@@ -1,0 +1,779 @@
+==== J134 pilot1 started 2026-10-16T11:21:58-04:00 in unit lab-J134-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+lint-bridge-selftest OK: 32 rules, 63 firing cases (each fired its own rule and no other), 77 checks
+bridge lint OK (83 file(s) under bridge/src, 3 under tools/; 32 rules)
+compiling 83 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 270 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 310 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2602 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:56994): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:57002): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:57014 (1 watching)
+WS CONNECT /127.0.0.1:57022 (connection #1)
+WS REFUSED /127.0.0.1:57038: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:57042 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:57042 (1 watching)
+WS DISCONNECT /127.0.0.1:57022 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:57056 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:57056 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:57062 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:54390 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:54390: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 32 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:43044: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:43058: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:43064: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:43076: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:43092: no valid pairing token
+WS SITE REFUSED /127.0.0.1:43214: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43228: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43240: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43254: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43264: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43278: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43292: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43298: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43310: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43322: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:43336: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:43344: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:43356: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:43368: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:43376: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:43390 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:43390 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:43394 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:43394 (0 watching)
+WS CONNECT /127.0.0.1:43402 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:43402 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:43406): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:43422): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:43438 (1 watching)
+WS CONNECT /127.0.0.1:60136 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:60136 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:60140 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:60140 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:36639 (/127.0.0.1:60156): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:42282: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:59420: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:59424: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:59434: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:59442: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:59446 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:59446 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:59460): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:33657 (/127.0.0.1:59468): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38350: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38362: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38374: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38376: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38392: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38394: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38404: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38414: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38416: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38432: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38448: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38452: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:38458: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:38460: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:46812: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46822: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46834: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:46856)
+TABLE SEAT 1 upgrade from /127.0.0.1:46872
+WS CONNECT /127.0.0.1:46872 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:46884
+WS SEAT 1 TAKEN OVER by /127.0.0.1:46884 (the older connection /127.0.0.1:46872 is closed 4002)
+WS CONNECT /127.0.0.1:46884 (connection #2)
+WS DISCONNECT /127.0.0.1:46884 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:46894
+WS CONNECT /127.0.0.1:46894 (connection #1)
+WS DISCONNECT /127.0.0.1:46894 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:46910: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46912: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46924: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46928: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46934: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46946: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46948: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46952: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46968: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:46976: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:46998
+WS CONNECT /127.0.0.1:46998 (connection #2)
+WS DISCONNECT /127.0.0.1:46998 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 5.3 us + predict 3.1 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 127 check(s), 0 failure(s)
+decision selftest: 122 check(s), 0 failure(s)
+distill selftest: 29 check(s), 0 failure(s)
+build OK
+✔ features and probabilities match fit.py on 30 held-out Vintage picks (3.126707ms)
+✔ utilities from LabCards reproduce humanPicks.ts on hand-made packs (both cubes) (1.599722ms)
+✔ uncovered cards: s = a + b * rating, least squares over the covered cards (0.331809ms)
+✔ a line is worth the sum of exp(u) in pick order, whatever the logit offset (0.398085ms)
+✔ the chooser takes the best line, never the line already taken, and refuses Winston (0.440094ms)
+✔ a human-pick draft: the deal is a plain run's, one seat picks by lineValue, both build decks (29.537901ms)
+✔ run plumbing: the drafter is part of the folder identity and the version, off changes nothing (0.472265ms)
+✔ --drafter specs: llm:<model>[:thinking=...], forge-ranks, human-picks; anything else is refused (0.89677ms)
+✔ card text: Forge costs as {1}{U}, oracle on one line and cut at 200 characters (0.586692ms)
+✔ theme summary: the cube document's own words, markdown dropped, at most 600 characters (0.948548ms)
+✔ the prompt on a fixture grid: nine cards with text, the legal lines, the pool by colour, the reply format (0.813783ms)
+✔ the prompt after the opponent picked: its line is gone, a crossing line holds 2 cards (0.234574ms)
+✔ the strict parse: one JSON object (or one fence), take/index/reason, a legal line, every fault named (0.405539ms)
+✔ a fake model answering valid JSON: one call a decision, no retries, the deal and the other seat a plain run's (18.138993ms)
+✔ malformed then valid: the retry names the fault and counts; malformed twice: the lab drafter's line, counted (3.517208ms)
+✔ the fallback is deterministic: a model that never answers drafts exactly the plain draft, twice (10.358775ms)
+✔ the usage is summed; a finished draft is written to <out>/llm/<seed>.json and replayed without a call (4.224708ms)
+✔ mapLimit keeps the order and the limit (8.273634ms)
+✔ forge-ranks: Forge's scores in place of the cube's ratings, no synergy, an early commit; the other seat plain (7.190901ms)
+✔ run plumbing: each drafter is part of the folder identity and the version; D416's version is unchanged (0.208636ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 170.014922
+numpy 2.5.3
+54d9c89eb9d22802b556023304e73479a97dba9f2ba55b09d27ed4ce57fd1c0f  var/lab-j134/cubes/twobert-cube-180.md
+{"written": 1, "bad_lines": 0, "drafter_ok": 1, "files_ok": 1, "seeds_unpaired": 0, "fl_vintage_matches": 600, "fl_vintage_rate": 0.6017, "fl_vintage_lo": 0.5617, "fl_vintage_hi": 0.6417, "fl_vintage_code": 1, "fl_vintage_complete": 1, "fl_synergy_matches": 600, "fl_synergy_rate": 0.525, "fl_synergy_lo": 0.4867, "fl_synergy_hi": 0.565, "fl_synergy_code": 0, "fl_synergy_complete": 1, "fl_twobert_matches": 600, "fl_twobert_rate": 0.4017, "fl_twobert_lo": 0.3617, "fl_twobert_hi": 0.4433, "fl_twobert_code": -1, "fl_twobert_complete": 1, "twobert_missing": 0, "fl_short_matches": 400, "fl_short_rate": 0.6625, "fl_short_lo": 0.6175, "fl_short_hi": 0.7075, "fl_short_code": 8, "fl_short_complete": 0, "ll_vintage_matches": 100, "ll_vintage_rate": 0.46, "ll_vintage_lo": 0.36, "ll_vintage_hi": 0.56, "ll_vintage_code": 0, "ll_vintage_complete": 1, "ll_ran": 1, "ll_drafts": 100, "ll_calls": 1900, "ll_fallbacks": 0, "ll_tokens_in": 5803000, "ll_tokens_out": 700000, "ll_cost_usd": 30.0, "ll_synergy_matches": 0, "ll_synergy_rate": null, "ll_synergy_lo": null, "ll_synergy_hi": null, "ll_synergy_code": 9, "ll_synergy_complete": 0, "verdicts": [1, 0, -1, 8, 0, 9], "verdicts_valid": 1}
+j134 selftest OK
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/FA-vintage, recording every game (both chairs) into var/lab-j134-pilot/FA-vintage/games, seat A drafting with Forge's ranks (D439)
+facts: booting the engine to look up 180 cards ...
+facts: 2.2 s
+drafter (D439): seat A drafts on Forge's ranks (180 of 180 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat B the lab drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:WU 1-2 B:BR  games ABB
+[2/2] seed 815990002: A:WU 2-0 B:UG  games AA
+matches: 11 s for 2 (5.6 s a draft wall-clock on 2 worker(s))
+recorded: 5 game(s), both chairs, 0.7 MiB gzipped (142 KiB a game) under var/lab-j134-pilot/FA-vintage/games
+done in 13 s -> var/lab-j134-pilot/FA-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/FA-vintage
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j134-pilot/FA-synergy, recording every game (both chairs) into var/lab-j134-pilot/FA-synergy/games, seat A drafting with Forge's ranks (D439)
+facts: booting the engine to look up 180 cards ...
+facts: 2.2 s
+drafter (D439): seat A drafts on Forge's ranks (180 of 180 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat B the lab drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990002: A:UG 0-2 B:WU  games BB
+[2/2] seed 815990001: A:UG 2-0 B:WU  games AA
+matches: 15 s for 2 (7.3 s a draft wall-clock on 2 worker(s))
+recorded: 4 game(s), both chairs, 0.7 MiB gzipped (188 KiB a game) under var/lab-j134-pilot/FA-synergy/games
+done in 17 s -> var/lab-j134-pilot/FA-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/FA-synergy
+cube lab: var/lab-j134/cubes/twobert-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j134-pilot/FA-twobert, recording every game (both chairs) into var/lab-j134-pilot/FA-twobert/games, seat A drafting with Forge's ranks (D439)
+facts: booting the engine to look up 180 cards ...
+facts: 2.3 s
+drafter (D439): seat A drafts on Forge's ranks (174 of 176 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat B the lab drafter
+WARNING: 4 card(s) not in the engine, drafted without them: Flickering Hound, Null Summoner, Twinned Vision, Primal Witchstalker (run check)
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:WU 2-0 B:UG+w  games AA
+[2/2] seed 815990002: A:WU+g 0-2 B:WU+b  games BB
+matches: 50 s for 2 (25.2 s a draft wall-clock on 2 worker(s))
+recorded: 4 game(s), both chairs, 1.5 MiB gzipped (377 KiB a game) under var/lab-j134-pilot/FA-twobert/games
+done in 53 s -> var/lab-j134-pilot/FA-twobert/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/FA-twobert
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/HA-vintage, recording every game (both chairs) into var/lab-j134-pilot/HA-vintage/games, seat A drafting with human picks fixtures/human-picks/vintage-cube-180.picks.json (D416)
+drafter (D416): seat A drafts with the human pick model fixtures/human-picks/vintage-cube-180.picks.json (152 of 180 cards covered, 152 in the file); the rest at s = -3.785 + 0.0587 x rating (least squares over the covered cards, r 0.53); seat B the current drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:UG 1-2 B:WB  games ABB
+[2/2] seed 815990002: A:WU+b 1-2 B:BG  games ABB
+matches: 11 s for 2 (5.3 s a draft wall-clock on 2 worker(s))
+recorded: 6 game(s), both chairs, 0.6 MiB gzipped (96 KiB a game) under var/lab-j134-pilot/HA-vintage/games
+done in 11 s -> var/lab-j134-pilot/HA-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/HA-vintage
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j134-pilot/HA-synergy, recording every game (both chairs) into var/lab-j134-pilot/HA-synergy/games, seat A drafting with human picks fixtures/human-picks/synergy-cube-180.picks.json (D416)
+drafter (D416): seat A drafts with the human pick model fixtures/human-picks/synergy-cube-180.picks.json (79 of 180 cards covered, 79 in the file); the rest at s = -2.099 + 0.0294 x rating (least squares over the covered cards, r 0.48); seat B the current drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990002: A:BG 0-2 B:WU  games BB
+[2/2] seed 815990001: A:UG+r 0-2 B:WR  games BB
+matches: 13 s for 2 (6.7 s a draft wall-clock on 2 worker(s))
+recorded: 4 game(s), both chairs, 0.7 MiB gzipped (181 KiB a game) under var/lab-j134-pilot/HA-synergy/games
+done in 14 s -> var/lab-j134-pilot/HA-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/HA-synergy
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/LA-vintage, recording every game (both chairs) into var/lab-j134-pilot/LA-vintage/games, seat A drafting with llm:fake (thinking low, D439)
+drafter (D439): seat A asks the fake model (no network, no spend); two failed replies take the lab drafter's line; decisions kept in var/lab-j134-pilot/LA-vintage/llm; seat B the lab drafter
+llm drafter: seed 815990001: 18 decisions, 18 calls, 0 retries, 0 fallbacks, 0 input tokens (0 cache read, 0 cache write), 0 output, 0.0 s
+llm drafter: seed 815990002: 18 decisions, 18 calls, 0 retries, 0 fallbacks, 0 input tokens (0 cache read, 0 cache write), 0 output, 0.0 s
+llm drafter: 2 draft(s), 36 decisions, 36 calls, 0 retries, 0 fallbacks; input 0 plain + 0 cache read + 0 cache write, output 0
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990002: A:UG+w 2-0 B:WB+r  games AA
+[2/2] seed 815990001: A:UBG 0-2 B:WR  games BB
+matches: 12 s for 2 (5.9 s a draft wall-clock on 2 worker(s))
+recorded: 4 game(s), both chairs, 0.5 MiB gzipped (128 KiB a game) under var/lab-j134-pilot/LA-vintage/games
+done in 12 s -> var/lab-j134-pilot/LA-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/LA-vintage
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/FB-vintage, recording every game (both chairs) into var/lab-j134-pilot/FB-vintage/games, seat B drafting with Forge's ranks (D439)
+drafter (D439): seat B drafts on Forge's ranks (180 of 180 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat A the lab drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990002: A:UR 0-2 B:RG  games BB
+[2/2] seed 815990001: A:UG 2-1 B:WU  games ABA
+matches: 18 s for 2 (8.8 s a draft wall-clock on 2 worker(s))
+recorded: 5 game(s), both chairs, 1.0 MiB gzipped (198 KiB a game) under var/lab-j134-pilot/FB-vintage/games
+done in 18 s -> var/lab-j134-pilot/FB-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/FB-vintage
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j134-pilot/FB-synergy, recording every game (both chairs) into var/lab-j134-pilot/FB-synergy/games, seat B drafting with Forge's ranks (D439)
+drafter (D439): seat B drafts on Forge's ranks (180 of 180 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat A the lab drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:WU 0-2 B:WU  games BB
+[2/2] seed 815990002: A:UG+w 0-2 B:WU+g  games BB
+matches: 14 s for 2 (6.9 s a draft wall-clock on 2 worker(s))
+recorded: 4 game(s), both chairs, 0.8 MiB gzipped (199 KiB a game) under var/lab-j134-pilot/FB-synergy/games
+done in 14 s -> var/lab-j134-pilot/FB-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/FB-synergy
+cube lab: var/lab-j134/cubes/twobert-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j134-pilot/FB-twobert, recording every game (both chairs) into var/lab-j134-pilot/FB-twobert/games, seat B drafting with Forge's ranks (D439)
+drafter (D439): seat B drafts on Forge's ranks (174 of 176 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat A the lab drafter
+WARNING: 4 card(s) not in the engine, drafted without them: Flickering Hound, Null Summoner, Twinned Vision, Primal Witchstalker (run check)
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:WU 2-1 B:UG  games BAA
+[2/2] seed 815990002: A:UB 1-2 B:WB+r  games BAB
+matches: 15 s for 2 (7.4 s a draft wall-clock on 2 worker(s))
+recorded: 6 game(s), both chairs, 0.9 MiB gzipped (151 KiB a game) under var/lab-j134-pilot/FB-twobert/games
+done in 15 s -> var/lab-j134-pilot/FB-twobert/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/FB-twobert
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/HB-vintage, recording every game (both chairs) into var/lab-j134-pilot/HB-vintage/games, seat B drafting with human picks fixtures/human-picks/vintage-cube-180.picks.json (D416)
+drafter (D416): seat B drafts with the human pick model fixtures/human-picks/vintage-cube-180.picks.json (152 of 180 cards covered, 152 in the file); the rest at s = -3.785 + 0.0587 x rating (least squares over the covered cards, r 0.53); seat A the current drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:WU 2-1 B:WB  games ABA
+[2/2] seed 815990002: A:UB 2-1 B:RG  games ABA
+matches: 11 s for 2 (5.7 s a draft wall-clock on 2 worker(s))
+recorded: 6 game(s), both chairs, 0.8 MiB gzipped (130 KiB a game) under var/lab-j134-pilot/HB-vintage/games
+done in 12 s -> var/lab-j134-pilot/HB-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/HB-vintage
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j134-pilot/HB-synergy, recording every game (both chairs) into var/lab-j134-pilot/HB-synergy/games, seat B drafting with human picks fixtures/human-picks/synergy-cube-180.picks.json (D416)
+drafter (D416): seat B drafts with the human pick model fixtures/human-picks/synergy-cube-180.picks.json (79 of 180 cards covered, 79 in the file); the rest at s = -2.099 + 0.0294 x rating (least squares over the covered cards, r 0.48); seat A the current drafter
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990001: A:WU 2-1 B:WU+g  games BAA
+[2/2] seed 815990002: A:UG 1-2 B:WB  games BAB
+matches: 27 s for 2 (13.5 s a draft wall-clock on 2 worker(s))
+recorded: 6 game(s), both chairs, 1.6 MiB gzipped (270 KiB a game) under var/lab-j134-pilot/HB-synergy/games
+done in 27 s -> var/lab-j134-pilot/HB-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/HB-synergy
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/LB-vintage, recording every game (both chairs) into var/lab-j134-pilot/LB-vintage/games, seat B drafting with llm:fake (thinking low, D439)
+drafter (D439): seat B asks the fake model (no network, no spend); two failed replies take the lab drafter's line; decisions kept in var/lab-j134-pilot/LB-vintage/llm; seat A the lab drafter
+llm drafter: seed 815990001: 18 decisions, 18 calls, 0 retries, 0 fallbacks, 0 input tokens (0 cache read, 0 cache write), 0 output, 0.0 s
+llm drafter: seed 815990002: 18 decisions, 18 calls, 0 retries, 0 fallbacks, 0 input tokens (0 cache read, 0 cache write), 0 output, 0.0 s
+llm drafter: 2 draft(s), 36 decisions, 36 calls, 0 retries, 0 fallbacks; input 0 plain + 0 cache read + 0 cache write, output 0
+drafted and built 2 draft(s) in 0.0 s; playing best of 3 each on 2 worker(s)
+[1/2] seed 815990002: A:UR 2-1 B:WU+b  games BAA
+[2/2] seed 815990001: A:WR 1-2 B:WU+b  games ABB
+matches: 11 s for 2 (5.5 s a draft wall-clock on 2 worker(s))
+recorded: 6 game(s), both chairs, 0.7 MiB gzipped (117 KiB a game) under var/lab-j134-pilot/LB-vintage/games
+done in 11 s -> var/lab-j134-pilot/LB-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/LB-vintage
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 0, 1 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j134-pilot/plain-vintage
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/2] seed 815990001: A:WU 0-0 B:WU+r  games -
+[2/2] seed 815990002: A:WU 0-0 B:UG  games -
+matches: 2 s for 2 (1.2 s a draft wall-clock on 1 worker(s))
+done in 2 s -> var/lab-j134-pilot/plain-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/plain-vintage
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 0, 1 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j134-pilot/plain-synergy
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/2] seed 815990001: A:UG 0-0 B:WU  games -
+[2/2] seed 815990002: A:BG 0-0 B:WU  games -
+matches: 2 s for 2 (1.2 s a draft wall-clock on 1 worker(s))
+done in 3 s -> var/lab-j134-pilot/plain-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/plain-synergy
+cube lab: var/lab-j134/cubes/twobert-cube-180.md, grid, 2 draft(s) from seed 815990001, best of 0, 1 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j134-pilot/plain-twobert
+WARNING: 4 card(s) not in the engine, drafted without them: Flickering Hound, Null Summoner, Twinned Vision, Primal Witchstalker (run check)
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/2] seed 815990001: A:WU 0-0 B:UG+w  games -
+[2/2] seed 815990002: A:UB+g 0-0 B:WR+u  games -
+matches: 2 s for 2 (1.2 s a draft wall-clock on 1 worker(s))
+done in 2 s -> var/lab-j134-pilot/plain-twobert/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j134-pilot/plain-twobert
+{"written": 1, "bad_lines": 0, "drafter_ok": 1, "files_ok": 1, "seeds_unpaired": 0, "fl_vintage_matches": 4, "fl_vintage_rate": 0.5, "fl_vintage_lo": 0.0, "fl_vintage_hi": 1.0, "fl_vintage_code": 0, "fl_vintage_complete": 1, "plain_compared": 24, "plain_differs": 22, "fl_synergy_matches": 4, "fl_synergy_rate": 0.75, "fl_synergy_lo": 0.5, "fl_synergy_hi": 1.0, "fl_synergy_code": 0, "fl_synergy_complete": 1, "fl_twobert_matches": 4, "fl_twobert_rate": 0.5, "fl_twobert_lo": 0.5, "fl_twobert_hi": 0.5, "fl_twobert_code": 0, "fl_twobert_complete": 1, "twobert_missing": 4, "hl_vintage_matches": 4, "hl_vintage_rate": 0.0, "hl_vintage_lo": 0.0, "hl_vintage_hi": 0.0, "hl_vintage_code": -1, "hl_vintage_complete": 1, "hl_synergy_matches": 4, "hl_synergy_rate": 0.25, "hl_synergy_lo": 0.0, "hl_synergy_hi": 0.5, "hl_synergy_code": 0, "hl_synergy_complete": 1, "ll_vintage_matches": 4, "ll_vintage_rate": 0.5, "ll_vintage_lo": 0.5, "ll_vintage_hi": 0.5, "ll_vintage_code": 0, "ll_vintage_complete": 1, "ll_ran": 1, "ll_drafts": 4, "ll_calls": 72, "ll_fallbacks": 0, "ll_tokens_in": 0, "ll_tokens_out": 0, "ll_cost_usd": null, "verdicts": [0, 0, 0, -1, 0, 0], "verdicts_valid": 1}
+{
+ "written": 1,
+ "bad_lines": 0,
+ "drafter_ok": 1,
+ "files_ok": 1,
+ "seeds_unpaired": 0,
+ "arms": [
+  {
+   "arm": "fl",
+   "cube": "vintage",
+   "challenger": "forge-ranks",
+   "planned_seeds": 2,
+   "matches": 4,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 2,
+    "seeds_b": 2,
+    "seeds_both": 2,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "plain": {
+    "compared": 4,
+    "pool_differs": 3
+   },
+   "rate": 0.5,
+   "lo": 0.0,
+   "hi": 1.0,
+   "code": 0,
+   "wld": [
+    2,
+    2,
+    0
+   ],
+   "game_rate": 0.6,
+   "game_ci": [
+    0.3333,
+    1.0
+   ],
+   "rate_as_seat": {
+    "A": 0.5,
+    "B": 0.5
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.75,
+     "U": 0.75,
+     "B": 0.0,
+     "R": 0.25,
+     "G": 0.25
+    },
+    "lab": {
+     "W": 0.0,
+     "U": 0.75,
+     "B": 0.25,
+     "R": 0.5,
+     "G": 0.5
+    }
+   },
+   "deck_score": {
+    "challenger": 139.8,
+    "lab": 138.475
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "fl",
+   "cube": "synergy",
+   "challenger": "forge-ranks",
+   "planned_seeds": 2,
+   "matches": 4,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 2,
+    "seeds_b": 2,
+    "seeds_both": 2,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "plain": {
+    "compared": 4,
+    "pool_differs": 4
+   },
+   "rate": 0.75,
+   "lo": 0.5,
+   "hi": 1.0,
+   "code": 0,
+   "wld": [
+    3,
+    1,
+    0
+   ],
+   "game_rate": 0.75,
+   "game_ci": [
+    0.5,
+    1.0
+   ],
+   "rate_as_seat": {
+    "A": 0.5,
+    "B": 1.0
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.5,
+     "U": 1.0,
+     "B": 0.0,
+     "R": 0.0,
+     "G": 0.5
+    },
+    "lab": {
+     "W": 0.75,
+     "U": 1.0,
+     "B": 0.0,
+     "R": 0.0,
+     "G": 0.25
+    }
+   },
+   "deck_score": {
+    "challenger": 131.3,
+    "lab": 132.45
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "fl",
+   "cube": "twobert",
+   "challenger": "forge-ranks",
+   "planned_seeds": 2,
+   "matches": 4,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 2,
+    "seeds_b": 2,
+    "seeds_both": 2,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 4,
+   "plain": {
+    "compared": 4,
+    "pool_differs": 3
+   },
+   "rate": 0.5,
+   "lo": 0.5,
+   "hi": 0.5,
+   "code": 0,
+   "wld": [
+    2,
+    2,
+    0
+   ],
+   "game_rate": 0.5,
+   "game_ci": [
+    0.4,
+    0.6
+   ],
+   "rate_as_seat": {
+    "A": 0.5,
+    "B": 0.5
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.75,
+     "U": 0.75,
+     "B": 0.25,
+     "R": 0.0,
+     "G": 0.25
+    },
+    "lab": {
+     "W": 0.5,
+     "U": 1.0,
+     "B": 0.25,
+     "R": 0.0,
+     "G": 0.25
+    }
+   },
+   "deck_score": {
+    "challenger": 105.35,
+    "lab": 103.775
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "hl",
+   "cube": "vintage",
+   "challenger": "human-picks",
+   "planned_seeds": 2,
+   "matches": 4,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 2,
+    "seeds_b": 2,
+    "seeds_both": 2,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "plain": {
+    "compared": 4,
+    "pool_differs": 4
+   },
+   "rate": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "code": -1,
+   "wld": [
+    0,
+    4,
+    0
+   ],
+   "game_rate": 0.3333,
+   "game_ci": [
+    0.3333,
+    0.3333
+   ],
+   "rate_as_seat": {
+    "A": 0.0,
+    "B": 0.0
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.5,
+     "U": 0.5,
+     "B": 0.25,
+     "R": 0.25,
+     "G": 0.5
+    },
+    "lab": {
+     "W": 0.5,
+     "U": 0.5,
+     "B": 0.75,
+     "R": 0.0,
+     "G": 0.25
+    }
+   },
+   "deck_score": {
+    "challenger": 135.15,
+    "lab": 142.35
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "hl",
+   "cube": "synergy",
+   "challenger": "human-picks",
+   "planned_seeds": 2,
+   "matches": 4,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 2,
+    "seeds_b": 2,
+    "seeds_both": 2,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "plain": {
+    "compared": 4,
+    "pool_differs": 4
+   },
+   "rate": 0.25,
+   "lo": 0.0,
+   "hi": 0.5,
+   "code": 0,
+   "wld": [
+    1,
+    3,
+    0
+   ],
+   "game_rate": 0.3,
+   "game_ci": [
+    0.2,
+    0.4
+   ],
+   "rate_as_seat": {
+    "A": 0.0,
+    "B": 0.5
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.5,
+     "U": 0.5,
+     "B": 0.5,
+     "R": 0.0,
+     "G": 0.5
+    },
+    "lab": {
+     "W": 0.75,
+     "U": 0.75,
+     "B": 0.0,
+     "R": 0.25,
+     "G": 0.25
+    }
+   },
+   "deck_score": {
+    "challenger": 121.35,
+    "lab": 139.625
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "ll",
+   "cube": "vintage",
+   "challenger": "llm",
+   "planned_seeds": 2,
+   "matches": 4,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 2,
+    "seeds_b": 2,
+    "seeds_both": 2,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "plain": {
+    "compared": 4,
+    "pool_differs": 4
+   },
+   "rate": 0.5,
+   "lo": 0.5,
+   "hi": 0.5,
+   "code": 0,
+   "wld": [
+    2,
+    2,
+    0
+   ],
+   "game_rate": 0.5,
+   "game_ci": [
+    0.4,
+    0.6
+   ],
+   "rate_as_seat": {
+    "A": 0.5,
+    "B": 0.5
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.5,
+     "U": 1.0,
+     "B": 0.25,
+     "R": 0.0,
+     "G": 0.5
+    },
+    "lab": {
+     "W": 0.75,
+     "U": 0.25,
+     "B": 0.25,
+     "R": 0.75,
+     "G": 0.0
+    }
+   },
+   "deck_score": {
+    "challenger": 124.125,
+    "lab": 141.575
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   },
+   "llm": {
+    "decisions": 72,
+    "calls": 72,
+    "retries": 0,
+    "fallbacks": 0,
+    "callErrors": 0,
+    "tokensIn": 0,
+    "cacheRead": 0,
+    "cacheCreate": 0,
+    "tokensOut": 0,
+    "wallMs": 37,
+    "drafts": 4,
+    "costUsd": null,
+    "replayed": 0,
+    "models": [
+     "fake"
+    ]
+   }
+  }
+ ],
+ "checked": [
+  {
+   "file": "var/lab-j134/cubes/twobert-cube-180.md",
+   "sha256": "54d9c89eb9d22802b556023304e73479a97dba9f2ba55b09d27ed4ce57fd1c0f",
+   "ok": 1
+  },
+  {
+   "file": "fixtures/human-picks/vintage-cube-180.picks.json",
+   "sha256": "d17708275e1559c508f36a2be65d5c07fb125ab8f044e712baecf169bbf6cfd0",
+   "ok": 1
+  },
+  {
+   "file": "fixtures/human-picks/synergy-cube-180.picks.json",
+   "sha256": "4f1af828a5ddd70e068c52565564f2d55fa979aa293e3e46f6e90bf7c1f8352a",
+   "ok": 1
+  }
+ ],
+ "fl_vintage_matches": 4,
+ "fl_vintage_rate": 0.5,
+ "fl_vintage_lo": 0.0,
+ "fl_vintage_hi": 1.0,
+ "fl_vintage_code": 0,
+ "fl_vintage_complete": 1,
+ "plain_compared": 24,
+ "plain_differs": 22,
+ "fl_synergy_matches": 4,
+ "fl_synergy_rate": 0.75,
+ "fl_synergy_lo": 0.5,
+ "fl_synergy_hi": 1.0,
+ "fl_synergy_code": 0,
+ "fl_synergy_complete": 1,
+ "fl_twobert_matches": 4,
+ "fl_twobert_rate": 0.5,
+ "fl_twobert_lo": 0.5,
+ "fl_twobert_hi": 0.5,
+ "fl_twobert_code": 0,
+ "fl_twobert_complete": 1,
+ "twobert_missing": 4,
+ "hl_vintage_matches": 4,
+ "hl_vintage_rate": 0.0,
+ "hl_vintage_lo": 0.0,
+ "hl_vintage_hi": 0.0,
+ "hl_vintage_code": -1,
+ "hl_vintage_complete": 1,
+ "hl_synergy_matches": 4,
+ "hl_synergy_rate": 0.25,
+ "hl_synergy_lo": 0.0,
+ "hl_synergy_hi": 0.5,
+ "hl_synergy_code": 0,
+ "hl_synergy_complete": 1,
+ "ll_vintage_matches": 4,
+ "ll_vintage_rate": 0.5,
+ "ll_vintage_lo": 0.5,
+ "ll_vintage_hi": 0.5,
+ "ll_vintage_code": 0,
+ "ll_vintage_complete": 1,
+ "ll_ran": 1,
+ "ll_drafts": 4,
+ "ll_calls": 72,
+ "ll_fallbacks": 0,
+ "ll_tokens_in": 0,
+ "ll_tokens_out": 0,
+ "ll_cost_usd": null,
+ "verdicts": [
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0
+ ],
+ "verdicts_valid": 1
+}
