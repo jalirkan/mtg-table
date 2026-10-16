@@ -12,6 +12,7 @@
 #   tools/cubelab.sh learn   var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md \
 #                            --out var/cubelab/learned/synergy.ratings.tsv           # D301, no engine
 #   tools/cubelab.sh selfplay cubes/synergy-cube-180.md --iterations 2 --drafts-per-iter 30 --jobs 2   # D302
+#   tools/cubelab.sh watch   cubes/fair-fight-cube-180.md --games 3 --player-b search   # D439: watch two bots draft and play
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):
@@ -26,8 +27,8 @@
 #   2. builds the bridge if bridge/out is missing, and compiles
 #      tools/cubelab/CubeLab.java into var/cubelab/classes/ when it is stale
 #      (javac through jdk.compiler, never --release; the lint already scans it);
-#   3. for `check`, `ratings`, `run` and `selfplay` (not `learn`, which reads files only), builds one Forge home per job under
-#      var/cubelab/homes/<k>/ with forge_home_make (D129's helper), so no two
+#   3. for `check`, `ratings`, `run`, `selfplay` and `watch` (not `learn`, which reads files only), builds one Forge home per job under
+#      var/cubelab/homes/<k>/ (`watch`: var/cubelab/watch-homes/0/) with forge_home_make (D129's helper), so no two
 #      JVMs share a userDir, and hands them to the TypeScript side;
 #   4. runs tools/cubelab/cli.ts under Node (type stripping, no build step).
 #
@@ -66,8 +67,12 @@ if [ "$cmd" != "report" ] && [ "$cmd" != "meta" ] && [ "$cmd" != "learn" ]; then
   case "$jobs" in ''|*[!0-9]*) echo "cubelab: --jobs wants a number, got $jobs" >&2; exit 2 ;; esac
   [ "$jobs" -ge 1 ] || jobs=1
   homes=""
+  # D439: `watch` boots its own home, so a watch started beside a lab run (the
+  # coach helper's POST /watch) never shares a userDir with that run's job 0.
+  home_root="${CUBELAB_HOME_ROOT:-var/cubelab/homes}"
+  [ "$cmd" = "watch" ] && home_root="${CUBELAB_HOME_ROOT:-var/cubelab/watch-homes}"
   for ((k = 0; k < jobs; k++)); do
-    cfg="$(forge_home_make "${CUBELAB_HOME_ROOT:-var/cubelab/homes}/$k")"
+    cfg="$(forge_home_make "$home_root/$k")"
     homes="${homes:+$homes,}$cfg"
   done
   export CUBELAB_CP="$CLASSES:$REPO_ROOT/bridge/out:$FORGE_JAR"

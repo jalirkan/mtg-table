@@ -414,7 +414,7 @@ try {
   check('preflight: 204 with methods, headers and private network', r.status === 204
     && r.headers['access-control-allow-origin'] === 'https://jalirkan.github.io'
     && r.headers['access-control-allow-methods'] === 'GET, POST, OPTIONS'
-    && r.headers['access-control-allow-headers'] === 'Content-Type, X-ForgeCoach-Token'
+    && r.headers['access-control-allow-headers'] === 'Content-Type, X-ForgeCoach-Token, Range'
     && r.headers['access-control-allow-private-network'] === 'true', JSON.stringify(r.headers));
   r = await http({ port: P, method: 'OPTIONS', path: '/coach', headers: { Origin: 'https://evil.example', 'Access-Control-Request-Method': 'POST' } });
   check('preflight from another site: 403', r.status === 403 && !r.headers['access-control-allow-private-network']);

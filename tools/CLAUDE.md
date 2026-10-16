@@ -356,6 +356,16 @@ second `play.sh --engine-only` beside a live helper wakes the first and exits 0
 instead of clashing on its ports. The self-test's fake engine takes the bridge's own `--idle-timeout` to
 exit on cue.
 
+Watching two bots (D439) is the helper's `/watch`, in `tools/watch-runner.mjs`,
+contract `docs/watch-bots.md`: it starts `tools/cubelab.sh watch` (one grid
+draft by the lab's drafters, then a paced best of three from seat 0's eyes) one
+at a time, and serves its `draft.json`, `match.json` and game logs. Rule 1 holds
+for its shapes. Nothing from the request but a checked cube id and a number
+reaches a path or the command line; it writes only `var/spectate/watch-*/` and
+its own Forge home; every game passes `check-redaction.mjs` before its result is
+written; a GET reads only. Its self-test, `tools/watch-runner-selftest.mjs`,
+drives a fake watch and runs in 12f and CI.
+
 ## The cube lab — the conventions D293–D297 added
 
 `tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their

@@ -86,6 +86,8 @@ import forge.util.MyRandom;
 import forge.util.ThreadUtil;
 
 import mtgtable.Json.JsonOut;
+import mtgtable.ai.PolicyLobbyPlayerAi;
+import mtgtable.ai.SearchConfig;
 
 /**
  * M1: record an AI-vs-AI game to a JSONL frame log.
@@ -122,6 +124,16 @@ import mtgtable.Json.JsonOut;
  *       following the file (the replay's follow mode) would have nothing to
  *       follow.  See {@link BoundaryFlusher} for where the dwell goes and why
  *       it cannot change the game.</li>
+ *   <li>{@code --policy} (seat 0) and {@code --ai-policy} (alias
+ *       {@code --policy2}, seat 1) are {@code plain} (the default: Forge's own
+ *       AI, {@link Bootstrap#createAiPlayer}, exactly as before) or
+ *       {@code search}: the live search seat, {@code MtgTable --ai-policy
+ *       search}'s -- D310's outlet policy and {@link SearchConfig#parseLive}'s
+ *       search-v2 in front of the seat's profile, through
+ *       {@link Bootstrap#createAiSeat} (D439, watching two bots: the cube lab's
+ *       {@code watch}).  Like the profile, it belongs to the DECK.  It changes
+ *       nothing on the wire: the handshake names the profile, as it always
+ *       did, and the caller says which seat searched.</li>
  * </ul>
  *
  * <p>Two AI seats play a full game; the log is written <b>from seat 0's point of
@@ -155,6 +167,8 @@ public final class RecordMatch {
 
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 600L;
+    /** D439: the extra time a game with a search seat may take (search-v2 spends ~1.5 s a decision). */
+    private static final long SEARCH_TIMEOUT_SEC = 1_800L;
 
     // ==================================================================
     // main
@@ -200,6 +214,8 @@ public final class RecordMatch {
         System.out.println("profiles      = seat 0 " + profiles.get(0) + ", seat 1 " + profiles.get(1)
                 + (a.profile == null && a.profile2 == null ? "  (the default; --profile / --ai-profile "
                         + String.join("|", Bootstrap.aiProfiles(cfg.forgeHomeDir())) + ")" : ""));
+        System.out.println("policies      = seat 0 " + a.policy + ", seat 1 " + a.policy2
+                + (a.searches() ? "  (search = " + SearchConfig.LIVE_VERSION + ", D439)" : ""));
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
         System.out.println("match block   = " + (a.writeMatch() ? "yes (hello_ok.match, amendment M47)" : "no"));
@@ -266,10 +282,12 @@ public final class RecordMatch {
         // --deck2), never to --seat: the viewpoint is a redaction choice and must
         // not change who plays what (amendment M47).
         final RegisteredPlayer p0 = new RegisteredPlayer(deck1);
-        p0.setPlayer(Bootstrap.createAiPlayer("AI-Seat0", 0, profiles.get(0)));
+        final LobbyPlayer lp0 = aiSeat("AI-Seat0", 0, profiles.get(0), a.policy);
+        p0.setPlayer(lp0);
         seats.add(p0);
         final RegisteredPlayer p1 = new RegisteredPlayer(deck2);
-        p1.setPlayer(Bootstrap.createAiPlayer("AI-Seat1", 1, profiles.get(1)));
+        final LobbyPlayer lp1 = aiSeat("AI-Seat1", 1, profiles.get(1), a.policy2);
+        p1.setPlayer(lp1);
         seats.add(p1);
 
         final Match match = new Match(rules, seats, "mtg-table");
@@ -347,7 +365,9 @@ public final class RecordMatch {
 
         // A paced game is SUPPOSED to take minutes: allow 3,000 dwells on top of
         // the engine's own cap (the longest committed game is 605 frames).
-        final long timeoutSec = GAME_TIMEOUT_SEC + (a.paceMs * 3_000L) / 1_000L;
+        // D439: a search seat thinks up to ~1.5 s a decision on top of that.
+        final long timeoutSec = GAME_TIMEOUT_SEC + (a.paceMs * 3_000L) / 1_000L
+                + (a.searches() ? SEARCH_TIMEOUT_SEC : 0L);
         final boolean finished = done.await(timeoutSec, TimeUnit.SECONDS);
         final long gameMs = ms(tGame);
         if (!finished) {
@@ -395,6 +415,15 @@ public final class RecordMatch {
                     + " ms asleep (--pace " + a.paceMs + ")");
         }
         System.out.println("total wall     = " + ms(t0) + " ms");
+        // D439: what a search seat did (the controller's own counters; read after the game is over).
+        final List<LobbyPlayer> lps = List.of(lp0, lp1);
+        for (int i = 0; i < 2; i++) {
+            if (lps.get(i) instanceof PolicyLobbyPlayerAi && ((PolicyLobbyPlayerAi) lps.get(i)).search() != null
+                    && ((PolicyLobbyPlayerAi) lps.get(i)).lastController() != null) {
+                System.out.println("search seat " + i + "  = "
+                        + ((PolicyLobbyPlayerAi) lps.get(i)).lastController().counts());
+            }
+        }
         System.out.println("snapshot errors= " + gui.errors());
         // protocol.md 3.6: an event missing an id the protocol declares non-null
         // is dropped rather than emitted as a null.  Zero is the expected value;
@@ -1069,6 +1098,14 @@ public final class RecordMatch {
         boolean match;
         /** M47: dwell this long at each frame boundary; 0 = engine speed. */
         long paceMs;
+        /** D439: seat 0's controller, plain | search. */
+        String policy = "plain";
+        /** D439: seat 1's controller, plain | search. */
+        String policy2 = "plain";
+
+        boolean searches() {
+            return "search".equals(policy) || "search".equals(policy2);
+        }
 
         /** A match setup was given, so the handshake says what it is (M47). */
         boolean writeMatch() {
@@ -1108,6 +1145,9 @@ public final class RecordMatch {
                     break;
                 }
                 case "--match": a.match = true; break;
+                case "--policy": a.policy = policyOf(need(argv, ++i, k), k); break;
+                case "--policy2":
+                case "--ai-policy": a.policy2 = policyOf(need(argv, ++i, k), k); break;
                 case "--pace": {
                     final String v = need(argv, ++i, k);
                     try {
@@ -1130,7 +1170,7 @@ public final class RecordMatch {
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: RecordMatch --deck <path> [--deck2|--ai-deck <path>] --seed <n> "
                         + "--out <file> [--seat 0|1] [--profile <p>] [--ai-profile|--profile2 <p>] "
-                        + "[--match] [--pace <ms>]");
+                        + "[--match] [--pace <ms>] [--policy plain|search] [--ai-policy|--policy2 plain|search]");
                 }
             }
             if (a.out == null) {
@@ -1142,12 +1182,34 @@ public final class RecordMatch {
             return a;
         }
 
+        private static String policyOf(final String v, final String k) {
+            if (!"plain".equals(v) && !"search".equals(v)) {
+                throw new IllegalArgumentException(k + " is plain or search, got \"" + v + "\"");
+            }
+            return v;
+        }
+
         private static String need(final String[] argv, final int i, final String k) {
             if (i >= argv.length) {
                 throw new IllegalArgumentException(k + " needs a value");
             }
             return argv[i];
         }
+    }
+
+    /**
+     * D439: one AI seat.  {@code plain} is Forge's own AI through
+     * {@link Bootstrap#createAiPlayer} (D107), exactly what every recording
+     * before D439 seated; {@code search} is the live search seat, built as
+     * {@code MtgTable --ai-policy search} builds it.
+     */
+    private static LobbyPlayer aiSeat(final String name, final int avatar, final String profile,
+                                      final String policy) {
+        if ("search".equals(policy)) {
+            return Bootstrap.createAiSeat(name, avatar, profile, null, PolicyLobbyPlayerAi.Outlets.ON,
+                    SearchConfig.parseLive(null));
+        }
+        return Bootstrap.createAiPlayer(name, avatar, profile);
     }
 
     private static Deck deck(final File f) {

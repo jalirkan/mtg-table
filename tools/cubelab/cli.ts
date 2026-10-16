@@ -33,6 +33,9 @@
 //           [--record-all | --record-every N]                  record both batches' games (D315)
 //           [--explore on | --explore name=value]...           controlled exploration of low-rated cards (D356):
 //                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
+//   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
+//           [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]   (D439, watch.ts)
+//           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -57,6 +60,7 @@ import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './play
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 import { readJsonLines } from './lines.ts';
+import { watchCommand } from './watch.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const say = (s: string): void => { process.stdout.write(`${s}\n`); };
@@ -91,6 +95,8 @@ function usage(msg?: string): never {
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
+       tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
+                        [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]   (D439)
 `);
   process.exit(2);
 }
@@ -338,6 +344,7 @@ async function main(): Promise<number> {
     case 'selfplay': if (!pos[0]) usage('selfplay needs a cube file'); return selfplayCommand(REPO, pos[0], f, say);
     case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
     case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
+    case 'watch': if (!pos[0]) usage('watch needs a cube file'); return watchCommand(REPO, pos[0], f, say);   // D439
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);
   }
 }
