@@ -147,9 +147,17 @@ all. At the default 600 ms expect a few minutes a game.
 `var/spectate/` (D122): **only complete lines** — a line the recorder is half way
 through is never sent — at most 4 MiB an answer, and **only lines that passed
 `tools/check-redaction.mjs`**: before it sends bytes past the last check, the
-helper checks the log's whole complete-lines prefix (an unfinished game passes as
-a killed recording does; about 0.1 s for 2 MB) and sends what passed, so a
-follower runs one check behind the recorder. A game that fails is never sent past
+helper checks the log's whole complete-lines prefix with `--partial` (every leak
+rule and every exact-shape rule; not the three coverage checks a game's first
+lines cannot meet; about 0.1 s for 2 MB) and sends what passed, so a follower
+runs one check behind the recorder. Until the first `state` frame is written
+(the session line and `hello_ok` come about 10 s before it) nothing has passed:
+the answer is `200`/`206` with no body and `X-Log-Next: 0`, not an error. A last
+`state` whose reveal the next line (its `ask`) may justify is held back until
+that line is written. Every one of the 17,757 line-prefixes of the committed
+recordings (`fixtures/games/`, `fixtures/synthetic/`) passes `--partial`
+(measured 2026-10-16, about 3.5 minutes in memory); the checker's self-test
+re-runs a stride of them. A game that fails is never sent past
 its last passing line: every later request for it is
 `500 {"ok": false, "code": "redaction-failed", "message"}` (which game, never
 what failed: the checker's own words can name the card, and stay on the helper's

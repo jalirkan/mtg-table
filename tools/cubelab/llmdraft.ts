@@ -325,6 +325,14 @@ export interface LlmCaps {
 /** `run`'s default dollar cap: a 100-draft Sonnet arm (about $30, D439) needs `--llm-max-usd` said out loud. */
 export const DEFAULT_LLM_MAX_USD = 5;
 export const DEFAULT_FALLBACK_RATE = 0.25;
+/**
+ * What the dollar cap charges a call whose cost it cannot read (#148 review): a reply without the
+ * CLI's `total_cost_usd`, or a call killed in flight (a stop, a timeout), which spent tokens and
+ * reports nothing.  It is the run's mean priced call when there is one, else this -- about three
+ * times D439's Sonnet draft call ($0.30 a draft of 18 calls) -- so a CLI that never reports a cost
+ * still meets the default $5 cap, at 100 calls: the dollar cap counts calls.
+ */
+export const UNPRICED_CALL_USD = 0.05;
 /** The fallback share's denominator is at least this many decisions: 3 fallbacks in the first 8 stop a run, 1 does not. */
 export const FALLBACK_FLOOR = 8;
 /** `--llm-jobs` at most: each lane is one `claude -p` at a time, and the cap's projection is per lane. */
@@ -356,8 +364,13 @@ export interface LlmSpend {
   tokensOut: number;
   /** The CLI's cost figure, summed: dollars at list price. */
   usd: number;
-  /** How many calls reported a cost (the projection's denominator). */
+  /** How many calls reported a cost. */
   costCalls: number;
+  /** Calls that returned with no cost figure, and calls killed in flight: charged an estimate each. */
+  unpriced: number;
+  aborted: number;
+  /** The estimates charged for them (UNPRICED_CALL_USD, or the mean priced call); the cap checks usd + this. */
+  usdAssumed: number;
 }
 
 const usd = (x: number): string => `$${x.toFixed(x < 1 ? 4 : 2)}`;
@@ -398,7 +411,7 @@ export function llmCapsOf(one: (k: string) => string | undefined, d: LlmCaps = {
  */
 export class LlmBudget {
   readonly caps: LlmCaps;
-  readonly spent: LlmSpend = { calls: 0, callErrors: 0, decisions: 0, retries: 0, fallbacks: 0, tokensIn: 0, cacheRead: 0, cacheCreate: 0, tokensOut: 0, usd: 0, costCalls: 0 };
+  readonly spent: LlmSpend = { calls: 0, callErrors: 0, decisions: 0, retries: 0, fallbacks: 0, tokensIn: 0, cacheRead: 0, cacheCreate: 0, tokensOut: 0, usd: 0, costCalls: 0, unpriced: 0, aborted: 0, usdAssumed: 0 };
   stopped: LlmStop | null = null;
   private inFlight = 0;
   private readonly ac = new AbortController();
@@ -433,21 +446,36 @@ export class LlmBudget {
       this.stop(new LlmStop('max-calls', `the call cap: ${s.calls + this.inFlight} model call(s) made of at most ${maxCalls} (${this.summary()})`));
     }
     if (maxUsd !== null) {
-      const per = s.costCalls > 0 ? s.usd / s.costCalls : 0;
-      if (s.usd >= maxUsd || s.usd + per * (this.inFlight + 1) > maxUsd) {
-        this.stop(new LlmStop('max-usd', `the spend cap: ${usd(s.usd)} spent of at most ${usd(maxUsd)} at list price, and the next call (about ${usd(per)} each) would pass it (${this.summary()})`));
+      // an unpriced call counts too (at an estimate), so a CLI that reports no cost is bounded by calls
+      const spent = s.usd + s.usdAssumed;
+      const charged = s.costCalls + s.unpriced + s.aborted;
+      const per = charged > 0 ? spent / charged : 0;
+      if (spent >= maxUsd || spent + per * (this.inFlight + 1) > maxUsd) {
+        this.stop(new LlmStop('max-usd', `the spend cap: ${usd(spent)} spent of at most ${usd(maxUsd)} at list price${s.usdAssumed > 0 ? ` (${usd(s.usdAssumed)} of it estimated for ${s.unpriced + s.aborted} call(s) with no cost figure)` : ''}, and the next call (about ${usd(per)} each) would pass it (${this.summary()})`));
       }
     }
     this.inFlight++;
   }
 
-  /** After a model call: its reply (null = the call failed). */
-  afterCall(r: DraftModelReply | null): void {
+  /** What a call with no cost figure is charged: the run's mean priced call, else UNPRICED_CALL_USD. */
+  private estimate(): number {
+    const s = this.spent;
+    return s.costCalls > 0 ? s.usd / s.costCalls : UNPRICED_CALL_USD;
+  }
+
+  /**
+   * After a model call: its reply (null = the call failed).  `killed`: the call was killed in flight
+   * (the run stopped, or it timed out) -- it spent tokens it never reported, so it is charged.
+   */
+  afterCall(r: DraftModelReply | null, { killed = false }: { killed?: boolean } = {}): void {
     this.inFlight = Math.max(0, this.inFlight - 1);
     const s = this.spent;
     s.calls++;
-    if (!r) s.callErrors++;
-    else {
+    if (!r) {
+      s.callErrors++;
+      if (killed) { s.aborted++; s.usdAssumed += this.estimate(); }
+    } else {
+      if (r.costUsd == null) { s.unpriced++; s.usdAssumed += this.estimate(); }
       if (r.usage) {
         s.tokensIn += r.usage.input ?? 0;
         s.cacheRead += r.usage.cacheRead ?? 0;
@@ -477,7 +505,8 @@ export class LlmBudget {
   summary(): string {
     const s = this.spent;
     return `${s.calls} call(s), ${s.callErrors} failed, ${s.decisions} decision(s), ${s.fallbacks} fallback(s), `
-      + `${s.tokensIn + s.cacheRead + s.cacheCreate} input + ${s.tokensOut} output tokens, ${usd(s.usd)} at list price`;
+      + `${s.tokensIn + s.cacheRead + s.cacheCreate} input + ${s.tokensOut} output tokens, ${usd(s.usd)} at list price`
+      + `${s.usdAssumed > 0 ? ` + ${usd(s.usdAssumed)} estimated (${s.unpriced} unpriced, ${s.aborted} killed in flight)` : ''}`;
   }
 
   /** The record a run or a watch writes (spend.json, match.json's `cost`). */
@@ -592,7 +621,12 @@ export async function runLlmDraft(o: LlmDrafterOptions, seed: number): Promise<D
     try {
       r = await model.call({ system, user, ...(signal ? { signal } : {}) });
     } catch (e) {
-      o.budget?.afterCall(null);
+      // killed in flight -- by the stop's signal or by the wrapper's timeout (model.mjs tags the error
+      // `killed`), or a model that rejected once the run stopped -- spent tokens it never reported;
+      // a model that refused before it started (it rethrows the stop itself) spent nothing
+      const stop0 = halted();
+      const tag = (e as { killed?: unknown } | null)?.killed;
+      o.budget?.afterCall(null, { killed: tag === 'abort' || tag === 'timeout' || (!!stop0 && e !== stop0) });
       const stop = halted();
       if (stop) throw stop;
       stats.callErrors++;

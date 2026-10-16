@@ -50,9 +50,12 @@
 // other hand the five-key stub, and NOTHING IS SERVED BEFORE IT PASSED
 // tools/check-redaction.mjs: before a game route sends bytes past what was
 // already checked, it checks the log's whole complete-lines prefix up to them
-// (the checker reads a cut log as it reads a killed recording: an unfinished
-// game is a warning, not a failure; about 0.1 s for 2 MB) and sends only the
-// lines that passed.  A live follower lags by one check; a prefix that fails is
+// with `--partial` (every leak rule and the exact shapes, not the three
+// coverage checks a game's first lines cannot meet; an unfinished game is a
+// warning, not a failure; about 0.1 s for 2 MB) and sends only the lines that
+// passed.  A prefix with no state frame yet (the session line and hello_ok,
+// for the ~10 s before Forge's first state) is 0 bytes passed, not a failure,
+// and a last state the next line could still justify waits for that line.  A live follower lags by one check; a prefix that fails is
 // never sent, every later request of that game is a 500, and the watch is
 // stopped with `error` naming the game.  The watch still checks each finished
 // recording whole (match.json's `redaction`).  draft.json shows both pools and
@@ -67,6 +70,7 @@
 // updatedAt, else the folder's mtime; a running watch is never removed.
 
 import { spawn } from 'node:child_process';
+import { procStart } from './llm-seat/lib/model.mjs';
 import { fileURLToPath } from 'node:url';
 import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
@@ -195,21 +199,50 @@ const readJson = (file) => {
 const CHECKER = fileURLToPath(new URL('./check-redaction.mjs', import.meta.url));
 
 /**
- * The real check: tools/check-redaction.mjs over `buf` (complete lines), written to a scratch file
- * under `dir` for the length of the check (the checker reads a path; a spawned child's stdin is a
- * socket, which /dev/stdin cannot open).  -> {ok, out}.
+ * Is there anything in this complete-lines prefix to decide: a `state` frame, or the `over` that ends
+ * a game which never had one (M11)?  A line's own `"type"`, parsed, never a substring.
+ */
+export function hasStateFrame(prefix) {
+  let from = 0;
+  while (from < prefix.length) {
+    let end = prefix.indexOf(0x0a, from);
+    if (end < 0) end = prefix.length;
+    const line = prefix.subarray(from, end);
+    // a cheap filter before the parse: a state line carries the bytes "state"
+    if (line.includes('"state"') || line.includes('"over"')) {
+      try { const t = JSON.parse(line.toString('utf8'))?.type; if (t === 'state' || t === 'over') return true; } catch { /* not JSON: the checker's business */ }
+    }
+    from = end + 1;
+  }
+  return false;
+}
+
+/**
+ * The real check: `tools/check-redaction.mjs --partial` over `buf` (complete lines), written to a
+ * scratch file under `dir` for the length of the check (the checker reads a path; a spawned child's
+ * stdin is a socket, which /dev/stdin cannot open).  -> {ok, upTo, out}: `upTo` the bytes of `buf`
+ * the verdict covers.  --partial fails only what a prefix can fail -- every leak rule and the exact
+ * shapes -- and not the three coverage checks a game's first lines cannot meet yet (exit 3, and
+ * all of `buf` decided); a state the next line could still justify (A6's one frame of slack) is
+ * left undecided, and `decided=` stops before it.  Exit 1 is a failure, anything else a fault.
  */
 export function checkRedaction(buf, dir) {
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jsonl`);
   writeFileSync(file, buf);
   return new Promise((resolveCheck) => {
-    const child = spawn(process.execPath, [CHECKER, file], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [CHECKER, '--partial', file], { stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     child.stdout.setEncoding('utf8').on('data', (d) => { if (out.length < 65536) out += d; });
     child.stderr.setEncoding('utf8').on('data', (d) => { if (out.length < 65536) out += d; });
     child.on('error', (e) => { rmSync(file, { force: true }); resolveCheck({ ok: false, out: `the checker did not start: ${e.message}` }); });
-    child.on('close', (code) => { rmSync(file, { force: true }); resolveCheck({ ok: code === 0, out }); });
+    child.on('close', (code) => {
+      rmSync(file, { force: true });
+      const decided = /^\s+partial: decided=(\d+) of /m.exec(out);
+      if (code === 0) resolveCheck({ ok: true, upTo: buf.length, out });
+      else if (code === 3 && decided) resolveCheck({ ok: true, upTo: Math.min(buf.length, Number(decided[1])), out });
+      else resolveCheck({ ok: false, out: code === 1 ? out : `the checker exited ${code}: ${out}` });
+    });
   });
 }
 
@@ -298,7 +331,32 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     try { writeFileSync(`${file}.runner.tmp`, `${JSON.stringify(next, null, 1)}\n`); renameSync(`${file}.runner.tmp`, file); } catch { /* the folder went away */ }
   };
 
-  const killGroup = (r, sig) => { try { process.kill(-r.child.pid, sig); } catch { /* gone */ } };
+  /**
+   * The process groups a watch's `claude -p` calls run in (tools/llm-seat/lib/model.mjs registers each
+   * under MTGTABLE_CHILD_GROUPS): their own groups, so the watch's signal must be sent to them too.  A
+   * file whose pid now names another process (its start time differs) is a stale entry, never signalled.
+   * -> the registered groups that still exist.
+   */
+  const registered = (r) => {
+    const live = [];
+    let names = [];
+    try { names = readdirSync(r.groups); } catch { return live; }
+    for (const n of names) {
+      if (!/^[0-9]{1,10}$/.test(n) || Number(n) <= 1) continue;
+      const pid = Number(n);
+      let mark = '';
+      try { mark = readFileSync(join(r.groups, n), 'utf8').trim(); } catch { continue; }
+      const now = procStart(pid);
+      // the leader alive with another start time: the pid was reused -- not ours
+      if (now !== null && mark !== '' && now !== mark) { rmSync(join(r.groups, n), { force: true }); continue; }
+      try { process.kill(-pid, 0); live.push(pid); } catch (e) { if (e.code === 'EPERM') continue; rmSync(join(r.groups, n), { force: true }); }
+    }
+    return live;
+  };
+  const killGroup = (r, sig) => {
+    try { process.kill(-r.child.pid, sig); } catch { /* gone */ }
+    for (const pid of registered(r)) { try { process.kill(-pid, sig); } catch { /* gone */ } }
+  };
 
   /** Remove all but the `keep` most recent watch folders (`fresh`, the one starting, counts as the newest; the running one stays). */
   const prune = (fresh) => {
@@ -318,9 +376,10 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       log(`WATCH ${o.n} removed (only the ${keep} most recent watches are kept)`);
     }
   };
-  /** Does the watch's process group still have a member (its JVM, after the leader exited)? */
+  /** Does the watch's process group still have a member (its JVM, after the leader exited), or a registered claude group? */
   const groupAlive = (r) => {
-    try { process.kill(-r.child.pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+    try { process.kill(-r.child.pid, 0); return true; } catch (e) { if (e.code === 'EPERM') return true; }
+    return registered(r).length > 0;
   };
   /** SIGKILL whatever of the group is left, `killGraceMs` from now (once; a stop arms it, so does an exit with members left). */
   const armKill = (r) => {
@@ -341,9 +400,11 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       try { st = statSync(file); } catch { return { upTo: 0, failed: null }; }
       const key = `${st.ino}:${st.birthtimeMs}`;
       let e = checked.get(file);
-      if (!e || e.key !== key) { e = { key, upTo: 0, failed: null, pending: null }; checked.set(file, e); }
+      if (!e || e.key !== key) { e = { key, upTo: 0, seen: 0, failed: null, pending: null }; checked.set(file, e); }
       if (e.failed) return { upTo: e.upTo, failed: e.failed };
-      if (e.upTo >= want) return { upTo: e.upTo, failed: null };
+      // `seen`: the prefix length last checked.  A verdict that stopped short of it (no state frame
+      // yet, or an undecided last state) waits for the log to grow before it is asked again.
+      if (e.upTo >= want || e.seen >= want) return { upTo: e.upTo, failed: null };
       if (e.pending) { await e.pending; continue; }
       const entry = e;
       entry.pending = (async () => {
@@ -352,9 +413,18 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
         const cut = buf.lastIndexOf(0x0a);
         if (cut < 0) return;
         const prefix = buf.subarray(0, cut + 1);
+        if (prefix.length <= entry.seen) return;
+        // A game opens with the session line and hello_ok and Forge's first state follows about 10 s
+        // later: until a state frame is written there is nothing to serve, which is 0 bytes passed,
+        // not a failure (the checker is not even asked).
+        if (!hasStateFrame(prefix)) { entry.seen = prefix.length; return; }
         const r = await check(prefix);
         if (checked.get(file) !== entry) return;   // re-recorded while it ran
-        if (r.ok) { entry.upTo = Math.max(entry.upTo, prefix.length); return; }
+        if (r.ok) {
+          entry.seen = Math.max(entry.seen, prefix.length);
+          entry.upTo = Math.max(entry.upTo, Math.min(prefix.length, r.upTo ?? prefix.length));
+          return;
+        }
         const lines = String(r.out ?? '').split('\n').filter((l) => /^\s*!/.test(l)).slice(0, 3).map((l) => l.trim().replace(/^!\s*/, '')).join(' | ');
         // The checker's own words can name the card that leaked, so they go to the helper's console only:
         // the message a client (and match.json) gets says which game and nothing about what failed.
@@ -368,7 +438,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       })().finally(() => { entry.pending = null; });
       await entry.pending;
       last = { upTo: entry.upTo, failed: entry.failed };
-      if (entry.failed || entry.upTo >= want) return last;
+      if (entry.failed || entry.upTo >= want || entry.seen >= want) return last;
       // re-recorded while it ran: look again (a bounded number of times, then send what passed)
     }
     return last;
@@ -398,11 +468,12 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       writeFileSync(join(dir, 'match.json'), `${JSON.stringify(firstMatch(r), null, 1)}\n`);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
+      const groups = join(dir, '.child-groups');
       let child;
       try {
-        child = spawn(file, args, { cwd: root, detached: true, stdio: ['ignore', fd, fd], env: process.env });
+        child = spawn(file, args, { cwd: root, detached: true, stdio: ['ignore', fd, fd], env: { ...process.env, MTGTABLE_CHILD_GROUPS: groups } });
       } finally { closeSync(fd); }
-      const me = { id: r.id, child, startedAt: Date.now() };
+      const me = { id: r.id, child, groups, startedAt: Date.now() };
       running = me;
       child.on('error', (e) => {
         // A child that never started fires no 'exit': free the slot and say why here.

@@ -10,7 +10,10 @@ import { test } from 'node:test';
 
 import { Arm, parseArm } from '../lib/arms.mjs';
 import { checkChoice, classifyAsk, classifyInput, movesFor, tokenFor } from '../lib/decision.mjs';
-import { claudeArgs, fakeChoice, makeFakeModel, parseCliOutput, thinkingEnv } from '../lib/model.mjs';
+import { claudeArgs, fakeChoice, makeClaudeModel, makeFakeModel, parseCliOutput, thinkingEnv } from '../lib/model.mjs';
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { hasNonManaActivated, oracleFromObjects } from '../lib/oracle.mjs';
 import { snapshot } from '../lib/prompt.mjs';
 import { parseReply } from '../lib/reply.mjs';
@@ -260,6 +263,54 @@ test('the CLI\'s JSON result: text, usage, session id', () => {
   const arr = parseCliOutput(JSON.stringify([{ type: 'system' }, { type: 'result', is_error: false, result: 'choice: 1' }]));
   assert.equal(arr.text, 'choice: 1');
   assert.throws(() => parseCliOutput(JSON.stringify({ type: 'result', is_error: true, result: 'Not logged in' })), /Not logged in/);
+});
+
+/**
+ * A fake `claude` that answers --help, then starts a grandchild that ignores SIGTERM and never
+ * answers: the pids land in its working directory.  -> {bin, dir, pids()}.
+ */
+function hangingClaude() {
+  const dir = mkdtempSync(join(tmpdir(), 'llm-seat-kill-'));
+  const bin = join(dir, 'claude');
+  writeFileSync(bin, `#!/usr/bin/env bash
+[ "\${1:-}" = --help ] && { echo "usage: claude"; exit 0; }
+trap '' TERM
+echo $$ > claude.pid
+bash -c 'trap "" TERM; echo $$ > grand.pid; while :; do sleep 0.1; done' &
+cat > /dev/null
+while :; do sleep 0.1; done
+`);
+  chmodSync(bin, 0o755);
+  const pid = (f) => (existsSync(join(dir, f)) ? Number(readFileSync(join(dir, f), 'utf8').trim()) : null);
+  return { bin, dir, pids: () => [pid('claude.pid'), pid('grand.pid')] };
+}
+const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
+const until = async (f, ms = 3000) => { const t = Date.now(); while (Date.now() - t < ms && !f()) await new Promise((r) => setTimeout(r, 25)); return f(); };
+
+test('the CLI wrapper kills claude -p\'s whole process group -- a grandchild too -- on an abort and on a timeout, and says which', async () => {
+  for (const how of ['abort', 'timeout']) {
+    const h = hangingClaude();
+    const groups = join(h.dir, 'groups');
+    const before = process.env.MTGTABLE_CHILD_GROUPS;
+    process.env.MTGTABLE_CHILD_GROUPS = groups;
+    try {
+      const m = makeClaudeModel({ model: 'haiku', cwd: h.dir, bin: h.bin, timeoutS: how === 'timeout' ? 1 : 60 });
+      const ac = new AbortController();
+      const p = m.call({ system: 'S', user: 'U', signal: ac.signal });
+      assert.ok(await until(() => h.pids().every((x) => x !== null)), 'the fake claude and its grandchild started');
+      const [c, g] = h.pids();
+      assert.deepEqual(readdirSync(groups), [String(c)], 'its group is registered by its pgid while it runs');
+      if (how === 'abort') ac.abort(new Error('the run stopped'));
+      const e = await p.then(() => null, (x) => x);
+      assert.ok(e instanceof Error && e.killed === how, `rejected, tagged killed: ${how} (${e?.message})`);
+      assert.ok(await until(() => !alive(c) && !alive(g)), `${how}: the CLI and its grandchild (both ignore SIGTERM) are gone`);
+      assert.deepEqual(readdirSync(groups), [], 'and the registration with them');
+    } finally {
+      if (before === undefined) delete process.env.MTGTABLE_CHILD_GROUPS; else process.env.MTGTABLE_CHILD_GROUPS = before;
+      for (const x of h.pids()) if (x && x > 1) { try { process.kill(x, 'SIGKILL'); } catch { /* gone */ } }
+      rmSync(h.dir, { recursive: true, force: true });
+    }
+  }
 });
 
 test('the fake model picks the first option that is not the default', () => {

@@ -293,6 +293,17 @@ warning. The shape is legitimately reachable (Opposition Agent, Bribery, Gonti)
 and **nothing in the repo passes it**, so the day a recording needs it is the day
 someone types it on the command line and says why in the commit message.
 
+`--partial` is the watch runner's flag (D440, `tools/watch-runner.mjs`) and is
+safe to pass only on a prefix of a game still being written. It skips the three
+coverage checks (no state frames, nothing redacted, no named card in the
+viewer's hand) and leaves undecided the complaints a later line could cure (A4/A6
+on a last `state` whose `ask` may be the next line; an M55 decision whose next
+state is not written yet); every leak rule and every exact-shape rule fails a
+prefix as it fails a whole file. Exit 0 is a full pass, 3 a pass that stops at
+`decided=<bytes>` or skipped a coverage check, 1 a failure. A finished recording
+is still checked without it. `check-redaction-selftest.mjs` holds every control
+to the same verdict under it and sweeps prefixes of the committed recordings.
+
 ## The coach helper — the conventions D292 added
 
 `tools/coach-helper.mjs` lets ForgeCoach coach through the Claude Code CLI the
