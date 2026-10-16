@@ -38,9 +38,11 @@
 // THE CARDS (cards.tsv), one row per band and card (basic lands left out): the decks and deck-games
 // that held it, its wins, its win rate when in the deck, that rate shrunk toward 0.5 with a Beta
 // prior of strength --shrink (20) deck-games (meta.ts's rule, m = 0.5 within a band), and the means,
-// over its deck-games, of the context: its deck's main share, colours with 3+ spells, the prior's k,
-// land count, mean mana value, card-flow count, fixers, and the opponent's main share and colours;
-// and the share of its deck-games where it came in as a CROSS or FILL card.  Report only: a row
+// over its deck-games, of the context (CTX_COLUMNS): its deck's main share, colours with 3+ spells,
+// number of colours, the prior's k, land count, mean mana value and mana-value histogram (0..5, 6+),
+// creatures, X spells, card-flow count, fixers (and those that reach two of its colours), each
+// colour's pip share, and the opponent's main share and colours; and the share of its deck-games
+// where it came in as a CROSS or FILL card.  Report only: a row
 // decides nothing, and a surprise is a candidate until it holds on fresh seeds (D447).
 
 import fs from 'node:fs';
@@ -93,10 +95,35 @@ export function cellOf(a: Acc, boot: number, seed: number, stream: string): Cell
 
 export interface ReadOptions { boot: number; bootSeed: number; shrink: number }
 
+/**
+ * The context columns of cards.tsv: each the mean, over the card's deck-games, of a variable of its own
+ * deck (or, `opp_`, of its opponent's), null where no deck-game has it (a deck with no pip has no main
+ * share; a v1 decks.jsonl has none of the v2 variables).  The deck's variables are decks.jsonl's.
+ */
+export const CTX_COLUMNS = [
+  'main_share', 'colours_with3', 'n_colours', 'makeup_k', 'lands', 'avg_mv', 'mv0', 'mv1', 'mv2', 'mv3', 'mv4', 'mv5', 'mv6p', 'creatures', 'x_spells',
+  'card_flow', 'fixers', 'fixers_real', 'share_w', 'share_u', 'share_b', 'share_r', 'share_g', 'opp_main_share', 'opp_colours_with3',
+] as const;
+export type CtxColumn = (typeof CTX_COLUMNS)[number];
+
+/** One deck-game's context: its deck d against opp. */
+export function contextOf(d: DeckRecord, opp: DeckRecord): Record<CtxColumn, number | null> {
+  const n = (x: number | undefined | null): number | null => (typeof x === 'number' && Number.isFinite(x) ? x : null);
+  const h = (b: number): number | null => n(d.mvHist?.[b]);
+  return {
+    main_share: n(d.profile.mainShare), colours_with3: d.profile.coloursWith3, n_colours: n(d.nColours), makeup_k: d.makeup.k, lands: d.lands, avg_mv: d.avgMv,
+    mv0: h(0), mv1: h(1), mv2: h(2), mv3: h(3), mv4: h(4), mv5: h(5), mv6p: h(6), creatures: n(d.creatures), x_spells: n(d.xSpells),
+    card_flow: n(d.cardFlow), fixers: d.fixers.length, fixers_real: n(d.fixersReal),
+    share_w: d.profile.pipShare.W, share_u: d.profile.pipShare.U, share_b: d.profile.pipShare.B, share_r: d.profile.pipShare.R, share_g: d.profile.pipShare.G,
+    opp_main_share: n(opp.profile.mainShare), opp_colours_with3: opp.profile.coloursWith3,
+  };
+}
+
 export interface CardRow {
   band: Band; card: string; decks: number; deckGames: number; decisive: number; wins: number; wr: number | null; wrShrunk: number | null;
-  mainShare: number | null; coloursWith3: number; makeupK: number; lands: number; avgMv: number; cardFlow: number; fixers: number;
-  oppMainShare: number | null; oppColoursWith3: number; crossShare: number; fillShare: number;
+  /** CTX_COLUMNS' means over the card's deck-games. */
+  ctx: Record<CtxColumn, number | null>;
+  crossShare: number; fillShare: number;
 }
 
 export interface CensusRead {
@@ -148,8 +175,8 @@ export function dedupe(decks: DeckRecord[], rows: GameRowOut[], o: { mixedPilots
 export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptions): { doc: CensusRead; cards: CardRow[] } {
   const byId = new Map(decks.map((d) => [d.id, d]));
   const bands: CensusRead['bands'] = {};
-  const cardAcc = new Map<string, { band: Band; card: string; decks: Set<string>; g: number; dec: number; wins: number; ctx: number[]; nOpp: number; cross: number; fill: number }>();
-  const CTX = 10;
+  const cardAcc = new Map<string, { band: Band; card: string; decks: Set<string>; g: number; dec: number; wins: number; sum: number[]; n: number[]; cross: number; fill: number }>();
+  const CTX = CTX_COLUMNS.length;
   const used = rows.filter((r) => byId.has(r.a) && byId.has(r.b));
   for (const band of BANDS) {
     const bRows = used.filter((r) => (byId.get(r.a) as DeckRecord).band === band);
@@ -180,17 +207,15 @@ export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptio
         }
         const won = isDec && r.winner === side ? 1 : 0;
         const crossSet = new Set(d.cross), fillSet = new Set(d.fill);
+        const ctx = contextOf(d, opp);
         for (const name of [...d.spells, ...d.fixers]) {
           const key = `${band}\t${name}`;
           let c = cardAcc.get(key);
-          if (!c) { c = { band, card: name, decks: new Set(), g: 0, dec: 0, wins: 0, ctx: new Array(CTX).fill(0) as number[], nOpp: 0, cross: 0, fill: 0 }; cardAcc.set(key, c); }
+          if (!c) { c = { band, card: name, decks: new Set(), g: 0, dec: 0, wins: 0, sum: new Array(CTX).fill(0) as number[], n: new Array(CTX).fill(0) as number[], cross: 0, fill: 0 }; cardAcc.set(key, c); }
           c.decks.add(id);
           c.g++;
           if (isDec) { c.dec++; c.wins += won; }
-          const v = [d.profile.mainShare ?? NaN, d.profile.coloursWith3, d.makeup.k, d.lands, d.avgMv, d.cardFlow, d.fixers.length, opp.profile.mainShare ?? NaN, opp.profile.coloursWith3, 0];
-          for (let i = 0; i < CTX; i++) c.ctx[i] = (c.ctx[i] as number) + (Number.isNaN(v[i]) ? 0 : (v[i] as number));
-          if (d.profile.mainShare === null) c.ctx[9] = (c.ctx[9] as number) + 1;     // deck-games with no main share
-          if (opp.profile.mainShare !== null) c.nOpp++;
+          CTX_COLUMNS.forEach((col, i) => { const x = ctx[col]; if (x !== null) { c.sum[i] = (c.sum[i] as number) + x; c.n[i] = (c.n[i] as number) + 1; } });
           if (crossSet.has(name)) c.cross++;
           if (fillSet.has(name)) c.fill++;
         }
@@ -208,25 +233,20 @@ export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptio
       byColours: cells('byColours', ['0', '1', '2', '3', '4', '5']), byPriorK: cells('byPriorK', ['1', '2', '3', '4', '5']), byMainShare: cells('byMainShare', SHARE_BINS),
     };
   }
-  const cards: CardRow[] = [...cardAcc.values()].map((c) => {
-    const mainN = c.g - (c.ctx[9] as number);
-    return {
-      band: c.band, card: c.card, decks: c.decks.size, deckGames: c.g, decisive: c.dec, wins: c.wins,
-      wr: c.dec ? r4(c.wins / c.dec) : null, wrShrunk: r4((c.wins + o.shrink * 0.5) / (c.dec + o.shrink)),
-      mainShare: mainN > 0 ? r4((c.ctx[0] as number) / mainN) : null, coloursWith3: r4((c.ctx[1] as number) / c.g), makeupK: r4((c.ctx[2] as number) / c.g),
-      lands: r4((c.ctx[3] as number) / c.g), avgMv: r4((c.ctx[4] as number) / c.g), cardFlow: r4((c.ctx[5] as number) / c.g), fixers: r4((c.ctx[6] as number) / c.g),
-      oppMainShare: c.nOpp > 0 ? r4((c.ctx[7] as number) / c.nOpp) : null, oppColoursWith3: r4((c.ctx[8] as number) / c.g),
-      crossShare: r4(c.cross / c.g), fillShare: r4(c.fill / c.g),
-    };
-  }).sort((x, y) => (x.band === y.band ? (x.card < y.card ? -1 : x.card > y.card ? 1 : 0) : BANDS.indexOf(x.band) - BANDS.indexOf(y.band)));
+  const cards: CardRow[] = [...cardAcc.values()].map((c) => ({
+    band: c.band, card: c.card, decks: c.decks.size, deckGames: c.g, decisive: c.dec, wins: c.wins,
+    wr: c.dec ? r4(c.wins / c.dec) : null, wrShrunk: r4((c.wins + o.shrink * 0.5) / (c.dec + o.shrink)),
+    ctx: Object.fromEntries(CTX_COLUMNS.map((col, i) => [col, (c.n[i] as number) > 0 ? r4((c.sum[i] as number) / (c.n[i] as number)) : null])) as Record<CtxColumn, number | null>,
+    crossShare: r4(c.cross / c.g), fillShare: r4(c.fill / c.g),
+  })).sort((x, y) => (x.band === y.band ? (x.card < y.card ? -1 : x.card > y.card ? 1 : 0) : BANDS.indexOf(x.band) - BANDS.indexOf(y.band)));
   return { doc: { v: 1, decision: 'D447', games: used.length, decks: decks.length, options: o, bands, cards: cards.length }, cards };
 }
 
-export const CARD_COLUMNS = ['band', 'card', 'decks', 'deck_games', 'decisive', 'wins', 'wr', 'wr_shrunk', 'main_share', 'colours_with3', 'makeup_k', 'lands', 'avg_mv', 'card_flow', 'fixers', 'opp_main_share', 'opp_colours_with3', 'cross_share', 'fill_share'] as const;
+export const CARD_COLUMNS = ['band', 'card', 'decks', 'deck_games', 'decisive', 'wins', 'wr', 'wr_shrunk', ...CTX_COLUMNS, 'cross_share', 'fill_share'] as const;
 
 export function cardsTsv(rows: CardRow[]): string {
   const v = (x: number | null): string => (x === null ? '' : String(x));
-  return `${CARD_COLUMNS.join('\t')}\n${rows.map((r) => [r.band, r.card, r.decks, r.deckGames, r.decisive, r.wins, v(r.wr), v(r.wrShrunk), v(r.mainShare), r.coloursWith3, r.makeupK, r.lands, r.avgMv, r.cardFlow, r.fixers, v(r.oppMainShare), r.oppColoursWith3, r.crossShare, r.fillShare].join('\t')).join('\n')}\n`;
+  return `${CARD_COLUMNS.join('\t')}\n${rows.map((r) => [r.band, r.card, r.decks, r.deckGames, r.decisive, r.wins, v(r.wr), v(r.wrShrunk), ...CTX_COLUMNS.map((c) => v(r.ctx[c])), r.crossShare, r.fillShare].join('\t')).join('\n')}\n`;
 }
 
 export function spectrumMd(doc: CensusRead): string {

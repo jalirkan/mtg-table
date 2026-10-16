@@ -32,9 +32,20 @@
 // `first` is read back from the game (onPlayVerified).  No recording, no frame log: numbers only.
 // The decks' lists are decks.jsonl's, bound by its sha256 in <out>/plan.json.
 //
+// ENGINE ERRORS (a worker died, or gave no game row) are retried ONCE, on fresh workers after the run's
+// other games, and the row written is the retry's, marked `retried: true`; a game that errs twice keeps
+// its engineError and counts as played (census-read leaves it out).  A timeout is a result, never retried.
+//
 // RESUMABLE.  plan.json holds the options; a second run with the same --out and the same options
 // skips every game whose row is in games.jsonl (a torn last line is cut off first) and plays the
-// rest; different options are refused.  census-play.json is the run's tally, rewritten at the end.
+// rest; different options are refused, except a LARGER --pairs on the same seed: the pairing is
+// prefix-stable (game g's pair does not depend on M), so the run is extended to the new M, plan.json
+// records it under `extended`, and only the new games are played.  A smaller --pairs is refused.
+// census-play.json is the run's tally, rewritten at the end.
+//
+// THE PLAY/DRAW.  Side a is on the play when the game's seed is even, so over a run each side is on
+// the play in half the games, but a given deck is not balanced between play and draw: `first` is
+// recorded on every row, and a reader that wants it controls for it (D447).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -67,6 +78,18 @@ export function pairingOf(ids: readonly string[], games: number, seed: number): 
     at += 2;
   }
   return out;
+}
+
+/** Whether a run's plan.json (`was`) admits these options (`now`): the same run, a larger --pairs on the same seed (extended), or not (error). */
+export function planExtension(was: Record<string, unknown>, now: Record<string, unknown>): { extended: boolean; error: string | null } {
+  const keys = ['decksSha', 'replaySha', 'seed', 'pairs', 'policyA', 'policyB', 'games'] as const;
+  const diff = keys.filter((k) => JSON.stringify(was[k]) !== JSON.stringify(now[k]));
+  if (!diff.length) return { extended: false, error: null };
+  const grows = now.replay === null && was.replay === null && diff.every((k) => k === 'pairs' || k === 'games')
+    && typeof was.pairs === 'number' && typeof now.pairs === 'number' && now.pairs > was.pairs;
+  if (grows) return { extended: true, error: null };
+  const text = diff.map((k) => `${k} ${JSON.stringify(was[k])} -> ${JSON.stringify(now[k])}`).join(', ');
+  return { extended: false, error: typeof was.pairs === 'number' && typeof now.pairs === 'number' && now.pairs < was.pairs && diff.every((k) => k === 'pairs' || k === 'games') ? `${text}: a smaller --pairs would leave played games outside the plan` : text };
 }
 
 /** CubeLab.java's rule for game 1 of a seed: side A on the play exactly when the seed is even. */
@@ -106,6 +129,8 @@ export interface GameRowOut {
   searchA?: SearchSummary;
   searchB?: SearchSummary;
   replayOf?: string;
+  /** The game hit an engine error and was played again (its row is the retry's). */
+  retried?: boolean;
 }
 
 /** A worker's match result (one game) as the census's row. */
@@ -195,9 +220,13 @@ export async function censusPlayCommand(repo: string, f: Map<string, string[]>, 
   const planFile = path.join(out, 'plan.json');
   if (fs.existsSync(planFile)) {
     const was = JSON.parse(fs.readFileSync(planFile, 'utf8')) as Record<string, unknown>;
-    const keys = ['decksSha', 'replaySha', 'seed', 'pairs', 'policyA', 'policyB', 'games'] as const;
-    const diff = keys.filter((k) => JSON.stringify(was[k]) !== JSON.stringify(planDoc[k]));
-    if (diff.length) throw new Error(`census-play: ${outArg} holds another run (${diff.map((k) => `${k} ${JSON.stringify(was[k])} -> ${JSON.stringify(planDoc[k])}`).join(', ')}); use another --out`);
+    const ext = planExtension(was, planDoc);
+    if (ext.error) throw new Error(`census-play: ${outArg} holds another run (${ext.error}); use another --out`);
+    if (ext.extended) {
+      const extended = [...((was.extended as unknown[] | undefined) ?? []), { from: was.pairs, to: pairs, at: new Date().toISOString() }];
+      fs.writeFileSync(planFile, `${JSON.stringify({ ...was, pairs, games: plan.length, extended }, null, 2)}\n`);
+      say(`census-play: extending ${outArg} from ${String(was.pairs)} to ${pairs} games (the pairing is prefix-stable: the first ${String(was.pairs)} are the same games)`);
+    }
   } else fs.writeFileSync(planFile, `${JSON.stringify(planDoc, null, 2)}\n`);
   const gamesFile = path.join(out, 'games.jsonl');
   const done = doneGames(gamesFile);
@@ -220,18 +249,34 @@ export async function censusPlayCommand(repo: string, f: Map<string, string[]>, 
   const homes = env.homes.slice(0, Math.max(1, Math.min(jobs, jobsList.length)));
   const t0 = Date.now();
   let n = 0;
+  const retry: MatchJob[] = [];
   const fd = fs.openSync(gamesFile, 'a');
   try {
     await runPool({ ...env, homes }, jobsList, path.join(out, 'logs'), (job, r, worker) => {
       const p = byJob.get(job.id) as PlannedGame;
       const row = rowOf(p, r, worker, policyA, policyB, replay ? `${planDoc.replay}#g${p.g}` : undefined);
+      if (row.engineError) {                                        // retried once, after the others; no row yet
+        retry.push(job);
+        say(`  g${p.g} ENGINE ERROR: ${row.engineError} (will retry once)`);
+        return;
+      }
       fs.writeSync(fd, `${JSON.stringify(row)}\n`);
       n++;
-      if (n % 100 === 0 || n === jobsList.length || row.engineError) {
+      if (n % 100 === 0 || n === jobsList.length) {
         const h = (Date.now() - t0) / 3_600_000;
-        say(`[${n}/${jobsList.length}] ${(n / h).toFixed(0)} games/h${row.engineError ? `  g${p.g} ENGINE ERROR: ${row.engineError}` : ''}`);
+        say(`[${n}/${jobsList.length}] ${(n / h).toFixed(0)} games/h`);
       }
     }, say);
+    if (retry.length) {
+      say(`census-play: retrying ${retry.length} game(s) that hit an engine error, once, on fresh workers`);
+      await runPool({ ...env, homes: env.homes.slice(0, Math.max(1, Math.min(jobs, retry.length))) }, retry, path.join(out, 'logs'), (job, r, worker) => {
+        const p = byJob.get(job.id) as PlannedGame;
+        const row: GameRowOut = { ...rowOf(p, r, worker, policyA, policyB, replay ? `${planDoc.replay}#g${p.g}` : undefined), retried: true };
+        fs.writeSync(fd, `${JSON.stringify(row)}\n`);
+        n++;
+        say(`  g${p.g} retried: ${row.engineError ? `ENGINE ERROR again (${row.engineError}); marked` : 'played'}`);
+      }, say);
+    }
   } finally {
     fs.closeSync(fd);
   }
@@ -246,12 +291,13 @@ export async function censusPlayCommand(repo: string, f: Map<string, string[]>, 
 
 /** census-play.json: the folder's rows counted, and this session's rate. */
 export function writeTally(out: string, gamesFile: string, session: { games: number; ms: number; workers: number } | null, say: (s: string) => void): void {
-  const t = { games: 0, decisive: 0, draws: 0, timeouts: 0, engineErrors: 0, errors: 0, firstWins: 0, aWins: 0, searchSeats: 0, turnsSum: 0 };
+  const t = { games: 0, decisive: 0, draws: 0, timeouts: 0, engineErrors: 0, errors: 0, firstWins: 0, aWins: 0, searchSeats: 0, turnsSum: 0, retried: 0 };
   if (fs.existsSync(gamesFile)) {
     for (const l of fileLines(gamesFile, { complete: true })) {
       if (!l) continue;
       const r = JSON.parse(l) as GameRowOut;
       t.games++;
+      if (r.retried) t.retried++;
       if (r.engineError) { t.engineErrors++; continue; }
       if (r.error) t.errors++;
       if (r.timeout) t.timeouts++;
@@ -269,7 +315,7 @@ export function writeTally(out: string, gamesFile: string, session: { games: num
   const prev = fs.existsSync(prevFile) ? (JSON.parse(fs.readFileSync(prevFile, 'utf8')) as { sessions?: unknown[] }) : {};
   const sessions = [...(prev.sessions ?? []), ...(session ? [{ ...session, gamesPerHour: session.ms > 0 ? Math.round(session.games / (session.ms / 3_600_000)) : null, at: new Date().toISOString() }] : [])];
   const doc = {
-    v: 1, games: t.games, decisive: t.decisive, draws: t.draws, timeouts: t.timeouts, engineErrors: t.engineErrors, gameErrors: t.errors,
+    v: 1, games: t.games, decisive: t.decisive, draws: t.draws, timeouts: t.timeouts, engineErrors: t.engineErrors, retried: t.retried, gameErrors: t.errors,
     engineErrorRate: t.games ? Math.round((t.engineErrors / t.games) * 1e6) / 1e6 : 0,
     firstPlayerWinRate: t.decisive ? Math.round((t.firstWins / t.decisive) * 1e4) / 1e4 : null,
     meanTurns: t.games - t.engineErrors > 0 ? Math.round((t.turnsSum / (t.games - t.engineErrors)) * 100) / 100 : null,

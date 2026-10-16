@@ -48,6 +48,11 @@
 //    exceed L - F, or a list ran dry) is REJECTED and redrawn with the same makeup (a new stream),
 //    up to 50 times, then with a new makeup; every rejection is counted.
 //
+// EACH DECK'S ROW (decks.jsonl, version 2) carries, beside its list and realised profile, the variables
+// the model needs to tell a card's value from a deck that happened to cohere (deckVars): the number of
+// colours, creatures, the mana-value histogram (0..5, 6+), X spells, card flow (#153's rule, isCardFlow
+// on the script's front face: 40 library cards) and the fixers that reach two of its colours.
+//
 // THE BANDS are census.tsv's (D445), exclusive, as `sample` draws them.  The powered band has 41
 // cards (37 eligible), too few for a deck, so its pool is powered united with legacy, its FILL band,
 // drawn as one uniform pool (MIN_BAND_POOL); its cross-band neighbour is then peasant.
@@ -67,8 +72,9 @@ import { parseLibraryPool } from './library-candidates.ts';
 import { rng, shuffle, type Rng } from './rng.ts';
 import { eligibleFor, FILL_ORDER, joinCensus, NEIGHBOURS, type SampleCard } from './sample.ts';
 import { openForgeScripts, type ForgeScripts } from '../forge-scripts.ts';
+import { isCardFlow } from './cardflow.ts';
 
-export const DECK_CENSUS_VERSION = 1;
+export const DECK_CENSUS_VERSION = 2;
 export const DECK_SIZE = 40;
 export const SPELLS_DRAWN = 25;
 export const LAND_BASE = 17;
@@ -81,12 +87,25 @@ export const MAX_CARD_ATTEMPTS = 50;
 export const MIN_BAND_POOL = 200;
 export const DEFAULT_DECK_CROSS = 0.10;
 
-/** The Synergy v3 study's 17 card-flow cards (pc-results/study/synergy-v3-design.md section 1); #153's rule replaces this list when it merges. */
+/**
+ * The Synergy v3 study's 17 card-flow cards (pc-results/study/synergy-v3-design.md section 1).  Card flow
+ * is counted by #153's oracle-text rule (cardflow.ts isCardFlow, D446 point 5: 40 library cards), read
+ * here off each card's Forge script; this list is the test's check that the rule still covers the study.
+ */
 export const CARD_FLOW_STUDY: readonly string[] = [
   'Opt', 'Consider', 'Brainstorm', 'Ponder', 'Thought Scour', 'Deep Analysis', 'Mulldrifter', 'Faithless Looting', 'Cathartic Reunion',
   'Unexpected Windfall', "Mishra's Bauble", 'Chromatic Star', 'Prophetic Prism', 'Ichor Wellspring', 'Candy Trail', 'Village Rites', 'Deadly Dispute',
 ];
-const FLOW = new Set(CARD_FLOW_STUDY);
+
+/** isCardFlow's facts from a Forge script's front face (name, Types, Oracle), as the engine's facts call gives them. */
+export function scriptFlowFact(script: string): { name: string; oracle: string; type: string; land: boolean; creature: boolean; planeswalker: boolean } {
+  const front = script.split(/\nALTERNATE\n/)[0] as string;
+  const type = /^Types:(.*)$/m.exec(front)?.[1]?.trim() ?? '';
+  return {
+    name: /^Name:(.*)$/m.exec(front)?.[1]?.trim() ?? '', oracle: /^Oracle:(.*)$/m.exec(front)?.[1] ?? '', type,
+    land: /\bLand\b/.test(type), creature: /\bCreature\b/.test(type), planeswalker: /\bPlaneswalker\b/.test(type),
+  };
+}
 
 // ---------------------------------------------------------------- costs
 
@@ -164,7 +183,12 @@ export function scriptCost(script: string): Cost {
  */
 export interface LandMana { direct: string; fetch: { types: string; basicOnly: boolean } | null; types: string }
 
-export interface CensusCard extends SampleCard { cost: Cost; mana?: LandMana }
+export interface CensusCard extends SampleCard {
+  cost: Cost;
+  mana?: LandMana;
+  /** Card flow by #153's rule (isCardFlow on the script's front face). */
+  flow?: boolean;
+}
 
 const TYPE_COLOUR: Record<string, Colour> = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
 const colourSet = (s: Iterable<string>): string => { const x = new Set(s); return COLOURS.filter((c) => x.has(c)).join(''); };
@@ -440,7 +464,19 @@ export interface DeckRecord {
   /** Mean mana value of the first 23 spells drawn, which set the land count. */
   avgMvDrawn: number;
   profile: Profile;
+  /** The deck's variables beside its profile (v2, the #154 review; the model separates a card's value from a deck that happened to cohere): */
+  /** colours with any pip (profile.pipColours' length); the colour shares are profile.pipShare */
+  nColours: number;
+  /** creature spells */
+  creatures: number;
+  /** the spells' mana values: 0, 1, 2, 3, 4, 5, 6+ */
+  mvHist: number[];
+  /** spells with X in their cost */
+  xSpells: number;
+  /** card-flow spells, by #153's rule (isCardFlow, 40 library cards) */
   cardFlow: number;
+  /** the fixers that reach two or more of the deck's pip colours in this deck (landSources); the rest count as one colour's source */
+  fixersReal: number;
   cross: string[];
   fill: string[];
   /** Every spell castable (rule 4); always the spell count. */
@@ -485,7 +521,7 @@ export function generateDeck(lib: CensusCard[], o: DeckOptions, i: number): Deck
         v: DECK_CENSUS_VERSION, id, band: o.band, seed: o.seed, index: i, makeup: { ...makeup, shares: roundShares(makeup.shares) }, rejections, makeupRedraws: mk,
         main, spells: spells.map((c) => c.name), fixers: plan.fixers.map((f) => f.card.name), basics: plan.basics,
         lands, fixerTarget: plan.fixerTarget, avgMv: r4(mean(spells.map((c) => c.mv))), avgMvDrawn: r4(avgMvDrawn),
-        profile: profileOf(spells), cardFlow: spells.filter((c) => FLOW.has(c.name)).length,
+        profile: profileOf(spells), ...deckVars(spells, plan),
         cross: [...kept, ...plan.fixers].filter((d) => d.role === 'cross').map((d) => d.card.name),
         fill: [...kept, ...plan.fixers].filter((d) => d.role === 'fill').map((d) => d.card.name),
         castable: ok, file: `decks/${id}.dck`,
@@ -493,6 +529,19 @@ export function generateDeck(lib: CensusCard[], o: DeckOptions, i: number): Deck
     }
   }
   throw new Error(`decks: deck ${i} could not be drawn in 1,000 makeups (a bug)`);
+}
+
+/** The per-deck variables beside the profile (DeckRecord's v2 fields). */
+export function deckVars(spells: CensusCard[], plan: Pick<LandPlan, 'fixers' | 'basics'>): Pick<DeckRecord, 'nColours' | 'creatures' | 'mvHist' | 'xSpells' | 'cardFlow' | 'fixersReal'> {
+  const pipColours = profileOf(spells).pipColours;
+  const mvHist = [0, 0, 0, 0, 0, 0, 0];
+  for (const c of spells) { const b = Math.min(6, Math.max(0, Math.floor(c.mv))); mvHist[b] = (mvHist[b] as number) + 1; }
+  const reach = landSources(plan.fixers.map((f) => f.card), plan.basics).reach;
+  return {
+    nColours: pipColours.length, creatures: spells.filter((c) => /\bCreature\b/.test(c.type)).length, mvHist,
+    xSpells: spells.filter((c) => c.cost.x > 0).length, cardFlow: spells.filter((c) => c.flow).length,
+    fixersReal: reach.filter((r) => [...r].filter((x) => pipColours.includes(x)).length >= 2).length,
+  };
 }
 
 function roundShares(s: Partial<Record<Colour, number>>): Partial<Record<Colour, number>> {
@@ -531,7 +580,7 @@ export function censusPopulation(poolText: string, censusText: string, scriptOf:
     if (c.land || !c.supported) return { ...c, cost: NO_COST };
     const script = scriptOf(c.name);
     if (script === null) noScript.push(c.name);
-    return { ...c, cost: script === null ? costFromColours(c.colors) : scriptCost(script) };
+    return { ...c, cost: script === null ? costFromColours(c.colors) : scriptCost(script), flow: script !== null && isCardFlow(scriptFlowFact(script)) };
   });
   return { lib, noScript };
 }
@@ -568,7 +617,9 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   fs.mkdirSync(path.join(out, 'decks'), { recursive: true });
   const o: DeckOptions = { band, seed, crossBand };
   const lines: string[] = [];
-  let rej = 0, redraws = 0, forty = 0, allCastable = 0;
+  let rej = 0, redraws = 0, forty = 0, allCastable = 0, redrawn = 0;
+  const sums = Object.fromEntries(MEAN_KEYS.map((k) => [k, 0])) as Record<(typeof MEAN_KEYS)[number], number>;
+  const mvHist = [0, 0, 0, 0, 0, 0, 0];
   const byK = [0, 0, 0, 0, 0, 0];
   const cc3 = [0, 0, 0, 0, 0, 0];
   const bins: Record<string, number> = Object.fromEntries(MAIN_SHARE_KEYS.map((k) => [k, 0]));
@@ -582,6 +633,9 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
     fs.writeFileSync(path.join(out, d.file), dckText(`census ${d.id}`, d.main, []));
     lines.push(JSON.stringify(d));
     rej += d.rejections; redraws += d.makeupRedraws;
+    if (d.rejections > 0 || d.makeupRedraws > 0) redrawn++;
+    for (const k of MEAN_KEYS) sums[k] += k === 'fixers' ? d.fixers.length : d[k];
+    d.mvHist.forEach((n, b) => { mvHist[b] = (mvHist[b] as number) + n; });
     byK[d.makeup.k] = (byK[d.makeup.k] as number) + 1;
   }
   const jsonl = `${lines.join('\n')}\n`;
@@ -590,9 +644,10 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   const manifest = {
     v: DECK_CENSUS_VERSION, decision: 'D447', band, seed, count, crossBand, poolBands: pool, crossBands: crossBands(pool), fillBands: FILL_ORDER[band].filter((b) => !pool.includes(b)),
     colourlessShare: r4(colourlessShareOf(lib.filter(eligibleFor(false)) as CensusCard[], pool)),
-    rejections: rej, makeupRedraws: redraws, makeupK: { k1: byK[1], k2: byK[2], k3: byK[3], k4: byK[4], k5: byK[5] },
+    rejections: rej, makeupRedraws: redraws, decksRedrawn: redrawn, makeupK: { k1: byK[1], k2: byK[2], k3: byK[3], k4: byK[4], k5: byK[5] },
     decksOf40: forty, decksAllCastable: allCastable, coloursWith3: { c0: cc3[0], c1: cc3[1], c2: cc3[2], c3: cc3[3], c4: cc3[4], c5: cc3[5] }, mainShare: bins,
     meanCross: r4(lines.reduce((a, l) => a + (JSON.parse(l) as DeckRecord).cross.length, 0) / Math.max(1, count)),
+    means: Object.fromEntries(MEAN_KEYS.map((k) => [k, r4(sums[k] / count)])), mvHist,
     censusSha: sha12(censusText), poolSha: sha12(poolText), scripts: scripts.path, noScript, decksSha: sha12(jsonl),
     rules: RULES_TEXT,
   };
@@ -600,6 +655,9 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   say(`decks: ${count} ${band} deck(s), seed ${seed}, into ${path.relative(repo, out) || '.'}: k = 1..5 ${byK.slice(1).join(' / ')}; ${rej} rejected draw(s), ${redraws} new makeup(s); pool ${pool.join('+')}, cross ${crossBands(pool).join('+') || '-'}${noScript.length ? `; ${noScript.length} card(s) with no script, costed by colour: ${noScript.slice(0, 5).join(', ')}` : ''}`);
   return 0;
 }
+
+/** The per-deck variables decks.json averages. */
+const MEAN_KEYS = ['lands', 'fixers', 'fixersReal', 'nColours', 'creatures', 'xSpells', 'cardFlow', 'avgMv'] as const;
 
 /** The main-share bins census-read reports (its SHARE_BINS), counted in decks.json for the prior's coverage. */
 export const MAIN_SHARE_KEYS = ['lt40', 's40_50', 's50_60', 's60_70', 's70_80', 's80_90', 's90_100', 'eq100'] as const;

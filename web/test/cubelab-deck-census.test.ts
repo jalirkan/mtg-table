@@ -40,8 +40,8 @@ import {
   castable, censusPopulation, CARD_FLOW_STUDY, landSources, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
   scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
 } from '../../tools/cubelab/deckcensus.ts';
-import { pairingOf, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
-import { censusReadCommand, dedupe, readCensus, shareBin, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
+import { pairingOf, planExtension, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
+import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { openForgeScripts } from '../../tools/forge-scripts.ts';
 import { BANDS } from '../../tools/cubelab/census.ts';
@@ -307,9 +307,33 @@ test('a fetcher or a cycler is a source only of the colours of the deck\'s lands
   assert.ok(castable(wug[20] as CensusCard, sourcesOf(p)));
 });
 
-test('card flow: the study\'s list is library cards', () => {
+test('card flow is #153\'s rule on the scripts: 40 library cards, the study\'s 17 among them', () => {
   assert.equal(CARD_FLOW_STUDY.length, 17);
-  for (const n of CARD_FLOW_STUDY) assert.ok(byName.has(n), `${n} is in the library`);
+  for (const n of CARD_FLOW_STUDY) assert.ok(byName.get(n)?.flow, `${n}: the rule still covers the study`);
+  const flow = lib.filter((c) => c.flow).map((c) => c.name);
+  assert.equal(flow.length, 40, `the rule names 40 library cards (D446 point 5): ${flow.length}`);
+  for (const n of ['Preordain', "Night's Whisper", "Sensei's Divining Top", 'Wheel of Fortune']) assert.ok(flow.includes(n), n);
+  for (const n of ['Counterspell', 'Lightning Bolt', 'Mulldrifter']) assert.equal(byName.get(n)?.flow, n === 'Mulldrifter', n);
+});
+
+test('every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers', () => {
+  for (const band of BANDS) {
+    for (let i = 1; i <= 60; i++) {
+      const d = generateDeck(lib, { band, seed: 13, crossBand: 0.1 }, i);
+      const spells = d.spells.map((n) => byName.get(n) as CensusCard);
+      assert.equal(d.v, 2);
+      assert.equal(d.mvHist.length, 7);
+      assert.equal(d.mvHist.reduce((a, b) => a + b, 0), d.spells.length, `${d.id}: every spell in the histogram`);
+      assert.equal(d.creatures, spells.filter((c) => /Creature/.test(c.type)).length);
+      assert.equal(d.xSpells, spells.filter((c) => c.cost.x > 0).length);
+      assert.equal(d.cardFlow, spells.filter((c) => c.flow).length);
+      assert.equal(d.nColours, d.profile.pipColours.length);
+      assert.ok(d.fixersReal <= d.fixers.length);
+      assert.ok(Math.abs(Object.values(d.profile.pipShare).reduce((a, b) => a + b, 0) - (d.nColours ? 1 : 0)) < 0.001, `${d.id}: colour shares`);
+    }
+  }
+  const legacy = Array.from({ length: 200 }, (_, i) => generateDeck(lib, { band: 'legacy', seed: 13, crossBand: 0.1 }, i + 1));
+  assert.ok(legacy.some((d) => d.xSpells > 0) && legacy.some((d) => d.cardFlow > 0), 'X spells and card flow occur');
 });
 
 // ---------------------------------------------------------------- the pairing
@@ -336,6 +360,17 @@ test('the pairing: deterministic, no self-pairs, every deck within one game of 2
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused', () => {
+  const ids = Array.from({ length: 37 }, (_, i) => `pauper-3-${String(i + 1).padStart(5, '0')}`);
+  assert.deepEqual(pairingOf(ids, 500, 3).slice(0, 120), pairingOf(ids, 120, 3), 'the first 120 games of 500 are the 120-game run');
+  const was = { decksSha: 'x', replaySha: null, replay: null, seed: 3, pairs: 120, policyA: 'plain', policyB: 'plain', games: 120 };
+  assert.deepEqual(planExtension(was, { ...was }), { extended: false, error: null });
+  assert.deepEqual(planExtension(was, { ...was, pairs: 500, games: 500 }), { extended: true, error: null });
+  assert.match(planExtension(was, { ...was, pairs: 100, games: 100 }).error ?? '', /smaller --pairs/);
+  assert.ok(planExtension(was, { ...was, seed: 4, pairs: 500, games: 500 }).error);
+  assert.ok(planExtension(was, { ...was, policyA: 'search' }).error);
+});
+
 test('the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them', () => {
   const s = searchSummary({ 'search.p.considered': 10, 'search.a.considered': 4, 'search.b.considered': 6, 'search.p.changed': 3, 'search.b.changed': 1, 'search.p.us': 15_000_000, 'search.a.us': 2_000_000, 'search.b.us': 3_000_000 })!;
   assert.equal(s.searched, 20);
@@ -350,7 +385,8 @@ test('the search summary: searched, changed and ms a decision over p + a + b, as
 function synthDeck(id: string, mainShare: number, coloursWith3: number, k: number, spells: string[]): DeckRecord {
   return {
     v: 1, id, band: 'pauper', seed: 1, index: 0, makeup: { k, colours: 'R', shares: { R: 1 } }, rejections: 0, makeupRedraws: 0, main: [], spells, fixers: [], basics: { W: 0, U: 0, B: 0, R: 16, G: 0 },
-    lands: 16, fixerTarget: 0, avgMv: 2.5, avgMvDrawn: 2.5, cardFlow: 0, cross: [], fill: [], castable: spells.length, file: '',
+    lands: 16, fixerTarget: 0, avgMv: 2.5, avgMvDrawn: 2.5, cardFlow: 0, nColours: 1, creatures: 3, mvHist: [0, 2, 2, 1, 1, 0, 0], xSpells: 0, fixersReal: 0,
+    cross: [], fill: [], castable: spells.length, file: '',
     profile: { pipShare: { W: 0, U: 0, B: 0, R: 1, G: 0 }, mainColour: 'R', mainShare, coloursWith3, pipColours: 'R', spellsByColour: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colourless: 0 },
   };
 }
@@ -395,6 +431,14 @@ test('the read on a synthetic games folder: a planted mono advantage and a plant
   assert.doesNotMatch(text, /NaN|Infinity/);
   JSON.parse(text);
   assert.throws(() => strictJson({ x: Number.NaN }));
+  // cards.tsv carries the deck variables as context columns
+  const tsv = cardsTsv(cards).trim().split('\n').map((l) => l.split('\t'));
+  const head = tsv[0] as string[];
+  for (const col of ['n_colours', 'creatures', 'mv0', 'mv6p', 'x_spells', 'card_flow', 'fixers', 'fixers_real', 'lands', 'share_r']) assert.ok(head.includes(col), col);
+  const bombRow = tsv.find((r) => r[1] === 'Planted Bomb') as string[];
+  assert.equal(bombRow[head.indexOf('creatures')], '3');
+  assert.equal(bombRow[head.indexOf('mv2')], '2');
+  assert.equal(bombRow[head.indexOf('share_r')], '1');
 });
 
 test('census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked', () => {

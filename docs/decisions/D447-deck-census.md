@@ -13,8 +13,9 @@ them, and the drafter is a middleman that decides which decks exist before a gam
 amended: decks are drawn straight from a band's pool at random colour makeups over the whole
 spectrum and played deck against deck. "Mono", "two-colour" and "mostly red with a little white" are
 read off the realised profiles afterwards, as continuous variables, binned only for intervals. The
-old J140 (PR #153's shapes, D446) is withdrawn unposted. #153 stays for the cube-balance side, where
-drafting is the question.
+old J140 (D446's shapes) was withdrawn unposted. #153 is merged: its shapes are an option for cube
+balance, compares and "does this cube draft well", where drafting is the question, and the census uses
+none of them.
 
 **Decision.** Three commands under `tools/cubelab.sh`, and the method, pre-registered here. The
 only rules are mechanical: the prior, the draw, one land formula, castability and the pairing. The
@@ -33,7 +34,13 @@ repeats its rules.
    - every coloured symbol of its cost can be paid: a plain symbol by its colour, a hybrid by
      either colour, a Phyrexian or {2/C} symbol always.
 
-   The costs are Forge's own scripts, read from the zip beside the jar; no engine is booted.
+   The costs are Forge's own scripts, read from the zip beside the jar; no engine is booted. They are
+   read in Forge's own tokens, which carry no slash: `W` a plain pip, `GW` a hybrid, `BP`, `GWP` and
+   `PRG` Phyrexian, `2W` a two-brid, `CW` (colourless-hybrid) counted as a plain pip of its colour, `X`
+   counted for the X-spell count. A **split** card's two faces must both be payable (Fire // Ice needs
+   an Island and a Mountain); an adventure's, a modal double-faced or a transforming card's other face is
+   an option, so only the front counts. **A plain {C} and snow {S} are not counted**: no library card
+   has either, so the gap is latent, and the first card with one needs a rule here before it is drawn.
    25 spells are drawn one at a time without replacement, since the library holds one of each card:
    - A draw is colourless with probability q, the band pool's own share of colourless cards among
      its eligible nonland cards (a card with no printed colour and no coloured pip): pauper 8.4%,
@@ -55,15 +62,25 @@ repeats its rules.
      the pips name two or more colours, the deck takes F = min(supply, round(L × (1 − s_max)))
      fixers. A fixer is a land that makes at least two of those colours, drawn uniformly: the
      band's own first, then `FILL_ORDER`'s (D445's peasant has one such land of its own, so a
-     peasant deck's fixers are mostly pauper's, as a peasant cube's are). A fixer counts as a
-     source of every colour it makes.
-   - **Basics.** The other L − F lands are basics. First, each colour gets the sources its most
-     demanding spell needs: that spell's plain pips of the colour, at least 1, less what the fixers
-     give. Then the basics go one at a time to the colour furthest below its pip share of the
-     basics, ties in WUBRG order.
+     peasant deck's fixers are mostly pauper's, as a peasant cube's are). A fixer is chosen by
+     what it *can* make, directly or by what it can fetch.
+   - **Sources.** A basic is a source of its colour, and a nonbasic of what it taps for (its `Add`
+     clauses, "any color", its basic land types, a Pathway's two faces). A **fetcher or cycler**
+     (a fetchland, a Landscape, Evolving Wilds, Fabled Passage, Ash Barrens' basic landcycling) is a
+     source only of the colours of the deck's lands it can find: a basic of a type it searches for,
+     or, when it is not basics-only, a typed nonbasic of the deck (Flooded Strand finding a Tundra).
+     So a "two-colour fixer" that reaches one colour of its deck counts as one, and each deck records
+     how many of its fixers reach two of its colours (`fixersReal`).
+   - **Basics.** The other L − F lands are basics. First, one at a time, a basic goes to the first
+     colour (WUBRG order) with fewer sources than its most demanding spell needs: that spell's plain
+     pips of the colour, at least 1, sources counted as above, so a splash behind fetchers gets the
+     basic they find. Then the basics go one at a time to the colour furthest below its pip share of
+     the basics, ties in WUBRG order.
    - Mono-coloured utility lands are never drawn. Nonland mana sources are not counted.
-4. **Castability.** A spell is castable when, for each colour, the deck's sources of it number at
-   least the spell's plain pips of it, and each hybrid symbol has a source of one of its colours.
+4. **Castability.** A spell is castable when, for each colour, the deck's sources of it (point 3)
+   number at least the spell's plain pips of it, and each hybrid symbol has a source of one of its
+   colours. The test checks every deck with a checker of its own that shares no code with the
+   generator (a land's colours from its script's ability lines, a spell's from its raw cost tokens).
    Every spell of a deck must be castable. A deck that fails is rejected and redrawn with the same
    makeup on a new stream: when its minimums exceed L − F, or when a list ran dry. After 50
    rejections the makeup itself is redrawn. Every rejection and every new makeup is counted in
@@ -79,8 +96,14 @@ repeats its rules.
    (`rng(S, 'census-play/pairs/<r>')`), and game g is the g-th consecutive pair. A pair of one deck
    against itself takes the next deck instead. After M games every deck has played within one game
    of 2M / N; when 2M / N is a whole number, exactly that many. Game g's seed is S × 1,000,000 + g.
-   It seeds Forge's `MyRandom`, and it puts side a on the play exactly when it is even. Each game is
-   Bo1 between Forge's Default AI and Forge's Default AI, numbers only, with no recording.
+   It seeds Forge's `MyRandom`, and it puts side a on the play exactly when it is even. **The play
+   and the draw are not balanced per deck**: each side is on the play in half the games of a run, but
+   a deck's own split is what its pairings give, so `first` is recorded on every row and a reader that
+   wants it controls for it. Each game is Bo1 between Forge's Default AI and Forge's Default AI,
+   numbers only, with no recording. A game that hits an engine error is retried once, on fresh workers
+   after the run's other games; its row is the retry's, marked `retried`, and a second error stays on
+   the row and leaves the game out of the read. The pairing is prefix-stable (game g's pair does not
+   depend on M), so a run's `--pairs` can be raised on resume; a smaller one is refused.
 7. **The pilots** (an addition from Justin, 2026-10-16, for J141's pilot slice). `--policy-a` and
    `--policy-b` take `plain` (the default: Forge's AI through `Bootstrap.createAiPlayer`) or
    `search`, the live search seat as `RecordMatch --policy search` builds it. That seat has the
@@ -96,8 +119,17 @@ repeats its rules.
    - each cell with Wilson's interval (unclustered, too narrow) and the interval to read: a
      deck-clustered percentile bootstrap, 1,000 replicates;
    - per card: deck-games, wins, the win rate when in the deck, that rate shrunk toward 0.5 at
-     strength 20 (meta.ts's rule), and the mean deck-profile and opponent context the Phase 3
-     model will use;
+     strength 20 (meta.ts's rule), and the means of the deck variables and opponent context the
+     Phase 3 model will use (below);
+   - each deck once and each game once per pilot pair (keyed by seed, g and the two pilots), the rows
+     one pilot pair unless `--mixed-pilots`.
+
+   **The deck variables**, on every deck's row of `decks.jsonl` and carried into `cards.tsv` as
+   context columns, so the model can tell a card's value from a deck that happened to cohere: the
+   colour shares (each colour's share of the pips), the number of colours, colours with 3+ spells, the
+   prior's k, the land count, the fixer count and how many reach two colours, the mean mana value and
+   the mana-value histogram (0, 1, 2, 3, 4, 5, 6+), the creature count, the X-spell count and the
+   card-flow count.
    - strict JSON and markdown, with no verdict and no label beyond the bins.
 9. **The confirmation rule** (the only pre-registration of an outcome, and it is a method): any
    difference the census reports — a bin, a card, a combination — is **a candidate until it holds
@@ -138,5 +170,22 @@ repeats its rules.
 - `web/test/cubelab-deck-census.test.ts` holds the rules.
 - `CubeLab.java` gains three things: a census match skips Forge's builder (no pool), `policyA` /
   `policyB` seat the live search seat, and a search seat's per-game counters.
-- Card flow is counted by the Synergy v3 study's 17-card list (`CARD_FLOW_STUDY`) until #153's
-  rule merges.
+- Card flow is counted by #153's oracle-text rule (`cardflow.ts`'s `isCardFlow`, D446 point 5), read
+  off each card's script: 40 library cards, the same 40 the engine's facts give on the 880 they cover.
+  The Synergy v3 study's 17 cards (`CARD_FLOW_STUDY`) are kept as the test's check that the rule still
+  covers them.
+
+**Amended 2026-10-16, after the cloud's review of #154 and before any census game** (`pc-jobs`
+README, *#154 review*). The points above carry the amended rules; what changed and what it measured:
+- *Fetchers and cyclers* (point 3, *Sources*). `produces` had counted Evolving Wilds, Fabled Passage
+  and Ash Barrens as WUBRG and a Landscape as its three colours, so 12 of 1,600 decks at seed 77
+  (pauper-77-00047: Qasali Pridemage and no Forest) held a spell with no real source. Now 0 of 1,600
+  at seed 77 and 0 of 1,600 at seed 2, by an independent checker.
+- *Cost tokens* (point 2). Forge's `GW`, `BP`, `2W` and `CW` were read as plain pips, which skewed pip
+  shares and asked for sources no rule needs; 42 library spells change cost. Split cards need both
+  faces.
+- *The test's castability check* is a checker of its own (point 4), over 400 decks a band, and the
+  suite fails without Forge's card scripts rather than fall back to printed colours.
+- *census-read* de-duplicates decks and games and refuses mixed pilots unless asked (point 8).
+- *Low items*: card flow by #153's rule; the deck variables; {C} and snow noted as latent (point 2);
+  the play/draw note, the engine-error retry and the extendable `--pairs` (point 6).
