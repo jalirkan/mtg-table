@@ -1,0 +1,9 @@
+==== J138 pilot3 started 2026-10-16T08:46:09-04:00 in unit lab-J138-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   a clear gain is ADOPT: ADOPT: the lower end 0.515 is above 0.5
+ok   a lower end of exactly 0.5 is NOT SHOWN: NOT SHOWN: the lower end 0.5 is not above 0.5
+ok   an interval across 0.5 is NOT SHOWN: NOT SHOWN: the lower end 0.485 is not above 0.5
+ok   a stopped match gives no verdict: INCOMPLETE: no verdict
+ok   1,199 games is not complete: INCOMPLETE: no verdict
+FAIL 61 errors and timeouts is not complete: ADOPT: the lower end 0.515 is above 0.5
+ok   another matchup is not this match: INCOMPLETE: no verdict
+ok   no match file: NO MATCH: no verdict

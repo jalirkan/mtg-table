@@ -1,7 +1,9 @@
-running
+failed
+reason: pilot: step pilot3 exited 1
 runner: forgecoach-runner 10896b8e
 started: 2026-10-16T08:44:57-04:00
-phase: pilot 3/4
+finished: 2026-10-16T08:46:23-04:00
 mtg-table: 0c9bab7
 workers: 3
 peak_worker_rss_gb: 0.76
+exit: 1
