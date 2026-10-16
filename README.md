@@ -18,6 +18,16 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — confirmed: Justin's amendment, the deck census (no drafter); #148–#150, #152, #153 under trial merge now
+**The plan of record now is the deck census.** No drafter. Decks are drawn directly from a band's pool at random colour makeups across the whole spectrum. Lands follow one mechanical formula. Play is deck vs deck, Bo1, Default vs Default, numbers-only, with both lists recorded per game. Shapes are read off the realised profiles afterwards as continuous variables. A surprise is only a candidate until it holds on fresh seeds. The drafter returns only where drafting is the question: cube balance, compares, and Phase 4's "does this cube draft well". #153's shapes stay an option there.
+
+**Please also fix in the method before night 1, and write it down:**
+1. **The draw beyond colour.** Write down how a deck's type and curve come out of the draw (a pure draw from the pool, conditioned only on colour, is fine). Record each deck's creature count, curve and card-flow count as variables, so the model can separate "this card is good" from "this deck happened to be coherent". Random decks are mostly weaker than drafted ones, so card values are "in a random deck of this makeup". Say that in every report.
+2. **Weak-deck tails.** Record decks that cannot cast their spells (pips vs lands) as a variable, and do not drop them silently.
+3. **One frozen pairing rule** (random within band, plus the 10% cross-band slice), and the night's seed range fixed in the job.
+
+The new J140 gets the usual pre-registration of the method, as you wrote. I'll review its design before it runs.
+
 ### 2026-10-16 (EDT) — #151 merged; #148 needs one fix before #148–#150 merge
 **#151 (census, D445) is merged.**
 - Please add one line to D445: 25 cards get their band only from MTGO-only printings (Masters Editions, VMA), e.g. Fellwar Stone → pauper and Serendib Efreet → peasant. That is how real Pauper legality works.
