@@ -17,9 +17,16 @@
  *    with a deck-bootstrap interval clear of 0.5, a planted card's shrunk rate stands out, the
  *    within-band rate is 0.5, and the JSON is strict.
  *
- * The real library's mana costs come from Forge's card scripts when this checkout has them
- * (forge-home/res or the jar's res/); without them (CI's web job) every card is costed by its
- * printed colours, and every property here still holds.
+ * The real library's mana costs and lands come from Forge's card scripts (the zip beside $FORGE_JAR or
+ * config.json's jar, else forge-home/res).  WITHOUT THEM THE SUITE FAILS (#154 review): costed by
+ * printed colours, castability would "pass" without one real cost.  So it needs the engine's res/,
+ * which CI's web job does not have.
+ *
+ * Castability is checked by an INDEPENDENT checker below (`independentCheck`), which shares no code with
+ * deckcensus.ts: a land's colours from its script's ability lines (`A:AB$ Mana ... Produced$`, `ChangeZone
+ * ... ChangeType$`, `K:TypeCycling:Basic`) and its `Types:`, a spell's from its raw `ManaCost:` tokens
+ * (a split card every face), a fetcher resolved through the deck's own lands it can find.  400 decks a
+ * band pass it.
  */
 
 import assert from 'node:assert/strict';
@@ -45,7 +52,9 @@ const censusText = readFileSync(join(REPO, 'cubes', 'library', 'census.tsv'), 'u
 let zip: string | null = null;
 try { zip = defaultScriptsZip(REPO); } catch { zip = null; }
 const scripts = (zip ? openForgeScripts(zip) : null) ?? openForgeScripts(join(REPO, 'forge-home/res/cardsfolder/cardsfolder.zip'));
-const { lib } = censusPopulation(poolText, censusText, scripts ? scriptLookup(scripts) : () => null);
+if (!scripts) throw new Error('cubelab-deck-census: no Forge card scripts (FORGE_JAR / config.json forgeJar beside res/cardsfolder/cardsfolder.zip, or forge-home/res): the deck census needs real costs, and this suite fails rather than fall back to printed colours');
+const scriptOf = scriptLookup(scripts);
+const { lib, noScript } = censusPopulation(poolText, censusText, scriptOf);
 const byName = new Map(lib.map((c) => [c.name, c]));
 const quiet = (): void => {};
 
@@ -66,12 +75,11 @@ test('mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid
   assert.deepEqual(scriptCost(fireIce), { plain: { R: 1, U: 1 }, hybrid: [], share: { R: 1, U: 1 }, x: 0 }, 'a split card needs both faces');
   const adventure = 'Name:Bonecrusher Giant\nManaCost:2 R\nAlternateMode:Adventure\nALTERNATE\nName:Stomp\nManaCost:1 R\n';
   assert.deepEqual(scriptCost(adventure), parseManaCost('2 R'), 'an adventure is an option: the front face only');
-  if (scripts) {
-    const real = (n: string): CensusCard => byName.get(n) as CensusCard;
-    assert.deepEqual(real('Fire // Ice').cost.plain, { U: 1, R: 1 }, 'Fire // Ice from the real script');
-    assert.deepEqual(real('Kitchen Finks').cost.hybrid, ['WG', 'WG']);
-    assert.deepEqual(real('Dismember').cost.plain, {});
-  }
+  const real = (n: string): CensusCard => byName.get(n) as CensusCard;
+  assert.deepEqual(real('Fire // Ice').cost.plain, { U: 1, R: 1 }, 'Fire // Ice from the real script');
+  assert.deepEqual(real('Kitchen Finks').cost.hybrid, ['WG', 'WG']);
+  assert.deepEqual(real('Dismember').cost.plain, {});
+  assert.deepEqual(noScript, [], 'every supported library card has a script');
 });
 
 test('the generator is deterministic by seed, and the command writes the same bytes twice', () => {
@@ -81,7 +89,6 @@ test('the generator is deterministic by seed, and the command writes the same by
     assert.deepEqual(a, b, `${band}: the same deck`);
     assert.notDeepEqual(generateDeck(lib, { band, seed: 8, crossBand: 0.1 }, 3).spells, a.spells, `${band}: another seed, another deck`);
   }
-  if (!scripts) return;
   const dir = mkdtempSync(join(tmpdir(), 'deck-census-'));
   try {
     for (const k of ['x', 'y']) decksCommand(REPO, new Map([['band', ['pauper']], ['count', ['12']], ['seed', ['3']], ['out', [join(dir, k)]], ['scripts', [scripts.path]]]), quiet);
@@ -94,7 +101,7 @@ test('the generator is deterministic by seed, and the command writes the same by
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('every deck of every band is 40 cards, singleton, every spell castable from its own lands', () => {
+test('every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker)', () => {
   for (const band of BANDS) {
     for (let i = 1; i <= 120; i++) {
       const d = generateDeck(lib, { band, seed: 11, crossBand: 0.1 }, i);
@@ -103,17 +110,107 @@ test('every deck of every band is 40 cards, singleton, every spell castable from
       assert.equal(d.fixers.length + Object.values(d.basics).reduce((a, b) => a + b, 0), d.lands);
       const names = [...d.spells, ...d.fixers];
       assert.equal(new Set(names).size, names.length, `${d.id}: one of each card`);
-      const src = sourcesOf({ fixers: d.fixers.map((n) => ({ card: byName.get(n) as CensusCard, role: 'in' as const })), basics: d.basics });
       for (const n of d.spells) {
         const c = byName.get(n) as CensusCard;
         assert.ok(c.supported && !c.land && c.aiFlag !== 'All', `${d.id}: ${n} is a drawable spell`);
-        assert.ok(castable(c, src), `${d.id}: ${n} castable`);
         for (const x of c.colors) assert.ok(d.makeup.colours.includes(x), `${d.id}: ${n}'s colours are the makeup's`);
       }
+      const ind = independentCheck(d.main, scriptOf);
+      assert.deepEqual([...ind.zeroSource, ...ind.short], [], `${d.id}: every spell castable (the independent checker)`);
       assert.equal(d.castable, d.spells.length);
       assert.ok(d.lands >= 15 && d.lands <= 18);
     }
   }
+});
+
+// ---------------------------------------------------------------- the independent castability checker
+
+const BASIC_TYPE: Record<string, string> = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
+interface ILand { name: string; basic: boolean; direct: Set<string>; types: Set<string>; fetch: Array<{ type: string; basicOnly: boolean }> }
+
+/** A land from its Forge script's ability lines and Types, as the engine reads them (not its oracle text). */
+function independentLand(name: string, script: string): ILand {
+  const l: ILand = { name, basic: false, direct: new Set(), types: new Set(), fetch: [] };
+  for (const line of script.split('\n')) {
+    const t = /^Types:(.*)$/.exec(line);
+    if (t) for (const w of (t[1] ?? '').trim().split(/\s+/)) { const c = BASIC_TYPE[w]; if (c) { l.types.add(c); l.direct.add(c); } }
+    if (/^A:AB\$ Mana\b/.test(line)) {
+      const p = (/Produced\$ ([^|]*)/.exec(line)?.[1] ?? '').trim();
+      for (const w of p === 'Any' ? ['W', 'U', 'B', 'R', 'G'] : p.split(/\s+/)) if (/^[WUBRG]$/.test(w)) l.direct.add(w);
+    }
+    if (/ChangeZone/.test(line) && /Origin\$ Library/.test(line)) {
+      for (const ct of (/ChangeType\$ ([^|]*)/.exec(line)?.[1] ?? '').trim().split(',')) {
+        const [ty, q] = ct.split('.');
+        if (ty === 'Land' && q === 'Basic') for (const c of 'WUBRG') l.fetch.push({ type: c, basicOnly: true });
+        else if (ty && BASIC_TYPE[ty]) l.fetch.push({ type: BASIC_TYPE[ty] as string, basicOnly: q === 'Basic' });
+      }
+    }
+    if (/^K:TypeCycling:Basic\b/.test(line)) for (const c of 'WUBRG') l.fetch.push({ type: c, basicOnly: true });
+  }
+  return l;
+}
+
+/** Every spell of a deck list castable from its own lands, by the rules above: the spells with a colour of zero sources, and those short of a colour's pips. */
+function independentCheck(main: Array<[number, string]>, scriptOfName: (n: string) => string | null): { zeroSource: string[]; short: string[]; reach: string[] } {
+  const lands: ILand[] = [];
+  const spells: Array<[string, string]> = [];
+  for (const [n, name] of main) {
+    const bc = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' }[name];
+    if (bc) { for (let i = 0; i < n; i++) lands.push({ name, basic: true, direct: new Set([bc]), types: new Set([bc]), fetch: [] }); continue; }
+    const sc = scriptOfName(name);
+    if (sc === null) throw new Error(`no script for ${name}`);
+    if (/^Types:.*\bLand\b/m.test(sc.split('\nALTERNATE')[0] as string)) lands.push(independentLand(name, sc)); else spells.push([name, sc]);
+  }
+  const src: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const reach: string[] = [];
+  lands.forEach((l, i) => {
+    const r = new Set(l.direct);
+    for (const f of l.fetch) lands.forEach((o, j) => { if (j !== i && o.types.has(f.type) && (!f.basicOnly || o.basic)) for (const c of o.direct) r.add(c); });
+    for (const c of r) src[c] = (src[c] as number) + 1;
+    if (!l.basic) reach.push([...r].sort().join(''));
+  });
+  const zeroSource: string[] = [], short: string[] = [];
+  for (const [name, sc] of spells) {
+    const faces = [...sc.matchAll(/^ManaCost:(.*)$/gm)].map((m) => (m[1] ?? '').trim().split(/\s+/));
+    for (const face of /^AlternateMode:Split/m.test(sc) ? faces : faces.slice(0, 1)) {
+      const pips: Record<string, number> = {};
+      for (const tok of face) {
+        if (/^C?[WUBRG]$/.test(tok)) { const c = tok.slice(-1); pips[c] = (pips[c] ?? 0) + 1; }
+        else if (/^[WUBRG]{2}$/.test(tok) && !((src[tok[0] as string] as number) > 0 || (src[tok[1] as string] as number) > 0)) zeroSource.push(`${name} {${tok}}`);
+      }
+      for (const [c, n] of Object.entries(pips)) {
+        if (src[c] === 0) zeroSource.push(`${name} {${c}}`);
+        else if ((src[c] as number) < n) short.push(`${name} ${n}x{${c}} from ${src[c]}`);
+      }
+    }
+  }
+  return { zeroSource, short, reach };
+}
+
+test('the independent checker catches what it should: a splash behind a fetcher with no basic, a split card\'s other face', () => {
+  assert.deepEqual(independentCheck([[1, 'Qasali Pridemage'], [1, 'Evolving Wilds'], [15, 'Plains']], scriptOf).zeroSource, ['Qasali Pridemage {G}']);
+  assert.deepEqual(independentCheck([[1, 'Qasali Pridemage'], [1, 'Evolving Wilds'], [14, 'Plains'], [1, 'Forest']], scriptOf).zeroSource, []);
+  assert.deepEqual(independentCheck([[1, 'Fire // Ice'], [16, 'Mountain']], scriptOf).zeroSource, ['Fire // Ice {U}']);
+  assert.deepEqual(independentCheck([[1, 'Kitchen Finks'], [16, 'Forest']], scriptOf).zeroSource, [], 'hybrid: either colour');
+  assert.deepEqual(independentCheck([[1, 'Counterspell'], [1, 'Flooded Strand'], [1, 'Tundra'], [14, 'Plains']], scriptOf).short, [], 'Flooded Strand finds the Tundra: two blue sources');
+  assert.deepEqual(independentCheck([[1, 'Counterspell'], [1, 'Tranquil Landscape'], [1, 'Tundra'], [14, 'Plains']], scriptOf).short, ['Counterspell 2x{U} from 1'], 'a Landscape finds basics only');
+});
+
+test('400 decks a band pass the independent checker: no spell without a real source, none short of its pips', () => {
+  let decks = 0, fixers = 0, fixersOneColour = 0;
+  const bad: string[] = [];
+  for (const band of BANDS) {
+    for (let i = 1; i <= 400; i++) {
+      const d = generateDeck(lib, { band, seed: 77, crossBand: 0.1 }, i);
+      const r = independentCheck(d.main, scriptOf);
+      decks++;
+      if (r.zeroSource.length || r.short.length) bad.push(`${d.id}: ${[...r.zeroSource, ...r.short].join(', ')}`);
+      for (const x of r.reach) { fixers++; if ([...x].filter((c) => d.profile.pipColours.includes(c)).length < 2) fixersOneColour++; }
+    }
+  }
+  assert.equal(decks, 1600);
+  assert.deepEqual(bad, [], `decks with an uncastable spell: ${bad.length}`);
+  assert.ok(fixers > 5000, `the decks hold fixers: ${fixers}, ${fixersOneColour} of them reaching one colour of their deck`);
 });
 
 test('the prior covers the spectrum over 1,000 decks', () => {
