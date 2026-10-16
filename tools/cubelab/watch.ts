@@ -3,14 +3,33 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   tools/cubelab.sh watch cubes/fair-fight-cube-180.md [--format grid] [--seed S] [--games 3]
-//       [--drafter-a lab|human-picks:<x.picks.json>] [--drafter-b ...] [--shape-a|--shape-b <shape>] (D446)
-//       [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]
+//       [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<x.picks.json>] [--drafter-b ...]
+//       [--shape-a|--shape-b <shape>] (D446; both sides the lab drafter)
+//       [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>]
 //       [--ratings <tsv>] [--game-timeout <sec>]
+//       [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]
+//
+// THE DRAFTERS (D443): each side drafts with the lab drafter (`lab`), or ONE side
+// with another drafter the lab has -- Forge's ranks (`forge-ranks`), Claude
+// (`llm:<model>`, D439) or ForgeCoach's human pick model (`human-picks:<file>`,
+// D416) -- the other side then the lab drafter, as every `--drafter` run is.
+// An `llm:` drafter runs under a spend cap for the whole watch (D442: $1 and 40
+// calls unless the flags say otherwise) and the fallback stop: past 25% of its
+// decisions falling back to the lab drafter's line (a logged-out CLI, replies it
+// cannot read), the watch ends `error` saying so -- it never goes on as a lab vs
+// lab draft under an `llm` name.  match.json's `cost` is what it really spent
+// (calls, failed calls, decisions, fallbacks, tokens, dollars at list price),
+// kept up to date while it drafts, and written when it stops.
 //
 // What it does, in order, all of it into ONE folder (--out; default
-// var/spectate/watch-<cube>-<seed>/, the id is the folder's name):
+// var/spectate/watch-<cube>-<seed>/, the id is the folder's name).  The cube
+// may be any path: a custom cube (D444, ForgeCoach's cube builder) is
+// <out>/cube.md, which the coach helper writes before it starts the watch and
+// the watch keeps; with no ratings file beside it the lab drafts with Forge's
+// ranks (defaultRatings is null):
 //
-//   1. match.json `status: "drafting"`;
+//   1. match.json `status: "drafting"`, with the cube, the seed, the players, the
+//      drafters and startedAt from the first write (a killed watch still says what it was);
 //   2. ONE grid draft with the lab's drafters and builders -- `run` itself, with
 //      --drafts 1 --games 0 (draft and build only, D318), into <out>/lab/, so the
 //      picks and the decks are exactly what `run` makes at this seed (D294);
@@ -27,8 +46,10 @@
 //   5. match.json `status: "done"` (or "error" / "stopped", with why).
 //
 // HIDDEN INFORMATION.  A grid draft is played face up -- both drafters see every
-// grid and every line the other takes -- so draft.json shows both pools and both
-// decks, and that reveals nothing a drafter did not see.  The GAMES are not face
+// grid and every line the other takes -- so draft.json's picks and pools reveal
+// nothing a drafter did not see; its decks are built in private, so B's main /
+// side split is the one thing in it A never saw (docs/watch-bots.md says how to
+// label it).  The GAMES are not face
 // up: each recording is one seat's view (seat 0, drafter A), the other hand the
 // five-key stub (hard rule 8), checked by tools/check-redaction.mjs like every
 // spectated game.  A viewer that shows draft.json's deck B beside a game shows a
@@ -48,10 +69,13 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { parseCube } from './cube.ts';
+import { parseDrafter } from './drafters.ts';
 import { engineEnv, type EngineEnv } from './engine.ts';
 import { dckText } from './deck.ts';
 import { LINES } from './draft.ts';
-import { defaultRatings, runLab, sha, type DraftRecord, type RunMeta } from './run.ts';
+import { LlmBudget, llmCapsOf, LlmStop, type DraftModel, type LlmCaps, type LlmSpend, type LlmStopReason } from './llmdraft.ts';
+import { defaultRatings, runLab, sha, type DraftRecord, type RunDrafterOption, type RunMeta } from './run.ts';
 import { isShape, SHAPE_NAMES, type Shape } from './shapes.ts';
 import { DEFAULT_WEIGHTS } from './weights.ts';
 import { RESERVED_SEED_MIN, VERIFY_SEED_MIN } from './seeds.ts';
@@ -286,11 +310,70 @@ export interface WatchMatch {
   /** Whose eyes every recording is: seat 0, drafter A. */
   view: { seat: 0; side: 'A' };
   players: Record<Side, Player & { deck: string | null }>;
+  /** D443: who drafts each side (`lab`, `forge-ranks`, `llm:<model>`, `human-picks:<file>`). */
+  drafters: Record<Side, { drafter: string }>;
+  /** D443: what an `llm:` drafter spent (null when no side drafts with one), kept current while it drafts. */
+  cost: WatchCost | null;
   games: WatchGame[];
   wins: { A: number; B: number; draws: number };
   winner: Side | 'draw' | null;
   /** The game being played now (its n), else null. */
   current: number | null;
+  /**
+   * The cube's names the engine does not know, drafted without (the #150 review): the helper's check
+   * of a custom cube before its 202 (forge-scripts.ts's name index; null = not checked), then, once
+   * the draft has run, the engine's own list (run.json's `missing`) for every watch.
+   */
+  unknownCards?: string[] | null;
+}
+
+/** match.json's `cost`: the LLM drafter's caps, its spend so far, and why it stopped the watch (null = it did not). */
+export interface WatchCost {
+  side: Side;
+  drafter: string;
+  caps: LlmCaps;
+  calls: number;
+  callErrors: number;
+  decisions: number;
+  retries: number;
+  fallbacks: number;
+  tokensIn: number;
+  cacheRead: number;
+  cacheCreate: number;
+  tokensOut: number;
+  /** Dollars at list price: the Claude Code CLI's own cost figure, summed (on a subscription login, what the API would charge). */
+  usd: number;
+  stopped: LlmStopReason | null;
+  why: string | null;
+}
+
+/** The watch's defaults for an `llm:` drafter's caps (the coach helper passes its config's): $1, 40 calls (18 decisions, two attempts each), 25%. */
+export const WATCH_LLM_CAPS: LlmCaps = { maxCalls: 40, maxUsd: 1, maxFallbackRate: 0.25 };
+
+/** `--drafter-a` / `--drafter-b`: lab, forge-ranks, llm:<model>[:thinking=...], human-picks:<file>; one side at most is not lab. */
+export function parseWatchDrafters(a: string, b: string): { drafters: Record<Side, string>; option: RunDrafterOption | null } {
+  const drafters: Record<Side, string> = { A: a.trim(), B: b.trim() };
+  let option: RunDrafterOption | null = null;
+  for (const s of ['A', 'B'] as const) {
+    const d = drafters[s];
+    if (d === 'lab') continue;
+    const spec = parseDrafter(d);
+    if (!spec) throw new Error(`--drafter-${s.toLowerCase()} is lab, forge-ranks, llm:<haiku|sonnet|opus|fake>[:thinking=off|low|default] or human-picks:<x.picks.json>, got ${d}`);
+    if (option) throw new Error('one side at most drafts with something other than the lab drafter (D416, D439: a drafter is measured against the lab\'s); the other is lab');
+    option = spec.kind === 'llm' ? { kind: 'llm', model: spec.model, thinking: spec.thinking, seat: s, seesOpponent: false }
+      : spec.kind === 'forge-ranks' ? { kind: 'forge-ranks', seat: s } : { kind: 'human-picks', file: spec.file, seat: s };
+  }
+  return { drafters, option };
+}
+
+/** match.json's `cost` from the budget. */
+export function watchCost(side: Side, drafter: string, b: LlmBudget): WatchCost {
+  const s: LlmSpend = b.spent;
+  return {
+    side, drafter, caps: { ...b.caps }, calls: s.calls, callErrors: s.callErrors, decisions: s.decisions, retries: s.retries, fallbacks: s.fallbacks,
+    tokensIn: s.tokensIn, cacheRead: s.cacheRead, cacheCreate: s.cacheCreate, tokensOut: s.tokensOut, usd: Math.round(s.usd * 1e6) / 1e6,
+    stopped: b.stopped?.reason ?? null, why: b.stopped?.message ?? null,
+  };
 }
 
 /** The statuses each may move to. A terminal status stays. */
@@ -341,8 +424,12 @@ export interface WatchOptions {
   seed: number;
   games: number;
   players: Record<Side, Player>;
-  /** `lab`, or one seat's `human-picks:<file>` (D416). */
+  /** `lab`, or one side's forge-ranks / llm:<model> / human-picks:<file> (D416, D439, D443). */
   drafters: Record<Side, string>;
+  /** An `llm:` drafter's caps for the whole watch (D442); absent = WATCH_LLM_CAPS. */
+  llmCaps?: LlmCaps;
+  /** The LLM drafter's model, made on first use; absent = the spec's.  Tests only (run.ts `llmModel`). */
+  llmModel?: () => Promise<DraftModel>;
   paceMs: number;
   out: string;
   ratingsFile: string | null;
@@ -352,7 +439,7 @@ export interface WatchOptions {
 }
 
 /** What a watch folder may hold; anything else and `watch` refuses to clear it. */
-const OURS = /^(lab|draft\.json|match\.json|watch\.log|(.+-)?g\d+\.(jsonl|log)|deck-[AB]\.dck|.*\.tmp)$/;
+const OURS = /^(lab|draft\.json|match\.json|watch\.log|(.+-)?g\d+\.(jsonl|log)|deck-[AB]\.dck|\.child-groups|.*\.tmp)$/;
 
 /** The game seed for game n of a watch: a pure function of the watch's seed. */
 export const gameSeed = (seed: number, n: number): number => seed * 10 + n;
@@ -381,21 +468,32 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
   const startedAt = new Date(t0).toISOString();
   const id = path.basename(path.resolve(o.out));
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
+  // D444: a custom cube (ForgeCoach's cube builder) is the helper's <out>/cube.md, written before the watch starts: it stays
+  const ownCube = path.resolve(o.cubeFile) === path.resolve(o.out, 'cube.md');
   if (fs.existsSync(o.out)) {
-    const foreign = fs.readdirSync(o.out).filter((n) => !OURS.test(n));
+    const foreign = fs.readdirSync(o.out).filter((n) => !OURS.test(n) && !(ownCube && n === 'cube.md'));
     if (foreign.length > 0) throw new Error(`${o.out} holds files a watch did not write (${foreign.slice(0, 3).join(', ')}) -- use a new --out`);
-    for (const n of fs.readdirSync(o.out)) if (n !== 'watch.log') fs.rmSync(path.join(o.out, n), { recursive: true, force: true });
+    // watch.log is the helper's for this run, and match.json the helper's first word on it (D443): both stay, and the first save replaces match.json
+    for (const n of fs.readdirSync(o.out)) if (n !== 'watch.log' && n !== 'match.json' && !(ownCube && n === 'cube.md')) fs.rmSync(path.join(o.out, n), { recursive: true, force: true });
   }
   fs.mkdirSync(o.out, { recursive: true });
   const cubeText = fs.readFileSync(o.cubeFile, 'utf8');
   const need = Math.floor(o.games / 2) + 1;
+  const { option: drafterOption } = parseWatchDrafters(o.drafters.A, o.drafters.B);
   const m: WatchMatch = {
     v: 1, kind: 'watch-match', id, status: 'drafting', startedAt, updatedAt: startedAt,
-    cube: { title: '', file: rel(o.cubeFile) }, seed: o.seed, bestOf: o.games, need, paceMs: o.paceMs, view: { seat: 0, side: 'A' },
+    cube: { title: parseCube(cubeText).title, file: rel(o.cubeFile) }, seed: o.seed, bestOf: o.games, need, paceMs: o.paceMs, view: { seat: 0, side: 'A' },
     players: { A: { ...o.players.A, deck: null }, B: { ...o.players.B, deck: null } },
+    drafters: { A: { drafter: o.drafters.A }, B: { drafter: o.drafters.B } },
+    cost: null,
     games: [], wins: { A: 0, B: 0, draws: 0 }, winner: null, current: null,
   };
   const matchFile = path.join(o.out, 'match.json');
+  // the helper's first match.json named a custom cube's unknown cards before its 202: kept until the engine says
+  try {
+    const first = JSON.parse(fs.readFileSync(matchFile, 'utf8')) as Partial<WatchMatch>;
+    if (Array.isArray(first.unknownCards) || first.unknownCards === null) m.unknownCards = first.unknownCards;
+  } catch { /* no first word: a watch run by hand */ }
   let last: WatchMatch | null = null;
   const save = (): void => {
     m.updatedAt = new Date().toISOString();
@@ -414,7 +512,20 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
     save();
   };
   let child: ReturnType<typeof spawn> | null = null;
+  // D442/D443: an llm: drafter's spend, one budget for the watch; match.json's `cost` follows it as it moves.
+  let budget: LlmBudget | null = null;
+  if (drafterOption?.kind === 'llm') {
+    const side = drafterOption.seat;
+    const llmDrafter = o.drafters[side];
+    budget = new LlmBudget(o.llmCaps ?? WATCH_LLM_CAPS, (b) => {
+      m.cost = watchCost(side, llmDrafter, b);
+      if (m.status === 'drafting') save();
+    });
+    m.cost = watchCost(side, llmDrafter, budget);
+  }
   const onSignal = (sig: NodeJS.Signals): void => {
+    // the CLI's calls run in process groups of their own: the budget's stop is what kills them
+    if (budget && !budget.stopped) { try { budget.stop(new LlmStop('aborted', `the watch was stopped (${sig})`)); } catch { /* stop() throws by design */ } }
     child?.kill('SIGTERM');
     fail('stopped', `stopped (${sig})`);
     process.exit(130);
@@ -426,19 +537,30 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
   try {
     // 2. the draft: `run` itself, one draft, no games.
     say(`watch ${id}: drafting ${o.cubeFile} (grid, seed ${o.seed}) -- A: ${o.drafters.A} drafts, ${o.players.A.player} plays; B: ${o.drafters.B} drafts, ${o.players.B.player} plays`);
-    const human = (['A', 'B'] as const).filter((s) => o.drafters[s] !== 'lab');
     const labOut = path.join(o.out, 'lab');
-    await runLab(env, {
-      cubeFile: o.cubeFile, format: 'grid', drafts: 1, games: 0, jobs: 1, seed: o.seed,
-      profiles: [seatSpecOf(o.players.A), seatSpecOf(o.players.B)], ratingsFile: o.ratingsFile, record: 0, out: labOut,
-      builder: 'lab', gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: DEFAULT_WEIGHTS,
-      ...(human.length === 1 ? { drafter: { kind: 'human-picks' as const, file: (o.drafters[human[0] as Side]).slice('human-picks:'.length), seat: human[0] as Side } } : {}),
-      ...(o.shapes && (o.shapes.A !== 'auto' || o.shapes.B !== 'auto') ? { shapes: { A: o.shapes.A, B: o.shapes.B, explore: null } } : {}),
-    }, (s) => say(`  lab: ${s}`));
+    try {
+      await runLab(env, {
+        cubeFile: o.cubeFile, format: 'grid', drafts: 1, games: 0, jobs: 1, seed: o.seed,
+        profiles: [seatSpecOf(o.players.A), seatSpecOf(o.players.B)], ratingsFile: o.ratingsFile, record: 0, out: labOut,
+        builder: 'lab', gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: DEFAULT_WEIGHTS,
+        ...(drafterOption ? { drafter: drafterOption } : {}),
+        ...(budget ? { llmBudget: budget, llmJobs: 1, ...(o.llmModel ? { llmModel: o.llmModel } : {}) } : {}),
+        ...(o.shapes && (o.shapes.A !== 'auto' || o.shapes.B !== 'auto') ? { shapes: { A: o.shapes.A, B: o.shapes.B, explore: null } } : {}),
+      }, (s) => say(`  lab: ${s}`));
+    } catch (e) {
+      // D443: an llm: drafter that hit its cap or fell back too often ends the watch in its own words, never as lab vs lab.
+      if (budget?.stopped && e instanceof LlmStop && drafterOption) {
+        m.cost = watchCost(drafterOption.seat, o.drafters[drafterOption.seat], budget);
+        throw new Error(`drafter ${drafterOption.seat} (${o.drafters[drafterOption.seat]}) stopped the watch -- ${budget.stopped.message}`);
+      }
+      throw e;
+    }
+    if (budget) m.cost = watchCost((drafterOption as RunDrafterOption).seat, o.drafters[(drafterOption as RunDrafterOption).seat], budget);
     const lines = fs.readFileSync(path.join(labOut, 'drafts.jsonl'), 'utf8').split('\n').filter(Boolean);
     const rec = JSON.parse(lines.at(-1) as string) as DraftRecord;
     const meta = JSON.parse(fs.readFileSync(path.join(labOut, 'run.json'), 'utf8')) as RunMeta;
     m.cube.title = meta.cube;
+    m.unknownCards = [...(meta.missing ?? [])];   // the engine's own word on the cube's names
     const decks = {} as Record<Side, WatchDeck>;
     for (const k of [0, 1] as const) {
       const side: Side = k === 0 ? 'A' : 'B';
@@ -549,15 +671,14 @@ export async function watchCommand(repo: string, cubeFile: string | undefined, f
   const aiDir = path.join(repo, 'forge-home', 'res', 'ai');
   const profiles = fs.existsSync(aiDir) ? fs.readdirSync(aiDir).filter((n) => n.endsWith('.ai')).map((n) => n.slice(0, -3)) : ['Default'];
   const players = { A: parsePlayer(one('player-a') ?? 'Default', profiles), B: parsePlayer(one('player-b') ?? 'Default', profiles) };
-  const drafters = { A: one('drafter-a') ?? 'lab', B: one('drafter-b') ?? 'lab' };
-  for (const s of ['A', 'B'] as const) {
-    const d = drafters[s];
-    if (d !== 'lab' && !/^human-picks:.+/.test(d)) throw new Error(`--drafter-${s.toLowerCase()} is lab or human-picks:<x.picks.json>, got ${d}`);
-  }
-  if (drafters.A !== 'lab' && drafters.B !== 'lab') throw new Error('one seat at most drafts with human-picks (D416); the other is the lab drafter');
+  const { drafters, option } = parseWatchDrafters(one('drafter-a') ?? 'lab', one('drafter-b') ?? 'lab');
+  if (option?.kind === 'human-picks' && !fs.existsSync(option.file)) throw new Error(`--drafter-${option.seat.toLowerCase()}: no file ${option.file}`);
+  const llmFlags = ['llm-max-usd', 'llm-max-calls', 'llm-fallback-rate'];
+  if (option?.kind !== 'llm' && llmFlags.some((k) => f.has(k))) throw new Error(`${llmFlags.map((k) => `--${k}`).join(', ')} need an llm:<model> drafter`);
+  const llmCaps = option?.kind === 'llm' ? llmCapsOf(one, WATCH_LLM_CAPS) : undefined;
   const shapes = { A: one('shape-a') ?? 'auto', B: one('shape-b') ?? 'auto' };
   for (const s of ['A', 'B'] as const) if (!isShape(shapes[s])) throw new Error(`--shape-${s.toLowerCase()} is ${SHAPE_NAMES.join(', ')}; got ${shapes[s]}`);
-  if ((shapes.A !== 'auto' || shapes.B !== 'auto') && (drafters.A !== 'lab' || drafters.B !== 'lab')) throw new Error('--shape-a/-b shape the lab drafter (D446): not with --drafter-a/-b human-picks');
+  if ((shapes.A !== 'auto' || shapes.B !== 'auto') && option) throw new Error('--shape-a/-b shape the lab drafter (D446): not with a --drafter-a/-b other than lab');
   const slug = path.basename(cubeFile, '.md').replace(/[^A-Za-z0-9._-]/g, '-');
   const out = one('out') ?? path.join('var/spectate', `watch-${slug}-${seed}`);
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(path.basename(path.resolve(out)))) throw new Error(`--out's folder name must be letters, digits, . _ - (got ${out})`);
@@ -565,6 +686,7 @@ export async function watchCommand(repo: string, cubeFile: string | undefined, f
   return watch(env, {
     cubeFile, seed, games, players, drafters, paceMs: num('pace', 600, 0, 60_000), out,
     ratingsFile: one('ratings') ?? defaultRatings(cubeFile), gameTimeoutSec: num('game-timeout', 300, 30, 3600),
+    ...(llmCaps ? { llmCaps } : {}),
     ...(shapes.A !== 'auto' || shapes.B !== 'auto' ? { shapes: shapes as Record<Side, Shape> } : {}),
   }, say);
 }

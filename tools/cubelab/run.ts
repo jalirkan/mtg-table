@@ -48,8 +48,8 @@ import { FORGE_RANKS_WEIGHTS, forgeRanked, runForgeRanksDraft } from './drafters
 import { isShaped, runShapedDraft, shapePlan, SHAPE_RULES, SHAPES, type Shape, type ShapeExplore, type ShapeRules } from './shapes.ts';
 import { isCardFlow } from './cardflow.ts';
 import {
-  cardTexts, claudeDraftModel, fakeDraftModel, LLM_PROMPT_VERSION, runLlmDraft, sumStats, themeSummary,
-  type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
+  cardTexts, claudeDraftModel, DEFAULT_FALLBACK_RATE, DEFAULT_LLM_MAX_USD, fakeDraftModel, LLM_PROMPT_VERSION, LlmBudget, LlmStop, MAX_LLM_JOBS,
+  runLlmDraft, sumStats, themeSummary, type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
 } from './llmdraft.ts';
 
 export interface RunOptions {
@@ -98,8 +98,16 @@ export interface RunOptions {
    * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
    */
   drafter?: RunDrafterOption;
-  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2); not part of the identity. */
+  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4); not part of the identity. */
   llmJobs?: number;
+  /**
+   * The LLM drafter's spend cap and fallback stop (the #144 review; llmdraft.ts `LlmBudget`), one for the
+   * whole run; absent = `--llm-max-usd 5`, no call cap, the 25% fallback stop.  The caller keeps it to read
+   * the spend afterwards, a stopped run's included (the watch's match.json `cost`).  Not part of the identity.
+   */
+  llmBudget?: LlmBudget;
+  /** The LLM drafter's model, made on first use; absent = the spec's (the CLI, or `fake`).  Tests only. */
+  llmModel?: () => Promise<DraftModel>;
   /** D446: each seat's shape (`--shape-a`, `--shape-b`) and the exploration share (`--shape-explore`); absent or all auto with share 0 = off, and the run is the old one. */
   shapes?: RunShapes;
 }
@@ -241,7 +249,7 @@ export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): stri
  * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
  * off it is the plain weights, so the version id of an ordinary run is what it always was.
  */
-export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number } | null; shapes?: RunShapesMeta | null }): unknown {
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: DrafterVersionInput | null; shapes?: RunShapesMeta | null }): unknown {
   if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter && !x.shapes) return w;
   return {
     ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}),
@@ -250,12 +258,21 @@ export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null;
   };
 }
 
+/** What of a run's drafter enters its version: run.json's `drafter`, or the fields of it the version reads. */
+export interface DrafterVersionInput { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number; weights?: Record<string, number> }
+
 /** A drafter's part of the lab version: D416's object exactly as it was (so its ids do not move), D439's by kind. */
-function drafterVersion(d: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number }): unknown {
+function drafterVersion(d: DrafterVersionInput): unknown {
   if (!d.kind || d.kind === 'human-picks') return { kind: 'human-picks', seat: d.seat, sha: d.sha };
   if (d.kind === 'llm') return { kind: 'llm', seat: d.seat, model: d.model, thinking: d.thinking, seesOpponent: !!d.seesOpponent, promptVersion: d.promptVersion };
+  // forge-ranks drafts with FORGE_RANKS_WEIGHTS, so a change to them is a change of version (the #144
+  // review).  At D439's own values the object is D439's {kind, seat}, so no existing folder's id moves.
+  if (d.kind === 'forge-ranks' && d.weights && JSON.stringify(d.weights) !== JSON.stringify(FORGE_RANKS_WEIGHTS_D439)) return { kind: d.kind, seat: d.seat, weights: d.weights };
   return { kind: d.kind, seat: d.seat };
 }
+
+/** The forge-ranks weights D439 shipped: version ids written with them stay as they were. */
+const FORGE_RANKS_WEIGHTS_D439 = { synergy: 0, lean: 0, commitAt: 0.04 };
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<RunCheck> {
   const t0 = Date.now();
@@ -265,7 +282,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   const { lc, text } = bridge ?? (loaded as NonNullable<typeof loaded>);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
   const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
-  let draftOne = (seed: number): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+  let draftOne = (seed: number, _signal?: AbortSignal): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
   if (bridge) {
     if (o.synergyFile || o.mixed) throw new Error('--bridge drafts with each cube\'s ratings; it takes no --synergy or head-to-head');
     draftOne = (seed) => bridge.draft(seed, o.format, o.weights, o.winstonCards);
@@ -300,6 +317,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   }
   let drafterMeta: RunDrafter | null = null;
   const llmStats: LlmDraftStats[] = [];
+  let budget: LlmBudget | null = null;
   if (o.drafter) {
     // D416, D439: one seat drafts with another drafter; everything else is a plain run's.
     const kind = o.drafter.kind;
@@ -329,15 +347,20 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       const texts = cardTexts(facts);
       const summary = themeSummary(text);
       let made: Promise<DraftModel> | null = null;
-      const model = (): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd')));
-      draftOne = async (seed) => {
-        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say }, seed);
+      const model = o.llmModel ?? ((): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd'))));
+      const b = o.llmBudget ?? new LlmBudget({ maxCalls: null, maxUsd: DEFAULT_LLM_MAX_USD, maxFallbackRate: DEFAULT_FALLBACK_RATE });
+      budget = b;
+      draftOne = async (seed, signal) => {
+        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say, budget: b, signal: signal ?? null }, seed);
         if (out.llm) llmStats.push(out.llm);
         return out;
       };
       drafterMeta = { kind: 'llm', seat, model: d.model, thinking: d.thinking, seesOpponent: d.seesOpponent, promptVersion: LLM_PROMPT_VERSION, fallback: 'lab', summaryChars: summary.length };
       say(`drafter (D439): seat ${seat} asks ${d.model === 'fake' ? 'the fake model (no network, no spend)' : `Claude (${d.model}, thinking ${d.thinking}) through the Claude Code CLI, once a decision`}; `
         + `${d.seesOpponent ? 'the prompt lists the opponent\'s pool; ' : ''}two failed replies take the lab drafter's line; decisions kept in ${path.join(o.out, 'llm')}; seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
+      const c = b.caps;
+      say(`llm drafter caps: ${c.maxCalls === null ? 'no call cap' : `at most ${c.maxCalls} call(s)`}, ${c.maxUsd === null ? 'NO dollar cap' : `at most $${c.maxUsd} at list price`}, `
+        + `${c.maxFallbackRate >= 1 ? 'no fallback stop' : `stop past ${Math.round(c.maxFallbackRate * 100)}% fallbacks`} (--llm-max-calls, --llm-max-usd, --llm-fallback-rate); ${Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2))} draft(s) at once`);
     }
   }
   let shapesMeta: RunShapesMeta | null = null;
@@ -440,7 +463,19 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   for (let i = 0; i < o.drafts; i++) if (!done.has(o.seed + i)) pending.push(o.seed + i);
   // D439: an LLM drafter waits on the model, so its drafts run --llm-jobs at a time; every other drafter is
   // synchronous and runs one by one, exactly as before.  The results are used in seed order either way.
-  const drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.max(1, o.llmJobs ?? 2) : 1, async (seed) => draftOne(seed));
+  // A failed draft stops the others (mapLimit aborts their signal); an LLM stop also leaves spend.json.
+  let drafted: DraftOut[];
+  try {
+    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2)) : 1, async (seed, signal) => draftOne(seed, signal));
+  } catch (e) {
+    if (budget) writeSpend(o.out, budget);
+    if (e instanceof LlmStop) throw new LlmStop(e.reason, `llm drafter stopped, ${e.message}; the drafts finished before it are kept in ${path.join(o.out, 'llm')} and are not asked again on a resume`);
+    throw e;
+  }
+  if (budget) {
+    writeSpend(o.out, budget);
+    say(`llm drafter spend: ${budget.summary()}`);
+  }
   if (llmStats.length > 0) {
     const t = sumStats(llmStats);
     say(`llm drafter: ${t.drafts} draft(s), ${t.decisions} decisions, ${t.calls} calls, ${t.retries} retries, ${t.fallbacks} fallbacks; `
@@ -537,17 +572,38 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   return check;
 }
 
-/** `f` over `items`, at most `limit` at a time; the results in the items' order. */
-export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T) => Promise<R>): Promise<R[]> {
+/** `<out>/llm/spend.json`: the run's LLM caps, what it spent and why it stopped (null = it did not). */
+function writeSpend(out: string, b: LlmBudget): void {
+  const dir = path.join(out, 'llm');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'spend.json.tmp'), `${JSON.stringify({ v: 1, ...b.record() }, null, 1)}\n`);
+  fs.renameSync(path.join(dir, 'spend.json.tmp'), path.join(dir, 'spend.json'));
+}
+
+/**
+ * `f` over `items`, at most `limit` at a time; the results in the items' order.  The first failure
+ * stops the rest: no lane takes another item, the in-flight calls see `signal` aborted (with that
+ * failure as its reason), and mapLimit rejects with it once every lane has settled, so nothing keeps
+ * running (or spending) after it returns.
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T, signal: AbortSignal) => Promise<R>): Promise<R[]> {
   const out = new Array<R>(items.length);
+  const ac = new AbortController();
+  let failure: { e: unknown } | null = null;
   let next = 0;
   const lane = async (): Promise<void> => {
-    while (next < items.length) {
+    while (next < items.length && !ac.signal.aborted) {
       const i = next++;
-      out[i] = await f(items[i] as T);
+      try {
+        out[i] = await f(items[i] as T, ac.signal);
+      } catch (e) {
+        if (!failure) { failure = { e }; ac.abort(e); }
+        return;
+      }
     }
   };
   await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), items.length) }, lane));
+  if (failure) throw (failure as { e: unknown }).e;
   return out;
 }
 

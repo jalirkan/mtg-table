@@ -20,7 +20,7 @@ export interface ModelReply {
 export interface ClaudeModel {
   name: string;
   cwd: string;
-  call(a: { system: string; user: string; session?: { id: string; resume: boolean } | null }): Promise<ModelReply>;
+  call(a: { system: string; user: string; session?: { id: string; resume: boolean } | null; signal?: AbortSignal | null }): Promise<ModelReply>;
 }
 
 export function thinkingEnv(thinking: string): Record<string, string>;

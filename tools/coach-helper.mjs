@@ -129,7 +129,13 @@
 //                 (docs/watch-bots.md the copyable form).  The games are served as complete
 //                 lines, by ?from=<byte> or Range: bytes=<n>- (ForgeCoach's live.ts).  /health
 //                 carries "watch": 1 when the bridge is built (else 0) and "watchRunning";
-//                 --no-watch turns it off.
+//                 --no-watch turns it off; --watch-keep N (10) is how many watch folders stay
+//                 under var/spectate/ (older ones go when a watch starts).  D443: /health also
+//                 lists the drafters and players POST /watch takes ("watchDrafters",
+//                 "watchPlayers") and an llm: drafter's cap a watch ("watchLlmCap"; config.json
+//                 coach.watchMaxUsd, default 1, and coach.watchMaxCalls, default 40).  D444: a
+//                 "my-<slug>" cube of the caller's own comes in the body ("cubeDoc": its title and
+//                 markdown, at most 256 KB; the body at most 600 KB); /health says "watchCustom": 1.
 //
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
@@ -250,7 +256,7 @@ import { MAX_HINT_BODY, createHintRunner } from './hint-runner.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
 import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
-import { MAX_WATCH_BODY, createWatchRunner } from './watch-runner.mjs';
+import { DEFAULT_WATCH_LLM_CAP, MAX_WATCH_BODY, createWatchRunner } from './watch-runner.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -512,7 +518,12 @@ function readConfig() {
   if (typeof coach !== 'object' || Array.isArray(coach) || coach === null) throw new Error(`"coach" in ${file} is not an object`);
   const autoReview = coach.autoReview ?? true;
   if (typeof autoReview !== 'boolean') throw new Error(`"coach.autoReview" in ${file} is not true or false`);
-  return { file, autoReview, coachPort: c.coachPort, wsPort: c.wsPort, roomPort: c.roomPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
+  // D443: one watch's cap for an llm: drafter (dollars at list price, model calls); the fallback stop is 25%.
+  const watchMaxUsd = coach.watchMaxUsd ?? DEFAULT_WATCH_LLM_CAP.maxUsd;
+  if (typeof watchMaxUsd !== 'number' || !(watchMaxUsd > 0) || watchMaxUsd > 50) throw new Error(`"coach.watchMaxUsd" in ${file} is not dollars above 0 and at most 50`);
+  const watchMaxCalls = coach.watchMaxCalls ?? DEFAULT_WATCH_LLM_CAP.maxCalls;
+  if (!Number.isInteger(watchMaxCalls) || watchMaxCalls < 1 || watchMaxCalls > 1000) throw new Error(`"coach.watchMaxCalls" in ${file} is not a whole number of calls 1..1000`);
+  return { file, autoReview, watchLlmCap: { maxUsd: watchMaxUsd, maxCalls: watchMaxCalls, maxFallbackRate: DEFAULT_WATCH_LLM_CAP.maxFallbackRate }, coachPort: c.coachPort, wsPort: c.wsPort, roomPort: c.roomPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
 }
 
 function parseArgs(argv) {
@@ -550,6 +561,7 @@ function parseArgs(argv) {
     else if (f === '--eval-schema') a.evalSchema = val();
     else if (f === '--eval-cube') a.evalCube = val();
     else if (f === '--no-watch') a.watch = false;   // D440
+    else if (f === '--watch-keep') a.watchKeep = Number(val());   // D440: watch folders kept (10)
     else if (f === '--draft-room') a.draftRoom = true;   // D400
     else if (f === '--room-port') a.roomPort = Number(val());
     else if (f === '--room-dir') a.roomDir = val();
@@ -799,7 +811,7 @@ export function startHelper(opts) {
       const game = /^\/watch\/([^/]+)\/game\/([^/]+)$/.exec(path);
       const stopIt = /^\/watch\/([^/]+)\/stop$/.exec(path);
       if (path === '/watch' && req.method === 'POST') {
-        const raw = await readBody(req, res, MAX_WATCH_BODY, '4 KB', cors, say);
+        const raw = await readBody(req, res, MAX_WATCH_BODY, `${MAX_WATCH_BODY / 1024} KB`, cors, say);   // D444: room for a cubeDoc
         if (raw === null) return;
         let q;
         try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
@@ -820,7 +832,7 @@ export function startHelper(opts) {
       if (path !== '/watch' && !one && !game) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
       if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: path === '/watch' ? 'use GET or POST' : 'use GET' }, { ...cors, Allow: path === '/watch' ? 'GET, POST, OPTIONS' : 'GET, OPTIONS' }); say(405); return; }
       if (game) {
-        const r = watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });
+        const r = await watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });   // only what passed the redaction check
         const expose = { 'Access-Control-Expose-Headers': 'X-Log-Next, X-Log-Size, Content-Range' };
         if (r.json) { send(res, r.status, r.json, { ...cors, ...expose, ...(r.headers ?? {}) }); say(r.status); return; }
         res.writeHead(r.status, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Length': r.body.length, ...cors, ...expose, ...r.headers });
@@ -1235,7 +1247,8 @@ async function main() {
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
   // D440: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
-  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`) }) : null;
+  if (a.watchKeep !== undefined && (!Number.isInteger(a.watchKeep) || a.watchKeep < 1)) { console.error('coach-helper: --watch-keep is a whole number of watch folders >= 1'); process.exit(2); }
+  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`), llmCap: cfg.watchLlmCap, ...(a.watchKeep !== undefined ? { keep: a.watchKeep } : {}) }) : null;
   const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch });
   let bound;
   try { bound = await h.listen(); } catch (e) {
@@ -1259,9 +1272,10 @@ async function main() {
   console.log(`COACH BUGS      POST /bug saves to var/bugs/ (D411); tools/bugs-sync.mjs --push sends new ones to pc-results`);
   console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
   console.log(!watch ? 'COACH WATCH     /watch off (--no-watch)'
-    : watch.available() ? 'COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time'
+    : watch.available() ? `COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time; an llm: drafter at most $${cfg.watchLlmCap.maxUsd} and ${cfg.watchLlmCap.maxCalls} calls a watch (D443)`
     : 'COACH WATCH     /watch waits for the bridge build (./bridge/build.sh); /health says "watch": 0 until then');
-  const stop = () => { watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
+  // D440: a running watch is SIGTERMed, then SIGKILLed after its grace, before the helper exits.
+  const stop = async () => { await watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }

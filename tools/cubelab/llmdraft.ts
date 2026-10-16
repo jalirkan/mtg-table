@@ -30,6 +30,19 @@
 // the moment the draft ends, and a resumed run replays that file instead of asking again, so a
 // stopped run never pays twice and a folder's drafts are reproducible from it.
 //
+// THE SPEND CAP AND THE FALLBACK STOP (the #144 review).  A run holds ONE `LlmBudget` across all its
+// drafts (every --llm-jobs lane draws on it): `--llm-max-calls` (model calls, retries included) and
+// `--llm-max-usd` (dollars at list price: the CLI's own cost figure, summed; default $5) refuse the call
+// that would pass them -- the dollar check projects the next call at the run's mean cost a call so
+// far, so it stops BEFORE the call that would cross the cap, not after -- and `--llm-fallback-rate`
+// (default 0.25) stops the run once more than that share of its decisions fell back, the share taken
+// over at least FALLBACK_FLOOR decisions so that one early fault does not end it (a logged-out CLI
+// fails every call: it stops after its third decision, six failed calls).  A stop is an `LlmStop`
+// with the reason in words: the draft in flight is abandoned (finished drafts keep their replay
+// files, so a resumed run never pays for them twice), every in-flight CLI call is killed, and the
+// run ends with that message.  Without the stop a logged-out CLI turned a run into lab vs lab while
+// it was still labelled `llm`.
+//
 // `llm:fake` is a model with no network and no spend (the first line the prompt lists): the tests,
 // the job's pilot and the runner's dry run use it.
 
@@ -256,7 +269,7 @@ export function parseReply(text: string, legal: readonly number[]): ParsedReply 
 
 export interface DraftModelUsage { input: number | null; cacheCreate: number | null; cacheRead: number | null; output: number | null }
 export interface DraftModelReply { text: string; usage: DraftModelUsage | null; costUsd: number | null; ms: number; model?: string | null }
-export interface DraftModel { name: string; call(a: { system: string; user: string }): Promise<DraftModelReply> }
+export interface DraftModel { name: string; call(a: { system: string; user: string; signal?: AbortSignal }): Promise<DraftModelReply> }
 
 /**
  * The fake model: no network, no spend.  With a script it replies with the script's strings in order
@@ -268,7 +281,8 @@ export function fakeDraftModel(script: readonly string[] = []): DraftModel & { c
   const m = {
     name: 'fake',
     calls: 0,
-    async call({ user }: { system: string; user: string }): Promise<DraftModelReply> {
+    async call({ user, signal }: { system: string; user: string; signal?: AbortSignal }): Promise<DraftModelReply> {
+      if (signal?.aborted) throw signal.reason;
       m.calls++;
       const next = queue.shift();
       if (next !== undefined && next.startsWith('!')) throw new Error(next.slice(1));
@@ -290,11 +304,215 @@ export async function claudeDraftModel(model: LlmModelName, thinking: LlmThinkin
   const m = lib.makeClaudeModel({ model, thinking, cwd, timeoutS });
   return {
     name: model,
-    async call({ system, user }) {
-      const r = await m.call({ system, user, session: null });
+    async call({ system, user, signal }) {
+      const r = await m.call({ system, user, session: null, ...(signal ? { signal } : {}) });
       return { text: r.text, usage: r.usage, costUsd: r.costUsd, ms: r.ms, model: r.model };
     },
   };
+}
+
+// ------------------------------------------------------------ the spend cap and the fallback stop
+
+export interface LlmCaps {
+  /** Model calls the run may make, retries included; null = no cap. */
+  maxCalls: number | null;
+  /** Dollars at list price (the CLI's own cost figure, summed) the run may spend; null = no cap. */
+  maxUsd: number | null;
+  /** The run stops once more than this share of its decisions fell back (0..1; 1 = never). */
+  maxFallbackRate: number;
+}
+
+/** `run`'s default dollar cap: a 100-draft Sonnet arm (about $30, D439) needs `--llm-max-usd` said out loud. */
+export const DEFAULT_LLM_MAX_USD = 5;
+export const DEFAULT_FALLBACK_RATE = 0.25;
+/**
+ * What the dollar cap charges a call whose cost it cannot read (#148 review): a reply without the
+ * CLI's `total_cost_usd`, or a call killed in flight (a stop, a timeout), which spent tokens and
+ * reports nothing.  It is the run's mean priced call when there is one, else this -- about three
+ * times D439's Sonnet draft call ($0.30 a draft of 18 calls) -- so a CLI that never reports a cost
+ * still meets the default $5 cap, at 100 calls: the dollar cap counts calls.
+ */
+export const UNPRICED_CALL_USD = 0.05;
+/** The fallback share's denominator is at least this many decisions: 3 fallbacks in the first 8 stop a run, 1 does not. */
+export const FALLBACK_FLOOR = 8;
+/** `--llm-jobs` at most: each lane is one `claude -p` at a time, and the cap's projection is per lane. */
+export const MAX_LLM_JOBS = 4;
+
+export type LlmStopReason = 'max-calls' | 'max-usd' | 'fallbacks' | 'aborted';
+
+/** Why an LLM run stopped, in words; `reason` is the machine's half. */
+export class LlmStop extends Error {
+  readonly reason: LlmStopReason;
+  constructor(reason: LlmStopReason, message: string) {
+    super(message);
+    this.name = 'LlmStop';
+    this.reason = reason;
+  }
+}
+
+/** What a run's model calls cost, over every draft it asked (an abandoned one included). */
+export interface LlmSpend {
+  calls: number;
+  /** Calls that failed (the CLI exited, timed out or said is_error). */
+  callErrors: number;
+  decisions: number;
+  retries: number;
+  fallbacks: number;
+  tokensIn: number;
+  cacheRead: number;
+  cacheCreate: number;
+  tokensOut: number;
+  /** The CLI's cost figure, summed: dollars at list price. */
+  usd: number;
+  /** How many calls reported a cost. */
+  costCalls: number;
+  /** Calls that returned with no cost figure, and calls killed in flight: charged an estimate each. */
+  unpriced: number;
+  aborted: number;
+  /** The estimates charged for them (UNPRICED_CALL_USD, or the mean priced call); the cap checks usd + this. */
+  usdAssumed: number;
+}
+
+const usd = (x: number): string => `$${x.toFixed(x < 1 ? 4 : 2)}`;
+
+/**
+ * The caps from `--llm-max-calls N`, `--llm-max-usd X` (or `none`) and `--llm-fallback-rate R` (`one`
+ * reads a flag's value), over `d`'s defaults.  Throws a sentence naming the flag on a bad value.
+ */
+export function llmCapsOf(one: (k: string) => string | undefined, d: LlmCaps = { maxCalls: null, maxUsd: DEFAULT_LLM_MAX_USD, maxFallbackRate: DEFAULT_FALLBACK_RATE }): LlmCaps {
+  const caps = { ...d };
+  const calls = one('llm-max-calls');
+  if (calls !== undefined) {
+    const n = Number(calls);
+    if (!Number.isInteger(n) || n < 1 || n > 100_000) throw new Error(`--llm-max-calls is a whole number of model calls, 1..100000, got "${calls}"`);
+    caps.maxCalls = n;
+  }
+  const dollars = one('llm-max-usd');
+  if (dollars !== undefined) {
+    const n = Number(dollars);
+    if (dollars === 'none') caps.maxUsd = null;
+    else if (!Number.isFinite(n) || n <= 0 || n > 10_000) throw new Error(`--llm-max-usd is dollars at list price above 0 (or none), got "${dollars}"`);
+    else caps.maxUsd = n;
+  }
+  const rate = one('llm-fallback-rate');
+  if (rate !== undefined) {
+    const n = Number(rate);
+    if (!Number.isFinite(n) || n < 0 || n > 1) throw new Error(`--llm-fallback-rate is a share 0..1 (1 = never stop), got "${rate}"`);
+    caps.maxFallbackRate = n;
+  }
+  return caps;
+}
+
+/**
+ * One run's spend, shared by every draft and lane.  `beforeCall` refuses a call past a cap,
+ * `afterCall` counts it, `afterDecision` applies the fallback stop; each refusal is an `LlmStop`,
+ * remembered (every later call refuses with the same one) and signalled on `signal`, which kills
+ * the in-flight CLI calls.  `onChange` sees every count move (the watch writes it into match.json).
+ */
+export class LlmBudget {
+  readonly caps: LlmCaps;
+  readonly spent: LlmSpend = { calls: 0, callErrors: 0, decisions: 0, retries: 0, fallbacks: 0, tokensIn: 0, cacheRead: 0, cacheCreate: 0, tokensOut: 0, usd: 0, costCalls: 0, unpriced: 0, aborted: 0, usdAssumed: 0 };
+  stopped: LlmStop | null = null;
+  private inFlight = 0;
+  private readonly ac = new AbortController();
+  private readonly onChange: ((b: LlmBudget) => void) | null;
+
+  constructor(caps: LlmCaps, onChange: ((b: LlmBudget) => void) | null = null) {
+    if (caps.maxCalls !== null && (!Number.isInteger(caps.maxCalls) || caps.maxCalls < 1)) throw new Error(`the call cap is a whole number of calls >= 1, got ${caps.maxCalls}`);
+    if (caps.maxUsd !== null && (!Number.isFinite(caps.maxUsd) || caps.maxUsd <= 0)) throw new Error(`the dollar cap is a number above 0, got ${caps.maxUsd}`);
+    if (!Number.isFinite(caps.maxFallbackRate) || caps.maxFallbackRate < 0 || caps.maxFallbackRate > 1) throw new Error(`the fallback rate is 0..1, got ${caps.maxFallbackRate}`);
+    this.caps = caps;
+    this.onChange = onChange;
+  }
+
+  get signal(): AbortSignal { return this.ac.signal; }
+
+  /** Stop the run: remembered, signalled, thrown. */
+  stop(e: LlmStop): never {
+    if (!this.stopped) {
+      this.stopped = e;
+      this.ac.abort(e);
+      this.onChange?.(this);
+    }
+    throw this.stopped;
+  }
+
+  /** Before a model call: refuse it when it would pass a cap. */
+  beforeCall(): void {
+    if (this.stopped) throw this.stopped;
+    const s = this.spent;
+    const { maxCalls, maxUsd } = this.caps;
+    if (maxCalls !== null && s.calls + this.inFlight >= maxCalls) {
+      this.stop(new LlmStop('max-calls', `the call cap: ${s.calls + this.inFlight} model call(s) made of at most ${maxCalls} (${this.summary()})`));
+    }
+    if (maxUsd !== null) {
+      // an unpriced call counts too (at an estimate), so a CLI that reports no cost is bounded by calls
+      const spent = s.usd + s.usdAssumed;
+      const charged = s.costCalls + s.unpriced + s.aborted;
+      const per = charged > 0 ? spent / charged : 0;
+      if (spent >= maxUsd || spent + per * (this.inFlight + 1) > maxUsd) {
+        this.stop(new LlmStop('max-usd', `the spend cap: ${usd(spent)} spent of at most ${usd(maxUsd)} at list price${s.usdAssumed > 0 ? ` (${usd(s.usdAssumed)} of it estimated for ${s.unpriced + s.aborted} call(s) with no cost figure)` : ''}, and the next call (about ${usd(per)} each) would pass it (${this.summary()})`));
+      }
+    }
+    this.inFlight++;
+  }
+
+  /** What a call with no cost figure is charged: the run's mean priced call, else UNPRICED_CALL_USD. */
+  private estimate(): number {
+    const s = this.spent;
+    return s.costCalls > 0 ? s.usd / s.costCalls : UNPRICED_CALL_USD;
+  }
+
+  /**
+   * After a model call: its reply (null = the call failed).  `killed`: the call was killed in flight
+   * (the run stopped, or it timed out) -- it spent tokens it never reported, so it is charged.
+   */
+  afterCall(r: DraftModelReply | null, { killed = false }: { killed?: boolean } = {}): void {
+    this.inFlight = Math.max(0, this.inFlight - 1);
+    const s = this.spent;
+    s.calls++;
+    if (!r) {
+      s.callErrors++;
+      if (killed) { s.aborted++; s.usdAssumed += this.estimate(); }
+    } else {
+      if (r.costUsd == null) { s.unpriced++; s.usdAssumed += this.estimate(); }
+      if (r.usage) {
+        s.tokensIn += r.usage.input ?? 0;
+        s.cacheRead += r.usage.cacheRead ?? 0;
+        s.cacheCreate += r.usage.cacheCreate ?? 0;
+        s.tokensOut += r.usage.output ?? 0;
+      }
+      if (r.costUsd != null) { s.usd += r.costUsd; s.costCalls++; }
+    }
+    this.onChange?.(this);
+  }
+
+  /** After a decision: how it was made; stops the run when too many fell back. */
+  afterDecision(by: LlmDecision['by']): void {
+    const s = this.spent;
+    s.decisions++;
+    if (by === 'retry') s.retries++;
+    if (by === 'fallback') s.fallbacks++;
+    this.onChange?.(this);
+    const rate = this.caps.maxFallbackRate;
+    if (rate < 1 && s.fallbacks > rate * Math.max(s.decisions, FALLBACK_FLOOR)) {
+      this.stop(new LlmStop('fallbacks', `the fallback stop: ${s.fallbacks} of ${s.decisions} decision(s) fell back to the lab drafter's line (more than ${Math.round(rate * 100)}%`
+        + `${s.decisions < FALLBACK_FLOOR ? ` of at least ${FALLBACK_FLOOR}` : ''}); ${s.callErrors} of ${s.calls} call(s) failed -- is the Claude Code CLI logged in? (${this.summary()})`));
+    }
+  }
+
+  /** The counts in one line. */
+  summary(): string {
+    const s = this.spent;
+    return `${s.calls} call(s), ${s.callErrors} failed, ${s.decisions} decision(s), ${s.fallbacks} fallback(s), `
+      + `${s.tokensIn + s.cacheRead + s.cacheCreate} input + ${s.tokensOut} output tokens, ${usd(s.usd)} at list price`
+      + `${s.usdAssumed > 0 ? ` + ${usd(s.usdAssumed)} estimated (${s.unpriced} unpriced, ${s.aborted} killed in flight)` : ''}`;
+  }
+
+  /** The record a run or a watch writes (spend.json, match.json's `cost`). */
+  record(): { caps: LlmCaps; spent: LlmSpend; stopped: LlmStopReason | null; why: string | null } {
+    return { caps: { ...this.caps }, spent: { ...this.spent }, stopped: this.stopped?.reason ?? null, why: this.stopped?.message ?? null };
+  }
 }
 
 // ------------------------------------------------------------ one draft
@@ -354,6 +572,10 @@ export interface LlmDrafterOptions {
   /** <out>/llm: one <seed>.json per finished draft, read back on resume; absent = no cache (tests). */
   cacheDir?: string | null;
   say?: (s: string) => void;
+  /** The run's caps and counts, shared by every draft (absent = no cap: tests). */
+  budget?: LlmBudget | null;
+  /** Aborted when the run stops for another reason (another lane's draft failed, run.ts mapLimit). */
+  signal?: AbortSignal | null;
 }
 
 interface CacheFile { v: 1; seed: number; seat: 'A' | 'B'; model: string; thinking: string; seesOpponent: boolean; promptVersion: number; lines: string[]; stats: LlmDraftStats }
@@ -385,26 +607,43 @@ export async function runLlmDraft(o: LlmDrafterOptions, seed: number): Promise<D
   const lines: string[] = [];
   let k = 0;
   let model: DraftModel | null = null;
+  const signals = [o.budget?.signal, o.signal].filter((x): x is AbortSignal => !!x);
+  const signal = signals.length === 0 ? undefined : signals.length === 1 ? signals[0] : AbortSignal.any(signals);
+  /** The reason the run stopped, if it did: the budget's own, else whatever aborted it. */
+  const halted = (): unknown => o.budget?.stopped ?? (signal?.aborted ? (signal.reason ?? new LlmStop('aborted', 'the run stopped')) : null);
   const ask = async (system: string, user: string, errors: string[]): Promise<string | null> => {
+    const h = halted();
+    if (h) throw h;
     model ??= await o.model();
+    o.budget?.beforeCall();
     stats.calls++;
+    let r: DraftModelReply;
     try {
-      const r = await model.call({ system, user });
-      stats.modelMs += r.ms;
-      if (r.usage) {
-        stats.tokensIn += r.usage.input ?? 0;
-        stats.cacheRead += r.usage.cacheRead ?? 0;
-        stats.cacheCreate += r.usage.cacheCreate ?? 0;
-        stats.tokensOut += r.usage.output ?? 0;
-      }
-      if (r.costUsd != null) stats.costUsd = (stats.costUsd ?? 0) + r.costUsd;
-      if (!stats.resolved && r.model) stats.resolved = r.model;
-      return r.text;
+      r = await model.call({ system, user, ...(signal ? { signal } : {}) });
     } catch (e) {
+      // killed in flight -- by the stop's signal or by the wrapper's timeout (model.mjs tags the error
+      // `killed`), or a model that rejected once the run stopped -- spent tokens it never reported;
+      // a model that refused before it started (it rethrows the stop itself) spent nothing
+      const stop0 = halted();
+      const tag = (e as { killed?: unknown } | null)?.killed;
+      o.budget?.afterCall(null, { killed: tag === 'abort' || tag === 'timeout' || (!!stop0 && e !== stop0) });
+      const stop = halted();
+      if (stop) throw stop;
       stats.callErrors++;
       errors.push(`the call failed: ${(e as Error).message.slice(0, 200)}`);
       return null;
     }
+    o.budget?.afterCall(r);
+    stats.modelMs += r.ms;
+    if (r.usage) {
+      stats.tokensIn += r.usage.input ?? 0;
+      stats.cacheRead += r.usage.cacheRead ?? 0;
+      stats.cacheCreate += r.usage.cacheCreate ?? 0;
+      stats.tokensOut += r.usage.output ?? 0;
+    }
+    if (r.costUsd != null) stats.costUsd = (stats.costUsd ?? 0) + r.costUsd;
+    if (!stats.resolved && r.model) stats.resolved = r.model;
+    return r.text;
   };
   const choose = async (q: GridAsk): Promise<number> => {
     if (q.d.seat !== o.seat) return base.gridLine(q.d, q.grid, q.taken);
@@ -436,6 +675,7 @@ export async function runLlmDraft(o: LlmDrafterOptions, seed: number): Promise<D
     }
     lines.push(lineName(line));
     stats.picks.push({ at: q.at, line: lineName(line), by, reason, ...(errors.length ? { errors } : {}), promptChars: p.user.length });
+    o.budget?.afterDecision(by);
     return line;
   };
   const r = rng(seed, 'draft:grid');

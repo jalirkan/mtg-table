@@ -25,6 +25,7 @@
 //                                                              pick model, the other as always; grid only (D416)
 //           [--drafter forge-ranks | llm:<haiku|sonnet|opus|fake>[:thinking=off|low|default] [--drafter-seat A|B]]
 //           [--llm-sees-opponent] [--llm-jobs 2]               Forge's ranks, or Claude asked once a decision (D439)
+//           [--llm-max-calls N] [--llm-max-usd 5|none] [--llm-fallback-rate 0.25]   the LLM's spend cap and fallback stop
 //           [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff] [--shape-explore on|share=x]   deck shapes (D446, shapes.ts)
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
 //   queue   plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
@@ -41,8 +42,9 @@
 //           [--record-all | --record-every N]                  record both batches' games (D315)
 //           [--explore on | --explore name=value]...           controlled exploration of low-rated cards (D356):
 //                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
-//   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
-//           [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]   (D440, watch.ts)
+//   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|forge-ranks|llm:<model>|human-picks:<f>] [--drafter-b ...]
+//           [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
+//           [--llm-max-usd 1] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   an llm: drafter's cap for the watch (D442)
 //           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
 //           [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--min-pair-games 30] [--rule <measure>:lower-better:margin=x]...
@@ -67,6 +69,7 @@ import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
 import { learnCommand, selfplayCommand } from './learncmd.ts';
 import { bridgeOptions } from './bridge.ts';
 import { DRAFTER_SPECS, parseDrafter } from './drafters.ts';
+import { LlmBudget, llmCapsOf, MAX_LLM_JOBS } from './llmdraft.ts';
 import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
 import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './playexplore.ts';
@@ -96,7 +99,8 @@ function usage(msg?: string): never {
                         [--allow-version-change] [--deckset]   (seeds 900000000+ are the deck sets', seeds.ts)
                         [--play-explore on | --play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
                         [--drafter human-picks:<x.picks.json> | forge-ranks | llm:<model>[:thinking=off|low|default]]
-                        [--drafter-seat A|B] [--llm-sees-opponent] [--llm-jobs 2]   (D416, D439; grid)
+                        [--drafter-seat A|B] [--llm-sees-opponent] [--llm-jobs 1..4]   (D416, D439; grid)
+                        [--llm-max-calls N] [--llm-max-usd 5|none] [--llm-fallback-rate 0.25]   (the LLM's caps)
                         [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff] [--shape-explore on|share=0.25[,mono=w,...]]   (D446; grid)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
@@ -113,9 +117,11 @@ function usage(msg?: string): never {
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
-       tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
-                        [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]   (D440)
-                        [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff]   (D446)
+       tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3]
+                        [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<f>] [--drafter-b ...]   (one side at most not lab)
+                        [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
+                        [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   (D440, D442, D443)
+                        [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff]   (D446; both lab drafters)
        tools/cubelab.sh census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   (D445, no engine)
        tools/cubelab.sh sample --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff>
                         --seed S --count N --out <dir> [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   (D445, no engine)
@@ -259,10 +265,13 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     } else if (spec.kind === 'forge-ranks') o.drafter = { kind: 'forge-ranks', seat };
     else {
       o.drafter = { kind: 'llm', model: spec.model, thinking: spec.thinking, seat, seesOpponent: f.has('llm-sees-opponent') };
-      o.llmJobs = Math.max(1, int(f, 'llm-jobs', 2));
+      o.llmJobs = int(f, 'llm-jobs', 2);
+      if (o.llmJobs < 1 || o.llmJobs > MAX_LLM_JOBS) usage(`--llm-jobs is 1..${MAX_LLM_JOBS} (each is one claude -p at a time, and the spend cap projects per lane), got ${o.llmJobs}`);
+      try { o.llmBudget = new LlmBudget(llmCapsOf((k) => one(f, k))); } catch (e) { usage((e as Error).message); }
     }
   } else if (one(f, 'drafter-seat') !== undefined) usage('--drafter-seat needs --drafter');
-  if (o.drafter?.kind !== 'llm' && (f.has('llm-sees-opponent') || f.has('llm-jobs'))) usage('--llm-sees-opponent and --llm-jobs need --drafter llm:<model>');
+  const llmFlags = ['llm-sees-opponent', 'llm-jobs', 'llm-max-calls', 'llm-max-usd', 'llm-fallback-rate'];
+  if (o.drafter?.kind !== 'llm' && llmFlags.some((k) => f.has(k))) usage(`${llmFlags.map((k) => `--${k}`).join(', ')} need --drafter llm:<model>`);
   const bridgeArg = one(f, 'bridge');
   if (bridgeArg) {
     if (cubeFile || one(f, 'ratings')) usage('--bridge names its cubes itself (no cube file, no --ratings: each cube keeps its own ratings)');

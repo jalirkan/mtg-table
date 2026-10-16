@@ -12,21 +12,25 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import type { Fact, LabCard } from '../../tools/cubelab/cards.ts';
+import { parseCube } from '../../tools/cubelab/cube.ts';
 import { aiChooser, gridDraft, newDrafter, type GridAsk } from '../../tools/cubelab/draft.ts';
-import { forgeRanked, parseDrafter, runForgeRanksDraft } from '../../tools/cubelab/drafters.ts';
+import { FORGE_RANKS_WEIGHTS, forgeRanked, parseDrafter, runForgeRanksDraft } from '../../tools/cubelab/drafters.ts';
 import type { LoadedCube } from '../../tools/cubelab/lab.ts';
 import {
-  buildPrompt, cardTexts, costText, fakeDraftModel, legalLines, LLM_SYSTEM, oracleText, parseLlmSpec, parseReply,
-  runLlmDraft, themeSummary, type CardText, type DraftModel, type LlmDrafterOptions,
+  buildPrompt, cardTexts, costText, DEFAULT_LLM_MAX_USD, fakeDraftModel, FALLBACK_FLOOR, legalLines, LLM_SYSTEM, LlmBudget, llmCapsOf, LlmStop, oracleText, parseLlmSpec, parseReply,
+  runLlmDraft, themeSummary, UNPRICED_CALL_USD, type CardText, type DraftModel, type LlmCaps, type LlmDrafterOptions,
 } from '../../tools/cubelab/llmdraft.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
-import { identityDiff, mapLimit, versionWeights } from '../../tools/cubelab/run.ts';
+import { identityDiff, mapLimit, runLab, versionWeights } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 
 const W = DEFAULT_WEIGHTS;
@@ -286,12 +290,170 @@ test('the usage is summed; a finished draft is written to <out>/llm/<seed>.json 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// ------------------------------------------------------------ the spend cap and the fallback stop (the #144 review)
+
+const CAPS: LlmCaps = { maxCalls: null, maxUsd: null, maxFallbackRate: 0.25 };
+/** A fake answering the first legal line and reporting `usd` a call. */
+function priced(usd: number): DraftModel & { calls: number } {
+  const inner = fakeDraftModel();
+  const m = { name: 'priced', calls: 0, call: async (a: { system: string; user: string; signal?: AbortSignal }) => { m.calls++; return { ...(await inner.call(a)), usage: { input: 10, cacheRead: 0, cacheCreate: 100, output: 5 }, costUsd: usd }; } };
+  return m;
+}
+
+test('the fallback stop: a logged-out CLI (every call fails) stops the run after its third decision, six calls, with the reason', async () => {
+  const lc = cube();
+  let calls = 0;
+  const loggedOut: DraftModel = { name: 'out', call: async () => { calls++; throw new Error('claude exited 1 with no output: Invalid API key · Please run /login'); } };
+  const b = new LlmBudget(CAPS);
+  const e = await runLlmDraft(opts(lc, loggedOut, { budget: b }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof LlmStop, String(e));
+  assert.equal((e as LlmStop).reason, 'fallbacks');
+  assert.match((e as LlmStop).message, /3 of 3 decision\(s\) fell back.*more than 25% of at least 8.*6 of 6 call\(s\) failed -- is the Claude Code CLI logged in\?/);
+  assert.equal(calls, 6);
+  assert.deepEqual([b.spent.decisions, b.spent.fallbacks, b.spent.calls, b.spent.callErrors], [3, 3, 6, 6]);
+  // the stop is remembered: a second draft on the same budget refuses before any call
+  await assert.rejects(runLlmDraft(opts(lc, loggedOut, { budget: b }), 7), (x: unknown) => x === b.stopped);
+  assert.equal(calls, 6);
+  assert.equal(b.record().stopped, 'fallbacks');
+});
+
+/** A fake that fails both attempts of the decisions numbered in `failing` (1-based) and answers the first legal line otherwise. */
+function failsAt(failing: number[]): DraftModel {
+  const inner = fakeDraftModel();
+  let decision = 0;
+  return { name: 'fails-at', call: async (a) => {
+    if (!a.user.includes('YOUR LAST REPLY COULD NOT BE USED')) decision++;
+    return failing.includes(decision) ? { text: 'no.', usage: null, costUsd: null, ms: 0 } : inner.call(a);
+  } };
+}
+
+test('the fallback stop is the running share: 4 of 18 spread out pass, a fifth (5 of 17) and 3 of the first 9 stop; rate 1 never stops', async () => {
+  const lc = cube();
+  // fallbacks at decisions 1, 2, 12 and 16: never more than 25% of max(decisions, 8)
+  const ok = await runLlmDraft(opts(lc, failsAt([1, 2, 12, 16]), { budget: new LlmBudget(CAPS) }), 4);
+  assert.equal(ok.llm!.fallbacks, 4);
+  assert.equal(ok.llm!.decisions, 18);
+  const stopsAt = async (failing: number[]): Promise<number> => {
+    const b = new LlmBudget(CAPS);
+    await assert.rejects(runLlmDraft(opts(lc, failsAt(failing), { budget: b }), 4), (x: unknown) => x instanceof LlmStop && x.reason === 'fallbacks');
+    return b.spent.decisions;
+  };
+  assert.equal(await stopsAt([1, 2, 12, 16, 17]), 17, 'a fifth fallback at decision 17: 5 > 4.25');
+  assert.equal(await stopsAt([1, 5, 9]), 9, '3 of the first 9: 3 > 2.25');
+  const never: DraftModel = { name: 'never', call: async () => ({ text: 'no.', usage: null, costUsd: null, ms: 0 }) };
+  const all = await runLlmDraft(opts(lc, never, { budget: new LlmBudget({ ...CAPS, maxFallbackRate: 1 }) }), 4);
+  assert.equal(all.llm!.fallbacks, 18, 'rate 1: the old behaviour, every decision the lab drafter\'s');
+  assert.equal(FALLBACK_FLOOR, 8);
+});
+
+test('the call cap and the dollar cap refuse the call that would pass them; the stop kills the run\'s other drafts', async () => {
+  const lc = cube();
+  const m = priced(0.1);
+  const calls = new LlmBudget({ ...CAPS, maxCalls: 5 });
+  const e = await runLlmDraft(opts(lc, m, { budget: calls }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof LlmStop && e.reason === 'max-calls', String(e));
+  assert.match((e as LlmStop).message, /5 model call\(s\) made of at most 5/);
+  assert.equal(m.calls, 5);
+  const m2 = priced(0.1);
+  const dollars = new LlmBudget({ ...CAPS, maxUsd: 0.35 });
+  const e2 = await runLlmDraft(opts(lc, m2, { budget: dollars }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(e2 instanceof LlmStop && e2.reason === 'max-usd', String(e2));
+  assert.equal(m2.calls, 3, 'the fourth call would have made $0.40: refused before it');
+  assert.ok(Math.abs(dollars.spent.usd - 0.3) < 1e-9 && dollars.spent.usd <= 0.35);
+  assert.match((e2 as LlmStop).message, /\$0\.3000 spent of at most \$0\.3500 at list price/);
+  assert.deepEqual([dollars.spent.tokensIn, dollars.spent.cacheCreate, dollars.spent.tokensOut, dollars.spent.costCalls], [30, 300, 15, 3]);
+  // an external abort (another lane failed) stops a draft before its next call
+  const ac = new AbortController();
+  ac.abort(new Error('another draft failed'));
+  const m3 = priced(0);
+  await assert.rejects(runLlmDraft(opts(lc, m3, { budget: new LlmBudget(CAPS), signal: ac.signal }), 4), /another draft failed/);
+  assert.equal(m3.calls, 0);
+  // the budget's signal reaches the model call (the CLI wrapper kills its process group on it)
+  let sawSignal: AbortSignal | undefined;
+  const watcher: DraftModel = { name: 'w', call: async (a) => { sawSignal = a.signal; return fakeDraftModel().call(a); } };
+  const b4 = new LlmBudget({ ...CAPS, maxCalls: 1 });
+  await assert.rejects(runLlmDraft(opts(lc, watcher, { budget: b4 }), 4), /call cap/);
+  assert.equal(sawSignal?.aborted, true, 'the signal the call was given is aborted by the stop');
+});
+
+test('a call with no cost figure, or killed in flight, is charged: the dollar cap counts calls when the CLI reports no cost (#148 review)', async () => {
+  const lc = cube();
+  // the CLI reports no total_cost_usd: each call is charged UNPRICED_CALL_USD, so $0.21 is four calls
+  const inner = fakeDraftModel();
+  let n = 0;
+  const unpriced: DraftModel = { name: 'unpriced', call: async (a) => { n++; return { ...(await inner.call(a)), costUsd: null }; } };
+  const b = new LlmBudget({ ...CAPS, maxUsd: 4.2 * UNPRICED_CALL_USD });
+  const e = await runLlmDraft(opts(lc, unpriced, { budget: b }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof LlmStop && e.reason === 'max-usd', String(e));
+  assert.equal(n, 4);
+  assert.deepEqual([b.spent.usd, b.spent.unpriced, b.spent.costCalls], [0, 4, 0]);
+  assert.ok(Math.abs(b.spent.usdAssumed - 4 * UNPRICED_CALL_USD) < 1e-9);
+  assert.match((e as LlmStop).message, /estimated for 4 call\(s\) with no cost figure/);
+  // so the default $5 cap is 100 such calls, and `run` is bounded with no --llm-max-calls
+  assert.equal(Math.round(DEFAULT_LLM_MAX_USD / UNPRICED_CALL_USD), 100);
+  // once a call is priced, an unpriced one is charged the run's mean priced call
+  let k = 0;
+  const mixed: DraftModel = { name: 'mixed', call: async (a) => { k++; return { ...(await inner.call(a)), costUsd: k === 1 ? 0.01 : null }; } };
+  const bm = new LlmBudget(CAPS);
+  await runLlmDraft(opts(lc, mixed, { budget: bm }), 4);
+  assert.ok(Math.abs(bm.spent.usdAssumed - 0.01 * (bm.spent.calls - 1)) < 1e-9, `the mean priced call (${bm.spent.usdAssumed})`);
+  // a call killed in flight (the wrapper's timeout, tagged) spent tokens it never reported: charged
+  const timesOut: DraftModel = { name: 'slow', call: async () => { throw Object.assign(new Error('claude was killed (no answer in 180 s)'), { killed: 'timeout' }); } };
+  const bt = new LlmBudget({ ...CAPS, maxUsd: 0.12, maxFallbackRate: 1 });
+  const et = await runLlmDraft(opts(lc, timesOut, { budget: bt }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(et instanceof LlmStop && et.reason === 'max-usd', String(et));
+  assert.deepEqual([bt.spent.calls, bt.spent.aborted, bt.spent.callErrors], [2, 2, 2]);
+  // a call killed by the run's own stop is charged too; a call that failed by itself (logged out) is not
+  const bs = new LlmBudget({ ...CAPS, maxCalls: 1 });
+  const stopper: DraftModel = { name: 'stopper', call: (a) => new Promise((_, reject) => {
+    a.signal?.addEventListener('abort', () => reject(Object.assign(new Error('claude was killed (the run stopped)'), { killed: 'abort' })), { once: true });
+    // a second lane asks for its call: the cap refuses it and the stop aborts this one in flight
+    queueMicrotask(() => { try { bs.beforeCall(); } catch { /* the stop */ } });
+  }) };
+  await assert.rejects(runLlmDraft(opts(lc, stopper, { budget: bs }), 4), (x: unknown) => x instanceof LlmStop && x.reason === 'max-calls');
+  assert.deepEqual([bs.spent.calls, bs.spent.aborted], [1, 1]);
+  assert.ok(bs.spent.usdAssumed > 0);
+  const bl = new LlmBudget(CAPS);
+  await assert.rejects(runLlmDraft(opts(lc, { name: 'out', call: async () => { throw new Error('claude exited 1 with no output: Please run /login'); } }, { budget: bl }), 4), /fallback stop/);
+  assert.deepEqual([bl.spent.aborted, bl.spent.unpriced, bl.spent.usdAssumed], [0, 0, 0]);
+});
+
+test('the caps from the flags: defaults, values, none, and the faults named', () => {
+  const f = (m: Record<string, string>) => (k: string) => m[k];
+  assert.deepEqual(llmCapsOf(f({})), { maxCalls: null, maxUsd: 5, maxFallbackRate: 0.25 });
+  assert.deepEqual(llmCapsOf(f({ 'llm-max-calls': '40', 'llm-max-usd': '1.5', 'llm-fallback-rate': '0.5' })), { maxCalls: 40, maxUsd: 1.5, maxFallbackRate: 0.5 });
+  assert.equal(llmCapsOf(f({ 'llm-max-usd': 'none' })).maxUsd, null);
+  assert.throws(() => llmCapsOf(f({ 'llm-max-calls': '0' })), /--llm-max-calls/);
+  assert.throws(() => llmCapsOf(f({ 'llm-max-usd': '-1' })), /--llm-max-usd/);
+  assert.throws(() => llmCapsOf(f({ 'llm-fallback-rate': '1.5' })), /--llm-fallback-rate/);
+  assert.throws(() => new LlmBudget({ maxCalls: 0, maxUsd: null, maxFallbackRate: 0.25 }), /call cap/);
+});
+
 test('mapLimit keeps the order and the limit', async () => {
   let live = 0;
   let peak = 0;
   const out = await mapLimit([5, 1, 4, 2, 3], 2, async (x) => { live++; peak = Math.max(peak, live); await new Promise((r) => setTimeout(r, x)); live--; return x * 10; });
   assert.deepEqual(out, [50, 10, 40, 20, 30]);
   assert.equal(peak, 2);
+});
+
+test('mapLimit: the first failure stops the rest -- no new item starts, the in-flight one sees the signal, it rejects once all settle', async () => {
+  const started: number[] = [];
+  let sawAbort = false;
+  let settled = 0;
+  const p = mapLimit([1, 2, 3, 4, 5, 6], 2, async (x, signal) => {
+    started.push(x);
+    try {
+      if (x === 2) { await new Promise((r) => setTimeout(r, 5)); throw new Error('draft 2 failed'); }
+      await new Promise((r) => setTimeout(r, 30));
+      sawAbort ||= signal.aborted;
+      return x;
+    } finally { settled++; }
+  });
+  await assert.rejects(p, /draft 2 failed/);
+  assert.deepEqual(started, [1, 2], 'nothing started after the failure');
+  assert.equal(sawAbort, true);
+  assert.equal(settled, 2, 'the in-flight item finished before mapLimit rejected');
 });
 
 // ------------------------------------------------------------ forge-ranks
@@ -321,5 +483,67 @@ test('run plumbing: each drafter is part of the folder identity and the version;
   assert.notDeepEqual(versionWeights(W, { drafter: llm }), versionWeights(W, { drafter: { ...llm, model: 'haiku' } }));
   assert.notDeepEqual(versionWeights(W, { drafter: llm }), versionWeights(W, { drafter: { ...llm, seesOpponent: true } }));
   assert.deepEqual(versionWeights(W, { drafter: { kind: 'forge-ranks', seat: 'B' } }), { ...W, drafter: { kind: 'forge-ranks', seat: 'B' } });
+  // FORGE_RANKS_WEIGHTS are in the version: at D439's values the id is D439's, any change moves it
+  assert.deepEqual(versionWeights(W, { drafter: { kind: 'forge-ranks', seat: 'B', weights: { ...FORGE_RANKS_WEIGHTS } } }), { ...W, drafter: { kind: 'forge-ranks', seat: 'B' } });
+  assert.deepEqual(versionWeights(W, { drafter: { kind: 'forge-ranks', seat: 'B', weights: { ...FORGE_RANKS_WEIGHTS, commitAt: 0.1 } } }),
+    { ...W, drafter: { kind: 'forge-ranks', seat: 'B', weights: { synergy: 0, lean: 0, commitAt: 0.1 } } });
   assert.equal(versionWeights(W, {}), W);
+});
+
+// ------------------------------------------------------------ a run that stops
+
+/**
+ * A scratch repo whose cached facts answer `cubeFile`'s lookup with invented cards (engine.ts reads a cached
+ * lookup before it would boot one), so a run drafts with no engine; a stopped LLM run ends before any game.
+ */
+function factsRepo(cubeFile: string): { repo: string; env: { cp: string; homes: string[]; repo: string } } {
+  const repo = mkdtempSync(join(tmpdir(), 'cubelab-llmstop-'));
+  const names = parseCube(readFileSync(cubeFile, 'utf8')).cards.map((c) => c.name);
+  const key = createHash('sha1').update([process.env.FORGE_JAR ?? '', '', ...names].join('\n')).digest('hex').slice(0, 16);
+  mkdirSync(join(repo, 'var/cubelab/facts'), { recursive: true });
+  const cards = names.map((n, i) => ({ listed: n, found: true, name: n, colors: 'WUBRG'[i % 5], manaCost: `1 ${'WUBRG'[i % 5]}`, cmc: 1 + (i % 5), type: 'Creature', creature: true, land: false, rank: { source: 'set', edition: 'X', defaultEdition: 'X', rawScore: 50 + (i % 40) } }));
+  writeFileSync(join(repo, 'var/cubelab/facts', `${key}.json`), JSON.stringify({ cards }));
+  const git = (...a: string[]): void => { execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { stdio: 'ignore' }); };
+  git('init', '-q');
+  git('commit', '-q', '--allow-empty', '-m', 'scratch');
+  return { repo, env: { cp: '', homes: [join(repo, 'home')], repo } };
+}
+
+test('a run whose LLM drafter hits a cap stops with the reason, kills its other lane, and leaves llm/spend.json', async () => {
+  const cubeFile = fileURLToPath(new URL('../../cubes/pauper-cube-180.md', import.meta.url));
+  const { repo, env } = factsRepo(cubeFile);
+  try {
+    const out = join(repo, 'run');
+    const b = new LlmBudget({ maxCalls: 20, maxUsd: null, maxFallbackRate: 0.25 });
+    const m = priced(0.01);
+    const said: string[] = [];
+    const e = await runLab(env, {
+      cubeFile, format: 'grid', drafts: 3, games: 0, jobs: 1, seed: 11, profiles: ['Default', 'Default'], ratingsFile: null, record: 0, out,
+      builder: 'lab', gameTimeoutSec: 300, winstonCards: 90, weights: W, drafter: { kind: 'llm', model: 'fake', thinking: 'low', seat: 'A', seesOpponent: false },
+      llmJobs: 2, llmBudget: b, llmModel: async () => m,
+    }, (x) => said.push(x)).then(() => null, (x: unknown) => x);
+    assert.ok(e instanceof LlmStop && e.reason === 'max-calls', String(e));
+    assert.match((e as LlmStop).message, /^llm drafter stopped, the call cap: 20 model call\(s\) made of at most 20 .*are not asked again on a resume$/);
+    assert.equal(m.calls, 20, 'two lanes, one budget: exactly the cap, then nothing');
+    assert.ok(said.some((x) => /llm drafter caps: at most 20 call\(s\), NO dollar cap, stop past 25% fallbacks/.test(x)), said.join('\n'));
+    const spend = JSON.parse(readFileSync(join(out, 'llm', 'spend.json'), 'utf8'));
+    assert.equal(spend.stopped, 'max-calls');
+    assert.equal(spend.spent.calls, 20);
+    assert.ok(Math.abs(spend.spent.usd - 0.2) < 1e-9);
+    assert.equal(existsSync(join(out, 'drafts.jsonl')), false, 'no draft was finished, so none is recorded');
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('the CLI: --llm-jobs is 1..4, and the LLM flags need an llm drafter (usage errors, before any engine)', () => {
+  const repo = fileURLToPath(new URL('../..', import.meta.url));
+  const cli = (...a: string[]) => spawnSync(process.execPath, [join(repo, 'tools/cubelab/cli.ts'), 'run', 'cubes/pauper-cube-180.md', ...a, '--out', join(tmpdir(), 'cubelab-cli-never')],
+    { cwd: repo, encoding: 'utf8', env: { ...process.env, CUBELAB_CP: 'x', CUBELAB_HOMES: join(tmpdir(), 'cubelab-cli-no-home') } });
+  const five = cli('--drafter', 'llm:fake', '--llm-jobs', '5');
+  assert.equal(five.status, 2);
+  assert.match(five.stderr, /--llm-jobs is 1\.\.4/);
+  assert.equal(cli('--drafter', 'llm:fake', '--llm-jobs', '0').status, 2);
+  const lone = cli('--llm-max-usd', '2');
+  assert.equal(lone.status, 2);
+  assert.match(lone.stderr, /--llm-max-usd, --llm-fallback-rate need --drafter llm:<model>/);
+  assert.match(cli('--drafter', 'llm:fake', '--llm-max-usd', 'lots').stderr, /--llm-max-usd is dollars/);
 });

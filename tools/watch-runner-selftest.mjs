@@ -7,13 +7,27 @@
 // helper's /watch routes, against a FAKE watch -- a small bash script that
 // writes match.json, draft.json and a game log the way tools/cubelab.sh watch
 // does, at a speed its seed picks (seed 1: done at once; 2: plays until it is
-// stopped; 3: dies without saying so).  Everything goes under
+// stopped; 3: dies without saying so; 5: exits on SIGTERM and leaves a child
+// that ignores it; 6: ignores SIGTERM itself; 7: gains a line the fake check
+// fails; 10: the REAL checker, staged: two lines, more, a planted leak; 11: a
+// claude -p in its own group, with a grandchild, under a watch that ignores SIGTERM).  Everything goes under
 // var/watch-runner-selftest/.  No Forge, no network.
 //
 // What it holds: the body's validation (cube ids from cubes/, never a path;
-// seeds in the lab's range; best of 1/3/5/7; players a profile or search;
-// unknown fields refused); one watch at a time (409 with the running id); stop
+// seeds in the lab's range; best of 1/3/5/7; D443's drafter and player ids,
+// an unknown one a 400 listing the known ones, two non-lab drafters refused;
+// unknown fields refused); D444's custom cube (a "my-<slug>" id with its
+// cubeDoc: read with the lab's parser, an unreadable document a 400 in the
+// parser's words, an oversized one 413, a bad slug 400, the title heading set,
+// cube.md written before the 202 and its path in the argv); /health's
+// watchDrafters, watchPlayers, watchLlmCap and watchCustom; the argv (an llm: drafter's cap only with one); match.json from
+// the moment POST answers, kept by a watch that dies; one watch at a time (409 with the running id); stop
 // (200, then match.json says "stopped"); a watch that dies is marked "error";
+// redaction as served (only lines that passed tools/check-redaction.mjs are sent;
+// a log that fails is a 500 from then on, and the watch is stopped with error);
+// the cleanup (a new watch keeps the 10 most recent watch folders, --watch-keep);
+// the kill escalation (a stop's SIGKILL still reaches a child the leader left
+// behind, and close() SIGKILLs a watch that ignores SIGTERM after the grace);
 // the game log served as COMPLETE lines by ?from= and by Range (206, its first
 // byte the newline ForgeCoach's live.ts asks for again), 404 before it starts and
 // 416 past its end; and the helper's door on every route: /health's "watch",
@@ -25,12 +39,14 @@
 //
 // Run from the repo root (hard rule 9).  Gate step 12f.
 
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { join, resolve } from 'node:path';
-import { createWatchRunner, readCompleteLines, validateWatch, WATCH_ID } from './watch-runner.mjs';
+import { checkCubeDoc, createWatchRunner, MAX_WATCH_BODY, readCompleteLines, validateWatch, WATCH_ID } from './watch-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
+import { parseCube } from './cubelab/cube.ts';
+import { CARDS_ZIP, forgeCardNames, unknownCards } from './forge-scripts.ts';
 
 const DIR = resolve('var/watch-runner-selftest');
 rmSync(DIR, { recursive: true, force: true });
@@ -53,9 +69,17 @@ const until = async (f, ms = 4000) => { const t = Date.now(); while (Date.now() 
 console.log('the body');
 const ctx = { cubes: ['fair-fight-cube-180', 'pauper-cube-180'], profiles: ['Default', 'Reckless'] };
 const ok = validateWatch({ cube: 'fair-fight-cube-180', seed: 7, games: 3, playerA: 'reckless', playerB: 'search-v2', pace: 0 }, ctx).req;
-check(ok && ok.id === 'watch-fair-fight-cube-180-7' && ok.playerA === 'Reckless' && ok.playerB === 'search' && ok.pace === 0 && WATCH_ID.test(ok.id), 'a full body: the id, the canonical profile, search');
+check(ok && ok.id === 'watch-fair-fight-cube-180-7' && ok.playerA.id === 'Reckless' && ok.playerB.id === 'search-v2' && ok.playerB.policy === 'search' && ok.pace === 0 && WATCH_ID.test(ok.id), 'a full body: the id, the canonical profile, search');
 const dflt = validateWatch({ cube: 'pauper-cube-180.md' }, ctx).req;
-check(dflt && dflt.games === 3 && dflt.playerA === 'Default' && dflt.playerB === 'Default' && dflt.pace === 600 && dflt.seed >= 1, 'defaults: best of 3, Default vs Default, 600 ms, a random seed; ".md" accepted');
+check(dflt && dflt.games === 3 && dflt.playerA.id === 'Default' && dflt.playerB.id === 'Default' && dflt.drafterA === 'lab' && dflt.drafterB === 'lab' && !dflt.llm && dflt.pace === 600 && dflt.seed >= 1,
+  'defaults: best of 3, lab drafts and Default plays both sides, 600 ms, a random seed; ".md" accepted');
+const withLlm = validateWatch({ cube: 'fair-fight-cube-180', drafterB: 'llm:sonnet', playerA: 'search' }, ctx).req;
+check(withLlm && withLlm.drafterB === 'llm:sonnet' && withLlm.drafterA === 'lab' && withLlm.llm === true && withLlm.playerA.id === 'search-v2', 'drafterB llm:sonnet; the older "search" still names search-v2');
+check(validateWatch({ cube: 'fair-fight-cube-180', drafterA: 'forge-ranks' }, ctx).req?.drafterA === 'forge-ranks', 'drafterA forge-ranks');
+const unknownD = validateWatch({ cube: 'fair-fight-cube-180', drafterA: 'llm:opus' }, ctx);
+check(unknownD.status === 400 && /"drafterA" is one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(unknownD.message), `400: an unknown drafter id, listing the known ones (${unknownD.message})`);
+const unknownP = validateWatch({ cube: 'fair-fight-cube-180', playerB: 'sonnet' }, ctx);
+check(unknownP.status === 400 && /"playerB" is one of Default, Reckless, search-v2/.test(unknownP.message), `400: an unknown player id, listing the known ones (${unknownP.message})`);
 const bad = (q, what) => check(validateWatch(q, ctx).req === undefined && validateWatch(q, ctx).status === 400, `400: ${what}`);
 bad(null, 'no object');
 bad({ cube: '../cubes/fair-fight-cube-180' }, 'a path for the cube');
@@ -68,6 +92,65 @@ bad({ cube: 'fair-fight-cube-180', playerA: 'Godlike' }, 'an unknown profile');
 bad({ cube: 'fair-fight-cube-180', playerB: 3 }, 'a player that is not a string');
 bad({ cube: 'fair-fight-cube-180', pace: 99999 }, 'a pace past 5 s');
 bad({ cube: 'fair-fight-cube-180', deck: 'x.dck' }, 'an unknown field');
+bad({ cube: 'fair-fight-cube-180', drafterA: 'forge-ranks', drafterB: 'llm:sonnet' }, 'two sides that are not lab');
+bad({ cube: 'fair-fight-cube-180', drafterB: 'llm:fake' }, 'llm:fake (the CLI\'s only)');
+bad({ cube: 'fair-fight-cube-180', drafterA: 'human-picks:/etc/passwd' }, 'human-picks (a path)');
+bad({ cube: 'fair-fight-cube-180', drafterA: 'LAB' }, 'a drafter id in another case');
+bad({ cube: 'fair-fight-cube-180', playerA: 'llm:sonnet' }, 'a Claude player (RecordMatch seats Forge AIs only)');
+// D444: a custom cube, its document in the body
+const FAIR = readFileSync(resolve('cubes/fair-fight-cube-180.md'), 'utf8');
+const FAIR_TITLE = FAIR.split('\n')[0].replace(/^#\s+/, '').trim();
+const cd = (markdown, title = 'My Fair Cube') => ({ title, markdown });
+const cu = validateWatch({ cube: 'my-fair-fight', seed: 7, cubeDoc: cd(FAIR, FAIR_TITLE) }, ctx);
+check(cu.req?.id === 'watch-my-fair-fight-7' && cu.req.doc?.cards === 180 && cu.req.doc.markdown === FAIR && cu.req.doc.title === FAIR_TITLE && WATCH_ID.test(cu.req.id),
+  'a cubeDoc beside "my-<slug>": valid, 180 cards by the lab\'s parser, the document kept byte for byte when its heading is the title');
+const retitled = validateWatch({ cube: 'my-fair-fight', cubeDoc: cd(FAIR, '  My  Fair Cube ') }, ctx).req?.doc;
+check(retitled?.title === 'My Fair Cube' && retitled.markdown.split('\n')[0] === '# My Fair Cube' && retitled.markdown.split('\n').slice(1).join('\n') === FAIR.split('\n').slice(1).join('\n'),
+  'another title: the first "# " heading becomes it, nothing else changes');
+const headless = FAIR.split('\n').slice(1).join('\n');
+check(validateWatch({ cube: 'my-fair-fight', cubeDoc: cd(headless) }, ctx).req?.doc.markdown === `# My Fair Cube\n\n${headless}`, 'a document with no "# " heading gets the title on top');
+const big = validateWatch({ cube: 'my-big', cubeDoc: cd(FAIR + 'x'.repeat(256 * 1024)) }, ctx);
+check(big.status === 413 && /at most 256 KB/.test(big.message), `markdown over 256 KB: 413 (${big.message})`);
+check(validateWatch({ cube: 'my-ok', cubeDoc: cd('# x\n\n' + 'é'.repeat(Math.floor((256 * 1024 - 80) / 2)) + '\n\n## The list\n\n### All (9)\nA · B · C · D · E · F · G · H · I\n') }, ctx).req !== undefined,
+  'markdown just under 256 KB in UTF-8 bytes (two-byte characters): accepted');
+const unreadable = validateWatch({ cube: 'my-prose', cubeDoc: cd('# Just prose\n\nNo list here at all.\n') }, ctx);
+check(unreadable.status === 400 && /lists 0 different cards; a grid draft needs at least 9 \(the cube parser: no "## The list" section/.test(unreadable.message), `an unreadable document: 400 in the parser's words (${unreadable.message})`);
+const tiny = validateWatch({ cube: 'my-tiny', cubeDoc: cd('# t\n## The list\n### All (3)\nOpt · Shock · Duress\n') }, ctx);
+check(tiny.status === 400 && /lists 3 different cards; a grid draft needs at least 9/.test(tiny.message), 'three cards: 400 (a grid needs nine)');
+const nine = '# t\n## The list\n### All (9)\nA1 · A2 · A3 · A4 · A5 · A6 · A7 · A8 · A9\n';
+check(checkCubeDoc(cd(nine)).doc?.cards === 9, 'nine cards: enough for one grid');
+bad({ cube: 'my-', cubeDoc: cd(nine) }, 'a cubeDoc with the slug "my-" (empty)');
+bad({ cube: 'my-Fair', cubeDoc: cd(nine) }, 'a cubeDoc with an upper-case slug');
+bad({ cube: 'my-a/../b', cubeDoc: cd(nine) }, 'a cubeDoc with a path in the slug');
+bad({ cube: `my-${'a'.repeat(61)}`, cubeDoc: cd(nine) }, 'a cubeDoc with a 61-character slug');
+check(validateWatch({ cube: `my-${'a'.repeat(60)}`, cubeDoc: cd(nine) }, ctx).req !== undefined, 'a 60-character slug: accepted');
+bad({ cube: 'fair-fight-cube-180', cubeDoc: cd(nine) }, 'a cubeDoc with a shipped cube\'s id (never shadows cubes/)');
+bad({ cube: 'my-fair-fight' }, 'a "my-" cube without its cubeDoc');
+check(/comes with its "cubeDoc"/.test(validateWatch({ cube: 'my-fair-fight' }, ctx).message), 'and the message says so');
+bad({ cube: 'my-x', cubeDoc: 'markdown' }, 'a cubeDoc that is not an object');
+bad({ cube: 'my-x', cubeDoc: { ...cd(nine), path: '/etc/passwd' } }, 'a cubeDoc with an unknown field');
+bad({ cube: 'my-x', cubeDoc: cd(nine, 'x'.repeat(81)) }, 'a title of 81 characters');
+bad({ cube: 'my-x', cubeDoc: cd(nine, 'two\nlines') }, 'a title with a newline');
+bad({ cube: 'my-x', cubeDoc: cd(nine, '   ') }, 'a blank title');
+bad({ cube: 'my-x', cubeDoc: { title: 't', markdown: 7 } }, 'markdown that is not a string');
+bad({ cube: 'my-x', cubeDoc: cd('') }, 'empty markdown');
+bad({ cube: 'my-x', cubeDoc: cd(nine.replace('A9', 'Z'.repeat(151))) }, 'a card name over 150 characters');
+check(validateWatch({ cube: 'my-x', cubeDoc: cd(nine, 'x'.repeat(80)) }, ctx).req?.doc.title.length === 80, 'a title of 80 characters: accepted');
+// the choices /health lists
+const hl = createWatchRunner({ repoRoot: ROOT, available: () => true }).health();
+check(JSON.stringify(hl.watchDrafters.map((d) => d.id)) === JSON.stringify(['lab', 'forge-ranks', 'llm:haiku', 'llm:sonnet'])
+  && hl.watchDrafters.every((d) => typeof d.label === 'string' && Object.keys(d).every((k) => ['id', 'label', 'costNote'].includes(k)))
+  && hl.watchDrafters.filter((d) => d.costNote).map((d) => d.id).join() === 'llm:haiku,llm:sonnet'
+  && hl.watchDrafters.every((d) => !d.costNote || (/\$1 and 40 calls a watch/.test(d.costNote) && /confirm/.test(d.costNote))), 'watchDrafters: {id, label, costNote?}, the cost note on the llm ones (the cap, a confirm)');
+check(JSON.stringify(hl.watchPlayers.map((p) => p.id)) === JSON.stringify(['Default', 'Reckless', 'search-v2']) && hl.watchPlayers.every((p) => typeof p.label === 'string' && !('costNote' in p)),
+  'watchPlayers: the profiles from forge-home/res/ai and search-v2, no Claude seat');
+check(JSON.stringify(hl.watchLlmCap) === JSON.stringify({ maxUsd: 1, maxCalls: 40, maxFallbackRate: 0.25 }), 'watchLlmCap: the defaults');
+check(hl.watchCustom === 1, 'watchCustom: 1 (D444)');
+const hl2 = createWatchRunner({ repoRoot: ROOT, available: () => true, llmCap: { maxUsd: 0.5, maxCalls: 20, maxFallbackRate: 0.25 } }).health();
+check(hl2.watchLlmCap.maxUsd === 0.5 && /\$0\.50 and 20 calls/.test(hl2.watchDrafters[3].costNote), 'a configured cap is the one /health and the notes say');
+let capThrew = false;
+try { createWatchRunner({ repoRoot: ROOT, llmCap: { maxUsd: 0, maxCalls: 40, maxFallbackRate: 0.25 } }); } catch { capThrew = true; }
+check(capThrew, 'a cap of $0 is refused');
 
 // 2. Complete lines.
 console.log('complete lines');
@@ -92,7 +175,45 @@ m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"drafting","games":[],"wi
 [ "$seed" = 3 ] && exit 3
 printf '{"v":1,"kind":"watch-draft","id":"%s","picks":[]}\\n' "$id" > "$dir/draft.json"
 m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"playing","games":[{"n":1,"file":"'"$id"'-g1.jsonl","status":"playing"}],"wins":{"A":0,"B":0,"draws":0},"winner":null,"current":1}'
-printf '{"v":1,"kind":"session","gameId":"%s-g1","seat":0}\\n{"v":1,"seq":1,"type":"hello_ok"}\\n{"v":1,"seq":2,"ty' "$id" > "$dir/$id-g1.jsonl"
+printf '{"v":1,"kind":"session","gameId":"%s-g1","seat":0}\\n{"v":1,"seq":1,"type":"hello_ok"}\\n{"v":1,"seq":2,"type":"state"}\\n{"v":1,"seq":3,"ty' "$id" > "$dir/$id-g1.jsonl"
+if [ "$seed" = 10 ]; then
+  # the REAL checker, staged ($3 holds the stages): a real recording's first two lines (the session
+  # line and hello_ok, as every game opens), then its next lines, then a line that leaks
+  log="$dir/$id-g1.jsonl"
+  cat "$3/two.jsonl" > "$log"
+  trap 'exit 130' TERM
+  while [ ! -e "$dir/go1" ]; do sleep 0.05; done
+  cat "$3/more.jsonl" >> "$log"
+  while [ ! -e "$dir/go2" ]; do sleep 0.05; done
+  cat "$3/leak.jsonl" >> "$log"
+  while :; do sleep 0.1; done
+fi
+if [ "$seed" = 5 ]; then
+  # a leader that exits on TERM, leaving a child (the JVM, say) that ignores it
+  bash -c 'trap "" TERM; echo $$ > "$0/straggler.pid"; while :; do sleep 0.1; done' "$dir" &
+  trap 'exit 130' TERM
+  while :; do sleep 0.1; done
+fi
+if [ "$seed" = 7 ]; then
+  # a game whose log gains a line that fails the redaction check while it is followed
+  trap 'm "{\\"v\\":1,\\"kind\\":\\"watch-match\\",\\"id\\":\\"$id\\",\\"status\\":\\"stopped\\",\\"games\\":[{\\"n\\":1,\\"status\\":\\"error\\"}],\\"current\\":null}"; exit 130' TERM
+  while [ ! -e "$dir/go" ]; do sleep 0.05; done
+  printf 'pe":"state"}\\n{"v":1,"seq":4,"note":"LEAK"}\\n' >> "$dir/$id-g1.jsonl"
+  while :; do sleep 0.1; done
+fi
+if [ "$seed" = 8 ]; then
+  # what watch.ts writes when its llm: drafter's fallback stop ends the watch (web/test/cubelab-watch.test.ts runs the real one)
+  m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"error","error":"drafter B (llm:sonnet) stopped the watch -- the fallback stop: 3 of 3 decision(s) fell back","games":[],"current":null,"drafters":{"A":{"drafter":"lab"},"B":{"drafter":"llm:sonnet"}},"cost":{"side":"B","drafter":"llm:sonnet","calls":6,"callErrors":6,"decisions":3,"fallbacks":3,"usd":0,"stopped":"fallbacks"}}'
+  exit 1
+fi
+if [ "$seed" = 6 ]; then echo $$ > "$dir/leader.pid"; trap '' TERM; while :; do sleep 0.1; done; fi
+if [ "$seed" = 11 ]; then
+  # an llm: drafter's claude -p, in a process group of its own (model.mjs), with a grandchild; the
+  # watch ignores SIGTERM, so only the runner's SIGKILL ends it
+  echo $$ > "$dir/leader.pid"; trap '' TERM
+  node "$3/llm-call.mjs" "$3/claude" "$dir" &
+  while :; do sleep 0.1; done
+fi
 if [ "$seed" = 2 ]; then
   trap 'm "{\\"v\\":1,\\"kind\\":\\"watch-match\\",\\"id\\":\\"$id\\",\\"status\\":\\"stopped\\",\\"games\\":[],\\"current\\":null}"; exit 130' TERM
   while :; do sleep 0.1; done
@@ -102,7 +223,11 @@ m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"done","games":[{"n":1,"f
 `);
 chmodSync(FAKE, 0o755);
 const argvs = [];
-const mk = (o = {}) => createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000,
+// The fake logs are not frame logs, so the runner's redaction check is a fake too: a log passes unless
+// it holds LEAK (the real checker is held at the end, on a real recording and a negative fixture).
+const redChecks = [];
+const fakeCheck = async (buf) => { redChecks.push(buf.length); return { ok: !buf.includes('LEAK'), out: buf.includes('LEAK') ? '      ! x.jsonl:3: an opponent hand card named Secret Card' : 'PASS' }; };
+const mk = (o = {}) => createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, redactionCheck: fakeCheck,
   command: (q, dir) => { argvs.push([q, dir]); return ['bash', FAKE, dir, String(q.seed)]; }, ...o });
 const off = createWatchRunner({ repoRoot: ROOT, available: () => false });
 check(off.health().watch === 0 && off.post({ cube: 'fair-fight-cube-180' }).status === 503, 'not built: "watch": 0, POST 503');
@@ -118,21 +243,21 @@ await until(() => w.running() === null);
 const done = w.get('watch-fair-fight-cube-180-1');
 check(done.status === 200 && done.body.match?.status === 'done' && done.body.draft?.kind === 'watch-draft' && done.body.running === false, 'GET: match.json done, draft.json, not running');
 check(w.get('watch-nope-1').status === 404 && w.get('../etc').status === 404 && w.get('watch-x/../../y-1').status === 404, 'an unknown or malformed id: 404');
-const g = w.game('watch-fair-fight-cube-180-1', '1');
-check(g.status === 200 && g.body.toString().split('\n').length === 4 && g.headers['X-Log-Next'] === String(g.body.length), 'the game log: every complete line, X-Log-Next');
-const gr = w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.indexOf('\n')}-` });
+const g = await w.game('watch-fair-fight-cube-180-1', '1');
+check(g.status === 200 && g.body.toString().split('\n').length === 5 && g.headers['X-Log-Next'] === String(g.body.length), 'the game log: every complete line, X-Log-Next');
+const gr = await w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.indexOf('\n')}-` });
 check(gr.status === 206 && gr.body[0] === 0x0a && /^bytes \d+-\d+\/\d+$/.test(gr.headers['Content-Range']), 'Range: 206 from the newline asked for, Content-Range');
-check(w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.length}-` }).status === 416, 'Range at the end of a finished log: 416');
-check(w.game('watch-fair-fight-cube-180-1', '1', { from: '99999' }).status === 416, '?from past the end: 416 (re-recorded)');
-check(w.game('watch-fair-fight-cube-180-1', '1', { from: '-1' }).status === 400, '?from not a number: 400');
-check(w.game('watch-fair-fight-cube-180-1', '2').status === 404 && w.game('watch-fair-fight-cube-180-1', '../x').status === 404, 'a game not started, or a bad number: 404');
+check((await w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.length}-` })).status === 416, 'Range at the end of a finished log: 416');
+check((await w.game('watch-fair-fight-cube-180-1', '1', { from: '99999' })).status === 416, '?from past the end: 416 (re-recorded)');
+check((await w.game('watch-fair-fight-cube-180-1', '1', { from: '-1' })).status === 400, '?from not a number: 400');
+check((await w.game('watch-fair-fight-cube-180-1', '2')).status === 404 && (await w.game('watch-fair-fight-cube-180-1', '../x')).status === 404, 'a game not started, or a bad number: 404');
 check(w.list().body.watches.length === 1 && w.list().body.watches[0].status === 'done', 'GET /watch lists it');
 // stop
 const s = w.post({ cube: 'pauper-cube-180', seed: 2 });
 check(s.status === 202, 'a long watch starts');
 await until(() => existsSync(join(ROOT, 'var/spectate/watch-pauper-cube-180-2/watch-pauper-cube-180-2-g1.jsonl')));
-const live = w.game('watch-pauper-cube-180-2', '1');
-check(live.status === 200 && !live.body.toString().includes('"seq":2') && live.body.toString().endsWith('"hello_ok"}\n'), 'while it is written: the half line is held back');
+const live = await w.game('watch-pauper-cube-180-2', '1');
+check(live.status === 200 && !live.body.toString().includes('"seq":3') && live.body.toString().endsWith('"type":"state"}\n'), 'while it is written: the half line is held back');
 check(w.stop('watch-fair-fight-cube-180-1').status === 409, 'stop a watch that is not running: 409');
 check(w.stop('watch-pauper-cube-180-2').status === 200, 'stop the running one: 200');
 await until(() => w.running() === null);
@@ -142,14 +267,246 @@ w.post({ cube: 'pauper-cube-180', seed: 3 });
 await until(() => w.running() === null);
 const dead = w.get('watch-pauper-cube-180-3').body.match;
 check(dead?.status === 'error' && /exited \(code 3\)/.test(dead.error ?? ''), 'a watch that dies is marked error, with why');
+// kill escalation: the stop's SIGKILL is not cancelled when the leader exits with its group still alive
+const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
+w.post({ cube: 'pauper-cube-180', seed: 5 });
+const strag = join(ROOT, 'var/spectate/watch-pauper-cube-180-5/straggler.pid');
+await until(() => existsSync(strag) && readFileSync(strag, 'utf8').trim() !== '');
+const sp = Number(readFileSync(strag, 'utf8').trim());
+check(alive(sp) && w.stop('watch-pauper-cube-180-5').status === 200, 'a watch whose child ignores SIGTERM: stop 200');
+await until(() => w.running() === null);
+check(alive(sp), 'the leader exited on SIGTERM, its child did not');
+await until(() => !alive(sp), 3000);
+check(!alive(sp), 'the armed SIGKILL still reached the child after the grace');
+// close(): SIGTERM, then SIGKILL after the grace; it resolves once the group is gone
+const wc = mk();
+wc.post({ cube: 'pauper-cube-180', seed: 6 });
+await until(() => existsSync(join(ROOT, 'var/spectate/watch-pauper-cube-180-6/watch-pauper-cube-180-6-g1.jsonl')));
+const t0 = Date.now();
+await wc.close();
+const closedMs = Date.now() - t0;
+await until(() => wc.running() === null);
+check(closedMs >= 900 && closedMs < 3000 && wc.running() === null, `close() on a watch that ignores SIGTERM: SIGKILL after the grace (${closedMs} ms), then nothing runs`);
+check((await mk().close()) === undefined, 'close() with nothing running resolves at once');
+// the watch's SIGKILL reaches the claude -p groups its llm: drafter started (their own groups, registered)
+const K = join(DIR, 'kill-stage');
+mkdirSync(K, { recursive: true });
+writeFileSync(join(K, 'claude'), `#!/usr/bin/env bash
+[ "\${1:-}" = --help ] && { echo "usage: claude"; exit 0; }
+trap '' TERM
+echo $$ > claude.pid
+bash -c 'trap "" TERM; echo $$ > grand.pid; while :; do sleep 0.1; done' &
+cat > /dev/null
+while :; do sleep 0.1; done
+`);
+chmodSync(join(K, 'claude'), 0o755);
+writeFileSync(join(K, 'llm-call.mjs'), `import { makeClaudeModel } from ${JSON.stringify(resolve('tools/llm-seat/lib/model.mjs'))};
+const m = makeClaudeModel({ model: 'haiku', bin: process.argv[2], cwd: process.argv[3], timeoutS: 120 });
+await m.call({ system: 'S', user: 'U' });
+`);
+const wk = createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, redactionCheck: fakeCheck, command: (q, dir) => ['bash', FAKE, dir, String(q.seed), K] });
+wk.post({ cube: 'pauper-cube-180', seed: 11 });
+const kdir = join(ROOT, 'var/spectate/watch-pauper-cube-180-11');
+const kpid = (f) => (existsSync(join(kdir, f)) ? Number(readFileSync(join(kdir, f), 'utf8').trim()) || null : null);
+const kgroups = () => { try { return readdirSync(join(kdir, '.child-groups')); } catch { return []; } };
+await until(() => kpid('claude.pid') && kpid('grand.pid') && kgroups().length === 1, 8000);
+const [kc, kg] = [kpid('claude.pid'), kpid('grand.pid')];
+check(kc && kg && alive(kc) && alive(kg) && kgroups()[0] === String(kc), 'an llm: call in flight: claude -p and its grandchild run, its own group registered in the watch folder');
+await wk.close();
+await until(() => !alive(kc) && !alive(kg), 3000);
+check(!alive(kc) && !alive(kg), 'the watch\'s SIGKILL (it ignored SIGTERM) reached claude -p\'s own group, the grandchild included');
+for (const pid of [kc, kg]) if (pid && pid > 1) { try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } }
+
+// whatever a failed check above left behind is this test's own: never leave it running
+for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid'), join(ROOT, 'var/spectate/watch-pauper-cube-180-11/leader.pid')]) {
+  try { const pid = Number(readFileSync(f, 'utf8').trim()); if (pid > 1) { try { process.kill(-pid, 'SIGKILL'); } catch { /* not a group */ } try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } } catch { /* no file */ }
+}
+// redaction as served: only lines that passed are sent; a failing prefix is never sent, and stops the watch
+const rid = 'watch-pauper-cube-180-7';
+w.post({ cube: 'pauper-cube-180', seed: 7 });
+await until(() => existsSync(join(ROOT, `var/spectate/${rid}/${rid}-g1.jsonl`)));
+const n0 = redChecks.length;
+const r1 = await w.game(rid, '1');
+check(r1.status === 200 && r1.body.toString().endsWith('"type":"state"}\n') && redChecks.length === n0 + 1, 'a live game: its complete lines checked once, then sent');
+const r1b = await w.game(rid, '1', { from: String(r1.body.length) });
+check(r1b.status === 200 && r1b.body.length === 0 && redChecks.length === n0 + 1, 'nothing new: no second check');
+writeFileSync(join(ROOT, `var/spectate/${rid}/go`), '');
+await until(() => readFileSync(join(ROOT, `var/spectate/${rid}/${rid}-g1.jsonl`), 'utf8').includes('LEAK'));
+const r2 = await w.game(rid, '1', { from: String(r1.body.length) });
+check(r2.status === 500 && r2.json?.code === 'redaction-failed' && !/Secret Card/.test(JSON.stringify(r2.json)), 'a line that fails: 500 redaction-failed, and the checker\'s words (a card name) are not in it');
+check((await w.game(rid, '1')).status === 500, 'from then on the whole game is refused, from byte 0 too');
+await until(() => w.running() === null);
+const rm = w.get(rid).body.match;
+check(rm?.status === 'error' && /game 1 failed tools\/check-redaction\.mjs as it was served/.test(rm.error ?? '') && !/Secret Card/.test(rm.error), 'the watch was stopped, and match.json says error naming the game (over the watch\'s own "stopped")');
+// a game that has only opened (the session line, hello_ok; Forge's first state is ~10 s away): 0 bytes
+// passed and no check at all -- not a failure; its first state line is checked and sent
+const oid = 'watch-opened-1';
+const odir = join(ROOT, 'var/spectate', oid);
+mkdirSync(odir, { recursive: true });
+writeFileSync(join(odir, `${oid}-g1.jsonl`), '{"v":1,"kind":"session","seat":0}\n{"v":1,"seq":1,"type":"hello_ok"}\n');
+const o0 = redChecks.length;
+const o1 = await w.game(oid, '1');
+const o1r = await w.game(oid, '1', { range: 'bytes=0-' });
+check(o1.status === 200 && o1.body.length === 0 && o1.headers['X-Log-Next'] === '0' && o1r.status === 206 && o1r.body.length === 0 && redChecks.length === o0,
+  'a game with no state frame yet: 200 / 206 with nothing in it, X-Log-Next 0, the checker never asked');
+writeFileSync(join(odir, `${oid}-g1.jsonl`), '{"v":1,"kind":"session","seat":0}\n{"v":1,"seq":1,"type":"hello_ok"}\n{"v":1,"seq":2,"type":"state"}\n', { flag: 'w' });
+const o2 = await w.game(oid, '1');
+check(o2.status === 200 && o2.body.toString().endsWith('"type":"state"}\n') && redChecks.length === o0 + 1, 'its first state frame: checked once, then all three lines sent');
+
+// the real checker, on a real recording and on a negative fixture
+const realLog = [];
+const real2 = createWatchRunner({ repoRoot: ROOT, available: () => true, command: () => ['true'], log: (x) => realLog.push(x) });
+const realDir = join(ROOT, 'var/spectate/watch-real-1');
+mkdirSync(realDir, { recursive: true });
+writeFileSync(join(realDir, 'watch-real-1-g1.jsonl'), readFileSync(resolve('fixtures/games/g1.jsonl')));
+writeFileSync(join(realDir, 'watch-real-1-g2.jsonl'), readFileSync(resolve('fixtures/negative/redaction/a6-opponent-hand-named.jsonl')));
+const rg1 = await real2.game('watch-real-1', '1');
+check(rg1.status === 200 && rg1.body.length === readFileSync(resolve('fixtures/games/g1.jsonl')).length, 'the real check: a real recording passes and is sent whole');
+const half = readFileSync(resolve('fixtures/games/g1.jsonl'));
+writeFileSync(join(realDir, 'watch-real-1-g3.jsonl'), half.subarray(0, Math.floor(half.length / 2)));
+const rg3 = await real2.game('watch-real-1', '3');
+check(rg3.status === 200 && rg3.body.length > 0 && rg3.body.at(-1) === 0x0a, 'the real check: half a recording (a game in progress) passes, whole lines only');
+check((await real2.game('watch-real-1', '2')).status === 500 && realLog.some((x) => /REDACTION FAIL on game 2 .*: .*a6-|REDACTION FAIL on game 2 \(\d+ bytes\): (?!see )/.test(x)),
+  'the real check: a log that names an opponent\'s hand card is refused, for the checker\'s own reason (on the console only)');
+// the REAL checker on a RUNNING watch, as a live game grows: two lines, then more, then a planted leak
+// (fixtures/negative/redaction/: baseline.jsonl, and a1-stub-with-a-name.jsonl's leaking state)
+const STAGE = join(DIR, 'stage');
+mkdirSync(STAGE, { recursive: true });
+const base = readFileSync(resolve('fixtures/negative/redaction/baseline.jsonl'), 'utf8').split('\n').filter(Boolean);
+const leaky = readFileSync(resolve('fixtures/negative/redaction/a1-stub-with-a-name.jsonl'), 'utf8').split('\n').filter(Boolean);
+writeFileSync(join(STAGE, 'two.jsonl'), `${base.slice(0, 2).join('\n')}\n`);
+writeFileSync(join(STAGE, 'more.jsonl'), `${base.slice(2, 4).join('\n')}\n`);
+// the leaking state, renumbered to follow the two states before it (so the leak is the only fault)
+const leakLine = JSON.parse(leaky[2]);
+leakLine.seq = JSON.parse(base[3]).seq + 1;
+writeFileSync(join(STAGE, 'leak.jsonl'), `${JSON.stringify(leakLine)}\n`);
+const liveLog = [];
+const wr = createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, log: (x) => liveLog.push(x),
+  command: (q, dir) => ['bash', FAKE, dir, String(q.seed), STAGE] });
+const lid = 'watch-pauper-cube-180-10';
+const lfile = join(ROOT, `var/spectate/${lid}/${lid}-g1.jsonl`);
+check(wr.post({ cube: 'pauper-cube-180', seed: 10 }).status === 202, 'the real checker on a running watch: it starts');
+await until(() => existsSync(lfile) && readFileSync(lfile, 'utf8').split('\n').filter(Boolean).length === 2 && readFileSync(lfile, 'utf8').startsWith('{"v":1,"kind":"session"'));
+const l1 = await wr.game(lid, '1');
+check(l1.status === 200 && l1.body.length === 0 && l1.headers['X-Log-Next'] === '0' && wr.running() === lid && !liveLog.some((x) => /REDACTION FAIL/.test(x)),
+  'the real checker: a 2-line prefix (session, hello_ok) is 0 bytes passed, no error, the watch still running');
+writeFileSync(join(ROOT, `var/spectate/${lid}/go1`), '');
+await until(() => readFileSync(lfile, 'utf8').split('\n').filter(Boolean).length === 4);
+const l2 = await wr.game(lid, '1');
+check(l2.status === 200 && l2.body.toString() === `${base.slice(0, 4).join('\n')}\n` && wr.running() === lid,
+  `the real checker: a healthy 4-line prefix (two states) is served whole (${l2.body.length} bytes), the watch still running`);
+writeFileSync(join(ROOT, `var/spectate/${lid}/go2`), '');
+await until(() => readFileSync(lfile, 'utf8').split('\n').filter(Boolean).length === 5);
+const l3 = await wr.game(lid, '1', { from: String(l2.body.length) });
+check(l3.status === 500 && l3.json?.code === 'redaction-failed' && !/Agent Phil Coulson/.test(JSON.stringify(l3.json)),
+  'the real checker: the planted leak (a named stub) is a 500 redaction-failed, the card not in it');
+await until(() => wr.running() === null);
+const lm = wr.get(lid).body.match;
+check(wr.running() === null && lm?.status === 'error' && /game 1 failed tools\/check-redaction\.mjs/.test(lm.error ?? '') && liveLog.some((x) => /REDACTION FAIL on game 1 .*leaks extra keys: name/.test(x)),
+  'the real checker: the watch is stopped, match.json says error, and the console names A1 (leaks extra keys: name)');
+check(!existsSync(join(ROOT, 'var/watch-check')) || readdirSync(join(ROOT, 'var/watch-check')).length === 0, 'the checker\'s scratch copies are gone');
+// cleanup: starting a watch keeps only the `keep` most recent watch folders, the new one included
+const pruneRoot = join(DIR, 'prune-root');
+for (const d of ['cubes', 'var/spectate']) mkdirSync(join(pruneRoot, d), { recursive: true });
+writeFileSync(join(pruneRoot, 'cubes', 'pauper-cube-180.md'), '# a cube\n');
+for (let k = 1; k <= 5; k++) {
+  const d = join(pruneRoot, 'var/spectate', `watch-old-cube-${k}`);
+  mkdirSync(d, { recursive: true });
+  writeFileSync(join(d, 'match.json'), JSON.stringify({ status: 'done', updatedAt: `2026-10-0${k}T00:00:00.000Z` }));
+}
+mkdirSync(join(pruneRoot, 'var/spectate', 'not-a-watch'), { recursive: true });
+writeFileSync(join(pruneRoot, 'var/spectate', 'pacho-vs-doom-1.jsonl'), '');
+const pruneLog = [];
+const wp = createWatchRunner({ repoRoot: pruneRoot, available: () => true, keep: 3, redactionCheck: fakeCheck, log: (x) => pruneLog.push(x), command: (q, dir) => ['bash', FAKE, dir, '1'] });
+wp.post({ cube: 'pauper-cube-180', seed: 1 });
+await until(() => wp.running() === null);
+const left = readdirSync(join(pruneRoot, 'var/spectate')).sort();
+check(JSON.stringify(left) === JSON.stringify(['not-a-watch', 'pacho-vs-doom-1.jsonl', 'watch-old-cube-4', 'watch-old-cube-5', 'watch-pauper-cube-180-1']),
+  `keep 3: the new watch and the two most recent old ones stay, the rest go, nothing else is touched (${left.join(', ')})`);
+check(pruneLog.filter((x) => /removed \(only the 3 most recent/.test(x)).length === 3, 'each removal is logged');
+let threw = false;
+try { createWatchRunner({ repoRoot: pruneRoot, keep: 0 }); } catch { threw = true; }
+check(threw, 'keep 0 is refused');
 // a re-run replaces the folder
 writeFileSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt'), 'x');
 w.post({ cube: 'fair-fight-cube-180', seed: 1 });
 await until(() => w.running() === null);
 check(!existsSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt')), 'the same cube and seed again replace the old folder');
 check(argvs.every(([q, dir]) => dir === join(ROOT, 'var/spectate', q.id)), 'every run in var/spectate/<id>');
+// the command: drafters, players and (only with an llm: drafter) the configured cap reach the watch's argv
+const argvSeen = [];
+const wa = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, llmCap: { maxUsd: 0.75, maxCalls: 30, maxFallbackRate: 0.2 },
+  command: (q, dir, args) => { argvSeen.push(args); return ['bash', FAKE, dir, '1']; } });
+wa.post({ cube: 'pauper-cube-180', seed: 21, drafterB: 'llm:sonnet', playerA: 'Reckless', playerB: 'search-v2' });
+await until(() => wa.running() === null);
+wa.post({ cube: 'pauper-cube-180', seed: 22, drafterA: 'forge-ranks' });
+await until(() => wa.running() === null);
+const flag = (args, k) => args[args.indexOf(k) + 1];
+const [a1, a2] = argvSeen;
+check(a1[0] === 'watch' && a1[1] === 'cubes/pauper-cube-180.md' && flag(a1, '--drafter-a') === 'lab' && flag(a1, '--drafter-b') === 'llm:sonnet'
+  && flag(a1, '--player-a') === 'Reckless' && flag(a1, '--player-b') === 'search-v2'
+  && flag(a1, '--llm-max-usd') === '0.75' && flag(a1, '--llm-max-calls') === '30' && flag(a1, '--llm-fallback-rate') === '0.2', `an llm: drafter: its id and the cap in the argv (${a1.join(' ')})`);
+check(flag(a2, '--drafter-a') === 'forge-ranks' && !a2.includes('--llm-max-usd') && flag(a2, '--player-a') === 'Default', 'no llm: drafter, no cap flags');
+// D444: a custom cube -- cube.md written before the 202, its path the watch's cube, match.json naming it
+const argvC = [];
+let atSpawn = null;
+const wcu = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck,
+  command: (q, dir, args) => { argvC.push(args); atSpawn = existsSync(join(dir, 'cube.md')) ? readFileSync(join(dir, 'cube.md'), 'utf8') : null; return ['bash', '-c', 'sleep 0.3; exec bash "$0" "$1" 1', FAKE, dir]; } });
+const pc = wcu.post({ cube: 'my-fair-fight', seed: 23, cubeDoc: cd(FAIR, 'My Fair Cube') });
+const cdir = join(ROOT, 'var/spectate/watch-my-fair-fight-23');
+const onDisk = existsSync(join(cdir, 'cube.md')) ? readFileSync(join(cdir, 'cube.md'), 'utf8') : null;
+check(pc.status === 202 && pc.body.id === 'watch-my-fair-fight-23' && onDisk !== null && onDisk.startsWith('# My Fair Cube\n') && onDisk.length === FAIR.length - FAIR_TITLE.length + 'My Fair Cube'.length,
+  'POST with a cubeDoc: 202, and var/spectate/<id>/cube.md is there when it answers (its heading the title)');
+check(atSpawn === onDisk, 'cube.md was written before the watch process was started');
+const mc = wcu.get('watch-my-fair-fight-23').body.match;
+check(mc?.cube?.title === 'My Fair Cube' && mc.cube.file === 'var/spectate/watch-my-fair-fight-23/cube.md' && mc.status === 'drafting', 'match.json from the 202: the custom cube\'s title and its cube.md');
+check(argvC[0]?.[0] === 'watch' && argvC[0][1] === 'var/spectate/watch-my-fair-fight-23/cube.md' && flag(argvC[0], '--out') === 'var/spectate/watch-my-fair-fight-23' && !argvC[0].includes('--ratings'),
+  `the argv: that path as the cube, no --ratings (the lab falls back to Forge's ranks) (${argvC[0]?.slice(0, 2).join(' ')})`);
+check(!argvC[0].some((x) => /My Fair Cube|## The list/.test(x)), 'neither the title nor the markdown is in the argv');
+await until(() => wcu.running() === null);
+check(wcu.get('watch-my-fair-fight-23').body.match?.status === 'done' && existsSync(join(cdir, 'cube.md')), 'the fake watch runs to done over it; cube.md stays');
+check(wcu.post({ cube: 'my-fair-fight', seed: 24, cubeDoc: cd('# x\nno list\n') }).status === 400 && !existsSync(join(ROOT, 'var/spectate/watch-my-fair-fight-24')), 'an unreadable cubeDoc: 400, and no folder is made');
+check(mc?.unknownCards === null, 'a checkout with no engine resources (this test root): match.json\'s unknownCards is null, not checked');
+// #150 review: names the engine does not know are named in match.json before the 202 (still a 202)
+{
+  const planted = FAIR.replace(/^(### [^\n]*\n)/m, '$1Zzyzx the Unprinted · Not A Real Card · ');
+  const known = new Set(parseCube(FAIR).cards.map((c) => c.name.toLowerCase()));
+  const wn = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, cardNames: () => known,
+    command: (q, dir) => ['bash', '-c', 'sleep 0.3; exec bash "$0" "$1" 1', FAKE, dir] });
+  const pn = wn.post({ cube: 'my-planted', seed: 25, cubeDoc: cd(planted, 'Planted') });
+  const mn = wn.get('watch-my-planted-25').body.match;
+  check(pn.status === 202 && JSON.stringify(mn?.unknownCards) === JSON.stringify(['Zzyzx the Unprinted', 'Not A Real Card']),
+    `a cube with two names the engine lacks: 202, and match.json names them from the start (${JSON.stringify(mn?.unknownCards)})`);
+  await until(() => wn.running() === null);
+  // the engine's real index (forge-home's cardsfolder.zip, read, never booted), where this checkout has one
+  const real = forgeCardNames(resolve(CARDS_ZIP));
+  if (!real) console.log('  SKIP  the real name index: no forge-home/res/cardsfolder/cardsfolder.zip here');
+  else {
+    const t1 = performance.now();
+    const u1 = unknownCards([...new Set(parseCube(planted).cards.map((c) => c.name))], real);
+    const ms = performance.now() - t1;
+    check(JSON.stringify(u1) === JSON.stringify(['Zzyzx the Unprinted', 'Not A Real Card']) && ms < 50,
+      `the real index (${real.size} names): Fair Fight's 180 are all known, the two planted are not; ${ms.toFixed(2)} ms for 182 names once built`);
+    check(unknownCards(['Fire // Ice', 'Delver of Secrets', 'Insectile Aberration', 'Æther Vial', 'lightning bolt'], real).length === 0, 'a split card as "A // B", both faces of a transform card, a ligature, any case: known');
+  }
+}
+// the fallback stop, as the watch reports it, comes through unchanged
+w.post({ cube: 'pauper-cube-180', seed: 8, drafterB: 'llm:sonnet' });
+await until(() => w.running() === null);
+const fb = w.get('watch-pauper-cube-180-8').body.match;
+check(fb?.status === 'error' && /the fallback stop/.test(fb.error) && fb.cost?.fallbacks === 3 && fb.cost?.stopped === 'fallbacks', 'an llm: drafter\'s fallback stop: error with its reason and the cost, as the watch wrote it');
+// match.json from the start: a watch that dies before it writes anything still says what it was
+const early = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, command: () => ['bash', '-c', 'sleep 0.3; exit 4'] });
+early.post({ cube: 'pauper-cube-180', seed: 31, games: 5, drafterA: 'forge-ranks', playerB: 'search-v2', pace: 150 });
+const m0 = early.get('watch-pauper-cube-180-31').body.match;
+check(m0?.status === 'drafting' && m0.cube?.title === 'a cube' && m0.cube?.file === 'cubes/pauper-cube-180.md' && m0.seed === 31 && m0.bestOf === 5 && m0.need === 3 && m0.paceMs === 150
+  && m0.players?.A?.player === 'Default' && m0.players?.B?.player === 'search' && m0.players?.B?.policy === 'search' && m0.drafters?.A?.drafter === 'forge-ranks'
+  && !Number.isNaN(Date.parse(m0.startedAt)) && m0.cost === null && Array.isArray(m0.games), 'match.json the moment POST answers: cube, seed, best of, pace, players, drafters, startedAt');
+await until(() => early.running() === null);
+const m1 = early.get('watch-pauper-cube-180-31').body.match;
+check(m1?.status === 'error' && /exited \(code 4\)/.test(m1.error) && m1.cube?.title === 'a cube' && m1.drafters?.A?.drafter === 'forge-ranks' && m1.startedAt === m0.startedAt, 'and when it dies: error, with everything it said at the start');
 // a command that cannot start frees the slot
-const nostart = createWatchRunner({ repoRoot: ROOT, available: () => true, command: () => [join(DIR, 'no-such-program')] });
+const nostart = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, command: () => [join(DIR, 'no-such-program')] });
 check(nostart.post({ cube: 'pauper-cube-180', seed: 4 }).status === 202, 'a watch whose program is missing: 202 (spawn fails later)');
 await until(() => nostart.running() === null);
 check(nostart.running() === null && nostart.get('watch-pauper-cube-180-4').body.match?.status === 'error', 'then the slot is free and match.json says error');
@@ -173,6 +530,19 @@ const h = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins, t
 const port = await h.listen();
 const hh = await call(port, 'GET', '/health');
 check(hh.status === 200 && hh.body.watch === 1 && hh.body.watchRunning === null, '/health carries "watch": 1');
+check(Array.isArray(hh.body.watchDrafters) && hh.body.watchDrafters[0]?.id === 'lab' && hh.body.watchPlayers?.at(-1)?.id === 'search-v2' && hh.body.watchLlmCap?.maxUsd === 1, '/health carries watchDrafters, watchPlayers and watchLlmCap');
+const p400 = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', drafterA: 'gpt' });
+check(p400.status === 400 && /one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(p400.body.message), 'POST /watch with an unknown drafter: 400 naming the known ones');
+check(hh.body.watchCustom === 1, '/health carries "watchCustom": 1 (D444)');
+const pBad = await call(port, 'POST', '/watch', { cube: 'my-prose', cubeDoc: cd('# Just prose\n') });
+check(pBad.status === 400 && /the cube parser: no "## The list" section/.test(pBad.body.message), 'POST /watch with an unreadable cubeDoc: 400 in the parser\'s words');
+const p413 = await call(port, 'POST', '/watch', { cube: 'my-big', cubeDoc: cd('#'.repeat(300 * 1024)) });
+check(p413.status === 413, `POST /watch with markdown over 256 KB (a body under ${MAX_WATCH_BODY / 1024} KB): 413`);
+const pHuge = await call(port, 'POST', '/watch', { cube: 'my-big', cubeDoc: cd('#'.repeat(MAX_WATCH_BODY)) });
+check(pHuge.status === 413 && /600 KB/.test(pHuge.body?.message ?? ''), 'a body over 600 KB: 413 from the helper');
+const pc2 = await call(port, 'POST', '/watch', { cube: 'my-fair-fight', seed: 1, cubeDoc: cd(FAIR) });
+check(pc2.status === 202 && pc2.body.id === 'watch-my-fair-fight-1' && existsSync(join(ROOT, 'var/spectate/watch-my-fair-fight-1/cube.md')), 'POST /watch with a cubeDoc through the route: 202, cube.md written');
+await until(() => wh.running() === null);
 const p = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', seed: 2 });
 check(p.status === 202 && p.body.id === 'watch-fair-fight-cube-180-2', 'POST /watch: 202');
 check((await call(port, 'POST', '/watch', { cube: 'pauper-cube-180', seed: 9 })).status === 409, 'POST /watch again: 409');

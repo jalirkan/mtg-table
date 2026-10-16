@@ -177,7 +177,25 @@ grid draft is hidden: all nine cards are face up for both drafters.
   the seed; the deal, who opens, the other seat and every fallback are. Each finished draft's
   decisions go to `<out>/llm/<seed>.json` at once, and a resumed run replays that file instead of
   asking again: a stopped run never pays twice, and a folder's drafts can be rebuilt from it.
-- **`--llm-jobs N`** (default 2) drafts N seeds at once; the model is the wait, not the CPU.
+- **`--llm-jobs N`** (default 2, at most 4) drafts N seeds at once; the model is the wait, not the CPU.
+  More lanes would not be faster for long (the CLI runs one question a lane, and the account's rate
+  limit is shared) and each lane is one call the dollar cap's projection has to allow for.
+- **The spend cap and the fallback stop** (the #144 review). One budget covers the whole run, every
+  lane of it: `--llm-max-calls N` (model calls, retries included; no cap by default) and
+  `--llm-max-usd X` (dollars at list price, the CLI's own cost figure summed; **default $5**, `none` to
+  lift it) refuse the call that would pass them — the dollar check projects the next call at the
+  run's mean cost a call so far, so it stops *before* crossing the cap, by at most one call a lane
+  when the calls vary. A call the CLI reports no cost for, and a call killed in flight (a stop, a
+  timeout), is charged the run's mean priced call, or $0.05 when none is priced, so a CLI that never
+  reports a cost still stops at the default cap, after 100 calls. `--llm-fallback-rate R` (default 0.25; 1 never stops) ends the run once more
+  than that share of its decisions so far fell back, the share taken over at least 8 decisions: a
+  logged-out CLI, whose every call fails, stops after its third decision (six failed calls) instead of
+  quietly drafting lab against lab under an `llm` label; 3 fallbacks in the first 9 decisions stop
+  it, 4 spread over a draft of 18 do not. A stop names its reason (`the call cap`, `the spend cap`,
+  `the fallback stop`) and the counts, kills the CLI calls in flight, abandons the draft in progress
+  (the finished ones keep their replay files, so a resume does not pay for them again) and exits
+  with an error; `<out>/llm/spend.json` holds the caps, the spend and why it stopped, written at the
+  end of every LLM run, stopped or not.
 
 **What it costs (measured, 2026-10-15).** The one real smoke, Vintage, seed 899,000,001, seat A
 `llm:haiku` (thinking low), `--games 0`: 18 decisions, 18 calls, 0 retries, 0 fallbacks; 57,971
@@ -396,7 +414,10 @@ lowers it): a mix with search plays slower games.
 | `--drafter llm:<model>[:thinking=off\|low\|default]` | off | one seat asks Claude (`haiku`, `sonnet`, `opus`; `fake` spends nothing), once a decision (grid only; D439). **Costs API money** |
 | `--drafter-seat A\|B` | `A` | which seat that is (a mirrored test runs both) |
 | `--llm-sees-opponent` | off | the LLM's prompt also lists the opponent's pool (part of the folder's identity) |
-| `--llm-jobs N` | 2 | LLM drafts asked at once |
+| `--llm-jobs N` | 2 | LLM drafts asked at once, 1..4 |
+| `--llm-max-calls N` | none | stop the run before its (N+1)th model call |
+| `--llm-max-usd X\|none` | 5 | stop the run before a call that would take its spend (list price) past $X |
+| `--llm-fallback-rate R` | 0.25 | stop the run once more than R of its decisions fell back (over at least 8; 1 = never) |
 | `--shape-a`, `--shape-b` | `auto` | the seat's deck shape: `auto`, `two-colour`, `mono`, `three-colour`, `good-stuff` (grid; *Shapes*, D446) |
 | `--shape-explore on \| share=x[,<shape>=w...]` | off | each auto seat forced to a weighted random shape with probability x, seeded by the draft (D446) |
 | `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
@@ -878,7 +899,12 @@ tools/cubelab.sh library-candidates --fc ~/code/ForgeCoach [--out cubes/library]
   best pooled shrunk win rate first (to four decimals, then games). A card with no lab data, or fewer
   games, has no slot; the header says how many that excludes.
 - **`random-180.md`**, the control: every drawable card, keyed by a seeded uniform draw (`--seed`, 180,
-  `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected.
+  `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected. Its draw
+  holds **3 cards Forge marks `AI:RemoveDeck:All`** (Adanto Vanguard, Flash, Memory Jar; its own header
+  names them), kept on purpose: the control draws every supported card alike, and leaving the flagged
+  ones out would make it a selected cube. The hits hold none and Omega none by design, and the lab's
+  default weights do not mark the flag down (`remAIDeck: 0`), so Forge's AI may play those three
+  poorly in random-180's games: a difference against the control includes those 3 slots of 180.
 - **`synergy-v2-180.md`**: ForgeCoach's current Synergy Cube, copied with one provenance line under its
   title, for reference. J136 does not read it: its Synergy population is ForgeCoach's v2 only, copied from
   its pinned clone and checked by sha256. Synergy v2 against a v3 is a separate job, J137.
@@ -1385,8 +1411,9 @@ you follow as it is played.
 
 ```bash
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md                       # Default vs Default, best of 3, a random seed
-tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search --games 5
+tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search-v2 --games 5
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the smoke: about 20 s
+tools/cubelab.sh watch cubes/fair-fight-cube-180.md --drafter-b llm:sonnet   # Claude drafts B: SPENDS, at most $1 (D443)
 ```
 
 | Flag | Default | |
@@ -1394,8 +1421,9 @@ tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the 
 | `--format grid` | grid | the only format: a grid is what a viewer replays pick by pick |
 | `--seed S` | random 1–99,999 (printed in the id) | the draft's seed, as `run`'s; game `n` plays at `S × 10 + n` |
 | `--games N` | 3 | a best of N (odd, 1–7); it stops once a side has more than half |
-| `--drafter-a`, `--drafter-b` | `lab` | `lab`, or `human-picks:<x.picks.json>` for one seat (D416) |
-| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search` (search-v2, the live search seat, through RecordMatch's `--policy search`) |
+| `--drafter-a`, `--drafter-b` | `lab` | `lab`, or for one side `forge-ranks`, `llm:<model>[:thinking=…]` (D439) or `human-picks:<x.picks.json>` (D416); the other side is then `lab` (D443) |
+| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search-v2` (`search` also; the live search seat, through RecordMatch's `--policy search`). No Claude player: RecordMatch seats Forge AIs only |
+| `--llm-max-usd X`, `--llm-max-calls N`, `--llm-fallback-rate R` | 1, 40, 0.25 | an `llm:` drafter's cap for the whole watch and its fallback stop (D442): past either cap, or past R of its picks falling back to the lab drafter's line, the watch ends `error` with the reason |
 | `--pace ms` | 600 | the recorder's pace (M47); 0 = engine speed |
 | `--shape-a`, `--shape-b` | `auto` | the lab drafter's deck shape per seat (D446; not with `human-picks`) |
 | `--out <dir>` | `var/spectate/watch-<cube>-<seed>` | the folder; its name is the watch's id |
@@ -1416,7 +1444,10 @@ What it writes, all in the one folder:
   `tools/check-redaction.mjs` as soon as it ends; `<id>-g<n>.log` its output;
 - `match.json` — `status` `drafting` → `playing` → `done` (or `error` /
   `stopped`, with why), the games, their winners, the wins and the result,
-  rewritten after every change.
+  rewritten after every change; from its first write it names the cube, the
+  seed, the players, the drafters and `startedAt`, and with an `llm:` drafter its
+  `cost` (calls, failed calls, decisions, fallbacks, tokens, dollars at list
+  price) follows the spend while it drafts (D443).
 
 **The draft is face up, so draft.json shows both pools and both decks**: in a
 grid draft both drafters see every grid and every line the other takes. The
