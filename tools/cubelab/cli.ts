@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   check   <cube.md>                       every card against the engine's database
+//   library-candidates --fc <ForgeCoach> [--out cubes/library] [--seed 180] [--min-games 80]   the library pool and its candidate 180s (library-candidates.ts)
 //   ratings init <cube.md> [--out <tsv>] [--force]
 //   ratings apply <cube.md> --from <evolve-dir|changelog.md> --rule explore-eb --out <tsv> [--base <tsv>] [--report <md>]
 //           raise the low-rated cards exploration found holding their own (D360, raisecmd.ts)
@@ -343,6 +344,7 @@ async function main(): Promise<number> {
   const { pos, f } = flags(rest);
   switch (cmd) {
     case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
+    case 'library-candidates': return (await import('./library-candidates.ts')).libraryCandidates(REPO, f, say);   // the library pool and its candidate 180s (J136)
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');
