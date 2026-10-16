@@ -43,3 +43,22 @@ about to offer `llm:` drafters from a button, which makes both a requirement.
   safe.
 - *No default dollar cap for `run`*: the lab's jobs are written by a session that may not think of
   it; a default that needs lifting out loud is the safer failure.
+
+**2026-10-16, the #148 review (low).** Three holes, closed on this branch:
+- *The dollar cap read only `total_cost_usd`*, which the CLI may leave out (`model.mjs`'s
+  `parseCliOutput` gives null), so a run without `--llm-max-calls` had no bound at all. A call with
+  no cost figure is now charged an estimate, the run's mean priced call or `UNPRICED_CALL_USD`
+  ($0.05, about three times D439's Sonnet draft call) when none is priced, into `spent.usdAssumed`
+  beside `spent.unpriced`; the cap checks `usd + usdAssumed`. With nothing priced the default $5
+  is 100 calls: the dollar cap counts calls.
+- *A call killed in flight was not spent*: the stop's abort and the wrapper's timeout kill a
+  `claude -p` that has used tokens and reports none. `model.mjs` tags the rejection `killed:
+  'abort' | 'timeout'`, and the budget charges such a call the same estimate (`spent.aborted`). A
+  call that failed on its own (a logged-out CLI) is not charged.
+- *The watch's SIGKILL missed `claude -p`*: the wrapper spawns each call in a process group of its
+  own (so one `kill(-pid)` reaches what it started), which also takes it out of the watch's group.
+  When `MTGTABLE_CHILD_GROUPS` names a directory, `model.mjs` registers each group there for its
+  lifetime (a file named by its pgid, holding the leader's start time from `/proc` so that a reused
+  pid is never signalled), and the watch runner sets it to `<watch>/.child-groups/` and sends every
+  signal it sends the watch's group to the registered groups too. `watch-runner-selftest.mjs` holds
+  it with a fake `claude` that leaves a grandchild and ignores SIGTERM.

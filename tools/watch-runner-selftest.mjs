@@ -126,6 +126,13 @@ if [ "$seed" = 7 ]; then
   while :; do sleep 0.1; done
 fi
 if [ "$seed" = 6 ]; then echo $$ > "$dir/leader.pid"; trap '' TERM; while :; do sleep 0.1; done; fi
+if [ "$seed" = 9 ]; then
+  # an llm: drafter's claude -p, in a process group of its own (model.mjs), with a grandchild; the
+  # watch ignores SIGTERM, so only the runner's SIGKILL ends it
+  echo $$ > "$dir/leader.pid"; trap '' TERM
+  node "$3/llm-call.mjs" "$3/claude" "$dir" &
+  while :; do sleep 0.1; done
+fi
 if [ "$seed" = 2 ]; then
   trap 'm "{\\"v\\":1,\\"kind\\":\\"watch-match\\",\\"id\\":\\"$id\\",\\"status\\":\\"stopped\\",\\"games\\":[],\\"current\\":null}"; exit 130' TERM
   while :; do sleep 0.1; done
@@ -200,8 +207,37 @@ const closedMs = Date.now() - t0;
 await until(() => wc.running() === null);
 check(closedMs >= 900 && closedMs < 3000 && wc.running() === null, `close() on a watch that ignores SIGTERM: SIGKILL after the grace (${closedMs} ms), then nothing runs`);
 check((await mk().close()) === undefined, 'close() with nothing running resolves at once');
+// the watch's SIGKILL reaches the claude -p groups its llm: drafter started (their own groups, registered)
+const K = join(DIR, 'kill-stage');
+mkdirSync(K, { recursive: true });
+writeFileSync(join(K, 'claude'), `#!/usr/bin/env bash
+[ "\${1:-}" = --help ] && { echo "usage: claude"; exit 0; }
+trap '' TERM
+echo $$ > claude.pid
+bash -c 'trap "" TERM; echo $$ > grand.pid; while :; do sleep 0.1; done' &
+cat > /dev/null
+while :; do sleep 0.1; done
+`);
+chmodSync(join(K, 'claude'), 0o755);
+writeFileSync(join(K, 'llm-call.mjs'), `import { makeClaudeModel } from ${JSON.stringify(resolve('tools/llm-seat/lib/model.mjs'))};
+const m = makeClaudeModel({ model: 'haiku', bin: process.argv[2], cwd: process.argv[3], timeoutS: 120 });
+await m.call({ system: 'S', user: 'U' });
+`);
+const wk = createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, redactionCheck: fakeCheck, command: (q, dir) => ['bash', FAKE, dir, String(q.seed), K] });
+wk.post({ cube: 'pauper-cube-180', seed: 9 });
+const kdir = join(ROOT, 'var/spectate/watch-pauper-cube-180-9');
+const kpid = (f) => (existsSync(join(kdir, f)) ? Number(readFileSync(join(kdir, f), 'utf8').trim()) || null : null);
+const kgroups = () => { try { return readdirSync(join(kdir, '.child-groups')); } catch { return []; } };
+await until(() => kpid('claude.pid') && kpid('grand.pid') && kgroups().length === 1, 8000);
+const [kc, kg] = [kpid('claude.pid'), kpid('grand.pid')];
+check(kc && kg && alive(kc) && alive(kg) && kgroups()[0] === String(kc), 'an llm: call in flight: claude -p and its grandchild run, its own group registered in the watch folder');
+await wk.close();
+await until(() => !alive(kc) && !alive(kg), 3000);
+check(!alive(kc) && !alive(kg), 'the watch\'s SIGKILL (it ignored SIGTERM) reached claude -p\'s own group, the grandchild included');
+for (const pid of [kc, kg]) if (pid && pid > 1) { try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } }
+
 // whatever a failed check above left behind is this test's own: never leave it running
-for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid')]) {
+for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid'), join(ROOT, 'var/spectate/watch-pauper-cube-180-9/leader.pid')]) {
   try { const pid = Number(readFileSync(f, 'utf8').trim()); if (pid > 1) { try { process.kill(-pid, 'SIGKILL'); } catch { /* not a group */ } try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } } catch { /* no file */ }
 }
 // redaction as served: only lines that passed are sent; a failing prefix is never sent, and stops the watch

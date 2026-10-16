@@ -61,6 +61,7 @@
 // updatedAt, else the folder's mtime; a running watch is never removed.
 
 import { spawn } from 'node:child_process';
+import { procStart } from './llm-seat/lib/model.mjs';
 import { fileURLToPath } from 'node:url';
 import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
@@ -239,7 +240,32 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     try { writeFileSync(`${file}.runner.tmp`, `${JSON.stringify(next, null, 1)}\n`); renameSync(`${file}.runner.tmp`, file); } catch { /* the folder went away */ }
   };
 
-  const killGroup = (r, sig) => { try { process.kill(-r.child.pid, sig); } catch { /* gone */ } };
+  /**
+   * The process groups a watch's `claude -p` calls run in (tools/llm-seat/lib/model.mjs registers each
+   * under MTGTABLE_CHILD_GROUPS): their own groups, so the watch's signal must be sent to them too.  A
+   * file whose pid now names another process (its start time differs) is a stale entry, never signalled.
+   * -> the registered groups that still exist.
+   */
+  const registered = (r) => {
+    const live = [];
+    let names = [];
+    try { names = readdirSync(r.groups); } catch { return live; }
+    for (const n of names) {
+      if (!/^[0-9]{1,10}$/.test(n) || Number(n) <= 1) continue;
+      const pid = Number(n);
+      let mark = '';
+      try { mark = readFileSync(join(r.groups, n), 'utf8').trim(); } catch { continue; }
+      const now = procStart(pid);
+      // the leader alive with another start time: the pid was reused -- not ours
+      if (now !== null && mark !== '' && now !== mark) { rmSync(join(r.groups, n), { force: true }); continue; }
+      try { process.kill(-pid, 0); live.push(pid); } catch (e) { if (e.code === 'EPERM') continue; rmSync(join(r.groups, n), { force: true }); }
+    }
+    return live;
+  };
+  const killGroup = (r, sig) => {
+    try { process.kill(-r.child.pid, sig); } catch { /* gone */ }
+    for (const pid of registered(r)) { try { process.kill(-pid, sig); } catch { /* gone */ } }
+  };
 
   /** Remove all but the `keep` most recent watch folders (`fresh`, the one starting, counts as the newest; the running one stays). */
   const prune = (fresh) => {
@@ -259,9 +285,10 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       log(`WATCH ${o.n} removed (only the ${keep} most recent watches are kept)`);
     }
   };
-  /** Does the watch's process group still have a member (its JVM, after the leader exited)? */
+  /** Does the watch's process group still have a member (its JVM, after the leader exited), or a registered claude group? */
   const groupAlive = (r) => {
-    try { process.kill(-r.child.pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+    try { process.kill(-r.child.pid, 0); return true; } catch (e) { if (e.code === 'EPERM') return true; }
+    return registered(r).length > 0;
   };
   /** SIGKILL whatever of the group is left, `killGraceMs` from now (once; a stop arms it, so does an exit with members left). */
   const armKill = (r) => {
@@ -345,11 +372,12 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       prune(r.id);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
+      const groups = join(dir, '.child-groups');
       let child;
       try {
-        child = spawn(file, args, { cwd: root, detached: true, stdio: ['ignore', fd, fd], env: process.env });
+        child = spawn(file, args, { cwd: root, detached: true, stdio: ['ignore', fd, fd], env: { ...process.env, MTGTABLE_CHILD_GROUPS: groups } });
       } finally { closeSync(fd); }
-      const me = { id: r.id, child, startedAt: Date.now() };
+      const me = { id: r.id, child, groups, startedAt: Date.now() };
       running = me;
       child.on('error', (e) => {
         // A child that never started fires no 'exit': free the slot and say why here.

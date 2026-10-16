@@ -185,7 +185,9 @@ grid draft is hidden: all nine cards are face up for both drafters.
   `--llm-max-usd X` (dollars at list price, the CLI's own cost figure summed; **default $5**, `none` to
   lift it) refuse the call that would pass them — the dollar check projects the next call at the
   run's mean cost a call so far, so it stops *before* crossing the cap, by at most one call a lane
-  when the calls vary. `--llm-fallback-rate R` (default 0.25; 1 never stops) ends the run once more
+  when the calls vary. A call the CLI reports no cost for, and a call killed in flight (a stop, a
+  timeout), is charged the run's mean priced call, or $0.05 when none is priced, so a CLI that never
+  reports a cost still stops at the default cap, after 100 calls. `--llm-fallback-rate R` (default 0.25; 1 never stops) ends the run once more
   than that share of its decisions so far fell back, the share taken over at least 8 decisions: a
   logged-out CLI, whose every call fails, stops after its third decision (six failed calls) instead of
   quietly drafting lab against lab under an `llm` label; 3 fallbacks in the first 9 decisions stop
