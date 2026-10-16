@@ -133,7 +133,9 @@
 //                 under var/spectate/ (older ones go when a watch starts).  D443: /health also
 //                 lists the drafters and players POST /watch takes ("watchDrafters",
 //                 "watchPlayers") and an llm: drafter's cap a watch ("watchLlmCap"; config.json
-//                 coach.watchMaxUsd, default 1, and coach.watchMaxCalls, default 40).
+//                 coach.watchMaxUsd, default 1, and coach.watchMaxCalls, default 40).  D444: a
+//                 "my-<slug>" cube of the caller's own comes in the body ("cubeDoc": its title and
+//                 markdown, at most 256 KB; the body at most 600 KB); /health says "watchCustom": 1.
 //
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
@@ -809,7 +811,7 @@ export function startHelper(opts) {
       const game = /^\/watch\/([^/]+)\/game\/([^/]+)$/.exec(path);
       const stopIt = /^\/watch\/([^/]+)\/stop$/.exec(path);
       if (path === '/watch' && req.method === 'POST') {
-        const raw = await readBody(req, res, MAX_WATCH_BODY, '4 KB', cors, say);
+        const raw = await readBody(req, res, MAX_WATCH_BODY, `${MAX_WATCH_BODY / 1024} KB`, cors, say);   // D444: room for a cubeDoc
         if (raw === null) return;
         let q;
         try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }

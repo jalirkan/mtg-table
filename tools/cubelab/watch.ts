@@ -21,7 +21,11 @@
 // kept up to date while it drafts, and written when it stops.
 //
 // What it does, in order, all of it into ONE folder (--out; default
-// var/spectate/watch-<cube>-<seed>/, the id is the folder's name):
+// var/spectate/watch-<cube>-<seed>/, the id is the folder's name).  The cube
+// may be any path: a custom cube (D444, ForgeCoach's cube builder) is
+// <out>/cube.md, which the coach helper writes before it starts the watch and
+// the watch keeps; with no ratings file beside it the lab drafts with Forge's
+// ranks (defaultRatings is null):
 //
 //   1. match.json `status: "drafting"`, with the cube, the seed, the players, the
 //      drafters and startedAt from the first write (a killed watch still says what it was);
@@ -313,6 +317,12 @@ export interface WatchMatch {
   winner: Side | 'draw' | null;
   /** The game being played now (its n), else null. */
   current: number | null;
+  /**
+   * The cube's names the engine does not know, drafted without (the #150 review): the helper's check
+   * of a custom cube before its 202 (forge-scripts.ts's name index; null = not checked), then, once
+   * the draft has run, the engine's own list (run.json's `missing`) for every watch.
+   */
+  unknownCards?: string[] | null;
 }
 
 /** match.json's `cost`: the LLM drafter's caps, its spend so far, and why it stopped the watch (null = it did not). */
@@ -454,11 +464,13 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
   const startedAt = new Date(t0).toISOString();
   const id = path.basename(path.resolve(o.out));
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
+  // D444: a custom cube (ForgeCoach's cube builder) is the helper's <out>/cube.md, written before the watch starts: it stays
+  const ownCube = path.resolve(o.cubeFile) === path.resolve(o.out, 'cube.md');
   if (fs.existsSync(o.out)) {
-    const foreign = fs.readdirSync(o.out).filter((n) => !OURS.test(n));
+    const foreign = fs.readdirSync(o.out).filter((n) => !OURS.test(n) && !(ownCube && n === 'cube.md'));
     if (foreign.length > 0) throw new Error(`${o.out} holds files a watch did not write (${foreign.slice(0, 3).join(', ')}) -- use a new --out`);
     // watch.log is the helper's for this run, and match.json the helper's first word on it (D443): both stay, and the first save replaces match.json
-    for (const n of fs.readdirSync(o.out)) if (n !== 'watch.log' && n !== 'match.json') fs.rmSync(path.join(o.out, n), { recursive: true, force: true });
+    for (const n of fs.readdirSync(o.out)) if (n !== 'watch.log' && n !== 'match.json' && !(ownCube && n === 'cube.md')) fs.rmSync(path.join(o.out, n), { recursive: true, force: true });
   }
   fs.mkdirSync(o.out, { recursive: true });
   const cubeText = fs.readFileSync(o.cubeFile, 'utf8');
@@ -473,6 +485,11 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
     games: [], wins: { A: 0, B: 0, draws: 0 }, winner: null, current: null,
   };
   const matchFile = path.join(o.out, 'match.json');
+  // the helper's first match.json named a custom cube's unknown cards before its 202: kept until the engine says
+  try {
+    const first = JSON.parse(fs.readFileSync(matchFile, 'utf8')) as Partial<WatchMatch>;
+    if (Array.isArray(first.unknownCards) || first.unknownCards === null) m.unknownCards = first.unknownCards;
+  } catch { /* no first word: a watch run by hand */ }
   let last: WatchMatch | null = null;
   const save = (): void => {
     m.updatedAt = new Date().toISOString();
@@ -538,6 +555,7 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
     const rec = JSON.parse(lines.at(-1) as string) as DraftRecord;
     const meta = JSON.parse(fs.readFileSync(path.join(labOut, 'run.json'), 'utf8')) as RunMeta;
     m.cube.title = meta.cube;
+    m.unknownCards = [...(meta.missing ?? [])];   // the engine's own word on the cube's names
     const decks = {} as Record<Side, WatchDeck>;
     for (const k of [0, 1] as const) {
       const side: Side = k === 0 ? 'A' : 'B';

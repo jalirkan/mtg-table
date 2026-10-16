@@ -1,6 +1,6 @@
 # Watch two bots — draft, then a best of three
 
-**D440, D443.** Two AIs grid-draft a cube with the cube lab's drafters, build their
+**D440, D443, D444.** Two AIs grid-draft a cube with the cube lab's drafters, build their
 decks with the lab's builder, and play a best of three that you watch as it is
 played. It is for seeing how a cube plays, not for testing a deck of yours.
 mtg-table does the engine half (`tools/cubelab.sh watch`, served by the coach
@@ -33,8 +33,13 @@ only when `watch` is 1. It also lists the choices `POST /watch` takes (D443):
   { "id": "Experimental", "label": "Forge AI (Experimental)" }, { "id": "Reckless", "label": "Forge AI (Reckless)" },
   { "id": "search-v2", "label": "Search AI (search-v2: Forge AI plus a look-ahead search)" }
 ],
-"watchLlmCap": { "maxUsd": 1, "maxCalls": 40, "maxFallbackRate": 0.25 }
+"watchLlmCap": { "maxUsd": 1, "maxCalls": 40, "maxFallbackRate": 0.25 },
+"watchCustom": 1
 ```
+
+`watchCustom: 1` (D444) means `POST /watch` takes a cube of your own, carried
+in the body (*Your own cube*, below): enable the cube builder's cubes in the
+form only when it is there.
 
 Build the form from these lists, not from a copy: `watchPlayers` is the helper's
 `forge-home/res/ai/*.ai` files, and the cap is its `config.json` (`coach.watchMaxUsd`,
@@ -48,7 +53,7 @@ only.
 
 | Route | Answer |
 |---|---|
-| `POST /watch` `{"cube", "seed"?, "games"?, "drafterA"?, "drafterB"?, "playerA"?, "playerB"?, "pace"?}` (4 KB) | `202 {"ok": true, "id", "seed", "state": "/watch/<id>", "game": "/watch/<id>/game/<n>"}`, `match.json` already written — `409 {"code": "busy", "running": "<id>"}` while another watch runs (one at a time); `400` a bad body: unknown fields, an id not in `/health`'s lists (the message lists the known ones), or two non-`lab` drafters; `503` the bridge is not built or `--no-watch` |
+| `POST /watch` `{"cube", "seed"?, "games"?, "drafterA"?, "drafterB"?, "playerA"?, "playerB"?, "pace"?, "cubeDoc"?}` (600 KB) | `202 {"ok": true, "id", "seed", "state": "/watch/<id>", "game": "/watch/<id>/game/<n>"}`, `match.json` (and with a `cubeDoc`, `cube.md`) already written — `409 {"code": "busy", "running": "<id>"}` while another watch runs (one at a time); `400` a bad body: unknown fields, an id not in `/health`'s lists (the message lists the known ones), two non-`lab` drafters, or a `cubeDoc` that is not a cube (the parser's words); `413` markdown over 256 KB, or a body over 600 KB; `503` the bridge is not built or `--no-watch` |
 | `GET /watch` | `200 {"ok": true, "running": "<id>"|null, "watches": [{id, status, cube, seed, bestOf, players, wins, winner, updatedAt}]}`, newest first, at most 20 |
 | `GET /watch/<id>` | `200 {"ok": true, "id", "running": bool, "match": <match.json>|null, "draft": <draft.json>|null}` — each null until written; `404` an unknown id |
 | `GET /watch/<id>/game/<n>` | game `n`'s frame log, complete lines that passed the redaction check only (below); `404` until that game has started; `500 {"code": "redaction-failed"}` once it failed the check |
@@ -58,7 +63,10 @@ The body:
 
 - `cube` — a cube id, the file name under mtg-table's `cubes/` without `.md`
   (`fair-fight-cube-180`, `pauper-cube-180`, `peasant-cube-180`, `vintage-cube-180`,
-  …; ForgeCoach's `src/cube/cubes.ts` `file` field). A path is a 400.
+  …; ForgeCoach's `src/cube/cubes.ts` `file` field). A path is a 400. Or, with
+  `cubeDoc`, your own cube's id, `my-<slug>` (below).
+- `cubeDoc` (D444) — `{"title": "...", "markdown": "..."}`, only beside a
+  `my-<slug>` cube (*Your own cube*, below).
 - `seed` — 1 … 799,999,999 (the lab's seed range); absent: random, and the
   answer says which. The same cube and seed draft the same picks and decks
   (D294); a second watch of them replaces the first's folder.
@@ -79,6 +87,54 @@ The body:
 - `pace` — milliseconds the recorder waits at a frame where something happened
   (a quarter of it after one that only moved the phase strip); 0 … 5000, default
   600. At 0 a game is over in seconds.
+
+## Your own cube (D444)
+
+A cube made in ForgeCoach's cube builder (`src/cube/custom.ts`, id `my-<slug>`)
+is not in mtg-table's `cubes/`, so the body carries it:
+
+```json
+{ "cube": "my-izzet-tempo", "seed": 7,
+  "cubeDoc": { "title": "Izzet Tempo", "markdown": "# Izzet Tempo\n\n## The list (name — tags)\n\n### Blue (40)\nOpt · …" } }
+```
+
+- `cube` is `my-` and then 1–60 lowercase letters, digits and dashes
+  (`^my-[a-z0-9-]{1,60}$`). A `my-` cube without its `cubeDoc` is a 400, and so is a
+  `cubeDoc` beside a cube from `cubes/` (it never stands in for one).
+- `title`: 1–80 characters of one line (white space collapsed).
+- `markdown`: the cube document, as `cubeMarkdown` writes it — the shape the
+  cube lab's parser reads (`tools/cubelab/cube.ts`, the same format as
+  ForgeCoach's `parseCube.ts`): `## The list…`, then `### Section (n)` headings
+  with ` · `-separated names. At most 256 KB in UTF-8, else `413`. It is read
+  with the lab's own parser, the one the watch drafts from; fewer than 9
+  different cards (a grid draft deals grids of nine) is a `400` whose message
+  carries the parser's words — `the cube document lists 0 different cards; a grid
+  draft needs at least 9 (the cube parser: no "## The list" section with "###
+  Section (N)" headings found)`. At most 2,000 different names, each at most 150
+  characters (the draft room's limits). A `## Not in Forge` section, or any card
+  the engine has no script for, is drafted without it, as for every cube.
+- **`match.unknownCards`** names those cards (the #150 review): before the `202`
+  the helper checks every name of the document against the engine's own card
+  names (the `Name:` lines of Forge's `cardsfolder.zip`, read once per helper
+  process, about 0.3 s, then a lookup a name; any case, accents folded, a split
+  card as `A // B` or its front face), and writes the ones it lacks — still a
+  `202`, the watch drafts without them. `null` means it was not checked (a
+  checkout with no engine resources); `[]`, every name is known. Once the draft
+  has run, `tools/cubelab.sh watch` replaces it with the engine's own list (the
+  lab's `run.json` `missing`), for every watch.
+- The helper writes the document to `var/spectate/watch-my-<slug>-<seed>/cube.md`
+  **before** it answers `202`, with its first `# ` heading set to `title` (added on
+  top when it has none; a document whose heading already is the title is kept
+  byte for byte), and that file is the watch's cube: `match.cube` is
+  `{"title": "<title>", "file": "var/spectate/watch-my-…/cube.md"}`, and
+  `draft.cube.sha256` is that file's.
+- **No ratings:** a cube in `cubes/` may have a `.ratings.tsv` beside it; yours
+  has none, so the lab drafter rates every card at Forge's draft ranks (the
+  lab's default when a cube has no ratings file), and there is no meta. The draft
+  is still the lab's drafters and builders; it is just less tuned to the cube.
+- Everything else is as for any cube: the id is `watch-<cube>-<seed>`, the
+  same cube and seed replace the folder, and the games are served only after the
+  redaction check.
 
 ## Spending: an `llm:` drafter (D442, D443)
 
