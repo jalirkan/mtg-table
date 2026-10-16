@@ -26,8 +26,8 @@ import { aiChooser, gridDraft, newDrafter, type GridAsk } from '../../tools/cube
 import { FORGE_RANKS_WEIGHTS, forgeRanked, parseDrafter, runForgeRanksDraft } from '../../tools/cubelab/drafters.ts';
 import type { LoadedCube } from '../../tools/cubelab/lab.ts';
 import {
-  buildPrompt, cardTexts, costText, fakeDraftModel, FALLBACK_FLOOR, legalLines, LLM_SYSTEM, LlmBudget, llmCapsOf, LlmStop, oracleText, parseLlmSpec, parseReply,
-  runLlmDraft, themeSummary, type CardText, type DraftModel, type LlmCaps, type LlmDrafterOptions,
+  buildPrompt, cardTexts, costText, DEFAULT_LLM_MAX_USD, fakeDraftModel, FALLBACK_FLOOR, legalLines, LLM_SYSTEM, LlmBudget, llmCapsOf, LlmStop, oracleText, parseLlmSpec, parseReply,
+  runLlmDraft, themeSummary, UNPRICED_CALL_USD, type CardText, type DraftModel, type LlmCaps, type LlmDrafterOptions,
 } from '../../tools/cubelab/llmdraft.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { identityDiff, mapLimit, runLab, versionWeights } from '../../tools/cubelab/run.ts';
@@ -374,6 +374,48 @@ test('the call cap and the dollar cap refuse the call that would pass them; the 
   const b4 = new LlmBudget({ ...CAPS, maxCalls: 1 });
   await assert.rejects(runLlmDraft(opts(lc, watcher, { budget: b4 }), 4), /call cap/);
   assert.equal(sawSignal?.aborted, true, 'the signal the call was given is aborted by the stop');
+});
+
+test('a call with no cost figure, or killed in flight, is charged: the dollar cap counts calls when the CLI reports no cost (#148 review)', async () => {
+  const lc = cube();
+  // the CLI reports no total_cost_usd: each call is charged UNPRICED_CALL_USD, so $0.21 is four calls
+  const inner = fakeDraftModel();
+  let n = 0;
+  const unpriced: DraftModel = { name: 'unpriced', call: async (a) => { n++; return { ...(await inner.call(a)), costUsd: null }; } };
+  const b = new LlmBudget({ ...CAPS, maxUsd: 4.2 * UNPRICED_CALL_USD });
+  const e = await runLlmDraft(opts(lc, unpriced, { budget: b }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof LlmStop && e.reason === 'max-usd', String(e));
+  assert.equal(n, 4);
+  assert.deepEqual([b.spent.usd, b.spent.unpriced, b.spent.costCalls], [0, 4, 0]);
+  assert.ok(Math.abs(b.spent.usdAssumed - 4 * UNPRICED_CALL_USD) < 1e-9);
+  assert.match((e as LlmStop).message, /estimated for 4 call\(s\) with no cost figure/);
+  // so the default $5 cap is 100 such calls, and `run` is bounded with no --llm-max-calls
+  assert.equal(Math.round(DEFAULT_LLM_MAX_USD / UNPRICED_CALL_USD), 100);
+  // once a call is priced, an unpriced one is charged the run's mean priced call
+  let k = 0;
+  const mixed: DraftModel = { name: 'mixed', call: async (a) => { k++; return { ...(await inner.call(a)), costUsd: k === 1 ? 0.01 : null }; } };
+  const bm = new LlmBudget(CAPS);
+  await runLlmDraft(opts(lc, mixed, { budget: bm }), 4);
+  assert.ok(Math.abs(bm.spent.usdAssumed - 0.01 * (bm.spent.calls - 1)) < 1e-9, `the mean priced call (${bm.spent.usdAssumed})`);
+  // a call killed in flight (the wrapper's timeout, tagged) spent tokens it never reported: charged
+  const timesOut: DraftModel = { name: 'slow', call: async () => { throw Object.assign(new Error('claude was killed (no answer in 180 s)'), { killed: 'timeout' }); } };
+  const bt = new LlmBudget({ ...CAPS, maxUsd: 0.12, maxFallbackRate: 1 });
+  const et = await runLlmDraft(opts(lc, timesOut, { budget: bt }), 4).then(() => null, (x: unknown) => x);
+  assert.ok(et instanceof LlmStop && et.reason === 'max-usd', String(et));
+  assert.deepEqual([bt.spent.calls, bt.spent.aborted, bt.spent.callErrors], [2, 2, 2]);
+  // a call killed by the run's own stop is charged too; a call that failed by itself (logged out) is not
+  const bs = new LlmBudget({ ...CAPS, maxCalls: 1 });
+  const stopper: DraftModel = { name: 'stopper', call: (a) => new Promise((_, reject) => {
+    a.signal?.addEventListener('abort', () => reject(Object.assign(new Error('claude was killed (the run stopped)'), { killed: 'abort' })), { once: true });
+    // a second lane asks for its call: the cap refuses it and the stop aborts this one in flight
+    queueMicrotask(() => { try { bs.beforeCall(); } catch { /* the stop */ } });
+  }) };
+  await assert.rejects(runLlmDraft(opts(lc, stopper, { budget: bs }), 4), (x: unknown) => x instanceof LlmStop && x.reason === 'max-calls');
+  assert.deepEqual([bs.spent.calls, bs.spent.aborted], [1, 1]);
+  assert.ok(bs.spent.usdAssumed > 0);
+  const bl = new LlmBudget(CAPS);
+  await assert.rejects(runLlmDraft(opts(lc, { name: 'out', call: async () => { throw new Error('claude exited 1 with no output: Please run /login'); } }, { budget: bl }), 4), /fallback stop/);
+  assert.deepEqual([bl.spent.aborted, bl.spent.unpriced, bl.spent.usdAssumed], [0, 0, 0]);
 });
 
 test('the caps from the flags: defaults, values, none, and the faults named', () => {

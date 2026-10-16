@@ -185,7 +185,9 @@ grid draft is hidden: all nine cards are face up for both drafters.
   `--llm-max-usd X` (dollars at list price, the CLI's own cost figure summed; **default $5**, `none` to
   lift it) refuse the call that would pass them — the dollar check projects the next call at the
   run's mean cost a call so far, so it stops *before* crossing the cap, by at most one call a lane
-  when the calls vary. `--llm-fallback-rate R` (default 0.25; 1 never stops) ends the run once more
+  when the calls vary. A call the CLI reports no cost for, and a call killed in flight (a stop, a
+  timeout), is charged the run's mean priced call, or $0.05 when none is priced, so a CLI that never
+  reports a cost still stops at the default cap, after 100 calls. `--llm-fallback-rate R` (default 0.25; 1 never stops) ends the run once more
   than that share of its decisions so far fell back, the share taken over at least 8 decisions: a
   logged-out CLI, whose every call fails, stops after its third decision (six failed calls) instead of
   quietly drafting lab against lab under an `llm` label; 3 fallbacks in the first 9 decisions stop
@@ -916,6 +918,83 @@ cube exactly what the rule gives on the committed pool.
 
 Every candidate drafts on Forge's ranks (none has a ratings file beside it, and neither does Omega), so
 the comparison is of the lists, not of anyone's ratings.
+
+## The library census (D445)
+
+**The programme.** Treat the whole library as one population, one copy of each card, and learn each
+card's value *in context* — power band, colour structure, archetype — then suggest balanced cubes and
+decks at a chosen power level, every suggestion confirmed by a fresh, pre-registered lab run (Justin,
+2026-10-16; the plan and its agreed corrections are the cloud's notes in `pc-jobs`' README, *NOTES TO
+THE PC*, and the PC's critique and J140's design in `pc-results/HEARTBEAT.md`, 2026-10-16). Phase 0 is
+the population and a sampler, and is all this section covers: no engine runs, nothing played. Phase 1
+(the drafter and builder shape variants, J140) and the census rounds come after it.
+
+```bash
+tools/cubelab.sh census build --fc ~/code/ForgeCoach            # cubes/library/census.tsv
+tools/cubelab.sh census build --fc ~/code/ForgeCoach --check    # exit 1 when it is stale
+tools/cubelab.sh sample --band peasant --structure three-colour --seed 1 --count 40 --out var/cubelab/census/cubes
+```
+
+**`cubes/library/census.tsv`**, one row a card of `library-pool.tsv` (1,592), committed:
+
+| column | what |
+|---|---|
+| `name`, `sources`, `forge_supported`, `forge_ai_flag`, `colour_identity`, `type`, `mana_value` | `library-pool.tsv`'s own columns (the engine's facts), copied |
+| `lowest_rarity`, `lowest_rarity_set` | the lowest rarity of any printing in Forge's edition files (`res/editions/*.txt` beside the jar, every printing section but `[tokens]`; C < U < R < M < S, Forge's `L` read as C), and the set that prints it so (a paper set's own edition first, then an Online one, then a promo); blank when no edition prints the card |
+| `lab_games`, `lab_wr_shrunk` | the lab's metas in ForgeCoach's `public/cubes`: games summed, `winRateShrunk` averaged with those games as weights; the rate blank under 80 games |
+| `member_vintage`, `member_legacy`, `member_peasant`, `member_pauper` | 1 when a list of that kind lists it: `vintage180` or `mtgovc`; any other list; `peasant`; `pauper` |
+| `band`, `band_source`, `provisional` | the band by the rule below, which rule fired, and 1 on every row |
+
+**The band rule**, the first that applies: **powered** = on the fixed powered list (written in the
+file's header and in D445: the Power Nine, the ten original duals, Library of Alexandria, Bazaar of
+Baghdad, Mishra's Workshop, Candelabra of Tawnos, Sol Ring, Mana Crypt, Mana Vault, Time Vault,
+Tolarian Academy, Strip Mine, and twelve restricted-style cards of the Vintage cubes); **pauper** =
+ever printed at common; **peasant** = ever at uncommon, never at common; **legacy** = everything else
+with a printing; and for a card no edition prints, its membership: a Pauper cube → pauper, else a
+Peasant cube → peasant, else legacy. Every label is **provisional** until the census's first round,
+whose re-labelling rule (the lab's shrunk win rate where it has 80+ games, with the band edges a soft
+feature) is written before that round runs. Today: pauper 444, peasant 425, legacy 682 (24 of them
+by membership — the cards Forge 2.0.14 lacks), powered 41. The file's header carries the sha256 of
+the pool, of Forge's editions and of each meta, so `--check` rebuilds it, compares the bytes and names
+the input that moved.
+
+**`tools/cubelab.sh sample`** writes `--count` cube documents of 180 cards, a uniform random draw
+within `--band` under a **structure**:
+
+| structure | nonland | lands |
+|---|---|---|
+| `two-colour` | Omega's skeleton: 24 a colour, 2 gold a pair, 18 colourless | 2 a pair + 2 others |
+| `mono-heavy` | a main colour 60 (the five rotate across a run from a seeded start), the other four 18 each, 1 gold a pair, 22 colourless | light: 1 a pair + 6 others |
+| `three-colour` | 20 a colour, 3 gold a pair, 20 colourless | 3 a pair (30) |
+| `good-stuff` | 24 a colour, 20 gold of any two or more colours (five-colour allowed), 18 colourless | 20 fixers (any land of two or more colours) + 2 of fewer |
+
+The curve is always Omega's, scaled to the structure's nonland count, and every count is exact. A
+pair's land slot takes a land of exactly that pair, or failing that one of three or more colours that
+includes it. The selection is `library-candidates`' min-cost flow, generalised (`skeleton.ts`'s
+`selectSlots`): each eligible card (supported, not a basic land, not AI:RemoveDeck:All unless
+`--allow-ai-flagged`) has one seeded uniform key, and the costs are tiers first, keys second:
+
+- **in-band** slots take the band's cards; only where the band cannot fill a slot do they take the
+  nearest band that can (down first, then up), listed in the header as **FILL**. In practice: peasant
+  has no land of exactly a pair, so a peasant cube's pair lands are pauper's (about 17 a two-colour
+  cube); pauper borrows one or two cards where a curve or gold slot runs out; powered (41 cards) fills
+  about three quarters of every cube from legacy, which is what a vintage cube is. `--band all` draws
+  from every band alike.
+- the **cross-band slice** (`--cross-band`, 0.10; none for `all`) is round(share × 180) slots spread by
+  a seeded draw over the slot groups the neighbouring bands (pauper–peasant–legacy–powered) have cards
+  for, filled from those neighbours and listed as **CROSS**: it is there to learn the band offsets.
+  Over 20 cubes it lands at 9.6–10.0% in every band and structure.
+
+Each document's header records the band, structure, seed, cube index, main colour, the census's and
+the pool's sha256, the eligible pool and its in-band and neighbour sizes, the plan exactly, the CROSS
+and FILL cards with their bands, and the cube's composition by band. Cube *i* depends only on the
+census, the flags, the seed and *i* (`rng(S, 'census-sample/<band>/<structure>/<i>')`), so a larger
+`--count` extends a run without changing its first cubes; `<band>-<structure>-<seed>.tsv` beside them
+lists every file with its in-band, cross and fill counts and its sha256. A census built from another
+`library-pool.tsv` is refused. `web/test/cubelab-census.test.ts` holds both tools: the rows and
+columns, the rule on every row and on known cards, determinism, every band × structure's cube
+parsing with no warning and only supported cards (what `check` needs), each structure's counts, and
+the cross-band share.
 
 ## Learning the drafters' values from the games (D301–D302)
 

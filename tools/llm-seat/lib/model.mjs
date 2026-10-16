@@ -26,7 +26,7 @@
 
 import { execFileSync, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -39,6 +39,31 @@ export function thinkingEnv(thinking) {
 }
 
 const ARGV_SYSTEM_MAX = 100 * 1024;
+
+/*
+ * THE CHILD-GROUP REGISTRY (#148 review).  Each `claude -p` runs in a process group of its own
+ * (detached), so a stop, a timeout or an abort kills the CLI and whatever it started with one
+ * kill(-pid).  The same detachment takes it OUT of its caller's group: the watch runner's SIGKILL to
+ * the watch's group (D440) never reached it, and nothing in a SIGKILLed process can kill it either.
+ * So when MTGTABLE_CHILD_GROUPS names a directory (the watch runner sets it for each watch), every
+ * spawned group is registered there for its lifetime -- a file named by its pgid holding the
+ * leader's start time from /proc, so a reused pid is told apart -- and the runner signals the
+ * registered groups with the watch's own (tools/watch-runner.mjs, `killRegistered`).
+ */
+/** The leader's start time (clock ticks since boot, /proc/<pid>/stat field 22), or null off Linux. */
+export function procStart(pid) {
+  try {
+    const st = readFileSync(`/proc/${pid}/stat`, 'utf8');
+    return st.slice(st.lastIndexOf(')') + 2).split(' ')[19] ?? null;
+  } catch { return null; }
+}
+function registerGroup(pid) {
+  const dir = process.env.MTGTABLE_CHILD_GROUPS;
+  if (!dir || !pid) return () => {};
+  const file = join(dir, String(pid));
+  try { mkdirSync(dir, { recursive: true }); writeFileSync(file, `${procStart(pid) ?? ''}\n`); } catch { return () => {}; }
+  return () => { try { rmSync(file, { force: true }); } catch { /* the folder went away */ } };
+}
 
 /** The options block of a message: [{n, label}] (the last OPTIONS: block in it). */
 export function optionsIn(text) {
@@ -220,18 +245,28 @@ export function makeClaudeModel({ model = 'sonnet', thinking = 'low', cwd = null
       const t0 = Date.now();
       const env = { ...process.env, ...thinkingEnv(thinking) };
       const out = await new Promise((resolve, reject) => {
+        // its own process group (detached): one kill(-pid) reaches the CLI and anything it started
         const child = spawn(bin, args, { cwd: dir, env, stdio: ['pipe', 'pipe', 'pipe'], detached: true });
+        const unregister = registerGroup(child.pid);
         let so = '';
         let se = '';
-        const timer = setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* gone */ } }, timeoutS * 1000);
-        const onAbort = () => { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* gone */ } };
+        /** 'abort' | 'timeout' once we killed it: the caller charges a killed call (it spent tokens). */
+        let killed = null;
+        const kill = (why) => { killed ??= why; try { process.kill(-child.pid, 'SIGKILL'); } catch { /* gone */ } };
+        const timer = setTimeout(() => kill('timeout'), timeoutS * 1000);
+        const onAbort = () => kill('abort');
         signal?.addEventListener('abort', onAbort, { once: true });
+        const tagged = (e) => { if (killed) e.killed = killed; return e; };
         child.stdout.setEncoding('utf8').on('data', (d) => { so += d; });
         child.stderr.setEncoding('utf8').on('data', (d) => { if (se.length < 16384) se += d; });
-        child.on('error', (e) => { clearTimeout(timer); signal?.removeEventListener('abort', onAbort); reject(e); });
+        child.on('error', (e) => { clearTimeout(timer); signal?.removeEventListener('abort', onAbort); unregister(); reject(tagged(e)); });
+        // the leader is gone; what it left in its group (holding the pipes open) goes with it
+        child.on('exit', () => { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* the group is gone */ } });
         child.on('close', (code, sig) => {
           clearTimeout(timer);
           signal?.removeEventListener('abort', onAbort);
+          unregister();
+          if (killed) { reject(tagged(new Error(`claude was killed (${killed === 'timeout' ? `no answer in ${timeoutS} s` : 'the run stopped'})${so.trim() ? '' : ' with no output'}`))); return; }
           if (so.trim() === '') { reject(new Error(`claude exited ${code ?? sig} with no output: ${se.trim().slice(-300)}`)); return; }
           try { resolve(parseCliOutput(so)); } catch (e) { reject(e); }
         });

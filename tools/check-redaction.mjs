@@ -159,7 +159,8 @@
  * ---------------------------------------------------------------------------
  */
 
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import * as zlib from 'node:zlib';
 
 import { answerRefusal } from './adversary/answers.mjs';
@@ -1361,15 +1362,48 @@ function readLogText(path) {
   return raw.toString('utf8');
 }
 
-function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false } = {}) {
+/**
+ * One log's verdict -> {problems, warnings, stats, undecided, skipped, decidedBytes}.  Exported for
+ * check-redaction-selftest.mjs's prefix sweep, which passes `text` (a prefix, in memory) for `path`.
+ */
+export function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false, partial = false, text: given = null } = {}) {
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
+  /*
+   * --partial (D440's served prefix; see PARTIAL MODE below the flags): the
+   * failures a LATER line could still cure are held here instead of in
+   * `problems`, keyed by line, and the coverage checks that only a whole game
+   * can meet are named in `skipped` rather than failed.
+   */
+  const undecided = new Map();   // lineNo -> [msg]
+  const skipped = [];
+  /** A failure a later line could cure (see `curableLine`): undecided in --partial, a failure otherwise. */
+  const noteCurable = (line, msg) => {
+    if (partial && line === curableLine) {
+      const l = undecided.get(line) ?? [];
+      l.push(`${path}:${line}: ${msg}`);
+      undecided.set(line, l);
+    } else note(line, msg);
+  };
+  let curableLine = -1;
+  /** --partial: the prefix holds an `over`, so the game is over and nothing in it waits on a later line. */
+  let logEnded = false;
 
   // A `.gz` log (the cube lab's in-worker recordings, D315) or a `.zst` one
   // (a finished queue night's archive, D370) is read whole and checked exactly
   // as its plain text would be.
-  const text = readLogText(path);
-  const lines = text.split('\n').filter((l) => l.length > 0);
+  const text = given ?? readLogText(path);
+  const rawLines = text.split('\n');
+  const lines = [];
+  /** The byte offset each of `lines` starts at (--partial reports how far its verdict reaches in bytes). */
+  const lineStart = [];
+  {
+    let at = 0;
+    for (const l of rawLines) {
+      if (l.length > 0) { lines.push(l); lineStart.push(at); }
+      at += Buffer.byteLength(l, 'utf8') + 1;
+    }
+  }
   if (lines.length === 0) {
     return { problems: [`${path}: empty file`], stats: {} };
   }
@@ -1542,7 +1576,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
 
   // ---- every later line: an envelope + a body --------------------------
   const stats = {
-    frames: 0, state: 0, other: 0, bytes: statSync(path).size,
+    frames: 0, state: 0, other: 0, bytes: given !== null ? Buffer.byteLength(given, 'utf8') : statSync(path).size,
     cardsChecked: 0, redacted: 0, faceDown: 0, stackCards: 0,
     viewerHandNamed: 0, opponentHandCards: 0, events: 0, shapeChecks: 0,
     texts: 0, textsConcealed: 0,
@@ -2382,6 +2416,20 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       }
       if (ids.size > 0) preAskReveals.set(parsed[j].line, ids);
     }
+    /*
+     * PARTIAL MODE's one lookahead.  The log may be cut between a `state` and
+     * the `ask` it was flushed for, so the LAST frame of a prefix -- walked back
+     * past c2s frames exactly as above -- may yet be justified by a line that
+     * has not been written.  Its A4/A6 complaints are undecided, not failures:
+     * the prefix's verdict stops at its first byte, and the next check (with
+     * the ask, or with any other s2c frame after it) decides it.
+     */
+    if (partial) {
+      logEnded = parsed.some((x) => x.f !== null && x.f.type === 'over');
+      let j = parsed.length - 1;
+      while (j >= 0 && parsed[j].f !== null && parsed[j].f.dir === 'c2s') j--;
+      if (j >= 0 && parsed[j].f !== null && parsed[j].f.type === 'state') curableLine = parsed[j].line;
+    }
   }
   /** Was `id` revealed by this frame, or by the `ask` this frame was flushed for? */
   const revealedBy = (id, lineNo) =>
@@ -2722,7 +2770,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
           if (!concealed) {
             if (hiddenZone && !isViewer) {
               if (!revealedBy(c.id, lineNo)) {
-                note(lineNo, `players[${pi}] (not the viewing seat) has a FULL card ${c.id} ` +
+                noteCurable(lineNo, `players[${pi}] (not the viewing seat) has a FULL card ${c.id} ` +
                   `${JSON.stringify(c.name)} in their ${zname}, and nothing earlier in this log ` +
                   `ever revealed that id to seat ${seat} -- either a reveal is missing from the ` +
                   `stream or the gate did not run (A6)`);
@@ -2748,10 +2796,10 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
         for (const c of zones.hand.cards) {
           stats.opponentHandCards++;
           if ('name' in c && !revealedBy(c.id, lineNo)) {
-            note(lineNo, `players[${pi}] (the opponent) hand card ${c.id} carries a name: ${JSON.stringify(c.name)}`);
+            noteCurable(lineNo, `players[${pi}] (the opponent) hand card ${c.id} carries a name: ${JSON.stringify(c.name)}`);
           }
           if (c.hidden !== true && !revealedBy(c.id, lineNo)) {
-            note(lineNo, `players[${pi}] (the opponent) hand card ${c.id} is not marked hidden`);
+            noteCurable(lineNo, `players[${pi}] (the opponent) hand card ${c.id} is not marked hidden`);
           }
         }
       }
@@ -2804,12 +2852,21 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
-  if (!sawState) note(lines.length, 'no state frames at all');
+  if (!sawState) {
+    // Coverage, not a leak: a served prefix may end before the first state (D440).
+    if (partial) skipped.push('no state frames at all');
+    else note(lines.length, 'no state frames at all');
+  }
 
   // --- M55 / D347: an AI seat's decision records, its OWN recording only ---
   if (aiLines.length > 0) {
     for (const complaint of auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog)) {
-      note(complaint.lineNo, complaint.msg);
+      if (partial && complaint.curable && !logEnded) {
+        // D3 allows the NEXT state frame's cards too, and a prefix may not hold it yet.
+        const l = undecided.get(complaint.lineNo) ?? [];
+        l.push(`${path}:${complaint.lineNo}: ${complaint.msg}`);
+        undecided.set(complaint.lineNo, l);
+      } else note(complaint.lineNo, complaint.msg);
     }
     stats.decisions = aiLines.filter((x) => x.f.type === 'decision').length;
   }
@@ -2839,7 +2896,11 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   // A file that reached turn 1 has had a card dealt, and both stay failures.
   const preGameOnly = stats.state > 0 && stats.maxTurn === 0;
   const provesNothing = (msg) => {
-    if (preGameOnly) {
+    if (partial) {
+      // A prefix of a healthy game has not had to redact or name anything yet:
+      // the whole recording is held to this when it is finished (D440).
+      skipped.push(msg);
+    } else if (preGameOnly) {
       warn(lines.length, `${msg}. Every \`state\` in this file is turn 0, so no card was ever ` +
         `dealt: this is a pre-game session (a concede during the opening prompts), and the ` +
         `assertion is a WARN rather than a failure because there was nothing to conceal`);
@@ -2906,7 +2967,13 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   stats.clientLog = isClientLog;
   stats.redelivered = redelivered;
 
-  return { problems, warnings, stats };
+  // --partial: how far the verdict reaches -- every byte before the first undecided line.
+  let decidedBytes = stats.bytes;
+  if (undecided.size > 0) {
+    const first = Math.min(...undecided.keys());
+    decidedBytes = lineStart[first - 1] ?? 0;
+  }
+  return { problems, warnings, stats, undecided: [...undecided.values()].flat(), skipped, decidedBytes };
 }
 
 // ----------------------------------------------------------------------
@@ -2969,7 +3036,7 @@ function tokenCardIds(t) {
 
 function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
   const out = [];
-  const bad = (lineNo, msg) => out.push({ lineNo, msg: `${msg} (M55, D347)` });
+  const bad = (lineNo, msg, curable = false) => out.push({ lineNo, msg: `${msg} (M55, D347)`, curable });
   const seat = header.seat;
   const players = new Set((header.decks ?? []).map((d) => d?.player).filter((x) => typeof x === 'number'));
   const nextState = (idx) => stateOrder.find((k) => k > idx);
@@ -3071,7 +3138,7 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
       for (const id of tokenCardIds(t)) {
         if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
-            'a stub\'s id, a library card or another seat\'s hidden card is never an option');
+            'a stub\'s id, a library card or another seat\'s hidden card is never an option', nx === undefined);
         }
       }
       for (const m of t.matchAll(/p(\d+)/g)) {
@@ -3103,171 +3170,228 @@ function findKey(node, key, path = 'events') {
 
 // ----------------------------------------------------------------------
 
-const argv = process.argv.slice(2);
-/**
- * The ONE way to get the pre-amendment tolerance (see the header).  It is a
- * global, deliberately: a per-path allowance would quietly become the way new
- * files land, which is how the tolerance became invisible the first time.
- */
-const preAmendment = argv.includes('--pre-amendment');
-/**
- * The ONE way to accept a recording in which a seat other than the viewer has
- * full cards in `library.cards` (A3).  Like `--pre-amendment` it is global and
- * opt-in, and nothing in check-all.sh passes it: an opponent's library is the
- * largest hidden-information surface there is, so the recording that opens one
- * has to say so out loud.
- */
-const opponentLibraryOk = argv.includes('--opponent-library-ok');
-/**
- * Force client-log mode (amendment M10, the reader's half -- see `isClientLog`).
- * It is auto-detected from `recordedBy:"client"` in the session header, or from
- * a file whose frames carry no `dir` key at all; this flag is for a client log
- * that predates that header key.  It relaxes the seq rule and NOTHING else --
- * every content assertion (redaction, shapes, labels, prompts) is unchanged.
- */
-const clientLog = argv.includes('--client-log');
-const FLAGS = ['--pre-amendment', '--opponent-library-ok', '--client-log'];
-const files = argv.filter((a) => !a.startsWith('--'));
-const unknownFlag = argv.find((a) => a.startsWith('--') && !FLAGS.includes(a));
-if (unknownFlag !== undefined) {
-  console.error(`unknown flag ${unknownFlag}`);
-  process.exit(2);
-}
-if (files.length === 0) {
-  console.error('usage: node tools/check-redaction.mjs [--pre-amendment] ' +
-    '[--opponent-library-ok] [--client-log] <frames.jsonl> [...]');
-  console.error('  --pre-amendment       accept a log recorded before the 2026-09-11 amendments');
-  console.error('                        (a four-key stub, a library with no `cards`, a card with');
-  console.error('                        no `token`/`alt`, a `faceDownHidden` object) as a WARN.');
-  console.error('  --opponent-library-ok accept full cards in a NON-viewer library.cards as a');
-  console.error('                        WARN -- for a recording that really exercises a');
-  console.error('                        look-at-an-opponent\'s-library effect (Opposition Agent,');
-  console.error('                        Bribery, Gonti). It relaxes A3 and nothing else.');
-  console.error('  --client-log          the file is a CLIENT\'s view of the stream (what');
-  console.error('                        tools/ws-auto-play.mjs --log writes), so a verbatim');
-  console.error('                        re-delivery and a forward gap are amendment M10, not');
-  console.error('                        a dropped frame. Auto-detected from the header\'s');
-  console.error('                        recordedBy:"client". It relaxes the seq rule alone.');
-  process.exit(2);
-}
-if (preAmendment) {
-  console.log('--pre-amendment: missing P1/P2/P3/P15 keys are WARNings, not failures');
-}
-if (opponentLibraryOk) {
-  console.log('--opponent-library-ok: a non-viewer library.cards with content is a WARN, not a failure');
+/** Run as a script (not imported by the self-test)? */
+const isMain = (() => {
+  try { return realpathSync(process.argv[1] ?? '') === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; }
+})();
+
+function main() {
+  const argv = process.argv.slice(2);
+  /**
+   * The ONE way to get the pre-amendment tolerance (see the header).  It is a
+   * global, deliberately: a per-path allowance would quietly become the way new
+   * files land, which is how the tolerance became invisible the first time.
+   */
+  const preAmendment = argv.includes('--pre-amendment');
+  /**
+   * The ONE way to accept a recording in which a seat other than the viewer has
+   * full cards in `library.cards` (A3).  Like `--pre-amendment` it is global and
+   * opt-in, and nothing in check-all.sh passes it: an opponent's library is the
+   * largest hidden-information surface there is, so the recording that opens one
+   * has to say so out loud.
+   */
+  const opponentLibraryOk = argv.includes('--opponent-library-ok');
+  /**
+   * Force client-log mode (amendment M10, the reader's half -- see `isClientLog`).
+   * It is auto-detected from `recordedBy:"client"` in the session header, or from
+   * a file whose frames carry no `dir` key at all; this flag is for a client log
+   * that predates that header key.  It relaxes the seq rule and NOTHING else --
+   * every content assertion (redaction, shapes, labels, prompts) is unchanged.
+   */
+  const clientLog = argv.includes('--client-log');
+  /*
+   * PARTIAL MODE (--partial, D440's served prefix: tools/watch-runner.mjs checks a
+   * live game's log before it sends any of it).  A prefix of a healthy game is not
+   * a whole game, so two kinds of complaint change and NOTHING ELSE does:
+   *
+   *   SKIPPED -- the three coverage checks, "no state frames at all", "not one
+   *   card was redacted" and "the viewer never saw a named card".  They guard a
+   *   green run over a recording with nothing hidden in it, and the first lines
+   *   of every game (the header, hello_ok, the first states) meet none of them.
+   *   They are named on a `skipped:` line; the finished recording is still
+   *   checked whole, without the flag.
+   *
+   *   UNDECIDED -- the failures a line not yet written could cure: A4/A6 on the
+   *   prefix's last frame when it is a `state` (the `ask` it was flushed for may
+   *   be the next line: A6's one frame of slack), and an M55 decision naming a
+   *   card when no later state frame is in the prefix yet (D3 allows the next
+   *   one's).  They are not failures and not passes: `decided=<bytes>` stops at
+   *   the first byte of the first such line, and a caller sends nothing past it.
+   *
+   * Every other assertion -- every leak rule (a stub with a sixth key or a
+   * name, a named card in a hidden zone nothing revealed, an `alt` block on a
+   * concealed face-down card, a yieldKey with a space or a `(`, a faceDownHidden
+   * object, a library dumped as full cards, an engine string naming a concealed
+   * card) and the exact-shape rules that make a leak visible at all ("a key this
+   * script does not know about is a failure") -- fails a prefix exactly as it
+   * fails a whole file.  A prefix of a healthy recording passes them: every
+   * committed fixture, cut at every line, is held to that by
+   * check-redaction-selftest.mjs.
+   *
+   * The exit code says which: 0 the prefix would pass a full check too; 3 no
+   * failure in the decided part, but a coverage check was skipped or a tail is
+   * undecided (read `decided=`); 1 a failure; 2 usage.
+   */
+  const partial = argv.includes('--partial');
+  const FLAGS = ['--pre-amendment', '--opponent-library-ok', '--client-log', '--partial'];
+  const files = argv.filter((a) => !a.startsWith('--'));
+  const unknownFlag = argv.find((a) => a.startsWith('--') && !FLAGS.includes(a));
+  if (unknownFlag !== undefined) {
+    console.error(`unknown flag ${unknownFlag}`);
+    process.exit(2);
+  }
+  if (files.length === 0) {
+    console.error('usage: node tools/check-redaction.mjs [--pre-amendment] ' +
+      '[--opponent-library-ok] [--client-log] [--partial] <frames.jsonl> [...]');
+    console.error('  --pre-amendment       accept a log recorded before the 2026-09-11 amendments');
+    console.error('                        (a four-key stub, a library with no `cards`, a card with');
+    console.error('                        no `token`/`alt`, a `faceDownHidden` object) as a WARN.');
+    console.error('  --opponent-library-ok accept full cards in a NON-viewer library.cards as a');
+    console.error('                        WARN -- for a recording that really exercises a');
+    console.error('                        look-at-an-opponent\'s-library effect (Opposition Agent,');
+    console.error('                        Bribery, Gonti). It relaxes A3 and nothing else.');
+    console.error('  --client-log          the file is a CLIENT\'s view of the stream (what');
+    console.error('                        tools/ws-auto-play.mjs --log writes), so a verbatim');
+    console.error('                        re-delivery and a forward gap are amendment M10, not');
+    console.error('                        a dropped frame. Auto-detected from the header\'s');
+    console.error('                        recordedBy:"client". It relaxes the seq rule alone.');
+    console.error('  --partial             the file is a PREFIX of a game still being written (the');
+    console.error('                        watch runner\'s served check, D440): the three coverage');
+    console.error('                        checks are skipped and a tail a later line could cure is');
+    console.error('                        undecided; every leak rule still fails. Exit 0 a full');
+    console.error('                        pass, 3 no failure but skipped/undecided (decided=<bytes>),');
+    console.error('                        1 a failure.');
+    process.exit(2);
+  }
+  if (preAmendment) {
+    console.log('--pre-amendment: missing P1/P2/P3/P15 keys are WARNings, not failures');
+  }
+  if (opponentLibraryOk) {
+    console.log('--opponent-library-ok: a non-viewer library.cards with content is a WARN, not a failure');
+  }
+
+  let failed = 0;
+  let short = 0;
+  for (const path of files) {
+    const { problems, warnings = [], stats, undecided = [], skipped = [], decidedBytes = 0 } = checkFile(path, { preAmendment, opponentLibraryOk, clientLog, partial });
+    const ok = problems.length === 0;
+    if (!ok) failed++;
+    const whole = undecided.length === 0 && skipped.length === 0;
+    if (ok && !whole) short++;
+    console.log(`${ok ? (whole ? 'PASS' : 'PARTIAL') : 'FAIL'}  ${path}`);
+    if (partial) {
+      console.log(`      partial: decided=${ok ? decidedBytes : 0} of ${stats.bytes ?? 0} bytes`
+        + `${undecided.length ? ` (${undecided.length} complaint(s) on a tail a later line may cure)` : ''}`);
+      if (skipped.length) console.log(`      skipped (coverage, not a leak): ${skipped.join('; ')}`);
+    }
+    console.log(`      frames=${stats.frames} (state=${stats.state}, other=${stats.other})`
+      + `  bytes=${stats.bytes}  events=${stats.events}`
+      + (stats.clientLog
+        ? `  [CLIENT log: ${stats.redelivered} frame(s) re-delivered verbatim, M10]`
+        : ''));
+    console.log(`      cards checked=${stats.cardsChecked}  redacted=${stats.redacted}`
+      + `  face-down=${stats.faceDown}  stack cards=${stats.stackCards}`
+      + `  opponent-hand cards=${stats.opponentHandCards}  viewer-hand named=${stats.viewerHandNamed}`);
+    console.log(`      shape-checked state bodies=${stats.shapeChecks} `
+      + `(exact key set + runtime type of every key, docs/protocol.md section 3)`);
+    console.log(`      engine strings=${stats.texts} (stack[].text + events[].cast.text), `
+      + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
+    console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
+      + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
+      + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`
+      + `${stats.damageRefusalsSeen ? `  assign_damage answers refused and re-asked=${stats.damageRefusalsSeen} (M67)` : ''}`
+      + `${stats.answerRefusalsSeen ? `  answers refused and re-asked=${stats.answerRefusalsSeen} (M68)` : ''}`);
+    console.log(`      A12 answers=${stats.answers} (kinds: `
+      + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
+      + `the matching ask.kind, unanswered asks=${stats.unanswered}`
+      + `${stats.nullDefaults ? `, ${stats.nullDefaults} answered null on purpose (transport="null")` : ''}`);
+    console.log(`      shape-checked ask bodies=${stats.askShapeChecks} (exact key set + declared `
+      + `nullability, section 5.2)  notices=${stats.notices} (both strings swept and scanned, `
+      + `section 6)  over frames=${stats.overs}`);
+    // M44.  Printed either way, like the M6 line below: which files evidence the
+    // match block, and which predate it (or are AI vs AI with no match setup).
+    if (stats.hellos > 0) {
+      console.log(stats.matchChecked > 0
+        ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
+          + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header`
+          + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''}`
+          + `${stats.aiPolicyChecked > 0 ? `; aiPolicy a known policy, M56` : ''}`
+          + `${stats.tableMatchChecked > 0 ? `; the two-person form, opponentDeck held to {name, cards}, M59` : ''})`
+        : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
+          + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
+    }
+    if (stats.tables > 0) {
+      console.log(`      table frames=${stats.tables} (exact key sets, amendment M59: presence, the decision clock, claimWin)`);
+    }
+    // M49.  Whether this file carries the status layer's keywords -- on every
+    // full card, or (a recording older than M49) on none.
+    const kw = stats.perFile?.['M49 (keywords)'];
+    if (kw !== undefined) {
+      console.log(kw === 'present'
+        ? '      M49 keywords present on every full card (Keyword constants only, [] when face down)'
+        : kw === 'absent'
+          ? '      M49 keywords absent from every full card (legitimate -- recorded before amendment M49)'
+          : '      M49 keywords HALF PRESENT (a failure, above)');
+    }
+    // M61.  Whether this file carries state.playable -- on every frame, or on none.
+    const pl = stats.perFile?.['M61 (playable)'];
+    if (pl !== undefined) {
+      console.log(pl === 'present'
+        ? `      M61 playable present on every state (${String(stats.playable ?? 0)} entries, each the seat's own full card)`
+        : pl === 'absent'
+          ? '      M61 playable absent (legitimate -- recorded before amendment M61, or no seat)'
+          : '      M61 playable HALF PRESENT (a failure, above)');
+    }
+    // M63.  The same for state.activatable.
+    const ac = stats.perFile?.['M63 (activatable)'];
+    if (ac !== undefined) {
+      console.log(ac === 'present'
+        ? `      M63 activatable present on every state (${String(stats.activatable ?? 0)} entries, each a permanent the seat controls)`
+        : ac === 'absent'
+          ? '      M63 activatable absent (legitimate -- recorded before amendment M63, or no seat)'
+          : '      M63 activatable HALF PRESENT (a failure, above)');
+    }
+    // M65 / M66.  Whether this file's inputs carry selectable.chosen / playerIds.
+    for (const [label, n, what] of [['M66 (playerIds)', stats.selPlayers, 'a list'], ['M65 (chosen)', stats.selChosen, 'an object']]) {
+      const v = stats.perFile?.[label];
+      if (v === undefined) continue;
+      console.log(v === 'present'
+        ? `      ${label} present on every input (${String(n ?? 0)} carrying ${what}, the rest null)`
+        : v === 'absent'
+          ? `      ${label} absent (legitimate -- recorded before the amendment, or no input)`
+          : `      ${label} HALF PRESENT (a failure, above)`);
+    }
+    // M6.  Which comfort fields this recording carries, and which it does not:
+    // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,
+    // and both are protocol (amendments M32-M36).  Printed either way so the
+    // corpus says out loud which half of it evidences the M6 wire.
+    if ((stats.optionalAbsent ?? []).length > 0) {
+      console.log(`      M6 comfort fields absent: ${stats.optionalAbsent.join(', ')} `
+        + `(legitimate -- no seat, or recorded before M6; protocol section 3.1)`);
+    } else if (stats.shapeChecks > 0) {
+      // The stack half of the claim is only true if a stack item was actually
+      // shape-checked: a file whose stack was empty in every frame never looked at
+      // a `yieldKey`, and the earlier version of this line said it had anyway.
+      console.log('      M6 comfort fields present: phaseStops{own,opp}, yield, undo, '
+        + 'input.buttons.focus'
+        + (stats.stackItems > 0
+          ? `, stack[].yieldKey/isAbility/isOptionalTrigger/yielded over ${stats.stackItems} `
+            + 'stack item(s) (yieldKey asserted opaque)'
+          : ' — no stack item in any frame, so stack[].yieldKey was never checked here'));
+    }
+    if ((stats.missed ?? []).length > 0) {
+      // Not a failure: the file is simply older than the amendment. It is printed
+      // every run so a corpus cannot quietly stay on a superseded shape.
+      console.log(`      WARN  --pre-amendment: recorded before ${stats.missed.join(', ')} -- `
+        + `re-record it, this file cannot evidence `
+        + `${stats.missed.length === 1 ? 'that amendment' : 'those amendments'}`);
+    }
+    for (const w of warnings.slice(0, 10)) console.log(`      ~ ${w}`);
+    if (warnings.length > 10) console.log(`      ~ ... and ${warnings.length - 10} more warnings`);
+    for (const p of problems.slice(0, 20)) console.log(`      ! ${p}`);
+    if (problems.length > 20) console.log(`      ! ... and ${problems.length - 20} more`);
+  }
+  process.exit(failed > 0 ? 1 : short > 0 ? 3 : 0);
 }
 
-let failed = 0;
-for (const path of files) {
-  const { problems, warnings = [], stats } = checkFile(path, { preAmendment, opponentLibraryOk, clientLog });
-  const ok = problems.length === 0;
-  if (!ok) failed++;
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${path}`);
-  console.log(`      frames=${stats.frames} (state=${stats.state}, other=${stats.other})`
-    + `  bytes=${stats.bytes}  events=${stats.events}`
-    + (stats.clientLog
-      ? `  [CLIENT log: ${stats.redelivered} frame(s) re-delivered verbatim, M10]`
-      : ''));
-  console.log(`      cards checked=${stats.cardsChecked}  redacted=${stats.redacted}`
-    + `  face-down=${stats.faceDown}  stack cards=${stats.stackCards}`
-    + `  opponent-hand cards=${stats.opponentHandCards}  viewer-hand named=${stats.viewerHandNamed}`);
-  console.log(`      shape-checked state bodies=${stats.shapeChecks} `
-    + `(exact key set + runtime type of every key, docs/protocol.md section 3)`);
-  console.log(`      engine strings=${stats.texts} (stack[].text + events[].cast.text), `
-    + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
-  console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
-    + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
-    + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`
-    + `${stats.damageRefusalsSeen ? `  assign_damage answers refused and re-asked=${stats.damageRefusalsSeen} (M67)` : ''}`
-    + `${stats.answerRefusalsSeen ? `  answers refused and re-asked=${stats.answerRefusalsSeen} (M68)` : ''}`);
-  console.log(`      A12 answers=${stats.answers} (kinds: `
-    + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
-    + `the matching ask.kind, unanswered asks=${stats.unanswered}`
-    + `${stats.nullDefaults ? `, ${stats.nullDefaults} answered null on purpose (transport="null")` : ''}`);
-  console.log(`      shape-checked ask bodies=${stats.askShapeChecks} (exact key set + declared `
-    + `nullability, section 5.2)  notices=${stats.notices} (both strings swept and scanned, `
-    + `section 6)  over frames=${stats.overs}`);
-  // M44.  Printed either way, like the M6 line below: which files evidence the
-  // match block, and which predate it (or are AI vs AI with no match setup).
-  if (stats.hellos > 0) {
-    console.log(stats.matchChecked > 0
-      ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
-        + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header`
-        + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''}`
-        + `${stats.aiPolicyChecked > 0 ? `; aiPolicy a known policy, M56` : ''}`
-        + `${stats.tableMatchChecked > 0 ? `; the two-person form, opponentDeck held to {name, cards}, M59` : ''})`
-      : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
-        + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
-  }
-  if (stats.tables > 0) {
-    console.log(`      table frames=${stats.tables} (exact key sets, amendment M59: presence, the decision clock, claimWin)`);
-  }
-  // M49.  Whether this file carries the status layer's keywords -- on every
-  // full card, or (a recording older than M49) on none.
-  const kw = stats.perFile?.['M49 (keywords)'];
-  if (kw !== undefined) {
-    console.log(kw === 'present'
-      ? '      M49 keywords present on every full card (Keyword constants only, [] when face down)'
-      : kw === 'absent'
-        ? '      M49 keywords absent from every full card (legitimate -- recorded before amendment M49)'
-        : '      M49 keywords HALF PRESENT (a failure, above)');
-  }
-  // M61.  Whether this file carries state.playable -- on every frame, or on none.
-  const pl = stats.perFile?.['M61 (playable)'];
-  if (pl !== undefined) {
-    console.log(pl === 'present'
-      ? `      M61 playable present on every state (${String(stats.playable ?? 0)} entries, each the seat's own full card)`
-      : pl === 'absent'
-        ? '      M61 playable absent (legitimate -- recorded before amendment M61, or no seat)'
-        : '      M61 playable HALF PRESENT (a failure, above)');
-  }
-  // M63.  The same for state.activatable.
-  const ac = stats.perFile?.['M63 (activatable)'];
-  if (ac !== undefined) {
-    console.log(ac === 'present'
-      ? `      M63 activatable present on every state (${String(stats.activatable ?? 0)} entries, each a permanent the seat controls)`
-      : ac === 'absent'
-        ? '      M63 activatable absent (legitimate -- recorded before amendment M63, or no seat)'
-        : '      M63 activatable HALF PRESENT (a failure, above)');
-  }
-  // M65 / M66.  Whether this file's inputs carry selectable.chosen / playerIds.
-  for (const [label, n, what] of [['M66 (playerIds)', stats.selPlayers, 'a list'], ['M65 (chosen)', stats.selChosen, 'an object']]) {
-    const v = stats.perFile?.[label];
-    if (v === undefined) continue;
-    console.log(v === 'present'
-      ? `      ${label} present on every input (${String(n ?? 0)} carrying ${what}, the rest null)`
-      : v === 'absent'
-        ? `      ${label} absent (legitimate -- recorded before the amendment, or no input)`
-        : `      ${label} HALF PRESENT (a failure, above)`);
-  }
-  // M6.  Which comfort fields this recording carries, and which it does not:
-  // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,
-  // and both are protocol (amendments M32-M36).  Printed either way so the
-  // corpus says out loud which half of it evidences the M6 wire.
-  if ((stats.optionalAbsent ?? []).length > 0) {
-    console.log(`      M6 comfort fields absent: ${stats.optionalAbsent.join(', ')} `
-      + `(legitimate -- no seat, or recorded before M6; protocol section 3.1)`);
-  } else if (stats.shapeChecks > 0) {
-    // The stack half of the claim is only true if a stack item was actually
-    // shape-checked: a file whose stack was empty in every frame never looked at
-    // a `yieldKey`, and the earlier version of this line said it had anyway.
-    console.log('      M6 comfort fields present: phaseStops{own,opp}, yield, undo, '
-      + 'input.buttons.focus'
-      + (stats.stackItems > 0
-        ? `, stack[].yieldKey/isAbility/isOptionalTrigger/yielded over ${stats.stackItems} `
-          + 'stack item(s) (yieldKey asserted opaque)'
-        : ' — no stack item in any frame, so stack[].yieldKey was never checked here'));
-  }
-  if ((stats.missed ?? []).length > 0) {
-    // Not a failure: the file is simply older than the amendment. It is printed
-    // every run so a corpus cannot quietly stay on a superseded shape.
-    console.log(`      WARN  --pre-amendment: recorded before ${stats.missed.join(', ')} -- `
-      + `re-record it, this file cannot evidence `
-      + `${stats.missed.length === 1 ? 'that amendment' : 'those amendments'}`);
-  }
-  for (const w of warnings.slice(0, 10)) console.log(`      ~ ${w}`);
-  if (warnings.length > 10) console.log(`      ~ ... and ${warnings.length - 10} more warnings`);
-  for (const p of problems.slice(0, 20)) console.log(`      ! ${p}`);
-  if (problems.length > 20) console.log(`      ! ... and ${problems.length - 20} more`);
-}
-process.exit(failed === 0 ? 0 : 1);
+if (isMain) main();
