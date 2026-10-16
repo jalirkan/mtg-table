@@ -117,14 +117,21 @@ Each game's `gameId` is `<id>-g<n>`, so two watches never share one.
 ## Hidden information
 
 - **Every game is drafter A's eyes** (`match.view`: seat 0). Drafter B's hand is
-  the five-key stub, exactly as on the board (hard rule 8), and each recording
-  passed `tools/check-redaction.mjs` before its result was written
-  (`games[].redaction: "pass"`; a fail ends the watch with `"error"`). There is
-  no omniscient view, and no seat-1 recording.
+  the five-key stub, exactly as on the board (hard rule 8). Every line the
+  helper serves passed `tools/check-redaction.mjs` before it was sent (above,
+  *Following a game*), and each finished recording is checked again, whole,
+  before its result is written (`games[].redaction: "pass"`; a fail at either
+  point ends the watch with `"error"`). There is no omniscient view, and no
+  seat-1 recording.
 - **`draft` shows both pools and both decks.** A grid draft is played face up:
-  both drafters see every grid and every line the other takes, so nothing in
-  `draft.json` was hidden from either drafter. Showing deck B's list beside a
-  game shows a decklist, never what B holds.
+  both drafters see every grid and every line the other takes, so the picks and
+  the pools in `draft.json` hid nothing from either drafter. The decks are the
+  exception: each drafter builds its own in private, so **B's main / side
+  choice was hidden from A** (and A's from B) — the AI playing A never saw which
+  of B's cards B put in its 40. Showing deck B's list beside a game tells the
+  viewer something seat A did not know; it is a decklist, never what B holds
+  or draws, so it is no leak of the game, but label it as B's list rather than
+  as anything A could see.
 
 ## draft.json (`kind: "watch-draft"`, v1)
 

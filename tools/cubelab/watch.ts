@@ -27,8 +27,10 @@
 //   5. match.json `status: "done"` (or "error" / "stopped", with why).
 //
 // HIDDEN INFORMATION.  A grid draft is played face up -- both drafters see every
-// grid and every line the other takes -- so draft.json shows both pools and both
-// decks, and that reveals nothing a drafter did not see.  The GAMES are not face
+// grid and every line the other takes -- so draft.json's picks and pools reveal
+// nothing a drafter did not see; its decks are built in private, so B's main /
+// side split is the one thing in it A never saw (docs/watch-bots.md says how to
+// label it).  The GAMES are not face
 // up: each recording is one seat's view (seat 0, drafter A), the other hand the
 // five-key stub (hard rule 8), checked by tools/check-redaction.mjs like every
 // spectated game.  A viewer that shows draft.json's deck B beside a game shows a
