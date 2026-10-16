@@ -9,12 +9,21 @@
 // lab's tools/cubelab/watch.ts); this file starts it, one at a time, and serves
 // what it writes.  docs/watch-bots.md is the copyable contract.
 //
+//   GET  /health           + "watch": 0|1, "watchRunning": "<id>"|null, and (D443) the choices:
+//                          "watchDrafters": [{id, label, costNote?}]  (lab, forge-ranks, llm:haiku, llm:sonnet)
+//                          "watchPlayers":  [{id, label}]             (each forge-home/res/ai/*.ai, search-v2)
+//                          "watchLlmCap":   {maxUsd, maxCalls, maxFallbackRate}   (one watch's llm: cap)
 //   POST /watch            {"cube": "fair-fight-cube-180", "seed"?: 1..799999999, "games"?: 1|3|5|7,
-//                           "playerA"?: "<Profile>"|"search", "playerB"?: ..., "pace"?: 0..5000}
+//                           "drafterA"?: <a watchDrafters id>, "drafterB"?: ...   (default "lab"; one side at most not lab),
+//                           "playerA"?: <a watchPlayers id, any case; "search" too>, "playerB"?: ..., "pace"?: 0..5000}
 //                          -> 202 {"ok": true, "id": "watch-<cube>-<seed>", "state": "/watch/<id>",
-//                                  "game": "/watch/<id>/game/<n>"}
+//                                  "game": "/watch/<id>/game/<n>"}; match.json is written before it answers
 //                          409 {"code": "busy", "running": "<id>"} while another watch runs;
-//                          400 a bad body (unknown fields too); 503 the bridge is not built
+//                          400 a bad body (unknown fields, an unknown id -- the message lists the known
+//                          ones -- or two non-lab drafters); 503 the bridge is not built
+//                          An llm: drafter runs under watchLlmCap (config.json coach.watchMaxUsd /
+//                          coach.watchMaxCalls) and the fallback stop: the watch ends "error" with the
+//                          reason, never as a lab draft; match.json's `cost` is what it spent.
 //   GET  /watch            -> 200 {"ok": true, "running": "<id>"|null, "watches": [newest first, at most 20]}
 //   GET  /watch/<id>       -> 200 {"ok": true, "id", "running": bool, "match": <match.json>|null,
 //                                  "draft": <draft.json>|null}   (null until written); 404
@@ -66,16 +75,55 @@ export const MAX_WATCH_BODY = 4096;
 export const MAX_CHUNK_BYTES = 4 * 1024 * 1024;
 export const WATCH_ID = /^watch-[A-Za-z0-9][A-Za-z0-9._-]*-[0-9]{1,9}$/;
 const CUBE = /^[a-z0-9][a-z0-9-]{0,63}$/;
-const FIELDS = new Set(['cube', 'seed', 'games', 'playerA', 'playerB', 'pace']);
+const FIELDS = ['cube', 'seed', 'games', 'drafterA', 'drafterB', 'playerA', 'playerB', 'pace'];
 const TERMINAL = new Set(['done', 'error', 'stopped']);
 /** seeds.ts: the lab's seed range ends below VERIFY_SEED_MIN. */
 export const MAX_SEED = 799_999_999;
 
+/** An `llm:` drafter's caps for one watch when the helper's config says nothing (D442, D443): $1, 40 calls, 25%. */
+export const DEFAULT_WATCH_LLM_CAP = Object.freeze({ maxUsd: 1, maxCalls: 40, maxFallbackRate: 0.25 });
+
+const usdText = (x) => `$${Number.isInteger(x) ? x : x.toFixed(2)}`;
+
+/**
+ * Who may draft a side (D443), for /health's `watchDrafters` and POST /watch's `drafterA` / `drafterB`:
+ * the lab's drafters by D439's names.  `llm:opus` is left out (about five times Sonnet's price, past the
+ * default cap in one draft); `llm:fake` and `human-picks:<file>` are the CLI's only.
+ */
+export function watchDrafters(cap = DEFAULT_WATCH_LLM_CAP) {
+  const spend = `spends Claude usage through the logged-in Claude Code CLI, at most ${usdText(cap.maxUsd)} and ${cap.maxCalls} calls a watch, and stops the watch if more than ${Math.round(cap.maxFallbackRate * 100)}% of its picks fall back; asks for a confirm`;
+  return [
+    { id: 'lab', label: 'Lab drafter (card ratings, themes and colours)' },
+    { id: 'forge-ranks', label: "Forge's card ranks (no themes, commits early)" },
+    { id: 'llm:haiku', label: 'Claude Haiku, asked once a pick', costNote: `about $0.02 a draft at list price (measured $0.015); ${spend}` },
+    { id: 'llm:sonnet', label: 'Claude Sonnet, asked once a pick', costNote: `about $0.30 a draft at list price; ${spend}` },
+  ];
+}
+
+/**
+ * Who may play a side's deck (D443): a Forge AI profile (an .ai file; a style, never a difficulty, D107)
+ * or the live search seat.  No Claude seat: RecordMatch, which records the games, seats Forge AIs only
+ * (plain or search); the LLM seat (D418, D419) is a /ws client of MtgTable, not a RecordMatch policy.
+ */
+export function watchPlayers(profiles) {
+  return [
+    ...profiles.map((p) => ({ id: p, label: `Forge AI (${p})` })),
+    { id: 'search-v2', label: 'Search AI (search-v2: Forge AI plus a look-ahead search)' },
+  ];
+}
+
+/** A player id (or the older `search`) -> the seat watch.ts records, as its parsePlayer makes it; null if unknown. */
+function playerOf(v, profiles) {
+  if (/^search(-v2)?$/i.test(v)) return { id: 'search-v2', arg: 'search-v2', player: 'search', profile: 'Default', policy: 'search' };
+  const p = profiles.find((x) => x.toLowerCase() === v.toLowerCase());
+  return p ? { id: p, arg: p, player: p, profile: p, policy: 'plain' } : null;
+}
+
 /** The body of POST /watch, checked.  -> {req} or {status, message}. */
-export function validateWatch(q, { cubes, profiles }) {
+export function validateWatch(q, { cubes, profiles, llmCap = DEFAULT_WATCH_LLM_CAP }) {
   const no = (message) => ({ status: 400, message });
   if (!q || typeof q !== 'object' || Array.isArray(q)) return no('the body is a JSON object: {"cube": "<cube id>", ...}');
-  for (const k of Object.keys(q)) if (!FIELDS.has(k)) return no(`unknown field "${k}" (cube, seed, games, playerA, playerB, pace)`);
+  for (const k of Object.keys(q)) if (!FIELDS.includes(k)) return no(`unknown field "${k}" (${FIELDS.join(', ')})`);
   if (typeof q.cube !== 'string') return no('"cube" is a cube id such as "fair-fight-cube-180"');
   const cube = q.cube.replace(/\.md$/, '');
   if (!CUBE.test(cube) || !cubes.includes(cube)) return no(`"cube" is one of ${cubes.join(', ')}`);
@@ -86,16 +134,35 @@ export function validateWatch(q, { cubes, profiles }) {
   if (![1, 3, 5, 7].includes(games)) return no('"games" is 1, 3, 5 or 7 (a best of)');
   const pace = q.pace ?? 600;
   if (!Number.isInteger(pace) || pace < 0 || pace > 5000) return no('"pace" is milliseconds a frame, 0..5000');
-  const player = (v, k) => {
-    if (v === undefined || v === null) return 'Default';
-    if (typeof v !== 'string') return null;
-    if (/^search(-v2)?$/i.test(v)) return 'search';
-    return profiles.find((p) => p.toLowerCase() === v.toLowerCase()) ?? null;
+  const known = watchDrafters(llmCap).map((d) => d.id);
+  const drafter = (v, k) => {
+    if (v === undefined || v === null) return { id: 'lab' };
+    if (typeof v !== 'string' || !known.includes(v)) return { bad: `"${k}" is one of ${known.join(', ')} (GET /health's watchDrafters), got ${JSON.stringify(v)}` };
+    return { id: v };
   };
-  const playerA = player(q.playerA);
-  const playerB = player(q.playerB);
-  if (!playerA || !playerB) return no(`"playerA" and "playerB" are "search" or one of ${profiles.join(', ')}`);
-  return { req: { cube, seed, games, pace, playerA, playerB, id: `watch-${cube}-${seed}` } };
+  const dA = drafter(q.drafterA, 'drafterA');
+  const dB = drafter(q.drafterB, 'drafterB');
+  if (dA.bad || dB.bad) return no(dA.bad ?? dB.bad);
+  if (dA.id !== 'lab' && dB.id !== 'lab') return no('one side at most drafts with something other than "lab" (a drafter is measured against the lab drafter, D416 and D439); the other side is "lab"');
+  const playerIds = watchPlayers(profiles).map((p) => p.id);
+  const player = (v, k) => {
+    if (v === undefined || v === null) return playerOf('Default', profiles) ?? { id: 'Default', arg: 'Default', player: 'Default', profile: 'Default', policy: 'plain' };
+    const p = typeof v === 'string' ? playerOf(v, profiles) : null;
+    return p ?? { bad: `"${k}" is one of ${playerIds.join(', ')} (GET /health's watchPlayers; any case), got ${JSON.stringify(v)}` };
+  };
+  const pA = player(q.playerA, 'playerA');
+  const pB = player(q.playerB, 'playerB');
+  if (pA.bad || pB.bad) return no(pA.bad ?? pB.bad);
+  const llm = [dA.id, dB.id].some((d) => d.startsWith('llm:'));
+  return { req: { cube, seed, games, pace, drafterA: dA.id, drafterB: dB.id, playerA: pA, playerB: pB, llm, id: `watch-${cube}-${seed}` } };
+}
+
+/** A cube document's title, its first `# ` heading (cube.ts's parseCube reads it the same way). */
+export function cubeTitle(file) {
+  try {
+    for (const l of readFileSync(file, 'utf8').split('\n')) { const t = /^#\s+(.+)$/.exec(l); if (t) return t[1].trim(); }
+  } catch { /* unreadable: no title */ }
+  return null;
 }
 
 /** The complete lines of `file` from byte `from` (spectate/devRoute.ts's readCompleteLines, in plain Node). */
@@ -153,8 +220,11 @@ export function checkRedaction(buf, dir) {
  */
 export const DEFAULT_WATCH_KEEP = 10;
 
-export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null, keep = DEFAULT_WATCH_KEEP }) {
+export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null, keep = DEFAULT_WATCH_KEEP, llmCap = DEFAULT_WATCH_LLM_CAP }) {
   if (!Number.isInteger(keep) || keep < 1) throw new Error(`keep is a whole number of watch folders >= 1, got ${keep}`);
+  if (!(llmCap.maxUsd > 0) || !Number.isInteger(llmCap.maxCalls) || llmCap.maxCalls < 1 || !(llmCap.maxFallbackRate >= 0 && llmCap.maxFallbackRate <= 1)) {
+    throw new Error(`llmCap is {maxUsd > 0, maxCalls >= 1, maxFallbackRate 0..1}, got ${JSON.stringify(llmCap)}`);
+  }
   const root = resolve(repoRoot);
   const check = redactionCheck ?? ((buf) => checkRedaction(buf, join(root, 'var', 'watch-check')));
   const spectate = join(root, 'var', 'spectate');
@@ -178,9 +248,30 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       return real.startsWith(top + sep) ? real : null;
     } catch { return null; }
   };
-  const argvOf = (q, dir) => (command ? command(q, dir) : [join(root, 'tools', 'cubelab.sh'), 'watch', `cubes/${q.cube}.md`,
-    '--seed', String(q.seed), '--games', String(q.games), '--player-a', q.playerA, '--player-b', q.playerB,
-    '--pace', String(q.pace), '--out', `var/spectate/${q.id}`]);
+  /** The watch's command: only checked ids and numbers from the request reach it. */
+  const watchArgs = (q) => ['watch', `cubes/${q.cube}.md`,
+    '--seed', String(q.seed), '--games', String(q.games), '--drafter-a', q.drafterA, '--drafter-b', q.drafterB,
+    '--player-a', q.playerA.arg, '--player-b', q.playerB.arg, '--pace', String(q.pace), '--out', `var/spectate/${q.id}`,
+    ...(q.llm ? ['--llm-max-usd', String(llmCap.maxUsd), '--llm-max-calls', String(llmCap.maxCalls), '--llm-fallback-rate', String(llmCap.maxFallbackRate)] : [])];
+  const argvOf = (q, dir) => (command ? command(q, dir, watchArgs(q)) : [join(root, 'tools', 'cubelab.sh'), ...watchArgs(q)]);
+
+  /**
+   * match.json as the watch starts (D443): what it is -- the cube, the seed, the players, the drafters,
+   * when -- written by the helper before the watch process runs, so a watch killed at any point still
+   * says what it was.  The watch rewrites it at once with the same fields (watch.ts).
+   */
+  const firstMatch = (r) => {
+    const at = new Date().toISOString();
+    const seat = (p) => ({ player: p.player, profile: p.profile, policy: p.policy, deck: null });
+    return {
+      v: 1, kind: 'watch-match', id: r.id, status: 'drafting', startedAt: at, updatedAt: at,
+      cube: { title: cubeTitle(join(root, 'cubes', `${r.cube}.md`)) ?? r.cube, file: `cubes/${r.cube}.md` },
+      seed: r.seed, bestOf: r.games, need: Math.floor(r.games / 2) + 1, paceMs: r.pace, view: { seat: 0, side: 'A' },
+      players: { A: seat(r.playerA), B: seat(r.playerB) },
+      drafters: { A: { drafter: r.drafterA }, B: { drafter: r.drafterB } },
+      cost: null, games: [], wins: { A: 0, B: 0, draws: 0 }, winner: null, current: null,
+    };
+  };
 
   /** A watch that ended without saying so (killed, crashed): match.json says it now. */
   const settle = (dir, code, signal, failWhy = null) => {
@@ -198,7 +289,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     }
     if (m && TERMINAL.has(m.status)) return;
     const why = signal ? `the watch process was stopped (${signal})` : `the watch process exited (code ${code}) before it finished; see watch.log`;
-    const next = m ?? { v: 1, kind: 'watch-match', id: dir.split(sep).pop(), games: [] };
+    const next = m ?? { v: 1, kind: 'watch-match', id: dir.split(sep).pop(), games: [] };   // (firstMatch wrote one; this is a folder emptied under it)
     next.status = signal === 'SIGTERM' || signal === 'SIGKILL' ? 'stopped' : 'error';
     next.error = why;
     next.current = null;
@@ -285,12 +376,16 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
 
   return {
     available: () => isAvailable(),
-    health: () => ({ watch: isAvailable() ? 1 : 0, watchRunning: running ? running.id : null }),
+    /** /health's watch keys (D440, D443): whether it can run, what runs, and the choices POST /watch takes. */
+    health: () => ({
+      watch: isAvailable() ? 1 : 0, watchRunning: running ? running.id : null,
+      watchDrafters: watchDrafters(llmCap), watchPlayers: watchPlayers(profiles()), watchLlmCap: { ...llmCap },
+    }),
     running: () => (running ? running.id : null),
 
     post(q) {
       if (!isAvailable()) return { status: 503, body: { ok: false, type: 'error', message: 'watching needs the bridge built (./bridge/build.sh): RecordMatch records the games' } };
-      const v = validateWatch(q, { cubes: cubes(), profiles: profiles() });
+      const v = validateWatch(q, { cubes: cubes(), profiles: profiles(), llmCap });
       if (!v.req) return { status: v.status, body: { ok: false, type: 'error', message: v.message } };
       if (running) return { status: 409, body: { ok: false, type: 'error', code: 'busy', running: running.id, message: `a watch is running (${running.id}); one at a time -- follow it, or POST /watch/${running.id}/stop` } };
       const r = v.req;
@@ -300,6 +395,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       mkdirSync(dir, { recursive: true });
       for (const k of [...checked.keys()]) if (k.startsWith(dir + sep)) checked.delete(k);
       prune(r.id);
+      writeFileSync(join(dir, 'match.json'), `${JSON.stringify(firstMatch(r), null, 1)}\n`);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
       let child;
@@ -324,7 +420,8 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
         settle(dir, code, signal, me.failWhy ?? null);
         log(`WATCH ${r.id} ended (${signal ?? `exit ${code}`}) in ${((Date.now() - me.startedAt) / 1000).toFixed(0)} s`);
       });
-      log(`WATCH ${r.id} started: ${r.cube}, seed ${r.seed}, best of ${r.games}, A ${r.playerA} vs B ${r.playerB}, pace ${r.pace} ms`);
+      log(`WATCH ${r.id} started: ${r.cube}, seed ${r.seed}, best of ${r.games}, A drafts ${r.drafterA} and ${r.playerA.id} plays, B drafts ${r.drafterB} and ${r.playerB.id} plays, pace ${r.pace} ms`
+        + `${r.llm ? `; the llm drafter's cap: $${llmCap.maxUsd}, ${llmCap.maxCalls} calls, ${Math.round(llmCap.maxFallbackRate * 100)}% fallbacks` : ''}`);
       return { status: 202, body: { ok: true, id: r.id, seed: r.seed, state: `/watch/${r.id}`, game: `/watch/${r.id}/game/<n>` } };
     },
 

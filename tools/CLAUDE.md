@@ -360,8 +360,10 @@ Watching two bots (D440) is the helper's `/watch`, in `tools/watch-runner.mjs`,
 contract `docs/watch-bots.md`: it starts `tools/cubelab.sh watch` (one grid
 draft by the lab's drafters, then a paced best of three from seat 0's eyes) one
 at a time, and serves its `draft.json`, `match.json` and game logs. Rule 1 holds
-for its shapes. Nothing from the request but a checked cube id and a number
-reaches a path or the command line; it writes only `var/spectate/watch-*/`,
+for its shapes. Nothing from the request but a checked cube id, numbers and
+drafter and player ids from the runner's own lists (D443) reaches a path or the
+command line; an `llm:` drafter runs under the helper's per-watch cap and the
+fallback stop (D442); it writes only `var/spectate/watch-*/`,
 its own Forge home and the redaction check's scratch copies (`var/watch-check/`,
 removed after each check); a game route sends only lines that already passed
 `check-redaction.mjs` (it checks the log's complete-lines prefix whenever a

@@ -13,7 +13,9 @@
   "wsAllowedOrigins": ["http://127.0.0.1:*", "http://localhost:*", "https://jalirkan.github.io"],
   "coachPort": 8643,
   "coach": {
-    "autoReview": true
+    "autoReview": true,
+    "watchMaxUsd": 1,
+    "watchMaxCalls": 40
   },
   "webPort": 5173,
   "labArchiveRoot": "/mnt/e/forgecoach-archive",

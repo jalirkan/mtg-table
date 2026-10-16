@@ -12,8 +12,11 @@
 // var/watch-runner-selftest/.  No Forge, no network.
 //
 // What it holds: the body's validation (cube ids from cubes/, never a path;
-// seeds in the lab's range; best of 1/3/5/7; players a profile or search;
-// unknown fields refused); one watch at a time (409 with the running id); stop
+// seeds in the lab's range; best of 1/3/5/7; D443's drafter and player ids,
+// an unknown one a 400 listing the known ones, two non-lab drafters refused;
+// unknown fields refused); /health's watchDrafters, watchPlayers and
+// watchLlmCap; the argv (an llm: drafter's cap only with one); match.json from
+// the moment POST answers, kept by a watch that dies; one watch at a time (409 with the running id); stop
 // (200, then match.json says "stopped"); a watch that dies is marked "error";
 // redaction as served (only lines that passed tools/check-redaction.mjs are sent;
 // a log that fails is a 500 from then on, and the watch is stopped with error);
@@ -59,9 +62,17 @@ const until = async (f, ms = 4000) => { const t = Date.now(); while (Date.now() 
 console.log('the body');
 const ctx = { cubes: ['fair-fight-cube-180', 'pauper-cube-180'], profiles: ['Default', 'Reckless'] };
 const ok = validateWatch({ cube: 'fair-fight-cube-180', seed: 7, games: 3, playerA: 'reckless', playerB: 'search-v2', pace: 0 }, ctx).req;
-check(ok && ok.id === 'watch-fair-fight-cube-180-7' && ok.playerA === 'Reckless' && ok.playerB === 'search' && ok.pace === 0 && WATCH_ID.test(ok.id), 'a full body: the id, the canonical profile, search');
+check(ok && ok.id === 'watch-fair-fight-cube-180-7' && ok.playerA.id === 'Reckless' && ok.playerB.id === 'search-v2' && ok.playerB.policy === 'search' && ok.pace === 0 && WATCH_ID.test(ok.id), 'a full body: the id, the canonical profile, search');
 const dflt = validateWatch({ cube: 'pauper-cube-180.md' }, ctx).req;
-check(dflt && dflt.games === 3 && dflt.playerA === 'Default' && dflt.playerB === 'Default' && dflt.pace === 600 && dflt.seed >= 1, 'defaults: best of 3, Default vs Default, 600 ms, a random seed; ".md" accepted');
+check(dflt && dflt.games === 3 && dflt.playerA.id === 'Default' && dflt.playerB.id === 'Default' && dflt.drafterA === 'lab' && dflt.drafterB === 'lab' && !dflt.llm && dflt.pace === 600 && dflt.seed >= 1,
+  'defaults: best of 3, lab drafts and Default plays both sides, 600 ms, a random seed; ".md" accepted');
+const withLlm = validateWatch({ cube: 'fair-fight-cube-180', drafterB: 'llm:sonnet', playerA: 'search' }, ctx).req;
+check(withLlm && withLlm.drafterB === 'llm:sonnet' && withLlm.drafterA === 'lab' && withLlm.llm === true && withLlm.playerA.id === 'search-v2', 'drafterB llm:sonnet; the older "search" still names search-v2');
+check(validateWatch({ cube: 'fair-fight-cube-180', drafterA: 'forge-ranks' }, ctx).req?.drafterA === 'forge-ranks', 'drafterA forge-ranks');
+const unknownD = validateWatch({ cube: 'fair-fight-cube-180', drafterA: 'llm:opus' }, ctx);
+check(unknownD.status === 400 && /"drafterA" is one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(unknownD.message), `400: an unknown drafter id, listing the known ones (${unknownD.message})`);
+const unknownP = validateWatch({ cube: 'fair-fight-cube-180', playerB: 'sonnet' }, ctx);
+check(unknownP.status === 400 && /"playerB" is one of Default, Reckless, search-v2/.test(unknownP.message), `400: an unknown player id, listing the known ones (${unknownP.message})`);
 const bad = (q, what) => check(validateWatch(q, ctx).req === undefined && validateWatch(q, ctx).status === 400, `400: ${what}`);
 bad(null, 'no object');
 bad({ cube: '../cubes/fair-fight-cube-180' }, 'a path for the cube');
@@ -74,6 +85,25 @@ bad({ cube: 'fair-fight-cube-180', playerA: 'Godlike' }, 'an unknown profile');
 bad({ cube: 'fair-fight-cube-180', playerB: 3 }, 'a player that is not a string');
 bad({ cube: 'fair-fight-cube-180', pace: 99999 }, 'a pace past 5 s');
 bad({ cube: 'fair-fight-cube-180', deck: 'x.dck' }, 'an unknown field');
+bad({ cube: 'fair-fight-cube-180', drafterA: 'forge-ranks', drafterB: 'llm:sonnet' }, 'two sides that are not lab');
+bad({ cube: 'fair-fight-cube-180', drafterB: 'llm:fake' }, 'llm:fake (the CLI\'s only)');
+bad({ cube: 'fair-fight-cube-180', drafterA: 'human-picks:/etc/passwd' }, 'human-picks (a path)');
+bad({ cube: 'fair-fight-cube-180', drafterA: 'LAB' }, 'a drafter id in another case');
+bad({ cube: 'fair-fight-cube-180', playerA: 'llm:sonnet' }, 'a Claude player (RecordMatch seats Forge AIs only)');
+// the choices /health lists
+const hl = createWatchRunner({ repoRoot: ROOT, available: () => true }).health();
+check(JSON.stringify(hl.watchDrafters.map((d) => d.id)) === JSON.stringify(['lab', 'forge-ranks', 'llm:haiku', 'llm:sonnet'])
+  && hl.watchDrafters.every((d) => typeof d.label === 'string' && Object.keys(d).every((k) => ['id', 'label', 'costNote'].includes(k)))
+  && hl.watchDrafters.filter((d) => d.costNote).map((d) => d.id).join() === 'llm:haiku,llm:sonnet'
+  && hl.watchDrafters.every((d) => !d.costNote || (/\$1 and 40 calls a watch/.test(d.costNote) && /confirm/.test(d.costNote))), 'watchDrafters: {id, label, costNote?}, the cost note on the llm ones (the cap, a confirm)');
+check(JSON.stringify(hl.watchPlayers.map((p) => p.id)) === JSON.stringify(['Default', 'Reckless', 'search-v2']) && hl.watchPlayers.every((p) => typeof p.label === 'string' && !('costNote' in p)),
+  'watchPlayers: the profiles from forge-home/res/ai and search-v2, no Claude seat');
+check(JSON.stringify(hl.watchLlmCap) === JSON.stringify({ maxUsd: 1, maxCalls: 40, maxFallbackRate: 0.25 }), 'watchLlmCap: the defaults');
+const hl2 = createWatchRunner({ repoRoot: ROOT, available: () => true, llmCap: { maxUsd: 0.5, maxCalls: 20, maxFallbackRate: 0.25 } }).health();
+check(hl2.watchLlmCap.maxUsd === 0.5 && /\$0\.50 and 20 calls/.test(hl2.watchDrafters[3].costNote), 'a configured cap is the one /health and the notes say');
+let capThrew = false;
+try { createWatchRunner({ repoRoot: ROOT, llmCap: { maxUsd: 0, maxCalls: 40, maxFallbackRate: 0.25 } }); } catch { capThrew = true; }
+check(capThrew, 'a cap of $0 is refused');
 
 // 2. Complete lines.
 console.log('complete lines');
@@ -111,6 +141,11 @@ if [ "$seed" = 7 ]; then
   while [ ! -e "$dir/go" ]; do sleep 0.05; done
   printf 'pe":"state"}\\n{"v":1,"seq":3,"note":"LEAK"}\\n' >> "$dir/$id-g1.jsonl"
   while :; do sleep 0.1; done
+fi
+if [ "$seed" = 8 ]; then
+  # what watch.ts writes when its llm: drafter's fallback stop ends the watch (web/test/cubelab-watch.test.ts runs the real one)
+  m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"error","error":"drafter B (llm:sonnet) stopped the watch -- the fallback stop: 3 of 3 decision(s) fell back","games":[],"current":null,"drafters":{"A":{"drafter":"lab"},"B":{"drafter":"llm:sonnet"}},"cost":{"side":"B","drafter":"llm:sonnet","calls":6,"callErrors":6,"decisions":3,"fallbacks":3,"usd":0,"stopped":"fallbacks"}}'
+  exit 1
 fi
 if [ "$seed" = 6 ]; then echo $$ > "$dir/leader.pid"; trap '' TERM; while :; do sleep 0.1; done; fi
 if [ "$seed" = 2 ]; then
@@ -252,6 +287,35 @@ w.post({ cube: 'fair-fight-cube-180', seed: 1 });
 await until(() => w.running() === null);
 check(!existsSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt')), 'the same cube and seed again replace the old folder');
 check(argvs.every(([q, dir]) => dir === join(ROOT, 'var/spectate', q.id)), 'every run in var/spectate/<id>');
+// the command: drafters, players and (only with an llm: drafter) the configured cap reach the watch's argv
+const argvSeen = [];
+const wa = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, llmCap: { maxUsd: 0.75, maxCalls: 30, maxFallbackRate: 0.2 },
+  command: (q, dir, args) => { argvSeen.push(args); return ['bash', FAKE, dir, '1']; } });
+wa.post({ cube: 'pauper-cube-180', seed: 21, drafterB: 'llm:sonnet', playerA: 'Reckless', playerB: 'search-v2' });
+await until(() => wa.running() === null);
+wa.post({ cube: 'pauper-cube-180', seed: 22, drafterA: 'forge-ranks' });
+await until(() => wa.running() === null);
+const flag = (args, k) => args[args.indexOf(k) + 1];
+const [a1, a2] = argvSeen;
+check(a1[0] === 'watch' && a1[1] === 'cubes/pauper-cube-180.md' && flag(a1, '--drafter-a') === 'lab' && flag(a1, '--drafter-b') === 'llm:sonnet'
+  && flag(a1, '--player-a') === 'Reckless' && flag(a1, '--player-b') === 'search-v2'
+  && flag(a1, '--llm-max-usd') === '0.75' && flag(a1, '--llm-max-calls') === '30' && flag(a1, '--llm-fallback-rate') === '0.2', `an llm: drafter: its id and the cap in the argv (${a1.join(' ')})`);
+check(flag(a2, '--drafter-a') === 'forge-ranks' && !a2.includes('--llm-max-usd') && flag(a2, '--player-a') === 'Default', 'no llm: drafter, no cap flags');
+// the fallback stop, as the watch reports it, comes through unchanged
+w.post({ cube: 'pauper-cube-180', seed: 8, drafterB: 'llm:sonnet' });
+await until(() => w.running() === null);
+const fb = w.get('watch-pauper-cube-180-8').body.match;
+check(fb?.status === 'error' && /the fallback stop/.test(fb.error) && fb.cost?.fallbacks === 3 && fb.cost?.stopped === 'fallbacks', 'an llm: drafter\'s fallback stop: error with its reason and the cost, as the watch wrote it');
+// match.json from the start: a watch that dies before it writes anything still says what it was
+const early = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, command: () => ['bash', '-c', 'sleep 0.3; exit 4'] });
+early.post({ cube: 'pauper-cube-180', seed: 31, games: 5, drafterA: 'forge-ranks', playerB: 'search-v2', pace: 150 });
+const m0 = early.get('watch-pauper-cube-180-31').body.match;
+check(m0?.status === 'drafting' && m0.cube?.title === 'a cube' && m0.cube?.file === 'cubes/pauper-cube-180.md' && m0.seed === 31 && m0.bestOf === 5 && m0.need === 3 && m0.paceMs === 150
+  && m0.players?.A?.player === 'Default' && m0.players?.B?.player === 'search' && m0.players?.B?.policy === 'search' && m0.drafters?.A?.drafter === 'forge-ranks'
+  && !Number.isNaN(Date.parse(m0.startedAt)) && m0.cost === null && Array.isArray(m0.games), 'match.json the moment POST answers: cube, seed, best of, pace, players, drafters, startedAt');
+await until(() => early.running() === null);
+const m1 = early.get('watch-pauper-cube-180-31').body.match;
+check(m1?.status === 'error' && /exited \(code 4\)/.test(m1.error) && m1.cube?.title === 'a cube' && m1.drafters?.A?.drafter === 'forge-ranks' && m1.startedAt === m0.startedAt, 'and when it dies: error, with everything it said at the start');
 // a command that cannot start frees the slot
 const nostart = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, command: () => [join(DIR, 'no-such-program')] });
 check(nostart.post({ cube: 'pauper-cube-180', seed: 4 }).status === 202, 'a watch whose program is missing: 202 (spawn fails later)');
@@ -277,6 +341,9 @@ const h = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins, t
 const port = await h.listen();
 const hh = await call(port, 'GET', '/health');
 check(hh.status === 200 && hh.body.watch === 1 && hh.body.watchRunning === null, '/health carries "watch": 1');
+check(Array.isArray(hh.body.watchDrafters) && hh.body.watchDrafters[0]?.id === 'lab' && hh.body.watchPlayers?.at(-1)?.id === 'search-v2' && hh.body.watchLlmCap?.maxUsd === 1, '/health carries watchDrafters, watchPlayers and watchLlmCap');
+const p400 = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', drafterA: 'gpt' });
+check(p400.status === 400 && /one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(p400.body.message), 'POST /watch with an unknown drafter: 400 naming the known ones');
 const p = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', seed: 2 });
 check(p.status === 202 && p.body.id === 'watch-fair-fight-cube-180-2', 'POST /watch: 202');
 check((await call(port, 'POST', '/watch', { cube: 'pauper-cube-180', seed: 9 })).status === 409, 'POST /watch again: 409');
