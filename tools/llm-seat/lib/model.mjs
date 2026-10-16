@@ -204,8 +204,12 @@ export function makeClaudeModel({ model = 'sonnet', thinking = 'low', cwd = null
   return {
     name: model,
     cwd: dir,
-    /** session: null (fresh), {id, resume: false} (start), {id, resume: true}. */
-    async call({ system, user, session = null }) {
+    /**
+     * session: null (fresh), {id, resume: false} (start), {id, resume: true}.  signal: an AbortSignal
+     * that kills the CLI's process group and rejects with its reason (the cube lab's spend cap, D439).
+     */
+    async call({ system, user, session = null, signal = null }) {
+      if (signal?.aborted) throw signal.reason ?? new Error('aborted');
       let systemArg = ['--system-prompt', system];
       if (Buffer.byteLength(system, 'utf8') > ARGV_SYSTEM_MAX) {
         const sp = join(mkdtempSync(join(tmpdir(), 'llm-seat-system-')), 'system.txt');
@@ -220,12 +224,15 @@ export function makeClaudeModel({ model = 'sonnet', thinking = 'low', cwd = null
         let so = '';
         let se = '';
         const timer = setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* gone */ } }, timeoutS * 1000);
+        const onAbort = () => { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* gone */ } };
+        signal?.addEventListener('abort', onAbort, { once: true });
         child.stdout.setEncoding('utf8').on('data', (d) => { so += d; });
         child.stderr.setEncoding('utf8').on('data', (d) => { if (se.length < 16384) se += d; });
-        child.on('error', (e) => { clearTimeout(timer); reject(e); });
-        child.on('close', (code, signal) => {
+        child.on('error', (e) => { clearTimeout(timer); signal?.removeEventListener('abort', onAbort); reject(e); });
+        child.on('close', (code, sig) => {
           clearTimeout(timer);
-          if (so.trim() === '') { reject(new Error(`claude exited ${code ?? signal} with no output: ${se.trim().slice(-300)}`)); return; }
+          signal?.removeEventListener('abort', onAbort);
+          if (so.trim() === '') { reject(new Error(`claude exited ${code ?? sig} with no output: ${se.trim().slice(-300)}`)); return; }
           try { resolve(parseCliOutput(so)); } catch (e) { reject(e); }
         });
         child.stdin.on('error', () => {});

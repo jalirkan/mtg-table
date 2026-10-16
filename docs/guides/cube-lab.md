@@ -178,6 +178,20 @@ grid draft is hidden: all nine cards are face up for both drafters.
   decisions go to `<out>/llm/<seed>.json` at once, and a resumed run replays that file instead of
   asking again: a stopped run never pays twice, and a folder's drafts can be rebuilt from it.
 - **`--llm-jobs N`** (default 2) drafts N seeds at once; the model is the wait, not the CPU.
+- **The spend cap and the fallback stop** (the #144 review). One budget covers the whole run, every
+  lane of it: `--llm-max-calls N` (model calls, retries included; no cap by default) and
+  `--llm-max-usd X` (dollars at list price, the CLI's own cost figure summed; **default $5**, `none` to
+  lift it) refuse the call that would pass them — the dollar check projects the next call at the
+  run's mean cost a call so far, so it stops *before* crossing the cap, by at most one call a lane
+  when the calls vary. `--llm-fallback-rate R` (default 0.25; 1 never stops) ends the run once more
+  than that share of its decisions so far fell back, the share taken over at least 8 decisions: a
+  logged-out CLI, whose every call fails, stops after its third decision (six failed calls) instead of
+  quietly drafting lab against lab under an `llm` label; 3 fallbacks in the first 9 decisions stop
+  it, 4 spread over a draft of 18 do not. A stop names its reason (`the call cap`, `the spend cap`,
+  `the fallback stop`) and the counts, kills the CLI calls in flight, abandons the draft in progress
+  (the finished ones keep their replay files, so a resume does not pay for them again) and exits
+  with an error; `<out>/llm/spend.json` holds the caps, the spend and why it stopped, written at the
+  end of every LLM run, stopped or not.
 
 **What it costs (measured, 2026-10-15).** The one real smoke, Vintage, seed 899,000,001, seat A
 `llm:haiku` (thinking low), `--games 0`: 18 decisions, 18 calls, 0 retries, 0 fallbacks; 57,971
@@ -397,6 +411,9 @@ lowers it): a mix with search plays slower games.
 | `--drafter-seat A\|B` | `A` | which seat that is (a mirrored test runs both) |
 | `--llm-sees-opponent` | off | the LLM's prompt also lists the opponent's pool (part of the folder's identity) |
 | `--llm-jobs N` | 2 | LLM drafts asked at once |
+| `--llm-max-calls N` | none | stop the run before its (N+1)th model call |
+| `--llm-max-usd X\|none` | 5 | stop the run before a call that would take its spend (list price) past $X |
+| `--llm-fallback-rate R` | 0.25 | stop the run once more than R of its decisions fell back (over at least 8; 1 = never) |
 | `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
 | `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
 | `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |

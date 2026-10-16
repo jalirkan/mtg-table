@@ -46,8 +46,8 @@ import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExplor
 import { humanDrafter, parsePicks, runHumanDraft, type Fallback } from './humanpicks.ts';
 import { FORGE_RANKS_WEIGHTS, forgeRanked, runForgeRanksDraft } from './drafters.ts';
 import {
-  cardTexts, claudeDraftModel, fakeDraftModel, LLM_PROMPT_VERSION, runLlmDraft, sumStats, themeSummary,
-  type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
+  cardTexts, claudeDraftModel, DEFAULT_FALLBACK_RATE, DEFAULT_LLM_MAX_USD, fakeDraftModel, LLM_PROMPT_VERSION, LlmBudget, LlmStop,
+  runLlmDraft, sumStats, themeSummary, type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
 } from './llmdraft.ts';
 
 export interface RunOptions {
@@ -96,8 +96,16 @@ export interface RunOptions {
    * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
    */
   drafter?: RunDrafterOption;
-  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2); not part of the identity. */
+  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4); not part of the identity. */
   llmJobs?: number;
+  /**
+   * The LLM drafter's spend cap and fallback stop (the #144 review; llmdraft.ts `LlmBudget`), one for the
+   * whole run; absent = `--llm-max-usd 5`, no call cap, the 25% fallback stop.  The caller keeps it to read
+   * the spend afterwards, a stopped run's included (the watch's match.json `cost`).  Not part of the identity.
+   */
+  llmBudget?: LlmBudget;
+  /** The LLM drafter's model, made on first use; absent = the spec's (the CLI, or `fake`).  Tests only. */
+  llmModel?: () => Promise<DraftModel>;
 }
 
 /**
@@ -285,6 +293,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   }
   let drafterMeta: RunDrafter | null = null;
   const llmStats: LlmDraftStats[] = [];
+  let budget: LlmBudget | null = null;
   if (o.drafter) {
     // D416, D439: one seat drafts with another drafter; everything else is a plain run's.
     const kind = o.drafter.kind;
@@ -314,15 +323,20 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       const texts = cardTexts(facts);
       const summary = themeSummary(text);
       let made: Promise<DraftModel> | null = null;
-      const model = (): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd')));
+      const model = o.llmModel ?? ((): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd'))));
+      const b = o.llmBudget ?? new LlmBudget({ maxCalls: null, maxUsd: DEFAULT_LLM_MAX_USD, maxFallbackRate: DEFAULT_FALLBACK_RATE });
+      budget = b;
       draftOne = async (seed) => {
-        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say }, seed);
+        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say, budget: b }, seed);
         if (out.llm) llmStats.push(out.llm);
         return out;
       };
       drafterMeta = { kind: 'llm', seat, model: d.model, thinking: d.thinking, seesOpponent: d.seesOpponent, promptVersion: LLM_PROMPT_VERSION, fallback: 'lab', summaryChars: summary.length };
       say(`drafter (D439): seat ${seat} asks ${d.model === 'fake' ? 'the fake model (no network, no spend)' : `Claude (${d.model}, thinking ${d.thinking}) through the Claude Code CLI, once a decision`}; `
         + `${d.seesOpponent ? 'the prompt lists the opponent\'s pool; ' : ''}two failed replies take the lab drafter's line; decisions kept in ${path.join(o.out, 'llm')}; seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
+      const c = b.caps;
+      say(`llm drafter caps: ${c.maxCalls === null ? 'no call cap' : `at most ${c.maxCalls} call(s)`}, ${c.maxUsd === null ? 'NO dollar cap' : `at most $${c.maxUsd} at list price`}, `
+        + `${c.maxFallbackRate >= 1 ? 'no fallback stop' : `stop past ${Math.round(c.maxFallbackRate * 100)}% fallbacks`} (--llm-max-calls, --llm-max-usd, --llm-fallback-rate)`);
     }
   }
   const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
@@ -407,7 +421,19 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   for (let i = 0; i < o.drafts; i++) if (!done.has(o.seed + i)) pending.push(o.seed + i);
   // D439: an LLM drafter waits on the model, so its drafts run --llm-jobs at a time; every other drafter is
   // synchronous and runs one by one, exactly as before.  The results are used in seed order either way.
-  const drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.max(1, o.llmJobs ?? 2) : 1, async (seed) => draftOne(seed));
+  // An LLM stop leaves spend.json and says why.
+  let drafted: DraftOut[];
+  try {
+    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.max(1, o.llmJobs ?? 2) : 1, async (seed) => draftOne(seed));
+  } catch (e) {
+    if (budget) writeSpend(o.out, budget);
+    if (e instanceof LlmStop) throw new LlmStop(e.reason, `llm drafter stopped, ${e.message}; the drafts finished before it are kept in ${path.join(o.out, 'llm')} and are not asked again on a resume`);
+    throw e;
+  }
+  if (budget) {
+    writeSpend(o.out, budget);
+    say(`llm drafter spend: ${budget.summary()}`);
+  }
   if (llmStats.length > 0) {
     const t = sumStats(llmStats);
     say(`llm drafter: ${t.drafts} draft(s), ${t.decisions} decisions, ${t.calls} calls, ${t.retries} retries, ${t.fallbacks} fallbacks; `
@@ -502,6 +528,14 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   }
   say(`done in ${((Date.now() - t0) / 1000).toFixed(0)} s -> ${jsonl}`);
   return check;
+}
+
+/** `<out>/llm/spend.json`: the run's LLM caps, what it spent and why it stopped (null = it did not). */
+function writeSpend(out: string, b: LlmBudget): void {
+  const dir = path.join(out, 'llm');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'spend.json.tmp'), `${JSON.stringify({ v: 1, ...b.record() }, null, 1)}\n`);
+  fs.renameSync(path.join(dir, 'spend.json.tmp'), path.join(dir, 'spend.json'));
 }
 
 /** `f` over `items`, at most `limit` at a time; the results in the items' order. */
