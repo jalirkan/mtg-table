@@ -129,7 +129,8 @@
 //                 (docs/watch-bots.md the copyable form).  The games are served as complete
 //                 lines, by ?from=<byte> or Range: bytes=<n>- (ForgeCoach's live.ts).  /health
 //                 carries "watch": 1 when the bridge is built (else 0) and "watchRunning";
-//                 --no-watch turns it off.
+//                 --no-watch turns it off; --watch-keep N (10) is how many watch folders stay
+//                 under var/spectate/ (older ones go when a watch starts).
 //
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
@@ -550,6 +551,7 @@ function parseArgs(argv) {
     else if (f === '--eval-schema') a.evalSchema = val();
     else if (f === '--eval-cube') a.evalCube = val();
     else if (f === '--no-watch') a.watch = false;   // D440
+    else if (f === '--watch-keep') a.watchKeep = Number(val());   // D440: watch folders kept (10)
     else if (f === '--draft-room') a.draftRoom = true;   // D400
     else if (f === '--room-port') a.roomPort = Number(val());
     else if (f === '--room-dir') a.roomDir = val();
@@ -820,7 +822,7 @@ export function startHelper(opts) {
       if (path !== '/watch' && !one && !game) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
       if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: path === '/watch' ? 'use GET or POST' : 'use GET' }, { ...cors, Allow: path === '/watch' ? 'GET, POST, OPTIONS' : 'GET, OPTIONS' }); say(405); return; }
       if (game) {
-        const r = watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });
+        const r = await watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });   // only what passed the redaction check
         const expose = { 'Access-Control-Expose-Headers': 'X-Log-Next, X-Log-Size, Content-Range' };
         if (r.json) { send(res, r.status, r.json, { ...cors, ...expose, ...(r.headers ?? {}) }); say(r.status); return; }
         res.writeHead(r.status, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Length': r.body.length, ...cors, ...expose, ...r.headers });
@@ -1235,7 +1237,8 @@ async function main() {
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
   // D440: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
-  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`) }) : null;
+  if (a.watchKeep !== undefined && (!Number.isInteger(a.watchKeep) || a.watchKeep < 1)) { console.error('coach-helper: --watch-keep is a whole number of watch folders >= 1'); process.exit(2); }
+  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`), ...(a.watchKeep !== undefined ? { keep: a.watchKeep } : {}) }) : null;
   const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch });
   let bound;
   try { bound = await h.listen(); } catch (e) {
@@ -1261,7 +1264,8 @@ async function main() {
   console.log(!watch ? 'COACH WATCH     /watch off (--no-watch)'
     : watch.available() ? 'COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time'
     : 'COACH WATCH     /watch waits for the bridge build (./bridge/build.sh); /health says "watch": 0 until then');
-  const stop = () => { watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
+  // D440: a running watch is SIGTERMed, then SIGKILLed after its grace, before the helper exits.
+  const stop = async () => { await watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }

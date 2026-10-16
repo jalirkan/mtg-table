@@ -293,6 +293,17 @@ warning. The shape is legitimately reachable (Opposition Agent, Bribery, Gonti)
 and **nothing in the repo passes it**, so the day a recording needs it is the day
 someone types it on the command line and says why in the commit message.
 
+`--partial` is the watch runner's flag (D440, `tools/watch-runner.mjs`) and is
+safe to pass only on a prefix of a game still being written. It skips the three
+coverage checks (no state frames, nothing redacted, no named card in the
+viewer's hand) and leaves undecided the complaints a later line could cure (A4/A6
+on a last `state` whose `ask` may be the next line; an M55 decision whose next
+state is not written yet); every leak rule and every exact-shape rule fails a
+prefix as it fails a whole file. Exit 0 is a full pass, 3 a pass that stops at
+`decided=<bytes>` or skipped a coverage check, 1 a failure. A finished recording
+is still checked without it. `check-redaction-selftest.mjs` holds every control
+to the same verdict under it and sweeps prefixes of the committed recordings.
+
 ## The coach helper — the conventions D292 added
 
 `tools/coach-helper.mjs` lets ForgeCoach coach through the Claude Code CLI the
@@ -361,9 +372,12 @@ contract `docs/watch-bots.md`: it starts `tools/cubelab.sh watch` (one grid
 draft by the lab's drafters, then a paced best of three from seat 0's eyes) one
 at a time, and serves its `draft.json`, `match.json` and game logs. Rule 1 holds
 for its shapes. Nothing from the request but a checked cube id and a number
-reaches a path or the command line; it writes only `var/spectate/watch-*/` and
-its own Forge home; every game passes `check-redaction.mjs` before its result is
-written; a GET reads only. Its self-test, `tools/watch-runner-selftest.mjs`,
+reaches a path or the command line; it writes only `var/spectate/watch-*/`,
+its own Forge home and the redaction check's scratch copies (`var/watch-check/`,
+removed after each check); a game route sends only lines that already passed
+`check-redaction.mjs` (it checks the log's complete-lines prefix whenever a
+request needs bytes past the last check), and a game that fails is refused from
+then on and stops the watch; a GET starts and stops nothing. Its self-test, `tools/watch-runner-selftest.mjs`,
 drives a fake watch and runs in 12f and CI.
 
 ## The cube lab — the conventions D293–D297 added

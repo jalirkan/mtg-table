@@ -25,6 +25,7 @@
 //                                                              pick model, the other as always; grid only (D416)
 //           [--drafter forge-ranks | llm:<haiku|sonnet|opus|fake>[:thinking=off|low|default] [--drafter-seat A|B]]
 //           [--llm-sees-opponent] [--llm-jobs 2]               Forge's ranks, or Claude asked once a decision (D439)
+//           [--llm-max-calls N] [--llm-max-usd 5|none] [--llm-fallback-rate 0.25]   the LLM's spend cap and fallback stop
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
 //   queue   plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //           [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   each drafter's AI drawn per draft (D375; off by default)
@@ -63,6 +64,7 @@ import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
 import { learnCommand, selfplayCommand } from './learncmd.ts';
 import { bridgeOptions } from './bridge.ts';
 import { DRAFTER_SPECS, parseDrafter } from './drafters.ts';
+import { LlmBudget, llmCapsOf, MAX_LLM_JOBS } from './llmdraft.ts';
 import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
 import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './playexplore.ts';
@@ -90,7 +92,8 @@ function usage(msg?: string): never {
                         [--allow-version-change] [--deckset]   (seeds 900000000+ are the deck sets', seeds.ts)
                         [--play-explore on | --play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
                         [--drafter human-picks:<x.picks.json> | forge-ranks | llm:<model>[:thinking=off|low|default]]
-                        [--drafter-seat A|B] [--llm-sees-opponent] [--llm-jobs 2]   (D416, D439; grid)
+                        [--drafter-seat A|B] [--llm-sees-opponent] [--llm-jobs 1..4]   (D416, D439; grid)
+                        [--llm-max-calls N] [--llm-max-usd 5|none] [--llm-fallback-rate 0.25]   (the LLM's caps)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
        tools/cubelab.sh queue plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
@@ -243,10 +246,13 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     } else if (spec.kind === 'forge-ranks') o.drafter = { kind: 'forge-ranks', seat };
     else {
       o.drafter = { kind: 'llm', model: spec.model, thinking: spec.thinking, seat, seesOpponent: f.has('llm-sees-opponent') };
-      o.llmJobs = Math.max(1, int(f, 'llm-jobs', 2));
+      o.llmJobs = int(f, 'llm-jobs', 2);
+      if (o.llmJobs < 1 || o.llmJobs > MAX_LLM_JOBS) usage(`--llm-jobs is 1..${MAX_LLM_JOBS} (each is one claude -p at a time, and the spend cap projects per lane), got ${o.llmJobs}`);
+      try { o.llmBudget = new LlmBudget(llmCapsOf((k) => one(f, k))); } catch (e) { usage((e as Error).message); }
     }
   } else if (one(f, 'drafter-seat') !== undefined) usage('--drafter-seat needs --drafter');
-  if (o.drafter?.kind !== 'llm' && (f.has('llm-sees-opponent') || f.has('llm-jobs'))) usage('--llm-sees-opponent and --llm-jobs need --drafter llm:<model>');
+  const llmFlags = ['llm-sees-opponent', 'llm-jobs', 'llm-max-calls', 'llm-max-usd', 'llm-fallback-rate'];
+  if (o.drafter?.kind !== 'llm' && llmFlags.some((k) => f.has(k))) usage(`${llmFlags.map((k) => `--${k}`).join(', ')} need --drafter llm:<model>`);
   const bridgeArg = one(f, 'bridge');
   if (bridgeArg) {
     if (cubeFile || one(f, 'ratings')) usage('--bridge names its cubes itself (no cube file, no --ratings: each cube keeps its own ratings)');

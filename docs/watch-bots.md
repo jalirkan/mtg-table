@@ -25,7 +25,7 @@ only when `watch` is 1.
 | `POST /watch` `{"cube", "seed"?, "games"?, "playerA"?, "playerB"?, "pace"?}` (4 KB) | `202 {"ok": true, "id", "seed", "state": "/watch/<id>", "game": "/watch/<id>/game/<n>"}` — `409 {"code": "busy", "running": "<id>"}` while another watch runs (one at a time); `400` a bad body, unknown fields included; `503` the bridge is not built or `--no-watch` |
 | `GET /watch` | `200 {"ok": true, "running": "<id>"|null, "watches": [{id, status, cube, seed, bestOf, players, wins, winner, updatedAt}]}`, newest first, at most 20 |
 | `GET /watch/<id>` | `200 {"ok": true, "id", "running": bool, "match": <match.json>|null, "draft": <draft.json>|null}` — each null until written; `404` an unknown id |
-| `GET /watch/<id>/game/<n>` | game `n`'s frame log, complete lines only (below); `404` until that game has started |
+| `GET /watch/<id>/game/<n>` | game `n`'s frame log, complete lines that passed the redaction check only (below); `404` until that game has started; `500 {"code": "redaction-failed"}` once it failed the check |
 | `POST /watch/<id>/stop` | `200 {"ok": true, "id", "stopping": true}`; `409 {"code": "not-running"}`; then `match.status` becomes `"stopped"` |
 
 The body:
@@ -85,7 +85,23 @@ all. At the default 600 ms expect a few minutes a game.
 
 `GET /watch/<id>/game/<n>` serves the log as the spectate dev route serves
 `var/spectate/` (D122): **only complete lines** — a line the recorder is half way
-through is never sent — at most 4 MiB an answer. Two ways to poll, and every
+through is never sent — at most 4 MiB an answer, and **only lines that passed
+`tools/check-redaction.mjs`**: before it sends bytes past the last check, the
+helper checks the log's whole complete-lines prefix with `--partial` (every leak
+rule and every exact-shape rule; not the three coverage checks a game's first
+lines cannot meet; about 0.1 s for 2 MB) and sends what passed, so a follower
+runs one check behind the recorder. Until the first `state` frame is written
+(the session line and `hello_ok` come about 10 s before it) nothing has passed:
+the answer is `200`/`206` with no body and `X-Log-Next: 0`, not an error. A last
+`state` whose reveal the next line (its `ask`) may justify is held back until
+that line is written. Every one of the 17,757 line-prefixes of the committed
+recordings (`fixtures/games/`, `fixtures/synthetic/`) passes `--partial`
+(measured 2026-10-16, about 3.5 minutes in memory); the checker's self-test
+re-runs a stride of them. A game that fails is never sent past
+its last passing line: every later request for it is
+`500 {"ok": false, "code": "redaction-failed", "message"}` (which game, never
+what failed: the checker's own words can name the card, and stay on the helper's
+console), and the watch ends `error` saying so. Two ways to poll, and every
 answer carries `X-Log-Next` (the byte after the last line sent) and `X-Log-Size`
 (exposed to the page through `Access-Control-Expose-Headers`):
 
@@ -109,14 +125,21 @@ Each game's `gameId` is `<id>-g<n>`, so two watches never share one.
 ## Hidden information
 
 - **Every game is drafter A's eyes** (`match.view`: seat 0). Drafter B's hand is
-  the five-key stub, exactly as on the board (hard rule 8), and each recording
-  passed `tools/check-redaction.mjs` before its result was written
-  (`games[].redaction: "pass"`; a fail ends the watch with `"error"`). There is
-  no omniscient view, and no seat-1 recording.
+  the five-key stub, exactly as on the board (hard rule 8). Every line the
+  helper serves passed `tools/check-redaction.mjs` before it was sent (above,
+  *Following a game*), and each finished recording is checked again, whole,
+  before its result is written (`games[].redaction: "pass"`; a fail at either
+  point ends the watch with `"error"`). There is no omniscient view, and no
+  seat-1 recording.
 - **`draft` shows both pools and both decks.** A grid draft is played face up:
-  both drafters see every grid and every line the other takes, so nothing in
-  `draft.json` was hidden from either drafter. Showing deck B's list beside a
-  game shows a decklist, never what B holds.
+  both drafters see every grid and every line the other takes, so the picks and
+  the pools in `draft.json` hid nothing from either drafter. The decks are the
+  exception: each drafter builds its own in private, so **B's main / side
+  choice was hidden from A** (and A's from B) — the AI playing A never saw which
+  of B's cards B put in its 40. Showing deck B's list beside a game tells the
+  viewer something seat A did not know; it is a decklist, never what B holds
+  or draws, so it is no leak of the game, but label it as B's list rather than
+  as anything A could see.
 
 ## draft.json (`kind: "watch-draft"`, v1)
 
@@ -244,4 +267,7 @@ A tile **Watch two bots** (shown when `/health` has `"watch": 1`):
    the watch; it ends by itself.
 
 A finished watch stays in `var/spectate/watch-<cube>-<seed>/` and in
-`GET /watch` until the same cube and seed are watched again.
+`GET /watch` until the same cube and seed are watched again, or until it is no
+longer among the 10 most recent: starting a watch removes the older folders
+(the helper's `--watch-keep N`; by `match.json`'s `updatedAt`, a running watch
+never).

@@ -22,7 +22,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const DIR = 'fixtures/negative/redaction';
 const manifest = JSON.parse(readFileSync(`${DIR}/manifest.json`, 'utf8'));
@@ -209,6 +209,105 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
   } else {
     console.log(`  ok    ${file} is still rejected under --opponent-library-ok`);
   }
+}
+
+// --- and --partial (D440: the watch runner's served prefix) -----------------
+// It skips the three coverage checks and holds back a tail a later line could
+// cure -- and nothing else.  So: every probe above fails under it for the same
+// reason, every control passes clean, a two-line prefix is exit 3 and not a
+// failure, the one frame of slack is undecided when the log is cut inside it and
+// still a failure one frame further, and no prefix of a committed recording
+// fails it (a stride over fixtures/games/, every line of the small ones; the
+// every-line sweep of all of them, about 3.5 minutes, is measured in
+// docs/watch-bots.md, *Following a game*).
+{
+  const { checkFile } = await import('./check-redaction.mjs');
+  const lead = (s) => console.log(`  ok    ${s}`);
+  let same = 0;
+  for (const { file, level, expect } of manifest) {
+    const r = checkFile(`${DIR}/${file}`, { partial: true });
+    if (level === 'fail') {
+      if (r.problems.length === 0 || !r.problems.some((p) => p.includes(expect))) bad(`--partial does not reject ${file} for its reason (${JSON.stringify(expect)}): a leak rule is switched off in partial mode`);
+      else same++;
+    } else if (r.problems.length > 0) bad(`--partial rejects ${file}, which passes without it: ${r.problems[0]}`);
+    else if (level === 'pass' && (r.skipped.length > 0 || r.undecided.length > 0)) bad(`--partial calls the whole control ${file} short (${r.skipped.join('; ')})`);
+    else same++;
+  }
+  if (same === manifest.length) lead(`--partial: every one of the ${manifest.length} controls has the same verdict, for the same reason`);
+
+  /** `n` lines of `file` (or the given line numbers, 1-based), as text. */
+  const cut = (file, n) => {
+    const L = readFileSync(file, 'utf8').split('\n').filter(Boolean);
+    return `${(Array.isArray(n) ? n.map((k) => L[k - 1]) : L.slice(0, n)).join('\n')}\n`;
+  };
+  const SCRATCH = 'var/check-redaction-selftest';
+  mkdirSync(SCRATCH, { recursive: true });
+  const cli = (text, flags = ['--partial']) => {
+    const f = `${SCRATCH}/prefix-${process.pid}.jsonl`;
+    writeFileSync(f, text);
+    const r = spawnSync(process.execPath, ['tools/check-redaction.mjs', ...flags, f], { encoding: 'utf8' });
+    rmSync(f, { force: true });
+    return { code: r.status, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+  };
+  const two = cut(`${DIR}/baseline.jsonl`, 2);
+  const t2 = cli(two);
+  const t2full = cli(two, []);
+  if (t2.code !== 3 || !/skipped \(coverage, not a leak\): no state frames at all/.test(t2.out) || !t2.out.includes(`decided=${Buffer.byteLength(two)} of`)) bad(`a two-line prefix (the header, hello_ok) under --partial: want exit 3, the skipped line and decided=all, got ${t2.code}`);
+  else if (t2full.code !== 1) bad(`a two-line prefix without --partial should still fail (the coverage checks), got ${t2full.code}`);
+  else lead('a two-line prefix: --partial exit 3 (coverage skipped, nothing leaked); without the flag still exit 1');
+  const whole = cli(readFileSync(`${DIR}/baseline.jsonl`, 'utf8'));
+  if (whole.code !== 0) bad(`the whole baseline under --partial: want exit 0, got ${whole.code}`);
+  const leak = cli(cut(`${DIR}/a1-stub-with-a-name.jsonl`, 3));
+  if (leak.code !== 1 || !leak.out.includes('leaks extra keys: name')) bad(`a three-line prefix whose state carries a named stub under --partial: want exit 1 for A1, got ${leak.code}`);
+  else lead('a prefix ending in a leaking state: --partial exit 1, A1');
+  rmSync(SCRATCH, { recursive: true, force: true });
+
+  // A6's one frame of slack, cut inside it: the state that shows the opponent's
+  // card, then the reveal ask that justifies it, with nothing between them.
+  const slackFile = `${DIR}/a6-reveal-ask-one-frame-too-late.jsonl`;
+  // (the notice dropped, the ask and the over renumbered so the seq series stays whole)
+  const justified = cut(slackFile, [1, 2, 3, 4, 5, 7, 8]).split('\n').filter(Boolean)
+    .map((l, i) => (i >= 5 ? JSON.stringify({ ...JSON.parse(l), seq: i }) : l)).join('\n') + '\n';
+  const beforeAsk = cut(slackFile, [1, 2, 3, 4, 5]);
+  const tooLate = cut(slackFile, [1, 2, 3, 4, 5, 6]);
+  const atState = Buffer.byteLength(cut(slackFile, [1, 2, 3, 4]));
+  const j = checkFile('justified.jsonl', { text: justified });
+  const p5 = checkFile('before-ask.jsonl', { partial: true, text: beforeAsk });
+  const f5 = checkFile('before-ask.jsonl', { text: beforeAsk });
+  const p6 = checkFile('too-late.jsonl', { partial: true, text: tooLate });
+  if (j.problems.length > 0) bad(`the slack fixture with the ask straight after the state should pass whole: ${j.problems[0]}`);
+  else if (p5.problems.length > 0 || p5.undecided.length === 0 || p5.decidedBytes !== atState) bad(`cut between the state and its ask, --partial should hold the state undecided (decided=${atState}), got problems=${p5.problems.length} undecided=${p5.undecided.length} decided=${p5.decidedBytes}`);
+  else if (f5.problems.length === 0) bad('cut between the state and its ask, the FULL check should fail it (nothing after it justifies it)');
+  else if (p6.problems.length === 0 || !p6.problems.some((x) => x.includes('carries a name'))) bad('cut one frame later (a notice after the state), --partial should fail it: the slack is one frame');
+  else lead(`A6's slack cut inside it: --partial holds the state back (decided=${atState} bytes), one frame later it fails`);
+
+  // M55's D3: a decision may name the NEXT state's cards; cut before that state, it waits.
+  const d3 = `${DIR}/m55-option-names-the-opponent-hand.jsonl`;
+  const d4 = checkFile('d3.jsonl', { partial: true, text: cut(d3, 4) });
+  const d5 = checkFile('d3.jsonl', { partial: true, text: cut(d3, 5) });
+  if (d4.problems.length > 0 || d4.undecided.length === 0 || d4.decidedBytes !== Buffer.byteLength(cut(d3, 3))) bad(`a decision naming a card with no later state yet: --partial should hold it undecided, got problems=${d4.problems.length} undecided=${d4.undecided.length}`);
+  else if (d5.problems.length === 0) bad('the same decision once the next state is in the prefix (and does not show the card): --partial should fail it');
+  else lead('M55 D3 cut before the next state: undecided; with it: a failure');
+
+  // No prefix of a healthy recording fails --partial.
+  const t0 = Date.now();
+  let prefixes = 0;
+  const sweep = (file, stride) => {
+    const text = readFileSync(file, 'utf8');
+    const L = text.split('\n').filter(Boolean);
+    let at = 0;
+    const ends = L.map((l) => (at += Buffer.byteLength(l) + 1));
+    const buf = Buffer.from(text);
+    for (let k = 1; k <= L.length; k += (k < 6 ? 1 : stride)) {
+      const r = checkFile(file, { partial: true, text: buf.subarray(0, ends[k - 1]).toString('utf8') });
+      prefixes++;
+      if (r.problems.length > 0) { bad(`${file} cut at ${k} lines fails --partial: ${r.problems[0].slice(0, 300)}`); return; }
+    }
+  };
+  for (const { file, level } of manifest) if (level !== 'fail') sweep(`${DIR}/${file}`, 1);
+  for (const f of readdirSync('fixtures/synthetic').filter((x) => x.endsWith('.jsonl'))) sweep(`fixtures/synthetic/${f}`, 1);
+  for (const f of readdirSync('fixtures/games').filter((x) => x.endsWith('.jsonl')).sort()) sweep(`fixtures/games/${f}`, 97);
+  lead(`${prefixes} prefixes of the committed recordings pass --partial (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
 }
 
 if (failures > 0) {
