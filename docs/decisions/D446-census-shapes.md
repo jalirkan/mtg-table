@@ -24,7 +24,8 @@ two-colour rule; this is the lab's.
 
 1. **The shapes.** `--shape-a` and `--shape-b` (`run`, `compare`, which passes them to every
    population's run, and `watch`) take `auto`, `two-colour`, `mono`, `three-colour` or
-   `good-stuff`; the default is `auto`. **`auto` is today's drafter and builder, exactly**: with
+   `good-stuff`; the default is `auto`. Shapes are grid only, as D416's and D439's drafters are,
+   and refuse `--bridge`, `--drafter`, `--explore` and the head-to-head modes. **`auto` is today's drafter and builder, exactly**: with
    both seats `auto` and no `--shape-explore`, `run` takes the code path it took before this
    decision, and its `drafts.jsonl`, decks, `run.json`, `cards.json` and lab version are byte for
    byte what they were (the test holds the picks and decks of ten drafts, twenty pools, on three
@@ -69,8 +70,9 @@ two-colour rule; this is the lab's.
      colour of at most `monoMaxSplash` (2) cards each needing at most one pip of it (and today's
      `splashDeckSources` 3 sources, at most two of them basics). **16 lands and 24 spells, or 17
      and 23 when the 24 spells chosen for 16 lands average a mana value of `monoSeventeenAt`
-     (3.0) or more.** Basics of the main colour; nonbasic lands only for the splash (today's rule
-     with the colour as the "pair": a land making two of the deck's colours or the splash colour).
+     (3.0) or more** (a pool with only 23 castable spells builds 17 and 23; fewer, no build).
+     Basics of the main colour; nonbasic lands only for the splash (today's rule with the colour as
+     the "pair": a land making two of the deck's colours or the splash colour).
    - **three-colour**: exactly three main colours, each of the ten triples tried, no splash.
      **17 lands and 23 spells when the pool holds at least `threeFixers` (3) fixers for the
      triple, else 18 and 22**; a fixer for a colour set is a land or a nonland fixer producing at
