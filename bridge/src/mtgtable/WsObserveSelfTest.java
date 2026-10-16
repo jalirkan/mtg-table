@@ -362,7 +362,7 @@ public final class WsObserveSelfTest {
      * {@code Origin} (or none), then RFC 6455 frames -- the server's read
      * unmasked, ours written masked, as a browser writes them.
      */
-    private static final class Raw implements AutoCloseable {
+    static final class Raw implements AutoCloseable {          // StalledGameSelfTest uses it too (D448)
         final Socket s;
         final InputStream in;
         final OutputStream out;

@@ -457,6 +457,28 @@ public final class WsTransport implements Transport {
     /** This game's {@code over}, so an observer that joins after it is told (M50). */
     private volatile String lastOver;
 
+    // ---- D448: who held the seat, for the line a stalled game prints ----------
+    // Written on the event loop (connect, frame, disconnect) and in push (a new
+    // hello_ok); read by clientLine() on MAIN.  A log line, so the fields are
+    // read one at a time and need not agree to the millisecond.
+
+    /** The client that held the seat when this game began, or first took it during the game; null for none. */
+    private volatile String gamePeer;
+    /** {@link #gamePeer}'s connection number (1-based, as {@code WS CONNECT} prints it). */
+    private volatile long gamePeerConn;
+    /** The last client that took the seat, and its connection number. */
+    private volatile String lastPeer;
+    private volatile long lastPeerConn;
+    /** Epoch ms: when {@link #lastPeer} connected, last sent a frame (0: never), and left (0: still here). */
+    private volatile long lastPeerAt;
+    private volatile long lastSpokeAt;
+    private volatile long lastLeftAt;
+    /** D448: games this session abandoned for want of a client; {@code /health} carries it. */
+    private final AtomicLong stalledGames = new AtomicLong();
+
+    /** The {@code /health} response header that counts {@link #stalledGames} (D448, amendment M70). */
+    static final String STALLED_HEADER = "X-Stalled-Games";
+
     /**
      * The one monitor that orders the cache, the seat's write and every
      * observer's write in {@link #push}, and an observer's catch-up against all
@@ -890,6 +912,63 @@ public final class WsTransport implements Transport {
         return port;
     }
 
+    /** D448, from {@link #push}: a new game began; the client holding the seat now, if any, began it. */
+    private void markGameBegan() {
+        final Channel ch = client;
+        if (ch != null && ch.isActive()) {
+            gamePeer = String.valueOf(ch.remoteAddress());
+            gamePeerConn = connects.get();
+        } else {
+            gamePeer = null;
+            gamePeerConn = 0;
+        }
+    }
+
+    /** D448, on the event loop: a client took the seat. */
+    void markConnect(final String peer, final long conn) {
+        lastPeer = peer;
+        lastPeerConn = conn;
+        lastPeerAt = System.currentTimeMillis();
+        lastSpokeAt = 0L;
+        lastLeftAt = 0L;
+        if (gamePeer == null && lastHello != null) {
+            gamePeer = peer;                   // the first to join a game nobody began
+            gamePeerConn = conn;
+        }
+    }
+
+    /**
+     * <b>D448.</b>  One line for a stalled game: which client began this game (or
+     * first joined it), and the last client's address, when it connected, when it
+     * last sent a frame and when it left.  Peers as {@code WS CONNECT} prints
+     * them; times in UTC.  MAIN thread.
+     */
+    public String clientLine() {
+        if (connects.get() == 0) {
+            return "no /ws client ever connected to this session";
+        }
+        final StringBuilder sb = new StringBuilder();
+        final String began = gamePeer;
+        sb.append(began == null ? "no client held the seat during this game"
+                : "began by " + began + " (connection #" + gamePeerConn + ")");
+        sb.append("; the last client ").append(lastPeer).append(" (connection #").append(lastPeerConn)
+          .append(") connected ").append(utc(lastPeerAt));
+        final long spoke = lastSpokeAt;
+        sb.append(", last spoke ").append(spoke == 0L ? "never" : utc(spoke));
+        final long left = lastLeftAt;
+        sb.append(left == 0L ? ", still connected" : ", left " + utc(left));
+        return sb.toString();
+    }
+
+    private static String utc(final long ms) {
+        return java.time.Instant.ofEpochMilli(ms).toString();
+    }
+
+    /** D448, MAIN: the session's count of abandoned games, for {@code /health}. */
+    public void stalledGames(final long n) {
+        stalledGames.set(n);
+    }
+
     /** {@code true} while a client holds the seat. */
     public boolean connected() {
         final Channel ch = client;
@@ -1074,6 +1153,7 @@ public final class WsTransport implements Transport {
             switch (frameType(frameJson)) {
             case "hello_ok":
                 lastHello = frameJson;
+                markGameBegan();               // D448: who began this game
                 // Amendment M42, the transport's own half: a handshake opens a NEW
                 // game (M38) and the cached `input` belongs to the one that just
                 // ended, so nothing may re-deliver it.  The rule -- an `input`
@@ -1392,6 +1472,7 @@ public final class WsTransport implements Transport {
 
     private void onText(final String text) {
         framesIn.incrementAndGet();
+        lastSpokeAt = System.currentTimeMillis();      // D448: the seat's client spoke
         final Object parsed;
         try {
             parsed = Json.parse(text);
@@ -1602,6 +1683,8 @@ public final class WsTransport implements Transport {
                     res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=us-ascii");
                     res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, payload.length);
                     res.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+                    // D448: a header, so the body stays exactly "ok" for every poller that matches it.
+                    res.headers().set(STALLED_HEADER, String.valueOf(stalledGames.get()));
                     ReferenceCountUtil.release(msg);
                     ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
                     return;
@@ -2007,6 +2090,7 @@ public final class WsTransport implements Transport {
             connects.incrementAndGet();
             System.err.println("WS CONNECT " + ctx.channel().remoteAddress()
                     + " (connection #" + connects.get() + ")");
+            markConnect(String.valueOf(ctx.channel().remoteAddress()), connects.get());
             if (pool != null) {
                 // Belt and braces: channelInactive already lifted the latch a
                 // disconnect's cancelAll() set, so an ask raised while nobody
@@ -2128,6 +2212,7 @@ public final class WsTransport implements Transport {
             } else if (owner) {
                 owner = false;
                 client = null;
+                lastLeftAt = System.currentTimeMillis();    // D448
                 System.err.println("WS DISCONNECT " + ctx.channel().remoteAddress()
                         + " -- cancelling " + (pool == null ? 0 : pool.pending()) + " pending ask(s)");
                 if (inbound != null) {

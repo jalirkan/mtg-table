@@ -77,6 +77,18 @@ deadline while a client is connected. Gate step 10h holds both halves on a real
 session (D291): seatless with an observer attached it ends `ABANDONED`, and a
 client holding the seat idle for twice the limit keeps it.
 
+**On a `--games N` server the stalled game is abandoned, not fatal** (**D448**,
+amendment M70). With N > 1 the idle limit ends the GAME, not the session: a
+`STALLED GAME` line names the client that began it and when it last spoke, the
+EDT concedes on the absent seat's behalf through the `act: concede` path (D136's
+guard; the outcome event reaches `captureOutcome`'s existing D39 hop, so no fourth
+hop), the `over` is M11's null body after a `Game abandoned` notice, and the
+server starts the next game itself as `newGame {mode:"restart"}` -- or, after the
+match's last, lingers under `--keep-open` as after any `over`. A single game keeps
+D286's failure, which 10h holds. `/health` counts them in its `X-Stalled-Games`
+header, never in the body. `MtgTable.playGames` is the loop, behind a `Loop`
+interface so `StalledGameSelfTest` drives it with a fake clock.
+
 **`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
 amendment **M50**). Any number of followers on the same port; an observer is
 caught up from the transport's cache (`hello_ok`, the last `state`,
@@ -189,7 +201,10 @@ to think.
 `bridge/build.sh` runs **eight** self-tests after javac, and since D402 a ninth,
 `mtgtable.TableSelfTest` (amendment M59's door: a seat token per seat with no
 loopback exemption, no `/observe`, the table's `Origin` rule, the 4002 takeover,
-the wrong-token limit and the health-only port, on a real `TableServer`) (the eighth,
+the wrong-token limit and the health-only port, on a real `TableServer`), and
+since D448 a tenth, `mtgtable.StalledGameSelfTest` (the abandoned game: `MtgTable`'s
+own game loop over a fake seat whose clock it advances, and a real `WsTransport`'s
+client line and `/health` header; no engine) (the eighth,
 `mtgtable.eval.EvalSelfTest`, is **D316**'s: the position evaluator's Java
 encoder and forward pass against Python's golden rows, features and P(win) in
 `fixtures/eval/`, its schema refusals, and D305's hidden-zone scrambler in Java;

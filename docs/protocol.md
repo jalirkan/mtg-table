@@ -30,6 +30,17 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-16 — a stalled game on a multi-game server has no result
+
+Found on the PC's long-lived server (2026-10-16): a game nobody was connected to
+reached `--idle-timeout` and took the whole `--games 6` session down with it.
+Decision **D448** (M70). Held by `mtgtable.StalledGameSelfTest` (`bridge/build.sh`)
+and one real-engine run, which D448 records.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M70 | §6, §7, M15, M46 | **A game abandoned for want of a client ends in a `Game abandoned` notice and M11's null `over`, and the session goes on.** On a `ws` seat of a `--games N` session (N > 1), a game whose seat has had no `/ws` client for `--idle-timeout` seconds (D286) is ended by the bridge: `notice {level:"warn", title:"Game abandoned", text:<the bridge's own words>}`, then — after the `state` carrying Forge's own `gameOver` for the concession the bridge made on the absent seat's behalf, which is only how the engine gets out — `over {winner: null, reason: null, matchOver: true}`. **No new shape and no new `reason` value**: the null body already means "this game has no result" (M11, M46), and a reader must take the result from `over`, never from the last `state`. Unlike M46 the session does not end: if the game was not the match's last, the bridge itself starts the next one as `act: newGame {mode:"restart"}` would (a new `hello_ok`, a new `gameId`, a fresh match), and otherwise `--keep-open` lingers as after any `over`. A single game (`--games 1`) is not abandoned: D286's end of the session stands. **`GET /health` gains the header `X-Stalled-Games: <n>`**, the session's count of abandoned games, on every answer; the body stays exactly `ok` / `starting` (M15). | D448 |
+
 ### 2026-10-12 — a click is never a commitment
 
 Found in the owner's own game (2026-10-10): a click on Carrion Feeder, meant to
@@ -2243,6 +2254,13 @@ an exception out of Forge's game loop publishes no outcome, so the bridge sends
 an error `notice` titled `Engine error` and then this `over` with `winner`,
 `reason` null and `matchOver: true`. The notice is the marker that the game is
 incomplete; its text is the bridge's own and never the engine's message.
+
+**A game the server abandoned is the third** (amendment **M70**, D448): nobody
+held the seat of a `--games N` session for `--idle-timeout`, so the bridge sent
+a warn `notice` titled `Game abandoned`, conceded on the absent seat's behalf to
+end the engine's game, and sent this body with `matchOver: true` — the last
+`state`'s `gameOver` is that concession, and is not the result. The session then
+goes on to its next game, which carries a new `hello_ok`.
 
 ---
 

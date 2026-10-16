@@ -146,6 +146,14 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
     -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
     -Dsentry.uncaught.handler.enabled=false \
     -cp "$OUT:$FORGE_JAR" mtgtable.TableSelfTest "$REPO_ROOT/var/table-selftest"
+# D448: a game nobody is connected to on a --games N server is abandoned with no
+# result and the session goes on -- MtgTable's own loop over a fake seat whose
+# clock it advances, and a real WsTransport's client line and /health header.
+# No engine, so CI's bridge job runs it too.
+env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
+    -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
+    -Dsentry.uncaught.handler.enabled=false \
+    -cp "$OUT:$FORGE_JAR" mtgtable.StalledGameSelfTest
 
 # Unit-check the position evaluator's Java half (D316) against its Python half:
 # fixtures/eval/golden.json is tools/ml/eval_golden.py's answer for every

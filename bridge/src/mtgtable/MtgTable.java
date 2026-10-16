@@ -164,6 +164,17 @@ public final class MtgTable {
      */
     private static final long QUEUED_NEW_GAME_GRACE_MS = 10_000L;
 
+    /**
+     * <b>D448.</b>  How long an abandoned game's {@code over} may take once the
+     * concede is posted.  A concede applied at once is milliseconds; a deferred
+     * one (D136) waits for {@code Game-0}'s next state-based check, and its own
+     * poll gives up after 30 s.  A cap, not an expected wait.
+     */
+    static final long ABANDON_OVER_MS = 60_000L;
+
+    /** <b>D448.</b>  How long the next game may take to begin after an abandoned one: Forge's wind-down, then a restart. */
+    static final long NEXT_AFTER_ABANDON_MS = 60_000L;
+
     public static void main(final String[] args) {
         final long t0 = System.nanoTime();
         int exit = 0;
@@ -403,64 +414,20 @@ public final class MtgTable {
             System.out.flush();
         }
 
-        // 7. Park until `over` -- once per game.
-        //
-        // M6: the session outlives a game.  Nothing here starts the next one:
-        // that is `act: newGame {mode}` from whoever is playing the seat (the
-        // browser, tools/ws-auto-play.mjs, AutoTransport), which reaches
-        // HostedMatch.continueMatch / restartMatch and comes back as a new
-        // `hello_ok` from openView.  This loop only watches: after each `over`
-        // it waits a bounded moment for the next game to BEGIN, and exits when
-        // none does.  A transport with nobody at the keyboard (`--transport
-        // null`) therefore still plays exactly one game and exits, as it always
-        // did.
-        boolean finished = true;
-        int played = 0;
+        // 7. Park until `over` -- once per game; playGames says what follows
+        //    each one (M6), and what a game nobody is connected to becomes (D448).
         final long limitSec = gameLimitSec(a);
         final long idleSec = transport instanceof WsTransport ? a.idleTimeoutSec : 0L;
         System.out.println("game limit    = " + (limitSec == 0 ? "none" : limitSec + " s")
                 + (a.gameTimeoutSec == null ? "  (the default for --transport " + a.transport + ")"
                         : "  (--game-timeout)")
-                + (idleSec == 0 ? "" : "; ends after " + idleSec + " s with no client connected"
+                + (idleSec == 0 ? "" : (abandonsStalled(transport instanceof WsTransport, a.games)
+                        ? "; a game is abandoned with no result after " + idleSec
+                                + " s with no client connected, and the session goes on (D448)"
+                        : "; ends after " + idleSec + " s with no client connected")
                         + (a.idleTimeoutFlag ? "  (--idle-timeout)" : "")));
-        while (true) {
-            final int n = played + 1;
-            finished = awaitGameEnd(gui, transport, n, limitSec, idleSec);
-            if (!finished) {
-                break;
-            }
-            played = n;
-            if (gui.engineFailure() != null) {
-                // D115: no next game after a crash -- the same deck crashes the
-                // same way, and the run has already failed.
-                break;
-            }
-            if (played >= a.games) {
-                // The match we were asked for is done.  `--keep-open` is the
-                // flag that says somebody is watching, and it is also the window
-                // in which a browser's New Game button can still be pressed: if
-                // one is, keep playing rather than tearing the session down
-                // under the game the client just started.  awaitNextGame()
-                // returns the instant a client that WAS connected leaves, so a
-                // scripted client pays nothing for this.
-                if (!(a.keepOpen && transport instanceof WsTransport)) {
-                    break;
-                }
-                if (!awaitNextGame(gui, transport, played + 1, KEEP_OPEN_MS, "--keep-open")) {
-                    break;
-                }
-                System.out.println("game " + (played + 1) + " began during --keep-open: "
-                        + gui.gameId());
-                continue;
-            }
-            if (!awaitNextGame(gui, transport, played + 1, NEXT_GAME_GRACE_MS,
-                    "between games " + played + " and " + (played + 1))) {
-                System.out.println("no `newGame` after game " + played
-                        + " -- the session ends here");
-                break;
-            }
-            System.out.println("game " + (played + 1) + " began: " + gui.gameId());
-        }
+        final Played run = playGames(loopOf(gui, transport), a.games, a.keepOpen, limitSec, idleSec, System.out);
+        final boolean finished = run.finished;
         final long gameMs = ms(tGame);
         // `--keep-open`'s linger is INSIDE the loop above (M6), because it is
         // also the window in which a client may ask for another game.  Every
@@ -482,8 +449,8 @@ public final class MtgTable {
         }
         System.out.println();
         System.out.println("== summary ==");
-        System.out.println("finished       = " + finished + (finished ? "" : abandoned != null
-                ? "  (" + abandoned + ")"
+        System.out.println("finished       = " + finished + (finished ? "" : run.abandoned != null
+                ? "  (" + run.abandoned + ")"
                 : "  (TIMED OUT after " + limitSec + "s -- the game thread is wedged)"));
         System.out.println("games          = " + gui.gamesFinished() + " played of " + a.games
                 + " asked for, last game id " + gui.gameId()
@@ -570,6 +537,10 @@ public final class MtgTable {
                         + ws.siteRefused() + " refused (amendment M51)");
             }
         }
+        if (transport instanceof WsTransport) {
+            System.out.println("stalled games  = " + run.stalled + " (abandoned with no result for want of a "
+                    + "client, and the session went on -- D448)");
+        }
         System.out.println("engine crash   = " + (gui.engineFailure() == null ? "none"
                 : EngineCrash.describe(gui.engineFailure())));
         System.out.println("game wall time = " + gameMs + " ms");
@@ -577,15 +548,15 @@ public final class MtgTable {
         if (!finished) {
             throw new IllegalStateException("the game did not reach `over`");
         }
+        if (run.failure != null) {
+            throw new IllegalStateException(run.failure);
+        }
         if (gui.engineFailure() != null) {
             throw new IllegalStateException("the engine crashed (D115): "
                     + EngineCrash.describe(gui.engineFailure()), gui.engineFailure());
         }
         System.out.println("MTGTABLE OK");
     }
-
-    /** Set by {@link #awaitGameEnd} when it gives up for want of a client; read by the summary. */
-    private static volatile String abandoned;
 
     /**
      * <b>D286.</b>  The wall-clock limit on one game, in seconds; 0 is none.
@@ -600,35 +571,265 @@ public final class MtgTable {
     }
 
     /**
+     * <b>D448.</b>  What the game loop needs from the seat and its socket.
+     * {@link #loopOf} is the real one, a {@link WireGuiGame} and its
+     * {@link Transport}; {@code StalledGameSelfTest}'s is a fake whose clock it
+     * advances itself, so an hour with nobody connected costs the build nothing.
+     * Every method is called on MAIN.
+     */
+    interface Loop {
+        /** {@link WireGuiGame#awaitGameEnd}. */
+        boolean awaitGameEnd(int n, long ms) throws InterruptedException;
+
+        /** {@link WireGuiGame#awaitGameStart}. */
+        boolean awaitGameStart(int n, long ms) throws InterruptedException;
+
+        /** D115: Forge's game loop died. */
+        boolean engineFailed();
+
+        /** D114: an early {@code newGame} waits for Forge to finish the last game. */
+        boolean newGameQueued();
+
+        String gameId();
+
+        /** Whether the transport has connections at all ({@code ws}); the others keep flat waits. */
+        boolean hasSocket();
+
+        /** A {@code /ws} client holds the seat -- never an observer ({@link WsTransport#connected()}). */
+        boolean connected();
+
+        /** {@link System#nanoTime()}, or the fake's clock. */
+        long nanoTime();
+
+        /** D448: {@link WireGuiGame#abandonForAbsentSeat}. */
+        boolean abandon(String noticeText);
+
+        /** D448: {@link WireGuiGame#newGameAfterAbandon}. */
+        void startNextGame();
+
+        /** D448: {@link WsTransport#clientLine()}. */
+        String clientLine();
+
+        /** D448: the session's count of abandoned games, for {@code /health}. */
+        void stalledGames(int count);
+    }
+
+    /** What {@link #playGames} reports; MAIN thread only. */
+    static final class Played {
+        /** False when the session gave up on a game that had not ended (the run fails). */
+        boolean finished = true;
+        /** Games that reached {@code over}, abandoned ones included. */
+        int played;
+        /** D448: games abandoned for want of a client. */
+        int stalled;
+        /** Why the session gave up for want of a client, or null; the summary prints it. */
+        String abandoned;
+        /** D448: the next game did not begin after an abandoned one -- the run fails with this. */
+        String failure;
+    }
+
+    /** {@code MtgTable}'s own {@link Loop}: the seat and its transport. */
+    private static Loop loopOf(final WireGuiGame gui, final Transport transport) {
+        final WsTransport ws = transport instanceof WsTransport ? (WsTransport) transport : null;
+        return new Loop() {
+            @Override public boolean awaitGameEnd(final int n, final long ms) throws InterruptedException {
+                return gui.awaitGameEnd(n, ms);
+            }
+            @Override public boolean awaitGameStart(final int n, final long ms) throws InterruptedException {
+                return gui.awaitGameStart(n, ms);
+            }
+            @Override public boolean engineFailed() { return gui.engineFailure() != null; }
+            @Override public boolean newGameQueued() { return gui.newGameQueued(); }
+            @Override public String gameId() { return gui.gameId(); }
+            @Override public boolean hasSocket() { return ws != null; }
+            @Override public boolean connected() { return ws != null && ws.connected(); }
+            @Override public long nanoTime() { return System.nanoTime(); }
+            @Override public boolean abandon(final String text) { return gui.abandonForAbsentSeat(text); }
+            @Override public void startNextGame() { gui.newGameAfterAbandon(); }
+            @Override public String clientLine() { return ws == null ? "no socket" : ws.clientLine(); }
+            @Override public void stalledGames(final int count) {
+                if (ws != null) {
+                    ws.stalledGames(count);
+                }
+            }
+        };
+    }
+
+    /**
+     * <b>D448.</b>  Whether a game nobody is connected to is abandoned rather
+     * than fatal: on a {@code ws} seat of a {@code --games N} session, N &gt; 1.
+     * A single game -- and the console and the recorders, which have no idle
+     * limit at all -- keeps D286's rule: a stalled single game is a failure.
+     */
+    static boolean abandonsStalled(final boolean ws, final int games) {
+        return ws && games > 1;
+    }
+
+    /**
+     * Step 7: park until {@code over}, once per game, and decide what follows
+     * it.  MAIN thread.
+     *
+     * <p>M6: the session outlives a game.  Nothing here starts the next one --
+     * that is {@code act: newGame {mode}} from whoever plays the seat (the
+     * browser, {@code tools/ws-auto-play.mjs}, {@code AutoTransport}), which
+     * reaches {@code HostedMatch.continueMatch} / {@code restartMatch} and comes
+     * back as a new {@code hello_ok} from {@code openView}.  This loop only
+     * watches: after each {@code over} it waits a bounded moment for the next
+     * game to BEGIN, and returns when none does.  A transport with nobody at the
+     * keyboard ({@code --transport null}) therefore still plays exactly one game.
+     *
+     * <p><b>D448 is the one exception.</b>  On a {@code --games N} server a game
+     * whose seat nobody has held for {@code idleSec} is abandoned -- ended with
+     * no result through the concede path ({@link #abandonStalled}) -- and then,
+     * as after any {@code over}: the next game, which the server starts itself
+     * because nobody is there to ask for it ({@link #startAfterAbandon}), or, if
+     * that was the match's last game, {@code --keep-open}'s linger.
+     */
+    static Played playGames(final Loop l, final int games, final boolean keepOpen, final long limitSec,
+                            final long idleSec, final java.io.PrintStream out) throws InterruptedException {
+        final Played r = new Played();
+        final boolean abandonStalled = abandonsStalled(l.hasSocket(), games);
+        while (true) {
+            final int n = r.played + 1;
+            final boolean[] idle = new boolean[1];
+            boolean wasAbandoned = false;
+            if (!awaitGameEnd(l, n, limitSec, idleSec, idle)) {
+                if (!idle[0]) {
+                    r.finished = false;        // the wall clock: the game thread is wedged
+                    break;
+                }
+                if (!abandonStalled) {
+                    r.abandoned = "ABANDONED: no client connected for " + idleSec
+                            + " s, so the session ends; --idle-timeout 0 turns this off";
+                    out.println(r.abandoned);
+                    r.finished = false;
+                    break;
+                }
+                if (!abandonStalled(l, n, idleSec, out)) {
+                    r.abandoned = "ABANDONED: game " + n + " had no client for " + idleSec
+                            + " s and could not be ended with no result, so the session ends (D448)";
+                    out.println(r.abandoned);
+                    r.finished = false;
+                    break;
+                }
+                r.stalled++;
+                l.stalledGames(r.stalled);
+                wasAbandoned = true;
+            }
+            r.played = n;
+            if (l.engineFailed()) {
+                // D115: no next game after a crash -- the same deck crashes the
+                // same way, and the run has already failed.
+                break;
+            }
+            if (r.played >= games) {
+                // The match we were asked for is done.  `--keep-open` is the
+                // flag that says somebody is watching, and it is also the window
+                // in which a browser's New Game button can still be pressed: if
+                // one is, keep playing rather than tearing the session down
+                // under the game the client just started.  awaitNextGame()
+                // returns the instant a client that WAS connected leaves, so a
+                // scripted client pays nothing for this.  D448: after an
+                // abandoned last game too, exactly as after a played one.
+                if (!(keepOpen && l.hasSocket())) {
+                    break;
+                }
+                if (!awaitNextGame(l, r.played + 1, KEEP_OPEN_MS, "--keep-open", out)) {
+                    break;
+                }
+                out.println("game " + (r.played + 1) + " began during --keep-open: " + l.gameId());
+                continue;
+            }
+            if (wasAbandoned) {
+                if (!startAfterAbandon(l, r.played + 1, out)) {
+                    r.failure = "game " + (r.played + 1) + " did not begin after the abandoned game "
+                            + r.played + " (D448)";
+                    break;
+                }
+                continue;
+            }
+            if (!awaitNextGame(l, r.played + 1, NEXT_GAME_GRACE_MS,
+                    "between games " + r.played + " and " + (r.played + 1), out)) {
+                out.println("no `newGame` after game " + r.played + " -- the session ends here");
+                break;
+            }
+            out.println("game " + (r.played + 1) + " began: " + l.gameId());
+        }
+        return r;
+    }
+
+    /**
+     * <b>D448.</b>  Game {@code n} has had no client for {@code idleSec}: say who
+     * began it and when it last spoke, end it with no result, and wait for its
+     * {@code over}.  False when it cannot be ended that way (the engine has not
+     * asked the seat anything yet) or no {@code over} came within
+     * {@link #ABANDON_OVER_MS}; the session then fails as before.
+     */
+    static boolean abandonStalled(final Loop l, final int n, final long idleSec, final java.io.PrintStream out)
+            throws InterruptedException {
+        out.println("STALLED GAME " + n + " (" + l.gameId() + "): no client connected for " + idleSec + " s -- "
+                + l.clientLine() + "; ending it with no result (D448)");
+        final long mins = idleSec / 60;
+        final String text = "Nobody was connected to this game for "
+                + (mins > 0 ? mins + " min" : idleSec + " s") + ", so the server ended it with no result.";
+        if (!l.abandon(text)) {
+            out.println("STALLED GAME " + n + ": the engine has not asked this seat anything yet, so there "
+                    + "is no game to concede");
+            return false;
+        }
+        if (!l.awaitGameEnd(n, ABANDON_OVER_MS)) {
+            out.println("STALLED GAME " + n + ": no `over` within " + ABANDON_OVER_MS + " ms of conceding it");
+            return false;
+        }
+        out.println("STALLED GAME " + n + " over: no result (amendment M70)");
+        return true;
+    }
+
+    /**
+     * <b>D448.</b>  After an abandoned game that was not the match's last: start
+     * game {@code next} as {@code act: newGame {mode:"restart"}} would, and wait
+     * for it to begin.  Nobody is connected to ask for it, and a server that
+     * waited for a {@code newGame} here would end the session 30 s later, which
+     * is the outage D448 exists to prevent.
+     */
+    static boolean startAfterAbandon(final Loop l, final int next, final java.io.PrintStream out)
+            throws InterruptedException {
+        l.startNextGame();
+        if (!l.awaitGameStart(next, NEXT_AFTER_ABANDON_MS)) {
+            out.println("STALLED GAME: game " + next + " did not begin within " + NEXT_AFTER_ABANDON_MS + " ms");
+            return false;
+        }
+        out.println("game " + next + " began after the abandoned game, as a fresh match: " + l.gameId());
+        return true;
+    }
+
+    /**
      * Wait for game {@code n} to end.  With a limit, exactly the old
      * {@code awaitGameEnd(n, limit)}.  Without one, wait for ever -- except that
      * on a {@code ws} seat the wait ends once no client has been connected for
      * {@code idleSec} (0: never), because nothing else would (see
-     * {@link #NO_CLIENT_GAME_TIMEOUT_SEC}).  Only {@code /ws} counts, never an
-     * observer ({@link WsTransport#connected()}).
+     * {@link #NO_CLIENT_GAME_TIMEOUT_SEC}); {@code idle[0]} then says so.  Only
+     * {@code /ws} counts, never an observer ({@link WsTransport#connected()}).
      */
-    private static boolean awaitGameEnd(final WireGuiGame gui, final Transport transport, final int n,
-                                        final long limitSec, final long idleSec)
+    private static boolean awaitGameEnd(final Loop l, final int n, final long limitSec, final long idleSec,
+                                        final boolean[] idle)
             throws InterruptedException {
         if (limitSec > 0) {
-            return gui.awaitGameEnd(n, limitSec * 1000L);
+            return l.awaitGameEnd(n, limitSec * 1000L);
         }
-        final WsTransport ws = transport instanceof WsTransport ? (WsTransport) transport : null;
-        if (ws == null || idleSec <= 0) {
-            return gui.awaitGameEnd(n, ONE_YEAR_MS);
+        if (!l.hasSocket() || idleSec <= 0) {
+            return l.awaitGameEnd(n, ONE_YEAR_MS);
         }
-        long since = System.nanoTime();
+        long since = l.nanoTime();
         while (true) {
-            if (gui.awaitGameEnd(n, CONNECT_POLL_MS)) {
+            if (l.awaitGameEnd(n, CONNECT_POLL_MS)) {
                 return true;
             }
-            final long now = System.nanoTime();
-            if (ws.connected()) {
+            final long now = l.nanoTime();
+            if (l.connected()) {
                 since = now;
             } else if ((now - since) / 1_000_000_000L >= idleSec) {
-                abandoned = "ABANDONED: no client connected for " + idleSec
-                        + " s, so the session ends; --idle-timeout 0 turns this off";
-                System.out.println(abandoned);
+                idle[0] = true;
                 return false;
             }
         }
@@ -664,26 +865,25 @@ public final class MtgTable {
      * @param graceMs the cap that applies only while no client is connected
      * @param why     what this wait is, for the one line it prints
      */
-    private static boolean awaitNextGame(final WireGuiGame gui, final Transport transport,
-                                         final int n, final long graceMs, final String why)
+    private static boolean awaitNextGame(final Loop l, final int n, final long graceMs, final String why,
+                                         final java.io.PrintStream out)
             throws InterruptedException {
-        final WsTransport ws = transport instanceof WsTransport ? (WsTransport) transport : null;
-        if (ws == null) {
-            return gui.awaitGameStart(n, graceMs);
+        if (!l.hasSocket()) {
+            return l.awaitGameStart(n, graceMs);
         }
         boolean sawClient = false;
         boolean announced = false;
         long left = graceMs;
         while (true) {
-            if (ws.connected()) {
+            if (l.connected()) {
                 sawClient = true;
                 if (!announced) {
                     announced = true;
-                    System.out.println("WAITING for `act: newGame` (" + why + ") -- a client is "
+                    out.println("WAITING for `act: newGame` (" + why + ") -- a client is "
                             + "connected, so there is no deadline; it ends when the client does");
-                    System.out.flush();
+                    out.flush();
                 }
-                if (gui.awaitGameStart(n, CONNECT_POLL_MS)) {
+                if (l.awaitGameStart(n, CONNECT_POLL_MS)) {
                     return true;
                 }
                 continue;
@@ -692,28 +892,28 @@ public final class MtgTable {
                 // It read the final frames and left.  Check the clock BEFORE
                 // saying so: a client that sends `newGame` and closes the socket
                 // in the same breath is not a session that ended.
-                if (gui.awaitGameStart(n, 0L)) {
+                if (l.awaitGameStart(n, 0L)) {
                     return true;
                 }
                 // D114: a `newGame` that arrived before Forge finished the last
                 // game is queued, not lost, and it runs the moment Forge has --
                 // which is a moment, not a wait on a person.
-                if (gui.newGameQueued() && gui.awaitGameStart(n, QUEUED_NEW_GAME_GRACE_MS)) {
+                if (l.newGameQueued() && l.awaitGameStart(n, QUEUED_NEW_GAME_GRACE_MS)) {
                     return true;
                 }
                 // Nothing is going to press New Game, and holding the JVM open
                 // for 30 s more would only slow every scripted run in
                 // tools/check-all.sh down.
-                System.out.println("the client disconnected (" + why + ") -- the session ends here");
+                out.println("the client disconnected (" + why + ") -- the session ends here");
                 return false;
             }
             final long slice = Math.min(CONNECT_POLL_MS, left);
-            if (gui.awaitGameStart(n, slice)) {
+            if (l.awaitGameStart(n, slice)) {
                 return true;
             }
             left -= slice;
             if (left <= 0) {
-                System.out.println("no `newGame` within " + graceMs + " ms (" + why
+                out.println("no `newGame` within " + graceMs + " ms (" + why
                         + ") and no client is connected");
                 return false;
             }
