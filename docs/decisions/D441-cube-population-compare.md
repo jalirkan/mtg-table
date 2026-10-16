@@ -69,6 +69,15 @@ written first.
    with each population's cube, sha, ratings, weights and run folder. Never `summary.md` or
    `metrics.json`: those names are the runner's and the PC session's.
 
+**No multiple-comparison correction** *(note added 2026-10-16, the cloud's review of #147; the
+decision is unchanged)*. Every interval above is a 95% interval for its own measure and pair alone.
+With eleven measures, up to fifteen pairs of populations and several `--rule`s, some interval will
+exclude 0 by chance (the null runs below: about 1 in 20 per measure and pair, as nominal), and no
+Bonferroni, Holm or false-discovery adjustment is applied to the tables or to the verdicts. A
+verdict is meant to be read for the one measure its rule was written for before the run; several
+rules on one run are several separate claims, and a reader who wants them to hold together must
+widen the intervals (`--boot` does not do it) or pre-register one rule.
+
 **Evidence** (`web/test/cubelab-compare.test.ts`; the coverage numbers from a throwaway script
 over the test's generator, `web/test/cubelab-compare-synth.ts`, 600 drafts a population, 200
 replicates):
