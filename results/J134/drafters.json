@@ -1,0 +1,380 @@
+{
+ "written": 1,
+ "bad_lines": 0,
+ "drafter_ok": 1,
+ "files_ok": 1,
+ "seeds_unpaired": 0,
+ "arms": [
+  {
+   "arm": "fl",
+   "cube": "vintage",
+   "challenger": "forge-ranks",
+   "planned_seeds": 300,
+   "matches": 599,
+   "engine_errors": 1,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 300,
+    "seeds_b": 300,
+    "seeds_both": 300,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "rate": 0.5376,
+   "lo": 0.4983,
+   "hi": 0.5769,
+   "code": 0,
+   "wld": [
+    322,
+    277,
+    0
+   ],
+   "game_rate": 0.5244,
+   "game_ci": [
+    0.5,
+    0.5495
+   ],
+   "rate_as_seat": {
+    "A": 0.5585,
+    "B": 0.5167
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.5309,
+     "U": 0.611,
+     "B": 0.3005,
+     "R": 0.3356,
+     "G": 0.222
+    },
+    "lab": {
+     "W": 0.4875,
+     "U": 0.5977,
+     "B": 0.3105,
+     "R": 0.3873,
+     "G": 0.217
+    }
+   },
+   "deck_score": {
+    "challenger": 140.8394,
+    "lab": 141.0963
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "fl",
+   "cube": "synergy",
+   "challenger": "forge-ranks",
+   "planned_seeds": 300,
+   "matches": 600,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 300,
+    "seeds_b": 300,
+    "seeds_both": 300,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "rate": 0.5275,
+   "lo": 0.4908,
+   "hi": 0.5642,
+   "code": 0,
+   "wld": [
+    316,
+    283,
+    1
+   ],
+   "game_rate": 0.5188,
+   "game_ci": [
+    0.4935,
+    0.5441
+   ],
+   "rate_as_seat": {
+    "A": 0.4933,
+    "B": 0.5617
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.4917,
+     "U": 0.645,
+     "B": 0.2317,
+     "R": 0.145,
+     "G": 0.4867
+    },
+    "lab": {
+     "W": 0.4667,
+     "U": 0.6667,
+     "B": 0.1917,
+     "R": 0.1733,
+     "G": 0.5017
+    }
+   },
+   "deck_score": {
+    "challenger": 132.6923,
+    "lab": 134.1823
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "fl",
+   "cube": "twobert",
+   "challenger": "forge-ranks",
+   "planned_seeds": 300,
+   "matches": 600,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 300,
+    "seeds_b": 300,
+    "seeds_both": 300,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 4,
+   "rate": 0.495,
+   "lo": 0.4567,
+   "hi": 0.5317,
+   "code": 0,
+   "wld": [
+    297,
+    303,
+    0
+   ],
+   "game_rate": 0.499,
+   "game_ci": [
+    0.4748,
+    0.5228
+   ],
+   "rate_as_seat": {
+    "A": 0.53,
+    "B": 0.46
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.3367,
+     "U": 0.7983,
+     "B": 0.285,
+     "R": 0.235,
+     "G": 0.345
+    },
+    "lab": {
+     "W": 0.3383,
+     "U": 0.8033,
+     "B": 0.2567,
+     "R": 0.2017,
+     "G": 0.4
+    }
+   },
+   "deck_score": {
+    "challenger": 107.9275,
+    "lab": 108.8588
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "hl",
+   "cube": "vintage",
+   "challenger": "human-picks",
+   "planned_seeds": 150,
+   "matches": 300,
+   "engine_errors": 0,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 150,
+    "seeds_b": 150,
+    "seeds_both": 150,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "rate": 0.5133,
+   "lo": 0.4567,
+   "hi": 0.57,
+   "code": 0,
+   "wld": [
+    154,
+    146,
+    0
+   ],
+   "game_rate": 0.5068,
+   "game_ci": [
+    0.4692,
+    0.5437
+   ],
+   "rate_as_seat": {
+    "A": 0.4867,
+    "B": 0.54
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.4733,
+     "U": 0.6267,
+     "B": 0.3767,
+     "R": 0.36,
+     "G": 0.1667
+    },
+    "lab": {
+     "W": 0.54,
+     "U": 0.65,
+     "B": 0.28,
+     "R": 0.3533,
+     "G": 0.1767
+    }
+   },
+   "deck_score": {
+    "challenger": 134.6063,
+    "lab": 142.083
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "hl",
+   "cube": "synergy",
+   "challenger": "human-picks",
+   "planned_seeds": 150,
+   "matches": 299,
+   "engine_errors": 1,
+   "complete": 1,
+   "pairing": {
+    "seeds_a": 150,
+    "seeds_b": 150,
+    "seeds_both": 150,
+    "unpaired": 0
+   },
+   "drafter_ok": 1,
+   "missing_cards": 0,
+   "rate": 0.5418,
+   "lo": 0.4867,
+   "hi": 0.594,
+   "code": 0,
+   "wld": [
+    162,
+    137,
+    0
+   ],
+   "game_rate": 0.5292,
+   "game_ci": [
+    0.4917,
+    0.5672
+   ],
+   "rate_as_seat": {
+    "A": 0.557,
+    "B": 0.5267
+   },
+   "colours": {
+    "challenger": {
+     "W": 0.4916,
+     "U": 0.5418,
+     "B": 0.4448,
+     "R": 0.2475,
+     "G": 0.2843
+    },
+    "lab": {
+     "W": 0.4582,
+     "U": 0.6355,
+     "B": 0.1873,
+     "R": 0.1405,
+     "G": 0.5786
+    }
+   },
+   "deck_score": {
+    "challenger": 123.0592,
+    "lab": 136.8873
+   },
+   "forge_built": {
+    "challenger": 0,
+    "lab": 0
+   }
+  },
+  {
+   "arm": "ll",
+   "cube": "vintage",
+   "challenger": "llm",
+   "code": 9,
+   "why": "not run: it spends API money and needs Justin's approval",
+   "matches": 0,
+   "rate": null,
+   "lo": null,
+   "hi": null,
+   "complete": 0
+  }
+ ],
+ "checked": [
+  {
+   "file": "var/lab-j134/cubes/twobert-cube-180.md",
+   "sha256": "54d9c89eb9d22802b556023304e73479a97dba9f2ba55b09d27ed4ce57fd1c0f",
+   "ok": 1
+  },
+  {
+   "file": "fixtures/human-picks/vintage-cube-180.picks.json",
+   "sha256": "d17708275e1559c508f36a2be65d5c07fb125ab8f044e712baecf169bbf6cfd0",
+   "ok": 1
+  },
+  {
+   "file": "fixtures/human-picks/synergy-cube-180.picks.json",
+   "sha256": "4f1af828a5ddd70e068c52565564f2d55fa979aa293e3e46f6e90bf7c1f8352a",
+   "ok": 1
+  }
+ ],
+ "fl_vintage_matches": 599,
+ "fl_vintage_rate": 0.5376,
+ "fl_vintage_lo": 0.4983,
+ "fl_vintage_hi": 0.5769,
+ "fl_vintage_code": 0,
+ "fl_vintage_complete": 1,
+ "fl_synergy_matches": 600,
+ "fl_synergy_rate": 0.5275,
+ "fl_synergy_lo": 0.4908,
+ "fl_synergy_hi": 0.5642,
+ "fl_synergy_code": 0,
+ "fl_synergy_complete": 1,
+ "fl_twobert_matches": 600,
+ "fl_twobert_rate": 0.495,
+ "fl_twobert_lo": 0.4567,
+ "fl_twobert_hi": 0.5317,
+ "fl_twobert_code": 0,
+ "fl_twobert_complete": 1,
+ "twobert_missing": 4,
+ "hl_vintage_matches": 300,
+ "hl_vintage_rate": 0.5133,
+ "hl_vintage_lo": 0.4567,
+ "hl_vintage_hi": 0.57,
+ "hl_vintage_code": 0,
+ "hl_vintage_complete": 1,
+ "hl_synergy_matches": 299,
+ "hl_synergy_rate": 0.5418,
+ "hl_synergy_lo": 0.4867,
+ "hl_synergy_hi": 0.594,
+ "hl_synergy_code": 0,
+ "hl_synergy_complete": 1,
+ "ll_vintage_matches": 0,
+ "ll_vintage_rate": null,
+ "ll_vintage_lo": null,
+ "ll_vintage_hi": null,
+ "ll_vintage_code": 9,
+ "ll_vintage_complete": 0,
+ "ll_ran": 0,
+ "verdicts": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  9
+ ],
+ "verdicts_valid": 1
+}

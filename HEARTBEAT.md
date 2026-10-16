@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T12:34:12-04:00
+- time: 2026-10-16T12:34:26-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J134 commands 4/4, 2400/2400 drafts, 2191.4/h, 7 worker(s), 1 core(s); J136 prepare, 0/4800 drafts, 1 worker(s), 7 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.71; memory 5.3/30.5 GB, swap 1905 MB, pressure 0% (lab budget 23.4 GB)
+- running: J136 prepare, 0/4800 drafts, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 9.06; memory 5.6/30.5 GB, swap 1905 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J137, J139
 - waiting: nothing
-- last finished: J133 done at 2026-10-16T11:21:34-04:00: cmp.pop.synergy.m.flatness.est 0.078 · cmp.pop.synergy_v1.m.flatness.est 0.075 · cmp.pop.omega.m.flatness.est 0 · cmp.pop.fair_fight.m.flatness.est 0.036 · cmp.pop.synergy_17.m.flatness.est 0.084 · cmp.drafts 600 · cmp.same_seeds 1
+- last finished: J134 done at 2026-10-16T12:34:25-04:00: jr.fl_vintage_rate 0.538 · jr.fl_vintage_code 0 · jr.fl_synergy_rate 0.528 · jr.fl_synergy_code 0 · jr.fl_twobert_rate 0.495 · jr.fl_twobert_code 0 · jr.hl_vintage_rate 0.513 · jr.hl_vintage_code 0 · jr.hl_synergy_rate 0.542 · jr.hl_synergy_code 0 · jr.ll_ran 0
 
 ## Messages
+
+- FOLLOW-UP READY [J134@2026-10-16T12:34:25-04:00] (the runner, for the cloud session): J134 is done; write and post the template morning-read. It decides: which of the lab's drafters (the lab drafter, Forge's ranks, the human-pick model and, if Justin approves the spend, Sonnet) a follow-up offers in ForgeCoach's Draft vs Bot, and whether the lab drafter stays the default; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J133@2026-10-16T11:21:34-04:00] (the runner, for the cloud session): J133 is done; write and post the template morning-read. It decides: which cube population tends towards the more balanced AI deck builds (Justin, 2026-10-15): a measurement for the owner and the cloud to read, not a switch. Ledger: LEDGER.md. Delete this line once posted.
 
