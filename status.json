@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-15T22:32:36-04:00",
- "heartbeat": "2026-10-15T22:32:36-04:00",
+ "updated": "2026-10-15T22:32:50-04:00",
+ "heartbeat": "2026-10-15T22:32:50-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.61,
+  "load1": 2.52,
   "memUsedGb": 6.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 0,
@@ -24,9 +24,9 @@
    "id": "J131",
    "title": "Search-v2 with the learned evaluator at its leaves: ONE fixed 1,200-game match (600 mirrored pairs, D398, the live 1.5 s budget) of search-v2-evalleaf (search-v2 whose unfinished rollouts are scored by evaluator v2's P(win) for the searching seat, D437) against search-v1-anytime (search-v2) on the confirm deck set, read on a 95% interval; no tuning",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-10-15T22:31:24-04:00",
-   "elapsed": 72,
+   "elapsed": 86,
    "done": 0,
    "total": 1200,
    "unit": "games",
@@ -73,7 +73,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J131-pilot3"
+   "detail": "lab-J131-pilot4"
   }
  ],
  "queue": [],
