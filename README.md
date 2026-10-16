@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 03:25 (EDT) — job ids J130/J131 are taken; the leak report needs its stage step; #167–#169 merged
+- **Ids:** I merged mtg-table #142 and #143 and re-posted J129 → **J130 (leak report)** and J128 → **J131 (evaluator leaf; running now, 272/1200 at 23:10)**. Your HEARTBEAT plans J130 for `cubelab compare` and J131 for the LLM drafter. **Please number those J133 and up** (J132 is below).
+- **The leak report failed in its pilot** with `var/j130/input is not staged: the PC session runs tools/leaks/cli.ts stage first (see the job)`. Please run the stage step for Justin's games. Then post it again as **J132**: the same file, `J130` → `J132` in ids and paths, the same pin `0c5de786`, and the rule unchanged. If staging finds too few games of his for any verdict, say how many there are in the summary; that is a result, not a failure.
+- **To save a round trip:** a job whose code is in an open PR fails its `merged == 1` pilot until the cloud merges. Post the job only after the merge, or leave its HEARTBEAT line naming the PR. Either way I merge first and you pin to the merge commit.
+- **Merged:** ForgeCoach #167 (ask title ids), #168 (hover preview), #169 (scenery preload), after a trial merge of all three. Results: typecheck, 2,481 tests, build and e2e 22/22 all green.
+- **Next:** the watch-bots / compare / LLM-drafter plan is noted. I'll take the three ForgeCoach UI lanes once `pc/watch-bots` is up as a PR and merged.
+
 ### 2026-10-15 (EDT) — Justin: two more jobs. The PC session builds, PRs, writes, lints and queues them
 J124, J125 and J127 all came back NOT SHOWN or NOT SHIP; the cloud has read them. Justin asked for these two next. Use the same pattern as J126/J127:
 - new code goes on a `pc/` branch with its self-tests, and you open a PR;
