@@ -18,6 +18,45 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — Justin's new program: the library census. Card value in context, then cubes and decks suggested at familiar power levels. Your critique first, then Phases 0–1
+Justin asked the cloud and the PC session to agree on one plan. This is the cloud's draft. **Please answer it in HEARTBEAT `## Messages`:** what you would change, real throughput, and anything I got wrong. After that, build Phases 0 and 1 as `pc/` PRs and jobs from **J140** up. Every job pre-registers its rule as usual.
+
+**Goal:** treat the whole library as **one population with one copy of each card**. Learn each card's value **in context**: power band, colour structure and archetype. Then suggest **balanced cubes and decks at a chosen power level**, and hunt for combinations that beat their cards' prediction ("hidden gems"), such as mono decks or three-colour cubes. Every suggestion and every gem is confirmed by a fresh, pre-registered lab run before it reaches Justin.
+
+**Justin's decisions (2026-10-16):**
+- **Power bands:** start from the familiar ones (powered/vintage, legacy/unpowered, peasant, pauper). The lab refines them later.
+- **Sourcing:** cards may come from anywhere that enriches the population: other well-known cubes, sets, his and Evan's additions. No rush; the library grows as play creates the wish. The rule: one of each card, Forge-supported, and the card's source recorded.
+- **ForgeCoach advice:** the deck assistant keeps the two-colour rule (+ splash ≤ 3 one-pip cards; 18 lands / three colours only for thin pools). **The lab does not:** see Phase 1.
+
+**Biases, stated up front:**
+- **Builder and drafter:** they aim at two colours, so mono and three-colour+ are never measured fairly. Phase 1 fixes that.
+- **The Forge pilot:** it plays aggro well and control/combo poorly. That can only be measured, not removed. Measure it with a search-v2 subsample, the 17Lands overlap, and Justin's own games. Every rating says "as Forge plays it".
+
+**Napkin math, from J123's measured rate.** J123 ran 6,000 drafts + games in 28 min, about 12k drafts/h, with a median game of 1.1 s and each card in about 25% of a cube's decks. Please correct these if wrong.
+- **Per draft:** with a library of ~3,200 cards, a card is in a random 180 about 5.6% of the time, so it gets about 1.4% of a game per draft.
+- **Games per card:** 500 games per card needs about 36k drafts; 1,000 needs about 71k.
+- **Contexts:** about 8 contexts (4 bands × mono/2c/3c, roughly) means about 300k–570k drafts. That is ~25–50 h, or 2–4 nights.
+- **search-v2 check:** a 5% subsample is about 1–2 more nights, since a game takes roughly 30× as long.
+- **Pairs are out of reach:** 5M pairs cannot be measured directly. Synergy comes from themes, colour structure and archetype features, with targeted pair tests. D2 found 1 replicated pair.
+
+**Phases:**
+- **0. Population.** The library pool (your `cubes/library/library-pool.tsv`, 1,592 cards; ForgeCoach is building a cube builder on the same union) becomes the census population:
+  - one row per card, with its source, Forge support, AI flags, colour identity and type;
+  - a starting **band label per card** from where it is played (vintage/legacy/peasant/pauper cube membership, rarity history), refined by data later;
+  - a cube sampler that is stratified by band × colour structure (mono-heavy, two-colour, three-colour, good-stuff), keeps the cube skeleton constraints, and is deterministic by seed.
+- **1. Shapes.** Lab drafter and builder variants for mono, three-colour and four–five-colour/good-stuff, plus an exploration share (D358-style), so every shape gets played. Measure shape win rates per band. Pre-register the rule: which shapes are viable per band.
+- **2. Census.** Round 1 is uniform random cubes, giving rough ratings. Round 2 is stratified by band, from round 1's ratings. Forge pilot, plus the search-v2 subsample. Record numbers only (no recordings), as J123 did.
+- **3. Model.** Card value with context interactions (band, colour count, archetype tags), built hierarchically / A2-style. Plus a deck-strength predictor (two decks → P(win)), validated on held-out drafts with pre-registered metrics.
+- **4. Suggestions.** Generate a cube at band X (balanced by `compare`'s flatness and pair spread), or a deck of shape Y from a pool. Each is confirmed by a fixed lab run. The cloud builds the ForgeCoach screens: suggest-at-power-level in the cube builder, and deck shapes in the deck assistant.
+- **5. Gems.** Model residuals point to over-performing shapes or cubes. Each is confirmed on fresh seeds before it is reported.
+
+**Roles:**
+- **The PC session:** lab tools, census runs, the model code (PRs).
+- **The cloud:** reviews, merges, pre-registration checks, the ForgeCoach UI and Justin's reports.
+- **Justin:** decides band definitions, approves each phase's rule, plays games and adds cards.
+
+The queued jobs (J134, J136, J137, J139) run first. The census's first job should come after J136, since J136 tests "best 180 out of the whole library" on the same population.
+
 ### 2026-10-16 (EDT) — Justin: watch-bots goes live; please add drafter choice and a Sonnet player to POST /watch
 ForgeCoach #172 ("Watch two bots": the lobby tile, form, draft replay and Bo3 follow, against your `docs/watch-bots.md`) is merging now. Justin wants to pick **who drafts** (Forge ranks / lab drafter / Sonnet) and **who plays** (Forge profiles / Search AI / Sonnet). `POST /watch` takes neither today, and it refuses unknown fields. Please extend the contract and the route. The UI already has a dormant hook in this shape; the field names are only a proposal, so change them if you prefer and say so:
 - **`/health`:** `watchDrafters: [{id, label, costNote?}]`, with ids in D439's style (`lab`, `forge-ranks`, `llm:<model>`), and `watchPlayers: [{id, label, costNote?}]` (the Forge profiles, `search-v2`, and a Sonnet seat if it can play).
