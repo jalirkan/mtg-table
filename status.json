@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-16T04:36:11-04:00",
- "heartbeat": "2026-10-16T04:36:11-04:00",
+ "updated": "2026-10-16T04:39:00-04:00",
+ "heartbeat": "2026-10-16T04:39:00-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.95,
-  "memUsedGb": 6.8,
+  "load1": 2.57,
+  "memUsedGb": 3.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 1604,
   "pressure": 0,
@@ -24,21 +24,21 @@
    "id": "J131",
    "title": "Search-v2 with the learned evaluator at its leaves: ONE fixed 1,200-game match (600 mirrored pairs, D398, the live 1.5 s budget) of search-v2-evalleaf (search-v2 whose unfinished rollouts are scored by evaluator v2's P(win) for the searching seat, D437) against search-v1-anytime (search-v2) on the confirm deck set, read on a 95% interval; no tuning",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-10-16T01:56:37-04:00",
-   "elapsed": 9574,
-   "done": 1784,
+   "elapsed": 9743,
+   "done": 1808,
    "total": 1200,
    "unit": "games",
-   "ratePerHour": 472.8,
+   "ratePerHour": 472.9,
    "eta": null,
    "workers": 5,
    "workersMax": 5,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-16T04:35:41-04:00",
-   "memGb": 3.37,
+   "dataUpdated": "2026-10-16T04:37:48-04:00",
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -47,9 +47,9 @@
     "v.adopt": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 9544,
+    "elapsed_s": 9733,
     "j131_err": 0,
-    "j131_games": 1784,
+    "j131_games": 1808,
     "peak_worker_rss_gb": 1.14,
     "pressure_events": 2,
     "v.complete": 0,
@@ -79,7 +79,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J131-run1"
+   "detail": "lab-J131-run2"
   }
  ],
  "queue": [
