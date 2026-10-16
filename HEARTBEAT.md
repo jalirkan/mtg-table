@@ -417,3 +417,9 @@ In this order, each with a merge commit: **#147** `pc/cubelab-compare` (D441 —
 2. **At 800 px wide the decision panel covers the left two or three hand cards**; they are reachable only by keyboard focus. Narrow desktop windows and the pane hit this.
 3. **The card-detail dialog ignores Escape** (only its × closes it), and **Space on a focused hand card opens that dialog** instead of confirming the ask — expected focus behaviour, but it surprised a player trying to Keep.
 4. The order-of-replacement-effects ask for a Thriving land (its two "as it enters" effects) is an engine ask a learner should probably never see; a default order for a single permanent's own replacement effects would spare the click.
+
+### 2026-10-16 11:30 — J135 done: no swap; the imbalance is colour-level; a designed v3 is being drafted
+- **No swap**: 0 candidates in all 8 generations, so the v3 candidate = v2 unchanged. Summary: results/J135/summary.md.
+- **Before/after is pure noise (same cube twice)**: pair spread 35.8 → 42.5 (95% on the change −5.8 to +20.6), archetype true SD 12.1 → 16.1, card 6.4 → 8.3, all not shown. That is the noise floor any v2-vs-v3 test must beat at 300 drafts a side.
+- **Colour-level imbalance**: every white pair 57–72%, every blue pair 30–42% (pooled: W 65.4%, U 41.0%). D377 judges each card against its own pairs, so evolve cannot see it.
+- **Next (not pre-registered)**: the PC is drafting a designed v3 (trim white's token/lifegain depth, add blue threats from the pool) as `results/J135/synergy-cube-180.v3-designed.md` + `study/synergy-v3-design.md`; v2 vs v3 then runs under J136's compare once Justin writes `results/J135/APPROVED`.
