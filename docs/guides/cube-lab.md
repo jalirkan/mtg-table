@@ -8,7 +8,7 @@ and the raw data behind it, every pick with the cards that were on offer, for
 a drafting AI or a play AI to learn from later. No tokens, no network: Forge
 plays every game.
 
-The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md); what
+The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md), and [D439](../decisions/D439-cube-population-compare.md) for *Comparing cube populations*; what
 was measured is [`docs/evidence/cube-lab.md`](../evidence/cube-lab.md).
 
 ## One command
@@ -1121,6 +1121,78 @@ D375's profile mix (whose lines also carry their seats' `profiles`). Before a
 that folder's first chunk will, and stops on a refusal; `queue check`, with the
 same flags as the run, does only that and writes nothing (a job's pilot runs it
 on the real root).
+
+## Comparing cube populations: `compare` (D439)
+
+Which cube, or which version of one, makes the AIs draft the more balanced decks? `compare`
+plays two to six **populations** on the same seeds and measures each one the same way, with
+intervals:
+
+```bash
+tools/cubelab.sh compare cubes/synergy-cube-180.md cubes/omega-cube-180.md cubes/fair-fight-cube-180.md \
+    --variant syn17=cubes/synergy-cube-180.md,weight.sixteenLandsAt=0 \
+    --drafts 600 --games 3 --jobs 4 --seed 801330001 --out var/cubelab/compare/four
+tools/cubelab.sh compare ... --no-run          # the measures again from the run folders, no engine
+```
+
+- **A population** is a cube file (its name is the file's, `fair-fight-cube-180.md` → `fair_fight`)
+  or a `--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...`: the same cube on other
+  ratings or weights (`weight.sixteenLandsAt=0` makes the builder play 17 lands whenever its
+  first pass can), or another cube file under a name of your choosing. Each cube reads its own
+  ratings file beside it, as `run` does; a population's run takes `ratings=` instead.
+- **Each population is an ordinary `run`** into `<out>/runs/<name>/`, one after another, with
+  `--drafts`, `--seed`, `--games`, `--jobs` and every other `run` flag you pass (`--profiles`,
+  `--game-timeout`, `--weight` for all of them). It resumes like any run: the same line again skips
+  the drafts already played. `--bridge`, `--play-explore`, `--deckset`, recording and a global
+  `--ratings` are refused. The default seed is 800,000,001, in the verification range (*Seeds and
+  versions*, above); give a fresh block per comparison.
+- **The same seeds, asserted.** Before measuring, every population must hold exactly the same
+  seeds (and, unless `--no-run` without `--drafts`, exactly the block asked for); otherwise it
+  stops and names the seeds one has and another lacks. Two variants of one cube therefore draft
+  the very same deals.
+
+**The measures** (pre-registered in D439; every one per population):
+
+| id | what | unit |
+|---|---|---|
+| `flatness` | the noise-corrected spread (true SD) of the cards' win rates: ForgeCoach's `flatness.ts` exactly, over cards with 10+ decisive games (`tools/cubelab/flatness.ts` is the port; the cards are counted as `meta.json` counts them, lands included) | points |
+| `pair_spread` | max − min win rate over the two-colour pairs with `--min-pair-games` (30) decisive games | points |
+| `pair_within5` | the share of those pairs within 5 points of 50% | % |
+| `draw_rate`, `timeout_rate` | draws (timeouts are draws) and timeouts per game | % |
+| `game_turns` | mean turns a game | turns |
+| `lands`, `colours` | the played decks' mean land count; mean colours (main colours + splash) | |
+| `two_colour`, `splash` | the share of played decks with exactly two main colours (splash or not); with a splash | % |
+| `first_pick_top10` | of every card in the first line taken from each grid (evolve's first-line count), the share held by the 10 cards most often there | % |
+
+**Intervals.** 95%, percentile, from a **draft-clustered bootstrap** (`--boot 1000` replicates,
+`--boot-seed 1`): a replicate draws the seeds with replacement and takes each drawn seed's whole
+draft — both decks, every game — in every population at once, so each pairwise difference is
+paired. The replicates of `flatness`, `pair_spread` and `first_pick_top10` are recentred on their
+estimate first: a resample makes those three larger whatever the truth (it carries the games'
+noise twice; it duplicates drafts into a max and a top 10), and without the recentring a
+flat cube's flatness interval can lie wholly above its own estimate of 0.
+
+**Verdicts only by rule.** Without `--rule` there is no verdict: each measure's table ranks the
+populations (1 = lowest) with their intervals and lists the pairwise differences whose interval
+excludes 0. `--rule flatness:lower-better:margin=1.0` (repeatable, one per measure) adds one line:
+A beats B when A is better by more than the margin, in the measure's unit (points for rates and
+shares), **and** the difference's interval excludes 0.
+
+**What it writes.** `<out>/compare.json` is strict JSON with numbers only — no strings, arrays,
+NaN or infinities; a measure that could not be measured is an absent key — so a lab job's `sh:`
+metrics read it flat: `same_seeds`, `drafts`, `populations`, `pop.<name>.m.<measure>.{est,lo,hi,valid}`,
+`pop.<name>.flatness_detail` (ForgeCoach's own chi-square interval `fc_lo`/`fc_hi`, the cards it
+read, the design effect), `diff.<a>.<b>.<measure>.{est,lo,hi,excludes_zero}` (a listed before b),
+`rank.<measure>.<name>`, and with rules `verdict.<measure>.<a>.<b>` (1 a beats b, −1 b beats a, 0
+neither). `<out>/compare.md` is the same as tables, with each population's cube, sha, ratings,
+weights and run folder.
+
+**Reading it.** Card flatness needs drafts: a 180-card cube's typical card plays about 0.6
+decisive games a draft at best of three (two decks of some 25 nonbasic cards, about 2.3 games a
+match), so a few hundred at 600 drafts, while at 6 drafts no card has 10 and the measure is absent. `pair_spread` and
+`first_pick_top10` are biased upward by small samples, the same way in populations of the same
+size, so read their differences rather than their levels. The AI drafts and plays every game:
+a balanced cube here is one Forge's AI finds balanced.
 
 ## What it does not do
 
