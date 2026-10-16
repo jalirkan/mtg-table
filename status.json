@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-16T02:18:45-04:00",
- "heartbeat": "2026-10-16T02:18:45-04:00",
+ "updated": "2026-10-16T02:19:17-04:00",
+ "heartbeat": "2026-10-16T02:19:17-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 0.44,
+  "load1": 0.47,
   "memUsedGb": 10,
   "memTotalGb": 30.5,
   "swapUsedMb": 1692,
@@ -26,17 +26,17 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-16T01:56:37-04:00",
-   "elapsed": 1328,
+   "elapsed": 1360,
    "done": 736,
    "total": 1200,
    "unit": "games",
    "ratePerHour": 325.4,
-   "eta": "2026-10-16T03:44:18-04:00",
+   "eta": "2026-10-16T03:44:50-04:00",
    "workers": 5,
    "workersMax": 5,
    "cores": 7,
    "errors": null,
-   "paused": true,
+   "paused": false,
    "dataUpdated": "2026-10-16T02:14:34-04:00",
    "memGb": 5.5,
    "live": {
@@ -71,23 +71,28 @@
      "kind": "playing",
      "workers": 5,
      "pressure": 0
+    },
+    {
+     "at": "2026-10-16T02:19:17-04:00",
+     "kind": "play-ended",
+     "workers": 5,
+     "pressure": 0
     }
    ],
    "detail": "lab-J131-run1"
   }
  ],
- "queue": [],
- "waiting": [
+ "queue": [
   {
    "publicTitle": "Leak report from my own games",
    "publicEst": "~1-2 h",
    "id": "J132",
    "title": "A3, the leak report: Justin's recurring mistakes in his own recorded games. Every decision of his seat that the post-game review covers (main-phase plays, attacks, blocks, targets) is graded by coach-grade.sh review in pool mode (D348), put into one kind by what he chose and what he saw, and judged by a rule written before grading (D438): a mistake is a regret interval above zero; a leak is at least 5 mistakes in at least 3 games with a mean regret whose 95% interval is above zero; everything else \"not shown\"",
-   "reason": "held",
-   "est": "~1-1.5 h. The pilot ~3-5 min (the tests ~1 s, the inventory ~2 s, one 6-decision game reviewed at small budgets ~30-60 s on 3 workers). The run: 7 games with decisions (2 more are skipped as empty in seconds), one at a time on 7 JVMs: per game ~10 s of JVM boot, the triage at 6 s a decision over 7 JVMs (<= ~40 s for the 40-decision game), then the deepening of every decision the triage did not call best, inside 600 s of wall (~10 s boot), the report ~5 s: <= ~11.5 min a game, ~1-1.4 h for 7 (measured: 21 s for the 6-decision game at small budgets). The aggregate and verify: seconds (10 kinds x 10,000 resamples over ~150 decisions)",
-   "detail": "Justin is playing"
+   "cpu": "heavy",
+   "est": "~1-1.5 h. The pilot ~3-5 min (the tests ~1 s, the inventory ~2 s, one 6-decision game reviewed at small budgets ~30-60 s on 3 workers). The run: 7 games with decisions (2 more are skipped as empty in seconds), one at a time on 7 JVMs: per game ~10 s of JVM boot, the triage at 6 s a decision over 7 JVMs (<= ~40 s for the 40-decision game), then the deepening of every decision the triage did not call best, inside 600 s of wall (~10 s boot), the report ~5 s: <= ~11.5 min a game, ~1-1.4 h for 7 (measured: 21 s for the 6-decision game at small budgets). The aggregate and verify: seconds (10 kinds x 10,000 resamples over ~150 decisions)"
   }
  ],
+ "waiting": [],
  "finished": [
   {
    "publicTitle": "Synergy cube evolve for balance",
