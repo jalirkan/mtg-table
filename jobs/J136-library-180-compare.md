@@ -1,5 +1,5 @@
 id: J136
-title: The best 180 out of the whole library -- four candidate cubes (Omega, library hits by lab rating, a seeded random control, Synergy: J135's v3 candidate if Justin approved it, else ForgeCoach's v2) compared on D439's measures: 400 grid drafts each on one seed block (836,000,001-836,000,400), then each evolved 2 generations x 200 drafts from the 1,592-card library pool (Omega with its own notes; the others cut the Power Nine, Sol Ring and Library of Alexandria wherever present and never add Omega's other 43 design exclusions; exploration on), then the four evolved cubes compared on a fresh block (836,100,001-836,100,400); best of three, Default vs Default, unrecorded; no verdict rule
+title: The best 180 out of the whole library -- four candidate cubes (Omega, library hits by lab rating, a seeded random control, ForgeCoach's Synergy v2) compared on D439's measures: 400 grid drafts each on one seed block (836,000,001-836,000,400), then each evolved 2 generations x 200 drafts from the 1,592-card library pool (Omega with its own notes; the others cut the Power Nine, Sol Ring and Library of Alexandria wherever present and never add Omega's other 43 design exclusions; exploration on), then the four evolved cubes compared on a fresh block (836,100,001-836,100,400); best of three, Default vs Default, unrecorded; no verdict rule
 public_title: Best 180 from the whole library: four candidate cubes compared
 public_est: ~5-7 h
 public_decides: Which way of choosing 180 library cards drafts more balanced AI decks
@@ -54,15 +54,12 @@ ratings file beside it, Omega included -- so the comparison is of the lists):
   and 2 others, Omega's curve, every count exact).
 - `random`: `cubes/library/random-180.md`, the control: every supported card keyed by `rng(180)` under the
   same skeleton; legal, colour-balanced, unselected.
-- `synergy`: J135's proposed v3, `results/J135/synergy-cube-180.v3-candidate.md` on pc-results, **only if**
-  that file AND the marker `results/J135/APPROVED` are both on `origin/pc-results` in the runner's pc-results
-  worktree (`/home/justin-a/code/lab/pc-results`, docs/guides/lab-runner.md's *On the PC*) when the pilot runs;
-  the PC session creates APPROVED only on Justin's word. Otherwise ForgeCoach's Synergy v2, copied from the
-  pinned ForgeCoach clone exactly as J135 copies it and checked against its sha256 (8cb5e5f0...806c36). Never
-  mtg-table main's `cubes/synergy-cube-180.md`, which is still version 1. The pilot copies the one it chose to
-  `var/lab-j136/cubes/` and records it (`var/lab-j136/synergy-cube.txt`, the pc-results commit in
-  `synergy-source.txt`; metric `syn.v3`); every stage uses that one file. The population is named `synergy`
-  either way. PR #146's `cubes/library/synergy-v2-180.md` (the same v2 list) is not read.
+- `synergy`: ForgeCoach's Synergy Cube v2 and nothing else: `public/cubes/synergy-cube-180.md` from the pinned
+  ForgeCoach clone (3e3b007b), copied exactly as J135 copies it and checked against its sha256
+  (8cb5e5f0...806c36) to `var/lab-j136/cubes/synergy-v2-cube-180.md`; every stage uses that file
+  (`var/lab-j136/synergy-cube.txt` names it). Never mtg-table main's `cubes/synergy-cube-180.md`, which is still
+  version 1. PR #146's `cubes/library/synergy-v2-180.md` (the same v2 list) is not read. v2 against a v3 is J137's
+  question, not this job's.
 
 **Stage 1, the baseline.** `compare` on the four, 400 drafts each, seeds 836,000,001-836,000,400 (D340's
 verification range; no job in `jobs/` uses 836M), best of three -> `baseline.json`, `baseline.md`.
@@ -114,21 +111,12 @@ git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j136/merged.tx
 grep -q "case 'compare'" tools/cubelab/cli.ts && echo 1 > var/lab-j136/has-compare.txt || echo 0 > var/lab-j136/has-compare.txt
 cat var/lab-j136/merged.txt var/lab-j136/has-compare.txt
 node --test web/test/cubelab-library.test.ts web/test/cubelab-compare.test.ts
-# Synergy: J135's v3 candidate only when Justin approved it (results/J135/APPROVED), else ForgeCoach's v2 (J135's copy).
-PCR=/home/justin-a/code/lab/pc-results
+# Synergy: ForgeCoach's v2 from the pinned clone, as J135 copies it, checked by sha256. Nothing else.
 mkdir -p var/lab-j136/cubes
-rm -f var/lab-j136/cubes/synergy-*.md
-if git -C "$PCR" cat-file -e origin/pc-results:results/J135/APPROVED 2>/dev/null \
-   && git -C "$PCR" cat-file -e origin/pc-results:results/J135/synergy-cube-180.v3-candidate.md 2>/dev/null; then
-  git -C "$PCR" show origin/pc-results:results/J135/synergy-cube-180.v3-candidate.md > var/lab-j136/cubes/synergy-v3-cube-180.md
-  echo "pc-results $(git -C "$PCR" rev-parse origin/pc-results) results/J135/synergy-cube-180.v3-candidate.md (APPROVED)" > var/lab-j136/synergy-source.txt
-  echo var/lab-j136/cubes/synergy-v3-cube-180.md > var/lab-j136/synergy-cube.txt
-else
-  cp {ForgeCoach}/public/cubes/synergy-cube-180.md var/lab-j136/cubes/synergy-v2-cube-180.md
-  echo "8cb5e5f0827a3fc2563a3d15950aad237816b654f9a1baa400ebb2ba9c806c36  var/lab-j136/cubes/synergy-v2-cube-180.md" | sha256sum -c
-  echo "ForgeCoach $(git -C {ForgeCoach} rev-parse HEAD) public/cubes/synergy-cube-180.md (v2; no approved v3 on pc-results)" > var/lab-j136/synergy-source.txt
-  echo var/lab-j136/cubes/synergy-v2-cube-180.md > var/lab-j136/synergy-cube.txt
-fi
+cp {ForgeCoach}/public/cubes/synergy-cube-180.md var/lab-j136/cubes/synergy-v2-cube-180.md
+echo "8cb5e5f0827a3fc2563a3d15950aad237816b654f9a1baa400ebb2ba9c806c36  var/lab-j136/cubes/synergy-v2-cube-180.md" | sha256sum -c
+echo "ForgeCoach $(git -C {ForgeCoach} rev-parse HEAD) public/cubes/synergy-cube-180.md (v2, sha256 OK)" > var/lab-j136/synergy-source.txt
+echo var/lab-j136/cubes/synergy-v2-cube-180.md > var/lab-j136/synergy-cube.txt
 cat var/lab-j136/synergy-source.txt
 SYN=$(cat var/lab-j136/synergy-cube.txt)
 head -1 "$SYN"
@@ -250,8 +238,7 @@ node -e '
     if (/^cards listed\s+180$/m.test(t) && /^in Forge.s DB\s+180$/m.test(t) && /^unsupported\s+0$/m.test(t)) ok++;
     listed++;
   }
-  const v3 = fs.readFileSync("var/lab-j136/synergy-cube.txt", "utf8").includes("synergy-v3") ? 1 : 0;
-  fs.writeFileSync("var/lab-j136/pilot-cubes.json", JSON.stringify({ cubes: listed, cubes_ok: ok, v3 }) + "\n");
+  fs.writeFileSync("var/lab-j136/pilot-cubes.json", JSON.stringify({ cubes: listed, cubes_ok: ok }) + "\n");
 '
 cat var/lab-j136/pilot-cubes.json
 ```
@@ -343,7 +330,7 @@ check: pe.timeouts <= 3
 check: pe.recorded_games == 0
 
 The pilot asks whether anything is broken: the pin is on origin/main and holds `compare`; the POWER (11) and NEVER-ADD (43) lists are together exactly
-Omega's 54 cut rows, POWER holding the Power Nine, Sol Ring and Library of Alexandria; Synergy is the approved v3 or J135's sha-checked v2; the library and
+Omega's 54 cut rows, POWER holding the Power Nine, Sol Ring and Library of Alexandria; Synergy is ForgeCoach's sha-checked v2; the library and
 compare tests pass on it; all four cubes are 180 cards that Forge 2.0.14 has and supports; the baseline
 compare ran the four populations on the same four seeds and wrote strict JSON; each population evolved one
 generation from the library pool (each evolve folder's latest cube is where stage 3 reads it); and the
@@ -355,14 +342,12 @@ Dry runs (2026-10-16, user-namespace sandbox, 2 workers, `--pilot-only --max-sec
 merge of PR #146's d40ad1c0 and `pc/cubelab-compare`, 3fc81069, never pushed; ForgeCoach overlaid from a
 checkout holding 3e3b007b's unchanged v2). pilot1 ok in 21 s, pilot2 123 s, pilot3 119 s, pilot4 72 s. Every
 pilot check passed except `merged == 1`, which can't pass on a local merge. Synergy came from ForgeCoach
-(sha256 OK; no APPROVED on origin/pc-results). The notes: hits 11 POWER + 42 NEVER-ADD (Minsc & Boo left in);
+(sha256 OK). The notes: hits 11 POWER + 42 NEVER-ADD (Minsc & Boo left in);
 random 11 + 40 (Flash, Archon of Cruelty, Nadu left in); synergy 11 + 41 (Archon of Cruelty, Faithless Looting
 left in). Generation 1's only note-cuts were hits' Ancestral Recall, Time Walk, Mox Emerald and Mox Jet (random's
 Mox Jet likewise); Synergy had none. `notes.mjs check` on the evolved pilot cubes gave power_found 0,
 never_added 0 and never_kept 6 (the six left in). As a negative control it reports 5 POWER and 4 NEVER-ADD
-when the unevolved hits and random are checked as if evolved from Omega. The v3 branch of the Synergy step was
-run by hand against a throwaway pc-results repository: a candidate without APPROVED -> v2, a candidate with
-APPROVED -> v3. An earlier full dry run (`--max-seconds 120`, before the notes) cut stages 1 and 2 at 120 s
+when the unevolved hits and random are checked as if evolved from Omega. An earlier full dry run (`--max-seconds 120`, before the notes) cut stages 1 and 2 at 120 s
 with no error and refused stage 3 for want of stage 2's cubes, as a cut-short dry run must. The swaps
 tabulation was run by hand on the pilot's folders.
 
@@ -514,7 +499,7 @@ collect: var/lab-j136/out/synergy-source.txt
 collect: var/lab-j136/out/notes-check.json
 
 summary.md (the PC session's; the job's own outputs are the files above):
-- Which Synergy ran (`synergy-source.txt`: the approved v3 from pc-results, or ForgeCoach's v2), and the pin.
+- The Synergy source (`synergy-source.txt`: ForgeCoach's v2 and its commit) and the pin.
 - The baseline table and the final table, each measure group by group: the four estimates with their 95%
   intervals in rank order, and every pairwise difference whose interval excludes 0 with its size and
   interval. Say how many colour pairs each population had with 30+ decisive games (compare.md's line under
