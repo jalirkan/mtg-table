@@ -9,9 +9,9 @@ pilot_cores: 3
 max_workers: 7
 mem_per_worker_gb: 2
 after: J136
-repos: mtg-table@bf88d0f1 (the head of branch pc/deck-census, mtg-table PR #154, D447; RE-PIN to the commit on origin/main that merges #154 before posting: the pilot fails on merged == 1 until then)
+repos: mtg-table@c69efe17 (the head of branch pc/deck-census, mtg-table PR #154, D447, after the #154 review's fixes and the merge of main at 58de1637; RE-PIN to the commit on origin/main that merges #154 before posting: the pilot fails on merged == 1 until then)
 decides: nothing by itself. It is the census's first data: how win rate moves across the colour spectrum in each band, and each card's rate in context, for Justin to read and for Phase 3's model to learn from. Any surprise is a candidate until it holds on fresh seeds (D447 point 9)
-hypothesis: none to confirm, and none is tested. Read the Forge pilot's known bias first: it plays aggro well and control poorly. Uniform draws with no curve rule give clunky decks, more so in legacy, whose pool's mean mana value is high (most legacy decks land on 18 lands), so the band rates are rates of random decks as Forge plays them, not of built decks. Within a band every decisive game is one win and one loss, so the band's own rate is 0.5 by construction and the bins are read against it
+hypothesis: none to confirm, and none is tested. Read the Forge pilot's known bias first: it plays aggro well and control poorly. Uniform draws with no curve rule give clunky decks, more so in legacy, whose pool's mean mana value is high (most legacy decks land on 18 lands), so the band rates are rates of random decks as Forge plays them, not of built decks: every rate and every card value is "in a random deck of this makeup" (D447 point 10). Within a band every decisive game is one win and one loss, so the band's own rate is 0.5 by construction and the bins are read against it
 rule: D447, written 2026-10-16 before any census game. The prior, the draw, the land formula, castability, the bands, the pairing and the read are the decision's points 1-8. There is no verdict rule and no label beyond the bins. Point 9 is the confirmation rule: any difference reported (a bin, a card, a combination) is a candidate until it holds on a fresh deck seed and a fresh game seed under the same method, read on the same interval
 followup: morning-read
 est: ~7 h at the engine smoke's CPU cost (2.2 CPU-seconds a game: about 11,400 games an hour on 7 cores), ~9.2 h at its loaded rate (2,472 games an hour on 2 workers beside J136's 7, so 1,236 a worker); plus ~10 min of pilot and ~2 min to read. 80,000 games is sized to that: one night
@@ -31,7 +31,8 @@ metrics: sp = sh: cat var/lab-j140/out/spectrum.json 2>/dev/null || echo '{"game
 metrics: strict = sh: python3 -c "import json,sys; json.load(open('var/lab-j140/out/spectrum.json'), parse_constant=lambda c: sys.exit(1)); print(1)" 2>/dev/null || echo 0
 metrics: cards = sh: test -s var/lab-j140/out/cards.tsv && echo $(($(wc -l < var/lab-j140/out/cards.tsv) - 1)) || echo 0
 metrics: gz = sh: test -s var/lab-j140/out/census-games.jsonl.gz && gzip -dc var/lab-j140/out/census-games.jsonl.gz | wc -l || echo 0
-headline: played, engine_errors, sp.bands.pauper.byColours.1.wr, sp.bands.peasant.byColours.1.wr, sp.bands.legacy.byColours.1.wr, sp.bands.powered.byColours.1.wr, cards
+metrics: redraws = sh: python3 -c "import json; print(json.dumps({b: json.load(open(f'var/lab-j140/decks/{b}/decks.json')).get('rejections') for b in ['pauper', 'peasant', 'legacy', 'powered']}))" 2>/dev/null || echo '{}'
+headline: played, engine_errors, redraws.pauper, redraws.peasant, redraws.legacy, redraws.powered, sp.bands.pauper.byColours.1.wr, sp.bands.peasant.byColours.1.wr, sp.bands.legacy.byColours.1.wr, sp.bands.powered.byColours.1.wr, cards
 
 **Why (Justin, 2026-10-17 01:30, `pc-results/HEARTBEAT.md`).** The census is there to learn how the cards
 play with each other, so that better decks and cubes can be built. Hand-written shapes, lean rules and land
@@ -47,11 +48,11 @@ afterwards, never enforced.
 | | rule |
 |---|---|
 | prior | k colours uniform on 1-5; a uniform k-subset of WUBRG; shares a flat Dirichlet(1, ..., 1), so a two-colour makeup's main share is uniform on [0.5, 1] |
-| draw | 25 spells without replacement. A card is eligible when every printed colour is a makeup colour and every cost symbol can be paid. A draw is colourless at the band pool's own colourless share (pauper 8.4%, peasant 10.3%, legacy 11.4%, powered with legacy 12.9%), else a colour by the shares and a uniform eligible card of it. 10% of draws are cross-band, from the neighbouring bands. No rating, no curve |
-| lands | L = clamp(17 + round(2 x (m - 3)), 15, 18), m the mean mana value of the first 23 spells drawn; the deck keeps the first 40 - L spells. F = min(supply, round(L x (1 - s_max))) fixers making 2+ of the pip colours, uniform, band then FILL. The rest are basics: each colour first gets the sources its most demanding spell needs, then the rest go by pip share |
-| castability | every spell castable from the deck's own lands, or the deck is redrawn and the rejection counted |
+| draw | 25 spells without replacement. A card is eligible when every printed colour is a makeup colour and every cost symbol can be paid (Forge's own tokens: hybrid `GW` either colour, Phyrexian `BP` and two-brid `2W` always, a split card both faces). A draw is colourless at the band pool's own colourless share (pauper 8.4%, peasant 10.3%, legacy 11.4%, powered with legacy 12.9%), else a colour by the shares and a uniform eligible card of it. 10% of draws are cross-band, from the neighbouring bands. No rating, no curve: beyond its colours a deck is a pure draw from the pool, so its creatures, curve, X spells and card flow are what the draw gave, recorded per deck (D447 point 2) |
+| lands | L = clamp(17 + round(2 x (m - 3)), 15, 18), m the mean mana value of the first 23 spells drawn; the deck keeps the first 40 - L spells. F = min(supply, round(L x (1 - s_max))) fixers that can make 2+ of the pip colours, uniform, band then FILL. The rest are basics: each colour first gets the sources its most demanding spell needs, then the rest go by pip share. A fetcher or cycler is a source only of the colours of the deck's lands it can find. Mono-coloured utility lands are never drawn, so there is no census data on utility lands |
+| castability | every spell castable from the deck's own lands, or the deck is redrawn and the rejection counted (the weak-deck tail, D447 point 4); the tests check it with an independent checker over 400 decks a band |
 | bands | census.tsv's (D445), exclusive; powered (37 eligible cards) is one pool with legacy (about 1.5 powered cards a deck), its cross slice from peasant |
-| pairing | within a band; consecutive pairs of seeded permutations, so with 2,500 decks and 20,000 games each deck plays exactly 16; game g's seed is S x 1,000,000 + g and fixes the first player |
+| pairing | the one frozen pairing rule (D447 point 6): within a band, consecutive pairs of seeded permutations, so with 2,500 decks and 20,000 games each deck plays exactly 16, plus the 10% cross-band slice inside each deck; game g's seed is S x 1,000,000 + g and fixes the first player (half the games each side, not balanced per deck: `first` is on every row). The night's seeds are fixed here: decks and games 1401-1404 (pauper, peasant, legacy, powered), the pilot's games 1491-1494 |
 | games | Bo1, Forge's Default AI on both sides (`plain`), numbers only, no recordings |
 
 **Sizes.** Per band, 2,500 decks x 16 games / 2 = 20,000 games; 80,000 in all. The 10% cross-band slice
@@ -64,13 +65,28 @@ hour on 7 cores, so ~7 h; the loaded rate gives ~9.2 h.
 **Outputs** (`var/lab-j140/out/`):
 - `census-games.jsonl.gz`: every game row of the four bands. Each row holds both deck ids, the seed, the
   pilots, the winner, the first player, turns, ms, timeout and errors.
-- `census-decks.jsonl.gz`: the four bands' `decks.jsonl`, with every deck's 40 cards and realised profile.
+- `census-decks.jsonl.gz`: the four bands' `decks.jsonl` (version 2), with every deck's 40 cards, realised
+  profile and its variables, so the model can tell a card's value from a deck that happened to cohere:
+  - the colour shares (`profile.pipShare`, each colour's share of the pips) and the number of colours
+    (`nColours`; also `profile.coloursWith3` and the prior's `makeup.k`);
+  - the creature count (`creatures`);
+  - the mean mana value (`avgMv`) and the curve (`mvHist`: mana values 0, 1, 2, 3, 4, 5, 6+);
+  - the X-spell count (`xSpells`);
+  - the card-flow count (`cardFlow`, by #153's oracle-text rule: 40 library cards, the study's 17 among
+    them);
+  - the fixer count (`fixers`, and `fixersReal`: those that reach two of its colours) and the land count
+    (`lands`);
+  - the rejected draws before it (`rejections`, `makeupRedraws`).
   The game rows name decks by id, so this is the other half of the data.
 - `spectrum.json` and `spectrum.md`: per band, the win rate by colours with 3+ spells, by the prior's k and
-  by main-colour pip share, with deck-clustered bootstrap intervals.
-- `cards.tsv`: one row per band and card, with its rate when in the deck, shrunk, and the deck-profile
-  context.
-- `counts.json`: the four decks.json manifests and the four census-play tallies.
+  by main-colour pip share, with deck-clustered bootstrap intervals, and the weak-deck tail (`redraws`).
+  `spectrum.md` opens with "in a random deck of this makeup".
+- `cards.tsv`: one row per band and card, with its rate when in the deck, shrunk, and the means over its
+  deck-games of every variable above (`main_share`, `colours_with3`, `n_colours`, `makeup_k`, `lands`,
+  `avg_mv`, `mv0`-`mv6p`, `creatures`, `x_spells`, `card_flow`, `fixers`, `fixers_real`,
+  `share_w`-`share_g`, `redraws`) and of the opponent's main share and colours.
+- `counts.json`: the four decks.json manifests (with the variables' means and the summed curve) and the
+  four census-play tallies.
 
 Never `summary.md` or `metrics.json`: those names are the runner's and the PC session's.
 
@@ -183,6 +199,21 @@ mount namespace sandbox, against the PR worktree at bf88d0f1, beside the running
   (pauper's `games.jsonl` held fewer than 20,000 lines), as a cut-short dry run must.
 - `tools/runner.sh check`: lint clean, machine-checked.
 
+Re-checked 2026-10-16 at c69efe17 (the review's fixes), outside the runner, so not a dry run:
+- The pilot's 10,000 decks (`decks`, seeds 1401-1404, 2,500 a band) are 40 cards and castable, and every
+  deck check above holds: k 466-559 a band; < 0.4 main share 316-407, 0.9-< 1.0 64-96, mono 493-567; five
+  colours with 3+ spells each 56-142; the cross-band slice 2.22-2.36 spells a deck.
+- The weak-deck tail is 0 rejected draws and 0 new makeups in every band at these seeds: no deck's first
+  draw was uncastable. It is reported all the same.
+- The deck variables' means a band (pauper, peasant, legacy, powered): creatures 12.3 / 13.1 / 14.3 /
+  13.9; card flow 1.33 / 0.28 / 0.12 / 0.20 (1+ in 64% / 24% / 11% / 17% of decks); X spells 0.44 /
+  0.25 / 0.69 / 0.66; fixers 5.3 / 6.1 / 6.1 / 6.2, of them reaching two colours 5.1 / 6.0 / 6.1 / 6.2.
+- One engine smoke beside J136: 40 legacy decks, 100 games on 2 workers in 136 s (2,654 games an hour),
+  100 decisive, 0 engine errors; census-read strict over them.
+- The tests (`cubelab-deck-census.test.ts`, now 17 with an independent castability checker over 400 decks
+  a band, and every cubelab suite, 235) pass on the branch. The deck-census suite fails without Forge's
+  card scripts, which the runner's checkout has (config.json's jar).
+
 ## Commands
 ```bash
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J140
@@ -211,7 +242,7 @@ for b in ['pauper', 'peasant', 'legacy', 'powered']:
     d.pop('rules', None)
     doc[b] = {'decks': d, 'games': json.load(open(f'var/lab-j140/games/{b}/census-play.json'))}
 json.dump(doc, open('var/lab-j140/out/counts.json', 'w'), indent=2)
-print(json.dumps({b: {'decks': doc[b]['decks']['count'], 'rejections': doc[b]['decks']['rejections'], 'games': doc[b]['games']['games'], 'engineErrors': doc[b]['games']['engineErrors']} for b in doc}))
+print(json.dumps({b: {'decks': doc[b]['decks']['count'], 'rejections': doc[b]['decks']['rejections'], 'makeupRedraws': doc[b]['decks']['makeupRedraws'], 'decksRedrawn': doc[b]['decks'].get('decksRedrawn'), 'games': doc[b]['games']['games'], 'engineErrors': doc[b]['games']['engineErrors']} for b in doc}))
 PY
 head -80 var/lab-j140/out/spectrum.md
 ```
@@ -267,15 +298,25 @@ collect: var/lab-j140/out/cards.tsv
 collect: var/lab-j140/out/counts.json
 
 summary.md is the PC session's; the job's own outputs are the files above. It covers:
-- **The pin, and the decks.** The deck seeds 1401-1404. Per band: the rejections and new makeups, the
-  counts by k, by colours with 3+ spells and by main-share bin (`counts.json`), the mean cross-band spells a
-  deck, the land counts.
+- **The pin, and the decks.** The deck seeds 1401-1404, and the one frozen pairing rule (D447 point 6:
+  seeded permutations within a band, the 10% cross-band slice inside each deck; game seeds 1401-1404).
+  Per band: the counts by k, by colours with 3+ spells and by main-share bin (`counts.json`), the mean
+  cross-band spells a deck, and the means of the deck variables (lands, fixers and those reaching two
+  colours, colours, creatures, X spells, card flow, mean mana value) with the summed curve.
+- **The weak-deck tail, per band** (`redraws` in the metrics and in `spectrum.json`, its line in
+  `spectrum.md`): the rejected draws (decks whose spells their own lands could not cast), the new
+  makeups, the decks that came after one, and the rejected share of all draws. Report it even when it is
+  0, as it was at these seeds before the run.
+- **Known holes.** No census data on utility lands: mono-coloured utility lands are never drawn (D447
+  point 3). Plain {C} and snow costs are not counted (no library card has one).
 - **The spectrum, per band.** The three tables from `spectrum.md`, in this order: colours with 3+ spells,
   main-colour share of pips, the prior's k. Give each cell's win rate with its deck-bootstrap interval
   (the interval to read; Wilson's is unclustered and too narrow) and its decks and deck-games. Also give
   the first player's rate.
 - **No verdict.** Say plainly that within a band the rate is 0.5 by construction and a bin is read against
-  it. Every rate is "as Forge's AI plays it", on uniformly drawn decks with no curve rule. Any difference
+  it. Every rate is "as Forge's AI plays it", on uniformly drawn decks with no curve rule. Random decks
+  are mostly weaker than drafted ones, so say in so many words that **every rate and every card value is
+  "in a random deck of this makeup"** (D447 point 10). Any difference
   is a candidate until it holds on fresh seeds (D447 point 9). Name no shape as better or worse.
 - **The cards** (`cards.tsv`). Per band: the number of rows, the median deck-games a card, and how many
   rows have 500+ and 1,000+ deck-games. Do not list top or bottom cards: this is report-only data for the
