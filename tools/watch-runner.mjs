@@ -179,7 +179,11 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       } finally { closeSync(fd); }
       const me = { id: r.id, child, startedAt: Date.now() };
       running = me;
-      child.on('error', (e) => log(`WATCH ${r.id} could not start: ${e.message}`));
+      child.on('error', (e) => {
+        // A child that never started fires no 'exit': free the slot and say why here.
+        log(`WATCH ${r.id} could not start: ${e.message}`);
+        if (running === me && child.pid === undefined) { running = null; settle(dir, 127, null); }
+      });
       child.on('exit', (code, signal) => {
         if (running === me) running = null;
         clearTimeout(me.killer);

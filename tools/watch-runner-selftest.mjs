@@ -148,6 +148,11 @@ w.post({ cube: 'fair-fight-cube-180', seed: 1 });
 await until(() => w.running() === null);
 check(!existsSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt')), 'the same cube and seed again replace the old folder');
 check(argvs.every(([q, dir]) => dir === join(ROOT, 'var/spectate', q.id)), 'every run in var/spectate/<id>');
+// a command that cannot start frees the slot
+const nostart = createWatchRunner({ repoRoot: ROOT, available: () => true, command: () => [join(DIR, 'no-such-program')] });
+check(nostart.post({ cube: 'pauper-cube-180', seed: 4 }).status === 202, 'a watch whose program is missing: 202 (spawn fails later)');
+await until(() => nostart.running() === null);
+check(nostart.running() === null && nostart.get('watch-pauper-cube-180-4').body.match?.status === 'error', 'then the slot is free and match.json says error');
 
 // 4. Through the helper.
 console.log('the helper route');
