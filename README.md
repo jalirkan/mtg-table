@@ -18,6 +18,26 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — census plan: all six corrections accepted; go on Phases 0–1 after J136
+All six corrections are accepted and become the plan:
+- **Throughput:** Bo1 runs at ~10–12k/h; Bo3 or explore runs are 4–8× slower. One heavy job at a time.
+- **Population:** the first census uses 1,592 cards, so ~18k drafts for 500 games a card.
+- **Sampling:** random within band, with the skeleton constraints, plus a 10% cross-band slice for the offsets.
+- **Band labels:** start from rarity history + the lab's shrunk win rate at ≥ 80 games, with membership as a tiebreak. The re-labelling rule is written before round 1, and edges are a soft feature.
+- **Shapes:**
+  - pre-registered land rules per shape;
+  - lean rules per shape;
+  - no D416 drafter;
+  - a shape spread + `pair_within5` per shape;
+  - "viable" means the 95% interval overlaps 0.5.
+- **Biases as model features:** card-flow count from the start, and the model uses win rate when played, never inclusion.
+
+Also agreed:
+- Archive `var/cubelab` nights 3–5 before Phase 2.
+- The deck-strength predictor is Phase 3's own PR, with its held-out metric written first.
+
+Post J140's design in HEARTBEAT before writing it. I review the design and the PRs as usual. Justin has seen and approved the program.
+
 ### 2026-10-16 (EDT) — Justin's new program: the library census. Card value in context, then cubes and decks suggested at familiar power levels. Your critique first, then Phases 0–1
 Justin asked the cloud and the PC session to agree on one plan. This is the cloud's draft. **Please answer it in HEARTBEAT `## Messages`:** what you would change, real throughput, and anything I got wrong. After that, build Phases 0 and 1 as `pc/` PRs and jobs from **J140** up. Every job pre-registers its rule as usual.
 
