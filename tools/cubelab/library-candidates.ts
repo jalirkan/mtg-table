@@ -40,6 +40,9 @@
 // key is lexicographic and integer: the hits' pooled shrunk win rate (to 1e-4), then games; the
 // random cube's a 32-bit draw from rng.ts.  Deterministic: the same inputs give the same files.
 //
+// The skeleton, the selections and the document writer live in skeleton.ts (shared with the census's
+// sampler, sample.ts, D445) and are re-exported from here.
+//
 // Engine facts come through engine.ts (one JVM boot, cached under var/cubelab/facts/); everything
 // else here is pure and is tested by web/test/cubelab-library.test.ts.
 
@@ -52,6 +55,7 @@ import { producesOf, type Fact } from './cards.ts';
 import { parseCube, type Cube } from './cube.ts';
 import { engineEnv, engineFacts } from './engine.ts';
 import { rng } from './rng.ts';
+import { cubeDocument, drawable, OMEGA_SKELETON, selectLands, selectNonland, skeletonErrors, withProvenance, type Skeleton } from './skeleton.ts';
 
 // ---------------------------------------------------------------- the sources
 
@@ -204,138 +208,13 @@ export function parseLibraryPool(text: string): LibraryCard[] {
   });
 }
 
-// ---------------------------------------------------------------- Omega's skeleton
+// ---------------------------------------------------------------- the skeleton, the selection and the documents
 
-export const MONO = ['W', 'U', 'B', 'R', 'G'] as const;
-export const PAIRS = ['WU', 'WB', 'WR', 'WG', 'UB', 'UR', 'UG', 'BR', 'BG', 'RG'] as const;
-export const SECTION_OF: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
-export const GUILD_OF: Record<string, string> = {
-  WU: 'Azorius', UB: 'Dimir', BR: 'Rakdos', RG: 'Gruul', WG: 'Selesnya', WB: 'Orzhov', UR: 'Izzet', BG: 'Golgari', WR: 'Boros', UG: 'Simic',
-};
-
-export interface Skeleton {
-  /** Nonland cards a colour class: 'W'..'G', each pair, and '' (colourless). */
-  classes: Record<string, number>;
-  /** Nonland cards a mana-value bucket, 0 .. 6 and 7 (7+). */
-  curve: number[];
-  /** Lands a pair makes, exactly that pair. */
-  fixersPerPair: number;
-  otherLands: number;
-}
-
-export const OMEGA_SKELETON: Skeleton = {
-  classes: { W: 24, U: 24, B: 24, R: 24, G: 24, ...Object.fromEntries(PAIRS.map((p) => [p, 2])), '': 18 },
-  curve: [3, 24, 32, 34, 30, 17, 11, 7],
-  fixersPerPair: 2,
-  otherLands: 2,
-};
-
-export const bucketOf = (mv: number): number => Math.min(7, Math.max(0, Math.floor(mv)));
-/** The colour class a nonland card fills, or null for one of three or more colours. */
-export const classOf = (colors: string): string | null => (colors.length <= 2 ? colors : null);
-/** The pair a land fixes, or null for an other land. */
-export const fixesPair = (c: Pick<LibraryCard, 'produces'>): string | null => ((PAIRS as readonly string[]).includes(c.produces) ? c.produces : null);
-
-/** What a list holds, in the skeleton's terms (the test's reading and the headers'). */
-export function shapeOf(cards: Array<Pick<LibraryCard, 'colors' | 'mv' | 'land' | 'produces'>>): { classes: Record<string, number>; curve: number[]; fixers: Record<string, number>; otherLands: number; threePlus: number } {
-  const classes: Record<string, number> = {};
-  const curve = new Array(8).fill(0) as number[];
-  const fixers: Record<string, number> = {};
-  let otherLands = 0, threePlus = 0;
-  for (const c of cards) {
-    if (c.land) {
-      const p = fixesPair(c);
-      if (p) fixers[p] = (fixers[p] ?? 0) + 1; else otherLands++;
-      continue;
-    }
-    const k = classOf(c.colors);
-    if (k === null) { threePlus++; continue; }
-    classes[k] = (classes[k] ?? 0) + 1;
-    curve[bucketOf(c.mv)] = (curve[bucketOf(c.mv)] as number) + 1;
-  }
-  return { classes, curve, fixers, otherLands, threePlus };
-}
-
-/** Every way a list misses the skeleton (empty: it fits exactly). */
-export function skeletonErrors(cards: Array<Pick<LibraryCard, 'colors' | 'mv' | 'land' | 'produces'>>, sk: Skeleton = OMEGA_SKELETON): string[] {
-  const s = shapeOf(cards);
-  const out: string[] = [];
-  for (const [k, n] of Object.entries(sk.classes)) if ((s.classes[k] ?? 0) !== n) out.push(`class ${k || 'colourless'}: ${s.classes[k] ?? 0}, want ${n}`);
-  for (const k of Object.keys(s.classes)) if (!(k in sk.classes)) out.push(`class ${k}: not in the skeleton`);
-  sk.curve.forEach((n, b) => { if (s.curve[b] !== n) out.push(`mana value ${b}${b === 7 ? '+' : ''}: ${s.curve[b]}, want ${n}`); });
-  for (const p of PAIRS) if ((s.fixers[p] ?? 0) !== sk.fixersPerPair) out.push(`${p} fixing lands: ${s.fixers[p] ?? 0}, want ${sk.fixersPerPair}`);
-  if (s.otherLands !== sk.otherLands) out.push(`other lands: ${s.otherLands}, want ${sk.otherLands}`);
-  if (s.threePlus) out.push(`${s.threePlus} card(s) of three or more colours`);
-  return out;
-}
-
-// ---------------------------------------------------------------- the selection
-
-/**
- * The nonland cards that fill `classes` and `curve` exactly with the largest total key: a min-cost
- * flow (successive shortest paths, Bellman-Ford on the residual graph; the graph is 26 nodes and an
- * edge a card, so it is instant).  `key` is an integer, larger better; ties go to the earlier card.
- */
-export function selectNonland<T extends Pick<LibraryCard, 'colors' | 'mv'>>(cards: T[], key: (c: T) => number, sk: Skeleton = OMEGA_SKELETON): T[] {
-  const classNames = Object.keys(sk.classes);
-  const S = 0, T0 = 1 + classNames.length + sk.curve.length;
-  const N = T0 + 1;
-  const to: number[] = [], cap: number[] = [], cost: number[] = [], card: number[] = [];
-  const adj: number[][] = Array.from({ length: N }, () => []);
-  const edge = (u: number, v: number, c: number, w: number, ci = -1): void => {
-    adj[u]!.push(to.length); to.push(v); cap.push(c); cost.push(w); card.push(ci);
-    adj[v]!.push(to.length); to.push(u); cap.push(0); cost.push(-w); card.push(-1);
-  };
-  classNames.forEach((k, i) => edge(S, 1 + i, sk.classes[k] as number, 0));
-  sk.curve.forEach((n, b) => edge(1 + classNames.length + b, T0, n, 0));
-  cards.forEach((c, ci) => {
-    const k = classOf(c.colors);
-    const i = k === null ? -1 : classNames.indexOf(k);
-    if (i >= 0) edge(1 + i, 1 + classNames.length + bucketOf(c.mv), 1, -key(c), ci);
-  });
-  const want = sk.curve.reduce((a, b) => a + b, 0);
-  let flow = 0;
-  while (flow < want) {
-    const dist = new Array(N).fill(Infinity) as number[];
-    const via = new Array(N).fill(-1) as number[];
-    dist[S] = 0;
-    for (let round = 0; round < N; round++) {
-      let moved = false;
-      for (let u = 0; u < N; u++) {
-        if (dist[u] === Infinity) continue;
-        for (const e of adj[u]!) {
-          if (cap[e]! <= 0) continue;
-          const d = dist[u]! + cost[e]!;
-          if (d < dist[to[e]!]!) { dist[to[e]!] = d; via[to[e]!] = e; moved = true; }
-        }
-      }
-      if (!moved) break;
-    }
-    if (dist[T0] === Infinity) throw new Error(`selectNonland: the skeleton cannot be filled from these cards (${flow} of ${want} placed)`);
-    for (let v = T0; v !== S; v = to[via[v]! ^ 1]!) { cap[via[v]!]!--; cap[via[v]! ^ 1]!++; }
-    flow++;
-  }
-  const out: T[] = [];
-  for (let e = 0; e < to.length; e += 2) if (card[e]! >= 0 && cap[e] === 0) out.push(cards[card[e]!] as T);
-  return out;
-}
-
-/** Each pair's best `fixersPerPair` fixing lands, then the best `otherLands` others, by `key`. */
-export function selectLands<T extends Pick<LibraryCard, 'produces' | 'name'>>(lands: T[], key: (c: T) => number, sk: Skeleton = OMEGA_SKELETON): T[] {
-  const order = [...lands].sort((a, b) => key(b) - key(a) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  const out: T[] = [];
-  for (const p of PAIRS) {
-    const got = order.filter((c) => fixesPair(c) === p).slice(0, sk.fixersPerPair);
-    if (got.length < sk.fixersPerPair) throw new Error(`selectLands: ${got.length} fixing land(s) for ${p}, the skeleton wants ${sk.fixersPerPair}`);
-    out.push(...got);
-  }
-  const others = order.filter((c) => fixesPair(c) === null).slice(0, sk.otherLands);
-  if (others.length < sk.otherLands) throw new Error(`selectLands: ${others.length} other land(s), the skeleton wants ${sk.otherLands}`);
-  return [...out, ...others];
-}
-
-/** Drawable at all: the engine has it and supports it, and it is not a basic land. */
-export const drawable = (c: LibraryCard): boolean => c.supported && !c.basic && !(c.land && /\bBasic\b/.test(c.type));
+// Moved to skeleton.ts (shared with the census's sampler, sample.ts) and re-exported here unchanged.
+export {
+  bucketOf, classOf, cubeDocument, drawable, fixesPair, GUILD_OF, MONO, OMEGA_SKELETON, PAIRS, SECTION_OF, selectLands, selectNonland, shapeOf,
+  skeletonErrors, withProvenance, type Skeleton,
+} from './skeleton.ts';
 
 /**
  * The hits' key: the pooled shrunk win rate to four decimals (as library-pool.tsv writes it, so the
@@ -354,51 +233,6 @@ export function selectRandom(lib: LibraryCard[], seed: number, sk: Skeleton = OM
   const keys = new Map(ok.map((c) => [c.name, Math.floor(r.next() * 4294967296)]));
   const key = (c: LibraryCard): number => keys.get(c.name) as number;
   return [...selectLands(ok.filter((c) => c.land), key, sk), ...selectNonland(ok.filter((c) => !c.land), key, sk)];
-}
-
-// ---------------------------------------------------------------- the documents
-
-const item = (c: LibraryCard): string => (c.tags.length ? `${c.name} — ${c.tags.join(' ')}` : c.name);
-const byCurve = (a: LibraryCard, b: LibraryCard): number => a.mv - b.mv || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
-
-/** A cube document in the lab's format (cube.ts), Omega's sections, theme table and format-counts table. */
-export function cubeDocument(o: { title: string; made: string[]; cards: LibraryCard[]; themeNames: Record<string, string>; notes: string[] }): string {
-  const shape = shapeOf(o.cards);
-  const nonland = o.cards.filter((c) => !c.land);
-  const sections: Array<[string, string[]]> = [];
-  for (const k of MONO) sections.push([SECTION_OF[k] as string, [nonland.filter((c) => c.colors === k).sort(byCurve).map(item).join(' · ')]]);
-  sections.push(['Gold', PAIRS.map((p) => `${p}: ${nonland.filter((c) => c.colors === p).sort(byCurve).map(item).join(' · ')}`)]);
-  sections.push(['Colorless', [nonland.filter((c) => c.colors === '').sort(byCurve).map(item).join(' · ')]]);
-  const lands = o.cards.filter((c) => c.land);
-  const landLines = PAIRS.map((p) => `${GUILD_OF[p]} lands: ${lands.filter((c) => fixesPair(c) === p).sort(byCurve).map(item).join(' · ')}`);
-  landLines.push(`Other lands: ${lands.filter((c) => fixesPair(c) === null).sort(byCurve).map(item).join(' · ')}`);
-  sections.push(['Lands', landLines]);
-  const count = (name: string): number => (name === 'Lands' ? lands.length : name === 'Gold' ? nonland.filter((c) => c.colors.length === 2).length
-    : name === 'Colorless' ? nonland.filter((c) => c.colors === '').length : nonland.filter((c) => c.colors === Object.keys(SECTION_OF).find((k) => SECTION_OF[k] === name)).length);
-  const creatures = nonland.filter((c) => /\bCreature\b/.test(c.type)).length;
-  const walkers = nonland.filter((c) => /\bPlaneswalker\b/.test(c.type)).length;
-  const ai = o.cards.filter((c) => c.aiFlag === 'All').map((c) => c.name);
-  const L: string[] = [`# ${o.title}`, '', ...o.made.map((l) => `*${l}*`).flatMap((l) => [l, '']), '## Format counts', '', '| Section | Cards |', '|---|---|'];
-  for (const [name] of sections) L.push(`| ${name}${name === 'Gold' ? ' (2 per colour pair)' : ''} | ${count(name)} |`);
-  L.push(`| **Total** | **${o.cards.length}** |`, '');
-  L.push(`${creatures} creatures, ${walkers} planeswalkers. Nonland mana-value curve: ${shape.curve.map((n, b) => `${n} at ${b}${b === 7 ? '+' : ''}`).join(', ')}.`, '');
-  L.push(`Forge marks ${ai.length} of these AI:RemoveDeck:All (its AI plays them poorly or not at all)${ai.length ? `: ${ai.join(', ')}` : ''}.`, '');
-  for (const n of o.notes) L.push(n, '');
-  L.push('## The themes', '', 'Tags are omega-seed-pool.tsv\'s where it has the card, else the Synergy Cube\'s, else none; a card with no tag is listed bare.', '',
-    '| Code | Theme |', '|---|---|');
-  for (const [k, v] of Object.entries(o.themeNames)) L.push(`| ${k} | ${v} |`);
-  L.push('', '## The list (name — themes)', '');
-  for (const [name, lines] of sections) L.push(`### ${name} (${count(name)})`, ...lines, '');
-  L.push('## Iteration log', '', '- version 1: made by `tools/cubelab.sh library-candidates` (above).', '');
-  return L.join('\n');
-}
-
-/** ForgeCoach's Synergy document with one provenance paragraph under its title; its list untouched. */
-export function withProvenance(text: string, line: string): string {
-  const lines = text.split('\n');
-  const t = lines.findIndex((l) => /^#\s+/.test(l));
-  lines.splice(t + 1, 0, '', `*${line}*`);
-  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------- the command

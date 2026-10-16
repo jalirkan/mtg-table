@@ -1,0 +1,1611 @@
+# mtg-table cubes/library/census.tsv: the library census's population (Phase 0, D445), one row a card of library-pool.tsv.
+# Written by tools/cubelab.sh census build (tools/cubelab/census.ts); do not edit by hand. `census build --check` fails when it is stale.
+# Inputs: library-pool.tsv sha256 ccd1123660dd; editions sha256 936433dac9bb (Forge's res/editions, 678 files); meta:evybaby-cube-360 sha256 1dac8d7247a9; meta:fair-fight-cube-180 sha256 71d74e5b0735; meta:modern-era-cube-180 sha256 2506a126de6d; meta:omega-cube-180 sha256 a8bbe4635a83; meta:pauper-cube-180 sha256 f7e953db7a5a; meta:peasant-cube-180 sha256 0ec4efdb838f; meta:synergy-cube-180 sha256 add24ec2e8c5; meta:vintage-cube-180 sha256 a25e7be7d999 (ForgeCoach's public/cubes).
+# name, sources, forge_supported, forge_ai_flag, colour_identity, type, mana_value: library-pool.tsv's columns (the engine's facts), copied.
+# lowest_rarity: the lowest rarity of any printing in Forge's edition files ([cards] and the other printing sections, not [tokens]), C < U < R < M < S, Forge's L (a booster's land slot) read as C;
+# lowest_rarity_set: the edition printing it at that rarity, a paper set's own (Core, Expansion, Reprint, Draft, Starter, Commander, Duel_Deck, Multiplayer, Boxed_Set) first, then an Online edition, then a promo or collector product, then the earliest Date, then the code. Both blank for a card no edition prints.
+# lab_games, lab_wr_shrunk: the cube lab's metas (evybaby-cube-360, fair-fight-cube-180, modern-era-cube-180, omega-cube-180, pauper-cube-180, peasant-cube-180, synergy-cube-180, vintage-cube-180), games summed over every meta that played the card and winRateShrunk averaged with those games as weights; the rate is blank under 80 games.
+# member_vintage: in vintage180 or mtgovc; member_peasant: in peasant; member_pauper: in pauper; member_legacy: in any other list (the legacy-ish lists).
+# BAND, the first rule that applies: powered = on the POWERED list below; pauper = ever printed at common (rarity:C); peasant = ever at uncommon and never at common (rarity:U);
+# legacy = everything else with a printing (rarity:R, rarity:M, rarity:S); a card no edition prints goes by membership: a Pauper cube -> pauper, else a Peasant cube -> peasant, else legacy
+# (membership:pauper, membership:peasant, membership:other). band_source says which rule fired. provisional = 1 on every row: the labels stand until the census's first round, whose re-labelling rule is written before it runs.
+# POWERED, the Power Nine (9): Black Lotus; Ancestral Recall; Time Walk; Timetwister; Mox Pearl; Mox Sapphire; Mox Jet; Mox Ruby; Mox Emerald.
+# POWERED, the original dual lands (10): Tundra; Underground Sea; Badlands; Taiga; Savannah; Scrubland; Volcanic Island; Bayou; Plateau; Tropical Island.
+# POWERED, named by the programme (10): Library of Alexandria; Bazaar of Baghdad; Mishra's Workshop; Candelabra of Tawnos; Sol Ring; Mana Crypt; Mana Vault; Time Vault; Tolarian Academy; Strip Mine.
+# POWERED, the Vintage cubes' restricted-style cards (12): Balance; Demonic Tutor; Imperial Seal; Lion's Eye Diamond; Memory Jar; Mystic Forge; Mystical Tutor; Narset, Parter of Veils; Tinker; Vampiric Tutor; Wheel of Fortune; Yawgmoth's Will.
+# Restricted in Vintage but printed at common, so banded by rarity: Brainstorm; Gitaxian Probe; Gush; Lotus Petal; Treasure Cruise.
+# 1592 cards: pauper 444 (rarity:C 444); peasant 425 (rarity:U 425); legacy 682 (membership:other 24, rarity:M 114, rarity:R 544); powered 41 (powered-list 41).
+# Supported by Forge 2.0.14 (drawable unless a basic land): pauper 444, peasant 425, legacy 658, powered 41; 814 cards have 80+ lab games.
+name	sources	forge_supported	forge_ai_flag	colour_identity	type	mana_value	lowest_rarity	lowest_rarity_set	lab_games	lab_wr_shrunk	member_vintage	member_legacy	member_peasant	member_pauper	band	band_source	provisional
+Aang's Iceberg	mtgovc	yes	none	W	Enchantment	3	R	TLA	0		1	0	0	0	legacy	rarity:R	1
+Aang, Swift Savior	evybaby mtgovc	yes	none	WU	Creature	3	R	TLA	507	0.5654	1	1	0	0	legacy	rarity:R	1
+Abandoned Air Temple	mtgovc	yes	none	W	Land	0	R	TLA	0		1	0	0	0	legacy	rarity:R	1
+Abhorrent Oculus	mtgovc	yes	none	U	Creature	3	R	SCH	0		1	0	0	0	legacy	rarity:R	1
+Abrade	peasant evybaby mtgovc	yes	none	R	Instant	2	C	2XM	3242	0.4739	1	1	1	0	pauper	rarity:C	1
+Abrupt Decay	modern	yes	none	BG	Instant	2	R	RTR	19		0	1	0	0	legacy	rarity:R	1
+Absorbing Man	mtgovc	yes	none	UG	Creature	3	R	MSH	0		1	0	0	0	legacy	rarity:R	1
+Abu Ja'far	oldschool	yes	none	W	Creature	1	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Acid Rain	oldschool	yes	Random	U	Sorcery	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Acidic Slime	omega	yes	none	G	Creature	5	U	M10	54		0	1	0	0	peasant	rarity:U	1
+Active Volcano	oldschool	yes	Random	R	Instant	1	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Adanto Vanguard	modern	yes	All	W	Creature	2	U	XLN	94	0.4123	0	1	0	0	peasant	rarity:U	1
+Adeline, Resplendent Cathar	omega synergy vintage180 twobert mtgovc	yes	none	W	Creature	3	R	MID	9965	0.5822	1	1	0	0	legacy	rarity:R	1
+Adun Oakenshield	oldschool	yes	none	BRG	Creature	3	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Aeolipile	oldschool	yes	none		Artifact	2	C	ME2	0		0	1	0	0	pauper	rarity:C	1
+Aerie Auxiliary	peasant	yes	none	W	Creature	4	C	MH3	746	0.6057	0	0	1	0	pauper	rarity:C	1
+Aether Spellbomb	mtgovc	yes	Random	U	Artifact	1	C	MRD	0		1	0	0	0	pauper	rarity:C	1
+Agate Instigator	twobert	yes	none	R	Creature	2	R	BLC	0		0	1	0	0	legacy	rarity:R	1
+Agatha's Soul Cauldron	mtgovc	yes	none		Artifact	2	M	WOE	0		1	0	0	0	legacy	rarity:M	1
+Air Elemental	oldschool	yes	none	U	Creature	5	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Ajani Vengeant	modern	yes	none	WR	Planeswalker	4	M	ALA	54		0	1	0	0	legacy	rarity:M	1
+Ajani's Pridemate	synergy	yes	none	W	Creature	2	U	M11	50		0	1	0	0	peasant	rarity:U	1
+Ajani, Nacatl Pariah	mtgovc	yes	none	WR	Creature	2	M	MH3	0		1	0	0	0	legacy	rarity:M	1
+Akron Legionnaire	oldschool	yes	none	W	Creature	8	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Al Bhed Salvagers	twobert	yes	none	B	Creature	3	U	FIN	0		0	1	0	0	peasant	rarity:U	1
+Aladdin	oldschool	yes	none	R	Creature	4	U	CHR	0		0	1	0	0	peasant	rarity:U	1
+Aladdin's Ring	oldschool	yes	none		Artifact	8	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Alesha, Who Laughs at Fate	evybaby	yes	none	BR	Creature	3	R	FDN	616	0.4874	0	1	0	0	legacy	rarity:R	1
+Ali from Cairo	oldschool	yes	none	R	Creature	4	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+All Hallow's Eve	oldschool	yes	none	B	Sorcery	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+All-Fates Stalker	peasant	yes	none	W	Creature	4	U	EOE	900	0.5935	0	0	1	0	peasant	rarity:U	1
+Alpha Deathclaw	mtgovc	yes	none	BG	Creature	6	R	PIP	0		1	0	0	0	legacy	rarity:R	1
+Ambrosia Whiteheart	evybaby	yes	none	W	Creature	2	U	FIN	182	0.5346	0	1	0	0	peasant	rarity:U	1
+Amethyst Dragon	peasant	yes	none	R	Creature	6	U	CLB	2810	0.5092	0	0	1	0	peasant	rarity:U	1
+Amnesia	oldschool	yes	none	U	Sorcery	6	U	DRK	0		0	1	0	0	peasant	rarity:U	1
+Anax, Hardened in the Forge	synergy	yes	none	R	Enchantment Creature	3	U	THB	180	0.4599	0	1	0	0	peasant	rarity:U	1
+Ancestral Blade	pauper	yes	none	W	Artifact	2	C	2XM	622	0.6433	0	0	0	1	pauper	rarity:C	1
+Ancestral Recall	vintage180 mtgovc oldschool	yes	none	U	Instant	1	R	LEA	2976	0.5047	1	1	0	0	powered	powered-list	1
+Anchovy & Banana Pizza	evybaby	yes	none	B	Artifact	4	C	TMT	138	0.4683	0	1	0	0	pauper	rarity:C	1
+Ancient Tomb	vintage180 mtgovc	yes	Random		Land	0	U	TMP	0		1	0	0	0	peasant	rarity:U	1
+Angel of Invention	evybaby	yes	none	W	Creature	5	M	KLD	1030	0.5800	0	1	0	0	legacy	rarity:M	1
+Angelic Voices	oldschool	yes	Random	W	Enchantment	4	U	ME4	0		0	1	0	0	peasant	rarity:U	1
+Anger of the Gods	modern	yes	none	R	Sorcery	3	R	THS	57		0	1	0	0	legacy	rarity:R	1
+Animate Dead	omega vintage180 peasant mtgovc oldschool	yes	none	B	Enchantment	2	U	LEA	8346	0.5051	1	1	1	0	peasant	rarity:U	1
+Ankh of Mishra	oldschool	yes	Random		Artifact	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Annoyed Altisaur	fairfight pauper	yes	none	G	Creature	7	C	CMR	865	0.5402	0	1	0	1	pauper	rarity:C	1
+Apex Witchstalker	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Arabella, Abandoned Doll	peasant	yes	none	WR	Artifact Creature	2	U	DSK	78		0	0	1	0	peasant	rarity:U	1
+Arbiter of Woe	evybaby	yes	none	B	Creature	6	U	FDN	534	0.4729	0	1	0	0	peasant	rarity:U	1
+Arbor Elf	pauper	yes	none	G	Creature	1	C	WWK	726	0.4665	0	0	0	1	pauper	rarity:C	1
+Arc Trail	omega fairfight	yes	none	R	Sorcery	2	U	SOM	4842	0.5139	0	1	0	0	peasant	rarity:U	1
+Arcane Omens	evybaby	yes	none	B	Sorcery	5	U	SOS	708	0.4231	0	1	0	0	peasant	rarity:U	1
+Arcbound Ravager	twobert	yes	none		Artifact Creature	2	R	DST	0		0	1	0	0	legacy	rarity:R	1
+Archaeomancer	fairfight pauper	yes	none	U	Creature	4	C	M13	10194	0.4694	0	1	0	1	pauper	rarity:C	1
+Archaeomender	evybaby	yes	none	U	Creature	3	C	JMP	732	0.4628	0	1	0	0	pauper	rarity:C	1
+Archangel Avacyn	modern	yes	none	WR	Creature	5	M	SOI	894	0.5241	0	1	0	0	legacy	rarity:M	1
+Archmage's Charm	modern	yes	none	U	Instant	3	R	MH1	30		0	1	0	0	legacy	rarity:R	1
+Archon of Cruelty	synergy vintage180 modern twobert mtgovc	yes	none	B	Creature	8	M	MH2	6033	0.4905	1	1	0	0	legacy	rarity:M	1
+Ardent Elementalist	pauper	yes	none	R	Creature	4	C	PLST	286	0.5261	0	0	0	1	pauper	rarity:C	1
+Arena of Glory	mtgovc	yes	none	R	Land	0	R	PLST	0		1	0	0	0	legacy	rarity:R	1
+Argivian Archaeologist	oldschool	yes	Random	W	Creature	3	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Argothian Pixies	oldschool	yes	none	G	Creature	2	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Argothian Treefolk	oldschool	yes	none	G	Creature	5	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Arid Mesa	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ZEN	2308	0.5115	1	1	0	0	legacy	rarity:R	1
+Ark of Hunger	evybaby twobert	yes	none	WR	Artifact	4	R	SOS	274	0.4285	0	1	0	0	legacy	rarity:R	1
+Armageddon	oldschool	yes	none	W	Sorcery	4	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Army of Allah	oldschool	yes	none	W	Instant	3	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Artifact Blast	oldschool	yes	none	R	Instant	1	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Artisan of Kozilek	peasant	yes	none		Creature	9	U	ROE	2359	0.4783	0	0	1	0	peasant	rarity:U	1
+Ash Barrens	fairfight pauper	yes	none		Land	0	C	C16	8029	0.4688	0	1	0	1	pauper	rarity:C	1
+Ashes to Ashes	oldschool	yes	none	B	Sorcery	3	C	DRK	0		0	1	0	0	pauper	rarity:C	1
+Ashnod's Altar	peasant oldschool	yes	none		Artifact	3	C	CHR	22		0	1	1	0	pauper	rarity:C	1
+Ashroot Animist	evybaby	yes	none	RG	Creature	4	R	FDN	127	0.5374	0	1	0	0	legacy	rarity:R	1
+Asmoranomardicadaistinaculdacar	evybaby	yes	none	BR	Creature	0	R	PLST	391	0.4039	0	1	0	0	legacy	rarity:R	1
+Astrologian's Planisphere	mtgovc	yes	none	U	Artifact	2	R	FIN	0		1	0	0	0	legacy	rarity:R	1
+Atlantis Attacks	evybaby	yes	none	U	Sorcery	7	C	MSH	427	0.4317	0	1	0	0	pauper	rarity:C	1
+Atog	oldschool	yes	none	R	Creature	2	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Atraxa, Grand Unifier	mtgovc	yes	none	WUBG	Creature	7	M	ONE	0		1	0	0	0	legacy	rarity:M	1
+Attended Knight	fairfight pauper	yes	none	W	Creature	3	C	M13	1126	0.5973	0	1	0	1	pauper	rarity:C	1
+Augur of Bolas	fairfight pauper	yes	none	U	Creature	2	C	MM3	2075	0.5177	0	1	0	1	pauper	rarity:C	1
+Auriok Salvagers	mtgovc	yes	none	W	Creature	4	U	5DN	0		1	0	0	0	peasant	rarity:U	1
+Avatar of Burgeoning Echoes	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Avenger of Zendikar	omega synergy vintage180 twobert	yes	none	G	Creature	7	M	WWK	5205	0.4699	1	1	0	0	legacy	rarity:M	1
+Awaken the Inferno	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Azorius Chancery	pauper	yes	none	WU	Land	0	C	DIS	2242	0.4996	0	0	0	1	pauper	rarity:C	1
+Azure Drake	oldschool	yes	none	U	Creature	4	C	M11	0		0	1	0	0	pauper	rarity:C	1
+Bad Moon	oldschool	yes	none	B	Enchantment	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Badgermole Cub	mtgovc	yes	none	G	Creature	2	M	TLA	0		1	0	0	0	legacy	rarity:M	1
+Badlands	omega vintage180 mtgovc oldschool	yes	none	BR	Land	0	R	LEA	563	0.4685	1	1	0	0	powered	powered-list	1
+Balance	vintage180 mtgovc oldschool	yes	none	W	Sorcery	2	R	LEA	249	0.5688	1	1	0	0	powered	powered-list	1
+Baleful Strix	omega synergy vintage180 fairfight mtgovc	yes	none	UB	Artifact Creature	2	U	PC2	2856	0.4803	1	1	0	0	peasant	rarity:U	1
+Ball Lightning	omega oldschool	yes	none	R	Creature	3	R	DRK	128	0.5473	0	1	0	0	legacy	rarity:R	1
+Balmor, Battlemage Captain	peasant	yes	none	UR	Creature	2	U	DMU	581	0.3943	0	0	1	0	peasant	rarity:U	1
+Baloth Prime	mtgovc	yes	none	G	Creature	4	R	EOC	0		1	0	0	0	legacy	rarity:R	1
+Bane of Bala Ged	peasant	yes	none		Creature	7	U	BFZ	1312	0.4632	0	0	1	0	peasant	rarity:U	1
+Baneslayer Angel	omega	yes	none	W	Creature	5	M	M10	906	0.5378	0	1	0	0	legacy	rarity:M	1
+Barkchannel Pathway	modern	yes	none	UG	Land	0	R	PLST	561	0.4888	0	1	0	0	legacy	rarity:R	1
+Barrin, Tolarian Archmage	modern	yes	none	U	Creature	3	R	M21	2718	0.4503	0	1	0	0	legacy	rarity:R	1
+Barrowgoyf	mtgovc	yes	none	B	Creature	3	R	M3C	0		1	0	0	0	legacy	rarity:R	1
+Basalt Monolith	mtgovc oldschool	yes	Random		Artifact	3	U	LEA	0		1	1	0	0	peasant	rarity:U	1
+Basking Broodscale	pauper	yes	none	G	Creature	2	C	MH3	3062	0.4854	0	0	0	1	pauper	rarity:C	1
+Batroc the Leaper	mtgovc	yes	none	R	Creature	2	R	MSC	0		1	0	0	0	legacy	rarity:R	1
+Batterskull	omega vintage180 modern	yes	none		Artifact	5	M	NPH	3536	0.5401	1	1	0	0	legacy	rarity:M	1
+Battle Screech	synergy fairfight pauper peasant twobert	yes	none	W	Sorcery	4	C	CMM	10617	0.5967	0	1	1	1	pauper	rarity:C	1
+Battlesong Berserker	evybaby	yes	none	R	Creature	4	U	FDN	476	0.4637	0	1	0	0	peasant	rarity:U	1
+Bayou	omega vintage180 mtgovc oldschool	yes	none	BG	Land	0	R	LEA	614	0.4562	1	1	0	0	powered	powered-list	1
+Bazaar of Baghdad	oldschool	yes	Random		Land	0	U	ARN	0		0	1	0	0	powered	powered-list	1
+Beast Within	synergy vintage180 modern	yes	All	G	Instant	3	U	NPH	871	0.4913	1	1	0	0	peasant	rarity:U	1
+Beetleback Chief	fairfight pauper	yes	none	R	Creature	4	C	VMA	3764	0.5024	0	1	0	1	pauper	rarity:C	1
+Belladonna Took	evybaby	yes	none	W	Creature	2	R	HOB	591	0.5303	0	1	0	0	legacy	rarity:R	1
+Benalish Hero	oldschool	yes	none	W	Creature	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Berserk	oldschool	yes	none	G	Instant	1	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Bespoke Bō	twobert	yes	none	U	Artifact	3	U	TMT	0		0	1	0	0	peasant	rarity:U	1
+Bilbo, Luckwearer	evybaby	yes	none	U	Creature	2	U	HOB	674	0.5072	0	1	0	0	peasant	rarity:U	1
+Bilbo, Thief in the Night	mtgovc	yes	none	U	Creature	2	M	HOB	0		1	0	0	0	legacy	rarity:M	1
+Biomechan Engineer	peasant	yes	none	UG	Creature	2	U	EOE	264	0.4577	0	0	1	0	peasant	rarity:U	1
+Biotech Specialist	twobert	yes	none	RG	Creature	2	R	EOE	0		0	1	0	0	legacy	rarity:R	1
+Birds of Paradise	omega vintage180 modern evybaby mtgovc oldschool	yes	none	G	Creature	1	R	LEA	1166	0.5331	1	1	0	0	legacy	rarity:R	1
+Bitter Triumph	peasant mtgovc	yes	none	B	Instant	2	U	LCI	2806	0.5400	1	0	1	0	peasant	rarity:U	1
+Bitterblossom	omega	yes	none	B	Kindred Enchantment	2	R	MOR	2649	0.5272	0	1	0	0	legacy	rarity:R	1
+Black Knight	oldschool	yes	none	B	Creature	2	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Black Lotus	vintage180 mtgovc oldschool	yes	none		Artifact	0	R	LEA	4449	0.4977	1	1	0	0	powered	powered-list	1
+Black Vise	oldschool	yes	none		Artifact	1	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Black Widow, Super Spy	mtgovc	yes	none	B	Creature	2	M	MSH	0		1	0	0	0	legacy	rarity:M	1
+Blackcleave Cliffs	mtgovc	yes	none	BR	Land	0	R	SOM	0		1	0	0	0	legacy	rarity:R	1
+Blade Splicer	omega synergy modern fairfight twobert	yes	none	W	Creature	3	R	NPH	11612	0.5693	0	1	0	0	legacy	rarity:R	1
+Blazemire Verge	mtgovc	yes	none	BR	Land	0	R	DSK	0		1	0	0	0	legacy	rarity:R	1
+Bleachbone Verge	mtgovc	yes	none	WB	Land	0	R	DFT	0		1	0	0	0	legacy	rarity:R	1
+Blessing	oldschool	yes	none	W	Enchantment	2	U	M14	0		0	1	0	0	peasant	rarity:U	1
+Blightsteel Colossus	mtgovc	yes	none		Artifact Creature	12	M	MBS	0		1	0	0	0	legacy	rarity:M	1
+Blightstep Pathway	modern	yes	none	BR	Land	0	R	PLST	183	0.4630	0	1	0	0	legacy	rarity:R	1
+Blood Artist	omega synergy	yes	none	B	Creature	2	U	AVR	3691	0.5229	0	1	0	0	peasant	rarity:U	1
+Blood Crypt	synergy modern peasant evybaby twobert mtgovc	yes	none	BR	Land	0	R	DIS	2238	0.4757	1	1	1	0	legacy	rarity:R	1
+Blood Fountain	pauper	yes	none	B	Artifact	1	C	PLST	4749	0.4932	0	0	0	1	pauper	rarity:C	1
+Blood Lust	oldschool	yes	none	R	Instant	2	C	4ED	0		0	1	0	0	pauper	rarity:C	1
+Blood Moon	oldschool	yes	Random	R	Enchantment	3	R	DRK	0		0	1	0	0	legacy	rarity:R	1
+Bloodbraid Challenger	mtgovc	yes	none	RG	Creature	5	R	M3C	0		1	0	0	0	legacy	rarity:R	1
+Bloodbraid Elf	omega modern peasant	yes	none	RG	Creature	4	U	ARB	3103	0.5164	0	1	1	0	peasant	rarity:U	1
+Bloodchief's Thirst	modern mtgovc	yes	none	B	Sorcery	1	U	ZNR	2049	0.4442	1	1	0	0	peasant	rarity:U	1
+Bloodfell Caves	fairfight pauper	yes	none	BR	Land	0	C	KTK	1532	0.4683	0	1	0	1	pauper	rarity:C	1
+Bloodghast	omega synergy vintage180 modern fairfight evybaby twobert	yes	none	B	Creature	2	R	ZEN	1767	0.4976	1	1	0	0	legacy	rarity:R	1
+Bloodsoaked Champion	modern	yes	none	B	Creature	1	R	KTK	15		0	1	0	0	legacy	rarity:R	1
+Bloodstained Mire	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ONS	1629	0.4871	1	1	0	0	legacy	rarity:R	1
+Bloodtithe Harvester	vintage180 fairfight mtgovc	yes	none	BR	Creature	2	U	PLST	255	0.5210	1	1	0	0	peasant	rarity:U	1
+Bloodwater Entity	pauper	yes	none	UR	Creature	3	C	2X2	1726	0.5206	0	0	0	1	pauper	rarity:C	1
+Blooming Marsh	mtgovc	yes	none	BG	Land	0	R	KLD	0		1	0	0	0	legacy	rarity:R	1
+Blossoming Sands	fairfight pauper	yes	none	WG	Land	0	C	KTK	2984	0.5146	0	1	0	1	pauper	rarity:C	1
+Blue Elemental Blast	oldschool	yes	Random	U	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Body Dropper	pauper	yes	none	BR	Creature	2	C	SNC	10		0	0	0	1	pauper	rarity:C	1
+Bog Wraith	oldschool	yes	none	B	Creature	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Bogardan Dragonheart	pauper	yes	All	R	Creature	3	C	MH1	48		0	0	0	1	pauper	rarity:C	1
+Bolas's Citadel	mtgovc	yes	none	B	Artifact	6	R	WAR	0		1	0	0	0	legacy	rarity:R	1
+Bomat Courier	fairfight	yes	Random	R	Artifact Creature	1	R	KLD	7		0	1	0	0	legacy	rarity:R	1
+Bone Shards	omega synergy vintage180 modern fairfight peasant mtgovc	yes	none	B	Sorcery	1	C	PLST	13379	0.4908	1	1	1	0	pauper	rarity:C	1
+Bonecrusher Giant	omega vintage180 modern fairfight evybaby mtgovc	yes	none	R	Creature	3	R	ELD	10582	0.5130	1	1	0	0	legacy	rarity:R	1
+Bonesplitter	synergy fairfight pauper peasant	yes	none		Artifact	1	C	MRD	24891	0.5014	0	1	1	1	pauper	rarity:C	1
+Boomerang	oldschool	yes	none	U	Instant	2	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Boomerang Basics	mtgovc	yes	none	U	Sorcery	1	U	TLA	0		1	0	0	0	peasant	rarity:U	1
+Boros Garrison	pauper	yes	none	WR	Land	0	C	RAV	1864	0.5005	0	0	0	1	pauper	rarity:C	1
+Borough Backup	evybaby	yes	none	W	Sorcery	5	C	MSH	74		0	1	0	0	pauper	rarity:C	1
+Boseiju Reaches Skyward	evybaby	yes	none	G	Enchantment	4	U	NEO	547	0.5626	0	1	0	0	peasant	rarity:U	1
+Boseiju, Who Endures	mtgovc	yes	none	G	Land	0	R	NEO	0		1	0	0	0	legacy	rarity:R	1
+Botanical Sanctum	mtgovc	yes	none	UG	Land	0	R	KLD	0		1	0	0	0	legacy	rarity:R	1
+Bothersome Noisemaker	peasant evybaby	yes	none	R	Creature	2	U	HOB	2116	0.4974	0	1	1	0	peasant	rarity:U	1
+Bountiful Landscape	peasant	yes	none	URG	Land	0	C	MH3	1823	0.4465	0	0	1	0	pauper	rarity:C	1
+Brain Freeze	mtgovc	yes	none	U	Instant	2	U	SCG	0		1	0	0	0	peasant	rarity:U	1
+Braingeyser	oldschool	yes	none	U	Sorcery	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Brainstorm	omega synergy vintage180 fairfight pauper evybaby twobert mtgovc	yes	none	U	Instant	1	C	ICE	22388	0.4602	1	1	0	1	pauper	rarity:C	1
+Branching Bolt	fairfight pauper	yes	none	RG	Instant	3	C	ALA	75		0	1	0	1	pauper	rarity:C	1
+Branchloft Pathway	modern	yes	none	WG	Land	0	R	ZNR	489	0.5540	0	1	0	0	legacy	rarity:R	1
+Brazen Borrower	omega vintage180 modern fairfight evybaby mtgovc	yes	none	U	Creature	3	M	ELD	14693	0.4735	1	1	0	0	legacy	rarity:M	1
+Breeding Pit	oldschool	yes	none	B	Enchantment	4	U	FEM	0		0	1	0	0	peasant	rarity:U	1
+Breeding Pool	synergy modern peasant evybaby twobert mtgovc	yes	none	UG	Land	0	R	DIS	3146	0.4676	1	1	1	0	legacy	rarity:R	1
+Brightblade Stoat	evybaby	yes	none	W	Creature	2	U	BLB	380	0.5475	0	1	0	0	peasant	rarity:U	1
+Brightclimb Pathway	modern	yes	none	WB	Land	0	R	ZNR	253	0.5018	0	1	0	0	legacy	rarity:R	1
+Brightglass Gearhulk	evybaby mtgovc	yes	none	WG	Artifact Creature	4	M	DFT	169	0.5343	1	1	0	0	legacy	rarity:M	1
+Brilliance Unleashed	evybaby	yes	none	UR	Sorcery	6	U	TMT	228	0.4959	0	1	0	0	peasant	rarity:U	1
+Brimaz, King of Oreskos	omega synergy modern	yes	none	W	Creature	3	M	BNG	8337	0.5664	0	1	0	0	legacy	rarity:M	1
+Bristlebud Farmer	twobert	yes	none	G	Creature	4	M	BIG	0		0	1	0	0	legacy	rarity:M	1
+Bristly Bill, Spine Sower	twobert mtgovc	yes	none	G	Creature	2	M	OTJ	0		1	1	0	0	legacy	rarity:M	1
+Broadside Bombardiers	twobert mtgovc	yes	none	R	Creature	3	R	LCC	0		1	1	0	0	legacy	rarity:R	1
+Brothers of Fire	oldschool	yes	none	R	Creature	3	C	4ED	0		0	1	0	0	pauper	rarity:C	1
+Burn Down the House	evybaby	yes	none	R	Sorcery	5	R	MID	820	0.4607	0	1	0	0	legacy	rarity:R	1
+Burn, Burn, Tree and Fern	evybaby	yes	none	R	Enchantment	4	U	HOB	277	0.4815	0	1	0	0	peasant	rarity:U	1
+Burning-Tree Emissary	evybaby	yes	none	RG	Creature	2	C	MM3	69		0	1	0	0	pauper	rarity:C	1
+Burst Lightning	synergy modern pauper evybaby twobert mtgovc	yes	none	R	Instant	1	C	ZEN	8221	0.4909	1	1	0	1	pauper	rarity:C	1
+Bushwhack	pauper evybaby twobert	yes	none	G	Sorcery	1	C	FDN	2246	0.5012	0	1	0	1	pauper	rarity:C	1
+Cabal Ritual	mtgovc	yes	Random	B	Instant	2	C	TOR	0		1	0	0	0	pauper	rarity:C	1
+Candelabra of Tawnos	mtgovc oldschool	yes	All		Artifact	1	R	ATQ	0		1	1	0	0	powered	powered-list	1
+Candy Grapple	evybaby	yes	none	B	Instant	2	C	WOE	1210	0.4780	0	1	0	0	pauper	rarity:C	1
+Candy Trail	synergy pauper twobert	yes	none		Artifact	1	C	WOE	7782	0.4950	0	1	0	1	pauper	rarity:C	1
+Captain Storm, Cosmium Raider	evybaby	yes	none	UR	Creature	2	U	LCI	213	0.4034	0	1	0	0	peasant	rarity:U	1
+Carnage Interpreter	mtgovc	yes	none	BR	Creature	3	R	CLU	0		1	0	0	0	legacy	rarity:R	1
+Carnage Tyrant	evybaby	yes	none	G	Creature	6	M	XLN	674	0.5706	0	1	0	0	legacy	rarity:M	1
+Carnivorous Cultivator	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Carrier Thrall	fairfight pauper	yes	none	B	Creature	2	C	PLST	180	0.5294	0	1	0	1	pauper	rarity:C	1
+Carrion Ants	oldschool	yes	none	B	Creature	4	U	4ED	0		0	1	0	0	peasant	rarity:U	1
+Carrion Feeder	synergy evybaby twobert	yes	none	B	Creature	1	C	SCG	72		0	1	0	0	pauper	rarity:C	1
+Casey Jones, Jury-Rig Justiciar	evybaby	yes	none	R	Creature	2	U	TMT	625	0.4605	0	1	0	0	peasant	rarity:U	1
+Cast Down	fairfight pauper evybaby	yes	none	B	Instant	2	C	2XM	3668	0.5209	0	1	0	1	pauper	rarity:C	1
+Cast Out	peasant	yes	none	W	Enchantment	4	U	AKH	616	0.5786	0	0	1	0	peasant	rarity:U	1
+Cathar Commando	peasant evybaby twobert mtgovc	yes	none	W	Creature	2	C	MID	183	0.5365	1	1	1	0	pauper	rarity:C	1
+Cathartic Reunion	synergy	yes	none	R	Sorcery	2	C	KLD	1093	0.4277	0	1	0	0	pauper	rarity:C	1
+Cauldron Familiar	synergy evybaby twobert	yes	none	B	Creature	1	C	JMP	3588	0.5011	0	1	0	0	pauper	rarity:C	1
+Cauldron of Essence	twobert	yes	none	BG	Artifact	3	R	SOS	0		0	1	0	0	legacy	rarity:R	1
+Caustic Bronco	mtgovc	yes	none	B	Creature	2	R	OTJ	0		1	0	0	0	legacy	rarity:R	1
+Cavern Harpy	pauper	yes	none	UB	Creature	2	C	PLS	729	0.4593	0	0	0	1	pauper	rarity:C	1
+Celestial Colonnade	mtgovc	yes	none	WU	Land	0	R	WWK	0		1	0	0	0	legacy	rarity:R	1
+Chain Lightning	omega vintage180 fairfight pauper peasant mtgovc oldschool	yes	none	R	Sorcery	1	C	LEG	13221	0.4971	1	1	1	1	pauper	rarity:C	1
+Chain of Smog	mtgovc	yes	Random	B	Sorcery	2	U	ONS	0		1	0	0	0	peasant	rarity:U	1
+Champion of Wits	synergy	yes	none	U	Creature	3	R	HOU	3817	0.4285	0	1	0	0	legacy	rarity:R	1
+Chandra, Torch of Defiance	omega synergy vintage180 modern evybaby mtgovc	yes	none	R	Planeswalker	4	M	KLD	2853	0.5009	1	1	0	0	legacy	rarity:M	1
+Channel	oldschool	yes	All	G	Sorcery	2	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Chaos Orb	oldschool	yes	none		Artifact	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Charging Monstrosaur	peasant	yes	none	R	Creature	5	U	XLN	2400	0.5066	0	0	1	0	peasant	rarity:U	1
+Charming Prince	synergy fairfight twobert	yes	none	W	Creature	2	R	ELD	210	0.6170	0	1	0	0	legacy	rarity:R	1
+Chart a Course	modern peasant	yes	none	U	Sorcery	2	U	XLN	7393	0.4373	0	1	1	0	peasant	rarity:U	1
+Chittering Rats	fairfight pauper	yes	none	B	Creature	3	C	DST	764	0.5084	0	1	0	1	pauper	rarity:C	1
+Choco-Comet	peasant	yes	none	R	Sorcery	2	U	FIN	3260	0.5070	0	0	1	0	peasant	rarity:U	1
+Chromatic Star	synergy pauper mtgovc	yes	All		Artifact	1	C	TSP	5896	0.4555	1	1	0	1	pauper	rarity:C	1
+Chrome Mox	mtgovc	yes	none		Artifact	0	R	MRD	0		1	0	0	0	legacy	rarity:R	1
+Circle of Protection: Black	oldschool	yes	Random	W	Enchantment	2	C	LEB	0		0	1	0	0	pauper	rarity:C	1
+Circle of Protection: Blue	oldschool	yes	Random	W	Enchantment	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Circle of Protection: Green	oldschool	yes	Random	W	Enchantment	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Circle of Protection: Red	oldschool	yes	Random	W	Enchantment	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Circuit Mender	peasant evybaby	yes	none		Artifact Creature	3	U	PLST	2057	0.5155	0	1	1	0	peasant	rarity:U	1
+City in a Bottle	oldschool	yes	All		Artifact	2	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+City of Brass	peasant oldschool	yes	none		Land	0	U	ARN	3581	0.5079	0	1	1	0	peasant	rarity:U	1
+City of Traitors	mtgovc	yes	All		Land	0	R	EXO	0		1	0	0	0	legacy	rarity:R	1
+Cleanse	oldschool	yes	Random	W	Sorcery	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Clearwater Pathway	modern	yes	none	UB	Land	0	R	ZNR	422	0.3665	0	1	0	0	legacy	rarity:R	1
+Cloak and Dagger, Entwined	mtgovc	yes	none	WB	Creature	3	R	MSH	0		1	0	0	0	legacy	rarity:R	1
+Clockwork Avian	oldschool	yes	none		Artifact Creature	5	U	ME4	0		0	1	0	0	peasant	rarity:U	1
+Clockwork Beast	oldschool	yes	none		Artifact Creature	6	U	ME1	0		0	1	0	0	peasant	rarity:U	1
+Clockwork Percussionist	evybaby	yes	none	R	Artifact Creature	1	C	DSK	1328	0.4414	0	1	0	0	pauper	rarity:C	1
+Clone	oldschool	yes	none	U	Creature	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Cloudgoat Ranger	peasant	yes	none	W	Creature	5	U	LRW	1866	0.5726	0	0	1	0	peasant	rarity:U	1
+Cloudkin Seer	pauper	yes	none	U	Creature	3	C	M20	4436	0.5224	0	0	0	1	pauper	rarity:C	1
+Coalition Relic	omega mtgovc	yes	none		Artifact	3	R	FUT	1480	0.4820	1	1	0	0	legacy	rarity:R	1
+Cockatrice	oldschool	yes	none	G	Creature	5	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Cogwork Wrestler	evybaby	yes	none	U	Artifact Creature	1	C	LCI	218	0.4369	0	1	0	0	pauper	rarity:C	1
+Coiling Oracle	evybaby	yes	none	UG	Creature	2	C	DIS	92	0.5892	0	1	0	0	pauper	rarity:C	1
+Collected Company	modern	yes	none	G	Instant	4	R	DTK	3032	0.5419	0	1	0	0	legacy	rarity:R	1
+Collective Brutality	vintage180 modern mtgovc	yes	none	B	Sorcery	2	R	EMN	3418	0.4312	1	1	0	0	legacy	rarity:R	1
+Colossal Skyturtle	peasant	yes	none	UG	Enchantment Creature	7	U	NEO	172	0.4583	0	0	1	0	peasant	rarity:U	1
+Colossus of Sardia	oldschool	yes	none		Artifact Creature	9	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Combat Thresher	peasant	yes	none	W	Artifact Creature	7	U	BRO	2895	0.5005	0	0	1	0	peasant	rarity:U	1
+Commercial District	evybaby mtgovc	yes	none	RG	Land	0	R	MKM	763	0.5211	1	1	0	0	legacy	rarity:R	1
+Concealed Courtyard	mtgovc	yes	none	WB	Land	0	R	KLD	0		1	0	0	0	legacy	rarity:R	1
+Concealing Curtains	mtgovc	yes	none	B	Creature	1	R	VOW	0		1	0	0	0	legacy	rarity:R	1
+Conclave Mentor	synergy	yes	none	WG	Creature	2	U	M21	66		0	1	0	0	peasant	rarity:U	1
+Conclave Naturalists	fairfight pauper	yes	none	G	Creature	5	C	2XM	379	0.5102	0	1	0	1	pauper	rarity:C	1
+Concordant Crossroads	oldschool	yes	Random	G	Enchantment	1	U	TD0	0		0	1	0	0	peasant	rarity:U	1
+Consecrated Sphinx	omega	yes	none	U	Creature	6	M	MBS	3735	0.4980	0	1	0	0	legacy	rarity:M	1
+Consider	synergy peasant twobert mtgovc	yes	none	U	Instant	1	C	MID	8486	0.4138	1	1	1	0	pauper	rarity:C	1
+Contagious Vorrac	evybaby	yes	none	G	Creature	3	C	ONE	233	0.4427	0	1	0	0	pauper	rarity:C	1
+Containment Priest	vintage180 mtgovc	yes	none	W	Creature	2	R	C14	2538	0.5344	1	0	0	0	legacy	rarity:R	1
+Contaminated Landscape	peasant	yes	none	WUB	Land	0	C	MH3	1296	0.4780	0	0	1	0	pauper	rarity:C	1
+Control Magic	omega evybaby oldschool	yes	none	U	Enchantment	4	U	LEA	4338	0.5073	0	1	0	0	peasant	rarity:U	1
+Conversion	oldschool	yes	Random	W	Enchantment	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Copperline Gorge	mtgovc	yes	none	RG	Land	0	R	SOM	0		1	0	0	0	legacy	rarity:R	1
+Copy Artifact	oldschool	yes	none	U	Enchantment	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Cori-Steel Cutter	mtgovc	yes	none	R	Artifact	2	R	TDM	0		1	0	0	0	legacy	rarity:R	1
+Cornered by Black Mages	evybaby	yes	none	B	Sorcery	3	C	FIN	452	0.4767	0	1	0	0	pauper	rarity:C	1
+Corpse Dance	mtgovc	yes	none	B	Instant	3	R	TMP	0		1	0	0	0	legacy	rarity:R	1
+Coruscation Mage	peasant	yes	none	R	Creature	2	U	BLB	10		0	0	1	0	peasant	rarity:U	1
+Cosmic Horror	oldschool	yes	none	B	Creature	6	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Cost of Brilliance	evybaby	yes	none	B	Sorcery	3	C	SOS	168	0.4521	0	1	0	0	pauper	rarity:C	1
+Council's Judgment	omega vintage180 mtgovc	yes	none	W	Sorcery	3	R	CNS	100	0.5059	1	1	0	0	legacy	rarity:R	1
+Counterspell	omega vintage180 modern fairfight pauper peasant evybaby twobert mtgovc oldschool	yes	none	U	Instant	2	C	ICE	28003	0.4772	1	1	1	1	pauper	rarity:C	1
+Courier of Comestibles	evybaby twobert	yes	none	G	Creature	2	U	TMT	681	0.5364	0	1	0	0	peasant	rarity:U	1
+Courser of Kruphix	omega synergy vintage180 modern twobert	yes	none	G	Enchantment Creature	3	R	BNG	9540	0.4966	1	1	0	0	legacy	rarity:R	1
+Coveted Jewel	mtgovc	yes	none		Artifact	6	R	C18	0		1	0	0	0	legacy	rarity:R	1
+Crabomination	mtgovc	yes	none	B	Creature	6	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Cragcrown Pathway	modern	yes	none	RG	Land	0	R	ZNR	356	0.5053	0	1	0	0	legacy	rarity:R	1
+Cranial Plating	synergy twobert	yes	none	B	Artifact	2	C	5DN	2405	0.5361	0	1	0	0	pauper	rarity:C	1
+Craterhoof Behemoth	omega vintage180 modern	yes	none	G	Creature	8	M	AVR	4733	0.5243	1	1	0	0	legacy	rarity:M	1
+Craw Giant	oldschool	yes	none	G	Creature	7	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Craw Wurm	oldschool	yes	none	G	Creature	6	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Creeping Tar Pit	mtgovc	yes	none	UB	Land	0	R	WWK	0		1	0	0	0	legacy	rarity:R	1
+Crop Rotation	mtgovc	yes	Random	G	Instant	1	C	ULG	0		1	0	0	0	pauper	rarity:C	1
+Crude Bent Blade	evybaby	yes	none	B	Artifact	3	C	HOB	14		0	1	0	0	pauper	rarity:C	1
+Crumble	oldschool	yes	Random	G	Instant	1	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Crusade	oldschool	yes	none	W	Enchantment	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Cryogen Relic	mtgovc	yes	none	U	Artifact	2	C	EOE	0		1	0	0	0	pauper	rarity:C	1
+Crypt Rats	fairfight pauper	yes	none	B	Creature	3	C	VIS	7510	0.4933	0	1	0	1	pauper	rarity:C	1
+Cryptic Command	omega modern	yes	none	U	Instant	4	R	LRW	2132	0.4419	0	1	0	0	legacy	rarity:R	1
+Cult Conscript	peasant	yes	none	B	Creature	1	U	DMU	99	0.5629	0	0	1	0	peasant	rarity:U	1
+Cuombajj Witches	oldschool	yes	All	B	Creature	2	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Currency Converter	mtgovc	yes	none		Artifact	1	R	NCC	0		1	0	0	0	legacy	rarity:R	1
+Curse of Predation	peasant	yes	none	G	Enchantment	3	U	C13	1148	0.5419	0	0	1	0	peasant	rarity:U	1
+Cut Down	mtgovc	yes	none	B	Instant	1	U	DMU	0		1	0	0	0	peasant	rarity:U	1
+Cyclone	oldschool	yes	All	G	Enchantment	4	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Dack Fayden	mtgovc	yes	Random	UR	Planeswalker	3	M	CNS	0		1	0	0	0	legacy	rarity:M	1
+Dakkon Blackblade	oldschool	yes	none	WUB	Creature	6	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Damn	mtgovc	yes	none	WB	Sorcery	2	R	MH2	0		1	0	0	0	legacy	rarity:R	1
+Damnation	omega modern mtgovc	yes	none	B	Sorcery	4	R	PLC	3975	0.4715	1	1	0	0	legacy	rarity:R	1
+Dance of Many	oldschool	yes	none	U	Enchantment	2	U	ME3	0		0	1	0	0	peasant	rarity:U	1
+Dance of the Dead	peasant	yes	none	B	Enchantment	2	U	ICE	3578	0.5397	0	0	1	0	peasant	rarity:U	1
+Dancing Scimitar	oldschool	yes	none		Artifact Creature	4	U	9ED	0		0	1	0	0	peasant	rarity:U	1
+Dandân	oldschool	yes	none	U	Creature	2	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Daring Waverider	evybaby	yes	none	U	Creature	6	U	BLB	1309	0.4868	0	1	0	0	peasant	rarity:U	1
+Dark Confidant	omega vintage180 modern mtgovc	yes	none	B	Creature	2	R	RAV	2140	0.4961	1	1	0	0	legacy	rarity:R	1
+Dark Depths	mtgovc	yes	none		Land	0	R	CSP	0		1	0	0	0	legacy	rarity:R	1
+Dark Ritual	vintage180 mtgovc oldschool	yes	none	B	Instant	1	C	LEA	844	0.4294	1	1	0	0	pauper	rarity:C	1
+Darkbore Pathway	modern	yes	none	BG	Land	0	R	PLST	417	0.4988	0	1	0	0	legacy	rarity:R	1
+Darkslick Shores	mtgovc	yes	none	UB	Land	0	R	SOM	0		1	0	0	0	legacy	rarity:R	1
+Dauntless Scrapbot	peasant	yes	none		Artifact Creature	3	U	EOE	364	0.5000	0	0	1	0	peasant	rarity:U	1
+Dauthi Voidwalker	modern mtgovc	yes	none	B	Creature	2	R	PLST	915	0.4556	1	1	0	0	legacy	rarity:R	1
+Davriel, Rogue Shadowmage	fairfight	yes	none	B	Planeswalker	3	U	WAR	8		0	1	0	0	peasant	rarity:U	1
+Daze	mtgovc	yes	none	U	Instant	2	C	NMS	0		1	0	0	0	pauper	rarity:C	1
+Dead // Gone	mtgovc	yes	none	R	Instant	4	C	PLC	0		1	0	0	0	pauper	rarity:C	1
+Deadly Dispute	synergy modern fairfight pauper evybaby twobert	yes	none	B	Instant	2	C	PLST	11237	0.4758	0	1	0	1	pauper	rarity:C	1
+Death-Greeter's Champion	mtgovc	yes	none	R	Creature	3	R	MOC	0		1	0	0	0	legacy	rarity:R	1
+Deathgrip	oldschool	yes	Random	B	Enchantment	2	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Deathrite Shaman	vintage180 mtgovc	yes	none	BG	Creature	1	R	RTR	174	0.4227	1	0	0	0	legacy	rarity:R	1
+Deceit	evybaby	yes	none	UB	Creature	6	M	ECL	144	0.4573	0	1	0	0	legacy	rarity:M	1
+Deceptive Landscape	peasant	yes	none	WBG	Land	0	C	MH3	1049	0.5014	0	0	1	0	pauper	rarity:C	1
+Deduce	evybaby	yes	none	U	Instant	2	C	MKM	1694	0.4831	0	1	0	0	pauper	rarity:C	1
+Deep Analysis	synergy pauper twobert	yes	none	U	Sorcery	4	C	TOR	11565	0.4710	0	1	0	1	pauper	rarity:C	1
+Deep Forest Hermit	synergy twobert	yes	none	G	Creature	5	R	MH1	1614	0.4792	0	1	0	0	legacy	rarity:R	1
+Deep Spawn	oldschool	yes	none	U	Creature	8	U	FEM	0		0	1	0	0	peasant	rarity:U	1
+Deep-Cavern Bat	peasant mtgovc	yes	none	B	Creature	2	U	LCI	4044	0.5423	1	0	1	0	peasant	rarity:U	1
+Delayed Blast Fireball	mtgovc	yes	none	R	Instant	3	R	CLB	0		1	0	0	0	legacy	rarity:R	1
+Delighted Halfling	vintage180 mtgovc	yes	none	G	Creature	1	R	LTR	230	0.4640	1	0	0	0	legacy	rarity:R	1
+Delver of Secrets	omega synergy vintage180 modern fairfight pauper	yes	none	U	Creature	1	C	ISD	131	0.5030	1	1	0	1	pauper	rarity:C	1
+Demonic Hordes	oldschool	yes	none	B	Creature	6	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Demonic Tutor	omega vintage180 mtgovc oldschool	yes	Random	B	Sorcery	2	U	LEA	4701	0.4924	1	1	0	0	powered	powered-list	1
+Derelor	oldschool	yes	none	B	Creature	4	U	ME1	0		0	1	0	0	peasant	rarity:U	1
+Descendant of Storms	peasant evybaby	yes	none	W	Creature	1	U	TDM	3290	0.5436	0	1	1	0	peasant	rarity:U	1
+Desecrator Hag	pauper	yes	none	BG	Creature	4	C	EVE	62		0	0	0	1	pauper	rarity:C	1
+Desert Twister	oldschool	yes	none	G	Sorcery	6	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Detective's Phoenix	mtgovc	yes	none	R	Enchantment Creature	3	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Detonate	oldschool	yes	none	R	Sorcery	1	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Devoted Druid	mtgovc	yes	All	G	Creature	2	C	SHM	0		1	0	0	0	pauper	rarity:C	1
+Diamond Valley	oldschool	yes	none		Land	0	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Dimir Aqueduct	pauper	yes	none	UB	Land	0	C	RAV	1923	0.4910	0	0	0	1	pauper	rarity:C	1
+Dinrova Horror	pauper peasant	yes	none	UB	Creature	6	C	MM3	1725	0.4742	0	0	1	1	pauper	rarity:C	1
+Disenchant	oldschool	yes	none	W	Instant	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Disfigure	pauper	yes	none	B	Instant	1	C	ZEN	4201	0.5070	0	0	0	1	pauper	rarity:C	1
+Disharmony	oldschool	yes	All	R	Instant	3	U	ME3	0		0	1	0	0	peasant	rarity:U	1
+Disintegrate	oldschool	yes	none	R	Sorcery	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Dismal Backwater	fairfight pauper	yes	none	UB	Land	0	C	KTK	2852	0.4917	0	1	0	1	pauper	rarity:C	1
+Dismember	peasant evybaby mtgovc	yes	none	B	Instant	3	U	NPH	4253	0.5253	1	1	1	0	peasant	rarity:U	1
+Displacer Kitten	mtgovc	yes	none	U	Creature	4	R	CLB	0		1	0	0	0	legacy	rarity:R	1
+Disrupting Scepter	oldschool	yes	none		Artifact	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Disruptive Stormbrood	evybaby	yes	none	BG	Creature	5	U	TDM	1570	0.5440	0	1	0	0	peasant	rarity:U	1
+Divergent Equation	evybaby	yes	All	U	Instant	1	U	SOS	331	0.4359	0	1	0	0	peasant	rarity:U	1
+Divine Offering	oldschool	yes	none	W	Instant	2	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Dockside Chef	evybaby	yes	none	B	Enchantment Creature	1	U	PLST	164	0.4782	0	1	0	0	peasant	rarity:U	1
+Dog Walker	pauper	yes	none	WR	Creature	2	C	MKM	113	0.6165	0	0	0	1	pauper	rarity:C	1
+Don & Leo, Problem Solvers	evybaby twobert	yes	none	WU	Creature	5	R	TMT	401	0.5392	0	1	0	0	legacy	rarity:R	1
+Doom Blade	omega	yes	none	B	Instant	2	C	M10	55		0	1	0	0	pauper	rarity:C	1
+Doomed Traveler	fairfight pauper	yes	none	W	Creature	1	C	ISD	72		0	1	0	1	pauper	rarity:C	1
+Doomsday	mtgovc	yes	All	B	Sorcery	3	R	WTH	0		1	0	0	0	legacy	rarity:R	1
+Dori, Bearer of Friends	evybaby	yes	none	R	Creature	3	C	HOB	140	0.3812	0	1	0	0	pauper	rarity:C	1
+Down in the Valley	evybaby	yes	none	G	Enchantment	3	R	HOB	560	0.5483	0	1	0	0	legacy	rarity:R	1
+Down, Down to Goblin-town	evybaby	yes	none	B	Enchantment	3	U	HOB	53		0	1	0	0	peasant	rarity:U	1
+Dragon Engine	oldschool	yes	none		Artifact Creature	3	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Dragon Fodder	pauper	yes	none	R	Sorcery	2	C	ALA	3091	0.5143	0	0	0	1	pauper	rarity:C	1
+Dragon Whelp	oldschool	yes	none	R	Creature	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Dragon's Rage Channeler	omega vintage180 modern peasant mtgovc	yes	none	R	Creature	1	U	PLST	7498	0.5002	1	1	1	0	peasant	rarity:U	1
+Dragonbroods' Relic	evybaby	yes	none	WUBRG	Artifact	2	U	TDM	324	0.5320	0	1	0	0	peasant	rarity:U	1
+Dragonwing Glider	evybaby	yes	none	R	Artifact	5	R	ONE	817	0.4958	0	1	0	0	legacy	rarity:R	1
+Drain Life	oldschool	yes	none	B	Sorcery	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Dreadhorde Arcanist	synergy twobert	yes	none	R	Creature	2	R	WAR	4		0	1	0	0	legacy	rarity:R	1
+Dreadwing Scavenger	evybaby twobert	yes	none	UB	Creature	3	U	FDN	345	0.4739	0	1	0	0	peasant	rarity:U	1
+Dream Beavers	evybaby	yes	none	B	Creature	1	U	TMT	558	0.5000	0	1	0	0	peasant	rarity:U	1
+Drop of Honey	oldschool	yes	All	G	Enchantment	1	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Drown in the Loch	evybaby	yes	none	UB	Instant	2	U	ELD	12		0	1	0	0	peasant	rarity:U	1
+Drudge Skeletons	oldschool	yes	none	B	Creature	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Dubious Delicacy	twobert	yes	none	B	Artifact	3	U	EOE	0		0	1	0	0	peasant	rarity:U	1
+Duress	mtgovc	yes	none	B	Sorcery	1	C	USG	0		1	0	0	0	pauper	rarity:C	1
+Durkwood Boars	oldschool	yes	none	G	Creature	5	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Dusk Legion Zealot	pauper	yes	none	B	Creature	2	C	RIX	4119	0.4992	0	0	0	1	pauper	rarity:C	1
+Dust to Dust	oldschool	yes	none	W	Sorcery	3	C	DRK	0		0	1	0	0	pauper	rarity:C	1
+Dwarven Soldier	oldschool	yes	none	R	Creature	2	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Eagles of the North	fairfight pauper evybaby twobert mtgovc	yes	none	W	Creature	6	C	LTR	10634	0.5271	1	1	0	1	pauper	rarity:C	1
+Earth Elemental	oldschool	yes	none	R	Creature	5	C	IMA	0		0	1	0	0	pauper	rarity:C	1
+Earthquake	oldschool	yes	none	R	Sorcery	1	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Echo of Eons	mtgovc	yes	none	U	Sorcery	6	R	PRM	0		1	0	0	0	legacy	rarity:R	1
+Ecstatic Awakener	pauper	yes	none	B	Creature	1	C	MID	125	0.5862	0	0	0	1	pauper	rarity:C	1
+Eddymurk Crab	peasant	yes	none	U	Creature	7	U	BLB	58		0	0	1	0	peasant	rarity:U	1
+Eidolon of the Great Revel	modern	yes	Random	R	Enchantment Creature	2	R	JOU	66		0	1	0	0	legacy	rarity:R	1
+Elas il-Kor, Sadistic Pilgrim	peasant	yes	none	WB	Creature	2	U	PLST	27		0	0	1	0	peasant	rarity:U	1
+Elder Gargaroth	modern	yes	none	G	Creature	5	M	M21	2449	0.5788	0	1	0	0	legacy	rarity:M	1
+Eldrazi Repurposer	peasant	yes	none	G	Creature	3	C	MH3	1827	0.5414	0	0	1	0	pauper	rarity:C	1
+Elegant Parlor	evybaby mtgovc	yes	none	WR	Land	0	R	MKM	486	0.5099	1	1	0	0	legacy	rarity:R	1
+Elektra, Daughter of the Hand	evybaby	yes	none	B	Creature	4	R	MSH	559	0.4870	0	1	0	0	legacy	rarity:R	1
+Elite Interceptor	evybaby twobert	yes	none	W	Creature	1	C	SOS	396	0.5168	0	1	0	0	pauper	rarity:C	1
+Elite Spellbinder	vintage180 fairfight evybaby mtgovc	yes	none	W	Creature	3	R	STX	8187	0.5415	1	1	0	0	legacy	rarity:R	1
+Elspeth, Knight-Errant	modern	yes	none	W	Planeswalker	4	M	ALA	2228	0.5236	0	1	0	0	legacy	rarity:M	1
+Elspeth, Storm Slayer	mtgovc	yes	none	W	Planeswalker	5	M	TDM	0		1	0	0	0	legacy	rarity:M	1
+Elspeth, Sun's Champion	omega synergy vintage180 modern	yes	none	W	Planeswalker	6	M	THS	11979	0.5733	1	1	0	0	legacy	rarity:M	1
+Elves of Deep Shadow	oldschool	yes	none	BG	Creature	1	C	RAV	0		0	1	0	0	pauper	rarity:C	1
+Elvish Archers	oldschool	yes	none	G	Creature	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Elvish Mystic	modern peasant evybaby mtgovc	yes	none	G	Creature	1	C	M14	2210	0.5727	1	1	1	0	pauper	rarity:C	1
+Elvish Reclaimer	mtgovc	yes	Random	G	Creature	1	R	M20	0		1	0	0	0	legacy	rarity:R	1
+Elvish Visionary	synergy	yes	none	G	Creature	2	C	ALA	2966	0.4511	0	1	0	0	pauper	rarity:C	1
+Embercleave	modern	yes	All	R	Artifact	6	M	ELD	469	0.5051	0	1	0	0	legacy	rarity:M	1
+Embereth Shieldbreaker	fairfight evybaby mtgovc	yes	none	R	Creature	2	U	ELD	44		1	1	0	0	peasant	rarity:U	1
+Emeritus of Abundance	mtgovc	yes	none	G	Creature	3	M	SOS	0		1	0	0	0	legacy	rarity:M	1
+Emeritus of Ideation	mtgovc	yes	none	U	Creature	5	M	SOS	0		1	0	0	0	legacy	rarity:M	1
+Emmara, Soul of the Accord	evybaby	yes	none	WG	Creature	2	R	GRN	111	0.5648	0	1	0	0	legacy	rarity:R	1
+Emperor of Bones	mtgovc	yes	none	B	Creature	2	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Empyrean Eagle	evybaby	yes	none	WU	Creature	3	U	M20	324	0.5349	0	1	0	0	peasant	rarity:U	1
+Emrakul's Messenger	evybaby	yes	Random	U	Creature	2	U	MH3	1530	0.4897	0	1	0	0	peasant	rarity:U	1
+Emrakul, the Aeons Torn	vintage180 mtgovc	yes	none		Creature	15	M	ROE	3783	0.4641	1	0	0	0	legacy	rarity:M	1
+Emry, Lurker of the Loch	synergy twobert mtgovc	yes	none	U	Creature	3	R	ELD	2827	0.4138	1	1	0	0	legacy	rarity:R	1
+Endurance	vintage180 twobert mtgovc	yes	none	G	Creature	3	M	MH2	55		1	1	0	0	legacy	rarity:M	1
+Enduring Innocence	twobert mtgovc	yes	none	W	Enchantment Creature	3	R	DSK	0		1	1	0	0	legacy	rarity:R	1
+Energy Flux	oldschool	yes	Random	U	Enchantment	3	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Engineered Explosives	mtgovc	yes	All		Artifact	0	R	5DN	0		1	0	0	0	legacy	rarity:R	1
+Enlightened Tutor	mtgovc	yes	Random	W	Instant	1	U	MIR	0		1	0	0	0	peasant	rarity:U	1
+Entomb	vintage180 mtgovc	yes	none	B	Instant	1	R	ODY	1567	0.4568	1	0	0	0	legacy	rarity:R	1
+Environmental Scientist	peasant evybaby	yes	none	G	Creature	2	U	SOS	1938	0.5653	0	1	1	0	peasant	rarity:U	1
+Ephemerate	omega synergy vintage180 fairfight pauper peasant evybaby twobert	yes	none	W	Instant	1	C	MH1	118	0.5268	1	1	1	1	pauper	rarity:C	1
+Erg Raiders	oldschool	yes	none	B	Creature	2	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Erhnam Djinn	oldschool	yes	none	G	Creature	4	U	CHR	0		0	1	0	0	peasant	rarity:U	1
+Eriette's Tempting Apple	evybaby	yes	none		Artifact	4	U	WOE	1425	0.4491	0	1	0	0	peasant	rarity:U	1
+Erode	mtgovc	yes	none	W	Instant	1	R	SOS	0		1	0	0	0	legacy	rarity:R	1
+Ertai Resurrected	fairfight	yes	none	UB	Creature	4	R	DMU	346	0.4590	0	1	0	0	legacy	rarity:R	1
+Escape to the Wilds	mtgovc	yes	none	RG	Sorcery	5	R	ELD	0		1	0	0	0	legacy	rarity:R	1
+Esika's Chariot	mtgovc	yes	none	G	Artifact	4	R	KHM	0		1	0	0	0	legacy	rarity:R	1
+Esper Sentinel	modern	yes	none	W	Artifact Creature	1	R	PLST	2385	0.5135	0	1	0	0	legacy	rarity:R	1
+Essence Scatter	evybaby twobert	yes	none	U	Instant	2	C	M10	1684	0.5041	0	1	0	0	pauper	rarity:C	1
+Etali, Primal Conqueror	mtgovc	yes	none	RG	Creature	7	R	MOM	0		1	0	0	0	legacy	rarity:R	1
+Eternal Witness	omega synergy vintage180 modern fairfight peasant	yes	none	G	Creature	3	U	5DN	12626	0.5013	1	1	1	0	peasant	rarity:U	1
+Eureka	oldschool	yes	Random	G	Sorcery	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Eusocial Engineering	peasant	yes	none	G	Enchantment	5	U	EOE	669	0.5573	0	0	1	0	peasant	rarity:U	1
+Everflowing Chalice	omega modern mtgovc	yes	none		Artifact	0	C	2XM	465	0.4198	1	1	0	0	pauper	rarity:C	1
+Everything Pizza	evybaby	yes	none	WUBRG	Artifact	2	U	TMT	1691	0.4746	0	1	0	0	peasant	rarity:U	1
+Evolution Sage	synergy	yes	none	G	Creature	3	U	WAR	2838	0.4220	0	1	0	0	peasant	rarity:U	1
+Evolved Sleeper	modern	yes	none	B	Creature	1	R	DMU	96	0.4483	0	1	0	0	legacy	rarity:R	1
+Evolving Wilds	fairfight pauper	yes	none		Land	0	C	ROE	10089	0.4839	0	1	0	1	pauper	rarity:C	1
+Exalted Angel	omega	yes	none	W	Creature	6	R	ONS	3408	0.5047	0	1	0	0	legacy	rarity:R	1
+Exclude	fairfight pauper	yes	none	U	Instant	3	C	INV	10965	0.4998	0	1	0	1	pauper	rarity:C	1
+Exhibition Tidecaller	twobert	yes	none	U	Creature	1	R	SOS	0		0	1	0	0	legacy	rarity:R	1
+Exhume	vintage180 mtgovc	yes	none	B	Sorcery	2	C	USG	1533	0.4514	1	0	0	0	pauper	rarity:C	1
+Exorcist	oldschool	yes	none	W	Creature	2	U	ME3	0		0	1	0	0	peasant	rarity:U	1
+Expedition Map	mtgovc	yes	none		Artifact	1	C	ZEN	0		1	0	0	0	pauper	rarity:C	1
+Experimental Confectioner	evybaby	yes	none	B	Creature	3	U	WOE	453	0.4968	0	1	0	0	peasant	rarity:U	1
+Experimental Synthesizer	synergy fairfight pauper evybaby twobert	yes	none	R	Artifact	1	C	PLST	4555	0.5036	0	1	0	1	pauper	rarity:C	1
+Expressive Iteration	omega vintage180 modern evybaby mtgovc	yes	none	UR	Sorcery	2	U	STX	122	0.4497	1	1	0	0	peasant	rarity:U	1
+Eye for an Eye	oldschool	yes	none	W	Instant	2	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Fable of the Mirror-Breaker	omega vintage180 modern mtgovc	yes	none	R	Enchantment	3	R	NEO	6631	0.5306	1	1	0	0	legacy	rarity:R	1
+Fabled Passage	mtgovc	yes	none		Land	0	R	ELD	0		1	0	0	0	legacy	rarity:R	1
+Fact or Fiction	omega peasant	yes	none	U	Instant	4	U	INV	4241	0.4370	0	1	1	0	peasant	rarity:U	1
+Fading Hope	modern	yes	none	U	Instant	1	U	MID	7		0	1	0	0	peasant	rarity:U	1
+Faebloom Trick	evybaby	yes	none	U	Instant	3	U	FDN	1636	0.4921	0	1	0	0	peasant	rarity:U	1
+Faerie Guidemother	pauper	yes	none	W	Creature	1	C	ELD	5		0	0	0	1	pauper	rarity:C	1
+Faerie Mastermind	modern mtgovc	yes	none	U	Creature	2	R	MOM	3535	0.4436	1	1	0	0	legacy	rarity:R	1
+Faerie Seer	fairfight pauper evybaby	yes	none	U	Creature	1	C	MH1	48		0	1	0	1	pauper	rarity:C	1
+Faerie Vandal	evybaby	yes	none	U	Creature	2	U	ELD	570	0.4610	0	1	0	0	peasant	rarity:U	1
+Faith's Fetters	pauper	yes	none	W	Enchantment	4	C	RAV	724	0.5995	0	0	0	1	pauper	rarity:C	1
+Faithless Looting	synergy vintage180 pauper peasant evybaby twobert mtgovc	yes	All	R	Sorcery	1	C	DKA	13222	0.4492	1	1	1	1	pauper	rarity:C	1
+Falkenrath Aristocrat	omega	yes	none	BR	Creature	4	R	MM3	107	0.5669	0	1	0	0	legacy	rarity:R	1
+Falkenrath Noble	fairfight pauper	yes	none	B	Creature	4	C	MM3	8474	0.5110	0	1	0	1	pauper	rarity:C	1
+Fallaji Archaeologist	peasant	yes	none	U	Creature	2	C	BRO	281	0.4551	0	0	1	0	pauper	rarity:C	1
+Fallen Angel	oldschool	yes	none	B	Creature	5	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Fallen Shinobi	mtgovc	yes	none	UB	Creature	5	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Falling Star	oldschool	yes	none	R	Sorcery	3	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Fanatic of Rhonas	mtgovc	yes	none	G	Creature	2	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Fanatical Firebrand	pauper	yes	none	R	Creature	1	C	RIX	18		0	0	0	1	pauper	rarity:C	1
+Farrel's Mantle	oldschool	yes	none	W	Enchantment	3	U	FEM	0		0	1	0	0	peasant	rarity:U	1
+Farrel's Zealot	oldschool	yes	none	W	Creature	3	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Farseek	evybaby	yes	Random	G	Sorcery	2	C	RAV	1418	0.5069	0	1	0	0	pauper	rarity:C	1
+Fastbond	mtgovc oldschool	yes	none	G	Enchantment	1	R	LEA	0		1	1	0	0	legacy	rarity:R	1
+Fatal Push	omega synergy vintage180 modern fairfight peasant evybaby twobert mtgovc	yes	none	B	Instant	1	U	AER	1761	0.5095	1	1	1	0	peasant	rarity:U	1
+Fateful Absence	fairfight	yes	none	W	Instant	2	R	MID	1463	0.5550	0	1	0	0	legacy	rarity:R	1
+Fblthp, Knows the Way	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Fear of Missing Out	mtgovc	yes	none	R	Enchantment Creature	2	R	DSK	0		1	0	0	0	legacy	rarity:R	1
+Feldon's Cane	oldschool	yes	Random		Artifact	1	C	CHR	0		0	1	0	0	pauper	rarity:C	1
+Fellwar Stone	oldschool	yes	none		Artifact	2	C	ME3	0		0	1	0	0	pauper	rarity:C	1
+Feral Thallid	oldschool	yes	none	G	Creature	6	C	ME2	0		0	1	0	0	pauper	rarity:C	1
+Fervent Champion	fairfight	yes	none	R	Creature	1	R	ELD	13		0	1	0	0	legacy	rarity:R	1
+Fiery Confluence	vintage180 evybaby mtgovc	yes	none	R	Sorcery	4	R	C15	1094	0.4397	1	1	0	0	legacy	rarity:R	1
+Figure of Destiny	omega mtgovc	yes	none	WR	Creature	1	R	EVE	21		1	1	0	0	legacy	rarity:R	1
+Figure of Fable	mtgovc	yes	none	WG	Creature	1	R	ECL	0		1	0	0	0	legacy	rarity:R	1
+Fire // Ice	omega fairfight	yes	none	UR	Instant	4	C	UMA	341	0.4178	0	1	0	0	pauper	rarity:C	1
+Fire Covenant	mtgovc	yes	All	BR	Instant	3	U	ICE	0		1	0	0	0	peasant	rarity:U	1
+Fire Elemental	oldschool	yes	none	R	Creature	5	C	M13	0		0	1	0	0	pauper	rarity:C	1
+Fireball	fairfight pauper oldschool	yes	none	R	Sorcery	1	C	LEA	3900	0.4954	0	1	0	1	pauper	rarity:C	1
+Fireblade Artist	pauper	yes	All	BR	Creature	2	C	2X2	48		0	0	0	1	pauper	rarity:C	1
+Fireblast	vintage180 mtgovc	yes	none	R	Instant	6	C	VIS	104	0.4839	1	0	0	0	pauper	rarity:C	1
+Firebolt	peasant evybaby mtgovc	yes	none	R	Sorcery	1	C	ODY	514	0.4745	1	1	1	0	pauper	rarity:C	1
+Firebrand Archer	pauper	yes	none	R	Creature	2	C	HOU	3865	0.5009	0	0	0	1	pauper	rarity:C	1
+Fissure	oldschool	yes	none	R	Instant	5	C	DRK	0		0	1	0	0	pauper	rarity:C	1
+Flame Slash	synergy modern pauper evybaby twobert mtgovc	yes	none	R	Sorcery	1	C	ROE	4758	0.5074	1	1	0	1	pauper	rarity:C	1
+Flame of Anor	mtgovc	yes	none	UR	Instant	3	R	LTR	0		1	0	0	0	legacy	rarity:R	1
+Flametongue Kavu	omega fairfight evybaby	yes	none	R	Creature	4	U	PLS	3941	0.5203	0	1	0	0	peasant	rarity:U	1
+Flash	mtgovc	yes	All	U	Instant	2	R	MIR	0		1	0	0	0	legacy	rarity:R	1
+Flash Counter	oldschool	yes	none	U	Instant	2	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Flashback	evybaby mtgovc	yes	none	R	Instant	1	R	SOS	21		1	1	0	0	legacy	rarity:R	1
+Flashfires	oldschool	yes	Random	R	Sorcery	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Flayer Husk	pauper	yes	none		Artifact	1	C	MBS	6730	0.5098	0	0	0	1	pauper	rarity:C	1
+Flickering Hound	evybaby twobert	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Flickerwisp	omega synergy vintage180 modern fairfight peasant twobert mtgovc	yes	none	W	Creature	3	U	EVE	2860	0.5484	1	1	1	0	peasant	rarity:U	1
+Fling	fairfight pauper	yes	Random	R	Instant	2	C	STH	497	0.5043	0	1	0	1	pauper	rarity:C	1
+Flitterwing Nuisance	evybaby	yes	none	U	Creature	1	R	ECL	459	0.4989	0	1	0	0	legacy	rarity:R	1
+Flooded Strand	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ONS	3878	0.5255	1	1	0	0	legacy	rarity:R	1
+Floodpits Drowner	peasant	yes	none	U	Creature	2	U	DSK	3056	0.4288	0	0	1	0	peasant	rarity:U	1
+Floral Spuzzem	oldschool	yes	none	G	Creature	4	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Flow State	evybaby	yes	none	U	Sorcery	2	U	SOS	254	0.4379	0	1	0	0	peasant	rarity:U	1
+Flying Men	oldschool	yes	none	U	Creature	1	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Fog	oldschool	yes	none	G	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Force Spike	oldschool	yes	none	U	Instant	1	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Force of Nature	oldschool	yes	none	G	Creature	6	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Force of Negation	mtgovc	yes	none	U	Instant	3	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Force of Vigor	mtgovc	yes	none	G	Instant	4	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Force of Will	omega vintage180 mtgovc	yes	none	U	Instant	5	U	ALL	7141	0.4867	1	1	0	0	peasant	rarity:U	1
+Forcefield	oldschool	yes	none		Artifact	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Foreboding Landscape	peasant	yes	none	UBG	Land	0	C	MH3	1573	0.4595	0	0	1	0	pauper	rarity:C	1
+Forensic Gadgeteer	mtgovc	yes	none	U	Creature	3	R	MKM	0		1	0	0	0	legacy	rarity:R	1
+Fork	oldschool	yes	none	R	Instant	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Formidable Speaker	mtgovc	yes	none	G	Creature	3	R	ECL	0		1	0	0	0	legacy	rarity:R	1
+Forsaken Miner	evybaby twobert	yes	none	B	Creature	1	U	OTJ	1131	0.4917	0	1	0	0	peasant	rarity:U	1
+Forth Eorlingas!	mtgovc	yes	none	WR	Sorcery	2	R	LTC	0		1	0	0	0	legacy	rarity:R	1
+Fractured Identity	mtgovc	yes	none	WU	Sorcery	5	R	C17	0		1	0	0	0	legacy	rarity:R	1
+Frantic Search	vintage180 mtgovc	yes	Random	U	Instant	3	C	ULG	1422	0.4327	1	0	0	0	pauper	rarity:C	1
+Frog Butler	evybaby	yes	none	G	Creature	2	C	TMT	624	0.5699	0	1	0	0	pauper	rarity:C	1
+Frost Trickster	peasant	yes	none	U	Creature	3	C	PLST	646	0.4144	0	0	1	0	pauper	rarity:C	1
+Frozen Shade	oldschool	yes	none	B	Creature	3	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Fury	omega vintage180 modern mtgovc	yes	none	R	Creature	5	M	MH2	6416	0.5233	1	1	0	0	legacy	rarity:M	1
+Futurist Forge	evybaby	yes	none	U	Artifact	2	C	MSH	22		0	1	0	0	pauper	rarity:C	1
+Gaea's Cradle	mtgovc	yes	none	G	Land	0	R	USG	0		1	0	0	0	legacy	rarity:R	1
+Gaea's Liege	oldschool	yes	All	G	Creature	6	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Galewind Moose	evybaby	yes	none	G	Creature	6	U	BLB	849	0.5466	0	1	0	0	peasant	rarity:U	1
+Galvanic Blast	evybaby	yes	none	R	Instant	1	C	SOM	1403	0.4814	0	1	0	0	pauper	rarity:C	1
+Galvanic Discharge	pauper mtgovc	yes	none	R	Instant	1	C	MH3	415	0.5264	1	0	0	1	pauper	rarity:C	1
+Gandalf, Goblins' Bane	mtgovc	yes	none	R	Creature	3	M	HOB	0		1	0	0	0	legacy	rarity:M	1
+Garruk Relentless	omega	yes	none	BG	Planeswalker	4	M	ISD	118	0.4855	0	1	0	0	legacy	rarity:M	1
+Garruk Wildspeaker	omega vintage180 modern	yes	none	G	Planeswalker	4	R	LRW	1489	0.5521	1	1	0	0	legacy	rarity:R	1
+Garruk, Curse Breaker	mtgovc	yes	none	G	Planeswalker	5	M	FRA	0		1	0	0	0	legacy	rarity:M	1
+Gau, Feral Youth	mtgovc	yes	none	R	Creature	2	R	FIC	0		1	0	0	0	legacy	rarity:R	1
+Gauntlet of Might	oldschool	yes	Random	R	Artifact	4	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Generous Ent	fairfight pauper evybaby twobert mtgovc	yes	none	G	Creature	6	C	LTR	9623	0.5147	1	1	0	1	pauper	rarity:C	1
+Generous Plunderer	mtgovc	yes	none	R	Creature	2	M	BIG	0		1	0	0	0	legacy	rarity:M	1
+Generous Revival	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Get Lost	mtgovc	yes	none	W	Instant	2	R	LCI	0		1	0	0	0	legacy	rarity:R	1
+Ghazbán Ogre	oldschool	yes	Random	G	Creature	1	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Ghost Ship	oldschool	yes	none	U	Creature	4	C	DRK	0		0	1	0	0	pauper	rarity:C	1
+Ghostly Flicker	pauper	yes	All	U	Instant	3	C	AVR	6157	0.4465	0	0	0	1	pauper	rarity:C	1
+Giant Growth	oldschool	yes	none	G	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Giant Killer	evybaby	yes	none	W	Creature	1	R	ELD	336	0.5365	0	1	0	0	legacy	rarity:R	1
+Giant Spider	oldschool	yes	none	G	Creature	4	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Giant Tortoise	oldschool	yes	none	U	Creature	2	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Giant Turtle	oldschool	yes	none	G	Creature	3	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Gideon, Ally of Zendikar	modern	yes	none	W	Planeswalker	4	M	BFZ	1852	0.5358	0	1	0	0	legacy	rarity:M	1
+Ginger, Queen of Sweets	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Gitaxian Probe	mtgovc	yes	All	U	Sorcery	1	C	NPH	0		1	0	0	0	pauper	rarity:C	1
+Githzerai Monk	peasant	yes	none	W	Creature	5	U	CLB	610	0.5413	0	0	1	0	peasant	rarity:U	1
+Giver of Runes	mtgovc	yes	none	W	Creature	1	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Glamer Gifter	evybaby	yes	none	U	Creature	2	U	ECL	285	0.4819	0	1	0	0	peasant	rarity:U	1
+Gleeful Demolition	evybaby	yes	none	R	Sorcery	1	U	ONE	982	0.4311	0	1	0	0	peasant	rarity:U	1
+Glen Elendra Archmage	modern	yes	none	U	Creature	4	R	EVE	1366	0.4545	0	1	0	0	legacy	rarity:R	1
+Glimmer Lens	mtgovc	yes	none	W	Artifact	2	R	ONC	0		1	0	0	0	legacy	rarity:R	1
+Gloom	oldschool	yes	Random	B	Enchantment	3	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Glorybringer	omega modern	yes	none	R	Creature	5	R	AKH	1785	0.5353	0	1	0	0	legacy	rarity:R	1
+Glowspore Shaman	pauper	yes	none	BG	Creature	2	C	2X2	50		0	0	0	1	pauper	rarity:C	1
+Glóin the Mighty	evybaby	yes	none	R	Creature	4	U	HOB	33		0	1	0	0	peasant	rarity:U	1
+Go for the Throat	synergy modern evybaby	yes	none	B	Instant	2	C	40K	4703	0.4898	0	1	0	0	pauper	rarity:C	1
+Goblin Balloon Brigade	oldschool	yes	none	R	Creature	1	C	ATH	0		0	1	0	0	pauper	rarity:C	1
+Goblin Bombardment	synergy vintage180 peasant evybaby twobert mtgovc	yes	All	R	Enchantment	2	U	TMP	6825	0.4529	1	1	1	0	peasant	rarity:U	1
+Goblin Bushwhacker	pauper	yes	none	R	Creature	1	C	ZEN	35		0	0	0	1	pauper	rarity:C	1
+Goblin Engineer	vintage180 evybaby twobert mtgovc	yes	none	R	Creature	2	R	MH1	24		1	1	0	0	legacy	rarity:R	1
+Goblin Guide	omega vintage180 modern	yes	none	R	Creature	1	R	ZEN	375	0.5069	1	1	0	0	legacy	rarity:R	1
+Goblin Plate Mail	peasant	yes	none	BR	Artifact	2	C	HOB	4		0	0	1	0	pauper	rarity:C	1
+Goblin Rabblemaster	omega synergy vintage180 modern	yes	none	R	Creature	3	R	M15	5100	0.5149	1	1	0	0	legacy	rarity:R	1
+Goblin Surprise	peasant	yes	none	R	Instant	3	C	FDN	4184	0.4681	0	0	1	0	pauper	rarity:C	1
+Goblin Welder	vintage180 evybaby mtgovc	yes	All	R	Creature	1	R	ULG	99	0.4535	1	1	0	0	legacy	rarity:R	1
+Godless Shrine	synergy modern peasant evybaby twobert mtgovc	yes	none	WB	Land	0	R	GPT	2370	0.5261	1	1	1	0	legacy	rarity:R	1
+Goldspan Dragon	omega	yes	none	R	Creature	5	M	PLST	1843	0.5437	0	1	0	0	legacy	rarity:M	1
+Golgari Rot Farm	pauper	yes	none	BG	Land	0	C	RAV	1057	0.5079	0	0	0	1	pauper	rarity:C	1
+Gollum, Silent Slinker	evybaby	yes	none	B	Creature	4	C	HOB	19		0	1	0	0	pauper	rarity:C	1
+Gonti, Lord of Luxury	peasant	yes	none	B	Creature	4	U	CMM	2992	0.5342	0	0	1	0	peasant	rarity:U	1
+Grafted Wargear	peasant	yes	none		Artifact	3	U	5DN	2986	0.5163	0	0	1	0	peasant	rarity:U	1
+Granite Gargoyle	oldschool	yes	none	R	Creature	3	U	ME1	0		0	1	0	0	peasant	rarity:U	1
+Grapple with the Past	fairfight pauper	yes	none	G	Instant	2	C	EMN	5		0	1	0	1	pauper	rarity:C	1
+Grave Titan	omega	yes	none	B	Creature	6	M	M11	137	0.5223	0	1	0	0	legacy	rarity:M	1
+Gravecrawler	synergy	yes	none	B	Creature	1	R	DKA	1203	0.5257	0	1	0	0	legacy	rarity:R	1
+Gravedigger	fairfight pauper	yes	none	B	Creature	4	C	TMP	5108	0.5014	0	1	0	1	pauper	rarity:C	1
+Gray Merchant of Asphodel	fairfight pauper	yes	none	B	Creature	5	C	THS	6170	0.5041	0	1	0	1	pauper	rarity:C	1
+Greed	oldschool	yes	none	B	Enchantment	4	U	C21	0		0	1	0	0	peasant	rarity:U	1
+Green Sun's Zenith	vintage180 mtgovc	yes	none	G	Sorcery	1	R	MBS	17		1	0	0	0	legacy	rarity:R	1
+Greta, Sweettooth Scourge	evybaby	yes	none	BG	Creature	3	U	WOE	76		0	1	0	0	peasant	rarity:U	1
+Grief	vintage180 modern mtgovc	yes	none	B	Creature	4	M	MH2	3737	0.4387	1	1	0	0	legacy	rarity:M	1
+Grim Flayer	fairfight	yes	none	BG	Creature	2	R	2X2	237	0.5292	0	1	0	0	legacy	rarity:R	1
+Grim Haruspex	synergy twobert	yes	none	B	Creature	3	R	KTK	1653	0.5188	0	1	0	0	legacy	rarity:R	1
+Grim Monolith	mtgovc	yes	Random		Artifact	2	R	ULG	0		1	0	0	0	legacy	rarity:R	1
+Grindstone	mtgovc	yes	none		Artifact	1	R	TMP	0		1	0	0	0	legacy	rarity:R	1
+Griselbrand	vintage180 modern mtgovc	yes	none	B	Creature	8	M	AVR	3431	0.4477	1	1	0	0	legacy	rarity:M	1
+Grist, the Hunger Tide	omega synergy vintage180 modern mtgovc	yes	none	BG	Planeswalker	3	M	PLST	746	0.5268	1	1	0	0	legacy	rarity:M	1
+Grizzly Bears	oldschool	yes	none	G	Creature	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Grizzly Fate	peasant	yes	none	G	Sorcery	5	U	JUD	808	0.5749	0	0	1	0	peasant	rarity:U	1
+Grumgully, the Generous	synergy	yes	none	RG	Creature	3	U	ELD	0		0	1	0	0	peasant	rarity:U	1
+Gruul Turf	pauper	yes	none	RG	Land	0	C	GPT	1196	0.5008	0	0	0	1	pauper	rarity:C	1
+Guardian Beast	oldschool	yes	none	B	Creature	4	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Guardian Idol	fairfight pauper	yes	none		Artifact	2	C	IMA	5638	0.4923	0	1	0	1	pauper	rarity:C	1
+Guardian Scalelord	mtgovc	yes	none	W	Creature	5	R	MOC	0		1	0	0	0	legacy	rarity:R	1
+Guide of Souls	mtgovc	yes	none	W	Creature	1	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Gurmag Angler	fairfight pauper	yes	none	B	Creature	7	C	FRF	8070	0.4940	0	1	0	1	pauper	rarity:C	1
+Gush	mtgovc	yes	none	U	Instant	5	C	MMQ	0		1	0	0	0	pauper	rarity:C	1
+Gut, True Soul Zealot	peasant mtgovc	yes	none	R	Creature	3	U	CLB	3309	0.4797	1	0	1	0	peasant	rarity:U	1
+Guttersnipe	fairfight pauper	yes	none	R	Creature	3	C	CMM	1654	0.4897	0	1	0	1	pauper	rarity:C	1
+Gwendlyn Di Corci	oldschool	yes	none	UBR	Creature	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Gyruda, Doom of Depths	twobert	yes	none	UB	Creature	6	R	IKO	0		0	1	0	0	legacy	rarity:R	1
+Hallowed Fountain	synergy modern evybaby twobert mtgovc	yes	none	WU	Land	0	R	DIS	2839	0.5182	1	1	0	0	legacy	rarity:R	1
+Halo Forager	peasant evybaby	yes	Random	UB	Creature	3	U	MOM	1087	0.4373	0	1	1	0	peasant	rarity:U	1
+Hand of Justice	oldschool	yes	none	W	Creature	6	R	FEM	0		0	1	0	0	legacy	rarity:R	1
+Hangarback Walker	omega synergy fairfight twobert	yes	none		Artifact Creature	0	R	ORI	10907	0.5401	0	1	0	0	legacy	rarity:R	1
+Hanweir Battlements	twobert	yes	none	R	Land	0	R	EMN	0		0	1	0	0	legacy	rarity:R	1
+Hanweir Garrison	synergy twobert	yes	none	R	Creature	3	R	EMN	101	0.5288	0	1	0	0	legacy	rarity:R	1
+Hard Evidence	pauper evybaby	yes	none	U	Sorcery	1	C	PLST	8170	0.4787	0	1	0	1	pauper	rarity:C	1
+Hardened Scales	synergy	yes	Random	G	Enchantment	1	R	KTK	2159	0.4383	0	1	0	0	legacy	rarity:R	1
+Harrow	twobert	yes	none	G	Instant	3	C	INV	0		0	1	0	0	pauper	rarity:C	1
+Harvester of Misery	mtgovc	yes	none	B	Creature	5	M	BIG	0		1	0	0	0	legacy	rarity:M	1
+Hasran Ogress	oldschool	yes	none	B	Creature	2	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Haywire Mite	evybaby mtgovc	yes	none	G	Artifact Creature	1	U	PLST	45		1	1	0	0	peasant	rarity:U	1
+Headliner Scarlett	mtgovc	yes	none	R	Creature	4	R	CLU	0		1	0	0	0	legacy	rarity:R	1
+Heartless Act	modern	yes	none	B	Instant	2	U	IKO	676	0.4899	0	1	0	0	peasant	rarity:U	1
+Hedge Maze	evybaby mtgovc	yes	none	UG	Land	0	R	MKM	794	0.5258	1	1	0	0	legacy	rarity:R	1
+Hedron Crab	twobert	yes	none	U	Creature	1	U	ZEN	0		0	1	0	0	peasant	rarity:U	1
+Hell's Caretaker	oldschool	yes	Random	B	Creature	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Hellfire	oldschool	yes	Random	B	Sorcery	5	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Hellrider	omega modern fairfight evybaby	yes	none	R	Creature	4	R	DKA	3243	0.5171	0	1	0	0	legacy	rarity:R	1
+Hengegate Pathway	modern	yes	none	WU	Land	0	R	PLST	488	0.4862	0	1	0	0	legacy	rarity:R	1
+Hero of Bladehold	omega	yes	none	W	Creature	4	M	MBS	754	0.5103	0	1	0	0	legacy	rarity:M	1
+Hero of the Dunes	peasant	yes	none	WB	Creature	5	U	BRO	293	0.6230	0	0	1	0	peasant	rarity:U	1
+Hero's Downfall	modern	yes	none	B	Instant	3	U	PLST	2117	0.4511	0	1	0	0	peasant	rarity:U	1
+Heroic Reinforcements	peasant	yes	none	WR	Sorcery	4	U	M19	169	0.5714	0	0	1	0	peasant	rarity:U	1
+Hexdrinker	mtgovc	yes	none	G	Creature	1	M	MH1	0		1	0	0	0	legacy	rarity:M	1
+Hexgold Halberd	evybaby	yes	none	R	Artifact	2	U	ONE	114	0.4999	0	1	0	0	peasant	rarity:U	1
+Hidden Stockpile	twobert	yes	none	WB	Enchantment	2	U	AER	0		0	1	0	0	peasant	rarity:U	1
+High Fae Trickster	evybaby	yes	none	U	Creature	4	R	FDN	1661	0.4991	0	1	0	0	legacy	rarity:R	1
+High Tide	oldschool	yes	All	U	Instant	1	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Hivespine Wolverine	evybaby	yes	none	G	Creature	5	U	BLB	306	0.5245	0	1	0	0	peasant	rarity:U	1
+Holy Light	oldschool	yes	none	W	Instant	3	C	DRK	0		0	1	0	0	pauper	rarity:C	1
+Homarid Spawning Bed	oldschool	yes	All	U	Enchantment	2	U	FEM	0		0	1	0	0	peasant	rarity:U	1
+Honest Rutstein	peasant	yes	none	BG	Creature	3	U	OTJ	1170	0.5865	0	0	1	0	peasant	rarity:U	1
+Hordeling Outburst	synergy fairfight pauper peasant twobert	yes	none	R	Sorcery	3	C	A25	2635	0.5070	0	1	1	1	pauper	rarity:C	1
+Horizon Canopy	peasant mtgovc	yes	none	WG	Land	0	R	FUT	592	0.4722	1	0	1	0	legacy	rarity:R	1
+Hornet Queen	modern	yes	none	G	Creature	7	R	CMD	378	0.5804	0	1	0	0	legacy	rarity:R	1
+Howl from Beyond	oldschool	yes	none	B	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Howling Mine	oldschool	yes	none		Artifact	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Hullbreacher	mtgovc	yes	none	U	Creature	3	R	CMR	0		1	0	0	0	legacy	rarity:R	1
+Hullbreaker Horror	evybaby	yes	none	U	Creature	7	R	VOW	1371	0.4910	0	1	0	0	legacy	rarity:R	1
+Hunter's Talent	peasant evybaby	yes	none	G	Enchantment	2	U	BLB	3653	0.5205	0	1	1	0	peasant	rarity:U	1
+Huntmaster of the Fells	omega	yes	none	RG	Creature	4	R	INR	130	0.5733	0	1	0	0	legacy	rarity:R	1
+Hurkyl's Recall	oldschool	yes	none	U	Instant	2	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Hurricane	oldschool	yes	none	G	Sorcery	1	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Hymn to Tourach	omega vintage180 mtgovc oldschool	yes	none	B	Sorcery	2	C	FEM	1711	0.4944	1	1	0	0	pauper	rarity:C	1
+Hypnotic Specter	omega oldschool	yes	none	B	Creature	3	U	LEA	2836	0.5053	0	1	0	0	peasant	rarity:U	1
+Icatian Javelineers	oldschool	yes	none	W	Creature	1	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Icatian Scout	oldschool	yes	none	W	Creature	1	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Icatian Town	oldschool	yes	none	W	Sorcery	6	U	ME1	0		0	1	0	0	peasant	rarity:U	1
+Ice Cream Kitty	twobert	yes	none	BG	Artifact Creature	2	C	TMT	0		0	1	0	0	pauper	rarity:C	1
+Ice Storm	oldschool	yes	none	G	Sorcery	3	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Icefall Regent	evybaby	yes	none	U	Creature	5	R	DTK	1142	0.5249	0	1	0	0	legacy	rarity:R	1
+Icetill Explorer	mtgovc	yes	none	G	Creature	4	R	EOE	0		1	0	0	0	legacy	rarity:R	1
+Ichor Wellspring	synergy pauper	yes	Random		Artifact	2	C	MBS	12319	0.4954	0	1	0	1	pauper	rarity:C	1
+Icy Manipulator	oldschool	yes	none		Artifact	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Ifh-Bíff Efreet	oldschool	yes	none	G	Creature	4	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Ignoble Hierarch	twobert mtgovc	yes	none	BRG	Creature	1	R	PLST	0		1	1	0	0	legacy	rarity:R	1
+Immolation	oldschool	yes	none	R	Enchantment	1	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Imperial Seal	mtgovc	yes	Random	B	Sorcery	1	R	PTK	0		1	0	0	0	powered	powered-list	1
+Impractical Joke	mtgovc	yes	none	R	Sorcery	1	U	SOS	0		1	0	0	0	peasant	rarity:U	1
+Imprison	oldschool	yes	All	B	Enchantment	1	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Incinerate	omega	yes	none	R	Instant	2	C	ICE	468	0.5225	0	1	0	0	pauper	rarity:C	1
+Indatha Triome	mtgovc	yes	none	WBG	Land	0	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Infernal Grasp	vintage180 twobert mtgovc	yes	none	B	Instant	2	U	MID	26		1	1	0	0	peasant	rarity:U	1
+Inferno	oldschool	yes	none	R	Instant	7	R	DRK	0		0	1	0	0	legacy	rarity:R	1
+Inferno Titan	omega vintage180 modern	yes	none	R	Creature	6	R	CMM	4720	0.5410	1	1	0	0	legacy	rarity:R	1
+Infestation Sage	evybaby	yes	none	B	Creature	1	C	FDN	104	0.4435	0	1	0	0	pauper	rarity:C	1
+Inquisition of Kozilek	modern mtgovc	yes	none	B	Sorcery	1	U	ROE	1843	0.4342	1	1	0	0	peasant	rarity:U	1
+Inspiring Overseer	fairfight pauper peasant	yes	none	W	Creature	3	C	PLST	7627	0.5604	0	1	1	1	pauper	rarity:C	1
+Inspiring Vantage	mtgovc	yes	none	WR	Land	0	R	KLD	0		1	0	0	0	legacy	rarity:R	1
+Instill Energy	oldschool	yes	none	G	Enchantment	1	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Intangible Virtue	synergy	yes	Random	W	Enchantment	2	U	ISD	11		0	1	0	0	peasant	rarity:U	1
+Inti, Seneschal of the Sun	mtgovc	yes	none	R	Creature	2	R	LCI	0		1	0	0	0	legacy	rarity:R	1
+Iron Hills Blacksmith	twobert	yes	none	W	Creature	2	U	HOB	0		0	1	0	0	peasant	rarity:U	1
+Iron Man Armor	mtgovc	yes	none		Artifact	3	M	MSH	0		1	0	0	0	legacy	rarity:M	1
+Iron-Shield Elf	peasant twobert mtgovc	yes	none	B	Creature	2	U	ECL	137	0.5350	1	1	1	0	peasant	rarity:U	1
+Ironclaw Orcs	oldschool	yes	none	R	Creature	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Isamaru, Hound of Konda	evybaby	yes	none	W	Creature	1	R	CHK	226	0.5691	0	1	0	0	legacy	rarity:R	1
+Island Sanctuary	oldschool	yes	All	W	Enchantment	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Island of Wak-Wak	oldschool	yes	All		Land	0	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Ivora, Insatiable Heir	mtgovc	yes	none	R	Creature	2	U	J25	0		1	0	0	0	peasant	rarity:U	1
+Ivory Tower	oldschool	yes	none		Artifact	1	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Izzet Boilerworks	pauper	yes	none	UR	Land	0	C	GPT	1724	0.4925	0	0	0	1	pauper	rarity:C	1
+Izzet Charm	pauper	yes	none	UR	Instant	2	C	2X2	220	0.5000	0	0	0	1	pauper	rarity:C	1
+Jace, Vryn's Prodigy	omega synergy vintage180 modern twobert mtgovc	yes	none	U	Creature	2	M	ORI	16228	0.4515	1	1	0	0	legacy	rarity:M	1
+Jace, Wielder of Mysteries	mtgovc	yes	Random	U	Planeswalker	4	R	WAR	0		1	0	0	0	legacy	rarity:R	1
+Jace, the Mind Sculptor	omega vintage180 modern mtgovc	yes	none	U	Planeswalker	4	M	WWK	11094	0.4775	1	1	0	0	legacy	rarity:M	1
+Jacked Rabbit	mtgovc	yes	none	W	Creature	2	R	BLC	0		1	0	0	0	legacy	rarity:R	1
+Jade Statue	oldschool	yes	none		Artifact	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Jalum Tome	oldschool	yes	Random		Artifact	3	C	CMR	0		0	1	0	0	pauper	rarity:C	1
+Jayemdae Tome	oldschool	yes	none		Artifact	4	U	M13	0		0	1	0	0	peasant	rarity:U	1
+Jennifer Walters	mtgovc	yes	none	WG	Creature	2	M	MSH	0		1	0	0	0	legacy	rarity:M	1
+Jetmir's Garden	mtgovc	yes	none	WRG	Land	0	R	PLST	0		1	0	0	0	legacy	rarity:R	1
+Jewel Thief	fairfight pauper evybaby	yes	none	G	Creature	3	C	PLST	1944	0.5306	0	1	0	1	pauper	rarity:C	1
+Jihad	oldschool	yes	none	W	Enchantment	3	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Journey to Nowhere	fairfight pauper	yes	none	W	Enchantment	2	C	ZEN	4113	0.5618	0	1	0	1	pauper	rarity:C	1
+Judge's Familiar	pauper	yes	none	WU	Creature	1	C	RVR	19		0	0	0	1	pauper	rarity:C	1
+Juggernaut	oldschool	yes	none		Artifact Creature	4	C	DMR	0		0	1	0	0	pauper	rarity:C	1
+Jungle Hollow	fairfight pauper	yes	none	BG	Land	0	C	KTK	2146	0.5069	0	1	0	1	pauper	rarity:C	1
+Junji, the Midnight Sky	evybaby	yes	none	B	Creature	5	M	NEO	943	0.4974	0	1	0	0	legacy	rarity:M	1
+Junún Efreet	oldschool	yes	none	B	Creature	3	U	4ED	0		0	1	0	0	peasant	rarity:U	1
+Juri, Master of the Revue	synergy twobert	yes	none	BR	Creature	2	U	CMR	1		0	1	0	0	peasant	rarity:U	1
+Juzám Djinn	oldschool	yes	none	B	Creature	4	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Ka-Zar of the Savage Land	peasant evybaby	yes	none	G	Creature	5	U	MSH	626	0.5690	0	1	1	0	peasant	rarity:U	1
+Kaito, Bane of Nightmares	mtgovc	yes	none	UB	Planeswalker	4	M	DSK	0		1	0	0	0	legacy	rarity:M	1
+Kaldra Compleat	vintage180 mtgovc	yes	none		Artifact	7	M	PLST	3725	0.5052	1	0	0	0	legacy	rarity:M	1
+Kappa Cannoneer	vintage180 mtgovc	yes	none	U	Artifact Creature	6	R	NEC	2826	0.5053	1	0	0	0	legacy	rarity:R	1
+Karakas	mtgovc oldschool	yes	none	W	Land	0	U	LEG	0		1	1	0	0	peasant	rarity:U	1
+Kari Zev, Skyship Raider	synergy modern fairfight twobert	yes	none	R	Creature	2	R	AER	134	0.5607	0	1	0	0	legacy	rarity:R	1
+Karma	oldschool	yes	Random	W	Enchantment	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Karn Liberated	omega modern	yes	none		Planeswalker	7	M	NPH	6691	0.5025	0	1	0	0	legacy	rarity:M	1
+Karn, Scion of Urza	omega synergy vintage180 twobert mtgovc	yes	none		Planeswalker	4	M	DOM	10087	0.5227	1	1	0	0	legacy	rarity:M	1
+Keen-Eyed Curator	mtgovc	yes	none	G	Creature	2	R	BLB	0		1	0	0	0	legacy	rarity:R	1
+Kellan, Planar Trailblazer	evybaby	yes	none	R	Creature	1	R	FDN	295	0.4444	0	1	0	0	legacy	rarity:R	1
+Ketria Triome	mtgovc	yes	none	URG	Land	0	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Khabál Ghoul	oldschool	yes	none	B	Creature	3	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Khenra Spellspear	peasant	yes	none	UR	Creature	2	U	MOM	3918	0.4726	0	0	1	0	peasant	rarity:U	1
+Killer Bees	oldschool	yes	none	G	Creature	3	U	4ED	0		0	1	0	0	peasant	rarity:U	1
+Killian, Ink Duelist	evybaby	yes	none	WB	Creature	2	U	STX	60		0	1	0	0	peasant	rarity:U	1
+King Suleiman	oldschool	yes	none	W	Creature	2	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Kird Ape	oldschool	yes	none	R	Creature	1	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Kismet	oldschool	yes	none	W	Enchantment	4	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Kitchen Finks	twobert	yes	none	WG	Creature	3	U	SHM	0		0	1	0	0	peasant	rarity:U	1
+Kitesail Freebooter	synergy modern fairfight	yes	none	B	Creature	2	U	XLN	2954	0.5079	0	1	0	0	peasant	rarity:U	1
+Knight of Autumn	synergy	yes	none	WG	Creature	3	R	GRN	34		0	1	0	0	legacy	rarity:R	1
+Knight of the Reliquary	omega vintage180 modern mtgovc	yes	none	WG	Creature	3	R	CON	30		1	1	0	0	legacy	rarity:R	1
+Knockout Maneuver	evybaby	yes	none	G	Sorcery	3	U	TDM	906	0.5561	0	1	0	0	peasant	rarity:U	1
+Kokusho, the Evening Star	omega	yes	none	B	Creature	6	R	CHK	2403	0.5225	0	1	0	0	legacy	rarity:R	1
+Kolaghan's Command	omega vintage180 modern evybaby mtgovc	yes	none	BR	Instant	3	R	DTK	968	0.4925	1	1	0	0	legacy	rarity:R	1
+Kor Skyfisher	fairfight pauper peasant	yes	none	W	Creature	2	C	ZEN	13128	0.5282	0	1	1	1	pauper	rarity:C	1
+Kormus Bell	oldschool	yes	Random		Artifact	4	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Krenko, Tin Street Kingpin	synergy	yes	none	R	Creature	3	R	WAR	1546	0.4476	0	1	0	0	legacy	rarity:R	1
+Krosan Tusker	fairfight pauper	yes	none	G	Creature	7	C	ONS	1296	0.4527	0	1	0	1	pauper	rarity:C	1
+Kuldotha Rebirth	pauper	yes	Random	R	Sorcery	1	C	SOM	12		0	0	0	1	pauper	rarity:C	1
+Kumano Faces Kakkazan	evybaby	yes	none	R	Enchantment	1	U	NEO	64		0	1	0	0	peasant	rarity:U	1
+Laelia, the Blade Reforged	vintage180 mtgovc	yes	none	R	Creature	3	R	C21	2553	0.5045	1	0	0	0	legacy	rarity:R	1
+Lakeshore Apothecary	evybaby	yes	none	U	Creature	2	C	HOB	26		0	1	0	0	pauper	rarity:C	1
+Lampad of Death's Vigil	peasant	yes	none	B	Enchantment Creature	2	C	THB	10		0	0	1	0	pauper	rarity:C	1
+Land Tax	oldschool	yes	none	W	Enchantment	1	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Land's Edge	oldschool	yes	All	R	Enchantment	3	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Large Bear	evybaby	yes	none	BG	Creature	5	U	HOB	87	0.5607	0	1	0	0	peasant	rarity:U	1
+Lava Dart	mtgovc	yes	none	R	Instant	1	C	JUD	0		1	0	0	0	pauper	rarity:C	1
+Leatherhead, Swamp Stalker	evybaby	yes	none	G	Creature	4	R	TMT	296	0.5474	0	1	0	0	legacy	rarity:R	1
+Ledger Shredder	vintage180 modern fairfight mtgovc	yes	none	U	Creature	2	R	SNC	14329	0.4710	1	1	0	0	legacy	rarity:R	1
+Legion Extruder	mtgovc	yes	none	R	Artifact	2	M	BIG	0		1	0	0	0	legacy	rarity:M	1
+Legion Warboss	synergy twobert	yes	none	R	Creature	3	R	GRN	265	0.4526	0	1	0	0	legacy	rarity:R	1
+Leonardo, Leader in Blue	evybaby	yes	none	W	Creature	1	U	TMT	130	0.5199	0	1	0	0	peasant	rarity:U	1
+Lessons from Life	evybaby twobert	yes	none	UG	Sorcery	4	U	TMT	215	0.5234	0	1	0	0	peasant	rarity:U	1
+Ley Druid	oldschool	yes	none	G	Creature	3	C	5ED	0		0	1	0	0	pauper	rarity:C	1
+Leyline Binding	mtgovc	yes	Random	W	Enchantment	6	R	DMU	0		1	0	0	0	legacy	rarity:R	1
+Library of Alexandria	mtgovc oldschool	yes	none		Land	0	U	ARN	0		1	1	0	0	powered	powered-list	1
+Library of Leng	oldschool	yes	none		Artifact	1	C	ME4	0		0	1	0	0	pauper	rarity:C	1
+Life // Death	mtgovc	yes	none	BG	Sorcery	3	U	APC	0		1	0	0	0	peasant	rarity:U	1
+Life of Toshiro Umezawa	evybaby	yes	none	B	Enchantment	2	U	NEO	1318	0.4791	0	1	0	0	peasant	rarity:U	1
+Lifeforce	oldschool	yes	Random	G	Enchantment	2	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Light Up the Stage	modern	yes	none	R	Sorcery	3	U	RNA	1288	0.5359	0	1	0	0	peasant	rarity:U	1
+Lightning Bolt	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc oldschool	yes	none	R	Instant	1	C	LEA	20960	0.4966	1	1	1	1	pauper	rarity:C	1
+Lightning Greaves	mtgovc	yes	none		Artifact	2	U	MRD	0		1	0	0	0	peasant	rarity:U	1
+Lightning Helix	omega synergy vintage180 modern fairfight evybaby	yes	none	WR	Instant	2	U	RAV	3652	0.5571	1	1	0	0	peasant	rarity:U	1
+Liliana of the Veil	omega vintage180 modern mtgovc	yes	none	B	Planeswalker	3	M	ISD	3136	0.4778	1	1	0	0	legacy	rarity:M	1
+Liliana, the Last Hope	omega	yes	none	B	Planeswalker	3	M	EMN	2776	0.5061	0	1	0	0	legacy	rarity:M	1
+Lingering Souls	omega synergy vintage180 modern peasant evybaby twobert mtgovc	yes	none	WB	Sorcery	3	U	DKA	14398	0.5609	1	1	1	0	peasant	rarity:U	1
+Lion Sash	evybaby mtgovc	yes	none	W	Artifact Creature	2	R	PLST	918	0.5245	1	1	0	0	legacy	rarity:R	1
+Lion's Eye Diamond	mtgovc	yes	All		Artifact	0	R	MIR	0		1	0	0	0	powered	powered-list	1
+Lita, Little Orphan Amphibian	peasant	yes	none	W	Creature	2	U	TMT	630	0.5708	0	0	1	0	peasant	rarity:U	1
+Lively Dirge	peasant	yes	none	B	Sorcery	2	U	OTJ	2846	0.5356	0	0	1	0	peasant	rarity:U	1
+Living Plane	oldschool	yes	Random	G	Enchantment	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Llanowar Elves	omega synergy vintage180 modern fairfight pauper peasant evybaby mtgovc oldschool	yes	none	G	Creature	1	C	LEA	11802	0.5130	1	1	1	1	pauper	rarity:C	1
+Llanowar Visionary	fairfight pauper twobert	yes	none	G	Creature	3	C	M21	4028	0.5003	0	1	0	1	pauper	rarity:C	1
+Loam Lion	evybaby	yes	none	W	Creature	1	U	WWK	38		0	1	0	0	peasant	rarity:U	1
+Lone Missionary	pauper	yes	none	W	Creature	2	C	ROE	21		0	0	0	1	pauper	rarity:C	1
+Lonis, Cryptozoologist	synergy	yes	none	UG	Creature	2	R	PLST	85	0.3332	0	1	0	0	legacy	rarity:R	1
+Loran of the Third Path	vintage180 modern mtgovc	yes	Random	W	Creature	3	R	BRO	4467	0.5327	1	1	0	0	legacy	rarity:R	1
+Lord of the Pit	oldschool	yes	none	B	Creature	7	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Lose Focus	mtgovc	yes	none	U	Instant	2	C	MH2	0		1	0	0	0	pauper	rarity:C	1
+Lotus Cobra	omega synergy vintage180 modern	yes	none	G	Creature	2	R	IMA	9708	0.4887	1	1	0	0	legacy	rarity:R	1
+Lotus Petal	synergy mtgovc	yes	Random		Artifact	0	C	TMP	6228	0.5013	1	1	0	0	pauper	rarity:C	1
+Lovestruck Beast	fairfight	yes	none	G	Creature	3	R	ELD	490	0.5333	0	1	0	0	legacy	rarity:R	1
+Loxodon Smiter	evybaby	yes	none	WG	Creature	3	U	PIO	192	0.5707	0	1	0	0	peasant	rarity:U	1
+Loxodon Warhammer	peasant	yes	none		Artifact	3	U	MRD	5042	0.5196	0	0	1	0	peasant	rarity:U	1
+Lumbering Worldwagon	evybaby	yes	none	G	Artifact	3	R	DFT	385	0.5308	0	1	0	0	legacy	rarity:R	1
+Luminarch Aspirant	omega synergy vintage180 modern mtgovc	yes	none	W	Creature	2	R	ZNR	13039	0.5678	1	1	0	0	legacy	rarity:R	1
+Lunarch Veteran	synergy	yes	none	W	Creature	1	C	MID	2384	0.6772	0	1	0	0	pauper	rarity:C	1
+Lurrus of the Dream-Den	evybaby mtgovc	yes	none	WB	Creature	3	R	IKO	265	0.5438	1	1	0	0	legacy	rarity:R	1
+Lush Portico	evybaby mtgovc	yes	none	WG	Land	0	R	MKM	402	0.4787	1	1	0	0	legacy	rarity:R	1
+Lutri, the Spellchaser	mtgovc	yes	none	UR	Creature	3	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Lórien Revealed	peasant evybaby twobert mtgovc	yes	none	U	Sorcery	5	C	LTR	5321	0.4388	1	1	1	0	pauper	rarity:C	1
+Maelstrom Pulse	omega	yes	none	BG	Sorcery	3	R	ARB	4		0	1	0	0	legacy	rarity:R	1
+Mahamoti Djinn	oldschool	yes	none	U	Creature	6	U	IMA	0		0	1	0	0	peasant	rarity:U	1
+Malcolm, Alluring Scoundrel	mtgovc	yes	none	U	Creature	2	R	LCI	0		1	0	0	0	legacy	rarity:R	1
+Malevolent Rumble	peasant mtgovc	yes	none	G	Sorcery	2	C	MH3	1853	0.5585	1	0	1	0	pauper	rarity:C	1
+Man-o'-War	omega fairfight pauper	yes	none	U	Creature	3	C	VIS	20409	0.4807	0	1	0	1	pauper	rarity:C	1
+Mana Confluence	mtgovc	yes	none		Land	0	R	JOU	0		1	0	0	0	legacy	rarity:R	1
+Mana Crypt	mtgovc	yes	Random		Artifact	0	R	PRM	0		1	0	0	0	powered	powered-list	1
+Mana Drain	vintage180 mtgovc oldschool	yes	none	U	Instant	2	U	LEG	3074	0.4783	1	1	0	0	peasant	rarity:U	1
+Mana Flare	oldschool	yes	none	R	Enchantment	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Mana Leak	omega synergy modern fairfight pauper peasant twobert mtgovc	yes	none	U	Instant	2	C	STH	28600	0.4673	1	1	1	1	pauper	rarity:C	1
+Mana Short	oldschool	yes	All	U	Instant	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Mana Tithe	evybaby mtgovc	yes	none	W	Instant	1	C	PLC	1058	0.4981	1	1	0	0	pauper	rarity:C	1
+Mana Vault	mtgovc oldschool	yes	Random		Artifact	1	R	LEA	0		1	1	0	0	powered	powered-list	1
+Manabarbs	oldschool	yes	Random	R	Enchantment	4	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Manamorphose	mtgovc	yes	All	RG	Instant	2	C	SHM	0		1	0	0	0	pauper	rarity:C	1
+Manifold Key	mtgovc	yes	All		Artifact	1	U	M20	0		1	0	0	0	peasant	rarity:U	1
+Marauding Sphinx	peasant	yes	none	U	Creature	5	U	OTJ	710	0.4726	0	0	1	0	peasant	rarity:U	1
+March of Otherworldly Light	synergy modern twobert	yes	none	W	Instant	1	R	NEO	10		0	1	0	0	legacy	rarity:R	1
+March of the Multitudes	evybaby	yes	none	WG	Instant	3	M	GRN	248	0.5783	0	1	0	0	legacy	rarity:M	1
+Marionette Apprentice	peasant	yes	none	B	Creature	2	U	MH3	3968	0.5471	0	0	1	0	peasant	rarity:U	1
+Marionette Master	synergy twobert	yes	none	B	Creature	6	R	KLD	914	0.5160	0	1	0	0	legacy	rarity:R	1
+Marsh Flats	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ZEN	1991	0.5285	1	1	0	0	legacy	rarity:R	1
+Marwyn, the Preserver	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Master of the Hunt	oldschool	yes	none	G	Creature	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Master's Councillors	evybaby	yes	none	U	Creature	2	U	HOB	89	0.4953	0	1	0	0	peasant	rarity:U	1
+Mayhem Devil	synergy fairfight peasant evybaby twobert	yes	none	BR	Creature	3	U	WAR	109	0.4040	0	1	1	0	peasant	rarity:U	1
+Maze of Ith	oldschool	yes	Random		Land	0	U	DRK	0		0	1	0	0	peasant	rarity:U	1
+Mechanized Ninja Cavalry	evybaby twobert	yes	none	WR	Artifact Creature	2	C	TMT	59		0	1	0	0	pauper	rarity:C	1
+Meekstone	oldschool	yes	Random		Artifact	1	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Memory Deluge	modern	yes	none	U	Instant	4	R	MID	3688	0.4566	0	1	0	0	legacy	rarity:R	1
+Memory Jar	mtgovc	yes	All		Artifact	5	R	ULG	0		1	0	0	0	powered	powered-list	1
+Memory Lapse	vintage180 mtgovc	yes	none	U	Instant	2	C	HML	2944	0.4828	1	0	0	0	pauper	rarity:C	1
+Mentor of the Meek	synergy	yes	none	W	Creature	3	U	PLST	2867	0.6491	0	1	0	0	peasant	rarity:U	1
+Mesa Pegasus	oldschool	yes	none	W	Creature	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Metalhead	evybaby	yes	none	UR	Artifact Creature	5	U	TMT	1052	0.4888	0	1	0	0	peasant	rarity:U	1
+Metamorphosis Fanatic	mtgovc	yes	none	B	Creature	6	R	DSC	0		1	0	0	0	legacy	rarity:R	1
+Meticulous Archive	peasant evybaby mtgovc	yes	none	WU	Land	0	R	MKM	1635	0.5295	1	1	1	0	legacy	rarity:R	1
+Micromancer	evybaby	yes	Random	U	Creature	4	U	DMU	1811	0.5188	0	1	0	0	peasant	rarity:U	1
+Midnight Reaper	synergy	yes	none	B	Creature	3	R	GRN	527	0.5155	0	1	0	0	legacy	rarity:R	1
+Mighty Mutanimals	peasant	yes	none	W	Creature	4	U	TMT	1151	0.6020	0	0	1	0	peasant	rarity:U	1
+Mijae Djinn	oldschool	yes	none	R	Creature	3	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Militia Bugler	pauper	yes	none	W	Creature	3	C	PLST	3584	0.5552	0	0	0	1	pauper	rarity:C	1
+Millstone	oldschool	yes	none		Artifact	2	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Mind Stone	omega synergy modern fairfight pauper peasant mtgovc	yes	none		Artifact	2	C	WTH	26120	0.4887	1	1	1	1	pauper	rarity:C	1
+Mind Twist	mtgovc oldschool	yes	none	B	Sorcery	1	R	LEA	0		1	1	0	0	legacy	rarity:R	1
+Mindstab Thrull	oldschool	yes	none	B	Creature	3	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Mine Collapse	mtgovc	yes	none	R	Instant	4	C	MH2	0		1	0	0	0	pauper	rarity:C	1
+Minsc & Boo, Timeless Heroes	vintage180 modern mtgovc	yes	none	RG	Planeswalker	4	M	PLST	1008	0.5689	1	1	0	0	legacy	rarity:M	1
+Mintstrosity	evybaby	yes	none	B	Creature	2	C	WOE	152	0.4883	0	1	0	0	pauper	rarity:C	1
+Mire Triton	fairfight pauper	yes	none	B	Creature	2	C	CMM	1724	0.5381	0	1	0	1	pauper	rarity:C	1
+Mirkwood Nurturer	evybaby	yes	none	UG	Creature	3	C	HOB	29		0	1	0	0	pauper	rarity:C	1
+Mirkwood Pathmaker	evybaby	yes	none	G	Creature	3	U	HOB	123	0.6013	0	1	0	0	peasant	rarity:U	1
+Mirror Universe	oldschool	yes	none		Artifact	6	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Miscalculation	peasant mtgovc	yes	none	U	Instant	2	C	ULG	3927	0.4320	1	0	1	0	pauper	rarity:C	1
+Mischievous Mystic	evybaby	yes	none	U	Creature	2	U	FDN	1761	0.5132	0	1	0	0	peasant	rarity:U	1
+Mischievous Pup	evybaby	yes	none	W	Creature	3	U	LCI	44		0	1	0	0	peasant	rarity:U	1
+Mishra's Bauble	synergy vintage180 peasant evybaby twobert mtgovc	yes	All		Artifact	0	U	CSP	12619	0.4695	1	1	1	0	peasant	rarity:U	1
+Mishra's Factory	omega oldschool	yes	none		Land	0	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Mishra's Workshop	mtgovc oldschool	yes	Random		Land	0	R	ATQ	0		1	1	0	0	powered	powered-list	1
+Mist Raven	pauper	yes	none	U	Creature	4	C	AVR	6510	0.5193	0	0	0	1	pauper	rarity:C	1
+Misty Rainforest	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ZEN	3101	0.4415	1	1	0	0	legacy	rarity:R	1
+Moat	oldschool	yes	Random	W	Enchantment	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Mogg War Marshal	fairfight pauper peasant	yes	none	R	Creature	2	C	TSP	1297	0.5342	0	1	1	1	pauper	rarity:C	1
+Mole Man, Moloid Master	mtgovc	yes	none	G	Creature	3	R	MSH	0		1	0	0	0	legacy	rarity:R	1
+Momentary Blink	fairfight pauper	yes	none	WU	Instant	2	C	TSP	3145	0.5274	0	1	0	1	pauper	rarity:C	1
+Momo, Friendly Flier	evybaby	yes	none	W	Creature	1	R	TLA	209	0.5240	0	1	0	0	legacy	rarity:R	1
+Momo, Playful Pet	peasant	yes	none	W	Creature	1	U	TLA	218	0.6512	0	0	1	0	peasant	rarity:U	1
+Monastery Swiftspear	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc	yes	none	R	Creature	1	C	2X2	20237	0.4953	1	1	1	1	pauper	rarity:C	1
+Monstrous Rage	evybaby	yes	none	R	Instant	1	U	WOE	236	0.4101	0	1	0	0	peasant	rarity:U	1
+Moon-Circuit Hacker	fairfight pauper evybaby	yes	none	U	Enchantment Creature	2	C	PLST	651	0.5438	0	1	0	1	pauper	rarity:C	1
+Moonshadow	mtgovc	yes	none	B	Creature	1	M	ECL	0		1	0	0	0	legacy	rarity:M	1
+Moorish Cavalry	oldschool	yes	none	W	Creature	4	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Morbid Opportunist	peasant	yes	none	B	Creature	3	U	PLST	3717	0.5347	0	0	1	0	peasant	rarity:U	1
+Morphling	omega	yes	none	U	Creature	5	R	USG	4183	0.4680	0	1	0	0	legacy	rarity:R	1
+Mother Bear	pauper	yes	none	G	Creature	2	C	MH1	34		0	0	0	1	pauper	rarity:C	1
+Mother of Runes	omega vintage180 mtgovc	yes	none	W	Creature	1	U	ULG	4216	0.5140	1	1	0	0	peasant	rarity:U	1
+Mountain Yeti	oldschool	yes	none	R	Creature	4	C	CHR	0		0	1	0	0	pauper	rarity:C	1
+Mouser Foundry	evybaby twobert	yes	none	R	Artifact	2	C	TMT	316	0.5089	0	1	0	0	pauper	rarity:C	1
+Mox Diamond	mtgovc	yes	none		Artifact	0	R	STH	0		1	0	0	0	legacy	rarity:R	1
+Mox Emerald	vintage180 mtgovc oldschool	yes	none	G	Artifact	0	R	LEA	4361	0.5152	1	1	0	0	powered	powered-list	1
+Mox Jet	vintage180 mtgovc oldschool	yes	none	B	Artifact	0	R	LEA	4366	0.5164	1	1	0	0	powered	powered-list	1
+Mox Opal	mtgovc	yes	Random		Artifact	0	M	SOM	0		1	0	0	0	legacy	rarity:M	1
+Mox Pearl	vintage180 mtgovc oldschool	yes	none	W	Artifact	0	R	LEA	4332	0.5129	1	1	0	0	powered	powered-list	1
+Mox Ruby	vintage180 mtgovc oldschool	yes	none	R	Artifact	0	R	LEA	4388	0.5113	1	1	0	0	powered	powered-list	1
+Mox Sapphire	vintage180 mtgovc oldschool	yes	none	U	Artifact	0	R	LEA	4372	0.5137	1	1	0	0	powered	powered-list	1
+Mulldrifter	omega synergy modern fairfight pauper peasant twobert	yes	none	U	Creature	5	C	LRW	26242	0.4728	0	1	1	1	pauper	rarity:C	1
+Multiversal Passage	mtgovc	yes	none		Land	0	R	SPM	0		1	0	0	0	legacy	rarity:R	1
+Murderous Redcap	synergy evybaby twobert	yes	none	BR	Creature	4	U	SHM	322	0.4356	0	1	0	0	peasant	rarity:U	1
+Murderous Rider	modern fairfight	yes	none	B	Creature	3	R	ELD	4154	0.4843	0	1	0	0	legacy	rarity:R	1
+Murktide Regent	omega modern	yes	none	U	Creature	7	M	PLST	7800	0.4671	0	1	0	0	legacy	rarity:M	1
+Murmuring Mystic	synergy fairfight pauper peasant	yes	none	U	Creature	4	C	CMM	14662	0.4775	0	1	1	1	pauper	rarity:C	1
+Mutagenic Growth	mtgovc	yes	none	G	Instant	1	C	NPH	0		1	0	0	0	pauper	rarity:C	1
+Mutavault	omega	yes	none		Land	0	R	MOR	0		0	1	0	0	legacy	rarity:R	1
+Myr Battlesphere	vintage180 mtgovc	yes	none		Artifact Creature	7	R	SOM	4205	0.4985	1	0	0	0	legacy	rarity:R	1
+Myr Sire	synergy fairfight pauper twobert	yes	none		Artifact Creature	2	C	MBS	1025	0.5391	0	1	0	1	pauper	rarity:C	1
+Mystic Confluence	vintage180 twobert mtgovc	yes	All	U	Instant	5	R	C15	3074	0.4515	1	1	0	0	legacy	rarity:R	1
+Mystic Forge	mtgovc	yes	Random		Artifact	4	R	M20	0		1	0	0	0	powered	powered-list	1
+Mystic Snake	omega	yes	none	UG	Creature	4	R	APC	1		0	1	0	0	legacy	rarity:R	1
+Mystical Tutor	mtgovc	yes	Random	U	Instant	1	U	MIR	0		1	0	0	0	powered	powered-list	1
+Nadu, Winged Wisdom	mtgovc	yes	none	UG	Creature	3	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Nahiri, Storm of Stone	fairfight	yes	none	WR	Planeswalker	4	U	WAR	142	0.5494	0	1	0	0	peasant	rarity:U	1
+Narset, Parter of Veils	mtgovc	yes	none	U	Planeswalker	3	U	WAR	0		1	0	0	0	powered	powered-list	1
+Nasty Little Rabbit	evybaby	yes	none	G	Creature	1	U	HOB	151	0.5087	0	1	0	0	peasant	rarity:U	1
+Natural Order	vintage180 mtgovc	yes	none	G	Sorcery	4	R	VIS	811	0.4477	1	0	0	0	legacy	rarity:R	1
+Necromancy	vintage180 mtgovc	yes	none	B	Enchantment	3	U	VIS	1520	0.4753	1	0	0	0	peasant	rarity:U	1
+Needleverge Pathway	modern	yes	none	WR	Land	0	R	ZNR	255	0.5600	0	1	0	0	legacy	rarity:R	1
+Nessian Hornbeetle	evybaby	yes	none	G	Creature	2	U	THB	176	0.5255	0	1	0	0	peasant	rarity:U	1
+Nest Invader	fairfight pauper	yes	none	G	Creature	2	C	ROE	743	0.5004	0	1	0	1	pauper	rarity:C	1
+Nested Shambler	fairfight pauper	yes	none	B	Creature	1	C	MH2	16		0	1	0	1	pauper	rarity:C	1
+Nether Void	oldschool	yes	Random	B	Enchantment	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Nethergoyf	mtgovc	yes	All	B	Creature	1	M	MH3	0		1	0	0	0	legacy	rarity:M	1
+Nettlecyst	mtgovc	yes	none		Artifact	3	R	MH2	0		1	0	0	0	legacy	rarity:R	1
+Nevinyrral's Disk	oldschool	yes	none		Artifact	4	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Nezumi Linkbreaker	evybaby	yes	none	B	Creature	1	C	OTJ	29		0	1	0	0	pauper	rarity:C	1
+Nezumi Prowler	evybaby	yes	none	B	Artifact Creature	2	U	PLST	131	0.5165	0	1	0	0	peasant	rarity:U	1
+Nicol Bolas	oldschool	yes	none	UBR	Creature	8	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Night Nurse, Healer of Heroes	mtgovc	yes	none	W	Creature	2	U	MSH	0		1	0	0	0	peasant	rarity:U	1
+Night's Whisper	fairfight pauper peasant evybaby mtgovc	yes	none	B	Sorcery	2	C	EMA	12027	0.4997	1	1	1	1	pauper	rarity:C	1
+Nightmare	oldschool	yes	none	B	Creature	6	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Ninja of the Deep Hours	fairfight pauper evybaby	yes	none	U	Creature	4	C	BOK	5053	0.4743	0	1	0	1	pauper	rarity:C	1
+Nishoba Brawler	evybaby	yes	Random	G	Creature	2	U	DMU	445	0.5849	0	1	0	0	peasant	rarity:U	1
+Nissa, Who Shakes the World	omega vintage180 modern mtgovc	yes	none	G	Planeswalker	5	R	WAR	5107	0.5469	1	1	0	0	legacy	rarity:R	1
+No More Lies	mtgovc	yes	none	WU	Instant	2	U	MKM	0		1	0	0	0	peasant	rarity:U	1
+Noble Hierarch	modern twobert mtgovc	yes	none	WUG	Creature	1	R	CON	3196	0.5569	1	1	0	0	legacy	rarity:R	1
+Northern Paladin	oldschool	yes	Random	W	Creature	4	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Novice Inspector	evybaby	yes	none	W	Creature	1	C	MKM	870	0.5348	0	1	0	0	pauper	rarity:C	1
+Null Summoner	twobert	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Nurturing Pixie	evybaby	yes	none	W	Creature	1	U	OTJ	1302	0.5000	0	1	0	0	peasant	rarity:U	1
+Nyxborn Hydra	peasant	yes	none	G	Enchantment Creature	1	C	MH3	1523	0.5645	0	0	1	0	pauper	rarity:C	1
+Oath of Druids	mtgovc	yes	none	G	Enchantment	2	R	EXO	0		1	0	0	0	legacy	rarity:R	1
+Ob Nixilis, the Adversary	evybaby	yes	none	BR	Planeswalker	3	M	SNC	229	0.4136	0	1	0	0	legacy	rarity:M	1
+Oblivion Ring	fairfight pauper	yes	none	W	Enchantment	3	C	LRW	9225	0.5319	0	1	0	1	pauper	rarity:C	1
+Obsessive Pursuit	evybaby	yes	none	B	Enchantment	2	R	TLA	390	0.4414	0	1	0	0	legacy	rarity:R	1
+Obsianus Golem	oldschool	yes	none		Artifact Creature	6	C	ME4	0		0	1	0	0	pauper	rarity:C	1
+Occult Epiphany	mtgovc	yes	none	U	Instant	1	R	VOC	0		1	0	0	0	legacy	rarity:R	1
+Ocelot Pride	vintage180 mtgovc	yes	none	W	Creature	1	R	SCH	2793	0.5723	1	0	0	0	legacy	rarity:R	1
+Oketra's Monument	peasant	yes	none		Artifact	3	U	AKH	39		0	0	1	0	peasant	rarity:U	1
+Okiba Reckoner Raid	evybaby	yes	none	B	Enchantment	1	C	NEO	73		0	1	0	0	pauper	rarity:C	1
+Okiba-Gang Shinobi	fairfight pauper	yes	none	B	Creature	5	C	BOK	1526	0.4963	0	1	0	1	pauper	rarity:C	1
+Oko, Thief of Crowns	vintage180 modern mtgovc	yes	none	UG	Planeswalker	3	M	ELD	2679	0.5043	1	1	0	0	legacy	rarity:M	1
+Okoye, Dora Milaje Leader	evybaby	yes	none	W	Creature	4	U	MSH	581	0.5291	0	1	0	0	peasant	rarity:U	1
+Okoye, Mighty and Adored	evybaby mtgovc	yes	none	WG	Creature	4	R	MSC	124	0.6110	1	1	0	0	legacy	rarity:R	1
+Old Man of the Sea	oldschool	yes	none	U	Creature	3	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Oliphaunt	evybaby twobert mtgovc	yes	none	R	Creature	6	C	LTR	1647	0.4835	1	1	0	0	pauper	rarity:C	1
+Omnath, Locus of Creation	mtgovc	yes	none	WURG	Creature	4	M	ZNR	0		1	0	0	0	legacy	rarity:M	1
+Omnath, Locus of Rage	synergy twobert	yes	none	RG	Creature	7	M	BFZ	150	0.4176	0	1	0	0	legacy	rarity:M	1
+Once Upon a Time	mtgovc	yes	none	G	Instant	2	R	ELD	0		1	0	0	0	legacy	rarity:R	1
+Oni-Cult Anvil	evybaby	yes	none	BR	Artifact	2	U	NEO	481	0.4132	0	1	0	0	peasant	rarity:U	1
+Ophiomancer	synergy vintage180	yes	none	B	Creature	3	R	C13	3734	0.5101	1	1	0	0	legacy	rarity:R	1
+Opt	synergy modern	yes	none	U	Instant	1	C	INV	6898	0.4363	0	1	0	0	pauper	rarity:C	1
+Oracle of Mul Daya	modern	yes	none	G	Creature	4	R	ZEN	3144	0.5468	0	1	0	0	legacy	rarity:R	1
+Orcish Artillery	oldschool	yes	none	R	Creature	3	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Orcish Bowmasters	omega vintage180 mtgovc	yes	none	B	Creature	2	R	LTR	4985	0.5120	1	1	0	0	legacy	rarity:R	1
+Orcish Lumberjack	mtgovc	yes	All	RG	Creature	1	C	ICE	0		1	0	0	0	pauper	rarity:C	1
+Orcish Oriflamme	oldschool	yes	none	R	Enchantment	4	C	EMA	0		0	1	0	0	pauper	rarity:C	1
+Order of Leitbur	oldschool	yes	none	W	Creature	2	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Order of the Ebon Hand	oldschool	yes	none	B	Creature	2	C	FEM	0		0	1	0	0	pauper	rarity:C	1
+Orgg	oldschool	yes	none	R	Creature	5	R	FEM	0		0	1	0	0	legacy	rarity:R	1
+Ornithopter	oldschool	yes	none		Artifact Creature	0	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Oroku Saki, Shredder Rising	evybaby	yes	none	B	Creature	3	C	TMT	223	0.4732	0	1	0	0	pauper	rarity:C	1
+Ossification	evybaby	yes	none	W	Enchantment	2	U	PLST	1484	0.5233	0	1	0	0	peasant	rarity:U	1
+Otawara, Soaring City	mtgovc	yes	none	U	Land	0	R	NEO	0		1	0	0	0	legacy	rarity:R	1
+Otharri, Suns' Glory	mtgovc	yes	none	WR	Creature	5	M	ONC	0		1	0	0	0	legacy	rarity:M	1
+Oubliette	oldschool	yes	All	B	Enchantment	3	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Ouroboroid	mtgovc	yes	none	G	Creature	4	M	EOE	0		1	0	0	0	legacy	rarity:M	1
+Oust	mtgovc	yes	none	W	Sorcery	1	U	ROE	0		1	0	0	0	peasant	rarity:U	1
+Overgrown Tomb	synergy modern evybaby twobert mtgovc	yes	none	BG	Land	0	R	RAV	1785	0.4944	1	1	0	0	legacy	rarity:R	1
+Overlord of the Balemurk	mtgovc	yes	none	B	Enchantment Creature	5	M	DSK	0		1	0	0	0	legacy	rarity:M	1
+Overlord of the Mistmoors	mtgovc	yes	none	W	Enchantment Creature	7	M	DSK	0		1	0	0	0	legacy	rarity:M	1
+Owlbear	pauper	yes	none	G	Creature	5	C	AFR	383	0.4987	0	0	0	1	pauper	rarity:C	1
+Painter's Servant	mtgovc	yes	none		Artifact Creature	2	R	SHM	0		1	0	0	0	legacy	rarity:R	1
+Palace Jailer	vintage180 evybaby mtgovc	yes	none	W	Creature	4	U	CN2	4128	0.5566	1	1	0	0	peasant	rarity:U	1
+Palace Sentinels	pauper	yes	none	W	Creature	4	C	CN2	5857	0.5244	0	0	0	1	pauper	rarity:C	1
+Palantír of Orthanc	mtgovc	yes	none		Artifact	3	M	LTR	0		1	0	0	0	legacy	rarity:M	1
+Paradox Surveyor	evybaby	yes	none	UG	Creature	3	U	SOS	191	0.5308	0	1	0	0	peasant	rarity:U	1
+Paradoxical Outcome	mtgovc	yes	none	U	Instant	4	R	KLD	0		1	0	0	0	legacy	rarity:R	1
+Parallax Wave	mtgovc	yes	All	W	Enchantment	4	R	NMS	0		1	0	0	0	legacy	rarity:R	1
+Paralyze	oldschool	yes	none	B	Enchantment	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Path to Exile	omega modern peasant evybaby mtgovc	yes	none	W	Instant	1	U	CON	7812	0.5140	1	1	1	0	peasant	rarity:U	1
+Path to the World Tree	evybaby	yes	none	WUBRG	Enchantment	2	U	PLST	120	0.4928	0	1	0	0	peasant	rarity:U	1
+Pelakka Wurm	peasant	yes	none	G	Creature	7	U	ROE	1121	0.5627	0	0	1	0	peasant	rarity:U	1
+Pelt Collector	synergy	yes	none	G	Creature	1	R	GRN	73		0	1	0	0	legacy	rarity:R	1
+Pendelhaven	oldschool	yes	Random	G	Land	0	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Pentad Prism	mtgovc	yes	none		Artifact	2	C	5DN	0		1	0	0	0	pauper	rarity:C	1
+Perilous Landscape	peasant	yes	none	WUR	Land	0	C	MH3	1576	0.4304	0	0	1	0	pauper	rarity:C	1
+Perilous Myr	fairfight pauper	yes	none		Artifact Creature	2	C	SOM	11872	0.5070	0	1	0	1	pauper	rarity:C	1
+Persist	synergy modern twobert	yes	none	B	Sorcery	2	R	MH2	1028	0.5214	0	1	0	0	legacy	rarity:R	1
+Personal Incarnation	oldschool	yes	All	W	Creature	6	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Pest Infestation	evybaby mtgovc	yes	none	G	Sorcery	1	R	C21	1018	0.5626	1	1	0	0	legacy	rarity:R	1
+Pestermite	fairfight pauper	yes	none	U	Creature	3	C	LRW	9389	0.4749	0	1	0	1	pauper	rarity:C	1
+Pestilence	oldschool	yes	none	B	Enchantment	4	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Phantasmal Image	omega synergy modern fairfight mtgovc	yes	none	U	Creature	2	R	M12	13614	0.4635	1	1	0	0	legacy	rarity:R	1
+Phantom Monster	oldschool	yes	none	U	Creature	4	C	EMA	0		0	1	0	0	pauper	rarity:C	1
+Phelia, Exuberant Shepherd	mtgovc	yes	none	W	Creature	2	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Phlage, Titan of Fire's Fury	vintage180 mtgovc	yes	none	WR	Creature	3	M	MH3	897	0.5442	1	0	0	0	legacy	rarity:M	1
+Phyrexian Arena	omega	yes	none	B	Enchantment	3	R	APC	985	0.4935	0	1	0	0	legacy	rarity:R	1
+Phyrexian Dragon Engine	mtgovc	yes	none	R	Artifact Creature	3	R	BRO	0		1	0	0	0	legacy	rarity:R	1
+Phyrexian Metamorph	vintage180 mtgovc	yes	none	U	Artifact Creature	4	R	NPH	949	0.4592	1	0	0	0	legacy	rarity:R	1
+Pia Nalaar	synergy fairfight twobert	yes	none	R	Creature	3	R	KLD	2340	0.5045	0	1	0	0	legacy	rarity:R	1
+Pia and Kiran Nalaar	synergy	yes	none	R	Creature	4	R	ORI	1239	0.4646	0	1	0	0	legacy	rarity:R	1
+Picklock Prankster	evybaby	yes	none	U	Creature	2	U	WOE	1714	0.5023	0	1	0	0	peasant	rarity:U	1
+Pillage the Bog	mtgovc	yes	none	BG	Sorcery	2	R	OTJ	0		1	0	0	0	legacy	rarity:R	1
+Pink Horror	twobert	yes	none	UR	Creature	5	R	40K	0		0	1	0	0	legacy	rarity:R	1
+Pirate Ship	oldschool	yes	none	U	Creature	5	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Pizza Face, Gastromancer	evybaby	yes	none	BG	Artifact Creature	5	U	TMT	18		0	1	0	0	peasant	rarity:U	1
+Plaguecrafter	fairfight	yes	none	B	Creature	3	U	GRN	62		0	1	0	0	peasant	rarity:U	1
+Plagued Rusalka	pauper	yes	Random	B	Creature	1	C	MM2	163	0.5464	0	0	0	1	pauper	rarity:C	1
+Plateau	omega vintage180 mtgovc oldschool	yes	none	WR	Land	0	R	LEA	916	0.5314	1	1	0	0	powered	powered-list	1
+Platinum Angel	omega	yes	none		Artifact Creature	7	R	MRD	553	0.4939	0	1	0	0	legacy	rarity:R	1
+Play with Fire	modern	yes	none	R	Instant	1	U	MID	1385	0.5352	0	1	0	0	peasant	rarity:U	1
+Plunder the Trollshaws	evybaby	yes	none	U	Instant	2	C	HOB	68		0	1	0	0	pauper	rarity:C	1
+Political Triumph	evybaby	yes	none	W	Enchantment	1	U	MSH	18		0	1	0	0	peasant	rarity:U	1
+Polluted Delta	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ONS	2614	0.4697	1	1	0	0	legacy	rarity:R	1
+Polukranos, World Eater	omega modern	yes	none	G	Creature	4	R	PIO	759	0.5672	0	1	0	0	legacy	rarity:R	1
+Pompous Battlemage	evybaby mtgovc	no	none			0			0		1	1	0	0	legacy	membership:other	1
+Ponder	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc	yes	none	U	Sorcery	1	C	LRW	32596	0.4591	1	1	1	1	pauper	rarity:C	1
+Porcelain Legionnaire	evybaby	yes	none	W	Artifact Creature	3	C	NPH	1637	0.5178	0	1	0	0	pauper	rarity:C	1
+Portable Hole	modern mtgovc	yes	none	W	Artifact	1	U	PLST	1993	0.5201	1	1	0	0	peasant	rarity:U	1
+Portal to Phyrexia	mtgovc	yes	none		Artifact	9	M	BRO	0		1	0	0	0	legacy	rarity:M	1
+Potioner's Trove	evybaby	yes	none		Artifact	3	C	SOS	966	0.4513	0	1	0	0	pauper	rarity:C	1
+Power Artifact	oldschool	yes	Random	U	Enchantment	2	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Power Sink	oldschool	yes	none	U	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Power Word Kill	peasant	yes	none	B	Instant	2	U	PLST	1109	0.5881	0	0	1	0	peasant	rarity:U	1
+Practiced Offense	evybaby	yes	none	W	Sorcery	3	R	SOS	921	0.5611	0	1	0	0	legacy	rarity:R	1
+Practiced Scrollsmith	evybaby	yes	none	WR	Creature	3	U	SOS	223	0.4074	0	1	0	0	peasant	rarity:U	1
+Preacher	oldschool	yes	none	W	Creature	3	R	DRK	0		0	1	0	0	legacy	rarity:R	1
+Preordain	omega vintage180 modern fairfight pauper peasant evybaby mtgovc	yes	none	U	Sorcery	1	C	M11	24588	0.4610	1	1	1	1	pauper	rarity:C	1
+Priest of Forgotten Gods	synergy twobert	yes	none	B	Creature	2	R	RNA	415	0.6161	0	1	0	0	legacy	rarity:R	1
+Primal Might	fairfight	yes	none	G	Sorcery	1	R	M21	74		0	1	0	0	legacy	rarity:R	1
+Primal Witchstalker	evybaby twobert	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Primeval Titan	omega vintage180 modern	yes	none	G	Creature	6	R	FCA	1852	0.5464	1	1	0	0	legacy	rarity:R	1
+Primordial Pachyderm	peasant	yes	none	G	Creature	4	C	TMT	69		0	0	1	0	pauper	rarity:C	1
+Prismari Command	modern	yes	none	UR	Instant	3	R	STX	760	0.4718	0	1	0	0	legacy	rarity:R	1
+Prismatic Ending	synergy modern evybaby twobert mtgovc	yes	All	W	Sorcery	1	U	MH2	1712	0.5122	1	1	0	0	peasant	rarity:U	1
+Prismatic Strands	pauper	yes	All	W	Instant	3	C	JUD	16		0	0	0	1	pauper	rarity:C	1
+Prismatic Vista	peasant mtgovc	yes	none		Land	0	R	MH1	3799	0.4849	1	0	1	0	legacy	rarity:R	1
+Prized Amalgam	synergy	yes	none	UB	Creature	3	R	SOI	20		0	1	0	0	legacy	rarity:R	1
+Prodigal Sorcerer	oldschool	yes	none	U	Creature	3	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Proft's Eidetic Memory	mtgovc	yes	none	U	Enchantment	2	R	MKM	0		1	0	0	0	legacy	rarity:R	1
+Prophetic Prism	synergy pauper	yes	All		Artifact	2	C	ROE	13491	0.4488	0	1	0	1	pauper	rarity:C	1
+Prosperous Innkeeper	synergy	yes	none	G	Creature	2	U	PLST	4283	0.4574	0	1	0	0	peasant	rarity:U	1
+Psionic Blast	oldschool	yes	none	U	Instant	3	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Psychic Frog	omega vintage180 modern mtgovc	yes	none	UB	Creature	2	R	MH3	3884	0.4509	1	1	0	0	legacy	rarity:R	1
+Psychic Purge	oldschool	yes	none	U	Sorcery	1	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Pulse of Murasa	fairfight pauper	yes	none	G	Instant	3	C	OGW	23		0	1	0	1	pauper	rarity:C	1
+Purphoros, God of the Forge	twobert	yes	none	R	Enchantment Creature	4	R	P22	0		0	1	0	0	legacy	rarity:R	1
+Pursue the Past	evybaby	yes	none	WR	Sorcery	2	C	SOS	212	0.5043	0	1	0	0	pauper	rarity:C	1
+Pyrite Spellbomb	mtgovc	yes	Random	R	Artifact	1	C	MRD	0		1	0	0	0	pauper	rarity:C	1
+Pyrogoyf	mtgovc	yes	none	R	Creature	4	R	M3C	0		1	0	0	0	legacy	rarity:R	1
+Pyrokinesis	vintage180 mtgovc	yes	none	R	Instant	6	U	ALL	31		1	0	0	0	peasant	rarity:U	1
+Pyrotechnics	oldschool	yes	none	R	Sorcery	5	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Qasali Pridemage	fairfight pauper evybaby	yes	none	WG	Creature	2	C	ARB	33		0	1	0	1	pauper	rarity:C	1
+Quandrix Charm	evybaby	yes	none	UG	Instant	2	U	SOS	22		0	1	0	0	peasant	rarity:U	1
+Quantum Riddler	mtgovc	yes	none	U	Creature	5	M	EOE	0		1	0	0	0	legacy	rarity:M	1
+Questing Beast	omega vintage180 modern mtgovc	yes	none	G	Creature	4	M	ELD	650	0.5425	1	1	0	0	legacy	rarity:M	1
+Questing Druid	evybaby	yes	none	RG	Creature	2	R	WOE	903	0.5460	0	1	0	0	legacy	rarity:R	1
+Quirion Dryad	evybaby	yes	none	G	Creature	2	U	M21	348	0.5516	0	1	0	0	peasant	rarity:U	1
+Quirion Ranger	mtgovc	yes	All	G	Creature	1	C	VIS	0		1	0	0	0	pauper	rarity:C	1
+Rabbit Battery	peasant evybaby	yes	none	R	Artifact Creature	1	U	PLST	3548	0.4923	0	1	1	0	peasant	rarity:U	1
+Raffine's Tower	mtgovc	yes	none	WUB	Land	0	R	SNC	0		1	0	0	0	legacy	rarity:R	1
+Ragamuffin Raptor	evybaby	yes	none	G	Creature	5	C	TMT	117	0.5109	0	1	0	0	pauper	rarity:C	1
+Ragavan, Nimble Pilferer	omega vintage180 modern mtgovc	yes	none	R	Creature	1	M	MH2	6669	0.5232	1	1	0	0	legacy	rarity:M	1
+Raid Bombardment	pauper	yes	none	R	Enchantment	3	C	ROE	41		0	0	0	1	pauper	rarity:C	1
+Raise the Alarm	pauper	yes	none	W	Instant	2	C	MRD	82	0.6372	0	0	0	1	pauper	rarity:C	1
+Rakdos Carnarium	pauper	yes	none	BR	Land	0	C	DIS	970	0.5101	0	0	0	1	pauper	rarity:C	1
+Rally the Peasants	fairfight pauper	yes	none	WR	Instant	3	C	EMA	391	0.5544	0	1	0	1	pauper	rarity:C	1
+Ram Through	synergy fairfight pauper evybaby twobert	yes	none	G	Instant	2	C	IKO	54		0	1	0	1	pauper	rarity:C	1
+Rampaging Baloths	omega	yes	none	G	Creature	6	R	IMA	1827	0.4759	0	1	0	0	legacy	rarity:R	1
+Rampaging Ferocidon	modern	yes	none	R	Creature	3	R	XLN	60		0	1	0	0	legacy	rarity:R	1
+Rampant Growth	modern	yes	none	G	Sorcery	2	C	MIR	2609	0.5633	0	1	0	0	pauper	rarity:C	1
+Ramunap Excavator	synergy twobert	yes	none	G	Creature	3	R	HOU	3904	0.4266	0	1	0	0	legacy	rarity:R	1
+Rancor	omega modern fairfight pauper	yes	none	G	Enchantment	1	C	ULG	1247	0.5301	0	1	0	1	pauper	rarity:C	1
+Ranger-Captain of Eos	modern	yes	none	W	Creature	3	R	PRM	1703	0.5206	0	1	0	0	legacy	rarity:R	1
+Rankle, Master of Pranks	modern evybaby	yes	none	B	Creature	4	R	CMM	1065	0.4410	0	1	0	0	legacy	rarity:R	1
+Rasputin Dreamweaver	oldschool	yes	none	WU	Creature	6	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Raucous Theater	evybaby mtgovc	yes	none	BR	Land	0	R	MKM	692	0.5056	1	1	0	0	legacy	rarity:R	1
+Raugrin Triome	mtgovc	yes	none	WUR	Land	0	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Ravenous Chupacabra	omega fairfight peasant	yes	none	B	Creature	4	U	RIX	4849	0.5394	0	1	1	0	peasant	rarity:U	1
+Razorverge Thicket	mtgovc	yes	none	WG	Land	0	R	SOM	0		1	0	0	0	legacy	rarity:R	1
+Reanimate	omega synergy vintage180 peasant twobert mtgovc	yes	none	B	Sorcery	1	U	TMP	8020	0.5083	1	1	1	0	peasant	rarity:U	1
+Recall	oldschool	yes	All	U	Sorcery	1	U	CHR	0		0	1	0	0	peasant	rarity:U	1
+Reckless Fireweaver	synergy	yes	none	R	Creature	2	C	KLD	1		0	1	0	0	pauper	rarity:C	1
+Reclamation Sage	peasant	yes	none	G	Creature	3	U	M15	475	0.5333	0	0	1	0	peasant	rarity:U	1
+Recruitment Officer	fairfight	yes	none	W	Creature	1	U	BRO	2928	0.5529	0	1	0	0	peasant	rarity:U	1
+Recurring Nightmare	vintage180 mtgovc	yes	none	B	Enchantment	3	R	EXO	1522	0.4488	1	0	0	0	legacy	rarity:R	1
+Red Elemental Blast	oldschool	yes	Random	R	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Red Room Recruit	evybaby	yes	none	B	Creature	2	C	MSH	89	0.4678	0	1	0	0	pauper	rarity:C	1
+Reflector Mage	omega synergy fairfight	yes	none	WU	Creature	3	U	OGW	81	0.5089	0	1	0	0	peasant	rarity:U	1
+Regal Caracal	evybaby	yes	none	W	Creature	5	R	AKH	1316	0.5494	0	1	0	0	legacy	rarity:R	1
+Regrowth	oldschool	yes	none	G	Sorcery	2	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Relic Barrier	oldschool	yes	Random		Artifact	2	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Relic of Sauron	mtgovc	yes	none	UBR	Artifact	4	R	LTC	0		1	0	0	0	legacy	rarity:R	1
+Remand	synergy modern twobert mtgovc	yes	none	U	Instant	2	U	RAV	8329	0.4460	1	1	0	0	peasant	rarity:U	1
+Remove Soul	oldschool	yes	none	U	Instant	2	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Renegade Freighter	fairfight pauper	yes	none		Artifact	3	C	KLD	519	0.4468	0	1	0	1	pauper	rarity:C	1
+Renegade Rallier	twobert	yes	none	WG	Creature	3	U	AER	0		0	1	0	0	peasant	rarity:U	1
+Repentant Blacksmith	oldschool	yes	none	W	Creature	2	C	CHR	0		0	1	0	0	pauper	rarity:C	1
+Reprieve	evybaby mtgovc	yes	none	W	Instant	2	U	LTR	1266	0.5000	1	1	0	0	peasant	rarity:U	1
+Repulse	fairfight	yes	none	U	Instant	3	C	INV	5394	0.4695	0	1	0	0	pauper	rarity:C	1
+Rescue Girl, First Responder	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Restless Anchorage	fairfight	yes	none	WU	Land	0	R	LCI	1640	0.4765	0	1	0	0	legacy	rarity:R	1
+Restless Bivouac	fairfight	yes	none	WR	Land	0	R	WOE	958	0.4857	0	1	0	0	legacy	rarity:R	1
+Restless Cottage	fairfight	yes	none	BG	Land	0	R	WOE	1139	0.5272	0	1	0	0	legacy	rarity:R	1
+Restless Fortress	fairfight	yes	none	WB	Land	0	R	WOE	851	0.4891	0	1	0	0	legacy	rarity:R	1
+Restless Prairie	fairfight	yes	none	WG	Land	0	R	LCI	1324	0.5179	0	1	0	0	legacy	rarity:R	1
+Restless Reef	fairfight	yes	none	UB	Land	0	R	LCI	994	0.4507	0	1	0	0	legacy	rarity:R	1
+Restless Ridgeline	fairfight	yes	none	RG	Land	0	R	LCI	1487	0.4871	0	1	0	0	legacy	rarity:R	1
+Restless Spire	fairfight	yes	none	UR	Land	0	R	WOE	1030	0.4476	0	1	0	0	legacy	rarity:R	1
+Restless Vents	fairfight	yes	none	BR	Land	0	R	LCI	581	0.4742	0	1	0	0	legacy	rarity:R	1
+Restless Vinestalk	fairfight	yes	none	UG	Land	0	R	WOE	1318	0.5374	0	1	0	0	legacy	rarity:R	1
+Restoration Angel	omega synergy vintage180 modern fairfight twobert	yes	none	W	Creature	4	R	AVR	5624	0.5637	1	1	0	0	legacy	rarity:R	1
+Retrofitter Foundry	synergy vintage180 twobert mtgovc	yes	none		Artifact	1	R	C18	10404	0.5428	1	1	0	0	legacy	rarity:R	1
+Reveillark	synergy twobert	yes	none	W	Creature	5	R	MOR	2570	0.6595	0	1	0	0	legacy	rarity:R	1
+Righteousness	oldschool	yes	All	W	Instant	1	U	M10	0		0	1	0	0	peasant	rarity:U	1
+Rimrock Knight	fairfight pauper	yes	none	R	Creature	2	C	ELD	2292	0.5086	0	1	0	1	pauper	rarity:C	1
+Rise from the Tides	peasant	yes	none	U	Sorcery	6	U	SOI	332	0.4204	0	0	1	0	peasant	rarity:U	1
+Rise of the Witch-king	peasant	yes	none	BG	Sorcery	4	U	LTR	2		0	0	1	0	peasant	rarity:U	1
+Risen Reef	synergy	yes	none	UG	Creature	3	U	M20	2213	0.3283	0	1	0	0	peasant	rarity:U	1
+Rishkar, Peema Renegade	synergy	yes	none	G	Creature	3	U	CMM	3462	0.4408	0	1	0	0	peasant	rarity:U	1
+Riverglide Pathway	modern	yes	none	UR	Land	0	R	ZNR	362	0.4791	0	1	0	0	legacy	rarity:R	1
+Riverpyre Verge	mtgovc	yes	none	UR	Land	0	R	DFT	0		1	0	0	0	legacy	rarity:R	1
+Roc of Kher Ridges	oldschool	yes	none	R	Creature	4	U	ME4	0		0	1	0	0	peasant	rarity:U	1
+Rock Hydra	oldschool	yes	All	R	Creature	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Rolling Thunder	fairfight pauper	yes	none	R	Sorcery	2	C	TMP	2344	0.5326	0	1	0	1	pauper	rarity:C	1
+Royal Assassin	oldschool	yes	none	B	Creature	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Rubble Rouser	evybaby	yes	none	R	Creature	3	C	SOS	584	0.4569	0	1	0	0	pauper	rarity:C	1
+Rubinia Soulsinger	oldschool	yes	none	WUG	Creature	5	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Ruby, Daring Tracker	evybaby	yes	none	RG	Creature	2	U	WOE	57		0	1	0	0	peasant	rarity:U	1
+Rugged Highlands	fairfight pauper	yes	none	RG	Land	0	C	KTK	2257	0.5133	0	1	0	1	pauper	rarity:C	1
+Rukh Egg	oldschool	yes	none	R	Creature	4	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Sacred Foundry	synergy modern peasant evybaby twobert mtgovc	yes	none	WR	Land	0	R	RAV	2468	0.5014	1	1	1	0	legacy	rarity:R	1
+Sage of the Skies	mtgovc	yes	none	W	Creature	3	R	TDM	0		1	0	0	0	legacy	rarity:R	1
+Saheeli, Jewel of Avishkar	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Saheeli, Sublime Artificer	synergy fairfight mtgovc	yes	none	UR	Planeswalker	3	U	WAR	1966	0.4095	1	1	0	0	peasant	rarity:U	1
+Sai, Master Thopterist	synergy twobert	yes	none	U	Creature	3	R	M19	2096	0.4409	0	1	0	0	legacy	rarity:R	1
+Sakura-Tribe Elder	omega synergy vintage180 modern fairfight pauper twobert	yes	none	G	Creature	2	C	CHK	6171	0.4988	1	1	0	1	pauper	rarity:C	1
+Salt Road Packbeast	evybaby	yes	none	W	Creature	6	C	TDM	436	0.5241	0	1	0	0	pauper	rarity:C	1
+Samurai's Katana	peasant	yes	none	R	Artifact	3	U	FIN	4084	0.5119	0	0	1	0	peasant	rarity:U	1
+Samut, Hazoret's Champion	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Sanctum Lurker	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Sanguine Evangelist	mtgovc	yes	none	W	Creature	3	R	LCI	0		1	0	0	0	legacy	rarity:R	1
+Saproling Migration	fairfight pauper	yes	none	G	Sorcery	2	C	DOM	3224	0.5025	0	1	0	1	pauper	rarity:C	1
+Satyr Wayfinder	synergy fairfight pauper peasant twobert	yes	none	G	Creature	2	C	BNG	213	0.5190	0	1	1	1	pauper	rarity:C	1
+Savage Land Dinosaur	evybaby	yes	none	G	Creature	6	C	MSH	26		0	1	0	0	pauper	rarity:C	1
+Savai Triome	mtgovc	yes	none	WBR	Land	0	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Savannah	omega vintage180 mtgovc oldschool	yes	none	WG	Land	0	R	LEA	805	0.5086	1	1	0	0	powered	powered-list	1
+Savannah Lions	oldschool	yes	none	W	Creature	1	C	A25	0		0	1	0	0	pauper	rarity:C	1
+Savor	evybaby	yes	none	B	Instant	2	C	BLB	946	0.4824	0	1	0	0	pauper	rarity:C	1
+Scalding Tarn	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ZEN	2573	0.4672	1	1	0	0	legacy	rarity:R	1
+Scavenger Folk	oldschool	yes	none	G	Creature	1	C	DRK	0		0	1	0	0	pauper	rarity:C	1
+Scavenging Ooze	omega synergy vintage180 modern fairfight evybaby twobert	yes	none	G	Creature	2	R	CMD	10197	0.4995	1	1	0	0	legacy	rarity:R	1
+Scolding Administrator	evybaby	yes	none	WB	Creature	2	U	SOS	110	0.5384	0	1	0	0	peasant	rarity:U	1
+Scoured Barrens	pauper	yes	none	WB	Land	0	C	KTK	1771	0.5176	0	0	0	1	pauper	rarity:C	1
+Screaming Nemesis	mtgovc	yes	none	R	Creature	3	M	DSK	0		1	0	0	0	legacy	rarity:M	1
+Scrubland	omega vintage180 mtgovc oldschool	yes	none	WB	Land	0	R	LEA	802	0.5285	1	1	0	0	powered	powered-list	1
+Scryb Sprites	oldschool	yes	none	G	Creature	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Scurry Oak	peasant	yes	none	G	Creature	3	U	PLST	2345	0.5057	0	0	1	0	peasant	rarity:U	1
+Scute Swarm	synergy	yes	none	G	Creature	3	R	ZNR	1839	0.4492	0	1	0	0	legacy	rarity:R	1
+Scythecat Cub	mtgovc	yes	none	G	Creature	2	R	J25	0		1	0	0	0	legacy	rarity:R	1
+Seachrome Coast	mtgovc	yes	none	WU	Land	0	R	SOM	0		1	0	0	0	legacy	rarity:R	1
+Sear	mtgovc	yes	none	R	Instant	2	U	ECL	0		1	0	0	0	peasant	rarity:U	1
+Search Party Captain	pauper	yes	none	W	Creature	4	C	PLST	284	0.5822	0	0	0	1	pauper	rarity:C	1
+Searslicer Goblin	evybaby	yes	none	R	Creature	2	R	PLST	1383	0.4611	0	1	0	0	legacy	rarity:R	1
+Seasoned Cryomancer	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Seasoned Hallowblade	modern twobert	yes	none	W	Creature	2	U	M21	31		0	1	0	0	peasant	rarity:U	1
+Seasoned Pyromancer	omega synergy vintage180 modern twobert mtgovc	yes	none	R	Creature	3	M	MH1	4251	0.4870	1	1	0	0	legacy	rarity:M	1
+Secure the Wastes	fairfight	yes	none	W	Instant	1	R	DTK	1075	0.5370	0	1	0	0	legacy	rarity:R	1
+Sedge Troll	oldschool	yes	none	BR	Creature	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Sedgemoor Witch	mtgovc	yes	none	B	Creature	3	R	PLST	0		1	0	0	0	legacy	rarity:R	1
+Seeker of the Way	fairfight pauper	yes	none	W	Creature	2	C	IMA	1796	0.5796	0	1	0	1	pauper	rarity:C	1
+Seething Landscape	peasant	yes	none	UBR	Land	0	C	MH3	1808	0.4633	0	0	1	0	pauper	rarity:C	1
+Selesnya Evangel	pauper	yes	none	WG	Creature	2	C	RAV	12		0	0	0	1	pauper	rarity:C	1
+Selesnya Sanctuary	pauper	yes	none	WG	Land	0	C	RAV	1982	0.4890	0	0	0	1	pauper	rarity:C	1
+Selfless Spirit	modern fairfight	yes	none	W	Creature	2	R	EMN	867	0.5667	0	1	0	0	legacy	rarity:R	1
+Sengir Vampire	oldschool	yes	none	B	Creature	5	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Sensei's Divining Top	mtgovc	yes	none		Artifact	1	U	CHK	0		1	0	0	0	peasant	rarity:U	1
+Sentinel of the Nameless City	fairfight mtgovc	yes	none	G	Creature	3	R	LCI	3868	0.5378	1	1	0	0	legacy	rarity:R	1
+Serendib Djinn	oldschool	yes	All	U	Creature	4	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Serendib Efreet	oldschool	yes	none	U	Creature	3	U	VMA	0		0	1	0	0	peasant	rarity:U	1
+Serra Angel	oldschool	yes	none	W	Creature	5	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Serra Paragon	vintage180 mtgovc	yes	none	W	Creature	4	M	DMU	477	0.5453	1	0	0	0	legacy	rarity:M	1
+Serrated Arrows	fairfight pauper	yes	none		Artifact	4	C	HML	8844	0.5084	0	1	0	1	pauper	rarity:C	1
+Servo Schematic	synergy	yes	none		Artifact	2	U	AER	5753	0.4966	0	1	0	0	peasant	rarity:U	1
+Settle Beyond Reality	pauper	yes	none	W	Sorcery	5	C	MH1	183	0.5911	0	0	0	1	pauper	rarity:C	1
+Sewer-veillance Cam	evybaby twobert mtgovc	yes	none	U	Artifact	1	C	TMT	174	0.3866	1	1	0	0	pauper	rarity:C	1
+Shadowspear	synergy modern fairfight twobert	yes	none		Artifact	1	R	THB	16572	0.5260	0	1	0	0	legacy	rarity:R	1
+Shadowy Backstreet	evybaby mtgovc	yes	none	WB	Land	0	R	MKM	345	0.5287	1	1	0	0	legacy	rarity:R	1
+Shahrazad	oldschool	yes	All	W	Sorcery	2	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Shallow Grave	mtgovc	yes	none	B	Instant	2	R	MIR	0		1	0	0	0	legacy	rarity:R	1
+Shark Typhoon	twobert	yes	none	U	Enchantment	6	R	IKO	0		0	1	0	0	legacy	rarity:R	1
+Shatter	oldschool	yes	none	R	Instant	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Shattered Landscape	peasant	yes	none	WBR	Land	0	C	MH3	1347	0.4879	0	0	1	0	pauper	rarity:C	1
+Shatterstorm	oldschool	yes	none	R	Sorcery	4	U	3ED	0		0	1	0	0	peasant	rarity:U	1
+Shelldock Isle	mtgovc	yes	Random	U	Land	0	R	LRW	0		1	0	0	0	legacy	rarity:R	1
+Sheltered by Ghosts	peasant	yes	none	W	Enchantment	2	U	DSK	1102	0.6132	0	0	1	0	peasant	rarity:U	1
+Sheltering Landscape	peasant	yes	none	WRG	Land	0	C	MH3	1338	0.4823	0	0	1	0	pauper	rarity:C	1
+Sheoldred's Edict	mtgovc	yes	none	B	Instant	2	U	PLST	0		1	0	0	0	peasant	rarity:U	1
+Sheoldred, the Apocalypse	omega vintage180 modern mtgovc	yes	none	B	Creature	4	M	DMU	7238	0.4964	1	1	0	0	legacy	rarity:M	1
+Shepherd of the Flock	evybaby	yes	none	W	Creature	2	U	ELD	146	0.5240	0	1	0	0	peasant	rarity:U	1
+Shi'ar Soldier	peasant	yes	none	U	Creature	2	U	MSC	780	0.4600	0	0	1	0	peasant	rarity:U	1
+Shifting Woodland	mtgovc	yes	none	G	Land	0	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Shivan Dragon	omega oldschool	yes	none	R	Creature	6	U	FDN	117	0.5255	0	1	0	0	peasant	rarity:U	1
+Shorikai, Genesis Engine	mtgovc	yes	none	WU	Artifact	4	M	NEC	0		1	0	0	0	legacy	rarity:M	1
+Show and Tell	vintage180 mtgovc	yes	none	U	Sorcery	3	R	USG	425	0.4472	1	0	0	0	legacy	rarity:R	1
+Showdown of the Skalds	synergy evybaby twobert	yes	none	WR	Enchantment	4	R	PLST	321	0.5027	0	1	0	0	legacy	rarity:R	1
+Shriekmaw	omega fairfight peasant	yes	none	B	Creature	5	U	LRW	6239	0.5223	0	1	1	0	peasant	rarity:U	1
+Shuri, Vibranium Technologist	peasant	yes	none	WU	Creature	3	U	MSC	179	0.4924	0	0	1	0	peasant	rarity:U	1
+Siege-Gang Commander	omega fairfight	yes	none	R	Creature	5	R	SCG	2864	0.5250	0	1	0	0	legacy	rarity:R	1
+Signal Pest	peasant	yes	none		Artifact Creature	1	U	MBS	24		0	0	1	0	peasant	rarity:U	1
+Silver Drake	pauper	yes	none	WU	Creature	3	C	PLS	730	0.5173	0	0	0	1	pauper	rarity:C	1
+Silverquill Charm	evybaby	yes	none	WB	Instant	2	U	SOS	112	0.5757	0	1	0	0	peasant	rarity:U	1
+Sindbad	oldschool	yes	none	U	Creature	2	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Singing Tree	oldschool	yes	All	G	Creature	4	U	ME1	0		0	1	0	0	peasant	rarity:U	1
+Sinister Starfish	peasant	yes	none	B	Creature	2	C	MH2	5		0	0	1	0	pauper	rarity:C	1
+Sink into Stupor	peasant mtgovc	yes	none	U	Instant	3	U	MH3	3603	0.4184	1	0	1	0	peasant	rarity:U	1
+Sinkhole	oldschool	yes	none	B	Sorcery	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Six	vintage180 mtgovc	yes	none	G	Creature	3	R	MH3	1319	0.4638	1	0	0	0	legacy	rarity:R	1
+Skateboard	evybaby mtgovc	yes	none		Artifact	1	U	TMT	25		1	1	0	0	peasant	rarity:U	1
+Skewer the Critics	pauper	yes	none	R	Sorcery	3	C	RNA	4768	0.4893	0	0	0	1	pauper	rarity:C	1
+Skittering Precursor	peasant	yes	none	R	Creature	3	U	MH3	127	0.4557	0	0	1	0	peasant	rarity:U	1
+Skullclamp	omega vintage180 mtgovc	yes	none		Artifact	1	U	DST	16401	0.4805	1	1	0	0	peasant	rarity:U	1
+Skyclave Apparition	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none	W	Creature	3	R	ZNR	17062	0.5478	1	1	0	0	legacy	rarity:R	1
+Sleight of Mind	oldschool	yes	All	U	Instant	1	U	ICE	0		0	1	0	0	peasant	rarity:U	1
+Slickshot Lockpicker	peasant	yes	none	U	Creature	3	U	OTJ	3251	0.4249	0	0	1	0	peasant	rarity:U	1
+Slickshot Show-Off	mtgovc	yes	none	R	Creature	2	R	OTJ	0		1	0	0	0	legacy	rarity:R	1
+Smuggler's Copter	omega synergy vintage180 modern twobert mtgovc	yes	none		Artifact	2	R	KLD	8038	0.5277	1	1	0	0	legacy	rarity:R	1
+Snap	pauper	yes	none	U	Instant	2	C	ULG	6409	0.4802	0	0	0	1	pauper	rarity:C	1
+Snapcaster Mage	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none	U	Creature	2	R	ISD	22749	0.4531	1	1	0	0	legacy	rarity:R	1
+Snarl Song	evybaby	yes	none	G	Sorcery	6	U	SOS	680	0.5500	0	1	0	0	peasant	rarity:U	1
+Sneak Attack	vintage180 mtgovc	yes	Random	R	Enchantment	4	R	USG	1939	0.4620	1	0	0	0	legacy	rarity:R	1
+Sneaky Snacker	evybaby	yes	none	UB	Creature	2	C	MH3	142	0.4691	0	1	0	0	pauper	rarity:C	1
+Snuff Out	pauper twobert mtgovc	yes	none	B	Instant	4	C	MMQ	4855	0.4956	1	1	0	1	pauper	rarity:C	1
+Sokenzan Smelter	evybaby	yes	none	R	Creature	2	U	NEO	24		0	1	0	0	peasant	rarity:U	1
+Sol Ring	vintage180 mtgovc oldschool	yes	none		Artifact	1	C	30A	4385	0.5078	1	1	0	0	powered	powered-list	1
+Sol'kanar the Swamp King	oldschool	yes	none	UBR	Creature	5	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Solemn Simulacrum	omega synergy fairfight	yes	none		Artifact Creature	4	R	MRD	14859	0.4993	0	1	0	0	legacy	rarity:R	1
+Solitude	omega vintage180 modern mtgovc	yes	none	W	Creature	5	M	MH2	9551	0.5200	1	1	0	0	legacy	rarity:M	1
+Sorceress Queen	oldschool	yes	none	B	Creature	3	U	ARN	0		0	1	0	0	peasant	rarity:U	1
+Sorin, Lord of Innistrad	omega	yes	none	WB	Planeswalker	4	M	DKA	116	0.5588	0	1	0	0	legacy	rarity:M	1
+Soul Exchange	oldschool	yes	Random	B	Sorcery	2	U	FEM	0		0	1	0	0	peasant	rarity:U	1
+Soul Warden	synergy	yes	none	W	Creature	1	C	EXO	1317	0.6597	0	1	0	0	pauper	rarity:C	1
+Soul-Guide Lantern	mtgovc	yes	none		Artifact	1	U	THB	0		1	0	0	0	peasant	rarity:U	1
+Soul-Scar Mage	synergy mtgovc	yes	none	R	Creature	1	R	AKH	0		1	1	0	0	legacy	rarity:R	1
+Soulherder	synergy fairfight peasant evybaby twobert	yes	Random	WU	Creature	3	U	MH1	723	0.5155	0	1	1	0	peasant	rarity:U	1
+Sourbread Auntie	peasant	yes	none	R	Creature	4	U	ECL	229	0.4658	0	0	1	0	peasant	rarity:U	1
+Sower of Temptation	omega	yes	none	U	Creature	4	R	LRW	4232	0.5096	0	1	0	0	legacy	rarity:R	1
+Sowing Mycospawn	mtgovc	yes	none	G	Creature	4	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Spara's Headquarters	mtgovc	yes	none	WUG	Land	0	R	SNC	0		1	0	0	0	legacy	rarity:R	1
+Spawning Pit	peasant	yes	All		Artifact	2	U	DST	43		0	0	1	0	peasant	rarity:U	1
+Spectral Sailor	fairfight evybaby	yes	none	U	Creature	1	U	M20	877	0.4548	0	1	0	0	peasant	rarity:U	1
+Spell Blast	oldschool	yes	none	U	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Spell Pierce	mtgovc	yes	none	U	Instant	1	C	ZEN	0		1	0	0	0	pauper	rarity:C	1
+Spell Queller	modern evybaby	yes	none	WU	Creature	3	R	EMN	667	0.4702	0	1	0	0	legacy	rarity:R	1
+Spellscorn Coven	evybaby	yes	none	UB	Creature	4	U	WOE	551	0.4781	0	1	0	0	peasant	rarity:U	1
+Spellseeker	mtgovc	yes	none	U	Creature	3	R	BBD	0		1	0	0	0	legacy	rarity:R	1
+Spellstutter Sprite	fairfight pauper evybaby	yes	none	U	Creature	2	C	LRW	12726	0.4503	0	1	0	1	pauper	rarity:C	1
+Sphinx of False Conclusions	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Spicy Oatmeal Pizza	evybaby twobert	yes	none	R	Artifact	3	U	TMT	267	0.4599	0	1	0	0	peasant	rarity:U	1
+Spider Spawning	peasant twobert	yes	none	BG	Sorcery	5	U	ISD	887	0.5127	0	1	1	0	peasant	rarity:U	1
+Spider-Woman, Stunning Savior	mtgovc	yes	none	WU	Creature	2	R	SPM	0		1	0	0	0	legacy	rarity:R	1
+Spinal Villain	oldschool	yes	Random	R	Creature	3	U	ME1	0		0	1	0	0	peasant	rarity:U	1
+Spinewoods Armadillo	peasant	yes	none	G	Creature	6	U	OTJ	1915	0.5550	0	0	1	0	peasant	rarity:U	1
+Spinewoods Paladin	peasant	yes	none	G	Creature	5	C	OTJ	356	0.5904	0	0	1	0	pauper	rarity:C	1
+Spinner of Souls	evybaby	yes	none	G	Creature	3	R	FDN	838	0.5606	0	1	0	0	legacy	rarity:R	1
+Spirebluff Canal	mtgovc	yes	none	UR	Land	0	R	KLD	0		1	0	0	0	legacy	rarity:R	1
+Spirit Link	oldschool	yes	none	W	Enchantment	1	C	DMR	0		0	1	0	0	pauper	rarity:C	1
+Spirited Companion	synergy twobert	yes	none	W	Enchantment Creature	2	C	PLST	3778	0.6461	0	1	0	0	pauper	rarity:C	1
+Spiteful Prankster	peasant	yes	none	R	Creature	3	U	JMP	2481	0.5178	0	0	1	0	peasant	rarity:U	1
+Splitskin Doll	peasant evybaby	yes	none	W	Artifact Creature	2	U	DSK	1407	0.5605	0	1	1	0	peasant	rarity:U	1
+Springbloom Druid	synergy twobert	yes	none	G	Creature	3	C	MH1	2585	0.4284	0	1	0	0	pauper	rarity:C	1
+Springheart Nantuko	mtgovc	yes	none	G	Enchantment Creature	2	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Sprout Swarm	pauper peasant	yes	none	G	Instant	2	C	FUT	1003	0.5571	0	0	1	1	pauper	rarity:C	1
+Spyglass Siren	peasant evybaby	yes	none	U	Creature	1	U	LCI	4530	0.4690	0	1	1	0	peasant	rarity:U	1
+Squee, Goblin Nabob	evybaby	yes	none	R	Creature	3	U	CMM	1251	0.4516	0	1	0	0	peasant	rarity:U	1
+Stab	evybaby	yes	none	B	Instant	1	C	FDN	255	0.5054	0	1	0	0	pauper	rarity:C	1
+Stadium Headliner	evybaby	yes	none	R	Creature	1	R	TDM	116	0.4779	0	1	0	0	legacy	rarity:R	1
+Staff of the Storyteller	mtgovc	yes	none	W	Artifact	2	R	ONC	0		1	0	0	0	legacy	rarity:R	1
+Stampede Surfer	twobert	yes	none	RG	Creature	5	R	CLU	0		0	1	0	0	legacy	rarity:R	1
+Stampeding Scurryfoot	peasant	yes	none	G	Creature	1	C	DFT	1830	0.5476	0	0	1	0	pauper	rarity:C	1
+Starfield Shepherd	evybaby	yes	none	W	Creature	5	U	EOE	820	0.5131	0	1	0	0	peasant	rarity:U	1
+Starting Town	mtgovc	yes	none		Land	0	R	FIN	0		1	0	0	0	legacy	rarity:R	1
+Stasis	oldschool	yes	Random	U	Enchantment	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Staunch Crewmate	evybaby	yes	none	U	Creature	2	U	LCI	785	0.4981	0	1	0	0	peasant	rarity:U	1
+Steal Artifact	oldschool	yes	none	U	Enchantment	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Steam Vents	synergy modern peasant evybaby twobert mtgovc	yes	none	UR	Land	0	R	GPT	3341	0.4444	1	1	1	0	legacy	rarity:R	1
+Steel Leaf Champion	modern	yes	none	G	Creature	3	R	DOM	540	0.6143	0	1	0	0	legacy	rarity:R	1
+Steel Overseer	synergy twobert	yes	none		Artifact Creature	2	R	M11	2522	0.5248	0	1	0	0	legacy	rarity:R	1
+Stern Scolding	mtgovc	yes	none	U	Instant	1	U	LTR	0		1	0	0	0	peasant	rarity:U	1
+Stickytongue Sentinel	evybaby twobert	yes	none	G	Creature	3	C	BLB	64		0	1	0	0	pauper	rarity:C	1
+Stingcaster Mage	evybaby mtgovc	yes	none	R	Creature	2	M	FRA	411	0.4547	1	1	0	0	legacy	rarity:M	1
+Stitcher's Supplier	synergy twobert	yes	none	B	Creature	1	U	M19	1324	0.5238	0	1	0	0	peasant	rarity:U	1
+Stock Up	peasant evybaby mtgovc	yes	none	U	Sorcery	3	U	DFT	5719	0.4607	1	1	1	0	peasant	rarity:U	1
+Stomping Ground	synergy modern peasant evybaby twobert mtgovc	yes	none	RG	Land	0	R	GPT	3399	0.4849	1	1	1	0	legacy	rarity:R	1
+Stone Giant	oldschool	yes	none	R	Creature	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Stone Rain	oldschool	yes	none	R	Sorcery	3	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Stone-Throwing Devils	oldschool	yes	none	B	Creature	1	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Stoneforge Mystic	omega vintage180 modern fairfight mtgovc	yes	none	W	Creature	2	R	WWK	11958	0.5314	1	1	0	0	legacy	rarity:R	1
+Storm Seeker	oldschool	yes	none	G	Instant	4	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Stormchaser's Talent	mtgovc	yes	none	U	Enchantment	1	R	BLB	0		1	0	0	0	legacy	rarity:R	1
+Stormfront Pegasus	pauper	yes	none	W	Creature	2	C	M10	254	0.6168	0	0	0	1	pauper	rarity:C	1
+Strategic Betrayal	evybaby	yes	none	B	Sorcery	2	U	TDM	24		0	1	0	0	peasant	rarity:U	1
+Stress Dream	evybaby	yes	none	UR	Instant	5	U	SOS	304	0.4815	0	1	0	0	peasant	rarity:U	1
+Strip Mine	mtgovc oldschool	yes	none		Land	0	U	ATQ	0		1	1	0	0	powered	powered-list	1
+Strixhaven Skycoach	evybaby	yes	none		Artifact	3	U	SOS	1660	0.4780	0	1	0	0	peasant	rarity:U	1
+Studious First-Year	evybaby	yes	none	G	Creature	1	C	SOS	44		0	1	0	0	pauper	rarity:C	1
+Su-Chi	oldschool	yes	none		Artifact Creature	4	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Subtlety	mtgovc	yes	none	U	Creature	4	M	MH2	0		1	0	0	0	legacy	rarity:M	1
+Summon: Fenrir	peasant	yes	none	G	Enchantment Creature	3	U	FIN	1323	0.5704	0	0	1	0	peasant	rarity:U	1
+Sun Titan	omega synergy vintage180 evybaby twobert	yes	none	W	Creature	6	M	M11	7562	0.5762	1	1	0	0	legacy	rarity:M	1
+Sun-Blessed Healer	evybaby	yes	none	W	Creature	2	U	FDN	828	0.5495	0	1	0	0	peasant	rarity:U	1
+Sunastian Falconer	oldschool	yes	none	RG	Creature	5	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Sunbaked Canyon	mtgovc	yes	none	WR	Land	0	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Sundering Archaic	evybaby	yes	none		Creature	6	U	SOS	1157	0.4698	0	1	0	0	peasant	rarity:U	1
+Sunfall	mtgovc	yes	none	W	Sorcery	5	R	MOM	0		1	0	0	0	legacy	rarity:R	1
+Sunlance	pauper	yes	none	W	Sorcery	1	C	PLC	72		0	0	0	1	pauper	rarity:C	1
+Super Shredder	evybaby mtgovc	yes	none	B	Creature	2	M	TMT	280	0.4600	1	1	0	0	legacy	rarity:M	1
+Superior Spider-Man	mtgovc	yes	none	UB	Creature	4	R	SPM	0		1	0	0	0	legacy	rarity:R	1
+Suplex	mtgovc	yes	none	R	Sorcery	2	C	FIN	0		1	0	0	0	pauper	rarity:C	1
+Surgical Skullbomb	evybaby	yes	none	U	Artifact	1	C	PLST	16		0	1	0	0	pauper	rarity:C	1
+Surrak, Elusive Hunter	evybaby	yes	none	G	Creature	3	R	TDM	1091	0.5589	0	1	0	0	legacy	rarity:R	1
+Survival of the Fittest	vintage180	yes	Random	G	Enchantment	2	R	EXO	1266	0.4510	1	0	0	0	legacy	rarity:R	1
+Sweltering Suns	fairfight	yes	none	R	Sorcery	3	R	AKH	68		0	1	0	0	legacy	rarity:R	1
+Swift Reconfiguration	mtgovc	yes	none	W	Enchantment	1	R	NEC	0		1	0	0	0	legacy	rarity:R	1
+Swiftwater Cliffs	fairfight pauper	yes	none	UR	Land	0	C	KTK	2885	0.4886	0	1	0	1	pauper	rarity:C	1
+Sword of Feast and Famine	omega	yes	none		Artifact	3	R	PGPX	1635	0.5172	0	1	0	0	legacy	rarity:R	1
+Sword of Fire and Ice	omega modern	yes	none		Artifact	3	R	DST	4782	0.5435	0	1	0	0	legacy	rarity:R	1
+Sword of Light and Shadow	omega	yes	none		Artifact	3	R	DST	2785	0.5084	0	1	0	0	legacy	rarity:R	1
+Sword of the Ages	oldschool	yes	All		Artifact	6	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Sword of the Meek	mtgovc	yes	none		Artifact	2	U	FUT	0		1	0	0	0	peasant	rarity:U	1
+Swords to Plowshares	omega synergy vintage180 modern fairfight peasant evybaby twobert mtgovc oldschool	yes	none	W	Instant	1	U	LEA	19153	0.5581	1	1	1	0	peasant	rarity:U	1
+Sylvan Library	vintage180 oldschool	yes	All	G	Enchantment	2	U	LEG	128	0.4527	1	1	0	0	peasant	rarity:U	1
+Sylvan Safekeeper	mtgovc	yes	All	G	Creature	1	R	JUD	0		1	0	0	0	legacy	rarity:R	1
+Sylvan Scavenging	evybaby	yes	none	G	Enchantment	3	R	FDN	1027	0.5444	0	1	0	0	legacy	rarity:R	1
+Syr Konrad, the Grim	peasant	yes	none	B	Creature	5	U	ELD	2570	0.5552	0	0	1	0	peasant	rarity:U	1
+Syr Vondam, Sunstar Exemplar	twobert	yes	none	WB	Creature	2	R	EOE	0		0	1	0	0	legacy	rarity:R	1
+Tablet of Discovery	evybaby	yes	none	R	Artifact	3	U	SOS	274	0.4115	0	1	0	0	peasant	rarity:U	1
+Taiga	omega vintage180 mtgovc oldschool	yes	none	RG	Land	0	R	LEA	556	0.4900	1	1	0	0	powered	powered-list	1
+Tainted Treats	evybaby	yes	none	BG	Instant	3	U	TMT	106	0.5237	0	1	0	0	peasant	rarity:U	1
+Take Up the Shield	evybaby	yes	none	W	Instant	2	C	DMU	452	0.5254	0	1	0	0	pauper	rarity:C	1
+Talisman of Creativity	mtgovc	yes	none	UR	Artifact	2	U	MH1	0		1	0	0	0	peasant	rarity:U	1
+Talisman of Curiosity	mtgovc	yes	none	UG	Artifact	2	U	MH1	0		1	0	0	0	peasant	rarity:U	1
+Talisman of Dominance	mtgovc	yes	none	UB	Artifact	2	U	MRD	0		1	0	0	0	peasant	rarity:U	1
+Talisman of Progress	mtgovc	yes	none	WU	Artifact	2	U	MRD	0		1	0	0	0	peasant	rarity:U	1
+Talon Gates of Madara	mtgovc	yes	none		Land	0	R	M3C	0		1	0	0	0	legacy	rarity:R	1
+Talrand, Sky Summoner	synergy twobert	yes	none	U	Creature	4	R	M13	4837	0.4371	0	1	0	0	legacy	rarity:R	1
+Tamiyo's Safekeeping	mtgovc	yes	none	G	Instant	1	C	NEO	0		1	0	0	0	pauper	rarity:C	1
+Tamiyo, Collector of Tales	mtgovc	yes	All	UG	Planeswalker	4	R	WAR	0		1	0	0	0	legacy	rarity:R	1
+Tamiyo, Inquisitive Student	mtgovc	yes	none	UG	Creature	1	M	MH3	0		1	0	0	0	legacy	rarity:M	1
+Tarfire	mtgovc	yes	none	R	Kindred Instant	1	C	LRW	0		1	0	0	0	pauper	rarity:C	1
+Tarmogoyf	omega modern	yes	none	G	Creature	2	R	FUT	5052	0.5279	0	1	0	0	legacy	rarity:R	1
+Tawnos's Coffin	oldschool	yes	All		Artifact	4	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Tear Asunder	mtgovc	yes	none	BG	Instant	2	U	PLST	0		1	0	0	0	peasant	rarity:U	1
+Teferi, Hero of Dominaria	omega vintage180 mtgovc	yes	none	WU	Planeswalker	5	M	DOM	1699	0.5081	1	1	0	0	legacy	rarity:M	1
+Teferi, Time Raveler	vintage180 modern mtgovc	yes	none	WU	Planeswalker	3	R	WAR	2902	0.4993	1	1	0	0	legacy	rarity:R	1
+Telekinesis	oldschool	yes	none	U	Instant	2	C	ME1	0		0	1	0	0	pauper	rarity:C	1
+Temple Garden	synergy modern evybaby twobert mtgovc	yes	none	WG	Land	0	R	RAV	2125	0.5369	1	1	0	0	legacy	rarity:R	1
+Tendrils of Agony	mtgovc	yes	none	B	Sorcery	4	U	SCG	0		1	0	0	0	peasant	rarity:U	1
+Tenth District Legionnaire	pauper	yes	none	WR	Creature	2	C	2X2	185	0.5512	0	0	0	1	pauper	rarity:C	1
+Terminate	modern	yes	none	BR	Instant	2	C	PLS	189	0.4832	0	1	0	0	pauper	rarity:C	1
+Territorial Kavu	evybaby	yes	none	RG	Creature	2	R	MH2	27		0	1	0	0	legacy	rarity:R	1
+Terror	oldschool	yes	none	B	Instant	2	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Tetravus	oldschool	yes	none		Artifact Creature	6	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Tetsuo Umezawa	oldschool	yes	none	UBR	Creature	3	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Tezzeret, Cruel Captain	mtgovc	yes	none		Planeswalker	3	M	EOE	0		1	0	0	0	legacy	rarity:M	1
+Thalia, Guardian of Thraben	omega vintage180 modern evybaby	yes	none	W	Creature	2	R	DKA	10442	0.5189	1	1	0	0	legacy	rarity:R	1
+Thassa's Oracle	mtgovc	yes	none	U	Creature	2	R	THB	0		1	0	0	0	legacy	rarity:R	1
+The Abyss	oldschool	yes	Random	B	Enchantment	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+The Echoverse Fulcrum	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+The Fantasticar	mtgovc	yes	none		Artifact	3	R	MSC	0		1	0	0	0	legacy	rarity:R	1
+The Last Ronin's Technique	peasant	yes	none	W	Instant	4	U	TMT	460	0.5729	0	0	1	0	peasant	rarity:U	1
+The Legend of Yangchen	evybaby	yes	none	W	Enchantment	5	M	TLA	894	0.5514	0	1	0	0	legacy	rarity:M	1
+The Mightstone and Weakstone	fairfight mtgovc	yes	none		Artifact	5	R	BRO	6443	0.4917	1	1	0	0	legacy	rarity:R	1
+The Mighty Thor, Jane Foster	evybaby twobert	yes	none	WU	Creature	3	R	MSH	222	0.5289	0	1	0	0	legacy	rarity:R	1
+The Mountain-king's Return	evybaby	yes	none	W	Enchantment	3	U	HOB	156	0.4318	0	1	0	0	peasant	rarity:U	1
+The One Ring	modern mtgovc	yes	none		Artifact	4	M	LTR	5018	0.4682	1	1	0	0	legacy	rarity:M	1
+The Rack	oldschool	yes	none		Artifact	1	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+The Underworld Cookbook	peasant evybaby	yes	none		Artifact	1	U	MH2	50		0	1	1	0	peasant	rarity:U	1
+The Wandering Emperor	omega vintage180 mtgovc	yes	none	W	Planeswalker	4	M	NEO	1958	0.5263	1	1	0	0	legacy	rarity:M	1
+The Witch's Vanity	evybaby	yes	none	B	Enchantment	2	U	WOE	1345	0.5018	0	1	0	0	peasant	rarity:U	1
+The Wondrous Wasp	mtgovc	yes	none	U	Creature	2	R	MSH	0		1	0	0	0	legacy	rarity:R	1
+Theorix Charm	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Thermo-Alchemist	peasant	yes	none	R	Creature	2	C	EMN	446	0.4528	0	0	1	0	pauper	rarity:C	1
+Thespian's Stage	mtgovc	yes	All		Land	0	R	GTC	0		1	0	0	0	legacy	rarity:R	1
+Thicket Basilisk	oldschool	yes	none	G	Creature	5	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Thief of Sanity	modern	yes	none	UB	Creature	3	R	GRN	66		0	1	0	0	legacy	rarity:R	1
+Thieving Skydiver	synergy vintage180 mtgovc	yes	none	U	Creature	2	R	ZNR	3125	0.4568	1	1	0	0	legacy	rarity:R	1
+Thieving Sprite	evybaby	yes	none	B	Creature	3	C	LRW	44		0	1	0	0	pauper	rarity:C	1
+Thing in the Ice	fairfight	yes	none	U	Creature	2	R	SOI	5140	0.4628	0	1	0	0	legacy	rarity:R	1
+Think Twice	evybaby	yes	none	U	Instant	2	C	TSP	1333	0.4848	0	1	0	0	pauper	rarity:C	1
+Third Path Iconoclast	synergy vintage180 peasant evybaby twobert mtgovc	yes	none	UR	Creature	2	U	BRO	4128	0.4079	1	1	1	0	peasant	rarity:U	1
+Thopter Foundry	mtgovc	yes	none	WUB	Artifact	2	U	ARB	0		1	0	0	0	peasant	rarity:U	1
+Thorn of the Black Rose	pauper	yes	none	B	Creature	4	C	CN2	4520	0.5009	0	0	0	1	pauper	rarity:C	1
+Thornspire Verge	mtgovc	yes	none	RG	Land	0	R	DSK	0		1	0	0	0	legacy	rarity:R	1
+Thornwood Falls	pauper	yes	none	UG	Land	0	C	KTK	891	0.5192	0	0	0	1	pauper	rarity:C	1
+Thought Scour	synergy pauper twobert mtgovc	yes	none	U	Instant	1	C	DKA	10369	0.4516	1	1	0	1	pauper	rarity:C	1
+Thought-Stalker Warlock	evybaby	yes	none	B	Creature	3	U	BLB	655	0.4859	0	1	0	0	peasant	rarity:U	1
+Thoughtseize	omega vintage180 modern mtgovc	yes	none	B	Sorcery	1	R	LRW	5653	0.4636	1	1	0	0	legacy	rarity:R	1
+Thraben Inspector	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc	yes	none	W	Creature	1	C	SOI	27790	0.5361	1	1	1	1	pauper	rarity:C	1
+Thragtusk	omega vintage180 modern fairfight evybaby	yes	none	G	Creature	5	R	M13	11463	0.5304	1	1	0	0	legacy	rarity:R	1
+Thranduil's Company	twobert	yes	none	UG	Creature	4	R	HOB	0		0	1	0	0	legacy	rarity:R	1
+Thranduil, Sindarin Liege	evybaby twobert	yes	none	UG	Creature	4	U	HOB	189	0.5741	0	1	0	0	peasant	rarity:U	1
+Thrashing Brontodon	fairfight peasant	yes	none	G	Creature	3	U	RIX	165	0.5773	0	1	1	0	peasant	rarity:U	1
+Threadbind Clique	evybaby	yes	none	WU	Creature	4	U	WOE	681	0.5235	0	1	0	0	peasant	rarity:U	1
+Three Tree Rootweaver	evybaby	yes	none	G	Creature	2	C	BLB	31		0	1	0	0	pauper	rarity:C	1
+Throat Slitter	evybaby	yes	none	B	Creature	5	U	BOK	690	0.5014	0	1	0	0	peasant	rarity:U	1
+Through the Breach	mtgovc	yes	All	R	Instant	5	R	CHK	0		1	0	0	0	legacy	rarity:R	1
+Thrun, the Last Troll	omega	yes	none	G	Creature	4	M	MBS	1570	0.4755	0	1	0	0	legacy	rarity:M	1
+Thunder Spirit	oldschool	yes	none	W	Creature	3	U	PRM	0		0	1	0	0	peasant	rarity:U	1
+Thundering Falls	evybaby mtgovc	yes	none	UR	Land	0	R	MKM	609	0.4769	1	1	0	0	legacy	rarity:R	1
+Thundermaw Hellkite	omega modern	yes	none	R	Creature	5	M	M13	900	0.5447	0	1	0	0	legacy	rarity:M	1
+Thundertrap Trainer	mtgovc	yes	none	U	Creature	2	R	BLB	0		1	0	0	0	legacy	rarity:R	1
+Tibalt, Rakish Instigator	fairfight	yes	none	R	Planeswalker	3	U	WAR	104	0.4919	0	1	0	0	peasant	rarity:U	1
+Tidehollow Sculler	synergy vintage180 modern mtgovc	yes	none	WB	Artifact Creature	2	U	ALA	8		1	1	0	0	peasant	rarity:U	1
+Time Elemental	oldschool	yes	All	U	Creature	3	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Time Spiral	mtgovc	yes	none	U	Sorcery	6	R	USG	0		1	0	0	0	legacy	rarity:R	1
+Time Vault	oldschool	yes	Random		Artifact	2	R	LEA	0		0	1	0	0	powered	powered-list	1
+Time Walk	vintage180 mtgovc oldschool	yes	none	U	Sorcery	2	R	LEA	3128	0.5076	1	1	0	0	powered	powered-list	1
+Timetwister	mtgovc oldschool	yes	none	U	Sorcery	3	R	LEA	0		1	1	0	0	powered	powered-list	1
+Tinker	vintage180 mtgovc	yes	Random	U	Sorcery	3	U	ULG	3297	0.4863	1	0	0	0	powered	powered-list	1
+Tireless Tracker	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none	G	Creature	3	R	SOI	13853	0.4932	1	1	0	0	legacy	rarity:R	1
+Tishana's Tidebinder	mtgovc	yes	none	U	Creature	3	R	LCI	0		1	0	0	0	legacy	rarity:R	1
+Titania, Protector of Argoth	omega synergy vintage180 mtgovc	yes	none	G	Creature	5	R	PZ1	4922	0.4564	1	1	0	0	legacy	rarity:R	1
+Together as One	evybaby	yes	none		Sorcery	6	R	SOS	1671	0.5062	0	1	0	0	legacy	rarity:R	1
+Tolarian Academy	mtgovc	yes	Random	U	Land	0	R	USG	0		1	0	0	0	powered	powered-list	1
+Tolarian Terror	modern fairfight pauper	yes	none	U	Creature	7	C	PLST	11615	0.4918	0	1	0	1	pauper	rarity:C	1
+Tormod's Crypt	oldschool	yes	Random		Artifact	0	C	CHR	0		0	1	0	0	pauper	rarity:C	1
+Torrential Gearhulk	synergy modern twobert	yes	none	U	Artifact Creature	6	R	CMM	7051	0.4294	0	1	0	0	legacy	rarity:R	1
+Torsten, Founder of Benalia	mtgovc	yes	none	WG	Creature	7	M	DMC	0		1	0	0	0	legacy	rarity:M	1
+Tortured Existence	pauper	yes	All	B	Enchantment	1	C	STH	2183	0.4852	0	0	0	1	pauper	rarity:C	1
+Tough Cookie	evybaby	yes	none	G	Artifact Creature	2	U	WOE	688	0.5819	0	1	0	0	peasant	rarity:U	1
+Toxic Deluge	vintage180 mtgovc	yes	All	B	Sorcery	3	R	C13	48		1	0	0	0	legacy	rarity:R	1
+Tracker	oldschool	yes	none	G	Creature	3	U	ME3	0		0	1	0	0	peasant	rarity:U	1
+Tragic Slip	pauper	yes	none	B	Instant	1	C	DKA	3249	0.5032	0	0	0	1	pauper	rarity:C	1
+Tranquil Cove	fairfight pauper	yes	none	WU	Land	0	C	KTK	3448	0.5149	0	1	0	1	pauper	rarity:C	1
+Tranquil Landscape	peasant	yes	none	WUG	Land	0	C	MH3	926	0.4810	0	0	1	0	pauper	rarity:C	1
+Tranquility	oldschool	yes	none	G	Sorcery	3	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Transmute Artifact	oldschool	yes	Random	U	Sorcery	2	U	ATQ	0		0	1	0	0	peasant	rarity:U	1
+Traumatic Critique	mtgovc	yes	none	UR	Instant	2	R	SOS	0		1	0	0	0	legacy	rarity:R	1
+Traveling Botanist	evybaby	yes	none	G	Creature	2	U	TDM	1496	0.5257	0	1	0	0	peasant	rarity:U	1
+Treasure Cruise	omega vintage180 fairfight pauper mtgovc	yes	none	U	Sorcery	8	C	KTK	9592	0.4616	1	1	0	1	pauper	rarity:C	1
+Trickster's Stratagem	evybaby	yes	none	U	Sorcery	4	C	MSH	291	0.4276	0	1	0	0	pauper	rarity:C	1
+Triplicate Spirits	pauper	yes	none	W	Sorcery	6	C	M15	274	0.6734	0	0	0	1	pauper	rarity:C	1
+Triskelion	oldschool	yes	none		Artifact Creature	6	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Troll Negotiations	evybaby	yes	none	G	Sorcery	4	U	HOB	343	0.5509	0	1	0	0	peasant	rarity:U	1
+Troll of Khazad-dûm	peasant evybaby twobert mtgovc	yes	none	B	Creature	6	C	LTR	5675	0.5243	1	1	1	0	pauper	rarity:C	1
+Tropical Island	omega vintage180 mtgovc oldschool	yes	none	UG	Land	0	R	LEA	869	0.4863	1	1	0	0	powered	powered-list	1
+Trostani Discordant	fairfight	yes	none	WG	Creature	5	M	GRN	637	0.5982	0	1	0	0	legacy	rarity:M	1
+Trumpeting Herd	peasant	yes	none	G	Sorcery	4	C	MH1	3		0	0	1	0	pauper	rarity:C	1
+Tsunami	oldschool	yes	Random	G	Sorcery	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Tundra	omega vintage180 mtgovc oldschool	yes	none	WU	Land	0	R	LEA	1693	0.5119	1	1	0	0	powered	powered-list	1
+Tundra Wolves	oldschool	yes	none	W	Creature	1	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Twiddle	oldschool	yes	All	U	Instant	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Twinned Vision	evybaby twobert	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Twinshot Sniper	peasant evybaby	yes	none	R	Artifact Creature	4	U	NEO	6033	0.4721	0	1	1	0	peasant	rarity:U	1
+Twisted Fates	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Twisted Landscape	peasant	yes	none	BRG	Land	0	C	MH3	1525	0.4964	0	0	1	0	pauper	rarity:C	1
+Two-Headed Giant of Foriys	oldschool	yes	none	R	Creature	5	U	ME4	0		0	1	0	0	peasant	rarity:U	1
+Ugin, Eye of the Storms	mtgovc	yes	none		Planeswalker	7	M	TDM	0		1	0	0	0	legacy	rarity:M	1
+Ugin, the Spirit Dragon	omega	yes	none		Planeswalker	8	M	FRF	4767	0.5003	0	1	0	0	legacy	rarity:M	1
+Ulamog's Crusher	pauper	yes	none		Creature	8	C	ROE	562	0.4948	0	0	0	1	pauper	rarity:C	1
+Ulvenwald Mysteries	synergy twobert	yes	none	G	Enchantment	3	U	SOI	405	0.4235	0	1	0	0	peasant	rarity:U	1
+Ulvenwald Oddity	evybaby	yes	none	G	Creature	4	R	VOW	716	0.5774	0	1	0	0	legacy	rarity:R	1
+Umbral Collar Zealot	peasant evybaby twobert	yes	none	B	Creature	2	U	EOE	1053	0.5319	0	1	1	0	peasant	rarity:U	1
+Umezawa's Jitte	omega vintage180 mtgovc	yes	none		Artifact	2	R	BOK	10137	0.4953	1	1	0	0	legacy	rarity:R	1
+Unable to Scream	peasant	yes	none	U	Enchantment	1	C	DSK	2364	0.4346	0	0	1	0	pauper	rarity:C	1
+Unbreakable Formation	fairfight	yes	none	W	Instant	3	R	RNA	1442	0.4795	0	1	0	0	legacy	rarity:R	1
+Unburial Rites	synergy twobert	yes	none	WB	Sorcery	5	U	ISD	575	0.4790	0	1	0	0	peasant	rarity:U	1
+Undercity Sewers	peasant evybaby mtgovc	yes	none	UB	Land	0	R	MKM	1732	0.4941	1	1	1	0	legacy	rarity:R	1
+Underground Mortuary	peasant evybaby mtgovc	yes	none	BG	Land	0	R	MKM	1519	0.5130	1	1	1	0	legacy	rarity:R	1
+Underground Sea	omega vintage180 mtgovc oldschool	yes	none	UB	Land	0	R	LEA	1316	0.4757	1	1	0	0	powered	powered-list	1
+Underworld Breach	mtgovc	yes	none	R	Enchantment	2	R	THB	0		1	0	0	0	legacy	rarity:R	1
+Underworld Dreams	oldschool	yes	none	B	Enchantment	3	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Unearth	fairfight pauper mtgovc	yes	none	B	Sorcery	1	C	ULG	89	0.5366	1	1	0	1	pauper	rarity:C	1
+Unexpected Windfall	synergy	yes	none	R	Instant	4	C	PLST	1730	0.4171	0	1	0	0	pauper	rarity:C	1
+Unexpectedly Absent	mtgovc	yes	none	W	Instant	2	R	C13	0		1	0	0	0	legacy	rarity:R	1
+Unholy Heat	vintage180 modern mtgovc	yes	none	R	Instant	1	C	MH2	3019	0.5061	1	1	0	0	pauper	rarity:C	1
+Unholy Strength	oldschool	yes	none	B	Enchantment	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Unsummon	synergy oldschool	yes	none	U	Instant	1	C	LEA	68		0	1	0	0	pauper	rarity:C	1
+Untamed Wilds	oldschool	yes	none	G	Sorcery	3	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+Unwelcome Sprite	evybaby	yes	none	U	Creature	2	U	ECL	174	0.4690	0	1	0	0	peasant	rarity:U	1
+Unwilling Ingredient	pauper	yes	none	B	Creature	1	C	STX	16		0	0	0	1	pauper	rarity:C	1
+Up the Beanstalk	evybaby	yes	none	G	Enchantment	2	U	WOE	192	0.4481	0	1	0	0	peasant	rarity:U	1
+Upheaval	mtgovc	yes	none	U	Sorcery	6	R	ODY	0		1	0	0	0	legacy	rarity:R	1
+Urborg, Tomb of Yawgmoth	mtgovc	yes	Random		Land	0	R	PLC	0		1	0	0	0	legacy	rarity:R	1
+Uro, Titan of Nature's Wrath	omega vintage180 modern mtgovc	yes	none	UG	Creature	3	M	THB	1170	0.4913	1	1	0	0	legacy	rarity:M	1
+Ursine Monstrosity	mtgovc	yes	none	G	Creature	3	R	DSC	0		1	0	0	0	legacy	rarity:R	1
+Urza's Avenger	oldschool	yes	All		Artifact Creature	6	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Urza's Bauble	mtgovc	yes	All		Artifact	0	U	ICE	0		1	0	0	0	peasant	rarity:U	1
+Urza's Saga	twobert mtgovc	yes	none		Enchantment Land	0	R	PLST	0		1	1	0	0	legacy	rarity:R	1
+Urza, Lord High Artificer	vintage180 mtgovc	yes	none	U	Creature	4	R	PRM	3527	0.5035	1	0	0	0	legacy	rarity:R	1
+Uthden Troll	oldschool	yes	none	R	Creature	3	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Utopia Sprawl	pauper	yes	All	G	Enchantment	1	C	DIS	1998	0.4613	0	0	0	1	pauper	rarity:C	1
+Vampire Gourmand	evybaby	yes	none	B	Creature	2	U	FDN	503	0.4570	0	1	0	0	peasant	rarity:U	1
+Vampire Nighthawk	omega synergy modern fairfight peasant	yes	none	B	Creature	3	U	ZEN	13425	0.5142	0	1	1	0	peasant	rarity:U	1
+Vampiric Tutor	mtgovc	yes	All	B	Instant	1	R	VIS	0		1	0	0	0	powered	powered-list	1
+Vapor Snag	evybaby	yes	none	U	Instant	1	C	NPH	25		0	1	0	0	pauper	rarity:C	1
+Vault Skirge	fairfight pauper	yes	none	B	Artifact Creature	2	C	NPH	547	0.5750	0	1	0	1	pauper	rarity:C	1
+Vaultborn Tyrant	mtgovc	yes	none	G	Creature	7	M	BIG	0		1	0	0	0	legacy	rarity:M	1
+Vendilion Clique	omega modern evybaby	yes	none	U	Creature	3	R	MOR	8747	0.4723	0	1	0	0	legacy	rarity:R	1
+Vengeful Rebel	evybaby	yes	none	B	Creature	3	U	AER	766	0.4936	0	1	0	0	peasant	rarity:U	1
+Vengevine	omega	yes	none	G	Creature	4	R	SCH	2207	0.4692	0	1	0	0	legacy	rarity:R	1
+Venser, Shaper Savant	omega	yes	none	U	Creature	4	R	FUT	3725	0.4838	0	1	0	0	legacy	rarity:R	1
+Verdant Catacombs	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ZEN	1992	0.4822	1	1	0	0	legacy	rarity:R	1
+Vesuvan Doppelganger	oldschool	yes	none	U	Creature	5	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Veteran Beastrider	peasant	yes	none	WG	Creature	3	U	DFT	21		0	0	1	0	peasant	rarity:U	1
+Veteran Bodyguard	oldschool	yes	none	W	Creature	5	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Vibrance	evybaby mtgovc	yes	none	RG	Creature	5	M	ECL	172	0.4895	1	1	0	0	legacy	rarity:M	1
+Vicious Offering	pauper	yes	none	B	Instant	2	C	DOM	2592	0.4847	0	0	0	1	pauper	rarity:C	1
+Vicious Rivalry	mtgovc	yes	none	BG	Sorcery	4	R	SOS	0		1	0	0	0	legacy	rarity:R	1
+Village Rites	synergy fairfight pauper	yes	none	B	Instant	1	C	M21	21		0	1	0	1	pauper	rarity:C	1
+Vinereap Mentor	evybaby	yes	none	BG	Creature	2	U	BLB	163	0.5519	0	1	0	0	peasant	rarity:U	1
+Virus Beetle	evybaby	yes	none	B	Artifact Creature	2	C	PLST	1371	0.4745	0	1	0	0	pauper	rarity:C	1
+Viscera Seer	synergy	yes	All	B	Creature	1	C	M11	29		0	1	0	0	pauper	rarity:C	1
+Vitu-Ghazi Guildmage	peasant	yes	none	WG	Creature	2	U	RTR	24		0	0	1	0	peasant	rarity:U	1
+Vivi Ornitier	mtgovc	yes	none	UR	Creature	3	M	FIN	0		1	0	0	0	legacy	rarity:M	1
+Voice of Resurgence	omega vintage180 modern evybaby	yes	none	WG	Creature	2	R	2XM	660	0.5782	1	1	0	0	legacy	rarity:R	1
+Voice of Victory	evybaby mtgovc	yes	none	W	Creature	2	R	TDM	1049	0.5575	1	1	0	0	legacy	rarity:R	1
+Volcanic Eruption	oldschool	yes	Random	U	Sorcery	3	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Volcanic Island	omega vintage180 mtgovc oldschool	yes	none	UR	Land	0	R	LEB	1116	0.4861	1	1	0	0	powered	powered-list	1
+Voldaren Epicure	evybaby mtgovc	yes	none	R	Creature	1	C	PLST	950	0.4639	1	1	0	0	pauper	rarity:C	1
+Voltage Surge	evybaby	yes	none	R	Instant	1	C	NEO	927	0.4562	0	1	0	0	pauper	rarity:C	1
+Vraska's Final Mercy	mtgovc	no	none			0			0		1	0	0	0	legacy	membership:other	1
+Vraska, Swarm's Eminence	fairfight	yes	none	BG	Planeswalker	4	U	WAR	78		0	1	0	0	peasant	rarity:U	1
+Vulshok Morningstar	fairfight	yes	none		Artifact	2	C	DST	3799	0.5292	0	1	0	0	pauper	rarity:C	1
+Waker of Waves	peasant	yes	All	U	Creature	7	U	M21	718	0.3835	0	0	1	0	peasant	rarity:U	1
+Walking Ballista	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none		Artifact Creature	0	R	AER	25479	0.5005	1	1	0	0	legacy	rarity:R	1
+Wall of Air	oldschool	yes	none	U	Creature	3	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Wall of Earth	oldschool	yes	none	R	Creature	2	C	LEG	0		0	1	0	0	pauper	rarity:C	1
+Wall of Roots	fairfight pauper	yes	none	G	Creature	2	C	MIR	380	0.4402	0	1	0	1	pauper	rarity:C	1
+Wall of Swords	oldschool	yes	none	W	Creature	4	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Wan Shi Tong, All-Knowing	mtgovc	yes	none	U	Creature	5	M	TLE	0		1	0	0	0	legacy	rarity:M	1
+Wan Shi Tong, Librarian	mtgovc	yes	none	U	Creature	2	M	TLA	0		1	0	0	0	legacy	rarity:M	1
+Warrior's Blades	evybaby	no	none			0			0		0	1	0	0	legacy	membership:other	1
+Wasteland	mtgovc	yes	none		Land	0	U	TMP	0		1	0	0	0	peasant	rarity:U	1
+Wastewood Verge	mtgovc	yes	none	BG	Land	0	R	DFT	0		1	0	0	0	legacy	rarity:R	1
+Watcher for Tomorrow	synergy	yes	none	U	Creature	2	U	MH1	49		0	1	0	0	peasant	rarity:U	1
+Water Elemental	oldschool	yes	none	U	Creature	5	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Waterlogged Grove	mtgovc	yes	none	UG	Land	0	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Watery Grave	synergy modern evybaby twobert mtgovc	yes	none	UB	Land	0	R	RAV	1616	0.4456	1	1	0	0	legacy	rarity:R	1
+Weakness	oldschool	yes	none	B	Enchantment	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Wedding Announcement	omega	yes	none	W	Enchantment	3	R	VOW	3371	0.5087	0	1	0	0	legacy	rarity:R	1
+Welcome to Sweettooth	evybaby	yes	none	G	Enchantment	2	U	WOE	625	0.5690	0	1	0	0	peasant	rarity:U	1
+Welcoming Vampire	synergy	yes	none	W	Creature	3	R	VOW	3533	0.6648	0	1	0	0	legacy	rarity:R	1
+Werebear	fairfight pauper	yes	none	G	Creature	2	C	ODY	871	0.4794	0	1	0	1	pauper	rarity:C	1
+Wheel of Fortune	mtgovc oldschool	yes	none	R	Sorcery	3	R	LEA	0		1	1	0	0	powered	powered-list	1
+Whirler Rogue	peasant evybaby	yes	none	U	Creature	4	U	ORI	3232	0.4748	0	1	1	0	peasant	rarity:U	1
+Whirling Dervish	oldschool	yes	none	G	Creature	2	U	LEG	0		0	1	0	0	peasant	rarity:U	1
+White Knight	oldschool	yes	none	W	Creature	2	U	LEA	0		0	1	0	0	peasant	rarity:U	1
+Wicked Wolf	evybaby	yes	none	G	Creature	4	R	ELD	1086	0.5425	0	1	0	0	legacy	rarity:R	1
+Wight of the Reliquary	mtgovc	yes	none	BG	Creature	2	R	MH3	0		1	0	0	0	legacy	rarity:R	1
+Wild Growth	oldschool	yes	All	G	Enchantment	1	C	LEA	0		0	1	0	0	pauper	rarity:C	1
+Wild Nacatl	evybaby	yes	none	G	Creature	1	C	ALA	61		0	1	0	0	pauper	rarity:C	1
+Wildheart Invoker	pauper	yes	none	G	Creature	4	C	ROE	370	0.4820	0	0	0	1	pauper	rarity:C	1
+Will-o'-the-Wisp	oldschool	yes	none	B	Creature	1	U	A25	0		0	1	0	0	peasant	rarity:U	1
+Willow Satyr	oldschool	yes	none	G	Creature	4	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Wind-Scarred Crag	fairfight pauper	yes	none	WR	Land	0	C	KTK	2761	0.4865	0	1	0	1	pauper	rarity:C	1
+Winding Constrictor	synergy	yes	Random	BG	Creature	2	U	AER	11		0	1	0	0	peasant	rarity:U	1
+Winding Way	twobert	yes	All	G	Sorcery	2	C	MH1	0		0	1	0	0	pauper	rarity:C	1
+Winds of Abandon	mtgovc	yes	none	W	Sorcery	2	R	MH1	0		1	0	0	0	legacy	rarity:R	1
+Windswept Heath	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ONS	2450	0.5023	1	1	0	0	legacy	rarity:R	1
+Winter Eladrin	evybaby	yes	none	U	Creature	3	C	CLB	1684	0.5182	0	1	0	0	pauper	rarity:C	1
+Winter Orb	oldschool	yes	Random		Artifact	2	R	LEA	0		0	1	0	0	legacy	rarity:R	1
+Wishclaw Talisman	mtgovc	yes	none	B	Artifact	2	R	ELD	0		1	0	0	0	legacy	rarity:R	1
+Wistfulness	mtgovc	yes	none	UG	Creature	5	M	ECL	0		1	0	0	0	legacy	rarity:M	1
+Witch Enchanter	peasant evybaby mtgovc	yes	none	W	Creature	4	U	MH3	3039	0.5437	1	1	1	0	peasant	rarity:U	1
+Witch Hunter	oldschool	yes	none	W	Creature	4	U	CHR	0		0	1	0	0	peasant	rarity:U	1
+Witch's Oven	evybaby twobert	yes	Random		Artifact	1	U	ELD	1907	0.4572	0	1	0	0	peasant	rarity:U	1
+Witherbloom Apprentice	mtgovc	yes	none	BG	Creature	2	U	PLST	0		1	0	0	0	peasant	rarity:U	1
+Woe Strider	synergy fairfight	yes	none	B	Creature	3	R	THB	2175	0.5350	0	1	0	0	legacy	rarity:R	1
+Wood Elves	synergy	yes	none	G	Creature	3	C	EXO	3393	0.4336	0	1	0	0	pauper	rarity:C	1
+Wooded Foothills	omega synergy vintage180 evybaby twobert mtgovc	yes	none		Land	0	R	ONS	1970	0.4783	1	1	0	0	legacy	rarity:R	1
+Woodfall Primus	mtgovc	yes	none	G	Creature	8	R	SHM	0		1	0	0	0	legacy	rarity:R	1
+Worldspine Wurm	mtgovc	yes	none	G	Creature	11	M	RTR	0		1	0	0	0	legacy	rarity:M	1
+Wormwood Treefolk	oldschool	yes	none	BG	Creature	5	U	ME3	0		0	1	0	0	peasant	rarity:U	1
+Wrath of God	omega vintage180 modern evybaby oldschool	yes	none	W	Sorcery	4	R	LEA	6465	0.5098	1	1	0	0	legacy	rarity:R	1
+Wrenn and Six	vintage180 mtgovc	yes	none	RG	Planeswalker	2	M	MH1	164	0.4131	1	0	0	0	legacy	rarity:M	1
+Wrenn's Resolve	fairfight pauper	yes	none	R	Sorcery	2	C	PLST	7828	0.4817	0	1	0	1	pauper	rarity:C	1
+Writhing Chrysalis	fairfight pauper peasant evybaby	yes	none	RG	Creature	4	C	MH3	7400	0.5024	0	1	1	1	pauper	rarity:C	1
+Wurmcoil Engine	omega vintage180 modern twobert	yes	none		Artifact Creature	6	M	SOM	14128	0.5327	1	1	0	0	legacy	rarity:M	1
+Wyluli Wolf	oldschool	yes	none	G	Creature	2	C	ARN	0		0	1	0	0	pauper	rarity:C	1
+Xander's Lounge	mtgovc	yes	none	UBR	Land	0	R	SNC	0		1	0	0	0	legacy	rarity:R	1
+Xira Arien	oldschool	yes	none	BRG	Creature	3	R	LEG	0		0	1	0	0	legacy	rarity:R	1
+Yahenni, Undying Partisan	peasant evybaby	yes	none	B	Creature	3	U	CMM	1193	0.5265	0	1	1	0	peasant	rarity:U	1
+Yasharn, Implacable Earth	twobert	yes	Random	WG	Creature	4	R	ZNR	0		0	1	0	0	legacy	rarity:R	1
+Yavimaya Elder	fairfight pauper	yes	none	G	Creature	3	C	UDS	1807	0.4753	0	1	0	1	pauper	rarity:C	1
+Yavimaya, Cradle of Growth	mtgovc	yes	Random		Land	0	R	MH2	0		1	0	0	0	legacy	rarity:R	1
+Yawgmoth Demon	oldschool	yes	Random	B	Creature	6	R	ATQ	0		0	1	0	0	legacy	rarity:R	1
+Yawgmoth's Will	mtgovc	yes	none	B	Sorcery	3	R	USG	0		1	0	0	0	powered	powered-list	1
+Yawgmoth, Thran Physician	synergy twobert	yes	none	B	Creature	4	M	MH1	0		0	1	0	0	legacy	rarity:M	1
+Ydwen Efreet	oldschool	yes	none	R	Creature	3	R	ARN	0		0	1	0	0	legacy	rarity:R	1
+Yotian Soldier	oldschool	yes	none		Artifact Creature	3	C	ATQ	0		0	1	0	0	pauper	rarity:C	1
+Young Pyromancer	omega synergy vintage180 modern fairfight evybaby twobert	yes	none	R	Creature	2	U	M14	2351	0.4923	1	1	0	0	peasant	rarity:U	1
+Zagoth Triome	mtgovc	yes	none	UBG	Land	0	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Zealous Persecution	evybaby	yes	none	WB	Instant	2	U	ARB	15		0	1	0	0	peasant	rarity:U	1
+Ziatora's Proving Ground	mtgovc	yes	none	BRG	Land	0	R	SNC	0		1	0	0	0	legacy	rarity:R	1
+Zirda, the Dawnwaker	mtgovc	yes	none	WR	Creature	3	R	IKO	0		1	0	0	0	legacy	rarity:R	1
+Zulaport Cutthroat	synergy evybaby twobert	yes	none	B	Creature	2	U	BFZ	293	0.5252	0	1	0	0	peasant	rarity:U	1
+Zuran Orb	mtgovc	yes	none		Artifact	0	U	ICE	0		1	0	0	0	peasant	rarity:U	1
