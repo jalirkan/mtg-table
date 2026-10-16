@@ -1,0 +1,202 @@
+/*
+ * mtg-table — web/test/cubelab-record-cake.test.ts
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Recording the cake (D450), engine-free:
+ *
+ *  - LAB_DATA_DIR: a var/ path re-rooted for writes and (when there) reads, everything else untouched,
+ *    unset meaning exactly what it meant before, a missing drive refused; and a real lab job (`decks`,
+ *    which needs no engine) run with the setting writes under it and nothing under the repo's var/;
+ *  - census-play --record: the match line's blocks for rows and full, plan.json refusing a folder of
+ *    another mode (an old plan reads as `none`), the game row picking up rows / leak check / frames /
+ *    ledger, the size statistics;
+ *  - the rows' redaction check: a well-formed file passes; a name, an unknown key, a token outside the
+ *    grammar, a card-bearing begin key and a chosen index out of range each fail; an id the seat's own
+ *    frame log never shows fails the id check, one it does show passes;
+ *  - census-replay's comparison: the last complete run of a game is the one read (a retried game is
+ *    written twice), only the wall time may differ, and the first different row is named.
+ */
+
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
+
+import { labArg, labDataDir, labPath, underVar } from '../../tools/cubelab/labdata.ts';
+import { planExtension, recordBlocks, rowOf, rowsKeyOf, sizeStats, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
+import { checkRowsDir, checkRowsText, tokenIds, TOKEN, visibleIds, type RowsCheck } from '../../tools/cubelab/rowscheck.ts';
+import { compareFrames, compareGames, framesFace, gameLines } from '../../tools/cubelab/censusreplay.ts';
+import type { MatchResult } from '../../tools/cubelab/engine.ts';
+
+const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
+
+test('LAB_DATA_DIR: var/ paths re-rooted, the rest untouched, unset is the old behaviour, a missing drive refused', () => {
+  const root = mkdtempSync(join(tmpdir(), 'labdata-'));
+  try {
+    assert.equal(underVar('var/census/games'), join('census', 'games'));
+    assert.equal(underVar('./var/x'), 'x');
+    assert.equal(underVar('cubes/a.md'), null);
+    assert.equal(underVar('/abs/var/x'), null);
+    assert.equal(underVar('var/../etc'), null);
+    assert.equal(underVar('var'), null);
+    // write: always re-rooted; read: re-rooted only when it exists there
+    assert.equal(labPath(REPO, 'var/census/games', 'write', root), join(root, 'census', 'games'));
+    assert.equal(labPath(REPO, 'var/census/decks', 'read', root), join(REPO, 'var/census/decks'));
+    mkdirSync(join(root, 'census', 'decks'), { recursive: true });
+    assert.equal(labPath(REPO, 'var/census/decks', 'read', root), join(root, 'census', 'decks'));
+    assert.equal(labPath(REPO, 'decks/pacho-shield.dck', 'read', root), join(REPO, 'decks/pacho-shield.dck'));
+    assert.equal(labPath(REPO, '/tmp/x', 'write', root), '/tmp/x');
+    // unset: exactly path.resolve, and labArg leaves the spelling alone
+    assert.equal(labPath(REPO, 'var/census/games', 'write', null), join(REPO, 'var/census/games'));
+    assert.equal(labArg(REPO, 'var/cubelab/runs/x', 'write', null), 'var/cubelab/runs/x');
+    assert.equal(labArg(REPO, 'var/cubelab/runs/x', 'write', root), join(root, 'cubelab', 'runs', 'x'));
+    assert.equal(labDataDir(REPO, { LAB_DATA_DIR: root }), root);
+    assert.throws(() => labDataDir(REPO, { LAB_DATA_DIR: join(root, 'not-mounted') }), /not an existing directory/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('LAB_DATA_DIR: a lab job writes under it and nowhere under the repo\'s var/', () => {
+  mkdirSync(join(REPO, 'var'), { recursive: true });   // so `find` below looks at a real folder, never a missing one
+  const root = mkdtempSync(join(tmpdir(), 'labdata-job-'));
+  const marker = join(root, '.t0');
+  writeFileSync(marker, '');
+  const rel = `var/labdata-selftest-${process.pid}/decks`;
+  const control = join(REPO, 'var', `labdata-selftest-control-${process.pid}`);
+  try {
+    const r = spawnSync(process.execPath, [join(REPO, 'tools/cubelab/cli.ts'), 'decks', '--band', 'pauper', '--count', '4', '--seed', '7', '--out', rel],
+      { cwd: REPO, encoding: 'utf8', env: { ...process.env, LAB_DATA_DIR: root }, timeout: 120_000 });
+    assert.equal(r.status, 0, `decks failed: ${r.stderr.slice(-800)}`);
+    assert.ok(existsSync(join(root, `labdata-selftest-${process.pid}`, 'decks', 'decks.jsonl')), 'the decks are under LAB_DATA_DIR');
+    assert.ok(!existsSync(join(REPO, rel)), 'nothing at the repo path');
+    // nothing anywhere under the repo's var/ is newer than the marker
+    const found = spawnSync('find', [join(REPO, 'var'), '-newer', marker, '-print', '-quit'], { encoding: 'utf8' });
+    assert.equal(found.status, 0, `find failed: ${found.stderr}`);
+    assert.equal(found.stdout.trim(), '', `something under the repo's var/ was written: ${found.stdout.trim()}`);
+    // the positive control: the same `find` sees a file written there now
+    writeFileSync(control, 'x');
+    const seen = spawnSync('find', [join(REPO, 'var'), '-newer', marker, '-name', `labdata-selftest-control-${process.pid}`, '-print'], { encoding: 'utf8' });
+    assert.ok(seen.stdout.includes('labdata-selftest-control'), 'the check can see a write under var/');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(control, { force: true });
+  }
+});
+
+const P: PlannedGame = { g: 17, seed: 1401000017, a: 'legacy-1401-00811', b: 'legacy-1401-02213' };
+
+test('census-play --record: the match line\'s blocks, the plan\'s mode, the game row, the sizes', () => {
+  assert.deepEqual(recordBlocks('none', '/o', P, { a: '/d/a.dck', b: '/d/b.dck', sha: 'x', dir: '/d' }, 'plain', 'plain', 50, REPO), {});
+  const rows = recordBlocks('rows', '/o', P, { a: '/d/a.dck', b: '/d/b.dck', sha: 'abc', dir: '/d' }, 'plain', 'plain', 50, REPO) as Record<string, any>;
+  assert.equal(rows.rows.dir, '/o/rows');
+  assert.equal(rows.rows.key, 'census:1401000017');
+  assert.equal(rowsKeyOf(P), 'census:1401000017');
+  assert.equal(rows.rows.begin.deckFileA, '/d/a.dck');
+  assert.equal(rows.rows.begin.decksSha, 'abc');
+  assert.equal(rows.ledger, true);
+  assert.equal(rows.rowsCheckEvery, 50);
+  assert.equal(rows.record, undefined, 'rows mode writes no frame log');
+  const full = recordBlocks('full', '/o', P, { a: '/d/a.dck', b: '/d/b.dck', sha: 'abc', dir: '/d' }, 'plain', 'plain', 50, REPO) as Record<string, any>;
+  assert.equal(full.record.dir, '/o/frames');
+  assert.equal(full.record.name, 'g17');
+  assert.equal(full.rowsCheckEvery, 0, 'no zone swaps in a recorded game');
+  // the plan: an old plan (no record) is `none`; another mode is refused; the same mode resumes
+  const base = { decksSha: 'x', replaySha: null, seed: 1, pairs: 10, policyA: 'plain', policyB: 'plain', games: 10, replay: null };
+  assert.equal(planExtension(base, { ...base, record: 'none' }).error, null);
+  assert.match(String(planExtension(base, { ...base, record: 'rows' }).error), /record "none" -> "rows"/);
+  assert.equal(planExtension({ ...base, record: 'rows' }, { ...base, record: 'rows', pairs: 20, games: 20 }).extended, true, 'a larger --pairs in the same mode extends');
+  assert.match(String(planExtension({ ...base, record: 'rows' }, { ...base, record: 'full', pairs: 20, games: 20 }).error), /record/);
+  // the game row
+  const r = { type: 'match', id: 'g17', forge: [], games: [{ n: 1, onPlay: 'A', onPlayVerified: 'A', winner: 'B', turns: 12, ms: 900, timeout: false, reason: 'x', error: null,
+    rows: { key: 'census:1401000017', rowsA: 30, rowsB: 28, errorsA: 0, errorsB: 0 }, rowsCheck: { checks: 1, leaks: 0, controls: 1, controlMoved: 1 },
+    recorded: { dir: 'frames', bytes: 1000, frames: 40, errors: 0 }, ledger: { v: 1, seats: 2, errors: 0, fields: [], turns: [{ t: 1, active: 0, s: [] }, { t: 2, active: 1, s: [] }] } }] } as unknown as MatchResult;
+  const row = rowOf(P, r, 0, 'plain', 'plain');
+  assert.equal(row.rows?.rowsA, 30);
+  assert.equal(row.rowsCheck?.leaks, 0);
+  assert.equal(row.recorded?.bytes, 1000);
+  assert.equal(row.ledgerTurns, 2);
+  assert.equal((row as unknown as Record<string, unknown>).ledger, undefined, 'the ledger goes to ledger.jsonl, not the games row');
+  const st = sizeStats([10, 20, 30, 40]);
+  assert.deepEqual([st.games, st.total, st.mean, st.max], [4, 100, 25, 40]);
+  assert.equal(sizeStats([]).mean, null);
+});
+
+const HEADER = JSON.stringify({ type: 'header', v: 1, featureVersion: 1, stateSchemaId: 'x', stateSize: 10, stateNames: [], cand: { p: ['a', 'b'], a: ['a'], b: ['a'] } });
+const BEGIN = (key: string, extra: Record<string, unknown> = {}): string => JSON.stringify({ type: 'begin', v: 1, game: key, g: 3, seed: 5, a: 'd1', b: 'd2', deckFileA: 'x/d1.dck', deckFileB: 'x/d2.dck', seat0: 'Drafter A', seat1: 'Drafter B', ...extra });
+const ROW = (key: string, extra: Record<string, unknown> = {}): string => JSON.stringify({ type: 'row', v: 1, game: key, seat: 'Drafter A', kind: 'p', turn: 3, n: 2, chosen: 0, overrode: false, fallback: null, ms: 1.5, policy: 'forge', tokens: ['cast:12', 'pass'], s: [[0, 1], [4, 2.5]], c: [[1, 0], [0, 1]], ...extra });
+const END = (key: string): string => JSON.stringify({ type: 'end', v: 1, game: key, ok: true, winner: 'A' });
+const run = (lines: string[]): RowsCheck => { const out: RowsCheck = { files: 0, rows: 0, games: 0, problems: [] }; checkRowsText(lines.join('\n'), 'f', out); return out; };
+
+test('the rows\' redaction check: shape', () => {
+  assert.deepEqual(run([HEADER, BEGIN('k'), ROW('k'), END('k')]).problems, []);
+  assert.match(run([HEADER, ROW('k', { name: 'Lightning Bolt' })]).problems.join(), /unknown row key name/);
+  assert.match(run([HEADER, ROW('k', { tokens: ['cast:12', 'Lightning Bolt'] })]).problems.join(), /token outside the grammar/);
+  assert.match(run([HEADER, BEGIN('k', { hand: '3' })]).problems.join(), /card-bearing key hand/);
+  assert.match(run([HEADER, BEGIN('k', { decklist: ['x'] })]).problems.join(), /not a plain value/);
+  assert.match(run([HEADER, ROW('k', { chosen: 2 })]).problems.join(), /chosen 2 is not a candidate/);
+  assert.match(run([HEADER, ROW('k', { s: [[11, 1]] })]).problems.join(), /state/);
+  assert.match(run([HEADER, ROW('k', { c: [[1, 0, 3], [0, 1]] })]).problems.join(), /width/);
+  for (const t of ['pass', 'land:3', 'cast:12', 'activate:7', 'activate:7#1', 'attack:none', 'attack:3,9', 'block:none', 'block:4>9,5>9', '?']) assert.ok(TOKEN.test(t), t);
+  for (const t of ['cast:', 'cast:Bolt', 'attack:3,', 'block:4-9', 'pass ']) assert.ok(!TOKEN.test(t), t);
+  assert.deepEqual(tokenIds('block:4>9,5>9'), [4, 9, 5, 9]);
+  assert.deepEqual(tokenIds('activate:7#1'), [7]);
+});
+
+test('the rows\' redaction check: every id a row names is one its seat\'s own log shows', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rowscheck-'));
+  try {
+    const rows = join(dir, 'rows');
+    mkdirSync(rows);
+    writeFileSync(join(rows, 'rows-1.jsonl'), [HEADER, BEGIN('k'), ROW('k'), ROW('k', { kind: 'a', n: 2, tokens: ['attack:none', 'attack:12,40'], c: [[1], [0]] }), END('k')].join('\n') + '\n');
+    // seat 0's log shows 12 in its hand and 40 on the battlefield; 99 only as a hidden stub
+    const log = (ids: number[]): Buffer => zlib.gzipSync([JSON.stringify({ kind: 'session' }), JSON.stringify({ dir: 's2c', type: 'state', body: { players: [{ zones: {
+      hand: { cards: ids.map((id) => ({ id, name: 'X', zone: 'hand' })) }, battlefield: [{ id: 40, name: 'Y', zone: 'battlefield' }], library: { count: 3, cards: [] } } },
+    { zones: { hand: { cards: [{ id: 99, zone: 'hand', owner: 1, controller: 1, hidden: true }] } } }] } })].join('\n'));
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), log([12]));
+    assert.deepEqual([...visibleIds(zlib.gunzipSync(readFileSync(join(dir, 'g3-seat0.jsonl.gz'))).toString())].sort(), [12, 40]);
+    const ok = checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`));
+    assert.deepEqual(ok.problems, []);
+    assert.equal(ok.games, 1);
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), log([13]));       // 12 never shown to seat 0
+    const bad = checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`));
+    assert.match(bad.problems.join(), /names id 12 .*never shows it/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('census-replay: the last complete run of a game is read, the wall time ignored, the first difference named', () => {
+  const twice = [HEADER, BEGIN('k'), ROW('k', { turn: 1 }), JSON.stringify({ type: 'end', game: 'k', ok: false, winner: null }),
+    BEGIN('k'), ROW('k', { turn: 1, ms: 9 }), ROW('k', { turn: 2 }), END('k'), BEGIN('other'), ROW('other'), END('other')].join('\n');
+  const g = gameLines(twice, 'k');
+  assert.equal(g.rows.length, 2, 'the retried run, not the failed one');
+  assert.equal(g.end?.winner, 'A');
+  const same = gameLines([BEGIN('k'), ROW('k', { turn: 1, ms: 400 }), ROW('k', { turn: 2, ms: 1 }), END('k')].join('\n'), 'k');
+  assert.deepEqual(compareGames(g, same), { same: true, rows: 2, firstDiff: null });
+  const other = gameLines([BEGIN('k'), ROW('k', { turn: 1 }), ROW('k', { turn: 2, chosen: 1 }), END('k')].join('\n'), 'k');
+  const c = compareGames(g, other);
+  assert.equal(c.same, false);
+  assert.match(String(c.firstDiff), /row 2 .*played 0 vs 1/);
+  const shorter = gameLines([BEGIN('k'), ROW('k', { turn: 1 }), END('k')].join('\n'), 'k');
+  assert.match(String(compareGames(g, shorter).firstDiff), /has no row here/);
+});
+
+test('census-replay: two recordings of one game are equal but for the wall clock; a changed frame is named', () => {
+  const log = (t: number, ms: number, life: number): string => [
+    JSON.stringify({ v: 1, kind: 'session', startedAt: t }),
+    JSON.stringify({ v: 1, seq: 1, t, dir: 's2c', type: 'state', body: { turn: 1, players: [{ life }] } }),
+    JSON.stringify({ v: 1, seq: 2, t: t + 5, dir: 'ai', type: 'decisions', body: { seat: 0, written: 3, recordMs: ms, buildMs: ms * 2 } }),
+  ].join('\n');
+  assert.equal(framesFace(log(1, 2, 20)).length, 2, 'the session header is not compared');
+  assert.equal(compareFrames(log(1000, 21, 20), log(99999, 17, 20)), null);
+  assert.match(String(compareFrames(log(1, 2, 20), log(1, 2, 19))), /line 1 .*"life":20.* vs .*"life":19/);
+  // the stack's instance ids are the process's count, not the game's: renumbered by first appearance
+  const st = (ids: number[]): string => ids.map((id, i) => JSON.stringify({ seq: i, dir: 's2c', type: 'state', body: { stack: [{ id, name: 'x' }], events: [{ type: 'cast', stackId: id }] } })).join('\n');
+  assert.equal(compareFrames(st([1376, 1380, 1376]), st([1, 5, 1])), null);
+  assert.notEqual(compareFrames(st([1376, 1380, 1376]), st([1, 5, 5])), null, 'a different stack order still shows');
+});

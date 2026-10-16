@@ -66,6 +66,30 @@ or written. They are only the reference the clones borrow objects from
 clone. So a lab run's data (`var/ai-bench/…`, `var/cubelab/…`) is under
 `~/code/lab/mtg-table/var/`, not in Justin's checkout.
 
+### The lab's data on another drive: `LAB_DATA_DIR` (D450)
+
+A job that writes a lot (census games with `--record rows|full`, recordings, the move atlas) can put
+its outputs on a mounted drive instead of the clone's `var/`: set `LAB_DATA_DIR` in the block before
+the lab commands, and leave their paths as they are.
+
+```bash
+export LAB_DATA_DIR=/mnt/lab-data/mtg-table      # must exist: an unmounted drive stops the command
+tools/cubelab.sh census-play --decks var/census/legacy/decks ... --out var/census/legacy/games
+# writes /mnt/lab-data/mtg-table/census/legacy/games; reads the decks there if they are there, else from var/
+```
+
+`tools/cubelab.sh` re-roots every relative path under `var/` it is given (`census-play`,
+`census-read`, `census-replay`, `decks`, `run`, `evolve`, `queue --root`); `config.json`'s
+`labDataDir` does the same for every job. The Forge homes and compiled classes stay in the clone's
+`var/`, and so does every extractor's input: an extractor (`cubelab <dir>`, `lines <glob>`) reads the
+path it is given, so a job whose data is under `LAB_DATA_DIR` names that path in its `metrics:` and
+`progress:` lines (or uses `sh:`). The drive's free space is the job's to check
+(`tools/cubelab.sh` does not). `docs/guides/cube-lab.md` has the rules.
+
+The pc-jobs README's safety rules keep a job's commands inside the two repos and the lab clones
+(D378's cold drive is the one exception so far, through `archive.py`). Before a job writes under
+`LAB_DATA_DIR`, that README has to name the data drive too; it is the cloud session's file.
+
 ## Commands
 
 ```bash

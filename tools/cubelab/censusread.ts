@@ -63,6 +63,7 @@ import { wilson } from './report.ts';
 import { rng } from './rng.ts';
 import { MAIN_SHARE_KEYS, mainShareKey, type DeckRecord } from './deckcensus.ts';
 import type { GameRowOut } from './censusplay.ts';
+import { labPath, shownPath } from './labdata.ts';
 
 /** The main-share bins' keys (plain identifiers, so the runner's metrics read them) and their labels. */
 export const SHARE_BINS = MAIN_SHARE_KEYS;
@@ -311,12 +312,12 @@ export function censusReadCommand(repo: string, f: Map<string, string[]>, say: (
   const o: ReadOptions = { boot: num('boot', 1000), bootSeed: num('boot-seed', 1), shrink: num('shrink', 20) };
   const decks: DeckRecord[] = [];
   for (const d of deckDirs) {
-    const file = path.resolve(repo, d, 'decks.jsonl');
+    const file = path.join(labPath(repo, d, 'read'), 'decks.jsonl');   // D450
     for (const l of fileLines(file, { complete: true })) if (l) decks.push(JSON.parse(l) as DeckRecord);
   }
   const rows: GameRowOut[] = [];
   for (const g of gamesDirs) {
-    const dir = path.resolve(repo, g);
+    const dir = labPath(repo, g, 'read');
     const files = fs.existsSync(path.join(dir, 'games.jsonl')) ? [path.join(dir, 'games.jsonl')] : fs.readdirSync(dir).filter((x) => x.endsWith('.jsonl')).map((x) => path.join(dir, x));
     for (const file of files) for (const l of fileLines(file, { complete: true })) if (l) rows.push(JSON.parse(l) as GameRowOut);
   }
@@ -327,11 +328,11 @@ export function censusReadCommand(repo: string, f: Map<string, string[]>, say: (
   const read = readCensus(dd.decks, dd.rows, o);
   const doc: CensusRead = { ...read.doc, dropped: dd.dropped, pilots: dd.pilots };
   const { cards } = read;
-  const out = path.resolve(repo, outArg);
+  const out = labPath(repo, outArg, 'write');
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'spectrum.json'), `${strictJson(doc)}\n`);
   fs.writeFileSync(path.join(out, 'spectrum.md'), spectrumMd(doc));
   fs.writeFileSync(path.join(out, 'cards.tsv'), cardsTsv(cards));
-  say(`census-read: ${doc.games} game(s), ${doc.decks} deck(s)${dd.dropped.rows || dd.dropped.decks ? ` (${dd.dropped.rows} duplicate row(s), ${dd.dropped.decks} duplicate deck(s) dropped)` : ''}, pilots ${dd.pilots.join(' + ') || '-'}, ${Object.keys(doc.bands).join(', ')}; ${cards.length} card row(s) -> ${path.relative(repo, out) || '.'}/spectrum.json, spectrum.md, cards.tsv`);
+  say(`census-read: ${doc.games} game(s), ${doc.decks} deck(s)${dd.dropped.rows || dd.dropped.decks ? ` (${dd.dropped.rows} duplicate row(s), ${dd.dropped.decks} duplicate deck(s) dropped)` : ''}, pilots ${dd.pilots.join(' + ') || '-'}, ${Object.keys(doc.bands).join(', ')}; ${cards.length} card row(s) -> ${shownPath(repo, out) || '.'}/spectrum.json, spectrum.md, cards.tsv`);
   return 0;
 }

@@ -105,6 +105,7 @@ import { codeVersion, fileSha } from './versions.ts';
 import { isPlayExplored, parsePlayExploreArgs, playExploreText, type PlayExploreOptions } from './playexplore.ts';
 import { checkProfiles, mixText, parseProfileMix } from './profiles.ts';
 import { fileLines } from './lines.ts';
+import { labArg } from './labdata.ts';
 
 /** Power tier of each cube: 0 flat, 1 middle, 2 powered.  A cube not listed is treated as middle. */
 export const TIERS: Record<string, { tier: number; why: string }> = {
@@ -427,7 +428,7 @@ export async function checkKeyFolders(env: EngineEnv, plan: NightPlan, opts: (c:
 export async function queueCommand(repo: string, mode: string, f: Map<string, string[]>, say: (s: string) => void): Promise<number> {
   const one = (k: string): string | undefined => f.get(k)?.at(-1);
   const num = (k: string, d: number): number => { const v = one(k); const n = v === undefined ? d : Number(v); if (!Number.isFinite(n) || n < 0) throw new Error(`--${k} wants a number, got ${v}`); return n; };
-  const root = one('root') ?? 'var/cubelab/queue';
+  const root = labArg(repo, one('root') ?? 'var/cubelab/queue', 'write');   // D450: LAB_DATA_DIR re-roots it
   const night = num('night', NaN);
   if (!Number.isInteger(night) || night < 1) throw new Error('queue needs --night N (1, 2, ...)');
   const ids = (one('cubes') ?? fs.readdirSync(path.join(repo, 'cubes')).filter((x) => /-cube-180\.md$/.test(x)).map(cubeId).sort().join(',')).split(',');

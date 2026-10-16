@@ -167,6 +167,20 @@ public final class DistillSelfTest {
         }
         check(threw, "a path a seat config cannot spell is refused");
 
+        // 4b. D450: the observing seat's switch
+        check(SearchConfig.parse("observe=1").observe && !SearchConfig.parse("").observe, "observe=1 parses, off by default");
+        check(SearchConfig.parse("observe=1").toString().endsWith(",observe=1")
+                && !SearchConfig.parse("").toString().contains("observe"), "observe prints only when on");
+        check(SearchConfig.parse("observe=1").withLeaf("eval:m.json").withDecisions(true, 6000, 3, true).observe,
+                "the other copies keep it");
+        threw = false;
+        try {
+            SearchConfig.parse("observe=1,distill=x.json");
+        } catch (final IllegalArgumentException e) {
+            threw = true;
+        }
+        check(threw, "observe and distill together are refused");
+
         // 5. the row writer
         final Path tmp = Files.createTempDirectory("distill-selftest");
         try {
@@ -200,6 +214,31 @@ public final class DistillSelfTest {
                         "the end line: " + lines.get(2));
             }
             check(DistillRows.rowsWritten() == 1, "one row counted");
+            if (lines.size() == 3) {
+                check("search".equals(((Map<?, ?>) Json.parse(lines.get(1))).get("policy")), "D450: a row says who answered (search by default)");
+            }
+            // D450: a folder of the job's own, a begin line, a row of an observing seat
+            final Path other = tmp.resolve("job");
+            DistillRows.useDir(other);
+            check(other.equals(DistillRows.dir()), "useDir points the exporter at the job's folder");
+            DistillRows.setGame("census:7");
+            final Map<String, Object> begin = new java.util.LinkedHashMap<>();
+            begin.put("seed", 7L);
+            begin.put("a", "pauper-1-00001");
+            begin.put("onPlay", "B");
+            DistillRows.begin("census:7", begin);
+            DistillRows.row(3, "Drafter B", "p", 2, st, new double[][] {{1, 0, 2}}, List.of("pass"), 0, null, 2.0, "forge");
+            DistillRows.endGame("census:7", "B", true);
+            DistillRows.close();
+            final List<String> jl = Files.readAllLines(DistillRows.file(other), StandardCharsets.UTF_8);
+            check(jl.size() == 4, "header, begin, row, end in the job's folder (" + jl.size() + " lines)");
+            if (jl.size() == 4) {
+                final Map<?, ?> b = (Map<?, ?>) Json.parse(jl.get(1));
+                final Map<?, ?> r = (Map<?, ?>) Json.parse(jl.get(2));
+                check("begin".equals(b.get("type")) && "census:7".equals(b.get("game")) && ((Number) b.get("seed")).longValue() == 7
+                        && "pauper-1-00001".equals(b.get("a")) && "B".equals(b.get("onPlay")), "the begin line: " + jl.get(1));
+                check("forge".equals(r.get("policy")) && "census:7".equals(r.get("game")), "the observing seat's row: " + jl.get(2));
+            }
         } finally {
             DistillRows.enableForTest(null);
             try (var w = Files.walk(tmp)) {

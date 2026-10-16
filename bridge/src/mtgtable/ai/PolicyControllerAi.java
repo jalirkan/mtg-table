@@ -71,6 +71,13 @@ import forge.util.collect.FCollectionView;
  * ({@code explore: {rule, forge}}), so a policy dataset can leave it out.  With
  * no explorer, nothing changes.
  *
+ * <p><b>The observing seat (D450).</b>  With a search config of
+ * {@code observe=1}, the search's candidates are generated at p, a and b (in
+ * {@link Decisions#quiet}, so Forge's random stream does not move) and no
+ * rollout runs: Forge's answer, or play exploration's, is played, and the
+ * {@link DistillRows} row is written once that final answer is known
+ * ({@link #flushObserved}).  Without it, nothing here changes.
+ *
  * <p><b>Opening hands and targets (D417).</b>  With the search's {@code mull=1},
  * {@link #mulliganKeepHand} and {@link #tuckCardsViaMulligan} reconsider Forge's
  * keep and London bottom; with {@code targets=1}, the targets of the priority
@@ -176,16 +183,34 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
     }
 
+    /** D450: whether the search is an observing one (candidates and rows, no verdict). */
+    private boolean observing() {
+        return search != null && search.config().observe;
+    }
+
+    /** D450: who answered an observing seat's decision, for its row. */
+    private String observedPolicy() {
+        return explorer == null ? "forge" : "explore";
+    }
+
+    /** D450: the observing seat's pending priority row, written with the answer actually played. */
+    private List<SpellAbility> flushObserved(final List<SpellAbility> r) {
+        if (observing()) {
+            search.flushObservedPriority(r, observedPolicy());
+        }
+        return r;
+    }
+
     @Override
     public List<SpellAbility> chooseSpellAbilityToPlay() {
         if (decisions == null) {
-            return explored(choose());
+            return flushObserved(explored(choose()));
         }
         if (search != null) {
             search.takeReport();
             search.takeTargetReport();
         }
-        final List<SpellAbility> r = explored(choose());
+        final List<SpellAbility> r = flushObserved(explored(choose()));
         final Decision.Explore explored = explorer == null ? null : explorer.takeMark();
         final long t0 = System.nanoTime();
         try {
@@ -344,7 +369,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (search != null && steerSa == null && search.wantsPriority(player)) {
             // The outlet policy's rules stay in front (D311 roadmap 5): the search
             // only reconsiders a priority none of them claimed.
-            final List<SpellAbility> r = search.choosePriority(player, getAi(), forge);
+            final List<SpellAbility> r = observing()
+                    ? Decisions.quiet(() -> search.choosePriority(player, getAi(), forge))   // D450
+                    : search.choosePriority(player, getAi(), forge);
             lastBy = searchBy(r != forge);
             return r;
         }
@@ -365,11 +392,14 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (decisions == null || attacker != player) {
             super.declareAttackers(attacker, combat);
             if (search != null && attacker == player) {
-                search.chooseAttack(player, combat);
+                searchAttack(combat);
             }
             if (explorer != null && attacker == player) {
                 explorer.attack(player, combat);
                 explorer.takeMark();
+            }
+            if (observing() && attacker == player) {
+                search.flushObservedAttack(combat, observedPolicy());
             }
             return;
         }
@@ -379,12 +409,15 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         super.declareAttackers(attacker, combat);
         if (search != null) {
-            search.chooseAttack(player, combat);
+            searchAttack(combat);
         }
         Decision.Explore explored = null;
         if (explorer != null) {
             explorer.attack(player, combat);
             explored = explorer.takeMark();
+        }
+        if (observing()) {
+            search.flushObservedAttack(combat, observedPolicy());
         }
         try {
             final List<Integer> chosen = new ArrayList<>();
@@ -402,16 +435,43 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
     }
 
+    /** The search's attack decision; an observing one's inside {@link Decisions#quiet} (D450). */
+    private void searchAttack(final Combat combat) {
+        if (observing()) {
+            Decisions.quiet(() -> {
+                search.chooseAttack(player, combat);
+                return null;
+            });
+        } else {
+            search.chooseAttack(player, combat);
+        }
+    }
+
+    /** The search's block decision; an observing one's inside {@link Decisions#quiet} (D450). */
+    private void searchBlock(final Combat combat) {
+        if (observing()) {
+            Decisions.quiet(() -> {
+                search.chooseBlock(player, combat);
+                return null;
+            });
+        } else {
+            search.chooseBlock(player, combat);
+        }
+    }
+
     @Override
     public void declareBlockers(final Player defender, final Combat combat) {
         if (decisions == null || defender != player) {
             super.declareBlockers(defender, combat);
             if (search != null && defender == player) {
-                search.chooseBlock(player, combat);
+                searchBlock(combat);
             }
             if (explorer != null && defender == player) {
                 explorer.block(player, combat);
                 explorer.takeMark();
+            }
+            if (observing() && defender == player) {
+                search.flushObservedBlock(combat, observedPolicy());
             }
             return;
         }
@@ -427,12 +487,15 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         super.declareBlockers(defender, combat);
         if (search != null) {
-            search.chooseBlock(player, combat);
+            searchBlock(combat);
         }
         Decision.Explore explored = null;
         if (explorer != null) {
             explorer.block(player, combat);
             explored = explorer.takeMark();
+        }
+        if (observing()) {
+            search.flushObservedBlock(combat, observedPolicy());
         }
         if (pairs == null) {
             return;

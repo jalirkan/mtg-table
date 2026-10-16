@@ -73,6 +73,7 @@ import { rng, shuffle, type Rng } from './rng.ts';
 import { eligibleFor, FILL_ORDER, joinCensus, NEIGHBOURS, type SampleCard } from './sample.ts';
 import { openForgeScripts, type ForgeScripts } from '../forge-scripts.ts';
 import { isCardFlow } from './cardflow.ts';
+import { labPath, shownPath } from './labdata.ts';
 
 export const DECK_CENSUS_VERSION = 2;
 export const DECK_SIZE = 40;
@@ -605,7 +606,7 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   if (!(crossBand >= 0 && crossBand <= 0.5)) throw new Error('decks: --cross-band wants a share from 0 to 0.5');
   const outArg = one('out');
   if (!outArg) throw new Error('decks: --out <dir> is required');
-  const out = path.resolve(repo, outArg);
+  const out = labPath(repo, outArg, 'write');   // D450: LAB_DATA_DIR re-roots var/ paths
   const censusFile = path.resolve(repo, one('census') ?? 'cubes/library/census.tsv');
   const poolFile = path.resolve(repo, one('pool') ?? 'cubes/library/library-pool.tsv');
   const censusText = fs.readFileSync(censusFile, 'utf8');
@@ -652,7 +653,7 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
     rules: RULES_TEXT,
   };
   fs.writeFileSync(path.join(out, 'decks.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  say(`decks: ${count} ${band} deck(s), seed ${seed}, into ${path.relative(repo, out) || '.'}: k = 1..5 ${byK.slice(1).join(' / ')}; ${rej} rejected draw(s), ${redraws} new makeup(s); pool ${pool.join('+')}, cross ${crossBands(pool).join('+') || '-'}${noScript.length ? `; ${noScript.length} card(s) with no script, costed by colour: ${noScript.slice(0, 5).join(', ')}` : ''}`);
+  say(`decks: ${count} ${band} deck(s), seed ${seed}, into ${shownPath(repo, out) || '.'}: k = 1..5 ${byK.slice(1).join(' / ')}; ${rej} rejected draw(s), ${redraws} new makeup(s); pool ${pool.join('+')}, cross ${crossBands(pool).join('+') || '-'}${noScript.length ? `; ${noScript.length} card(s) with no script, costed by colour: ${noScript.slice(0, 5).join(', ')}` : ''}`);
   return 0;
 }
 

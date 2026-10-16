@@ -36,7 +36,7 @@ import mtgtable.Json.JsonOut;
  *
  * <pre>{@code
  * {"type":"row","v":1,"game":"lab:<draft id>:g1","seat":"Drafter A","kind":"p","turn":5,
- *  "n":3,"chosen":1,"overrode":true,"fallback":null,"ms":812.4,
+ *  "n":3,"chosen":1,"overrode":true,"fallback":null,"ms":812.4,"policy":"search",
  *  "tokens":["cast:31","pass","cast:44"],
  *  "s":[[0,5],[1,3],...],                      the state, sparse [index, value] (DistillFeatures.state)
  *  "c":[[1,0,1,...],[0,1,0,...],[0,0,1,...]]}  each candidate's vector (DistillFeatures.candidates)
@@ -51,6 +51,17 @@ import mtgtable.Json.JsonOut;
  * {@code end} line when a game finishes ({@link #endGame}), so a reader keeps
  * only games that ended and drops a game a killed worker left half-written (it
  * is played again from its seed, under the same key, by a new process).
+ *
+ * <p>D450 adds three things, none of which changes a row a searching seat
+ * wrote before: every row names who answered ({@code policy}: {@code search},
+ * or {@code forge} / {@code random} for an observing seat, {@code observe=1},
+ * whose rows the cube lab's {@code census-play --record rows} and the move atlas
+ * write -- a reader training on the search's choices keeps {@code search}
+ * rows only); a job may point the exporter at a folder of its own
+ * ({@link #useDir}) instead of the environment's; and a {@code begin} line
+ * before a game's rows names what the game is made of (its seed, the two decks,
+ * who played first, the two seats' policies), so the game can be played again
+ * from that recipe ({@code census-replay}).
  *
  * <p>Off unless the variable names a directory; nothing else changes when it is
  * on.  Rows name no card: the tokens are the decision records' spelling (wire
@@ -108,6 +119,50 @@ public final class DistillRows {
         }
     }
 
+    /**
+     * D450: write into {@code d} from now on (null = off), whatever the
+     * environment says: a cube-lab job names its own rows folder.  The file is
+     * still {@code rows-<pid>.jsonl}, so a folder is shared by workers safely.
+     */
+    public static synchronized void useDir(final Path d) {
+        if (java.util.Objects.equals(d, dir)) {
+            return;
+        }
+        close();
+        dir = d;
+    }
+
+    /** D450: the folder rows go to now, or null. */
+    public static synchronized Path dir() {
+        return dir;
+    }
+
+    /**
+     * D450: a game's recipe, before its rows: {@code fields} are strings and
+     * whole numbers only (the seed, the two decks' ids or paths, who played
+     * first, each seat's policy) -- nothing a seat could not know about the
+     * game it sits in.
+     */
+    public static synchronized void begin(final String key, final java.util.Map<String, Object> fields) {
+        if (dir == null) {
+            return;
+        }
+        final JsonOut j = new JsonOut().obj().n("type", "begin").n("v", ROW_VERSION).n("game", key);
+        for (final java.util.Map.Entry<String, Object> e : fields.entrySet()) {
+            final Object v = e.getValue();
+            if (v == null) {
+                j.nNull(e.getKey());
+            } else if (v instanceof Number) {
+                j.n(e.getKey(), ((Number) v).longValue());
+            } else if (v instanceof Boolean) {
+                j.n(e.getKey(), (Boolean) v);
+            } else {
+                j.n(e.getKey(), v.toString());
+            }
+        }
+        write(j.end().done());
+    }
+
     /** Rows written by this process so far. */
     public static synchronized long rowsWritten() {
         return rows;
@@ -145,6 +200,14 @@ public final class DistillRows {
     public static synchronized void row(final int gameId, final String seat, final String kind, final int turn,
                                         final double[] state, final double[][] cands, final List<String> tokens,
                                         final int chosen, final String fallback, final double ms) {
+        row(gameId, seat, kind, turn, state, cands, tokens, chosen, fallback, ms, "search");
+    }
+
+    /** {@link #row} naming who answered (D450): {@code search}, {@code forge} or {@code random}. */
+    public static synchronized void row(final int gameId, final String seat, final String kind, final int turn,
+                                        final double[] state, final double[][] cands, final List<String> tokens,
+                                        final int chosen, final String fallback, final double ms,
+                                        final String policy) {
         if (dir == null) {
             return;
         }
@@ -158,6 +221,7 @@ public final class DistillRows {
             j.n("fallback", fallback);
         }
         j.n("ms", Math.round(ms * 1000) / 1000.0);
+        j.n("policy", policy == null ? "search" : policy);
         j.key("tokens").arr();
         for (final String t : tokens) {
             j.v(t);
