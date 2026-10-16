@@ -72,6 +72,7 @@ import mtgtable.ai.DistillRows;
 import mtgtable.ai.ExploreMath;
 import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
+import mtgtable.ai.SearchConfig;
 import mtgtable.ai.SeatSpec;
 
 /**
@@ -122,6 +123,18 @@ import mtgtable.ai.SeatSpec;
  * gains {@code playExplore}: the two seats' counts.  A recording's session
  * header carries {@code playExplore} (the settings), and each seat's
  * {@code decisions} summary line its own counts.
+ *
+ * <h2>The deck census (D447)</h2>
+ *
+ * A match line whose two pools are empty and whose two {@code deck} paths are
+ * given ({@code cubelab.sh census-play}) skips Forge's builder entirely: there
+ * is no pool to build from, and the census plays the generated decks as they
+ * are.  Its {@code policyA} / {@code policyB} ({@code plain}, the default, or
+ * {@code search}) seat a side as {@code RecordMatch --policy search} does: the
+ * live search seat ({@link Bootstrap#createAiSeat} with the outlet policy on
+ * and {@link SearchConfig#parseLive}{@code (null)}, the 1.5 s budget), and each
+ * game row of a search seat gains {@code searchA} / {@code searchB}: that seat's
+ * {@code search.*} counters for the game.
  *
  * <h2>The rules it keeps</h2>
  *
@@ -379,10 +392,14 @@ public final class CubeLab {
             final String labDeck = str(job, "deck" + side);
             Deck forgeDeck = null;
             final long t = System.nanoTime();
-            try {
-                forgeDeck = forgeBuild(pool, side, res);
-            } catch (final RuntimeException e) {
-                res.obj().n("side", side).n("error", e.getClass().getSimpleName()).end();
+            // D447: the deck census gives no pool, only the deck: nothing for Forge's builder to build
+            final boolean noPool = (pool == null || pool.length == 0) && labDeck != null;
+            if (!noPool) {
+                try {
+                    forgeDeck = forgeBuild(pool, side, res);
+                } catch (final RuntimeException e) {
+                    res.obj().n("side", side).n("error", e.getClass().getSimpleName()).end();
+                }
             }
             final String forgeOut = str(job, "forgeDeckOut" + side);
             if (forgeDeck != null && forgeOut != null) DeckSerializer.writeDeck(forgeDeck, new File(forgeOut));
@@ -398,8 +415,12 @@ public final class CubeLab {
         final Map<?, ?> record = job.get("record") instanceof Map ? (Map<?, ?>) job.get("record") : null;
         final SeatSpec specA = SeatSpec.parse(profA), specB = SeatSpec.parse(profB);
         final ExploreMath.Config explore = ExploreMath.Config.of(job.get("playExplore"));
-        final LobbyPlayer lpA = seat("Drafter A", 0, specA, record != null || explore != null);
-        final LobbyPlayer lpB = seat("Drafter B", 1, specB, record != null || explore != null);
+        // D447: a census side may be the live search seat (policyA / policyB = "search")
+        final boolean searchA = "search".equals(str(job, "policyA")), searchB = "search".equals(str(job, "policyB"));
+        final LobbyPlayer lpA = searchA ? liveSearchSeat("Drafter A", 0, specA.profile)
+                : seat("Drafter A", 0, specA, record != null || explore != null);
+        final LobbyPlayer lpB = searchB ? liveSearchSeat("Drafter B", 1, specB.profile)
+                : seat("Drafter B", 1, specB, record != null || explore != null);
         int winsA = 0, winsB = 0;
         final int need = games / 2 + 1;
         res.key("games").arr();
@@ -447,6 +468,8 @@ public final class CubeLab {
             if (explore != null) {
                 exploreRow(res, aOnPlay, (PolicyLobbyPlayerAi) lpA, (PolicyLobbyPlayerAi) lpB, explore);
             }
+            if (searchA) searchRow(res, "searchA", (PolicyLobbyPlayerAi) lpA);
+            if (searchB) searchRow(res, "searchB", (PolicyLobbyPlayerAi) lpB);
             res.end();
         }
         res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
@@ -482,6 +505,24 @@ public final class CubeLab {
         for (final Map.Entry<String, Long> e : byKind.entrySet()) res.n(e.getKey(), (long) e.getValue());
         res.end();
         if (cfg.opening) res.n("onPlayDrawn", aOnPlay ? "A" : "B");
+        res.end();
+    }
+
+    /** D447: the live search seat, built exactly as {@code RecordMatch --policy search} builds it. */
+    static LobbyPlayer liveSearchSeat(final String name, final int avatar, final String profile) {
+        return Bootstrap.createAiSeat(name, avatar, profile, null, PolicyLobbyPlayerAi.Outlets.ON,
+                SearchConfig.parseLive(null));
+    }
+
+    /** D447: a search seat's {@code search.*} counters for the game just played (its controller is the game's). */
+    static void searchRow(final JsonOut res, final String key, final PolicyLobbyPlayerAi lp) {
+        res.key(key).obj();
+        final PolicyControllerAi c = lp.lastController();
+        if (c != null) {
+            for (final Map.Entry<String, Integer> e : new java.util.TreeMap<>(c.counts()).entrySet()) {
+                if (e.getKey().startsWith("search.")) res.n(e.getKey(), (long) e.getValue());
+            }
+        }
         res.end();
     }
 

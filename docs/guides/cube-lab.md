@@ -900,8 +900,10 @@ card's value *in context* — power band, colour structure, archetype — then s
 decks at a chosen power level, every suggestion confirmed by a fresh, pre-registered lab run (Justin,
 2026-10-16; the plan and its agreed corrections are the cloud's notes in `pc-jobs`' README, *NOTES TO
 THE PC*, and the PC's critique and J140's design in `pc-results/HEARTBEAT.md`, 2026-10-16). Phase 0 is
-the population and a sampler, and is all this section covers: no engine runs, nothing played. Phase 1
-(the drafter and builder shape variants, J140) and the census rounds come after it.
+the population and a sampler, and is all this section covers: no engine runs, nothing played. What is
+played on it is the next section's deck census (D447). Justin's amendment of 2026-10-17 withdrew the
+drafter-based Phase 1 (D446's shapes, PR #153); #153's shapes stay an option for cube balance, where
+drafting is the question, and are not used by the census.
 
 ```bash
 tools/cubelab.sh census build --fc ~/code/ForgeCoach            # cubes/library/census.tsv
@@ -969,6 +971,71 @@ lists every file with its in-band, cross and fill counts and its sha256. A censu
 columns, the rule on every row and on known cards, determinism, every band × structure's cube
 parsing with no warning and only supported cards (what `check` needs), each structure's counts, and
 the cross-band share.
+
+## The deck census (D447)
+
+**What it is.** No drafter, no shape, no rating: 40-card decks drawn straight from a census band's pool
+at random colour makeups over the whole spectrum, played deck against deck, Bo1, Forge's Default AI on
+both sides, numbers only. "Mono", "two-colour" and "mostly red with a little white" are read off each
+deck's realised profile afterwards, never enforced (Justin's amendment, `pc-results/HEARTBEAT.md`,
+2026-10-17 01:30). [D447](../decisions/D447-deck-census.md) pre-registers the method. A reported
+difference is **a candidate until it holds on fresh seeds**.
+
+```bash
+tools/cubelab.sh decks --band legacy --count 2500 --seed 1401 --out var/census/legacy/decks          # no engine, ~15 s
+tools/cubelab.sh census-play --decks var/census/legacy/decks --pairs 20000 --seed 1401 --jobs 7 --out var/census/legacy/games
+tools/cubelab.sh census-read --games var/census/legacy/games --decks var/census/legacy/decks --out var/census/read
+# J141's pilot slice: the same games again, the live search seat on side a
+tools/cubelab.sh census-play --decks var/census/legacy/decks --replay slice.jsonl --policy-a search --jobs 7 --out var/census/legacy/slice-search-a
+```
+
+**The rules** (`tools/cubelab/deckcensus.ts`; the decision has the numbers):
+
+| rule | what |
+|---|---|
+| prior | k colours uniform on 1–5, a uniform k-subset of WUBRG, shares from a flat Dirichlet(1, …, 1): a two-colour makeup's main share is uniform on [0.5, 1] |
+| eligible | drawable, not AI:RemoveDeck:All, every printed colour in the makeup, every cost symbol payable (hybrid by either colour, Phyrexian and {2/C} always); costs from Forge's card scripts beside the jar |
+| draw | 25 spells without replacement: colourless with the band pool's own colourless share, else a colour by the shares and a uniform eligible card of it; cross-band with probability `--cross-band` (0.10) from the neighbouring bands; fallbacks band → FILL → other colours |
+| lands | L = clamp(17 + round(2 × (m − 3)), 15, 18), m the mean mana value of the first 23 drawn, the first 40 − L spells kept; F = min(supply, round(L × (1 − s_max))) fixers making 2+ of the pip colours, uniform, band then FILL; the rest basics: each colour its most demanding spell's pips (at least 1) less the fixers' sources, then by the largest deficit to its pip share |
+| castability | every spell castable from the deck's own lands (a colour's sources ≥ the spell's plain pips of it; a hybrid symbol a source of either colour), or the deck is redrawn (the same makeup 50 times, then a new one), every rejection counted |
+| bands | census.tsv's, exclusive; powered (37 eligible cards) is drawn as one pool with legacy, its cross slice from peasant |
+| pairing | consecutive pairs of a run of seeded permutations: every deck within one game of 2M / N; game g's seed S × 1,000,000 + g, side a on the play when it is even |
+
+**`decks`** writes `decks/<id>.dck` (`<band>-<seed>-<i>`, five digits), `decks.jsonl` (one deck a line:
+the makeup, the 40 cards, spells, fixers and basics, land count, mean mana value, the realised profile
+— each colour's pip share, the main colour and its share, colours with 3+ spells — card flow by the
+Synergy v3 study's 17-card list, the CROSS and FILL cards, the rejections before it) and `decks.json`
+(the rules as text, the counts by k, by colours with 3+ spells and by main-share bin, the rejections,
+the census's and the pool's sha256). Deck i depends only on the census, the flags, the seed and i.
+
+**`census-play`** plays `--pairs` games on `--jobs` cube-lab workers (`CubeLab.java play`, one game a
+match line, no pool so no Forge build), appending one row a game to `games.jsonl` as games finish:
+
+```jsonc
+{ "v": 1, "g": 17, "seed": 1401000017, "a": "legacy-1401-00811", "b": "legacy-1401-02213",
+  "policyA": "plain", "policyB": "plain", "winner": "a", "first": "b", "turns": 14, "ms": 1180,
+  "timeout": false, "reason": "AllOpponentsLost", "error": null, "engineError": null, "worker": 3,
+  "searchA": { "searched": 19, "changed": 5, "msPerDecision": 1006.1, "counts": { "search.p.considered": 14, … } } }   // a search seat only
+```
+
+`plan.json` binds the run to `decks.jsonl`'s sha256 and its options, and a run started again with the
+same `--out` skips the games it has; other options are refused. `census-play.json` is the tally (decisive,
+drawn, timeouts, engine errors, the first player's rate, games an hour per session). `--policy-a` /
+`--policy-b search` seat the live search seat (`RecordMatch --policy search`'s: search-v2 at 1.5 s);
+`--replay <games.jsonl>` plays exactly the listed games — numbers, sides, seeds — under this run's
+pilots. Plain against plain, a replay gave the same winner and turn count in all five games tried
+(D447's smoke).
+
+**`census-read`** reads any number of `--games` and `--decks` folders (deck ids name their band) into
+`spectrum.json` (strict), `spectrum.md` and `cards.tsv`: per band, the win rate by colours with 3+ spells,
+by the prior's k and by main-colour pip share (bins `lt40`, `s40_50` … `s90_100`, `eq100`), each with
+Wilson's unclustered interval and the one to read, a deck-clustered bootstrap (`--boot` 1,000); and one
+row per band and card: decks, deck-games, wins, the win rate when in the deck and shrunk toward 0.5 at
+strength 20, and the means of its decks' profile and its opponents' (main share, colours, k, lands, mean
+mana value, card flow, fixers, the CROSS and FILL shares). No verdicts and no labels beyond the bins.
+
+**Rate.** D447's smoke beside a seven-worker job: 2,472 games an hour on 2 workers, about 2.2 CPU-seconds
+a game — some 11,000 games an hour on seven free cores.
 
 ## Learning the drafters' values from the games (D301–D302)
 
