@@ -1,7 +1,11 @@
-running
+waiting
+reason: memory: step run1 was killed without an exit code (oomd or the OOM killer?)
 runner: forgecoach-runner 10896b8e
 started: 2026-10-15T23:54:57-04:00
-phase: commands 1/2
+finished: 2026-10-16T00:02:15-04:00
 mtg-table: 0c5de78
 workers: 7 (sized 7: min(cores 7, memory 7, max_workers 7); peak 2.50 GB per worker (declared; measured 1.08), budget 21.4 GB)
 peak_worker_rss_gb: 1.08
+workers_cap: 6
+retry_after: 2026-10-16T00:17:15-04:00
+memory_stops: 1

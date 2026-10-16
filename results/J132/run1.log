@@ -1,0 +1,7 @@
+==== J132 run1 started 2026-10-15T23:57:10-04:00 in unit lab-J132-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J129 REVIEW friend-m1791336206841 (1 of 9)
+REVIEW STAGE plan var/j132/input/games/friend-m1791336206841.jsonl seat 0
+{"status":"ok","decisions":21,"jobs":7,"triageMsPerDecision":6000,"gameId":"friend-m1791336206841","frames":1920}
+REVIEW STAGE triage 21 decision(s) on 7 JVM(s), 6000 ms each
+coach-grade: 21 graded moment(s) -> var/coach-grade/review/j129-friend-m1791336206841/triage.jsonl
+REVIEW STAGE deepen 9 decision(s) on 7 JVM(s), 300000 ms each, horizon -1
