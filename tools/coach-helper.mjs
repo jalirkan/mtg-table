@@ -129,7 +129,8 @@
 //                 (docs/watch-bots.md the copyable form).  The games are served as complete
 //                 lines, by ?from=<byte> or Range: bytes=<n>- (ForgeCoach's live.ts).  /health
 //                 carries "watch": 1 when the bridge is built (else 0) and "watchRunning";
-//                 --no-watch turns it off.
+//                 --no-watch turns it off; --watch-keep N (10) is how many watch folders stay
+//                 under var/spectate/ (older ones go when a watch starts).
 //
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
@@ -550,6 +551,7 @@ function parseArgs(argv) {
     else if (f === '--eval-schema') a.evalSchema = val();
     else if (f === '--eval-cube') a.evalCube = val();
     else if (f === '--no-watch') a.watch = false;   // D440
+    else if (f === '--watch-keep') a.watchKeep = Number(val());   // D440: watch folders kept (10)
     else if (f === '--draft-room') a.draftRoom = true;   // D400
     else if (f === '--room-port') a.roomPort = Number(val());
     else if (f === '--room-dir') a.roomDir = val();
@@ -1235,7 +1237,8 @@ async function main() {
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
   // D440: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
-  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`) }) : null;
+  if (a.watchKeep !== undefined && (!Number.isInteger(a.watchKeep) || a.watchKeep < 1)) { console.error('coach-helper: --watch-keep is a whole number of watch folders >= 1'); process.exit(2); }
+  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`), ...(a.watchKeep !== undefined ? { keep: a.watchKeep } : {}) }) : null;
   const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch });
   let bound;
   try { bound = await h.listen(); } catch (e) {

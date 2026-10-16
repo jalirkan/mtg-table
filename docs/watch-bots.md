@@ -259,4 +259,7 @@ A tile **Watch two bots** (shown when `/health` has `"watch": 1`):
    the watch; it ends by itself.
 
 A finished watch stays in `var/spectate/watch-<cube>-<seed>/` and in
-`GET /watch` until the same cube and seed are watched again.
+`GET /watch` until the same cube and seed are watched again, or until it is no
+longer among the 10 most recent: starting a watch removes the older folders
+(the helper's `--watch-keep N`; by `match.json`'s `updatedAt`, a running watch
+never).

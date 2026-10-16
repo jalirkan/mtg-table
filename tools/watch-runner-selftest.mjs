@@ -17,6 +17,7 @@
 // (200, then match.json says "stopped"); a watch that dies is marked "error";
 // redaction as served (only lines that passed tools/check-redaction.mjs are sent;
 // a log that fails is a 500 from then on, and the watch is stopped with error);
+// the cleanup (a new watch keeps the 10 most recent watch folders, --watch-keep);
 // the kill escalation (a stop's SIGKILL still reaches a child the leader left
 // behind, and close() SIGKILLs a watch that ignores SIGTERM after the grace);
 // the game log served as COMPLETE lines by ?from= and by Range (206, its first
@@ -223,6 +224,28 @@ check(rg3.status === 200 && rg3.body.length > 0 && rg3.body.at(-1) === 0x0a, 'th
 check((await real2.game('watch-real-1', '2')).status === 500 && realLog.some((x) => /REDACTION FAIL on game 2 .*: .*a6-|REDACTION FAIL on game 2 \(\d+ bytes\): (?!see )/.test(x)),
   'the real check: a log that names an opponent\'s hand card is refused, for the checker\'s own reason (on the console only)');
 check(!existsSync(join(ROOT, 'var/watch-check')) || readdirSync(join(ROOT, 'var/watch-check')).length === 0, 'the checker\'s scratch copies are gone');
+// cleanup: starting a watch keeps only the `keep` most recent watch folders, the new one included
+const pruneRoot = join(DIR, 'prune-root');
+for (const d of ['cubes', 'var/spectate']) mkdirSync(join(pruneRoot, d), { recursive: true });
+writeFileSync(join(pruneRoot, 'cubes', 'pauper-cube-180.md'), '# a cube\n');
+for (let k = 1; k <= 5; k++) {
+  const d = join(pruneRoot, 'var/spectate', `watch-old-cube-${k}`);
+  mkdirSync(d, { recursive: true });
+  writeFileSync(join(d, 'match.json'), JSON.stringify({ status: 'done', updatedAt: `2026-10-0${k}T00:00:00.000Z` }));
+}
+mkdirSync(join(pruneRoot, 'var/spectate', 'not-a-watch'), { recursive: true });
+writeFileSync(join(pruneRoot, 'var/spectate', 'pacho-vs-doom-1.jsonl'), '');
+const pruneLog = [];
+const wp = createWatchRunner({ repoRoot: pruneRoot, available: () => true, keep: 3, redactionCheck: fakeCheck, log: (x) => pruneLog.push(x), command: (q, dir) => ['bash', FAKE, dir, '1'] });
+wp.post({ cube: 'pauper-cube-180', seed: 1 });
+await until(() => wp.running() === null);
+const left = readdirSync(join(pruneRoot, 'var/spectate')).sort();
+check(JSON.stringify(left) === JSON.stringify(['not-a-watch', 'pacho-vs-doom-1.jsonl', 'watch-old-cube-4', 'watch-old-cube-5', 'watch-pauper-cube-180-1']),
+  `keep 3: the new watch and the two most recent old ones stay, the rest go, nothing else is touched (${left.join(', ')})`);
+check(pruneLog.filter((x) => /removed \(only the 3 most recent/.test(x)).length === 3, 'each removal is logged');
+let threw = false;
+try { createWatchRunner({ repoRoot: pruneRoot, keep: 0 }); } catch { threw = true; }
+check(threw, 'keep 0 is refused');
 // a re-run replaces the folder
 writeFileSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt'), 'x');
 w.post({ cube: 'fair-fight-cube-180', seed: 1 });

@@ -53,6 +53,9 @@
 // The run lives in var/spectate/watch-<cube>-<seed>/ (draft.json, match.json,
 // <id>-g<n>.jsonl, the decks, the lab's folder, watch.log); a second watch of
 // the same cube and seed replaces it, and a follower of the old log gets 416.
+// Starting a watch also removes all but the `keep` (10; the helper's
+// --watch-keep) most recent watch folders, the new one included: by match.json's
+// updatedAt, else the folder's mtime; a running watch is never removed.
 
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -148,7 +151,10 @@ export function checkRedaction(buf, dir) {
  * default `tools/cubelab.sh watch cubes/<cube>.md ...`.  `available()` is
  * whether that can work here (the bridge built: RecordMatch is what records).
  */
-export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null }) {
+export const DEFAULT_WATCH_KEEP = 10;
+
+export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null, keep = DEFAULT_WATCH_KEEP }) {
+  if (!Number.isInteger(keep) || keep < 1) throw new Error(`keep is a whole number of watch folders >= 1, got ${keep}`);
   const root = resolve(repoRoot);
   const check = redactionCheck ?? ((buf) => checkRedaction(buf, join(root, 'var', 'watch-check')));
   const spectate = join(root, 'var', 'spectate');
@@ -202,6 +208,25 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
   };
 
   const killGroup = (r, sig) => { try { process.kill(-r.child.pid, sig); } catch { /* gone */ } };
+
+  /** Remove all but the `keep` most recent watch folders (`fresh`, the one starting, counts as the newest; the running one stays). */
+  const prune = (fresh) => {
+    if (!existsSync(spectate)) return;
+    const others = [];
+    for (const n of readdirSync(spectate)) {
+      if (!WATCH_ID.test(n) || n === fresh || n === running?.id) continue;
+      const d = dirOf(n);
+      if (!d || !existsSync(d) || !statSync(d).isDirectory()) continue;
+      const at = Date.parse(readJson(join(d, 'match.json'))?.updatedAt ?? '') || statSync(d).mtimeMs;
+      others.push({ n, d, at });
+    }
+    others.sort((a, b) => b.at - a.at);
+    for (const o of others.slice(keep - 1)) {
+      rmSync(o.d, { recursive: true, force: true });
+      for (const k of [...checked.keys()]) if (k.startsWith(o.d + sep)) checked.delete(k);
+      log(`WATCH ${o.n} removed (only the ${keep} most recent watches are kept)`);
+    }
+  };
   /** Does the watch's process group still have a member (its JVM, after the leader exited)? */
   const groupAlive = (r) => {
     try { process.kill(-r.child.pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
@@ -274,6 +299,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       rmSync(dir, { recursive: true, force: true });
       mkdirSync(dir, { recursive: true });
       for (const k of [...checked.keys()]) if (k.startsWith(dir + sep)) checked.delete(k);
+      prune(r.id);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
       let child;
