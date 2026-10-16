@@ -6,7 +6,7 @@
 //                                       [--min-games 80] [--date YYYY-MM-DD]
 //
 // "The best 180 out of the whole library" (Justin, 2026-10-15): seed several candidate 180s by
-// different ideas, play each on the same seeds, evolve each, and compare them on D439's
+// different ideas, play each on the same seeds, evolve each, and compare them on D441's
 // pre-registered measures (`tools/cubelab.sh compare`).  This writes the candidates:
 //
 //   <out>/library-pool.tsv   THE LIBRARY: every card of every cube document ForgeCoach ships
@@ -22,7 +22,9 @@
 //                            win rate under Omega's skeleton (below); no lab data, no slot.
 //   <out>/random-180.md      the control: the same skeleton from every supported card, each card's
 //                            key a seeded uniform draw (--seed, 180), so a legal, colour-balanced cube
-//                            that nobody selected.
+//                            that nobody selected.  Cards Forge marks AI:RemoveDeck:All are drawn like
+//                            any other (3 at --seed 180; the document lists them): leaving them out
+//                            would make the control a selected cube.
 //   <out>/synergy-v2-180.md  ForgeCoach's current Synergy Cube (version 2), copied with a provenance
 //                            line under its title and nothing else changed.
 //

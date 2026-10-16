@@ -45,9 +45,11 @@ import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
 import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExploreTag } from './playexplore.ts';
 import { humanDrafter, parsePicks, runHumanDraft, type Fallback } from './humanpicks.ts';
 import { FORGE_RANKS_WEIGHTS, forgeRanked, runForgeRanksDraft } from './drafters.ts';
+import { isShaped, runShapedDraft, shapePlan, SHAPE_RULES, SHAPES, type Shape, type ShapeExplore, type ShapeRules } from './shapes.ts';
+import { isCardFlow } from './cardflow.ts';
 import {
-  cardTexts, claudeDraftModel, fakeDraftModel, LLM_PROMPT_VERSION, runLlmDraft, sumStats, themeSummary,
-  type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
+  cardTexts, claudeDraftModel, DEFAULT_FALLBACK_RATE, DEFAULT_LLM_MAX_USD, fakeDraftModel, LLM_PROMPT_VERSION, LlmBudget, LlmStop, MAX_LLM_JOBS,
+  runLlmDraft, sumStats, themeSummary, type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
 } from './llmdraft.ts';
 
 export interface RunOptions {
@@ -96,9 +98,25 @@ export interface RunOptions {
    * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
    */
   drafter?: RunDrafterOption;
-  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2); not part of the identity. */
+  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4); not part of the identity. */
   llmJobs?: number;
+  /**
+   * The LLM drafter's spend cap and fallback stop (the #144 review; llmdraft.ts `LlmBudget`), one for the
+   * whole run; absent = `--llm-max-usd 5`, no call cap, the 25% fallback stop.  The caller keeps it to read
+   * the spend afterwards, a stopped run's included (the watch's match.json `cost`).  Not part of the identity.
+   */
+  llmBudget?: LlmBudget;
+  /** The LLM drafter's model, made on first use; absent = the spec's (the CLI, or `fake`).  Tests only. */
+  llmModel?: () => Promise<DraftModel>;
+  /** D446: each seat's shape (`--shape-a`, `--shape-b`) and the exploration share (`--shape-explore`); absent or all auto with share 0 = off, and the run is the old one. */
+  shapes?: RunShapes;
 }
+
+/** D446: the shapes a run's seats draft and build to. */
+export interface RunShapes { A: Shape; B: Shape; explore: ShapeExplore | null }
+
+/** Whether a run's shape options do anything (otherwise run.ts never enters shapes.ts: today's run, byte for byte). */
+export const shapesOn = (s: RunShapes | undefined | null): s is RunShapes => !!s && (s.A !== 'auto' || s.B !== 'auto' || (!!s.explore && s.explore.share > 0));
 
 /**
  * The drafter one seat is given (`--drafter`): D416's human pick model, or D439's forge-ranks seat or LLM.
@@ -180,7 +198,11 @@ export interface RunMeta {
   playExplore?: PlayExploreOptions;
   /** D416: the seat that drafted with the human pick model, its file, and how much of the cube the file covered. */
   drafter?: RunDrafter;
+  /** D446: the seats' shapes, the exploration share, the rules' numbers and the card-flow rule (absent: shapes off). */
+  shapes?: RunShapesMeta;
 }
+
+export interface RunShapesMeta { A: Shape; B: Shape; explore: ShapeExplore | null; rules: ShapeRules; flow: 'D446' }
 
 export type RunDrafter =
   | { kind: 'human-picks'; seat: 'A' | 'B'; file: string; sha: string; cards: number; covered: number; fallback: Fallback }
@@ -214,7 +236,7 @@ export function defaultRatings(cubeFile: string): string | null {
  * carries `ver` and its own `profiles`, so readers split by either.  Before D394 the mix sat here too,
  * which no flag could pass: night 4 (J096) failed every chunk on it.
  */
-export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore', 'drafter'] as const;
+export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore', 'drafter', 'shapes'] as const;
 
 /** The identity fields that differ between a folder's run.json and this run's meta (empty: the same population). */
 export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): string[] {
@@ -227,20 +249,30 @@ export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): stri
  * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
  * off it is the plain weights, so the version id of an ordinary run is what it always was.
  */
-export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number } | null }): unknown {
-  if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter) return w;
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: DrafterVersionInput | null; shapes?: RunShapesMeta | null }): unknown {
+  if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter && !x.shapes) return w;
   return {
     ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}),
     ...(x.drafter ? { drafter: drafterVersion(x.drafter) } : {}),
+    ...(x.shapes ? { shapes: x.shapes } : {}),
   };
 }
 
+/** What of a run's drafter enters its version: run.json's `drafter`, or the fields of it the version reads. */
+export interface DrafterVersionInput { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number; weights?: Record<string, number> }
+
 /** A drafter's part of the lab version: D416's object exactly as it was (so its ids do not move), D439's by kind. */
-function drafterVersion(d: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number }): unknown {
+function drafterVersion(d: DrafterVersionInput): unknown {
   if (!d.kind || d.kind === 'human-picks') return { kind: 'human-picks', seat: d.seat, sha: d.sha };
   if (d.kind === 'llm') return { kind: 'llm', seat: d.seat, model: d.model, thinking: d.thinking, seesOpponent: !!d.seesOpponent, promptVersion: d.promptVersion };
+  // forge-ranks drafts with FORGE_RANKS_WEIGHTS, so a change to them is a change of version (the #144
+  // review).  At D439's own values the object is D439's {kind, seat}, so no existing folder's id moves.
+  if (d.kind === 'forge-ranks' && d.weights && JSON.stringify(d.weights) !== JSON.stringify(FORGE_RANKS_WEIGHTS_D439)) return { kind: d.kind, seat: d.seat, weights: d.weights };
   return { kind: d.kind, seat: d.seat };
 }
+
+/** The forge-ranks weights D439 shipped: version ids written with them stay as they were. */
+const FORGE_RANKS_WEIGHTS_D439 = { synergy: 0, lean: 0, commitAt: 0.04 };
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<RunCheck> {
   const t0 = Date.now();
@@ -250,7 +282,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   const { lc, text } = bridge ?? (loaded as NonNullable<typeof loaded>);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
   const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
-  let draftOne = (seed: number): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+  let draftOne = (seed: number, _signal?: AbortSignal): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
   if (bridge) {
     if (o.synergyFile || o.mixed) throw new Error('--bridge drafts with each cube\'s ratings; it takes no --synergy or head-to-head');
     draftOne = (seed) => bridge.draft(seed, o.format, o.weights, o.winstonCards);
@@ -285,6 +317,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   }
   let drafterMeta: RunDrafter | null = null;
   const llmStats: LlmDraftStats[] = [];
+  let budget: LlmBudget | null = null;
   if (o.drafter) {
     // D416, D439: one seat drafts with another drafter; everything else is a plain run's.
     const kind = o.drafter.kind;
@@ -314,16 +347,33 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       const texts = cardTexts(facts);
       const summary = themeSummary(text);
       let made: Promise<DraftModel> | null = null;
-      const model = (): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd')));
-      draftOne = async (seed) => {
-        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say }, seed);
+      const model = o.llmModel ?? ((): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd'))));
+      const b = o.llmBudget ?? new LlmBudget({ maxCalls: null, maxUsd: DEFAULT_LLM_MAX_USD, maxFallbackRate: DEFAULT_FALLBACK_RATE });
+      budget = b;
+      draftOne = async (seed, signal) => {
+        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say, budget: b, signal: signal ?? null }, seed);
         if (out.llm) llmStats.push(out.llm);
         return out;
       };
       drafterMeta = { kind: 'llm', seat, model: d.model, thinking: d.thinking, seesOpponent: d.seesOpponent, promptVersion: LLM_PROMPT_VERSION, fallback: 'lab', summaryChars: summary.length };
       say(`drafter (D439): seat ${seat} asks ${d.model === 'fake' ? 'the fake model (no network, no spend)' : `Claude (${d.model}, thinking ${d.thinking}) through the Claude Code CLI, once a decision`}; `
         + `${d.seesOpponent ? 'the prompt lists the opponent\'s pool; ' : ''}two failed replies take the lab drafter's line; decisions kept in ${path.join(o.out, 'llm')}; seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
+      const c = b.caps;
+      say(`llm drafter caps: ${c.maxCalls === null ? 'no call cap' : `at most ${c.maxCalls} call(s)`}, ${c.maxUsd === null ? 'NO dollar cap' : `at most $${c.maxUsd} at list price`}, `
+        + `${c.maxFallbackRate >= 1 ? 'no fallback stop' : `stop past ${Math.round(c.maxFallbackRate * 100)}% fallbacks`} (--llm-max-calls, --llm-max-usd, --llm-fallback-rate); ${Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2))} draft(s) at once`);
     }
+  }
+  let shapesMeta: RunShapesMeta | null = null;
+  if (shapesOn(o.shapes)) {
+    // D446: each seat drafts and builds to its shape; an auto seat may be forced by the exploration share.
+    const sh = o.shapes;
+    if (bridge || o.mixed || o.synergyFile || explore || o.drafter) throw new Error('shapes (D446) run on one cube with the lab drafter: no --bridge, --synergy, head-to-head, --explore or --drafter');
+    if (o.format !== 'grid') throw new Error('shapes (D446) are grid only');
+    const ex = sh.explore && sh.explore.share > 0 ? sh.explore : null;
+    draftOne = (seed) => runShapedDraft(lc, seed, o.weights, shapePlan(seed, { A: sh.A, B: sh.B }, ex ?? 0));
+    shapesMeta = { A: sh.A, B: sh.B, explore: ex, rules: SHAPE_RULES, flow: 'D446' };
+    say(`shapes (D446): seat A ${sh.A}, seat B ${sh.B}${ex ? `; each auto seat forced with probability ${ex.share} to a shape drawn by the weights ${SHAPES.map((x, i) => `${x} ${ex.weights[i]}`).join(', ')} (never both seats to one shape)` : ''}`);
+    if ([sh.A, sh.B].some((x) => !isShaped(x) && x !== 'auto')) say('shapes: two-colour is the lab drafter and builder exactly (the control arm)');
   }
   const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
   if (playExplore) {
@@ -346,6 +396,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(explore ? { explore } : {}),
     ...(playExplore ? { playExplore } : {}),
     ...(drafterMeta ? { drafter: drafterMeta } : {}),
+    ...(shapesMeta ? { shapes: shapesMeta } : {}),
   };
   const version = labVersion(env.repo, {
     cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
@@ -355,7 +406,8 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     // version change: refused unless --allow-version-change, and logged); off, the id is the old one.
     // D394: so does the profile mix (each line also carries its seats' `profiles`).
     // D416: the human-pick drafter changes the drafts, so its seat and file are part of the version; off, the id is the old one.
-    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null, drafter: drafterMeta }),
+    // D446: so do the shapes; off, the id is the old one.
+    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null, drafter: drafterMeta, shapes: shapesMeta }),
   });
   const metaFile = path.join(o.out, 'run.json');
   const jsonl = path.join(o.out, 'drafts.jsonl');
@@ -394,8 +446,12 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (o.recordEvery) fs.writeFileSync(cubeCopy, text);
   // What the report needs to know about each card, as this run saw it.
   const info: Record<string, CardInfo> = {};
+  // D446: with shapes on, each card-flow card is marked (cardflow.ts), so the shape measures can count a deck's.
+  const flowFacts = shapesMeta ? new Map((loaded?.facts ?? []).filter((f) => f.found && f.name).map((f) => [f.name as string, f])) : null;
   for (const c of lc.cards) {
     info[c.name] = { section: c.section, colors: c.colors, cmc: c.cmc, land: c.land, themes: c.themes, rating: c.rating, remAIDeck: c.remAIDeck, type: c.type };
+    const fact = flowFacts?.get(c.name);
+    if (fact && isCardFlow(fact)) info[c.name] = { ...info[c.name] as CardInfo, flow: true };
   }
   fs.writeFileSync(path.join(o.out, 'cards.json'), `${JSON.stringify(info, null, 1)}\n`);
 
@@ -407,7 +463,19 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   for (let i = 0; i < o.drafts; i++) if (!done.has(o.seed + i)) pending.push(o.seed + i);
   // D439: an LLM drafter waits on the model, so its drafts run --llm-jobs at a time; every other drafter is
   // synchronous and runs one by one, exactly as before.  The results are used in seed order either way.
-  const drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.max(1, o.llmJobs ?? 2) : 1, async (seed) => draftOne(seed));
+  // A failed draft stops the others (mapLimit aborts their signal); an LLM stop also leaves spend.json.
+  let drafted: DraftOut[];
+  try {
+    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2)) : 1, async (seed, signal) => draftOne(seed, signal));
+  } catch (e) {
+    if (budget) writeSpend(o.out, budget);
+    if (e instanceof LlmStop) throw new LlmStop(e.reason, `llm drafter stopped, ${e.message}; the drafts finished before it are kept in ${path.join(o.out, 'llm')} and are not asked again on a resume`);
+    throw e;
+  }
+  if (budget) {
+    writeSpend(o.out, budget);
+    say(`llm drafter spend: ${budget.summary()}`);
+  }
   if (llmStats.length > 0) {
     const t = sumStats(llmStats);
     say(`llm drafter: ${t.drafts} draft(s), ${t.decisions} decisions, ${t.calls} calls, ${t.retries} retries, ${t.fallbacks} fallbacks; `
@@ -504,17 +572,38 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   return check;
 }
 
-/** `f` over `items`, at most `limit` at a time; the results in the items' order. */
-export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T) => Promise<R>): Promise<R[]> {
+/** `<out>/llm/spend.json`: the run's LLM caps, what it spent and why it stopped (null = it did not). */
+function writeSpend(out: string, b: LlmBudget): void {
+  const dir = path.join(out, 'llm');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'spend.json.tmp'), `${JSON.stringify({ v: 1, ...b.record() }, null, 1)}\n`);
+  fs.renameSync(path.join(dir, 'spend.json.tmp'), path.join(dir, 'spend.json'));
+}
+
+/**
+ * `f` over `items`, at most `limit` at a time; the results in the items' order.  The first failure
+ * stops the rest: no lane takes another item, the in-flight calls see `signal` aborted (with that
+ * failure as its reason), and mapLimit rejects with it once every lane has settled, so nothing keeps
+ * running (or spending) after it returns.
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T, signal: AbortSignal) => Promise<R>): Promise<R[]> {
   const out = new Array<R>(items.length);
+  const ac = new AbortController();
+  let failure: { e: unknown } | null = null;
   let next = 0;
   const lane = async (): Promise<void> => {
-    while (next < items.length) {
+    while (next < items.length && !ac.signal.aborted) {
       const i = next++;
-      out[i] = await f(items[i] as T);
+      try {
+        out[i] = await f(items[i] as T, ac.signal);
+      } catch (e) {
+        if (!failure) { failure = { e }; ac.abort(e); }
+        return;
+      }
     }
   };
   await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), items.length) }, lane));
+  if (failure) throw (failure as { e: unknown }).e;
   return out;
 }
 

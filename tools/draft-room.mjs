@@ -67,6 +67,12 @@
 //
 //   On the room listener (8644):
 //   GET  /room/<id>          -> 200 state
+//   GET  /room/<id>/cube     (D444) -> 200 {ok, room, id, title, hash, size, cards}: the room's whole cube, the
+//                               names de-duplicated in the owner's POST order -- exactly what cube.hash is the
+//                               SHA-256 of -- so a seat whose browser lacks the cube (the owner's own, my-<slug>)
+//                               can check its hash and replay the draft.  Fixed for the room's life: fetched once,
+//                               never in the state, which is sent on every change.  404 {code:"cube"} for a room
+//                               made before D444 (its rooms.json entry has no list)
 //   GET  /room/<id>/events   -> 200 text/event-stream: `event: state` + `data: <state>` now and
 //                               after every change; `: ping` every 15 s; `event: gone` when it expires
 //                               or its owner closes it; `event: revoked` (D408) when the owner made a
@@ -96,7 +102,7 @@
 //   OPTIONS                  preflight (Allow-Private-Network, X-Room-Token)
 //   GET  /, /assets/...      the site, when --room-site-dir is given (else 404)
 //
-//   state = {v:1, id, version, you, format:"grid", cube:{id,title,hash,size}, grids, g, slots[9],
+//   state = {v:1, id, version, you, format:"grid", cube:{id,title,hash,size} (D444: the names are GET .../cube), grids, g, slots[9],
 //            firstLine, firstSeat, toAct (0|1|null), done, seats:[{name, joined, online, picks}x2],
 //            log:[{n, seat, grid, line, cards}], createdAt, expiresAt, seed (null until done),
 //            decks:[{ready, name, cards}x2]  (D404: the other seat's deck by name and count only),
@@ -618,6 +624,8 @@ export function createRoomStore(opts = {}) {
       const t = now();
       const r = {
         id, cubeId: c.cubeId, cubeTitle: c.cubeTitle, cubeHash: cubeHash(c.cards), cubeSize: new Set(c.cards).size,
+        // D444: the whole list, de-duplicated as cubeHash hashes it (GET /room/<id>/cube; never in the state)
+        cubeCards: [...new Set(c.cards)],
         ...grid, version: 1, createdAt: t, activeAt: t,
         seats: [{ name: c.name, joined: true, tokenHash: digest(tokens[0]).toString('hex') }, { name: 'Player 2', joined: false, tokenHash: digest(tokens[1]).toString('hex') }],
         decks: [null, null], ready: [false, false], game: null,
@@ -644,6 +652,18 @@ export function createRoomStore(opts = {}) {
     view(id, seat) {
       const r = rooms.get(id);
       return r ? viewFor(r, seat) : null;
+    },
+    /**
+     * D444: the room's whole cube for a seat -- the names de-duplicated in the owner's order, which cube.hash
+     * is the SHA-256 of.  The same for both seats (a grid draft is face up, and the names in document order
+     * say nothing of the deal: the seed stays hidden until the draft is over).  null for no such room;
+     * {missing: true} for a room made before D444, whose rooms.json entry has no list.
+     */
+    cube(id) {
+      const r = rooms.get(id);
+      if (!r) return null;
+      if (!Array.isArray(r.cubeCards)) return { missing: true };
+      return { ok: true, room: r.id, id: r.cubeId, title: r.cubeTitle, hash: r.cubeHash, size: r.cubeCards.length, cards: [...r.cubeCards] };
     },
     join(id, seat, name) {
       const r = rooms.get(id);
@@ -1033,7 +1053,7 @@ export function startRoomServer(opts) {
       }
       if (!all.take('all')) { send(res, 429, { ok: false, code: 'slow', message: 'the room is busy — try again in a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ' (all)'); return; }
       if (fails.empty(who)) { send(res, 429, { ok: false, code: 'slow', message: 'too many wrong links from this address — wait a minute' }, { ...cors, 'Retry-After': '60' }); say(429, ' (failures)'); return; }
-      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log|bug)(?:\/(m[0-9]{13}))?)?$/.exec(path);
+      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log|bug|cube)(?:\/(m[0-9]{13}))?)?$/.exec(path);
       if (!m || !ROOM_ID.test(m[1])) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const [, id, action, sub] = m;
       if ((action === 'review' || action === 'log') !== (sub !== undefined)) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
@@ -1051,6 +1071,15 @@ export function startRoomServer(opts) {
         if (method !== 'GET') { send(res, 405, { ok: false, code: 'method', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
         send(res, 200, store.view(id, seat), cors);
         say(200);
+        return;
+      }
+      if (action === 'cube') {
+        // D444: the room's whole cube, fetched once (the state, sent on every change, carries its hash and size only).
+        if (method !== 'GET') { send(res, 405, { ok: false, code: 'method', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
+        const c = store.cube(id);
+        if (!c || c.missing) { send(res, 404, { ok: false, code: 'cube', message: 'this room was made before it kept its card list (D444): make a new room' }, cors); say(404, ' (no list)'); return; }
+        send(res, 200, c, cors);
+        say(200, ` (seat ${seat} cube, ${c.size} names)`);
         return;
       }
       if (action === 'review') {

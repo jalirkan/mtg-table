@@ -19,6 +19,7 @@
 #   tools/cubelab.sh census-play --decks var/cubelab/deck-census/legacy/decks --pairs 200 --seed 1 --jobs 2 --out var/cubelab/deck-census/legacy/games
 #   tools/cubelab.sh census-read --games var/cubelab/deck-census/legacy/games --decks var/cubelab/deck-census/legacy/decks --out var/cubelab/deck-census/read
 #   tools/cubelab.sh sample --band pauper --structure two-colour --seed 1 --count 40 --out var/cubelab/census/pauper   # D445
+#   tools/cubelab.sh shapes var/lab-j140/runs/*/* --out var/lab-j140/out              # D446: shape measures by band, no engine
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):
@@ -33,7 +34,7 @@
 #   2. builds the bridge if bridge/out is missing, and compiles
 #      tools/cubelab/CubeLab.java into var/cubelab/classes/ when it is stale
 #      (javac through jdk.compiler, never --release; the lint already scans it);
-#   3. for `check`, `ratings`, `run`, `selfplay` and `watch` (not `learn`, `census`, `sample`, `decks` or `census-read`, which read files only), builds one Forge home per job under
+#   3. for `check`, `ratings`, `run`, `selfplay`, `watch` and `census-play` (not `learn`, `census`, `sample`, `shapes`, `decks` or `census-read`, which read files only), builds one Forge home per job under
 #      var/cubelab/homes/<k>/ (`watch`: var/cubelab/watch-homes/0/) with forge_home_make (D129's helper), so no two
 #      JVMs share a userDir, and hands them to the TypeScript side;
 #   4. runs tools/cubelab/cli.ts under Node (type stripping, no build step).
@@ -49,7 +50,7 @@ cd "$REPO_ROOT"
 
 cmd="$1"
 engine=yes
-case "$cmd" in report|meta|learn|census|sample|decks|census-read) engine=no ;; esac
+case "$cmd" in report|meta|learn|census|sample|shapes|decks|census-read) engine=no ;; esac
 # compare --no-run only reads its run folders (D441)
 if [ "$cmd" = "compare" ]; then for a in "$@"; do if [ "$a" = "--no-run" ]; then engine=no; fi; done; fi
 if [ "$engine" = yes ]; then

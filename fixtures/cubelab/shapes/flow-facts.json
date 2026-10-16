@@ -1,0 +1,337 @@
+{
+ "note": "Forge 2.0.14 engine facts (CubeLab.java facts, cached) for the Synergy v3 study's 17 card-flow cards and controls that are not card flow (D446 point 5)",
+ "flow": [
+  {
+   "listed": "Opt",
+   "found": true,
+   "name": "Opt",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Scry 1.\\nDraw a card."
+  },
+  {
+   "listed": "Consider",
+   "found": true,
+   "name": "Consider",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Surveil 1. (Look at the top card of your library. You may put that card into your graveyard.)\\nDraw a card."
+  },
+  {
+   "listed": "Brainstorm",
+   "found": true,
+   "name": "Brainstorm",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Draw three cards, then put two cards from your hand on top of your library in any order."
+  },
+  {
+   "listed": "Ponder",
+   "found": true,
+   "name": "Ponder",
+   "type": "Sorcery",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Look at the top three cards of your library, then put them back in any order. You may shuffle.\\nDraw a card."
+  },
+  {
+   "listed": "Thought Scour",
+   "found": true,
+   "name": "Thought Scour",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Target player mills two cards.\\nDraw a card."
+  },
+  {
+   "listed": "Deep Analysis",
+   "found": true,
+   "name": "Deep Analysis",
+   "type": "Sorcery",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Target player draws two cards.\\nFlashback—{1}{U}, Pay 3 life. (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+  },
+  {
+   "listed": "Mulldrifter",
+   "found": true,
+   "name": "Mulldrifter",
+   "type": "Creature - Elemental",
+   "land": false,
+   "creature": true,
+   "planeswalker": false,
+   "oracle": "Flying\\nWhen Mulldrifter enters, draw two cards.\\nEvoke {2}{U} (You may cast this spell for its evoke cost. If you do, it's sacrificed when it enters.)"
+  },
+  {
+   "listed": "Faithless Looting",
+   "found": true,
+   "name": "Faithless Looting",
+   "type": "Sorcery",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Draw two cards, then discard two cards.\\nFlashback {2}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+  },
+  {
+   "listed": "Cathartic Reunion",
+   "found": true,
+   "name": "Cathartic Reunion",
+   "type": "Sorcery",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "As an additional cost to cast this spell, discard two cards.\\nDraw three cards."
+  },
+  {
+   "listed": "Unexpected Windfall",
+   "found": true,
+   "name": "Unexpected Windfall",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "As an additional cost to cast this spell, discard a card.\\nDraw two cards and create two Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+  },
+  {
+   "listed": "Mishra's Bauble",
+   "found": true,
+   "name": "Mishra's Bauble",
+   "type": "Artifact",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "{T}, Sacrifice Mishra's Bauble: Look at the top card of target player's library. Draw a card at the beginning of the next turn's upkeep."
+  },
+  {
+   "listed": "Chromatic Star",
+   "found": true,
+   "name": "Chromatic Star",
+   "type": "Artifact",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "{1}, {T}, Sacrifice Chromatic Star: Add one mana of any color.\\nWhen Chromatic Star is put into a graveyard from the battlefield, draw a card."
+  },
+  {
+   "listed": "Prophetic Prism",
+   "found": true,
+   "name": "Prophetic Prism",
+   "type": "Artifact",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "When Prophetic Prism enters, draw a card.\\n{1}, {T}: Add one mana of any color."
+  },
+  {
+   "listed": "Ichor Wellspring",
+   "found": true,
+   "name": "Ichor Wellspring",
+   "type": "Artifact",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "When Ichor Wellspring enters or is put into a graveyard from the battlefield, draw a card."
+  },
+  {
+   "listed": "Candy Trail",
+   "found": true,
+   "name": "Candy Trail",
+   "type": "Artifact - Food Clue",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "When Candy Trail enters, scry 2.\\n{2}, {T}, Sacrifice Candy Trail: You gain 3 life and draw a card."
+  },
+  {
+   "listed": "Village Rites",
+   "found": true,
+   "name": "Village Rites",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "As an additional cost to cast this spell, sacrifice a creature.\\nDraw two cards."
+  },
+  {
+   "listed": "Deadly Dispute",
+   "found": true,
+   "name": "Deadly Dispute",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "As an additional cost to cast this spell, sacrifice an artifact or creature.\\nDraw two cards and create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+  }
+ ],
+ "control": [
+  {
+   "listed": "Lightning Bolt",
+   "found": true,
+   "name": "Lightning Bolt",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Lightning Bolt deals 3 damage to any target."
+  },
+  {
+   "listed": "Remand",
+   "found": true,
+   "name": "Remand",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Counter target spell. If that spell is countered this way, put it into its owner's hand instead of into that player's graveyard.\\nDraw a card."
+  },
+  {
+   "listed": "Repulse",
+   "found": true,
+   "name": "Repulse",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Return target creature to its owner's hand.\\nDraw a card."
+  },
+  {
+   "listed": "Exclude",
+   "found": true,
+   "name": "Exclude",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Counter target creature spell.\\nDraw a card."
+  },
+  {
+   "listed": "Mind Stone",
+   "found": true,
+   "name": "Mind Stone",
+   "type": "Artifact",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "{T}: Add {C}.\\n{1}, {T}, Sacrifice Mind Stone: Draw a card."
+  },
+  {
+   "listed": "Miscalculation",
+   "found": true,
+   "name": "Miscalculation",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Counter target spell unless its controller pays {2}.\\nCycling {2} ({2}, Discard this card: Draw a card.)"
+  },
+  {
+   "listed": "Archmage's Charm",
+   "found": true,
+   "name": "Archmage's Charm",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Choose one —\\n• Counter target spell.\\n• Target player draws two cards.\\n• Gain control of target nonland permanent with mana value 1 or less."
+  },
+  {
+   "listed": "Howling Mine",
+   "found": true,
+   "name": "Howling Mine",
+   "type": "Artifact",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "At the beginning of each player's draw step, if Howling Mine is untapped, that player draws an additional card."
+  },
+  {
+   "listed": "Fact or Fiction",
+   "found": true,
+   "name": "Fact or Fiction",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard."
+  },
+  {
+   "listed": "Phyrexian Arena",
+   "found": true,
+   "name": "Phyrexian Arena",
+   "type": "Enchantment",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "At the beginning of your upkeep, you draw a card and you lose 1 life."
+  },
+  {
+   "listed": "Skullclamp",
+   "found": true,
+   "name": "Skullclamp",
+   "type": "Artifact - Equipment",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Equipped creature gets +1/-1.\\nWhenever equipped creature dies, draw two cards.\\nEquip {1}"
+  },
+  {
+   "listed": "Cryptic Command",
+   "found": true,
+   "name": "Cryptic Command",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Choose two —\\n• Counter target spell.\\n• Return target permanent to its owner's hand.\\n• Tap all creatures your opponents control.\\n• Draw a card."
+  },
+  {
+   "listed": "Fire // Ice",
+   "found": true,
+   "name": "Fire // Ice",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Fire deals 2 damage divided as you choose among one or two targets.\r\n\r\nTap target permanent.\\nDraw a card."
+  },
+  {
+   "listed": "Counterspell",
+   "found": true,
+   "name": "Counterspell",
+   "type": "Instant",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "Counter target spell."
+  },
+  {
+   "listed": "Bitterblossom",
+   "found": true,
+   "name": "Bitterblossom",
+   "type": "Kindred Enchantment - Faerie",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "At the beginning of your upkeep, you lose 1 life and create a 1/1 black Faerie Rogue creature token with flying."
+  },
+  {
+   "listed": "Sylvan Library",
+   "found": true,
+   "name": "Sylvan Library",
+   "type": "Enchantment",
+   "land": false,
+   "creature": false,
+   "planeswalker": false,
+   "oracle": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library."
+  }
+ ]
+}
