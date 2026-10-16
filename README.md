@@ -18,6 +18,36 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — #154 review: the pipeline is good; fix these before it merges and J140 runs
+**What checked out:**
+- Determinism is byte-identical.
+- The land formula is exact.
+- The prior over k is uniform.
+- The cross-band share is ~10%.
+- Pairing gives 16 games a deck with no self-pairs.
+- Replay reproduces 6/6 games.
+- 30 real games ran with 0 errors.
+
+**An independent checker (not your `castable`) found:**
+1. **HIGH: fetch and cycling lands count as sources of colours with no basic in the deck.** `produces` says Evolving Wilds, Fabled Passage, Ash Barrens = WUBRG, and a Landscape = its three colours. `landPlan`/`sourcesOf` (`deckcensus.ts:249,257,278-281`) count them and lower the basics minimum (`:261-262`).
+   - **Example:** `pauper-77-00047` has Qasali Pridemage and no Forest.
+   - **Scale:** 12 of 1,600 decks (0.75%, 11 of them pauper) hold a spell with zero real sources. 128 "two-colour fixers" reach at most one colour of their deck.
+   - **Fix:** count a fetcher/cycler only toward the colours whose basics (or fetchable typed lands) are in the deck.
+2. **MEDIUM: `parseManaCost` (`:104-115`) misses Forge's real tokens.** Forge writes `GW` (hybrid), `BP` (Phyrexian), `2W` and `CW`, with no slash; only 3 slash tokens exist in the zip. So hybrid is read as two pips, and Phyrexian and 2/colour as plain pips. That is stricter, so never uncastable, but the pip shares are skewed. The unit test checks slash forms that never occur (`test:57-64`). Also read split cards' second face (`:120-122`): Fire // Ice was drawn with no Island.
+3. **MEDIUM: the castability test reuses the generator's own `castable`/`sourcesOf`** (`test:96-101`), which is why #1 slipped through. Make it independent. Also, without `FORGE_JAR` the suite silently falls back to printed colours and passes. Fail instead, so CI never "passes" without real costs.
+4. **MEDIUM: `census-read` does not de-duplicate rows or check pilots** (`censusread.ts:230-238`). The main folder plus its replay counted 36 games instead of 30. A search-pilot folder would mix in silently. A repeated `--decks` folder doubles the deck count. De-duplicate by (seed, g), refuse mixed pilots unless asked, and de-duplicate decks.
+5. **LOW:**
+   - switch card flow to main's `isCardFlow` (40 cards);
+   - add per-deck **creature count and the mana-value histogram** (asked for before night 1) plus X-spell count;
+   - `{C}` and snow costs are ignored (no current card, latent);
+   - which deck is on the play isn't balanced per deck (`first` is recorded, so fine; note it in D447);
+   - engine-error games count as done and are never retried (`censusplay.ts:130-137`);
+   - `--pairs` cannot be extended;
+   - the guide still says #153 is withdrawn.
+6. **Rebase:** conflicts with #153 in `tools/cubelab.sh`, `tools/README.md` and `docs/guides/cube-lab.md`. Every one is "both added subcommands", so keep both, e.g. `report|meta|learn|census|sample|shapes|decks|census-read) engine=no`. Merge main in; don't rebase.
+
+Speed note: here a game took ~12.8 s median on a loaded 4-core box, against your ~2.9 s. Yours is likely right on 8 cores; J140's timeout already has room.
+
 ### 2026-10-16 (EDT) — deck census (#154, D447): your four choices answered; #154 in review now
 1. **Powered drawn together with legacy:** agreed. No weight.
 2. **Peasant's fixers mostly from pauper:** agreed. That matches D445's cubes.
