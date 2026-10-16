@@ -1192,9 +1192,59 @@ that folder's first chunk will, and stops on a refusal; `queue check`, with the
 same flags as the run, does only that and writes nothing (a job's pilot runs it
 on the real root).
 
+## Watching two bots draft and play (D440)
+
+`watch` is the lab made to be watched: ONE grid draft, then a best of three
+you follow as it is played.
+
+```bash
+tools/cubelab.sh watch cubes/fair-fight-cube-180.md                       # Default vs Default, best of 3, a random seed
+tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search --games 5
+tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the smoke: about 20 s
+```
+
+| Flag | Default | |
+|---|---|---|
+| `--format grid` | grid | the only format: a grid is what a viewer replays pick by pick |
+| `--seed S` | random 1–99,999 (printed in the id) | the draft's seed, as `run`'s; game `n` plays at `S × 10 + n` |
+| `--games N` | 3 | a best of N (odd, 1–7); it stops once a side has more than half |
+| `--drafter-a`, `--drafter-b` | `lab` | `lab`, or `human-picks:<x.picks.json>` for one seat (D416) |
+| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search` (search-v2, the live search seat, through RecordMatch's `--policy search`) |
+| `--pace ms` | 600 | the recorder's pace (M47); 0 = engine speed |
+| `--out <dir>` | `var/spectate/watch-<cube>-<seed>` | the folder; its name is the watch's id |
+| `--ratings <tsv>`, `--game-timeout <sec>` | as `run` | |
+
+What it writes, all in the one folder:
+
+- `lab/` — `run --drafts 1 --games 0` itself (run.json, drafts.jsonl, the decks):
+  the same picks and decks `run` makes at that seed;
+- `draft.json` — the draft as a viewer replays it: every grid as each drafter
+  saw it (nine slots, null where the opener's line was), the line taken (0–2
+  rows, 3–5 columns) and the cards gained, both pools, both decks with the
+  builder's reasons. Checked before it is written (nine slots, a legal line
+  holding what was taken, pools the sum of the picks, 40-card decks);
+- `deck-A.dck`, `deck-B.dck` — the decks the games play (`Drafter A (UB)`);
+- `<id>-g<n>.jsonl` — each game, a paced both-AI `mtgtable.RecordMatch` from
+  seat 0's eyes (drafter A; the other hand stays the five-key stub), checked by
+  `tools/check-redaction.mjs` as soon as it ends; `<id>-g<n>.log` its output;
+- `match.json` — `status` `drafting` → `playing` → `done` (or `error` /
+  `stopped`, with why), the games, their winners, the wins and the result,
+  rewritten after every change.
+
+**The draft is face up, so draft.json shows both pools and both decks**: in a
+grid draft both drafters see every grid and every line the other takes. The
+games are not: one seat's view, as every spectated game.
+
+ForgeCoach starts and follows a watch through the coach helper (`POST /watch`,
+one at a time); [`docs/watch-bots.md`](../watch-bots.md) is that contract, with
+both files' schemas. A watch boots its own Forge home,
+`var/cubelab/watch-homes/0`, so it never shares one with a lab run's job 0.
+
 ## What it does not do
 
-- It never touches the game: no bridge code, no wire, nothing the board reads.
+- It never touches the game: no bridge code, no wire, nothing the board reads
+  (`watch` runs the bridge's own recorder, `mtgtable.RecordMatch`, as
+  `scripts/spectate.sh` does, and changes nothing it writes).
   It boots the same engine the same way (`mtgtable.Bootstrap`), under the same
   lint, and writes only under `var/` (and the ratings TSV you ask for).
 - Forge's AI is the only player. A card the AI misplays — Forge marks some
