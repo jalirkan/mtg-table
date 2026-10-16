@@ -589,6 +589,55 @@ test('J126: the match tally times each side\'s decisions (search.<kind>.us), per
   assert.equal(tallyLine(emptyTally()).msPerDecision, null, 'no time counted: null, never 0');
 });
 
+test('J128 (D437): search-v2-evalleaf is search-v2 (search-v1-anytime) plus leaf=eval:<evaluator v2> and nothing else', async () => {
+  const { createHash } = await import('node:crypto');
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!, p = by.get('search-v2-evalleaf');
+  assert.ok(p, 'search-v2-evalleaf is registered');
+  assert.equal(p!.kind, 'search-eval');
+  const { model, ...search } = p!.resolved;
+  assert.deepEqual(search, v2.resolved, "every search param is search-v2's");
+  assert.equal(model, 'dcdae3745b84', "the model is evaluator v2's file (nights-1-3-eval.json, D364) by its sha256 prefix");
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+  assert.notEqual(p!.hash, v2.hash);
+  // Here the PC-only model is present or it is not: the player is the one config, or unavailable -- never another model.
+  if (p!.cfg) assert.equal(p!.cfg, `${v2.cfg},leaf=eval:var/ml/models/eval-dcdae3745b84.json`);
+  else assert.match(p!.unavailable!, /is not here|hashes to/);
+  // The same params against a stand-in model in a scratch checkout: search-v2's seat config plus the one key.
+  const repo = mkdtempSync(join(tmpdir(), 'ladder-evalleaf-'));
+  mkdirSync(join(repo, 'tools/ai-bench'), { recursive: true });
+  mkdirSync(join(repo, 'bridge/src/mtgtable/ai'), { recursive: true });
+  mkdirSync(join(repo, 'var/ml/models'), { recursive: true });
+  writeFileSync(join(repo, 'tools/ai-bench/AiBench.java'), '// +search');
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'case "leaf": leaf = p[1];');
+  const body = '{"format":"mtgtable-position-eval","j128":1}\n';
+  const hash = createHash('sha256').update(body).digest('hex').slice(0, 12);
+  writeFileSync(join(repo, `var/ml/models/eval-${hash}.json`), body);
+  const stand = resolvePlayer({ name: 'search-v2-evalleaf-x', kind: 'search-eval', params: { ...search, model: hash } }, repo);
+  assert.equal(stand.cfg, `${v2.cfg},leaf=eval:var/ml/models/eval-${hash}.json`);
+  // The live seat's default leaf stays the hand leaf.
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.match(java, /case "leaf"/);
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /leaf/);
+});
+
+test('J128 (D437): the match tally counts the evaluator\'s leaves and their mean cost (search.leaf.eval, .evalNs)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-evalleaf-tally-'));
+  const f = join(dir, 'b0.jsonl');
+  const a1 = { 'search.p.considered': 3, 'search.leaf.eval': 100, 'search.leaf.evalNs': 2_000_000 };
+  const a2 = { 'search.a.considered': 2, 'search.leaf.eval': 50, 'search.leaf.evalNs': 1_000_000 };
+  const b1 = { 'search.p.considered': 4 };
+  writeFileSync(f, [JSON.stringify({ aStats: { counts: a1 }, bStats: { counts: b1 } }), JSON.stringify({ aStats: { counts: a2 } })].join('\n'));
+  const a = emptyTally(), b = emptyTally();
+  tallyBatch(f, a, b);
+  const ta = tallyLine(a), tb = tallyLine(b);
+  assert.equal(ta.evalLeaves, 150);
+  assert.equal(ta.evalLeafUs, 20, '3,000,000 ns over 150 leaves');
+  assert.equal(tb.evalLeaves, 0, 'a hand-leaf side counts none');
+  assert.equal(tb.evalLeafUs, null, 'and no cost: null, never 0');
+});
+
 // ------------------------------------------------------------ match (D398)
 
 test('match (D398): the pair-score interval, in Elo too; no interval under 2 pairs', () => {

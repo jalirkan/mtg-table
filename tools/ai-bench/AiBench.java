@@ -1497,7 +1497,186 @@ public final class AiBench {
                             : "budget".equals(rep.fallback) && rep.playouts <= 1) && ms < 60 + 1500,
                             "a tight budget: " + ms + " ms, " + (rep == null ? "none" : rep.summary()));
                 });
+        evalLeafScenarios();
         d416Scenarios(castBoard);
+    }
+
+    // ------------------------------------------------------------------
+    // J128 (D437): search-v2 with D316's learned evaluator at its leaves
+    // (D354's leaf=eval:<model.json>).  The switch changes the score of the
+    // position a rollout stops at and nothing that led there; the evaluator
+    // reads only the searching seat's knowledge, so two games that differ only
+    // in hidden cards score alike; and a search-v2 decision with it stays
+    // inside the 1.5 s budget.  The model is the committed fixture
+    // (fixtures/eval/model.json), so the bench needs no PC-only file; the job
+    // measures the real model's cost in its match (search.leaf.evalNs).
+    // ------------------------------------------------------------------
+
+    /** A sink that keeps the counters (the playouts' own). */
+    static final class CountSink implements mtgtable.ai.SearchPolicy.Sink {
+        final Map<String, Integer> counts = new TreeMap<>();
+
+        @Override
+        public void add(final String key, final int n) {
+            counts.merge(key, n, Integer::sum);
+        }
+
+        @Override
+        public void event(final String text) { }
+
+        int get(final String key) {
+            return counts.getOrDefault(key, 0);
+        }
+    }
+
+    static final String EVAL_FIXTURE = "fixtures/eval/model.json";
+
+    static void evalLeafScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the learned evaluator at search-v2's leaves (J128, D437, engine)");
+        final mtgtable.eval.PositionEvaluator ev = mtgtable.ai.SearchPolicy.evaluator(EVAL_FIXTURE);
+        final long far = 60_000_000_000L;
+
+        // 1. Only the leaf changes.  The same rollout (seed, candidate, horizon) with
+        //    the hand leaf and with the evaluator: the same end (over, result, turns,
+        //    step cap), the hand run's leaf is the hand leaf of the evaluator run's
+        //    final position, the evaluator run's leaf is LEAF_SCALE * logit(P(win))
+        //    of that position, a finished game keeps the hand leaf's +-WIN, and the
+        //    score differs on unfinished rollouts.  Only evaluator leaves are counted.
+        final List<String> board = List.of(
+                "humanlife=12", "ailife=14", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest;Wall of Wood", "humanhand=Grizzly Bears;Forest",
+                "humanlibrary=Forest;Hill Giant;Forest;Forest", "aihand=Typhoid Rats;Swamp",
+                "ailibrary=Swamp;Swamp;Hill Giant;Swamp",
+                "aibattlefield=Grizzly Bears;Hill Giant;Swamp;Swamp;Swamp;Mountain");
+        scenario("search-evalleaf-only", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            int sameEnd = 0;
+            int handIsHand = 0;
+            int evalIsEval = 0;
+            int unfinished = 0;
+            int differs = 0;
+            int finishedSame = 0;
+            int finished = 0;
+            int handCounted = 0;
+            int evalCounted = 0;
+            final int seeds = 6;
+            for (long seed = 1; seed <= seeds; seed++) {
+                final CountSink hs = new CountSink();
+                final CountSink es = new CountSink();
+                final mtgtable.ai.SearchPolicy.Playout ph = mtgtable.ai.SearchPolicy.playout(g, ai,
+                        mtgtable.ai.SearchPolicy.forgeCand(), seed, new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + far, 1, 20_000),
+                        hs, false, null);
+                final double[] atEnd = {Double.NaN, Double.NaN};
+                mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                    atEnd[0] = mtgtable.ai.SearchPolicy.leaf(copy, aiC, 1.0);
+                    atEnd[1] = copy.isGameOver() ? Double.NaN : mtgtable.ai.SearchPolicy.evalLeaf(ev, copy, aiC);
+                });
+                final mtgtable.ai.SearchPolicy.Playout pe;
+                try {
+                    pe = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.forgeCand(), seed,
+                            new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + far, 1, 20_000, 1.0, false, ev), es, false, null);
+                } finally {
+                    mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+                }
+                if (ph == null || pe == null) {
+                    continue;
+                }
+                sameEnd += ph.over == pe.over && ph.result == pe.result && ph.turns == pe.turns && ph.stepCapped == pe.stepCapped ? 1 : 0;
+                handIsHand += ph.leaf == atEnd[0] ? 1 : 0;
+                handCounted += hs.get("search.leaf.eval");
+                evalCounted += es.get("search.leaf.eval");
+                if (pe.over) {
+                    finished++;
+                    finishedSame += pe.leaf == ph.leaf ? 1 : 0;
+                } else {
+                    unfinished++;
+                    evalIsEval += pe.leaf == atEnd[1] ? 1 : 0;
+                    differs += pe.leaf != ph.leaf ? 1 : 0;
+                }
+            }
+            check(sameEnd == seeds && handIsHand == seeds,
+                    "the same " + seeds + " rollouts end alike with either leaf (" + sameEnd + "), and the hand run's leaf is the "
+                    + "hand leaf of the evaluator run's end position (" + handIsHand + ")");
+            check(unfinished >= 1 && evalIsEval == unfinished && finishedSame == finished,
+                    "the evaluator scores every unfinished end (" + evalIsEval + " of " + unfinished
+                    + ") and a finished game keeps +-WIN (" + finishedSame + " of " + finished + ")");
+            check(differs == unfinished, "the switch changed the score of every unfinished rollout (" + differs + " of " + unfinished + ")");
+            check(handCounted == 0 && evalCounted == unfinished,
+                    "search.leaf.eval counts the evaluator's leaves only (hand " + handCounted + ", eval " + evalCounted + ")");
+        });
+
+        // 2. Nothing hidden enters.  Two games that differ only in what the AI cannot
+        //    see -- which of the opponent's cards is in hand and which in the library,
+        //    the library's order, the AI's own library order -- give the evaluator the
+        //    same features on the REAL game (its hidden cards untouched) and the same
+        //    eval-leaf rollouts seed for seed.  The control: a card the AI does see
+        //    (its own hand) changes the features, so the comparison has teeth.
+        final String[][] hidden = {
+            {"Lightning Bolt", "Forest;Forest;Forest", "Swamp;Hill Giant;Swamp", "Typhoid Rats"},
+            {"Forest", "Forest;Lightning Bolt;Forest", "Hill Giant;Swamp;Swamp", "Typhoid Rats"},
+            {"Lightning Bolt", "Forest;Forest;Forest", "Swamp;Hill Giant;Swamp", "Hill Giant"},
+        };
+        final List<double[]> feats = new ArrayList<>();
+        final List<List<Double>> leaves = new ArrayList<>();
+        final int[] evalCounts = new int[hidden.length];
+        for (int k = 0; k < hidden.length; k++) {
+            final int kk = k;
+            final List<String> b = List.of(
+                    "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN2",
+                    "humanbattlefield=Mountain;Forest", "humanhand=" + hidden[k][0], "humanlibrary=" + hidden[k][1],
+                    "aihand=" + hidden[k][3], "ailibrary=" + hidden[k][2], "aibattlefield=Swamp;Swamp;Mountain|Id:30");
+            scenario("search-evalleaf-nopeek-" + k, b, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                feats.add(ev.features(ai.getGame(), ai));
+                final List<Double> ls = new ArrayList<>();
+                final CountSink cs = new CountSink();
+                for (long seed = 1; seed <= 8; seed++) {
+                    final mtgtable.ai.SearchPolicy.Playout pl = mtgtable.ai.SearchPolicy.playout(ai.getGame(), ai,
+                            mtgtable.ai.SearchPolicy.forgeCand(), seed,
+                            new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + far, 1, 20_000, 1.0, false, ev), cs, false, null);
+                    ls.add(pl == null ? Double.NaN : pl.leaf);
+                }
+                leaves.add(ls);
+                evalCounts[kk] = cs.get("search.leaf.eval");
+            });
+        }
+        check(feats.size() == 3 && Arrays.equals(feats.get(0), feats.get(1)),
+                "the evaluator's features of the real game are the same whichever hidden cards are where");
+        check(leaves.size() == 3 && leaves.get(0).equals(leaves.get(1)) && evalCounts[0] >= 1,
+                "and its rollout leaves are the same seed for seed (" + evalCounts[0] + " evaluator leaves; first "
+                + (leaves.isEmpty() ? "-" : leaves.get(0).get(0)) + ")");
+        check(feats.size() == 3 && !Arrays.equals(feats.get(0), feats.get(2)),
+                "control: a card the AI does see (its own hand) changes the features");
+
+        // 3. The budget.  search-v2 (anytime=1, 1.5 s) with the evaluator at its leaves,
+        //    on scenario 1's main phase (a creature to cast, a land, attackers to come),
+        //    decides within the budget, its leaves are the evaluator's, and one
+        //    evaluator leaf costs far less than a rollout (printed; bound 1 ms).
+        scenario("search-evalleaf-budget", board, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=1500,anytime=1,seed=7,leaf=eval:" + EVAL_FIXTURE), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final long t0 = System.nanoTime();
+                    ctl.chooseSpellAbilityToPlay();
+                    final long ms = (System.nanoTime() - t0) / 1_000_000L;
+                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+                    final Map<String, Integer> c = ctl.counts();
+                    check(rep != null && rep.anytime && c.getOrDefault("search.p.considered", 0) == 1
+                            && c.getOrDefault("search.leaf.eval", 0) >= 1 && c.getOrDefault("search.rolloutErrors", 0) == 0,
+                            "search-v2 with the evaluator leaf searched: " + c.getOrDefault("search.leaf.eval", 0)
+                            + " evaluator leaves (" + (rep == null ? "none" : rep.summary()) + ")");
+                    check(ms < 1500 + 1000, "inside the 1.5 s budget: " + ms + " ms");
+                    final int n = 2000;
+                    final Game g = ai.getGame();
+                    double sum = 0;
+                    final long te = System.nanoTime();
+                    for (int i = 0; i < n; i++) {
+                        sum += mtgtable.ai.SearchPolicy.evalLeaf(ev, g, ai);
+                    }
+                    final double us = (System.nanoTime() - te) / 1000.0 / n;
+                    final double evalNs = c.getOrDefault("search.leaf.evalNs", 0) / (double) Math.max(1, c.getOrDefault("search.leaf.eval", 0));
+                    check(us < 1000 && evalNs < 1_000_000,
+                            String.format(Locale.ROOT, "an evaluator leaf costs %.1f us here (in the search %.1f us; checksum %.1f)",
+                                    us, evalNs / 1000.0, sum / n));
+                });
     }
 
     // ------------------------------------------------------------------

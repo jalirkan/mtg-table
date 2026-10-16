@@ -139,6 +139,7 @@ public final class DecisionSelfTest {
 
         searchWeek3();
         mullAndTargets();
+        evalLeafOnly();
         explore();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
@@ -268,6 +269,49 @@ public final class DecisionSelfTest {
             }
             check(threw, "refused: " + bad);
         }
+    }
+
+    /**
+     * J128 (D437): search-v2 with the learned evaluator at its leaves is search-v2
+     * with ONE field changed.  The ladder's {@code search-v2-evalleaf} is
+     * {@code search-v1-anytime}'s config text plus {@code ,leaf=eval:<file>}; every
+     * public field of the parsed config but {@code leafModel} equals search-v2's
+     * (read by reflection, so a field added later is held too), the text is
+     * search-v2's plus the one key, and the live seat's default leaf stays the
+     * hand leaf.  The engine half (the leaf of the same end position is all that
+     * changes, it reads nothing hidden, the budget holds) is ai-bench's.
+     */
+    private static void evalLeafOnly() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final String model = "var/ml/models/eval-dcdae3745b84.json";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig ev = SearchConfig.parse(v2Text + ",leaf=eval:" + model);
+        check(v2.leafModel == null && model.equals(ev.leafModel), "search-v2's leaf is the hand leaf; evalleaf's names the model");
+        check(ev.toString().equals(v2.toString() + ",leaf=eval:" + model), "the text is search-v2's plus the one key: " + ev);
+        check(SearchConfig.parse(ev.toString()).toString().equals(ev.toString()), "and round-trips");
+        int compared = 0;
+        final List<String> differ = new ArrayList<>();
+        for (final java.lang.reflect.Field f : SearchConfig.class.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                continue;
+            }
+            compared++;
+            try {
+                if (!java.util.Objects.equals(f.get(v2), f.get(ev))) {
+                    differ.add(f.getName());
+                }
+            } catch (final IllegalAccessException e) {
+                differ.add(f.getName() + "?");
+            }
+        }
+        check(compared >= 25 && differ.equals(List.of("leafModel")),
+                "of " + compared + " config fields only leafModel differs: " + differ);
+        // The same holds wherever the key sits in the text, and leaf=hand is search-v2 itself.
+        check(SearchConfig.parse("leaf=eval:" + model + "," + v2Text).toString().equals(ev.toString()), "key order does not matter");
+        check(SearchConfig.parse(v2Text + ",leaf=hand").toString().equals(v2.toString()), "leaf=hand is search-v2");
+        // The default stays the hand leaf: the live seat (search-v2) and parse's defaults name no model.
+        check(SearchConfig.parseLive("").leafModel == null && SearchConfig.defaults().leafModel == null
+                && !SearchConfig.LIVE_DEFAULTS.contains("leaf"), "the live seat's leaf stays hand");
     }
 
     private static double[] rpDiff(final List<double[]> leaves, final int k) {

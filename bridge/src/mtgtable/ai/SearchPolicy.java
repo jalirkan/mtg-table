@@ -127,6 +127,19 @@ public final class SearchPolicy {
         probeForTest = probe;
     }
 
+    /**
+     * For the self-test only (J128, D437): sees each rollout's copy and searching
+     * seat once play has stopped, just before the leaf is scored -- the position
+     * both leaves would score, so the bench can hold that {@code leaf=eval}
+     * changes the score of that position and nothing that led to it.
+     */
+    private static volatile java.util.function.BiConsumer<Game, Player> leafProbeForTest;
+
+    /** For the self-test only: called with every rollout's final copy and its searching seat (null = off). */
+    public static void leafProbeForTest(final java.util.function.BiConsumer<Game, Player> probe) {
+        leafProbeForTest = probe;
+    }
+
     /** For the self-test only: the mulligan search's candidate (keep, or one more London mulligan), D417. */
     public static Cand mulliganCandForTest(final boolean keep, final Player first, final int tucked) {
         return new MullCand(keep, first, tucked);
@@ -2373,9 +2386,25 @@ public final class SearchPolicy {
                 sink.add("search.rolloutStepCap", 1);
             }
             sink.add(lim.untilApplied ? "search.prior.playUs" : "search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
-            final double leaf = lim.score != null && !copy.isGameOver() ? lim.score.applyAsDouble(copy, aiCopy)
-                    : lim.evaluator != null && !copy.isGameOver() ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
-                    : leaf(copy, aiCopy, lim.untapped);
+            final java.util.function.BiConsumer<Game, Player> leafProbe = leafProbeForTest;
+            if (leafProbe != null) {
+                leafProbe.accept(copy, aiCopy);
+            }
+            final double leaf;
+            if (lim.score != null && !copy.isGameOver()) {
+                leaf = lim.score.applyAsDouble(copy, aiCopy);
+            } else if (lim.evaluator != null && !copy.isGameOver()) {
+                // D354's leaf; J128 (D437) counts it and its cost, so a match line says the
+                // evaluator really scored the leaves and what that cost against the budget.
+                final long te = System.nanoTime();
+                leaf = evalLeaf(lim.evaluator, copy, aiCopy);
+                sink.add("search.leaf.eval", 1);
+                // nanoseconds: a leaf costs tens of microseconds, so microseconds would round to 0;
+                // a game's sum stays far below 2^31 ns (2.1 s of evaluator time a game).
+                sink.add("search.leaf.evalNs", (int) Math.min(Integer.MAX_VALUE, System.nanoTime() - te));
+            } else {
+                leaf = leaf(copy, aiCopy, lim.untapped);
+            }
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {
             MyRandom.setRandom(realRandom);
