@@ -1,0 +1,70 @@
+==== J137 pilot2 started 2026-10-16T14:48:14-04:00 in unit lab-J137-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+cube lab compare: synergy_v2, synergy_v3; 6 draft(s) each from seed 837900001 (the same block for every population); out var/lab-j137/pilot
+== population synergy_v2: var/lab-j137/cubes/synergy-v2-cube-180.md
+cube lab: var/lab-j137/cubes/synergy-v2-cube-180.md, grid, 6 draft(s) from seed 837900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j137/pilot/runs/synergy_v2
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 837900001: A:UB 0-2 B:WG  games BB
+[2/6] seed 837900002: A:WG+u 2-1 B:BG  games ABA
+[3/6] seed 837900004: A:WB 2-0 B:UG  games AA
+[4/6] seed 837900005: A:WU 2-0 B:RG  games AA
+[5/6] seed 837900003: A:UB 2-1 B:WG  games ABA
+[6/6] seed 837900006: A:WB 2-0 B:UG  games AA
+matches: 21 s for 6 (3.5 s a draft wall-clock on 3 worker(s))
+done in 21 s -> var/lab-j137/pilot/runs/synergy_v2/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j137/pilot/runs/synergy_v2
+== population synergy_v3: var/lab-j137/cubes/synergy-v3-cube-180.md
+cube lab: var/lab-j137/cubes/synergy-v3-cube-180.md, grid, 6 draft(s) from seed 837900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j137/pilot/runs/synergy_v3
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 837900003: A:UB 2-1 B:WG  games ABA
+[2/6] seed 837900001: A:BG 0-2 B:WU  games BB
+[3/6] seed 837900004: A:UB 2-0 B:UG+w  games AA
+[4/6] seed 837900006: A:WB 2-0 B:UR+g  games AA
+[5/6] seed 837900005: A:WU 2-1 B:WG  games ABA
+[6/6] seed 837900002: A:WG 0-2 B:UB  games BB
+matches: 25 s for 6 (4.2 s a draft wall-clock on 3 worker(s))
+done in 25 s -> var/lab-j137/pilot/runs/synergy_v3/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j137/pilot/runs/synergy_v3
+same seeds in every population: 6 (837900001..837900006)
+flatness          synergy_v2 0.00 [0.00, 28.80]   synergy_v3 4.73 [0.00, 27.45]
+pair_spread       synergy_v2 100.0 [100.0, 100.0]   synergy_v3 100.0 [78.4, 100.0]
+pair_within5      synergy_v2 0.0 [0.0, 40.0]   synergy_v3 0.0 [0.0, 0.0]
+draw_rate         synergy_v2 0.00 [0.00, 0.00]   synergy_v3 0.00 [0.00, 0.00]
+timeout_rate      synergy_v2 0.00 [0.00, 0.00]   synergy_v3 0.00 [0.00, 0.00]
+game_turns        synergy_v2 18.00 [15.64, 20.29]   synergy_v3 19.71 [17.86, 21.57]
+lands             synergy_v2 16.417 [16.167, 16.667]   synergy_v3 16.500 [16.250, 16.750]
+colours           synergy_v2 2.083 [2.000, 2.250]   synergy_v3 2.167 [2.000, 2.333]
+two_colour        synergy_v2 100.0 [100.0, 100.0]   synergy_v3 100.0 [100.0, 100.0]
+splash            synergy_v2 8.3 [0.0, 25.0]   synergy_v3 16.7 [0.0, 33.3]
+first_pick_top10  synergy_v2 15.7 [14.5, 16.9]   synergy_v3 15.4 [14.1, 16.9]
+wrote var/lab-j137/pilot/compare.json and var/lab-j137/pilot/compare.md
+v2v3: NOT SHOWN (decided 1, spread below 0, no low pair 1); wrote var/lab-j137/pilot/out/v2v3.json and v2v3.md
+# J137: Synergy v2 against the designed v3
+
+Compare folder: `var/lab-j137/pilot`; 6 and 6 drafts on the same seeds (compare asserts it). Pairs count with 1+ decisive games. Wilson intervals carry the study's design effect 1.25 (the plain Wilson interval beside it).
+
+## The pre-registered rule (synergy-v3-design.md §4, written 2026-10-16 before any v3 draft)
+
+v3 is **BETTER BALANCED** iff v3's pair-spread 95% interval lies wholly below v2's (v3's upper bound < v2's lower bound) AND no v3 pair with 1+ decisive games has a Wilson 95% interval wholly below 35%. Anything else is **NOT SHOWN**, never "no change". A pass ships nothing: Justin decides.
+
+| cube | pair spread | 95% interval (compare's paired draft-clustered bootstrap) | pairs counted |
+|---|---|---|---|
+| v2 | 100.0 | [100.0, 100.0] | 7 |
+| v3 | 100.0 | [78.4, 100.0] | 7 |
+
+- Spread: v3's upper 100.0 is not below v2's lower 100.0.
+- Pairs: no v3 pair wholly below 35%.
+- Paired difference v2 − v3 (description only): 0.0 [0.0, 21.6].
+
+**Verdict: NOT SHOWN.**
+
+## Information only (decides nothing)
+
+### Colour pairs
+
+| pair | v2 rate | v2 Wilson (deff) | v2 games | v3 rate | v3 Wilson (deff) | v3 plain Wilson | v3 games |
+|---|---|---|---|---|---|---|---|
+| BG | 33.3 | [5.2, 82.0] | 3 | 0.0 | [0.0, 70.6] | [0.0, 65.8] | 2 |
+| RG | 0.0 | [0.0, 70.6] | 2 | - | - | - | 0 |
+| UB | 40.0 | [10.3, 79.5] | 5 | 85.7 | [44.5, 97.8] | [48.7, 97.4] | 7 |
+| UG | 0.0 | [0.0, 54.6] | 4 | 0.0 | [0.0, 70.6] | [0.0, 65.8] | 2 |
+| UR | - | - | 0 | 0.0 | [0.0, 70.6] | [0.0, 65.8] | 2 |
