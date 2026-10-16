@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   check   <cube.md>                       every card against the engine's database
+//   library-candidates --fc <ForgeCoach> [--out cubes/library] [--seed 180] [--min-games 80]   the library pool and its candidate 180s (library-candidates.ts)
 //   ratings init <cube.md> [--out <tsv>] [--force]
 //   ratings apply <cube.md> --from <evolve-dir|changelog.md> --rule explore-eb --out <tsv> [--base <tsv>] [--report <md>]
 //           raise the low-rated cards exploration found holding their own (D360, raisecmd.ts)
@@ -19,6 +20,8 @@
 //           [--deckset]                                        the AI ladder's deck sets: reserved seeds, --games 0 (D340)
 //           [--drafter human-picks:<x.picks.json> [--drafter-seat A|B]]   one seat drafts with ForgeCoach's human
 //                                                              pick model, the other as always; grid only (D416)
+//           [--drafter forge-ranks | llm:<haiku|sonnet|opus|fake>[:thinking=off|low|default] [--drafter-seat A|B]]
+//           [--llm-sees-opponent] [--llm-jobs 2]               Forge's ranks, or Claude asked once a decision (D439)
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
 //   queue   plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //           [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   each drafter's AI drawn per draft (D375; off by default)
@@ -33,6 +36,9 @@
 //           [--record-all | --record-every N]                  record both batches' games (D315)
 //           [--explore on | --explore name=value]...           controlled exploration of low-rated cards (D356):
 //                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
+//   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
+//           [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]   (D440, watch.ts)
+//           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
 //           [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--min-pair-games 30] [--rule <measure>:lower-better:margin=x]...
 //           [--no-run]   2-6 populations on the same seeds, through `run`; balance measures with paired bootstrap intervals (D441)
@@ -53,13 +59,14 @@ import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
 import { learnCommand, selfplayCommand } from './learncmd.ts';
 import { bridgeOptions } from './bridge.ts';
-import { parseDrafterSpec } from './humanpicks.ts';
+import { DRAFTER_SPECS, parseDrafter } from './drafters.ts';
 import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
 import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './playexplore.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 import { readJsonLines } from './lines.ts';
+import { watchCommand } from './watch.ts';
 import { compareCommand } from './compare.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
@@ -79,7 +86,8 @@ function usage(msg?: string): never {
                         [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
                         [--allow-version-change] [--deckset]   (seeds 900000000+ are the deck sets', seeds.ts)
                         [--play-explore on | --play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
-                        [--drafter human-picks:<x.picks.json> [--drafter-seat A|B]]   (D416, grid)
+                        [--drafter human-picks:<x.picks.json> | forge-ranks | llm:<model>[:thinking=off|low|default]]
+                        [--drafter-seat A|B] [--llm-sees-opponent] [--llm-jobs 2]   (D416, D439; grid)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
        tools/cubelab.sh queue plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
@@ -95,6 +103,8 @@ function usage(msg?: string): never {
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
+       tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
+                        [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]   (D440)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
@@ -110,7 +120,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--no-run') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -217,13 +227,20 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
   const drafterArg = one(f, 'drafter');
   if (drafterArg !== undefined) {
-    const spec = parseDrafterSpec(drafterArg);
-    if (!spec) usage(`--drafter wants human-picks:<x.picks.json>, got ${drafterArg}`);
+    const spec = parseDrafter(drafterArg);
+    if (!spec) usage(`--drafter wants ${DRAFTER_SPECS}, got ${drafterArg}`);
     const seat = one(f, 'drafter-seat') ?? 'A';
     if (seat !== 'A' && seat !== 'B') usage(`--drafter-seat is A or B, got ${seat}`);
-    if (!fs.existsSync(spec.file)) usage(`--drafter: no file ${spec.file}`);
-    o.drafter = { ...spec, seat };
+    if (spec.kind === 'human-picks') {
+      if (!fs.existsSync(spec.file)) usage(`--drafter: no file ${spec.file}`);
+      o.drafter = { ...spec, seat };
+    } else if (spec.kind === 'forge-ranks') o.drafter = { kind: 'forge-ranks', seat };
+    else {
+      o.drafter = { kind: 'llm', model: spec.model, thinking: spec.thinking, seat, seesOpponent: f.has('llm-sees-opponent') };
+      o.llmJobs = Math.max(1, int(f, 'llm-jobs', 2));
+    }
   } else if (one(f, 'drafter-seat') !== undefined) usage('--drafter-seat needs --drafter');
+  if (o.drafter?.kind !== 'llm' && (f.has('llm-sees-opponent') || f.has('llm-jobs'))) usage('--llm-sees-opponent and --llm-jobs need --drafter llm:<model>');
   const bridgeArg = one(f, 'bridge');
   if (bridgeArg) {
     if (cubeFile || one(f, 'ratings')) usage('--bridge names its cubes itself (no cube file, no --ratings: each cube keeps its own ratings)');
@@ -237,7 +254,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
   if (o.games < 0) usage('--games must be 0 or more');
   if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
-  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}${o.playExplore ? `, play exploration ${playExploreText(o.playExplore)} (D358)` : ''}${o.drafter ? `, seat ${o.drafter.seat} drafting with human picks ${o.drafter.file} (D416)` : ''}`);
+  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}${o.playExplore ? `, play exploration ${playExploreText(o.playExplore)} (D358)` : ''}${o.drafter ? `, seat ${o.drafter.seat} drafting with ${o.drafter.kind === 'human-picks' ? `human picks ${o.drafter.file} (D416)` : o.drafter.kind === 'llm' ? `llm:${o.drafter.model} (thinking ${o.drafter.thinking}, D439)` : "Forge's ranks (D439)"}` : ''}`);
   await runLab(env, o, say);
   say(`next: tools/cubelab.sh report ${o.out}`);
   return 0;
@@ -335,6 +352,7 @@ async function main(): Promise<number> {
   const { pos, f } = flags(rest);
   switch (cmd) {
     case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
+    case 'library-candidates': return (await import('./library-candidates.ts')).libraryCandidates(REPO, f, say);   // the library pool and its candidate 180s (J136)
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');
@@ -346,6 +364,7 @@ async function main(): Promise<number> {
     case 'selfplay': if (!pos[0]) usage('selfplay needs a cube file'); return selfplayCommand(REPO, pos[0], f, say);
     case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
     case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
+    case 'watch': if (!pos[0]) usage('watch needs a cube file'); return watchCommand(REPO, pos[0], f, say);   // D440
     case 'compare': return compareCommand(REPO, pos, f, say, run);
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);
   }

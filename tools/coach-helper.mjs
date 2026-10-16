@@ -122,6 +122,15 @@
 //                 reports through the room listener instead (POST /room/<id>/bug, its seat token).
 //                 tools/bugs-sync.mjs --push copies new reports to pc-results under bugs/.
 //
+//   POST /watch, GET /watch, GET /watch/<id>, GET /watch/<id>/game/<n>, POST /watch/<id>/stop
+//                 -- WATCH TWO BOTS (D440): two AIs grid-draft a cube with the cube lab's drafters,
+//                 then play a best of three, recorded paced from seat 0's eyes; one watch at a
+//                 time (409 while one runs).  tools/watch-runner.mjs's header is that contract
+//                 (docs/watch-bots.md the copyable form).  The games are served as complete
+//                 lines, by ?from=<byte> or Range: bytes=<n>- (ForgeCoach's live.ts).  /health
+//                 carries "watch": 1 when the bridge is built (else 0) and "watchRunning";
+//                 --no-watch turns it off.
+//
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
 //   first out, up to --queue-max (default 4) waiting; past that it is answered
@@ -241,6 +250,7 @@ import { MAX_HINT_BODY, createHintRunner } from './hint-runner.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
 import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
+import { MAX_WATCH_BODY, createWatchRunner } from './watch-runner.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -509,7 +519,7 @@ function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
     matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
     review: true, hint: true, reviewJobs: undefined, reviewQueueMax: 2, autoReview: undefined, runnerStatus: undefined,
-    eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined,
+    eval: true, watch: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined,
     draftRoom: false, roomPort: undefined, roomDir: 'var/draft-room', roomSiteDir: undefined, roomOrigins: [], roomPublicUrl: null };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
@@ -539,6 +549,7 @@ function parseArgs(argv) {
     else if (f === '--eval-python') a.evalPython = val();
     else if (f === '--eval-schema') a.evalSchema = val();
     else if (f === '--eval-cube') a.evalCube = val();
+    else if (f === '--no-watch') a.watch = false;   // D440
     else if (f === '--draft-room') a.draftRoom = true;   // D400
     else if (f === '--room-port') a.roomPort = Number(val());
     else if (f === '--room-dir') a.roomDir = val();
@@ -634,7 +645,7 @@ export function seatReviewOf({ review, auto }, gameId) {
 }
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, hint = null, auto = null, evaluator = null, room = null, bugs = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, hint = null, auto = null, evaluator = null, room = null, bugs = null, watch = null, log = (s) => console.log(s) } = opts;
   // D411: bug reports through this door -- a few a minute is plenty for a person at a board.
   const bugLimit = createLimiter({ perMinute: opts.bugsPerMinute ?? 6, burst: opts.bugsBurst ?? 10 });
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
@@ -682,7 +693,7 @@ export function startHelper(opts) {
       res.writeHead(204, {
         ...cors,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-ForgeCoach-Token',
+        'Access-Control-Allow-Headers': 'Content-Type, X-ForgeCoach-Token, Range',   // Range: D440's game logs
         'Access-Control-Allow-Private-Network': 'true',
         'Access-Control-Max-Age': '600',
         'Content-Length': '0',
@@ -699,7 +710,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1, replaceRunning: 1 };   // D325; D410
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}) };   // D361; D400 (no key without --draft-room); D411
+      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}), ...(watch ? watch.health() : { watch: 0 }) };   // D361; D400 (no key without --draft-room); D411; D440
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }, cors);
@@ -779,6 +790,47 @@ export function startHelper(opts) {
       const r = bugs.save({ body: q, via: 'helper', secrets: [token, url.searchParams.get('token') ?? '', String(req.headers['x-forgecoach-token'] ?? '')] });
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 201 ? ` (bug ${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/watch' || path.startsWith('/watch/')) {
+      // D440: watch two bots draft and play (tools/watch-runner.mjs).  Behind this port's door, like /review.
+      if (!watch) { send(res, 503, { ok: false, type: 'error', message: 'watching is off: this helper was started with --no-watch' }, cors); say(503); return; }
+      const one = /^\/watch\/([^/]+)$/.exec(path);
+      const game = /^\/watch\/([^/]+)\/game\/([^/]+)$/.exec(path);
+      const stopIt = /^\/watch\/([^/]+)\/stop$/.exec(path);
+      if (path === '/watch' && req.method === 'POST') {
+        const raw = await readBody(req, res, MAX_WATCH_BODY, '4 KB', cors, say);
+        if (raw === null) return;
+        let q;
+        try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+        const r = watch.post(q);
+        send(res, r.status, r.body, cors);
+        say(r.status, r.status === 202 ? ` (${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
+        return;
+      }
+      if (stopIt) {
+        if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+        const raw = await readBody(req, res, 1024, '1 KB', cors, say);
+        if (raw === null) return;
+        const r = watch.stop(stopIt[1]);
+        send(res, r.status, r.body, cors);
+        say(r.status);
+        return;
+      }
+      if (path !== '/watch' && !one && !game) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+      if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: path === '/watch' ? 'use GET or POST' : 'use GET' }, { ...cors, Allow: path === '/watch' ? 'GET, POST, OPTIONS' : 'GET, OPTIONS' }); say(405); return; }
+      if (game) {
+        const r = watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });
+        const expose = { 'Access-Control-Expose-Headers': 'X-Log-Next, X-Log-Size, Content-Range' };
+        if (r.json) { send(res, r.status, r.json, { ...cors, ...expose, ...(r.headers ?? {}) }); say(r.status); return; }
+        res.writeHead(r.status, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Length': r.body.length, ...cors, ...expose, ...r.headers });
+        res.end(r.body);
+        say(r.status, ` (${r.body.length} bytes)`);
+        return;
+      }
+      const r = path === '/watch' ? watch.list() : watch.get(one[1]);
+      send(res, r.status, r.body, cors);
+      say(r.status);
       return;
     }
     if (path === '/room') {
@@ -1182,7 +1234,9 @@ async function main() {
     room = createRoomOwner({ store, roomPort, lan: a.lan, publicUrl: a.roomPublicUrl });
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs });
+  // D440: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
+  const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`) }) : null;
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -1204,7 +1258,10 @@ async function main() {
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   console.log(`COACH BUGS      POST /bug saves to var/bugs/ (D411); tools/bugs-sync.mjs --push sends new ones to pc-results`);
   console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
-  const stop = () => { h.close(); roomServer?.close(); process.exit(0); };
+  console.log(!watch ? 'COACH WATCH     /watch off (--no-watch)'
+    : watch.available() ? 'COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time'
+    : 'COACH WATCH     /watch waits for the bridge build (./bridge/build.sh); /health says "watch": 0 until then');
+  const stop = () => { watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }

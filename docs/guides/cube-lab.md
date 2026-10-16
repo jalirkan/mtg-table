@@ -133,6 +133,64 @@ the pool plus the cards before it: invariant to the logit's additive constant
 Grid only; one cube; no `--synergy`, `--bridge` or `--explore`. The drafter, its
 seat and the file's sha256 are part of the folder's identity and version.
 
+### The drafters, and how to name each (D439)
+
+A plain run drafts both seats with the **lab drafter** above. `--drafter <spec>` gives one seat
+(`--drafter-seat A|B`, default A) another drafter; the other seat stays the lab drafter, and both
+seats build with the lab builder and the cube's ratings, so two mirrored folders on the same seeds
+(the drafter at A in one, at B in the other) compare **picking** alone. Every drafter but the lab's is
+grid only, on one cube, with no `--synergy`, `--bridge`, head-to-head or `--explore`; the spec, its
+seat and what pins it (a file's sha256, a model's name) are part of the folder's identity and lab
+version, so a folder never mixes drafters.
+
+| drafter | on the command line | what picks | cost |
+|---|---|---|---|
+| the lab drafter | (no `--drafter`) | rating + theme synergy + colour lean, committing after a third of its picks (D294, above) | free |
+| Forge's ranks | `--drafter forge-ranks` | Forge's own pick function in the lab's terms: each card at Forge's raw draft score (as `ratings init` seeds it, whatever the ratings file says), no synergy, no lean, committing after its first line (`synergy 0, lean 0, commitAt 0.04`, D439). An approximation of what D294 rejected, not Forge's code: Forge has no grid draft | free |
+| the human-pick model | `--drafter human-picks:<ForgeCoach>/public/cubes/<cube>.picks.json` | ForgeCoach's 17Lands pick model (D416, above). It lost to the lab drafter on Vintage (J114) | free |
+| an LLM | `--drafter llm:<haiku\|sonnet\|opus>[:thinking=off\|low\|default]` | Claude, asked once a decision through the logged-in Claude Code CLI (below) | **API money** |
+| a fake LLM | `--drafter llm:fake` | the first line the prompt lists: no network, no spend; for tests, pilots and dry runs | free |
+
+"Search AI" is not a drafter: search-v2 is a way of *playing* games (`--profiles …+search`, D347),
+and it can pilot the decks any of these drafters build.
+
+**The LLM drafter (D439, `tools/cubelab/llmdraft.ts`).** One fresh call per decision, 18 a draft,
+with the LLM seat's CLI wrapper (`tools/llm-seat/lib/model.mjs`: every tool off, one turn, thinking
+through coach-helper's two variables; `thinking` defaults to `low`, as the seat's). The system prompt
+is the grid's rules and the reply format; the user prompt is the cube's name, a summary of its own
+document (its "What it is", "The themes and how they connect" or "Design principles" section, else
+its opening line and "Source and credit"; at most 600 characters), the grid with every card's name,
+cost, type, P/T and oracle text (cut at 200 characters), the lines it may take, and its own pool so
+far grouped by colour with mana value and type. `--llm-sees-opponent` adds the opponent's pool (grid
+picks are public, so it hides nothing either way; the default keeps the prompt small). Nothing in a
+grid draft is hidden: all nine cards are face up for both drafters.
+
+- **The reply** is `{"take": "row"|"col", "index": 0..2, "reason": "…"}`, parsed strictly: the object
+  alone (or in one ```` ```json ```` fence), no other key, an integer index, a line the rules allow. A
+  reply that fails, or a call that fails, is sent back once with the fault named; a second failure
+  takes the **lab drafter's line** for that decision and counts a **fallback**.
+- **Cost accounting.** Each draft's line in `drafts.jsonl` carries `llm`: calls, retries, fallbacks,
+  failed calls, input tokens (plain, cache read, cache write), output tokens, the CLI's own cost
+  figure, the milliseconds inside the model and the draft's wall time, and every decision's line,
+  reason and faults. The run prints the totals.
+- **Determinism and resume.** The CLI exposes no temperature, so the answers are not a function of
+  the seed; the deal, who opens, the other seat and every fallback are. Each finished draft's
+  decisions go to `<out>/llm/<seed>.json` at once, and a resumed run replays that file instead of
+  asking again: a stopped run never pays twice, and a folder's drafts can be rebuilt from it.
+- **`--llm-jobs N`** (default 2) drafts N seeds at once; the model is the wait, not the CPU.
+
+**What it costs (measured, 2026-10-15).** The one real smoke, Vintage, seed 899,000,001, seat A
+`llm:haiku` (thinking low), `--games 0`: 18 decisions, 18 calls, 0 retries, 0 fallbacks; 57,971
+input tokens a draft (36 plain, 57,935 written to the cache, none read: every call is fresh and the
+Claude Code CLI writes its prompt to the one-hour cache), 6,610 output tokens; 114.6 s wall, 6.4 s a
+call; the CLI's cost figure $0.0149. At the same token counts, Sonnet 5.5's list price (claude-api
+skill, prices cached 2026-10-06: $2 input, $10 output per million tokens, a one-hour cache write 2×
+input) is about **$0.30 a draft** — 57,935 × $4 + 6,610 × $10 per million — and more if Sonnet
+writes longer replies or thinks longer than Haiku did (+$0.07 a draft per doubling of the output).
+On a Claude subscription login the CLI draws on the plan instead; the figure is what the API would
+charge. **Running it at scale is Justin's call**: building the option was approved, spending on it
+was not.
+
 ## How the decks are built (D294)
 
 Every two-colour pair, with no splash and with each splash colour the pool can
@@ -334,7 +392,11 @@ lowers it): a mix with search plays slower games.
 | `--synergy <tsv>` | | learned pair synergy for both drafters (`learn` writes it; D301) |
 | `--deck-synergy on\|off` | `off` | ...and for both deckbuilders (needs `--synergy`) |
 | `--drafter human-picks:<x.picks.json>` | off | one seat drafts with ForgeCoach's human pick model instead (grid only; *The human-pick drafter* above, D416) |
+| `--drafter forge-ranks` | off | one seat drafts on Forge's ranks (grid only; *The drafters* above, D439) |
+| `--drafter llm:<model>[:thinking=off\|low\|default]` | off | one seat asks Claude (`haiku`, `sonnet`, `opus`; `fake` spends nothing), once a decision (grid only; D439). **Costs API money** |
 | `--drafter-seat A\|B` | `A` | which seat that is (a mirrored test runs both) |
+| `--llm-sees-opponent` | off | the LLM's prompt also lists the opponent's pool (part of the folder's identity) |
+| `--llm-jobs N` | 2 | LLM drafts asked at once |
 | `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
 | `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
 | `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |
@@ -392,7 +454,8 @@ tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 100 --jobs 4 --out var/c
 rating), `decks/<seed>-A.dck` and `-B.dck` (the lab's) and `-A-forge.dck` /
 `-B-forge.dck` (Forge's builder's), `logs/worker-<k>.log` (the engine's own
 output), `frames/` and `recordings.json` under `--record`, `games/` and
-`cube.md` under `--record-all` / `--record-every` (above), and
+`cube.md` under `--record-all` / `--record-every` (above), `llm/<seed>.json` under an LLM
+drafter (each draft's decisions, replayed on resume; D439), and
 **`drafts.jsonl`**, one line per draft:
 
 ```jsonc
@@ -414,6 +477,13 @@ output), `frames/` and `recordings.json` under `--record`, `games/` and
              "winsA": 1, "winsB": 0, "winner": "A", "worker": 0 },
   "ms": { "draft": 15, "build": 20, "match": 24970 } }
 ```
+
+Under an LLM drafter (D439) a line also carries `"llm": { "seat": "A", "model": "haiku", "thinking":
+"low", "resolved": "claude-haiku-…", "decisions": 18, "calls": 18, "retries": 0, "fallbacks": 0,
+"callErrors": 0, "tokensIn": 36, "cacheRead": 0, "cacheCreate": 57935, "tokensOut": 6610,
+"costUsd": 0.0149, "modelMs": 114437, "wallMs": 114559, "replayed": false, "picks": [ { "at": 1,
+"line": "col 2", "by": "model", "reason": "…", "promptChars": 2610 }, … ] }` — `line` in the lab's
+own 1-based names, as `picks[].how`; `by` is `model`, `retry` or `fallback`.
 
 `report <out>` reads the folder and writes `report.html` (one self-contained
 page: no script, font or style from anywhere), `report.md` (the headline
@@ -779,6 +849,50 @@ which `run`, the queue and bridge drafts would pick up on their own: pass it wit
 --raised docs/evidence/omega-ratings-raise.json`, PC job J064, D360's pre-registered
 reading) says to promote it.
 
+### The whole library as a pool, and candidate 180s from it (`library-candidates`)
+
+"The best 180 out of the whole library" (Justin, 2026-10-15) is a comparison, not one cube: seed several
+candidate 180s by different ideas, play each on the same seeds, evolve each a couple of generations from
+the whole library, and compare them on `compare`'s pre-registered measures (lab job J136). The candidates
+and the pool are committed under `cubes/library/`:
+
+```bash
+tools/cubelab.sh library-candidates --fc ~/code/ForgeCoach [--out cubes/library] [--seed 180] [--min-games 80]
+```
+
+- **`library-pool.tsv`**, the library: every card of ForgeCoach's nine cube documents
+  (`public/cubes/*.md`) and its two proxy lists (`docs/proxies/mtgo-vintage-cube-540.txt`,
+  `old-school-93-94-360.txt`), one row a card by Forge's name, in `omega-seed-pool.tsv`'s columns, so
+  `evolve --pool` reads it as it is. Support and the AI flag are the engine's facts (a card Forge 2.0.14
+  lacks is listed with `forge_supported` `no` and is never drawn or added); the tags are
+  `omega-seed-pool.tsv`'s, else the Synergy Cube's, else none. Five more columns: `colors` (printed),
+  `produces` (what a land makes or fetches), and `lab_games`, `lab_wr_shrunk`, `lab_cubes` — every meta
+  in ForgeCoach's `public/cubes` that played the card, its games summed and its `winRateShrunk` averaged
+  with those games as weights. The file's `#` header says which ForgeCoach commit it was made from.
+- **`hits-180.md`**, the greatest hits by lab rating: the cards with 80 or more lab games (`--min-games`),
+  best pooled shrunk win rate first (to four decimals, then games). A card with no lab data, or fewer
+  games, has no slot; the header says how many that excludes.
+- **`random-180.md`**, the control: every drawable card, keyed by a seeded uniform draw (`--seed`, 180,
+  `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected.
+- **`synergy-v2-180.md`**: ForgeCoach's current Synergy Cube, copied with one provenance line under its
+  title, for reference. J136 does not read it: its Synergy population is ForgeCoach's v2 only, copied from
+  its pinned clone and checked by sha256. Synergy v2 against a v3 is a separate job, J137.
+- Omega is used as it is, `cubes/omega-cube-180.md`.
+
+**Omega's skeleton**, for the two that are drawn: 24 mono-coloured nonland cards a colour, 2 gold cards a
+pair and none of three colours or more, 18 colourless nonland cards, 22 lands (2 a pair that make exactly
+that pair, 2 others), and Omega's nonland curve (3 / 24 / 32 / 34 / 30 / 17 / 11 / 7 at mana value 0–6
+and 7+), every count exact; colours are printed colours, as evolve's colour constraint counts them. The
+lands are each pair's best two fixing lands and the best two others; the nonland cards are the single
+selection with the largest total key that fills every colour quota and every curve count (a min-cost
+flow). Deterministic: the same ForgeCoach commit and engine give the same files.
+`web/test/cubelab-library.test.ts` holds the committed files to it: 180 cards, no duplicates, only
+supported cards, every document written back unchanged, the skeleton exact, and the hits and the random
+cube exactly what the rule gives on the committed pool.
+
+Every candidate drafts on Forge's ranks (none has a ratings file beside it, and neither does Omega), so
+the comparison is of the lists, not of anyone's ratings.
+
 ## Learning the drafters' values from the games (D301–D302)
 
 The ratings start as Forge's draft ranks and the synergy term is a hand
@@ -1122,6 +1236,53 @@ that folder's first chunk will, and stops on a refusal; `queue check`, with the
 same flags as the run, does only that and writes nothing (a job's pilot runs it
 on the real root).
 
+## Watching two bots draft and play (D440)
+
+`watch` is the lab made to be watched: ONE grid draft, then a best of three
+you follow as it is played.
+
+```bash
+tools/cubelab.sh watch cubes/fair-fight-cube-180.md                       # Default vs Default, best of 3, a random seed
+tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search --games 5
+tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the smoke: about 20 s
+```
+
+| Flag | Default | |
+|---|---|---|
+| `--format grid` | grid | the only format: a grid is what a viewer replays pick by pick |
+| `--seed S` | random 1–99,999 (printed in the id) | the draft's seed, as `run`'s; game `n` plays at `S × 10 + n` |
+| `--games N` | 3 | a best of N (odd, 1–7); it stops once a side has more than half |
+| `--drafter-a`, `--drafter-b` | `lab` | `lab`, or `human-picks:<x.picks.json>` for one seat (D416) |
+| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search` (search-v2, the live search seat, through RecordMatch's `--policy search`) |
+| `--pace ms` | 600 | the recorder's pace (M47); 0 = engine speed |
+| `--out <dir>` | `var/spectate/watch-<cube>-<seed>` | the folder; its name is the watch's id |
+| `--ratings <tsv>`, `--game-timeout <sec>` | as `run` | |
+
+What it writes, all in the one folder:
+
+- `lab/` — `run --drafts 1 --games 0` itself (run.json, drafts.jsonl, the decks):
+  the same picks and decks `run` makes at that seed;
+- `draft.json` — the draft as a viewer replays it: every grid as each drafter
+  saw it (nine slots, null where the opener's line was), the line taken (0–2
+  rows, 3–5 columns) and the cards gained, both pools, both decks with the
+  builder's reasons. Checked before it is written (nine slots, a legal line
+  holding what was taken, pools the sum of the picks, 40-card decks);
+- `deck-A.dck`, `deck-B.dck` — the decks the games play (`Drafter A (UB)`);
+- `<id>-g<n>.jsonl` — each game, a paced both-AI `mtgtable.RecordMatch` from
+  seat 0's eyes (drafter A; the other hand stays the five-key stub), checked by
+  `tools/check-redaction.mjs` as soon as it ends; `<id>-g<n>.log` its output;
+- `match.json` — `status` `drafting` → `playing` → `done` (or `error` /
+  `stopped`, with why), the games, their winners, the wins and the result,
+  rewritten after every change.
+
+**The draft is face up, so draft.json shows both pools and both decks**: in a
+grid draft both drafters see every grid and every line the other takes. The
+games are not: one seat's view, as every spectated game.
+
+ForgeCoach starts and follows a watch through the coach helper (`POST /watch`,
+one at a time); [`docs/watch-bots.md`](../watch-bots.md) is that contract, with
+both files' schemas. A watch boots its own Forge home,
+`var/cubelab/watch-homes/0`, so it never shares one with a lab run's job 0.
 ## Comparing cube populations: `compare` (D441)
 
 Which cube, or which version of one, makes the AIs draft the more balanced decks? `compare`
@@ -1196,7 +1357,9 @@ a balanced cube here is one Forge's AI finds balanced.
 
 ## What it does not do
 
-- It never touches the game: no bridge code, no wire, nothing the board reads.
+- It never touches the game: no bridge code, no wire, nothing the board reads
+  (`watch` runs the bridge's own recorder, `mtgtable.RecordMatch`, as
+  `scripts/spectate.sh` does, and changes nothing it writes).
   It boots the same engine the same way (`mtgtable.Bootstrap`), under the same
   lint, and writes only under `var/` (and the ratings TSV you ask for).
 - Forge's AI is the only player. A card the AI misplays — Forge marks some

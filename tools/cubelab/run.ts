@@ -44,6 +44,11 @@ import { labVersion, resumeVersions, type LabVersion, type VersionEntry } from '
 import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
 import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExploreTag } from './playexplore.ts';
 import { humanDrafter, parsePicks, runHumanDraft, type Fallback } from './humanpicks.ts';
+import { FORGE_RANKS_WEIGHTS, forgeRanked, runForgeRanksDraft } from './drafters.ts';
+import {
+  cardTexts, claudeDraftModel, fakeDraftModel, LLM_PROMPT_VERSION, runLlmDraft, sumStats, themeSummary,
+  type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
+} from './llmdraft.ts';
 
 export interface RunOptions {
   cubeFile: string;
@@ -90,8 +95,19 @@ export interface RunOptions {
    * D416: one seat drafts with ForgeCoach's human pick model (`--drafter human-picks:<file>`, humanpicks.ts),
    * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
    */
-  drafter?: { kind: 'human-picks'; file: string; seat: 'A' | 'B' };
+  drafter?: RunDrafterOption;
+  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2); not part of the identity. */
+  llmJobs?: number;
 }
+
+/**
+ * The drafter one seat is given (`--drafter`): D416's human pick model, or D439's forge-ranks seat or LLM.
+ * `seesOpponent` (D439, `--llm-sees-opponent`): the LLM's prompt also lists the opponent's pool.
+ */
+export type RunDrafterOption =
+  | { kind: 'human-picks'; file: string; seat: 'A' | 'B' }
+  | { kind: 'forge-ranks'; seat: 'A' | 'B' }
+  | { kind: 'llm'; model: LlmModelName; thinking: LlmThinking; seat: 'A' | 'B'; seesOpponent: boolean };
 
 /** D394: what `runLab` found when it checked a folder (`checkOnly`), or after it ran. */
 export interface RunCheck { out: string; meta: RunMeta; version: LabVersion; resumed: boolean; done: number; versionChange: string[] | null }
@@ -166,7 +182,12 @@ export interface RunMeta {
   drafter?: RunDrafter;
 }
 
-export interface RunDrafter { kind: 'human-picks'; seat: 'A' | 'B'; file: string; sha: string; cards: number; covered: number; fallback: Fallback }
+export type RunDrafter =
+  | { kind: 'human-picks'; seat: 'A' | 'B'; file: string; sha: string; cards: number; covered: number; fallback: Fallback }
+  /** D439: Forge's ranks, the three weights it changes, how many cards Forge ranks and how many differ from the cube's ratings. */
+  | { kind: 'forge-ranks'; seat: 'A' | 'B'; weights: typeof FORGE_RANKS_WEIGHTS; cards: number; ranked: number; differ: number }
+  /** D439: the model, its thinking, whether it sees the opponent's pool, the prompt's version and the fallback drafter. */
+  | { kind: 'llm'; seat: 'A' | 'B'; model: LlmModelName; thinking: LlmThinking; seesOpponent: boolean; promptVersion: number; fallback: 'lab'; summaryChars: number };
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
 
@@ -206,12 +227,19 @@ export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): stri
  * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
  * off it is the plain weights, so the version id of an ordinary run is what it always was.
  */
-export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { seat: string; sha: string } | null }): unknown {
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number } | null }): unknown {
   if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter) return w;
   return {
     ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}),
-    ...(x.drafter ? { drafter: { kind: 'human-picks', seat: x.drafter.seat, sha: x.drafter.sha } } : {}),
+    ...(x.drafter ? { drafter: drafterVersion(x.drafter) } : {}),
   };
+}
+
+/** A drafter's part of the lab version: D416's object exactly as it was (so its ids do not move), D439's by kind. */
+function drafterVersion(d: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number }): unknown {
+  if (!d.kind || d.kind === 'human-picks') return { kind: 'human-picks', seat: d.seat, sha: d.sha };
+  if (d.kind === 'llm') return { kind: 'llm', seat: d.seat, model: d.model, thinking: d.thinking, seesOpponent: !!d.seesOpponent, promptVersion: d.promptVersion };
+  return { kind: d.kind, seat: d.seat };
 }
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<RunCheck> {
@@ -222,7 +250,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   const { lc, text } = bridge ?? (loaded as NonNullable<typeof loaded>);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
   const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
-  let draftOne = (seed: number): DraftOut => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+  let draftOne = (seed: number): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
   if (bridge) {
     if (o.synergyFile || o.mixed) throw new Error('--bridge drafts with each cube\'s ratings; it takes no --synergy or head-to-head');
     draftOne = (seed) => bridge.draft(seed, o.format, o.weights, o.winstonCards);
@@ -249,28 +277,53 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (explore) {
     checkExploreOptions(explore);
     if (bridge || o.mixed || o.builder !== 'lab') throw new Error('exploration (D356) runs with the lab builder on one cube only: no --bridge, head-to-head or --builder forge');
-    const base = draftOne;
+    // every drafter here is synchronous: the D416/D439 drafters (the only async one, the LLM) refuse --explore
+    const base = draftOne as (seed: number) => DraftOut;
     const maxSplash = (stretched: boolean): number => (stretched ? o.weights.maxSplashStretch : o.weights.maxSplash);
     draftOne = (seed) => exploreDraft(base(seed), explore, lc.byName, maxSplash);
     say(`exploring (D356): ${explore.share} of the drafts; a target rated under ${explore.below} forced with probability v / max(sum v, ${explore.cap}), v ${explore.gold} for gold`);
   }
   let drafterMeta: RunDrafter | null = null;
+  const llmStats: LlmDraftStats[] = [];
   if (o.drafter) {
-    // D416: one seat drafts with the human pick model; everything else is a plain run's.
-    if (bridge || o.mixed || o.synergyFile || explore) throw new Error('--drafter human-picks runs on one cube with its own ratings: no --bridge, --synergy, head-to-head or --explore');
-    if (o.format !== 'grid') throw new Error('--drafter human-picks drafts grid only');
-    const raw = fs.readFileSync(o.drafter.file);
-    const file = parsePicks(JSON.parse(raw.toString('utf8')));
-    if (file.cube.file !== path.basename(o.cubeFile)) throw new Error(`${o.drafter.file} is for ${file.cube.file}, not ${path.basename(o.cubeFile)}`);
-    const listedOf = new Map<string, string>();
-    for (const f of loaded?.facts ?? []) if (f.found && f.name) listedOf.set(f.name, f.listed);
-    const hd = humanDrafter(file, lc.cards, listedOf);
+    // D416, D439: one seat drafts with another drafter; everything else is a plain run's.
+    const kind = o.drafter.kind;
+    if (bridge || o.mixed || o.synergyFile || explore) throw new Error(`--drafter ${kind} runs on one cube with its own ratings: no --bridge, --synergy, head-to-head or --explore`);
+    if (o.format !== 'grid') throw new Error(`--drafter ${kind} drafts grid only`);
     const seat = o.drafter.seat;
-    draftOne = (seed) => runHumanDraft(lc, hd, seat, seed, o.weights);
-    drafterMeta = { kind: 'human-picks', seat, file: rel(o.drafter.file), sha: sha(raw), cards: lc.cards.length, covered: hd.covered.size, fallback: hd.fallback };
-    const fb = hd.fallback;
-    say(`drafter (D416): seat ${seat} drafts with the human pick model ${o.drafter.file} (${hd.covered.size} of ${lc.cards.length} cards covered, ${file.cube.matched} in the file); `
-      + `the rest at s = ${fb.intercept.toFixed(3)} + ${fb.slope.toFixed(4)} x rating (least squares over the covered cards, r ${fb.r.toFixed(2)}); seat ${seat === 'A' ? 'B' : 'A'} the current drafter`);
+    const facts = loaded?.facts ?? [];
+    if (o.drafter.kind === 'human-picks') {
+      const raw = fs.readFileSync(o.drafter.file);
+      const file = parsePicks(JSON.parse(raw.toString('utf8')));
+      if (file.cube.file !== path.basename(o.cubeFile)) throw new Error(`${o.drafter.file} is for ${file.cube.file}, not ${path.basename(o.cubeFile)}`);
+      const listedOf = new Map<string, string>();
+      for (const f of facts) if (f.found && f.name) listedOf.set(f.name, f.listed);
+      const hd = humanDrafter(file, lc.cards, listedOf);
+      draftOne = (seed) => runHumanDraft(lc, hd, seat, seed, o.weights);
+      drafterMeta = { kind: 'human-picks', seat, file: rel(o.drafter.file), sha: sha(raw), cards: lc.cards.length, covered: hd.covered.size, fallback: hd.fallback };
+      const fb = hd.fallback;
+      say(`drafter (D416): seat ${seat} drafts with the human pick model ${o.drafter.file} (${hd.covered.size} of ${lc.cards.length} cards covered, ${file.cube.matched} in the file); `
+        + `the rest at s = ${fb.intercept.toFixed(3)} + ${fb.slope.toFixed(4)} x rating (least squares over the covered cards, r ${fb.r.toFixed(2)}); seat ${seat === 'A' ? 'B' : 'A'} the current drafter`);
+    } else if (o.drafter.kind === 'forge-ranks') {
+      const fr = forgeRanked(lc, facts, o.weights.unrated);
+      draftOne = (seed) => runForgeRanksDraft(lc, fr, seat, seed, o.weights);
+      drafterMeta = { kind: 'forge-ranks', seat, weights: FORGE_RANKS_WEIGHTS, cards: lc.cards.length, ranked: fr.ranked, differ: fr.differ };
+      say(`drafter (D439): seat ${seat} drafts on Forge's ranks (${fr.ranked} of ${lc.cards.length} cards ranked, ${fr.differ} rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
+    } else {
+      const d = o.drafter;
+      const texts = cardTexts(facts);
+      const summary = themeSummary(text);
+      let made: Promise<DraftModel> | null = null;
+      const model = (): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd')));
+      draftOne = async (seed) => {
+        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say }, seed);
+        if (out.llm) llmStats.push(out.llm);
+        return out;
+      };
+      drafterMeta = { kind: 'llm', seat, model: d.model, thinking: d.thinking, seesOpponent: d.seesOpponent, promptVersion: LLM_PROMPT_VERSION, fallback: 'lab', summaryChars: summary.length };
+      say(`drafter (D439): seat ${seat} asks ${d.model === 'fake' ? 'the fake model (no network, no spend)' : `Claude (${d.model}, thinking ${d.thinking}) through the Claude Code CLI, once a decision`}; `
+        + `${d.seesOpponent ? 'the prompt lists the opponent\'s pool; ' : ''}two failed replies take the lab drafter's line; decisions kept in ${path.join(o.out, 'llm')}; seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
+    }
   }
   const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
   if (playExplore) {
@@ -350,10 +403,18 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   const jobs: MatchJob[] = [];
   const outs = new Map<number, DraftOut>();
   const tDraft = Date.now();
-  for (let i = 0; i < o.drafts; i++) {
-    const seed = o.seed + i;
-    if (done.has(seed)) continue;
-    const d = draftOne(seed);
+  const pending: number[] = [];
+  for (let i = 0; i < o.drafts; i++) if (!done.has(o.seed + i)) pending.push(o.seed + i);
+  // D439: an LLM drafter waits on the model, so its drafts run --llm-jobs at a time; every other drafter is
+  // synchronous and runs one by one, exactly as before.  The results are used in seed order either way.
+  const drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.max(1, o.llmJobs ?? 2) : 1, async (seed) => draftOne(seed));
+  if (llmStats.length > 0) {
+    const t = sumStats(llmStats);
+    say(`llm drafter: ${t.drafts} draft(s), ${t.decisions} decisions, ${t.calls} calls, ${t.retries} retries, ${t.fallbacks} fallbacks; `
+      + `input ${t.tokensIn} plain + ${t.cacheRead} cache read + ${t.cacheCreate} cache write, output ${t.tokensOut}${t.costUsd != null ? `; CLI cost $${t.costUsd.toFixed(4)}` : ''}`);
+  }
+  for (const [k, seed] of pending.entries()) {
+    const d = drafted[k] as DraftOut;
     outs.set(seed, d);
     const deckPath = (side: string, kind: string): string => path.join(o.out, 'decks', `${seed}-${side}${kind}.dck`);
     const sides = d.drafters.map((dr) => {
@@ -441,6 +502,20 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   }
   say(`done in ${((Date.now() - t0) / 1000).toFixed(0)} s -> ${jsonl}`);
   return check;
+}
+
+/** `f` over `items`, at most `limit` at a time; the results in the items' order. */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const lane = async (): Promise<void> => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await f(items[i] as T);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), items.length) }, lane));
+  return out;
 }
 
 /** The two seats of the draft at `seed`: drawn from the mix (D347), else `--profiles`. */
