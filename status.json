@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-16T16:39:26-04:00",
- "heartbeat": "2026-10-16T16:39:26-04:00",
+ "updated": "2026-10-16T16:40:10-04:00",
+ "heartbeat": "2026-10-16T16:40:10-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.29,
-  "memUsedGb": 10.6,
+  "load1": 4.19,
+  "memUsedGb": 7.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 1994,
   "pressure": 0,
@@ -19,74 +19,56 @@
  },
  "running": [
   {
-   "publicTitle": "Synergy v2 against the designed v3",
-   "publicEst": "~3 h",
-   "id": "J137",
-   "title": "Synergy v2 against the designed v3, head to head under the design study's pre-registered rule: ForgeCoach's v2 (3e3b007b, sha-checked) and results/J135/synergy-cube-180.v3-designed.md (pc-results 8ac778d1, sha-checked; 8 swaps), tools/cubelab.sh compare on the SAME 1,500 seeds (837,000,001-837,001,500), grid, best of three, Default vs Default, Forge's ranks, no exploration, unrecorded; runs only when results/J135/APPROVED exists",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-16T14:47:37-04:00",
-   "elapsed": 6709,
-   "done": 2998,
-   "total": 3000,
-   "unit": "drafts",
-   "ratePerHour": 1789.4,
-   "eta": "2026-10-16T16:39:30-04:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-16T16:38:56-04:00",
-   "memGb": 3.14,
-   "live": {
-    "all.engine_error_rate": 0.0013,
-    "all.bridge_drafts": 0,
-    "all.cpu_ms_per_turn": 378,
-    "all.drafts": 2998,
-    "all.drafts_per_h": 1789.4,
-    "all.draws": 7,
-    "all.engine_errors": 4,
-    "all.games": 7204,
-    "all.games_per_h": 4309.8,
-    "all.mean_game_ms": 5935,
-    "all.mean_game_s": 5.9345,
-    "all.mean_turns": 19.4588,
-    "all.median_game_s": 2.144,
-    "all.ms_per_turn": 305,
-    "all.output_bytes": 49000401,
-    "all.recorded_bytes_per_game": 0,
-    "all.recorded_errors": 0,
-    "all.recorded_games": 0,
-    "all.runs": 2,
-    "all.timeouts": 6,
-    "cmp.written": 0,
-    "elapsed_s": 6679,
-    "peak_worker_rss_gb": 1.67,
-    "pressure_events": 0,
-    "qwriters": 0,
-    "strict": 0,
-    "vv.schema": 0,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "all.engine_error_rate"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J137-run1"
-  }
- ],
- "queue": [
-  {
    "publicTitle": "Search with the learned evaluator as its leaf: one fixed match",
    "publicEst": "~8-9 h (one night)",
    "id": "J139",
    "title": "Evaluator-leaf confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-evalleaf (D437) vs search-v2 (search-v1-anytime) on the confirm deck set, read alone on a 95% interval; Justin asked for it after J131's +8.7 Elo [-4.7, +22.1]",
    "cpu": "heavy",
-   "est": "~8-9 h. J131's 1,200 games took about 2 h 10 m at ~550 games an hour on 7 workers, so 4,800 games are ~8.7 h; the match stops itself at 18 h. Pilot ~15 min (the build, the bench self-test, the ladder tests, 8 games on one worker)."
-  },
+   "phase": "prepare",
+   "started": "2026-10-16T16:40:10-04:00",
+   "elapsed": 0,
+   "done": 1816,
+   "total": 4800,
+   "unit": "games",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-16T16:40:10-04:00",
+   "memGb": null,
+   "live": {
+    "cm.played": 0,
+    "cm.score": 0,
+    "cm.lo": 0,
+    "cm.hi": 0,
+    "v.adopt": 0,
+    "cm.errors": 0,
+    "cm.timeouts": 0,
+    "elapsed_s": 0,
+    "j139_err": 0,
+    "j139_games": 1816,
+    "pressure_events": 0,
+    "v.complete": 0,
+    "v.written": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "cm.played",
+    "cm.score",
+    "cm.lo",
+    "cm.hi",
+    "v.adopt"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J139-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Library deck census night 1: random decks across the colour spectrum",
    "publicEst": "~7-9 h",
@@ -106,6 +88,25 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Synergy v2 against the designed v3",
+   "publicEst": "~3 h",
+   "id": "J137",
+   "title": "Synergy v2 against the designed v3, head to head under the design study's pre-registered rule: ForgeCoach's v2 (3e3b007b, sha-checked) and results/J135/synergy-cube-180.v3-designed.md (pc-results 8ac778d1, sha-checked; 8 swaps), tools/cubelab.sh compare on the SAME 1,500 seeds (837,000,001-837,001,500), grid, best of three, Default vs Default, Forge's ranks, no exploration, unrecorded; runs only when results/J135/APPROVED exists",
+   "status": "done",
+   "finished": "2026-10-16T16:40:10-04:00",
+   "headline": "vv.verdict.better_balanced 0 · vv.verdict.decided 1 · vv.spread.v2.est 0.389 · vv.spread.v2.lo 0.337 · vv.spread.v3.est 0.271 · vv.spread.v3.hi 0.351 · vv.verdict.low_pairs 0 · all.engine_error_rate 0.001",
+   "numbers": {
+    "vv.verdict.better_balanced": 0,
+    "vv.verdict.decided": 1,
+    "vv.spread.v2.est": 0.389421,
+    "vv.spread.v2.lo": 0.336949,
+    "vv.spread.v3.est": 0.271492,
+    "vv.spread.v3.hi": 0.350671,
+    "vv.verdict.low_pairs": 0,
+    "all.engine_error_rate": 0.0013
+   }
+  },
   {
    "publicTitle": "Best 180 from the whole library: four candidate cubes compared",
    "publicEst": "~5-7 h",
@@ -900,17 +901,6 @@
    "headline": "",
    "numbers": {},
    "detail": "pilot: rq3.written == 1 and rq3.newKinds == 0 (rq3.written = 1, rq3.newKinds = 3)"
-  },
-  {
-   "publicTitle": "Evaluator v2 training",
-   "publicEst": "~12 h",
-   "id": "J087",
-   "title": "Evaluator v2 (D364): nights 1-3 dataset, split audit, learning curve (plain vs game-weighted), successive-halving search, gate 1 on v2 and v2 against v1 on the same test pairs",
-   "status": "failed",
-   "finished": "2026-10-05T23:38:26-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "step run2 exited 1"
   }
  ],
  "runner": {

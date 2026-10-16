@@ -827,3 +827,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J136/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 0c9bab7, ForgeCoach 3e3b007
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J137 DONE: Synergy v2 against the designed v3, head to head under the design study's pre-registered rule: ForgeCoach's v2 (3e3b007b, sha-checked) and results/J135/synergy-cube-180.v3-designed.md (pc-results 8ac778d1, sha-checked; 8 swaps), tools/cubelab.sh compare on the SAME 1,500 seeds (837,000,001-837,001,500), grid, best of three, Default vs Default, Forge's ranks, no exploration, unrecorded; runs only when results/J135/APPROVED exists
+
+- finished: 2026-10-16T16:40:10-04:00
+- decides: whether the designed Synergy v3 (8 swaps, pc-results study/synergy-v3-design.md) is shown better balanced than v2 for the lab's AI, by the study's rule; a pass ships nothing -- Justin decides whether v3 ships
+- hypothesis: the study (section 3) guesses the pair spread falls from about 38.7 points to about 28-34, with blue up 4-8 points and white down 2-6; its power calculation (section 4) says 1,500 drafts a side barely separates a v3 30% flatter (v2 [38.6, 48.1], v3 [26.6, 36.2]), 300 cannot
+- rule: synergy-v3-design.md section 4, written 2026-10-16 before any v3 draft, as written there: v3 is BETTER BALANCED iff v3's pair-spread 95% interval lies wholly below v2's (v3's upper bound < v2's lower bound), AND no v3 pair with >= 40 decisive games has a Wilson 95% interval wholly below 35%. Anything else is NOT SHOWN, never "no change". Pair spread = max - min over the two-colour pairs with >= 40 decisive games in that cube's batch; its interval is D441 compare's paired draft-clustered bootstrap (1,000 replicates, boot seed 1; compare is merged code here, so the study's fallback, balance.mts, is not used). The pair Wilson interval carries the study's design effect 1.25 (its stated convention for rates; the plain interval is reported beside it). The paired difference and every pair's rate are description and decide nothing
+- outcome: done
+- headline: vv.verdict.better_balanced 0, vv.verdict.decided 1, vv.spread.v2.est 0.3894, vv.spread.v2.lo 0.3369, vv.spread.v3.est 0.2715, vv.spread.v3.hi 0.3507, vv.verdict.low_pairs 0, all.engine_error_rate 0.0013
+- summary: results/J137/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 0c9bab7, ForgeCoach 3e3b007
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

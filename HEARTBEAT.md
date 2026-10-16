@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T16:39:26-04:00
+- time: 2026-10-16T16:40:10-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J137 commands 1/1, 2998/3000 drafts, 1789.4/h, ETA 2026-10-16T16:39:30-04:00, 7 worker(s), 7 core(s)
+- running: J139 prepare, 1816/4800 games, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5.29; memory 10.6/30.5 GB, swap 1994 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J139, J140, J141
+- load: 4.19; memory 7.8/30.5 GB, swap 1994 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J140, J141
 - waiting: nothing
-- last finished: J136 done at 2026-10-16T14:47:37-04:00: base.pop.omega.m.flatness.est 0 · base.pop.hits.m.flatness.est 0 · base.pop.random.m.flatness.est 0 · base.pop.synergy.m.flatness.est 0.081 · fin.pop.omega.m.flatness.est 0 · fin.pop.hits.m.flatness.est 0 · fin.pop.random.m.flatness.est 0.022 · fin.pop.synergy.m.flatness.est 0.078 · sw.swaps 5 · all.engine_error_rate 0.001
+- last finished: J137 done at 2026-10-16T16:40:10-04:00: vv.verdict.better_balanced 0 · vv.verdict.decided 1 · vv.spread.v2.est 0.389 · vv.spread.v2.lo 0.337 · vv.spread.v3.est 0.271 · vv.spread.v3.hi 0.351 · vv.verdict.low_pairs 0 · all.engine_error_rate 0.001
 
 ## Messages
+
+- FOLLOW-UP READY [J137@2026-10-16T16:40:10-04:00] (the runner, for the cloud session): J137 is done; write and post the template morning-read. It decides: whether the designed Synergy v3 (8 swaps, pc-results study/synergy-v3-design.md) is shown better balanced than v2 for the lab's AI, by the study's rule; a pass ships nothing -- Justin decides whether v3 ships. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J136@2026-10-16T14:47:37-04:00] (the runner, for the cloud session): J136 is done; write and post the template morning-read. It decides: which way of seeding a 180-card cube from the whole library (Omega's design, the lab's greatest hits, an unselected random draw, the Synergy design) gives the more balanced AI drafts, before and after two generations of evolve from the same pool (Justin, 2026-10-15: "treat the entire library as one cube", approved as this comparison): a measurement for the owner and the cloud to read, not a switch. Ledger: LEDGER.md. Delete this line once posted.
 
