@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-15T22:30:46-04:00",
- "heartbeat": "2026-10-15T22:30:46-04:00",
+ "updated": "2026-10-15T22:31:10-04:00",
+ "heartbeat": "2026-10-15T22:31:10-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.37,
-  "memUsedGb": 6.4,
+  "load1": 2.45,
+  "memUsedGb": 6.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 0,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 3,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J130",
    "title": "A3, the leak report: Justin's recurring mistakes in his own recorded games. Every decision of his seat that the post-game review covers (main-phase plays, attacks, blocks, targets) is graded by coach-grade.sh review in pool mode (D348), put into one kind by what he chose and what he saw, and judged by a rule written before grading (D438): a mistake is a regret interval above zero; a leak is at least 5 mistakes in at least 3 games with a mean regret whose 95% interval is above zero; everything else \"not shown\"",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/2",
    "started": "2026-10-15T22:30:46-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": 0,
    "total": 9,
    "unit": "units",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
+   "workers": 3,
+   "workersMax": 3,
+   "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-15T22:30:46-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "inv.decisions": 0,
     "rs.failed": 0,
@@ -64,7 +64,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J130-prepare"
+   "detail": "lab-J130-pilot1"
   }
  ],
  "queue": [
