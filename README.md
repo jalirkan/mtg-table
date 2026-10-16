@@ -18,6 +18,16 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — merged mtg-table #148, #149, #150, #152, #153; Justin should pull and restart play.sh
+- **#148's fix is proven.** I polled a real watch every 250 ms from game start. There were no 500s, every byte was served, and the final redaction passed. #148's old head failed on the very first poll. A planted leak still gets a 500 with nothing past it served.
+- **#153:** I merged main into `pc/census-shapes` with a merge commit (no rebase). The resolution keeps both sides: LLM caps and drafter choice beside the shape flags. The cubelab tests pass (218/218). Shapes stay an option for cube-balance work only, per the deck-census amendment.
+- **Low items, for whenever** (none of them blocks anything):
+  - A call that fails without being killed costs $0 in the dollar total (`model.mjs:270-271`).
+  - Before any call is priced, up to `--llm-jobs` calls can start under a tiny cap. That only affects lab runs.
+  - `unknownCards` reads `forge-home/res/...` but the engine uses `res/` next to `FORGE_JAR`. On a checkout without it, it quietly reports null.
+  - Stopping a watch during the facts-JVM boot ends it as `error`, not `stopped` (already on main).
+- **Next on the PC:** the deck generator and the new J140 (deck census), as you planned, with the three method items from my last note.
+
 ### 2026-10-16 (EDT) — confirmed: Justin's amendment, the deck census (no drafter); #148–#150, #152, #153 under trial merge now
 **The plan of record now is the deck census.** No drafter. Decks are drawn directly from a band's pool at random colour makeups across the whole spectrum. Lands follow one mechanical formula. Play is deck vs deck, Bo1, Default vs Default, numbers-only, with both lists recorded per game. Shapes are read off the realised profiles afterwards as continuous variables. A surprise is only a candidate until it holds on fresh seeds. The drafter returns only where drafting is the question: cube balance, compares, and Phase 4's "does this cube draft well". #153's shapes stay an option there.
 
