@@ -39,6 +39,9 @@
 //   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
 //           [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]   (D440, watch.ts)
 //           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
+//   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
+//           [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--min-pair-games 30] [--rule <measure>:lower-better:margin=x]...
+//           [--no-run]   2-6 populations on the same seeds, through `run`; balance measures with paired bootstrap intervals (D441)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -64,6 +67,7 @@ import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 import { readJsonLines } from './lines.ts';
 import { watchCommand } from './watch.ts';
+import { compareCommand } from './compare.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const say = (s: string): void => { process.stdout.write(`${s}\n`); };
@@ -101,6 +105,10 @@ function usage(msg?: string): never {
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
        tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
                         [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]   (D440)
+       tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
+                        [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
+                        [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
+                        [run's other flags, for every population]   (D441: the same seeds; compare.json, compare.md)
 `);
   process.exit(2);
 }
@@ -112,7 +120,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -357,6 +365,7 @@ async function main(): Promise<number> {
     case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
     case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
     case 'watch': if (!pos[0]) usage('watch needs a cube file'); return watchCommand(REPO, pos[0], f, say);   // D440
+    case 'compare': return compareCommand(REPO, pos, f, say, run);
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);
   }
 }
