@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-16T10:01:50-04:00",
- "heartbeat": "2026-10-16T10:01:50-04:00",
+ "updated": "2026-10-16T10:02:11-04:00",
+ "heartbeat": "2026-10-16T10:02:11-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.45,
-  "memUsedGb": 15,
+  "load1": 12.47,
+  "memUsedGb": 15.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 1779,
   "pressure": 0,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/1",
    "started": "2026-10-16T09:36:51-04:00",
-   "elapsed": 1499,
+   "elapsed": 1520,
    "done": 1051,
    "total": 3000,
    "unit": "drafts",
    "ratePerHour": 2543.8,
-   "eta": "2026-10-16T10:47:48-04:00",
-   "workers": 6,
+   "eta": "2026-10-16T10:48:10-04:00",
+   "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-16T10:01:39-04:00",
-   "memGb": 8.49,
+   "memGb": 8.97,
    "live": {
     "cmp.written": 0,
     "elapsed_s": 1487,
@@ -89,6 +89,12 @@
      "kind": "drop",
      "workers": 6,
      "pressure": 10.9
+    },
+    {
+     "at": "2026-10-16T10:02:11-04:00",
+     "kind": "raise",
+     "workers": 7,
+     "pressure": 0
     }
    ],
    "detail": "lab-J133-run1"
