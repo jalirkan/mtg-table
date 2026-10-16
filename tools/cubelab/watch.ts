@@ -351,7 +351,7 @@ export interface WatchOptions {
 }
 
 /** What a watch folder may hold; anything else and `watch` refuses to clear it. */
-const OURS = /^(lab|draft\.json|match\.json|watch\.log|(.+-)?g\d+\.(jsonl|log)|deck-[AB]\.dck|.*\.tmp)$/;
+const OURS = /^(lab|draft\.json|match\.json|watch\.log|(.+-)?g\d+\.(jsonl|log)|deck-[AB]\.dck|\.child-groups|.*\.tmp)$/;
 
 /** The game seed for game n of a watch: a pure function of the watch's seed. */
 export const gameSeed = (seed: number, n: number): number => seed * 10 + n;
