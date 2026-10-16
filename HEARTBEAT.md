@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T12:27:33-04:00
+- time: 2026-10-16T12:32:12-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J134 commands 2/4, 2245/2400 drafts, 2310.6/h, ETA 2026-10-16T12:31:35-04:00, 7 worker(s), 7 core(s)
+- running: J134 commands 2/4, 2332/2400 drafts, 2269.4/h, ETA 2026-10-16T12:34:00-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.85; memory 6.4/30.5 GB, swap 1979 MB, pressure 0% (lab budget 23.4 GB)
+- load: 18.46; memory 19.5/30.5 GB, swap 1944 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J136, J137, J139
 - waiting: nothing
 - last finished: J133 done at 2026-10-16T11:21:34-04:00: cmp.pop.synergy.m.flatness.est 0.078 · cmp.pop.synergy_v1.m.flatness.est 0.075 · cmp.pop.omega.m.flatness.est 0 · cmp.pop.fair_fight.m.flatness.est 0.036 · cmp.pop.synergy_17.m.flatness.est 0.084 · cmp.drafts 600 · cmp.same_seeds 1
