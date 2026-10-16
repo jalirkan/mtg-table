@@ -1,0 +1,43 @@
+==== J135 pilot1 started 2026-10-16T00:07:15-04:00 in unit lab-J135-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+v24.21.0
+# The Synergy Cube — version 2 (180 cards, two-player)
+{"listed":180,"in_db":180,"missing":0,"v2":1,"sha_ok":1}
+{"theme_codes":9,"cube_cards":180,"cube_rows_from_omega":178,"candidates":601,"candidates_max2colours":586,"candidates_lands":117,"candidates_ai_all":25,"candidates_ai_random":27,"rows":781,"notes_keep":2,"notes_cut":57,"notes_cut_from_omega":51,"notes_cut_none_in_cube":1,"notes_keep_all_in_cube":1}
+{"card_true_sd_pts":8.9,"arch_true_sd_pts":14.9,"cards_n":168,"arch_n":49}
+cube lab evolve: var/lab-j135-pilot/cubes/synergy-cube-180.md, pool var/lab-j135-pilot/pool.tsv, notes var/lab-j135-pilot/notes.tsv, 1 generation(s) x 12 draft(s) from seed 174000001, 3 job(s), at most 6 swap(s) a generation, out var/cubelab/evolve/j135-synergy-pilot, exploring 0.3 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+facts: booting the engine to look up 781 cards ...
+facts: 2.3 s
+== generation 1/1: The Synergy Cube — version 2 (180 cards, two-player) (180 cards), seeds 174000001-174000012
+exploring (D356): 0.3 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 12 draft(s) in 0.1 s; playing best of 3 each on 3 worker(s)
+[1/12] seed 174000001: A:BR 0-2 B:WU  games BB
+[2/12] seed 174000002: A:WB+g 2-1 B:UG+r  games BAA
+[3/12] seed 174000004: A:WG 2-0 B:BR  games AA
+[4/12] seed 174000005: A:WU+g 2-0 B:UG  games AA
+[5/12] seed 174000006: A:WU 2-0 B:BG  games AA
+[6/12] seed 174000008: A:WU 2-1 B:BG  games ABA
+[7/12] seed 174000007: A:UG 2-1 B:WB  games ABA
+[8/12] seed 174000009: A:UB+g 1-2 B:WU  games ABB
+[9/12] seed 174000011: A:UG+w 2-0 B:WG  games AA
+[10/12] seed 174000012: A:UB 1-2 B:WG  games BAB
+[11/12] seed 174000010: A:UG+w 1-2 B:BG  games BAB
+[12/12] seed 174000003: A:WG 1-2 B:UG  games BAB
+matches: 116 s for 12 (9.7 s a draft wall-clock on 3 worker(s))
+done in 116 s -> var/cubelab/evolve/j135-synergy-pilot/gen-01/run/drafts.jsonl
+generation 1: 6 of 12 draft(s) explored (D356); the game rules read the other 6
+generation 1: Insufficient data: no card was confirmed at 12 drafts; 30 lead(s) to watch — about 92 drafts per generation would find half of them. Run more drafts. 28 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+done: var/cubelab/evolve/j135-synergy-pilot/changelog.md, var/cubelab/evolve/j135-synergy-pilot/index.html, var/cubelab/evolve/j135-synergy-pilot/synergy-cube-180.md
+{"explore_on":1,"generations_done":1,"explored_drafts":6,"plain_drafts":6,"explored_engine_error_rate":0,"plain_engine_error_rate":0,"explored_timeout_rate":0,"plain_timeout_rate":0,"plain_deff_max":1,"plain_mean_min":0.5007,"plain_mean_max":0.5007,"rating_limited":28,"share":0.5,"share_z":1.5118578920369092,"treated":8,"expected":9.000000000000004,"treated_z":-0.3333333333333345,"pooled_delta":-0.00931718670415993,"pooled_se":0.15894165446769443,"balance_diff":0.727751222033433,"targets":26,"holds":0,"weak":0,"undecided":0,"too_few":26,"limited_judged":0,"limited_min_treated":0,"limited_median_treated":0}
+{"listed":180,"in_db":180,"missing":0,"changelog":1,"gen_cube":1,"next_cube":1}
+cube lab: var/lab-j135-pilot/synergy-cube-180.next.md, grid, 4 draft(s) from seed 176000001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j135-pilot/final
+drafted and built 4 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/4] seed 176000002: A:UG 0-2 B:WR  games BB
+[2/4] seed 176000004: A:BG 1-2 B:WU  games ABB
+[3/4] seed 176000001: A:WB 2-0 B:UG  games AA
+[4/4] seed 176000003: A:WB+u 2-1 B:UB+g  games ABA
+matches: 37 s for 4 (9.3 s a draft wall-clock on 3 worker(s))
+done in 37 s -> var/lab-j135-pilot/final/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j135-pilot/final
+4 draft(s): var/lab-j135-pilot/final/report.html, var/lab-j135-pilot/final/report.md, var/lab-j135-pilot/final/meta.json
+{"written":1,"swaps":0,"swaps_dead":0,"swaps_dominant_win":0,"swaps_dominant_pick":0,"swaps_explore":0,"swaps_other":0,"unconfirmed_swaps":0,"keep_cards":2,"keep_missing":0,"candidate_cards":180,"candidate_listed":180,"candidate_in_db":180,"input_drafts":6,"final_drafts":4,"gen1_drafts":6,"input_games":16,"final_games":10,"pair_spread_before":-1,"pair_spread_after":-1,"pair_spread_change":-9,"pair_spread_change_lo":-9,"pair_spread_change_hi":-9,"arch_true_sd_before":0,"arch_true_sd_after":-1,"card_true_sd_before":0,"card_true_sd_after":0,"card_trueSd_narrowed_shown":0,"card_trueSd_widened_shown":0,"archetype_trueSd_narrowed_shown":0,"archetype_trueSd_widened_shown":0,"pair_spread_narrowed_shown":0,"pair_spread_widened_shown":0}
+{"strict": 1}

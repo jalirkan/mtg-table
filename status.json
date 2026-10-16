@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-16T00:07:15-04:00",
- "heartbeat": "2026-10-16T00:07:15-04:00",
+ "updated": "2026-10-16T00:09:59-04:00",
+ "heartbeat": "2026-10-16T00:09:59-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.69,
-  "memUsedGb": 7.8,
+  "load1": 15.21,
+  "memUsedGb": 5.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 1681,
+  "swapUsedMb": 1677,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 3,
+  "coresUsed": 7,
   "coresTotal": 8
  },
  "running": [
@@ -24,30 +24,32 @@
    "id": "J135",
    "title": "Synergy balance, measure and propose: an overnight evolve of ForgeCoach's Synergy Cube v2 (8 generations x 200 drafts, best of 3, exploration on, seeds 170,000,001+) on a proper seed pool (Omega's cards on Synergy's nine themes, 601 candidates, plus the cube's own 180 rows), with a fresh 300-draft batch of the input and of the final cube read by ForgeCoach's flatness.ts; nothing ships, Justin decides whether v3 does",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/4",
    "started": "2026-10-16T00:06:51-04:00",
-   "elapsed": 24,
+   "elapsed": 188,
    "done": 0,
    "total": 0,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 3,
+   "workers": 7,
+   "workersMax": 7,
+   "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-16T00:06:51-04:00",
-   "memGb": 0,
+   "memGb": 0.01,
    "live": {
     "big.engine_error_rate": 0,
     "base.bridge_drafts": 0,
     "base.cpu_ms_per_turn": 0,
     "base.drafts": 0,
+    "base.drafts_per_h": 0,
     "base.draws": 0,
     "base.engine_error_rate": 0,
     "base.engine_errors": 0,
     "base.games": 0,
+    "base.games_per_h": 0,
     "base.mean_game_ms": 0,
     "base.mean_game_s": 0,
     "base.mean_turns": 0,
@@ -63,9 +65,11 @@
     "big.cpu_ms_per_turn": 0,
     "big.drafts": 0,
     "big.drafts_per_generation": 0,
+    "big.drafts_per_h": 0,
     "big.draws": 0,
     "big.engine_errors": 0,
     "big.games": 0,
+    "big.games_per_h": 0,
     "big.generations_done": 0,
     "big.generations_started": 0,
     "big.mean_game_ms": 0,
@@ -75,11 +79,7 @@
     "big.ms_per_turn": 0,
     "big.output_bytes": 0,
     "big.recorded_bytes_per_game": 0,
-    "big.recorded_errors": 0,
-    "big.recorded_games": 0,
-    "big.runs": 0,
-    "big.timeouts": 0,
-    "bm.written": 0
+    "big.recorded_errors": 0
    },
    "liveHeadline": [
     "big.engine_error_rate"
@@ -87,20 +87,20 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J135-pilot1"
+   "detail": "lab-J135-run1"
   }
  ],
- "queue": [],
- "waiting": [
+ "queue": [
   {
    "publicTitle": "Search with the learned evaluator as its leaf: one fixed match",
    "publicEst": "~2-3 h",
    "id": "J131",
    "title": "Search-v2 with the learned evaluator at its leaves: ONE fixed 1,200-game match (600 mirrored pairs, D398, the live 1.5 s budget) of search-v2-evalleaf (search-v2 whose unfinished rollouts are scored by evaluator v2's P(win) for the searching seat, D437) against search-v1-anytime (search-v2) on the confirm deck set, read on a 95% interval; no tuning",
-   "reason": "stopped for memory; will retry",
-   "est": "~2-2.5 h. The match: J125's confirmation (search-v2 with one leaf weight against search-v2, the same 1,200 games on the same deals, 7 workers) took 2 h 00 m (10:19-12:19 on 2026-10-14). The evaluator leaf adds its own cost to each searched decision: the smoke on this PC measured 3,534 evaluator leaves in 206 decisions at 79 us each, about 1.4 ms a decision against search-v2's ~650-900 ms, and the anytime loop's deadline caps a decision either way, so ~2 h again. Pilot ~15 min (the build, the bench self-test, the ladder tests, 8 games on one worker ~5 min). At J115's worst case (75 s a game a worker) the match would be ~3.6 h; it stops itself at 5 h, the step timeout is 7 h",
-   "detail": "memory: step run1 was killed without an exit code (oomd or the OOM killer?); retry after 2026-10-16T00:09:57-04:00"
-  },
+   "cpu": "heavy",
+   "est": "~2-2.5 h. The match: J125's confirmation (search-v2 with one leaf weight against search-v2, the same 1,200 games on the same deals, 7 workers) took 2 h 00 m (10:19-12:19 on 2026-10-14). The evaluator leaf adds its own cost to each searched decision: the smoke on this PC measured 3,534 evaluator leaves in 206 decisions at 79 us each, about 1.4 ms a decision against search-v2's ~650-900 ms, and the anytime loop's deadline caps a decision either way, so ~2 h again. Pilot ~15 min (the build, the bench self-test, the ladder tests, 8 games on one worker ~5 min). At J115's worst case (75 s a game a worker) the match would be ~3.6 h; it stops itself at 5 h, the step timeout is 7 h"
+  }
+ ],
+ "waiting": [
   {
    "publicTitle": "Leak report from my own games",
    "publicEst": "~1-2 h",
