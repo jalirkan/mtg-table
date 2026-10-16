@@ -17,7 +17,10 @@
  *  - the drafters (D443: lab, or one side forge-ranks / llm:<model> / human-picks), and a watch whose
  *    llm: drafter stops it -- the fallback stop and the spend cap -- run for real through watch() and
  *    the lab's run, with no engine (cached invented facts; it stops before any game): match.json ends
- *    `error` in the drafter's own words, with the cube, players, drafters and the real `cost`.
+ *    `error` in the drafter's own words, with the cube, players, drafters and the real `cost`;
+ *  - D444: a custom cube is the watch folder's own cube.md (the coach helper writes it first): the watch
+ *    keeps it, drafts from it with no ratings file (Forge's ranks), and names it in match.json; a cube.md
+ *    that is not the watch's cube is a file the watch did not write.
  *
  * The end-to-end run (the engine, the games, the redaction check) is the smoke in
  * docs/guides/cube-lab.md's watch section; the helper's routes are
@@ -27,7 +30,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -36,7 +39,7 @@ import { fileURLToPath } from 'node:url';
 import type { LabCard } from '../../tools/cubelab/cards.ts';
 import { parseCube, type Cube } from '../../tools/cubelab/cube.ts';
 import { runDraft, type LoadedCube } from '../../tools/cubelab/lab.ts';
-import type { DraftRecord } from '../../tools/cubelab/run.ts';
+import { defaultRatings, type DraftRecord } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 import { fakeDraftModel, type DraftModel } from '../../tools/cubelab/llmdraft.ts';
 import {
@@ -326,4 +329,36 @@ test('a watch whose llm: drafter reaches the dollar cap stops before the call th
   assert.equal(m.cost?.calls, 3);
   assert.ok((m.cost?.usd ?? 1) <= 0.1);
   assert.deepEqual([m.cost?.cacheCreate, m.cost?.tokensOut, m.cost?.stopped], [9000, 900, 'max-usd']);
+});
+
+test('D444: a custom cube in the watch folder (cube.md, written by the helper first) is kept and drafted from, with no ratings file', async () => {
+  const { repo, env } = factsRepo();
+  try {
+    const id = 'watch-my-pauper-copy-12';
+    const out = join(repo, 'var/spectate', id);
+    mkdirSync(out, { recursive: true });
+    const text = readFileSync(CUBE_FILE, 'utf8').replace(/^# .*$/m, '# My Pauper Copy');
+    const own = join(out, 'cube.md');
+    writeFileSync(own, text);
+    writeFileSync(join(out, 'watch.log'), '');
+    writeFileSync(join(out, 'match.json'), '{"v":1,"kind":"watch-match","status":"drafting"}\n');
+    assert.equal(defaultRatings(own), null, 'no ratings beside it: the lab drafts with Forge\'s ranks');
+    const profiles = ['Default'];
+    const loggedOut: DraftModel = { name: 'out', call: async () => { throw new Error('logged out'); } };
+    const e = await watch(env, {
+      cubeFile: own, seed: 12, games: 1, players: { A: parsePlayer('Default', profiles), B: parsePlayer('Default', profiles) },
+      drafters: { A: 'lab', B: 'llm:sonnet' }, paceMs: 0, out, ratingsFile: defaultRatings(own), gameTimeoutSec: 60, llmCaps: WATCH_LLM_CAPS, llmModel: async () => loggedOut,
+    }, () => {}).then(() => null, (x: unknown) => x);
+    assert.ok(e instanceof Error, 'it stops at the fallback stop, before any game (no engine here)');
+    assert.equal(readFileSync(own, 'utf8'), text, 'cube.md is still there, unchanged');
+    const m = JSON.parse(readFileSync(join(out, 'match.json'), 'utf8')) as WatchMatch;
+    assert.deepEqual(m.cube, { title: 'My Pauper Copy', file: `var/spectate/${id}/cube.md` });
+    assert.match(m.error ?? '', /the fallback stop/, 'it got as far as drafting from the custom cube');
+    assert.ok(existsSync(join(out, 'lab')), 'the lab ran in the folder');
+    // the same folder with the cube given from elsewhere: its cube.md is not the watch's, and is refused as foreign
+    await assert.rejects(watch(env, {
+      cubeFile: CUBE_FILE, seed: 12, games: 1, players: { A: parsePlayer('Default', profiles), B: parsePlayer('Default', profiles) },
+      drafters: { A: 'lab', B: 'lab' }, paceMs: 0, out, ratingsFile: null, gameTimeoutSec: 60,
+    }, () => {}), /holds files a watch did not write \(cube\.md\)/);
+  } finally { rmSync(repo, { recursive: true, force: true }); }
 });

@@ -288,6 +288,33 @@ const funnelled = await call(R, `/room/${id}`, { token: T1, host: 'pc.tail1234.t
 eq(funnelled.status, 200, 'Tailscale Funnel (D409): its ts.net Host and https Origin with the token: 200');
 eq((await call(R, `/room/${id}`, { host: 'pc.tail1234.ts.net', origin: 'https://pc.tail1234.ts.net' })).status, 403, 'Tailscale Funnel without a token: 403');
 
+// D444: the whole cube, for a seat whose browser does not have it (the owner's own, my-<slug>).
+{
+  // a listener of its own over the same store, so these wrong links do not use up the main one's per-address limit
+  const cubeSrv = startRoomServer({ store, port: 0, origins: ORIGINS, log: () => {}, pollMs: 3_600_000 });
+  const C = `http://127.0.0.1:${await cubeSrv.listen()}`;
+  const posted = [...cards, 'Cube Card 1'];   // the owner's POST order, one name twice
+  const want = [...new Set(posted)];
+  const sha = createHash('sha256').update(want.join('\n'), 'utf8').digest('hex');
+  const fc = await call(C, `/room/${id}/cube`, { token: T1, origin: 'https://jalirkan.github.io' });
+  eq([fc.status, fc.json?.ok, fc.json?.room, fc.json?.id, fc.json?.title, fc.json?.size], [200, true, id, 'synergy', 'Synergy Cube', 240], 'GET /room/<id>/cube with the friend\'s token: 200, the cube\'s id, title and size');
+  eq(fc.json?.cards, want, 'the list is the owner\'s POST order, de-duplicated (the first of a repeat kept)');
+  eq([fc.json?.hash, made.json.cube.hash], [sha, sha], 'its hash is the SHA-256 of those names joined by \\n, and the one POST /room answered');
+  eq(Object.keys(fc.json ?? {}).sort(), ['cards', 'hash', 'id', 'ok', 'room', 'size', 'title'], 'the answer\'s keys, and nothing else (no token, no seed, no deal)');
+  eq(fc.headers['access-control-allow-origin'], 'https://jalirkan.github.io', 'CORS echoed for an allowed Origin');
+  eq((await call(C, `/room/${id}/cube`, { token: T0 })).json, fc.json, 'the owner\'s token gets the same list');
+  eq((await call(C, `/room/${id}/cube`)).status, 403, 'no token: 403');
+  eq((await call(C, `/room/${id}/cube`, { token: 'A'.repeat(22) })).status, 403, 'a wrong token: 403');
+  eq((await call(C, `/room/rAAAAAAAA/cube`, { token: T1 })).status, 404, 'another room id: 404');
+  eq((await call(C, `/room/${id}/cube`, { token: T1, origin: 'https://evil.example' })).status, 403, 'a foreign Origin with the right token: 403');
+  eq((await call(C, `/room/${id}/cube`, { method: 'POST', token: T1, body: {} })).status, 405, 'POST to it: 405');
+  eq((await call(C, `/room/${id}/cube/m1234567890123`, { token: T1 })).status, 404, 'a sub-path: 404');
+  const st = await call(C, `/room/${id}`, { token: T1 });
+  eq(Object.keys(st.json.cube).sort(), ['hash', 'id', 'size', 'title'], 'the state still carries the cube\'s hash and size only, never the list');
+  ok(!readFileSync(join(VAR, 'rooms', 'rooms.json'), 'utf8').includes(T1), 'rooms.json holds the list and still no token');
+  cubeSrv.close();
+}
+
 let s0v = await call(R, `/room/${id}`, { token: T0 });
 eq([s0v.json.you, s0v.json.toAct, s0v.json.g, s0v.json.slots.length, s0v.json.seed, s0v.json.seats[1].joined], [0, 0, 0, 9, null, false], 'seat 0 sees grid 1, its own move, no seed yet, seat 2 not joined');
 ok(!('dealt' in s0v.json), 'no future grid is sent');
@@ -579,6 +606,24 @@ section('4. what lasts: a second store over the same folder; expiry');
   eq(st2.load(), 1, 'a restarted helper reads the room back');
   eq([st2.auth(id, T0), st2.auth(id, T1), st2.auth(id, 'B'.repeat(22))], [0, 1, 'token'], 'both links still work after the restart; a wrong one does not');
   eq(st2.view(id, 0).log, end0.log, 'the draft is all there');
+  eq(st2.cube(id)?.cards, [...new Set([...cards, 'Cube Card 1'])], 'D444: the cube\'s list too');
+  {
+    // a room from before D444: rooms.json has no list for it -- 404 {code:"cube"}, nothing made up
+    const oldDir = join(VAR, 'rooms-before-d444');
+    mkdirSync(oldDir, { recursive: true });
+    const doc = JSON.parse(readFileSync(join(VAR, 'rooms', 'rooms.json'), 'utf8'));
+    for (const r of doc.rooms) delete r.cubeCards;
+    writeFileSync(join(oldDir, 'rooms.json'), JSON.stringify(doc));
+    const old = createRoomStore({ dir: oldDir, varRoot: join(ROOT, 'var'), now: () => t });
+    eq(old.load(), 1, 'a rooms.json from before D444 still loads');
+    eq(old.cube(id), { missing: true }, 'its room has no list to give');
+    const oldSrv = startRoomServer({ store: old, port: 0, origins: ORIGINS, log: () => {}, pollMs: 3_600_000 });
+    const op = await oldSrv.listen();
+    const oc = await call(`http://127.0.0.1:${op}`, `/room/${id}/cube`, { token: T1 });
+    eq([oc.status, oc.json?.code], [404, 'cube'], 'GET .../cube on it: 404 {code:"cube"}');
+    eq((await call(`http://127.0.0.1:${op}`, `/room/${id}`, { token: T1 })).status, 200, 'and the room itself still works');
+    await oldSrv.close();
+  }
   const r2 = st2.create({ cubeId: 'x', cubeTitle: 'x', cards, name: 'A', firstSeat: 1 });
   const got = [];
   st2.listen(r2.body.id, 0, (s) => got.push(s));

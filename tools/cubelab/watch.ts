@@ -21,7 +21,11 @@
 // kept up to date while it drafts, and written when it stops.
 //
 // What it does, in order, all of it into ONE folder (--out; default
-// var/spectate/watch-<cube>-<seed>/, the id is the folder's name):
+// var/spectate/watch-<cube>-<seed>/, the id is the folder's name).  The cube
+// may be any path: a custom cube (D444, ForgeCoach's cube builder) is
+// <out>/cube.md, which the coach helper writes before it starts the watch and
+// the watch keeps; with no ratings file beside it the lab drafts with Forge's
+// ranks (defaultRatings is null):
 //
 //   1. match.json `status: "drafting"`, with the cube, the seed, the players, the
 //      drafters and startedAt from the first write (a killed watch still says what it was);
@@ -454,11 +458,13 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
   const startedAt = new Date(t0).toISOString();
   const id = path.basename(path.resolve(o.out));
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
+  // D444: a custom cube (ForgeCoach's cube builder) is the helper's <out>/cube.md, written before the watch starts: it stays
+  const ownCube = path.resolve(o.cubeFile) === path.resolve(o.out, 'cube.md');
   if (fs.existsSync(o.out)) {
-    const foreign = fs.readdirSync(o.out).filter((n) => !OURS.test(n));
+    const foreign = fs.readdirSync(o.out).filter((n) => !OURS.test(n) && !(ownCube && n === 'cube.md'));
     if (foreign.length > 0) throw new Error(`${o.out} holds files a watch did not write (${foreign.slice(0, 3).join(', ')}) -- use a new --out`);
     // watch.log is the helper's for this run, and match.json the helper's first word on it (D443): both stay, and the first save replaces match.json
-    for (const n of fs.readdirSync(o.out)) if (n !== 'watch.log' && n !== 'match.json') fs.rmSync(path.join(o.out, n), { recursive: true, force: true });
+    for (const n of fs.readdirSync(o.out)) if (n !== 'watch.log' && n !== 'match.json' && !(ownCube && n === 'cube.md')) fs.rmSync(path.join(o.out, n), { recursive: true, force: true });
   }
   fs.mkdirSync(o.out, { recursive: true });
   const cubeText = fs.readFileSync(o.cubeFile, 'utf8');

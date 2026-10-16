@@ -35,7 +35,8 @@ Without `--lan`, the room listener answers this machine only (two browsers on on
 PC, or a tunnel later). `--room-port <n>` or `config.json` `roomPort` moves it off
 8644. A reload or a dropped connection reconnects by itself: the page keeps the
 seat token in that browser's storage, and the room keeps every pick. Rooms live in
-`var/draft-room/rooms.json` and survive a restart. A room expires 24 hours after
+`var/draft-room/rooms.json` and survive a restart, each with its cube's
+de-duplicated name list (D444). A room expires 24 hours after
 its last pick, and 72 hours after it was made.
 
 ## Who may call what
@@ -44,7 +45,7 @@ its last pick, and 72 hours after it was made.
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
 | Coach helper (8643) | `POST /room/<id>/close`, `POST /room/<id>/friend-link` (D408) | The same owner's door. Only the owner closes a room or replaces the friend's link; the room listener has no such route. |
-| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407), `POST /room/<id>/bug` (D411) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
+| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `GET /room/<id>/cube` (D444), `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407), `POST /room/<id>/bug` (D411) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
 Tokens are 128 bits (22 base64url characters). The server stores only their
@@ -135,6 +136,25 @@ It carries no tokens.
 ### Routes
 
 - `GET /room/<id>` → `200` state.
+- `GET /room/<id>/cube` (D444) → `200`
+
+  ```json
+  { "ok": true, "room": "rAbC12_x", "id": "my-izzet-tempo", "title": "Izzet Tempo",
+    "hash": "<sha256 hex>", "size": 180, "cards": ["…every name, de-duplicated, in the owner's POST order…"] }
+  ```
+
+  The room's whole cube, for a seat whose browser does not have it — the
+  owner's own cube from ForgeCoach's cube builder (`my-<slug>`). `cards` is the
+  owner's `POST /room` list with duplicates dropped, the first kept: exactly the
+  names `hash` is the SHA-256 of, joined by `\n` (the same `hash` as the state's
+  `cube.hash`), so the friend's page can check it and, at the end, replay the
+  draft from the `seed` as for a shipped cube. It is the same for both seats
+  and does not change for the room's life, so fetch it once; the state, which
+  is sent on every join, pick and change of `online`, carries only the cube's
+  `hash` and `size`. The list in document order says nothing about the deal:
+  the shuffle comes from the `seed`, which stays hidden until the draft is over,
+  as for a shipped cube the friend's browser already has. `404 {code: "cube"}`
+  for a room made before D444, whose `rooms.json` entry has no list; GET only.
 - `GET /room/<id>/events` → `200 text/event-stream`. It sends `event: state` with
   `data: <state>` straight away and after every change (including the other
   seat's `online` flag), a `: ping` comment every 15 s, and `event: gone` when the

@@ -15,7 +15,16 @@
 //                          "watchLlmCap":   {maxUsd, maxCalls, maxFallbackRate}   (one watch's llm: cap)
 //   POST /watch            {"cube": "fair-fight-cube-180", "seed"?: 1..799999999, "games"?: 1|3|5|7,
 //                           "drafterA"?: <a watchDrafters id>, "drafterB"?: ...   (default "lab"; one side at most not lab),
-//                           "playerA"?: <a watchPlayers id, any case; "search" too>, "playerB"?: ..., "pace"?: 0..5000}
+//                           "playerA"?: <a watchPlayers id, any case; "search" too>, "playerB"?: ..., "pace"?: 0..5000,
+//                           "cubeDoc"?: {"title": <1-80 chars>, "markdown": <a cube document, at most 256 KB>}}
+//                          (D444: with cubeDoc, "cube" is "my-<slug>" (^my-[a-z0-9-]{1,60}$), a cube of the
+//                          caller's own -- ForgeCoach's cube builder -- that is not in cubes/: the markdown is
+//                          read with the lab's parser (tools/cubelab/cube.ts) and refused, 400 with its words,
+//                          when it lists fewer than 9 different cards; over 256 KB is 413.  It is written to
+//                          var/spectate/<id>/cube.md before the 202, its first "# " heading set to the title,
+//                          and that path is the watch's cube; no ratings file sits beside it, so the lab
+//                          drafts with Forge's ranks, as for a cube with no ratings.  /health: "watchCustom": 1)
+//                          (the body: at most 600 KB)
 //                          -> 202 {"ok": true, "id": "watch-<cube>-<seed>", "state": "/watch/<id>",
 //                                  "game": "/watch/<id>/game/<n>"}; match.json is written before it answers
 //                          409 {"code": "busy", "running": "<id>"} while another watch runs;
@@ -70,12 +79,24 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
+import { parseCube } from './cubelab/cube.ts';
 
-export const MAX_WATCH_BODY = 4096;
+/** D444: a body may carry a custom cube's document (at most 256 KB of markdown, which JSON may escape). */
+export const MAX_WATCH_BODY = 600 * 1024;
+/** D444: a custom cube's markdown, in UTF-8 bytes. */
+export const MAX_CUBE_DOC = 256 * 1024;
+export const MAX_CUBE_TITLE = 80;
+/** D444: the draft room's limits on a cube list (tools/draft-room.mjs MAX_CARDS, MAX_CARD_NAME). */
+export const MAX_CUBE_CARDS = 2000;
+export const MAX_CUBE_NAME = 150;
+/** D444: a custom cube's id -- ForgeCoach's cube/custom.ts `my-<slug>`. */
+export const CUSTOM_CUBE = /^my-[a-z0-9-]{1,60}$/;
 export const MAX_CHUNK_BYTES = 4 * 1024 * 1024;
 export const WATCH_ID = /^watch-[A-Za-z0-9][A-Za-z0-9._-]*-[0-9]{1,9}$/;
 const CUBE = /^[a-z0-9][a-z0-9-]{0,63}$/;
-const FIELDS = ['cube', 'seed', 'games', 'drafterA', 'drafterB', 'playerA', 'playerB', 'pace'];
+const FIELDS = ['cube', 'seed', 'games', 'drafterA', 'drafterB', 'playerA', 'playerB', 'pace', 'cubeDoc'];
+const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/;
+const TITLE_LINE = /^#\s+(.+)$/;
 const TERMINAL = new Set(['done', 'error', 'stopped']);
 /** seeds.ts: the lab's seed range ends below VERIFY_SEED_MIN. */
 export const MAX_SEED = 799_999_999;
@@ -126,7 +147,14 @@ export function validateWatch(q, { cubes, profiles, llmCap = DEFAULT_WATCH_LLM_C
   for (const k of Object.keys(q)) if (!FIELDS.includes(k)) return no(`unknown field "${k}" (${FIELDS.join(', ')})`);
   if (typeof q.cube !== 'string') return no('"cube" is a cube id such as "fair-fight-cube-180"');
   const cube = q.cube.replace(/\.md$/, '');
-  if (!CUBE.test(cube) || !cubes.includes(cube)) return no(`"cube" is one of ${cubes.join(', ')}`);
+  let doc = null;
+  if (q.cubeDoc !== undefined) {
+    // D444: a cube of the caller's own, carried in the body -- never a name in cubes/
+    if (!CUSTOM_CUBE.test(cube)) return no('with "cubeDoc", "cube" is your cube\'s id: "my-" and then 1-60 lowercase letters, digits and dashes');
+    const d = checkCubeDoc(q.cubeDoc);
+    if (d.status) return d;
+    doc = d.doc;
+  } else if (!CUBE.test(cube) || !cubes.includes(cube)) return no(`"cube" is one of ${cubes.join(', ')}${CUSTOM_CUBE.test(cube) ? ' (a "my-" cube comes with its "cubeDoc")' : ''}`);
   let seed = q.seed;
   if (seed === undefined || seed === null) seed = 1 + Math.floor(Math.random() * 99_999);
   else if (!Number.isInteger(seed) || seed < 1 || seed > MAX_SEED) return no(`"seed" is a whole number 1..${MAX_SEED}`);
@@ -154,7 +182,46 @@ export function validateWatch(q, { cubes, profiles, llmCap = DEFAULT_WATCH_LLM_C
   const pB = player(q.playerB, 'playerB');
   if (pA.bad || pB.bad) return no(pA.bad ?? pB.bad);
   const llm = [dA.id, dB.id].some((d) => d.startsWith('llm:'));
-  return { req: { cube, seed, games, pace, drafterA: dA.id, drafterB: dB.id, playerA: pA, playerB: pB, llm, id: `watch-${cube}-${seed}` } };
+  return { req: { cube, seed, games, pace, drafterA: dA.id, drafterB: dB.id, playerA: pA, playerB: pB, llm, id: `watch-${cube}-${seed}`, ...(doc ? { doc } : {}) } };
+}
+
+/**
+ * D444: a custom cube's {title, markdown}, checked and read with the lab's own parser (the one the watch
+ * drafts from).  -> {doc: {title, markdown, cards}} -- `markdown` with its first "# " heading set to the
+ * title, so match.json and draft.json name the cube as the caller does -- or {status, message}.
+ */
+export function checkCubeDoc(d) {
+  const no = (message, status = 400) => ({ status, message });
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return no('"cubeDoc" is {"title": "...", "markdown": "..."}');
+  for (const k of Object.keys(d)) if (k !== 'title' && k !== 'markdown') return no(`"cubeDoc" has an unknown field "${k}" (title, markdown)`);
+  if (typeof d.title !== 'string' || CONTROL.test(d.title)) return no(`"cubeDoc.title" is a line of text, 1-${MAX_CUBE_TITLE} characters`);
+  const title = d.title.trim().replace(/\s+/g, ' ');
+  if (title.length < 1 || [...title].length > MAX_CUBE_TITLE) return no(`"cubeDoc.title" is a line of text, 1-${MAX_CUBE_TITLE} characters`);
+  if (typeof d.markdown !== 'string' || d.markdown.length === 0) return no('"cubeDoc.markdown" is the cube document (markdown), as a string');
+  const bytes = Buffer.byteLength(d.markdown, 'utf8');
+  if (bytes > MAX_CUBE_DOC) return no(`"cubeDoc.markdown" is ${Math.ceil(bytes / 1024)} KB; at most ${MAX_CUBE_DOC / 1024} KB`, 413);
+  if (d.markdown.includes('\u0000')) return no('"cubeDoc.markdown" holds a NUL character');
+  let cube;
+  try { cube = parseCube(d.markdown); } catch (e) { return no(`the cube document could not be read: ${String(e?.message ?? e).slice(0, 300)}`); }
+  const names = [...new Set(cube.cards.map((c) => c.name))];
+  const said = cube.warnings.length ? ` (the cube parser: ${cube.warnings.slice(0, 3).join('; ').slice(0, 400)})` : '';
+  if (names.length < 9) return no(`the cube document lists ${names.length} different card${names.length === 1 ? '' : 's'}; a grid draft needs at least 9${said}`);
+  if (names.length > MAX_CUBE_CARDS) return no(`the cube document lists ${names.length} different cards; at most ${MAX_CUBE_CARDS}`);
+  const long = names.find((n) => [...n].length > MAX_CUBE_NAME || CONTROL.test(n));
+  if (long !== undefined) return no(`the cube document lists a name that is not a card name (over ${MAX_CUBE_NAME} characters, or a control character): ${JSON.stringify(long.slice(0, 60))}…`);
+  return { doc: { title, markdown: withTitle(d.markdown, title), cards: names.length } };
+}
+
+/** The document with its title heading (the first line parseCube reads a title from) set to `title`, or one added on top. */
+function withTitle(markdown, title) {
+  const lines = markdown.split('\n');
+  const i = lines.findIndex((l) => TITLE_LINE.test(l.replace(/\r$/, '').trimEnd()));
+  if (i >= 0) {
+    if (TITLE_LINE.exec(lines[i].replace(/\r$/, '').trimEnd())[1].trim() === title) return markdown;
+    lines[i] = `# ${title}${lines[i].endsWith('\r') ? '\r' : ''}`;
+    return lines.join('\n');
+  }
+  return `# ${title}\n\n${markdown}`;
 }
 
 /** A cube document's title, its first `# ` heading (cube.ts's parseCube reads it the same way). */
@@ -249,7 +316,8 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     } catch { return null; }
   };
   /** The watch's command: only checked ids and numbers from the request reach it. */
-  const watchArgs = (q) => ['watch', `cubes/${q.cube}.md`,
+  const cubePath = (q) => (q.doc ? `var/spectate/${q.id}/cube.md` : `cubes/${q.cube}.md`);   // D444: a custom cube's, written by post()
+  const watchArgs = (q) => ['watch', cubePath(q),
     '--seed', String(q.seed), '--games', String(q.games), '--drafter-a', q.drafterA, '--drafter-b', q.drafterB,
     '--player-a', q.playerA.arg, '--player-b', q.playerB.arg, '--pace', String(q.pace), '--out', `var/spectate/${q.id}`,
     ...(q.llm ? ['--llm-max-usd', String(llmCap.maxUsd), '--llm-max-calls', String(llmCap.maxCalls), '--llm-fallback-rate', String(llmCap.maxFallbackRate)] : [])];
@@ -265,7 +333,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     const seat = (p) => ({ player: p.player, profile: p.profile, policy: p.policy, deck: null });
     return {
       v: 1, kind: 'watch-match', id: r.id, status: 'drafting', startedAt: at, updatedAt: at,
-      cube: { title: cubeTitle(join(root, 'cubes', `${r.cube}.md`)) ?? r.cube, file: `cubes/${r.cube}.md` },
+      cube: { title: r.doc ? r.doc.title : (cubeTitle(join(root, 'cubes', `${r.cube}.md`)) ?? r.cube), file: cubePath(r) },
       seed: r.seed, bestOf: r.games, need: Math.floor(r.games / 2) + 1, paceMs: r.pace, view: { seat: 0, side: 'A' },
       players: { A: seat(r.playerA), B: seat(r.playerB) },
       drafters: { A: { drafter: r.drafterA }, B: { drafter: r.drafterB } },
@@ -380,6 +448,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     health: () => ({
       watch: isAvailable() ? 1 : 0, watchRunning: running ? running.id : null,
       watchDrafters: watchDrafters(llmCap), watchPlayers: watchPlayers(profiles()), watchLlmCap: { ...llmCap },
+      watchCustom: 1,   // D444: POST /watch takes a "my-<slug>" cube with its "cubeDoc"
     }),
     running: () => (running ? running.id : null),
 
@@ -395,6 +464,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       mkdirSync(dir, { recursive: true });
       for (const k of [...checked.keys()]) if (k.startsWith(dir + sep)) checked.delete(k);
       prune(r.id);
+      if (r.doc) writeFileSync(join(dir, 'cube.md'), r.doc.markdown);   // D444: the cube the watch drafts, before the 202
       writeFileSync(join(dir, 'match.json'), `${JSON.stringify(firstMatch(r), null, 1)}\n`);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
@@ -420,7 +490,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
         settle(dir, code, signal, me.failWhy ?? null);
         log(`WATCH ${r.id} ended (${signal ?? `exit ${code}`}) in ${((Date.now() - me.startedAt) / 1000).toFixed(0)} s`);
       });
-      log(`WATCH ${r.id} started: ${r.cube}, seed ${r.seed}, best of ${r.games}, A drafts ${r.drafterA} and ${r.playerA.id} plays, B drafts ${r.drafterB} and ${r.playerB.id} plays, pace ${r.pace} ms`
+      log(`WATCH ${r.id} started: ${r.cube}${r.doc ? ` (a custom cube, ${r.doc.cards} cards, cube.md)` : ''}, seed ${r.seed}, best of ${r.games}, A drafts ${r.drafterA} and ${r.playerA.id} plays, B drafts ${r.drafterB} and ${r.playerB.id} plays, pace ${r.pace} ms`
         + `${r.llm ? `; the llm drafter's cap: $${llmCap.maxUsd}, ${llmCap.maxCalls} calls, ${Math.round(llmCap.maxFallbackRate * 100)}% fallbacks` : ''}`);
       return { status: 202, body: { ok: true, id: r.id, seed: r.seed, state: `/watch/${r.id}`, game: `/watch/${r.id}/game/<n>` } };
     },

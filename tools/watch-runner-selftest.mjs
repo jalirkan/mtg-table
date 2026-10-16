@@ -14,8 +14,11 @@
 // What it holds: the body's validation (cube ids from cubes/, never a path;
 // seeds in the lab's range; best of 1/3/5/7; D443's drafter and player ids,
 // an unknown one a 400 listing the known ones, two non-lab drafters refused;
-// unknown fields refused); /health's watchDrafters, watchPlayers and
-// watchLlmCap; the argv (an llm: drafter's cap only with one); match.json from
+// unknown fields refused); D444's custom cube (a "my-<slug>" id with its
+// cubeDoc: read with the lab's parser, an unreadable document a 400 in the
+// parser's words, an oversized one 413, a bad slug 400, the title heading set,
+// cube.md written before the 202 and its path in the argv); /health's
+// watchDrafters, watchPlayers, watchLlmCap and watchCustom; the argv (an llm: drafter's cap only with one); match.json from
 // the moment POST answers, kept by a watch that dies; one watch at a time (409 with the running id); stop
 // (200, then match.json says "stopped"); a watch that dies is marked "error";
 // redaction as served (only lines that passed tools/check-redaction.mjs are sent;
@@ -38,7 +41,7 @@ import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, wr
 import { request } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { join, resolve } from 'node:path';
-import { createWatchRunner, readCompleteLines, validateWatch, WATCH_ID } from './watch-runner.mjs';
+import { checkCubeDoc, createWatchRunner, MAX_WATCH_BODY, readCompleteLines, validateWatch, WATCH_ID } from './watch-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
 
 const DIR = resolve('var/watch-runner-selftest');
@@ -90,6 +93,45 @@ bad({ cube: 'fair-fight-cube-180', drafterB: 'llm:fake' }, 'llm:fake (the CLI\'s
 bad({ cube: 'fair-fight-cube-180', drafterA: 'human-picks:/etc/passwd' }, 'human-picks (a path)');
 bad({ cube: 'fair-fight-cube-180', drafterA: 'LAB' }, 'a drafter id in another case');
 bad({ cube: 'fair-fight-cube-180', playerA: 'llm:sonnet' }, 'a Claude player (RecordMatch seats Forge AIs only)');
+// D444: a custom cube, its document in the body
+const FAIR = readFileSync(resolve('cubes/fair-fight-cube-180.md'), 'utf8');
+const FAIR_TITLE = FAIR.split('\n')[0].replace(/^#\s+/, '').trim();
+const cd = (markdown, title = 'My Fair Cube') => ({ title, markdown });
+const cu = validateWatch({ cube: 'my-fair-fight', seed: 7, cubeDoc: cd(FAIR, FAIR_TITLE) }, ctx);
+check(cu.req?.id === 'watch-my-fair-fight-7' && cu.req.doc?.cards === 180 && cu.req.doc.markdown === FAIR && cu.req.doc.title === FAIR_TITLE && WATCH_ID.test(cu.req.id),
+  'a cubeDoc beside "my-<slug>": valid, 180 cards by the lab\'s parser, the document kept byte for byte when its heading is the title');
+const retitled = validateWatch({ cube: 'my-fair-fight', cubeDoc: cd(FAIR, '  My  Fair Cube ') }, ctx).req?.doc;
+check(retitled?.title === 'My Fair Cube' && retitled.markdown.split('\n')[0] === '# My Fair Cube' && retitled.markdown.split('\n').slice(1).join('\n') === FAIR.split('\n').slice(1).join('\n'),
+  'another title: the first "# " heading becomes it, nothing else changes');
+const headless = FAIR.split('\n').slice(1).join('\n');
+check(validateWatch({ cube: 'my-fair-fight', cubeDoc: cd(headless) }, ctx).req?.doc.markdown === `# My Fair Cube\n\n${headless}`, 'a document with no "# " heading gets the title on top');
+const big = validateWatch({ cube: 'my-big', cubeDoc: cd(FAIR + 'x'.repeat(256 * 1024)) }, ctx);
+check(big.status === 413 && /at most 256 KB/.test(big.message), `markdown over 256 KB: 413 (${big.message})`);
+check(validateWatch({ cube: 'my-ok', cubeDoc: cd('# x\n\n' + 'é'.repeat(Math.floor((256 * 1024 - 80) / 2)) + '\n\n## The list\n\n### All (9)\nA · B · C · D · E · F · G · H · I\n') }, ctx).req !== undefined,
+  'markdown just under 256 KB in UTF-8 bytes (two-byte characters): accepted');
+const unreadable = validateWatch({ cube: 'my-prose', cubeDoc: cd('# Just prose\n\nNo list here at all.\n') }, ctx);
+check(unreadable.status === 400 && /lists 0 different cards; a grid draft needs at least 9 \(the cube parser: no "## The list" section/.test(unreadable.message), `an unreadable document: 400 in the parser's words (${unreadable.message})`);
+const tiny = validateWatch({ cube: 'my-tiny', cubeDoc: cd('# t\n## The list\n### All (3)\nOpt · Shock · Duress\n') }, ctx);
+check(tiny.status === 400 && /lists 3 different cards; a grid draft needs at least 9/.test(tiny.message), 'three cards: 400 (a grid needs nine)');
+const nine = '# t\n## The list\n### All (9)\nA1 · A2 · A3 · A4 · A5 · A6 · A7 · A8 · A9\n';
+check(checkCubeDoc(cd(nine)).doc?.cards === 9, 'nine cards: enough for one grid');
+bad({ cube: 'my-', cubeDoc: cd(nine) }, 'a cubeDoc with the slug "my-" (empty)');
+bad({ cube: 'my-Fair', cubeDoc: cd(nine) }, 'a cubeDoc with an upper-case slug');
+bad({ cube: 'my-a/../b', cubeDoc: cd(nine) }, 'a cubeDoc with a path in the slug');
+bad({ cube: `my-${'a'.repeat(61)}`, cubeDoc: cd(nine) }, 'a cubeDoc with a 61-character slug');
+check(validateWatch({ cube: `my-${'a'.repeat(60)}`, cubeDoc: cd(nine) }, ctx).req !== undefined, 'a 60-character slug: accepted');
+bad({ cube: 'fair-fight-cube-180', cubeDoc: cd(nine) }, 'a cubeDoc with a shipped cube\'s id (never shadows cubes/)');
+bad({ cube: 'my-fair-fight' }, 'a "my-" cube without its cubeDoc');
+check(/comes with its "cubeDoc"/.test(validateWatch({ cube: 'my-fair-fight' }, ctx).message), 'and the message says so');
+bad({ cube: 'my-x', cubeDoc: 'markdown' }, 'a cubeDoc that is not an object');
+bad({ cube: 'my-x', cubeDoc: { ...cd(nine), path: '/etc/passwd' } }, 'a cubeDoc with an unknown field');
+bad({ cube: 'my-x', cubeDoc: cd(nine, 'x'.repeat(81)) }, 'a title of 81 characters');
+bad({ cube: 'my-x', cubeDoc: cd(nine, 'two\nlines') }, 'a title with a newline');
+bad({ cube: 'my-x', cubeDoc: cd(nine, '   ') }, 'a blank title');
+bad({ cube: 'my-x', cubeDoc: { title: 't', markdown: 7 } }, 'markdown that is not a string');
+bad({ cube: 'my-x', cubeDoc: cd('') }, 'empty markdown');
+bad({ cube: 'my-x', cubeDoc: cd(nine.replace('A9', 'Z'.repeat(151))) }, 'a card name over 150 characters');
+check(validateWatch({ cube: 'my-x', cubeDoc: cd(nine, 'x'.repeat(80)) }, ctx).req?.doc.title.length === 80, 'a title of 80 characters: accepted');
 // the choices /health lists
 const hl = createWatchRunner({ repoRoot: ROOT, available: () => true }).health();
 check(JSON.stringify(hl.watchDrafters.map((d) => d.id)) === JSON.stringify(['lab', 'forge-ranks', 'llm:haiku', 'llm:sonnet'])
@@ -99,6 +141,7 @@ check(JSON.stringify(hl.watchDrafters.map((d) => d.id)) === JSON.stringify(['lab
 check(JSON.stringify(hl.watchPlayers.map((p) => p.id)) === JSON.stringify(['Default', 'Reckless', 'search-v2']) && hl.watchPlayers.every((p) => typeof p.label === 'string' && !('costNote' in p)),
   'watchPlayers: the profiles from forge-home/res/ai and search-v2, no Claude seat');
 check(JSON.stringify(hl.watchLlmCap) === JSON.stringify({ maxUsd: 1, maxCalls: 40, maxFallbackRate: 0.25 }), 'watchLlmCap: the defaults');
+check(hl.watchCustom === 1, 'watchCustom: 1 (D444)');
 const hl2 = createWatchRunner({ repoRoot: ROOT, available: () => true, llmCap: { maxUsd: 0.5, maxCalls: 20, maxFallbackRate: 0.25 } }).health();
 check(hl2.watchLlmCap.maxUsd === 0.5 && /\$0\.50 and 20 calls/.test(hl2.watchDrafters[3].costNote), 'a configured cap is the one /health and the notes say');
 let capThrew = false;
@@ -301,6 +344,25 @@ check(a1[0] === 'watch' && a1[1] === 'cubes/pauper-cube-180.md' && flag(a1, '--d
   && flag(a1, '--player-a') === 'Reckless' && flag(a1, '--player-b') === 'search-v2'
   && flag(a1, '--llm-max-usd') === '0.75' && flag(a1, '--llm-max-calls') === '30' && flag(a1, '--llm-fallback-rate') === '0.2', `an llm: drafter: its id and the cap in the argv (${a1.join(' ')})`);
 check(flag(a2, '--drafter-a') === 'forge-ranks' && !a2.includes('--llm-max-usd') && flag(a2, '--player-a') === 'Default', 'no llm: drafter, no cap flags');
+// D444: a custom cube -- cube.md written before the 202, its path the watch's cube, match.json naming it
+const argvC = [];
+let atSpawn = null;
+const wcu = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck,
+  command: (q, dir, args) => { argvC.push(args); atSpawn = existsSync(join(dir, 'cube.md')) ? readFileSync(join(dir, 'cube.md'), 'utf8') : null; return ['bash', '-c', 'sleep 0.3; exec bash "$0" "$1" 1', FAKE, dir]; } });
+const pc = wcu.post({ cube: 'my-fair-fight', seed: 23, cubeDoc: cd(FAIR, 'My Fair Cube') });
+const cdir = join(ROOT, 'var/spectate/watch-my-fair-fight-23');
+const onDisk = existsSync(join(cdir, 'cube.md')) ? readFileSync(join(cdir, 'cube.md'), 'utf8') : null;
+check(pc.status === 202 && pc.body.id === 'watch-my-fair-fight-23' && onDisk !== null && onDisk.startsWith('# My Fair Cube\n') && onDisk.length === FAIR.length - FAIR_TITLE.length + 'My Fair Cube'.length,
+  'POST with a cubeDoc: 202, and var/spectate/<id>/cube.md is there when it answers (its heading the title)');
+check(atSpawn === onDisk, 'cube.md was written before the watch process was started');
+const mc = wcu.get('watch-my-fair-fight-23').body.match;
+check(mc?.cube?.title === 'My Fair Cube' && mc.cube.file === 'var/spectate/watch-my-fair-fight-23/cube.md' && mc.status === 'drafting', 'match.json from the 202: the custom cube\'s title and its cube.md');
+check(argvC[0]?.[0] === 'watch' && argvC[0][1] === 'var/spectate/watch-my-fair-fight-23/cube.md' && flag(argvC[0], '--out') === 'var/spectate/watch-my-fair-fight-23' && !argvC[0].includes('--ratings'),
+  `the argv: that path as the cube, no --ratings (the lab falls back to Forge's ranks) (${argvC[0]?.slice(0, 2).join(' ')})`);
+check(!argvC[0].some((x) => /My Fair Cube|## The list/.test(x)), 'neither the title nor the markdown is in the argv');
+await until(() => wcu.running() === null);
+check(wcu.get('watch-my-fair-fight-23').body.match?.status === 'done' && existsSync(join(cdir, 'cube.md')), 'the fake watch runs to done over it; cube.md stays');
+check(wcu.post({ cube: 'my-fair-fight', seed: 24, cubeDoc: cd('# x\nno list\n') }).status === 400 && !existsSync(join(ROOT, 'var/spectate/watch-my-fair-fight-24')), 'an unreadable cubeDoc: 400, and no folder is made');
 // the fallback stop, as the watch reports it, comes through unchanged
 w.post({ cube: 'pauper-cube-180', seed: 8, drafterB: 'llm:sonnet' });
 await until(() => w.running() === null);
@@ -344,6 +406,16 @@ check(hh.status === 200 && hh.body.watch === 1 && hh.body.watchRunning === null,
 check(Array.isArray(hh.body.watchDrafters) && hh.body.watchDrafters[0]?.id === 'lab' && hh.body.watchPlayers?.at(-1)?.id === 'search-v2' && hh.body.watchLlmCap?.maxUsd === 1, '/health carries watchDrafters, watchPlayers and watchLlmCap');
 const p400 = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', drafterA: 'gpt' });
 check(p400.status === 400 && /one of lab, forge-ranks, llm:haiku, llm:sonnet/.test(p400.body.message), 'POST /watch with an unknown drafter: 400 naming the known ones');
+check(hh.body.watchCustom === 1, '/health carries "watchCustom": 1 (D444)');
+const pBad = await call(port, 'POST', '/watch', { cube: 'my-prose', cubeDoc: cd('# Just prose\n') });
+check(pBad.status === 400 && /the cube parser: no "## The list" section/.test(pBad.body.message), 'POST /watch with an unreadable cubeDoc: 400 in the parser\'s words');
+const p413 = await call(port, 'POST', '/watch', { cube: 'my-big', cubeDoc: cd('#'.repeat(300 * 1024)) });
+check(p413.status === 413, `POST /watch with markdown over 256 KB (a body under ${MAX_WATCH_BODY / 1024} KB): 413`);
+const pHuge = await call(port, 'POST', '/watch', { cube: 'my-big', cubeDoc: cd('#'.repeat(MAX_WATCH_BODY)) });
+check(pHuge.status === 413 && /600 KB/.test(pHuge.body?.message ?? ''), 'a body over 600 KB: 413 from the helper');
+const pc2 = await call(port, 'POST', '/watch', { cube: 'my-fair-fight', seed: 1, cubeDoc: cd(FAIR) });
+check(pc2.status === 202 && pc2.body.id === 'watch-my-fair-fight-1' && existsSync(join(ROOT, 'var/spectate/watch-my-fair-fight-1/cube.md')), 'POST /watch with a cubeDoc through the route: 202, cube.md written');
+await until(() => wh.running() === null);
 const p = await call(port, 'POST', '/watch', { cube: 'fair-fight-cube-180', seed: 2 });
 check(p.status === 202 && p.body.id === 'watch-fair-fight-cube-180-2', 'POST /watch: 202');
 check((await call(port, 'POST', '/watch', { cube: 'pauper-cube-180', seed: 9 })).status === 409, 'POST /watch again: 409');
