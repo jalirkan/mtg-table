@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-15T23:57:10-04:00
+- time: 2026-10-16T00:02:02-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J132 commands 1/2, 1/9 units, 27.1/h, ETA 2026-10-16T00:14:52-04:00, 7 worker(s), 7 core(s)
+- running: J132 commands 1/2, 1/9 units, 9.3/h, ETA 2026-10-16T00:53:26-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 33.35; memory 11.9/30.5 GB, swap 1659 MB, pressure 0.05% (lab budget 23.4 GB)
+- load: 55.3; memory 29.8/30.5 GB, swap 2040 MB, pressure 45.09% (lab budget 23.4 GB)
 - queue: empty
 - waiting: J131 (memory: step run1 was killed without an exit code (oomd or the OOM killer?); retry after 2026-10-16T00:09:57-04:00)
 - last finished: J130 failed at 2026-10-15T22:31:23-04:00
