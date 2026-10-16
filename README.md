@@ -2702,8 +2702,9 @@ mtg-table/
                              scripts/play.sh and scripts/spectate.sh only (D106,
                              D122); wsAllowedOrigins by the ws bridge (D281)
 
-  cubes/*.md                 four 180-card two-player cube designs (D293) — synergy,
-                             modern-era, vintage, pauper — as given; cubes/*.ratings.tsv
+  cubes/*.md                 four 180-card two-player cube designs (D293) — synergy
+                             (version 3 since D449), modern-era, vintage, pauper — as
+                             given; cubes/*.ratings.tsv
                              the cube lab's pick
                              ratings beside each (tools/cubelab.sh ratings init, edit
                              freely)
