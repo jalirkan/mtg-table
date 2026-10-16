@@ -1,0 +1,3343 @@
+==== J133 run1 started 2026-10-16T09:40:59-04:00 in unit lab-J133-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+var/lab-j133/cubes/synergy-cube-180.md: OK
+cube lab compare: omega, fair_fight, synergy, synergy_v1, synergy_17; 600 draft(s) each from seed 833000001 (the same block for every population); out var/lab-j133/compare
+== population omega: cubes/omega-cube-180.md
+cube lab: cubes/omega-cube-180.md, grid, 600 draft(s) from seed 833000001, best of 3, 7 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j133/compare/runs/omega
+drafted and built 600 draft(s) in 1.6 s; playing best of 3 each on 7 worker(s)
+[1/600] seed 833000005: A:UB 0-2 B:UB  games BB
+[2/600] seed 833000003: A:UG 2-0 B:UB  games AA
+[3/600] seed 833000004: A:WU 2-0 B:UB  games AA
+[4/600] seed 833000002: A:UR 0-2 B:UB  games BB
+[5/600] seed 833000006: A:WR+g 2-1 B:UB  games ABA
+[6/600] seed 833000001: A:WB 2-1 B:UR+w  games BAA
+[7/600] seed 833000009: A:WU+b 0-2 B:UB  games BB
+[8/600] seed 833000007: A:RG 2-1 B:WU  games ABA
+[9/600] seed 833000008: A:UR 1-2 B:BG  games ABB
+[10/600] seed 833000010: A:WB 2-1 B:UR  games BAA
+[11/600] seed 833000013: A:WU 2-0 B:UR+g  games AA
+[12/600] seed 833000016: A:BR 0-2 B:WG  games BB
+[13/600] seed 833000015: A:UB 0-2 B:WB  games BB
+[14/600] seed 833000011: A:WU 2-1 B:UR+b  games ABA
+[15/600] seed 833000014: A:WU 1-2 B:WR  games ABB
+[16/600] seed 833000017: A:UB 1-2 B:WU+b  games ABB
+[17/600] seed 833000021: A:RG+w 2-0 B:UB  games AA
+[18/600] seed 833000018: A:WU 1-2 B:WR  games BAB
+[19/600] seed 833000012: A:WG 2-1 B:WU  games BAA
+[20/600] seed 833000019: A:WU 1-2 B:BG  games BAB
+[21/600] seed 833000022: A:BR 2-1 B:UR  games ABA
+[22/600] seed 833000023: A:WG 2-0 B:UB  games AA
+[23/600] seed 833000025: A:BR 1-2 B:WU  games BAB
+[24/600] seed 833000024: A:UR 2-0 B:WB  games AA
+[25/600] seed 833000027: A:WG 0-2 B:UB  games BB
+[26/600] seed 833000026: A:WU 0-2 B:UR  games BB
+[27/600] seed 833000029: A:WG 1-2 B:UR  games BAB
+[28/600] seed 833000028: A:UR 2-1 B:WU  games ABA
+[29/600] seed 833000032: A:UR 1-2 B:WB  games BAB
+[30/600] seed 833000034: A:WB+r 0-2 B:WG  games BB
+[31/600] seed 833000031: A:WU 1-2 B:WU  games BAB
+[32/600] seed 833000020: A:UR 1-2 B:BG  games BAB
+[33/600] seed 833000038: A:WU 1-2 B:WR  games ABB
+[34/600] seed 833000033: A:UB 1-2 B:WR  games BAB
+[35/600] seed 833000039: A:WU 0-2 B:BR+u  games BB
+[36/600] seed 833000037: A:WG 1-2 B:UR  games BAB
+[37/600] seed 833000035: A:WU 2-1 B:UB  games ABA
+[38/600] seed 833000030: A:UB 0-2 B:UB  games BB
+[39/600] seed 833000040: A:UG 2-0 B:WU  games AA
+[40/600] seed 833000044: A:WU+b 2-0 B:UG  games AA
+[41/600] seed 833000036: A:UB+r 2-0 B:RG  games AA
+[42/600] seed 833000043: A:WG 2-1 B:UB  games BAA
+[43/600] seed 833000045: A:WU 2-1 B:RG  games BAA
+[44/600] seed 833000042: A:UB 2-0 B:WU  games AA
+[45/600] seed 833000041: A:UR 2-1 B:WU+b  games ABA
+[46/600] seed 833000047: A:WU 0-2 B:WR  games BB
+[47/600] seed 833000046: A:WU 1-2 B:UB  games BAB
+[48/600] seed 833000054: A:UB+g 0-2 B:UB  games BB
+[49/600] seed 833000048: A:RG 1-2 B:WR  games ABB
+[50/600] seed 833000051: A:WU 2-0 B:BR+w  games AA
+[51/600] seed 833000050: A:WU 1-2 B:RG  games BAB
+[52/600] seed 833000053: A:WU 2-0 B:BR  games AA
+[53/600] seed 833000049: A:BR 2-1 B:WU  games ABA
+[54/600] seed 833000057: A:BG 0-2 B:WU  games BB
+[55/600] seed 833000058: A:WU 2-0 B:UB+g  games AA
+[56/600] seed 833000056: A:WR 2-0 B:UB  games AA
+[57/600] seed 833000052: A:UB 1-2 B:UR+g  games ABB
+[58/600] seed 833000059: A:WB 2-1 B:UR+g  games ABA
+[59/600] seed 833000055: A:BG+w 2-0 B:UB  games AA
+[60/600] seed 833000060: A:WU 2-1 B:RG  games ABA
+[61/600] seed 833000062: A:UB 2-1 B:WU  games BAA
+[62/600] seed 833000063: A:WG 2-1 B:UB  games BAA
+[63/600] seed 833000064: A:BG 2-1 B:UR+g  games ABA
+[64/600] seed 833000065: A:UB 2-1 B:WG  games ABA
+[65/600] seed 833000061: A:UB+g 1-2 B:WG  games BAB
+[66/600] seed 833000067: A:RG 1-2 B:WU+b  games BAB
+[67/600] seed 833000071: A:WU 2-1 B:UB  games ABA
+[68/600] seed 833000072: A:UB 1-2 B:WU  games BAB
+[69/600] seed 833000069: A:WU 1-2 B:UG  games ABB
+[70/600] seed 833000068: A:WU 2-1 B:WR+g  games BAA
+[71/600] seed 833000070: A:UR 0-2 B:UB  games BB
+[72/600] seed 833000074: A:WB 2-1 B:UR  games BAA
+[73/600] seed 833000066: A:UG 1-2 B:WU  games BAB
+[74/600] seed 833000075: A:BR 2-0 B:WG  games AA
+[75/600] seed 833000078: A:WU 2-1 B:BG+u  games ABA
+[76/600] seed 833000081: A:WB 2-0 B:UG+b  games AA
+[77/600] seed 833000080: A:WU 2-0 B:BR  games AA
+[78/600] seed 833000073: A:UG 2-1 B:WR  games ABA
+[79/600] seed 833000083: A:BG 0-2 B:UR  games BB
+[80/600] seed 833000084: A:UB 0-2 B:WR  games BB
+[81/600] seed 833000076: A:WB 1-2 B:UB  games ABB
+[82/600] seed 833000082: A:BG 0-2 B:WU  games BB
+[83/600] seed 833000077: A:UG 2-1 B:WG  games BAA
+[84/600] seed 833000086: A:RG 2-0 B:BG  games AA
+[85/600] seed 833000079: A:WR+g 2-1 B:UG  games ABA
+[86/600] seed 833000085: A:WB+u 2-0 B:WG  games AA
+[87/600] seed 833000090: A:BR 0-2 B:WU  games BB
+[88/600] seed 833000092: A:BG 0-2 B:WU  games BB
+[89/600] seed 833000087: A:WB 2-0 B:UR  games AA
+[90/600] seed 833000088: A:UB 1-2 B:RG  games BAB
+[91/600] seed 833000089: A:BG 0-2 B:WU  games BB
+[92/600] seed 833000091: A:UB 2-0 B:UR  games AA
+[93/600] seed 833000098: A:BG 0-2 B:WU+r  games BB
+[94/600] seed 833000096: A:UB 0-2 B:WR+g  games BB
+[95/600] seed 833000097: A:UB 2-0 B:WU  games AA
+[96/600] seed 833000093: A:BG 2-1 B:WU  games ABA
+[97/600] seed 833000095: A:WG 0-2 B:UB  games BB
+[98/600] seed 833000099: A:UG 1-2 B:WR  games BAB
+[99/600] seed 833000094: A:WG 1-2 B:WR+g  games BAB
+[100/600] seed 833000102: A:WB+u 2-0 B:BG  games AA
+[101/600] seed 833000101: A:UR 2-1 B:WB  games BAA
+[102/600] seed 833000104: A:WU 2-0 B:WU+g  games AA
+[103/600] seed 833000100: A:WU 0-2 B:BG  games BB
+[104/600] seed 833000109: A:RG 2-0 B:WU  games AA
+[105/600] seed 833000107: A:WU 2-1 B:UB  games ABA
+[106/600] seed 833000111: A:UG 2-0 B:WB  games AA
+[107/600] seed 833000112: A:WR 2-0 B:UB  games AA
+[108/600] seed 833000110: A:WU+g 2-1 B:RG  games BAA
+[109/600] seed 833000115: A:BG 2-0 B:WU  games AA
+[110/600] seed 833000113: A:UR+b 1-2 B:UB  games ABB
+[111/600] seed 833000105: A:WG+b 0-2 B:UB  games BB
+[112/600] seed 833000114: A:WG 2-1 B:WU  games ABA
+[113/600] seed 833000108: A:UG 1-2 B:UB  games ABB
+[114/600] seed 833000106: A:UG 1-2 B:WU  games ABB
+[115/600] seed 833000119: A:UG 0-2 B:WB  games BB
+[116/600] seed 833000116: A:UB+w 2-1 B:WG  games BAA
+[117/600] seed 833000103: A:UR 1-2 B:WB  games BAB
+[118/600] seed 833000118: A:UB 2-1 B:WG  games ABA
+[119/600] seed 833000122: A:WR 0-2 B:UB  games BB
+[120/600] seed 833000121: A:WB 2-0 B:UR  games AA
+[121/600] seed 833000117: A:WU 0-2 B:RG  games BB
+[122/600] seed 833000125: A:UB 0-2 B:WU  games BB
+[123/600] seed 833000120: A:WG 0-2 B:UB  games BB
+[124/600] seed 833000124: A:UB 0-2 B:WG  games BB
+[125/600] seed 833000130: A:UB 0-2 B:WU  games BB
+[126/600] seed 833000123: A:WG 1-2 B:UR  games BAB
+[127/600] seed 833000126: A:UB 2-1 B:WU+b  games BAA
+[128/600] seed 833000129: A:WG 0-2 B:UB  games BB
+[129/600] seed 833000127: A:BG+u 2-0 B:WR  games AA
+[130/600] seed 833000128: A:UR 2-1 B:BG  games ABA
+[131/600] seed 833000132: A:WU 0-2 B:RG  games BB
+[132/600] seed 833000131: A:WU 0-2 B:UB  games BB
+[133/600] seed 833000133: A:UB 2-0 B:WG  games AA
+[134/600] seed 833000138: A:UB 2-0 B:WG  games AA
+[135/600] seed 833000135: A:WU 2-0 B:RG  games AA
+[136/600] seed 833000134: A:WB 2-1 B:WU  games BAA
+[137/600] seed 833000141: A:UR 2-0 B:WB  games AA
+[138/600] seed 833000137: A:UG 2-1 B:UR+g  games ABA
+[139/600] seed 833000143: A:UG 1-2 B:WB  games BAB
+[140/600] seed 833000144: A:UB 1-2 B:WG  games ABB
+[141/600] seed 833000146: A:WG 0-2 B:UB  games BB
+[142/600] seed 833000145: A:UB 0-2 B:RG  games BB
+[143/600] seed 833000142: A:WG+b 2-1 B:BG  games BAA
+[144/600] seed 833000140: A:UB 2-1 B:WR  games BAA
+[145/600] seed 833000147: A:RG 1-2 B:WU  games BAB
+[146/600] seed 833000148: A:WU 0-2 B:BR+u  games BB
+[147/600] seed 833000151: A:BR 2-0 B:UG  games AA
+[148/600] seed 833000150: A:WU 2-1 B:RG  games ABA
+[149/600] seed 833000152: A:UB 2-0 B:WR  games AA
+[150/600] seed 833000149: A:UR 2-1 B:WR  games ABA
+[151/600] seed 833000155: A:WU 2-1 B:WU+g  games BAA
+[152/600] seed 833000154: A:WU 2-1 B:UB  games BAA
+[153/600] seed 833000158: A:UR 2-0 B:UB  games AA
+[154/600] seed 833000157: A:BG 2-1 B:UB  games BAA
+[155/600] seed 833000139: A:WU 2-1 B:BG  games ABA
+[156/600] seed 833000153: A:UG 0-2 B:UB+g  games BB
+[157/600] seed 833000159: A:WR 2-0 B:UB  games AA
+[158/600] seed 833000156: A:WB 0-2 B:UR  games BB
+[159/600] seed 833000162: A:UG 1-2 B:UR  games ABB
+[160/600] seed 833000160: A:WB 1-2 B:UR+g  games ABB
+[161/600] seed 833000164: A:WU 2-0 B:UR  games AA
+[162/600] seed 833000163: A:UB 2-1 B:WU  games BAA
+[163/600] seed 833000168: A:BG 0-2 B:WU  games BB
+[164/600] seed 833000166: A:WB 2-0 B:UR+g  games AA
+[165/600] seed 833000169: A:UG 1-2 B:WU  games BAB
+[166/600] seed 833000167: A:WU+g 1-2 B:UR  games BAB
+[167/600] seed 833000172: A:UB 2-0 B:WU  games AA
+[168/600] seed 833000170: A:UR 2-1 B:UB  games BAA
+[169/600] seed 833000136: A:UB 0-2 B:WG+u  games BB
+[170/600] seed 833000161: A:UB 0-2 B:WG  games BB
+[171/600] seed 833000171: A:WR 2-0 B:UB  games AA
+[172/600] seed 833000173: A:WU 0-2 B:UB  games BB
+[173/600] seed 833000165: A:WU+b 2-1 B:RG  games ABA
+[174/600] seed 833000177: A:WB 1-2 B:WU  games ABB
+[175/600] seed 833000174: A:UB 1-2 B:WG  games BAB
+[176/600] seed 833000178: A:WU 1-2 B:UB  games ABB
+[177/600] seed 833000176: A:WU 2-0 B:WU  games AA
+[178/600] seed 833000175: A:UB 2-1 B:WU  games ABA
+[179/600] seed 833000184: A:RG 2-1 B:WB  games BAA
+[180/600] seed 833000183: A:BR 2-1 B:WU  games BAA
+[181/600] seed 833000185: A:UR+g 2-0 B:WB+g  games AA
+[182/600] seed 833000179: A:UR 2-1 B:WR  games BAA
+[183/600] seed 833000180: A:UB 1-2 B:WU  games BAB
+[184/600] seed 833000182: A:WU 2-1 B:WR  games ABA
+[185/600] seed 833000187: A:UB+g 1-2 B:WR  games BAB
+[186/600] seed 833000191: A:WR 2-0 B:UB  games AA
+[187/600] seed 833000190: A:WU 2-0 B:WR  games AA
+[188/600] seed 833000181: A:UG 1-2 B:WR  games BAB
+[189/600] seed 833000186: A:UB 0-2 B:WR  games BB
+[190/600] seed 833000189: A:WU 1-2 B:WR  games ABB
+[191/600] seed 833000192: A:BG 2-0 B:WU  games AA
+[192/600] seed 833000188: A:WB 1-2 B:UR  games BAB
+[193/600] seed 833000193: A:WB 2-0 B:WG  games AA
+[194/600] seed 833000196: A:WU 2-0 B:WG  games AA
+[195/600] seed 833000195: A:BR 2-0 B:WU  games AA
+[196/600] seed 833000198: A:UR 2-1 B:WB  games BAA
+[197/600] seed 833000197: A:WG 2-0 B:UR  games AA
+[198/600] seed 833000194: A:UB 1-2 B:WU  games BAB
+[199/600] seed 833000201: A:WG 2-0 B:UB+r  games AA
+[200/600] seed 833000202: A:WU 0-2 B:WR  games BB
+[201/600] seed 833000204: A:UB 2-1 B:WG  games ABA
+[202/600] seed 833000199: A:WU 2-1 B:BG  games BAA
+[203/600] seed 833000203: A:WU+g 0-2 B:WU  games BB
+[204/600] seed 833000200: A:WU 1-2 B:WG  games ABB
+[205/600] seed 833000206: A:WU 0-2 B:BG  games BB
+[206/600] seed 833000208: A:UB+g 2-1 B:WU  games ABA
+[207/600] seed 833000210: A:WU 0-2 B:WG  games BB
+[208/600] seed 833000207: A:UR 2-1 B:WU+g  games BAA
+[209/600] seed 833000211: A:WU 2-1 B:BG  games BAA
+[210/600] seed 833000205: A:UG 0-2 B:WU+g  games BB
+[211/600] seed 833000214: A:UB 1-2 B:WG  games BAB
+[212/600] seed 833000217: A:WR+g 2-1 B:UB  games ABA
+[213/600] seed 833000218: A:WU 2-0 B:BG  games AA
+[214/600] seed 833000209: A:WU 1-2 B:RG  games ABB
+[215/600] seed 833000216: A:WU 1-2 B:RG  games BAB
+[216/600] seed 833000215: A:UG+r 0-2 B:BR  games BB
+[217/600] seed 833000221: A:UR 2-1 B:WB  games ABA
+[218/600] seed 833000219: A:WU 1-2 B:UB+g  games ABB
+[219/600] seed 833000222: A:WB 0-2 B:WU+r  games BB
+[220/600] seed 833000220: A:WU 2-1 B:UB  games ABA
+[221/600] seed 833000224: A:UB 2-0 B:WU  games AA
+[222/600] seed 833000223: A:UR 0-2 B:UB  games BB
+[223/600] seed 833000226: A:WB 2-0 B:UR  games AA
+[224/600] seed 833000229: A:WU 2-0 B:UB+g  games AA
+[225/600] seed 833000227: A:WR+g 2-1 B:UB  games ABA
+[226/600] seed 833000225: A:BR 1-2 B:UB  games BAB
+[227/600] seed 833000230: A:WB 2-0 B:WU  games AA
+[228/600] seed 833000228: A:WB 2-1 B:WU  games ABA
+[229/600] seed 833000212: A:WU 1-2 B:WG  games ABB
+[230/600] seed 833000231: A:WU 0-2 B:UB  games BB
+[231/600] seed 833000232: A:WB 2-1 B:UB  games BAA
+[232/600] seed 833000234: A:RG 1-2 B:WU  games BAB
+[233/600] seed 833000233: A:UR 2-1 B:BG  games BAA
+[234/600] seed 833000236: A:WR 0-2 B:UB  games BB
+[235/600] seed 833000239: A:BG 2-1 B:WU  games BAA
+[236/600] seed 833000235: A:UB 2-0 B:WR  games AA
+[237/600] seed 833000240: A:BR 2-1 B:WU  games ABA
+[238/600] seed 833000237: A:WB 0-2 B:UB  games BB
+[239/600] seed 833000238: A:WG+r 2-1 B:WU+r  games ABA
+[240/600] seed 833000241: A:UB 2-0 B:WG  games AA
+[241/600] seed 833000244: A:UB 1-2 B:WU  games ABB
+[242/600] seed 833000245: A:UR 2-0 B:WB  games AA
+[243/600] seed 833000246: A:UG 2-1 B:WR  games BAA
+[244/600] seed 833000247: A:UB 0-2 B:WU  games BB
+[245/600] seed 833000249: A:BG 2-0 B:WU  games AA
+[246/600] seed 833000242: A:UB 2-1 B:RG+b  games ABA
+[247/600] seed 833000250: A:UR 0-2 B:WR+g  games BB
+[248/600] seed 833000243: A:WU 2-0 B:WU+b  games AA
+[249/600] seed 833000248: A:WU 2-0 B:UB  games AA
+[250/600] seed 833000252: A:BG 0-2 B:WU  games BB
+[251/600] seed 833000251: A:UR 2-0 B:WB  games AA
+[252/600] seed 833000256: A:RG 2-0 B:UB  games AA
+[253/600] seed 833000254: A:WU 2-0 B:RG  games AA
+[254/600] seed 833000253: A:UR 0-2 B:UB  games BB
+[255/600] seed 833000257: A:WU 0-2 B:WB  games BB
+[256/600] seed 833000260: A:WG 0-2 B:UB  games BB
+[257/600] seed 833000258: A:WU 0-2 B:UB  games BB
+[258/600] seed 833000263: A:UB 1-2 B:WR  games BAB
+[259/600] seed 833000262: A:UB 2-0 B:WG  games AA
+[260/600] seed 833000261: A:WG+b 2-0 B:WR  games AA
+[261/600] seed 833000259: A:WU 1-2 B:BR  games BAB
+[262/600] seed 833000264: A:WU 1-2 B:UR  games BAB
+[263/600] seed 833000265: A:UB+g 1-2 B:WB  games BAB
+[264/600] seed 833000269: A:UG 0-2 B:WB  games BB
+[265/600] seed 833000255: A:UR 1-2 B:UB  games BAB
+[266/600] seed 833000268: A:WR 1-2 B:BG  games BAB
+[267/600] seed 833000267: A:WB 2-1 B:UR  games ABA
+[268/600] seed 833000273: A:UG 2-0 B:UB  games AA
+[269/600] seed 833000274: A:RG 0-2 B:UB  games BB
+[270/600] seed 833000275: A:UR 0-2 B:WB  games BB
+[271/600] seed 833000270: A:WU 0-2 B:UR+g  games BB
+[272/600] seed 833000276: A:UB 2-0 B:WR  games AA
+[273/600] seed 833000272: A:UB 1-2 B:WR  games ABB
+[274/600] seed 833000280: A:UB+g 2-0 B:UR  games AA
+[275/600] seed 833000278: A:UR 1-2 B:BG  games ABB
+[276/600] seed 833000279: A:WB 0-2 B:RG  games BB
+[277/600] seed 833000277: A:UR 1-2 B:WB  games ABB
+[278/600] seed 833000281: A:WB 2-0 B:WU  games AA
+[279/600] seed 833000282: A:UB 2-0 B:UG  games AA
+[280/600] seed 833000284: A:WU 2-0 B:UR  games AA
+[281/600] seed 833000283: A:RG+w 1-2 B:WU+g  games ABB
+[282/600] seed 833000285: A:UB 2-0 B:WG  games AA
+[283/600] seed 833000271: A:UG+r 0-2 B:WB  games BB
+[284/600] seed 833000288: A:WB 0-2 B:UG+b  games BB
+[285/600] seed 833000290: A:BG 0-2 B:WU+b  games BB
+[286/600] seed 833000266: A:WU+b 2-1 B:UG  games BAA
+[287/600] seed 833000291: A:UR 0-2 B:WG  games BB
+[288/600] seed 833000287: A:BR+u 0-2 B:WU  games BB
+[289/600] seed 833000289: A:WU 0-2 B:WB  games BB
+[290/600] seed 833000286: A:UB 2-1 B:RG+w  games ABA
+[291/600] seed 833000292: A:WU 0-2 B:BG  games BB
+[292/600] seed 833000293: A:UB 1-2 B:RG  games ABB
+[293/600] seed 833000297: A:WU 0-2 B:UR+w  games BB
+[294/600] seed 833000298: A:WB 2-1 B:UG  games ABA
+[295/600] seed 833000296: A:WU 2-0 B:WG  games AA
+[296/600] seed 833000300: A:UB 0-2 B:WU  games BB
+[297/600] seed 833000299: A:UR 2-1 B:UB  games ABA
+[298/600] seed 833000294: A:WU 1-2 B:BR  games BAB
+[299/600] seed 833000302: A:UB 2-0 B:WU  games AA
+[300/600] seed 833000303: A:RG 0-2 B:UB  games BB
+[301/600] seed 833000295: A:WU 2-1 B:WG  games BAA
+[302/600] seed 833000301: A:WR 2-0 B:UG  games AA
+[303/600] seed 833000308: A:UG+b 1-2 B:UB  games ABB
+[304/600] seed 833000306: A:UB 0-2 B:WG  games BB
+[305/600] seed 833000305: A:UR 2-1 B:UB  games ABA
+[306/600] seed 833000307: A:WU 2-0 B:UB+r  games AA
+[307/600] seed 833000313: A:UB+g 0-2 B:WB  games BB
+[308/600] seed 833000311: A:WG 2-1 B:UB  games ABA
+[309/600] seed 833000310: A:WR 0-2 B:UB  games BB
+[310/600] seed 833000312: A:WR 0-2 B:WB  games BB
+[311/600] seed 833000315: A:UB 0-2 B:WU  games BB
+[312/600] seed 833000309: A:UB 0-2 B:UR  games BB
+[313/600] seed 833000317: A:BR 2-0 B:WU  games AA
+[314/600] seed 833000316: A:UB+g 2-1 B:WR+b  games ABA
+[315/600] seed 833000314: A:BG 0-2 B:WU+r  games BB
+[316/600] seed 833000320: A:WR 0-2 B:UG  games BB
+[317/600] seed 833000318: A:UR 2-1 B:WU  games BAA
+[318/600] seed 833000322: A:WB+u 0-2 B:RG  games BB
+[319/600] seed 833000321: A:WR 2-1 B:UB  games BAA
+[320/600] seed 833000324: A:WR 0-2 B:UB+w  games BB
+[321/600] seed 833000325: A:UB+g 2-0 B:BR+g  games AA
+[322/600] seed 833000326: A:WU 1-2 B:RG  games ABB
+[323/600] seed 833000319: A:WU+b 2-0 B:WG  games AA
+[324/600] seed 833000327: A:UG 2-0 B:WB  games AA
+[325/600] seed 833000323: A:UB 1-2 B:WG  games ABB
+[326/600] seed 833000328: A:UB 1-2 B:WU  games ABB
+[327/600] seed 833000329: A:UG+b 2-0 B:UB  games AA
+[328/600] seed 833000304: A:RG 1-2 B:WU  games BAB
+[329/600] seed 833000331: A:WG 2-0 B:UR+w  games AA
+[330/600] seed 833000330: A:WR 2-1 B:UB+g  games ABA
+[331/600] seed 833000334: A:BG 1-2 B:UR  games ABB
+[332/600] seed 833000332: A:WU 1-2 B:UB  games BAB
+[333/600] seed 833000335: A:WU 1-2 B:WG  games BAB
+[334/600] seed 833000333: A:WB 2-1 B:UR  games BAA
+[335/600] seed 833000336: A:UG+b 2-1 B:WU  games ABA
+[336/600] seed 833000213: A:WG 2-1 B:UB  games ABA
+[337/600] seed 833000338: A:UB 2-0 B:UR  games AA
+[338/600] seed 833000340: A:UB 0-2 B:WG  games BB
+[339/600] seed 833000343: A:WG 0-2 B:UB  games BB
+[340/600] seed 833000344: A:UB 2-0 B:WG  games AA
+[341/600] seed 833000345: A:UR 2-0 B:WU+b  games AA
+[342/600] seed 833000346: A:BG 0-2 B:UR  games BB
+[343/600] seed 833000348: A:UR 0-2 B:BG  games BB
+[344/600] seed 833000347: A:UR 2-0 B:WG  games AA
+[345/600] seed 833000342: A:WU 2-1 B:WR  games ABA
+[346/600] seed 833000339: A:WG 2-1 B:WU+g  games ABA
+[347/600] seed 833000351: A:WG 1-2 B:WR  games BAB
+[348/600] seed 833000350: A:WU 2-1 B:UB  games ABA
+[349/600] seed 833000349: A:WR 0-2 B:BG  games BB
+[350/600] seed 833000353: A:BG 2-0 B:UR  games AA
+[351/600] seed 833000352: A:BG 2-1 B:WU  games ABA
+[352/600] seed 833000354: A:UG+w 2-0 B:WG  games AA
+[353/600] seed 833000355: A:WU 2-0 B:UB  games AA
+[354/600] seed 833000341: A:RG 1-2 B:UB+g  games BAB
+[355/600] seed 833000357: A:BR+u 2-1 B:WU  games BAA
+[356/600] seed 833000360: A:UR 2-0 B:WG  games AA
+[357/600] seed 833000361: A:UR 2-1 B:WB  games BAA
+[358/600] seed 833000362: A:UB 0-2 B:WU  games BB
+[359/600] seed 833000359: A:WR 2-0 B:UB  games AA
+[360/600] seed 833000363: A:BG 2-0 B:UB  games AA
+[361/600] seed 833000356: A:UB 0-2 B:WU  games BB
+[362/600] seed 833000364: A:WU+b 2-1 B:WR  games BAA
+[363/600] seed 833000365: A:WU+r 0-2 B:UB  games BB
+[364/600] seed 833000366: A:UR 2-0 B:WG  games AA
+[365/600] seed 833000367: A:WR 0-2 B:UG  games BB
+[366/600] seed 833000368: A:WB 2-0 B:UR  games AA
+[367/600] seed 833000372: A:UB 0-2 B:WR  games BB
+[368/600] seed 833000373: A:UG 0-2 B:WR  games BB
+[369/600] seed 833000369: A:WU 2-1 B:UR  games ABA
+[370/600] seed 833000337: A:WU 2-1 B:UB+g  games ABA
+[371/600] seed 833000374: A:WG 0-2 B:UB  games BB
+[372/600] seed 833000377: A:BR+w 0-2 B:UB+g  games BB
+[373/600] seed 833000376: A:WR 2-0 B:UR  games AA
+[374/600] seed 833000371: A:WB 2-1 B:UG  games BAA
+[375/600] seed 833000379: A:UB 0-2 B:WU  games BB
+[376/600] seed 833000380: A:WG 2-0 B:BR  games AA
+[377/600] seed 833000375: A:WG 2-1 B:UB  games ABA
+[378/600] seed 833000382: A:WR 2-1 B:WU  games ABA
+[379/600] seed 833000370: A:UB 0-2 B:WR+b  games BB
+[380/600] seed 833000378: A:BR+g 1-2 B:WU  games ABB
+[381/600] seed 833000387: A:WU 0-2 B:RG  games BB
+[382/600] seed 833000384: A:RG+w 2-0 B:WU  games AA
+[383/600] seed 833000386: A:UR 0-2 B:BG  games BB
+[384/600] seed 833000383: A:BG 1-2 B:WR  games ABB
+[385/600] seed 833000385: A:WG 2-1 B:UB  games BAA
+[386/600] seed 833000381: A:WB 2-1 B:UB  games BAA
+[387/600] seed 833000388: A:WU 2-1 B:BG  games BAA
+[388/600] seed 833000392: A:UR 1-2 B:UB  games BAB
+[389/600] seed 833000393: A:WU 0-2 B:BR  games BB
+[390/600] seed 833000390: A:WU 1-2 B:RG  games ABB
+[391/600] seed 833000358: A:WU 0-2 B:UB  games BB
+[392/600] seed 833000389: A:BG 1-2 B:WU  games ABB
+[393/600] seed 833000395: A:UG 0-2 B:WU  games BB
+[394/600] seed 833000396: A:WR 0-2 B:UB  games BB
+[395/600] seed 833000399: A:UB 2-0 B:UG  games AA
+[396/600] seed 833000401: A:WB 0-2 B:UR  games BB
+[397/600] seed 833000397: A:WU 0-2 B:WB  games BB
+[398/600] seed 833000402: A:UR 2-1 B:WU  games ABA
+[399/600] seed 833000398: A:WU 1-2 B:UB+g  games BAB
+[400/600] seed 833000403: A:WU+b 2-0 B:UG  games AA
+[401/600] seed 833000400: A:WU 1-2 B:UG  games BAB
+[402/600] seed 833000405: A:WR 2-1 B:UG  games ABA
+[403/600] seed 833000406: A:UG+b 0-2 B:WB  games BB
+[404/600] seed 833000408: A:WB 2-1 B:WU+b  games BAA
+[405/600] seed 833000407: A:WR+b 1-2 B:WG  games BAB
+[406/600] seed 833000409: A:UG 1-2 B:WB  games BAB
+[407/600] seed 833000411: A:WG 0-2 B:UB  games BB
+[408/600] seed 833000412: A:WG 0-2 B:UR  games BB
+[409/600] seed 833000413: A:WU 1-2 B:RG  games ABB
+[410/600] seed 833000410: A:UB 2-0 B:UG+r  games AA
+[411/600] seed 833000414: A:WU 2-1 B:BG  games BAA
+[412/600] seed 833000404: A:WU 1-2 B:WG  games ABB
+[413/600] seed 833000417: A:WU 1-2 B:BR  games ABB
+[414/600] seed 833000418: A:UR 0-2 B:WG  games BB
+[415/600] seed 833000415: A:UB 2-0 B:WG  games AA
+[416/600] seed 833000416: A:WU 2-1 B:UB  games ABA
+[417/600] seed 833000419: A:UB 2-1 B:UR  games BAA
+[418/600] seed 833000421: A:WR 1-2 B:BG  games BAB
+[419/600] seed 833000422: A:WB 0-2 B:UR  games BB
+[420/600] seed 833000420: A:WR 1-2 B:WG  games ABB
+[421/600] seed 833000426: A:WU+b 0-2 B:BG+u  games BB
+[422/600] seed 833000423: A:BG 2-1 B:WU  games ABA
+[423/600] seed 833000425: A:UB 0-2 B:WG  games BB
+[424/600] seed 833000427: A:WR 1-2 B:UG  games BAB
+[425/600] seed 833000430: A:WG 0-2 B:UB  games BB
+[426/600] seed 833000431: A:BG 2-0 B:UR  games AA
+[427/600] seed 833000424: A:UG 1-2 B:WB+u  games ABB
+[428/600] seed 833000394: A:WU 1-2 B:WU  games BAB
+[429/600] seed 833000434: A:UR+b 2-0 B:WU+g  games AA
+[430/600] seed 833000429: A:UB 2-0 B:UR  games AA
+[431/600] seed 833000432: A:WR 0-2 B:UB  games BB
+[432/600] seed 833000433: A:RG 2-1 B:UB  games BAA
+[433/600] seed 833000438: A:UB 2-1 B:WR  games ABA
+[434/600] seed 833000436: A:WG 1-2 B:BR  games BAB
+[435/600] seed 833000439: A:BR 2-0 B:UG  games AA
+[436/600] seed 833000440: A:WB 2-0 B:UB  games AA
+[437/600] seed 833000441: A:UB 0-2 B:WR  games BB
+[438/600] seed 833000437: A:RG+u 0-2 B:UB  games BB
+[439/600] seed 833000442: A:RG 1-2 B:WU  games ABB
+[440/600] seed 833000444: A:BR 1-2 B:UR  games ABB
+[441/600] seed 833000443: A:WU 2-0 B:UB  games AA
+[442/600] seed 833000445: A:BR 1-2 B:WU+b  games BAB
+[443/600] seed 833000446: A:WU 0-2 B:BR  games BB
+[444/600] seed 833000447: A:UB 2-0 B:WR  games AA
+[445/600] seed 833000435: A:BG 0-2 B:WG  games BB
+[446/600] seed 833000448: A:UG 2-0 B:BR  games AA
+[447/600] seed 833000450: A:WG 1-2 B:UB  games ABB
+[448/600] seed 833000451: A:WB 2-1 B:UB  games BAA
+[449/600] seed 833000453: A:UB 2-0 B:WG+r  games AA
+[450/600] seed 833000454: A:UR 0-2 B:UB  games BB
+[451/600] seed 833000452: A:UB 1-2 B:WG  games BAB
+[452/600] seed 833000455: A:UR 2-1 B:UB  games BAA
+[453/600] seed 833000456: A:WU 2-1 B:UB  games BAA
+[454/600] seed 833000457: A:WG 2-1 B:UR+g  games BAA
+[455/600] seed 833000458: A:WR 0-2 B:UB  games BB
+[456/600] seed 833000459: A:UG+b 1-2 B:WB  games BAB
+[457/600] seed 833000460: A:WU 0-2 B:BR  games BB
+[458/600] seed 833000461: A:WR 2-1 B:UB+g  games BAA
+[459/600] seed 833000464: A:WU+g 0-2 B:WR  games BB
+[460/600] seed 833000465: A:UR 2-1 B:WG  games BAA
+[461/600] seed 833000463: A:WG 1-2 B:WU+g  games BAB
+[462/600] seed 833000467: A:WR 2-0 B:UB  games AA
+[463/600] seed 833000466: A:BR 2-1 B:UG  games ABA
+[464/600] seed 833000462: A:WR 0-2 B:UG  games BB
+[465/600] seed 833000468: A:UR 2-0 B:WB  games AA
+[466/600] seed 833000469: A:WU 2-1 B:UB  games BAA
+[467/600] seed 833000471: A:UG 0-2 B:WB  games BB
+[468/600] seed 833000470: A:UR 2-0 B:WB  games AA
+[469/600] seed 833000475: A:UR 0-2 B:WG  games BB
+[470/600] seed 833000476: A:BR+g 0-2 B:WG  games BB
+[471/600] seed 833000477: A:UB 0-2 B:UG  games BB
+[472/600] seed 833000473: A:WR 0-2 B:UG  games BB
+[473/600] seed 833000474: A:WB 2-1 B:WU  games BAA
+[474/600] seed 833000478: A:UR 0-2 B:WB  games BB
+[475/600] seed 833000479: A:BR 2-0 B:UB  games AA
+worker 1: parked (maxWorkers 6)
+[476/600] seed 833000480: A:UR 0-2 B:WU  games BB
+[477/600] seed 833000482: A:WU+r 0-2 B:UR  games BB
+[478/600] seed 833000481: A:WU+b 2-0 B:UG  games AA
+[479/600] seed 833000483: A:WR 2-0 B:UB  games AA
+[480/600] seed 833000484: A:UR 2-0 B:WB+u  games AA
+[481/600] seed 833000472: A:BG+u 0-2 B:UB+r  games BB
+[482/600] seed 833000391: A:RG+w 2-1 B:WU  games BAA
+[483/600] seed 833000486: A:WU 1-2 B:UB  games BAB
+[484/600] seed 833000428: A:WR+u 2-1 B:WU  games BAA
+[485/600] seed 833000485: A:UB 1-2 B:UG  games BAB
+[486/600] seed 833000489: A:UB 1-2 B:WR  games ABB
+[487/600] seed 833000491: A:UG 2-0 B:WR+g  games AA
+[488/600] seed 833000488: A:WU 2-0 B:UB  games AA
+[489/600] seed 833000490: A:WU 0-2 B:BG  games BB
+[490/600] seed 833000487: A:UB 2-1 B:WU+b  games ABA
+[491/600] seed 833000494: A:UB 2-0 B:BR+w  games AA
+[492/600] seed 833000492: A:WU 2-0 B:UB  games AA
+[493/600] seed 833000493: A:WR 1-2 B:UB  games BAB
+[494/600] seed 833000498: A:WU 2-1 B:UR  games ABA
+[495/600] seed 833000497: A:WU 0-2 B:UB  games BB
+[496/600] seed 833000496: A:UB 1-2 B:UG  games BAB
+[497/600] seed 833000499: A:BR 0-2 B:UG  games BB
+[498/600] seed 833000495: A:WG 2-1 B:WU  games BAA
+[499/600] seed 833000500: A:UB+g 1-2 B:WG  games BAB
+[500/600] seed 833000501: A:UB 1-2 B:WU+g  games BAB
+[501/600] seed 833000502: A:WU 1-2 B:UB  games ABB
+[502/600] seed 833000506: A:WU 2-0 B:WU  games AA
+[503/600] seed 833000504: A:UB+g 0-2 B:WR  games BB
+[504/600] seed 833000503: A:UB 2-1 B:WR  games ABA
+[505/600] seed 833000508: A:UR+g 2-0 B:UB  games AA
+[506/600] seed 833000507: A:WU 1-2 B:UR  games BAB
+[507/600] seed 833000505: A:UR 1-2 B:WG  games ABB
+[508/600] seed 833000510: A:UR 2-0 B:UB  games AA
+[509/600] seed 833000512: A:WU 0-2 B:BR  games BB
+[510/600] seed 833000509: A:UG 2-0 B:UR  games AA
+[511/600] seed 833000515: A:UB 0-2 B:UR  games BB
+[512/600] seed 833000514: A:UG 1-2 B:WR  games ABB
+[513/600] seed 833000449: A:UB+g 0-2 B:WG  games BB
+[514/600] seed 833000513: A:UB 1-2 B:WR  games BAB
+[515/600] seed 833000517: A:WB 2-1 B:UR  games ABA
+[516/600] seed 833000516: A:WR 2-1 B:UG  games ABA
+[517/600] seed 833000519: A:UB 1-2 B:WG  games ABB
+[518/600] seed 833000511: A:WU+b 1-2 B:UB  games BAB
+[519/600] seed 833000523: A:WG 1-2 B:UB  games BAB
+[520/600] seed 833000524: A:RG 0-2 B:WU  games BB
+[521/600] seed 833000521: A:UG 0-2 B:UB  games BB
+[522/600] seed 833000518: A:WU 1-2 B:UB  games BAB
+[523/600] seed 833000526: A:WU 0-2 B:UG  games BB
+[524/600] seed 833000522: A:WU 0-2 B:UG  games BB
+[525/600] seed 833000527: A:WU 1-2 B:UB  games BAB
+[526/600] seed 833000528: A:WB 1-2 B:UG  games ABB
+[527/600] seed 833000529: A:WR 1-2 B:UB  games BAB
+[528/600] seed 833000532: A:BG 0-2 B:WU  games BB
+[529/600] seed 833000531: A:WU 1-2 B:WB  games BAB
+[530/600] seed 833000533: A:UG 1-2 B:WB  games ABB
+[531/600] seed 833000525: A:UB+g 2-1 B:WB  games BAA
+[532/600] seed 833000534: A:WU 2-1 B:WR  games BAA
+[533/600] seed 833000536: A:UG+b 2-0 B:WR  games AA
+[534/600] seed 833000530: A:WR 0-2 B:UR  games BB
+[535/600] seed 833000520: A:BR 2-1 B:WU  games ABA
+[536/600] seed 833000535: A:RG 0-2 B:UB  games BB
+[537/600] seed 833000537: A:WU 2-1 B:BG  games BAA
+[538/600] seed 833000541: A:RG 1-2 B:UB  games ABB
+[539/600] seed 833000538: A:WU 2-0 B:BR  games AA
+[540/600] seed 833000543: A:BG 0-2 B:WR  games BB
+[541/600] seed 833000539: A:WU 2-1 B:BG  games BAA
+[542/600] seed 833000542: A:WB 1-2 B:UB  games ABB
+[543/600] seed 833000546: A:WB 0-2 B:UR  games BB
+[544/600] seed 833000540: A:WG 2-1 B:UB  games ABA
+[545/600] seed 833000549: A:UR 1-2 B:WB+g  games ABB
+[546/600] seed 833000544: A:UG 1-2 B:UB  games ABB
+[547/600] seed 833000545: A:WU 2-0 B:UG  games AA
+[548/600] seed 833000550: A:WR 2-0 B:UG  games AA
+[549/600] seed 833000547: A:UG 0-2 B:WB  games BB
+[550/600] seed 833000552: A:WU 2-1 B:BG  games ABA
+[551/600] seed 833000553: A:UG+b 2-1 B:WB  games BAA
+[552/600] seed 833000551: A:WB 2-1 B:UR  games BAA
+[553/600] seed 833000548: A:BG 1-2 B:WU  games BAB
+[554/600] seed 833000555: A:UB 1-2 B:WU  games ABB
+[555/600] seed 833000554: A:UR 2-1 B:UG+w  games BAA
+[556/600] seed 833000558: A:UR 0-2 B:WB  games BB
+[557/600] seed 833000556: A:BR 1-2 B:WU  games ABB
+[558/600] seed 833000560: A:UR 0-2 B:WB  games BB
+[559/600] seed 833000557: A:UB 2-1 B:WU+b  games ABA
+[560/600] seed 833000559: A:RG 1-2 B:UB  games ABB
+[561/600] seed 833000561: A:UB 0-2 B:WB  games BB
+[562/600] seed 833000562: A:WG 2-1 B:UR  games ABA
+[563/600] seed 833000567: A:WR 2-0 B:BG  games AA
+[564/600] seed 833000564: A:WG 2-0 B:UB  games AA
+[565/600] seed 833000565: A:WU 2-1 B:WB  games ABA
+[566/600] seed 833000571: A:WB+r 2-0 B:UG  games AA
+[567/600] seed 833000569: A:UB 1-2 B:WU+b  games BAB
+[568/600] seed 833000563: A:WG 0-2 B:WU  games BB
+[569/600] seed 833000570: A:UR 1-2 B:WG+r  games ABB
+[570/600] seed 833000566: A:WB 1-2 B:WR  games ABB
+[571/600] seed 833000568: A:WU+g 1-2 B:WU+b  games BAB
+[572/600] seed 833000573: A:WB 0-2 B:UG  games BB
+[573/600] seed 833000572: A:WU+g 2-1 B:WR  games BAA
+[574/600] seed 833000576: A:WU 1-2 B:BR+u  games BAB
+[575/600] seed 833000575: A:UB 0-2 B:WR  games BB
+[576/600] seed 833000579: A:UB 2-0 B:WG+r  games AA
+[577/600] seed 833000578: A:WU 1-2 B:WB  games BAB
+[578/600] seed 833000574: A:RG+b 2-0 B:WU  games AA
+[579/600] seed 833000581: A:WU 2-0 B:UB  games AA
+[580/600] seed 833000580: A:UB 0-2 B:WU+b  games BB
+[581/600] seed 833000582: A:WB 2-0 B:UG+b  games AA
+[582/600] seed 833000584: A:UB 0-2 B:WG  games BB
+[583/600] seed 833000583: A:UB 2-0 B:WR  games AA
+[584/600] seed 833000586: A:WU 2-1 B:UR  games BAA
+[585/600] seed 833000585: A:WG 2-1 B:UR  games BAA
+[586/600] seed 833000577: A:WU 2-0 B:WU  games AA
+[587/600] seed 833000587: A:WU 2-1 B:UB  games BAA
+[588/600] seed 833000590: A:UR+g 0-2 B:WB  games BB
+[589/600] seed 833000588: A:WG 2-1 B:WU  games ABA
+[590/600] seed 833000593: A:UB 2-0 B:WR  games AA
+[591/600] seed 833000592: A:UG 2-1 B:UB  games ABA
+[592/600] seed 833000591: A:BG 2-1 B:WU  games BAA
+[593/600] seed 833000594: A:UB 1-2 B:WR  games BAB
+[594/600] seed 833000595: A:UG+w 1-2 B:WR  games BAB
+[595/600] seed 833000589: A:WG+r 1-2 B:UB  games ABB
+[596/600] seed 833000599: A:UB 1-2 B:WR  games ABB
+[597/600] seed 833000597: A:WR 1-2 B:UB  games BAB
+[598/600] seed 833000600: A:WB 2-0 B:UR  games AA
+[599/600] seed 833000598: A:UB 2-0 B:UG  games AA
+[600/600] seed 833000596: A:WB 2-1 B:UG  games ABA
+matches: 586 s for 600 (1.0 s a draft wall-clock on 7 worker(s))
+done in 588 s -> var/lab-j133/compare/runs/omega/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/compare/runs/omega
+== population fair_fight: cubes/fair-fight-cube-180.md
+cube lab: cubes/fair-fight-cube-180.md, grid, 600 draft(s) from seed 833000001, best of 3, 7 job(s), AI Default vs Default, ratings cubes/fair-fight-cube-180.ratings.tsv, out var/lab-j133/compare/runs/fair_fight
+drafted and built 600 draft(s) in 1.6 s; playing best of 3 each on 7 worker(s)
+[1/600] seed 833000002: A:UR 0-2 B:UB+g  games BB
+[2/600] seed 833000006: A:BG+w 0-2 B:UR  games BB
+[3/600] seed 833000004: A:WU+b 1-2 B:UB+g  games ABB
+[4/600] seed 833000003: A:UG 2-0 B:WB+u  games AA
+[5/600] seed 833000007: A:WU 0-2 B:UR+w  games BB
+[6/600] seed 833000008: A:WU 0-2 B:UB+g  games BB
+[7/600] seed 833000005: A:UR+g 1-2 B:WU+g  games ABB
+[8/600] seed 833000009: A:UB+g 2-0 B:WG+u  games AA
+[9/600] seed 833000010: A:UB+r 2-0 B:WR+g  games AA
+[10/600] seed 833000001: A:WU 1-2 B:UR+g  games BAB
+[11/600] seed 833000012: A:WG+b 2-1 B:WU+b  games ABA
+[12/600] seed 833000014: A:WU+g 0-2 B:WR+u  games BB
+[13/600] seed 833000011: A:UG+b 0-2 B:UB+r  games BB
+[14/600] seed 833000015: A:WU 0-2 B:BR+g  games BB
+[15/600] seed 833000016: A:UG+w 1-2 B:UR  games ABB
+[16/600] seed 833000017: A:UR 2-0 B:UB+w  games AA
+[17/600] seed 833000019: A:UR+w 0-2 B:WU+g  games BB
+[18/600] seed 833000021: A:WB 2-0 B:UG+r  games AA
+[19/600] seed 833000018: A:UB+g 2-1 B:WU  games BAA
+[20/600] seed 833000020: A:UR 2-1 B:WB+g  games BAA
+[21/600] seed 833000023: A:BG+u 1-2 B:WU+g  games BAB
+[22/600] seed 833000027: A:WR+g 2-0 B:UB  games AA
+[23/600] seed 833000026: A:BR+w 2-0 B:WU+b  games AA
+[24/600] seed 833000022: A:WU+b 1-2 B:WB+g  games ABB
+[25/600] seed 833000025: A:WU+r 2-1 B:UG+r  games BAA
+[26/600] seed 833000028: A:UR+g 0-2 B:WU  games BB
+[27/600] seed 833000029: A:UB+r 0-2 B:WU  games BB
+[28/600] seed 833000032: A:WU+g 0-2 B:WB+g  games BB
+[29/600] seed 833000024: A:WU 1-2 B:UG+b  games BAB
+[30/600] seed 833000033: A:UR+w 0-2 B:UG  games BB
+[31/600] seed 833000035: A:UG 0-2 B:WU+g  games BB
+[32/600] seed 833000031: A:BG+r 2-0 B:WU+g  games AA
+[33/600] seed 833000034: A:UR+g 0-2 B:WB+u  games BB
+[34/600] seed 833000030: A:WU 1-2 B:UB+r  games BAB
+[35/600] seed 833000036: A:WB+r 2-1 B:UG+w  games BAA
+[36/600] seed 833000038: A:WR 1-2 B:UB+w  games ABB
+[37/600] seed 833000040: A:UR+w 0-2 B:WB  games BB
+[38/600] seed 833000037: A:UR+g 0-2 B:WB  games BB
+[39/600] seed 833000039: A:UB 1-2 B:WR+u  games BAB
+[40/600] seed 833000042: A:WB+g 0-2 B:WU  games BB
+[41/600] seed 833000041: A:WU 2-1 B:BR+g  games ABA
+[42/600] seed 833000043: A:WR+g 2-1 B:UB+w  games ABA
+[43/600] seed 833000044: A:UG+r 0-2 B:WB+g  games BB
+[44/600] seed 833000047: A:UG+r 0-2 B:WU  games BB
+[45/600] seed 833000046: A:UR 1-2 B:WU+b  games ABB
+[46/600] seed 833000048: A:WU+b 2-1 B:UR+g  games ABA
+[47/600] seed 833000045: A:WU 2-1 B:UR+g  games BAA
+[48/600] seed 833000050: A:UR 2-0 B:BG+u  games AA
+[49/600] seed 833000049: A:WR+g 1-2 B:UB  games BAB
+[50/600] seed 833000054: A:UR 1-2 B:WB  games ABB
+[51/600] seed 833000051: A:WB+u 2-1 B:UG+r  games ABA
+[52/600] seed 833000057: A:UB+w 2-0 B:WG  games AA
+[53/600] seed 833000053: A:WR+g 0-2 B:UB  games BB
+[54/600] seed 833000052: A:UB 2-1 B:WU+g  games BAA
+[55/600] seed 833000056: A:RG+u 1-2 B:WU+g  games BAB
+[56/600] seed 833000058: A:WU+g 2-0 B:BR+g  games AA
+[57/600] seed 833000061: A:UB 0-2 B:WR+g  games BB
+[58/600] seed 833000013: A:UB+w 0-2 B:UG+r  games BB
+[59/600] seed 833000062: A:UB+w 2-1 B:UR+g  games ABA
+[60/600] seed 833000063: A:WU 1-2 B:UB+g  games BAB
+[61/600] seed 833000064: A:WR+u 2-1 B:UB+g  games ABA
+[62/600] seed 833000059: A:WU+g 1-2 B:UR+g  games BAB
+[63/600] seed 833000065: A:UB+w 1-2 B:WU+r  games ABB
+[64/600] seed 833000068: A:WR+u 2-0 B:UR  games AA
+[65/600] seed 833000069: A:UG+w 2-0 B:WU  games AA
+[66/600] seed 833000070: A:UR+g 2-0 B:WU  games AA
+[67/600] seed 833000055: A:UB 2-0 B:WU+g  games AA
+[68/600] seed 833000072: A:WU 1-2 B:UG  games ABB
+[69/600] seed 833000067: A:UB+g 0-2 B:WU+b  games BB
+[70/600] seed 833000071: A:WU 2-1 B:UR+w  games ABA
+[71/600] seed 833000073: A:WU 1-2 B:RG+w  games BAB
+[72/600] seed 833000075: A:UB 0-2 B:WG+r  games BB
+[73/600] seed 833000060: A:WU 2-1 B:WU+g  games ABA
+[74/600] seed 833000074: A:UR+g 1-2 B:WU+g  games ABB
+[75/600] seed 833000078: A:UB+w 0-2 B:UR+w  games BB
+[76/600] seed 833000066: A:WU+b 1-2 B:WU+g  games BAB
+[77/600] seed 833000081: A:BR+g 0-2 B:WU  games BB
+[78/600] seed 833000076: A:UG+r 2-1 B:BR  games ABA
+[79/600] seed 833000079: A:WU+b 2-1 B:UG+r  games ABA
+[80/600] seed 833000082: A:RG+u 2-1 B:WU+g  games ABA
+[81/600] seed 833000084: A:WU 0-2 B:RG+w  games BB
+[82/600] seed 833000086: A:WR 2-0 B:UR+g  games AA
+[83/600] seed 833000085: A:UB+g 1-2 B:WU  games ABB
+[84/600] seed 833000077: A:UR+w 1-2 B:WU+b  games BAB
+[85/600] seed 833000080: A:UB+r 2-1 B:RG+u  games BAA
+[86/600] seed 833000089: A:BR+g 2-1 B:WU+g  games ABA
+[87/600] seed 833000087: A:BG+w 2-0 B:WU  games AA
+[88/600] seed 833000090: A:UG+w 2-0 B:UB+w  games AA
+[89/600] seed 833000093: A:UB+w 2-0 B:WU+b  games AA
+[90/600] seed 833000092: A:UR+b 2-0 B:WG+r  games AA
+[91/600] seed 833000091: A:WU+b 1-2 B:UB+r  games BAB
+[92/600] seed 833000088: A:WG+r 2-1 B:UR  games BAA
+[93/600] seed 833000095: A:UR+g 2-0 B:WB+u  games AA
+[94/600] seed 833000094: A:WU+g 2-0 B:UB+r  games AA
+[95/600] seed 833000083: A:UR 2-1 B:UG+r  games BAA
+[96/600] seed 833000098: A:WU+g 2-1 B:WR+g  games BAA
+[97/600] seed 833000099: A:UR+w 2-0 B:WB  games AA
+[98/600] seed 833000096: A:UB+r 1-2 B:RG+b  games BAB
+[99/600] seed 833000101: A:WU 0-2 B:RG+u  games BB
+[100/600] seed 833000100: A:UR+g 2-1 B:WU+g  games ABA
+[101/600] seed 833000105: A:UB 0-2 B:WG  games BB
+[102/600] seed 833000102: A:WU+b 2-1 B:BG+u  games BAA
+[103/600] seed 833000106: A:WB+g 1-2 B:UR+w  games ABB
+[104/600] seed 833000104: A:WG+u 1-2 B:UB+g  games ABB
+[105/600] seed 833000103: A:WR 2-1 B:WU  games ABA
+[106/600] seed 833000108: A:UR+w 2-0 B:UB+g  games AA
+[107/600] seed 833000107: A:WU 2-0 B:UR  games AA
+[108/600] seed 833000110: A:WU 2-0 B:UR+g  games AA
+worker 6: unparked (maxWorkers 7)
+[109/600] seed 833000111: A:UR 2-1 B:WU+b  games BAA
+[110/600] seed 833000109: A:WG+u 2-0 B:UR+g  games AA
+[111/600] seed 833000113: A:WU 0-2 B:UB+w  games BB
+[112/600] seed 833000114: A:WG+u 1-2 B:UB  games ABB
+[113/600] seed 833000118: A:WB+g 2-0 B:UR+g  games AA
+[114/600] seed 833000112: A:UB+w 1-2 B:WR+b  games BAB
+[115/600] seed 833000115: A:UB+r 2-1 B:UB+w  games ABA
+[116/600] seed 833000117: A:BG+r 0-2 B:WU+g  games BB
+[117/600] seed 833000121: A:UR+w 1-2 B:BG  games ABB
+[118/600] seed 833000119: A:UG+r 2-1 B:WB  games ABA
+[119/600] seed 833000122: A:WR+g 2-0 B:WU+g  games AA
+[120/600] seed 833000123: A:WU 2-0 B:BR+u  games AA
+[121/600] seed 833000126: A:WR+g 2-0 B:WU+r  games AA
+[122/600] seed 833000120: A:BR+g 2-1 B:UG+w  games ABA
+[123/600] seed 833000124: A:WU 2-1 B:UG+b  games BAA
+[124/600] seed 833000129: A:WU 2-0 B:WU  games AA
+[125/600] seed 833000127: A:WU+g 1-2 B:UB  games BAB
+[126/600] seed 833000125: A:WU+g 2-1 B:UR+g  games ABA
+[127/600] seed 833000128: A:UB 2-0 B:WU  games AA
+[128/600] seed 833000097: A:BG+w 2-0 B:WU  games AA
+[129/600] seed 833000135: A:WU 2-0 B:UB  games AA
+[130/600] seed 833000132: A:UR+g 2-0 B:WB+g  games AA
+[131/600] seed 833000130: A:UR+g 0-2 B:WB  games BB
+[132/600] seed 833000133: A:UG+r 1-2 B:UR+w  games ABB
+[133/600] seed 833000137: A:WB+g 0-2 B:UR  games BB
+[134/600] seed 833000136: A:WU 0-2 B:RG  games BB
+[135/600] seed 833000134: A:UG 1-2 B:WB+u  games ABB
+[136/600] seed 833000139: A:WU 2-0 B:UR+g  games AA
+[137/600] seed 833000116: A:RG+b 1-2 B:WU+b  games ABB
+[138/600] seed 833000138: A:UR 1-2 B:BR+g  games ABB
+[139/600] seed 833000141: A:RG+w 2-0 B:WU  games AA
+[140/600] seed 833000146: A:UR 2-0 B:WB+u  games AA
+[141/600] seed 833000140: A:RG+w 1-2 B:WU  games ABB
+[142/600] seed 833000144: A:UG 1-2 B:WB+g  games ABB
+[143/600] seed 833000147: A:WU 0-2 B:RG+b  games BB
+[144/600] seed 833000148: A:WU+r 2-0 B:UB+g  games AA
+[145/600] seed 833000145: A:WB+g 1-2 B:UR  games BAB
+[146/600] seed 833000149: A:BR 2-1 B:WU  games ABA
+[147/600] seed 833000143: A:BG+w 2-0 B:UR  games AA
+[148/600] seed 833000142: A:UG+r 0-2 B:WB+u  games BB
+[149/600] seed 833000155: A:WB+u 0-2 B:UG  games BB
+[150/600] seed 833000151: A:UR 0-2 B:WB+u  games BB
+[151/600] seed 833000152: A:WB+g 2-0 B:UR+g  games AA
+[152/600] seed 833000150: A:WU 2-1 B:RG+w  games ABA
+[153/600] seed 833000131: A:UB+w 2-0 B:WU  games AA
+[154/600] seed 833000157: A:BG+r 2-0 B:WU+r  games AA
+[155/600] seed 833000156: A:WU+r 1-2 B:WU+g  games ABB
+[156/600] seed 833000153: A:UG+b 2-1 B:WG+b  games BAA
+[157/600] seed 833000161: A:UG+r 0-2 B:WU  games BB
+[158/600] seed 833000154: A:UB+g 1-2 B:WU+b  games BAB
+[159/600] seed 833000158: A:UR+g 2-1 B:WU  games ABA
+[160/600] seed 833000159: A:UB+w 2-0 B:UR+b  games AA
+[161/600] seed 833000163: A:WU+g 0-2 B:UB+r  games BB
+[162/600] seed 833000160: A:WU 2-1 B:RG  games ABA
+[163/600] seed 833000166: A:BG+w 2-0 B:WU  games AA
+[164/600] seed 833000162: A:UB+r 2-0 B:WU+g  games AA
+[165/600] seed 833000167: A:WU 2-1 B:WB  games ABA
+[166/600] seed 833000165: A:UB 2-1 B:WU+g  games ABA
+[167/600] seed 833000164: A:UR 1-2 B:WR  games ABB
+[168/600] seed 833000169: A:WU+g 0-2 B:WU+g  games BB
+[169/600] seed 833000170: A:BR+g 1-2 B:WU+r  games BAB
+[170/600] seed 833000172: A:WB+u 0-2 B:WU+g  games BB
+[171/600] seed 833000171: A:UB+g 2-0 B:UR+g  games AA
+[172/600] seed 833000177: A:UR 2-1 B:WB+u  games ABA
+[173/600] seed 833000174: A:RG+w 2-1 B:UB  games BAA
+[174/600] seed 833000175: A:UB+w 1-2 B:UR+w  games BAB
+[175/600] seed 833000176: A:WU 2-1 B:UG+w  games ABA
+[176/600] seed 833000178: A:UB 1-2 B:WG+b  games BAB
+[177/600] seed 833000179: A:WU 2-0 B:UR+g  games AA
+[178/600] seed 833000168: A:BG 2-1 B:WU  games BAA
+[179/600] seed 833000180: A:WB+u 1-2 B:UR+g  games BAB
+[180/600] seed 833000181: A:UB 1-2 B:BG+w  games BAB
+[181/600] seed 833000185: A:UR+w 2-0 B:WU+g  games AA
+[182/600] seed 833000183: A:UG+r 2-0 B:WU+g  games AA
+[183/600] seed 833000182: A:UR 1-2 B:WB+g  games BAB
+[184/600] seed 833000187: A:WU 0-2 B:WB+g  games BB
+[185/600] seed 833000173: A:UB+w 1-2 B:RG+w  games BAB
+[186/600] seed 833000186: A:UB 2-1 B:RG+w  games BAA
+[187/600] seed 833000189: A:WU+r 0-2 B:UB+g  games BB
+[188/600] seed 833000188: A:WU 2-1 B:RG  games BAA
+[189/600] seed 833000193: A:WB+g 0-2 B:UR  games BB
+[190/600] seed 833000192: A:WU+r 2-1 B:UB+w  games ABA
+[191/600] seed 833000191: A:UR+g 1-2 B:UB  games BAB
+[192/600] seed 833000190: A:WG+r 2-0 B:UB  games AA
+[193/600] seed 833000197: A:UR+g 0-2 B:WU  games BB
+[194/600] seed 833000200: A:UR+g 0-2 B:WU+b  games BB
+[195/600] seed 833000195: A:UB+w 1-2 B:WU  games ABB
+[196/600] seed 833000194: A:WU+g 2-1 B:WU+g  games ABA
+[197/600] seed 833000203: A:WU 2-0 B:UB+r  games AA
+[198/600] seed 833000196: A:WR+g 2-0 B:UB  games AA
+[199/600] seed 833000202: A:WB+u 2-1 B:UR+w  games ABA
+[200/600] seed 833000199: A:UB 2-1 B:WU  games ABA
+[201/600] seed 833000198: A:UG+r 0-2 B:WB+u  games BB
+[202/600] seed 833000201: A:WU+r 0-2 B:RG  games BB
+[203/600] seed 833000205: A:UG 1-2 B:WR+u  games ABB
+[204/600] seed 833000206: A:UR+w 0-2 B:WG+u  games BB
+[205/600] seed 833000208: A:WU+g 1-2 B:WU  games ABB
+[206/600] seed 833000209: A:UB+r 1-2 B:WB+u  games BAB
+[207/600] seed 833000212: A:WU+g 1-2 B:UR+w  games BAB
+[208/600] seed 833000213: A:RG 0-2 B:WU  games BB
+[209/600] seed 833000211: A:UB+w 2-1 B:WU  games ABA
+[210/600] seed 833000210: A:WU 0-2 B:UR+g  games BB
+[211/600] seed 833000215: A:WB 2-0 B:WU+r  games AA
+[212/600] seed 833000214: A:BR+u 2-1 B:WU+b  games BAA
+[213/600] seed 833000204: A:WU 2-1 B:BG+u  games ABA
+[214/600] seed 833000217: A:UB 0-2 B:RG+w  games BB
+[215/600] seed 833000218: A:WU+r 1-2 B:WB+u  games ABB
+[216/600] seed 833000221: A:WU+g 0-2 B:WB+g  games BB
+[217/600] seed 833000219: A:WU+g 0-2 B:WB  games BB
+[218/600] seed 833000220: A:UB+r 0-2 B:WU  games BB
+[219/600] seed 833000216: A:UR 0-2 B:WG+b  games BB
+[220/600] seed 833000223: A:BG 2-1 B:UR  games BAA
+[221/600] seed 833000226: A:WU 2-0 B:RG+w  games AA
+[222/600] seed 833000225: A:UG+b 0-2 B:WB+u  games BB
+[223/600] seed 833000227: A:UB+w 2-1 B:UR+g  games BAA
+[224/600] seed 833000207: A:WU 0-2 B:WG+u  games BB
+[225/600] seed 833000224: A:WU+r 1-2 B:UB+g  games BAB
+[226/600] seed 833000228: A:UB+r 2-0 B:WU+g  games AA
+[227/600] seed 833000230: A:WU 1-2 B:WR+u  games BAB
+[228/600] seed 833000229: A:WB+u 2-1 B:UG+w  games ABA
+[229/600] seed 833000231: A:WU 0-2 B:UR+w  games BB
+[230/600] seed 833000232: A:WU 0-2 B:BR+g  games BB
+[231/600] seed 833000233: A:UB 0-2 B:UG+w  games BB
+[232/600] seed 833000235: A:UR 0-2 B:WB+u  games BB
+[233/600] seed 833000234: A:WG+u 2-0 B:UR+w  games AA
+[234/600] seed 833000238: A:UR+b 2-1 B:WU  games ABA
+[235/600] seed 833000237: A:WB+u 2-1 B:WU+r  games ABA
+[236/600] seed 833000239: A:WB+g 1-2 B:UR+w  games ABB
+[237/600] seed 833000241: A:BR+g 2-0 B:WU  games AA
+[238/600] seed 833000236: A:UG 2-1 B:UR+w  games BAA
+[239/600] seed 833000240: A:UG+w 1-2 B:WB+u  games BAB
+[240/600] seed 833000222: A:WU 2-1 B:UR+g  games ABA
+[241/600] seed 833000243: A:WG+u 2-1 B:UG+w  games ABA
+[242/600] seed 833000244: A:WU 1-2 B:UG+r  games BAB
+[243/600] seed 833000242: A:UB+r 2-0 B:UG+r  games AA
+[244/600] seed 833000249: A:UB+w 1-2 B:UR+w  games BAB
+[245/600] seed 833000247: A:WU+g 2-0 B:UR+g  games AA
+[246/600] seed 833000251: A:WR+g 2-0 B:UB  games AA
+[247/600] seed 833000245: A:UR 0-2 B:BG+r  games BB
+[248/600] seed 833000248: A:WG 2-1 B:UR  games ABA
+[249/600] seed 833000255: A:UR 2-0 B:WB+g  games AA
+[250/600] seed 833000254: A:BR+g 1-2 B:WU+b  games BAB
+[251/600] seed 833000250: A:UB+w 2-1 B:WR+b  games BAA
+[252/600] seed 833000252: A:WU+b 1-2 B:UB  games BAB
+[253/600] seed 833000253: A:WU+g 0-2 B:WU  games BB
+[254/600] seed 833000246: A:WU+b 1-2 B:BG+w  games ABB
+[255/600] seed 833000258: A:WR+g 1-2 B:WU  games BAB
+[256/600] seed 833000260: A:UG+r 0-2 B:WB+u  games BB
+[257/600] seed 833000257: A:WB+g 2-1 B:WU+b  games ABA
+[258/600] seed 833000262: A:WU+b 0-2 B:UB  games BB
+worker 4: parked (maxWorkers 6)
+[259/600] seed 833000259: A:WG 2-0 B:UR+g  games AA
+[260/600] seed 833000263: A:BR+g 0-2 B:WU+g  games BB
+[261/600] seed 833000264: A:WB+g 0-2 B:UR+g  games BB
+[262/600] seed 833000266: A:WG+r 1-2 B:WU  games BAB
+[263/600] seed 833000265: A:WR+g 0-2 B:WU+g  games BB
+[264/600] seed 833000261: A:WB+u 2-0 B:UR  games AA
+[265/600] seed 833000268: A:WR+g 2-0 B:WU+g  games AA
+[266/600] seed 833000267: A:WU+r 1-2 B:WU+g  games ABB
+[267/600] seed 833000272: A:UR+w 2-1 B:WU  games ABA
+[268/600] seed 833000269: A:UR 0-2 B:WU+g  games BB
+[269/600] seed 833000270: A:UB+g 0-2 B:UB+g  games BB
+[270/600] seed 833000273: A:UB+g 1-2 B:WU+g  games BAB
+[271/600] seed 833000271: A:WU+b 2-0 B:UB+w  games AA
+[272/600] seed 833000275: A:WB+g 2-0 B:WU  games AA
+[273/600] seed 833000256: A:UR+g 2-1 B:UG+b  games BAA
+[274/600] seed 833000274: A:WU 2-1 B:RG+b  games BAA
+[275/600] seed 833000277: A:RG+b 2-0 B:UB+g  games AA
+[276/600] seed 833000276: A:WU+g 2-1 B:UB+r  games ABA
+[277/600] seed 833000279: A:WU+r 1-2 B:RG+w  games BAB
+[278/600] seed 833000278: A:WU+r 2-0 B:WR+g  games AA
+[279/600] seed 833000281: A:WU+r 2-0 B:UB+g  games AA
+[280/600] seed 833000280: A:UG+r 0-2 B:WB+u  games BB
+[281/600] seed 833000283: A:WU+g 2-1 B:UR+g  games BAA
+[282/600] seed 833000286: A:WB+u 0-2 B:UR  games BB
+[283/600] seed 833000287: A:UB 0-2 B:WR+g  games BB
+[284/600] seed 833000288: A:UB+g 1-2 B:WR  games ABB
+[285/600] seed 833000285: A:UR+g 2-1 B:WU  games BAA
+[286/600] seed 833000290: A:WG+u 2-0 B:UB+w  games AA
+[287/600] seed 833000291: A:WU+g 2-0 B:BR+g  games AA
+[288/600] seed 833000289: A:BR+g 2-1 B:WU+b  games BAA
+[289/600] seed 833000284: A:UG 2-1 B:WB  games ABA
+[290/600] seed 833000292: A:WU 2-0 B:UG+w  games AA
+[291/600] seed 833000184: A:UR 1-2 B:UG+r  games ABB
+[292/600] seed 833000295: A:UR+g 0-2 B:WU  games BB
+[293/600] seed 833000293: A:UR+g 1-2 B:WU  games BAB
+[294/600] seed 833000294: A:WU+g 1-2 B:WR+g  games BAB
+[295/600] seed 833000298: A:UB+g 1-2 B:WR+g  games ABB
+[296/600] seed 833000296: A:UG+r 2-0 B:WU  games AA
+[297/600] seed 833000297: A:WG+u 2-1 B:UR  games ABA
+[298/600] seed 833000299: A:WB+g 2-0 B:UR  games AA
+[299/600] seed 833000301: A:WU 0-2 B:UB+g  games BB
+[300/600] seed 833000304: A:UB 0-2 B:WG+u  games BB
+[301/600] seed 833000303: A:UG 1-2 B:WB+g  games BAB
+[302/600] seed 833000302: A:UB+w 1-2 B:WU+b  games ABB
+[303/600] seed 833000300: A:WU 2-1 B:UB+g  games BAA
+[304/600] seed 833000307: A:WG+u 2-0 B:UR  games AA
+[305/600] seed 833000282: A:BR+g 2-1 B:WU  games ABA
+[306/600] seed 833000306: A:WG+r 0-2 B:UB+g  games BB
+[307/600] seed 833000308: A:UG+w 2-0 B:WB+u  games AA
+[308/600] seed 833000305: A:UB+r 2-1 B:WU+g  games ABA
+[309/600] seed 833000312: A:UR+w 2-1 B:UB+w  games ABA
+[310/600] seed 833000309: A:WB+g 2-1 B:UR  games BAA
+[311/600] seed 833000316: A:UR+b 2-1 B:WB+g  games ABA
+[312/600] seed 833000311: A:UB 2-0 B:UG+r  games AA
+[313/600] seed 833000314: A:WU 2-1 B:BG+r  games BAA
+[314/600] seed 833000315: A:WB+g 0-2 B:UG+r  games BB
+[315/600] seed 833000317: A:WU+g 1-2 B:WG+r  games BAB
+[316/600] seed 833000318: A:UB+g 0-2 B:RG+w  games BB
+[317/600] seed 833000319: A:UG+r 2-0 B:UB  games AA
+[318/600] seed 833000313: A:WU 1-2 B:WB+r  games BAB
+[319/600] seed 833000321: A:UB+g 2-1 B:WU  games BAA
+[320/600] seed 833000322: A:UR 0-2 B:BG+w  games BB
+[321/600] seed 833000323: A:WB+g 2-1 B:UR+g  games ABA
+[322/600] seed 833000320: A:WU+g 1-2 B:UB+w  games BAB
+[323/600] seed 833000310: A:WU 1-2 B:UB  games ABB
+[324/600] seed 833000324: A:WU 2-1 B:UB+g  games ABA
+[325/600] seed 833000326: A:WR+g 2-0 B:UB  games AA
+[326/600] seed 833000325: A:WB 2-0 B:UB+r  games AA
+[327/600] seed 833000327: A:UR+w 0-2 B:WB+g  games BB
+[328/600] seed 833000329: A:WU+g 1-2 B:UR+g  games BAB
+[329/600] seed 833000332: A:WU+g 1-2 B:UR+g  games BAB
+[330/600] seed 833000334: A:BG+w 2-0 B:UR+g  games AA
+[331/600] seed 833000330: A:WU 2-1 B:UR+g  games BAA
+[332/600] seed 833000335: A:WR 2-0 B:UB+g  games AA
+[333/600] seed 833000331: A:UB 2-1 B:WU+r  games ABA
+[334/600] seed 833000339: A:UR+g 1-2 B:WU  games BAB
+[335/600] seed 833000336: A:UR+w 1-2 B:WU+g  games BAB
+[336/600] seed 833000338: A:WU+g 2-1 B:UB  games ABA
+[337/600] seed 833000337: A:UB 2-1 B:WG+r  games ABA
+[338/600] seed 833000340: A:UB+w 0-2 B:WU+r  games BB
+[339/600] seed 833000342: A:UG 1-2 B:WB  games BAB
+[340/600] seed 833000344: A:UB+r 0-2 B:WU+r  games BB
+[341/600] seed 833000328: A:UG+r 1-2 B:WU  games ABB
+[342/600] seed 833000345: A:WR 2-0 B:UB+w  games AA
+[343/600] seed 833000346: A:WB+g 2-1 B:UR  games BAA
+[344/600] seed 833000348: A:UB 2-1 B:WB+u  games ABA
+[345/600] seed 833000347: A:UG 0-2 B:WU  games BB
+[346/600] seed 833000350: A:UB+g 0-2 B:WU+r  games BB
+[347/600] seed 833000351: A:WR+b 1-2 B:WG+r  games BAB
+[348/600] seed 833000349: A:UB+r 0-2 B:WU+g  games BB
+[349/600] seed 833000354: A:WU 0-2 B:UR  games BB
+[350/600] seed 833000333: A:WU+g 2-1 B:UB  games ABA
+[351/600] seed 833000352: A:UR+g 1-2 B:UB+w  games BAB
+[352/600] seed 833000356: A:WU+b 2-0 B:RG+w  games AA
+[353/600] seed 833000353: A:WB+g 2-1 B:WU+r  games ABA
+[354/600] seed 833000355: A:WU+g 2-0 B:UB+w  games AA
+[355/600] seed 833000359: A:WU 0-2 B:WR+g  games BB
+[356/600] seed 833000357: A:WU 2-0 B:WR+u  games AA
+[357/600] seed 833000358: A:UR+g 0-2 B:UG+w  games BB
+[358/600] seed 833000343: A:WU+r 2-0 B:UR+w  games AA
+[359/600] seed 833000361: A:WU+g 1-2 B:UR+g  games ABB
+[360/600] seed 833000363: A:UB+r 0-2 B:WB+g  games BB
+[361/600] seed 833000364: A:RG 2-1 B:WU  games BAA
+[362/600] seed 833000362: A:BR+w 2-1 B:WU  games ABA
+[363/600] seed 833000360: A:UR+g 1-2 B:WG+u  games BAB
+[364/600] seed 833000366: A:UR 2-0 B:WU+g  games AA
+[365/600] seed 833000365: A:BG+r 0-2 B:WU+r  games BB
+[366/600] seed 833000367: A:UB 2-1 B:WR+g  games BAA
+[367/600] seed 833000370: A:UG+r 0-2 B:WB+u  games BB
+[368/600] seed 833000371: A:UG+r 0-2 B:BR+w  games BB
+[369/600] seed 833000373: A:UR+g 2-1 B:UB+r  games BAA
+[370/600] seed 833000374: A:WU 2-1 B:WB+g  games BAA
+[371/600] seed 833000368: A:WU+g 0-2 B:WB+g  games BB
+[372/600] seed 833000369: A:UR 1-2 B:UB  games ABB
+[373/600] seed 833000375: A:UB 0-2 B:WR+g  games BB
+[374/600] seed 833000378: A:WG+r 2-1 B:UR+b  games BAA
+[375/600] seed 833000376: A:WU+g 0-2 B:UB+g  games BB
+[376/600] seed 833000377: A:UR+w 1-2 B:UB+w  games BAB
+[377/600] seed 833000379: A:WR+g 0-2 B:WU  games BB
+[378/600] seed 833000380: A:UG+r 0-2 B:WB+g  games BB
+[379/600] seed 833000382: A:WU+b 2-1 B:BG  games ABA
+[380/600] seed 833000372: A:WU+g 1-2 B:UR+w  games BAB
+[381/600] seed 833000381: A:UG+r 0-2 B:WR+g  games BB
+[382/600] seed 833000383: A:WU+g 2-1 B:UR  games BAA
+[383/600] seed 833000384: A:WG+u 2-1 B:UR+w  games ABA
+[384/600] seed 833000388: A:UR+b 2-0 B:BG  games AA
+[385/600] seed 833000390: A:WG+r 2-1 B:UR+w  games BAA
+[386/600] seed 833000386: A:WB 2-0 B:UG+r  games AA
+[387/600] seed 833000385: A:WB+u 1-2 B:UG+w  games BAB
+[388/600] seed 833000387: A:WU 1-2 B:UB  games BAB
+[389/600] seed 833000389: A:WU+g 2-1 B:UR+g  games ABA
+[390/600] seed 833000395: A:UR+g 0-2 B:UB  games BB
+[391/600] seed 833000392: A:UR+g 0-2 B:WB+u  games BB
+[392/600] seed 833000394: A:WU+g 0-2 B:UB+w  games BB
+[393/600] seed 833000393: A:WU+r 2-1 B:UB+w  games BAA
+[394/600] seed 833000396: A:UR+g 2-1 B:UB  games ABA
+[395/600] seed 833000397: A:WB+g 2-0 B:WU+g  games AA
+[396/600] seed 833000398: A:UB 2-1 B:WR+g  games BAA
+[397/600] seed 833000401: A:BG 0-2 B:WU  games BB
+[398/600] seed 833000402: A:BG+w 2-1 B:WU  games ABA
+[399/600] seed 833000391: A:UR 0-2 B:RG+b  games BB
+[400/600] seed 833000400: A:BG 1-2 B:WU  games BAB
+[401/600] seed 833000404: A:WU+g 2-0 B:UB+g  games AA
+[402/600] seed 833000341: A:WG+r 2-1 B:WU  games BAA
+[403/600] seed 833000406: A:WU+r 0-2 B:UB+g  games BB
+[404/600] seed 833000403: A:WU+b 2-1 B:UB+w  games BAA
+[405/600] seed 833000405: A:UB 2-0 B:WU+r  games AA
+[406/600] seed 833000409: A:WB+g 2-1 B:WU+b  games BAA
+[407/600] seed 833000412: A:UG 1-2 B:UB+w  games BAB
+[408/600] seed 833000411: A:UG 2-1 B:WU+r  games BAA
+[409/600] seed 833000410: A:UB+r 1-2 B:UR+g  games BAB
+[410/600] seed 833000414: A:WU 0-2 B:UR+g  games BB
+[411/600] seed 833000413: A:UR+g 1-2 B:WU  games BAB
+[412/600] seed 833000416: A:WU+b 2-0 B:UG+b  games AA
+[413/600] seed 833000415: A:UG 2-1 B:WU+b  games ABA
+[414/600] seed 833000408: A:WB+u 2-1 B:UB+r  games BAA
+[415/600] seed 833000418: A:WB 1-2 B:UR  games ABB
+[416/600] seed 833000421: A:WU+g 2-0 B:UR+g  games AA
+[417/600] seed 833000417: A:WU 1-2 B:BG+w  games ABB
+[418/600] seed 833000422: A:UG+w 1-2 B:UR  games BAB
+[419/600] seed 833000420: A:WU+g 0-2 B:WB+u  games BB
+[420/600] seed 833000399: A:WB 2-1 B:UR  games ABA
+[421/600] seed 833000423: A:BR 2-0 B:WU+g  games AA
+[422/600] seed 833000424: A:WR 2-0 B:UG  games AA
+[423/600] seed 833000425: A:UB+g 0-2 B:WU  games BB
+[424/600] seed 833000426: A:WU+g 1-2 B:UR+b  games BAB
+[425/600] seed 833000429: A:UR+g 2-0 B:UB+r  games AA
+[426/600] seed 833000427: A:BG+u 2-1 B:UB+g  games BAA
+[427/600] seed 833000431: A:WG 2-0 B:UR  games AA
+[428/600] seed 833000407: A:WU+r 1-2 B:WG+b  games BAB
+[429/600] seed 833000430: A:WR+b 2-0 B:UB  games AA
+[430/600] seed 833000432: A:BR 2-1 B:WU  games ABA
+[431/600] seed 833000433: A:WU+r 1-2 B:UR+g  games BAB
+[432/600] seed 833000435: A:UR 1-2 B:WG+u  games ABB
+[433/600] seed 833000434: A:WB+u 2-1 B:UR+g  games ABA
+[434/600] seed 833000439: A:BG+w 0-2 B:WU  games BB
+[435/600] seed 833000437: A:WU 2-0 B:UB+g  games AA
+[436/600] seed 833000419: A:WU+g 2-1 B:WU  games BAA
+[437/600] seed 833000440: A:UG+b 2-0 B:WU  games AA
+[438/600] seed 833000436: A:WU+r 1-2 B:UR  games BAB
+[439/600] seed 833000438: A:WG+u 2-0 B:WR+g  games AA
+[440/600] seed 833000441: A:UR+w 0-2 B:WU  games BB
+[441/600] seed 833000442: A:UB+r 2-0 B:WU+b  games AA
+[442/600] seed 833000444: A:UB+r 2-1 B:WU  games ABA
+[443/600] seed 833000443: A:WB 2-1 B:UR  games ABA
+[444/600] seed 833000446: A:WU+r 2-0 B:UB+g  games AA
+[445/600] seed 833000447: A:WR+g 2-0 B:UB+w  games AA
+[446/600] seed 833000449: A:UR+g 2-1 B:WB+r  games BAA
+[447/600] seed 833000428: A:WU+r 1-2 B:WU+g  games ABB
+[448/600] seed 833000452: A:WU+b 1-2 B:UG+w  games ABB
+[449/600] seed 833000453: A:UR+g 0-2 B:UG+r  games BB
+[450/600] seed 833000451: A:WU+g 2-1 B:WU+r  games BAA
+[451/600] seed 833000450: A:UR+g 2-1 B:WU  games BAA
+[452/600] seed 833000455: A:UR+g 1-2 B:WU+b  games ABB
+[453/600] seed 833000448: A:WU+g 2-1 B:UR+w  games BAA
+[454/600] seed 833000456: A:WU 0-2 B:BG+w  games BB
+[455/600] seed 833000458: A:UB+w 2-0 B:WU+r  games AA
+[456/600] seed 833000460: A:UB+w 2-1 B:WU+g  games BAA
+[457/600] seed 833000461: A:WU+g 2-0 B:UR  games AA
+[458/600] seed 833000459: A:UR+g 2-1 B:WB+u  games ABA
+[459/600] seed 833000462: A:WU+r 2-1 B:UB+g  games ABA
+[460/600] seed 833000457: A:UR+g 1-2 B:UG  games BAB
+[461/600] seed 833000463: A:UG+w 2-1 B:UB  games ABA
+[462/600] seed 833000454: A:WR+g 0-2 B:UG  games BB
+[463/600] seed 833000465: A:UR 0-2 B:UB+g  games BB
+[464/600] seed 833000468: A:BG+r 0-2 B:UR  games BB
+[465/600] seed 833000469: A:UB+w 2-0 B:WU  games AA
+[466/600] seed 833000466: A:UB+g 1-2 B:WG+u  games ABB
+[467/600] seed 833000467: A:WU+g 0-2 B:WG+r  games BB
+[468/600] seed 833000470: A:RG 2-0 B:WU+g  games AA
+[469/600] seed 833000464: A:WU+g 2-1 B:UB+w  games BAA
+[470/600] seed 833000472: A:RG 1-2 B:UB  games ABB
+[471/600] seed 833000473: A:WU 0-2 B:UR  games BB
+[472/600] seed 833000476: A:WU+g 0-2 B:UG+r  games BB
+[473/600] seed 833000474: A:UR+g 2-1 B:WB+g  games BAA
+[474/600] seed 833000475: A:WB 2-0 B:UG+w  games AA
+[475/600] seed 833000477: A:UR+g 0-2 B:WU+g  games BB
+[476/600] seed 833000471: A:UR 2-1 B:UB+g  games ABA
+[477/600] seed 833000478: A:UR+b 0-2 B:WU+r  games BB
+[478/600] seed 833000482: A:WG 2-0 B:WU+b  games AA
+[479/600] seed 833000479: A:WU 2-0 B:BR+g  games AA
+[480/600] seed 833000483: A:WB 2-0 B:UR+g  games AA
+[481/600] seed 833000481: A:UG+r 2-1 B:WB  games ABA
+[482/600] seed 833000480: A:UB+r 2-0 B:UR+w  games AA
+worker 4: unparked (maxWorkers 7)
+[483/600] seed 833000485: A:WU+r 2-1 B:UB  games ABA
+[484/600] seed 833000484: A:UG+w 2-1 B:WB+u  games BAA
+[485/600] seed 833000489: A:WR+u 2-0 B:UB+w  games AA
+[486/600] seed 833000486: A:WU+r 1-2 B:UR+g  games BAB
+[487/600] seed 833000487: A:UG+w 2-1 B:WU+g  games BAA
+[488/600] seed 833000492: A:WG+u 2-0 B:UB  games AA
+[489/600] seed 833000493: A:UR+w 0-2 B:UG+w  games BB
+[490/600] seed 833000488: A:UR+w 2-0 B:UG+w  games AA
+[491/600] seed 833000491: A:UG+r 2-0 B:UR+w  games AA
+[492/600] seed 833000490: A:UG+b 1-2 B:WB+g  games BAB
+[493/600] seed 833000497: A:WB+u 2-1 B:UG+r  games ABA
+[494/600] seed 833000496: A:UR+g 2-1 B:WU  games BAA
+[495/600] seed 833000495: A:WB+g 1-2 B:WU+b  games ABB
+[496/600] seed 833000445: A:UB+g 1-2 B:UG  games BAB
+[497/600] seed 833000498: A:UR+g 2-1 B:WU+r  games BAA
+[498/600] seed 833000500: A:WB+g 2-0 B:UR  games AA
+[499/600] seed 833000505: A:WG+u 2-0 B:UR+b  games AA
+[500/600] seed 833000499: A:WU 1-2 B:BR+g  games BAB
+[501/600] seed 833000502: A:WB+g 1-2 B:UR  games BAB
+[502/600] seed 833000503: A:WB+g 2-0 B:UR+g  games AA
+[503/600] seed 833000507: A:WU+b 0-2 B:BR+w  games BB
+[504/600] seed 833000509: A:WU+g 0-2 B:UR+g  games BB
+[505/600] seed 833000494: A:UB+r 2-1 B:WB+g  games ABA
+[506/600] seed 833000511: A:UG 2-0 B:BR  games AA
+[507/600] seed 833000510: A:WU+g 2-1 B:BR+w  games BAA
+[508/600] seed 833000512: A:WU+g 1-2 B:WU+r  games ABB
+[509/600] seed 833000513: A:WU 2-0 B:UB+r  games AA
+[510/600] seed 833000508: A:WU 0-2 B:WB+g  games BB
+[511/600] seed 833000506: A:WU 0-2 B:UR+g  games BB
+[512/600] seed 833000516: A:WG+u 2-0 B:WU+g  games AA
+[513/600] seed 833000514: A:WR+g 2-1 B:UB  games ABA
+[514/600] seed 833000517: A:WR+u 2-1 B:UB+r  games BAA
+[515/600] seed 833000518: A:WU+g 2-0 B:UR+w  games AA
+[516/600] seed 833000515: A:WU 2-1 B:UR+g  games ABA
+[517/600] seed 833000522: A:UB 0-2 B:UR+g  games BB
+[518/600] seed 833000520: A:WU+b 0-2 B:UR  games BB
+[519/600] seed 833000523: A:UR+g 2-0 B:WG+r  games AA
+[520/600] seed 833000524: A:WR 2-0 B:UB+r  games AA
+[521/600] seed 833000504: A:WU+b 0-2 B:UG  games BB
+[522/600] seed 833000519: A:WU+g 2-1 B:UR  games BAA
+[523/600] seed 833000521: A:WU 2-0 B:WB+g  games AA
+[524/600] seed 833000529: A:WG 2-0 B:UB+r  games AA
+[525/600] seed 833000526: A:WU+b 1-2 B:UB  games ABB
+[526/600] seed 833000525: A:UB+r 1-2 B:WU+g  games ABB
+[527/600] seed 833000528: A:WU 1-2 B:UB  games ABB
+[528/600] seed 833000531: A:UB 2-0 B:WU  games AA
+[529/600] seed 833000527: A:WU 2-0 B:UG+w  games AA
+[530/600] seed 833000530: A:WU 1-2 B:WB+g  games BAB
+[531/600] seed 833000534: A:UR+g 1-2 B:UB  games BAB
+[532/600] seed 833000532: A:WU+g 2-0 B:UG  games AA
+[533/600] seed 833000533: A:BG+u 1-2 B:WU+r  games BAB
+[534/600] seed 833000536: A:WU+b 2-1 B:UR+w  games BAA
+[535/600] seed 833000537: A:WG+u 2-1 B:WU  games BAA
+[536/600] seed 833000539: A:UG+w 1-2 B:WR+g  games ABB
+[537/600] seed 833000541: A:UB 0-2 B:WR  games BB
+[538/600] seed 833000540: A:WU+g 2-0 B:WU  games AA
+[539/600] seed 833000543: A:WU+g 2-0 B:WU  games AA
+[540/600] seed 833000535: A:UG+w 2-0 B:WU+g  games AA
+[541/600] seed 833000542: A:UR+g 1-2 B:WB  games ABB
+[542/600] seed 833000544: A:WG+b 0-2 B:UR  games BB
+[543/600] seed 833000549: A:UB+w 2-0 B:WU+g  games AA
+[544/600] seed 833000547: A:UR 1-2 B:WU+g  games BAB
+[545/600] seed 833000548: A:UR+w 1-2 B:UB+w  games BAB
+[546/600] seed 833000546: A:WR+g 0-2 B:WU+b  games BB
+[547/600] seed 833000550: A:WU 2-0 B:UR  games AA
+[548/600] seed 833000501: A:RG+b 1-2 B:WU+g  games ABB
+[549/600] seed 833000552: A:WU 2-1 B:BR  games ABA
+[550/600] seed 833000551: A:UB+r 1-2 B:WU+g  games BAB
+[551/600] seed 833000554: A:WB 2-0 B:UR+g  games AA
+[552/600] seed 833000555: A:UG+w 1-2 B:WB  games BAB
+[553/600] seed 833000553: A:UR+g 2-1 B:UB+w  games BAA
+[554/600] seed 833000557: A:BG+u 2-1 B:UR  games BAA
+[555/600] seed 833000558: A:UR+g 2-0 B:WU  games AA
+[556/600] seed 833000560: A:WG+r 2-0 B:WU  games AA
+[557/600] seed 833000561: A:WG+r 2-0 B:UB+r  games AA
+[558/600] seed 833000556: A:UB+w 2-1 B:WU+g  games BAA
+[559/600] seed 833000545: A:UG 2-0 B:WR+b  games AA
+[560/600] seed 833000565: A:WG 2-0 B:UR+g  games AA
+[561/600] seed 833000564: A:UR+w 1-2 B:RG  games ABB
+[562/600] seed 833000562: A:BG+u 2-0 B:WU+g  games AA
+[563/600] seed 833000559: A:BG+r 2-1 B:UG  games BAA
+[564/600] seed 833000567: A:UG+w 1-2 B:WR+u  games BAB
+[565/600] seed 833000570: A:UR+b 2-0 B:UB+g  games AA
+[566/600] seed 833000563: A:WB+g 2-0 B:UR  games AA
+[567/600] seed 833000538: A:UB 0-2 B:RG+u  games BB
+[568/600] seed 833000568: A:WU+g 2-1 B:UB+w  games BAA
+[569/600] seed 833000574: A:UB+g 2-0 B:WG+r  games AA
+[570/600] seed 833000573: A:UG+r 0-2 B:WU  games BB
+[571/600] seed 833000571: A:WB+u 2-1 B:UG+r  games BAA
+[572/600] seed 833000566: A:RG+w 2-1 B:WU+b  games ABA
+[573/600] seed 833000576: A:WU+b 2-0 B:UG+r  games AA
+[574/600] seed 833000578: A:UG 2-0 B:WB+u  games AA
+[575/600] seed 833000572: A:UB+w 0-2 B:WU+g  games BB
+[576/600] seed 833000577: A:WU+g 0-2 B:UB+g  games BB
+[577/600] seed 833000569: A:WB+u 0-2 B:UG+w  games BB
+[578/600] seed 833000579: A:UB 1-2 B:WG+u  games ABB
+[579/600] seed 833000582: A:UB+w 2-0 B:WU+r  games AA
+[580/600] seed 833000583: A:WB+g 0-2 B:WU  games BB
+[581/600] seed 833000581: A:WU+r 2-0 B:UR+g  games AA
+[582/600] seed 833000580: A:UR+g 1-2 B:UG+r  games ABB
+[583/600] seed 833000575: A:UB+w 0-2 B:UB+g  games BB
+[584/600] seed 833000588: A:RG 2-0 B:WU+b  games AA
+[585/600] seed 833000584: A:WU+g 2-1 B:UR+g  games ABA
+[586/600] seed 833000587: A:WU+r 2-0 B:UB+g  games AA
+[587/600] seed 833000585: A:UR+g 2-1 B:UB+g  games ABA
+[588/600] seed 833000586: A:UR+g 1-2 B:WG+u  games BAB
+[589/600] seed 833000591: A:WB+u 2-0 B:UB+g  games AA
+[590/600] seed 833000589: A:RG+u 2-1 B:UB+r  games ABA
+[591/600] seed 833000590: A:UR 1-2 B:UB+g  games ABB
+[592/600] seed 833000594: A:WB+g 1-2 B:WU  games BAB
+[593/600] seed 833000595: A:WU 0-2 B:RG+b  games BB
+[594/600] seed 833000592: A:UB 1-2 B:UG+w  games ABB
+[595/600] seed 833000596: A:WU+g 0-2 B:WR  games BB
+[596/600] seed 833000598: A:UR+b 2-1 B:WU+g  games ABA
+[597/600] seed 833000597: A:UR+w 2-0 B:WU+g  games AA
+[598/600] seed 833000600: A:WU+b 2-0 B:UR+g  games AA
+[599/600] seed 833000593: A:WU+g 1-2 B:UB  games BAB
+[600/600] seed 833000599: A:UR+g 2-1 B:WB+g  games ABA
+matches: 816 s for 600 (1.4 s a draft wall-clock on 7 worker(s))
+done in 818 s -> var/lab-j133/compare/runs/fair_fight/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/compare/runs/fair_fight
+== population synergy: var/lab-j133/cubes/synergy-cube-180.md
+cube lab: var/lab-j133/cubes/synergy-cube-180.md, grid, 600 draft(s) from seed 833000001, best of 3, 7 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j133/compare/runs/synergy
+drafted and built 600 draft(s) in 1.8 s; playing best of 3 each on 7 worker(s)
+[1/600] seed 833000004: A:BG 0-2 B:WU  games BB
+[2/600] seed 833000003: A:UG 0-2 B:WB  games BB
+[3/600] seed 833000007: A:UG 0-2 B:WU+g  games BB
+[4/600] seed 833000002: A:BR 2-0 B:WU+r  games AA
+[5/600] seed 833000006: A:UR 0-2 B:WG  games BB
+[6/600] seed 833000008: A:WG 0-2 B:WR  games BB
+[7/600] seed 833000011: A:UG 0-2 B:WB  games BB
+[8/600] seed 833000001: A:WB+g 0-2 B:WU  games BB
+[9/600] seed 833000009: A:BR 0-2 B:WU  games BB
+[10/600] seed 833000012: A:UG 0-2 B:WB+r  games BB
+[11/600] seed 833000005: A:UB 1-2 B:WG  games BAB
+[12/600] seed 833000016: A:WB 2-1 B:UG  games BAA
+[13/600] seed 833000015: A:RG 0-2 B:UB+g  games BB
+[14/600] seed 833000019: A:UG 0-2 B:WB  games BB
+[15/600] seed 833000018: A:WB 0-2 B:WU+g  games BB
+[16/600] seed 833000017: A:WU 2-0 B:BG  games AA
+[17/600] seed 833000021: A:WG 2-0 B:UG  games AA
+[18/600] seed 833000022: A:UB 2-0 B:UG  games AA
+[19/600] seed 833000014: A:UG 2-1 B:WR  games ABA
+[20/600] seed 833000023: A:UG 2-1 B:UR+w  games BAA
+[21/600] seed 833000026: A:WU 0-2 B:BG  games BB
+[22/600] seed 833000027: A:UG 0-2 B:WB  games BB
+[23/600] seed 833000028: A:UG 2-1 B:WU  games ABA
+[24/600] seed 833000024: A:WU+g 0-2 B:BG  games BB
+[25/600] seed 833000025: A:UG 0-2 B:WB  games BB
+[26/600] seed 833000032: A:WG 2-0 B:UR+w  games AA
+[27/600] seed 833000033: A:BR 2-0 B:UG  games AA
+[28/600] seed 833000034: A:WU 2-0 B:WG  games AA
+[29/600] seed 833000035: A:WB 2-0 B:UG  games AA
+[30/600] seed 833000031: A:UG 1-2 B:WG  games BAB
+[31/600] seed 833000030: A:WG 2-1 B:UB+g  games BAA
+[32/600] seed 833000038: A:WG 2-1 B:WU+g  games BAA
+[33/600] seed 833000037: A:UB 0-2 B:WG  games BB
+[34/600] seed 833000040: A:WG 0-2 B:BR  games BB
+[35/600] seed 833000039: A:UG 0-2 B:BG  games BB
+[36/600] seed 833000041: A:UG 0-2 B:WG  games BB
+[37/600] seed 833000043: A:WG 0-2 B:BG  games BB
+[38/600] seed 833000036: A:WB 2-0 B:UG  games AA
+[39/600] seed 833000020: A:WU 1-2 B:BG  games BAB
+[40/600] seed 833000044: A:UG 2-0 B:UR  games AA
+[41/600] seed 833000046: A:UR 0-2 B:WG  games BB
+[42/600] seed 833000042: A:BG 0-2 B:WU+g  games BB
+[43/600] seed 833000045: A:WG 2-0 B:BG  games AA
+[44/600] seed 833000048: A:WB 2-0 B:RG  games AA
+[45/600] seed 833000013: A:UR 2-0 B:WG  games AA
+[46/600] seed 833000051: A:BG 2-0 B:WR+u  games AA
+[47/600] seed 833000052: A:UB 0-2 B:WU  games BB
+[48/600] seed 833000047: A:UB 1-2 B:WG  games ABB
+[49/600] seed 833000054: A:BG 2-0 B:UG  games AA
+[50/600] seed 833000010: A:UG 1-2 B:WG  games ABB
+[51/600] seed 833000050: A:WR 2-1 B:UG  games ABA
+[52/600] seed 833000055: A:UB+g 1-2 B:WU  games BAB
+[53/600] seed 833000053: A:WU 1-2 B:WB+u  games ABB
+[54/600] seed 833000059: A:WG 2-0 B:UB  games AA
+[55/600] seed 833000060: A:UG 1-2 B:UB  games ABB
+[56/600] seed 833000058: A:UG 0-2 B:WB+u  games BB
+[57/600] seed 833000061: A:WG 1-2 B:WB  games BAB
+[58/600] seed 833000029: A:BG 0-2 B:WU  games BB
+[59/600] seed 833000062: A:UR 0-2 B:WB  games BB
+[60/600] seed 833000056: A:UG 0-2 B:WB  games BB
+[61/600] seed 833000064: A:WG 2-1 B:UB  games BAA
+[62/600] seed 833000065: A:WR 2-0 B:WB+u  games AA
+[63/600] seed 833000049: A:WG 2-0 B:UR+g  games AA
+[64/600] seed 833000068: A:BG 2-1 B:WU  games BAA
+[65/600] seed 833000070: A:WU+b 2-0 B:RG  games AA
+[66/600] seed 833000063: A:BG+u 0-2 B:WR  games BB
+[67/600] seed 833000071: A:UB 0-2 B:WG  games BB
+[68/600] seed 833000069: A:UB 2-1 B:WG+u  games BAA
+[69/600] seed 833000074: A:WU 2-1 B:UG  games ABA
+[70/600] seed 833000067: A:UG+w 0-2 B:WU  games BB
+[71/600] seed 833000057: A:WG 2-1 B:UB  games BAA
+[72/600] seed 833000073: A:WG 2-0 B:UG+r  games AA
+[73/600] seed 833000078: A:BG 1-2 B:UG  games ABB
+[74/600] seed 833000077: A:UG 2-0 B:UR+w  games AA
+[75/600] seed 833000080: A:WG 0-2 B:UR  games BB
+[76/600] seed 833000081: A:BG 0-2 B:WU  games BB
+[77/600] seed 833000082: A:WG 0-2 B:WB  games BB
+[78/600] seed 833000076: A:UR+w 0-2 B:UG  games BB
+[79/600] seed 833000084: A:WG 2-0 B:WU+g  games AA
+[80/600] seed 833000085: A:WG 0-2 B:WU  games BB
+[81/600] seed 833000086: A:UG 0-2 B:BR  games BB
+[82/600] seed 833000075: A:WG+b 2-0 B:WU  games AA
+[83/600] seed 833000083: A:WG 2-0 B:UR  games AA
+[84/600] seed 833000087: A:UB 0-2 B:WG+u  games BB
+[85/600] seed 833000088: A:UG 0-2 B:UB  games BB
+[86/600] seed 833000090: A:UR 0-2 B:WB  games BB
+[87/600] seed 833000091: A:WG 2-1 B:UB  games ABA
+[88/600] seed 833000092: A:BG 1-2 B:WB  games ABB
+[89/600] seed 833000094: A:UB+g 0-2 B:WR  games BB
+[90/600] seed 833000079: A:UR+g 2-1 B:WG  games BAA
+[91/600] seed 833000096: A:BG 2-0 B:UG  games AA
+[92/600] seed 833000093: A:UG 1-2 B:WG  games BAB
+[93/600] seed 833000095: A:WG 2-1 B:UR  games BAA
+[94/600] seed 833000099: A:UG 1-2 B:BR  games BAB
+[95/600] seed 833000101: A:RG 2-0 B:UB  games AA
+[96/600] seed 833000097: A:WG+u 1-2 B:WB  games BAB
+[97/600] seed 833000103: A:UG 0-2 B:WU  games BB
+[98/600] seed 833000089: A:UB 1-2 B:WG  games BAB
+[99/600] seed 833000102: A:WB 1-2 B:UG  games BAB
+[100/600] seed 833000105: A:WU+g 0-2 B:BG  games BB
+[101/600] seed 833000106: A:WU 0-2 B:UB  games BB
+[102/600] seed 833000104: A:WU 2-0 B:WR  games AA
+[103/600] seed 833000072: A:UB+g 1-2 B:WU  games BAB
+[104/600] seed 833000110: A:WB 2-0 B:UG  games AA
+[105/600] seed 833000109: A:UG 1-2 B:BR  games BAB
+[106/600] seed 833000112: A:UG 0-2 B:WR+u  games BB
+[107/600] seed 833000108: A:UG 2-1 B:WR  games ABA
+[108/600] seed 833000111: A:WU 2-1 B:WB  games BAA
+[109/600] seed 833000115: A:UB 0-2 B:WG  games BB
+[110/600] seed 833000113: A:UR 2-1 B:UG  games BAA
+[111/600] seed 833000116: A:UG 2-0 B:WU+g  games AA
+[112/600] seed 833000114: A:UG 0-2 B:WG  games BB
+[113/600] seed 833000119: A:UR+g 0-2 B:WG  games BB
+[114/600] seed 833000117: A:UB 0-2 B:WG  games BB
+[115/600] seed 833000118: A:WB 2-0 B:WG  games AA
+[116/600] seed 833000121: A:WB 2-1 B:UG  games BAA
+[117/600] seed 833000120: A:WG 2-1 B:BG  games BAA
+[118/600] seed 833000066: A:WU 1-2 B:UG  games BAB
+[119/600] seed 833000123: A:RG 1-2 B:WG  games BAB
+[120/600] seed 833000124: A:WG 1-2 B:UG  games BAB
+[121/600] seed 833000122: A:WB 2-0 B:UG  games AA
+[122/600] seed 833000128: A:WB 2-0 B:UG  games AA
+[123/600] seed 833000129: A:WG 2-0 B:UG  games AA
+[124/600] seed 833000127: A:UG 1-2 B:WR+u  games ABB
+[125/600] seed 833000125: A:WG 0-2 B:WU  games BB
+[126/600] seed 833000126: A:WB+g 2-0 B:UG  games AA
+[127/600] seed 833000131: A:WU 2-1 B:UG  games BAA
+[128/600] seed 833000130: A:UB 2-1 B:WG  games BAA
+[129/600] seed 833000132: A:UG 0-2 B:BG  games BB
+[130/600] seed 833000135: A:WG 2-0 B:UG  games AA
+[131/600] seed 833000133: A:WR 0-2 B:UG  games BB
+[132/600] seed 833000137: A:UR+g 0-2 B:WG+u  games BB
+[133/600] seed 833000138: A:WB+u 2-1 B:WR  games ABA
+[134/600] seed 833000136: A:WR+u 2-0 B:UG  games AA
+[135/600] seed 833000100: A:WU 0-2 B:UG  games BB
+[136/600] seed 833000140: A:WG+r 2-0 B:UG  games AA
+[137/600] seed 833000141: A:WG 2-0 B:UR  games AA
+[138/600] seed 833000142: A:WR 2-0 B:WG+u  games AA
+[139/600] seed 833000145: A:UR 0-2 B:WB  games BB
+[140/600] seed 833000143: A:WG 2-0 B:UB  games AA
+[141/600] seed 833000098: A:UB 2-0 B:WU  games AA
+[142/600] seed 833000148: A:WU 1-2 B:RG  games BAB
+[143/600] seed 833000146: A:UG 0-2 B:WB  games BB
+[144/600] seed 833000147: A:WU 2-1 B:UB  games BAA
+[145/600] seed 833000149: A:UR 0-2 B:WG  games BB
+[146/600] seed 833000151: A:UR 2-0 B:BG  games AA
+[147/600] seed 833000153: A:BR 1-2 B:WG  games BAB
+[148/600] seed 833000150: A:RG 1-2 B:UG  games BAB
+[149/600] seed 833000139: A:WU 1-2 B:RG  games ABB
+[150/600] seed 833000144: A:UG 1-2 B:UB+r  games BAB
+[151/600] seed 833000157: A:UG 0-2 B:WR  games BB
+[152/600] seed 833000155: A:BG 2-1 B:WU  games ABA
+[153/600] seed 833000152: A:UG+b 2-0 B:WG+u  games AA
+[154/600] seed 833000159: A:WG 0-2 B:UR  games BB
+[155/600] seed 833000134: A:UG 1-2 B:WU  games BAB
+[156/600] seed 833000158: A:BG 1-2 B:WR  games ABB
+[157/600] seed 833000156: A:UG 2-1 B:UR+g  games ABA
+[158/600] seed 833000160: A:UG 0-2 B:WR  games BB
+[159/600] seed 833000163: A:WB+g 1-2 B:UG  games BAB
+[160/600] seed 833000164: A:WU 2-0 B:UG+w  games AA
+[161/600] seed 833000162: A:UG 2-0 B:BR  games AA
+[162/600] seed 833000165: A:RG 0-2 B:WU  games BB
+[163/600] seed 833000166: A:BR 1-2 B:WU  games BAB
+[164/600] seed 833000167: A:WR 2-1 B:UG  games BAA
+[165/600] seed 833000168: A:BG 2-1 B:WU  games BAA
+[166/600] seed 833000169: A:UB 2-1 B:WG  games BAA
+[167/600] seed 833000172: A:BR 0-2 B:WU  games BB
+[168/600] seed 833000161: A:WB 1-2 B:WU  games BAB
+[169/600] seed 833000170: A:UG 2-0 B:UR  games AA
+[170/600] seed 833000175: A:WB 2-0 B:UG  games AA
+[171/600] seed 833000173: A:WU 2-0 B:BG  games AA
+[172/600] seed 833000176: A:WU 2-0 B:UG  games AA
+[173/600] seed 833000171: A:WB 2-1 B:WU  games ABA
+[174/600] seed 833000174: A:UG 1-2 B:UB  games BAB
+[175/600] seed 833000177: A:UB 2-1 B:RG  games ABA
+[176/600] seed 833000182: A:UG 0-2 B:WU  games BB
+[177/600] seed 833000179: A:BG 2-0 B:UR+g  games AA
+[178/600] seed 833000180: A:UG 1-2 B:BG  games BAB
+[179/600] seed 833000183: A:BG 0-2 B:WR  games BB
+[180/600] seed 833000185: A:UG+w 0-2 B:WG  games BB
+[181/600] seed 833000184: A:UR 0-2 B:WU  games BB
+[182/600] seed 833000186: A:UG 0-2 B:WR+u  games BB
+[183/600] seed 833000189: A:WG 2-1 B:UR  games BAA
+[184/600] seed 833000187: A:WU 0-2 B:UG  games BB
+[185/600] seed 833000191: A:WB+u 0-2 B:BR  games BB
+[186/600] seed 833000190: A:UR 0-2 B:WR  games BB
+[187/600] seed 833000192: A:UG 0-2 B:WU  games BB
+[188/600] seed 833000188: A:BG 1-2 B:WU  games BAB
+[189/600] seed 833000193: A:WR 2-0 B:UB  games AA
+[190/600] seed 833000195: A:WB 2-1 B:WU  games BAA
+[191/600] seed 833000196: A:UB+w 2-1 B:WG  games ABA
+[192/600] seed 833000198: A:WB 2-0 B:WR  games AA
+[193/600] seed 833000199: A:UG 2-0 B:BG+u  games AA
+[194/600] seed 833000200: A:UR 0-2 B:WG  games BB
+[195/600] seed 833000197: A:UG 2-1 B:WB  games BAA
+[196/600] seed 833000202: A:WU 0-2 B:WG  games BB
+[197/600] seed 833000201: A:WU 0-2 B:WB+g  games BB
+[198/600] seed 833000204: A:UB 2-0 B:UG  games AA
+[199/600] seed 833000178: A:UG 1-2 B:UR  games ABB
+[200/600] seed 833000194: A:UB 2-1 B:WG  games BAA
+[201/600] seed 833000205: A:UG 0-2 B:WU  games BB
+[202/600] seed 833000206: A:WB 2-0 B:RG  games AA
+[203/600] seed 833000208: A:WB+r 2-0 B:UG  games AA
+[204/600] seed 833000209: A:BG 1-2 B:WU  games BAB
+[205/600] seed 833000210: A:WB 2-0 B:UG  games AA
+[206/600] seed 833000203: A:WU 1-2 B:BG  games ABB
+[207/600] seed 833000211: A:BR 0-2 B:UB+g  games BB
+[208/600] seed 833000212: A:UG+w 0-2 B:WB  games BB
+[209/600] seed 833000181: A:WB 2-1 B:UR  games BAA
+[210/600] seed 833000214: A:WR 0-2 B:UG  games BB
+[211/600] seed 833000215: A:WB 0-2 B:UG  games BB
+[212/600] seed 833000218: A:UG 0-2 B:WB  games BB
+[213/600] seed 833000217: A:UG+w 1-2 B:BG  games BAB
+[214/600] seed 833000219: A:WU 2-0 B:BG+u  games AA
+[215/600] seed 833000220: A:WB 2-0 B:UG  games AA
+[216/600] seed 833000222: A:WB 2-0 B:UR+g  games AA
+[217/600] seed 833000216: A:UG 1-2 B:RG  games ABB
+[218/600] seed 833000221: A:WU 2-1 B:UB+g  games ABA
+[219/600] seed 833000213: A:WU 2-1 B:UG+r  games BAA
+[220/600] seed 833000223: A:WR 2-1 B:UB  games BAA
+[221/600] seed 833000225: A:UG 0-2 B:BR  games BB
+[222/600] seed 833000224: A:UB 1-2 B:WR  games BAB
+[223/600] seed 833000228: A:WG 2-0 B:UR  games AA
+[224/600] seed 833000230: A:UB 0-2 B:WB  games BB
+[225/600] seed 833000229: A:WG 2-0 B:WU+g  games AA
+[226/600] seed 833000227: A:WU 2-1 B:BG+w  games ABA
+[227/600] seed 833000231: A:WB 2-1 B:UR  games ABA
+[228/600] seed 833000234: A:UG 1-2 B:WU  games BAB
+[229/600] seed 833000232: A:BG+w 1-2 B:WG  games ABB
+[230/600] seed 833000226: A:UR 2-0 B:WG  games AA
+[231/600] seed 833000237: A:UB+w 2-1 B:WG  games BAA
+[232/600] seed 833000236: A:BR+w 2-0 B:UG  games AA
+[233/600] seed 833000238: A:WU 2-0 B:UG  games AA
+[234/600] seed 833000235: A:UG 1-2 B:UB+g  games BAB
+[235/600] seed 833000241: A:WB 0-2 B:WU  games BB
+[236/600] seed 833000240: A:UG 0-2 B:BG  games BB
+[237/600] seed 833000242: A:WU 2-0 B:BR  games AA
+[238/600] seed 833000239: A:WG 1-2 B:UR+g  games ABB
+[239/600] seed 833000244: A:WU 0-2 B:BG  games BB
+[240/600] seed 833000245: A:UG 0-2 B:UR  games BB
+[241/600] seed 833000247: A:BG+w 2-0 B:WU+g  games AA
+[242/600] seed 833000248: A:WB 1-2 B:BG  games BAB
+[243/600] seed 833000243: A:WG+u 2-0 B:UB  games AA
+[244/600] seed 833000233: A:WU 1-2 B:WG  games BAB
+[245/600] seed 833000246: A:UG 2-1 B:BG  games BAA
+[246/600] seed 833000249: A:WG 2-0 B:BG  games AA
+[247/600] seed 833000250: A:UR 1-2 B:WB  games BAB
+[248/600] seed 833000253: A:WU 2-0 B:BG  games AA
+[249/600] seed 833000252: A:BG 2-0 B:WU+g  games AA
+[250/600] seed 833000251: A:UR+g 1-2 B:WB  games BAB
+[251/600] seed 833000254: A:BG 2-0 B:UR+g  games AA
+[252/600] seed 833000256: A:UB+g 0-2 B:UG  games BB
+[253/600] seed 833000255: A:WU 1-2 B:WR  games BAB
+[254/600] seed 833000257: A:WR 2-1 B:UG  games BAA
+[255/600] seed 833000260: A:UG+w 0-2 B:WU+g  games BB
+[256/600] seed 833000261: A:UB+g 0-2 B:WR  games BB
+[257/600] seed 833000259: A:UB 2-1 B:BG  games ABA
+[258/600] seed 833000258: A:WG 0-2 B:UB  games BB
+[259/600] seed 833000264: A:WG 2-0 B:UR  games AA
+[260/600] seed 833000262: A:WG 2-1 B:UG+r  games BAA
+[261/600] seed 833000265: A:WU 2-0 B:UG  games AA
+[262/600] seed 833000266: A:WU 2-1 B:UB  games BAA
+[263/600] seed 833000269: A:BR 0-2 B:UG  games BB
+[264/600] seed 833000270: A:UG 0-2 B:WU  games BB
+[265/600] seed 833000268: A:UG+w 0-2 B:UG  games BB
+[266/600] seed 833000271: A:UB 1-2 B:WG  games ABB
+[267/600] seed 833000272: A:RG+w 0-2 B:WU  games BB
+[268/600] seed 833000274: A:UG 2-1 B:WU  games BAA
+[269/600] seed 833000275: A:WU 2-0 B:UG  games AA
+[270/600] seed 833000267: A:UB 0-2 B:WG  games BB
+[271/600] seed 833000276: A:WB 2-0 B:UR  games AA
+[272/600] seed 833000277: A:WU 2-1 B:BG  games ABA
+[273/600] seed 833000278: A:BG 1-2 B:WU+r  games BAB
+[274/600] seed 833000280: A:WB 2-0 B:UG  games AA
+[275/600] seed 833000281: A:WB 1-2 B:WG  games BAB
+[276/600] seed 833000273: A:UB 1-2 B:UG  games BAB
+[277/600] seed 833000263: A:UG 2-1 B:BG  games BAA
+[278/600] seed 833000283: A:UG 0-2 B:BG  games BB
+[279/600] seed 833000284: A:WG 2-0 B:UB  games AA
+[280/600] seed 833000286: A:WB 0-2 B:UG  games BB
+[281/600] seed 833000285: A:UB+g 2-1 B:UG  games ABA
+[282/600] seed 833000288: A:WB+u 2-1 B:BG  games BAA
+[283/600] seed 833000289: A:WG 2-0 B:BG  games AA
+[284/600] seed 833000287: A:WB 2-0 B:UR+w  games AA
+[285/600] seed 833000282: A:UG 0-2 B:WR+u  games BB
+[286/600] seed 833000290: A:WG 2-1 B:BR  games BAA
+[287/600] seed 833000293: A:UR+g 0-2 B:WU  games BB
+[288/600] seed 833000294: A:WU 0-2 B:BR  games BB
+[289/600] seed 833000291: A:RG 2-1 B:UG  games BAA
+[290/600] seed 833000292: A:WU+g 2-0 B:UG  games AA
+[291/600] seed 833000296: A:UG 2-1 B:WR+b  games BAA
+[292/600] seed 833000154: A:UR 1-1 B:UG  games AB  ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted
+[293/600] seed 833000298: A:UG 1-2 B:WU  games ABB
+[294/600] seed 833000279: A:UR+g 0-2 B:WG  games BB
+[295/600] seed 833000301: A:UG 0-2 B:WR  games BB
+[296/600] seed 833000300: A:UR 2-1 B:WB  games BAA
+[297/600] seed 833000302: A:WG 2-0 B:UB+r  games AA
+[298/600] seed 833000303: A:WG 2-0 B:BG  games AA
+[299/600] seed 833000295: A:UG 2-1 B:WU  games BAA
+[300/600] seed 833000297: A:UG 0-2 B:UG  games BB
+[301/600] seed 833000304: A:WU 1-2 B:WG+u  games ABB
+[302/600] seed 833000306: A:WB 2-1 B:UG  games ABA
+[303/600] seed 833000307: A:WU 0-2 B:BG  games BB
+[304/600] seed 833000308: A:BR 0-2 B:WU  games BB
+[305/600] seed 833000305: A:WU 2-0 B:UG  games AA
+[306/600] seed 833000309: A:UR+g 0-2 B:UB  games BB
+[307/600] seed 833000310: A:WU 2-1 B:BG  games BAA
+[308/600] seed 833000312: A:UG+w 0-2 B:WU  games BB
+[309/600] seed 833000311: A:WB+g 2-0 B:UG  games AA
+[310/600] seed 833000313: A:UG 0-2 B:WB  games BB
+[311/600] seed 833000316: A:UG 0-2 B:WU  games BB
+[312/600] seed 833000315: A:UR+w 0-2 B:WR  games BB
+[313/600] seed 833000314: A:WG 2-0 B:UR+g  games AA
+[314/600] seed 833000299: A:WB 2-1 B:WU  games BAA
+[315/600] seed 833000318: A:WU 1-2 B:BR+w  games BAB
+[316/600] seed 833000317: A:BR 2-1 B:WU  games BAA
+[317/600] seed 833000321: A:UB 0-2 B:WU  games BB
+[318/600] seed 833000320: A:WG 2-0 B:UR  games AA
+[319/600] seed 833000322: A:BG 2-0 B:UR  games AA
+[320/600] seed 833000207: A:UG 0-2 B:WU  games BTB
+[321/600] seed 833000326: A:BR 0-2 B:UG  games BB
+[322/600] seed 833000324: A:WU 2-0 B:UR+g  games AA
+[323/600] seed 833000323: A:WB 2-1 B:UG  games BAA
+[324/600] seed 833000328: A:WU 1-2 B:UB  games BAB
+[325/600] seed 833000327: A:UG 2-0 B:UR  games AA
+[326/600] seed 833000325: A:UG+w 1-2 B:BG  games BAB
+[327/600] seed 833000329: A:UB 1-2 B:UG  games ABB
+[328/600] seed 833000330: A:WG 2-1 B:UB  games ABA
+[329/600] seed 833000332: A:WG 1-2 B:UB  games BAB
+[330/600] seed 833000336: A:WG 2-0 B:BG  games AA
+[331/600] seed 833000334: A:WU+g 1-2 B:UG  games BAB
+[332/600] seed 833000331: A:BG 2-1 B:WU  games ABA
+[333/600] seed 833000338: A:WB 1-2 B:WU  games BAB
+[334/600] seed 833000333: A:WU 2-0 B:WB  games AA
+[335/600] seed 833000341: A:BG 0-2 B:WU  games BB
+[336/600] seed 833000340: A:WB 2-0 B:UG  games AA
+[337/600] seed 833000339: A:UG+r 0-2 B:WG  games BB
+[338/600] seed 833000337: A:BG 1-2 B:WU  games BAB
+[339/600] seed 833000342: A:WB 2-1 B:UR  games BAA
+[340/600] seed 833000343: A:UG+w 2-0 B:UR+w  games AA
+[341/600] seed 833000347: A:BG 2-0 B:WU  games AA
+[342/600] seed 833000345: A:UR 2-1 B:WB  games ABA
+[343/600] seed 833000348: A:UG 0-2 B:WU  games BB
+[344/600] seed 833000344: A:WB 2-0 B:UR  games AA
+[345/600] seed 833000350: A:UG 0-2 B:WG  games BB
+[346/600] seed 833000349: A:UG 0-2 B:WR  games BB
+[347/600] seed 833000353: A:UR+g 2-0 B:BG  games AA
+[348/600] seed 833000352: A:WG 2-0 B:BG  games AA
+[349/600] seed 833000351: A:UR+g 1-2 B:WG  games BAB
+[350/600] seed 833000107: A:UG+w 0-0 B:WG  games T  ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted
+[351/600] seed 833000354: A:UR 1-2 B:WG  games BAB
+[352/600] seed 833000357: A:WB 0-2 B:WU  games BB
+[353/600] seed 833000356: A:UB 0-2 B:WU  games BB
+[354/600] seed 833000358: A:WU 2-0 B:UG  games AA
+[355/600] seed 833000360: A:UR+g 0-2 B:WB  games BB
+[356/600] seed 833000355: A:UR+w 0-2 B:WU  games BB
+[357/600] seed 833000361: A:UR 1-2 B:WG  games ABB
+[358/600] seed 833000335: A:WU 2-1 B:BG  games ABA
+[359/600] seed 833000346: A:UR 0-2 B:UG+w  games BB
+[360/600] seed 833000359: A:WU+g 2-0 B:UG  games AA
+[361/600] seed 833000364: A:UB+g 1-2 B:WR+g  games BAB
+[362/600] seed 833000365: A:WU 2-0 B:BR  games AA
+[363/600] seed 833000362: A:UR 1-2 B:WU+g  games ABB
+[364/600] seed 833000369: A:UG 2-1 B:WU+g  games BAA
+[365/600] seed 833000368: A:UB 0-2 B:WU  games BB
+[366/600] seed 833000370: A:UR 2-1 B:UG  games ABA
+[367/600] seed 833000371: A:UG 0-2 B:BR+w  games BB
+[368/600] seed 833000366: A:WG 2-1 B:UR+w  games BAA
+[369/600] seed 833000373: A:UG 1-2 B:WB  games BAB
+[370/600] seed 833000376: A:WG 2-0 B:UG+w  games AA
+[371/600] seed 833000367: A:WB 2-1 B:UG  games ABA
+[372/600] seed 833000372: A:UR+w 0-2 B:UG  games BB
+[373/600] seed 833000363: A:WG 2-1 B:UG  games BAA
+[374/600] seed 833000378: A:WG+b 2-1 B:UG  games BAA
+[375/600] seed 833000379: A:UB 2-0 B:WG  games AA
+[376/600] seed 833000319: A:UB+g 0-2 B:WG  games BB
+[377/600] seed 833000377: A:BG 2-1 B:WU  games ABA
+[378/600] seed 833000381: A:UR 0-2 B:WU  games BB
+[379/600] seed 833000374: A:UG 2-1 B:WU  games BAA
+[380/600] seed 833000383: A:WG 2-0 B:UB  games AA
+[381/600] seed 833000386: A:WU 2-0 B:BR  games AA
+[382/600] seed 833000387: A:WB 2-1 B:UG  games ABA
+[383/600] seed 833000388: A:WU 2-1 B:UG  games BAA
+[384/600] seed 833000380: A:WU+g 1-2 B:WG  games ABB
+[385/600] seed 833000390: A:WU 2-1 B:UR  games ABA
+[386/600] seed 833000389: A:WU+g 0-2 B:UG  games BB
+[387/600] seed 833000393: A:WU 2-0 B:BG  games AA
+[388/600] seed 833000392: A:UG 0-2 B:WU  games BB
+[389/600] seed 833000391: A:UG 2-0 B:UR+w  games AA
+[390/600] seed 833000384: A:WG 2-1 B:UG  games BAA
+[391/600] seed 833000394: A:BG+w 0-2 B:WG  games BB
+[392/600] seed 833000397: A:UG 0-2 B:WG  games BB
+[393/600] seed 833000398: A:RG 0-2 B:WU  games BB
+[394/600] seed 833000396: A:UG 1-2 B:WB  games ABB
+[395/600] seed 833000395: A:UG 1-2 B:UB  games BAB
+[396/600] seed 833000399: A:UR+g 0-2 B:UB  games BB
+[397/600] seed 833000401: A:WG 1-2 B:UB+g  games BAB
+[398/600] seed 833000404: A:UR+g 0-2 B:BG  games BB
+[399/600] seed 833000400: A:UG 2-0 B:UB  games AA
+[400/600] seed 833000405: A:UR 0-2 B:WB  games BB
+[401/600] seed 833000402: A:UB 2-1 B:WG  games BAA
+[402/600] seed 833000406: A:BR+w 1-2 B:UB+w  games ABB
+[403/600] seed 833000407: A:WG 0-2 B:WU  games BB
+[404/600] seed 833000385: A:UG+b 2-1 B:WU+r  games BAA
+[405/600] seed 833000410: A:UG+b 0-2 B:WB  games BB
+[406/600] seed 833000411: A:UG 0-2 B:UB  games BB
+[407/600] seed 833000412: A:WG 1-2 B:UB  games BAB
+[408/600] seed 833000409: A:WU+g 2-1 B:UG  games BAA
+[409/600] seed 833000414: A:WU 2-0 B:BR  games AA
+[410/600] seed 833000415: A:BR 0-2 B:WU  games BB
+[411/600] seed 833000413: A:WB 1-2 B:WU  games BAB
+[412/600] seed 833000416: A:UG 1-2 B:WB  games ABB
+[413/600] seed 833000408: A:BG 0-2 B:WR  games BB
+[414/600] seed 833000418: A:UG 0-2 B:WU  games BB
+[415/600] seed 833000417: A:BR 0-2 B:WU  games BB
+[416/600] seed 833000421: A:WG 0-2 B:WB  games BB
+[417/600] seed 833000420: A:WG 1-2 B:UR  games ABB
+[418/600] seed 833000422: A:UG 1-2 B:WR  games ABB
+[419/600] seed 833000423: A:BG 0-2 B:WU  games BB
+[420/600] seed 833000424: A:WG 2-0 B:UB  games AA
+[421/600] seed 833000425: A:UG+w 1-2 B:WB  games ABB
+[422/600] seed 833000428: A:WU 0-2 B:WG  games BB
+[423/600] seed 833000426: A:UG 2-1 B:BR  games BAA
+[424/600] seed 833000429: A:UB 2-1 B:UG  games BAA
+[425/600] seed 833000431: A:BR 2-0 B:UR+g  games AA
+[426/600] seed 833000430: A:UB 1-2 B:WG  games ABB
+[427/600] seed 833000419: A:WU 0-2 B:WB  games BB
+[428/600] seed 833000433: A:WG+u 1-2 B:WR  games ABB
+[429/600] seed 833000375: A:WG 2-0 B:UB  games AA
+[430/600] seed 833000427: A:UG 0-2 B:WR  games BB
+[431/600] seed 833000436: A:UR 0-2 B:WG  games BB
+[432/600] seed 833000434: A:UG 2-0 B:WU+r  games AA
+[433/600] seed 833000438: A:BG 1-2 B:WR  games BAB
+[434/600] seed 833000439: A:WG+b 0-2 B:BG  games BB
+[435/600] seed 833000437: A:WU 2-1 B:UB+g  games BAA
+[436/600] seed 833000440: A:WR 2-0 B:BG+w  games AA
+[437/600] seed 833000442: A:WU+b 2-1 B:BG  games BAA
+[438/600] seed 833000432: A:UR 1-2 B:WG  games ABB
+[439/600] seed 833000445: A:BR 0-2 B:WG  games BB
+[440/600] seed 833000444: A:UG 0-2 B:WB+r  games BB
+[441/600] seed 833000435: A:WG 2-1 B:WR  games BAA
+[442/600] seed 833000446: A:UB 2-0 B:WG+u  games AA
+[443/600] seed 833000447: A:RG 0-2 B:UG  games BB
+[444/600] seed 833000449: A:WU 2-0 B:UG  games AA
+[445/600] seed 833000448: A:BR 2-1 B:UG  games BAA
+[446/600] seed 833000443: A:UG 1-2 B:BG  games ABB
+[447/600] seed 833000451: A:WB 2-0 B:UR  games AA
+[448/600] seed 833000453: A:UB+w 0-2 B:WG  games BB
+[449/600] seed 833000441: A:WG 1-2 B:WR  games BAB
+[450/600] seed 833000454: A:BR 2-1 B:UG  games ABA
+[451/600] seed 833000456: A:WU 2-0 B:UB  games AA
+[452/600] seed 833000452: A:UB 0-2 B:UG  games BB
+[453/600] seed 833000458: A:WU 2-0 B:BR  games AA
+[454/600] seed 833000450: A:UG 2-0 B:WG  games AA
+[455/600] seed 833000455: A:BG 2-0 B:UG+w  games AA
+[456/600] seed 833000460: A:WR 2-1 B:UG  games ABA
+[457/600] seed 833000459: A:UB 2-0 B:WG  games AA
+[458/600] seed 833000463: A:UR+g 0-2 B:WG  games BB
+[459/600] seed 833000461: A:UG 2-0 B:WB  games AA
+[460/600] seed 833000464: A:WU 2-0 B:BR  games AA
+[461/600] seed 833000466: A:UB 2-0 B:RG  games AA
+[462/600] seed 833000467: A:UG+w 0-2 B:WG  games BB
+[463/600] seed 833000465: A:UR 2-0 B:BG  games AA
+[464/600] seed 833000468: A:UR+g 1-2 B:WG  games ABB
+[465/600] seed 833000470: A:WU 1-2 B:UG  games ABB
+[466/600] seed 833000462: A:WB 2-0 B:UG  games AA
+[467/600] seed 833000471: A:UG 2-1 B:UB  games ABA
+[468/600] seed 833000473: A:WU 2-1 B:WB  games BAA
+[469/600] seed 833000469: A:UG 2-0 B:WB+g  games AA
+[470/600] seed 833000475: A:WB 2-1 B:WU  games BAA
+[471/600] seed 833000382: A:WU 1-2 B:WG+b  games ABB
+[472/600] seed 833000478: A:WU 1-2 B:UB  games BAB
+[473/600] seed 833000476: A:UG 0-2 B:WB+g  games BB
+[474/600] seed 833000457: A:WB 2-1 B:WG  games BAA
+[475/600] seed 833000481: A:WG 2-0 B:UR  games AA
+[476/600] seed 833000477: A:WU 2-0 B:WG+u  games AA
+[477/600] seed 833000482: A:WU 2-0 B:RG  games AA
+[478/600] seed 833000480: A:WR 2-0 B:UB  games AA
+[479/600] seed 833000483: A:WB 2-0 B:UG  games AA
+[480/600] seed 833000484: A:WG 2-0 B:UR  games AA
+[481/600] seed 833000474: A:WG 2-1 B:UB  games BAA
+[482/600] seed 833000486: A:WR 0-2 B:UB  games BB
+[483/600] seed 833000488: A:WG 1-2 B:WB  games BAB
+[484/600] seed 833000489: A:WU 0-2 B:BR  games BB
+[485/600] seed 833000479: A:UR 1-2 B:WU+g  games ABB
+[486/600] seed 833000491: A:WU 0-2 B:WG  games BB
+[487/600] seed 833000490: A:WB 2-1 B:UB  games ABA
+[488/600] seed 833000492: A:UB 0-2 B:WU  games BB
+[489/600] seed 833000494: A:UR 0-2 B:WB  games BB
+[490/600] seed 833000495: A:WU 2-1 B:RG  games BAA
+[491/600] seed 833000493: A:BG+u 0-2 B:WG  games BB
+[492/600] seed 833000498: A:UG 0-2 B:WR  games BB
+[493/600] seed 833000499: A:UG 2-0 B:WB  games AA
+[494/600] seed 833000497: A:WU 1-2 B:BG  games ABB
+[495/600] seed 833000500: A:WG 2-0 B:UR  games AA
+[496/600] seed 833000502: A:UB+g 1-2 B:WU  games ABB
+[497/600] seed 833000496: A:UR 0-2 B:UB  games BB
+[498/600] seed 833000503: A:WG 2-0 B:UB  games AA
+[499/600] seed 833000487: A:UG 2-1 B:WB  games BAA
+[500/600] seed 833000501: A:WU 0-2 B:UR  games BB
+[501/600] seed 833000505: A:WU 0-2 B:BG+u  games BB
+[502/600] seed 833000507: A:WG 0-2 B:WB  games BB
+[503/600] seed 833000509: A:WB 2-1 B:UR+g  games ABA
+[504/600] seed 833000504: A:BG 2-0 B:UR+g  games AA
+[505/600] seed 833000510: A:WG 2-1 B:UR  games BAA
+[506/600] seed 833000506: A:UG 0-2 B:WG+u  games BB
+[507/600] seed 833000513: A:WR 2-0 B:BG  games AA
+[508/600] seed 833000512: A:WG 0-2 B:UR  games BB
+[509/600] seed 833000514: A:WG 2-0 B:UG  games AA
+[510/600] seed 833000511: A:UB 0-2 B:WG  games BB
+[511/600] seed 833000516: A:BG 2-1 B:WU  games BAA
+[512/600] seed 833000485: A:WB 2-1 B:UG  games ABA
+[513/600] seed 833000518: A:BG 2-0 B:UG  games AA
+[514/600] seed 833000517: A:WG 0-2 B:UR  games BB
+[515/600] seed 833000515: A:UR 2-1 B:WU+g  games BAA
+[516/600] seed 833000521: A:BG+w 0-2 B:WU  games BB
+[517/600] seed 833000522: A:UG 0-2 B:WB  games BB
+[518/600] seed 833000523: A:WU 1-2 B:UG  games BAB
+[519/600] seed 833000520: A:BG 1-2 B:WU  games BAB
+[520/600] seed 833000524: A:WU 2-1 B:UG  games BAA
+[521/600] seed 833000526: A:UB 2-0 B:WU+g  games AA
+[522/600] seed 833000525: A:UG 0-2 B:UB+r  games BB
+[523/600] seed 833000529: A:WU 2-0 B:UB+g  games AA
+[524/600] seed 833000472: A:UG 0-2 B:WU  games BB
+[525/600] seed 833000528: A:UB 1-2 B:WG  games ABB
+[526/600] seed 833000531: A:UG 1-2 B:WU+g  games BAB
+[527/600] seed 833000533: A:WU 0-2 B:WR+g  games BB
+[528/600] seed 833000527: A:WU 1-2 B:WG  games ABB
+[529/600] seed 833000532: A:WU 2-1 B:RG  games ABA
+[530/600] seed 833000534: A:UG 0-2 B:UR+b  games BB
+[531/600] seed 833000403: A:WU 0-2 B:UG  games TBB
+[532/600] seed 833000538: A:UB 2-0 B:RG  games AA
+[533/600] seed 833000539: A:UG 2-0 B:BG+w  games AA
+[534/600] seed 833000535: A:UB 2-1 B:UG  games ABA
+[535/600] seed 833000540: A:WG 2-1 B:WU  games BAA
+[536/600] seed 833000542: A:UG 0-2 B:WR  games BB
+[537/600] seed 833000537: A:WU 2-1 B:BG  games ABA
+[538/600] seed 833000544: A:WG 1-2 B:BG  games ABB
+[539/600] seed 833000536: A:WG 2-0 B:UR+g  games AA
+[540/600] seed 833000530: A:WU 1-2 B:UB  games ABB
+[541/600] seed 833000543: A:UR+w 2-1 B:WR  games ABA
+[542/600] seed 833000546: A:WB+g 2-0 B:UG  games AA
+[543/600] seed 833000508: A:WG+r 1-2 B:WU+b  games BAB
+[544/600] seed 833000547: A:WB 2-0 B:BG  games AA
+[545/600] seed 833000541: A:WU 2-1 B:BG  games BAA
+[546/600] seed 833000552: A:WG 2-0 B:UG+w  games AA
+[547/600] seed 833000549: A:UG 1-2 B:WG  games ABB
+[548/600] seed 833000548: A:UG 2-0 B:UB+w  games AA
+[549/600] seed 833000553: A:BG 0-2 B:WU  games BB
+[550/600] seed 833000555: A:WB 0-2 B:UG  games BB
+[551/600] seed 833000556: A:UG 0-2 B:WU  games BB
+[552/600] seed 833000551: A:WU+g 1-2 B:WG+b  games BAB
+[553/600] seed 833000557: A:WU+r 2-0 B:BR  games AA
+[554/600] seed 833000559: A:UB 0-2 B:UG  games BB
+[555/600] seed 833000550: A:UG 0-2 B:WR  games BB
+[556/600] seed 833000560: A:WR 2-0 B:UB+w  games AA
+[557/600] seed 833000563: A:BG 2-1 B:UG  games ABA
+[558/600] seed 833000554: A:BG 2-0 B:UR+g  games AA
+[559/600] seed 833000558: A:UG 2-1 B:UB  games BAA
+[560/600] seed 833000564: A:UR 1-2 B:UG  games ABB
+[561/600] seed 833000565: A:UG 0-2 B:WB  games BB
+[562/600] seed 833000566: A:WG 2-0 B:UB  games AA
+[563/600] seed 833000561: A:WU 1-2 B:RG  games BAB
+[564/600] seed 833000568: A:WB 2-1 B:WU  games BAA
+[565/600] seed 833000567: A:WU 2-0 B:UB  games AA
+[566/600] seed 833000572: A:UG 2-0 B:RG  games AA
+[567/600] seed 833000571: A:UB 1-2 B:WG  games BAB
+[568/600] seed 833000570: A:UG 0-2 B:WG+u  games BB
+[569/600] seed 833000575: A:UR 0-2 B:WU  games BB
+[570/600] seed 833000573: A:WU 1-2 B:UG+w  games ABB
+[571/600] seed 833000576: A:UG 0-2 B:WB  games BB
+[572/600] seed 833000577: A:UG 2-0 B:WU  games AA
+[573/600] seed 833000578: A:BG 0-2 B:WU  games BB
+[574/600] seed 833000574: A:WG 2-1 B:BR  games ABA
+[575/600] seed 833000579: A:WR 2-1 B:UG  games BAA
+[576/600] seed 833000582: A:WB 2-0 B:RG  games AA
+[577/600] seed 833000583: A:WR 2-0 B:UB  games AA
+[578/600] seed 833000580: A:WB 2-0 B:UG  games AA
+[579/600] seed 833000581: A:WG 1-2 B:BG  games BAB
+[580/600] seed 833000584: A:WG 1-2 B:UG  games ABB
+[581/600] seed 833000587: A:WU 2-0 B:WG+u  games AA
+[582/600] seed 833000585: A:WG 2-1 B:WU+g  games ABA
+[583/600] seed 833000589: A:WG 2-1 B:UB  games BAA
+[584/600] seed 833000590: A:UR+w 2-1 B:WU  games ABA
+[585/600] seed 833000562: A:UB 2-1 B:UG  games BAA
+[586/600] seed 833000588: A:WU 1-2 B:WB+u  games BAB
+[587/600] seed 833000591: A:UB 2-0 B:WU  games AA
+[588/600] seed 833000592: A:WB+g 2-1 B:UR  games ABA
+[589/600] seed 833000593: A:WU+b 2-1 B:BR  games BAA
+[590/600] seed 833000569: A:WG 2-0 B:UB  games AA
+[591/600] seed 833000597: A:BR 2-0 B:UG  games AA
+[592/600] seed 833000595: A:WU 2-0 B:UG  games AA
+[593/600] seed 833000599: A:UG 0-2 B:WB  games BB
+[594/600] seed 833000596: A:WG 1-2 B:WB  games ABB
+[595/600] seed 833000586: A:UR+g 2-0 B:UG  games AA
+[596/600] seed 833000600: A:WB 2-1 B:WU  games BAA
+[597/600] seed 833000594: A:WU 1-2 B:WG  games BAB
+[598/600] seed 833000598: A:UG 0-2 B:BG  games BB
+[599/600] seed 833000519: A:WG 1-1 B:UG  games BTA
+[600/600] seed 833000545: A:WR 2-1 B:UG  games BAA
+matches: 1641 s for 600 (2.7 s a draft wall-clock on 7 worker(s))
+done in 1643 s -> var/lab-j133/compare/runs/synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/compare/runs/synergy
+== population synergy_v1: cubes/synergy-cube-180.md
+cube lab: cubes/synergy-cube-180.md, grid, 600 draft(s) from seed 833000001, best of 3, 7 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j133/compare/runs/synergy_v1
+drafted and built 600 draft(s) in 1.8 s; playing best of 3 each on 7 worker(s)
+[1/600] seed 833000003: A:WR 2-0 B:UG  games AA
+[2/600] seed 833000004: A:BG 2-0 B:UG  games AA
+[3/600] seed 833000005: A:WB 1-2 B:WU  games ABB
+[4/600] seed 833000008: A:UG 1-2 B:WU  games BAB
+[5/600] seed 833000009: A:RG 2-0 B:WU  games AA
+[6/600] seed 833000010: A:UG+b 0-2 B:WU  games BB
+[7/600] seed 833000013: A:UG 0-2 B:WU  games BB
+[8/600] seed 833000011: A:UG 2-1 B:WB  games BAA
+[9/600] seed 833000001: A:WG 1-2 B:UB  games BAB
+[10/600] seed 833000012: A:UR 1-2 B:WU  games ABB
+[11/600] seed 833000015: A:RG 2-1 B:WU  games BAA
+[12/600] seed 833000002: A:BR 0-2 B:UG  games BB
+[13/600] seed 833000014: A:UG 0-2 B:WU  games BB
+[14/600] seed 833000016: A:WG+u 0-2 B:UG  games BB
+[15/600] seed 833000021: A:BG 2-0 B:WU  games AA
+[16/600] seed 833000020: A:UR 1-2 B:WG  games BAB
+[17/600] seed 833000019: A:UG 2-1 B:UB  games ABA
+[18/600] seed 833000022: A:BG 1-2 B:UR  games ABB
+[19/600] seed 833000023: A:WU 2-0 B:BR  games AA
+[20/600] seed 833000006: A:UG 1-2 B:WU  games BAB
+[21/600] seed 833000024: A:RG 0-2 B:WU  games BB
+[22/600] seed 833000026: A:WU 2-0 B:BG  games AA
+[23/600] seed 833000007: A:WU 1-2 B:UG  games ABB
+[24/600] seed 833000028: A:UG 0-2 B:WU  games BB
+[25/600] seed 833000029: A:UG 0-2 B:UR+g  games BB
+[26/600] seed 833000018: A:WU 2-0 B:UR+g  games AA
+[27/600] seed 833000027: A:UG 1-2 B:BG  games ABB
+[28/600] seed 833000031: A:UG 1-2 B:WU  games ABB
+[29/600] seed 833000034: A:WG 2-0 B:UG  games AA
+[30/600] seed 833000017: A:UR 1-2 B:UG  games ABB
+[31/600] seed 833000037: A:WU 0-2 B:WR+b  games BB
+[32/600] seed 833000032: A:UG 2-1 B:UB+g  games ABA
+[33/600] seed 833000035: A:WU 2-0 B:UG+w  games AA
+[34/600] seed 833000038: A:WR 2-0 B:BG  games AA
+[35/600] seed 833000040: A:RG 0-2 B:WU  games BB
+[36/600] seed 833000030: A:BG 2-0 B:WU+r  games AA
+[37/600] seed 833000041: A:WU 2-0 B:UR+w  games AA
+[38/600] seed 833000043: A:WU 2-1 B:UG  games BAA
+[39/600] seed 833000044: A:UG 0-2 B:UB+w  games BB
+[40/600] seed 833000033: A:UB 1-2 B:WU  games ABB
+[41/600] seed 833000046: A:UG 0-2 B:WU  games BB
+[42/600] seed 833000036: A:WU 1-2 B:UR+g  games ABB
+[43/600] seed 833000025: A:WB 2-0 B:WU  games AA
+[44/600] seed 833000048: A:WU 2-0 B:UR  games AA
+[45/600] seed 833000039: A:WU 2-1 B:UG  games ABA
+[46/600] seed 833000051: A:WB 2-0 B:RG  games AA
+[47/600] seed 833000050: A:WG 2-0 B:UR  games AA
+[48/600] seed 833000052: A:UB 0-2 B:WG  games BB
+[49/600] seed 833000055: A:UG 0-2 B:WU  games BB
+[50/600] seed 833000053: A:WU 0-2 B:BG  games BB
+[51/600] seed 833000047: A:WU 2-1 B:BG  games ABA
+[52/600] seed 833000056: A:WG 2-0 B:UG+r  games AA
+[53/600] seed 833000054: A:UG+w 0-2 B:UB  games BB
+[54/600] seed 833000059: A:UG 0-2 B:UB  games BB
+[55/600] seed 833000057: A:UR+g 0-2 B:WU  games BB
+[56/600] seed 833000049: A:WR 2-0 B:UG  games AA
+[57/600] seed 833000062: A:UR 2-1 B:WB  games ABA
+[58/600] seed 833000061: A:UR 0-2 B:WG  games BB
+[59/600] seed 833000060: A:WG 1-2 B:WU+g  games ABB
+[60/600] seed 833000063: A:UG 1-2 B:WU  games BAB
+[61/600] seed 833000065: A:UG 0-2 B:WU+b  games BB
+[62/600] seed 833000066: A:WU 2-1 B:UB+w  games BAA
+[63/600] seed 833000058: A:BG+w 1-2 B:WU  games BAB
+[64/600] seed 833000068: A:WU+b 0-2 B:WU  games BB
+[65/600] seed 833000069: A:UR 1-2 B:WU  games BAB
+[66/600] seed 833000067: A:WU+r 2-1 B:UG  games BAA
+[67/600] seed 833000071: A:WU 2-0 B:UG  games AA
+[68/600] seed 833000072: A:UB+g 0-2 B:WG  games BB
+[69/600] seed 833000070: A:WU+b 2-1 B:UG  games BAA
+[70/600] seed 833000075: A:WU+g 2-0 B:WG  games AA
+[71/600] seed 833000076: A:WU 2-0 B:BG  games AA
+[72/600] seed 833000064: A:UG 1-2 B:WR  games BAB
+[73/600] seed 833000074: A:WG 2-1 B:UB  games ABA
+[74/600] seed 833000078: A:UB 2-1 B:WG  games ABA
+[75/600] seed 833000080: A:WG 2-1 B:UB  games ABA
+[76/600] seed 833000073: A:WB 2-1 B:UG  games ABA
+[77/600] seed 833000045: A:UR 0-2 B:WG+u  games BB
+[78/600] seed 833000083: A:WU 2-0 B:UG  games AA
+[79/600] seed 833000084: A:WU 2-0 B:UR+b  games AA
+[80/600] seed 833000086: A:UG 2-0 B:WB  games AA
+[81/600] seed 833000085: A:BG 2-1 B:WU+g  games BAA
+[82/600] seed 833000042: A:UG 2-1 B:WG+u  games BAA
+[83/600] seed 833000081: A:UR 2-0 B:WU  games AA
+[84/600] seed 833000087: A:WB 2-1 B:WG  games BAA
+[85/600] seed 833000088: A:WU 1-2 B:BR  games ABB
+[86/600] seed 833000090: A:WU 1-2 B:WG  games BAB
+[87/600] seed 833000093: A:UG 0-2 B:WG  games BB
+[88/600] seed 833000092: A:UG 0-2 B:WU  games BB
+[89/600] seed 833000091: A:UG 1-2 B:UB+g  games BAB
+[90/600] seed 833000094: A:WG+u 2-0 B:UG  games AA
+[91/600] seed 833000096: A:UG 0-2 B:WB  games BB
+[92/600] seed 833000095: A:WG 0-2 B:UR  games BB
+[93/600] seed 833000082: A:UB 0-2 B:UG  games BB
+[94/600] seed 833000089: A:UR 1-2 B:WU  games BAB
+[95/600] seed 833000100: A:WU 2-0 B:UG  games AA
+[96/600] seed 833000097: A:UR+g 1-2 B:WG  games ABB
+[97/600] seed 833000102: A:UG 0-2 B:WG  games BB
+[98/600] seed 833000104: A:WU 2-1 B:BG  games BAA
+[99/600] seed 833000105: A:UR+g 1-2 B:WR  games BAB
+[100/600] seed 833000103: A:WU+r 1-2 B:WU  games ABB
+[101/600] seed 833000099: A:UB 1-2 B:UG+r  games BAB
+[102/600] seed 833000108: A:UB 2-0 B:WU  games AA
+[103/600] seed 833000101: A:UG 2-1 B:WU+b  games ABA
+[104/600] seed 833000098: A:UB 0-2 B:WG  games BB
+[105/600] seed 833000110: A:WU 2-0 B:BG+w  games AA
+[106/600] seed 833000107: A:WU 2-1 B:UG  games BAA
+[107/600] seed 833000079: A:UG 1-2 B:WU  games ABB
+[108/600] seed 833000113: A:WU 2-0 B:BG  games AA
+[109/600] seed 833000106: A:UB 2-1 B:WU  games ABA
+[110/600] seed 833000109: A:WG 1-2 B:UG  games BAB
+[111/600] seed 833000115: A:WB 2-0 B:WG  games AA
+[112/600] seed 833000114: A:UG 0-2 B:WG  games BB
+[113/600] seed 833000112: A:UB 0-2 B:BG  games BB
+[114/600] seed 833000118: A:WU 2-0 B:UB  games AA
+[115/600] seed 833000120: A:WG 2-1 B:UR  games ABA
+[116/600] seed 833000119: A:UR 2-0 B:BG  games AA
+[117/600] seed 833000122: A:UG+w 0-2 B:UG  games BB
+[118/600] seed 833000124: A:WU 2-0 B:UR  games AA
+[119/600] seed 833000125: A:UB 0-2 B:WG  games BB
+[120/600] seed 833000123: A:UG 1-2 B:WG  games BAB
+[121/600] seed 833000126: A:WU 2-0 B:UG  games AA
+[122/600] seed 833000127: A:WB 2-1 B:WR  games ABA
+[123/600] seed 833000128: A:WB 2-0 B:WG  games AA
+[124/600] seed 833000129: A:WG+r 2-0 B:UG  games AA
+[125/600] seed 833000130: A:WU 2-0 B:UG  games AA
+[126/600] seed 833000132: A:WU 2-0 B:BG  games AA
+[127/600] seed 833000133: A:WU 2-0 B:UG  games AA
+[128/600] seed 833000111: A:UG 1-2 B:WG  games ABB
+[129/600] seed 833000121: A:UR 0-2 B:UB  games BB
+[130/600] seed 833000135: A:UG 2-0 B:UG+w  games AA
+[131/600] seed 833000137: A:UR 1-2 B:WG+u  games ABB
+[132/600] seed 833000136: A:UR 2-1 B:UG  games BAA
+[133/600] seed 833000134: A:UG 1-2 B:WB  games BAB
+[134/600] seed 833000140: A:UB 0-2 B:UG  games BB
+[135/600] seed 833000138: A:UR+g 2-0 B:UG  games AA
+[136/600] seed 833000141: A:WR 2-0 B:UG  games AA
+[137/600] seed 833000142: A:WR 2-1 B:BG  games ABA
+[138/600] seed 833000143: A:UG 0-2 B:WU  games BB
+[139/600] seed 833000145: A:BG 1-2 B:UG  games ABB
+[140/600] seed 833000131: A:BG 0-2 B:UG  games BB
+[141/600] seed 833000147: A:UG 0-2 B:WU  games BB
+[142/600] seed 833000148: A:UR 1-2 B:WB  games BAB
+[143/600] seed 833000144: A:WG 2-1 B:UB  games BAA
+[144/600] seed 833000150: A:WU 2-0 B:UG  games AA
+[145/600] seed 833000149: A:UR 1-2 B:WG  games ABB
+[146/600] seed 833000151: A:UG 2-0 B:UR  games AA
+[147/600] seed 833000152: A:UG 0-2 B:WU  games BB
+[148/600] seed 833000153: A:UG 0-2 B:WG  games BB
+[149/600] seed 833000077: A:WG 2-1 B:UG  games ABA
+[150/600] seed 833000154: A:UB 1-2 B:WG  games ABB
+[151/600] seed 833000139: A:UR 0-2 B:WG  games BB
+[152/600] seed 833000157: A:BG 0-2 B:WU  games BB
+[153/600] seed 833000116: A:WU 0-2 B:BG  games BB
+[154/600] seed 833000146: A:UR 1-2 B:WB  games BAB
+[155/600] seed 833000160: A:WG 2-0 B:UR  games AA
+[156/600] seed 833000161: A:UG 0-2 B:WR+u  games BB
+[157/600] seed 833000156: A:UG 2-0 B:UR  games AA
+[158/600] seed 833000163: A:WU 2-0 B:UR  games AA
+[159/600] seed 833000155: A:WU 1-2 B:UG+w  games BAB
+[160/600] seed 833000165: A:WG 2-0 B:UG  games AA
+[161/600] seed 833000162: A:BG 0-2 B:WU  games BB
+[162/600] seed 833000164: A:WU 2-1 B:WG+u  games ABA
+[163/600] seed 833000168: A:WU 2-1 B:BG+w  games ABA
+[164/600] seed 833000166: A:BR 2-1 B:WU  games ABA
+[165/600] seed 833000169: A:WU 2-0 B:UB  games AA
+[166/600] seed 833000171: A:WU 0-2 B:WG  games BB
+[167/600] seed 833000173: A:BG 0-2 B:UG  games BB
+[168/600] seed 833000159: A:WU 2-0 B:BG  games AA
+[169/600] seed 833000174: A:BG 2-1 B:UB  games ABA
+[170/600] seed 833000175: A:UG 0-2 B:WR  games BB
+[171/600] seed 833000176: A:UG 0-2 B:UB  games BB
+[172/600] seed 833000172: A:UG+w 1-2 B:WB  games ABB
+[173/600] seed 833000167: A:UR+g 2-1 B:WU  games ABA
+[174/600] seed 833000177: A:WU 2-0 B:UR  games AA
+[175/600] seed 833000178: A:UB 2-0 B:UG  games AA
+[176/600] seed 833000181: A:UB+g 2-0 B:WR+b  games AA
+[177/600] seed 833000180: A:WU 1-2 B:UB  games ABB
+[178/600] seed 833000158: A:UG 0-2 B:BG  games BB
+[179/600] seed 833000183: A:BG 1-2 B:WU  games BAB
+[180/600] seed 833000184: A:WG 1-2 B:WU  games BAB
+[181/600] seed 833000185: A:UB 2-0 B:WG  games AA
+[182/600] seed 833000186: A:WU 2-1 B:WG  games ABA
+[183/600] seed 833000189: A:RG 2-0 B:UR+g  games AA
+[184/600] seed 833000187: A:UG 0-2 B:WG  games BB
+[185/600] seed 833000191: A:UR 2-0 B:BG  games AA
+[186/600] seed 833000190: A:UG 1-2 B:WR  games ABB
+[187/600] seed 833000188: A:WG 1-2 B:UR  games ABB
+[188/600] seed 833000193: A:WU 1-2 B:WU  games ABB
+[189/600] seed 833000182: A:WU 1-2 B:UG  games ABB
+[190/600] seed 833000195: A:WU 1-2 B:UB+w  games BAB
+[191/600] seed 833000179: A:BG 2-1 B:WU  games ABA
+[192/600] seed 833000196: A:WU+g 2-1 B:WG  games ABA
+[193/600] seed 833000197: A:UG 1-2 B:WU+b  games ABB
+[194/600] seed 833000194: A:UB 0-2 B:WG  games BB
+[195/600] seed 833000200: A:UR 1-2 B:UG  games ABB
+[196/600] seed 833000202: A:WR 2-0 B:UG  games AA
+[197/600] seed 833000198: A:WB+u 1-2 B:WG  games ABB
+[198/600] seed 833000199: A:UG 0-2 B:WB  games BB
+[199/600] seed 833000192: A:UB 2-1 B:WG+u  games ABA
+[200/600] seed 833000203: A:WU 2-1 B:UG  games ABA
+[201/600] seed 833000206: A:WU 2-1 B:UB  games BAA
+[202/600] seed 833000204: A:UB 0-2 B:UG  games BB
+[203/600] seed 833000207: A:WU 0-2 B:WR  games BB
+[204/600] seed 833000205: A:UR 1-2 B:WU  games ABB
+[205/600] seed 833000208: A:UG 2-1 B:UR+g  games ABA
+[206/600] seed 833000209: A:BG 0-2 B:WU  games BB
+[207/600] seed 833000201: A:WU 2-1 B:WB+u  games ABA
+[208/600] seed 833000213: A:WU 2-0 B:BG+u  games AA
+[209/600] seed 833000212: A:UR 0-2 B:WG  games BB
+[210/600] seed 833000216: A:WR+b 2-0 B:UG  games AA
+[211/600] seed 833000210: A:WB 2-1 B:UG  games ABA
+[212/600] seed 833000214: A:WB+u 2-1 B:UG  games BAA
+[213/600] seed 833000219: A:WU 2-0 B:WR  games AA
+[214/600] seed 833000211: A:WG 1-2 B:UB  games ABB
+[215/600] seed 833000220: A:WG 2-1 B:UG  games ABA
+[216/600] seed 833000215: A:BG 0-2 B:UR  games BB
+[217/600] seed 833000218: A:UB+g 1-2 B:WG  games ABB
+[218/600] seed 833000222: A:WU 2-0 B:UB  games AA
+[219/600] seed 833000224: A:UG 0-2 B:WU  games BB
+[220/600] seed 833000226: A:WR+u 2-0 B:UG  games AA
+[221/600] seed 833000221: A:WG 2-0 B:UG  games AA
+[222/600] seed 833000227: A:WG 2-0 B:UG+r  games AA
+[223/600] seed 833000225: A:BG 1-2 B:UG  games BAB
+[224/600] seed 833000230: A:WU 2-0 B:WG  games AA
+[225/600] seed 833000117: A:WU 2-1 B:WG  games ABA
+[226/600] seed 833000217: A:UG 0-2 B:WU+g  games BDB
+[227/600] seed 833000229: A:WU 2-0 B:UG  games AA
+[228/600] seed 833000233: A:WR 2-0 B:UB  games AA
+[229/600] seed 833000232: A:WU+g 0-2 B:UB  games BB
+[230/600] seed 833000234: A:UG 0-2 B:BG  games BB
+[231/600] seed 833000228: A:UG 0-2 B:WU  games BB
+[232/600] seed 833000235: A:UR+b 1-2 B:UG  games ABB
+[233/600] seed 833000238: A:UB 0-2 B:WG  games BB
+[234/600] seed 833000240: A:WU 2-0 B:RG  games AA
+[235/600] seed 833000231: A:BR 2-1 B:UG  games BAA
+[236/600] seed 833000170: A:UG 2-1 B:WU  games BAA
+[237/600] seed 833000239: A:WG 2-0 B:UG  games AA
+[238/600] seed 833000223: A:BR 2-1 B:UG  games ABA
+[239/600] seed 833000243: A:WG 0-2 B:WU  games BB
+[240/600] seed 833000241: A:WB 2-1 B:WU  games ABA
+[241/600] seed 833000247: A:UG 0-2 B:WR+u  games BB
+[242/600] seed 833000244: A:UR 0-2 B:WG  games BB
+[243/600] seed 833000245: A:UB 0-2 B:UG  games BB
+[244/600] seed 833000246: A:UG 0-2 B:BG  games BB
+[245/600] seed 833000248: A:WR 2-0 B:UG  games AA
+[246/600] seed 833000250: A:UR 0-2 B:WG  games BB
+[247/600] seed 833000242: A:WU 1-2 B:UR+g  games ABB
+[248/600] seed 833000251: A:WU+g 1-2 B:UB  games ABB
+[249/600] seed 833000249: A:UB 1-2 B:WG  games BAB
+[250/600] seed 833000237: A:WR+u 2-1 B:UG  games ABA
+[251/600] seed 833000254: A:WU 2-0 B:UG  games AA
+[252/600] seed 833000256: A:UG 2-0 B:WU+b  games AA
+[253/600] seed 833000252: A:UG 2-1 B:WU  games ABA
+[254/600] seed 833000259: A:WR 2-1 B:UG  games ABA
+[255/600] seed 833000260: A:UG 0-2 B:WR  games BB
+[256/600] seed 833000257: A:WU 0-2 B:WG  games BB
+[257/600] seed 833000262: A:UR 2-0 B:UG  games AA
+[258/600] seed 833000261: A:WU 2-1 B:WR  games BAA
+[259/600] seed 833000258: A:WR 2-1 B:UB  games BAA
+[260/600] seed 833000265: A:WR 2-0 B:UG  games AA
+[261/600] seed 833000264: A:WG 2-0 B:UR  games AA
+[262/600] seed 833000253: A:UR 0-2 B:WG  games BB
+[263/600] seed 833000263: A:UG 1-2 B:WB+u  games BAB
+[264/600] seed 833000269: A:WU 2-0 B:RG  games AA
+[265/600] seed 833000271: A:UG 0-2 B:WU  games BB
+[266/600] seed 833000266: A:WU 2-1 B:BG  games ABA
+[267/600] seed 833000270: A:UG 1-2 B:WU  games BAB
+[268/600] seed 833000272: A:UR 0-2 B:WG  games BB
+[269/600] seed 833000268: A:UG 1-2 B:WB  games ABB
+[270/600] seed 833000275: A:WB 2-0 B:WU  games AA
+[271/600] seed 833000255: A:WU 2-1 B:UG  games BAA
+[272/600] seed 833000274: A:UG 1-2 B:UB  games BAB
+[273/600] seed 833000278: A:UG 0-2 B:WB+u  games BB
+[274/600] seed 833000280: A:UR 0-2 B:WB  games BB
+[275/600] seed 833000279: A:WG 2-0 B:UG  games AA
+[276/600] seed 833000277: A:WU 0-2 B:UB  games BB
+[277/600] seed 833000283: A:WU 2-0 B:UG  games AA
+[278/600] seed 833000267: A:UG 1-2 B:BG  games BAB
+[279/600] seed 833000236: A:BG 2-1 B:WU  games ABA
+[280/600] seed 833000273: A:WU 1-2 B:WG  games BAB
+[281/600] seed 833000276: A:UG 1-2 B:UG+b  games ABB
+[282/600] seed 833000285: A:WU+g 2-1 B:UG  games ABA
+[283/600] seed 833000288: A:UG 0-2 B:WG  games BB
+[284/600] seed 833000284: A:UG 2-1 B:UR+w  games BAA
+[285/600] seed 833000289: A:WR 2-0 B:UG  games AA
+[286/600] seed 833000287: A:BR 1-2 B:WU  games BAB
+[287/600] seed 833000291: A:WU 2-0 B:UR  games AA
+[288/600] seed 833000290: A:WG 1-2 B:WG  games BAB
+[289/600] seed 833000293: A:WG 2-1 B:UG  games ABA
+[290/600] seed 833000294: A:WU 2-0 B:RG  games AA
+[291/600] seed 833000295: A:UG 0-2 B:WU  games BB
+[292/600] seed 833000298: A:WG 2-1 B:UB  games ABA
+[293/600] seed 833000281: A:WG 2-1 B:UG  games ABA
+[294/600] seed 833000299: A:UG 0-2 B:WU  games BB
+[295/600] seed 833000296: A:UG 1-2 B:RG  games ABB
+[296/600] seed 833000300: A:UB 2-0 B:WU+g  games AA
+[297/600] seed 833000301: A:WU 2-0 B:WG  games AA
+[298/600] seed 833000302: A:WG 2-0 B:UG  games AA
+[299/600] seed 833000282: A:UG+w 0-2 B:WG+b  games BB
+[300/600] seed 833000303: A:UG 0-2 B:WG  games BB
+[301/600] seed 833000297: A:UR 0-2 B:WG  games BB
+[302/600] seed 833000304: A:WU 2-0 B:UG  games AA
+[303/600] seed 833000286: A:UB 1-2 B:WG  games ABB
+[304/600] seed 833000306: A:WU 2-0 B:UG  games AA
+[305/600] seed 833000308: A:BR 0-2 B:WU  games BB
+[306/600] seed 833000309: A:UR 0-2 B:WB  games BB
+[307/600] seed 833000292: A:WU 2-1 B:BR  games BAA
+[308/600] seed 833000305: A:UG 2-0 B:UR  games AA
+[309/600] seed 833000314: A:WB 1-2 B:WU+b  games ABB
+[310/600] seed 833000315: A:UR 0-2 B:WU  games BB
+[311/600] seed 833000311: A:WU 2-1 B:BG  games BAA
+[312/600] seed 833000312: A:UG 1-2 B:WB  games ABB
+[313/600] seed 833000313: A:UG 0-2 B:WU+g  games BB
+[314/600] seed 833000316: A:UG 0-2 B:WR  games BB
+[315/600] seed 833000319: A:UR 2-1 B:WG  games ABA
+[316/600] seed 833000307: A:WU+g 1-2 B:BG  games BAB
+[317/600] seed 833000321: A:WU+r 0-2 B:WU  games BB
+[318/600] seed 833000323: A:WG 2-0 B:UG  games AA
+[319/600] seed 833000324: A:WU 1-2 B:RG  games BAB
+[320/600] seed 833000317: A:WB 2-0 B:WU  games AA
+[321/600] seed 833000322: A:UR 0-2 B:BG  games BB
+[322/600] seed 833000325: A:WG 2-0 B:UR  games AA
+[323/600] seed 833000326: A:WU 2-0 B:UG  games AA
+[324/600] seed 833000318: A:UR 2-1 B:WU  games ABA
+[325/600] seed 833000327: A:UG 1-2 B:WR  games ABB
+[326/600] seed 833000330: A:WG 0-2 B:UG  games BB
+[327/600] seed 833000328: A:UB+g 0-2 B:WU  games BB
+[328/600] seed 833000329: A:UG+b 1-2 B:WB+g  games ABB
+[329/600] seed 833000332: A:WU+g 0-2 B:UR+g  games BB
+[330/600] seed 833000336: A:WG 2-0 B:RG  games AA
+[331/600] seed 833000335: A:UG 0-2 B:WG  games BB
+[332/600] seed 833000337: A:UB 1-2 B:WR+g  games ABB
+[333/600] seed 833000320: A:UG 2-0 B:WU  games AA
+[334/600] seed 833000339: A:UB 2-0 B:WG+b  games AA
+[335/600] seed 833000331: A:UG+w 1-2 B:WU  games ABB
+[336/600] seed 833000340: A:WU 2-1 B:WU  games ABA
+[337/600] seed 833000334: A:WU+g 1-2 B:UG  games ABB
+[338/600] seed 833000342: A:WU 2-1 B:BG  games BAA
+[339/600] seed 833000341: A:WR 0-2 B:WU  games BB
+[340/600] seed 833000344: A:WU 2-0 B:UR  games AA
+[341/600] seed 833000347: A:UG 0-2 B:WU+g  games BB
+[342/600] seed 833000346: A:UB 1-2 B:UR  games BAB
+[343/600] seed 833000338: A:WG 0-2 B:WU  games BB
+[344/600] seed 833000345: A:UR 1-2 B:WG+u  games ABB
+[345/600] seed 833000350: A:UB 0-2 B:WU  games BB
+[346/600] seed 833000349: A:WG 2-1 B:UR  games BAA
+[347/600] seed 833000351: A:WU 2-0 B:UR  games AA
+[348/600] seed 833000348: A:UG 1-2 B:WU  games ABB
+[349/600] seed 833000354: A:UR 2-1 B:UG  games BAA
+[350/600] seed 833000355: A:UG 0-2 B:WU  games BB
+[351/600] seed 833000356: A:UR 0-2 B:WU  games BB
+[352/600] seed 833000352: A:WR+g 0-2 B:WG  games BB
+[353/600] seed 833000358: A:WG+b 0-2 B:UB  games BB
+[354/600] seed 833000359: A:UB+g 0-2 B:WU  games BB
+[355/600] seed 833000360: A:UB+g 1-2 B:WU  games BAB
+[356/600] seed 833000361: A:UG 0-2 B:UG  games BB
+[357/600] seed 833000357: A:WR 2-0 B:UG  games AA
+[358/600] seed 833000363: A:RG+w 0-2 B:WU  games BB
+[359/600] seed 833000364: A:WU 2-0 B:UG  games AA
+[360/600] seed 833000343: A:BG 2-1 B:UR  games BAA
+[361/600] seed 833000367: A:RG 2-0 B:UG+b  games AA
+[362/600] seed 833000366: A:WG+r 2-1 B:UR+b  games ABA
+[363/600] seed 833000362: A:WU 2-1 B:UB  games ABA
+[364/600] seed 833000369: A:UG 0-2 B:WU+g  games BB
+[365/600] seed 833000365: A:UG 0-2 B:WG  games BB
+[366/600] seed 833000370: A:UR 2-0 B:UG  games AA
+[367/600] seed 833000373: A:UR 2-0 B:UG+w  games AA
+[368/600] seed 833000374: A:WU 2-0 B:UB  games AA
+[369/600] seed 833000310: A:UG 2-1 B:WU  games ABA
+[370/600] seed 833000375: A:WU+b 2-0 B:UG  games AA
+[371/600] seed 833000376: A:WU 2-0 B:BG  games AA
+[372/600] seed 833000377: A:BG 2-0 B:WU  games AA
+[373/600] seed 833000353: A:WB 2-1 B:UG  games ABA
+[374/600] seed 833000379: A:WB 1-2 B:UR  games BAB
+[375/600] seed 833000378: A:RG 1-2 B:WU  games BAB
+[376/600] seed 833000368: A:WB+u 1-2 B:UG  games ABB
+[377/600] seed 833000382: A:WU+r 1-2 B:RG  games BAB
+[378/600] seed 833000380: A:WU 2-1 B:BR  games ABA
+[379/600] seed 833000385: A:WU+g 1-2 B:UG  games BAB
+[380/600] seed 833000371: A:UG 2-1 B:UR  games BAA
+[381/600] seed 833000383: A:WU 2-1 B:UG  games ABA
+[382/600] seed 833000388: A:WU 0-2 B:UG  games BB
+[383/600] seed 833000381: A:WU 2-0 B:UG  games AA
+[384/600] seed 833000372: A:WG 1-2 B:UB  games BAB
+[385/600] seed 833000384: A:WU+g 2-0 B:UG  games AA
+[386/600] seed 833000333: A:WU 2-1 B:UG  games BAA
+[387/600] seed 833000392: A:UG 2-0 B:WR  games AA
+[388/600] seed 833000387: A:UG 0-2 B:WU  games BB
+[389/600] seed 833000390: A:WG 2-0 B:UR  games AA
+[390/600] seed 833000395: A:UG 2-0 B:UB  games AA
+[391/600] seed 833000393: A:WU 2-0 B:BG  games AA
+[392/600] seed 833000397: A:UR 1-2 B:WB  games ABB
+[393/600] seed 833000391: A:WG 2-0 B:BG  games AA
+[394/600] seed 833000398: A:UG 0-2 B:UG  games BB
+[395/600] seed 833000389: A:WU 0-2 B:UG  games BB
+[396/600] seed 833000402: A:WU 0-2 B:WG  games BB
+[397/600] seed 833000399: A:UG 0-2 B:WB  games BB
+[398/600] seed 833000400: A:UG 1-2 B:UR  games ABB
+[399/600] seed 833000403: A:WU 2-0 B:BG  games AA
+[400/600] seed 833000394: A:WU 2-0 B:WU  games AA
+[401/600] seed 833000401: A:WG 0-2 B:BR  games BB
+[402/600] seed 833000404: A:WU 2-0 B:BG  games AA
+[403/600] seed 833000405: A:UR 2-1 B:WB  games ABA
+[404/600] seed 833000408: A:WG 2-0 B:WU  games AA
+[405/600] seed 833000410: A:WU+b 0-2 B:UG  games BB
+[406/600] seed 833000412: A:BG 2-0 B:WU+b  games AA
+[407/600] seed 833000407: A:UB 2-1 B:WG  games BAA
+[408/600] seed 833000413: A:UG 0-2 B:WU+g  games BB
+[409/600] seed 833000406: A:UB 0-2 B:WG  games BB
+[410/600] seed 833000411: A:RG 2-0 B:UG  games AA
+[411/600] seed 833000409: A:UG 0-2 B:UR+g  games BB
+[412/600] seed 833000396: A:BG 1-2 B:WU  games ABB
+[413/600] seed 833000416: A:UG 0-2 B:WR  games BB
+[414/600] seed 833000418: A:WU 0-2 B:UR  games BB
+[415/600] seed 833000420: A:UG 0-2 B:WR  games BB
+[416/600] seed 833000417: A:WU+g 2-0 B:UR  games AA
+[417/600] seed 833000419: A:UG 1-2 B:WB  games ABB
+[418/600] seed 833000386: A:RG+b 0-2 B:BR  games BB
+[419/600] seed 833000414: A:WU 0-2 B:UR  games BB
+[420/600] seed 833000425: A:WU 2-0 B:WB  games AA
+[421/600] seed 833000415: A:UR+g 0-2 B:WG  games BB
+[422/600] seed 833000426: A:WG 1-2 B:WU  games BAB
+[423/600] seed 833000428: A:UG 0-2 B:WU  games BB
+[424/600] seed 833000427: A:UB+w 1-2 B:UR+g  games BAB
+[425/600] seed 833000424: A:UB 2-1 B:WG  games ABA
+[426/600] seed 833000430: A:UR 0-2 B:WB  games BB
+[427/600] seed 833000431: A:WB 2-0 B:UG  games AA
+[428/600] seed 833000432: A:UB 0-2 B:WR  games BB
+[429/600] seed 833000433: A:UR+g 0-2 B:UG  games BB
+[430/600] seed 833000434: A:BG 0-2 B:WU+g  games BB
+[431/600] seed 833000436: A:BG+w 1-2 B:WG+u  games BAB
+[432/600] seed 833000421: A:WG+u 2-1 B:UG  games BAA
+[433/600] seed 833000423: A:UG 1-2 B:WR  games BAB
+[434/600] seed 833000437: A:BG 1-2 B:WU  games ABB
+[435/600] seed 833000440: A:WR 2-0 B:UG+w  games AA
+[436/600] seed 833000441: A:WU 1-2 B:BG  games BAB
+[437/600] seed 833000438: A:WG+u 0-2 B:WG  games BB
+[438/600] seed 833000443: A:WU 2-0 B:BG  games AA
+[439/600] seed 833000442: A:WU 2-0 B:BG  games AA
+[440/600] seed 833000444: A:UG 0-2 B:WU  games BB
+[441/600] seed 833000439: A:WU 2-0 B:UB  games AA
+[442/600] seed 833000446: A:WU 1-2 B:BG  games ABB
+[443/600] seed 833000448: A:UG 2-0 B:WU+r  games AA
+[444/600] seed 833000449: A:WU 2-0 B:WG  games AA
+[445/600] seed 833000451: A:WU 2-0 B:UG  games AA
+[446/600] seed 833000447: A:BR 0-2 B:WU  games BB
+[447/600] seed 833000453: A:UR+w 1-2 B:WU+g  games BAB
+[448/600] seed 833000429: A:UG 2-1 B:UR  games BAA
+[449/600] seed 833000452: A:UG 0-2 B:UB  games BB
+[450/600] seed 833000435: A:UG+w 0-2 B:WG  games BB
+[451/600] seed 833000422: A:UG 1-2 B:UR  games BAB
+[452/600] seed 833000455: A:WG 2-0 B:UR+b  games AA
+[453/600] seed 833000456: A:WU+b 2-0 B:UG  games AA
+[454/600] seed 833000457: A:WU+b 2-1 B:UG  games ABA
+[455/600] seed 833000459: A:UB+g 1-2 B:WU  games BAB
+[456/600] seed 833000454: A:WR 2-1 B:UG  games ABA
+[457/600] seed 833000463: A:WB 2-0 B:UG  games AA
+[458/600] seed 833000462: A:WB 2-0 B:UG  games AA
+[459/600] seed 833000461: A:WG 1-2 B:WU  games ABB
+[460/600] seed 833000464: A:WU 2-0 B:UR+g  games AA
+[461/600] seed 833000460: A:WU 0-2 B:UG+b  games BB
+[462/600] seed 833000450: A:WU 1-2 B:UG  games ABB
+[463/600] seed 833000468: A:UG 2-0 B:UB+w  games AA
+[464/600] seed 833000467: A:UG 0-2 B:WU  games BB
+[465/600] seed 833000445: A:BR 2-1 B:UG  games BAA
+[466/600] seed 833000472: A:UB 0-2 B:WG  games BB
+[467/600] seed 833000471: A:UG 0-2 B:WG  games BB
+[468/600] seed 833000458: A:UR 2-1 B:UG  games BAA
+[469/600] seed 833000474: A:WG+r 2-0 B:UR  games AA
+[470/600] seed 833000475: A:UG 0-2 B:WU  games BB
+[471/600] seed 833000473: A:UB+r 2-1 B:WU  games ABA
+[472/600] seed 833000477: A:WU+g 0-2 B:WU  games BB
+[473/600] seed 833000465: A:UR 1-2 B:UG  games BAB
+[474/600] seed 833000476: A:WU 0-2 B:UG  games BB
+[475/600] seed 833000478: A:UB 2-1 B:UG  games ABA
+[476/600] seed 833000470: A:WU+g 2-1 B:UG  games BAA
+[477/600] seed 833000482: A:WU 2-0 B:UG  games AA
+[478/600] seed 833000480: A:BG 2-1 B:WU  games ABA
+[479/600] seed 833000484: A:WU 2-0 B:UG  games AA
+[480/600] seed 833000469: A:UG 0-2 B:UB  games BB
+[481/600] seed 833000481: A:UG 2-0 B:WU  games AA
+[482/600] seed 833000483: A:WG 2-1 B:UG  games BAA
+[483/600] seed 833000485: A:WR 2-0 B:UB  games AA
+[484/600] seed 833000486: A:WU 2-0 B:UG  games AA
+[485/600] seed 833000489: A:WU+g 0-2 B:RG  games BB
+[486/600] seed 833000488: A:WU 2-0 B:WG+b  games AA
+[487/600] seed 833000493: A:UG 0-2 B:WR+u  games BB
+[488/600] seed 833000490: A:WG 2-0 B:UB  games AA
+[489/600] seed 833000494: A:UR 2-1 B:WU  games ABA
+[490/600] seed 833000496: A:UR 2-1 B:WU  games ABA
+[491/600] seed 833000495: A:WG 2-1 B:UG  games BAA
+[492/600] seed 833000492: A:WU+b 2-1 B:BG  games ABA
+[493/600] seed 833000499: A:WU 2-0 B:UG  games AA
+[494/600] seed 833000498: A:UG 2-1 B:UR  games BAA
+[495/600] seed 833000500: A:WU 2-1 B:WG+u  games BAA
+[496/600] seed 833000497: A:WU 0-2 B:UG  games BB
+[497/600] seed 833000502: A:WB 2-0 B:UR+g  games AA
+[498/600] seed 833000503: A:UR 1-2 B:WR  games ABB
+[499/600] seed 833000501: A:UR 2-0 B:WU  games AA
+[500/600] seed 833000505: A:UG 0-2 B:WB  games BB
+[501/600] seed 833000507: A:UG 2-1 B:WR  games BAA
+[502/600] seed 833000506: A:WG 2-1 B:UG  games BAA
+[503/600] seed 833000491: A:UG 1-2 B:WU+b  games BAB
+[504/600] seed 833000504: A:RG 1-2 B:UB+w  games BAB
+[505/600] seed 833000508: A:WG 0-2 B:WU  games BB
+[506/600] seed 833000510: A:WR 2-0 B:UG  games AA
+[507/600] seed 833000511: A:UG 1-2 B:WU  games BAB
+[508/600] seed 833000512: A:UG 0-2 B:WG+u  games BB
+[509/600] seed 833000479: A:UG 2-1 B:WG  games BAA
+[510/600] seed 833000515: A:UR 2-1 B:WU+g  games BAA
+[511/600] seed 833000516: A:UG+w 1-2 B:WU  games ABB
+[512/600] seed 833000517: A:WU 1-2 B:UB  games ABB
+[513/600] seed 833000513: A:WG 2-1 B:UB  games BAA
+[514/600] seed 833000518: A:WU 2-0 B:UG  games AA
+[515/600] seed 833000520: A:BG 2-1 B:WR  games BAA
+[516/600] seed 833000514: A:WG 2-0 B:UG  games AA
+[517/600] seed 833000509: A:WU 2-0 B:RG  games AA
+[518/600] seed 833000519: A:WG 2-1 B:UB  games BAA
+[519/600] seed 833000523: A:WU 2-0 B:UG+w  games AA
+[520/600] seed 833000522: A:WU 1-2 B:WG  games ABB
+[521/600] seed 833000521: A:UG+w 1-2 B:WU  games BAB
+[522/600] seed 833000525: A:UG 0-2 B:WU  games BB
+[523/600] seed 833000466: A:UG 1-2 B:WR  games BAB
+[524/600] seed 833000528: A:WG 2-1 B:WU  games ABA
+[525/600] seed 833000526: A:UR+g 2-1 B:WG  games BAA
+[526/600] seed 833000530: A:WU 2-0 B:WB  games AA
+[527/600] seed 833000524: A:WU 0-2 B:UB  games BB
+[528/600] seed 833000531: A:UG 2-0 B:UB  games AA
+[529/600] seed 833000532: A:UG 0-2 B:WG  games BB
+[530/600] seed 833000529: A:WB+g 2-0 B:UG  games AA
+[531/600] seed 833000533: A:WB 2-0 B:UG  games AA
+[532/600] seed 833000534: A:WG+u 0-2 B:UB  games BB
+[533/600] seed 833000536: A:UG 0-2 B:RG  games BB
+[534/600] seed 833000540: A:WG+u 2-1 B:WU  games BAA
+[535/600] seed 833000537: A:BG 1-2 B:WU  games ABB
+[536/600] seed 833000538: A:WB 2-0 B:UG  games AA
+[537/600] seed 833000527: A:BG 2-0 B:WU  games AA
+[538/600] seed 833000541: A:WR 2-0 B:UG+w  games AA
+[539/600] seed 833000543: A:UG+w 0-2 B:UR+w  games BB
+[540/600] seed 833000544: A:WU 2-0 B:UB  games AA
+[541/600] seed 833000545: A:WU 1-2 B:WG  games BAB
+[542/600] seed 833000542: A:UG 1-2 B:WB  games ABB
+[543/600] seed 833000546: A:WB 2-0 B:UG  games AA
+[544/600] seed 833000547: A:WG 2-0 B:UG  games AA
+[545/600] seed 833000549: A:RG 2-0 B:WU  games AA
+[546/600] seed 833000535: A:UG 0-2 B:WG  games BB
+[547/600] seed 833000551: A:WU 1-2 B:WB  games BAB
+[548/600] seed 833000554: A:WG 2-0 B:BG  games AA
+[549/600] seed 833000552: A:WG 2-0 B:UG  games AA
+[550/600] seed 833000548: A:UR 2-0 B:WG  games AA
+[551/600] seed 833000556: A:UR 0-2 B:WG  games BB
+[552/600] seed 833000539: A:WU 2-0 B:RG  games AA
+[553/600] seed 833000557: A:WB 2-1 B:UB  games BAA
+[554/600] seed 833000555: A:UR 0-2 B:UG  games BB
+[555/600] seed 833000558: A:RG 2-1 B:UB  games ABA
+[556/600] seed 833000553: A:UG 2-1 B:WU  games ABA
+[557/600] seed 833000560: A:WU 0-2 B:WU+g  games BB
+[558/600] seed 833000550: A:UR 1-2 B:WB  games ABB
+[559/600] seed 833000563: A:UG 0-2 B:WU+g  games BB
+[560/600] seed 833000561: A:WU 2-0 B:UG  games AA
+[561/600] seed 833000559: A:WU 1-2 B:UG  games BAB
+[562/600] seed 833000566: A:BG 0-2 B:WR  games BB
+[563/600] seed 833000562: A:UG 1-2 B:WB  games ABB
+[564/600] seed 833000567: A:UR 0-2 B:UG  games BB
+[565/600] seed 833000569: A:WR 2-0 B:UG  games AA
+[566/600] seed 833000570: A:WU 2-0 B:UG  games AA
+[567/600] seed 833000564: A:WU 2-1 B:BG  games ABA
+[568/600] seed 833000565: A:UG 0-2 B:WB  games BB
+[569/600] seed 833000574: A:BR 0-2 B:WU  games BB
+[570/600] seed 833000575: A:WU 2-0 B:BG  games AA
+[571/600] seed 833000572: A:UG 0-2 B:BG  games BB
+[572/600] seed 833000577: A:UG 0-2 B:WB  games BB
+[573/600] seed 833000576: A:WU+g 2-1 B:UG+r  games ABA
+[574/600] seed 833000568: A:WB 0-2 B:UG  games BB
+[575/600] seed 833000579: A:WR 2-1 B:UB  games ABA
+[576/600] seed 833000571: A:WU 2-0 B:BG  games AA
+[577/600] seed 833000582: A:UR 2-0 B:BR+g  games AA
+[578/600] seed 833000578: A:UG 0-2 B:WG  games BB
+[579/600] seed 833000580: A:WU 2-0 B:UR  games AA
+[580/600] seed 833000573: A:WU+g 2-0 B:UG  games AA
+[581/600] seed 833000586: A:WU 2-1 B:UG  games ABA
+[582/600] seed 833000585: A:WG 2-0 B:UG  games AA
+[583/600] seed 833000584: A:WB 2-1 B:UR  games BAA
+[584/600] seed 833000587: A:WU 2-0 B:WG  games AA
+[585/600] seed 833000583: A:WU+g 2-1 B:RG  games ABA
+[586/600] seed 833000592: A:UB 0-2 B:UR  games BB
+[587/600] seed 833000588: A:UR 1-2 B:WU+g  games BAB
+[588/600] seed 833000593: A:UB 2-0 B:RG  games AA
+[589/600] seed 833000595: A:WG 2-0 B:UG  games AA
+[590/600] seed 833000596: A:RG+u 2-1 B:UB  games ABA
+[591/600] seed 833000594: A:WU 1-2 B:BR+g  games ABB
+[592/600] seed 833000590: A:UG 2-0 B:WB  games AA
+[593/600] seed 833000598: A:WU 2-0 B:BG  games AA
+[594/600] seed 833000597: A:WU 2-0 B:UG  games AA
+[595/600] seed 833000599: A:UG 2-0 B:WB+u  games AA
+[596/600] seed 833000591: A:WG 2-1 B:UB  games BAA
+[597/600] seed 833000600: A:WG 2-1 B:UR  games ABA
+[598/600] seed 833000589: A:WG 2-0 B:UR  games AA
+[599/600] seed 833000581: A:UG 0-2 B:WG  games BB
+[600/600] seed 833000487: A:UG 0-2 B:WB  games BB
+matches: 1477 s for 600 (2.5 s a draft wall-clock on 7 worker(s))
+done in 1479 s -> var/lab-j133/compare/runs/synergy_v1/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/compare/runs/synergy_v1
+== population synergy_17: var/lab-j133/cubes/synergy-cube-180.md, weight sixteenLandsAt=0
+cube lab: var/lab-j133/cubes/synergy-cube-180.md, grid, 600 draft(s) from seed 833000001, best of 3, 7 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j133/compare/runs/synergy_17
+drafted and built 600 draft(s) in 1.6 s; playing best of 3 each on 7 worker(s)
+[1/600] seed 833000004: A:BG 0-2 B:WU  games BB
+[2/600] seed 833000003: A:UG 0-2 B:WB  games BB
+[3/600] seed 833000005: A:UB+r 0-2 B:WG  games BB
+[4/600] seed 833000008: A:WG 0-2 B:WR  games BB
+[5/600] seed 833000009: A:BR 0-2 B:WU  games BB
+[6/600] seed 833000002: A:UB 0-2 B:WU+r  games BB
+[7/600] seed 833000012: A:UG 0-2 B:WB  games BB
+[8/600] seed 833000011: A:UG 0-2 B:WB  games BB
+[9/600] seed 833000001: A:BG 1-2 B:WU  games ABB
+[10/600] seed 833000016: A:WB 2-1 B:UG  games BAA
+[11/600] seed 833000015: A:RG 0-2 B:UB+g  games BB
+[12/600] seed 833000014: A:UG 0-2 B:WR  games BB
+[13/600] seed 833000019: A:UG 0-2 B:WB  games BB
+[14/600] seed 833000018: A:WB 1-2 B:WU+g  games BAB
+[15/600] seed 833000013: A:UR 0-2 B:WG  games BB
+[16/600] seed 833000021: A:WG+u 2-0 B:UG  games AA
+[17/600] seed 833000006: A:UR 2-1 B:WG  games ABA
+[18/600] seed 833000007: A:WG 2-1 B:WU  games BAA
+[19/600] seed 833000023: A:UG 2-0 B:UR+w  games AA
+[20/600] seed 833000024: A:WU+g 1-2 B:BG  games ABB
+[21/600] seed 833000022: A:UB 1-2 B:UG  games ABB
+[22/600] seed 833000017: A:WU 2-0 B:BG  games AA
+[23/600] seed 833000026: A:WU 2-1 B:BG  games ABA
+[24/600] seed 833000028: A:UG 2-1 B:WU  games ABA
+[25/600] seed 833000027: A:UG 0-2 B:WB  games BB
+[26/600] seed 833000032: A:WG 2-0 B:UR+w  games AA
+[27/600] seed 833000020: A:WU 2-1 B:BG  games ABA
+[28/600] seed 833000033: A:BR 2-0 B:UG  games AA
+[29/600] seed 833000030: A:WG 1-2 B:UB+r  games ABB
+[30/600] seed 833000035: A:WB 2-0 B:UG  games AA
+[31/600] seed 833000036: A:WB 2-0 B:UG  games AA
+[32/600] seed 833000038: A:WG 2-0 B:WU+g  games AA
+[33/600] seed 833000025: A:UG 2-1 B:WB  games ABA
+[34/600] seed 833000037: A:UB 1-2 B:WG  games BAB
+[35/600] seed 833000039: A:UG 0-2 B:WB+g  games BB
+[36/600] seed 833000031: A:UG 0-2 B:WG  games BB
+[37/600] seed 833000043: A:WG 0-2 B:BG  games BB
+[38/600] seed 833000041: A:UG 0-2 B:WG  games BB
+[39/600] seed 833000040: A:WG 0-2 B:BR  games BB
+[40/600] seed 833000044: A:BG 0-2 B:UR+b  games BB
+[41/600] seed 833000046: A:UR 0-2 B:WG  games BB
+[42/600] seed 833000048: A:WB 2-0 B:UG  games AA
+[43/600] seed 833000045: A:WG 2-0 B:BG  games AA
+[44/600] seed 833000049: A:WG 2-0 B:UR+g  games AA
+[45/600] seed 833000050: A:WR 2-0 B:UG  games AA
+[46/600] seed 833000047: A:UB 1-2 B:WG  games ABB
+[47/600] seed 833000051: A:UG 2-0 B:WG+u  games AA
+[48/600] seed 833000034: A:WU 1-2 B:WG  games ABB
+[49/600] seed 833000054: A:BG 2-0 B:UG  games AA
+[50/600] seed 833000055: A:UB 0-2 B:WU  games BB
+[51/600] seed 833000052: A:UB 2-1 B:WU  games ABA
+[52/600] seed 833000056: A:UG 0-2 B:WB  games BB
+[53/600] seed 833000058: A:UG 0-2 B:WB+g  games BB
+[54/600] seed 833000059: A:WG 0-2 B:UB  games BB
+[55/600] seed 833000057: A:WG 2-1 B:UB  games BAA
+[56/600] seed 833000053: A:WU 1-2 B:WB+u  games ABB
+[57/600] seed 833000062: A:UR 0-2 B:WB  games BB
+[58/600] seed 833000063: A:BG+u 0-2 B:WR  games BB
+[59/600] seed 833000065: A:WR 0-2 B:WB+u  games BB
+[60/600] seed 833000061: A:WG 1-2 B:UB  games BAB
+[61/600] seed 833000029: A:BG 0-2 B:WU  games BB
+[62/600] seed 833000068: A:BG 2-0 B:WU  games AA
+[63/600] seed 833000060: A:UG 2-0 B:UB  games AA
+[64/600] seed 833000069: A:UB 1-2 B:WG+u  games BAB
+[65/600] seed 833000071: A:UB 0-2 B:WG  games BB
+[66/600] seed 833000070: A:WU+b 2-1 B:BG  games ABA
+[67/600] seed 833000010: A:UG 1-2 B:WG  games ABB
+[68/600] seed 833000066: A:WU 2-1 B:UG  games ABA
+[69/600] seed 833000067: A:UG+w 0-2 B:WU  games BB
+[70/600] seed 833000073: A:WG 2-0 B:UG  games AA
+[71/600] seed 833000072: A:UB+g 1-2 B:WU  games BAB
+[72/600] seed 833000064: A:WG 1-2 B:BG  games BAB
+[73/600] seed 833000076: A:UR+w 0-2 B:UG  games BB
+[74/600] seed 833000074: A:WU 2-0 B:UG  games AA
+[75/600] seed 833000079: A:UR+w 0-2 B:WG  games BB
+[76/600] seed 833000080: A:WG 2-0 B:UR  games AA
+[77/600] seed 833000078: A:BR 0-2 B:UG  games BB
+[78/600] seed 833000083: A:WG 2-0 B:UR  games AA
+[79/600] seed 833000077: A:UG 2-0 B:UR+w  games AA
+[80/600] seed 833000084: A:WG 2-0 B:UG  games AA
+[81/600] seed 833000085: A:WG 2-0 B:WU  games AA
+[82/600] seed 833000075: A:WG+b 2-0 B:WU  games AA
+[83/600] seed 833000088: A:UG 2-0 B:UB  games AA
+[84/600] seed 833000086: A:UG 0-2 B:WB  games BB
+[85/600] seed 833000087: A:UB 2-1 B:WG  games BAA
+[86/600] seed 833000082: A:WG 1-2 B:WB  games ABB
+[87/600] seed 833000093: A:UG 0-2 B:WB  games BB
+[88/600] seed 833000092: A:BG 1-2 B:WB  games ABB
+[89/600] seed 833000094: A:UB 0-2 B:WR  games BB
+[90/600] seed 833000090: A:UR 1-2 B:WB  games BAB
+[91/600] seed 833000096: A:BG 2-0 B:WG  games AA
+[92/600] seed 833000095: A:WG 0-2 B:UR  games BB
+[93/600] seed 833000099: A:WU 2-0 B:BR  games AA
+[94/600] seed 833000098: A:UB 2-1 B:WU  games BAA
+[95/600] seed 833000101: A:RG 2-0 B:UB  games AA
+[96/600] seed 833000097: A:WG+u 1-2 B:WB  games BAB
+[97/600] seed 833000042: A:WG 2-0 B:WU+g  games AA
+[98/600] seed 833000102: A:WB 1-2 B:UG  games BAB
+[99/600] seed 833000105: A:WG 1-2 B:BG  games ABB
+[100/600] seed 833000100: A:WU 0-2 B:UG  games BB
+[101/600] seed 833000104: A:WU 1-2 B:WR  games ABB
+[102/600] seed 833000107: A:UG+w 0-2 B:WG  games BB
+[103/600] seed 833000106: A:WU 2-0 B:BR  games AA
+[104/600] seed 833000091: A:WG 2-1 B:UB  games ABA
+[105/600] seed 833000109: A:UG 0-2 B:WB  games BB
+[106/600] seed 833000110: A:WB 2-0 B:UG  games AA
+[107/600] seed 833000111: A:WU 0-2 B:WB  games BB
+[108/600] seed 833000113: A:UR 0-2 B:WU  games BB
+[109/600] seed 833000112: A:UG 0-2 B:WU  games BB
+[110/600] seed 833000108: A:UG 2-1 B:WR  games ABA
+[111/600] seed 833000089: A:UB 2-1 B:WG  games BAA
+[112/600] seed 833000116: A:UG 2-1 B:WU+g  games ABA
+[113/600] seed 833000081: A:WG 1-2 B:WU  games BAB
+[114/600] seed 833000103: A:UG 0-2 B:WU  games BB
+[115/600] seed 833000119: A:UG 0-2 B:WG  games BB
+[116/600] seed 833000120: A:WG 2-0 B:BG  games AA
+[117/600] seed 833000118: A:WB 2-0 B:WG  games AA
+[118/600] seed 833000121: A:WB 2-1 B:UG  games BAA
+[119/600] seed 833000124: A:WG 2-0 B:UG  games AA
+[120/600] seed 833000123: A:RG 1-2 B:WG  games BAB
+[121/600] seed 833000115: A:UB 0-2 B:WG  games BB
+[122/600] seed 833000125: A:RG 0-2 B:WU  games BB
+[123/600] seed 833000117: A:UB 0-2 B:WG  games BB
+[124/600] seed 833000127: A:WG 2-0 B:WR+u  games AA
+[125/600] seed 833000129: A:WG 2-0 B:UG  games AA
+[126/600] seed 833000126: A:WB 0-2 B:UG  games BB
+[127/600] seed 833000128: A:WG 2-0 B:UG  games AA
+[128/600] seed 833000131: A:WU 2-0 B:UB  games AA
+[129/600] seed 833000132: A:UG 1-2 B:BG  games ABB
+[130/600] seed 833000114: A:UG 0-2 B:WG  games BB
+[131/600] seed 833000134: A:UG 0-2 B:WU  games BB
+[132/600] seed 833000137: A:UR+g 0-2 B:WG+u  games BB
+[133/600] seed 833000133: A:WR 2-1 B:UG  games ABA
+[134/600] seed 833000138: A:WB+u 2-0 B:WR  games AA
+[135/600] seed 833000130: A:UB 1-2 B:WG  games BAB
+[136/600] seed 833000136: A:WG+u 2-1 B:UG  games BAA
+[137/600] seed 833000143: A:WG 2-0 B:UB  games AA
+[138/600] seed 833000142: A:BR 0-2 B:WG+u  games BB
+[139/600] seed 833000145: A:UR 0-2 B:WB  games BB
+[140/600] seed 833000140: A:WG+r 2-1 B:UG  games BAA
+[141/600] seed 833000122: A:WB 2-1 B:UG  games BAA
+[142/600] seed 833000144: A:WG 2-0 B:UB+r  games AA
+[143/600] seed 833000148: A:WU 2-0 B:RG+b  games AA
+[144/600] seed 833000147: A:WU 2-0 B:BG  games AA
+[145/600] seed 833000149: A:UR+g 0-2 B:WG  games BB
+[146/600] seed 833000150: A:WG 2-0 B:UG  games AA
+[147/600] seed 833000146: A:UG 0-2 B:WB  games BB
+[148/600] seed 833000151: A:UR 2-0 B:BG  games AA
+[149/600] seed 833000153: A:UB 0-2 B:WG  games BB
+[150/600] seed 833000155: A:BG 0-2 B:WU  games BB
+[151/600] seed 833000152: A:UG 2-0 B:WG+u  games AA
+[152/600] seed 833000154: A:UR+g 2-1 B:UG  games BAA
+[153/600] seed 833000157: A:UG 0-2 B:WR  games BB
+[154/600] seed 833000158: A:BG 0-2 B:WR+b  games BB
+[155/600] seed 833000159: A:WG 0-2 B:UR  games BB
+[156/600] seed 833000156: A:UG 2-0 B:UR+g  games AA
+[157/600] seed 833000160: A:UG 0-2 B:WR+g  games BB
+[158/600] seed 833000163: A:WB+g 0-2 B:BG  games BB
+[159/600] seed 833000162: A:UG 1-2 B:BR  games ABB
+[160/600] seed 833000139: A:WU 2-1 B:RG  games ABA
+[161/600] seed 833000165: A:RG 0-2 B:WU  games BB
+[162/600] seed 833000166: A:BR 2-0 B:UG  games AA
+[163/600] seed 833000164: A:WU 2-0 B:UG  games AA
+[164/600] seed 833000161: A:WB 1-2 B:WU  games ABB
+[165/600] seed 833000168: A:BG 2-1 B:WU  games BAA
+[166/600] seed 833000167: A:WR 2-1 B:UG  games BAA
+[167/600] seed 833000169: A:UB 2-1 B:WG  games BAA
+[168/600] seed 833000171: A:WB 2-1 B:WU  games ABA
+[169/600] seed 833000173: A:WU 2-0 B:BG  games AA
+[170/600] seed 833000141: A:WG 2-0 B:UR  games AA
+[171/600] seed 833000174: A:UG 1-2 B:UB  games BAB
+[172/600] seed 833000177: A:UB 2-1 B:RG  games BAA
+[173/600] seed 833000172: A:BR 2-1 B:WU  games ABA
+[174/600] seed 833000180: A:UG 0-2 B:BG  games BB
+[175/600] seed 833000170: A:UG 2-0 B:UR  games AA
+[176/600] seed 833000175: A:WB 2-1 B:UG  games BAA
+[177/600] seed 833000179: A:BG 1-2 B:UR+g  games ABB
+[178/600] seed 833000183: A:BG 0-2 B:WR  games BB
+[179/600] seed 833000182: A:UG 0-2 B:WU  games BB
+[180/600] seed 833000184: A:UR+g 0-2 B:WU  games BB
+[181/600] seed 833000185: A:UG 0-2 B:WG  games BB
+[182/600] seed 833000181: A:WB 2-0 B:UR  games AA
+[183/600] seed 833000187: A:WU 2-0 B:UG  games AA
+[184/600] seed 833000188: A:BG 2-0 B:WU  games AA
+[185/600] seed 833000190: A:UR 0-2 B:WR  games BB
+[186/600] seed 833000191: A:WB+u 0-2 B:BR  games BB
+[187/600] seed 833000189: A:WG 1-2 B:UR  games BAB
+[188/600] seed 833000186: A:UG 2-0 B:RG  games AA
+[189/600] seed 833000178: A:UG 1-2 B:UR  games BAB
+[190/600] seed 833000192: A:UG 1-2 B:WU  games ABB
+[191/600] seed 833000194: A:UB 1-2 B:WG  games BAB
+[192/600] seed 833000198: A:WB 2-0 B:WR  games AA
+[193/600] seed 833000195: A:WB 2-1 B:WU  games BAA
+[194/600] seed 833000196: A:UB+w 2-1 B:WG  games ABA
+[195/600] seed 833000200: A:UR 0-2 B:WG  games BB
+[196/600] seed 833000202: A:WU 0-2 B:WG  games BB
+[197/600] seed 833000201: A:UG 0-2 B:WB+g  games BB
+[198/600] seed 833000204: A:WB 2-0 B:UG  games AA
+[199/600] seed 833000199: A:UG 0-2 B:WB  games BB
+[200/600] seed 833000205: A:UG 0-2 B:WU  games BB
+[201/600] seed 833000203: A:WU 0-2 B:BG  games BB
+[202/600] seed 833000206: A:WB 2-1 B:RG  games ABA
+[203/600] seed 833000208: A:WB 2-0 B:UG  games AA
+[204/600] seed 833000197: A:UG 2-1 B:WB  games BAA
+[205/600] seed 833000211: A:BR 2-1 B:UB+g  games BAA
+[206/600] seed 833000210: A:WB 2-0 B:UG  games AA
+[207/600] seed 833000207: A:WG 2-0 B:WU  games AA
+[208/600] seed 833000176: A:WU 2-1 B:WG  games BAA
+[209/600] seed 833000209: A:BG 1-2 B:WU  games BAB
+[210/600] seed 833000212: A:UG 2-1 B:WB  games ABA
+[211/600] seed 833000214: A:WR 2-1 B:UG  games BAA
+[212/600] seed 833000193: A:WR 0-2 B:WB  games BB
+[213/600] seed 833000218: A:UG 0-2 B:WB  games BB
+[214/600] seed 833000220: A:WB 2-0 B:UG  games AA
+[215/600] seed 833000219: A:WU 1-2 B:BG+u  games BAB
+[216/600] seed 833000216: A:UG 0-2 B:RG  games BB
+[217/600] seed 833000213: A:WU 2-1 B:UG+r  games BAA
+[218/600] seed 833000222: A:WB 2-0 B:UR+g  games AA
+[219/600] seed 833000223: A:UG+w 2-1 B:UB  games BAA
+[220/600] seed 833000224: A:UB 0-2 B:WR  games BB
+[221/600] seed 833000217: A:UG+w 0-2 B:BG  games BB
+[222/600] seed 833000225: A:UG 0-2 B:BG  games BB
+[223/600] seed 833000228: A:WG 2-0 B:UR  games AA
+[224/600] seed 833000229: A:WG 2-0 B:UR+g  games AA
+[225/600] seed 833000231: A:WB 0-2 B:UR  games BB
+[226/600] seed 833000232: A:BG 0-2 B:WG  games BB
+[227/600] seed 833000135: A:BG 1-2 B:UG  games BAB
+[228/600] seed 833000233: A:WU 0-2 B:WG  games BB
+[229/600] seed 833000234: A:UG 2-1 B:WU  games BAA
+[230/600] seed 833000235: A:UG 0-2 B:UB  games BB
+[231/600] seed 833000236: A:BR+w 2-0 B:UG  games AA
+[232/600] seed 833000237: A:UB+w 0-2 B:WG  games BB
+[233/600] seed 833000238: A:WU 2-0 B:UG  games AA
+[234/600] seed 833000239: A:WG 2-0 B:UG+r  games AA
+[235/600] seed 833000241: A:WB 0-2 B:WU  games BB
+[236/600] seed 833000227: A:WU 1-2 B:BG+w  games BAB
+[237/600] seed 833000240: A:UG 1-2 B:RG  games ABB
+[238/600] seed 833000221: A:WU 2-1 B:UB  games BAA
+[239/600] seed 833000242: A:WU 2-0 B:BR  games AA
+[240/600] seed 833000244: A:WU 0-2 B:BG  games BB
+[241/600] seed 833000247: A:BG 0-2 B:WU+g  games BB
+[242/600] seed 833000245: A:UG 1-2 B:UR+g  games BAB
+[243/600] seed 833000226: A:UR 2-0 B:WG  games AA
+[244/600] seed 833000248: A:WB 1-2 B:BG  games BAB
+[245/600] seed 833000243: A:WG+u 0-2 B:UB+r  games BB
+[246/600] seed 833000252: A:BG 2-0 B:WU+g  games AA
+[247/600] seed 833000250: A:UR 1-2 B:WB  games BAB
+[248/600] seed 833000251: A:UR+g 1-2 B:WB  games BAB
+[249/600] seed 833000249: A:WU+b 1-2 B:BG  games ABB
+[250/600] seed 833000254: A:BG 2-0 B:UG  games AA
+[251/600] seed 833000257: A:WR 2-0 B:UG  games AA
+[252/600] seed 833000255: A:WU 1-2 B:WR  games BAB
+[253/600] seed 833000258: A:WG 2-1 B:UB  games BAA
+[254/600] seed 833000259: A:UB 2-1 B:WG  games ABA
+[255/600] seed 833000261: A:UB+g 1-2 B:WG  games ABB
+[256/600] seed 833000260: A:UG+w 0-2 B:WG  games BB
+[257/600] seed 833000246: A:UG 2-0 B:BG  games AA
+[258/600] seed 833000256: A:UB 1-2 B:UG  games BAB
+[259/600] seed 833000264: A:WG 2-1 B:UR  games ABA
+[260/600] seed 833000262: A:WG 0-2 B:UG+r  games BB
+[261/600] seed 833000266: A:WU 2-1 B:UB  games BAA
+[262/600] seed 833000265: A:WU 2-0 B:BG  games AA
+[263/600] seed 833000269: A:BR+u 0-2 B:UG  games BB
+[264/600] seed 833000267: A:UB 0-2 B:WG  games BB
+[265/600] seed 833000263: A:UG 1-2 B:BG  games ABB
+[266/600] seed 833000272: A:RG 0-2 B:WU  games BB
+[267/600] seed 833000270: A:UG 2-0 B:WU  games AA
+[268/600] seed 833000271: A:UB 1-2 B:WG  games ABB
+[269/600] seed 833000275: A:WU 2-0 B:UG  games AA
+[270/600] seed 833000274: A:UG 2-0 B:WU  games AA
+[271/600] seed 833000273: A:WB 0-2 B:UG  games BB
+[272/600] seed 833000276: A:WB 2-0 B:UR  games AA
+[273/600] seed 833000277: A:WU 0-2 B:BG  games BB
+[274/600] seed 833000278: A:BG 2-1 B:WU  games BAA
+[275/600] seed 833000280: A:WB 2-0 B:UG  games AA
+[276/600] seed 833000253: A:WU 1-2 B:BG  games ABB
+[277/600] seed 833000268: A:UG+w 0-2 B:UG  games BB
+[278/600] seed 833000282: A:UG 1-2 B:WR+u  games ABB
+[279/600] seed 833000283: A:UG 1-2 B:WB  games ABB
+[280/600] seed 833000284: A:WG 2-0 B:UB  games AA
+[281/600] seed 833000281: A:WB 0-2 B:WU  games BB
+[282/600] seed 833000286: A:WB 2-0 B:WG  games AA
+[283/600] seed 833000287: A:WB 2-1 B:UR  games BAA
+[284/600] seed 833000285: A:UB+g 2-1 B:UG  games ABA
+[285/600] seed 833000290: A:WG 2-1 B:BR  games BAA
+[286/600] seed 833000289: A:WG 1-2 B:BG  games ABB
+[287/600] seed 833000291: A:RG 2-1 B:UG  games BAA
+[288/600] seed 833000293: A:UR 0-2 B:WU  games BB
+[289/600] seed 833000294: A:WU 0-2 B:BR  games BB
+[290/600] seed 833000296: A:UG 2-1 B:WG+u  games ABA
+[291/600] seed 833000215: A:BR 2-1 B:UG  games BAA
+[292/600] seed 833000297: A:UG 1-2 B:UG+b  games BAB
+[293/600] seed 833000279: A:UR+g 0-2 B:WG  games BB
+[294/600] seed 833000300: A:UR 0-2 B:WB  games BB
+[295/600] seed 833000292: A:WU+g 2-0 B:UG  games AA
+[296/600] seed 833000302: A:WG 2-0 B:UB+r  games AA
+[297/600] seed 833000301: A:UG 0-2 B:WU  games BB
+[298/600] seed 833000298: A:UG 2-1 B:WU  games BAA
+[299/600] seed 833000303: A:WG 2-0 B:BG  games AA
+[300/600] seed 833000305: A:WU 1-2 B:UG  games BAB
+[301/600] seed 833000307: A:WU 0-2 B:BG  games BB
+[302/600] seed 833000304: A:WU 2-1 B:RG  games ABA
+[303/600] seed 833000308: A:BG 0-2 B:WU  games BB
+[304/600] seed 833000299: A:WB 2-1 B:WU  games BAA
+[305/600] seed 833000306: A:WB 2-1 B:UG  games ABA
+[306/600] seed 833000309: A:UR 2-0 B:UB  games AA
+[307/600] seed 833000310: A:WU 2-1 B:BG  games BAA
+[308/600] seed 833000312: A:UG+w 0-2 B:WU  games BB
+[309/600] seed 833000315: A:UR+w 0-2 B:WU  games BB
+[310/600] seed 833000311: A:WB 2-0 B:UG  games AA
+[311/600] seed 833000295: A:UG 2-1 B:WU  games ABA
+[312/600] seed 833000318: A:WU 2-0 B:BR  games AA
+[313/600] seed 833000313: A:UG 2-1 B:WB  games ABA
+[314/600] seed 833000319: A:UB+w 0-2 B:BG  games BB
+[315/600] seed 833000320: A:WG 2-0 B:UR  games AA
+[316/600] seed 833000314: A:WG 2-0 B:UR+g  games AA
+[317/600] seed 833000288: A:WB 2-0 B:WG  games AA
+[318/600] seed 833000323: A:WB+g 2-0 B:UG  games AA
+[319/600] seed 833000322: A:BG 0-2 B:UR  games BB
+[320/600] seed 833000317: A:BR 2-0 B:WU  games AA
+[321/600] seed 833000324: A:WU 2-0 B:UR+g  games AA
+[322/600] seed 833000316: A:UG 2-0 B:WU  games AA
+[323/600] seed 833000328: A:WU 1-2 B:UB  games BAB
+[324/600] seed 833000230: A:UB 1-1 B:WG  games BAT
+[325/600] seed 833000327: A:UG 1-2 B:UR  games ABB
+[326/600] seed 833000321: A:UB 2-1 B:WU  games BAA
+[327/600] seed 833000329: A:UB 0-2 B:UG  games BB
+[328/600] seed 833000332: A:WG 2-0 B:UB  games AA
+[329/600] seed 833000325: A:UG+w 1-2 B:BG  games BAB
+[330/600] seed 833000326: A:BR 0-2 B:UG  games BB
+[331/600] seed 833000334: A:WU+g 1-2 B:UG  games BAB
+[332/600] seed 833000330: A:WG 0-2 B:UB  games BB
+[333/600] seed 833000331: A:BG 1-2 B:WU  games ABB
+[334/600] seed 833000338: A:WB 1-2 B:WU  games BAB
+[335/600] seed 833000333: A:WU 2-0 B:WB  games AA
+[336/600] seed 833000341: A:BG 0-2 B:WU  games BB
+[337/600] seed 833000340: A:WB 2-0 B:UG  games AA
+[338/600] seed 833000342: A:WB 2-1 B:UR  games ABA
+[339/600] seed 833000337: A:BG 1-2 B:WU  games BAB
+[340/600] seed 833000344: A:WR 1-2 B:UR  games ABB
+[341/600] seed 833000335: A:WU 2-1 B:BG  games ABA
+[342/600] seed 833000345: A:UG 1-2 B:WB  games ABB
+[343/600] seed 833000347: A:BG 2-0 B:WU  games AA
+[344/600] seed 833000343: A:UG+w 2-1 B:UB+r  games BAA
+[345/600] seed 833000350: A:UG 0-2 B:WG  games BB
+[346/600] seed 833000348: A:WG 0-2 B:WU  games BB
+[347/600] seed 833000349: A:UG 0-2 B:WB  games BB
+[348/600] seed 833000353: A:UR 2-0 B:BG  games AA
+[349/600] seed 833000351: A:UR+g 1-2 B:WG  games BAB
+[350/600] seed 833000346: A:UR 1-2 B:UG+w  games BAB
+[351/600] seed 833000355: A:UR 0-2 B:WB  games BB
+[352/600] seed 833000352: A:WG 2-1 B:BG  games ABA
+[353/600] seed 833000358: A:WU 2-0 B:UG  games AA
+[354/600] seed 833000356: A:UB 0-2 B:WU  games BB
+[355/600] seed 833000357: A:WB 2-1 B:WU  games BAA
+[356/600] seed 833000360: A:UR+g 0-2 B:WB  games BB
+[357/600] seed 833000361: A:UR+g 1-2 B:WG  games ABB
+[358/600] seed 833000359: A:WU+g 2-0 B:UG  games AA
+[359/600] seed 833000362: A:UR 2-0 B:WU+g  games AA
+[360/600] seed 833000364: A:UB 0-2 B:WU  games BB
+[361/600] seed 833000366: A:UG 0-2 B:UR+w  games BB
+[362/600] seed 833000354: A:UR 0-2 B:WG  games BB
+[363/600] seed 833000369: A:UG 0-2 B:WU  games BB
+[364/600] seed 833000368: A:UB 0-2 B:WG  games BB
+[365/600] seed 833000365: A:WU 2-1 B:UR  games BAA
+[366/600] seed 833000371: A:UG 0-2 B:BR+w  games BB
+[367/600] seed 833000336: A:UG 2-1 B:BG  games BAA
+[368/600] seed 833000372: A:UR+w 0-2 B:BG  games BB
+[369/600] seed 833000373: A:UG 0-2 B:WB  games BB
+[370/600] seed 833000339: A:UR 2-0 B:WG  games AA
+[371/600] seed 833000375: A:WG 2-0 B:UB  games AA
+[372/600] seed 833000370: A:UR 1-2 B:UG  games ABB
+[373/600] seed 833000376: A:WG 2-0 B:UG  games AA
+[374/600] seed 833000363: A:WG 2-1 B:UG  games BAA
+[375/600] seed 833000379: A:UB 0-2 B:WG  games BB
+[376/600] seed 833000381: A:UR 0-2 B:WU  games BB
+[377/600] seed 833000380: A:WU+b 1-2 B:WG  games BAB
+[378/600] seed 833000383: A:WG 2-0 B:UB  games AA
+[379/600] seed 833000377: A:BG 2-1 B:WU  games BAA
+[380/600] seed 833000385: A:UG+b 0-2 B:WG  games BB
+[381/600] seed 833000386: A:WU 2-1 B:BR  games ABA
+[382/600] seed 833000384: A:WG 2-0 B:UG  games AA
+[383/600] seed 833000387: A:WB 2-1 B:UG  games BAA
+[384/600] seed 833000388: A:WU 2-1 B:UG  games BAA
+[385/600] seed 833000389: A:WU+g 1-2 B:UG  games BAB
+[386/600] seed 833000392: A:WG 2-0 B:WU  games AA
+[387/600] seed 833000393: A:WU 2-0 B:BG  games AA
+[388/600] seed 833000390: A:UG 0-2 B:UR  games BB
+[389/600] seed 833000395: A:UG 1-2 B:WB  games BAB
+[390/600] seed 833000396: A:UG 0-2 B:WB  games BB
+[391/600] seed 833000397: A:UG 0-2 B:WG  games BB
+[392/600] seed 833000398: A:RG 0-2 B:WU  games BB
+[393/600] seed 833000391: A:UG 2-1 B:UR  games BAA
+[394/600] seed 833000399: A:UR+g 1-2 B:UB  games BAB
+[395/600] seed 833000394: A:BG 1-2 B:WG  games BAB
+[396/600] seed 833000400: A:UG 2-0 B:UB  games AA
+[397/600] seed 833000401: A:WG 1-2 B:UB+g  games BAB
+[398/600] seed 833000402: A:UB 0-2 B:WG  games BB
+[399/600] seed 833000374: A:UG 2-1 B:WU  games BAA
+[400/600] seed 833000406: A:BR+w 2-0 B:UB  games AA
+[401/600] seed 833000404: A:UR 1-2 B:BG  games ABB
+[402/600] seed 833000407: A:WG 0-2 B:WU  games BB
+[403/600] seed 833000403: A:WU 2-1 B:UG  games ABA
+[404/600] seed 833000410: A:UG+b 0-2 B:WB  games BB
+[405/600] seed 833000409: A:WU+g 2-1 B:UG  games BAA
+[406/600] seed 833000408: A:BG 2-1 B:WU  games ABA
+[407/600] seed 833000412: A:WG 1-2 B:UB  games BAB
+[408/600] seed 833000414: A:WU 2-0 B:BR  games AA
+[409/600] seed 833000411: A:UG 0-2 B:WB  games BB
+[410/600] seed 833000405: A:UR+b 2-1 B:WB  games BAA
+[411/600] seed 833000413: A:WB 1-2 B:WU  games BAB
+[412/600] seed 833000416: A:BG 0-2 B:WB  games BB
+[413/600] seed 833000417: A:BR 1-2 B:WU  games ABB
+[414/600] seed 833000415: A:BR 1-2 B:WU  games BAB
+[415/600] seed 833000420: A:WG 2-0 B:UR  games AA
+[416/600] seed 833000419: A:WU 2-0 B:UB+w  games AA
+[417/600] seed 833000422: A:UG+w 0-2 B:WR  games BB
+[418/600] seed 833000418: A:UR 0-2 B:WG  games BB
+[419/600] seed 833000421: A:WG 0-2 B:WB  games BB
+[420/600] seed 833000423: A:BG 0-2 B:WU  games BB
+[421/600] seed 833000424: A:WG 2-0 B:UB  games AA
+[422/600] seed 833000426: A:WG 0-2 B:WB  games BB
+[423/600] seed 833000378: A:WG+b 2-1 B:UG  games BAA
+[424/600] seed 833000429: A:UB 2-1 B:UG  games BAA
+[425/600] seed 833000430: A:UB 2-0 B:WG  games AA
+[426/600] seed 833000431: A:BR 2-0 B:UG  games AA
+[427/600] seed 833000432: A:UR 0-2 B:WG  games BB
+[428/600] seed 833000425: A:UG+r 1-2 B:WB  games BAB
+[429/600] seed 833000428: A:WU 0-2 B:WG  games BB
+[430/600] seed 833000433: A:WG 2-1 B:WU+g  games ABA
+[431/600] seed 833000434: A:UG 2-0 B:WU+r  games AA
+[432/600] seed 833000436: A:UB 2-1 B:WG  games BAA
+[433/600] seed 833000439: A:WG+b 0-2 B:BG  games BB
+[434/600] seed 833000427: A:UG 0-2 B:WR  games BB
+[435/600] seed 833000440: A:WR 2-0 B:BG+w  games AA
+[436/600] seed 833000441: A:WG 2-0 B:WR  games AA
+[437/600] seed 833000442: A:WU+b 2-1 B:BG  games BAA
+[438/600] seed 833000437: A:WU 1-2 B:UB+g  games BAB
+[439/600] seed 833000438: A:BG 1-2 B:WR  games BAB
+[440/600] seed 833000444: A:UR+g 0-2 B:WB+r  games BB
+[441/600] seed 833000446: A:UB 2-1 B:RG+u  games ABA
+[442/600] seed 833000445: A:BR 2-1 B:UG  games BAA
+[443/600] seed 833000448: A:BR 1-2 B:UG  games BAB
+[444/600] seed 833000443: A:UG 1-2 B:BG  games ABB
+[445/600] seed 833000451: A:WB 2-0 B:UR  games AA
+[446/600] seed 833000447: A:RG 0-2 B:UG  games BB
+[447/600] seed 833000453: A:UB 1-2 B:WG  games BAB
+[448/600] seed 833000449: A:WU 2-0 B:WU+g  games AA
+[449/600] seed 833000452: A:UB 0-2 B:UG+r  games BB
+[450/600] seed 833000455: A:BG 1-2 B:UG+w  games BAB
+[451/600] seed 833000450: A:UG 2-0 B:WG  games AA
+[452/600] seed 833000454: A:BG 2-0 B:WU  games AA
+[453/600] seed 833000459: A:UB 2-0 B:WG  games AA
+[454/600] seed 833000382: A:WU 2-0 B:WG+b  games AA
+[455/600] seed 833000458: A:WU 2-0 B:WB  games AA
+[456/600] seed 833000462: A:WB 2-0 B:UR+g  games AA
+[457/600] seed 833000460: A:WB 2-0 B:UG  games AA
+[458/600] seed 833000456: A:WU 2-0 B:UB  games AA
+[459/600] seed 833000463: A:UR 0-2 B:WG  games BB
+[460/600] seed 833000461: A:UG 1-2 B:WB  games BAB
+[461/600] seed 833000464: A:WU 2-0 B:BR  games AA
+[462/600] seed 833000465: A:UR 1-2 B:BG  games ABB
+[463/600] seed 833000467: A:UG 0-2 B:WG  games BB
+[464/600] seed 833000466: A:UB 2-0 B:RG  games AA
+[465/600] seed 833000470: A:WU 0-2 B:WG  games BB
+[466/600] seed 833000471: A:UG 2-0 B:UB+w  games AA
+[467/600] seed 833000468: A:UR+g 0-2 B:WG  games BB
+[468/600] seed 833000473: A:WU 2-1 B:WB  games BAA
+[469/600] seed 833000469: A:UG 1-2 B:WB  games ABB
+[470/600] seed 833000435: A:WG 0-2 B:WR  games BB
+[471/600] seed 833000457: A:WB 1-2 B:WG  games ABB
+[472/600] seed 833000476: A:UG 0-2 B:WB+g  games BB
+[473/600] seed 833000475: A:WB 2-1 B:WU  games BAA
+[474/600] seed 833000478: A:WU 2-1 B:UB  games BAA
+[475/600] seed 833000480: A:WR 2-1 B:WU  games ABA
+[476/600] seed 833000479: A:UR 2-0 B:WU+g  games AA
+[477/600] seed 833000483: A:WB 2-0 B:UG  games AA
+[478/600] seed 833000481: A:WG 2-0 B:UR  games AA
+[479/600] seed 833000482: A:WU 2-0 B:RG  games AA
+[480/600] seed 833000484: A:WG 2-0 B:UR  games AA
+[481/600] seed 833000477: A:WU 2-0 B:WG+u  games AA
+[482/600] seed 833000485: A:WB 2-1 B:UG  games BAA
+[483/600] seed 833000486: A:WR 0-2 B:UB  games BB
+[484/600] seed 833000487: A:UG 0-2 B:WB  games BB
+[485/600] seed 833000488: A:WG 2-1 B:UB  games BAA
+[486/600] seed 833000491: A:WU 0-2 B:WG  games BB
+[487/600] seed 833000489: A:WU 1-2 B:BR  games BAB
+[488/600] seed 833000494: A:UR 0-2 B:WB  games BB
+[489/600] seed 833000492: A:UB 0-2 B:WU  games BB
+[490/600] seed 833000490: A:WB 0-2 B:UB  games BB
+[491/600] seed 833000496: A:UR 0-2 B:UB  games BB
+[492/600] seed 833000495: A:WU 0-2 B:RG  games BB
+[493/600] seed 833000474: A:WG 2-1 B:UB  games BAA
+[494/600] seed 833000497: A:WU 0-2 B:BG  games BB
+[495/600] seed 833000499: A:UG 2-0 B:WB  games AA
+[496/600] seed 833000500: A:WG 2-0 B:UR+g  games AA
+[497/600] seed 833000498: A:UG 0-2 B:WR  games BB
+[498/600] seed 833000503: A:WG 2-0 B:UB  games AA
+[499/600] seed 833000502: A:UB+g 0-2 B:WU  games BB
+[500/600] seed 833000504: A:BG 2-0 B:UR+w  games AA
+[501/600] seed 833000505: A:WU 0-2 B:BG+u  games BB
+[502/600] seed 833000507: A:WG 0-2 B:WB  games BB
+[503/600] seed 833000509: A:WB 2-1 B:UR+g  games ABA
+[504/600] seed 833000506: A:UG 0-2 B:WG+u  games BB
+[505/600] seed 833000367: A:WB 1-0 B:UG  games A  ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted
+[506/600] seed 833000510: A:WG 2-1 B:WU  games ABA
+[507/600] seed 833000512: A:WG 2-0 B:UR  games AA
+[508/600] seed 833000514: A:WG 2-0 B:UG  games AA
+[509/600] seed 833000513: A:WR 2-1 B:BG  games ABA
+[510/600] seed 833000516: A:UG 2-0 B:WU  games AA
+[511/600] seed 833000515: A:UR 0-2 B:WR+g  games BB
+[512/600] seed 833000518: A:BG 2-0 B:UG  games AA
+[513/600] seed 833000517: A:WB 2-1 B:UR  games ABA
+[514/600] seed 833000520: A:BG 0-2 B:WU  games BB
+[515/600] seed 833000521: A:BG 0-2 B:WU  games BB
+[516/600] seed 833000511: A:UG+b 0-2 B:WG  games BB
+[517/600] seed 833000523: A:WU 1-2 B:UG  games BAB
+[518/600] seed 833000524: A:WU 2-1 B:UG  games BAA
+[519/600] seed 833000472: A:UG 0-2 B:WU  games BB
+[520/600] seed 833000526: A:UB 2-1 B:WU+g  games BAA
+[521/600] seed 833000522: A:UG 1-2 B:WB  games BAB
+[522/600] seed 833000525: A:UG 2-1 B:UB+g  games BAA
+[523/600] seed 833000508: A:WG 1-2 B:WU+b  games BAB
+[524/600] seed 833000528: A:UB 1-2 B:WG  games ABB
+[525/600] seed 833000529: A:WU 1-2 B:UB  games BAB
+[526/600] seed 833000530: A:WU 2-1 B:UB  games ABA
+[527/600] seed 833000531: A:UG 0-2 B:WU+g  games BB
+[528/600] seed 833000533: A:WU 0-2 B:WR  games BB
+[529/600] seed 833000535: A:UR+g 0-2 B:UG  games BB
+[530/600] seed 833000532: A:WU 2-1 B:RG  games ABA
+[531/600] seed 833000534: A:BG 2-1 B:UR+g  games ABA
+[532/600] seed 833000538: A:UB 2-0 B:RG  games AA
+[533/600] seed 833000536: A:WG 2-0 B:UR+g  games AA
+[534/600] seed 833000540: A:WG 2-0 B:UR  games AA
+[535/600] seed 833000527: A:WU 2-1 B:RG  games ABA
+[536/600] seed 833000541: A:WU 2-0 B:BG  games AA
+[537/600] seed 833000537: A:WU 2-1 B:BG  games BAA
+[538/600] seed 833000542: A:UG 0-2 B:WR  games BB
+[539/600] seed 833000543: A:UR 1-2 B:WR  games BAB
+[540/600] seed 833000545: A:WR 2-0 B:UG  games AA
+[541/600] seed 833000544: A:WG 1-2 B:BG  games ABB
+[542/600] seed 833000546: A:WB 2-0 B:UG  games AA
+[543/600] seed 833000548: A:UG 2-0 B:UB  games AA
+[544/600] seed 833000549: A:UG 0-2 B:WG  games BB
+[545/600] seed 833000550: A:UG 0-2 B:WR  games BB
+[546/600] seed 833000551: A:WU+g 0-2 B:WG+b  games BB
+[547/600] seed 833000539: A:UG 2-1 B:BG  games ABA
+[548/600] seed 833000553: A:UB 0-2 B:WU  games BB
+[549/600] seed 833000554: A:BG 2-0 B:UR  games AA
+[550/600] seed 833000547: A:WG 1-2 B:BG  games ABB
+[551/600] seed 833000556: A:UG 0-2 B:WU  games BB
+[552/600] seed 833000552: A:BG 1-2 B:UG+w  games BAB
+[553/600] seed 833000558: A:UG 2-1 B:UB  games BAA
+[554/600] seed 833000559: A:UB 0-2 B:UG  games BB
+[555/600] seed 833000557: A:WU 1-2 B:BG  games BAB
+[556/600] seed 833000555: A:WB 1-2 B:UG  games BAB
+[557/600] seed 833000560: A:WR 2-1 B:WU+g  games ABA
+[558/600] seed 833000562: A:UB 2-0 B:UG  games AA
+[559/600] seed 833000565: A:UG 0-2 B:WB  games BB
+[560/600] seed 833000561: A:WU 2-0 B:RG  games AA
+[561/600] seed 833000566: A:WG 2-0 B:UB  games AA
+[562/600] seed 833000563: A:BG 0-2 B:UG  games BB
+[563/600] seed 833000567: A:WU 0-2 B:UB  games BB
+[564/600] seed 833000569: A:WG 0-2 B:UB  games BB
+[565/600] seed 833000571: A:UB 1-2 B:WG  games BAB
+[566/600] seed 833000570: A:UG 0-2 B:WG+u  games BB
+[567/600] seed 833000564: A:UR 2-0 B:UG  games AA
+[568/600] seed 833000572: A:UG 2-0 B:WG+b  games AA
+[569/600] seed 833000574: A:WG 2-0 B:BR+w  games AA
+[570/600] seed 833000573: A:WU 2-0 B:UG+w  games AA
+[571/600] seed 833000568: A:WB 2-1 B:WU  games BAA
+[572/600] seed 833000577: A:UG 2-0 B:WU  games AA
+[573/600] seed 833000579: A:WR 2-1 B:UG  games BAA
+[574/600] seed 833000578: A:BG 0-2 B:WU  games BB
+[575/600] seed 833000580: A:WB 2-0 B:UG  games AA
+[576/600] seed 833000581: A:WG 2-0 B:BG  games AA
+[577/600] seed 833000582: A:WB 2-0 B:RG  games AA
+[578/600] seed 833000583: A:WR 2-0 B:UB  games AA
+[579/600] seed 833000585: A:WG 2-0 B:UG  games AA
+[580/600] seed 833000586: A:UR+g 2-0 B:UG  games AA
+[581/600] seed 833000584: A:WG 1-2 B:UG  games ABB
+[582/600] seed 833000575: A:UR 2-0 B:WU  games AA
+[583/600] seed 833000588: A:WU 0-2 B:WB+u  games BB
+[584/600] seed 833000501: A:WU 2-1 B:UG  games ABA
+[585/600] seed 833000590: A:UR 2-1 B:WU  games ABA
+[586/600] seed 833000589: A:WG 2-1 B:BG  games BAA
+[587/600] seed 833000587: A:WU 2-0 B:WG+b  games AA
+[588/600] seed 833000591: A:UB 1-2 B:WU  games BAB
+[589/600] seed 833000593: A:WU+b 1-2 B:UB  games ABB
+[590/600] seed 833000595: A:WU 2-0 B:UG  games AA
+[591/600] seed 833000597: A:BR 2-0 B:UG  games AA
+[592/600] seed 833000596: A:WG 2-1 B:WB  games ABA
+[593/600] seed 833000592: A:BG 2-0 B:UR  games AA
+[594/600] seed 833000599: A:UG 0-2 B:WB  games BB
+[595/600] seed 833000600: A:WB+u 0-2 B:WU  games BB
+[596/600] seed 833000598: A:WU 1-2 B:BG  games ABB
+[597/600] seed 833000594: A:WU 1-2 B:WG  games ABB
+[598/600] seed 833000576: A:UG 0-2 B:WB  games BB
+[599/600] seed 833000493: A:BG 1-1 B:WG  games BTA
+[600/600] seed 833000519: A:WG 2-1 B:UG  games BAA
+matches: 1495 s for 600 (2.5 s a draft wall-clock on 7 worker(s))
+done in 1497 s -> var/lab-j133/compare/runs/synergy_17/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/compare/runs/synergy_17
+same seeds in every population: 600 (833000001..833000600)
+flatness          omega 0.00 [0.00, 3.01]   fair_fight 3.59 [1.51, 5.03]   synergy 7.83 [6.37, 9.35]   synergy_v1 7.50 [5.99, 8.87]   synergy_17 8.39 [6.86, 9.95]
+pair_spread       omega 13.7 [6.3, 22.2]   fair_fight 24.0 [17.2, 31.9]   synergy 41.6 [32.9, 51.9]   synergy_v1 43.4 [34.6, 52.7]   synergy_17 42.3 [32.9, 53.3]
+pair_within5      omega 80.0 [50.0, 90.0]   fair_fight 40.0 [20.0, 60.0]   synergy 10.0 [0.0, 30.0]   synergy_v1 0.0 [0.0, 30.0]   synergy_17 20.0 [0.0, 30.0]
+draw_rate         omega 0.00 [0.00, 0.00]   fair_fight 0.00 [0.00, 0.00]   synergy 0.28 [0.07, 0.56]   synergy_v1 0.07 [0.00, 0.21]   synergy_17 0.14 [0.00, 0.35]
+timeout_rate      omega 0.00 [0.00, 0.00]   fair_fight 0.00 [0.00, 0.00]   synergy 0.28 [0.07, 0.56]   synergy_v1 0.00 [0.00, 0.00]   synergy_17 0.14 [0.00, 0.35]
+game_turns        omega 18.39 [18.11, 18.67]   fair_fight 21.74 [21.40, 22.10]   synergy 19.30 [18.99, 19.59]   synergy_v1 19.29 [19.01, 19.58]   synergy_17 19.36 [19.06, 19.64]
+lands             omega 16.984 [16.977, 16.991]   fair_fight 16.867 [16.848, 16.884]   synergy 16.391 [16.364, 16.415]   synergy_v1 16.352 [16.327, 16.378]   synergy_17 17.000 [17.000, 17.000]
+colours           omega 2.136 [2.116, 2.154]   fair_fight 2.696 [2.670, 2.718]   synergy 2.162 [2.143, 2.183]   synergy_v1 2.142 [2.124, 2.161]   synergy_17 2.133 [2.115, 2.153]
+two_colour        omega 100.0 [100.0, 100.0]   fair_fight 100.0 [100.0, 100.0]   synergy 100.0 [100.0, 100.0]   synergy_v1 100.0 [100.0, 100.0]   synergy_17 100.0 [100.0, 100.0]
+splash            omega 13.6 [11.6, 15.4]   fair_fight 69.6 [67.0, 71.8]   synergy 16.2 [14.3, 18.3]   synergy_v1 14.2 [12.4, 16.1]   synergy_17 13.3 [11.5, 15.3]
+first_pick_top10  omega 11.7 [11.5, 11.9]   fair_fight 12.6 [12.4, 12.8]   synergy 12.8 [12.6, 13.0]   synergy_v1 12.8 [12.6, 13.0]   synergy_17 12.8 [12.6, 13.0]
+wrote var/lab-j133/compare/compare.json and var/lab-j133/compare/compare.md
+# Cube populations compared
+
+5 populations, the same 600 draft seeds each (833000001..833000600). 95% intervals: percentile, 1000 draft-clustered bootstrap replicates (seed 1), the seeds resampled jointly across populations, so a difference is paired; the replicates of flatness, pair_spread and first_pick_top10 are recentred on their estimate, because a resample biases those three upward (D441). Colour pairs count with 30+ decisive games; card flatness is ForgeCoach's (flatness.ts) over cards with 10+ decisive games.
+
+| # | population | cube | sha | ratings | weights | drafts | games | decisive | engine errors | run folder |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | omega | cubes/omega-cube-180.md | f6432a75975e | Forge's ranks | defaults | 600 | 1491 | 1491 | 0 | var/lab-j133/compare/runs/omega |
+| 2 | fair_fight | cubes/fair-fight-cube-180.md | 7db6ad35f7ef | cubes/fair-fight-cube-180.ratings.tsv | defaults | 600 | 1499 | 1499 | 0 | var/lab-j133/compare/runs/fair_fight |
+| 3 | synergy | var/lab-j133/cubes/synergy-cube-180.md | 8cb5e5f0827a | Forge's ranks | defaults | 600 | 1440 | 1436 | 2 | var/lab-j133/compare/runs/synergy |
+| 4 | synergy_v1 | cubes/synergy-cube-180.md | 7e4f1e95fe38 | cubes/synergy-cube-180.ratings.tsv | defaults | 600 | 1445 | 1444 | 0 | var/lab-j133/compare/runs/synergy_v1 |
+| 5 | synergy_17 | var/lab-j133/cubes/synergy-cube-180.md | 8cb5e5f0827a | Forge's ranks | sixteenLandsAt=0 | 600 | 1424 | 1422 | 1 | var/lab-j133/compare/runs/synergy_17 |
+
+No `--rule` was given: the tables rank and give intervals; they deliver no verdict.
+
+## Card-rate flatness: true SD of the cards' win rates (`flatness`, pts)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 0.00 | [0.00, 3.01] | 1000 |
+| 2 | fair_fight | 3.59 | [1.51, 5.03] | 1000 |
+| 3 | synergy_v1 | 7.50 | [5.99, 8.87] | 1000 |
+| 4 | synergy | 7.83 | [6.37, 9.35] | 1000 |
+| 5 | synergy_17 | 8.39 | [6.86, 9.95] | 1000 |
+
+ForgeCoach's own reading of each (its chi-square interval on the observed variance, not the bootstrap): omega 0.00 [0.00, 3.22], unclear, 165 cards; fair_fight 3.59 [2.59, 5.33], unclear, 160 cards; synergy 7.83 [6.80, 9.40], uneven, 157 cards; synergy_v1 7.50 [6.47, 9.11], uneven, 158 cards; synergy_17 8.39 [7.30, 10.02], uneven, 155 cards.
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | -3.59 | [-4.83, +0.23] | no |
+| omega - synergy | -7.83 | [-9.08, -4.27] | yes |
+| omega - synergy_v1 | -7.50 | [-8.71, -4.08] | yes |
+| omega - synergy_17 | -8.39 | [-9.78, -4.85] | yes |
+| fair_fight - synergy | -4.24 | [-6.77, -2.12] | yes |
+| fair_fight - synergy_v1 | -3.91 | [-6.47, -1.65] | yes |
+| fair_fight - synergy_17 | -4.80 | [-7.54, -2.58] | yes |
+| synergy - synergy_v1 | +0.33 | [-1.60, +2.40] | no |
+| synergy - synergy_17 | -0.56 | [-2.30, +1.26] | no |
+| synergy_v1 - synergy_17 | -0.89 | [-2.91, +1.41] | no |
+
+Differences whose interval excludes 0: omega - synergy -7.83; omega - synergy_v1 -7.50; omega - synergy_17 -8.39; fair_fight - synergy -4.24; fair_fight - synergy_v1 -3.91; fair_fight - synergy_17 -4.80.
+
+## Colour-pair spread: max - min pair win rate (`pair_spread`, pts)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 13.7 | [6.3, 22.2] | 1000 |
+| 2 | fair_fight | 24.0 | [17.2, 31.9] | 1000 |
+| 3 | synergy | 41.6 | [32.9, 51.9] | 1000 |
+| 4 | synergy_17 | 42.3 | [32.9, 53.3] | 1000 |
+| 5 | synergy_v1 | 43.4 | [34.6, 52.7] | 1000 |
+
+Pairs with 30+ decisive games: omega 10, fair_fight 10, synergy 10, synergy_v1 10, synergy_17 10.
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | -10.2 | [-21.2, +0.7] | no |
+| omega - synergy | -27.9 | [-41.8, -14.8] | yes |
+| omega - synergy_v1 | -29.7 | [-41.8, -17.7] | yes |
+| omega - synergy_17 | -28.6 | [-42.8, -16.0] | yes |
+| fair_fight - synergy | -17.6 | [-30.0, -6.2] | yes |
+| fair_fight - synergy_v1 | -19.5 | [-30.0, -7.8] | yes |
+| fair_fight - synergy_17 | -18.3 | [-32.1, -6.9] | yes |
+| synergy - synergy_v1 | -1.8 | [-15.7, +11.8] | no |
+| synergy - synergy_17 | -0.7 | [-12.3, +10.2] | no |
+| synergy_v1 - synergy_17 | +1.1 | [-12.6, +14.1] | no |
+
+Differences whose interval excludes 0: omega - synergy -27.9; omega - synergy_v1 -29.7; omega - synergy_17 -28.6; fair_fight - synergy -17.6; fair_fight - synergy_v1 -19.5; fair_fight - synergy_17 -18.3.
+
+## Colour pairs within 5 points of 50% (`pair_within5`, %)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | synergy_v1 | 0.0 | [0.0, 30.0] | 1000 |
+| 2 | synergy | 10.0 | [0.0, 30.0] | 1000 |
+| 3 | synergy_17 | 20.0 | [0.0, 30.0] | 1000 |
+| 4 | fair_fight | 40.0 | [20.0, 60.0] | 1000 |
+| 5 | omega | 80.0 | [50.0, 90.0] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | +40.0 | [0.0, +60.0] | no |
+| omega - synergy | +70.0 | [+30.0, +80.0] | yes |
+| omega - synergy_v1 | +80.0 | [+30.0, +90.0] | yes |
+| omega - synergy_17 | +60.0 | [+29.8, +80.0] | yes |
+| fair_fight - synergy | +30.0 | [0.0, +50.2] | no |
+| fair_fight - synergy_v1 | +40.0 | [0.0, +60.0] | no |
+| fair_fight - synergy_17 | +20.0 | [0.0, +50.0] | no |
+| synergy - synergy_v1 | +10.0 | [-20.0, +20.0] | no |
+| synergy - synergy_17 | -10.0 | [-20.0, +20.0] | no |
+| synergy_v1 - synergy_17 | -20.0 | [-30.0, +20.0] | no |
+
+Differences whose interval excludes 0: omega - synergy +70.0; omega - synergy_v1 +80.0; omega - synergy_17 +60.0.
+
+## Draws (timeouts included) per game (`draw_rate`, %)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 0.00 | [0.00, 0.00] | 1000 |
+| 2 | fair_fight | 0.00 | [0.00, 0.00] | 1000 |
+| 3 | synergy_v1 | 0.07 | [0.00, 0.21] | 1000 |
+| 4 | synergy_17 | 0.14 | [0.00, 0.35] | 1000 |
+| 5 | synergy | 0.28 | [0.07, 0.56] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | 0.00 | [0.00, 0.00] | no |
+| omega - synergy | -0.28 | [-0.56, -0.07] | yes |
+| omega - synergy_v1 | -0.07 | [-0.21, 0.00] | no |
+| omega - synergy_17 | -0.14 | [-0.35, 0.00] | no |
+| fair_fight - synergy | -0.28 | [-0.56, -0.07] | yes |
+| fair_fight - synergy_v1 | -0.07 | [-0.21, 0.00] | no |
+| fair_fight - synergy_17 | -0.14 | [-0.35, 0.00] | no |
+| synergy - synergy_v1 | +0.21 | [-0.07, +0.49] | no |
+| synergy - synergy_17 | +0.14 | [-0.21, +0.49] | no |
+| synergy_v1 - synergy_17 | -0.07 | [-0.29, +0.14] | no |
+
+Differences whose interval excludes 0: omega - synergy -0.28; fair_fight - synergy -0.28.
+
+## Timeouts per game (`timeout_rate`, %)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 0.00 | [0.00, 0.00] | 1000 |
+| 2 | fair_fight | 0.00 | [0.00, 0.00] | 1000 |
+| 3 | synergy_v1 | 0.00 | [0.00, 0.00] | 1000 |
+| 4 | synergy_17 | 0.14 | [0.00, 0.35] | 1000 |
+| 5 | synergy | 0.28 | [0.07, 0.56] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | 0.00 | [0.00, 0.00] | no |
+| omega - synergy | -0.28 | [-0.56, -0.07] | yes |
+| omega - synergy_v1 | 0.00 | [0.00, 0.00] | no |
+| omega - synergy_17 | -0.14 | [-0.35, 0.00] | no |
+| fair_fight - synergy | -0.28 | [-0.56, -0.07] | yes |
+| fair_fight - synergy_v1 | 0.00 | [0.00, 0.00] | no |
+| fair_fight - synergy_17 | -0.14 | [-0.35, 0.00] | no |
+| synergy - synergy_v1 | +0.28 | [+0.07, +0.56] | yes |
+| synergy - synergy_17 | +0.14 | [-0.21, +0.49] | no |
+| synergy_v1 - synergy_17 | -0.14 | [-0.35, 0.00] | no |
+
+Differences whose interval excludes 0: omega - synergy -0.28; fair_fight - synergy -0.28; synergy - synergy_v1 +0.28.
+
+## Mean game length, turns (`game_turns`, turns)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 18.39 | [18.11, 18.67] | 1000 |
+| 2 | synergy_v1 | 19.29 | [19.01, 19.58] | 1000 |
+| 3 | synergy | 19.30 | [18.99, 19.59] | 1000 |
+| 4 | synergy_17 | 19.36 | [19.06, 19.64] | 1000 |
+| 5 | fair_fight | 21.74 | [21.40, 22.10] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | -3.35 | [-3.80, -2.89] | yes |
+| omega - synergy | -0.91 | [-1.30, -0.53] | yes |
+| omega - synergy_v1 | -0.90 | [-1.29, -0.52] | yes |
+| omega - synergy_17 | -0.97 | [-1.36, -0.59] | yes |
+| fair_fight - synergy | +2.43 | [+2.00, +2.87] | yes |
+| fair_fight - synergy_v1 | +2.44 | [+1.99, +2.91] | yes |
+| fair_fight - synergy_17 | +2.38 | [+1.93, +2.79] | yes |
+| synergy - synergy_v1 | +0.01 | [-0.41, +0.44] | no |
+| synergy - synergy_17 | -0.05 | [-0.39, +0.28] | no |
+| synergy_v1 - synergy_17 | -0.06 | [-0.49, +0.34] | no |
+
+Differences whose interval excludes 0: omega - fair_fight -3.35; omega - synergy -0.91; omega - synergy_v1 -0.90; omega - synergy_17 -0.97; fair_fight - synergy +2.43; fair_fight - synergy_v1 +2.44; fair_fight - synergy_17 +2.38.
+
+## Mean lands in a played deck (`lands`, lands)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | synergy_v1 | 16.352 | [16.327, 16.378] | 1000 |
+| 2 | synergy | 16.391 | [16.364, 16.415] | 1000 |
+| 3 | fair_fight | 16.867 | [16.848, 16.884] | 1000 |
+| 4 | omega | 16.984 | [16.977, 16.991] | 1000 |
+| 5 | synergy_17 | 17.000 | [17.000, 17.000] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | +0.117 | [+0.098, +0.136] | yes |
+| omega - synergy | +0.593 | [+0.568, +0.622] | yes |
+| omega - synergy_v1 | +0.633 | [+0.606, +0.658] | yes |
+| omega - synergy_17 | -0.016 | [-0.023, -0.009] | yes |
+| fair_fight - synergy | +0.477 | [+0.448, +0.508] | yes |
+| fair_fight - synergy_v1 | +0.516 | [+0.486, +0.544] | yes |
+| fair_fight - synergy_17 | -0.133 | [-0.152, -0.116] | yes |
+| synergy - synergy_v1 | +0.039 | [+0.006, +0.071] | yes |
+| synergy - synergy_17 | -0.609 | [-0.636, -0.585] | yes |
+| synergy_v1 - synergy_17 | -0.648 | [-0.673, -0.622] | yes |
+
+Differences whose interval excludes 0: omega - fair_fight +0.117; omega - synergy +0.593; omega - synergy_v1 +0.633; omega - synergy_17 -0.016; fair_fight - synergy +0.477; fair_fight - synergy_v1 +0.516; fair_fight - synergy_17 -0.133; synergy - synergy_v1 +0.039; synergy - synergy_17 -0.609; synergy_v1 - synergy_17 -0.648.
+
+## Mean colours in a played deck (main + splash) (`colours`, colours)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | synergy_17 | 2.133 | [2.115, 2.153] | 1000 |
+| 2 | omega | 2.136 | [2.116, 2.154] | 1000 |
+| 3 | synergy_v1 | 2.142 | [2.124, 2.161] | 1000 |
+| 4 | synergy | 2.162 | [2.143, 2.183] | 1000 |
+| 5 | fair_fight | 2.696 | [2.670, 2.718] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | -0.560 | [-0.588, -0.530] | yes |
+| omega - synergy | -0.026 | [-0.052, +0.001] | no |
+| omega - synergy_v1 | -0.006 | [-0.033, +0.021] | no |
+| omega - synergy_17 | +0.002 | [-0.022, +0.026] | no |
+| fair_fight - synergy | +0.534 | [+0.501, +0.564] | yes |
+| fair_fight - synergy_v1 | +0.554 | [+0.521, +0.584] | yes |
+| fair_fight - synergy_17 | +0.563 | [+0.532, +0.592] | yes |
+| synergy - synergy_v1 | +0.020 | [-0.004, +0.045] | no |
+| synergy - synergy_17 | +0.028 | [+0.013, +0.045] | yes |
+| synergy_v1 - synergy_17 | +0.008 | [-0.019, +0.035] | no |
+
+Differences whose interval excludes 0: omega - fair_fight -0.560; fair_fight - synergy +0.534; fair_fight - synergy_v1 +0.554; fair_fight - synergy_17 +0.563; synergy - synergy_17 +0.028.
+
+## Played decks with exactly two main colours (`two_colour`, %)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 100.0 | [100.0, 100.0] | 1000 |
+| 2 | fair_fight | 100.0 | [100.0, 100.0] | 1000 |
+| 3 | synergy | 100.0 | [100.0, 100.0] | 1000 |
+| 4 | synergy_v1 | 100.0 | [100.0, 100.0] | 1000 |
+| 5 | synergy_17 | 100.0 | [100.0, 100.0] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | 0.0 | [0.0, 0.0] | no |
+| omega - synergy | 0.0 | [0.0, 0.0] | no |
+| omega - synergy_v1 | 0.0 | [0.0, 0.0] | no |
+| omega - synergy_17 | 0.0 | [0.0, 0.0] | no |
+| fair_fight - synergy | 0.0 | [0.0, 0.0] | no |
+| fair_fight - synergy_v1 | 0.0 | [0.0, 0.0] | no |
+| fair_fight - synergy_17 | 0.0 | [0.0, 0.0] | no |
+| synergy - synergy_v1 | 0.0 | [0.0, 0.0] | no |
+| synergy - synergy_17 | 0.0 | [0.0, 0.0] | no |
+| synergy_v1 - synergy_17 | 0.0 | [0.0, 0.0] | no |
+
+No difference's interval excludes 0.
+
+## Played decks with a splash (`splash`, %)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | synergy_17 | 13.3 | [11.5, 15.3] | 1000 |
+| 2 | omega | 13.6 | [11.6, 15.4] | 1000 |
+| 3 | synergy_v1 | 14.2 | [12.4, 16.1] | 1000 |
+| 4 | synergy | 16.2 | [14.3, 18.3] | 1000 |
+| 5 | fair_fight | 69.6 | [67.0, 71.8] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | -56.0 | [-58.8, -53.0] | yes |
+| omega - synergy | -2.6 | [-5.2, +0.1] | no |
+| omega - synergy_v1 | -0.6 | [-3.3, +2.1] | no |
+| omega - synergy_17 | +0.3 | [-2.3, +2.6] | no |
+| fair_fight - synergy | +53.4 | [+50.1, +56.4] | yes |
+| fair_fight - synergy_v1 | +55.4 | [+52.1, +58.4] | yes |
+| fair_fight - synergy_17 | +56.3 | [+53.3, +59.3] | yes |
+| synergy - synergy_v1 | +2.0 | [-0.4, +4.5] | no |
+| synergy - synergy_17 | +2.8 | [+1.3, +4.5] | yes |
+| synergy_v1 - synergy_17 | +0.8 | [-1.9, +3.5] | no |
+
+Differences whose interval excludes 0: omega - fair_fight -56.0; fair_fight - synergy +53.4; fair_fight - synergy_v1 +55.4; fair_fight - synergy_17 +56.3; synergy - synergy_17 +2.8.
+
+## First-pick concentration: share of first-line cards that are the top 10 (`first_pick_top10`, %)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 11.7 | [11.5, 11.9] | 1000 |
+| 2 | fair_fight | 12.6 | [12.4, 12.8] | 1000 |
+| 3 | synergy | 12.8 | [12.6, 13.0] | 1000 |
+| 4 | synergy_v1 | 12.8 | [12.6, 13.0] | 1000 |
+| 5 | synergy_17 | 12.8 | [12.6, 13.0] | 1000 |
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | -0.9 | [-1.1, -0.6] | yes |
+| omega - synergy | -1.1 | [-1.3, -0.8] | yes |
+| omega - synergy_v1 | -1.1 | [-1.3, -0.8] | yes |
+| omega - synergy_17 | -1.1 | [-1.3, -0.8] | yes |
+| fair_fight - synergy | -0.2 | [-0.5, +0.0] | no |
+| fair_fight - synergy_v1 | -0.2 | [-0.5, +0.1] | no |
+| fair_fight - synergy_17 | -0.2 | [-0.5, +0.0] | no |
+| synergy - synergy_v1 | 0.0 | [-0.2, +0.3] | no |
+| synergy - synergy_17 | 0.0 | [0.0, 0.0] | no |
+| synergy_v1 - synergy_17 | 0.0 | [-0.3, +0.2] | no |
+
+Differences whose interval excludes 0: omega - fair_fight -0.9; omega - synergy -1.1; omega - synergy_v1 -1.1; omega - synergy_17 -1.1.
+

@@ -791,3 +791,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J138/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 0c9bab7
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J133 DONE: Cube populations compared for balance (D441): Synergy v2 (ForgeCoach's current document), Synergy v1 (mtg-table's file), Omega, Fair Fight and Synergy v2 with 17 lands forced in the lab builder, 600 grid drafts each on the SAME seed block (833,000,001-833,000,600), best of three, Default vs Default, unrecorded; tools/cubelab.sh compare's pre-registered measures with paired draft-clustered bootstrap intervals, no verdict rule
+
+- finished: 2026-10-16T11:21:34-04:00
+- decides: which cube population tends towards the more balanced AI deck builds (Justin, 2026-10-15): a measurement for the owner and the cloud to read, not a switch
+- hypothesis: none to confirm. Synergy v1 and v2 differ by three cards (Skullclamp, Ledger Shredder, Man-o'-War out; Yawgmoth, Reanimate, Murderous Redcap in), so their differences should be small and mostly not shown; the 17-land variant draws the same deals as v2 and changes only the builder's 16-land choice (about a quarter to a third of Synergy decks), so its deck-health rows move and its balance rows probably do not; Omega (powered) and Fair Fight (flat by design) are the cubes most likely to differ from Synergy
+- rule: D441, written 2026-10-15 before any J133 draft: the measures are compare's eleven (flatness, pair_spread, pair_within5, draw_rate, timeout_rate, game_turns, lands, colours, two_colour, splash, first_pick_top10), each with a 95% paired draft-clustered bootstrap interval (1,000 replicates, boot seed 1, colour pairs with 30+ decisive games); NO verdict rule is given. The report ranks the populations on each measure with their intervals and lists the pairwise differences whose interval excludes 0; it calls no population better or more balanced
+- outcome: done
+- headline: cmp.pop.synergy.m.flatness.est 0.0783, cmp.pop.synergy_v1.m.flatness.est 0.075, cmp.pop.omega.m.flatness.est 0, cmp.pop.fair_fight.m.flatness.est 0.0359, cmp.pop.synergy_17.m.flatness.est 0.0839, cmp.drafts 600, cmp.same_seeds 1
+- summary: results/J133/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 0c9bab7, ForgeCoach 3e3b007
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

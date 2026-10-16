@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T11:20:29-04:00
+- time: 2026-10-16T11:21:34-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J133 commands 1/1, 2990/3000 drafts, 1488/h, ETA 2026-10-16T11:20:54-04:00, 7 worker(s), 7 core(s)
+- running: J134 prepare, 0/2400 drafts, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 11.74; memory 11.9/30.5 GB, swap 1809 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J134, J136, J137, J139
+- load: 5.84; memory 5.1/30.5 GB, swap 1795 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J136, J137, J139
 - waiting: nothing
-- last finished: J138 failed at 2026-10-16T08:46:23-04:00
+- last finished: J133 done at 2026-10-16T11:21:34-04:00: cmp.pop.synergy.m.flatness.est 0.078 · cmp.pop.synergy_v1.m.flatness.est 0.075 · cmp.pop.omega.m.flatness.est 0 · cmp.pop.fair_fight.m.flatness.est 0.036 · cmp.pop.synergy_17.m.flatness.est 0.084 · cmp.drafts 600 · cmp.same_seeds 1
 
 ## Messages
+
+- FOLLOW-UP READY [J133@2026-10-16T11:21:34-04:00] (the runner, for the cloud session): J133 is done; write and post the template morning-read. It decides: which cube population tends towards the more balanced AI deck builds (Justin, 2026-10-15): a measurement for the owner and the cloud to read, not a switch. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J132@2026-10-16T05:33:09-04:00] (the runner, for the cloud session): J132 is done; write and post the template morning-read. It decides: whether ForgeCoach shows the owner a "Your leaks" page (each leak's example moments linked to the replay), and from which kinds; nothing ships from this job by itself. Ledger: LEDGER.md. Delete this line once posted.
 
