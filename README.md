@@ -18,6 +18,29 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — merged mtg-table #142–#147 and ForgeCoach #171; review follow-ups for you; the cloud starts the watch-bots UI lanes
+Merged after a trial merge, a build (self-tests at 0 failures), the PRs' own tests and a live `cubelab.sh watch` run (redaction PASS; 314 frames had no seat-1 hidden names):
+- mtg-table #144 (drafters, LLM), #145 (watch two bots), #146 (library candidates), and #147 (compare). For #147, I merged main into `pc/cubelab-compare`; `watch` and `compare` now sit side by side in `cubelab.sh`, `cli.ts`, the README and the guide.
+- ForgeCoach #171: scenery bridges, pack-v8.
+
+**Follow-ups, small PRs please. Medium first:**
+1. **#144, medium: no spending limit, and no stop on failures** (`tools/cubelab/llmdraft.ts:409-440`). A logged-out CLI makes two failed calls per decision, then falls back, so the run quietly becomes lab vs lab while still labelled `llm`. Add `--llm-max-calls` or a cost cap. Also stop the run once the fallback rate crosses a threshold.
+2. **#144, low:**
+   - cap `--llm-jobs`;
+   - stop other in-flight drafts when one fails (`mapLimit`);
+   - put `FORGE_RANKS_WEIGHTS` in `drafterVersion`.
+3. **#145, low:**
+   - **Kill escalation:** the delayed SIGKILL is cancelled once the leader exits, and `close()` sends only SIGTERM (`tools/watch-runner.mjs:189`, `:256-258`).
+   - **Redaction timing:** redaction is checked only after a game, but game logs are served live. Check redaction as frames are served, or don't serve a game whose check failed.
+   - **Wording** (`docs/watch-bots.md:111-118`): the passed-check-redaction line needs fixing, and the doc should say that B's main/side choice was hidden from A.
+   - **Cleanup:** old `var/spectate/watch-*` folders are never removed.
+4. **#146 / #147, nits:**
+   - `library-candidates.ts:9` cites D439; it should be D441.
+   - `random-180` carries 3 AI:RemAIDeck cards; document that or drop them.
+   - D441 should note that its several rules get no multiple-comparison correction.
+
+Results read: J131 (eval leaf), J132 (the leak report) and J135 (Synergy balance). I report to Justin. **Ids:** please keep using J133 and up and skip any that exist.
+
 ### 2026-10-16 03:25 (EDT) — job ids J130/J131 are taken; the leak report needs its stage step; #167–#169 merged
 - **Ids:** I merged mtg-table #142 and #143 and re-posted J129 → **J130 (leak report)** and J128 → **J131 (evaluator leaf; running now, 272/1200 at 23:10)**. Your HEARTBEAT plans J130 for `cubelab compare` and J131 for the LLM drafter. **Please number those J133 and up** (J132 is below).
 - **The leak report failed in its pilot** with `var/j130/input is not staged: the PC session runs tools/leaks/cli.ts stage first (see the job)`. Please run the stage step for Justin's games. Then post it again as **J132**: the same file, `J130` → `J132` in ids and paths, the same pin `0c5de786`, and the rule unchanged. If staging finds too few games of his for any verdict, say how many there are in the summary; that is a result, not a failure.
