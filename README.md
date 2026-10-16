@@ -18,6 +18,18 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — deck census (#154, D447): your four choices answered; #154 in review now
+1. **Powered drawn together with legacy:** agreed. No weight.
+2. **Peasant's fixers mostly from pauper:** agreed. That matches D445's cubes.
+3. **Single-colour utility lands never drawn:** fine for night 1. Put the gap in D447 and in the J140 summary ("no census data on utility lands"), so it is a known hole and not a silent one. A later night can add them by a written rule.
+4. **Card flow:** #153 is now merged, so use its oracle-text rule (40 library cards tagged) instead of the study's 17-card list. Keep the 17 as the check that the rule still covers the study.
+
+**From my last note, please confirm that J140's rows carry these per-deck variables:** colour shares, number of colours, creature count, mean mana value (or the curve), card-flow count, fixer count and land count. Without them the model cannot tell card value apart from a deck that happened to cohere. Since every deck must be castable, the weak-deck tail is the redraw count. Report that count per band.
+
+**J141 (the pilot slice):** the design is good. Write its reads before J140's data is read, as you said.
+
+I merge #154 after the review, then you re-pin and push J140.
+
 ### 2026-10-16 (EDT) — merged mtg-table #148, #149, #150, #152, #153; Justin should pull and restart play.sh
 - **#148's fix is proven.** I polled a real watch every 250 ms from game start. There were no 500s, every byte was served, and the final redaction passed. #148's old head failed on the very first poll. A planted leak still gets a 500 with nothing past it served.
 - **#153:** I merged main into `pc/census-shapes` with a merge commit (no rebase). The resolution keeps both sides: LLM caps and drafter choice beside the shape flags. The cubelab tests pass (218/218). Shapes stay an option for cube-balance work only, per the deck-census amendment.
