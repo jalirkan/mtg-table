@@ -1,0 +1,86 @@
+==== J136 pilot4 started 2026-10-16T12:38:19-04:00 in unit lab-J136-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+cube lab compare: omega, hits, random, synergy; 4 draft(s) each from seed 836950001 (the same block for every population); out var/lab-j136/pilot/final
+== population omega: var/lab-j136/pilot/evolve/omega/omega-cube-180.md
+cube lab: var/lab-j136/pilot/evolve/omega/omega-cube-180.md, grid, 4 draft(s) from seed 836950001, best of 1, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/final/runs/omega
+drafted and built 4 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/4] seed 836950001: A:BG 0-1 B:UR  games B
+[2/4] seed 836950003: A:UB 0-1 B:UB  games B
+[3/4] seed 836950004: A:BG 1-0 B:WU  games A
+[4/4] seed 836950002: A:UB 1-0 B:WR+b  games A
+matches: 9 s for 4 (2.3 s a draft wall-clock on 3 worker(s))
+done in 9 s -> var/lab-j136/pilot/final/runs/omega/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/final/runs/omega
+== population hits: var/lab-j136/pilot/evolve/hits/hits-180.md
+cube lab: var/lab-j136/pilot/evolve/hits/hits-180.md, grid, 4 draft(s) from seed 836950001, best of 1, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/final/runs/hits
+drafted and built 4 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/4] seed 836950003: A:UR 1-0 B:UB  games A
+[2/4] seed 836950001: A:WU+b 0-1 B:UR  games B
+[3/4] seed 836950004: A:UR+b 1-0 B:WB+u  games A
+[4/4] seed 836950002: A:UR+b 0-1 B:UG  games B
+matches: 9 s for 4 (2.3 s a draft wall-clock on 3 worker(s))
+done in 9 s -> var/lab-j136/pilot/final/runs/hits/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/final/runs/hits
+== population random: var/lab-j136/pilot/evolve/random/random-180.md
+cube lab: var/lab-j136/pilot/evolve/random/random-180.md, grid, 4 draft(s) from seed 836950001, best of 1, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/final/runs/random
+drafted and built 4 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/4] seed 836950003: A:UR+b 1-0 B:UB+g  games A
+[2/4] seed 836950002: A:WB 0-1 B:WU+g  games B
+[3/4] seed 836950001: A:UB+w 0-1 B:WU+g  games B
+[4/4] seed 836950004: A:UB+g 0-1 B:WU+g  games B
+matches: 9 s for 4 (2.3 s a draft wall-clock on 3 worker(s))
+done in 9 s -> var/lab-j136/pilot/final/runs/random/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/final/runs/random
+== population synergy: var/lab-j136/pilot/evolve/synergy/synergy-v2-cube-180.md
+cube lab: var/lab-j136/pilot/evolve/synergy/synergy-v2-cube-180.md, grid, 4 draft(s) from seed 836950001, best of 1, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/final/runs/synergy
+drafted and built 4 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/4] seed 836950001: A:WU 0-1 B:WG  games B
+[2/4] seed 836950003: A:UB 0-1 B:WG  games B
+[3/4] seed 836950002: A:WU+g 1-0 B:UG  games A
+[4/4] seed 836950004: A:UG 0-1 B:WU  games B
+matches: 11 s for 4 (2.7 s a draft wall-clock on 3 worker(s))
+done in 11 s -> var/lab-j136/pilot/final/runs/synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/final/runs/synergy
+same seeds in every population: 4 (836950001..836950004)
+flatness          omega -   hits -   random -   synergy -
+pair_spread       omega -   hits -   random -   synergy -
+pair_within5      omega -   hits -   random -   synergy -
+draw_rate         omega 0.00 [0.00, 0.00]   hits 0.00 [0.00, 0.00]   random 0.00 [0.00, 0.00]   synergy 0.00 [0.00, 0.00]
+timeout_rate      omega 0.00 [0.00, 0.00]   hits 0.00 [0.00, 0.00]   random 0.00 [0.00, 0.00]   synergy 0.00 [0.00, 0.00]
+game_turns        omega 18.00 [14.00, 22.00]   hits 16.50 [11.50, 21.50]   random 19.75 [14.25, 25.50]   synergy 15.25 [13.75, 16.50]
+lands             omega 17.000 [17.000, 17.000]   hits 17.000 [17.000, 17.000]   random 17.000 [17.000, 17.000]   synergy 16.375 [16.125, 16.500]
+colours           omega 2.125 [2.000, 2.375]   hits 2.500 [2.125, 2.875]   random 2.875 [2.625, 3.000]   synergy 2.125 [2.000, 2.375]
+two_colour        omega 100.0 [100.0, 100.0]   hits 100.0 [100.0, 100.0]   random 100.0 [100.0, 100.0]   synergy 100.0 [100.0, 100.0]
+splash            omega 12.5 [0.0, 37.5]   hits 50.0 [12.5, 87.5]   random 87.5 [62.5, 100.0]   synergy 12.5 [0.0, 37.5]
+first_pick_top10  omega 16.7 [15.0, 16.9]   hits 16.7 [15.0, 16.9]   random 16.2 [14.1, 16.5]   synergy 15.7 [13.4, 16.2]
+wrote var/lab-j136/pilot/final/compare.json and var/lab-j136/pilot/final/compare.md
+# Cube populations compared
+
+4 populations, the same 4 draft seeds each (836950001..836950004). 95% intervals: percentile, 1000 draft-clustered bootstrap replicates (seed 1), the seeds resampled jointly across populations, so a difference is paired; the replicates of flatness, pair_spread and first_pick_top10 are recentred on their estimate, because a resample biases those three upward (D441). Colour pairs count with 30+ decisive games; card flatness is ForgeCoach's (flatness.ts) over cards with 10+ decisive games.
+
+| # | population | cube | sha | ratings | weights | drafts | games | decisive | engine errors | run folder |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | omega | var/lab-j136/pilot/evolve/omega/omega-cube-180.md | 8b059e1cb0fa | Forge's ranks | defaults | 4 | 4 | 4 | 0 | var/lab-j136/pilot/final/runs/omega |
+| 2 | hits | var/lab-j136/pilot/evolve/hits/hits-180.md | 4f089d0a7e98 | Forge's ranks | defaults | 4 | 4 | 4 | 0 | var/lab-j136/pilot/final/runs/hits |
+| 3 | random | var/lab-j136/pilot/evolve/random/random-180.md | 997fab0aee70 | Forge's ranks | defaults | 4 | 4 | 4 | 0 | var/lab-j136/pilot/final/runs/random |
+| 4 | synergy | var/lab-j136/pilot/evolve/synergy/synergy-v2-cube-180.md | 5d35ce2b5892 | Forge's ranks | defaults | 4 | 4 | 4 | 0 | var/lab-j136/pilot/final/runs/synergy |
+
+No `--rule` was given: the tables rank and give intervals; they deliver no verdict.
+
+## Card-rate flatness: true SD of the cards' win rates (`flatness`, pts)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| - | omega | - | - | 0 |
+| - | hits | - | - | 0 |
+| - | random | - | - | 0 |
+| - | synergy | - | - | 0 |
+
+ForgeCoach's own reading of each (its chi-square interval on the observed variance, not the bootstrap): omega -; hits -; random -; synergy -.
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - hits | - | - | no |
+| omega - random | - | - | no |
+| omega - synergy | - | - | no |
+| hits - random | - | - | no |
+{"cubes":4,"power_found":0,"never_added":0,"never_kept":6}
