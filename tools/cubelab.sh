@@ -12,7 +12,7 @@
 #   tools/cubelab.sh learn   var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md \
 #                            --out var/cubelab/learned/synergy.ratings.tsv           # D301, no engine
 #   tools/cubelab.sh selfplay cubes/synergy-cube-180.md --iterations 2 --drafts-per-iter 30 --jobs 2   # D302
-#   tools/cubelab.sh compare cubes/synergy-cube-180.md cubes/omega-cube-180.md --drafts 600 --jobs 4   # D439
+#   tools/cubelab.sh compare cubes/synergy-cube-180.md cubes/omega-cube-180.md --drafts 600 --jobs 4   # D441
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):
@@ -44,7 +44,7 @@ cd "$REPO_ROOT"
 cmd="$1"
 engine=yes
 case "$cmd" in report|meta|learn) engine=no ;; esac
-# compare --no-run only reads its run folders (D439)
+# compare --no-run only reads its run folders (D441)
 if [ "$cmd" = "compare" ]; then for a in "$@"; do if [ "$a" = "--no-run" ]; then engine=no; fi; done; fi
 if [ "$engine" = yes ]; then
   [ -f "$FORGE_JAR" ] || { echo "cubelab: FORGE_JAR not found: $FORGE_JAR" >&2; exit 1; }

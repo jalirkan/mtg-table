@@ -1,7 +1,7 @@
-## D439 — `cubelab.sh compare`: cube populations on the same seeds, pre-registered balance measures, paired draft-clustered bootstrap intervals, a verdict only under a written rule
+## D441 — `cubelab.sh compare`: cube populations on the same seeds, pre-registered balance measures, paired draft-clustered bootstrap intervals, a verdict only under a written rule
 
 *Branch `pc/cubelab-compare`, for lab job J133 (pc-jobs). `node tools/decisions.mjs next` gave
-D439 on 2026-10-15; no open branch uses it.*
+D441 on 2026-10-15; no open branch uses it.*
 
 **2026-10-15**
 

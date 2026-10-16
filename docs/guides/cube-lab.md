@@ -8,7 +8,7 @@ and the raw data behind it, every pick with the cards that were on offer, for
 a drafting AI or a play AI to learn from later. No tokens, no network: Forge
 plays every game.
 
-The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md), and [D439](../decisions/D439-cube-population-compare.md) for *Comparing cube populations*; what
+The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md), and [D441](../decisions/D441-cube-population-compare.md) for *Comparing cube populations*; what
 was measured is [`docs/evidence/cube-lab.md`](../evidence/cube-lab.md).
 
 ## One command
@@ -1122,7 +1122,7 @@ that folder's first chunk will, and stops on a refusal; `queue check`, with the
 same flags as the run, does only that and writes nothing (a job's pilot runs it
 on the real root).
 
-## Comparing cube populations: `compare` (D439)
+## Comparing cube populations: `compare` (D441)
 
 Which cube, or which version of one, makes the AIs draft the more balanced decks? `compare`
 plays two to six **populations** on the same seeds and measures each one the same way, with
@@ -1151,7 +1151,7 @@ tools/cubelab.sh compare ... --no-run          # the measures again from the run
   stops and names the seeds one has and another lacks. Two variants of one cube therefore draft
   the very same deals.
 
-**The measures** (pre-registered in D439; every one per population):
+**The measures** (pre-registered in D441; every one per population):
 
 | id | what | unit |
 |---|---|---|

@@ -1,4 +1,4 @@
-// mtg-table — the cube lab: how flat a cube's power is, ForgeCoach's arithmetic (D439).
+// mtg-table — the cube lab: how flat a cube's power is, ForgeCoach's arithmetic (D441).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -239,7 +239,7 @@ export function cubeSpread(meta: SpreadMeta, opts: { cardMinGames?: number; arch
 }
 
 /**
- * Not in ForgeCoach (an addition for `compare`'s bootstrap, D439): the parts `spreadOf` combines --
+ * Not in ForgeCoach (an addition for `compare`'s bootstrap, D441): the parts `spreadOf` combines --
  * the included units, the observed variance of their shrunk rates, the mean noise variance and the
  * mean (g/(g+k))² -- with the same inclusion rule and noise model, so a caller can form
  * (obsVar − c·noiseVar) / lam2 for c other than 1.  Null when no unit is included.

@@ -35,7 +35,7 @@
 //                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
 //           [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--min-pair-games 30] [--rule <measure>:lower-better:margin=x]...
-//           [--no-run]   2-6 populations on the same seeds, through `run`; balance measures with paired bootstrap intervals (D439)
+//           [--no-run]   2-6 populations on the same seeds, through `run`; balance measures with paired bootstrap intervals (D441)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -98,7 +98,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
-                        [run's other flags, for every population]   (D439: the same seeds; compare.json, compare.md)
+                        [run's other flags, for every population]   (D441: the same seeds; compare.json, compare.md)
 `);
   process.exit(2);
 }

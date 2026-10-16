@@ -1,4 +1,4 @@
-// mtg-table — the cube lab: `compare`, which cube population drafts the more balanced decks (D439).
+// mtg-table — the cube lab: `compare`, which cube population drafts the more balanced decks (D441).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -11,7 +11,7 @@
 // "variant") -- are each played through the lab's own `run` (cli.ts hands it in: nothing here
 // drafts or plays) on THE SAME SEED BLOCK, into <out>/runs/<name>/, resumable like any run.
 // Then every population's drafts are read back and these pre-registered measures computed
-// (D439 is the decision; docs/guides/cube-lab.md's *Comparing cube populations* the manual):
+// (D441 is the decision; docs/guides/cube-lab.md's *Comparing cube populations* the manual):
 //
 //   flatness          the noise-corrected spread (true SD) of the cards' win rates, exactly as
 //                     ForgeCoach's flatness.ts computes it from meta.json (flatness.ts here is the
@@ -350,7 +350,7 @@ export function compare(pops: Population[], o: CompareOptions, expect?: { seed: 
   //    drafts make both larger.
   // The others are averages and shares, whose resampling shift is about 0, and keep the plain percentile
   // interval (recentring a share of ten pairs, which moves in steps, made its intervals too narrow).  The
-  // shift is measured, not modelled (D439, with its coverage on synthetic populations).
+  // shift is measured, not modelled (D441, with its coverage on synthetic populations).
   pops.forEach((p, k) => {
     const rs = reps[k] as Values[];
     for (const m of MEASURES.filter((d) => d.recentre)) {
@@ -521,7 +521,7 @@ export function compareMd(c: Comparison, labels: PopulationLabel[], rules: Rule[
   L.push('');
   L.push(`${c.pops.length} populations, the same ${c.seeds.length} draft seeds each (${c.seeds[0]}..${c.seeds.at(-1)}). `
     + `95% intervals: percentile, ${c.options.boot} draft-clustered bootstrap replicates (seed ${c.options.bootSeed}), the seeds resampled jointly across populations, so a difference is paired; `
-    + `the replicates of flatness, pair_spread and first_pick_top10 are recentred on their estimate, because a resample biases those three upward (D439). `
+    + `the replicates of flatness, pair_spread and first_pick_top10 are recentred on their estimate, because a resample biases those three upward (D441). `
     + `Colour pairs count with ${c.options.minPairGames}+ decisive games; card flatness is ForgeCoach's (flatness.ts) over cards with ${CARD_MIN_GAMES}+ decisive games.`);
   L.push('');
   L.push('| # | population | cube | sha | ratings | weights | drafts | games | decisive | engine errors | run folder |');

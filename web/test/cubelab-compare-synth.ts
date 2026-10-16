@@ -2,7 +2,7 @@
  * mtg-table — web/test/cubelab-compare-synth.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * Synthetic cube-lab run folders with known rates, for web/test/cubelab-compare.test.ts (D439):
+ * Synthetic cube-lab run folders with known rates, for web/test/cubelab-compare.test.ts (D441):
  * 80 nonland cards in five colours and 10 nonbasic lands; each draft two decks of a random
  * colour pair, a best of three won by a logistic in the decks' summed card effects, two grids
  * whose first line is the best card's (with chance `greed`) or a random one.

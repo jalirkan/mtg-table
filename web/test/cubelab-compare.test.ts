@@ -2,7 +2,7 @@
  * mtg-table — web/test/cubelab-compare.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * D439: `tools/cubelab.sh compare` (tools/cubelab/compare.ts) and its port of ForgeCoach's
+ * D441: `tools/cubelab.sh compare` (tools/cubelab/compare.ts) and its port of ForgeCoach's
  * card-rate flatness (tools/cubelab/flatness.ts):
  *
  *  - the port gives ForgeCoach's own numbers on two metas (a synthetic run's meta.json and the
@@ -177,7 +177,7 @@ test('the paired bootstrap: a known difference excludes 0, no difference holds 0
     assert.ok(x && (x.lo as number) <= (x.est as number) && (x.est as number) <= (x.hi as number));
     assert.equal(x?.valid, 300);
   }
-  // the three recentred measures (D439): the estimate sits inside its own interval, a flat cube's flatness interval starts at 0
+  // the three recentred measures (D441): the estimate sits inside its own interval, a flat cube's flatness interval starts at 0
   for (const p of c.pops) for (const m of ['flatness', 'pair_spread', 'first_pick_top10'] as const) {
     const x = p.ci[m];
     assert.ok(x && (x.lo as number) <= (x.est as number) + 1e-12 && (x.est as number) <= (x.hi as number) + 1e-12, `${p.name} ${m}: ${JSON.stringify(x)}`);
