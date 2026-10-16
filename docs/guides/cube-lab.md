@@ -177,7 +177,9 @@ grid draft is hidden: all nine cards are face up for both drafters.
   the seed; the deal, who opens, the other seat and every fallback are. Each finished draft's
   decisions go to `<out>/llm/<seed>.json` at once, and a resumed run replays that file instead of
   asking again: a stopped run never pays twice, and a folder's drafts can be rebuilt from it.
-- **`--llm-jobs N`** (default 2) drafts N seeds at once; the model is the wait, not the CPU.
+- **`--llm-jobs N`** (default 2, at most 4) drafts N seeds at once; the model is the wait, not the CPU.
+  More lanes would not be faster for long (the CLI runs one question a lane, and the account's rate
+  limit is shared) and each lane is one call the dollar cap's projection has to allow for.
 - **The spend cap and the fallback stop** (the #144 review). One budget covers the whole run, every
   lane of it: `--llm-max-calls N` (model calls, retries included; no cap by default) and
   `--llm-max-usd X` (dollars at list price, the CLI's own cost figure summed; **default $5**, `none` to
@@ -410,7 +412,7 @@ lowers it): a mix with search plays slower games.
 | `--drafter llm:<model>[:thinking=off\|low\|default]` | off | one seat asks Claude (`haiku`, `sonnet`, `opus`; `fake` spends nothing), once a decision (grid only; D439). **Costs API money** |
 | `--drafter-seat A\|B` | `A` | which seat that is (a mirrored test runs both) |
 | `--llm-sees-opponent` | off | the LLM's prompt also lists the opponent's pool (part of the folder's identity) |
-| `--llm-jobs N` | 2 | LLM drafts asked at once |
+| `--llm-jobs N` | 2 | LLM drafts asked at once, 1..4 |
 | `--llm-max-calls N` | none | stop the run before its (N+1)th model call |
 | `--llm-max-usd X\|none` | 5 | stop the run before a call that would take its spend (list price) past $X |
 | `--llm-fallback-rate R` | 0.25 | stop the run once more than R of its decisions fell back (over at least 8; 1 = never) |

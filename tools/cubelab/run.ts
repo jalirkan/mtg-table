@@ -46,7 +46,7 @@ import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExplor
 import { humanDrafter, parsePicks, runHumanDraft, type Fallback } from './humanpicks.ts';
 import { FORGE_RANKS_WEIGHTS, forgeRanked, runForgeRanksDraft } from './drafters.ts';
 import {
-  cardTexts, claudeDraftModel, DEFAULT_FALLBACK_RATE, DEFAULT_LLM_MAX_USD, fakeDraftModel, LLM_PROMPT_VERSION, LlmBudget, LlmStop,
+  cardTexts, claudeDraftModel, DEFAULT_FALLBACK_RATE, DEFAULT_LLM_MAX_USD, fakeDraftModel, LLM_PROMPT_VERSION, LlmBudget, LlmStop, MAX_LLM_JOBS,
   runLlmDraft, sumStats, themeSummary, type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
 } from './llmdraft.ts';
 
@@ -96,7 +96,7 @@ export interface RunOptions {
    * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
    */
   drafter?: RunDrafterOption;
-  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4); not part of the identity. */
+  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4: MAX_LLM_JOBS); not part of the identity. */
   llmJobs?: number;
   /**
    * The LLM drafter's spend cap and fallback stop (the #144 review; llmdraft.ts `LlmBudget`), one for the
@@ -336,7 +336,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
         + `${d.seesOpponent ? 'the prompt lists the opponent\'s pool; ' : ''}two failed replies take the lab drafter's line; decisions kept in ${path.join(o.out, 'llm')}; seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
       const c = b.caps;
       say(`llm drafter caps: ${c.maxCalls === null ? 'no call cap' : `at most ${c.maxCalls} call(s)`}, ${c.maxUsd === null ? 'NO dollar cap' : `at most $${c.maxUsd} at list price`}, `
-        + `${c.maxFallbackRate >= 1 ? 'no fallback stop' : `stop past ${Math.round(c.maxFallbackRate * 100)}% fallbacks`} (--llm-max-calls, --llm-max-usd, --llm-fallback-rate)`);
+        + `${c.maxFallbackRate >= 1 ? 'no fallback stop' : `stop past ${Math.round(c.maxFallbackRate * 100)}% fallbacks`} (--llm-max-calls, --llm-max-usd, --llm-fallback-rate); ${Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2))} draft(s) at once`);
     }
   }
   const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
@@ -424,7 +424,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   // An LLM stop leaves spend.json and says why.
   let drafted: DraftOut[];
   try {
-    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.max(1, o.llmJobs ?? 2) : 1, async (seed) => draftOne(seed));
+    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2)) : 1, async (seed) => draftOne(seed));
   } catch (e) {
     if (budget) writeSpend(o.out, budget);
     if (e instanceof LlmStop) throw new LlmStop(e.reason, `llm drafter stopped, ${e.message}; the drafts finished before it are kept in ${path.join(o.out, 'llm')} and are not asked again on a resume`);

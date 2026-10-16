@@ -12,7 +12,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -467,4 +467,18 @@ test('a run whose LLM drafter hits a cap stops with the reason, kills its other 
     assert.ok(Math.abs(spend.spent.usd - 0.2) < 1e-9);
     assert.equal(existsSync(join(out, 'drafts.jsonl')), false, 'no draft was finished, so none is recorded');
   } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('the CLI: --llm-jobs is 1..4, and the LLM flags need an llm drafter (usage errors, before any engine)', () => {
+  const repo = fileURLToPath(new URL('../..', import.meta.url));
+  const cli = (...a: string[]) => spawnSync(process.execPath, [join(repo, 'tools/cubelab/cli.ts'), 'run', 'cubes/pauper-cube-180.md', ...a, '--out', join(tmpdir(), 'cubelab-cli-never')],
+    { cwd: repo, encoding: 'utf8', env: { ...process.env, CUBELAB_CP: 'x', CUBELAB_HOMES: join(tmpdir(), 'cubelab-cli-no-home') } });
+  const five = cli('--drafter', 'llm:fake', '--llm-jobs', '5');
+  assert.equal(five.status, 2);
+  assert.match(five.stderr, /--llm-jobs is 1\.\.4/);
+  assert.equal(cli('--drafter', 'llm:fake', '--llm-jobs', '0').status, 2);
+  const lone = cli('--llm-max-usd', '2');
+  assert.equal(lone.status, 2);
+  assert.match(lone.stderr, /--llm-max-usd, --llm-fallback-rate need --drafter llm:<model>/);
+  assert.match(cli('--drafter', 'llm:fake', '--llm-max-usd', 'lots').stderr, /--llm-max-usd is dollars/);
 });

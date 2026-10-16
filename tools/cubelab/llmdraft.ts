@@ -327,6 +327,8 @@ export const DEFAULT_LLM_MAX_USD = 5;
 export const DEFAULT_FALLBACK_RATE = 0.25;
 /** The fallback share's denominator is at least this many decisions: 3 fallbacks in the first 8 stop a run, 1 does not. */
 export const FALLBACK_FLOOR = 8;
+/** `--llm-jobs` at most: each lane is one `claude -p` at a time, and the cap's projection is per lane. */
+export const MAX_LLM_JOBS = 4;
 
 export type LlmStopReason = 'max-calls' | 'max-usd' | 'fallbacks' | 'aborted';
 
