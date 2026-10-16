@@ -53,6 +53,14 @@ repeats its rules.
      then to the other colours by share.
 
    The draw reads no rating, no curve, no synergy and no theme.
+
+   **Beyond colour, the draw is pure.** A deck's type mix and curve are not chosen: within the colour
+   (or colourlessness) a draw picks, the card is uniform over that colour's eligible cards of the
+   pool, so a deck's creature count, its curve, its X spells and its card flow are those of a pure
+   draw from the band's pool conditioned only on its colours. Only the land count looks at the curve
+   (point 3), and only the castability rule (point 4) can reject a draw. Each deck records those
+   outcomes as variables (point 8), so the model can separate "this card is good" from "this deck
+   happened to cohere".
 3. **The land formula, one for every deck.**
    - **Land count.** L = clamp(17 + round(2 × (m − 3)), 15, 18), where m is the mean mana value of
      the first 23 spells drawn. The deck keeps its first 40 − L spells. In words: the common
@@ -76,7 +84,9 @@ repeats its rules.
      pips of the colour, at least 1, sources counted as above, so a splash behind fetchers gets the
      basic they find. Then the basics go one at a time to the colour furthest below its pip share of
      the basics, ties in WUBRG order.
-   - Mono-coloured utility lands are never drawn. Nonland mana sources are not counted.
+   - Mono-coloured utility lands are never drawn, so **the census has no data on utility lands**: a
+     known hole, not a silent one, which a later night can fill by a written rule. Nonland mana
+     sources are not counted.
 4. **Castability.** A spell is castable when, for each colour, the deck's sources of it (point 3)
    number at least the spell's plain pips of it, and each hybrid symbol has a source of one of its
    colours. The test checks every deck with a checker of its own that shares no code with the
@@ -84,7 +94,12 @@ repeats its rules.
    Every spell of a deck must be castable. A deck that fails is rejected and redrawn with the same
    makeup on a new stream: when its minimums exceed L − F, or when a list ran dry. After 50
    rejections the makeup itself is redrawn. Every rejection and every new makeup is counted in
-   the deck's row and in `decks.json`.
+   the deck's row and in `decks.json`. **They are the weak-deck tail.** Since every deck that plays
+   is castable, the decks that could not cast their spells (pips against lands) are the rejected
+   draws, and they are recorded, never dropped silently: per deck (`rejections`, `makeupRedraws`),
+   per band in `decks.json` and in census-read's `redraws` (rejected draws, new makeups, decks that
+   came after one, the rejected share of all draws), on a line of `spectrum.md` per band, as the
+   `redraws` context column of `cards.tsv`, and in every census report.
 5. **The bands** are census.tsv's (D445), exclusive, as `sample` draws them. The powered band has
    41 cards, 37 of them eligible, too few for a deck. So a band with fewer than 200 eligible nonland
    cards is united with its `FILL_ORDER` bands, nearest first, until it has 200, and the union is
@@ -104,6 +119,10 @@ repeats its rules.
    after the run's other games; its row is the retry's, marked `retried`, and a second error stays on
    the row and leaves the game out of the read. The pairing is prefix-stable (game g's pair does not
    depend on M), so a run's `--pairs` can be raised on resume; a smaller one is refused.
+   **This is the one frozen pairing rule**: random within a band by the seeded permutations above,
+   with the 10% cross-band slice inside each deck (point 2), and nothing else. A job fixes the
+   night's seeds in its text before it runs (J140: deck seeds and game seeds 1401–1404, one a band;
+   its pilot's games 1491–1494).
 7. **The pilots** (an addition from Justin, 2026-10-16, for J141's pilot slice). `--policy-a` and
    `--policy-b` take `plain` (the default: Forge's AI through `Bootstrap.createAiPlayer`) or
    `search`, the live search seat as `RecordMatch --policy search` builds it. That seat has the
@@ -135,6 +154,9 @@ repeats its rules.
    difference the census reports — a bin, a card, a combination — is **a candidate until it holds
    on fresh seeds**: a fresh deck seed and a fresh game seed, same method, read on the same
    interval. Nothing is promoted, removed, re-banded or suggested on one census run.
+10. **What a rate means.** Random decks are mostly weaker than drafted or built ones, so every win
+   rate and every card's value the census reports is **"in a random deck of this makeup"**, as
+   Forge's AI plays it. `spectrum.md` says so in its header, and every census report says it.
 
 **The engine smoke** (2026-10-16, beside J136 on its 7 workers, 2 JVMs, about 6 minutes in all):
 - **Decks.** 40 legacy decks at seed 447 (k = 7 / 10 / 7 / 10 / 6), with 0 rejections. Over 300
@@ -189,3 +211,6 @@ README, *#154 review*). The points above carry the amended rules; what changed a
 - *census-read* de-duplicates decks and games and refuses mixed pilots unless asked (point 8).
 - *Low items*: card flow by #153's rule; the deck variables; {C} and snow noted as latent (point 2);
   the play/draw note, the engine-error retry and the extendable `--pairs` (point 6).
+- *Method, from the confirmed amendment's three items*: the draw beyond colour (point 2), the
+  weak-deck tail (point 4), the one frozen pairing rule and the night's seeds in the job (point 6),
+  what a rate means (point 10), and the utility-land hole (point 3).

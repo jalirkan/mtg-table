@@ -33,7 +33,14 @@
 //   (deck-games as if independent: too narrow), and the interval to read, a deck-clustered
 //   percentile bootstrap (the cell's decks resampled with replacement, --boot replicates,
 //   rng(--boot-seed, 'census-read/<band>/<axis>/<bin>')).  Also per band: the first player's
-//   rate, draws, timeouts, engine errors.
+//   rate, draws, timeouts, engine errors, and THE WEAK-DECK TAIL (`redraws`): every deck played is
+//   castable, so the decks that could not cast their spells are the draws the generator rejected
+//   before each deck, counted over the band's decks (rejected draws, new makeups, decks that came
+//   after one, the rejected share of all draws), never dropped silently.  cards.tsv's `redraws` is
+//   the mean of a card's decks' rejected draws.
+//
+// Every deck is a random draw at a random makeup, mostly weaker than a built deck, so every rate and
+// every card's value is "in a random deck of this makeup"; spectrum.md says so in its header.
 //
 // THE CARDS (cards.tsv), one row per band and card (basic lands left out): the decks and deck-games
 // that held it, its wins, its win rate when in the deck, that rate shrunk toward 0.5 with a Beta
@@ -102,7 +109,7 @@ export interface ReadOptions { boot: number; bootSeed: number; shrink: number }
  */
 export const CTX_COLUMNS = [
   'main_share', 'colours_with3', 'n_colours', 'makeup_k', 'lands', 'avg_mv', 'mv0', 'mv1', 'mv2', 'mv3', 'mv4', 'mv5', 'mv6p', 'creatures', 'x_spells',
-  'card_flow', 'fixers', 'fixers_real', 'share_w', 'share_u', 'share_b', 'share_r', 'share_g', 'opp_main_share', 'opp_colours_with3',
+  'card_flow', 'fixers', 'fixers_real', 'share_w', 'share_u', 'share_b', 'share_r', 'share_g', 'redraws', 'opp_main_share', 'opp_colours_with3',
 ] as const;
 export type CtxColumn = (typeof CTX_COLUMNS)[number];
 
@@ -114,6 +121,7 @@ export function contextOf(d: DeckRecord, opp: DeckRecord): Record<CtxColumn, num
     main_share: n(d.profile.mainShare), colours_with3: d.profile.coloursWith3, n_colours: n(d.nColours), makeup_k: d.makeup.k, lands: d.lands, avg_mv: d.avgMv,
     mv0: h(0), mv1: h(1), mv2: h(2), mv3: h(3), mv4: h(4), mv5: h(5), mv6p: h(6), creatures: n(d.creatures), x_spells: n(d.xSpells),
     card_flow: n(d.cardFlow), fixers: d.fixers.length, fixers_real: n(d.fixersReal),
+    redraws: d.rejections,
     share_w: d.profile.pipShare.W, share_u: d.profile.pipShare.U, share_b: d.profile.pipShare.B, share_r: d.profile.pipShare.R, share_g: d.profile.pipShare.G,
     opp_main_share: n(opp.profile.mainShare), opp_colours_with3: opp.profile.coloursWith3,
   };
@@ -135,6 +143,8 @@ export interface CensusRead {
   bands: Record<string, {
     games: number; decisive: number; draws: number; timeouts: number; engineErrors: number; firstPlayerWinRate: number | null; firstPlayerDecisive: number;
     decks: number; deckGamesMin: number | null; deckGamesMedian: number | null;
+    /** THE WEAK-DECK TAIL: every deck is castable (D447 point 4), so the decks that could not be are the rejected draws before them, counted here over the band's decks. */
+    redraws: Redraws;
     byColours: Record<string, Cell>; byPriorK: Record<string, Cell>; byMainShare: Record<string, Cell>;
   }>;
   cards: number;
@@ -169,6 +179,17 @@ export function dedupe(decks: DeckRecord[], rows: GameRowOut[], o: { mixedPilots
   const pilots = [...new Set(kept.map((r) => `${r.policyA}/${r.policyB}`))].sort();
   if (pilots.length > 1 && !o.mixedPilots) throw new Error(`census-read: the rows have ${pilots.length} pairs of pilots (${pilots.join(', ')}); read one pilot pair at a time, or pass --mixed-pilots to read them together`);
   return { decks: [...byId.values()].map((x) => x.d), rows: kept, dropped: { decks: dDecks, rows: dRows }, pilots };
+}
+
+/** The weak-deck tail of a band: rejected card draws (a draw whose spells its own lands could not cast, or a list ran dry) and new makeups, over its decks. */
+export interface Redraws { decks: number; rejections: number; makeupRedraws: number; decksRedrawn: number; rejectedShare: number | null }
+export function redrawsOf(decks: DeckRecord[]): Redraws {
+  const rejections = decks.reduce((a, d) => a + d.rejections, 0);
+  return {
+    decks: decks.length, rejections, makeupRedraws: decks.reduce((a, d) => a + d.makeupRedraws, 0),
+    decksRedrawn: decks.filter((d) => d.rejections > 0 || d.makeupRedraws > 0).length,
+    rejectedShare: decks.length ? r4(rejections / (rejections + decks.length)) : null,
+  };
 }
 
 /** The read itself, pure: decks and game rows in (already de-duplicated), the spectrum and the card rows out. */
@@ -229,7 +250,7 @@ export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptio
     const counts = [...perDeck.values()].sort((x, y) => x - y);
     bands[band] = {
       games: bRows.length, decisive, draws, timeouts, engineErrors, firstPlayerWinRate: firstDec ? r4(firstWins / firstDec) : null, firstPlayerDecisive: firstDec,
-      decks: perDeck.size, deckGamesMin: counts.length ? counts[0] as number : null, deckGamesMedian: counts.length ? counts[Math.floor((counts.length - 1) / 2)] as number : null,
+      decks: perDeck.size, redraws: redrawsOf(decks.filter((d) => d.band === band)), deckGamesMin: counts.length ? counts[0] as number : null, deckGamesMedian: counts.length ? counts[Math.floor((counts.length - 1) / 2)] as number : null,
       byColours: cells('byColours', ['0', '1', '2', '3', '4', '5']), byPriorK: cells('byPriorK', ['1', '2', '3', '4', '5']), byMainShare: cells('byMainShare', SHARE_BINS),
     };
   }
@@ -257,9 +278,11 @@ export function spectrumMd(doc: CensusRead): string {
     ...Object.entries(cells).map(([k, c]) => `| ${SHARE_LABEL[k] ?? k} | ${c.decks} | ${c.deckGames} | ${c.decisive} | ${f(c.wr)} | ${iv(c.bootLo, c.bootHi)} | ${iv(c.wilsonLo, c.wilsonHi)} |`), '',
   ];
   const out = ['# Deck census: win rate across the colour spectrum (D447)', '',
+    'Every deck here is a random draw from its band\'s pool at a random colour makeup, with no curve, synergy or rating rule, so it is mostly weaker than a drafted or built deck: **every rate, and every card\'s value, is "in a random deck of this makeup", as Forge\'s AI plays it**, not in a built deck.', '',
     `${doc.games} games, ${doc.decks} decks${doc.pilots ? `, pilots ${doc.pilots.join(' + ')}` : ''}${doc.dropped && (doc.dropped.rows || doc.dropped.decks) ? ` (${doc.dropped.rows} duplicate game rows and ${doc.dropped.decks} duplicate deck lines left out)` : ''}; bootstrap ${doc.options.boot} replicates (seed ${doc.options.bootSeed}), clustered by deck. Bins are the realised profiles, read after the games; no bin is a verdict, and any difference is a candidate until it holds on fresh seeds. Every rate is as Forge's AI plays it.`, ''];
   for (const [band, b] of Object.entries(doc.bands)) {
-    out.push(`## ${band}`, '', `${b.games} games (${b.decisive} decisive, ${b.draws} drawn, ${b.timeouts} timeouts, ${b.engineErrors} engine errors); ${b.decks} decks, deck-games min ${b.deckGamesMin ?? '–'}, median ${b.deckGamesMedian ?? '–'}; the first player won ${f(b.firstPlayerWinRate)} of ${b.firstPlayerDecisive}.`, '');
+    out.push(`## ${band}`, '', `${b.games} games (${b.decisive} decisive, ${b.draws} drawn, ${b.timeouts} timeouts, ${b.engineErrors} engine errors); ${b.decks} decks, deck-games min ${b.deckGamesMin ?? '–'}, median ${b.deckGamesMedian ?? '–'}; the first player won ${f(b.firstPlayerWinRate)} of ${b.firstPlayerDecisive}.`, '',
+      `**The weak-deck tail** (every deck played is castable, so the uncastable ones are the draws rejected before it): ${b.redraws.rejections} rejected draw(s) and ${b.redraws.makeupRedraws} new makeup(s) over the band's ${b.redraws.decks} decks; ${b.redraws.decksRedrawn} deck(s) came after at least one; ${f(b.redraws.rejectedShare)} of all draws were rejected.`, '');
     out.push(...table('colours with 3+ spells', b.byColours), ...table('main-colour share of pips', b.byMainShare), ...table('the prior\'s k', b.byPriorK));
   }
   return `${out.join('\n')}\n`;

@@ -1137,7 +1137,12 @@ the CROSS and FILL shares). No verdicts and no labels beyond the bins.
 It counts each deck once (a `--decks` folder named twice, or one deck in two folders; one id with two
 lists is refused) and each game once per pilot pair, keyed by (seed, g, policyA, policyB), so a folder
 read with its own replay counts each game once; the rows must be one pilot pair unless `--mixed-pilots`.
-`spectrum.json`'s `dropped` and `pilots` say what it did.
+`spectrum.json`'s `dropped` and `pilots` say what it did. Per band it also reports **the weak-deck tail**,
+`redraws`: every deck played is castable, so the decks that could not be are the generator's rejected
+draws, counted over the band's decks (a line of `spectrum.md`, and `cards.tsv`'s `redraws` column).
+Every rate and every card's value is **"in a random deck of this makeup"** (D447 point 10): the decks
+are pure draws from the pool beyond their colours, mostly weaker than built ones; `spectrum.md` opens
+with that sentence. Utility lands are never drawn, so the census says nothing about them.
 
 **Rate.** D447's smoke beside a seven-worker job: 2,472 games an hour on 2 workers, about 2.2 CPU-seconds
 a game — some 11,000 games an hour on seven free cores.

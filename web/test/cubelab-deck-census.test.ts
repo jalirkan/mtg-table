@@ -41,7 +41,7 @@ import {
   scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
 } from '../../tools/cubelab/deckcensus.ts';
 import { pairingOf, planExtension, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
-import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
+import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, spectrumMd, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { openForgeScripts } from '../../tools/forge-scripts.ts';
 import { BANDS } from '../../tools/cubelab/census.ts';
@@ -400,6 +400,8 @@ test('the read on a synthetic games folder: a planted mono advantage and a plant
     if (i % 4 === 0) spells.push('Planted Bomb');
     decks.push(synthDeck(`pauper-1-${String(i).padStart(5, '0')}`, isMono ? 1 : 0.5 + (i % 5) / 10, isMono ? 1 : 2 + (i % 3), isMono ? 1 : 2 + (i % 4), spells));
   }
+  for (let i = 0; i < 10; i++) decks[i * 7]!.rejections = i % 3;          // a weak-deck tail: 9 rejected draws over 6 decks
+  decks[5]!.makeupRedraws = 1;
   const strength = (d: DeckRecord): number => (d.profile.mainShare === 1 ? 0.85 : 0) + (d.spells.includes('Planted Bomb') ? 1.2 : 0);
   const rows: GameRowOut[] = pairingOf(decks.map((d) => d.id), 3000, 4).map((g) => {
     const a = decks.find((d) => d.id === g.a)!, b = decks.find((d) => d.id === g.b)!;
@@ -427,6 +429,10 @@ test('the read on a synthetic games folder: a planted mono advantage and a plant
   assert.ok(bomb.wrShrunk! > 0.65, `the planted card: ${bomb.wrShrunk}`);
   assert.ok(rest.filter((x) => x >= bomb.wrShrunk!).length === 0, 'and no other card reaches it');
   assert.equal(bomb.decks, 30);
+  assert.deepEqual(b.redraws, { decks: 120, rejections: 9, makeupRedraws: 1, decksRedrawn: 7, rejectedShare: 0.0698 }, 'the weak-deck tail, counted over the band\'s decks');
+  const md = spectrumMd(doc);
+  assert.match(md, /in a random deck of this makeup/);
+  assert.match(md, /\*\*The weak-deck tail\*\*.*9 rejected draw\(s\) and 1 new makeup\(s\) over the band's 120 decks/);
   const text = strictJson(doc);
   assert.doesNotMatch(text, /NaN|Infinity/);
   JSON.parse(text);
