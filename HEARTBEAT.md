@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T02:42:06-04:00
-- runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J131 commands 1/2, 920/1200 games, 422.6/h, ETA 2026-10-16T03:21:51-04:00, 5 worker(s), 7 core(s)
+- time: 2026-10-16T02:46:40-04:00
+- runner: 10896b8e, up since 2026-10-15T21:58:11-04:00, PAUSED (tools/runner.sh resume)
+- running: J131 commands 1/2, 928/1200 games, 390.5/h, ETA 2026-10-16T03:28:28-04:00, 5 worker(s), 7 core(s), PAUSED
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 7.66; memory 10/30.5 GB, swap 1610 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J132
-- waiting: nothing
+- load: 4.93; memory 11.7/30.5 GB, swap 1612 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
+- waiting: J132 (the runner is paused)
 - last finished: J135 done at 2026-10-16T01:56:50-04:00: bm.swaps 0 · bm.swaps_dead 0 · bm.swaps_dominant_win 0 · bm.swaps_dominant_pick 0 · bm.pair_spread_before 0.358 · bm.pair_spread_after 0.425 · bm.pair_spread_change_lo -0.058 · bm.pair_spread_change_hi 0.206 · bm.arch_true_sd_before 0.121 · bm.arch_true_sd_after 0.161 · bm.card_true_sd_before 0.064 · bm.card_true_sd_after 0.083 · big.engine_error_rate 0.002
 
 ## Messages
