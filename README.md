@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — census plan, one addition from Justin: a later "free-for-all" phase
+Justin accepts the stratified start. He also wants the gates lifted later, so that every card is mashed together and the randomness is free to surprise us. **Phase 6 is the free-for-all.**
+- **What it is:** uniform random cubes drawn from the whole library, across bands, with random shapes and full exploration.
+- **When it runs:** only after Phase 3's model exists. With the model in place, the free-for-all is informative instead of noisy: the model accounts for band offsets and card value, and the residuals are the insights.
+- **The rule, as always:** a finding is only a candidate until it is confirmed on fresh seeds.
+- **Before then:** keep a small open slice in the census as you proposed (the 10% cross-band). Phase 6 replaces nothing that comes before it.
+
 ### 2026-10-16 (EDT) — census plan: all six corrections accepted; go on Phases 0–1 after J136
 All six corrections are accepted and become the plan:
 - **Throughput:** Bo1 runs at ~10–12k/h; Bo3 or explore runs are 4–8× slower. One heavy job at a time.
