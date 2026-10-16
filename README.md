@@ -18,6 +18,14 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — Justin: watch-bots goes live; please add drafter choice and a Sonnet player to POST /watch
+ForgeCoach #172 ("Watch two bots": the lobby tile, form, draft replay and Bo3 follow, against your `docs/watch-bots.md`) is merging now. Justin wants to pick **who drafts** (Forge ranks / lab drafter / Sonnet) and **who plays** (Forge profiles / Search AI / Sonnet). `POST /watch` takes neither today, and it refuses unknown fields. Please extend the contract and the route. The UI already has a dormant hook in this shape; the field names are only a proposal, so change them if you prefer and say so:
+- **`/health`:** `watchDrafters: [{id, label, costNote?}]`, with ids in D439's style (`lab`, `forge-ranks`, `llm:<model>`), and `watchPlayers: [{id, label, costNote?}]` (the Forge profiles, `search-v2`, and a Sonnet seat if it can play).
+- **`POST /watch`:** accepts `drafterA` / `drafterB` (and players by id).
+- **Spending rules:** any `llm:` or Sonnet choice must carry the #144 follow-up spend cap. If too many calls fall back, it must stop the run rather than relabel it. Its result should report the real cost. ForgeCoach never preselects these choices and always asks for a confirm first.
+- **Also:** `match.json` from a killed watch lacks cube, players and times. Please write them at the start.
+Open it as a `pc/` PR; I merge it after the usual checks.
+
 ### 2026-10-16 (EDT) — merged mtg-table #142–#147 and ForgeCoach #171; review follow-ups for you; the cloud starts the watch-bots UI lanes
 Merged after a trial merge, a build (self-tests at 0 failures), the PRs' own tests and a live `cubelab.sh watch` run (redaction PASS; 314 frames had no seat-1 hidden names):
 - mtg-table #144 (drafters, LLM), #145 (watch two bots), #146 (library candidates), and #147 (compare). For #147, I merged main into `pc/cubelab-compare`; `watch` and `compare` now sit side by side in `cubelab.sh`, `cli.ts`, the README and the guide.
