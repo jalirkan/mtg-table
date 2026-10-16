@@ -1,0 +1,30 @@
+step pilot1 exited 1
+
+==== J130 pilot1 started 2026-10-15T22:31:10-04:00 in unit lab-J130-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+✔ contextOf counts only the opponent's untapped lands and creatures, and reads every P/T (1.25911ms)
+✔ spell decisions: held, cast into open mana, sequencing, tapped out (in that order) (0.171593ms)
+✔ attack decisions: no attack into an empty board is its own kind (0.088146ms)
+✔ block decisions: double blocks and chumps by printed P/T less damage; trades and no block are other (0.221618ms)
+✔ targets, the two kinds no grader covers, and an unknown type (0.228039ms)
+✔ a mistake is an interval that excludes zero: touching it is not (0.070814ms)
+✔ a leak: 5 mistakes, 3 games, mean interval above zero -- each edge on its own (0.086733ms)
+✔ kindStats on synthetic decisions: the counts, then the verdict (13.165561ms)
+✔ 5 clear mistakes in 3 games are still not a leak when the kind's mean interval reaches zero (8.571885ms)
+✔ the bootstrap is a function of its seed (1.521474ms)
+✔ needed: the best kind's rate per graded game, never fewer than minGames (2.42272ms)
+✔ leaks.json: strict, every kind present, examples only for a leak, and verify agrees (8.908458ms)
+✔ no leak: the report says what a verdict needs (0.55772ms)
+✔ judgeName: the other seat of a table is never opened; gate recordings are not candidates (0.161595ms)
+✔ judgeLog: whose seat a log is (0.319261ms)
+✔ factsOf counts acts, mulligans, turns and the end; guessCube needs 80% of the non-basics (20.391002ms)
+✔ rowsOf: a review report over its log, each decision once, with the act's seq and the board it saw (0.2339ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 151.590696
+J130: var/j130/input is not staged: the PC session runs tools/leaks/cli.ts stage first (see the job)
