@@ -9,7 +9,7 @@ pilot_cores: 3
 max_workers: 7
 mem_per_worker_gb: 2
 after: J140
-repos: mtg-table@bf88d0f1 (the head of branch pc/deck-census, mtg-table PR #154, D447: census-play's --replay and --policy-a/-b; RE-PIN to the commit on origin/main that merges #154 before posting, as J140: the pilot fails on merged == 1 until then)
+repos: mtg-table@c69efe17 (the head of branch pc/deck-census, mtg-table PR #154, D447, after the #154 review's fixes: census-play's --replay and --policy-a/-b; RE-PIN to the commit on origin/main that merges #154 before posting, as J140: the pilot fails on merged == 1 until then)
 decides: nothing by itself. It is exploration, asked by Justin: does Forge's AI, the census's pilot, undersell blue and card draw, and which cards move when search-v2 pilots the same decks in the same games. Any difference it shows is a candidate until it holds on a fresh slice (D447 point 9)
 hypothesis: none to confirm, and none is tested. The Synergy v3 study (pc-results study/synergy-v3-design.md) found each of its 17 card-flow cards costs -2.9 points [-3.7, -2.1] of win share under Forge, colours held fixed, and that card flow accounts for all of blue's deficit there; the question is whether that is the cards or the pilot. Search-v2 is Forge's AI with a rollout search on top (it changed Forge's answer at 18% of searched decisions in J131), so it inherits Forge's play inside its rollouts and is not an independent pilot
 rule: exploration; the method below (the slice, the arms, the five reads and their estimators) is pre-registered, written 2026-10-16 before any slice game. There is no outcome rule and no verdict. D447 point 9 applies: a difference reported here (a colour, a coefficient, a card) is a candidate until it holds on a fresh slice (a fresh slice seed over fresh census seeds), same method, read on the same interval
@@ -132,12 +132,15 @@ it. The blue question is the `U` row's `diff`: blue's shift when search pilots b
 rate beside it.
 
 **Read 2 -- the card-flow coefficient under each pilot.**
-- **Card flow** is the deck's `cardFlow`, its count of the Synergy v3 study's 17 cards (D447,
-  `CARD_FLOW_STUDY`).
-- **Which bands enter.** All 17 are pauper cards except Mishra's Bauble (peasant), and J140's decks put card
-  flow in about half of pauper's decks, 3% of peasant's and none of legacy's or powered's. So the
+- **Card flow** is the deck's `cardFlow`: since the #154 review (the cloud's answer 4), its count of
+  card-flow cards by #153's oracle-text rule (`cardflow.ts`'s `isCardFlow`, D446 point 5, read off the card
+  scripts: 40 library cards), which covers the Synergy v3 study's 17 (`CARD_FLOW_STUDY`, kept as D447's
+  test of the rule). Read 3's `flow` group stays the study's 17 by name (`FLOW_STUDY` below).
+- **Which bands enter.** J140's decks at c69efe17 put 1+ card-flow card in 64% of pauper's decks, 24% of
+  peasant's, 11% of legacy's and 17% of powered's (mean 1.33 / 0.28 / 0.12 / 0.20 a deck). The
   coefficient comes from the bands where it varies: a band enters when 50 or more of its slice deck-games
-  hold 1+ flow cards. That is pauper in practice, and the read names the bands that entered. (The pilot's read lowers
+  hold 1+ flow cards. With 1,000 slice deck-games a band, all four are likely to, and the read names the
+  bands that entered. (The pilot's read lowers
   the 50 to 1 and the card floor of read 3 to 1, only to run every estimator once on 20 games.)
 - **The model:** a linear probability model, fit by least squares on the decisive deck-games of the entered
   bands:
