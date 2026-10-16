@@ -13,7 +13,11 @@
  *    a terminal status stays, games are appended one at a time and a finished one
  *    never changes, the wins are the finished games, nothing is played past the
  *    decision; and the best-of result;
- *  - the players (`search` or a profile) and RecordMatch's summary lines.
+ *  - the players (`search` or a profile) and RecordMatch's summary lines;
+ *  - the drafters (D443: lab, or one side forge-ranks / llm:<model> / human-picks), and a watch whose
+ *    llm: drafter stops it -- the fallback stop and the spend cap -- run for real through watch() and
+ *    the lab's run, with no engine (cached invented facts; it stops before any game): match.json ends
+ *    `error` in the drafter's own words, with the cube, players, drafters and the real `cost`.
  *
  * The end-to-end run (the engine, the games, the redaction check) is the smoke in
  * docs/guides/cube-lab.md's watch section; the helper's routes are
@@ -21,15 +25,22 @@
  */
 
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import type { LabCard } from '../../tools/cubelab/cards.ts';
-import type { Cube } from '../../tools/cubelab/cube.ts';
+import { parseCube, type Cube } from '../../tools/cubelab/cube.ts';
 import { runDraft, type LoadedCube } from '../../tools/cubelab/lab.ts';
 import type { DraftRecord } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
+import { fakeDraftModel, type DraftModel } from '../../tools/cubelab/llmdraft.ts';
 import {
-  draftProblems, parsePlayer, parseSummary, resultOf, seatSpecOf, sideboardOf, transitionProblem, watchDeck, watchPicks,
+  draftProblems, parsePlayer, parseSummary, parseWatchDrafters, resultOf, seatSpecOf, sideboardOf, transitionProblem, watch, WATCH_LLM_CAPS, watchDeck, watchPicks,
   type WatchDraft, type WatchGame, type WatchMatch,
 } from '../../tools/cubelab/watch.ts';
 
@@ -166,6 +177,7 @@ function match(o: Partial<WatchMatch> = {}): WatchMatch {
     v: 1, kind: 'watch-match', id: 'watch-t-1', status: 'drafting', startedAt: 'x', updatedAt: 'x', cube: { title: 'T', file: 'cubes/t.md' }, seed: 1,
     bestOf: 3, need: 2, paceMs: 600, view: { seat: 0, side: 'A' },
     players: { A: { player: 'Default', profile: 'Default', policy: 'plain', deck: null }, B: { player: 'search', profile: 'Default', policy: 'search', deck: null } },
+    drafters: { A: { drafter: 'lab' }, B: { drafter: 'lab' } }, cost: null,
     games: [], wins: { A: 0, B: 0, draws: 0 }, winner: null, current: null, ...o,
   };
 }
@@ -236,4 +248,82 @@ test('players: a profile in any case, or search; RecordMatch\'s summary read bac
   assert.deepEqual(parseSummary(out), { winner: 'B', reason: 'AllOpponentsLost', turns: 18, ok: true });
   assert.equal(parseSummary('winner         = (draw), reason = Draw\nRECORD OK\n').winner, 'draw');
   assert.deepEqual(parseSummary('RECORD FAILED: x\n'), { winner: null, reason: null, turns: null, ok: false });
+});
+
+// ------------------------------------------------------------ the drafters (D443) and an llm: drafter's stop
+
+test('the drafters: lab, or one side forge-ranks / llm:<model> / human-picks; two non-lab sides or an unknown one refused', () => {
+  assert.deepEqual(parseWatchDrafters('lab', 'lab'), { drafters: { A: 'lab', B: 'lab' }, option: null });
+  assert.deepEqual(parseWatchDrafters('forge-ranks', 'lab').option, { kind: 'forge-ranks', seat: 'A' });
+  assert.deepEqual(parseWatchDrafters('lab', 'llm:sonnet').option, { kind: 'llm', model: 'sonnet', thinking: 'low', seat: 'B', seesOpponent: false });
+  assert.deepEqual(parseWatchDrafters('lab', 'llm:haiku:thinking=off').option, { kind: 'llm', model: 'haiku', thinking: 'off', seat: 'B', seesOpponent: false });
+  assert.deepEqual(parseWatchDrafters('human-picks:x.json', 'lab').option, { kind: 'human-picks', file: 'x.json', seat: 'A' });
+  assert.throws(() => parseWatchDrafters('forge-ranks', 'llm:sonnet'), /one side at most/);
+  assert.throws(() => parseWatchDrafters('lab', 'llm:gpt'), /--drafter-b is lab, forge-ranks, llm:/);
+  assert.throws(() => parseWatchDrafters('ranks', 'lab'), /--drafter-a/);
+  assert.deepEqual(WATCH_LLM_CAPS, { maxCalls: 40, maxUsd: 1, maxFallbackRate: 0.25 });
+  assert.deepEqual(parsePlayer('search-v2', ['Default']), { player: 'search', profile: 'Default', policy: 'search' });
+});
+
+const CUBE_FILE = fileURLToPath(new URL('../../cubes/pauper-cube-180.md', import.meta.url));
+
+/** A scratch repo whose cached facts answer the cube's lookup with invented cards, so the lab's run drafts with no engine. */
+function factsRepo(): { repo: string; env: { cp: string; homes: string[]; repo: string } } {
+  const repo = mkdtempSync(join(tmpdir(), 'cubelab-watch-'));
+  const names = parseCube(readFileSync(CUBE_FILE, 'utf8')).cards.map((c) => c.name);
+  const key = createHash('sha1').update([process.env.FORGE_JAR ?? '', '', ...names].join('\n')).digest('hex').slice(0, 16);
+  mkdirSync(join(repo, 'var/cubelab/facts'), { recursive: true });
+  const cards = names.map((n, i) => ({ listed: n, found: true, name: n, colors: 'WUBRG'[i % 5], manaCost: `1 ${'WUBRG'[i % 5]}`, cmc: 1 + (i % 5), type: 'Creature', creature: true, land: false, rank: { source: 'set', edition: 'X', defaultEdition: 'X', rawScore: 50 + (i % 40) } }));
+  writeFileSync(join(repo, 'var/cubelab/facts', `${key}.json`), JSON.stringify({ cards }));
+  const git = (...a: string[]): void => { execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { stdio: 'ignore' }); };
+  git('init', '-q');
+  git('commit', '-q', '--allow-empty', '-m', 'scratch');
+  return { repo, env: { cp: '', homes: [join(repo, 'home')], repo } };
+}
+
+async function stoppedWatch(model: DraftModel, caps = WATCH_LLM_CAPS): Promise<{ m: WatchMatch; e: unknown }> {
+  const { repo, env } = factsRepo();
+  try {
+    const out = join(repo, 'var/spectate/watch-pauper-cube-180-12');
+    const profiles = ['Default', 'Reckless'];
+    const e = await watch(env, {
+      cubeFile: CUBE_FILE, seed: 12, games: 3, players: { A: parsePlayer('Reckless', profiles), B: parsePlayer('search-v2', profiles) },
+      drafters: { A: 'lab', B: 'llm:sonnet' }, paceMs: 0, out, ratingsFile: null, gameTimeoutSec: 60, llmCaps: caps, llmModel: async () => model,
+    }, () => {}).then(() => null, (x: unknown) => x);
+    const m = JSON.parse(readFileSync(join(out, 'match.json'), 'utf8')) as WatchMatch;
+    return { m, e };
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+}
+
+test('a watch whose llm: drafter falls back too often ends error in its own words, never lab vs lab; match.json says what it was and what it cost', async () => {
+  const loggedOut: DraftModel = { name: 'out', call: async () => { throw new Error('claude exited 1 with no output: Invalid API key · Please run /login'); } };
+  const { m, e } = await stoppedWatch(loggedOut);
+  assert.ok(e instanceof Error);
+  assert.equal(m.status, 'error');
+  assert.match(m.error ?? '', /^drafter B \(llm:sonnet\) stopped the watch -- the fallback stop: 3 of 3 decision\(s\) fell back .* is the Claude Code CLI logged in\?/);
+  assert.equal(m.games.length, 0, 'no game was played');
+  // what it was, though the draft never finished: the cube's title, the seed, the players, the drafters, the start
+  assert.equal(m.cube.title, parseCube(readFileSync(CUBE_FILE, 'utf8')).title);
+  assert.ok(m.cube.title.length > 0);
+  assert.equal(m.seed, 12);
+  assert.deepEqual([m.players.A.player, m.players.B.player, m.players.B.policy], ['Reckless', 'search', 'search']);
+  assert.deepEqual(m.drafters, { A: { drafter: 'lab' }, B: { drafter: 'llm:sonnet' } });
+  assert.ok(!Number.isNaN(Date.parse(m.startedAt)));
+  // the real cost
+  assert.ok(m.cost);
+  assert.deepEqual([m.cost.side, m.cost.drafter, m.cost.calls, m.cost.callErrors, m.cost.decisions, m.cost.fallbacks, m.cost.usd, m.cost.stopped],
+    ['B', 'llm:sonnet', 6, 6, 3, 3, 0, 'fallbacks']);
+  assert.deepEqual(m.cost.caps, WATCH_LLM_CAPS);
+  assert.match(m.cost.why ?? '', /^the fallback stop/);
+});
+
+test('a watch whose llm: drafter reaches the dollar cap stops before the call that would pass it; the cost is under the cap', async () => {
+  const inner = fakeDraftModel();
+  const priced: DraftModel = { name: 'priced', call: async (a) => ({ ...(await inner.call(a)), usage: { input: 10, cacheRead: 0, cacheCreate: 3000, output: 300 }, costUsd: 0.03 }) };
+  const { m } = await stoppedWatch(priced, { ...WATCH_LLM_CAPS, maxUsd: 0.1 });
+  assert.equal(m.status, 'error');
+  assert.match(m.error ?? '', /^drafter B \(llm:sonnet\) stopped the watch -- the spend cap: \$0\.0900 spent of at most \$0\.1000 at list price/);
+  assert.equal(m.cost?.calls, 3);
+  assert.ok((m.cost?.usd ?? 1) <= 0.1);
+  assert.deepEqual([m.cost?.cacheCreate, m.cost?.tokensOut, m.cost?.stopped], [9000, 900, 'max-usd']);
 });

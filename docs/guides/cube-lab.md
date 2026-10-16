@@ -1267,8 +1267,9 @@ you follow as it is played.
 
 ```bash
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md                       # Default vs Default, best of 3, a random seed
-tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search --games 5
+tools/cubelab.sh watch cubes/pauper-cube-180.md --seed 12 --player-b search-v2 --games 5
 tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the smoke: about 20 s
+tools/cubelab.sh watch cubes/fair-fight-cube-180.md --drafter-b llm:sonnet   # Claude drafts B: SPENDS, at most $1 (D443)
 ```
 
 | Flag | Default | |
@@ -1276,8 +1277,9 @@ tools/cubelab.sh watch cubes/fair-fight-cube-180.md --games 1 --pace 0    # the 
 | `--format grid` | grid | the only format: a grid is what a viewer replays pick by pick |
 | `--seed S` | random 1–99,999 (printed in the id) | the draft's seed, as `run`'s; game `n` plays at `S × 10 + n` |
 | `--games N` | 3 | a best of N (odd, 1–7); it stops once a side has more than half |
-| `--drafter-a`, `--drafter-b` | `lab` | `lab`, or `human-picks:<x.picks.json>` for one seat (D416) |
-| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search` (search-v2, the live search seat, through RecordMatch's `--policy search`) |
+| `--drafter-a`, `--drafter-b` | `lab` | `lab`, or for one side `forge-ranks`, `llm:<model>[:thinking=…]` (D439) or `human-picks:<x.picks.json>` (D416); the other side is then `lab` (D443) |
+| `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search-v2` (`search` also; the live search seat, through RecordMatch's `--policy search`). No Claude player: RecordMatch seats Forge AIs only |
+| `--llm-max-usd X`, `--llm-max-calls N`, `--llm-fallback-rate R` | 1, 40, 0.25 | an `llm:` drafter's cap for the whole watch and its fallback stop (D442): past either cap, or past R of its picks falling back to the lab drafter's line, the watch ends `error` with the reason |
 | `--pace ms` | 600 | the recorder's pace (M47); 0 = engine speed |
 | `--out <dir>` | `var/spectate/watch-<cube>-<seed>` | the folder; its name is the watch's id |
 | `--ratings <tsv>`, `--game-timeout <sec>` | as `run` | |
@@ -1297,7 +1299,10 @@ What it writes, all in the one folder:
   `tools/check-redaction.mjs` as soon as it ends; `<id>-g<n>.log` its output;
 - `match.json` — `status` `drafting` → `playing` → `done` (or `error` /
   `stopped`, with why), the games, their winners, the wins and the result,
-  rewritten after every change.
+  rewritten after every change; from its first write it names the cube, the
+  seed, the players, the drafters and `startedAt`, and with an `llm:` drafter its
+  `cost` (calls, failed calls, decisions, fallbacks, tokens, dollars at list
+  price) follows the spend while it drafts (D443).
 
 **The draft is face up, so draft.json shows both pools and both decks**: in a
 grid draft both drafters see every grid and every line the other takes. The

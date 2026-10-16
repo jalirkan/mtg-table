@@ -37,8 +37,9 @@
 //           [--record-all | --record-every N]                  record both batches' games (D315)
 //           [--explore on | --explore name=value]...           controlled exploration of low-rated cards (D356):
 //                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
-//   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
-//           [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]   (D440, watch.ts)
+//   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|forge-ranks|llm:<model>|human-picks:<f>] [--drafter-b ...]
+//           [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
+//           [--llm-max-usd 1] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   an llm: drafter's cap for the watch (D442)
 //           ONE grid draft (run --drafts 1 --games 0), draft.json, then a paced best of N recorded from seat 0's eyes
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
 //           [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--min-pair-games 30] [--rule <measure>:lower-better:margin=x]...
@@ -106,8 +107,10 @@ function usage(msg?: string): never {
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
-       tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
-                        [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]   (D440)
+       tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3]
+                        [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<f>] [--drafter-b ...]   (one side at most not lab)
+                        [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
+                        [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   (D440, D442, D443)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
