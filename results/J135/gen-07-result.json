@@ -1,0 +1,15 @@
+{
+  "gen": 7,
+  "inputSha": "92076ed97af77328cd5f28c0ef148005801d8f9b926570b4f9a8968555acd16f",
+  "outputSha": "0146e008372ca1b7160843d29d723d767c7bf40ff83973be1aa8dd371dac1481",
+  "versionIn": 2,
+  "versionOut": 2,
+  "seeds": [
+    170001201,
+    170001400
+  ],
+  "swaps": [],
+  "verdict": "Insufficient data: no card was confirmed at 200 drafts; 9 lead(s) to watch — about 1226 drafts per generation would find half of them. Run more drafts. 33 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+  "date": "2026-10-16",
+  "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+}

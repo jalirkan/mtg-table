@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T01:56:37-04:00
+- time: 2026-10-16T01:56:51-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J131 prepare, 616/1200 games, 1 worker(s), 7 core(s); J135 commands 4/4, 1600/1600 drafts, 811.8/h, 7 worker(s), 1 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.24; memory 4.4/30.5 GB, swap 1702 MB, pressure 0% (lab budget 23.4 GB)
+- running: J131 prepare, 616/1200 games, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 8.42; memory 4.5/30.5 GB, swap 1702 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J132
 - waiting: nothing
-- last finished: J130 failed at 2026-10-15T22:31:23-04:00
+- last finished: J135 done at 2026-10-16T01:56:50-04:00: bm.swaps 0 · bm.swaps_dead 0 · bm.swaps_dominant_win 0 · bm.swaps_dominant_pick 0 · bm.pair_spread_before 0.358 · bm.pair_spread_after 0.425 · bm.pair_spread_change_lo -0.058 · bm.pair_spread_change_hi 0.206 · bm.arch_true_sd_before 0.121 · bm.arch_true_sd_after 0.161 · bm.card_true_sd_before 0.064 · bm.card_true_sd_after 0.083 · big.engine_error_rate 0.002
 
 ## Messages
+
+- FOLLOW-UP READY [J135@2026-10-16T01:56:50-04:00] (the runner, for the cloud session): J135 is done; write and post the template morning-read. It decides: whether the evolved Synergy list (synergy-cube-180.v3-candidate.md) is offered to Justin as v3. The lab measures and proposes; nothing here edits a cube in either repo. Justin decides whether v3 ships. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J127@2026-10-14T22:18:54-04:00] (the runner, for the cloud session): J127 is done; write and post the template morning-read. It decides: whether the distilled policy (search-v2's own candidates at priority, attack and block, scored by a small model trained on search-v2's choices, no rollout) ships as a lab policy, a ladder player for faster lab games and a candidate for the live hint. Ledger: LEDGER.md. Delete this line once posted.
 

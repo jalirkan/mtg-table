@@ -1,0 +1,234 @@
+{
+  "v": 1,
+  "cube": "var/lab-j135/cubes/synergy-cube-180.md",
+  "startSha": "8cb5e5f0827a3fc2563a3d15950aad237816b654f9a1baa400ebb2ba9c806c36",
+  "pool": "var/lab-j135/pool.tsv",
+  "poolSha": "f62d71e8c0a55970b50eb8f2ac3f1de9b4f30bd9ed8c581223e48793aafb7b0a",
+  "drafts": 200,
+  "seed": 170000001,
+  "games": 3,
+  "profiles": [
+    "Default",
+    "Default"
+  ],
+  "weights": {
+    "unrated": 40,
+    "landScale": 0.45,
+    "synergy": 4,
+    "synergyCap": 6,
+    "lean": 10,
+    "commitAt": 0.3333333333333333,
+    "offColour": 40,
+    "splash": 15,
+    "splashMinRating": 70,
+    "splashSources": 2,
+    "fixing": 12,
+    "setRest": 0.6,
+    "winstonMargin1": 10,
+    "winstonMargin2": 5,
+    "winstonMargin3": 0,
+    "remAIDeck": 0,
+    "playable": 45,
+    "deckPlayable": 2,
+    "deckTheme": 1.5,
+    "deckCurve": 1,
+    "deckCreatures": 1.5,
+    "creaturesMin": 13,
+    "deckSplash": 3,
+    "maxSplash": 3,
+    "maxSplashStretch": 7,
+    "deckThreeColour": 1.5,
+    "deckEighteenLands": 2,
+    "splashDeckSources": 3,
+    "buildSynergy": 3,
+    "sixteenLandsAt": 2.5
+  },
+  "knobs": {
+    "swaps": 6,
+    "minSeen": 15,
+    "minGames": 20,
+    "minOnColour": 8,
+    "deadPlayRateHi": 0.35,
+    "deadMinRating": 60,
+    "dominantMargin": 0.05,
+    "dominantFirstPickLo": 0.75,
+    "fdrQ": 0.1,
+    "confirmAlpha": 0.05,
+    "confirmPower": 0.8,
+    "dominantEffect": 0.1,
+    "deadEffect": 0.1,
+    "pickEffect": 0.9,
+    "confirmMinDrafts": 20,
+    "confirmMaxDrafts": 300,
+    "confirmSeedOffset": 1000000,
+    "confirmPool": 1,
+    "watchWinMargin": 0.12,
+    "colourSlack": 2,
+    "minSignposts": 2,
+    "fitSameClass": 4,
+    "fitTheme": 3,
+    "fitRole": 2,
+    "fitMv": 1,
+    "fitRating": 4,
+    "fitBalance": 3,
+    "fitTry": 20,
+    "dominantReplaceRatio": 0.9,
+    "humanTest": 10
+  },
+  "constraints": {
+    "size": 180,
+    "colourTarget": {
+      "W": 32,
+      "U": 30,
+      "B": 34,
+      "R": 33,
+      "G": 32
+    },
+    "colourSlack": 2,
+    "lands": 20,
+    "fixingMin": 30,
+    "pairMin": {
+      "WU": 2,
+      "WB": 1,
+      "WR": 2,
+      "WG": 2,
+      "UB": 2,
+      "UR": 2,
+      "UG": 2,
+      "BR": 2,
+      "BG": 2,
+      "RG": 2
+    }
+  },
+  "date": "2026-10-16",
+  "generations": [
+    {
+      "gen": 1,
+      "inputSha": "8cb5e5f0827a3fc2563a3d15950aad237816b654f9a1baa400ebb2ba9c806c36",
+      "outputSha": "9a9d724d7813c273853084b84287b8dc57ddd0484484ff7a51335b175c5700e1",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170000001,
+        170000200
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 4 lead(s) to watch — about 690 drafts per generation would find half of them. Run more drafts. 38 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 2,
+      "inputSha": "9a9d724d7813c273853084b84287b8dc57ddd0484484ff7a51335b175c5700e1",
+      "outputSha": "0e3a82cfe27fdae436728deb407e3c8811f57a51e115b7929d6285da6d38e59a",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170000201,
+        170000400
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 8 lead(s) to watch — about 2099 drafts per generation would find half of them. Run more drafts. 32 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 3,
+      "inputSha": "0e3a82cfe27fdae436728deb407e3c8811f57a51e115b7929d6285da6d38e59a",
+      "outputSha": "fd77c3cd513820e4a7ac2baef12eee01970204adce20e98e5c5c3f78f5c5a92a",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170000401,
+        170000600
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 6 lead(s) to watch — about 1279 drafts per generation would find half of them. Run more drafts. 32 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 4,
+      "inputSha": "fd77c3cd513820e4a7ac2baef12eee01970204adce20e98e5c5c3f78f5c5a92a",
+      "outputSha": "8241c18f16c08d78fc9a1d1590d741d77ae56f7e9ed9948e6b1d148734b620aa",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170000601,
+        170000800
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 11 lead(s) to watch — about 1471 drafts per generation would find half of them. Run more drafts. 31 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 5,
+      "inputSha": "8241c18f16c08d78fc9a1d1590d741d77ae56f7e9ed9948e6b1d148734b620aa",
+      "outputSha": "2481b105de2f3af31259776847c9fc5287f1c9b9b73471e8f62647d684a6db1b",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170000801,
+        170001000
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 7 lead(s) to watch — about 1498 drafts per generation would find half of them. Run more drafts. 31 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 6,
+      "inputSha": "2481b105de2f3af31259776847c9fc5287f1c9b9b73471e8f62647d684a6db1b",
+      "outputSha": "92076ed97af77328cd5f28c0ef148005801d8f9b926570b4f9a8968555acd16f",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170001001,
+        170001200
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 8 lead(s) to watch — about 746 drafts per generation would find half of them. Run more drafts. 32 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 7,
+      "inputSha": "92076ed97af77328cd5f28c0ef148005801d8f9b926570b4f9a8968555acd16f",
+      "outputSha": "0146e008372ca1b7160843d29d723d767c7bf40ff83973be1aa8dd371dac1481",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170001201,
+        170001400
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 9 lead(s) to watch — about 1226 drafts per generation would find half of them. Run more drafts. 33 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    },
+    {
+      "gen": 8,
+      "inputSha": "0146e008372ca1b7160843d29d723d767c7bf40ff83973be1aa8dd371dac1481",
+      "outputSha": "ab1bb5117b6998936e07653be918860632db6fb953b1c462781d51c91b457155",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        170001401,
+        170001600
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 7 lead(s) to watch — about 792 drafts per generation would find half of them. Run more drafts. 32 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "3bff1d3d7cf2036b7347f855ac1399fcdb11bbba86862c4da95f98a118906b8f"
+    }
+  ],
+  "explore": {
+    "share": 0.3,
+    "cap": 4,
+    "gold": 4,
+    "margin": 0.1,
+    "minDecks": 10
+  },
+  "winNull": "colour"
+}

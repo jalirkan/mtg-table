@@ -1,0 +1,19 @@
+== var/lab-j135/out/synergy-cube-180.v3-candidate.md: The Synergy Cube — version 2 (180 cards, two-player)
+sections        White 24/24, Blue 22/22, Black 26/26, Red 24/24, Green 24/24, Gold 21/21, Colorless 19/19, Lands 20/20
+cards listed    180
+in Forge's DB   180
+two-faced       3: Lunarch Veteran // Luminous Phantom; Delver of Secrets // Insectile Aberration; Jace, Vryn's Prodigy // Jace, Telepath Unbound  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    8 (Forge: its AI plays these poorly or not at all)
+  Prismatic Ending
+  Viscera Seer
+  Goblin Bombardment
+  Faithless Looting
+  Beast Within
+  Mishra's Bauble
+  Chromatic Star
+  Prophetic Prism
+AI:RemRandomDeck 6: Intangible Virtue, Hardened Scales, Soulherder, Winding Constrictor, Ichor Wellspring, Lotus Petal (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 125, a set's rank file only 55, none 0
+unranked        0 (Forge would score these -100 and draft them last; the lab starts them at 40)
+best printing   49 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Ajani's Pridemate [M15], Charming Prince [ELD], Flickerwisp [2X2], Restoration Angel [2X2], Ephemerate [STA], Intangible Virtue [CNS], Reveillark [MOR], Delver of Secrets [ISD], Unsummon [6ED], Watcher for Tomorrow [MH1], Zulaport Cutthroat [BFZ], Viscera Seer [C13], Carrion Feeder [MH1], Priest of Forgotten Gods [RNA], Bloodghast [ZEN], Unburial Rites [2X2], Woe Strider [THB], Midnight Reaper [RVR], Marionette Master [KLD], Soul-Scar Mage [AKH], Young Pyromancer [2X2], Dreadhorde Arcanist [WAR], Reckless Fireweaver [KLD], Pia Nalaar [KLD], Pia and Kiran Nalaar [PIO], Hordeling Outburst [A25], Kari Zev, Skyship Raider [AER], Legion Warboss [GRN], Anax, Hardened in the Forge [THB], Sakura-Tribe Elder [ARC], Satyr Wayfinder [CMA], Ulvenwald Mysteries [SOI], Beast Within [PCA], Ram Through [IKO], Deep Forest Hermit [MH1], Reflector Mage [OGW], Soulherder [MH1], Mayhem Devil [WAR], Juri, Master of the Revue [MUL], Grumgully, the Generous [ELD], Omnath, Locus of Rage [BFZ], Conclave Mentor [2X2], Knight of Autumn [GRN], Tidehollow Sculler [ALA], Winding Constrictor [AER], Lonis, Cryptozoologist [MH2], Smuggler's Copter [FCA], Myr Sire [MBS], Steel Overseer [MPS_KLD]

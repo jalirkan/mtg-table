@@ -1,0 +1,32 @@
+==== J135 run4 started 2026-10-16T01:56:37-04:00 in unit lab-J135-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"written":1,"swaps":0,"swaps_dead":0,"swaps_dominant_win":0,"swaps_dominant_pick":0,"swaps_explore":0,"swaps_other":0,"unconfirmed_swaps":0,"keep_cards":2,"keep_missing":0,"candidate_cards":180,"candidate_listed":180,"candidate_in_db":180,"input_drafts":300,"final_drafts":300,"gen1_drafts":144,"input_games":713,"final_games":705,"pair_spread_before":0.3576,"pair_spread_after":0.425,"pair_spread_change":0.0674,"pair_spread_change_lo":-0.058,"pair_spread_change_hi":0.2056,"arch_true_sd_before":0.1214,"arch_true_sd_after":0.1605,"card_true_sd_before":0.0639,"card_true_sd_after":0.0833,"card_trueSd_narrowed_shown":0,"card_trueSd_widened_shown":0,"archetype_trueSd_narrowed_shown":0,"archetype_trueSd_widened_shown":0,"pair_spread_narrowed_shown":0,"pair_spread_widened_shown":0}
+{"strict": 1}
+total 2240
+drwxrwxr-x 2 justin-a justin-a   4096 Oct 16 01:56 .
+drwxrwxr-x 6 justin-a justin-a   4096 Oct 16 01:56 ..
+-rw-rw-r-- 1 justin-a justin-a  38044 Oct 16 01:56 balance.json
+-rw-rw-r-- 1 justin-a justin-a   3056 Oct 16 01:56 balance.md
+-rw-rw-r-- 1 justin-a justin-a    784 Oct 16 01:56 balance-metrics.json
+-rw-rw-r-- 1 justin-a justin-a   2302 Oct 16 01:44 candidate-check.txt
+-rw-rw-r-- 1 justin-a justin-a  93534 Oct 16 01:56 changelog.md
+-rw-rw-r-- 1 justin-a justin-a   8295 Oct 16 01:56 evolve.json
+-rw-rw-r-- 1 justin-a justin-a    708 Oct 16 01:56 explore-health.json
+-rw-rw-r-- 1 justin-a justin-a    681 Oct 16 01:56 gen-01-result.json
+-rw-rw-r-- 1 justin-a justin-a 253968 Oct 16 01:56 gen-01-stats.json
+-rw-rw-r-- 1 justin-a justin-a    682 Oct 16 01:56 gen-02-result.json
+-rw-rw-r-- 1 justin-a justin-a 255529 Oct 16 01:56 gen-02-stats.json
+-rw-rw-r-- 1 justin-a justin-a    682 Oct 16 01:56 gen-03-result.json
+-rw-rw-r-- 1 justin-a justin-a 250517 Oct 16 01:56 gen-03-stats.json
+-rw-rw-r-- 1 justin-a justin-a    683 Oct 16 01:56 gen-04-result.json
+-rw-rw-r-- 1 justin-a justin-a 255986 Oct 16 01:56 gen-04-stats.json
+-rw-rw-r-- 1 justin-a justin-a    682 Oct 16 01:56 gen-05-result.json
+-rw-rw-r-- 1 justin-a justin-a 254194 Oct 16 01:56 gen-05-stats.json
+-rw-rw-r-- 1 justin-a justin-a    681 Oct 16 01:56 gen-06-result.json
+-rw-rw-r-- 1 justin-a justin-a 254756 Oct 16 01:56 gen-06-stats.json
+-rw-rw-r-- 1 justin-a justin-a    682 Oct 16 01:56 gen-07-result.json
+-rw-rw-r-- 1 justin-a justin-a 253852 Oct 16 01:56 gen-07-stats.json
+-rw-rw-r-- 1 justin-a justin-a    681 Oct 16 01:56 gen-08-result.json
+-rw-rw-r-- 1 justin-a justin-a 254995 Oct 16 01:56 gen-08-stats.json
+-rw-rw-r-- 1 justin-a justin-a   8807 Oct 16 01:56 notes.tsv
+-rw-rw-r-- 1 justin-a justin-a    301 Oct 16 01:56 pool-facts.json
+-rw-rw-r-- 1 justin-a justin-a  15131 Oct 16 01:44 synergy-cube-180.v3-candidate.md

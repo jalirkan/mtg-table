@@ -1,0 +1,63 @@
+# J135 notes for the Synergy Cube v2 evolve (card<TAB>verdict<TAB>note). keep = never cut; cut = never add (none is in the cube).
+# Judged by the loop, no note: Yawgmoth ("watch it"), Grumgully ("cut if the loop ever happens" - a human call),
+# Reanimate/Archon ("watch"), Mana Leak/Remand, Chandra/Elspeth ("swap them if they feel out of place").
+card	verdict	note
+Hardened Scales	keep	Synergy v2, Cards to watch: Hardened Scales / Winding Constrictor can snowball with Hangarback and Ballista. Intended.
+Winding Constrictor	keep	Synergy v2, Cards to watch: Hardened Scales / Winding Constrictor can snowball with Hangarback and Ballista. Intended.
+Skullclamp	cut	Synergy v2 iteration log: out (Clamp too strong); never re-add
+Ledger Shredder	cut	Synergy v2 iteration log: out (a card on its own, not a synergy piece); never re-add
+Man-o'-War	cut	Synergy v2 iteration log: out; never re-add
+Sheoldred, the Apocalypse	cut	Synergy design principle 2 names it: no card wins on its own regardless of the board
+Ragavan, Nimble Pilferer	cut	Synergy design principle 2 names it: no card wins on its own regardless of the board
+The One Ring	cut	Synergy design principle 2 names it: no card wins on its own regardless of the board
+Black Lotus	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Ancestral Recall	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Time Walk	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Timetwister	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Pearl	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Sapphire	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Jet	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Ruby	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Emerald	cut	Omega's design exclusion (v1 design: the Power Nine stay out); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Diamond	cut	Omega's design exclusion (v1 design: no fast mana); Synergy principles 2-3 (tight power band, no combo): never add
+Mox Opal	cut	Omega's design exclusion (v1 design: no fast mana); Synergy principles 2-3 (tight power band, no combo): never add
+Sol Ring	cut	Omega's design exclusion (v1 design: no fast mana); Synergy principles 2-3 (tight power band, no combo): never add
+Mana Crypt	cut	Omega's design exclusion (v1 design: no fast mana); Synergy principles 2-3 (tight power band, no combo): never add
+Mana Vault	cut	Omega's design exclusion (v1 design: no fast mana); Synergy principles 2-3 (tight power band, no combo): never add
+Oko, Thief of Crowns	cut	Omega's design exclusion (v1 design: a single pick that decides the draft); Synergy principles 2-3 (tight power band, no combo): never add
+Minsc & Boo, Timeless Heroes	cut	Omega's design exclusion (v1 design: a single pick that decides the draft); Synergy principles 2-3 (tight power band, no combo): never add
+Wrenn and Six	cut	Omega's design exclusion (v1 design: a single pick that decides the draft); Synergy principles 2-3 (tight power band, no combo): never add
+Nadu, Winged Wisdom	cut	Omega's design exclusion (v1 design: a single pick that decides the draft); Synergy principles 2-3 (tight power band, no combo): never add
+Urza's Saga	cut	Omega's design exclusion (v1 design: a single pick that decides the draft); Synergy principles 2-3 (tight power band, no combo): never add
+Balance	cut	Omega's design exclusion (v1 design: a single pick that decides the draft); Synergy principles 2-3 (tight power band, no combo): never add
+Tinker	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Sneak Attack	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Show and Tell	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Natural Order	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Survival of the Fittest	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Oath of Druids	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Channel	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Fastbond	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Entomb	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Griselbrand	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Emrakul, the Aeons Torn	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Atraxa, Grand Unifier	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Blightsteel Colossus	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+Doomsday	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Thassa's Oracle	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Underworld Breach	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Painter's Servant	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Grindstone	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Dark Depths	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Thespian's Stage	cut	Omega's design exclusion (v1 design: a two-card or combo win); Synergy principles 2-3 (tight power band, no combo): never add
+Library of Alexandria	cut	Omega's design exclusion (v1 design: a land that decides the draft or ruins the fixing); Synergy principles 2-3 (tight power band, no combo): never add
+Bazaar of Baghdad	cut	Omega's design exclusion (v1 design: a land that decides the draft or ruins the fixing); Synergy principles 2-3 (tight power band, no combo): never add
+Strip Mine	cut	Omega's design exclusion (v1 design: a land that decides the draft or ruins the fixing); Synergy principles 2-3 (tight power band, no combo): never add
+Wasteland	cut	Omega's design exclusion (v1 design: a land that decides the draft or ruins the fixing); Synergy principles 2-3 (tight power band, no combo): never add
+High Tide	cut	Omega's design exclusion (v1 design: no storm or combo engines (principle 2)); Synergy principles 2-3 (tight power band, no combo): never add
+Lion's Eye Diamond	cut	Omega's design exclusion (v1 design: no storm or combo engines (principle 2)); Synergy principles 2-3 (tight power band, no combo): never add
+Candelabra of Tawnos	cut	Omega's design exclusion (v1 design: no storm or combo engines (principle 2)); Synergy principles 2-3 (tight power band, no combo): never add
+Manamorphose	cut	Omega's design exclusion (v1 design: no storm or combo engines (principle 2)); Synergy principles 2-3 (tight power band, no combo): never add
+Flash	cut	Omega's design exclusion (v1 design: no storm or combo engines (principle 2)); Synergy principles 2-3 (tight power band, no combo): never add
+Through the Breach	cut	Omega's design exclusion (v1 design: a cheat plan or its target); Synergy principles 2-3 (tight power band, no combo): never add
+City of Traitors	cut	Omega's design exclusion (v1 design: no fast mana); Synergy principles 2-3 (tight power band, no combo): never add

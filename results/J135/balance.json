@@ -1,0 +1,2445 @@
+{
+ "schema": "j135-balance-1",
+ "job": "J135",
+ "inputs": {
+  "evolve": "var/cubelab/evolve/j135-synergy",
+  "forgecoach": "/home/justin-a/code/lab/ForgeCoach",
+  "notes": "var/lab-j135/notes.tsv",
+  "candidate": "var/lab-j135/out/synergy-cube-180.v3-candidate.md"
+ },
+ "headline": {
+  "swaps": 0,
+  "swaps_confirmed": 0,
+  "pair_spread_before": 0.3576,
+  "pair_spread_after": 0.425,
+  "pair_spread_change": {
+   "diff": 0.0674,
+   "ci95": [
+    -0.058,
+    0.2056
+   ],
+   "draws": 10000,
+   "deff": 1.25,
+   "seed": 135
+  },
+  "archetype_trueSd_before": 0.1214,
+  "archetype_trueSd_before_ci": [
+   0.0776,
+   0.1918
+  ],
+  "archetype_trueSd_after": 0.1605,
+  "archetype_trueSd_after_ci": [
+   0.1144,
+   0.2375
+  ],
+  "card_trueSd_before": 0.0639,
+  "card_trueSd_before_ci": [
+   0.0526,
+   0.0826
+  ],
+  "card_trueSd_after": 0.0833,
+  "card_trueSd_after_ci": [
+   0.0713,
+   0.102
+  ]
+ },
+ "reading": {
+  "rule": "written before the run (J135): narrowed is SHOWN only when the final batch's interval lies wholly below the input batch's (flatness.ts compareCubes for card and archetype true SD; the bootstrap 95% interval of the pair-spread change wholly below 0). Overlap is NOT SHOWN, never \"no change\". Widened is read the same way. No verdict ships anything: Justin decides whether v3 ships.",
+  "card_trueSd_narrowed_shown": 0,
+  "card_trueSd_widened_shown": 0,
+  "archetype_trueSd_narrowed_shown": 0,
+  "archetype_trueSd_widened_shown": 0,
+  "pair_spread_narrowed_shown": 0,
+  "pair_spread_widened_shown": 0
+ },
+ "swaps": {
+  "total": 0,
+  "byStatus": {
+   "dead": 0,
+   "dominant-win": 0,
+   "dominant-pick": 0,
+   "explore": 0,
+   "other": 0
+  },
+  "exploreNote": "exploration (D356) never cuts a card: its count is 0 by construction",
+  "list": []
+ },
+ "checks": {
+  "candidate_cards": 180,
+  "candidate_listed": 180,
+  "candidate_in_db": 180,
+  "keep": [
+   {
+    "card": "Hardened Scales",
+    "present": true
+   },
+   {
+    "card": "Winding Constrictor",
+    "present": true
+   }
+  ],
+  "unconfirmed_swaps": 0
+ },
+ "humanTest": [
+  {
+   "name": "Gitaxian Probe",
+   "colors": "U",
+   "themes": [
+    "SPL"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 5.52 (rating 97.6, SPL)"
+  },
+  {
+   "name": "Mystic Confluence",
+   "colors": "U",
+   "themes": [
+    "CTRL",
+    "SPL"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 5.30 (rating 98, CTRL SPL)"
+  },
+  {
+   "name": "Tamiyo, Collector of Tales",
+   "colors": "UG",
+   "themes": [
+    "GY",
+    "CTRL"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 4.48 (rating 94.4, GY CTRL)"
+  },
+  {
+   "name": "Ghostly Flicker",
+   "colors": "U",
+   "themes": [
+    "ETB",
+    "SPL"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 4.15 (rating 69.2, ETB SPL)"
+  },
+  {
+   "name": "Masticore",
+   "colors": "C",
+   "themes": [
+    "ART"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.96 (rating 85.4, ART)"
+  },
+  {
+   "name": "Urza's Bauble",
+   "colors": "C",
+   "themes": [
+    "ART"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.40 (rating 71.4, ART)"
+  },
+  {
+   "name": "Embercleave",
+   "colors": "R",
+   "themes": [
+    "ART"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.23 (rating 54.1, ART)"
+  },
+  {
+   "name": "Manifold Key",
+   "colors": "C",
+   "themes": [
+    "ART"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 2.70 (rating 53.8, ART)"
+  },
+  {
+   "name": "Memory Jar",
+   "colors": "C",
+   "themes": [
+    "ART"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 2.68 (rating 53.3, ART)"
+  },
+  {
+   "name": "Tortured Existence",
+   "colors": "B",
+   "themes": [
+    "GY",
+    "SAC"
+   ],
+   "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 2.54 (rating 54, GY SAC)"
+  }
+ ],
+ "lastVerdict": "Insufficient data: no card was confirmed at 200 drafts; 7 lead(s) to watch — about 792 drafts per generation would find half of them. Run more drafts. 32 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+ "input": {
+  "label": "input cube (Synergy v2): baseline batch, fresh seeds, no exploration",
+  "dir": "var/lab-j135/baseline",
+  "drafts": 300,
+  "games": 713,
+  "seedRange": [
+   172000001,
+   172000300
+  ],
+  "mean": 0.4989,
+  "pairs": [
+   {
+    "pair": "WU",
+    "decks": 108,
+    "games": 261,
+    "wins": 156,
+    "rate": 0.5977,
+    "wilson": [
+     0.5372,
+     0.6554
+    ],
+    "included": true
+   },
+   {
+    "pair": "WB",
+    "decks": 75,
+    "games": 174,
+    "wins": 112,
+    "rate": 0.6437,
+    "wilson": [
+     0.5701,
+     0.711
+    ],
+    "included": true
+   },
+   {
+    "pair": "WR",
+    "decks": 28,
+    "games": 67,
+    "wins": 43,
+    "rate": 0.6418,
+    "wilson": [
+     0.5222,
+     0.746
+    ],
+    "included": true
+   },
+   {
+    "pair": "WG",
+    "decks": 73,
+    "games": 166,
+    "wins": 111,
+    "rate": 0.6687,
+    "wilson": [
+     0.594,
+     0.7358
+    ],
+    "included": true
+   },
+   {
+    "pair": "UB",
+    "decks": 65,
+    "games": 158,
+    "wins": 62,
+    "rate": 0.3924,
+    "wilson": [
+     0.3197,
+     0.4702
+    ],
+    "included": true
+   },
+   {
+    "pair": "UR",
+    "decks": 49,
+    "games": 115,
+    "wins": 48,
+    "rate": 0.4174,
+    "wilson": [
+     0.3314,
+     0.5088
+    ],
+    "included": true
+   },
+   {
+    "pair": "UG",
+    "decks": 115,
+    "games": 270,
+    "wins": 84,
+    "rate": 0.3111,
+    "wilson": [
+     0.2589,
+     0.3687
+    ],
+    "included": true
+   },
+   {
+    "pair": "BR",
+    "decks": 25,
+    "games": 64,
+    "wins": 27,
+    "rate": 0.4219,
+    "wilson": [
+     0.3087,
+     0.5439
+    ],
+    "included": true
+   },
+   {
+    "pair": "BG",
+    "decks": 51,
+    "games": 124,
+    "wins": 57,
+    "rate": 0.4597,
+    "wilson": [
+     0.3745,
+     0.5473
+    ],
+    "included": true
+   },
+   {
+    "pair": "RG",
+    "decks": 11,
+    "games": 27,
+    "wins": 13,
+    "rate": 0.4815,
+    "wilson": [
+     0.3074,
+     0.6601
+    ],
+    "included": false
+   }
+  ],
+  "otherColours": [],
+  "pairSpread": {
+   "max": "WG",
+   "maxRate": 0.6687,
+   "min": "UG",
+   "minRate": 0.3111,
+   "spread": 0.3576,
+   "pairsIncluded": 9
+  },
+  "flatness": {
+   "cards": {
+    "n": 153,
+    "total": 166,
+    "minGames": 10,
+    "meanRate": 0.4926,
+    "sd": 0.0709,
+    "noiseSd": 0.045,
+    "noiseSource": "clumps",
+    "designEffect": 1.4913,
+    "trueSd": 0.0639,
+    "trueSdCi": [
+     0.0526,
+     0.0826
+    ],
+    "verdict": "uneven",
+    "outliers": [
+     {
+      "name": "Reveillark",
+      "games": 288,
+      "shrunk": 0.6753,
+      "dev": 0.1827,
+      "clear": true
+     },
+     {
+      "name": "Misty Rainforest",
+      "games": 120,
+      "shrunk": 0.3141,
+      "dev": -0.1785,
+      "clear": true
+     },
+     {
+      "name": "Sun Titan",
+      "games": 276,
+      "shrunk": 0.6553,
+      "dev": 0.1627,
+      "clear": true
+     },
+     {
+      "name": "Welcoming Vampire",
+      "games": 371,
+      "shrunk": 0.6496,
+      "dev": 0.157,
+      "clear": true
+     },
+     {
+      "name": "Brimaz, King of Oreskos",
+      "games": 285,
+      "shrunk": 0.6458,
+      "dev": 0.1532,
+      "clear": true
+     }
+    ]
+   },
+   "archetypes": {
+    "n": 31,
+    "total": 42,
+    "minGames": 5,
+    "meanRate": 0.5006,
+    "sd": 0.0988,
+    "noiseSd": 0.0616,
+    "noiseSource": "clumps",
+    "designEffect": 1.4841,
+    "trueSd": 0.1214,
+    "trueSdCi": [
+     0.0776,
+     0.1918
+    ],
+    "verdict": "uneven",
+    "outliers": [
+     {
+      "name": "WG-TOK",
+      "games": 38,
+      "shrunk": 0.6893,
+      "dev": 0.1887,
+      "clear": true
+     },
+     {
+      "name": "UG-LND",
+      "games": 25,
+      "shrunk": 0.3328,
+      "dev": -0.1677,
+      "clear": true
+     },
+     {
+      "name": "UG-ART",
+      "games": 140,
+      "shrunk": 0.3499,
+      "dev": -0.1507,
+      "clear": true
+     },
+     {
+      "name": "WU-TOK",
+      "games": 39,
+      "shrunk": 0.6437,
+      "dev": 0.1431,
+      "clear": true
+     },
+     {
+      "name": "UG-ETB",
+      "games": 58,
+      "shrunk": 0.3587,
+      "dev": -0.1419,
+      "clear": true
+     }
+    ]
+   }
+  },
+  "archetypes": [
+   {
+    "id": "UG-ART",
+    "colors": "UG",
+    "theme": "ART",
+    "decks": 59,
+    "games": 140,
+    "wins": 46,
+    "rate": 0.3286,
+    "wilson": [
+     0.2563,
+     0.41
+    ]
+   },
+   {
+    "id": "WU-ETB",
+    "colors": "WU",
+    "theme": "ETB",
+    "decks": 51,
+    "games": 123,
+    "wins": 81,
+    "rate": 0.6585,
+    "wilson": [
+     0.5711,
+     0.7364
+    ]
+   },
+   {
+    "id": "WB-SAC",
+    "colors": "WB",
+    "theme": "SAC",
+    "decks": 46,
+    "games": 108,
+    "wins": 69,
+    "rate": 0.6389,
+    "wilson": [
+     0.545,
+     0.7233
+    ]
+   },
+   {
+    "id": "UR-SPL",
+    "colors": "UR",
+    "theme": "SPL",
+    "decks": 40,
+    "games": 94,
+    "wins": 37,
+    "rate": 0.3936,
+    "wilson": [
+     0.3009,
+     0.4947
+    ]
+   },
+   {
+    "id": "UB-GY",
+    "colors": "UB",
+    "theme": "GY",
+    "decks": 30,
+    "games": 70,
+    "wins": 30,
+    "rate": 0.4286,
+    "wilson": [
+     0.3194,
+     0.5452
+    ]
+   },
+   {
+    "id": "BG-SAC",
+    "colors": "BG",
+    "theme": "SAC",
+    "decks": 28,
+    "games": 68,
+    "wins": 31,
+    "rate": 0.4559,
+    "wilson": [
+     0.343,
+     0.5734
+    ]
+   },
+   {
+    "id": "WU-ART",
+    "colors": "WU",
+    "theme": "ART",
+    "decks": 27,
+    "games": 68,
+    "wins": 34,
+    "rate": 0.5,
+    "wilson": [
+     0.3844,
+     0.6156
+    ]
+   },
+   {
+    "id": "WG-ART",
+    "colors": "WG",
+    "theme": "ART",
+    "decks": 29,
+    "games": 67,
+    "wins": 38,
+    "rate": 0.5672,
+    "wilson": [
+     0.4481,
+     0.679
+    ]
+   },
+   {
+    "id": "BR-SAC",
+    "colors": "BR",
+    "theme": "SAC",
+    "decks": 22,
+    "games": 58,
+    "wins": 27,
+    "rate": 0.4655,
+    "wilson": [
+     0.3433,
+     0.592
+    ]
+   },
+   {
+    "id": "UG-ETB",
+    "colors": "UG",
+    "theme": "ETB",
+    "decks": 25,
+    "games": 58,
+    "wins": 18,
+    "rate": 0.3103,
+    "wilson": [
+     0.2062,
+     0.438
+    ]
+   },
+   {
+    "id": "UB-SAC",
+    "colors": "UB",
+    "theme": "SAC",
+    "decks": 22,
+    "games": 54,
+    "wins": 17,
+    "rate": 0.3148,
+    "wilson": [
+     0.2068,
+     0.4474
+    ]
+   },
+   {
+    "id": "WG-ETB",
+    "colors": "WG",
+    "theme": "ETB",
+    "decks": 20,
+    "games": 48,
+    "wins": 33,
+    "rate": 0.6875,
+    "wilson": [
+     0.5467,
+     0.8005
+    ]
+   },
+   {
+    "id": "BG-ART",
+    "colors": "BG",
+    "theme": "ART",
+    "decks": 18,
+    "games": 43,
+    "wins": 22,
+    "rate": 0.5116,
+    "wilson": [
+     0.3675,
+     0.6538
+    ]
+   },
+   {
+    "id": "WB-ART",
+    "colors": "WB",
+    "theme": "ART",
+    "decks": 18,
+    "games": 41,
+    "wins": 26,
+    "rate": 0.6341,
+    "wilson": [
+     0.4812,
+     0.7641
+    ]
+   },
+   {
+    "id": "WR-TOK",
+    "colors": "WR",
+    "theme": "TOK",
+    "decks": 16,
+    "games": 41,
+    "wins": 25,
+    "rate": 0.6098,
+    "wilson": [
+     0.4573,
+     0.7434
+    ]
+   },
+   {
+    "id": "WU-TOK",
+    "colors": "WU",
+    "theme": "TOK",
+    "decks": 17,
+    "games": 39,
+    "wins": 28,
+    "rate": 0.7179,
+    "wilson": [
+     0.5622,
+     0.8346
+    ]
+   },
+   {
+    "id": "WG-TOK",
+    "colors": "WG",
+    "theme": "TOK",
+    "decks": 19,
+    "games": 38,
+    "wins": 30,
+    "rate": 0.7895,
+    "wilson": [
+     0.6365,
+     0.8893
+    ]
+   },
+   {
+    "id": "UG-SPL",
+    "colors": "UG",
+    "theme": "SPL",
+    "decks": 14,
+    "games": 33,
+    "wins": 11,
+    "rate": 0.3333,
+    "wilson": [
+     0.1975,
+     0.5039
+    ]
+   },
+   {
+    "id": "UB-ART",
+    "colors": "UB",
+    "theme": "ART",
+    "decks": 12,
+    "games": 31,
+    "wins": 14,
+    "rate": 0.4516,
+    "wilson": [
+     0.2916,
+     0.6223
+    ]
+   },
+   {
+    "id": "UG-LND",
+    "colors": "UG",
+    "theme": "LND",
+    "decks": 11,
+    "games": 25,
+    "wins": 5,
+    "rate": 0.2,
+    "wilson": [
+     0.0886,
+     0.3913
+    ]
+   },
+   {
+    "id": "WR-ART",
+    "colors": "WR",
+    "theme": "ART",
+    "decks": 11,
+    "games": 24,
+    "wins": 16,
+    "rate": 0.6667,
+    "wilson": [
+     0.4671,
+     0.8203
+    ]
+   },
+   {
+    "id": "RG-ART",
+    "colors": "RG",
+    "theme": "ART",
+    "decks": 9,
+    "games": 21,
+    "wins": 10,
+    "rate": 0.4762,
+    "wilson": [
+     0.2834,
+     0.6763
+    ]
+   },
+   {
+    "id": "UR-ART",
+    "colors": "UR",
+    "theme": "ART",
+    "decks": 8,
+    "games": 19,
+    "wins": 11,
+    "rate": 0.5789,
+    "wilson": [
+     0.3628,
+     0.7686
+    ]
+   },
+   {
+    "id": "WU-SPL",
+    "colors": "WU",
+    "theme": "SPL",
+    "decks": 7,
+    "games": 18,
+    "wins": 11,
+    "rate": 0.6111,
+    "wilson": [
+     0.3862,
+     0.7969
+    ]
+   },
+   {
+    "id": "WB-GY",
+    "colors": "WB",
+    "theme": "GY",
+    "decks": 7,
+    "games": 15,
+    "wins": 9,
+    "rate": 0.6,
+    "wilson": [
+     0.3575,
+     0.8018
+    ]
+   },
+   {
+    "id": "UG-GY",
+    "colors": "UG",
+    "theme": "GY",
+    "decks": 5,
+    "games": 12,
+    "wins": 4,
+    "rate": 0.3333,
+    "wilson": [
+     0.1381,
+     0.6094
+    ]
+   },
+   {
+    "id": "BG-GY",
+    "colors": "BG",
+    "theme": "GY",
+    "decks": 4,
+    "games": 11,
+    "wins": 4,
+    "rate": 0.3636,
+    "wilson": [
+     0.1517,
+     0.6462
+    ]
+   },
+   {
+    "id": "WU-GY",
+    "colors": "WU",
+    "theme": "GY",
+    "decks": 5,
+    "games": 11,
+    "wins": 2,
+    "rate": 0.1818,
+    "wilson": [
+     0.0514,
+     0.477
+    ]
+   },
+   {
+    "id": "WB-TOK",
+    "colors": "WB",
+    "theme": "TOK",
+    "decks": 3,
+    "games": 8,
+    "wins": 6,
+    "rate": 0.75,
+    "wilson": [
+     0.4093,
+     0.9285
+    ]
+   },
+   {
+    "id": "WG-LND",
+    "colors": "WG",
+    "theme": "LND",
+    "decks": 3,
+    "games": 8,
+    "wins": 6,
+    "rate": 0.75,
+    "wilson": [
+     0.4093,
+     0.9285
+    ]
+   },
+   {
+    "id": "BR-ART",
+    "colors": "BR",
+    "theme": "ART",
+    "decks": 3,
+    "games": 6,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.3903
+    ]
+   },
+   {
+    "id": "RG-LND",
+    "colors": "RG",
+    "theme": "LND",
+    "decks": 1,
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667,
+    "wilson": [
+     0.2077,
+     0.9385
+    ]
+   },
+   {
+    "id": "RG-SPL",
+    "colors": "RG",
+    "theme": "SPL",
+    "decks": 1,
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333,
+    "wilson": [
+     0.0615,
+     0.7923
+    ]
+   },
+   {
+    "id": "UB-SPL",
+    "colors": "UB",
+    "theme": "SPL",
+    "decks": 1,
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333,
+    "wilson": [
+     0.0615,
+     0.7923
+    ]
+   },
+   {
+    "id": "WG-CTR",
+    "colors": "WG",
+    "theme": "CTR",
+    "decks": 1,
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667,
+    "wilson": [
+     0.2077,
+     0.9385
+    ]
+   },
+   {
+    "id": "BG-CTR",
+    "colors": "BG",
+    "theme": "CTR",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "UG-CTR",
+    "colors": "UG",
+    "theme": "CTR",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "UR-TOK",
+    "colors": "UR",
+    "theme": "TOK",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "WB-ETB",
+    "colors": "WB",
+    "theme": "ETB",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   },
+   {
+    "id": "WG-GY",
+    "colors": "WG",
+    "theme": "GY",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   },
+   {
+    "id": "WR-SAC",
+    "colors": "WR",
+    "theme": "SAC",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   },
+   {
+    "id": "WU-SAC",
+    "colors": "WU",
+    "theme": "SAC",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   }
+  ]
+ },
+ "final": {
+  "label": "final cube (the v3 candidate): final batch, fresh seeds, no exploration",
+  "dir": "var/lab-j135/final",
+  "drafts": 300,
+  "games": 705,
+  "seedRange": [
+   173000001,
+   173000300
+  ],
+  "mean": 0.4995,
+  "pairs": [
+   {
+    "pair": "WU",
+    "decks": 105,
+    "games": 249,
+    "wins": 142,
+    "rate": 0.5703,
+    "wilson": [
+     0.5082,
+     0.6302
+    ],
+    "included": true
+   },
+   {
+    "pair": "WB",
+    "decks": 66,
+    "games": 154,
+    "wins": 111,
+    "rate": 0.7208,
+    "wilson": [
+     0.6452,
+     0.7856
+    ],
+    "included": true
+   },
+   {
+    "pair": "WR",
+    "decks": 32,
+    "games": 75,
+    "wins": 54,
+    "rate": 0.72,
+    "wilson": [
+     0.6096,
+     0.809
+    ],
+    "included": true
+   },
+   {
+    "pair": "WG",
+    "decks": 73,
+    "games": 170,
+    "wins": 113,
+    "rate": 0.6647,
+    "wilson": [
+     0.5908,
+     0.7313
+    ],
+    "included": true
+   },
+   {
+    "pair": "UB",
+    "decks": 57,
+    "games": 139,
+    "wins": 47,
+    "rate": 0.3381,
+    "wilson": [
+     0.2648,
+     0.4202
+    ],
+    "included": true
+   },
+   {
+    "pair": "UR",
+    "decks": 58,
+    "games": 141,
+    "wins": 52,
+    "rate": 0.3688,
+    "wilson": [
+     0.2936,
+     0.4509
+    ],
+    "included": true
+   },
+   {
+    "pair": "UG",
+    "decks": 124,
+    "games": 284,
+    "wins": 84,
+    "rate": 0.2958,
+    "wilson": [
+     0.2457,
+     0.3513
+    ],
+    "included": true
+   },
+   {
+    "pair": "BR",
+    "decks": 16,
+    "games": 35,
+    "wins": 23,
+    "rate": 0.6571,
+    "wilson": [
+     0.4915,
+     0.7917
+    ],
+    "included": false
+   },
+   {
+    "pair": "BG",
+    "decks": 59,
+    "games": 139,
+    "wins": 67,
+    "rate": 0.482,
+    "wilson": [
+     0.4006,
+     0.5644
+    ],
+    "included": true
+   },
+   {
+    "pair": "RG",
+    "decks": 10,
+    "games": 24,
+    "wins": 12,
+    "rate": 0.5,
+    "wilson": [
+     0.3143,
+     0.6857
+    ],
+    "included": false
+   }
+  ],
+  "otherColours": [],
+  "pairSpread": {
+   "max": "WB",
+   "maxRate": 0.7208,
+   "min": "UG",
+   "minRate": 0.2958,
+   "spread": 0.425,
+   "pairsIncluded": 8
+  },
+  "flatness": {
+   "cards": {
+    "n": 148,
+    "total": 166,
+    "minGames": 10,
+    "meanRate": 0.4993,
+    "sd": 0.0847,
+    "noiseSd": 0.0443,
+    "noiseSource": "clumps",
+    "designEffect": 1.4785,
+    "trueSd": 0.0833,
+    "trueSdCi": [
+     0.0713,
+     0.102
+    ],
+    "verdict": "uneven",
+    "outliers": [
+     {
+      "name": "Soul Warden",
+      "games": 173,
+      "shrunk": 0.6839,
+      "dev": 0.1846,
+      "clear": true
+     },
+     {
+      "name": "Blade Splicer",
+      "games": 302,
+      "shrunk": 0.6832,
+      "dev": 0.1839,
+      "clear": true
+     },
+     {
+      "name": "Lingering Souls",
+      "games": 327,
+      "shrunk": 0.6772,
+      "dev": 0.1779,
+      "clear": true
+     },
+     {
+      "name": "Swords to Plowshares",
+      "games": 304,
+      "shrunk": 0.6759,
+      "dev": 0.1766,
+      "clear": true
+     },
+     {
+      "name": "Reveillark",
+      "games": 268,
+      "shrunk": 0.6736,
+      "dev": 0.1743,
+      "clear": true
+     }
+    ]
+   },
+   "archetypes": {
+    "n": 31,
+    "total": 38,
+    "minGames": 5,
+    "meanRate": 0.507,
+    "sd": 0.1203,
+    "noiseSd": 0.0619,
+    "noiseSource": "clumps",
+    "designEffect": 1.4793,
+    "trueSd": 0.1605,
+    "trueSdCi": [
+     0.1144,
+     0.2375
+    ],
+    "verdict": "uneven",
+    "outliers": [
+     {
+      "name": "UG-ETB",
+      "games": 70,
+      "shrunk": 0.2554,
+      "dev": -0.2515,
+      "clear": true
+     },
+     {
+      "name": "WR-TOK",
+      "games": 48,
+      "shrunk": 0.7351,
+      "dev": 0.2281,
+      "clear": true
+     },
+     {
+      "name": "WG-ETB",
+      "games": 59,
+      "shrunk": 0.7214,
+      "dev": 0.2144,
+      "clear": true
+     },
+     {
+      "name": "UG-GY",
+      "games": 26,
+      "shrunk": 0.3041,
+      "dev": -0.2029,
+      "clear": true
+     },
+     {
+      "name": "UG-SPL",
+      "games": 29,
+      "shrunk": 0.3467,
+      "dev": -0.1602,
+      "clear": true
+     }
+    ]
+   }
+  },
+  "archetypes": [
+   {
+    "id": "UG-ART",
+    "colors": "UG",
+    "theme": "ART",
+    "decks": 54,
+    "games": 123,
+    "wins": 46,
+    "rate": 0.374,
+    "wilson": [
+     0.2935,
+     0.4621
+    ]
+   },
+   {
+    "id": "UR-SPL",
+    "colors": "UR",
+    "theme": "SPL",
+    "decks": 46,
+    "games": 113,
+    "wins": 40,
+    "rate": 0.354,
+    "wilson": [
+     0.2719,
+     0.4456
+    ]
+   },
+   {
+    "id": "WB-SAC",
+    "colors": "WB",
+    "theme": "SAC",
+    "decks": 44,
+    "games": 100,
+    "wins": 69,
+    "rate": 0.69,
+    "wilson": [
+     0.5937,
+     0.7722
+    ]
+   },
+   {
+    "id": "WU-ETB",
+    "colors": "WU",
+    "theme": "ETB",
+    "decks": 37,
+    "games": 88,
+    "wins": 52,
+    "rate": 0.5909,
+    "wilson": [
+     0.4865,
+     0.6877
+    ]
+   },
+   {
+    "id": "BG-SAC",
+    "colors": "BG",
+    "theme": "SAC",
+    "decks": 31,
+    "games": 73,
+    "wins": 35,
+    "rate": 0.4795,
+    "wilson": [
+     0.3688,
+     0.5922
+    ]
+   },
+   {
+    "id": "UG-ETB",
+    "colors": "UG",
+    "theme": "ETB",
+    "decks": 31,
+    "games": 70,
+    "wins": 13,
+    "rate": 0.1857,
+    "wilson": [
+     0.1119,
+     0.2923
+    ]
+   },
+   {
+    "id": "WG-ART",
+    "colors": "WG",
+    "theme": "ART",
+    "decks": 30,
+    "games": 70,
+    "wins": 37,
+    "rate": 0.5286,
+    "wilson": [
+     0.4132,
+     0.641
+    ]
+   },
+   {
+    "id": "WU-ART",
+    "colors": "WU",
+    "theme": "ART",
+    "decks": 28,
+    "games": 66,
+    "wins": 34,
+    "rate": 0.5152,
+    "wilson": [
+     0.3971,
+     0.6315
+    ]
+   },
+   {
+    "id": "UB-GY",
+    "colors": "UB",
+    "theme": "GY",
+    "decks": 24,
+    "games": 60,
+    "wins": 21,
+    "rate": 0.35,
+    "wilson": [
+     0.2417,
+     0.4764
+    ]
+   },
+   {
+    "id": "WG-ETB",
+    "colors": "WG",
+    "theme": "ETB",
+    "decks": 26,
+    "games": 59,
+    "wins": 47,
+    "rate": 0.7966,
+    "wilson": [
+     0.6773,
+     0.8796
+    ]
+   },
+   {
+    "id": "WU-TOK",
+    "colors": "WU",
+    "theme": "TOK",
+    "decks": 26,
+    "games": 59,
+    "wins": 38,
+    "rate": 0.6441,
+    "wilson": [
+     0.5166,
+     0.754
+    ]
+   },
+   {
+    "id": "BG-ART",
+    "colors": "BG",
+    "theme": "ART",
+    "decks": 24,
+    "games": 57,
+    "wins": 30,
+    "rate": 0.5263,
+    "wilson": [
+     0.3992,
+     0.6501
+    ]
+   },
+   {
+    "id": "WR-TOK",
+    "colors": "WR",
+    "theme": "TOK",
+    "decks": 21,
+    "games": 48,
+    "wins": 40,
+    "rate": 0.8333,
+    "wilson": [
+     0.7042,
+     0.913
+    ]
+   },
+   {
+    "id": "UB-SAC",
+    "colors": "UB",
+    "theme": "SAC",
+    "decks": 17,
+    "games": 40,
+    "wins": 13,
+    "rate": 0.325,
+    "wilson": [
+     0.2008,
+     0.4798
+    ]
+   },
+   {
+    "id": "UB-ART",
+    "colors": "UB",
+    "theme": "ART",
+    "decks": 15,
+    "games": 37,
+    "wins": 13,
+    "rate": 0.3514,
+    "wilson": [
+     0.2183,
+     0.5124
+    ]
+   },
+   {
+    "id": "UG-LND",
+    "colors": "UG",
+    "theme": "LND",
+    "decks": 14,
+    "games": 33,
+    "wins": 13,
+    "rate": 0.3939,
+    "wilson": [
+     0.2468,
+     0.5632
+    ]
+   },
+   {
+    "id": "WB-ART",
+    "colors": "WB",
+    "theme": "ART",
+    "decks": 13,
+    "games": 33,
+    "wins": 25,
+    "rate": 0.7576,
+    "wilson": [
+     0.5898,
+     0.8717
+    ]
+   },
+   {
+    "id": "UG-SPL",
+    "colors": "UG",
+    "theme": "SPL",
+    "decks": 13,
+    "games": 29,
+    "wins": 7,
+    "rate": 0.2414,
+    "wilson": [
+     0.1222,
+     0.4211
+    ]
+   },
+   {
+    "id": "UR-ART",
+    "colors": "UR",
+    "theme": "ART",
+    "decks": 12,
+    "games": 28,
+    "wins": 12,
+    "rate": 0.4286,
+    "wilson": [
+     0.2651,
+     0.6093
+    ]
+   },
+   {
+    "id": "WG-TOK",
+    "colors": "WG",
+    "theme": "TOK",
+    "decks": 12,
+    "games": 28,
+    "wins": 20,
+    "rate": 0.7143,
+    "wilson": [
+     0.5294,
+     0.8475
+    ]
+   },
+   {
+    "id": "UG-GY",
+    "colors": "UG",
+    "theme": "GY",
+    "decks": 11,
+    "games": 26,
+    "wins": 4,
+    "rate": 0.1538,
+    "wilson": [
+     0.0615,
+     0.3353
+    ]
+   },
+   {
+    "id": "BR-SAC",
+    "colors": "BR",
+    "theme": "SAC",
+    "decks": 11,
+    "games": 24,
+    "wins": 15,
+    "rate": 0.625,
+    "wilson": [
+     0.4271,
+     0.7884
+    ]
+   },
+   {
+    "id": "WR-ART",
+    "colors": "WR",
+    "theme": "ART",
+    "decks": 9,
+    "games": 23,
+    "wins": 10,
+    "rate": 0.4348,
+    "wilson": [
+     0.2563,
+     0.6319
+    ]
+   },
+   {
+    "id": "RG-ART",
+    "colors": "RG",
+    "theme": "ART",
+    "decks": 9,
+    "games": 21,
+    "wins": 11,
+    "rate": 0.5238,
+    "wilson": [
+     0.3237,
+     0.7166
+    ]
+   },
+   {
+    "id": "WU-GY",
+    "colors": "WU",
+    "theme": "GY",
+    "decks": 8,
+    "games": 20,
+    "wins": 7,
+    "rate": 0.35,
+    "wilson": [
+     0.1812,
+     0.5671
+    ]
+   },
+   {
+    "id": "WG-LND",
+    "colors": "WG",
+    "theme": "LND",
+    "decks": 5,
+    "games": 13,
+    "wins": 9,
+    "rate": 0.6923,
+    "wilson": [
+     0.4237,
+     0.8732
+    ]
+   },
+   {
+    "id": "WU-SPL",
+    "colors": "WU",
+    "theme": "SPL",
+    "decks": 5,
+    "games": 13,
+    "wins": 9,
+    "rate": 0.6923,
+    "wilson": [
+     0.4237,
+     0.8732
+    ]
+   },
+   {
+    "id": "WB-GY",
+    "colors": "WB",
+    "theme": "GY",
+    "decks": 5,
+    "games": 12,
+    "wins": 9,
+    "rate": 0.75,
+    "wilson": [
+     0.4677,
+     0.9111
+    ]
+   },
+   {
+    "id": "BR-ART",
+    "colors": "BR",
+    "theme": "ART",
+    "decks": 5,
+    "games": 11,
+    "wins": 8,
+    "rate": 0.7273,
+    "wilson": [
+     0.4344,
+     0.9025
+    ]
+   },
+   {
+    "id": "WB-TOK",
+    "colors": "WB",
+    "theme": "TOK",
+    "decks": 4,
+    "games": 9,
+    "wins": 8,
+    "rate": 0.8889,
+    "wilson": [
+     0.565,
+     0.9801
+    ]
+   },
+   {
+    "id": "BG-GY",
+    "colors": "BG",
+    "theme": "GY",
+    "decks": 3,
+    "games": 7,
+    "wins": 2,
+    "rate": 0.2857,
+    "wilson": [
+     0.0822,
+     0.6411
+    ]
+   },
+   {
+    "id": "RG-SPL",
+    "colors": "RG",
+    "theme": "SPL",
+    "decks": 1,
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333,
+    "wilson": [
+     0.0615,
+     0.7923
+    ]
+   },
+   {
+    "id": "UG-CTR",
+    "colors": "UG",
+    "theme": "CTR",
+    "decks": 1,
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333,
+    "wilson": [
+     0.0615,
+     0.7923
+    ]
+   },
+   {
+    "id": "WU-SAC",
+    "colors": "WU",
+    "theme": "SAC",
+    "decks": 1,
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667,
+    "wilson": [
+     0.2077,
+     0.9385
+    ]
+   },
+   {
+    "id": "BG-LND",
+    "colors": "BG",
+    "theme": "LND",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "UB-SPL",
+    "colors": "UB",
+    "theme": "SPL",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "WR-GY",
+    "colors": "WR",
+    "theme": "GY",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   },
+   {
+    "id": "WR-SAC",
+    "colors": "WR",
+    "theme": "SAC",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   }
+  ]
+ },
+ "inputGen1": {
+  "label": "input cube: evolve generation 1 discovery batch (plain drafts only; exploration on)",
+  "dir": "var/cubelab/evolve/j135-synergy/gen-01/run",
+  "drafts": 144,
+  "games": 342,
+  "seedRange": [
+   170000001,
+   170000200
+  ],
+  "mean": 0.5002,
+  "pairs": [
+   {
+    "pair": "WU",
+    "decks": 53,
+    "games": 122,
+    "wins": 79,
+    "rate": 0.6475,
+    "wilson": [
+     0.5594,
+     0.7266
+    ],
+    "included": true
+   },
+   {
+    "pair": "WB",
+    "decks": 21,
+    "games": 50,
+    "wins": 37,
+    "rate": 0.74,
+    "wilson": [
+     0.6045,
+     0.8413
+    ],
+    "included": true
+   },
+   {
+    "pair": "WR",
+    "decks": 5,
+    "games": 11,
+    "wins": 7,
+    "rate": 0.6364,
+    "wilson": [
+     0.3538,
+     0.8483
+    ],
+    "included": false
+   },
+   {
+    "pair": "WG",
+    "decks": 43,
+    "games": 104,
+    "wins": 70,
+    "rate": 0.6731,
+    "wilson": [
+     0.5782,
+     0.7557
+    ],
+    "included": true
+   },
+   {
+    "pair": "UB",
+    "decks": 33,
+    "games": 79,
+    "wins": 28,
+    "rate": 0.3544,
+    "wilson": [
+     0.258,
+     0.4644
+    ],
+    "included": true
+   },
+   {
+    "pair": "UR",
+    "decks": 32,
+    "games": 74,
+    "wins": 19,
+    "rate": 0.2568,
+    "wilson": [
+     0.171,
+     0.3665
+    ],
+    "included": true
+   },
+   {
+    "pair": "UG",
+    "decks": 55,
+    "games": 131,
+    "wins": 49,
+    "rate": 0.374,
+    "wilson": [
+     0.2959,
+     0.4594
+    ],
+    "included": true
+   },
+   {
+    "pair": "BR",
+    "decks": 10,
+    "games": 26,
+    "wins": 14,
+    "rate": 0.5385,
+    "wilson": [
+     0.3546,
+     0.7124
+    ],
+    "included": false
+   },
+   {
+    "pair": "BG",
+    "decks": 28,
+    "games": 66,
+    "wins": 30,
+    "rate": 0.4545,
+    "wilson": [
+     0.3402,
+     0.5738
+    ],
+    "included": true
+   },
+   {
+    "pair": "RG",
+    "decks": 8,
+    "games": 21,
+    "wins": 9,
+    "rate": 0.4286,
+    "wilson": [
+     0.2447,
+     0.6345
+    ],
+    "included": false
+   }
+  ],
+  "otherColours": [],
+  "pairSpread": {
+   "max": "WB",
+   "maxRate": 0.74,
+   "min": "UR",
+   "minRate": 0.2568,
+   "spread": 0.4832,
+   "pairsIncluded": 7
+  },
+  "flatness": {
+   "cards": {
+    "n": 142,
+    "total": 158,
+    "minGames": 10,
+    "meanRate": 0.4903,
+    "sd": 0.0881,
+    "noiseSd": 0.0521,
+    "noiseSource": "clumps",
+    "designEffect": 1.4858,
+    "trueSd": 0.0893,
+    "trueSdCi": [
+     0.0745,
+     0.1133
+    ],
+    "verdict": "uneven",
+    "outliers": [
+     {
+      "name": "Restoration Angel",
+      "games": 49,
+      "shrunk": 0.7392,
+      "dev": 0.2489,
+      "clear": true
+     },
+     {
+      "name": "Elspeth, Sun's Champion",
+      "games": 152,
+      "shrunk": 0.7035,
+      "dev": 0.2132,
+      "clear": true
+     },
+     {
+      "name": "Battle Screech",
+      "games": 152,
+      "shrunk": 0.6803,
+      "dev": 0.19,
+      "clear": true
+     },
+     {
+      "name": "Swords to Plowshares",
+      "games": 180,
+      "shrunk": 0.675,
+      "dev": 0.1847,
+      "clear": true
+     },
+     {
+      "name": "Brimaz, King of Oreskos",
+      "games": 136,
+      "shrunk": 0.6731,
+      "dev": 0.1828,
+      "clear": true
+     }
+    ]
+   },
+   "archetypes": {
+    "n": 27,
+    "total": 36,
+    "minGames": 5,
+    "meanRate": 0.5097,
+    "sd": 0.0974,
+    "noiseSd": 0.0641,
+    "noiseSource": "clumps",
+    "designEffect": 1.4974,
+    "trueSd": 0.1421,
+    "trueSdCi": [
+     0.0817,
+     0.238
+    ],
+    "verdict": "uneven",
+    "outliers": [
+     {
+      "name": "UR-SPL",
+      "games": 70,
+      "shrunk": 0.3222,
+      "dev": -0.1874,
+      "clear": true
+     },
+     {
+      "name": "WU-ART",
+      "games": 36,
+      "shrunk": 0.6965,
+      "dev": 0.1868,
+      "clear": true
+     },
+     {
+      "name": "WG-TOK",
+      "games": 24,
+      "shrunk": 0.6592,
+      "dev": 0.1495,
+      "clear": true
+     },
+     {
+      "name": "WG-ART",
+      "games": 45,
+      "shrunk": 0.6462,
+      "dev": 0.1365,
+      "clear": true
+     },
+     {
+      "name": "UG-ETB",
+      "games": 35,
+      "shrunk": 0.3819,
+      "dev": -0.1278,
+      "clear": true
+     }
+    ]
+   }
+  },
+  "archetypes": [
+   {
+    "id": "UG-ART",
+    "colors": "UG",
+    "theme": "ART",
+    "decks": 29,
+    "games": 71,
+    "wins": 26,
+    "rate": 0.3662,
+    "wilson": [
+     0.2637,
+     0.4824
+    ]
+   },
+   {
+    "id": "UR-SPL",
+    "colors": "UR",
+    "theme": "SPL",
+    "decks": 30,
+    "games": 70,
+    "wins": 19,
+    "rate": 0.2714,
+    "wilson": [
+     0.1812,
+     0.3854
+    ]
+   },
+   {
+    "id": "WG-ART",
+    "colors": "WG",
+    "theme": "ART",
+    "decks": 18,
+    "games": 45,
+    "wins": 32,
+    "rate": 0.7111,
+    "wilson": [
+     0.5663,
+     0.8227
+    ]
+   },
+   {
+    "id": "WU-ETB",
+    "colors": "WU",
+    "theme": "ETB",
+    "decks": 18,
+    "games": 42,
+    "wins": 26,
+    "rate": 0.619,
+    "wilson": [
+     0.4681,
+     0.75
+    ]
+   },
+   {
+    "id": "WU-ART",
+    "colors": "WU",
+    "theme": "ART",
+    "decks": 17,
+    "games": 36,
+    "wins": 29,
+    "rate": 0.8056,
+    "wilson": [
+     0.6497,
+     0.9025
+    ]
+   },
+   {
+    "id": "UG-ETB",
+    "colors": "UG",
+    "theme": "ETB",
+    "decks": 15,
+    "games": 35,
+    "wins": 11,
+    "rate": 0.3143,
+    "wilson": [
+     0.1855,
+     0.4798
+    ]
+   },
+   {
+    "id": "BG-SAC",
+    "colors": "BG",
+    "theme": "SAC",
+    "decks": 13,
+    "games": 33,
+    "wins": 18,
+    "rate": 0.5455,
+    "wilson": [
+     0.3799,
+     0.7016
+    ]
+   },
+   {
+    "id": "UB-GY",
+    "colors": "UB",
+    "theme": "GY",
+    "decks": 13,
+    "games": 33,
+    "wins": 12,
+    "rate": 0.3636,
+    "wilson": [
+     0.2219,
+     0.5338
+    ]
+   },
+   {
+    "id": "UB-SAC",
+    "colors": "UB",
+    "theme": "SAC",
+    "decks": 14,
+    "games": 32,
+    "wins": 10,
+    "rate": 0.3125,
+    "wilson": [
+     0.1795,
+     0.4857
+    ]
+   },
+   {
+    "id": "WB-SAC",
+    "colors": "WB",
+    "theme": "SAC",
+    "decks": 11,
+    "games": 28,
+    "wins": 20,
+    "rate": 0.7143,
+    "wilson": [
+     0.5294,
+     0.8475
+    ]
+   },
+   {
+    "id": "BG-ART",
+    "colors": "BG",
+    "theme": "ART",
+    "decks": 12,
+    "games": 27,
+    "wins": 12,
+    "rate": 0.4444,
+    "wilson": [
+     0.2759,
+     0.6269
+    ]
+   },
+   {
+    "id": "WU-TOK",
+    "colors": "WU",
+    "theme": "TOK",
+    "decks": 11,
+    "games": 27,
+    "wins": 18,
+    "rate": 0.6667,
+    "wilson": [
+     0.4782,
+     0.8136
+    ]
+   },
+   {
+    "id": "WG-ETB",
+    "colors": "WG",
+    "theme": "ETB",
+    "decks": 12,
+    "games": 26,
+    "wins": 13,
+    "rate": 0.5,
+    "wilson": [
+     0.3206,
+     0.6794
+    ]
+   },
+   {
+    "id": "WG-TOK",
+    "colors": "WG",
+    "theme": "TOK",
+    "decks": 10,
+    "games": 24,
+    "wins": 19,
+    "rate": 0.7917,
+    "wilson": [
+     0.5953,
+     0.9076
+    ]
+   },
+   {
+    "id": "BR-SAC",
+    "colors": "BR",
+    "theme": "SAC",
+    "decks": 8,
+    "games": 20,
+    "wins": 11,
+    "rate": 0.55,
+    "wilson": [
+     0.3421,
+     0.7418
+    ]
+   },
+   {
+    "id": "UB-ART",
+    "colors": "UB",
+    "theme": "ART",
+    "decks": 6,
+    "games": 14,
+    "wins": 6,
+    "rate": 0.4286,
+    "wilson": [
+     0.2138,
+     0.6741
+    ]
+   },
+   {
+    "id": "WB-ART",
+    "colors": "WB",
+    "theme": "ART",
+    "decks": 6,
+    "games": 13,
+    "wins": 11,
+    "rate": 0.8462,
+    "wilson": [
+     0.5777,
+     0.9567
+    ]
+   },
+   {
+    "id": "UG-SPL",
+    "colors": "UG",
+    "theme": "SPL",
+    "decks": 5,
+    "games": 12,
+    "wins": 6,
+    "rate": 0.5,
+    "wilson": [
+     0.2538,
+     0.7462
+    ]
+   },
+   {
+    "id": "RG-ART",
+    "colors": "RG",
+    "theme": "ART",
+    "decks": 4,
+    "games": 11,
+    "wins": 5,
+    "rate": 0.4545,
+    "wilson": [
+     0.2127,
+     0.7199
+    ]
+   },
+   {
+    "id": "UG-LND",
+    "colors": "UG",
+    "theme": "LND",
+    "decks": 5,
+    "games": 11,
+    "wins": 4,
+    "rate": 0.3636,
+    "wilson": [
+     0.1517,
+     0.6462
+    ]
+   },
+   {
+    "id": "WG-LND",
+    "colors": "WG",
+    "theme": "LND",
+    "decks": 3,
+    "games": 9,
+    "wins": 6,
+    "rate": 0.6667,
+    "wilson": [
+     0.3542,
+     0.8794
+    ]
+   },
+   {
+    "id": "WR-TOK",
+    "colors": "WR",
+    "theme": "TOK",
+    "decks": 4,
+    "games": 9,
+    "wins": 7,
+    "rate": 0.7778,
+    "wilson": [
+     0.4526,
+     0.9368
+    ]
+   },
+   {
+    "id": "WU-SPL",
+    "colors": "WU",
+    "theme": "SPL",
+    "decks": 4,
+    "games": 9,
+    "wins": 3,
+    "rate": 0.3333,
+    "wilson": [
+     0.1206,
+     0.6458
+    ]
+   },
+   {
+    "id": "BG-GY",
+    "colors": "BG",
+    "theme": "GY",
+    "decks": 3,
+    "games": 6,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.3903
+    ]
+   },
+   {
+    "id": "RG-SAC",
+    "colors": "RG",
+    "theme": "SAC",
+    "decks": 2,
+    "games": 6,
+    "wins": 2,
+    "rate": 0.3333,
+    "wilson": [
+     0.0968,
+     0.7
+    ]
+   },
+   {
+    "id": "WU-GY",
+    "colors": "WU",
+    "theme": "GY",
+    "decks": 2,
+    "games": 6,
+    "wins": 3,
+    "rate": 0.5,
+    "wilson": [
+     0.1876,
+     0.8124
+    ]
+   },
+   {
+    "id": "WB-TOK",
+    "colors": "WB",
+    "theme": "TOK",
+    "decks": 2,
+    "games": 5,
+    "wins": 4,
+    "rate": 0.8,
+    "wilson": [
+     0.3755,
+     0.9638
+    ]
+   },
+   {
+    "id": "RG-LND",
+    "colors": "RG",
+    "theme": "LND",
+    "decks": 2,
+    "games": 4,
+    "wins": 2,
+    "rate": 0.5,
+    "wilson": [
+     0.15,
+     0.85
+    ]
+   },
+   {
+    "id": "UR-ART",
+    "colors": "UR",
+    "theme": "ART",
+    "decks": 2,
+    "games": 4,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.4899
+    ]
+   },
+   {
+    "id": "BR-ART",
+    "colors": "BR",
+    "theme": "ART",
+    "decks": 1,
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667,
+    "wilson": [
+     0.2077,
+     0.9385
+    ]
+   },
+   {
+    "id": "BR-GY",
+    "colors": "BR",
+    "theme": "GY",
+    "decks": 1,
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333,
+    "wilson": [
+     0.0615,
+     0.7923
+    ]
+   },
+   {
+    "id": "UG-GY",
+    "colors": "UG",
+    "theme": "GY",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   },
+   {
+    "id": "WB-ETB",
+    "colors": "WB",
+    "theme": "ETB",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "WB-GY",
+    "colors": "WB",
+    "theme": "GY",
+    "decks": 1,
+    "games": 2,
+    "wins": 2,
+    "rate": 1,
+    "wilson": [
+     0.3424,
+     1
+    ]
+   },
+   {
+    "id": "WR-ART",
+    "colors": "WR",
+    "theme": "ART",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   },
+   {
+    "id": "WU-SAC",
+    "colors": "WU",
+    "theme": "SAC",
+    "decks": 1,
+    "games": 2,
+    "wins": 0,
+    "rate": 0,
+    "wilson": [
+     0,
+     0.6576
+    ]
+   }
+  ]
+ },
+ "method": {
+  "pairMinGames": 40,
+  "bootstrap": {
+   "draws": 10000,
+   "deff": 1.25,
+   "seed": 135,
+   "model": "per pair rate ~ N(rate, rate(1-rate)*deff/games), clipped to [0,1]"
+  },
+  "wilsonZ": 1.959964,
+  "flatness": "ForgeCoach src/cube/flatness.ts cubeSpread(meta), defaults (cards >= 10 games, archetypes >= 5)"
+ }
+}
