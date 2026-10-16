@@ -805,9 +805,8 @@ tools/cubelab.sh library-candidates --fc ~/code/ForgeCoach [--out cubes/library]
 - **`random-180.md`**, the control: every drawable card, keyed by a seeded uniform draw (`--seed`, 180,
   `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected.
 - **`synergy-v2-180.md`**: ForgeCoach's current Synergy Cube, copied with one provenance line under its
-  title, for reference. J136 does not read it: it takes J135's proposed v3
-  (`results/J135/synergy-cube-180.v3-candidate.md` on pc-results) only when `results/J135/APPROVED` is there
-  too (the PC session writes it on Justin's word), else ForgeCoach's v2 from its pinned clone, checked by sha256.
+  title, for reference. J136 does not read it: its Synergy population is ForgeCoach's v2 only, copied from
+  its pinned clone and checked by sha256. Synergy v2 against a v3 is a separate job, J137.
 - Omega is used as it is, `cubes/omega-cube-180.md`.
 
 **Omega's skeleton**, for the two that are drawn: 24 mono-coloured nonland cards a colour, 2 gold cards a

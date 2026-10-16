@@ -1,6 +1,6 @@
 # The Synergy Cube — version 2 (180 cards, two-player)
 
-*Copied 2026-10-16 by tools/cubelab.sh library-candidates from ForgeCoach@bf39a9f0's public/cubes/synergy-cube-180.md (sha256 8cb5e5f0827a), ForgeCoach's current Synergy Cube, version 2, for the "best 180 out of the whole library" comparison (lab job J136). Nothing below this line is changed. J136 itself does not read this copy: it takes J135's proposed v3 (results/J135/synergy-cube-180.v3-candidate.md on pc-results) only when results/J135/APPROVED is there too, else ForgeCoach's v2 from its pinned clone, checked by sha256.*
+*Copied 2026-10-16 by tools/cubelab.sh library-candidates from ForgeCoach@bf39a9f0's public/cubes/synergy-cube-180.md (sha256 8cb5e5f0827a), ForgeCoach's current Synergy Cube, version 2, for the "best 180 out of the whole library" comparison (lab job J136). Nothing below this line is changed. J136 itself does not read this copy: its Synergy population is ForgeCoach's v2 only, copied from its pinned clone and checked by sha256. Synergy v2 against a v3 is lab job J137.*
 
 *Designed 2026-10-01. All eras, light interaction, no infinite combos, every name verified on Scryfall. Intended as a full-proxy cube, so cost was ignored.*
 
