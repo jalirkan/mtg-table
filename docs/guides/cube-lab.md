@@ -1135,8 +1135,10 @@ number of colours, k, lands, mean mana value and the mana-value histogram, creat
 fixers and those that reach two colours, each colour's pip share; the opponent's main share and colours;
 the CROSS and FILL shares). No verdicts and no labels beyond the bins.
 It counts each deck once (a `--decks` folder named twice, or one deck in two folders; one id with two
-lists is refused) and each game once per pilot pair, keyed by (seed, g, policyA, policyB), so a folder
-read with its own replay counts each game once; the rows must be one pilot pair unless `--mixed-pilots`.
+lists is refused) and each game once per pilot pair, keyed by (band, seed, g, policyA, policyB), so a
+folder read with its own replay counts each game once, and the bands may share a `--seed` (the example's
+1401 for every band reads together); two runs of ONE band on one seed name two deck pairs for one game and
+are refused, so each run of a band gets its own seed. The rows must be one pilot pair unless `--mixed-pilots`.
 `spectrum.json`'s `dropped` and `pilots` say what it did. Per band it also reports **the weak-deck tail**,
 `redraws`: every deck played is castable, so the decks that could not be are the generator's rejected
 draws, counted over the band's decks (a line of `spectrum.md`, and `cards.tsv`'s `redraws` column).

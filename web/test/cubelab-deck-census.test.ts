@@ -30,6 +30,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -45,6 +46,7 @@ import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, spectrumMd, 
 import { rng } from '../../tools/cubelab/rng.ts';
 import { openForgeScripts } from '../../tools/forge-scripts.ts';
 import { BANDS } from '../../tools/cubelab/census.ts';
+import { unusedPositionals } from '../../tools/cubelab/cli.ts';
 
 const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
 const poolText = readFileSync(join(REPO, 'cubes', 'library', 'library-pool.tsv'), 'utf8');
@@ -484,4 +486,46 @@ test('census-read de-duplicates: a folder and its replay count 30 games, not 36;
     assert.throws(() => dedupe([decks[0]!, { ...decks[0]!, spells: ['other'] }], [], { mixedPilots: false }), /two different lists/);
     assert.throws(() => dedupe(decks, [row(plan[0] as PlannedGame, 0), { ...row(plan[0] as PlannedGame, 0), b: 'pauper-9-00099' }], { mixedPilots: false }), /two deck pairs/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused', () => {
+  const band = (b: 'pauper' | 'peasant'): DeckRecord[] => Array.from({ length: 12 }, (_, i) => ({ ...synthDeck(`${b}-1401-${String(i + 1).padStart(5, '0')}`, 0.5 + (i % 5) / 10, 2, 2, [`${b}${i}`]), band: b }));
+  const pauper = band('pauper'), peasant = band('peasant');
+  const rowsOf = (decks: DeckRecord[]): GameRowOut[] => pairingOf(decks.map((d) => d.id), 30, 1401).map((g, k) => ({
+    v: 1, g: g.g, seed: g.seed, a: g.a, b: g.b, policyA: 'plain', policyB: 'plain', winner: k % 2 ? 'a' : 'b', first: 'a', turns: 9, ms: 900,
+    timeout: false, reason: null, error: null, engineError: null, worker: 0,
+  }));
+  const pRows = rowsOf(pauper), qRows = rowsOf(peasant);
+  // the guide's example seed, 1401, for both bands: the same (seed, g) on every row of each
+  assert.deepEqual(pRows.map((r) => `${r.seed}/${r.g}`), qRows.map((r) => `${r.seed}/${r.g}`));
+  const both = dedupe([...pauper, ...peasant], [...pRows, ...qRows], { mixedPilots: false });
+  assert.equal(both.rows.length, 60, 'two bands on one seed: 30 games each, none dropped');
+  assert.deepEqual(both.dropped, { decks: 0, rows: 0 });
+  const { doc } = readCensus(both.decks, both.rows, { boot: 20, bootSeed: 1, shrink: 20 });
+  assert.equal(doc.bands['pauper']?.games, 30);
+  assert.equal(doc.bands['peasant']?.games, 30);
+  // read twice (a folder and itself), each band's games still count once
+  assert.equal(dedupe([...pauper, ...peasant], [...pRows, ...qRows, ...pRows, ...qRows], { mixedPilots: false }).rows.length, 60);
+  // one band, one seed, a different pairing (another run): refused, and the message says what to do
+  const other = rowsOf([...pauper].reverse());
+  const clash = other.findIndex((r, i) => r.a !== pRows[i]!.a || r.b !== pRows[i]!.b);
+  assert.ok(clash >= 0);
+  assert.throws(() => dedupe(pauper, [...pRows, other[clash]!], { mixedPilots: false }), /of band pauper names two deck pairs .*its own --seed/);
+});
+
+test('the cube lab CLI refuses a positional argument its command would ignore: --games A B', () => {
+  assert.equal(unusedPositionals('census-read', []), null);
+  assert.match(unusedPositionals('census-read', ['B']) ?? '', /census-read takes no positional argument, and "B" would be ignored -- a flag takes one value, so repeat it/);
+  assert.match(unusedPositionals('report', ['run1', 'run2']) ?? '', /report takes 1 positional argument, and "run2" would be ignored/);
+  assert.equal(unusedPositionals('ratings', ['init', 'cube.md']), null);
+  assert.match(unusedPositionals('ratings', ['init', 'cube.md', 'x']) ?? '', /takes 2 positional arguments/);
+  for (const variadic of ['learn', 'compare', 'shapes']) assert.equal(unusedPositionals(variadic, ['a', 'b', 'c']), null, variadic);
+  assert.equal(unusedPositionals('no-such-command', ['a']), null, 'an unknown command is usage()\'s, not this');
+  // the real CLI: exit 2 before anything is read
+  const r = spawnSync(process.execPath, [join(REPO, 'tools/cubelab/cli.ts'), 'census-read', '--games', 'A', 'B', '--decks', 'D', '--out', join(tmpdir(), 'cubelab-cli-never')], { encoding: 'utf8' });
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /cubelab: census-read takes no positional argument, and "B" would be ignored/);
+  const s = spawnSync(process.execPath, [join(REPO, 'tools/cubelab/cli.ts'), 'decks', '--band', 'pauper', 'extra', '--count', '1'], { encoding: 'utf8' });
+  assert.equal(s.status, 2, s.stderr);
+  assert.match(s.stderr, /decks takes no positional argument, and "extra" would be ignored/);
 });
