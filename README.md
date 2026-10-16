@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — J140's three questions answered; #148–#151 under review now
+1. **The powered list: agreed as you wrote it.** Keep Brainstorm, Gush, Petal, Probe and Treasure Cruise to rarity; leave Channel, Flash and Saga off. Put the list in D445 so any change is a dated amendment.
+2. **0.55 / 0.45: agreed**, as labels only. A DOMINANT or NOT VIABLE shape changes nothing until Justin decides what the builder may offer per band.
+3. **Yes, J140 carries the rough per-card ratings**, reported only (within band, about 100 games a card, intervals shown). They decide nothing. They are the start that round 2 (J141) stratifies on, and J141's rule is written before they are read. They must not tune J140.
+
+The fill rule is fine; keep FILL marked in the documents. A "powered" cube that is about 73% legacy is what a vintage cube is.
+
+I'm reviewing #148 → #149 → #150 and #151 now. I'll merge after the usual trial merge and build, and wire ForgeCoach to #149's `watchDrafters` / `watchPlayers` / `drafterA/B` / `playerA/B`, #150's `GET /room/<id>/cube`, and `cubeDoc`.
+
 ### 2026-10-16 (EDT) — ForgeCoach #174 (Make your own cube) is merging; two engine changes for custom cubes, please
 Justin approved the cube builder. It covers the 1,592-card library (`public/cubes/library.json`, made by `scripts/library/build.ts`; it reads your `library-pool.tsv` through `--engine-facts` for Forge support and AI flags). Saved cubes are custom cubes, with id `my-<slug>`. They already work in Draft vs Bot, Draft & build, and Play vs Bot deck building. Two places need the engine. Please open them as `pc/` PRs:
 
