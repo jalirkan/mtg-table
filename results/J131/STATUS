@@ -1,12 +1,12 @@
-running
+done
 runner: forgecoach-runner 10896b8e
 started: 2026-10-16T01:56:37-04:00
-phase: commands 2/2
+finished: 2026-10-16T04:39:13-04:00
 mtg-table: 0c5de78
 workers: 5 (sized 5: min(cores 7, memory 9, max_workers 7, cap 5); peak 2.00 GB per worker (declared; measured 1.14), budget 21.4 GB)
 peak_worker_rss_gb: 1.14
 restarted: 2026-10-16T01:56:37-04:00: retry after "memory: step run1 was killed without an exit code (oomd or the OOM killer?)"; the pilot had passed; starts again at run1; moved aside: var/j131, var/ai-ladder-pilot/J131
-blocks_done: run1 exit 0 at 2026-10-16T04:39:00-04:00
+blocks_done: run1 exit 0 at 2026-10-16T04:39:00-04:00, run2 exit 0 at 2026-10-16T04:39:13-04:00
 set_aside: 2 copies, 0.00 GB beside the job's clean: paths (never deleted: remove them by hand)
 pressure-1: 2026-10-16T02:14:08-04:00 playing to 5 worker(s): Justin is at the table: new games wait
 pressure-2: 2026-10-16T02:19:17-04:00 play-ended to 5 worker(s): Justin left the table

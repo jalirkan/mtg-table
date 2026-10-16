@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T04:39:00-04:00
+- time: 2026-10-16T04:39:14-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J131 commands 2/2, 1808/1200 games, 472.9/h, 5 worker(s), 7 core(s)
+- running: J132 prepare, 1/9 units, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.57; memory 3.4/30.5 GB, swap 1604 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J132
+- load: 2.17; memory 3.4/30.5 GB, swap 1604 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J135 done at 2026-10-16T01:56:50-04:00: bm.swaps 0 · bm.swaps_dead 0 · bm.swaps_dominant_win 0 · bm.swaps_dominant_pick 0 · bm.pair_spread_before 0.358 · bm.pair_spread_after 0.425 · bm.pair_spread_change_lo -0.058 · bm.pair_spread_change_hi 0.206 · bm.arch_true_sd_before 0.121 · bm.arch_true_sd_after 0.161 · bm.card_true_sd_before 0.064 · bm.card_true_sd_after 0.083 · big.engine_error_rate 0.002
+- last finished: J131 done at 2026-10-16T04:39:13-04:00: cm.played 1200 · cm.score 0.513 · cm.lo 0.493 · cm.hi 0.532 · cm.elo 8.7 · cm.eloLo -4.7 · cm.eloHi 22.1 · cm.aSearch.msPerDecision 772.407 · cm.bSearch.msPerDecision 767.034 · cm.aSearch.evalLeafUs 122.91 · v.adopt 0
 
 ## Messages
+
+- FOLLOW-UP READY [J131@2026-10-16T04:39:13-04:00] (the runner, for the cloud session): J131 is done; write and post the template morning-read. It decides: whether the next search version (search-v3) scores the leaves of its unfinished rollouts with the learned evaluator (D354's leaf=eval, evaluator v2) instead of the hand-written leaf. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J135@2026-10-16T01:56:50-04:00] (the runner, for the cloud session): J135 is done; write and post the template morning-read. It decides: whether the evolved Synergy list (synergy-cube-180.v3-candidate.md) is offered to Justin as v3. The lab measures and proposes; nothing here edits a cube in either repo. Justin decides whether v3 ships. Ledger: LEDGER.md. Delete this line once posted.
 

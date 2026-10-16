@@ -1,0 +1,7 @@
+PASS  cm.complete == true   [cm.complete = true]
+PASS  cm.played == 1200   [cm.played = 1200]
+PASS  cm.errors + cm.timeouts <= 60   [cm.errors = 0, cm.timeouts = 0]
+PASS  v.written == 1   [v.written = 1]
+PASS  v.complete == 1   [v.complete = 1]
+PASS  v.adopt == 1 or not (cm.complete == true and cm.played == 1200 and cm.errors + cm.timeouts <= 60 and cm.lo > 0.5)   [v.adopt = 0, cm.complete = true, cm.played = 1200, cm.errors = 0, cm.timeouts = 0, cm.lo = 0.4933]
+PASS  v.adopt == 0 or (cm.complete == true and cm.played == 1200 and cm.errors + cm.timeouts <= 60 and cm.lo > 0.5)   [v.adopt = 0]

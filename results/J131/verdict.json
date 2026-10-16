@@ -1,0 +1,16 @@
+{
+ "written": 1,
+ "match": 1,
+ "names": 1,
+ "complete": 1,
+ "adopt": 0,
+ "reading": "NOT SHOWN: the lower end 0.4933 is not above 0.5",
+ "games": 1200,
+ "played": 1200,
+ "score": 0.5125,
+ "lo": 0.4933,
+ "hi": 0.5317,
+ "elo": 8.7,
+ "eloLo": -4.7,
+ "eloHi": 22.1
+}
