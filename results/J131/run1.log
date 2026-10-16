@@ -1,0 +1,240 @@
+==== J131 run1 started 2026-10-15T22:38:28-04:00 in unit lab-J131-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J131: search-v2-evalleaf against search-v1-anytime, 1,200 games on the confirm set
+match search-v2-evalleaf vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 150 batch(es) of 8 games (1200 games, 600 mirrored pairs), no stopping rule
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900000, 2 pair(s))
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900001, 2 pair(s))
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900002, 2 pair(s))
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900003, 2 pair(s))
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900004, 2 pair(s))
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900005, 2 pair(s))
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900006, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 319 s
+  8 decisive games (4 pairs): search-v2-evalleaf scores 50.0%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900007, 2 pair(s))
+  done   w6 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 338 s
+  16 decisive games (8 pairs): search-v2-evalleaf scores 50.0%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900008, 2 pair(s))
+  done   w4 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 349 s
+  24 decisive games (12 pairs): search-v2-evalleaf scores 50.0%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900009, 2 pair(s))
+  done   w5 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 358 s
+  32 decisive games (16 pairs): search-v2-evalleaf scores 46.9%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900010, 2 pair(s))
+  done   w2 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 383 s
+  40 decisive games (20 pairs): search-v2-evalleaf scores 45.0%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900011, 2 pair(s))
+  done   w1 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 440 s
+  48 decisive games (24 pairs): search-v2-evalleaf scores 47.9%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900012, 2 pair(s))
+  done   w3 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 515 s
+  56 decisive games (28 pairs): search-v2-evalleaf scores 46.4%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900013, 2 pair(s))
+  done   w6 search-v2-evalleaf 6-2 search-v1-anytime (0 draws) in 205 s
+  64 decisive games (32 pairs): search-v2-evalleaf scores 50.0%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900014, 2 pair(s))
+  done   w4 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 287 s
+  72 decisive games (36 pairs): search-v2-evalleaf scores 50.0%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900015, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 394 s
+  80 decisive games (40 pairs): search-v2-evalleaf scores 50.0%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900016, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 294 s
+  88 decisive games (44 pairs): search-v2-evalleaf scores 50.0%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900017, 2 pair(s))
+  done   w6 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 202 s
+  96 decisive games (48 pairs): search-v2-evalleaf scores 50.0%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900018, 2 pair(s))
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 521 s
+  104 decisive games (52 pairs): search-v2-evalleaf scores 50.0%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900019, 2 pair(s))
+  done   w4 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 314 s
+  112 decisive games (56 pairs): search-v2-evalleaf scores 49.1%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900020, 2 pair(s))
+  done   w3 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 440 s
+  120 decisive games (60 pairs): search-v2-evalleaf scores 50.0%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900021, 2 pair(s))
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 149 s
+  128 decisive games (64 pairs): search-v2-evalleaf scores 50.0%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900022, 2 pair(s))
+  done   w2 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 677 s
+  136 decisive games (68 pairs): search-v2-evalleaf scores 50.0%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900023, 2 pair(s))
+  done   w6 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 339 s
+  144 decisive games (72 pairs): search-v2-evalleaf scores 50.7%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900024, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 379 s
+  152 decisive games (76 pairs): search-v2-evalleaf scores 50.7%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900025, 2 pair(s))
+  done   w4 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 206 s
+  160 decisive games (80 pairs): search-v2-evalleaf scores 50.0%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900026, 2 pair(s))
+  done   w1 search-v2-evalleaf 2-6 search-v1-anytime (0 draws) in 453 s
+  168 decisive games (84 pairs): search-v2-evalleaf scores 48.8%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900027, 2 pair(s))
+  done   w6 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 148 s
+  176 decisive games (88 pairs): search-v2-evalleaf scores 48.9%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900028, 2 pair(s))
+  done   w2 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 233 s
+  184 decisive games (92 pairs): search-v2-evalleaf scores 48.9%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900029, 2 pair(s))
+  done   w3 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 350 s
+  192 decisive games (96 pairs): search-v2-evalleaf scores 48.4%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900030, 2 pair(s))
+  done   w6 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 232 s
+  200 decisive games (100 pairs): search-v2-evalleaf scores 48.5%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900031, 2 pair(s))
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 436 s
+  208 decisive games (104 pairs): search-v2-evalleaf scores 48.6%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900032, 2 pair(s))
+  done   w1 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 315 s
+  216 decisive games (108 pairs): search-v2-evalleaf scores 48.1%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900033, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 486 s
+  224 decisive games (112 pairs): search-v2-evalleaf scores 48.2%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900034, 2 pair(s))
+  done   w2 search-v2-evalleaf 7-1 search-v1-anytime (0 draws) in 314 s
+  232 decisive games (116 pairs): search-v2-evalleaf scores 49.6%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900035, 2 pair(s))
+  done   w3 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 375 s
+  240 decisive games (120 pairs): search-v2-evalleaf scores 49.2%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900036, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 145 s
+  248 decisive games (124 pairs): search-v2-evalleaf scores 49.2%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900037, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 256 s
+  256 decisive games (128 pairs): search-v2-evalleaf scores 49.2%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900038, 2 pair(s))
+  done   w4 search-v2-evalleaf 6-2 search-v1-anytime (0 draws) in 616 s
+  264 decisive games (132 pairs): search-v2-evalleaf scores 50.0%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900039, 2 pair(s))
+  done   w6 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 324 s
+  272 decisive games (136 pairs): search-v2-evalleaf scores 50.0%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900040, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 179 s
+  280 decisive games (140 pairs): search-v2-evalleaf scores 50.0%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900041, 2 pair(s))
+  done   w5 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 516 s
+  288 decisive games (144 pairs): search-v2-evalleaf scores 49.7%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900042, 2 pair(s))
+  done   w2 search-v2-evalleaf 1-7 search-v1-anytime (0 draws) in 377 s
+  296 decisive games (148 pairs): search-v2-evalleaf scores 48.6%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900043, 2 pair(s))
+  done   w4 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 226 s
+  304 decisive games (152 pairs): search-v2-evalleaf scores 48.7%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900044, 2 pair(s))
+  done   w3 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 445 s
+  312 decisive games (156 pairs): search-v2-evalleaf scores 48.4%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900045, 2 pair(s))
+  done   w0 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 435 s
+  320 decisive games (160 pairs): search-v2-evalleaf scores 48.8%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900046, 2 pair(s))
+  done   w4 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 261 s
+  328 decisive games (164 pairs): search-v2-evalleaf scores 48.5%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900047, 2 pair(s))
+  done   w6 search-v2-evalleaf 6-2 search-v1-anytime (0 draws) in 487 s
+  336 decisive games (168 pairs): search-v2-evalleaf scores 49.1%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900048, 2 pair(s))
+  done   w5 search-v2-evalleaf 2-6 search-v1-anytime (0 draws) in 331 s
+  344 decisive games (172 pairs): search-v2-evalleaf scores 48.5%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900049, 2 pair(s))
+  done   w2 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 392 s
+  352 decisive games (176 pairs): search-v2-evalleaf scores 48.6%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900050, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 446 s
+  360 decisive games (180 pairs): search-v2-evalleaf scores 48.6%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900051, 2 pair(s))
+  done   w3 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 333 s
+  368 decisive games (184 pairs): search-v2-evalleaf scores 48.6%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900052, 2 pair(s))
+  done   w6 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 368 s
+  376 decisive games (188 pairs): search-v2-evalleaf scores 48.9%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900053, 2 pair(s))
+  done   w5 search-v2-evalleaf 6-2 search-v1-anytime (0 draws) in 346 s
+  384 decisive games (192 pairs): search-v2-evalleaf scores 49.5%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900054, 2 pair(s))
+  done   w0 search-v2-evalleaf 2-6 search-v1-anytime (0 draws) in 501 s
+  392 decisive games (196 pairs): search-v2-evalleaf scores 49.0%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900055, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 319 s
+  400 decisive games (200 pairs): search-v2-evalleaf scores 49.0%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900056, 2 pair(s))
+  done   w4 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 449 s
+  408 decisive games (204 pairs): search-v2-evalleaf scores 49.0%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900057, 2 pair(s))
+  done   w2 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 396 s
+  416 decisive games (208 pairs): search-v2-evalleaf scores 48.8%
+  done   w3 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 351 s
+  424 decisive games (212 pairs): search-v2-evalleaf scores 48.8%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900058, 2 pair(s))
+  done   w6 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 297 s
+  432 decisive games (216 pairs): search-v2-evalleaf scores 48.8%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900059, 2 pair(s))
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 368 s
+  440 decisive games (220 pairs): search-v2-evalleaf scores 48.9%
+  done   w4 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 336 s
+  448 decisive games (224 pairs): search-v2-evalleaf scores 48.7%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900060, 2 pair(s))
+  done   w2 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 294 s
+  456 decisive games (228 pairs): search-v2-evalleaf scores 48.7%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900061, 2 pair(s))
+  done   w3 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 236 s
+  464 decisive games (232 pairs): search-v2-evalleaf scores 48.9%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900062, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 500 s
+  472 decisive games (236 pairs): search-v2-evalleaf scores 48.9%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900063, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 543 s
+  480 decisive games (240 pairs): search-v2-evalleaf scores 49.0%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900064, 2 pair(s))
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900065, 2 pair(s))
+  done   w6 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 289 s
+  488 decisive games (244 pairs): search-v2-evalleaf scores 48.8%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900066, 2 pair(s))
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 285 s
+  496 decisive games (248 pairs): search-v2-evalleaf scores 48.8%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900067, 2 pair(s))
+  done   w3 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 292 s
+  504 decisive games (252 pairs): search-v2-evalleaf scores 48.8%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900068, 2 pair(s))
+  done   w4 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 371 s
+  512 decisive games (256 pairs): search-v2-evalleaf scores 48.8%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900069, 2 pair(s))
+  done   w2 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 382 s
+  520 decisive games (260 pairs): search-v2-evalleaf scores 48.8%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900070, 2 pair(s))
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900071, 2 pair(s))
+  done   w6 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 321 s
+  528 decisive games (264 pairs): search-v2-evalleaf scores 49.1%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900072, 2 pair(s))
+  done   w1 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 482 s
+  536 decisive games (268 pairs): search-v2-evalleaf scores 49.1%
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900073, 2 pair(s))
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 366 s
+  544 decisive games (272 pairs): search-v2-evalleaf scores 49.1%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900074, 2 pair(s))
+  done   w0 search-v2-evalleaf 2-6 search-v1-anytime (0 draws) in 545 s
+  552 decisive games (276 pairs): search-v2-evalleaf scores 48.7%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900075, 2 pair(s))
+  done   w3 search-v2-evalleaf 6-2 search-v1-anytime (0 draws) in 481 s
+  560 decisive games (280 pairs): search-v2-evalleaf scores 49.1%
+  done   w5 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 318 s
+  568 decisive games (284 pairs): search-v2-evalleaf scores 49.1%
+  start  w3 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900076, 2 pair(s))
+  done   w1 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 453 s
+  576 decisive games (288 pairs): search-v2-evalleaf scores 49.0%
+  start  w5 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900077, 2 pair(s))
+  start  w1 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900078, 2 pair(s))
+  done   w0 search-v2-evalleaf 4-4 search-v1-anytime (0 draws) in 407 s
+  584 decisive games (292 pairs): search-v2-evalleaf scores 49.0%
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900079, 2 pair(s))
+  done   w4 search-v2-evalleaf 5-3 search-v1-anytime (0 draws) in 708 s
+  592 decisive games (296 pairs): search-v2-evalleaf scores 49.2%
+  start  w4 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900080, 2 pair(s))
+  done   w2 search-v2-evalleaf 6-2 search-v1-anytime (0 draws) in 681 s
+  600 decisive games (300 pairs): search-v2-evalleaf scores 49.5%
+  start  w2 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900081, 2 pair(s))
+  done   w6 search-v2-evalleaf 2-6 search-v1-anytime (0 draws) in 700 s
+  608 decisive games (304 pairs): search-v2-evalleaf scores 49.2%
+  done   w0 search-v2-evalleaf 3-5 search-v1-anytime (0 draws) in 239 s
+  616 decisive games (308 pairs): search-v2-evalleaf scores 49.0%
+  start  w6 search-v2-evalleaf vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261016T023828-309089, seed 114900082, 2 pair(s))
