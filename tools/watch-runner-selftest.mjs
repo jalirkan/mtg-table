@@ -7,13 +7,16 @@
 // helper's /watch routes, against a FAKE watch -- a small bash script that
 // writes match.json, draft.json and a game log the way tools/cubelab.sh watch
 // does, at a speed its seed picks (seed 1: done at once; 2: plays until it is
-// stopped; 3: dies without saying so).  Everything goes under
+// stopped; 3: dies without saying so; 5: exits on SIGTERM and leaves a child
+// that ignores it; 6: ignores SIGTERM itself).  Everything goes under
 // var/watch-runner-selftest/.  No Forge, no network.
 //
 // What it holds: the body's validation (cube ids from cubes/, never a path;
 // seeds in the lab's range; best of 1/3/5/7; players a profile or search;
 // unknown fields refused); one watch at a time (409 with the running id); stop
 // (200, then match.json says "stopped"); a watch that dies is marked "error";
+// the kill escalation (a stop's SIGKILL still reaches a child the leader left
+// behind, and close() SIGKILLs a watch that ignores SIGTERM after the grace);
 // the game log served as COMPLETE lines by ?from= and by Range (206, its first
 // byte the newline ForgeCoach's live.ts asks for again), 404 before it starts and
 // 416 past its end; and the helper's door on every route: /health's "watch",
@@ -93,6 +96,13 @@ m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"drafting","games":[],"wi
 printf '{"v":1,"kind":"watch-draft","id":"%s","picks":[]}\\n' "$id" > "$dir/draft.json"
 m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"playing","games":[{"n":1,"file":"'"$id"'-g1.jsonl","status":"playing"}],"wins":{"A":0,"B":0,"draws":0},"winner":null,"current":1}'
 printf '{"v":1,"kind":"session","gameId":"%s-g1","seat":0}\\n{"v":1,"seq":1,"type":"hello_ok"}\\n{"v":1,"seq":2,"ty' "$id" > "$dir/$id-g1.jsonl"
+if [ "$seed" = 5 ]; then
+  # a leader that exits on TERM, leaving a child (the JVM, say) that ignores it
+  bash -c 'trap "" TERM; echo $$ > "$0/straggler.pid"; while :; do sleep 0.1; done' "$dir" &
+  trap 'exit 130' TERM
+  while :; do sleep 0.1; done
+fi
+if [ "$seed" = 6 ]; then echo $$ > "$dir/leader.pid"; trap '' TERM; while :; do sleep 0.1; done; fi
 if [ "$seed" = 2 ]; then
   trap 'm "{\\"v\\":1,\\"kind\\":\\"watch-match\\",\\"id\\":\\"$id\\",\\"status\\":\\"stopped\\",\\"games\\":[],\\"current\\":null}"; exit 130' TERM
   while :; do sleep 0.1; done
@@ -142,6 +152,31 @@ w.post({ cube: 'pauper-cube-180', seed: 3 });
 await until(() => w.running() === null);
 const dead = w.get('watch-pauper-cube-180-3').body.match;
 check(dead?.status === 'error' && /exited \(code 3\)/.test(dead.error ?? ''), 'a watch that dies is marked error, with why');
+// kill escalation: the stop's SIGKILL is not cancelled when the leader exits with its group still alive
+const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
+w.post({ cube: 'pauper-cube-180', seed: 5 });
+const strag = join(ROOT, 'var/spectate/watch-pauper-cube-180-5/straggler.pid');
+await until(() => existsSync(strag) && readFileSync(strag, 'utf8').trim() !== '');
+const sp = Number(readFileSync(strag, 'utf8').trim());
+check(alive(sp) && w.stop('watch-pauper-cube-180-5').status === 200, 'a watch whose child ignores SIGTERM: stop 200');
+await until(() => w.running() === null);
+check(alive(sp), 'the leader exited on SIGTERM, its child did not');
+await until(() => !alive(sp), 3000);
+check(!alive(sp), 'the armed SIGKILL still reached the child after the grace');
+// close(): SIGTERM, then SIGKILL after the grace; it resolves once the group is gone
+const wc = mk();
+wc.post({ cube: 'pauper-cube-180', seed: 6 });
+await until(() => existsSync(join(ROOT, 'var/spectate/watch-pauper-cube-180-6/watch-pauper-cube-180-6-g1.jsonl')));
+const t0 = Date.now();
+await wc.close();
+const closedMs = Date.now() - t0;
+await until(() => wc.running() === null);
+check(closedMs >= 900 && closedMs < 3000 && wc.running() === null, `close() on a watch that ignores SIGTERM: SIGKILL after the grace (${closedMs} ms), then nothing runs`);
+check((await mk().close()) === undefined, 'close() with nothing running resolves at once');
+// whatever a failed check above left behind is this test's own: never leave it running
+for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid')]) {
+  try { const pid = Number(readFileSync(f, 'utf8').trim()); if (pid > 1) { try { process.kill(-pid, 'SIGKILL'); } catch { /* not a group */ } try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } } catch { /* no file */ }
+}
 // a re-run replaces the folder
 writeFileSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt'), 'x');
 w.post({ cube: 'fair-fight-cube-180', seed: 1 });

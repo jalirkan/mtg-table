@@ -27,6 +27,9 @@
 //                            neither           200 from byte 0
 //                          at most 4 MiB an answer; 404 while the game has not started
 //   POST /watch/<id>/stop  -> 200 {"ok": true, "id", "stopping": true}; 409 {"code": "not-running"}
+//                          SIGTERM to the watch's process group, then SIGKILL to whatever of it is
+//                          left after the grace (5 s) -- also when the leader exits first and its JVM
+//                          does not; the helper's shutdown (close()) does the same before it exits.
 //
 // Every route sits behind the coach helper's door exactly as /review does
 // (D386: loopback, or --lan and the pairing token; the Host check; Origin on
@@ -155,6 +158,15 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
   };
 
   const killGroup = (r, sig) => { try { process.kill(-r.child.pid, sig); } catch { /* gone */ } };
+  /** Does the watch's process group still have a member (its JVM, after the leader exited)? */
+  const groupAlive = (r) => {
+    try { process.kill(-r.child.pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+  };
+  /** SIGKILL whatever of the group is left, `killGraceMs` from now (once; a stop arms it, so does an exit with members left). */
+  const armKill = (r) => {
+    if (r.killer) return;
+    r.killer = setTimeout(() => { if (groupAlive(r)) { killGroup(r, 'SIGKILL'); log(`WATCH ${r.id} SIGKILL to what was left of it`); } }, killGraceMs);
+  };
 
   return {
     available: () => isAvailable(),
@@ -186,7 +198,12 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       });
       child.on('exit', (code, signal) => {
         if (running === me) running = null;
-        clearTimeout(me.killer);
+        // The leader is gone, its group may not be (a JVM it started that has not died yet): a stop's
+        // SIGKILL stays armed, and any other exit with members left sends them SIGTERM and arms one.
+        if (groupAlive(me)) {
+          if (!me.killer) killGroup(me, 'SIGTERM');
+          armKill(me);
+        } else clearTimeout(me.killer);
         settle(dir, code, signal);
         log(`WATCH ${r.id} ended (${signal ?? `exit ${code}`}) in ${((Date.now() - me.startedAt) / 1000).toFixed(0)} s`);
       });
@@ -248,13 +265,29 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       if (!running || running.id !== id) return { status: 409, body: { ok: false, type: 'error', code: 'not-running', message: 'that watch is not running' } };
       const r = running;
       killGroup(r, 'SIGTERM');
-      r.killer = setTimeout(() => killGroup(r, 'SIGKILL'), killGraceMs);
+      armKill(r);
       log(`WATCH ${id} stopping`);
       return { status: 200, body: { ok: true, id, stopping: true } };
     },
 
+    /**
+     * The helper is shutting down: SIGTERM the running watch's group, then SIGKILL whatever is left
+     * after `killGraceMs`.  Resolves when the group is gone (await it before process.exit, or the
+     * SIGKILL never happens).
+     */
     close() {
-      if (running) killGroup(running, 'SIGTERM');
+      const r = running;
+      if (!r) return Promise.resolve();
+      killGroup(r, 'SIGTERM');
+      const t0 = Date.now();
+      return new Promise((done) => {
+        const tick = () => {
+          if (!groupAlive(r)) { done(); return; }
+          if (Date.now() - t0 >= killGraceMs) { killGroup(r, 'SIGKILL'); done(); return; }
+          setTimeout(tick, 50);
+        };
+        tick();
+      });
     },
   };
 }

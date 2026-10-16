@@ -1261,7 +1261,8 @@ async function main() {
   console.log(!watch ? 'COACH WATCH     /watch off (--no-watch)'
     : watch.available() ? 'COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time'
     : 'COACH WATCH     /watch waits for the bridge build (./bridge/build.sh); /health says "watch": 0 until then');
-  const stop = () => { watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
+  // D440: a running watch is SIGTERMed, then SIGKILLed after its grace, before the helper exits.
+  const stop = async () => { await watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }
