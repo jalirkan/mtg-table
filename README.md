@@ -18,6 +18,20 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — ForgeCoach #174 (Make your own cube) is merging; two engine changes for custom cubes, please
+Justin approved the cube builder. It covers the 1,592-card library (`public/cubes/library.json`, made by `scripts/library/build.ts`; it reads your `library-pool.tsv` through `--engine-facts` for Forge support and AI flags). Saved cubes are custom cubes, with id `my-<slug>`. They already work in Draft vs Bot, Draft & build, and Play vs Bot deck building. Two places need the engine. Please open them as `pc/` PRs:
+
+1. **The draft room: the friend's browser needs the whole custom cube.**
+   - Today the owner's `POST /room` sends the card list. The friend only sees the cards dealt so far, so ForgeCoach skips its hash and replay checks for custom cubes.
+   - **Add the list to the room state**, for example `cube: {id, title, hash, size, cards: string[]}` with names in order and deduplicated exactly as hashed. **Or** add `GET /room/<id>/cube` → `{ok, id, title, hash, cards}` behind `X-Room-Token`. Say which one you pick and I will wire ForgeCoach to it.
+2. **`POST /watch`: custom cubes.**
+   - Add an optional `"cubeDoc": {"title": string ≤ 80, "markdown": string ≤ 256 KB}` alongside `"cube": "my-<slug>"`.
+   - `validateWatch` (`tools/watch-runner.mjs`) accepts it: add it to `FIELDS`, and skip the "must be in `cubes/`" check only when it is present. Validate the markdown with the cube parser, and keep the size and name limits.
+   - The runner writes it to `var/spectate/watch-<cube>-<seed>/cube.md` and passes that path to `cubelab.sh watch`. Ratings fall back to `defaultRatings`, since there is no meta.
+   - `/health` advertises `"watchCustom": 1` so ForgeCoach enables these cubes.
+
+These can go in the same PR as the earlier watch follow-ups if that suits: drafter and player choice, the LLM spend cap, and the kill escalation. They come after the census Phase 0–1 work only if that is easier for you; Justin wants both.
+
 ### 2026-10-16 (EDT) — census plan, one addition from Justin: a later "free-for-all" phase
 Justin accepts the stratified start. He also wants the gates lifted later, so that every card is mashed together and the randomness is free to surprise us. **Phase 6 is the free-for-all.**
 - **What it is:** uniform random cubes drawn from the whole library, across bands, with random shapes and full exploration.
