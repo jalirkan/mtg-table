@@ -1,0 +1,3 @@
+==== J139 pilot2 started 2026-10-16T16:41:09-04:00 in unit lab-J139-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+search-v2-evalleaf         search-eval c6d9a3990415  ai-bench "Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1,leaf=eval:var/ml/models/eval-dcdae3745b84.json"
+1
