@@ -7,7 +7,7 @@
  *
  *  - library-pool.tsv: one row a card, no name twice, evolve's parsePool reads it, and its
  *    unsupported rows are marked;
- *  - every candidate (hits-180, random-180, synergy-v2-180, and synergy-v3-180 when it exists):
+ *  - every candidate (hits-180, random-180, synergy-v2-180):
  *    180 cards, no duplicates, no parse warning, every card a supported row of the pool, and the
  *    document written back unchanged is the same bytes (evolve's writer can edit it);
  *  - hits-180 and random-180 fill Omega's skeleton exactly (colour classes, gold pairs, curve,
@@ -18,7 +18,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -35,7 +35,7 @@ const DIR = join(REPO, 'cubes', 'library');
 const poolText = readFileSync(join(DIR, 'library-pool.tsv'), 'utf8');
 const pool = parseLibraryPool(poolText);
 const byName = new Map(pool.map((c) => [c.name, c]));
-const CANDIDATES = ['hits-180', 'random-180', 'synergy-v2-180', 'synergy-v3-180'].filter((c) => existsSync(join(DIR, `${c}.md`)));
+const CANDIDATES = ['hits-180', 'random-180', 'synergy-v2-180'];
 const cubeOf = (id: string) => parseCube(readFileSync(join(DIR, `${id}.md`), 'utf8'));
 const rows = (id: string): LibraryCard[] => cubeOf(id).cards.map((c) => byName.get(c.name) as LibraryCard);
 
