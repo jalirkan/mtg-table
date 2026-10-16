@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-16T08:45:56-04:00",
- "heartbeat": "2026-10-16T08:45:56-04:00",
+ "updated": "2026-10-16T08:46:10-04:00",
+ "heartbeat": "2026-10-16T08:46:10-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.25,
-  "memUsedGb": 5.3,
+  "load1": 1.97,
+  "memUsedGb": 5.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 1485,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J138",
    "title": "Evaluator-leaf confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-evalleaf (D437) vs search-v2 (search-v1-anytime) on the confirm deck set, read alone on a 95% interval; Justin asked for it after J131's +8.7 Elo [-4.7, +22.1]",
    "cpu": "heavy",
-   "phase": "pilot 2/4",
+   "phase": "pilot 3/4",
    "started": "2026-10-16T08:44:57-04:00",
-   "elapsed": 58,
+   "elapsed": 72,
    "done": 1816,
    "total": 4800,
    "unit": "games",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-16T08:44:58-04:00",
-   "memGb": 0,
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -47,13 +47,21 @@
     "v.adopt": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 0,
+    "elapsed_s": 71,
     "j138_err": 0,
     "j138_games": 1816,
+    "merged": 1,
+    "peak_worker_rss_gb": 0.76,
+    "player_ok": 1,
+    "pm.played": 0,
     "pressure_events": 0,
+    "st.cases": 8,
+    "st.ok": 0,
+    "st.passed": 7,
+    "st.selftest": 1,
     "v.complete": 0,
     "v.written": 0,
-    "workers": 1
+    "workers": 3
    },
    "liveHeadline": [
     "cm.played",
@@ -65,7 +73,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J138-pilot2"
+   "detail": "lab-J138-pilot3"
   }
  ],
  "queue": [],
