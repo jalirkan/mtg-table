@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-15T23:49:17-04:00",
- "heartbeat": "2026-10-15T23:49:17-04:00",
+ "updated": "2026-10-15T23:49:36-04:00",
+ "heartbeat": "2026-10-15T23:49:36-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 53.45,
-  "memUsedGb": 20.5,
+  "load1": 52.24,
+  "memUsedGb": 19.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 1532,
   "pressure": 0,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-15T22:31:24-04:00",
-   "elapsed": 4673,
+   "elapsed": 4692,
    "done": 568,
    "total": 1200,
    "unit": "games",
    "ratePerHour": 422.6,
-   "eta": "2026-10-16T01:19:01-04:00",
-   "workers": 6,
+   "eta": "2026-10-16T01:19:20-04:00",
+   "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-15T23:48:44-04:00",
-   "memGb": 8.63,
+   "memGb": 8.67,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -95,6 +95,12 @@
      "kind": "drop",
      "workers": 6,
      "pressure": 29.7
+    },
+    {
+     "at": "2026-10-15T23:49:30-04:00",
+     "kind": "raise",
+     "workers": 7,
+     "pressure": 0
     }
    ],
    "detail": "lab-J131-run1"
