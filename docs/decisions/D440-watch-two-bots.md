@@ -1,4 +1,4 @@
-## D439 — watch two bots: one grid draft by the lab's drafters, then a paced best of three from seat 0's eyes, served by the coach helper
+## D440 — watch two bots: one grid draft by the lab's drafters, then a paced best of three from seat 0's eyes, served by the coach helper
 
 *Branch `pc/watch-bots`. The engine half; ForgeCoach builds the lobby tile and the viewers from `docs/watch-bots.md`.*
 

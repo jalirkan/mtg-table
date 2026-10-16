@@ -2,7 +2,7 @@
  * mtg-table — web/test/cubelab-watch.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * The cube lab's `watch` (D439, tools/cubelab/watch.ts), its engine-free half:
+ * The cube lab's `watch` (D440, tools/cubelab/watch.ts), its engine-free half:
  *
  *  - draft.json's shape, from real lab drafts of a synthetic cube: every pick's
  *    grid has nine slots, the opener's are all full, the second drafter's grid is

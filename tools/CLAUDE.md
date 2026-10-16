@@ -356,7 +356,7 @@ second `play.sh --engine-only` beside a live helper wakes the first and exits 0
 instead of clashing on its ports. The self-test's fake engine takes the bridge's own `--idle-timeout` to
 exit on cue.
 
-Watching two bots (D439) is the helper's `/watch`, in `tools/watch-runner.mjs`,
+Watching two bots (D440) is the helper's `/watch`, in `tools/watch-runner.mjs`,
 contract `docs/watch-bots.md`: it starts `tools/cubelab.sh watch` (one grid
 draft by the lab's drafters, then a paced best of three from seat 0's eyes) one
 at a time, and serves its `draft.json`, `match.json` and game logs. Rule 1 holds

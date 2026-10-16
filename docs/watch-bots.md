@@ -1,6 +1,6 @@
 # Watch two bots — draft, then a best of three
 
-**D439.** Two AIs grid-draft a cube with the cube lab's drafters, build their
+**D440.** Two AIs grid-draft a cube with the cube lab's drafters, build their
 decks with the lab's builder, and play a best of three that you watch as it is
 played. It is for seeing how a cube plays, not for testing a deck of yours.
 mtg-table does the engine half (`tools/cubelab.sh watch`, served by the coach

@@ -2095,7 +2095,7 @@ s12e_skipped() {
 #      board -- the helper's POST /bug and the room's POST /room/<id>/bug behind
 #      their doors as they were, secrets scrubbed, the caps, and
 #      tools/bugs-sync.mjs against a local bare repository; about 3 s.
-#      Since D439 also tools/watch-runner-selftest.mjs: /watch, two bots
+#      Since D440 also tools/watch-runner-selftest.mjs: /watch, two bots
 #      drafting and playing, against a FAKE watch (the body, one at a time and
 #      409, stop, a watch that dies, the game log as complete lines by ?from=
 #      and by Range, the door on every route); about 3 s.
@@ -2124,7 +2124,7 @@ s12f_coach() {
   # D361: the helper's /eval, the win chance.
   node tools/eval-runner-selftest.mjs \
     || die "eval-runner-selftest.mjs (12f: the win chance broke its contract with ForgeCoach, or its features left the training rows' -- see the FAIL lines above)"
-  # D439: the helper's /watch against a fake watch.
+  # D440: the helper's /watch against a fake watch.
   node tools/watch-runner-selftest.mjs \
     || die "watch-runner-selftest.mjs (12f: watching two bots broke its contract with ForgeCoach or its door -- see the FAIL lines above)"
 }

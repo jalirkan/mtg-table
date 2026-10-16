@@ -123,7 +123,7 @@
 //                 tools/bugs-sync.mjs --push copies new reports to pc-results under bugs/.
 //
 //   POST /watch, GET /watch, GET /watch/<id>, GET /watch/<id>/game/<n>, POST /watch/<id>/stop
-//                 -- WATCH TWO BOTS (D439): two AIs grid-draft a cube with the cube lab's drafters,
+//                 -- WATCH TWO BOTS (D440): two AIs grid-draft a cube with the cube lab's drafters,
 //                 then play a best of three, recorded paced from seat 0's eyes; one watch at a
 //                 time (409 while one runs).  tools/watch-runner.mjs's header is that contract
 //                 (docs/watch-bots.md the copyable form).  The games are served as complete
@@ -549,7 +549,7 @@ function parseArgs(argv) {
     else if (f === '--eval-python') a.evalPython = val();
     else if (f === '--eval-schema') a.evalSchema = val();
     else if (f === '--eval-cube') a.evalCube = val();
-    else if (f === '--no-watch') a.watch = false;   // D439
+    else if (f === '--no-watch') a.watch = false;   // D440
     else if (f === '--draft-room') a.draftRoom = true;   // D400
     else if (f === '--room-port') a.roomPort = Number(val());
     else if (f === '--room-dir') a.roomDir = val();
@@ -693,7 +693,7 @@ export function startHelper(opts) {
       res.writeHead(204, {
         ...cors,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-ForgeCoach-Token, Range',   // Range: D439's game logs
+        'Access-Control-Allow-Headers': 'Content-Type, X-ForgeCoach-Token, Range',   // Range: D440's game logs
         'Access-Control-Allow-Private-Network': 'true',
         'Access-Control-Max-Age': '600',
         'Content-Length': '0',
@@ -710,7 +710,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1, replaceRunning: 1 };   // D325; D410
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}), ...(watch ? watch.health() : { watch: 0 }) };   // D361; D400 (no key without --draft-room); D411; D439
+      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}), ...(watch ? watch.health() : { watch: 0 }) };   // D361; D400 (no key without --draft-room); D411; D440
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }, cors);
@@ -793,7 +793,7 @@ export function startHelper(opts) {
       return;
     }
     if (path === '/watch' || path.startsWith('/watch/')) {
-      // D439: watch two bots draft and play (tools/watch-runner.mjs).  Behind this port's door, like /review.
+      // D440: watch two bots draft and play (tools/watch-runner.mjs).  Behind this port's door, like /review.
       if (!watch) { send(res, 503, { ok: false, type: 'error', message: 'watching is off: this helper was started with --no-watch' }, cors); say(503); return; }
       const one = /^\/watch\/([^/]+)$/.exec(path);
       const game = /^\/watch\/([^/]+)\/game\/([^/]+)$/.exec(path);
@@ -1234,7 +1234,7 @@ async function main() {
     room = createRoomOwner({ store, roomPort, lan: a.lan, publicUrl: a.roomPublicUrl });
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
-  // D439: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
+  // D440: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
   const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`) }) : null;
   const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch });
   let bound;
@@ -1259,7 +1259,7 @@ async function main() {
   console.log(`COACH BUGS      POST /bug saves to var/bugs/ (D411); tools/bugs-sync.mjs --push sends new ones to pc-results`);
   console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
   console.log(!watch ? 'COACH WATCH     /watch off (--no-watch)'
-    : watch.available() ? 'COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D439), one at a time'
+    : watch.available() ? 'COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time'
     : 'COACH WATCH     /watch waits for the bridge build (./bridge/build.sh); /health says "watch": 0 until then');
   const stop = () => { watch?.close(); h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);

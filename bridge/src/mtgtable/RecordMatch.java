@@ -130,7 +130,7 @@ import mtgtable.ai.SearchConfig;
  *       {@code search}: the live search seat, {@code MtgTable --ai-policy
  *       search}'s -- D310's outlet policy and {@link SearchConfig#parseLive}'s
  *       search-v2 in front of the seat's profile, through
- *       {@link Bootstrap#createAiSeat} (D439, watching two bots: the cube lab's
+ *       {@link Bootstrap#createAiSeat} (D440, watching two bots: the cube lab's
  *       {@code watch}).  Like the profile, it belongs to the DECK.  It changes
  *       nothing on the wire: the handshake names the profile, as it always
  *       did, and the caller says which seat searched.</li>
@@ -167,7 +167,7 @@ public final class RecordMatch {
 
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 600L;
-    /** D439: the extra time a game with a search seat may take (search-v2 spends ~1.5 s a decision). */
+    /** D440: the extra time a game with a search seat may take (search-v2 spends ~1.5 s a decision). */
     private static final long SEARCH_TIMEOUT_SEC = 1_800L;
 
     // ==================================================================
@@ -215,7 +215,7 @@ public final class RecordMatch {
                 + (a.profile == null && a.profile2 == null ? "  (the default; --profile / --ai-profile "
                         + String.join("|", Bootstrap.aiProfiles(cfg.forgeHomeDir())) + ")" : ""));
         System.out.println("policies      = seat 0 " + a.policy + ", seat 1 " + a.policy2
-                + (a.searches() ? "  (search = " + SearchConfig.LIVE_VERSION + ", D439)" : ""));
+                + (a.searches() ? "  (search = " + SearchConfig.LIVE_VERSION + ", D440)" : ""));
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
         System.out.println("match block   = " + (a.writeMatch() ? "yes (hello_ok.match, amendment M47)" : "no"));
@@ -365,7 +365,7 @@ public final class RecordMatch {
 
         // A paced game is SUPPOSED to take minutes: allow 3,000 dwells on top of
         // the engine's own cap (the longest committed game is 605 frames).
-        // D439: a search seat thinks up to ~1.5 s a decision on top of that.
+        // D440: a search seat thinks up to ~1.5 s a decision on top of that.
         final long timeoutSec = GAME_TIMEOUT_SEC + (a.paceMs * 3_000L) / 1_000L
                 + (a.searches() ? SEARCH_TIMEOUT_SEC : 0L);
         final boolean finished = done.await(timeoutSec, TimeUnit.SECONDS);
@@ -415,7 +415,7 @@ public final class RecordMatch {
                     + " ms asleep (--pace " + a.paceMs + ")");
         }
         System.out.println("total wall     = " + ms(t0) + " ms");
-        // D439: what a search seat did (the controller's own counters; read after the game is over).
+        // D440: what a search seat did (the controller's own counters; read after the game is over).
         final List<LobbyPlayer> lps = List.of(lp0, lp1);
         for (int i = 0; i < 2; i++) {
             if (lps.get(i) instanceof PolicyLobbyPlayerAi && ((PolicyLobbyPlayerAi) lps.get(i)).search() != null
@@ -1098,9 +1098,9 @@ public final class RecordMatch {
         boolean match;
         /** M47: dwell this long at each frame boundary; 0 = engine speed. */
         long paceMs;
-        /** D439: seat 0's controller, plain | search. */
+        /** D440: seat 0's controller, plain | search. */
         String policy = "plain";
-        /** D439: seat 1's controller, plain | search. */
+        /** D440: seat 1's controller, plain | search. */
         String policy2 = "plain";
 
         boolean searches() {
@@ -1198,9 +1198,9 @@ public final class RecordMatch {
     }
 
     /**
-     * D439: one AI seat.  {@code plain} is Forge's own AI through
+     * D440: one AI seat.  {@code plain} is Forge's own AI through
      * {@link Bootstrap#createAiPlayer} (D107), exactly what every recording
-     * before D439 seated; {@code search} is the live search seat, built as
+     * before D440 seated; {@code search} is the live search seat, built as
      * {@code MtgTable --ai-policy search} builds it.
      */
     private static LobbyPlayer aiSeat(final String name, final int avatar, final String profile,

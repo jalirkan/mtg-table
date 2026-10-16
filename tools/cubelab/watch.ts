@@ -1,4 +1,4 @@
-// mtg-table — the cube lab's `watch`: two bots grid-draft a cube, then play a best of three you can watch (D439).
+// mtg-table — the cube lab's `watch`: two bots grid-draft a cube, then play a best of three you can watch (D440).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -126,7 +126,7 @@ export interface WatchDraft {
   v: 1;
   kind: 'watch-draft';
   id: string;
-  /** A grid draft is face up, so both pools and both decks are here (D439); the games are seat 0's eyes. */
+  /** A grid draft is face up, so both pools and both decks are here (D440); the games are seat 0's eyes. */
   faceUp: true;
   cube: { title: string; file: string; sha256: string };
   format: 'grid';

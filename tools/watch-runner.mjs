@@ -2,7 +2,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// WATCH TWO BOTS (D439): the coach helper's /watch routes.  ForgeCoach's lobby
+// WATCH TWO BOTS (D440): the coach helper's /watch routes.  ForgeCoach's lobby
 // asks for a watch -- two AIs grid-draft a cube, then play a best of three --
 // and follows it: the draft from draft.json, the games from their frame logs as
 // the recorder writes them.  The work is `tools/cubelab.sh watch` (the cube

@@ -229,7 +229,7 @@ jobs:
       # D361: the helper's /eval against a fake evaluator (numpy is not here: part 2 says skipped).
       - name: eval-runner-selftest.mjs
         run: node tools/eval-runner-selftest.mjs
-      # D439: the helper's /watch (two bots draft and play) against a fake watch.
+      # D440: the helper's /watch (two bots draft and play) against a fake watch.
       - name: watch-runner-selftest.mjs
         run: node tools/watch-runner-selftest.mjs
       # Step 12h's standard-library half: the ML encoder over every committed

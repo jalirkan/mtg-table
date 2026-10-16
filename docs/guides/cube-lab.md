@@ -1122,7 +1122,7 @@ that folder's first chunk will, and stops on a refusal; `queue check`, with the
 same flags as the run, does only that and writes nothing (a job's pilot runs it
 on the real root).
 
-## Watching two bots draft and play (D439)
+## Watching two bots draft and play (D440)
 
 `watch` is the lab made to be watched: ONE grid draft, then a best of three
 you follow as it is played.

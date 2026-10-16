@@ -12,7 +12,7 @@
 #   tools/cubelab.sh learn   var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md \
 #                            --out var/cubelab/learned/synergy.ratings.tsv           # D301, no engine
 #   tools/cubelab.sh selfplay cubes/synergy-cube-180.md --iterations 2 --drafts-per-iter 30 --jobs 2   # D302
-#   tools/cubelab.sh watch   cubes/fair-fight-cube-180.md --games 3 --player-b search   # D439: watch two bots draft and play
+#   tools/cubelab.sh watch   cubes/fair-fight-cube-180.md --games 3 --player-b search   # D440: watch two bots draft and play
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):
@@ -67,7 +67,7 @@ if [ "$cmd" != "report" ] && [ "$cmd" != "meta" ] && [ "$cmd" != "learn" ]; then
   case "$jobs" in ''|*[!0-9]*) echo "cubelab: --jobs wants a number, got $jobs" >&2; exit 2 ;; esac
   [ "$jobs" -ge 1 ] || jobs=1
   homes=""
-  # D439: `watch` boots its own home, so a watch started beside a lab run (the
+  # D440: `watch` boots its own home, so a watch started beside a lab run (the
   # coach helper's POST /watch) never shares a userDir with that run's job 0.
   home_root="${CUBELAB_HOME_ROOT:-var/cubelab/homes}"
   [ "$cmd" = "watch" ] && home_root="${CUBELAB_HOME_ROOT:-var/cubelab/watch-homes}"

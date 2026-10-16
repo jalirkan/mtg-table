@@ -3,7 +3,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The watch runner's self-test (D439): tools/watch-runner.mjs and the coach
+// The watch runner's self-test (D440): tools/watch-runner.mjs and the coach
 // helper's /watch routes, against a FAKE watch -- a small bash script that
 // writes match.json, draft.json and a game log the way tools/cubelab.sh watch
 // does, at a speed its seed picks (seed 1: done at once; 2: plays until it is
