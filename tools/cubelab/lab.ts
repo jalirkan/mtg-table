@@ -12,6 +12,7 @@ import type { Cube } from './cube.ts';
 import { buildDeck, checkDeck, type DeckBuild } from './deck.ts';
 import { aiChooser, gridDraft, winstonDraft, type DraftResult, type PickRecord } from './draft.ts';
 import type { ExploreRecord } from './explore.ts';
+import type { LlmDraftStats } from './llmdraft.ts';
 import type { PairTable } from './pairs.ts';
 import { initialRating } from './ratings.ts';
 import { rng } from './rng.ts';
@@ -66,6 +67,20 @@ export interface DraftOut {
   ms: { draft: number; build: number };
   /** D356: present on an explored draft only (explore.ts); each drafter's `deck` is then the deck that played. */
   explore?: ExploreRecord;
+  /** D439: present when one seat drafted with an LLM (llmdraft.ts): its model, calls, tokens, fallbacks and time. */
+  llm?: LlmDraftStats;
+}
+
+/** Both drafters' pools built with the lab builder (`runDraft`'s second half; D416 and D439 reuse it). */
+export function draftOuts(lc: LoadedCube, d: DraftResult, w: Weights): [DrafterOut, DrafterOut] {
+  return d.drafters.map((dr): DrafterOut => {
+    const pool = dr.state.picks;
+    const deck = buildDeck(pool, w, lc.deckPairs);
+    const deckErrors = deck
+      ? checkDeck(deck, pool, lc.byName, deck.stretched ? w.maxSplashStretch : w.maxSplash)
+      : ['no build reaches 22 castable spells, even with a wide splash, 18 lands or three colours'];
+    return { seat: dr.seat, picks: dr.log, pool: pool.map((c) => c.name), deck, deckErrors };
+  }) as [DrafterOut, DrafterOut];
 }
 
 export function runDraft(lc: LoadedCube, format: Format, seed: number, w: Weights, winstonCards = 90): DraftOut {

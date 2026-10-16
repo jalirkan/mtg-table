@@ -78,7 +78,7 @@ export const LINES: number[][] = [
   [0, 3, 6], [1, 4, 7], [2, 5, 8],      // columns
 ];
 export const lineName = (l: number): string => (l < 3 ? `row ${l + 1}` : `col ${l - 2}`);
-const lineCards = (g: (LabCard | null)[], l: number): LabCard[] =>
+export const lineCards = (g: (LabCard | null)[], l: number): LabCard[] =>
   (LINES[l] ?? []).map((i) => g[i]).filter((c): c is LabCard => c != null);
 
 /** The AI chooser: the line or pile with the best set value (pick.ts); `table` adds learned pair synergy (D301). */
@@ -112,8 +112,19 @@ function take(d: Drafter, cards: LabCard[]): void {
   d.state.picks.push(...cards);
 }
 
-/** Grid draft: 18 grids of 9 (fewer if the cube is smaller), first pick alternating. */
-export function gridDraft(cube: LabCard[], r: Rng, chooser: Chooser, w: Weights, aOpens: boolean, grids = 18): DraftResult {
+/**
+ * One grid decision a drafter must make (D439): the drafter, the grid as it stands (taken cells null),
+ * the line the first drafter took (null when this drafter opens the grid), the grid's number (1-based),
+ * how many grids the draft deals, and the other drafter (whose picks are public in a grid draft).
+ */
+export interface GridAsk { d: Drafter; grid: (LabCard | null)[]; taken: number | null; at: number; of: number; other: Drafter }
+
+/**
+ * The grid draft's rules as a generator: it yields every decision and is sent back the line chosen.
+ * `gridDraft` drives it with a synchronous Chooser, `gridDraftAsync` with an async one (the LLM drafter,
+ * D439), so both run exactly one copy of the rules.
+ */
+function* gridSteps(cube: LabCard[], r: Rng, w: Weights, aOpens: boolean, grids: number): Generator<GridAsk, DraftResult, number> {
   const deck = shuffle([...cube], r);
   const n = Math.min(grids, Math.floor(deck.length / 9));
   const dealt = deck.slice(0, n * 9);
@@ -124,14 +135,14 @@ export function gridDraft(cube: LabCard[], r: Rng, chooser: Chooser, w: Weights,
     const first = (g % 2 === 0) === aOpens ? a : b;
     const second = first === a ? b : a;
     const seen1 = grid.filter((c): c is LabCard => c != null);
-    const l1 = chooser.gridLine(first, grid, null);
+    const l1: number = yield { d: first, grid, taken: null, at: g + 1, of: n, other: second };
     if (l1 < 0 || l1 > 5 || lineCards(grid, l1).length === 0) throw new Error(`grid ${g + 1}: illegal first line ${l1}`);
     const t1 = lineCards(grid, l1);
     record(first, 'grid', g + 1, seen1, t1, lineName(l1), setValue(t1, first.state, w));
     take(first, t1);
     for (const i of LINES[l1] ?? []) grid[i] = null;
     const seen2 = grid.filter((c): c is LabCard => c != null);
-    const l2 = chooser.gridLine(second, grid, l1);
+    const l2: number = yield { d: second, grid, taken: l1, at: g + 1, of: n, other: first };
     if (l2 < 0 || l2 > 5 || l2 === l1 || lineCards(grid, l2).length === 0) throw new Error(`grid ${g + 1}: illegal second line ${l2}`);
     const t2 = lineCards(grid, l2);
     record(second, 'grid', g + 1, seen2, t2, lineName(l2), setValue(t2, second.state, w));
@@ -139,6 +150,25 @@ export function gridDraft(cube: LabCard[], r: Rng, chooser: Chooser, w: Weights,
     for (const i of LINES[l2] ?? []) grid[i] = null;
   }
   return { format: 'grid', dealt: dealt.map((c) => c.name), drafters: [a, b] };
+}
+
+/** Grid draft: 18 grids of 9 (fewer if the cube is smaller), first pick alternating. */
+export function gridDraft(cube: LabCard[], r: Rng, chooser: Chooser, w: Weights, aOpens: boolean, grids = 18): DraftResult {
+  const it = gridSteps(cube, r, w, aOpens, grids);
+  let step = it.next();
+  while (!step.done) {
+    const q = step.value;
+    step = it.next(chooser.gridLine(q.d, q.grid, q.taken));
+  }
+  return step.value;
+}
+
+/** The same grid draft with an async decision per line (D439): `choose` sees the whole ask. */
+export async function gridDraftAsync(cube: LabCard[], r: Rng, choose: (q: GridAsk) => Promise<number>, w: Weights, aOpens: boolean, grids = 18): Promise<DraftResult> {
+  const it = gridSteps(cube, r, w, aOpens, grids);
+  let step = it.next();
+  while (!step.done) step = it.next(await choose(step.value));
+  return step.value;
 }
 
 /** The drafter's expected value of a blind card: the mean score of the dealt cards it has not seen. */
