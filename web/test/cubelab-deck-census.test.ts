@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   castable, censusPopulation, CARD_FLOW_STUDY, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
-  scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
+  scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
 } from '../../tools/cubelab/deckcensus.ts';
 import { pairingOf, replayPlan, rowOf, searchSummary, type GameRowOut } from '../../tools/cubelab/censusplay.ts';
 import { readCensus, shareBin, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
@@ -45,22 +45,33 @@ const censusText = readFileSync(join(REPO, 'cubes', 'library', 'census.tsv'), 'u
 let zip: string | null = null;
 try { zip = defaultScriptsZip(REPO); } catch { zip = null; }
 const scripts = (zip ? openForgeScripts(zip) : null) ?? openForgeScripts(join(REPO, 'forge-home/res/cardsfolder/cardsfolder.zip'));
-const costOf = (n: string): string | null => {
-  if (!scripts) return null;
-  const s = scripts.scriptOf(n) ?? (n.includes(' // ') ? scripts.scriptOf(n.split(' // ')[0] as string) : null);
-  return s === null ? null : scriptManaCost(s);
-};
-const { lib } = censusPopulation(poolText, censusText, costOf);
+const { lib } = censusPopulation(poolText, censusText, scripts ? scriptLookup(scripts) : () => null);
 const byName = new Map(lib.map((c) => [c.name, c]));
 const quiet = (): void => {};
 
-test('mana costs: plain, hybrid, Phyrexian and {2/C} symbols', () => {
-  assert.deepEqual(parseManaCost('1 W W'), { plain: { W: 2 }, hybrid: [], share: { W: 2 } });
-  assert.deepEqual(parseManaCost('2 W/U'), { plain: {}, hybrid: ['WU'], share: { W: 0.5, U: 0.5 } });
-  assert.deepEqual(parseManaCost('3 U/P'), { plain: {}, hybrid: [], share: { U: 1 } });
-  assert.deepEqual(parseManaCost('2/G 2/G 2/G'), { plain: {}, hybrid: [], share: { G: 3 } });
-  assert.deepEqual(parseManaCost('no cost'), { plain: {}, hybrid: [], share: {} });
+test('mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces', () => {
+  assert.deepEqual(parseManaCost('1 W W'), { plain: { W: 2 }, hybrid: [], share: { W: 2 }, x: 0 });
+  assert.deepEqual(parseManaCost('1 GW GW'), { plain: {}, hybrid: ['WG', 'WG'], share: { W: 1, G: 1 }, x: 0 }, 'Kitchen Finks: two hybrid symbols, not four pips');
+  assert.deepEqual(parseManaCost('1 BP BP'), { plain: {}, hybrid: [], share: { B: 2 }, x: 0 }, 'Dismember: payable with life');
+  assert.deepEqual(parseManaCost('GWP'), { plain: {}, hybrid: [], share: { W: 0.5, G: 0.5 }, x: 0 }, 'Phyrexian hybrid');
+  assert.deepEqual(parseManaCost('PRG'), { plain: {}, hybrid: [], share: { R: 0.5, G: 0.5 }, x: 0 }, "Lukka's spelling");
+  assert.deepEqual(parseManaCost('2U 2U 2U'), { plain: {}, hybrid: [], share: { U: 3 }, x: 0 }, 'two-brid: payable with {2}');
+  assert.deepEqual(parseManaCost('2 CW'), { plain: { W: 1 }, hybrid: [], share: { W: 1 }, x: 0 }, 'colourless hybrid: a W pip');
+  assert.deepEqual(parseManaCost('X X R'), { plain: { R: 1 }, hybrid: [], share: { R: 1 }, x: 2 });
+  assert.deepEqual(parseManaCost('2 C S'), { plain: {}, hybrid: [], share: {}, x: 0 }, '{C} and snow: latent, not counted');
+  assert.deepEqual(parseManaCost('2/B W/U W/P'), parseManaCost('2B WU WP'), 'the three slash tokens of the zip read the same');
+  assert.deepEqual(parseManaCost('no cost'), { plain: {}, hybrid: [], share: {}, x: 0 });
   assert.equal(scriptManaCost('Name:Lightning Bolt\nManaCost:R\nTypes:Instant\n'), 'R');
+  const fireIce = 'Name:Fire\nManaCost:1 R\nTypes:Instant\nAlternateMode:Split\nALTERNATE\nName:Ice\nManaCost:1 U\nTypes:Instant\n';
+  assert.deepEqual(scriptCost(fireIce), { plain: { R: 1, U: 1 }, hybrid: [], share: { R: 1, U: 1 }, x: 0 }, 'a split card needs both faces');
+  const adventure = 'Name:Bonecrusher Giant\nManaCost:2 R\nAlternateMode:Adventure\nALTERNATE\nName:Stomp\nManaCost:1 R\n';
+  assert.deepEqual(scriptCost(adventure), parseManaCost('2 R'), 'an adventure is an option: the front face only');
+  if (scripts) {
+    const real = (n: string): CensusCard => byName.get(n) as CensusCard;
+    assert.deepEqual(real('Fire // Ice').cost.plain, { U: 1, R: 1 }, 'Fire // Ice from the real script');
+    assert.deepEqual(real('Kitchen Finks').cost.hybrid, ['WG', 'WG']);
+    assert.deepEqual(real('Dismember').cost.plain, {});
+  }
 });
 
 test('the generator is deterministic by seed, and the command writes the same bytes twice', () => {

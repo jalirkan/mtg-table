@@ -19,7 +19,8 @@
 // 2. THE DRAW (drawSpells).  A card is ELIGIBLE for a makeup when it is drawable (supported, not a
 //    basic land), not AI:RemoveDeck:All, every one of its printed colours is a colour of the makeup
 //    (colourless always), and every coloured mana symbol of its cost can be paid by the makeup's
-//    colours (a hybrid symbol by either colour; a Phyrexian or a {2/C} symbol always).  25 spells
+//    colours (a hybrid symbol by either colour; a Phyrexian or a {2/C} symbol always; a split card's
+//    two faces both; parseManaCost reads Forge's own tokens, GW, BP, 2W, with no slash).  25 spells
 //    are drawn one at a time, without replacement (the library holds one of each card): a draw is
 //    colourless with probability q, the band pool's own share of colourless cards among its
 //    eligible nonland cards (a property of the pool, the same for every deck of the band), else it
@@ -62,7 +63,7 @@ import { dckText } from './deck.ts';
 import { parseLibraryPool } from './library-candidates.ts';
 import { rng, shuffle, type Rng } from './rng.ts';
 import { eligibleFor, FILL_ORDER, joinCensus, NEIGHBOURS, type SampleCard } from './sample.ts';
-import { openForgeScripts } from '../forge-scripts.ts';
+import { openForgeScripts, type ForgeScripts } from '../forge-scripts.ts';
 
 export const DECK_CENSUS_VERSION = 1;
 export const DECK_SIZE = 40;
@@ -91,34 +92,62 @@ export interface Cost {
   plain: Partial<Record<Colour, number>>;
   hybrid: string[];
   share: Partial<Record<Colour, number>>;
+  /** X symbols. */
+  x: number;
 }
 
-export const NO_COST: Cost = { plain: {}, hybrid: [], share: {} };
+export const NO_COST: Cost = { plain: {}, hybrid: [], share: {}, x: 0 };
 
-/** A Forge script's `ManaCost:` (`1 W W`, `2 W/U`, `B/P`, `2/G`, `no cost`) as a Cost. */
+/**
+ * A Forge script's `ManaCost:` as a Cost, token by token as Forge writes them (no braces, no slash):
+ * `W` a plain pip; `GW` a hybrid (either colour); `BP`, `GWP`, `PRG` Phyrexian (payable with life, so
+ * always payable; its share split over its colours); `2W` a two-brid (payable with {2}, so always
+ * payable; share 1 to its colour); `CW` colourless-hybrid, counted as a plain pip of its colour (this
+ * deck's lands make no {C} on purpose; no library card has one).  `X` counts in `x`.  A plain `C` and
+ * snow `S` need a colourless or a snow source; no library card has either, so they are not counted
+ * (latent, D447).  The slash spellings (`W/U`, `B/P`, `2/G`: three tokens in the whole zip) read the
+ * same.  Generic numbers and `no cost` are nothing.
+ */
 export function parseManaCost(text: string): Cost {
   const plain: Partial<Record<Colour, number>> = {};
   const share: Partial<Record<Colour, number>> = {};
   const hybrid: string[] = [];
+  let x = 0;
   const add = (r: Partial<Record<Colour, number>>, c: Colour, n: number): void => { r[c] = (r[c] ?? 0) + n; };
   for (const tok of text.trim().split(/\s+/)) {
-    const up = tok.toUpperCase();
-    if (!/[WUBRG]/.test(up)) continue;
+    const up = tok.toUpperCase().replace(/\//g, '');
+    if (up === 'X') { x++; continue; }
     const cols = COLOURS.filter((c) => up.includes(c));
-    if (up.includes('/')) {
-      if (up.includes('P') || /(^|\/)2(\/|$)/.test(up)) { for (const c of cols) add(share, c, 1 / cols.length); continue; }   // Phyrexian, {2/C}: payable without the colour
-      hybrid.push(cols.join(''));
-      for (const c of cols) add(share, c, 1 / cols.length);
-      continue;
-    }
-    for (const c of cols) { add(plain, c, 1); add(share, c, 1); }
+    if (!cols.length) continue;                                                        // generic, C, S, `no cost`
+    if (up.includes('P') || /\d/.test(up)) { for (const c of cols) add(share, c, 1 / cols.length); continue; }   // Phyrexian, two-brid: always payable
+    if (cols.length >= 2) { hybrid.push(cols.join('')); for (const c of cols) add(share, c, 1 / cols.length); continue; }
+    add(plain, cols[0] as Colour, 1); add(share, cols[0] as Colour, 1);                 // a plain pip (and CW, counted as one)
   }
-  return { plain, hybrid, share };
+  return { plain, hybrid, share, x };
+}
+
+/** Faces cast on their own, merged: each colour's plain pips the most any face needs (each face must be castable), every hybrid, the shares summed. */
+export function mergeFaces(faces: Cost[]): Cost {
+  const plain: Partial<Record<Colour, number>> = {};
+  const share: Partial<Record<Colour, number>> = {};
+  for (const f of faces) {
+    for (const [c, n] of Object.entries(f.plain)) plain[c as Colour] = Math.max(plain[c as Colour] ?? 0, n as number);
+    for (const [c, n] of Object.entries(f.share)) share[c as Colour] = (share[c as Colour] ?? 0) + (n as number);
+  }
+  return { plain, hybrid: faces.flatMap((f) => f.hybrid), share, x: faces.reduce((a, f) => a + f.x, 0) };
 }
 
 /** The front face's ManaCost line of a Forge script, or null. */
 export function scriptManaCost(script: string): string | null {
   return /^ManaCost:(.*)$/m.exec(script)?.[1]?.trim() ?? null;
+}
+
+/** A spell's cost from its script: the front face, and a SPLIT card's second face too (Fire // Ice needs both); an adventure's, a modal or a transforming card's other face is an option, not a requirement. */
+export function scriptCost(script: string): Cost {
+  const costs = [...script.matchAll(/^ManaCost:(.*)$/gm)].map((m) => (m[1] ?? '').trim());
+  if (!costs.length) return NO_COST;
+  const split = /^AlternateMode:\s*Split\s*$/m.test(script);
+  return split ? mergeFaces(costs.map(parseManaCost)) : parseManaCost(costs[0] as string);
 }
 
 // ---------------------------------------------------------------- the population
@@ -410,17 +439,22 @@ export function defaultScriptsZip(repo: string): string {
 
 export const sha12 = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex').slice(0, 12);
 
-/** census.tsv joined to library-pool.tsv, each card with its cost from Forge's scripts.  `costOf` returns null for a card with no script. */
-export function censusPopulation(poolText: string, censusText: string, costOf: (name: string) => string | null): { lib: CensusCard[]; noScript: string[] } {
+/** A card's script by its library name (a split card by its first half too), from Forge's zip. */
+export function scriptLookup(scripts: Pick<ForgeScripts, 'scriptOf'>): (name: string) => string | null {
+  return (n) => scripts.scriptOf(n) ?? (n.includes(' // ') ? scripts.scriptOf(n.split(' // ')[0] as string) : null);
+}
+
+/** census.tsv joined to library-pool.tsv, each card with its cost from its Forge script.  `scriptOf` returns null for a card with no script. */
+export function censusPopulation(poolText: string, censusText: string, scriptOf: (name: string) => string | null): { lib: CensusCard[]; noScript: string[] } {
   const recorded = recordedInputs(censusText).get('library-pool.tsv');
   if (recorded !== sha12(poolText)) throw new Error(`decks: census.tsv was built from another library-pool.tsv (sha256 ${recorded ?? '?'}, this one ${sha12(poolText)}); run tools/cubelab.sh census build`);
   const joined = joinCensus(parseLibraryPool(poolText), parseCensus(censusText));
   const noScript: string[] = [];
   const lib = joined.map((c): CensusCard => {
     if (c.land || !c.supported) return { ...c, cost: NO_COST };
-    const mc = costOf(c.name);
-    if (mc === null) noScript.push(c.name);
-    return { ...c, cost: mc === null ? costFromColours(c.colors) : parseManaCost(mc) };
+    const script = scriptOf(c.name);
+    if (script === null) noScript.push(c.name);
+    return { ...c, cost: script === null ? costFromColours(c.colors) : scriptCost(script) };
   });
   return { lib, noScript };
 }
@@ -429,7 +463,7 @@ export function censusPopulation(poolText: string, censusText: string, costOf: (
 function costFromColours(colors: string): Cost {
   const plain: Partial<Record<Colour, number>> = {};
   for (const c of colors) plain[c as Colour] = 1;
-  return { plain, hybrid: [], share: { ...plain } };
+  return { plain, hybrid: [], share: { ...plain }, x: 0 };
 }
 
 // ---------------------------------------------------------------- the command
@@ -453,10 +487,7 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   const zip = path.resolve(repo, one('scripts') ?? defaultScriptsZip(repo));
   const scripts = openForgeScripts(zip);
   if (!scripts) throw new Error(`decks: no Forge card scripts at ${zip} (pass --scripts)`);
-  const { lib, noScript } = censusPopulation(poolText, censusText, (n) => {
-    const s = scripts.scriptOf(n) ?? (n.includes(' // ') ? scripts.scriptOf(n.split(' // ')[0] as string) : null);
-    return s === null ? null : scriptManaCost(s);
-  });
+  const { lib, noScript } = censusPopulation(poolText, censusText, scriptLookup(scripts));
   fs.mkdirSync(path.join(out, 'decks'), { recursive: true });
   const o: DeckOptions = { band, seed, crossBand };
   const lines: string[] = [];
