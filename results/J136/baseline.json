@@ -1,0 +1,915 @@
+{
+ "schema": 1,
+ "populations": 4,
+ "drafts": 400,
+ "seed_first": 836000001,
+ "seed_last": 836000400,
+ "same_seeds": 1,
+ "boot": {
+  "replicates": 1000,
+  "seed": 1,
+  "level": 0.95
+ },
+ "min_pair_games": 30,
+ "card_min_games": 10,
+ "pop": {
+  "omega": {
+   "index": 1,
+   "drafts": 400,
+   "games": 999,
+   "decisive": 999,
+   "pairs_included": 10,
+   "m": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": 0.082183,
+     "lo": 0,
+     "hi": 0.209963
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.8,
+     "lo": 0.4,
+     "hi": 1
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": 18.93994,
+     "lo": 18.625173,
+     "hi": 19.262271
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 16.99375,
+     "lo": 16.9875,
+     "hi": 16.99875
+    },
+    "colours": {
+     "valid": 1000,
+     "est": 2.13375,
+     "lo": 2.10875,
+     "hi": 2.15625
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "splash": {
+     "valid": 1000,
+     "est": 0.13375,
+     "lo": 0.10875,
+     "hi": 0.15625
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": 0.114722,
+     "lo": 0.112545,
+     "hi": 0.116943
+    }
+   },
+   "flatness_detail": {
+    "n": 161,
+    "total": 169,
+    "sd": 0.031244,
+    "noise_sd": 0.042711,
+    "design_effect": 1.53171,
+    "true_sd": 0,
+    "fc_lo": 0,
+    "fc_hi": 0.007221,
+    "mean_rate": 0.497387,
+    "readable": 1
+   }
+  },
+  "hits": {
+   "index": 2,
+   "drafts": 400,
+   "games": 997,
+   "decisive": 997,
+   "pairs_included": 9,
+   "m": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0.034057
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": 0.158914,
+     "lo": 0.054882,
+     "hi": 0.296731
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.777778,
+     "lo": 0.3,
+     "hi": 0.888889
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": 16.132397,
+     "lo": 15.842838,
+     "hi": 16.408178
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 16.99375,
+     "lo": 16.9875,
+     "hi": 16.99875
+    },
+    "colours": {
+     "valid": 1000,
+     "est": 2.375,
+     "lo": 2.345,
+     "hi": 2.402531
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "splash": {
+     "valid": 1000,
+     "est": 0.375,
+     "lo": 0.345,
+     "hi": 0.402531
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": 0.129491,
+     "lo": 0.127438,
+     "hi": 0.131605
+    }
+   },
+   "flatness_detail": {
+    "n": 154,
+    "total": 169,
+    "sd": 0.041909,
+    "noise_sd": 0.043465,
+    "design_effect": 1.521266,
+    "true_sd": 0,
+    "fc_lo": 0,
+    "fc_hi": 0.035934,
+    "mean_rate": 0.496168,
+    "readable": 1
+   }
+  },
+  "random": {
+   "index": 3,
+   "drafts": 400,
+   "games": 972,
+   "decisive": 972,
+   "pairs_included": 7,
+   "m": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0.036369
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": 0.11016,
+     "lo": 0,
+     "hi": 0.287064
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.714286,
+     "lo": 0.285714,
+     "hi": 0.875
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": 19.751029,
+     "lo": 19.402449,
+     "hi": 20.092799
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 16.99875,
+     "lo": 16.99625,
+     "hi": 17
+    },
+    "colours": {
+     "valid": 1000,
+     "est": 2.765,
+     "lo": 2.73875,
+     "hi": 2.7925
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "splash": {
+     "valid": 1000,
+     "est": 0.765,
+     "lo": 0.73875,
+     "hi": 0.7925
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": 0.133148,
+     "lo": 0.131121,
+     "hi": 0.135151
+    }
+   },
+   "flatness_detail": {
+    "n": 151,
+    "total": 163,
+    "sd": 0.041064,
+    "noise_sd": 0.04269,
+    "design_effect": 1.489493,
+    "true_sd": 0,
+    "fc_lo": 0,
+    "fc_hi": 0.034857,
+    "mean_rate": 0.499061,
+    "readable": 1
+   }
+  },
+  "synergy": {
+   "index": 4,
+   "drafts": 400,
+   "games": 966,
+   "decisive": 964,
+   "pairs_included": 10,
+   "m": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0.080567,
+     "lo": 0.062721,
+     "hi": 0.096072
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": 0.449684,
+     "lo": 0.360614,
+     "hi": 0.546937
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.2,
+     "lo": 0,
+     "hi": 0.3
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0.00207,
+     "lo": 0,
+     "hi": 0.005187
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0.00207,
+     "lo": 0,
+     "hi": 0.005187
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": 19.42029,
+     "lo": 19.070145,
+     "hi": 19.774622
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 16.4175,
+     "lo": 16.38625,
+     "hi": 16.4475
+    },
+    "colours": {
+     "valid": 1000,
+     "est": 2.19125,
+     "lo": 2.165,
+     "hi": 2.21875
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "splash": {
+     "valid": 1000,
+     "est": 0.19125,
+     "lo": 0.165,
+     "hi": 0.21875
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": 0.12588,
+     "lo": 0.123468,
+     "hi": 0.128376
+    }
+   },
+   "flatness_detail": {
+    "n": 154,
+    "total": 164,
+    "sd": 0.082417,
+    "noise_sd": 0.042054,
+    "design_effect": 1.489025,
+    "true_sd": 0.080567,
+    "fc_lo": 0.069384,
+    "fc_hi": 0.097956,
+    "mean_rate": 0.491205,
+    "readable": 1
+   }
+  }
+ },
+ "diff": {
+  "omega": {
+   "hits": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0,
+     "lo": -0.034036,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": -0.076731,
+     "lo": -0.241407,
+     "hi": 0.088134,
+     "excludes_zero": 0
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.022222,
+     "lo": -0.288889,
+     "hi": 0.555556,
+     "excludes_zero": 0
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": 2.807543,
+     "lo": 2.39257,
+     "hi": 3.234337,
+     "excludes_zero": 1
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 0,
+     "lo": -0.00875,
+     "hi": 0.0075,
+     "excludes_zero": 0
+    },
+    "colours": {
+     "valid": 1000,
+     "est": -0.24125,
+     "lo": -0.27875,
+     "hi": -0.20625,
+     "excludes_zero": 1
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "splash": {
+     "valid": 1000,
+     "est": -0.24125,
+     "lo": -0.27875,
+     "hi": -0.20625,
+     "excludes_zero": 1
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": -0.014769,
+     "lo": -0.017671,
+     "hi": -0.011745,
+     "excludes_zero": 1
+    }
+   },
+   "random": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0,
+     "lo": -0.036369,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": -0.027978,
+     "lo": -0.222815,
+     "hi": 0.133607,
+     "excludes_zero": 0
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.085714,
+     "lo": -0.314286,
+     "hi": 0.571429,
+     "excludes_zero": 0
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": -0.811089,
+     "lo": -1.25211,
+     "hi": -0.352752,
+     "excludes_zero": 1
+    },
+    "lands": {
+     "valid": 1000,
+     "est": -0.005,
+     "lo": -0.01125,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "colours": {
+     "valid": 1000,
+     "est": -0.63125,
+     "lo": -0.66625,
+     "hi": -0.5975,
+     "excludes_zero": 1
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "splash": {
+     "valid": 1000,
+     "est": -0.63125,
+     "lo": -0.66625,
+     "hi": -0.5975,
+     "excludes_zero": 1
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": -0.018426,
+     "lo": -0.021449,
+     "hi": -0.015707,
+     "excludes_zero": 1
+    }
+   },
+   "synergy": {
+    "flatness": {
+     "valid": 1000,
+     "est": -0.080567,
+     "lo": -0.096072,
+     "hi": -0.062231,
+     "excludes_zero": 1
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": -0.367501,
+     "lo": -0.494302,
+     "hi": -0.217447,
+     "excludes_zero": 1
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.6,
+     "lo": 0.2,
+     "hi": 0.888889,
+     "excludes_zero": 1
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": -0.00207,
+     "lo": -0.005187,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": -0.00207,
+     "lo": -0.005187,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": -0.48035,
+     "lo": -0.951293,
+     "hi": 0.023057,
+     "excludes_zero": 0
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 0.57625,
+     "lo": 0.54625,
+     "hi": 0.607531,
+     "excludes_zero": 1
+    },
+    "colours": {
+     "valid": 1000,
+     "est": -0.0575,
+     "lo": -0.0925,
+     "hi": -0.0225,
+     "excludes_zero": 1
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "splash": {
+     "valid": 1000,
+     "est": -0.0575,
+     "lo": -0.0925,
+     "hi": -0.0225,
+     "excludes_zero": 1
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": -0.011157,
+     "lo": -0.014212,
+     "hi": -0.007913,
+     "excludes_zero": 1
+    }
+   }
+  },
+  "hits": {
+   "random": {
+    "flatness": {
+     "valid": 1000,
+     "est": 0,
+     "lo": -0.033554,
+     "hi": 0.03153,
+     "excludes_zero": 0
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": 0.048753,
+     "lo": -0.172756,
+     "hi": 0.2428,
+     "excludes_zero": 0
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.063492,
+     "lo": -0.444444,
+     "hi": 0.429018,
+     "excludes_zero": 0
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": -3.618632,
+     "lo": -4.078549,
+     "hi": -3.150171,
+     "excludes_zero": 1
+    },
+    "lands": {
+     "valid": 1000,
+     "est": -0.005,
+     "lo": -0.01125,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "colours": {
+     "valid": 1000,
+     "est": -0.39,
+     "lo": -0.431281,
+     "hi": -0.35,
+     "excludes_zero": 1
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "splash": {
+     "valid": 1000,
+     "est": -0.39,
+     "lo": -0.431281,
+     "hi": -0.35,
+     "excludes_zero": 1
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": -0.003657,
+     "lo": -0.0066,
+     "hi": -0.000906,
+     "excludes_zero": 1
+    }
+   },
+   "synergy": {
+    "flatness": {
+     "valid": 1000,
+     "est": -0.080567,
+     "lo": -0.094665,
+     "hi": -0.042711,
+     "excludes_zero": 1
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": -0.29077,
+     "lo": -0.435689,
+     "hi": -0.124656,
+     "excludes_zero": 1
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.577778,
+     "lo": 0.1,
+     "hi": 0.788889,
+     "excludes_zero": 1
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": -0.00207,
+     "lo": -0.005187,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": -0.00207,
+     "lo": -0.005187,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": -3.287893,
+     "lo": -3.77475,
+     "hi": -2.844729,
+     "excludes_zero": 1
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 0.57625,
+     "lo": 0.545,
+     "hi": 0.60875,
+     "excludes_zero": 1
+    },
+    "colours": {
+     "valid": 1000,
+     "est": 0.18375,
+     "lo": 0.14375,
+     "hi": 0.22375,
+     "excludes_zero": 1
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "splash": {
+     "valid": 1000,
+     "est": 0.18375,
+     "lo": 0.14375,
+     "hi": 0.22375,
+     "excludes_zero": 1
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": 0.003611,
+     "lo": 0.000542,
+     "hi": 0.006517,
+     "excludes_zero": 1
+    }
+   }
+  },
+  "random": {
+   "synergy": {
+    "flatness": {
+     "valid": 1000,
+     "est": -0.080567,
+     "lo": -0.095068,
+     "hi": -0.035358,
+     "excludes_zero": 1
+    },
+    "pair_spread": {
+     "valid": 1000,
+     "est": -0.339524,
+     "lo": -0.490139,
+     "hi": -0.143828,
+     "excludes_zero": 1
+    },
+    "pair_within5": {
+     "valid": 1000,
+     "est": 0.514286,
+     "lo": 0.075,
+     "hi": 0.8,
+     "excludes_zero": 1
+    },
+    "draw_rate": {
+     "valid": 1000,
+     "est": -0.00207,
+     "lo": -0.005187,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "timeout_rate": {
+     "valid": 1000,
+     "est": -0.00207,
+     "lo": -0.005187,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "game_turns": {
+     "valid": 1000,
+     "est": 0.330739,
+     "lo": -0.16895,
+     "hi": 0.810637,
+     "excludes_zero": 0
+    },
+    "lands": {
+     "valid": 1000,
+     "est": 0.58125,
+     "lo": 0.55125,
+     "hi": 0.6125,
+     "excludes_zero": 1
+    },
+    "colours": {
+     "valid": 1000,
+     "est": 0.57375,
+     "lo": 0.535,
+     "hi": 0.61125,
+     "excludes_zero": 1
+    },
+    "two_colour": {
+     "valid": 1000,
+     "est": 0,
+     "lo": 0,
+     "hi": 0,
+     "excludes_zero": 0
+    },
+    "splash": {
+     "valid": 1000,
+     "est": 0.57375,
+     "lo": 0.535,
+     "hi": 0.61125,
+     "excludes_zero": 1
+    },
+    "first_pick_top10": {
+     "valid": 1000,
+     "est": 0.007269,
+     "lo": 0.004365,
+     "hi": 0.010294,
+     "excludes_zero": 1
+    }
+   }
+  }
+ },
+ "rank": {
+  "flatness": {
+   "omega": 1,
+   "hits": 2,
+   "random": 3,
+   "synergy": 4
+  },
+  "pair_spread": {
+   "omega": 1,
+   "random": 2,
+   "hits": 3,
+   "synergy": 4
+  },
+  "pair_within5": {
+   "synergy": 1,
+   "random": 2,
+   "hits": 3,
+   "omega": 4
+  },
+  "draw_rate": {
+   "omega": 1,
+   "hits": 2,
+   "random": 3,
+   "synergy": 4
+  },
+  "timeout_rate": {
+   "omega": 1,
+   "hits": 2,
+   "random": 3,
+   "synergy": 4
+  },
+  "game_turns": {
+   "hits": 1,
+   "omega": 2,
+   "synergy": 3,
+   "random": 4
+  },
+  "lands": {
+   "synergy": 1,
+   "omega": 2,
+   "hits": 3,
+   "random": 4
+  },
+  "colours": {
+   "omega": 1,
+   "synergy": 2,
+   "hits": 3,
+   "random": 4
+  },
+  "two_colour": {
+   "omega": 1,
+   "hits": 2,
+   "random": 3,
+   "synergy": 4
+  },
+  "splash": {
+   "omega": 1,
+   "synergy": 2,
+   "hits": 3,
+   "random": 4
+  },
+  "first_pick_top10": {
+   "omega": 1,
+   "synergy": 2,
+   "hits": 3,
+   "random": 4
+  }
+ }
+}

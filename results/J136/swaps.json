@@ -1,0 +1,30 @@
+{
+ "written": 1,
+ "swaps": 5,
+ "pop": {
+  "omega": {
+   "generations": 2,
+   "swaps": 0,
+   "why": {}
+  },
+  "hits": {
+   "generations": 2,
+   "swaps": 4,
+   "why": {
+    "note_cut": 4
+   }
+  },
+  "random": {
+   "generations": 2,
+   "swaps": 1,
+   "why": {
+    "note_cut": 1
+   }
+  },
+  "synergy": {
+   "generations": 2,
+   "swaps": 0,
+   "why": {}
+  }
+ }
+}

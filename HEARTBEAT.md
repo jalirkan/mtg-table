@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T14:47:14-04:00
+- time: 2026-10-16T14:47:37-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J136 commands 3/3, 4970/4800 drafts, 2411/h, 7 worker(s), 7 core(s)
+- running: J137 prepare, 0/3000 drafts, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5.13; memory 8/30.5 GB, swap 1986 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J137, J139
+- load: 4.36; memory 6.8/30.5 GB, swap 1986 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J139
 - waiting: nothing
-- last finished: J134 done at 2026-10-16T12:34:25-04:00: jr.fl_vintage_rate 0.538 · jr.fl_vintage_code 0 · jr.fl_synergy_rate 0.528 · jr.fl_synergy_code 0 · jr.fl_twobert_rate 0.495 · jr.fl_twobert_code 0 · jr.hl_vintage_rate 0.513 · jr.hl_vintage_code 0 · jr.hl_synergy_rate 0.542 · jr.hl_synergy_code 0 · jr.ll_ran 0
+- last finished: J136 done at 2026-10-16T14:47:37-04:00: base.pop.omega.m.flatness.est 0 · base.pop.hits.m.flatness.est 0 · base.pop.random.m.flatness.est 0 · base.pop.synergy.m.flatness.est 0.081 · fin.pop.omega.m.flatness.est 0 · fin.pop.hits.m.flatness.est 0 · fin.pop.random.m.flatness.est 0.022 · fin.pop.synergy.m.flatness.est 0.078 · sw.swaps 5 · all.engine_error_rate 0.001
 
 ## Messages
+
+- FOLLOW-UP READY [J136@2026-10-16T14:47:37-04:00] (the runner, for the cloud session): J136 is done; write and post the template morning-read. It decides: which way of seeding a 180-card cube from the whole library (Omega's design, the lab's greatest hits, an unselected random draw, the Synergy design) gives the more balanced AI drafts, before and after two generations of evolve from the same pool (Justin, 2026-10-15: "treat the entire library as one cube", approved as this comparison): a measurement for the owner and the cloud to read, not a switch. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J134@2026-10-16T12:34:25-04:00] (the runner, for the cloud session): J134 is done; write and post the template morning-read. It decides: which of the lab's drafters (the lab drafter, Forge's ranks, the human-pick model and, if Justin approves the spend, Sonnet) a follow-up offers in ForgeCoach's Draft vs Bot, and whether the lab drafter stays the default; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
 

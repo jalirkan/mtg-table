@@ -1,0 +1,9 @@
+# J136: the swaps each evolve made
+
+| population | generation | out | in | why | evidence |
+|---|---|---|---|---|---|
+| hits | 1 | Ancestral Recall | Miscalculation | note-cut | notes: J136 POWER: removed wherever present, never added; dealt 179, picked 176, first line 144, in 134 deck(s); on colour in 134 pool(s), played in 134 (1.00, CI 0.97–1.00); won 106 of 225 decisive games (0.47, CI 0.41–0.54 by deck, design effect 1.01, shrunk 0.47) vs mean 0.50, its colour pairs 0.52 (D377) |
+| hits | 1 | Mox Emerald | Chrome Mox | note-cut | notes: J136 POWER: removed wherever present, never added; dealt 177, picked 171, first line 141, in 171 deck(s); on colour in 171 pool(s), played in 171 (1.00, CI 0.98–1.00); won 152 of 285 decisive games (0.53, CI 0.47–0.59 by deck, design effect 1.01, shrunk 0.53) vs mean 0.50, its colour pairs 0.50 (D377) |
+| hits | 1 | Mox Jet | Grim Monolith | note-cut | notes: J136 POWER: removed wherever present, never added; dealt 177, picked 175, first line 148, in 175 deck(s); on colour in 175 pool(s), played in 175 (1.00, CI 0.98–1.00); won 148 of 292 decisive games (0.51, CI 0.45–0.56 by deck, design effect 1.01, shrunk 0.51) vs mean 0.50, its colour pairs 0.49 (D377) |
+| hits | 1 | Time Walk | Chart a Course | note-cut | notes: J136 POWER: removed wherever present, never added; dealt 186, picked 180, first line 137, in 150 deck(s); on colour in 150 pool(s), played in 150 (1.00, CI 0.97–1.00); won 131 of 256 decisive games (0.51, CI 0.45–0.57 by deck, design effect 1.01, shrunk 0.51) vs mean 0.50, its colour pairs 0.51 (D377) |
+| random | 1 | Mox Jet | Chrome Mox | note-cut | notes: J136 POWER: removed wherever present, never added; dealt 177, picked 175, first line 152, in 175 deck(s); on colour in 175 pool(s), played in 175 (1.00, CI 0.98–1.00); won 148 of 285 decisive games (0.52, CI 0.46–0.58 by deck, design effect 1.05, shrunk 0.52) vs mean 0.50, its colour pairs 0.50 (D377); dominant-pick p 3.0e-4 |

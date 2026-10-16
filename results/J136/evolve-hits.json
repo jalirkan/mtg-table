@@ -1,0 +1,185 @@
+{
+  "v": 1,
+  "cube": "cubes/library/hits-180.md",
+  "startSha": "617f25e9f13d3c574085ce3cb06d1b111ef463c85b9b60be247679854a7813e1",
+  "pool": "cubes/library/library-pool.tsv",
+  "poolSha": "ccd1123660dd81bc4bc5282252b3900b9ff5ea5c0a4425fc05a17d3a7414394d",
+  "drafts": 200,
+  "seed": 186000001,
+  "games": 3,
+  "profiles": [
+    "Default",
+    "Default"
+  ],
+  "weights": {
+    "unrated": 40,
+    "landScale": 0.45,
+    "synergy": 4,
+    "synergyCap": 6,
+    "lean": 10,
+    "commitAt": 0.3333333333333333,
+    "offColour": 40,
+    "splash": 15,
+    "splashMinRating": 70,
+    "splashSources": 2,
+    "fixing": 12,
+    "setRest": 0.6,
+    "winstonMargin1": 10,
+    "winstonMargin2": 5,
+    "winstonMargin3": 0,
+    "remAIDeck": 0,
+    "playable": 45,
+    "deckPlayable": 2,
+    "deckTheme": 1.5,
+    "deckCurve": 1,
+    "deckCreatures": 1.5,
+    "creaturesMin": 13,
+    "deckSplash": 3,
+    "maxSplash": 3,
+    "maxSplashStretch": 7,
+    "deckThreeColour": 1.5,
+    "deckEighteenLands": 2,
+    "splashDeckSources": 3,
+    "buildSynergy": 3,
+    "sixteenLandsAt": 2.5
+  },
+  "knobs": {
+    "swaps": 6,
+    "minSeen": 15,
+    "minGames": 20,
+    "minOnColour": 8,
+    "deadPlayRateHi": 0.35,
+    "deadMinRating": 60,
+    "dominantMargin": 0.05,
+    "dominantFirstPickLo": 0.75,
+    "fdrQ": 0.1,
+    "confirmAlpha": 0.05,
+    "confirmPower": 0.8,
+    "dominantEffect": 0.1,
+    "deadEffect": 0.1,
+    "pickEffect": 0.9,
+    "confirmMinDrafts": 20,
+    "confirmMaxDrafts": 300,
+    "confirmSeedOffset": 1000000,
+    "confirmPool": 1,
+    "watchWinMargin": 0.12,
+    "colourSlack": 2,
+    "minSignposts": 2,
+    "fitSameClass": 4,
+    "fitTheme": 3,
+    "fitRole": 2,
+    "fitMv": 1,
+    "fitRating": 4,
+    "fitBalance": 3,
+    "fitTry": 20,
+    "dominantReplaceRatio": 0.9,
+    "humanTest": 10
+  },
+  "constraints": {
+    "size": 180,
+    "colourTarget": {
+      "W": 32,
+      "U": 32,
+      "B": 32,
+      "R": 32,
+      "G": 32
+    },
+    "colourSlack": 2,
+    "lands": 22,
+    "fixingMin": 25,
+    "pairMin": {
+      "WU": 2,
+      "WB": 2,
+      "WR": 2,
+      "WG": 2,
+      "UB": 2,
+      "UR": 2,
+      "UG": 2,
+      "BR": 2,
+      "BG": 2,
+      "RG": 2
+    }
+  },
+  "date": "2026-10-16",
+  "generations": [
+    {
+      "gen": 1,
+      "inputSha": "617f25e9f13d3c574085ce3cb06d1b111ef463c85b9b60be247679854a7813e1",
+      "outputSha": "301b3c13c1cbea61b5b7a4f22428b38d76071b140c8806d7479638132309e71c",
+      "versionIn": 1,
+      "versionOut": 2,
+      "seeds": [
+        186000001,
+        186000200
+      ],
+      "confirmSeeds": [
+        187000001,
+        187000047
+      ],
+      "swaps": [
+        {
+          "out": "Ancestral Recall",
+          "outSection": "Blue",
+          "in": "Miscalculation",
+          "inSection": "Blue",
+          "why": "note-cut",
+          "evidence": "notes: J136 POWER: removed wherever present, never added; dealt 179, picked 176, first line 144, in 134 deck(s); on colour in 134 pool(s), played in 134 (1.00, CI 0.97–1.00); won 106 of 225 decisive games (0.47, CI 0.41–0.54 by deck, design effect 1.01, shrunk 0.47) vs mean 0.50, its colour pairs 0.52 (D377)",
+          "fit": "same colour class; shares SPL CTRL; mv 2 for 1; rating 98"
+        },
+        {
+          "out": "Mox Emerald",
+          "outSection": "Colorless",
+          "in": "Chrome Mox",
+          "inSection": "Colorless",
+          "why": "note-cut",
+          "evidence": "notes: J136 POWER: removed wherever present, never added; dealt 177, picked 171, first line 141, in 171 deck(s); on colour in 171 pool(s), played in 171 (1.00, CI 0.98–1.00); won 152 of 285 decisive games (0.53, CI 0.47–0.59 by deck, design effect 1.01, shrunk 0.53) vs mean 0.50, its colour pairs 0.50 (D377)",
+          "fit": "same colour class; shares ART RAMP; mv 0 for 0; rating 99.4"
+        },
+        {
+          "out": "Mox Jet",
+          "outSection": "Colorless",
+          "in": "Grim Monolith",
+          "inSection": "Colorless",
+          "why": "note-cut",
+          "evidence": "notes: J136 POWER: removed wherever present, never added; dealt 177, picked 175, first line 148, in 175 deck(s); on colour in 175 pool(s), played in 175 (1.00, CI 0.98–1.00); won 148 of 292 decisive games (0.51, CI 0.45–0.56 by deck, design effect 1.01, shrunk 0.51) vs mean 0.50, its colour pairs 0.49 (D377)",
+          "fit": "same colour class; shares ART RAMP; mv 2 for 0; rating 98.9"
+        },
+        {
+          "out": "Time Walk",
+          "outSection": "Blue",
+          "in": "Chart a Course",
+          "inSection": "Blue",
+          "why": "note-cut",
+          "evidence": "notes: J136 POWER: removed wherever present, never added; dealt 186, picked 180, first line 137, in 150 deck(s); on colour in 150 pool(s), played in 150 (1.00, CI 0.97–1.00); won 131 of 256 decisive games (0.51, CI 0.45–0.57 by deck, design effect 1.01, shrunk 0.51) vs mean 0.50, its colour pairs 0.51 (D377)",
+          "fit": "same colour class; shares SPL CTRL; mv 2 for 2; rating 92.1"
+        }
+      ],
+      "verdict": "4 swap(s): 4 by the notes; 9 more lead(s) are insufficient data. Discovery: 1 candidate(s) of 307 tests at a false-discovery rate of 0.1; confirmation on 47 fresh drafts: 0 confirmed, 1 not. 44 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "ad01c1206ece6f2e56cc23b0ec4466b248e6d158f902d62afb33c178aecac7ac"
+    },
+    {
+      "gen": 2,
+      "inputSha": "301b3c13c1cbea61b5b7a4f22428b38d76071b140c8806d7479638132309e71c",
+      "outputSha": "a624a49b401e68a69edf79760c4293441ee5fb3a174c017bc723c1c941732682",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        186000201,
+        186000400
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 9 lead(s) to watch — about 1609 drafts per generation would find half of them. Run more drafts. 46 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "ad01c1206ece6f2e56cc23b0ec4466b248e6d158f902d62afb33c178aecac7ac"
+    }
+  ],
+  "explore": {
+    "share": 0.3,
+    "cap": 4,
+    "gold": 4,
+    "margin": 0.1,
+    "minDecks": 10
+  },
+  "winNull": "colour"
+}

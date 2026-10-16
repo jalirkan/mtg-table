@@ -1,0 +1,158 @@
+{
+  "v": 1,
+  "cube": "cubes/library/random-180.md",
+  "startSha": "e6c5a4f0bb00fcf72201aaebecd28fbb7f50123db2552e7f8cf1c9348bed9f9a",
+  "pool": "cubes/library/library-pool.tsv",
+  "poolSha": "ccd1123660dd81bc4bc5282252b3900b9ff5ea5c0a4425fc05a17d3a7414394d",
+  "drafts": 200,
+  "seed": 186000001,
+  "games": 3,
+  "profiles": [
+    "Default",
+    "Default"
+  ],
+  "weights": {
+    "unrated": 40,
+    "landScale": 0.45,
+    "synergy": 4,
+    "synergyCap": 6,
+    "lean": 10,
+    "commitAt": 0.3333333333333333,
+    "offColour": 40,
+    "splash": 15,
+    "splashMinRating": 70,
+    "splashSources": 2,
+    "fixing": 12,
+    "setRest": 0.6,
+    "winstonMargin1": 10,
+    "winstonMargin2": 5,
+    "winstonMargin3": 0,
+    "remAIDeck": 0,
+    "playable": 45,
+    "deckPlayable": 2,
+    "deckTheme": 1.5,
+    "deckCurve": 1,
+    "deckCreatures": 1.5,
+    "creaturesMin": 13,
+    "deckSplash": 3,
+    "maxSplash": 3,
+    "maxSplashStretch": 7,
+    "deckThreeColour": 1.5,
+    "deckEighteenLands": 2,
+    "splashDeckSources": 3,
+    "buildSynergy": 3,
+    "sixteenLandsAt": 2.5
+  },
+  "knobs": {
+    "swaps": 6,
+    "minSeen": 15,
+    "minGames": 20,
+    "minOnColour": 8,
+    "deadPlayRateHi": 0.35,
+    "deadMinRating": 60,
+    "dominantMargin": 0.05,
+    "dominantFirstPickLo": 0.75,
+    "fdrQ": 0.1,
+    "confirmAlpha": 0.05,
+    "confirmPower": 0.8,
+    "dominantEffect": 0.1,
+    "deadEffect": 0.1,
+    "pickEffect": 0.9,
+    "confirmMinDrafts": 20,
+    "confirmMaxDrafts": 300,
+    "confirmSeedOffset": 1000000,
+    "confirmPool": 1,
+    "watchWinMargin": 0.12,
+    "colourSlack": 2,
+    "minSignposts": 2,
+    "fitSameClass": 4,
+    "fitTheme": 3,
+    "fitRole": 2,
+    "fitMv": 1,
+    "fitRating": 4,
+    "fitBalance": 3,
+    "fitTry": 20,
+    "dominantReplaceRatio": 0.9,
+    "humanTest": 10
+  },
+  "constraints": {
+    "size": 180,
+    "colourTarget": {
+      "W": 32,
+      "U": 32,
+      "B": 32,
+      "R": 32,
+      "G": 32
+    },
+    "colourSlack": 2,
+    "lands": 22,
+    "fixingMin": 32,
+    "pairMin": {
+      "WU": 2,
+      "WB": 2,
+      "WR": 2,
+      "WG": 2,
+      "UB": 2,
+      "UR": 2,
+      "UG": 2,
+      "BR": 2,
+      "BG": 2,
+      "RG": 2
+    }
+  },
+  "date": "2026-10-16",
+  "generations": [
+    {
+      "gen": 1,
+      "inputSha": "e6c5a4f0bb00fcf72201aaebecd28fbb7f50123db2552e7f8cf1c9348bed9f9a",
+      "outputSha": "206bdf620309b11b04e7941de7797c85dcb3616ef49eda12556af2b487c9ddfc",
+      "versionIn": 1,
+      "versionOut": 2,
+      "seeds": [
+        186000001,
+        186000200
+      ],
+      "swaps": [
+        {
+          "out": "Mox Jet",
+          "outSection": "Colorless",
+          "in": "Chrome Mox",
+          "inSection": "Colorless",
+          "why": "note-cut",
+          "evidence": "notes: J136 POWER: removed wherever present, never added; dealt 177, picked 175, first line 152, in 175 deck(s); on colour in 175 pool(s), played in 175 (1.00, CI 0.98–1.00); won 148 of 285 decisive games (0.52, CI 0.46–0.58 by deck, design effect 1.05, shrunk 0.52) vs mean 0.50, its colour pairs 0.50 (D377); dominant-pick p 3.0e-4",
+          "fit": "same colour class; shares ART RAMP; mv 0 for 0; rating 99.4; helps weak ART (0.01)"
+        }
+      ],
+      "verdict": "1 swap(s): 1 by the notes; 9 more lead(s) are insufficient data. 52 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "77961a7ff61eb18c997249ea736ec05947eb3aaec2009cb3865e1b6c7a51f1a1"
+    },
+    {
+      "gen": 2,
+      "inputSha": "206bdf620309b11b04e7941de7797c85dcb3616ef49eda12556af2b487c9ddfc",
+      "outputSha": "b17daff7fae4e5a05d9486e4059a0063d36877f222e3bf6b7120a9558ef7529d",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        186000201,
+        186000400
+      ],
+      "confirmSeeds": [
+        187000301,
+        187000425
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 200 drafts; 12 lead(s) to watch — about 898 drafts per generation would find half of them. Run more drafts. Discovery: 1 candidate(s) of 283 tests at a false-discovery rate of 0.1; confirmation on 125 fresh drafts: 0 confirmed, 1 not. 50 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-16",
+      "notesSha": "77961a7ff61eb18c997249ea736ec05947eb3aaec2009cb3865e1b6c7a51f1a1"
+    }
+  ],
+  "explore": {
+    "share": 0.3,
+    "cap": 4,
+    "gold": 4,
+    "margin": 0.1,
+    "minDecks": 10
+  },
+  "winNull": "colour"
+}
