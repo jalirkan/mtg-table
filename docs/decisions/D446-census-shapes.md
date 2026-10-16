@@ -102,20 +102,28 @@ two-colour rule; this is the lab's.
      lands; good-stuff three to five, no splash, 18 lands. A shaped deck that fails its rules is a
      bug: the draft throws.
 
-4. **The exploration share.** `--shape-explore share=<x>` (or `on`, share 0.25) on `run` (and
-   `compare`): each draft draws, from its own stream `rng(seed, 'shape-explore')` — so nothing
-   else about the draft moves, any `--jobs`, a resumed run — u_A, k_A (one of four), u_B, k_B3
-   (one of three) and k_B4 (one of four), always all five. An `auto` seat is **forced** when its
-   u < share. Seat A's forced shape is the k_A-th of (mono, two-colour, three-colour,
-   good-stuff); seat B's is the k_B4-th, except when seat A was forced too, when it is the
-   k_B3-th of the three shapes A did not get. So each seat is forced with probability `share`,
-   its forced shape is uniform over the four (for B: s·(3/4)·(1/3) + (1 − s)·(1/4) = 1/4 for each),
-   and two forced seats never share a shape: the exploration makes no mirrors. A seat with a
-   non-`auto` `--shape-a/-b` keeps it and is never forced. Each drafter's line carries `shape`
-   (`auto` or the shape it drafted and built to) and `shapeForced` (true or false) whenever shapes
-   are on, and `shapeFallback` when point 3's fallback played; `run.json` carries
-   `shapes: {A, B, explore, rules}`; the shape settings are part of the folder's identity (D394)
-   and of its lab version when on.
+4. **The exploration share.** `--shape-explore share=<x>` (or `on`, share 0.25), optionally with
+   weights `mono=a,two-colour=b,three-colour=c,good-stuff=d` (default equal; any given weights
+   are normalised to sum 1, an unnamed shape 0), on `run` (and `compare`): each draft draws, from
+   its own stream `rng(seed, 'shape-explore')` — so nothing else about the draft moves, any
+   `--jobs`, a resumed run — four uniforms u_A, x_A, u_B, x_B, always all four. An `auto` seat is
+   **forced** when its u < share. Seat A's forced shape is drawn by the weights from x_A
+   (inverse CDF in the order mono, two-colour, three-colour, good-stuff); seat B's from x_B by the
+   same weights, renormalised over the three shapes A did not get when A was forced too. So each
+   seat is forced with probability `share`; with equal weights its forced shape is uniform (for B:
+   s·(3/4)·(1/3) + (1 − s)·(1/4) = 1/4 for each); and two forced seats never share a shape: the
+   exploration makes no mirrors. A seat with a non-`auto` `--shape-a/-b` keeps it and is never
+   forced. Each drafter's line carries `shape` (`auto` or the shape it drafted and built to) and
+   `shapeForced` (true or false) whenever shapes are on, and `shapeFallback` when point 3's
+   fallback played; `run.json` carries `shapes: {A, B, explore: {share, weights}, rules, flow}`;
+   the shape settings are part of the folder's identity (D394) and of its lab version when on.
+   `shapeMarginals` gives each seat's exact probability of each shape, for a job's expected game
+   counts. *The weights were added on 2026-10-16 after an offline measurement of how often each
+   shape's builder finds a build (no engine: the draft and the build are pure functions of the
+   seed): mono builds in 46–50% of seats a band (89–93% in mono-heavy cubes, 17–42% elsewhere),
+   three-colour 94–99%, good-stuff 87–99%, two-colour 100%; at equal weights mono would get about
+   half the built decks the other shapes get. No rule above reads the weights: they change how
+   many decks of each shape are played, not how any deck is drafted, built or counted.*
 
 5. **Card flow** (the Synergy v3 study's bias feature, `pc-results/study/synergy-v3-design.md`
    §1: 17 cards that "draw or filter without adding to the board", each −2.9 points [−3.7, −2.1]
@@ -123,14 +131,20 @@ two-colour rule; this is the lab's.
    `isCardFlow`): a card is **card flow** when it is not a land or a planeswalker, it is not a
    creature unless it has evoke, its text draws at least one card, and every sentence of its rules
    text (reminder text removed, the card's name read as `~`, a trigger of the card's own entering
-   or dying and an activation cost of mana, `{T}`, sacrificing it, life or a discard stripped
-   first) is, clause by clause (split at ", then" and "and"), one of: a draw (`draw(s) N
-   card(s)`, at once or at the next upkeep); card selection (scry, surveil, mill, look at the top
-   cards of a library or at a hand, reveal the top cards, put them back, shuffle, put one into the
-   hand and the rest on the bottom or into the graveyard, discard, put cards from the hand on top);
-   an additional or alternative cost; a Treasure, Clue or Food token; "add one mana of any color";
-   gaining or losing life; a flashback, evoke, delve, buyback, retrace, jump-start or cycling
-   line; and, on an evoke creature, a line of evergreen keywords. The study's 17 cards are card
+   or dying, an activation cost of mana, `{T}`, sacrificing it, life or a discard, and "if you
+   do," stripped first) is, clause by clause (split at ", then" and "and"), one of: a draw
+   (`draw(s) N card(s)`, at once or at the next upkeep); card selection (scry, surveil, mill, look
+   at the top cards of a library or at a hand or a random card of it, reveal the top cards, put them
+   back, shuffle, put one into the hand and the rest on the bottom or into the graveyard, discard a
+   number of cards or a hand, shuffle a hand and graveyard into the library, put cards from the hand
+   or the card itself on top); an additional or alternative cost; a Treasure, Clue or Food token or
+   investigate; "add one mana of any color" or "two mana in any combination of colors"; untapping
+   lands; gaining or losing life; a flashback, evoke, delve, buyback, retrace, jump-start or cycling
+   line; and, on an evoke creature, a line of evergreen keywords. On the library's 1,592 cards
+   (the engine's cached facts) the rule names 40 (the rule's text was settled against the
+   library's near misses before any test or game: the Tomes, Sensei's Divining Top, the wheels,
+   Night's Whisper, Preordain and Chart a Course are card flow; a modal card, a cantrip counterspell or bounce, a
+   cycling card and a mana rock that cycles are not). The study's 17 cards are card
    flow by this rule and the test holds them, with controls that are not (a counterspell that
    draws, a creature that draws, an enchantment that draws every turn, a burn spell). When shapes
    are on, `cards.json` marks each card-flow card `flow: true`, and the measures count a played
@@ -152,7 +166,7 @@ two-colour rule; this is the lab's.
    - **`card_flow`**: the mean card-flow count of a played deck by colour count (all decks) and by
      shape, with intervals; present only for runs with shapes on.
    - **By shape** (the table J140's rule reads): for each shape, the decks of seats **forced** to
-     it and **built to it** (no fallback), their match win rate over decisive matches with its 95%
+     it (or given it by `--shape-a/-b`) and **built to it** (no fallback), their match win rate over decisive matches with its 95%
      interval, a match between two seats of the same non-`auto` shape left out (point 4 makes none;
      a fixed `--shape-a` beside an explored B can), and the shape's fallback rate.
    - `compare.json` keeps numbers only: `pop.<name>.shape.<key>.{est,lo,hi,valid,n}` with the keys
@@ -167,13 +181,24 @@ two-colour rule; this is the lab's.
    --dominant 0.55 --not-viable 0.45` (J140's labels, the cloud's answer 2) each shape row of each
    group is labelled from its interval alone: VIABLE iff the interval contains 0.5, DOMINANT iff it
    lies wholly above 0.55, NOT VIABLE iff wholly below 0.45 (a row can be none, or DOMINANT and not
-   VIABLE). Reported beside, deciding nothing: the **band offsets** from the cross-band slice (in
+   VIABLE; a row with fewer than `--min-pair-games` (30) decisive matches gets no label). Reported beside, deciding nothing: the **band offsets** from the cross-band slice (in
    each band's cubes, the pooled win rate of the played cards from each other census band minus
    that of the in-band cards, deck-games as the unit, with a draft-clustered interval); card flow
    by shape; and the **rough per-card ratings** within band (`ratings-rough.tsv`: every card's
    games, wins, raw rate with Wilson's 95% interval, and the shrunk rate (wins + 20m)/(games + 20),
    m the group's nonland card-game mean), report only: J141 stratifies on them, and its rule is
    written before they are read.
+
+**The smoke (2026-10-16, one engine process at a time, `--jobs 1`).** `cubelab.sh run` on a sampled
+legacy two-colour cube (`sample --band legacy --structure two-colour --seed 140100`) with
+`--shape-explore share=1.0`, 8 drafts from seed 140,100,009 (the first 8-seed block from 140,100,001 in
+which an offline draft with the cached facts showed every shape built; the engine's own lookup dealt
+differently), best of one: 17 s. All 16 seats forced, no mirror, every shape present (good-stuff 6,
+three-colour 4, mono 4, two-colour 2); built to shape: three-colour 4 of 4 (all 17 lands, 3–8 fixers),
+good-stuff 3 of 6 (UBR, WURG, WUBRG on 18 lands, each with the fixers its colour count needs), mono 3 of 4
+(B+R, R+W, U+R: one colour and a one-colour splash on 17 lands), two-colour 2 of 2; the four fallbacks
+played today's legal two-colour decks. Every deck passed its rules, re-checked from `drafts.jsonl` against
+the facts; `report` and `shapes` read the folder.
 
 **Rejected.**
 
