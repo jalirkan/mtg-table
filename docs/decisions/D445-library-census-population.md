@@ -125,6 +125,44 @@ structure; the test checks two.
 - Old uncommons land in peasant by rule: Force of Will, Mana Drain, Wasteland, City of Brass,
   Swords to Plowshares, Ancient Tomb. That is the rarity rule doing what it says; the first round's
   re-labelling rule is where the lab's numbers can move them.
+- **25 cards get their band only from Magic Online printings** (the review of #151, 2026-10-16):
+  the rule counts every printing in Forge's editions, `Type=Online` ones included, and these 25 are
+  printed at their lowest rarity only in an Online edition — the Masters Editions (ME1–ME4), Vintage
+  Masters (VMA), the Magic Online Theme Decks (TD0) and Magic Online Promos (PRM). Fellwar Stone is
+  pauper by its ME3 common (its paper printings are uncommon) and Serendib Efreet is peasant by its
+  VMA uncommon (Arabian Nights rare). That is how real Pauper legality works: the format counts a
+  Magic Online common. Without the Online editions, 5 would move pauper → peasant, 2 pauper →
+  legacy and 18 peasant → legacy. Counted from `census.tsv` and the 2.0.14 jar's `res/editions` by
+  re-running `lowestPrintings` with the `Type=Online` files left out; four more rows name an Online
+  set as `lowest_rarity_set` but keep their band without it.
+
+  | card | band | from | paper's lowest | band without Online |
+  |---|---|---|---|---|
+  | Aeolipile | pauper | C, ME2 | R (FEM) | legacy |
+  | Angelic Voices | peasant | U, ME4 | R (LEG) | legacy |
+  | Beetleback Chief | pauper | C, VMA | U (PC2) | peasant |
+  | Clockwork Avian | peasant | U, ME4 | R (ATQ) | legacy |
+  | Clockwork Beast | peasant | U, ME1 | R (LEA) | legacy |
+  | Concordant Crossroads | peasant | U, TD0 | R (LEG) | legacy |
+  | Dance of Many | peasant | U, ME3 | R (DRK) | legacy |
+  | Derelor | peasant | U, ME1 | R (FEM) | legacy |
+  | Disharmony | peasant | U, ME3 | R (LEG) | legacy |
+  | Exorcist | peasant | U, ME3 | R (DRK) | legacy |
+  | Fellwar Stone | pauper | C, ME3 | U (DRK) | peasant |
+  | Feral Thallid | pauper | C, ME2 | U (FEM) | peasant |
+  | Granite Gargoyle | peasant | U, ME1 | R (LEA) | legacy |
+  | Icatian Town | peasant | U, ME1 | R (FEM) | legacy |
+  | Library of Leng | pauper | C, ME4 | U (LEA) | peasant |
+  | Obsianus Golem | pauper | C, ME4 | U (LEA) | peasant |
+  | Roc of Kher Ridges | peasant | U, ME4 | R (LEA) | legacy |
+  | Serendib Efreet | peasant | U, VMA | R (ARN) | legacy |
+  | Singing Tree | peasant | U, ME1 | R (ARN) | legacy |
+  | Spinal Villain | peasant | U, ME1 | R (LEG) | legacy |
+  | Telekinesis | pauper | C, ME1 | R (LEG) | legacy |
+  | Thunder Spirit | peasant | U, PRM | R (LEG) | legacy |
+  | Tracker | peasant | U, ME3 | R (DRK) | legacy |
+  | Two-Headed Giant of Foriys | peasant | U, ME4 | R (LEA) | legacy |
+  | Wormwood Treefolk | peasant | U, ME3 | R (DRK) | legacy |
 - `sample` writes documents only; the drafter and builder shape variants that make a mono or a
   three-colour cube play as one are Phase 1 (`pc/census-shapes`), and J140 is written after it.
 - `census build` needs a ForgeCoach checkout for the metas, as `library-candidates` does; CI does not
