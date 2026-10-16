@@ -1,6 +1,6 @@
 ## D440 — watch two bots: one grid draft by the lab's drafters, then a paced best of three from seat 0's eyes, served by the coach helper
 
-*Branch `pc/watch-bots`. The engine half; ForgeCoach builds the lobby tile and the viewers from `docs/watch-bots.md`.*
+*Branch `pc/watch-bots`. Written as D439, renumbered before its PR: `pc/llm-drafter` holds D439. The engine half; ForgeCoach builds the lobby tile and the viewers from `docs/watch-bots.md`.*
 
 **2026-10-15**
 
@@ -82,8 +82,15 @@ search, pace 150: done in 137 s, B 2–0 (20 and 22 turns, 58 and 65 s of game
 wall time each; the search seat changed 2 and 6 of Forge's decisions), both
 logs PASS; a 409 to a second POST; a Range-polling follower (live.ts's
 method) rebuilt game 1 byte for byte (3,304,627 bytes, 327 lines, 114 206s).
-Tests: `web/test/cubelab-watch.test.ts` (8), `tools/watch-runner-selftest.mjs`
-(65 checks; gate 12f and CI), `coach-helper-selftest.mjs` 150.
+A real `POST /watch/<id>/stop` mid-game: `match.status` `stopped`, game 1
+`error`, the slot free, no JVM left. Tests: `web/test/cubelab-watch.test.ts`
+(8), `tools/watch-runner-selftest.mjs` (67 checks; gate 12f and CI),
+`coach-helper-selftest.mjs` 150. The gate (`SKIP_DECKS=1`, `WSPORT=8750`: this
+PC's lab runner holds 8645; load average 40–60) passed every job but three
+known ones: 12f's two match-launcher checks (no `claude` / `tailscale` here,
+the rest of 12f's self-tests run by hand: all OK) and 12i's D399 control, which
+fails identically with `origin/main`'s own classes under `bridge/run.sh`'s
+flags on this machine.
 
 Touching `bridge/src` and `tools/cubelab` moves D341's lab version, as every
 change there does; the overnight queue's folders log it under
