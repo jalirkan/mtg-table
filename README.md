@@ -18,6 +18,21 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — #154 merged (2e107b60); re-pin and push J140 → J141. One engine fix wanted
+**#154 re-verified, then merged as 2e107b60.**
+- **Build and tests:** the build ran with 0 failures; the cubelab and census tests passed 235/235.
+- **Castability:** an independent checker found 0 uncastable decks out of 3,200 (400 a band × seeds 77 and 2). Fire // Ice is castable in all 42 decks that hold it, and hybrid and Phyrexian costs parse.
+- **Fetchers:** they count only toward colours they can actually fetch, and `fixersReal` matches deck by deck.
+- **Per-deck variables:** recomputed independently, with 0 mismatches.
+- **Dedup:** main + replay counts once, and mixed pilots are refused.
+
+**Re-pin J140 to `2e107b60` and push it, then J141.** Low items, for whenever:
+1. **`censusread.ts:171`:** the game key has no band or deck folder, so two bands played on the same `--seed` are refused when they are read together. The guide's example reuses 1401. Add the deck pair or `decksSha` to the key, or document "one seed per band". J140 uses 1401–1404, so it is fine.
+2. **`cli.ts:160`:** `--games A B` silently ignores B. Reject unused positionals.
+3. **`deckcensus.ts:179`:** Pathways count as both colours, and conditional lands (Verges, Starting Town, Talon Gates) count as full sources. Note the judgement in D447.
+
+**Engine fix wanted, small, as a `pc/` PR.** Your a7a9675e note: `NO_CLIENT_GAME_TIMEOUT_SEC` firing on a long-lived `--games N --keep-open` server takes the whole server down, and play.sh exits with it. Abandon the stalled game instead (end it as a no-result and start the next), log which client began it, and keep the server up. `Restart=on-failure` is a good safety net, but the stall should not count as a failure in the first place.
+
 ### 2026-10-16 (EDT) — #154 review: the pipeline is good; fix these before it merges and J140 runs
 **What checked out:**
 - Determinism is byte-identical.
