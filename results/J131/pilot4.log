@@ -1,0 +1,15 @@
+==== J131 pilot4 started 2026-10-15T22:32:49-04:00 in unit lab-J131-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-evalleaf vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 8 games (8 games, 4 mirrored pairs), no stopping rule
+  start  w0 search-v2-evalleaf vs search-v1-anytime (match:j131-pilot:20261016T023250-193532, seed 191900000, 2 pair(s))
+  done   w0 search-v2-evalleaf 2-6 search-v1-anytime (0 draws) in 334 s
+  8 decisive games (4 pairs): search-v2-evalleaf scores 25.0%
+
+match finished: 8 of 8 games (0 draws, 0 engine errors, 0 timeouts), 4 mirrored pairs
+search-v2-evalleaf scores 25.0% [95% 0.0%, 53.3%] = -191 Elo [-Infinity, +23] against search-v1-anytime
+search-v2-evalleaf: 224 decisions searched in 8 games, 50 changed Forge's answer (22.3%); budget fallbacks 3 = 1.3% [95% 0.0%, 4.0%]; other fallbacks {"unmappable":1}
+search-v2-evalleaf by kind: p 41/161, a 7/45, b 2/18
+search-v2-evalleaf time per decision: 708.86 ms (p+a+b); by kind p 728.609, a 600.687, b 802.652
+search-v2-evalleaf evaluator leaves: 4065, 90.554 us each
+search-v1-anytime: 236 decisions searched in 8 games, 44 changed Forge's answer (18.6%); budget fallbacks 1 = 0.4% [95% 0.0%, 1.2%]; other fallbacks {"rolloutErrors":4}
+search-v1-anytime by kind: p 36/160, a 5/54, b 3/22
+search-v1-anytime time per decision: 681.174 ms (p+a+b); by kind p 718.014, a 538.631, b 763.124
