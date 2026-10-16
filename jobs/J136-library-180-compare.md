@@ -1,5 +1,5 @@
 id: J136
-title: The best 180 out of the whole library -- four candidate cubes (Omega, library hits by lab rating, a seeded random control, Synergy: J135's v3 candidate if Justin approved it, else ForgeCoach's v2) compared on D439's measures: 400 grid drafts each on one seed block (836,000,001-836,000,400), then each evolved 2 generations x 200 drafts from the 1,592-card library pool (Omega with its own notes, the others with a shared list that never adds the Power Nine, Sol Ring, Library of Alexandria or any of Omega's 54 design exclusions; exploration on), then the four evolved cubes compared on a fresh block (836,100,001-836,100,400); best of three, Default vs Default, unrecorded; no verdict rule
+title: The best 180 out of the whole library -- four candidate cubes (Omega, library hits by lab rating, a seeded random control, Synergy: J135's v3 candidate if Justin approved it, else ForgeCoach's v2) compared on D439's measures: 400 grid drafts each on one seed block (836,000,001-836,000,400), then each evolved 2 generations x 200 drafts from the 1,592-card library pool (Omega with its own notes; the others cut the Power Nine, Sol Ring and Library of Alexandria wherever present and never add Omega's other 43 design exclusions; exploration on), then the four evolved cubes compared on a fresh block (836,100,001-836,100,400); best of three, Default vs Default, unrecorded; no verdict rule
 public_title: Best 180 from the whole library: four candidate cubes compared
 public_est: ~5-7 h
 public_decides: Which way of choosing 180 library cards drafts more balanced AI decks
@@ -8,9 +8,9 @@ cores: 7
 pilot_cores: 3
 max_workers: 7
 mem_per_worker_gb: 2
-repos: mtg-table@68523b7e (the head of branch pc/library-180-candidates, mtg-table PR #146: cubes/library/ -- library-pool.tsv, hits-180.md, random-180.md, synergy-v2-180.md (not read by this job). THIS PIN DOES NOT HOLD `tools/cubelab.sh compare`, which is PR pc/cubelab-compare, D439, J133's: RE-PIN to the commit on origin/main that merges BOTH PRs before posting; the pilot fails on merged == 1 and has_compare == 1 until then), ForgeCoach@3e3b007b (J135's pin: public/cubes/synergy-cube-180.md, Synergy version 2, sha256 8cb5e5f0827a3fc2563a3d15950aad237816b654f9a1baa400ebb2ba9c806c36, the fallback population)
+repos: mtg-table@d40ad1c0 (the head of branch pc/library-180-candidates, mtg-table PR #146: cubes/library/ -- library-pool.tsv, hits-180.md, random-180.md, synergy-v2-180.md (not read by this job). THIS PIN DOES NOT HOLD `tools/cubelab.sh compare`, which is PR pc/cubelab-compare, D439, J133's: RE-PIN to the commit on origin/main that merges BOTH PRs before posting; the pilot fails on merged == 1 and has_compare == 1 until then), ForgeCoach@3e3b007b (J135's pin: public/cubes/synergy-cube-180.md, Synergy version 2, sha256 8cb5e5f0827a3fc2563a3d15950aad237816b654f9a1baa400ebb2ba9c806c36, the fallback population)
 decides: which way of seeding a 180-card cube from the whole library (Omega's design, the lab's greatest hits, an unselected random draw, the Synergy design) gives the more balanced AI drafts, before and after two generations of evolve from the same pool (Justin, 2026-10-15: "treat the entire library as one cube", approved as this comparison): a measurement for the owner and the cloud to read, not a switch
-hypothesis: none to confirm. The random control should be the least balanced on card flatness (nothing selected it; 62 of its cards have no lab data and three are AI:RemoveDeck:All), and hits may be flatter than Omega on cards but not on colour pairs (it was chosen card by card, from metas of cubes with different power levels, with Ancestral Recall, Time Walk and two Moxen among its picks, which the evolve's notes then cut). Two 200-draft generations swap at most 6 cards a generation (dead cards, mostly), so the evolved cubes should differ from their inputs by a few cards and their tables by little
+hypothesis: none to confirm. The random control should be the least balanced on card flatness (nothing selected it; 62 of its cards have no lab data and three are AI:RemoveDeck:All), and hits may be flatter than Omega on cards but not on colour pairs (it was chosen card by card, from metas of cubes with different power levels, with Ancestral Recall, Time Walk and two Moxen among its picks, which the evolve's POWER notes then cut). Two 200-draft generations swap at most 6 cards a generation (dead cards, mostly), so the evolved cubes should differ from their inputs by a few cards and their tables by little
 rule: D439 measures, written 2026-10-16 before any J136 draft. NO verdict rule: no --rule is passed. Per table (baseline, final) the summary reports, for each of the five pre-registered measure groups (flatness; pair_spread and pair_within5; draw_rate, timeout_rate and game_turns; lands, colours, two_colour and splash; first_pick_top10), every population's estimate with its 95% paired draft-clustered bootstrap interval (1,000 replicates, boot seed 1, colour pairs with 30+ decisive games), and every pairwise difference whose interval excludes 0, with its size. Before against after is read only as two intervals side by side, never as a test: the two tables are on different seed blocks and different cube lists. The swaps each evolve made are reported as evolve decided them (D331 discovery then confirmation, D357), with their evidence
 followup: morning-read
 est: ~5-7 h on 7 workers at the cube-lab guide's 25 s of one core per draft and best of three (pilot ~15 min). Stage 1: 1,600 drafts, ~1.6 h. Stage 2: 1,600 discovery drafts, ~1.6 h, plus a confirmation batch of 20-300 drafts in each of the eight generations that finds candidates (0-2,400 drafts, 0-2.4 h; ~1.2 h if half the generations confirm about 150). Stage 3: 1,600 drafts, ~1.6 h. Total 4,800-7,200 drafts: 4.8-7.1 h, ~6 h likely. J120 measured 2.6 s a draft wall clock on 7 workers (Synergy), which would make it ~3.5-5 h
@@ -29,7 +29,7 @@ metrics: ev_hits = evolve var/lab-j136/evolve/hits
 metrics: ev_random = evolve var/lab-j136/evolve/random
 metrics: ev_synergy = evolve var/lab-j136/evolve/synergy
 metrics: sw = sh: cat var/lab-j136/out/swaps.json 2>/dev/null || echo '{"written":0}'
-metrics: fex = sh: cat var/lab-j136/out/exclusions.json 2>/dev/null || echo '{"cubes":0}'
+metrics: fex = sh: cat var/lab-j136/out/notes-check.json 2>/dev/null || echo '{"cubes":0}'
 headline: base.pop.omega.m.flatness.est, base.pop.hits.m.flatness.est, base.pop.random.m.flatness.est, base.pop.synergy.m.flatness.est, fin.pop.omega.m.flatness.est, fin.pop.hits.m.flatness.est, fin.pop.random.m.flatness.est, fin.pop.synergy.m.flatness.est, sw.swaps, all.engine_error_rate
 
 **Why (Justin, 2026-10-15).** He asked to "treat the entire library as one cube" and approved the
@@ -70,16 +70,19 @@ verification range; no job in `jobs/` uses 836M), best of three -> `baseline.jso
 **Stage 2, evolve.** Each population evolved for 2 generations x 200 drafts from `library-pool.tsv`, exploration
 on (`--explore on`, D356), the evolve knobs' defaults (at most 6 swaps a generation; D331 discovery then
 confirmation on fresh seeds; D357). **Notes:** Omega evolves under its own `cubes/omega-notes.tsv`, in full (54
-`cut` rows today: its *Power choices* design exclusions). `hits`, `random` and `synergy` evolve under one shared
-list, `var/lab-j136/library-notes.tsv`, which the pilot's first block writes from the 54 names listed in that
-block (Omega's cut rows as of 2026-10-16: the Power Nine, Sol Ring, Library of Alexandria and the rest of Omega's
-exclusions), each as `cut`; the pilot checks that the list equals Omega's cut rows at the pin and holds the eleven
-named cards. A `cut` note never adds the card and cuts it at once if it is in the cube, ahead of any AI-evidence
-swap: so in generation 1 hits loses Ancestral Recall, Time Walk, Mox Emerald, Mox Jet and Minsc & Boo, random loses
-Flash, Archon of Cruelty, Nadu and Mox Jet, and Synergy v2 loses Archon of Cruelty and Faithless Looting (5, 4 and 2
-of the 6 swaps that generation allows). A library-wide balance test is not won by whoever draws Black Lotus. The
-pilot and the final checks require that no evolved cube holds any of the 54. The stage-1 baseline is the
-candidates as committed, so it still holds those cards. All four on the same seeds: discovery
+`cut` rows today: its *Power choices* design exclusions). `hits`, `random` and `synergy` each evolve under
+`var/lab-j136/notes-<population>.tsv`, written from two lists the pilot's first block holds (together exactly
+Omega's 54 cut rows as of 2026-10-16; the pilot checks that against `omega-notes.tsv` at the pin):
+**POWER**, the Power Nine, Sol Ring and Library of Alexandria (11), always `cut` -- removed wherever present, ahead of
+any evidence swap, and never added; and **NEVER-ADD**, Omega's other 43 exclusions, written as `cut` ONLY for the
+names absent from that population's input cube, exactly as J135 wrote its 57: the pool may not bring one in, and
+one already in the cube gets no note, stays, and is judged by the data. So in generation 1 hits loses Ancestral
+Recall, Time Walk, Mox Emerald and Mox Jet (4 of the 6 swaps that generation allows) and keeps Minsc & Boo; random
+loses Mox Jet and keeps Flash, Archon of Cruelty and Nadu; Synergy v2 keeps Archon of Cruelty and Faithless Looting,
+which its design plays (J135's notes left them in too). A library-wide balance test is not won by whoever draws
+Black Lotus. The pilot and the final checks require that no evolved cube holds a POWER name and that no NEVER-ADD
+name absent from a population's input cube is in its evolved cube. The stage-1 baseline is the candidates as
+committed, so it still holds those cards. All four on the same seeds: discovery
 186,000,001-186,000,400, confirmation from 187,000,001 (D340's lab range; no job uses 186M or 187M). Unrecorded.
 
 **Stage 3, the final table.** `compare` on the four evolved cubes (each evolve folder's latest cube, on
@@ -129,8 +132,9 @@ fi
 cat var/lab-j136/synergy-source.txt
 SYN=$(cat var/lab-j136/synergy-cube.txt)
 head -1 "$SYN"
-# The shared notes for hits, random and synergy: never add (and cut at once) Omega's 54 design exclusions.
-cat > var/lab-j136/library-exclusions.txt <<'NAMES'
+# The notes for hits, random and synergy (Omega keeps cubes/omega-notes.tsv): POWER is cut wherever present;
+# NEVER-ADD is cut only where the input cube lacks the card (the pool may not bring it in; one already in stays).
+cat > var/lab-j136/notes-power.txt <<'NAMES'
 Black Lotus
 Ancestral Recall
 Time Walk
@@ -140,9 +144,12 @@ Mox Sapphire
 Mox Jet
 Mox Ruby
 Mox Emerald
+Sol Ring
+Library of Alexandria
+NAMES
+cat > var/lab-j136/notes-never-add.txt <<'NAMES'
 Mox Diamond
 Mox Opal
-Sol Ring
 Mana Crypt
 Mana Vault
 Oko, Thief of Crowns
@@ -174,7 +181,6 @@ Painter's Servant
 Grindstone
 Dark Depths
 Thespian's Stage
-Library of Alexandria
 Bazaar of Baghdad
 Strip Mine
 Wasteland
@@ -186,30 +192,50 @@ Flash
 Through the Breach
 City of Traitors
 NAMES
-awk 'BEGIN { print "card\tverdict\tnote" } NF { print $0 "\tcut\tJ136 shared list: Omega design exclusion, never added" }' \
-    var/lab-j136/library-exclusions.txt > var/lab-j136/library-notes.tsv
-cat > var/lab-j136/exclusions.mjs <<'JS'
-// node var/lab-j136/exclusions.mjs <out.json> <cube.md>...: how many of the 54 names each cube holds.
+cat > var/lab-j136/notes.mjs <<'JS'
+// node var/lab-j136/notes.mjs list <out.json>                       the two lists against omega-notes.tsv's cut rows
+// node var/lab-j136/notes.mjs write <input.md> <notes.tsv>          a population's notes
+// node var/lab-j136/notes.mjs check <out.json> <input.md>=<evolved.md>...   POWER in an evolved cube; NEVER-ADD brought in
 import fs from 'node:fs';
 import { parseCube } from '../../tools/cubelab/cube.ts';
-const names = fs.readFileSync('var/lab-j136/library-exclusions.txt', 'utf8').split('\n').filter(Boolean);
-const omega = fs.readFileSync('cubes/omega-notes.tsv', 'utf8').split('\n').map((l) => l.split('\t'))
-  .filter((c) => c[1] === 'cut').map((c) => c[0]);
-const same = names.length === omega.length && names.every((n) => omega.includes(n)) ? 1 : 0;
-const must = ['Black Lotus', 'Ancestral Recall', 'Time Walk', 'Timetwister', 'Mox Pearl', 'Mox Sapphire', 'Mox Jet', 'Mox Ruby', 'Mox Emerald', 'Sol Ring', 'Library of Alexandria'];
-const [out, ...cubes] = process.argv.slice(2);
-const doc = { listed: names.length, same_as_omega_notes: same, named: must.filter((n) => names.includes(n)).length, cubes: cubes.length, found: 0 };
-for (const c of cubes) {
-  const listed = new Set(parseCube(fs.readFileSync(c, 'utf8')).cards.map((x) => x.name));
-  if (listed.size < 170) throw new Error(`${c}: parsed only ${listed.size} cards`);
-  const hit = names.filter((n) => listed.has(n));
-  doc.found += hit.length;
-  if (hit.length) console.log(`${c}: ${hit.join('; ')}`);
-}
-fs.writeFileSync(out, JSON.stringify(doc) + '\n');
-console.log(JSON.stringify(doc));
+const read = (f) => fs.readFileSync(f, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean);
+const power = read('var/lab-j136/notes-power.txt'), never = read('var/lab-j136/notes-never-add.txt');
+const names = (f) => {
+  const set = new Set(parseCube(fs.readFileSync(f, 'utf8')).cards.map((x) => x.name));
+  if (set.size < 170) throw new Error(`${f}: parsed only ${set.size} cards`);
+  return set;
+};
+const [mode, ...args] = process.argv.slice(2);
+if (mode === 'list') {
+  const omega = fs.readFileSync('cubes/omega-notes.tsv', 'utf8').split('\n').map((l) => l.split('\t')).filter((c) => c[1] === 'cut').map((c) => c[0]);
+  const all = [...power, ...never];
+  const must = ['Black Lotus', 'Ancestral Recall', 'Time Walk', 'Timetwister', 'Mox Pearl', 'Mox Sapphire', 'Mox Jet', 'Mox Ruby', 'Mox Emerald', 'Sol Ring', 'Library of Alexandria'];
+  const doc = { power: power.length, never_add: never.length, listed: new Set(all).size,
+    same_as_omega_notes: all.length === omega.length && new Set(all).size === all.length && all.every((n) => omega.includes(n)) ? 1 : 0,
+    power_named: must.filter((n) => power.includes(n)).length };
+  fs.writeFileSync(args[0], JSON.stringify(doc) + '\n');
+  console.log(JSON.stringify(doc));
+} else if (mode === 'write') {
+  const input = names(args[0]);
+  const rows = ['card\tverdict\tnote',
+    ...power.map((n) => `${n}\tcut\tJ136 POWER: removed wherever present, never added`),
+    ...never.filter((n) => !input.has(n)).map((n) => `${n}\tcut\tJ136 NEVER-ADD: Omega design exclusion, absent from this input, never added`)];
+  fs.writeFileSync(args[1], rows.join('\n') + '\n');
+  console.log(`${args[1]}: ${power.length} POWER, ${rows.length - 1 - power.length} NEVER-ADD; left in (in the input, judged by the data): ${never.filter((n) => input.has(n)).join('; ') || 'none'}`);
+} else if (mode === 'check') {
+  const doc = { cubes: 0, power_found: 0, never_added: 0, never_kept: 0 };
+  for (const pair of args.slice(1)) {
+    const [inp, ev] = pair.split('=');
+    const a = names(inp), b = names(ev);
+    const pw = power.filter((n) => b.has(n)), added = never.filter((n) => !a.has(n) && b.has(n));
+    doc.cubes++; doc.power_found += pw.length; doc.never_added += added.length; doc.never_kept += never.filter((n) => a.has(n) && b.has(n)).length;
+    if (pw.length || added.length) console.log(`${ev}: POWER ${pw.join('; ') || '-'}; NEVER-ADD brought in ${added.join('; ') || '-'}`);
+  }
+  fs.writeFileSync(args[0], JSON.stringify(doc) + '\n');
+  console.log(JSON.stringify(doc));
+} else throw new Error('notes.mjs list|write|check');
 JS
-node var/lab-j136/exclusions.mjs var/lab-j136/exclusions-list.json
+node var/lab-j136/notes.mjs list var/lab-j136/notes-list.json
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J136
 for C in cubes/omega-cube-180.md cubes/library/hits-180.md cubes/library/random-180.md "$SYN"; do
   tools/cubelab.sh check "$C" > "var/lab-j136/check-$(basename "$C" .md).txt" || true
@@ -232,7 +258,7 @@ cat var/lab-j136/pilot-cubes.json
 metrics: merged = sh: cat var/lab-j136/merged.txt 2>/dev/null || echo 0
 metrics: has_compare = sh: cat var/lab-j136/has-compare.txt 2>/dev/null || echo 0
 metrics: syn = sh: cat var/lab-j136/pilot-cubes.json 2>/dev/null || echo '{"cubes":0}'
-metrics: xl = sh: cat var/lab-j136/exclusions-list.json 2>/dev/null || echo '{"listed":0}'
+metrics: xl = sh: cat var/lab-j136/notes-list.json 2>/dev/null || echo '{"listed":0}'
 ```bash
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J136
 SYN=$(cat var/lab-j136/synergy-cube.txt)
@@ -245,11 +271,12 @@ export CUBELAB_HOME_ROOT=var/cubelab/homes-J136
 SYN=$(cat var/lab-j136/synergy-cube.txt)
 for P in omega hits random synergy; do
   case "$P" in
-    omega) C=cubes/omega-cube-180.md; N=cubes/omega-notes.tsv ;;
-    hits) C=cubes/library/hits-180.md; N=var/lab-j136/library-notes.tsv ;;
-    random) C=cubes/library/random-180.md; N=var/lab-j136/library-notes.tsv ;;
-    synergy) C="$SYN"; N=var/lab-j136/library-notes.tsv ;;
+    omega) C=cubes/omega-cube-180.md ;;
+    hits) C=cubes/library/hits-180.md ;;
+    random) C=cubes/library/random-180.md ;;
+    synergy) C="$SYN" ;;
   esac
+  if [ "$P" = omega ]; then N=cubes/omega-notes.tsv; else N="var/lab-j136/notes-$P.tsv"; node var/lab-j136/notes.mjs write "$C" "$N"; fi
   tools/cubelab.sh evolve "$C" --pool cubes/library/library-pool.tsv --notes "$N" \
       --generations 1 --drafts-per-gen 8 --games 1 --jobs {workers} --seed 188500001 --explore on \
       --out "var/lab-j136/pilot/evolve/$P"
@@ -263,8 +290,9 @@ tools/cubelab.sh compare --variant "omega=$E/omega/omega-cube-180.md" --variant 
     --variant "random=$E/random/random-180.md" --variant "synergy=$E/synergy/$(basename "$SYN")" \
     --drafts 4 --games 1 --jobs {workers} --seed 836950001 --out var/lab-j136/pilot/final
 cat var/lab-j136/pilot/final/compare.md | head -30
-node var/lab-j136/exclusions.mjs var/lab-j136/pilot/exclusions.json "$E/omega/omega-cube-180.md" "$E/hits/hits-180.md" \
-    "$E/random/random-180.md" "$E/synergy/$(basename "$SYN")"
+node var/lab-j136/notes.mjs check var/lab-j136/pilot/notes-check.json cubes/omega-cube-180.md="$E/omega/omega-cube-180.md" \
+    cubes/library/hits-180.md="$E/hits/hits-180.md" cubes/library/random-180.md="$E/random/random-180.md" \
+    "$SYN=$E/synergy/$(basename "$SYN")"
 ```
 metrics: pb = sh: cat var/lab-j136/pilot/baseline/compare.json 2>/dev/null || echo '{"written":0}'
 metrics: pf = sh: cat var/lab-j136/pilot/final/compare.json 2>/dev/null || echo '{"written":0}'
@@ -275,15 +303,17 @@ metrics: pev_omega = evolve var/lab-j136/pilot/evolve/omega
 metrics: pev_hits = evolve var/lab-j136/pilot/evolve/hits
 metrics: pev_random = evolve var/lab-j136/pilot/evolve/random
 metrics: pev_synergy = evolve var/lab-j136/pilot/evolve/synergy
-metrics: pex = sh: cat var/lab-j136/pilot/exclusions.json 2>/dev/null || echo '{"cubes":0}'
+metrics: pex = sh: cat var/lab-j136/pilot/notes-check.json 2>/dev/null || echo '{"cubes":0}'
 check: merged == 1
 check: has_compare == 1
 check: qwriters == 0
 check: syn.cubes == 4
 check: syn.cubes_ok == 4
 check: xl.listed == 54
+check: xl.power == 11
+check: xl.never_add == 43
 check: xl.same_as_omega_notes == 1
-check: xl.named == 11
+check: xl.power_named == 11
 check: pbstrict == 1
 check: pb.same_seeds == 1
 check: pb.populations == 4
@@ -306,33 +336,35 @@ check: pf.populations == 4
 check: pf.drafts == 4
 check: pf.seed_first == 836950001
 check: pex.cubes == 4
-check: pex.found == 0
+check: pex.power_found == 0
+check: pex.never_added == 0
 check: pe.engine_errors == 0
 check: pe.timeouts <= 3
 check: pe.recorded_games == 0
 
-The pilot asks whether anything is broken: the pin is on origin/main and holds `compare`; the shared notes list is Omega's 54 cut rows and holds the
-Power Nine, Sol Ring and Library of Alexandria; Synergy is the approved v3 or J135's sha-checked v2; the library and
+The pilot asks whether anything is broken: the pin is on origin/main and holds `compare`; the POWER (11) and NEVER-ADD (43) lists are together exactly
+Omega's 54 cut rows, POWER holding the Power Nine, Sol Ring and Library of Alexandria; Synergy is the approved v3 or J135's sha-checked v2; the library and
 compare tests pass on it; all four cubes are 180 cards that Forge 2.0.14 has and supports; the baseline
 compare ran the four populations on the same four seeds and wrote strict JSON; each population evolved one
 generation from the library pool (each evolve folder's latest cube is where stage 3 reads it); and the
-compare of the four evolved cubes ran on its own seeds; and no evolved pilot cube holds any of the 54 names
-(the note-cuts need no evidence, so generation 1 makes them even at 8 drafts). No balance number is checked: the job is the
+compare of the four evolved cubes ran on its own seeds; and no evolved pilot cube holds a POWER name or a NEVER-ADD
+name its input lacked (a POWER cut needs no evidence, so generation 1 makes it even at 8 drafts). No balance number is checked: the job is the
 measurement.
 
-Dry runs (2026-10-16, user-namespace sandbox, 2 workers, against a local merge of PR #146 and
-`pc/cubelab-compare`, 88a91bfe, never pushed; ForgeCoach overlaid from a checkout holding 3e3b007b's
-unchanged v2). With the amendments (shared notes list, Synergy from pc-results or ForgeCoach), `--pilot-only
---max-seconds 420`: pilot1 ok in 12 s, pilot2 66 s, pilot3 67 s, pilot4 48 s, and every pilot check passed
-except `merged == 1`, which can't pass on a local merge. Synergy came from ForgeCoach (sha256 OK; no APPROVED on
-origin/pc-results). The note-cuts fired in generation 1: hits cut Ancestral Recall, Time Walk, Mox Emerald, Mox Jet
-and Minsc & Boo; random cut Flash, Archon of Cruelty, Nadu and Mox Jet; Synergy cut Archon of Cruelty and
-Faithless Looting. The evolved cubes then held none of the 54 (`pex.found == 0`), while the same check finds 11
-in the three inputs. The v3 branch of the Synergy step was run by hand against a throwaway pc-results
-repository: a candidate without APPROVED -> v2, a candidate with APPROVED -> v3. An earlier full dry run
-(`--max-seconds 120`, before the amendments) cut stages 1 and 2 at 120 s with no error and refused
-stage 3 for want of stage 2's cubes, as a cut-short dry run must. The swaps tabulation was run by hand on
-the pilot's folders.
+Dry runs (2026-10-16, user-namespace sandbox, 2 workers, `--pilot-only --max-seconds 420`, against a local
+merge of PR #146's d40ad1c0 and `pc/cubelab-compare`, 3fc81069, never pushed; ForgeCoach overlaid from a
+checkout holding 3e3b007b's unchanged v2). pilot1 ok in 21 s, pilot2 123 s, pilot3 119 s, pilot4 72 s. Every
+pilot check passed except `merged == 1`, which can't pass on a local merge. Synergy came from ForgeCoach
+(sha256 OK; no APPROVED on origin/pc-results). The notes: hits 11 POWER + 42 NEVER-ADD (Minsc & Boo left in);
+random 11 + 40 (Flash, Archon of Cruelty, Nadu left in); synergy 11 + 41 (Archon of Cruelty, Faithless Looting
+left in). Generation 1's only note-cuts were hits' Ancestral Recall, Time Walk, Mox Emerald and Mox Jet (random's
+Mox Jet likewise); Synergy had none. `notes.mjs check` on the evolved pilot cubes gave power_found 0,
+never_added 0 and never_kept 6 (the six left in). As a negative control it reports 5 POWER and 4 NEVER-ADD
+when the unevolved hits and random are checked as if evolved from Omega. The v3 branch of the Synergy step was
+run by hand against a throwaway pc-results repository: a candidate without APPROVED -> v2, a candidate with
+APPROVED -> v3. An earlier full dry run (`--max-seconds 120`, before the notes) cut stages 1 and 2 at 120 s
+with no error and refused stage 3 for want of stage 2's cubes, as a cut-short dry run must. The swaps
+tabulation was run by hand on the pilot's folders.
 
 ## Commands
 ```bash
@@ -349,14 +381,15 @@ cp var/lab-j136/baseline/compare.md var/lab-j136/out/baseline.md
 ```bash
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J136
 SYN=$(cat var/lab-j136/synergy-cube.txt)
-test -s var/lab-j136/library-notes.tsv
+test -s var/lab-j136/notes.mjs
 for P in omega hits random synergy; do
   case "$P" in
-    omega) C=cubes/omega-cube-180.md; N=cubes/omega-notes.tsv ;;
-    hits) C=cubes/library/hits-180.md; N=var/lab-j136/library-notes.tsv ;;
-    random) C=cubes/library/random-180.md; N=var/lab-j136/library-notes.tsv ;;
-    synergy) C="$SYN"; N=var/lab-j136/library-notes.tsv ;;
+    omega) C=cubes/omega-cube-180.md ;;
+    hits) C=cubes/library/hits-180.md ;;
+    random) C=cubes/library/random-180.md ;;
+    synergy) C="$SYN" ;;
   esac
+  if [ "$P" = omega ]; then N=cubes/omega-notes.tsv; else N="var/lab-j136/notes-$P.tsv"; node var/lab-j136/notes.mjs write "$C" "$N"; fi
   tools/cubelab.sh evolve "$C" --pool cubes/library/library-pool.tsv --notes "$N" \
       --generations 2 --drafts-per-gen 200 --games 3 --jobs {workers} --seed 186000001 --explore on \
       --out "var/lab-j136/evolve/$P"
@@ -380,8 +413,9 @@ cp "$E/omega/omega-cube-180.md" var/lab-j136/out/evolved-omega.md
 cp "$E/hits/hits-180.md" var/lab-j136/out/evolved-hits.md
 cp "$E/random/random-180.md" var/lab-j136/out/evolved-random.md
 cp "$E/synergy/$(basename "$SYN")" var/lab-j136/out/evolved-synergy.md
-node var/lab-j136/exclusions.mjs var/lab-j136/out/exclusions.json "$E/omega/omega-cube-180.md" "$E/hits/hits-180.md" \
-    "$E/random/random-180.md" "$E/synergy/$(basename "$SYN")"
+node var/lab-j136/notes.mjs check var/lab-j136/out/notes-check.json cubes/omega-cube-180.md="$E/omega/omega-cube-180.md" \
+    cubes/library/hits-180.md="$E/hits/hits-180.md" cubes/library/random-180.md="$E/random/random-180.md" \
+    "$SYN=$E/synergy/$(basename "$SYN")"
 cp var/lab-j136/synergy-source.txt var/lab-j136/out/synergy-source.txt
 node -e '
   const fs = require("node:fs");
@@ -439,7 +473,8 @@ check: fin.pop.random.flatness_detail.readable == 1
 check: fin.pop.synergy.flatness_detail.readable == 1
 check: sw.written == 1
 check: fex.cubes == 4
-check: fex.found == 0
+check: fex.power_found == 0
+check: fex.never_added == 0
 check: all.engine_error_rate <= 2%
 check: all.recorded_games == 0
 
@@ -476,7 +511,7 @@ collect: var/lab-j136/out/evolved-random.md
 collect: var/lab-j136/out/evolved-synergy.md
 collect: var/lab-j136/synergy-cube.txt
 collect: var/lab-j136/out/synergy-source.txt
-collect: var/lab-j136/out/exclusions.json
+collect: var/lab-j136/out/notes-check.json
 
 summary.md (the PC session's; the job's own outputs are the files above):
 - Which Synergy ran (`synergy-source.txt`: the approved v3 from pc-results, or ForgeCoach's v2), and the pin.
