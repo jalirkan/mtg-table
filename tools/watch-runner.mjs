@@ -25,7 +25,8 @@
 //                            Range: bytes=<b>- 206 the same, Content-Range set (ForgeCoach's live.ts
 //                                              polls this way); 416 when <b> is at or past the end
 //                            neither           200 from byte 0
-//                          at most 4 MiB an answer; 404 while the game has not started
+//                          at most 4 MiB an answer; 404 while the game has not started;
+//                          500 {"code": "redaction-failed"} once the log failed the redaction check
 //   POST /watch/<id>/stop  -> 200 {"ok": true, "id", "stopping": true}; 409 {"code": "not-running"}
 //                          SIGTERM to the watch's process group, then SIGKILL to whatever of it is
 //                          left after the grace (5 s) -- also when the leader exits first and its JVM
@@ -37,15 +38,24 @@
 // door admitted.  A GET reads and never starts, stops or writes anything.
 //
 // HIDDEN INFORMATION.  Each game is recorded from seat 0's eyes (drafter A), the
-// other hand the five-key stub, and the watch checks every recording with
-// tools/check-redaction.mjs (match.json's `redaction`).  draft.json shows both
-// pools and both decks: a grid draft is face up, both drafters saw every grid.
+// other hand the five-key stub, and NOTHING IS SERVED BEFORE IT PASSED
+// tools/check-redaction.mjs: before a game route sends bytes past what was
+// already checked, it checks the log's whole complete-lines prefix up to them
+// (the checker reads a cut log as it reads a killed recording: an unfinished
+// game is a warning, not a failure; about 0.1 s for 2 MB) and sends only the
+// lines that passed.  A live follower lags by one check; a prefix that fails is
+// never sent, every later request of that game is a 500, and the watch is
+// stopped with `error` naming the game.  The watch still checks each finished
+// recording whole (match.json's `redaction`).  draft.json shows both pools and
+// both decks: a grid draft is face up, both drafters saw every grid (B's
+// main / side split is the one thing in it A never saw: docs/watch-bots.md).
 //
 // The run lives in var/spectate/watch-<cube>-<seed>/ (draft.json, match.json,
 // <id>-g<n>.jsonl, the decks, the lab's folder, watch.log); a second watch of
 // the same cube and seed replaces it, and a follower of the old log gets 416.
 
 import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 
@@ -112,15 +122,39 @@ const readJson = (file) => {
   try { return JSON.parse(readFileSync(file, 'utf8')); } catch { return null; }
 };
 
+const CHECKER = fileURLToPath(new URL('./check-redaction.mjs', import.meta.url));
+
+/**
+ * The real check: tools/check-redaction.mjs over `buf` (complete lines), written to a scratch file
+ * under `dir` for the length of the check (the checker reads a path; a spawned child's stdin is a
+ * socket, which /dev/stdin cannot open).  -> {ok, out}.
+ */
+export function checkRedaction(buf, dir) {
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jsonl`);
+  writeFileSync(file, buf);
+  return new Promise((resolveCheck) => {
+    const child = spawn(process.execPath, [CHECKER, file], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '';
+    child.stdout.setEncoding('utf8').on('data', (d) => { if (out.length < 65536) out += d; });
+    child.stderr.setEncoding('utf8').on('data', (d) => { if (out.length < 65536) out += d; });
+    child.on('error', (e) => { rmSync(file, { force: true }); resolveCheck({ ok: false, out: `the checker did not start: ${e.message}` }); });
+    child.on('close', (code) => { rmSync(file, { force: true }); resolveCheck({ ok: code === 0, out }); });
+  });
+}
+
 /**
  * The runner.  `command(req, dir)` is the argv to run (tests pass a fake); by
  * default `tools/cubelab.sh watch cubes/<cube>.md ...`.  `available()` is
  * whether that can work here (the bridge built: RecordMatch is what records).
  */
-export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000 }) {
+export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null }) {
   const root = resolve(repoRoot);
+  const check = redactionCheck ?? ((buf) => checkRedaction(buf, join(root, 'var', 'watch-check')));
   const spectate = join(root, 'var', 'spectate');
-  let running = null;   // { id, child, startedAt }
+  let running = null;   // { id, child, startedAt, failWhy? }
+  /** Per game log: how much of it passed the redaction check (D440: nothing unchecked is served). */
+  const checked = new Map();   // file -> { key, upTo, failed: string|null, pending: Promise|null }
   const isAvailable = available ?? (() => existsSync(join(root, 'bridge', 'out', 'mtgtable', 'RecordMatch.class')) && existsSync(join(root, 'tools', 'cubelab.sh')));
   const cubes = () => (existsSync(join(root, 'cubes')) ? readdirSync(join(root, 'cubes')).filter((n) => n.endsWith('.md')).map((n) => n.slice(0, -3)).filter((n) => CUBE.test(n)).sort() : []);
   const profiles = () => {
@@ -143,9 +177,19 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     '--pace', String(q.pace), '--out', `var/spectate/${q.id}`]);
 
   /** A watch that ended without saying so (killed, crashed): match.json says it now. */
-  const settle = (dir, code, signal) => {
+  const settle = (dir, code, signal, failWhy = null) => {
     const file = join(dir, 'match.json');
     const m = readJson(file);
+    if (failWhy && m) {
+      // the runner stopped it (a served log failed the redaction check): its word is the last one
+      m.status = 'error';
+      m.error = failWhy;
+      m.current = null;
+      m.updatedAt = new Date().toISOString();
+      for (const g of m.games ?? []) if (g.status === 'playing') { g.status = 'error'; g.error = failWhy; }
+      try { writeFileSync(`${file}.runner.tmp`, `${JSON.stringify(m, null, 1)}\n`); renameSync(`${file}.runner.tmp`, file); } catch { /* the folder went away */ }
+      return;
+    }
     if (m && TERMINAL.has(m.status)) return;
     const why = signal ? `the watch process was stopped (${signal})` : `the watch process exited (code ${code}) before it finished; see watch.log`;
     const next = m ?? { v: 1, kind: 'watch-match', id: dir.split(sep).pop(), games: [] };
@@ -168,6 +212,52 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
     r.killer = setTimeout(() => { if (groupAlive(r)) { killGroup(r, 'SIGKILL'); log(`WATCH ${r.id} SIGKILL to what was left of it`); } }, killGraceMs);
   };
 
+  /**
+   * How much of game n's log passed tools/check-redaction.mjs, made to cover at least `want` bytes
+   * when the log has them: the whole complete-lines prefix is checked again whenever a request
+   * needs bytes past the last check (single-flight per file).  A failure is remembered, and stops
+   * the running watch with `error`.  -> {upTo, failed: string|null}.
+   */
+  const passedUpTo = async (id, n, file, want) => {
+    let last = { upTo: 0, failed: null };
+    for (let round = 0; round < 3; round++) {
+      let st;
+      try { st = statSync(file); } catch { return { upTo: 0, failed: null }; }
+      const key = `${st.ino}:${st.birthtimeMs}`;
+      let e = checked.get(file);
+      if (!e || e.key !== key) { e = { key, upTo: 0, failed: null, pending: null }; checked.set(file, e); }
+      if (e.failed) return { upTo: e.upTo, failed: e.failed };
+      if (e.upTo >= want) return { upTo: e.upTo, failed: null };
+      if (e.pending) { await e.pending; continue; }
+      const entry = e;
+      entry.pending = (async () => {
+        let buf;
+        try { buf = readFileSync(file); } catch { return; }
+        const cut = buf.lastIndexOf(0x0a);
+        if (cut < 0) return;
+        const prefix = buf.subarray(0, cut + 1);
+        const r = await check(prefix);
+        if (checked.get(file) !== entry) return;   // re-recorded while it ran
+        if (r.ok) { entry.upTo = Math.max(entry.upTo, prefix.length); return; }
+        const lines = String(r.out ?? '').split('\n').filter((l) => /^\s*!/.test(l)).slice(0, 3).map((l) => l.trim().replace(/^!\s*/, '')).join(' | ');
+        // The checker's own words can name the card that leaked, so they go to the helper's console only:
+        // the message a client (and match.json) gets says which game and nothing about what failed.
+        entry.failed = `game ${n} failed tools/check-redaction.mjs as it was served (its first ${prefix.length} bytes); nothing past the last line that passed was sent, and the watch was stopped`;
+        log(`WATCH ${id} REDACTION FAIL on game ${n} (${prefix.length} bytes): ${lines || 'see tools/check-redaction.mjs on the file'}`);
+        if (running && running.id === id) {
+          running.failWhy = entry.failed;
+          killGroup(running, 'SIGTERM');
+          armKill(running);
+        }
+      })().finally(() => { entry.pending = null; });
+      await entry.pending;
+      last = { upTo: entry.upTo, failed: entry.failed };
+      if (entry.failed || entry.upTo >= want) return last;
+      // re-recorded while it ran: look again (a bounded number of times, then send what passed)
+    }
+    return last;
+  };
+
   return {
     available: () => isAvailable(),
     health: () => ({ watch: isAvailable() ? 1 : 0, watchRunning: running ? running.id : null }),
@@ -183,6 +273,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       if (!dir) return { status: 400, body: { ok: false, type: 'error', message: 'that watch folder is not under var/spectate/' } };
       rmSync(dir, { recursive: true, force: true });
       mkdirSync(dir, { recursive: true });
+      for (const k of [...checked.keys()]) if (k.startsWith(dir + sep)) checked.delete(k);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
       let child;
@@ -204,7 +295,7 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
           if (!me.killer) killGroup(me, 'SIGTERM');
           armKill(me);
         } else clearTimeout(me.killer);
-        settle(dir, code, signal);
+        settle(dir, code, signal, me.failWhy ?? null);
         log(`WATCH ${r.id} ended (${signal ?? `exit ${code}`}) in ${((Date.now() - me.startedAt) / 1000).toFixed(0)} s`);
       });
       log(`WATCH ${r.id} started: ${r.cube}, seed ${r.seed}, best of ${r.games}, A ${r.playerA} vs B ${r.playerB}, pace ${r.pace} ms`);
@@ -231,8 +322,11 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       return { status: 200, body: { ok: true, id, running: running?.id === id, match: readJson(join(dir, 'match.json')), draft: readJson(join(dir, 'draft.json')) } };
     },
 
-    /** A game's frame log: {status, body: Buffer, headers} (or a JSON body for an error). */
-    game(id, n, { from = null, range = null } = {}) {
+    /**
+     * A game's frame log: {status, body: Buffer, headers} (or a JSON body for an error).  Async: the
+     * bytes it sends have passed the redaction check first (passedUpTo).
+     */
+    async game(id, n, { from = null, range = null } = {}) {
       const dir = dirOf(id);
       if (!dir || !/^[1-9]$/.test(String(n))) return { status: 404, json: { ok: false, type: 'error', message: 'no such game' } };
       const file = join(dir, `${id}-g${n}.jsonl`);
@@ -247,8 +341,12 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
         start = Number(m[1]);
         ranged = true;
       }
-      const c = readCompleteLines(file, start);
-      if (c.status === 404) return { status: 404, json: { ok: false, type: 'error', message: 'this game has not started (yet)' } };
+      const first = readCompleteLines(file, start);
+      if (first.status === 404) return { status: 404, json: { ok: false, type: 'error', message: 'this game has not started (yet)' } };
+      const ok = first.status === 200 ? await passedUpTo(id, n, file, first.next) : { upTo: first.next, failed: null };
+      if (ok.failed) return { status: 500, json: { ok: false, type: 'error', code: 'redaction-failed', message: ok.failed } };
+      // only what passed: the chunk cut back to the checked prefix (whole lines either way)
+      const c = first.status === 200 && ok.upTo < first.next ? readCompleteLines(file, start, Math.max(0, ok.upTo - start)) : first;
       const headers = { 'X-Log-Next': String(c.next), 'X-Log-Size': String(c.size) };
       if (c.status === 416 || (ranged && start >= c.size)) {
         return { status: 416, json: { ok: false, type: 'error', message: 'past the end of the log: it was re-recorded' }, headers: { ...headers, 'Content-Range': `bytes */${c.size}` } };

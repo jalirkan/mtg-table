@@ -15,6 +15,8 @@
 // seeds in the lab's range; best of 1/3/5/7; players a profile or search;
 // unknown fields refused); one watch at a time (409 with the running id); stop
 // (200, then match.json says "stopped"); a watch that dies is marked "error";
+// redaction as served (only lines that passed tools/check-redaction.mjs are sent;
+// a log that fails is a 500 from then on, and the watch is stopped with error);
 // the kill escalation (a stop's SIGKILL still reaches a child the leader left
 // behind, and close() SIGKILLs a watch that ignores SIGTERM after the grace);
 // the game log served as COMPLETE lines by ?from= and by Range (206, its first
@@ -28,7 +30,7 @@
 //
 // Run from the repo root (hard rule 9).  Gate step 12f.
 
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -102,6 +104,13 @@ if [ "$seed" = 5 ]; then
   trap 'exit 130' TERM
   while :; do sleep 0.1; done
 fi
+if [ "$seed" = 7 ]; then
+  # a game whose log gains a line that fails the redaction check while it is followed
+  trap 'm "{\\"v\\":1,\\"kind\\":\\"watch-match\\",\\"id\\":\\"$id\\",\\"status\\":\\"stopped\\",\\"games\\":[{\\"n\\":1,\\"status\\":\\"error\\"}],\\"current\\":null}"; exit 130' TERM
+  while [ ! -e "$dir/go" ]; do sleep 0.05; done
+  printf 'pe":"state"}\\n{"v":1,"seq":3,"note":"LEAK"}\\n' >> "$dir/$id-g1.jsonl"
+  while :; do sleep 0.1; done
+fi
 if [ "$seed" = 6 ]; then echo $$ > "$dir/leader.pid"; trap '' TERM; while :; do sleep 0.1; done; fi
 if [ "$seed" = 2 ]; then
   trap 'm "{\\"v\\":1,\\"kind\\":\\"watch-match\\",\\"id\\":\\"$id\\",\\"status\\":\\"stopped\\",\\"games\\":[],\\"current\\":null}"; exit 130' TERM
@@ -112,7 +121,11 @@ m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"done","games":[{"n":1,"f
 `);
 chmodSync(FAKE, 0o755);
 const argvs = [];
-const mk = (o = {}) => createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000,
+// The fake logs are not frame logs, so the runner's redaction check is a fake too: a log passes unless
+// it holds LEAK (the real checker is held at the end, on a real recording and a negative fixture).
+const redChecks = [];
+const fakeCheck = async (buf) => { redChecks.push(buf.length); return { ok: !buf.includes('LEAK'), out: buf.includes('LEAK') ? '      ! x.jsonl:3: an opponent hand card named Secret Card' : 'PASS' }; };
+const mk = (o = {}) => createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, redactionCheck: fakeCheck,
   command: (q, dir) => { argvs.push([q, dir]); return ['bash', FAKE, dir, String(q.seed)]; }, ...o });
 const off = createWatchRunner({ repoRoot: ROOT, available: () => false });
 check(off.health().watch === 0 && off.post({ cube: 'fair-fight-cube-180' }).status === 503, 'not built: "watch": 0, POST 503');
@@ -128,20 +141,20 @@ await until(() => w.running() === null);
 const done = w.get('watch-fair-fight-cube-180-1');
 check(done.status === 200 && done.body.match?.status === 'done' && done.body.draft?.kind === 'watch-draft' && done.body.running === false, 'GET: match.json done, draft.json, not running');
 check(w.get('watch-nope-1').status === 404 && w.get('../etc').status === 404 && w.get('watch-x/../../y-1').status === 404, 'an unknown or malformed id: 404');
-const g = w.game('watch-fair-fight-cube-180-1', '1');
+const g = await w.game('watch-fair-fight-cube-180-1', '1');
 check(g.status === 200 && g.body.toString().split('\n').length === 4 && g.headers['X-Log-Next'] === String(g.body.length), 'the game log: every complete line, X-Log-Next');
-const gr = w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.indexOf('\n')}-` });
+const gr = await w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.indexOf('\n')}-` });
 check(gr.status === 206 && gr.body[0] === 0x0a && /^bytes \d+-\d+\/\d+$/.test(gr.headers['Content-Range']), 'Range: 206 from the newline asked for, Content-Range');
-check(w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.length}-` }).status === 416, 'Range at the end of a finished log: 416');
-check(w.game('watch-fair-fight-cube-180-1', '1', { from: '99999' }).status === 416, '?from past the end: 416 (re-recorded)');
-check(w.game('watch-fair-fight-cube-180-1', '1', { from: '-1' }).status === 400, '?from not a number: 400');
-check(w.game('watch-fair-fight-cube-180-1', '2').status === 404 && w.game('watch-fair-fight-cube-180-1', '../x').status === 404, 'a game not started, or a bad number: 404');
+check((await w.game('watch-fair-fight-cube-180-1', '1', { range: `bytes=${g.body.length}-` })).status === 416, 'Range at the end of a finished log: 416');
+check((await w.game('watch-fair-fight-cube-180-1', '1', { from: '99999' })).status === 416, '?from past the end: 416 (re-recorded)');
+check((await w.game('watch-fair-fight-cube-180-1', '1', { from: '-1' })).status === 400, '?from not a number: 400');
+check((await w.game('watch-fair-fight-cube-180-1', '2')).status === 404 && (await w.game('watch-fair-fight-cube-180-1', '../x')).status === 404, 'a game not started, or a bad number: 404');
 check(w.list().body.watches.length === 1 && w.list().body.watches[0].status === 'done', 'GET /watch lists it');
 // stop
 const s = w.post({ cube: 'pauper-cube-180', seed: 2 });
 check(s.status === 202, 'a long watch starts');
 await until(() => existsSync(join(ROOT, 'var/spectate/watch-pauper-cube-180-2/watch-pauper-cube-180-2-g1.jsonl')));
-const live = w.game('watch-pauper-cube-180-2', '1');
+const live = await w.game('watch-pauper-cube-180-2', '1');
 check(live.status === 200 && !live.body.toString().includes('"seq":2') && live.body.toString().endsWith('"hello_ok"}\n'), 'while it is written: the half line is held back');
 check(w.stop('watch-fair-fight-cube-180-1').status === 409, 'stop a watch that is not running: 409');
 check(w.stop('watch-pauper-cube-180-2').status === 200, 'stop the running one: 200');
@@ -177,6 +190,39 @@ check((await mk().close()) === undefined, 'close() with nothing running resolves
 for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid')]) {
   try { const pid = Number(readFileSync(f, 'utf8').trim()); if (pid > 1) { try { process.kill(-pid, 'SIGKILL'); } catch { /* not a group */ } try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } } catch { /* no file */ }
 }
+// redaction as served: only lines that passed are sent; a failing prefix is never sent, and stops the watch
+const rid = 'watch-pauper-cube-180-7';
+w.post({ cube: 'pauper-cube-180', seed: 7 });
+await until(() => existsSync(join(ROOT, `var/spectate/${rid}/${rid}-g1.jsonl`)));
+const n0 = redChecks.length;
+const r1 = await w.game(rid, '1');
+check(r1.status === 200 && r1.body.toString().endsWith('"hello_ok"}\n') && redChecks.length === n0 + 1, 'a live game: its complete lines checked once, then sent');
+const r1b = await w.game(rid, '1', { from: String(r1.body.length) });
+check(r1b.status === 200 && r1b.body.length === 0 && redChecks.length === n0 + 1, 'nothing new: no second check');
+writeFileSync(join(ROOT, `var/spectate/${rid}/go`), '');
+await until(() => readFileSync(join(ROOT, `var/spectate/${rid}/${rid}-g1.jsonl`), 'utf8').includes('LEAK'));
+const r2 = await w.game(rid, '1', { from: String(r1.body.length) });
+check(r2.status === 500 && r2.json?.code === 'redaction-failed' && !/Secret Card/.test(JSON.stringify(r2.json)), 'a line that fails: 500 redaction-failed, and the checker\'s words (a card name) are not in it');
+check((await w.game(rid, '1')).status === 500, 'from then on the whole game is refused, from byte 0 too');
+await until(() => w.running() === null);
+const rm = w.get(rid).body.match;
+check(rm?.status === 'error' && /game 1 failed tools\/check-redaction\.mjs as it was served/.test(rm.error ?? '') && !/Secret Card/.test(rm.error), 'the watch was stopped, and match.json says error naming the game (over the watch\'s own "stopped")');
+// the real checker, on a real recording and on a negative fixture
+const realLog = [];
+const real2 = createWatchRunner({ repoRoot: ROOT, available: () => true, command: () => ['true'], log: (x) => realLog.push(x) });
+const realDir = join(ROOT, 'var/spectate/watch-real-1');
+mkdirSync(realDir, { recursive: true });
+writeFileSync(join(realDir, 'watch-real-1-g1.jsonl'), readFileSync(resolve('fixtures/games/g1.jsonl')));
+writeFileSync(join(realDir, 'watch-real-1-g2.jsonl'), readFileSync(resolve('fixtures/negative/redaction/a6-opponent-hand-named.jsonl')));
+const rg1 = await real2.game('watch-real-1', '1');
+check(rg1.status === 200 && rg1.body.length === readFileSync(resolve('fixtures/games/g1.jsonl')).length, 'the real check: a real recording passes and is sent whole');
+const half = readFileSync(resolve('fixtures/games/g1.jsonl'));
+writeFileSync(join(realDir, 'watch-real-1-g3.jsonl'), half.subarray(0, Math.floor(half.length / 2)));
+const rg3 = await real2.game('watch-real-1', '3');
+check(rg3.status === 200 && rg3.body.length > 0 && rg3.body.at(-1) === 0x0a, 'the real check: half a recording (a game in progress) passes, whole lines only');
+check((await real2.game('watch-real-1', '2')).status === 500 && realLog.some((x) => /REDACTION FAIL on game 2 .*: .*a6-|REDACTION FAIL on game 2 \(\d+ bytes\): (?!see )/.test(x)),
+  'the real check: a log that names an opponent\'s hand card is refused, for the checker\'s own reason (on the console only)');
+check(!existsSync(join(ROOT, 'var/watch-check')) || readdirSync(join(ROOT, 'var/watch-check')).length === 0, 'the checker\'s scratch copies are gone');
 // a re-run replaces the folder
 writeFileSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt'), 'x');
 w.post({ cube: 'fair-fight-cube-180', seed: 1 });
@@ -184,7 +230,7 @@ await until(() => w.running() === null);
 check(!existsSync(join(ROOT, 'var/spectate/watch-fair-fight-cube-180-1/stale.txt')), 'the same cube and seed again replace the old folder');
 check(argvs.every(([q, dir]) => dir === join(ROOT, 'var/spectate', q.id)), 'every run in var/spectate/<id>');
 // a command that cannot start frees the slot
-const nostart = createWatchRunner({ repoRoot: ROOT, available: () => true, command: () => [join(DIR, 'no-such-program')] });
+const nostart = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, command: () => [join(DIR, 'no-such-program')] });
 check(nostart.post({ cube: 'pauper-cube-180', seed: 4 }).status === 202, 'a watch whose program is missing: 202 (spawn fails later)');
 await until(() => nostart.running() === null);
 check(nostart.running() === null && nostart.get('watch-pauper-cube-180-4').body.match?.status === 'error', 'then the slot is free and match.json says error');

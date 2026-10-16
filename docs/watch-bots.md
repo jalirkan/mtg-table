@@ -25,7 +25,7 @@ only when `watch` is 1.
 | `POST /watch` `{"cube", "seed"?, "games"?, "playerA"?, "playerB"?, "pace"?}` (4 KB) | `202 {"ok": true, "id", "seed", "state": "/watch/<id>", "game": "/watch/<id>/game/<n>"}` — `409 {"code": "busy", "running": "<id>"}` while another watch runs (one at a time); `400` a bad body, unknown fields included; `503` the bridge is not built or `--no-watch` |
 | `GET /watch` | `200 {"ok": true, "running": "<id>"|null, "watches": [{id, status, cube, seed, bestOf, players, wins, winner, updatedAt}]}`, newest first, at most 20 |
 | `GET /watch/<id>` | `200 {"ok": true, "id", "running": bool, "match": <match.json>|null, "draft": <draft.json>|null}` — each null until written; `404` an unknown id |
-| `GET /watch/<id>/game/<n>` | game `n`'s frame log, complete lines only (below); `404` until that game has started |
+| `GET /watch/<id>/game/<n>` | game `n`'s frame log, complete lines that passed the redaction check only (below); `404` until that game has started; `500 {"code": "redaction-failed"}` once it failed the check |
 | `POST /watch/<id>/stop` | `200 {"ok": true, "id", "stopping": true}`; `409 {"code": "not-running"}`; then `match.status` becomes `"stopped"` |
 
 The body:
@@ -85,7 +85,15 @@ all. At the default 600 ms expect a few minutes a game.
 
 `GET /watch/<id>/game/<n>` serves the log as the spectate dev route serves
 `var/spectate/` (D122): **only complete lines** — a line the recorder is half way
-through is never sent — at most 4 MiB an answer. Two ways to poll, and every
+through is never sent — at most 4 MiB an answer, and **only lines that passed
+`tools/check-redaction.mjs`**: before it sends bytes past the last check, the
+helper checks the log's whole complete-lines prefix (an unfinished game passes as
+a killed recording does; about 0.1 s for 2 MB) and sends what passed, so a
+follower runs one check behind the recorder. A game that fails is never sent past
+its last passing line: every later request for it is
+`500 {"ok": false, "code": "redaction-failed", "message"}` (which game, never
+what failed: the checker's own words can name the card, and stay on the helper's
+console), and the watch ends `error` saying so. Two ways to poll, and every
 answer carries `X-Log-Next` (the byte after the last line sent) and `X-Log-Size`
 (exposed to the page through `Access-Control-Expose-Headers`):
 

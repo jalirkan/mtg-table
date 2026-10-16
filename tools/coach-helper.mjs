@@ -820,7 +820,7 @@ export function startHelper(opts) {
       if (path !== '/watch' && !one && !game) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
       if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: path === '/watch' ? 'use GET or POST' : 'use GET' }, { ...cors, Allow: path === '/watch' ? 'GET, POST, OPTIONS' : 'GET, OPTIONS' }); say(405); return; }
       if (game) {
-        const r = watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });
+        const r = await watch.game(game[1], game[2], { from: url.searchParams.get('from'), range: req.headers.range ?? null });   // only what passed the redaction check
         const expose = { 'Access-Control-Expose-Headers': 'X-Log-Next, X-Log-Size, Content-Range' };
         if (r.json) { send(res, r.status, r.json, { ...cors, ...expose, ...(r.headers ?? {}) }); say(r.status); return; }
         res.writeHead(r.status, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Length': r.body.length, ...cors, ...expose, ...r.headers });
