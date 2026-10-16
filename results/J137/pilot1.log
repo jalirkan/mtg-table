@@ -1,0 +1,28 @@
+==== J137 pilot1 started 2026-10-16T14:48:01-04:00 in unit lab-J137-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+✔ the flatness port gives ForgeCoach's numbers on its golden metas (68.21655ms)
+✔ compare's flatness from the drafts is the port on buildMeta's meta.json, exactly (102.711969ms)
+✔ spreadOf: a flat population of independent games reads near zero, a spread one near its truth (3.27555ms)
+✔ the measures read two synthetic populations back (29.399318ms)
+✔ the paired bootstrap: a known difference excludes 0, no difference holds 0 (447.760166ms)
+✔ every population must hold the same seeds (66.960188ms)
+✔ compare.json is numbers only, compare.md tables every measure, and a rule decides only past its margin (118.148685ms)
+✔ names and variants (0.343872ms)
+✔ readPopulation reads a run folder and leaves exploring drafts out (2.091265ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 952.084981
+var/lab-j137/cubes/synergy-v2-cube-180.md: OK
+var/lab-j137/cubes/synergy-v3-cube-180.md: OK
+cards listed    180
+in Forge's DB   180
+unsupported     0
+cards listed    180
+in Forge's DB   180
+unsupported     0
+{"v2_db":1,"v3_db":1,"v2_sha":1,"v3_sha":1}
+1
