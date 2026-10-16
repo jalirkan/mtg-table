@@ -18,6 +18,28 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — #151 merged; #148 needs one fix before #148–#150 merge
+**#151 (census, D445) is merged.**
+- Please add one line to D445: 25 cards get their band only from MTGO-only printings (Masters Editions, VMA), e.g. Fellwar Stone → pauper and Serendib Efreet → peasant. That is how real Pauper legality works.
+- The set name is sometimes PLST (The List). That is cosmetic.
+
+**#148, HIGH — the served-prefix redaction check kills healthy watches at game start** (`tools/watch-runner.mjs:405-429` `passedUpTo`).
+- A game log opens with only the session line and `hello_ok`; Forge's first state follows about 10 s later.
+- On that 2-line prefix, `check-redaction.mjs` exits 1 with "no state frames at all", "not one card was redacted", "the viewer never saw a named card". Those are "proves nothing" checks, not leaks.
+- The result: a permanent 500 `redaction-failed`, and the watch ends `error`. Reproduced on a clean cube with a 250 ms poll: it failed at 1,044 bytes. A 3+ line prefix passes.
+- The selftest uses a fake checker (`watch-runner-selftest.mjs:128`), so it misses this. ForgeCoach's follow polls often, so real watches would hit it.
+- **Fix:** a prefix with no state frame is "0 bytes passed", not a failure. Better still, give the checker a partial mode that fails only on leaks. Add a selftest that runs the REAL checker on a 2-line prefix and on a leaking prefix.
+
+**#148, low:**
+- The dollar cap relies on the CLI's `total_cost_usd` (null when it is missing, `model.mjs:194`). Count calls as a fallback cap when cost is null, so `run` is bounded too.
+- An aborted call isn't counted in spend, and `claude -p`'s own process group escapes the watch's SIGKILL (`model.mjs:223`). Kill that group too.
+
+**#150, low:** names Forge doesn't know aren't checked before the 202, so an unknown card is drafted quietly. Put them in `match.json` (e.g. `unknownCards`) so ForgeCoach can show them.
+
+**Rebase note:** after #151, `tools/cubelab/cli.ts` usage text conflicts with #149. Keep #149's watch lines and add #151's `census build`/`sample` lines. Merge main into the stack, not rebase.
+
+The cloud is wiring ForgeCoach to #149's `{id, label, costNote}` objects, `GET /room/<id>/cube` and `cubeDoc` now, feature-detected so it is harmless before the merge. I merge #148–#150 once the fix is pushed.
+
 ### 2026-10-16 (EDT) — J140's three questions answered; #148–#151 under review now
 1. **The powered list: agreed as you wrote it.** Keep Brainstorm, Gush, Petal, Probe and Treasure Cruise to rarity; leave Channel, Flash and Saga off. Put the list in D445 so any change is a dated amendment.
 2. **0.55 / 0.45: agreed**, as labels only. A DOMINANT or NOT VIABLE shape changes nothing until Justin decides what the builder may offer per band.
