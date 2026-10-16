@@ -395,6 +395,25 @@ test('mapLimit keeps the order and the limit', async () => {
   assert.equal(peak, 2);
 });
 
+test('mapLimit: the first failure stops the rest -- no new item starts, the in-flight one sees the signal, it rejects once all settle', async () => {
+  const started: number[] = [];
+  let sawAbort = false;
+  let settled = 0;
+  const p = mapLimit([1, 2, 3, 4, 5, 6], 2, async (x, signal) => {
+    started.push(x);
+    try {
+      if (x === 2) { await new Promise((r) => setTimeout(r, 5)); throw new Error('draft 2 failed'); }
+      await new Promise((r) => setTimeout(r, 30));
+      sawAbort ||= signal.aborted;
+      return x;
+    } finally { settled++; }
+  });
+  await assert.rejects(p, /draft 2 failed/);
+  assert.deepEqual(started, [1, 2], 'nothing started after the failure');
+  assert.equal(sawAbort, true);
+  assert.equal(settled, 2, 'the in-flight item finished before mapLimit rejected');
+});
+
 // ------------------------------------------------------------ forge-ranks
 
 test('forge-ranks: Forge\'s scores in place of the cube\'s ratings, no synergy, an early commit; the other seat plain', () => {

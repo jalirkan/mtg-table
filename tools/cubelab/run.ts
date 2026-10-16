@@ -258,7 +258,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   const { lc, text } = bridge ?? (loaded as NonNullable<typeof loaded>);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
   const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
-  let draftOne = (seed: number): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+  let draftOne = (seed: number, _signal?: AbortSignal): DraftOut | Promise<DraftOut> => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
   if (bridge) {
     if (o.synergyFile || o.mixed) throw new Error('--bridge drafts with each cube\'s ratings; it takes no --synergy or head-to-head');
     draftOne = (seed) => bridge.draft(seed, o.format, o.weights, o.winstonCards);
@@ -326,8 +326,8 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       const model = o.llmModel ?? ((): Promise<DraftModel> => (made ??= d.model === 'fake' ? Promise.resolve(fakeDraftModel()) : claudeDraftModel(d.model, d.thinking, path.resolve(o.out, 'llm', 'cwd'))));
       const b = o.llmBudget ?? new LlmBudget({ maxCalls: null, maxUsd: DEFAULT_LLM_MAX_USD, maxFallbackRate: DEFAULT_FALLBACK_RATE });
       budget = b;
-      draftOne = async (seed) => {
-        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say, budget: b }, seed);
+      draftOne = async (seed, signal) => {
+        const out = await runLlmDraft({ lc, seat, spec: { kind: 'llm', model: d.model, thinking: d.thinking }, model, texts, summary, seesOpponent: d.seesOpponent, w: o.weights, cacheDir: path.join(o.out, 'llm'), say, budget: b, signal: signal ?? null }, seed);
         if (out.llm) llmStats.push(out.llm);
         return out;
       };
@@ -421,10 +421,10 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   for (let i = 0; i < o.drafts; i++) if (!done.has(o.seed + i)) pending.push(o.seed + i);
   // D439: an LLM drafter waits on the model, so its drafts run --llm-jobs at a time; every other drafter is
   // synchronous and runs one by one, exactly as before.  The results are used in seed order either way.
-  // An LLM stop leaves spend.json and says why.
+  // A failed draft stops the others (mapLimit aborts their signal); an LLM stop also leaves spend.json.
   let drafted: DraftOut[];
   try {
-    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2)) : 1, async (seed) => draftOne(seed));
+    drafted = await mapLimit(pending, o.drafter?.kind === 'llm' ? Math.min(MAX_LLM_JOBS, Math.max(1, o.llmJobs ?? 2)) : 1, async (seed, signal) => draftOne(seed, signal));
   } catch (e) {
     if (budget) writeSpend(o.out, budget);
     if (e instanceof LlmStop) throw new LlmStop(e.reason, `llm drafter stopped, ${e.message}; the drafts finished before it are kept in ${path.join(o.out, 'llm')} and are not asked again on a resume`);
@@ -538,17 +538,30 @@ function writeSpend(out: string, b: LlmBudget): void {
   fs.renameSync(path.join(dir, 'spend.json.tmp'), path.join(dir, 'spend.json'));
 }
 
-/** `f` over `items`, at most `limit` at a time; the results in the items' order. */
-export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T) => Promise<R>): Promise<R[]> {
+/**
+ * `f` over `items`, at most `limit` at a time; the results in the items' order.  The first failure
+ * stops the rest: no lane takes another item, the in-flight calls see `signal` aborted (with that
+ * failure as its reason), and mapLimit rejects with it once every lane has settled, so nothing keeps
+ * running (or spending) after it returns.
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, f: (x: T, signal: AbortSignal) => Promise<R>): Promise<R[]> {
   const out = new Array<R>(items.length);
+  const ac = new AbortController();
+  let failure: { e: unknown } | null = null;
   let next = 0;
   const lane = async (): Promise<void> => {
-    while (next < items.length) {
+    while (next < items.length && !ac.signal.aborted) {
       const i = next++;
-      out[i] = await f(items[i] as T);
+      try {
+        out[i] = await f(items[i] as T, ac.signal);
+      } catch (e) {
+        if (!failure) { failure = { e }; ac.abort(e); }
+        return;
+      }
     }
   };
   await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), items.length) }, lane));
+  if (failure) throw (failure as { e: unknown }).e;
   return out;
 }
 
