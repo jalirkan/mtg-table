@@ -9,7 +9,7 @@
 //           40-card decks at random colour makeups straight from a band's pool, no drafter (deckcensus.ts, D447)
 //   census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search] [--policy-b plain|search]
 //           [--replay <games.jsonl>] [--game-timeout 300]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
-//   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000]   win rate across the spectrum, per card (censusread.ts, D447)
+//   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--mixed-pilots]   win rate across the spectrum, per card (censusread.ts, D447)
 //   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
 //           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
@@ -134,7 +134,7 @@ function usage(msg?: string): never {
                         [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D447, no engine)
        tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search]
                         [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout 300]   (D447)
-       tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1]   (D447, no engine)
+       tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
@@ -152,7 +152,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged' || a === '--mixed-pilots') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);

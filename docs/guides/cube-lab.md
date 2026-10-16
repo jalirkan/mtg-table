@@ -1124,6 +1124,10 @@ Wilson's unclustered interval and the one to read, a deck-clustered bootstrap (`
 row per band and card: decks, deck-games, wins, the win rate when in the deck and shrunk toward 0.5 at
 strength 20, and the means of its decks' profile and its opponents' (main share, colours, k, lands, mean
 mana value, card flow, fixers, the CROSS and FILL shares). No verdicts and no labels beyond the bins.
+It counts each deck once (a `--decks` folder named twice, or one deck in two folders; one id with two
+lists is refused) and each game once per pilot pair, keyed by (seed, g, policyA, policyB), so a folder
+read with its own replay counts each game once; the rows must be one pilot pair unless `--mixed-pilots`.
+`spectrum.json`'s `dropped` and `pilots` say what it did.
 
 **Rate.** D447's smoke beside a seven-worker job: 2,472 games an hour on 2 workers, about 2.2 CPU-seconds
 a game — some 11,000 games an hour on seven free cores.

@@ -4,7 +4,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   tools/cubelab.sh census-read --games <dir> [--games <dir>]... --decks <dir> [--decks <dir>]... --out <dir>
-//                                [--boot 1000] [--boot-seed 1] [--shrink 20]
+//                                [--boot 1000] [--boot-seed 1] [--shrink 20] [--mixed-pilots]
+//
+// ONE ROW A GAME, ONE DECK AN ID (dedupe, the #154 review).  A deck read twice (a --decks folder named
+// twice, or two folders holding one deck) counts once; one id with two different lists is refused.  A
+// game is keyed by (seed, g, policyA, policyB): a folder read with its own replay (`--replay`, the same
+// games under the same pilots) counts each game once, the first row without an engine error kept; one
+// key naming two different deck pairs is refused.  The rows' pilots must be one pair (plain vs plain for
+// the census) unless --mixed-pilots, which reads them together and says so.  spectrum.json carries
+// what was dropped (`dropped`) and the pilots (`pilots`).
 //
 // Reads census-play's games.jsonl in each --games folder and decks.jsonl in each --decks folder (a
 // deck id names its band, so the folders of several bands may be read together), and writes
@@ -103,9 +111,40 @@ export interface CensusRead {
     byColours: Record<string, Cell>; byPriorK: Record<string, Cell>; byMainShare: Record<string, Cell>;
   }>;
   cards: number;
+  /** census-read's de-duplication (dedupe): duplicate deck lines and game rows left out. */
+  dropped?: { decks: number; rows: number };
+  /** The pilot pairs read, `policyA/policyB`. */
+  pilots?: string[];
 }
 
-/** The read itself, pure: decks and game rows in, the spectrum and the card rows out. */
+/** One deck an id, one row a (seed, g, policyA, policyB), one pair of pilots unless asked (see the header). */
+export function dedupe(decks: DeckRecord[], rows: GameRowOut[], o: { mixedPilots: boolean }): { decks: DeckRecord[]; rows: GameRowOut[]; dropped: { decks: number; rows: number }; pilots: string[] } {
+  const byId = new Map<string, { d: DeckRecord; text: string }>();
+  let dDecks = 0;
+  for (const d of decks) {
+    const text = JSON.stringify(d);
+    const was = byId.get(d.id);
+    if (!was) { byId.set(d.id, { d, text }); continue; }
+    if (was.text !== text) throw new Error(`census-read: deck ${d.id} is in two --decks folders with two different lists`);
+    dDecks++;
+  }
+  const byKey = new Map<string, GameRowOut>();
+  let dRows = 0;
+  for (const r of rows) {
+    const k = `${r.seed}/${r.g}/${r.policyA}/${r.policyB}`;
+    const was = byKey.get(k);
+    if (!was) { byKey.set(k, r); continue; }
+    if (was.a !== r.a || was.b !== r.b) throw new Error(`census-read: game g${r.g} seed ${r.seed} names two deck pairs (${was.a} vs ${was.b}, ${r.a} vs ${r.b}): two runs on one seed`);
+    dRows++;
+    if (was.engineError && !r.engineError) byKey.set(k, r);
+  }
+  const kept = [...byKey.values()];
+  const pilots = [...new Set(kept.map((r) => `${r.policyA}/${r.policyB}`))].sort();
+  if (pilots.length > 1 && !o.mixedPilots) throw new Error(`census-read: the rows have ${pilots.length} pairs of pilots (${pilots.join(', ')}); read one pilot pair at a time, or pass --mixed-pilots to read them together`);
+  return { decks: [...byId.values()].map((x) => x.d), rows: kept, dropped: { decks: dDecks, rows: dRows }, pilots };
+}
+
+/** The read itself, pure: decks and game rows in (already de-duplicated), the spectrum and the card rows out. */
 export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptions): { doc: CensusRead; cards: CardRow[] } {
   const byId = new Map(decks.map((d) => [d.id, d]));
   const bands: CensusRead['bands'] = {};
@@ -198,7 +237,7 @@ export function spectrumMd(doc: CensusRead): string {
     ...Object.entries(cells).map(([k, c]) => `| ${SHARE_LABEL[k] ?? k} | ${c.decks} | ${c.deckGames} | ${c.decisive} | ${f(c.wr)} | ${iv(c.bootLo, c.bootHi)} | ${iv(c.wilsonLo, c.wilsonHi)} |`), '',
   ];
   const out = ['# Deck census: win rate across the colour spectrum (D447)', '',
-    `${doc.games} games, ${doc.decks} decks; bootstrap ${doc.options.boot} replicates (seed ${doc.options.bootSeed}), clustered by deck. Bins are the realised profiles, read after the games; no bin is a verdict, and any difference is a candidate until it holds on fresh seeds. Every rate is as Forge's AI plays it.`, ''];
+    `${doc.games} games, ${doc.decks} decks${doc.pilots ? `, pilots ${doc.pilots.join(' + ')}` : ''}${doc.dropped && (doc.dropped.rows || doc.dropped.decks) ? ` (${doc.dropped.rows} duplicate game rows and ${doc.dropped.decks} duplicate deck lines left out)` : ''}; bootstrap ${doc.options.boot} replicates (seed ${doc.options.bootSeed}), clustered by deck. Bins are the realised profiles, read after the games; no bin is a verdict, and any difference is a candidate until it holds on fresh seeds. Every rate is as Forge's AI plays it.`, ''];
   for (const [band, b] of Object.entries(doc.bands)) {
     out.push(`## ${band}`, '', `${b.games} games (${b.decisive} decisive, ${b.draws} drawn, ${b.timeouts} timeouts, ${b.engineErrors} engine errors); ${b.decks} decks, deck-games min ${b.deckGamesMin ?? '–'}, median ${b.deckGamesMedian ?? '–'}; the first player won ${f(b.firstPlayerWinRate)} of ${b.firstPlayerDecisive}.`, '');
     out.push(...table('colours with 3+ spells', b.byColours), ...table('main-colour share of pips', b.byMainShare), ...table('the prior\'s k', b.byPriorK));
@@ -232,15 +271,18 @@ export function censusReadCommand(repo: string, f: Map<string, string[]>, say: (
     const files = fs.existsSync(path.join(dir, 'games.jsonl')) ? [path.join(dir, 'games.jsonl')] : fs.readdirSync(dir).filter((x) => x.endsWith('.jsonl')).map((x) => path.join(dir, x));
     for (const file of files) for (const l of fileLines(file, { complete: true })) if (l) rows.push(JSON.parse(l) as GameRowOut);
   }
-  const ids = new Set(decks.map((d) => d.id));
-  const unknown = rows.filter((r) => !ids.has(r.a) || !ids.has(r.b)).length;
+  const dd = dedupe(decks, rows, { mixedPilots: f.has('mixed-pilots') });
+  const ids = new Set(dd.decks.map((d) => d.id));
+  const unknown = dd.rows.filter((r) => !ids.has(r.a) || !ids.has(r.b)).length;
   if (unknown) throw new Error(`census-read: ${unknown} game row(s) name a deck not in the --decks folders`);
-  const { doc, cards } = readCensus(decks, rows, o);
+  const read = readCensus(dd.decks, dd.rows, o);
+  const doc: CensusRead = { ...read.doc, dropped: dd.dropped, pilots: dd.pilots };
+  const { cards } = read;
   const out = path.resolve(repo, outArg);
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'spectrum.json'), `${strictJson(doc)}\n`);
   fs.writeFileSync(path.join(out, 'spectrum.md'), spectrumMd(doc));
   fs.writeFileSync(path.join(out, 'cards.tsv'), cardsTsv(cards));
-  say(`census-read: ${doc.games} game(s), ${doc.decks} deck(s), ${Object.keys(doc.bands).join(', ')}; ${cards.length} card row(s) -> ${path.relative(repo, out) || '.'}/spectrum.json, spectrum.md, cards.tsv`);
+  say(`census-read: ${doc.games} game(s), ${doc.decks} deck(s)${dd.dropped.rows || dd.dropped.decks ? ` (${dd.dropped.rows} duplicate row(s), ${dd.dropped.decks} duplicate deck(s) dropped)` : ''}, pilots ${dd.pilots.join(' + ') || '-'}, ${Object.keys(doc.bands).join(', ')}; ${cards.length} card row(s) -> ${path.relative(repo, out) || '.'}/spectrum.json, spectrum.md, cards.tsv`);
   return 0;
 }

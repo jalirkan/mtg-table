@@ -30,7 +30,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -40,8 +40,8 @@ import {
   castable, censusPopulation, CARD_FLOW_STUDY, landSources, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
   scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
 } from '../../tools/cubelab/deckcensus.ts';
-import { pairingOf, replayPlan, rowOf, searchSummary, type GameRowOut } from '../../tools/cubelab/censusplay.ts';
-import { readCensus, shareBin, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
+import { pairingOf, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
+import { censusReadCommand, dedupe, readCensus, shareBin, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { openForgeScripts } from '../../tools/forge-scripts.ts';
 import { BANDS } from '../../tools/cubelab/census.ts';
@@ -395,4 +395,43 @@ test('the read on a synthetic games folder: a planted mono advantage and a plant
   assert.doesNotMatch(text, /NaN|Infinity/);
   JSON.parse(text);
   assert.throws(() => strictJson({ x: Number.NaN }));
+});
+
+test('census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked', () => {
+  const decks = Array.from({ length: 12 }, (_, i) => synthDeck(`pauper-9-${String(i + 1).padStart(5, '0')}`, 0.5 + (i % 5) / 10, 2, 2, [`c${i}`, `c${i + 1}`]));
+  const plan = pairingOf(decks.map((d) => d.id), 30, 9);
+  const row = (g: PlannedGame, k: number, policyA: 'plain' | 'search' = 'plain', replayOf?: string): GameRowOut => ({
+    v: 1, g: g.g, seed: g.seed, a: g.a, b: g.b, policyA, policyB: 'plain', winner: k % 3 === 0 ? 'b' : 'a', first: g.seed % 2 === 0 ? 'a' : 'b', turns: 9, ms: 900,
+    timeout: false, reason: null, error: null, engineError: null, worker: 0, ...(replayOf ? { replayOf } : {}),
+  });
+  const dir = mkdtempSync(join(tmpdir(), 'census-read-'));
+  const write = (sub: string, file: string, lines: unknown[]): string => { mkdirSync(join(dir, sub), { recursive: true }); writeFileSync(join(dir, sub, file), `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`); return join(dir, sub); };
+  try {
+    const D = write('decks', 'decks.jsonl', decks);
+    const main = write('main', 'games.jsonl', plan.map((g, k) => row(g, k)));
+    const replay = write('replay', 'games.jsonl', plan.slice(0, 6).map((g, k) => row(g, k, 'plain', `main/games.jsonl#g${g.g}`)));
+    const search = write('search', 'games.jsonl', plan.slice(0, 6).map((g, k) => row(g, k, 'search', `main/games.jsonl#g${g.g}`)));
+    const read = (games: string[], extra: Array<[string, string[]]> = []): { games: number; decks: number; dropped: { decks: number; rows: number }; pilots: string[] } => {
+      const out = join(dir, `out-${Math.random().toString(36).slice(2)}`);
+      censusReadCommand(REPO, new Map<string, string[]>([['games', games], ['decks', [D, D]], ['out', [out]], ['boot', ['20']], ...extra]), quiet);
+      return JSON.parse(readFileSync(join(out, 'spectrum.json'), 'utf8')) as never;
+    };
+    const a = read([main, replay]);
+    assert.equal(a.games, 30, 'the main folder plus its replay: 30 games');
+    assert.equal(a.decks, 12, 'a --decks folder named twice: 12 decks');
+    assert.deepEqual(a.dropped, { decks: 12, rows: 6 });
+    assert.deepEqual(a.pilots, ['plain/plain']);
+    assert.throws(() => read([main, search]), /pairs of pilots .*--mixed-pilots/);
+    const m = read([main, search], [['mixed-pilots', ['1']]]);
+    assert.equal(m.games, 36, 'asked for: both pilots, each game once per pilot pair');
+    assert.deepEqual(m.pilots, ['plain/plain', 'search/plain']);
+    // an engine error and its good row: the good one is kept, whichever comes first
+    const err = { ...row(plan[0] as PlannedGame, 0), winner: null, engineError: 'worker exited' } as GameRowOut;
+    const kept = dedupe(decks, [err, row(plan[0] as PlannedGame, 0)], { mixedPilots: false });
+    assert.equal(kept.rows.length, 1);
+    assert.equal(kept.rows[0]!.engineError, null);
+    // one id, two lists; one game key, two deck pairs: refused
+    assert.throws(() => dedupe([decks[0]!, { ...decks[0]!, spells: ['other'] }], [], { mixedPilots: false }), /two different lists/);
+    assert.throws(() => dedupe(decks, [row(plan[0] as PlannedGame, 0), { ...row(plan[0] as PlannedGame, 0), b: 'pauper-9-00099' }], { mixedPilots: false }), /two deck pairs/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
