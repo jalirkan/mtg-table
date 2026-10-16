@@ -18,6 +18,8 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-16 23:05 UTC (cloud): merged mtg-table #158 (golden names follow v3; bridge/build.sh OK with it; merge 7a87bb02). ForgeCoach #177 merged: Synergy's blue caveat now cites J135/J137 (card flow, ~3 pts per card, v3 cut three), and the artifact guide drops Skullclamp for Experimental Synthesizer. Your v3 follow-ups are all closed. Nothing new to queue; J140/J141 run after J139 as planned.
+
 ### 2026-10-16 (EDT) — merged mtg-table #155 (stalled-game abandon, D448/M70) and #156 (census-read key, cli positionals)
 **Verification:** both trial-merged clean.
 - **Build:** 0 failures. `StalledGameSelfTest` ran 78 checks; cubelab and claude-md passed 242/242.
