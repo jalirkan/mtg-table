@@ -8,9 +8,11 @@
 //
 // ONE ROW A GAME, ONE DECK AN ID (dedupe, the #154 review).  A deck read twice (a --decks folder named
 // twice, or two folders holding one deck) counts once; one id with two different lists is refused.  A
-// game is keyed by (seed, g, policyA, policyB): a folder read with its own replay (`--replay`, the same
-// games under the same pilots) counts each game once, the first row without an engine error kept; one
-// key naming two different deck pairs is refused.  The rows' pilots must be one pair (plain vs plain for
+// game is keyed by (band, seed, g, policyA, policyB), the band its decks' (side a's): a folder read with
+// its own replay (`--replay`, the same games under the same pilots) counts each game once, the first row
+// without an engine error kept, and two bands played on the same --seed are read together; one key
+// naming two different deck pairs -- two runs of one band on one seed -- is refused, so give each run
+// of a band its own seed.  The rows' pilots must be one pair (plain vs plain for
 // the census) unless --mixed-pilots, which reads them together and says so.  spectrum.json carries
 // what was dropped (`dropped`) and the pilots (`pilots`).
 //
@@ -154,7 +156,7 @@ export interface CensusRead {
   pilots?: string[];
 }
 
-/** One deck an id, one row a (seed, g, policyA, policyB), one pair of pilots unless asked (see the header). */
+/** One deck an id, one row a (band, seed, g, policyA, policyB), one pair of pilots unless asked (see the header). */
 export function dedupe(decks: DeckRecord[], rows: GameRowOut[], o: { mixedPilots: boolean }): { decks: DeckRecord[]; rows: GameRowOut[]; dropped: { decks: number; rows: number }; pilots: string[] } {
   const byId = new Map<string, { d: DeckRecord; text: string }>();
   let dDecks = 0;
@@ -167,11 +169,15 @@ export function dedupe(decks: DeckRecord[], rows: GameRowOut[], o: { mixedPilots
   }
   const byKey = new Map<string, GameRowOut>();
   let dRows = 0;
+  // The band is the deck's (a game is played within one band); a row whose deck was not read keys by
+  // the deck's id instead, and readCensus leaves it out anyway.
+  const bandOf = (id: string): string => byId.get(id)?.d.band ?? `?${id}`;
   for (const r of rows) {
-    const k = `${r.seed}/${r.g}/${r.policyA}/${r.policyB}`;
+    const band = bandOf(r.a);
+    const k = `${band}/${r.seed}/${r.g}/${r.policyA}/${r.policyB}`;
     const was = byKey.get(k);
     if (!was) { byKey.set(k, r); continue; }
-    if (was.a !== r.a || was.b !== r.b) throw new Error(`census-read: game g${r.g} seed ${r.seed} names two deck pairs (${was.a} vs ${was.b}, ${r.a} vs ${r.b}): two runs on one seed`);
+    if (was.a !== r.a || was.b !== r.b) throw new Error(`census-read: game g${r.g} seed ${r.seed} of band ${band} names two deck pairs (${was.a} vs ${was.b}, ${r.a} vs ${r.b}): two runs of one band on one seed -- give each run of a band its own --seed`);
     dRows++;
     if (was.engineError && !r.engineError) byKey.set(k, r);
   }

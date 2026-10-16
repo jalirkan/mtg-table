@@ -162,6 +162,26 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
   return { pos, f };
 }
 const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
+
+/**
+ * How many positional arguments each command reads; a command missing from the table (learn, compare,
+ * shapes) reads every one.  A flag takes exactly one value, so `--games A B` leaves B positional, and a
+ * command that reads fewer would drop it in silence (the #154 review): it is refused instead.
+ */
+const POSITIONALS: Record<string, number> = {
+  check: 1, 'library-candidates': 0, census: 1, sample: 0, decks: 0, 'census-play': 0, 'census-read': 0,
+  ratings: 2, run: 1, queue: 1, report: 1, selfplay: 1, meta: 1, evolve: 1, watch: 1,
+};
+
+/** The refusal for positionals `cmd` does not read, or null when it reads them all. */
+export function unusedPositionals(cmd: string, pos: string[]): string | null {
+  const max = POSITIONALS[cmd];
+  if (max === undefined || pos.length <= max) return null;
+  const extra = pos.slice(max);
+  return `${cmd} ${max === 0 ? 'takes no positional argument' : `takes ${max} positional argument${max === 1 ? '' : 's'}`}, `
+    + `and ${extra.map((x) => JSON.stringify(x)).join(' ')} would be ignored -- a flag takes one value, so repeat it for more `
+    + `(${extra.length === 1 ? `--<flag> ${extra[0]}` : 'e.g. --games a --games b'})`;
+}
 const int = (f: Map<string, string[]>, k: string, d: number): number => {
   const v = one(f, k);
   if (v === undefined) return d;
@@ -397,6 +417,8 @@ async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<nu
 async function main(): Promise<number> {
   const [cmd, ...rest] = process.argv.slice(2);
   const { pos, f } = flags(rest);
+  const unused = cmd ? unusedPositionals(cmd, pos) : null;
+  if (unused) usage(unused);
   switch (cmd) {
     case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
     case 'library-candidates': return (await import('./library-candidates.ts')).libraryCandidates(REPO, f, say);   // the library pool and its candidate 180s (J136)

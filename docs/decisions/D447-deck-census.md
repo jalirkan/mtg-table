@@ -214,3 +214,19 @@ README, *#154 review*). The points above carry the amended rules; what changed a
 - *Method, from the confirmed amendment's three items*: the draw beyond colour (point 2), the
   weak-deck tail (point 4), the one frozen pairing rule and the night's seeds in the job (point 6),
   what a rate means (point 10), and the utility-land hole (point 3).
+
+**Noted 2026-10-16, after #154 merged** (`pc-jobs` README, *#154 merged*, low items 1 and 3). Two
+judgements the code already makes, written down so a reader of the census knows them:
+- *Lands that give a colour only some of the time count as full sources* (point 3, *Sources*; point 4;
+  `landManaOf` in `deckcensus.ts`). A **Pathway** is counted as a source of both its colours, though
+  it is played as one face and so gives one of them. A **Verge** is counted for both colours, though
+  its second needs a Swamp or a Mountain (Blazemire's) under the deck's control. **Starting Town**
+  (any colour for 1 life) and **Talon Gates of Madara** (any colour for {1} more) are counted as
+  sources of every colour, with no discount. All seventeen (ten Pathways, five Verges and the two) are
+  legacy-band rares, so the judgement touches the legacy and powered decks only. It overstates those
+  decks' sources, so the castability rule (point 4) and `fixersReal` can pass a deck that would
+  struggle for a colour, and the weak-deck tail cannot see it. A later night can discount them, a
+  Pathway as half a source of each colour say, by a written rule, as for the utility lands.
+- *census-read keys a game by its band* as well as its seed, g and pilots (point 8). Two bands played
+  on the same `--seed` are read together, and the guide's example uses 1401 for each band. Two runs of
+  one band on one seed are still refused.
