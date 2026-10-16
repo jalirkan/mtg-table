@@ -30,7 +30,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
-  castable, censusPopulation, CARD_FLOW_STUDY, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
+  castable, censusPopulation, CARD_FLOW_STUDY, landSources, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
   scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
 } from '../../tools/cubelab/deckcensus.ts';
 import { pairingOf, replayPlan, rowOf, searchSummary, type GameRowOut } from '../../tools/cubelab/censusplay.ts';
@@ -188,6 +188,26 @@ test('the land formula on fixture decks', () => {
   // five colours each needing three sources cannot fit in 15 basics with no fixer: rejected
   const greedy = 'WUBRG'.split('').map((c) => fx(`${c}3`, c, `${c} ${c} ${c} ${c}`, 4));
   assert.equal(landPlan({ lib: [], pool: ['pauper'] as unknown as ['pauper'], fill: [] }, greedy, 15, { k: 5, colours: 'WUBRG', shares: { W: 0.2, U: 0.2, B: 0.2, R: 0.2, G: 0.2 } }, rng(4)), null);
+});
+
+test('a fetcher or a cycler is a source only of the colours of the deck\'s lands it can find', () => {
+  const plainsOnly = { W: 2, U: 0, B: 0, R: 0, G: 0 };
+  const wilds = { ...land('Evolving Wilds', 'WUBRG'), mana: { direct: '', fetch: { types: 'WUBRG', basicOnly: true }, types: '' } };
+  const strand = { ...land('Flooded Strand', 'WU'), mana: { direct: '', fetch: { types: 'WU', basicOnly: false }, types: '' } };
+  const scape = { ...land('Tranquil Landscape', 'WUG'), mana: { direct: '', fetch: { types: 'WUG', basicOnly: true }, types: '' } };
+  const tundra = { ...land('Tundra', 'WU'), mana: { direct: 'WU', fetch: null, types: 'WU' } };
+  assert.deepEqual(landSources([wilds], plainsOnly).reach, ['W'], 'Evolving Wilds with Plains alone: W only');
+  assert.deepEqual(landSources([strand, tundra], { W: 0, U: 0, B: 0, R: 0, G: 0 }).reach, ['WU', 'WU'], 'Flooded Strand finds a Tundra');
+  assert.deepEqual(landSources([scape, tundra], { W: 0, U: 0, B: 0, R: 0, G: 0 }).reach, ['', 'WU'], 'a Landscape finds only basics');
+  // the review's case (pauper-77-00047): a white-blue deck splashing one {G}, its fixers all fetchers; they
+  // used to count as green sources, so green got no basic and the splash had no real source
+  const wug = [...Array.from({ length: 10 }, (_, i) => fx(`w${i}`, 'W', '1 W W', 2)), ...Array.from({ length: 10 }, (_, i) => fx(`u${i}`, 'U', '1 U U', 2)), fx('Qasali Pridemage', 'WG', 'G W', 2)];
+  const fetchers = Array.from({ length: 10 }, (_, i) => ({ ...wilds, name: `Wilds ${i}` }));
+  const p = landPlan({ lib: fetchers, pool: ['pauper'] as unknown as ['pauper'], fill: [] }, wug, 16, { k: 3, colours: 'WUG', shares: { W: 0.45, U: 0.45, G: 0.1 } }, rng(5))!;
+  assert.equal(p.fixers.length, 8, 'F = round(16 x (1 - 20.5/41))');
+  assert.ok(p.basics.G >= 1, `a Forest for the fetchers to find: ${JSON.stringify(p.basics)}`);
+  assert.ok(sourcesOf(p).G >= 1 + 8, 'and then every fetcher is a green source too');
+  assert.ok(castable(wug[20] as CensusCard, sourcesOf(p)));
 });
 
 test('card flow: the study\'s list is library cards', () => {

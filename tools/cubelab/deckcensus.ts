@@ -34,13 +34,16 @@
 //    kept spells' pips (a plain pip 1 to its colour, a hybrid 1/2 to each, a Phyrexian or {2/C}
 //    1 to its colour): s_max, the largest colour's share.  With two or more coloured pips' colours,
 //    F = min(supply, round(L x (1 - s_max))) FIXERS: lands of the pool that make at least two of
-//    the deck's pip colours, drawn uniformly, the band's first, then FILL_ORDER's (D445's peasant has
-//    one such land of its own); the other L - F lands are basics, each colour first given the
-//    sources its most demanding spell needs (its largest count of that colour's plain pips, at least
-//    1, less what the fixers give), then one at a time to the colour furthest below its pip share
-//    of the basics (ties in WUBRG order).  Mono-coloured utility lands are never drawn.
+//    the deck's pip colours (directly or by what it can fetch), drawn uniformly, the band's first,
+//    then FILL_ORDER's (D445's peasant has one such land of its own); the other L - F lands are
+//    basics, each colour first given the sources its most demanding spell needs (its largest count
+//    of that colour's plain pips, at least 1), counting the fixers as landSources does, one basic at
+//    a time; then one at a time to the colour furthest below its pip share of the basics (ties in
+//    WUBRG order).  A FETCHER or CYCLER (a fetchland, a Landscape, Evolving Wilds, Ash Barrens) is a
+//    source only of the colours of the deck's lands it can find: a basic of a type it searches for,
+//    or a typed nonbasic when it is not basics-only.  Mono-coloured utility lands are never drawn.
 // 4. CASTABILITY (castable).  A spell is castable when, for each colour, the deck's lands that
-//    make it number at least the spell's plain pips of it, and each hybrid symbol has a source of
+//    make it (landSources) number at least the spell's plain pips of it, and each hybrid symbol has a source of
 //    one of its colours.  A deck must have every spell castable; one that does not (the minimums
 //    exceed L - F, or a list ran dry) is REJECTED and redrawn with the same makeup (a new stream),
 //    up to 50 times, then with a new makeup; every rejection is counted.
@@ -152,7 +155,40 @@ export function scriptCost(script: string): Cost {
 
 // ---------------------------------------------------------------- the population
 
-export interface CensusCard extends SampleCard { cost: Cost }
+/**
+ * What a land gives a deck, from its script.  `direct`: the colours it taps for (its `Add` clauses, "any
+ * color", its basic land types; a Pathway's two faces).  `fetch`: what it can search for (a fetchland, a
+ * Landscape, Evolving Wilds, Ash Barrens' basic landcycling): the basic land types, as colours, and
+ * whether only basics.  `types`: its own basic land types, as colours (a fetchable typed land).  A
+ * fetcher is a source of a colour only through a land of the deck it can find (landSources).
+ */
+export interface LandMana { direct: string; fetch: { types: string; basicOnly: boolean } | null; types: string }
+
+export interface CensusCard extends SampleCard { cost: Cost; mana?: LandMana }
+
+const TYPE_COLOUR: Record<string, Colour> = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
+const colourSet = (s: Iterable<string>): string => { const x = new Set(s); return COLOURS.filter((c) => x.has(c)).join(''); };
+
+/** A land's LandMana from its Forge script (every face's `Types:` and `Oracle:`). */
+export function landManaOf(script: string): LandMana {
+  const types = colourSet([...script.matchAll(/^Types:(.*)$/gm)].flatMap((m) => (m[1] ?? '').split(/\s+/)).map((w) => TYPE_COLOUR[w] ?? ''));
+  const oracle = [...script.matchAll(/^Oracle:(.*)$/gm)].map((m) => (m[1] ?? '').replace(/\\n/g, '\n')).join('\n');
+  const direct = new Set<string>(types);
+  for (const m of oracle.matchAll(/\badd ([^.]*)/gi)) {
+    const clause = m[1] ?? '';
+    if (/any colou?r/i.test(clause)) COLOURS.forEach((c) => direct.add(c));
+    for (const x of clause.matchAll(/\{([WUBRG])\}/g)) direct.add(x[1] ?? '');
+  }
+  let fetch: LandMana['fetch'] = null;
+  for (const m of oracle.matchAll(/search your library for (?:an? |up to \w+ )?([^.]*?)cards?\b/gi)) {
+    const what = m[1] ?? '';
+    const ft = /basic land/i.test(what) ? COLOURS.join('') : colourSet(Object.entries(TYPE_COLOUR).filter(([t]) => new RegExp(`\\b${t}\\b`).test(what)).map(([, c]) => c));
+    if (!ft) continue;
+    const basicOnly = /\bbasic\b/i.test(what);
+    fetch = fetch ? { types: colourSet([...fetch.types, ...ft]), basicOnly: fetch.basicOnly && basicOnly } : { types: ft, basicOnly };
+  }
+  return { direct: colourSet(direct), fetch, types };
+}
 
 /** The deck pool of a band: its own cards, or (a band under MIN_BAND_POOL eligible nonland cards: powered) united with its FILL bands, nearest first, until it is not. */
 export function poolBands(lib: CensusCard[], band: Band): Band[] {
@@ -275,7 +311,9 @@ export function landPlan(ctx: Pick<DrawCtx, 'lib' | 'pool' | 'fill'>, spells: Ce
   let fixerTarget = 0;
   if (pipColours.length >= 2 && sMax !== null) {
     fixerTarget = Math.floor(lands * (1 - sMax) + 0.5);
-    const makes2 = (c: CensusCard): boolean => c.land && [...c.produces].filter((x) => pipColours.includes(x)).length >= 2;
+    // a fixer can make (directly, or by what it can find) two or more of the pip colours; whether it does
+    // depends on the basics, and landSources counts only what it really reaches
+    const makes2 = (c: CensusCard): boolean => c.land && [...reachable(c)].filter((x) => pipColours.includes(x)).length >= 2;
     for (const [bands, role] of [[ctx.pool, 'in'] as [Band[], Role], ...ctx.fill.map((b) => [[b], 'fill'] as [Band[], Role])]) {
       if (fixers.length >= fixerTarget) break;
       const list = shuffle(ctx.lib.filter((c) => makes2(c) && bands.includes(c.band)), r);
@@ -283,15 +321,21 @@ export function landPlan(ctx: Pick<DrawCtx, 'lib' | 'pool' | 'fill'>, spells: Ce
     }
   }
   const nBasics = lands - fixers.length;
-  const fixerSources = (c: Colour): number => fixers.filter((f) => f.card.produces.includes(c)).length;
   const basics = { W: 0, U: 0, B: 0, R: 0, G: 0 } as Record<Colour, number>;
   const basicColours = COLOURS.filter((c) => share(c) > 0);
-  for (const c of basicColours) {
-    const need = Math.max(1, ...spells.map((s) => s.cost.plain[c] ?? 0));
-    basics[c] = Math.max(0, need - fixerSources(c));
+  // each colour's minimum: the sources its most demanding spell needs (at least 1), counted as landSources
+  // counts them, so a fetcher counts toward a colour only once a land it can find of that colour is in
+  // the deck; one basic at a time to the first colour short of its minimum (WUBRG order)
+  const need = Object.fromEntries(basicColours.map((c) => [c, Math.max(1, ...spells.map((s) => s.cost.plain[c] ?? 0))])) as Partial<Record<Colour, number>>;
+  let used = 0;
+  for (;;) {
+    const src = landSources(fixers.map((f) => f.card), basics).sources;
+    const short = basicColours.find((c) => src[c] < (need[c] as number));
+    if (short === undefined) break;
+    if (used >= nBasics) return null;
+    basics[short]++;
+    used++;
   }
-  let used = COLOURS.reduce((a, c) => a + basics[c], 0);
-  if (used > nBasics) return null;
   for (; used < nBasics; used++) {
     let best: Colour | null = null, gap = -Infinity;
     for (const c of basicColours) { const g = nBasics * share(c) - basics[c]; if (g > gap + 1e-12) { gap = g; best = c; } }
@@ -303,11 +347,39 @@ export function landPlan(ctx: Pick<DrawCtx, 'lib' | 'pool' | 'fill'>, spells: Ce
 
 // ---------------------------------------------------------------- 4. castability
 
-/** The sources of each colour among a deck's lands (a basic makes its colour, a fixer what it produces). */
+/** Every colour a land could ever give a deck: what it taps for and every basic type it can find. */
+function reachable(c: Pick<CensusCard, 'produces' | 'mana'>): string {
+  return c.mana ? colourSet([...c.mana.direct, ...(c.mana.fetch?.types ?? '')]) : c.produces;
+}
+
+/**
+ * The sources of each colour among a deck's lands, and each nonbasic land's REALISED colours.  A basic
+ * makes its colour.  A nonbasic makes what it taps for, plus, for a fetcher or a cycler, the colours of
+ * the deck's lands it can find: a basic of a type it searches for, or (when it is not basics-only) a
+ * typed nonbasic of the deck with such a type (Flooded Strand finding a Tundra), never itself.  So
+ * Evolving Wilds in a deck with Plains and Islands only is a source of W and U, and a Landscape whose
+ * three types meet one basic of the deck is a source of one colour.
+ */
+export function landSources(nonbasics: Array<Pick<CensusCard, 'name' | 'produces' | 'mana'>>, basics: Record<Colour, number>): { sources: Record<Colour, number>; reach: string[] } {
+  const s = { ...basics };
+  const reach = nonbasics.map((l, i) => {
+    const m = l.mana ?? { direct: l.produces, fetch: null, types: '' };
+    const out = new Set<string>(m.direct);
+    if (m.fetch) {
+      for (const t of m.fetch.types) {
+        if (basics[t as Colour] > 0) out.add(t);
+        if (!m.fetch.basicOnly) nonbasics.forEach((o, j) => { if (j !== i && o.mana?.types.includes(t)) for (const c of o.mana.direct) out.add(c); });
+      }
+    }
+    return colourSet(out);
+  });
+  for (const r of reach) for (const c of r) s[c as Colour]++;
+  return { sources: s, reach };
+}
+
+/** The sources of each colour among a deck's lands (landSources). */
 export function sourcesOf(plan: Pick<LandPlan, 'fixers' | 'basics'>): Record<Colour, number> {
-  const s = { ...plan.basics };
-  for (const f of plan.fixers) for (const c of COLOURS) if (f.card.produces.includes(c)) s[c]++;
-  return s;
+  return landSources(plan.fixers.map((f) => f.card), plan.basics).sources;
 }
 
 export function castable(spell: Pick<CensusCard, 'cost'>, sources: Record<Colour, number>): boolean {
@@ -451,6 +523,11 @@ export function censusPopulation(poolText: string, censusText: string, scriptOf:
   const joined = joinCensus(parseLibraryPool(poolText), parseCensus(censusText));
   const noScript: string[] = [];
   const lib = joined.map((c): CensusCard => {
+    if (c.land && c.supported) {
+      const script = scriptOf(c.name);
+      if (script === null) noScript.push(c.name);
+      return { ...c, cost: NO_COST, mana: script === null ? { direct: c.produces, fetch: null, types: '' } : landManaOf(script) };
+    }
     if (c.land || !c.supported) return { ...c, cost: NO_COST };
     const script = scriptOf(c.name);
     if (script === null) noScript.push(c.name);
@@ -536,7 +613,7 @@ export function mainShareKey(s: number | null): string | null {
 export const RULES_TEXT = {
   prior: 'k uniform on 1..5; the colours a uniform k-subset of WUBRG; shares Dirichlet(1,...,1)',
   draw: `${SPELLS_DRAWN} spells without replacement; a draw is colourless with the band pool's colourless share, else a colour by the shares and a uniform eligible card of it; cross-band with probability --cross-band from the pool's neighbours; empty lists fall back band, FILL, other colours`,
-  lands: `L = clamp(${LAND_BASE} + round(${LAND_SLOPE} x (mean mv of the first ${LAND_FROM_FIRST} drawn - ${LAND_MV_AT})), ${LAND_MIN}, ${LAND_MAX}); keep the first 40 - L spells; F = min(supply, round(L x (1 - s_max))) fixers making 2+ of the pip colours, uniform, band then FILL; basics: each colour its most demanding spell's pips less the fixers' sources (at least 1), then by largest deficit to its pip share`,
+  lands: `L = clamp(${LAND_BASE} + round(${LAND_SLOPE} x (mean mv of the first ${LAND_FROM_FIRST} drawn - ${LAND_MV_AT})), ${LAND_MIN}, ${LAND_MAX}); keep the first 40 - L spells; F = min(supply, round(L x (1 - s_max))) fixers that can make 2+ of the pip colours, uniform, band then FILL; basics: one at a time to the first colour with fewer sources than its most demanding spell's pips (at least 1), then by largest deficit to its pip share; a fetcher or cycler is a source only of the colours of the deck's lands it can find (a basic of a type it searches for; a typed nonbasic unless basics-only)`,
   castability: `every spell castable: per colour, sources >= its plain pips; a hybrid symbol a source of either colour; else rejected and redrawn (same makeup ${MAX_CARD_ATTEMPTS} times, then a new makeup)`,
   bands: `census.tsv's, exclusive; a band under ${MIN_BAND_POOL} eligible nonland cards (powered) is united with its FILL bands, nearest first`,
 };
