@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-16T16:40:10-04:00",
- "heartbeat": "2026-10-16T16:40:10-04:00",
+ "updated": "2026-10-16T16:40:34-04:00",
+ "heartbeat": "2026-10-16T16:40:34-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.19,
+  "load1": 4.01,
   "memUsedGb": 7.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 1994,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 3,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J139",
    "title": "Evaluator-leaf confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-evalleaf (D437) vs search-v2 (search-v1-anytime) on the confirm deck set, read alone on a 95% interval; Justin asked for it after J131's +8.7 Elo [-4.7, +22.1]",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/4",
    "started": "2026-10-16T16:40:10-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": 1816,
    "total": 4800,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
+   "workers": 3,
+   "workersMax": 3,
+   "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-16T16:40:10-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -65,7 +65,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J139-prepare"
+   "detail": "lab-J139-pilot1"
   }
  ],
  "queue": [
