@@ -1,0 +1,2 @@
+==== J134 run3 started 2026-10-16T12:33:57-04:00 in unit lab-J134-run3, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J134 LL arm SKIPPED: LAB_LLM_SPEND_OK is not 1 (Claude Sonnet costs API money; Justin's approval sets it)
