@@ -1,0 +1,167 @@
+==== J133 pilot1 started 2026-10-16T09:37:15-04:00 in unit lab-J133-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+✔ the flatness port gives ForgeCoach's numbers on its golden metas (78.386695ms)
+✔ compare's flatness from the drafts is the port on buildMeta's meta.json, exactly (105.12029ms)
+✔ spreadOf: a flat population of independent games reads near zero, a spread one near its truth (4.079499ms)
+✔ the measures read two synthetic populations back (33.88611ms)
+✔ the paired bootstrap: a known difference excludes 0, no difference holds 0 (448.136581ms)
+✔ every population must hold the same seeds (64.132152ms)
+✔ compare.json is numbers only, compare.md tables every measure, and a rule decides only past its margin (124.037506ms)
+✔ names and variants (0.384998ms)
+✔ readPopulation reads a run folder and leaves exploring drafts out (2.128367ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 964.444799
+var/lab-j133/cubes/synergy-cube-180.md: OK
+==> var/lab-j133/cubes/synergy-cube-180.md <==
+# The Synergy Cube — version 2 (180 cards, two-player)
+
+==> cubes/synergy-cube-180.md <==
+# The Synergy Cube — version 1 (180 cards, two-player)
+facts: booting the engine to look up 180 cards ...
+facts: 2.3 s
+== var/lab-j133/cubes/synergy-cube-180.md: The Synergy Cube — version 2 (180 cards, two-player)
+sections        White 24/24, Blue 22/22, Black 26/26, Red 24/24, Green 24/24, Gold 21/21, Colorless 19/19, Lands 20/20
+cards listed    180
+in Forge's DB   180
+two-faced       3: Lunarch Veteran // Luminous Phantom; Delver of Secrets // Insectile Aberration; Jace, Vryn's Prodigy // Jace, Telepath Unbound  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    8 (Forge: its AI plays these poorly or not at all)
+  Prismatic Ending
+  Viscera Seer
+  Goblin Bombardment
+  Faithless Looting
+  Beast Within
+  Mishra's Bauble
+  Chromatic Star
+  Prophetic Prism
+AI:RemRandomDeck 6: Intangible Virtue, Hardened Scales, Soulherder, Winding Constrictor, Ichor Wellspring, Lotus Petal (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 125, a set's rank file only 55, none 0
+unranked        0 (Forge would score these -100 and draft them last; the lab starts them at 40)
+only in v2: Yawgmoth, Thran Physician, Reanimate, Murderous Redcap; only in v1: Ledger Shredder, Man-o'-War, Skullclamp
+{"v2_is_v2":1,"v1_is_v1":1,"v2_cards":180,"v1_cards":180,"only_v2":3,"only_v1":3,"symdiff":6}
+cube lab compare: omega, fair_fight, synergy, synergy_v1, synergy_17; 6 draft(s) each from seed 833900001 (the same block for every population); out var/lab-j133/pilot
+== population omega: cubes/omega-cube-180.md
+cube lab: cubes/omega-cube-180.md, grid, 6 draft(s) from seed 833900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j133/pilot/runs/omega
+facts: booting the engine to look up 180 cards ...
+facts: 2.3 s
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 833900001: A:BR 2-1 B:WU  games ABA
+[2/6] seed 833900004: A:UR 2-0 B:UB  games AA
+[3/6] seed 833900003: A:WU 2-0 B:BR+u  games AA
+[4/6] seed 833900005: A:WU 2-0 B:BG+r  games AA
+[5/6] seed 833900002: A:WR 2-0 B:WU  games AA
+[6/6] seed 833900006: A:WG 2-1 B:UB+g  games BAA
+matches: 20 s for 6 (3.4 s a draft wall-clock on 3 worker(s))
+done in 24 s -> var/lab-j133/pilot/runs/omega/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/pilot/runs/omega
+== population fair_fight: cubes/fair-fight-cube-180.md
+cube lab: cubes/fair-fight-cube-180.md, grid, 6 draft(s) from seed 833900001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/fair-fight-cube-180.ratings.tsv, out var/lab-j133/pilot/runs/fair_fight
+facts: booting the engine to look up 180 cards ...
+facts: 2.2 s
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 833900003: A:UR 1-2 B:WU+g  games BAB
+[2/6] seed 833900002: A:WU 0-2 B:UB+g  games BB
+[3/6] seed 833900001: A:WG+u 0-2 B:UB  games BB
+[4/6] seed 833900004: A:WB+u 0-2 B:UB+g  games BB
+[5/6] seed 833900006: A:UB 0-2 B:RG+w  games BB
+[6/6] seed 833900005: A:WU 0-2 B:WB+u  games BB
+matches: 20 s for 6 (3.4 s a draft wall-clock on 3 worker(s))
+done in 23 s -> var/lab-j133/pilot/runs/fair_fight/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/pilot/runs/fair_fight
+== population synergy: var/lab-j133/cubes/synergy-cube-180.md
+cube lab: var/lab-j133/cubes/synergy-cube-180.md, grid, 6 draft(s) from seed 833900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j133/pilot/runs/synergy
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 833900001: A:UB 0-2 B:WG  games BB
+[2/6] seed 833900003: A:UR 0-2 B:WG  games BB
+[3/6] seed 833900002: A:BR 1-2 B:RG  games ABB
+[4/6] seed 833900004: A:WR 2-0 B:UB  games AA
+[5/6] seed 833900006: A:BG 0-2 B:WU+g  games BB
+[6/6] seed 833900005: A:UR+g 2-0 B:WU  games AA
+matches: 25 s for 6 (4.2 s a draft wall-clock on 3 worker(s))
+done in 25 s -> var/lab-j133/pilot/runs/synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/pilot/runs/synergy
+== population synergy_v1: cubes/synergy-cube-180.md
+cube lab: cubes/synergy-cube-180.md, grid, 6 draft(s) from seed 833900001, best of 3, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j133/pilot/runs/synergy_v1
+facts: booting the engine to look up 180 cards ...
+facts: 2.4 s
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 833900003: A:RG 0-2 B:WU+g  games BB
+[2/6] seed 833900004: A:WB 2-1 B:UR  games ABA
+[3/6] seed 833900002: A:WU 1-2 B:BR  games BAB
+[4/6] seed 833900001: A:UR 1-2 B:BG  games ABB
+[5/6] seed 833900006: A:WU 2-1 B:BG  games ABA
+[6/6] seed 833900005: A:UG+r 2-1 B:UR  games ABA
+matches: 41 s for 6 (6.8 s a draft wall-clock on 3 worker(s))
+done in 43 s -> var/lab-j133/pilot/runs/synergy_v1/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/pilot/runs/synergy_v1
+== population synergy_17: var/lab-j133/cubes/synergy-cube-180.md, weight sixteenLandsAt=0
+cube lab: var/lab-j133/cubes/synergy-cube-180.md, grid, 6 draft(s) from seed 833900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j133/pilot/runs/synergy_17
+drafted and built 6 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/6] seed 833900001: A:UR 0-2 B:WG  games BB
+[2/6] seed 833900002: A:BR 1-2 B:RG  games ABB
+[3/6] seed 833900004: A:WU 2-0 B:UB  games AA
+[4/6] seed 833900006: A:BG 0-2 B:WU+g  games BB
+[5/6] seed 833900003: A:UR 1-2 B:WG  games BAB
+[6/6] seed 833900005: A:UR+g 2-0 B:WG  games AA
+matches: 100 s for 6 (16.7 s a draft wall-clock on 3 worker(s))
+done in 100 s -> var/lab-j133/pilot/runs/synergy_17/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j133/pilot/runs/synergy_17
+same seeds in every population: 6 (833900001..833900006)
+flatness          omega 0.00 [0.00, 31.30]   fair_fight 0.00 [0.00, 28.85]   synergy 16.40 [0.00, 33.91]   synergy_v1 0.00 [0.00, 14.46]   synergy_17 6.80 [0.00, 30.28]
+pair_spread       omega -   fair_fight -   synergy -   synergy_v1 -   synergy_17 -
+pair_within5      omega -   fair_fight -   synergy -   synergy_v1 -   synergy_17 -
+draw_rate         omega 0.00 [0.00, 0.00]   fair_fight 0.00 [0.00, 0.00]   synergy 0.00 [0.00, 0.00]   synergy_v1 0.00 [0.00, 0.00]   synergy_17 0.00 [0.00, 0.00]
+timeout_rate      omega 0.00 [0.00, 0.00]   fair_fight 0.00 [0.00, 0.00]   synergy 0.00 [0.00, 0.00]   synergy_v1 0.00 [0.00, 0.00]   synergy_17 0.00 [0.00, 0.00]
+game_turns        omega 18.79 [16.00, 22.17]   fair_fight 22.15 [17.69, 27.84]   synergy 19.15 [17.31, 21.46]   synergy_v1 19.88 [17.06, 22.71]   synergy_17 19.29 [17.54, 20.85]
+lands             omega 17.000 [17.000, 17.000]   fair_fight 16.917 [16.750, 17.000]   synergy 16.333 [16.083, 16.667]   synergy_v1 16.333 [16.167, 16.500]   synergy_17 17.000 [17.000, 17.000]
+colours           omega 2.250 [2.083, 2.417]   fair_fight 2.583 [2.500, 2.750]   synergy 2.167 [2.000, 2.335]   synergy_v1 2.167 [2.000, 2.333]   synergy_17 2.167 [2.000, 2.335]
+two_colour        omega 100.0 [100.0, 100.0]   fair_fight 100.0 [100.0, 100.0]   synergy 100.0 [100.0, 100.0]   synergy_v1 100.0 [100.0, 100.0]   synergy_17 100.0 [100.0, 100.0]
+splash            omega 25.0 [8.3, 41.7]   fair_fight 58.3 [50.0, 75.0]   synergy 16.7 [0.0, 33.5]   synergy_v1 16.7 [0.0, 33.3]   synergy_17 16.7 [0.0, 33.5]
+first_pick_top10  omega 14.8 [13.3, 16.4]   fair_fight 15.7 [14.4, 17.2]   synergy 14.8 [13.2, 16.6]   synergy_v1 15.4 [13.8, 16.9]   synergy_17 14.8 [13.2, 16.6]
+wrote var/lab-j133/pilot/compare.json and var/lab-j133/pilot/compare.md
+# Cube populations compared
+
+5 populations, the same 6 draft seeds each (833900001..833900006). 95% intervals: percentile, 1000 draft-clustered bootstrap replicates (seed 1), the seeds resampled jointly across populations, so a difference is paired; the replicates of flatness, pair_spread and first_pick_top10 are recentred on their estimate, because a resample biases those three upward (D441). Colour pairs count with 30+ decisive games; card flatness is ForgeCoach's (flatness.ts) over cards with 10+ decisive games.
+
+| # | population | cube | sha | ratings | weights | drafts | games | decisive | engine errors | run folder |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | omega | cubes/omega-cube-180.md | f6432a75975e | Forge's ranks | defaults | 6 | 14 | 14 | 0 | var/lab-j133/pilot/runs/omega |
+| 2 | fair_fight | cubes/fair-fight-cube-180.md | 7db6ad35f7ef | cubes/fair-fight-cube-180.ratings.tsv | defaults | 6 | 13 | 13 | 0 | var/lab-j133/pilot/runs/fair_fight |
+| 3 | synergy | var/lab-j133/cubes/synergy-cube-180.md | 8cb5e5f0827a | Forge's ranks | defaults | 6 | 13 | 13 | 0 | var/lab-j133/pilot/runs/synergy |
+| 4 | synergy_v1 | cubes/synergy-cube-180.md | 7e4f1e95fe38 | cubes/synergy-cube-180.ratings.tsv | defaults | 6 | 17 | 17 | 0 | var/lab-j133/pilot/runs/synergy_v1 |
+| 5 | synergy_17 | var/lab-j133/cubes/synergy-cube-180.md | 8cb5e5f0827a | Forge's ranks | sixteenLandsAt=0 | 6 | 14 | 14 | 0 | var/lab-j133/pilot/runs/synergy_17 |
+
+No `--rule` was given: the tables rank and give intervals; they deliver no verdict.
+
+## Card-rate flatness: true SD of the cards' win rates (`flatness`, pts)
+
+| rank (1 = lowest) | population | estimate | 95% interval | replicates |
+|---|---|---|---|---|
+| 1 | omega | 0.00 | [0.00, 31.30] | 1000 |
+| 2 | fair_fight | 0.00 | [0.00, 28.85] | 1000 |
+| 3 | synergy_v1 | 0.00 | [0.00, 14.46] | 1000 |
+| 4 | synergy_17 | 6.80 | [0.00, 30.28] | 1000 |
+| 5 | synergy | 16.40 | [0.00, 33.91] | 1000 |
+
+ForgeCoach's own reading of each (its chi-square interval on the observed variance, not the bootstrap): omega 0.00 [0.00, 21.95], unclear, 15 cards; fair_fight 0.00 [0.00, 20.29], unclear, 21 cards; synergy 16.40 [0.00, 39.52], unreadable, 11 cards; synergy_v1 0.00 [0.00, 0.00], flat, 30 cards; synergy_17 6.80 [0.00, 25.18], unclear, 17 cards.
+
+| difference | estimate | 95% interval | excludes 0 |
+|---|---|---|---|
+| omega - fair_fight | 0.00 | [-26.98, +23.86] | no |
+| omega - synergy | -16.40 | [-33.03, +21.31] | no |
+| omega - synergy_v1 | 0.00 | [0.00, +27.29] | no |
+| omega - synergy_17 | -6.80 | [-26.24, +25.48] | no |
+| fair_fight - synergy | -16.40 | [-31.68, +25.43] | no |
+| fair_fight - synergy_v1 | 0.00 | [-14.46, +28.85] | no |
+| fair_fight - synergy_17 | -6.80 | [-23.82, +26.20] | no |
+| synergy - synergy_v1 | +16.40 | [0.00, +33.23] | no |
+| synergy - synergy_17 | +9.60 | [-5.29, +27.16] | no |
+| synergy_v1 - synergy_17 | -6.80 | [-30.28, +14.46] | no |
+
+No difference's interval excludes 0.
