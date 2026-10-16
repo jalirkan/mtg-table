@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-15T23:33:33-04:00",
- "heartbeat": "2026-10-15T23:33:33-04:00",
+ "updated": "2026-10-15T23:33:55-04:00",
+ "heartbeat": "2026-10-15T23:33:55-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 15.73,
+  "load1": 17.18,
   "memUsedGb": 13.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 1428,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-15T22:31:24-04:00",
-   "elapsed": 3730,
+   "elapsed": 3751,
    "done": 480,
    "total": 1200,
    "unit": "games",
    "ratePerHour": 550.1,
-   "eta": "2026-10-16T00:52:05-04:00",
-   "workers": 5,
+   "eta": "2026-10-16T00:52:27-04:00",
+   "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-15T23:31:57-04:00",
-   "memGb": 5.71,
+   "memGb": 5.7,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -77,6 +77,12 @@
      "kind": "drop",
      "workers": 5,
      "pressure": 33.2
+    },
+    {
+     "at": "2026-10-15T23:33:55-04:00",
+     "kind": "raise",
+     "workers": 6,
+     "pressure": 0
     }
    ],
    "detail": "lab-J131-run1"
