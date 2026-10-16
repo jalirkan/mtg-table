@@ -1,1 +1,2 @@
 {"at":"2026-10-16T09:48:42-04:00","kind":"drop","workers":6,"pressure":19.9,"why":"some avg10 19.9%, swap-in 451/s, job 9.4/21.4 GB"}
+{"at":"2026-10-16T09:53:45-04:00","kind":"raise","workers":7,"pressure":0,"why":"some avg10 0.0%, swap-in 0/s, job 8.0/21.4 GB"}
