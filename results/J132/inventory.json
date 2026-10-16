@@ -1,0 +1,94 @@
+{
+ "written": 1,
+ "inputOk": 1,
+ "otherSeats": 0,
+ "stagedAt": "2026-10-16T03:20:20.174Z",
+ "gamesHis": 14,
+ "gamesGradable": 9,
+ "gamesFriend": 1,
+ "gamesExcluded": 34,
+ "gamesHisNotGraded": 5,
+ "gamesWithDecisions": 7,
+ "decisions": 153,
+ "spell": 95,
+ "attack": 30,
+ "block": 12,
+ "target": 16,
+ "mulligans": 8,
+ "perGame": [
+  {
+   "gameId": "match-m1791029375517",
+   "kind": "ai",
+   "decisions": 0,
+   "mulligans": 1
+  },
+  {
+   "gameId": "friend-m1791336206841",
+   "kind": "friend",
+   "decisions": 21,
+   "spell": 15,
+   "target": 2,
+   "attack": 4,
+   "mulligans": 1
+  },
+  {
+   "gameId": "match-m1791341011805",
+   "kind": "ai",
+   "decisions": 6,
+   "spell": 5,
+   "attack": 1,
+   "mulligans": 1
+  },
+  {
+   "gameId": "match-m1791649145759",
+   "kind": "ai",
+   "decisions": 39,
+   "spell": 23,
+   "attack": 10,
+   "target": 2,
+   "block": 4,
+   "mulligans": 1
+  },
+  {
+   "gameId": "match-m1791665969863",
+   "kind": "ai",
+   "decisions": 10,
+   "spell": 10,
+   "mulligans": 1
+  },
+  {
+   "gameId": "match-m1791666843336",
+   "kind": "ai",
+   "decisions": 25,
+   "spell": 12,
+   "target": 7,
+   "attack": 6,
+   "mulligans": 1
+  },
+  {
+   "gameId": "match-m1791666843336-g2",
+   "kind": "ai",
+   "decisions": 0,
+   "mulligans": 0
+  },
+  {
+   "gameId": "match-m1791671758740",
+   "kind": "ai",
+   "decisions": 12,
+   "spell": 10,
+   "target": 1,
+   "block": 1,
+   "mulligans": 1
+  },
+  {
+   "gameId": "match-m1791671758740-g2",
+   "kind": "ai",
+   "decisions": 40,
+   "spell": 20,
+   "attack": 9,
+   "target": 4,
+   "block": 7,
+   "mulligans": 1
+  }
+ ]
+}

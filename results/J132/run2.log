@@ -1,0 +1,48 @@
+==== J132 run2 started 2026-10-16T05:32:56-04:00 in unit lab-J132-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"games":7,"decisions":103,"leaks":0}
+{"written":1,"strict":1,"mismatches":0,"leaks":0,"kinds":10,"decisions":103,"mistakes":5,"gamesGraded":7,"minMistakes":5,"minGames":3,"bootstrapB":10000}
+# Your leaks: recurring mistakes in your own games (J129)
+
+**No leak shown.** Under the rule written before any of your games was graded, no kind of decision qualifies.
+
+## What was read
+
+- 14 recorded games are yours for certain; 7 of them were graded (2 held no decision of yours, 0 reviews failed). 34 other logs were left out, each with its reason below.
+- Only your own seat was read. In a game against a friend, the friend's log was never opened and none of the friend's decisions was graded.
+- 153 of your decisions were found: 95 main-phase plays, 30 attacks, 12 blocks, 16 target choices. 103 were graded; 40 had only one legal answer and 10 could not be graded. You also made 7 keep-or-mulligan decisions, which no grader covers.
+- The engine graded each decision by playing every option out with Forge's AI on both sides, the opponent's hidden cards dealt from the cube (never their real hand or deck). 63 were graded to the end of the game, 40 to the end of the turn.
+
+## The rule (fixed before grading)
+
+- A decision is a **clear mistake** only when the whole 95% interval of what it cost you is above zero. You made 5 clear mistakes in all.
+- A kind of decision is a **leak** only with at least 5 clear mistakes, in at least 3 different games, and an average cost over all your decisions of that kind whose 95% interval is above zero. Anything else is "not shown": not proof that you play it well, only that these games do not show a pattern.
+
+## Kind by kind
+
+| kind | graded | games | clear mistakes | in games | average cost, win-chance points [95%] | verdict |
+|---|---|---|---|---|---|---|
+| playing a land late (not graded: the review plays the land drop the same way in every option) | - | - | - | - | - | not graded |
+| not attacking when the opponent had no untapped creature to block | 0 | 0 | 0 | 0 | - | not shown |
+| chump blocks and double blocks | 5 | 2 | 1 | 1 | 6.0 [-1.3, 40.3] | not shown |
+| holding mana up versus tapping out in your main phase | 28 | 7 | 1 | 1 | 1.8 [0.1, 5.1] | not shown |
+| casting a spell while the opponent had two or more untapped lands | 11 | 4 | 0 | 0 | 0.7 [-0.2, 1.5] | not shown |
+| keeping or mulliganing (not graded: no grader takes the opening hand) | - | - | - | - | - | not graded (7 seen) |
+| which spell to cast first when two or more were castable | 17 | 5 | 3 | 2 | 5.1 [0.2, 8.4] | not shown |
+| other attacks (attacking, or holding back into possible blockers) | 30 | 5 | 0 | 0 | 2.1 [0.5, 3.8] | not shown |
+| other blocks (no block, or a trade) | 4 | 3 | 0 | 0 | 2.0 [-2.4, 5.8] | not shown |
+| choosing a target | 8 | 5 | 0 | 0 | 0.0 [-0.5, 0.5] | not shown |
+
+Holding up versus tapping out: you held mana up 15 times (1 clear mistakes) and cast 13 times (0 clear mistakes).
+
+## What a verdict needs
+
+Your most frequent kind of clear mistake has 3 in 2 games, about 0.429 a game. At that rate a verdict on it needs about 12 graded games in all; you have 7. More games against the AI launched from ForgeCoach (or a table game with recording on) are what adds to this.
+
+## Logs left out
+
+- 31 × a play.sh id that scripted clients and Claude's own verification games also write: cannot be told
+- 4 × yours, not graded: no act: nothing he decided: `match-m1791029326002`, `match-m1791665969863-g2`, `match-m1791671624946`, `match-m1791671758740-g3`
+- 2 × the other seat of a game between two people: never opened: `friend-m1791327978782-seat1`, `friend-m1791336206841-seat1`
+- 2 × yours, not graded: the review found no decision of yours in it: `match-m1791029375517`, `match-m1791666843336-g2`
+- 1 × his seat's recording consent is not on the header (D407): `friend-m1791327978782-seat0`
+- 1 × yours, not graded: no cube holds his deck, so pool mode (D348) has no pool: the opponent could only be basic lands: `match-m1791639803150`

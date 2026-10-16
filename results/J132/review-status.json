@@ -1,0 +1,19 @@
+{
+ "games": 9,
+ "done": 7,
+ "failed": 0,
+ "empty": 2,
+ "failedGames": [],
+ "emptyGames": [
+  "match-m1791029375517",
+  "match-m1791666843336-g2"
+ ],
+ "settings": {
+  "jobs": 6,
+  "triageS": 60,
+  "deepK": 50,
+  "deepS": 600,
+  "deepOptions": 5,
+  "seed": 1
+ }
+}

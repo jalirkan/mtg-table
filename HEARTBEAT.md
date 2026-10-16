@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T05:32:56-04:00
+- time: 2026-10-16T05:33:10-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J132 commands 2/2, 9/9 units, 10.2/h, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.65; memory 3.4/30.5 GB, swap 1604 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 2.24; memory 3.4/30.5 GB, swap 1604 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J131 done at 2026-10-16T04:39:13-04:00: cm.played 1200 · cm.score 0.513 · cm.lo 0.493 · cm.hi 0.532 · cm.elo 8.7 · cm.eloLo -4.7 · cm.eloHi 22.1 · cm.aSearch.msPerDecision 772.407 · cm.bSearch.msPerDecision 767.034 · cm.aSearch.evalLeafUs 122.91 · v.adopt 0
+- last finished: J132 done at 2026-10-16T05:33:09-04:00: lk.leaks 0 · lk.gamesGraded 7 · lk.decisions 103 · lk.mistakes 5 · inv.decisions 153 · rs.failed 0
 
 ## Messages
+
+- FOLLOW-UP READY [J132@2026-10-16T05:33:09-04:00] (the runner, for the cloud session): J132 is done; write and post the template morning-read. It decides: whether ForgeCoach shows the owner a "Your leaks" page (each leak's example moments linked to the replay), and from which kinds; nothing ships from this job by itself. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J131@2026-10-16T04:39:13-04:00] (the runner, for the cloud session): J131 is done; write and post the template morning-read. It decides: whether the next search version (search-v3) scores the leaves of its unfinished rollouts with the learned evaluator (D354's leaf=eval, evaluator v2) instead of the hand-written leaf. Ledger: LEDGER.md. Delete this line once posted.
 
