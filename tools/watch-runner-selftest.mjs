@@ -9,7 +9,8 @@
 // does, at a speed its seed picks (seed 1: done at once; 2: plays until it is
 // stopped; 3: dies without saying so; 5: exits on SIGTERM and leaves a child
 // that ignores it; 6: ignores SIGTERM itself; 7: gains a line the fake check
-// fails; 8: the REAL checker, staged: two lines, more, a planted leak).  Everything goes under
+// fails; 10: the REAL checker, staged: two lines, more, a planted leak; 11: a
+// claude -p in its own group, with a grandchild, under a watch that ignores SIGTERM).  Everything goes under
 // var/watch-runner-selftest/.  No Forge, no network.
 //
 // What it holds: the body's validation (cube ids from cubes/, never a path;
@@ -100,7 +101,7 @@ m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"drafting","games":[],"wi
 printf '{"v":1,"kind":"watch-draft","id":"%s","picks":[]}\\n' "$id" > "$dir/draft.json"
 m '{"v":1,"kind":"watch-match","id":"'"$id"'","status":"playing","games":[{"n":1,"file":"'"$id"'-g1.jsonl","status":"playing"}],"wins":{"A":0,"B":0,"draws":0},"winner":null,"current":1}'
 printf '{"v":1,"kind":"session","gameId":"%s-g1","seat":0}\\n{"v":1,"seq":1,"type":"hello_ok"}\\n{"v":1,"seq":2,"type":"state"}\\n{"v":1,"seq":3,"ty' "$id" > "$dir/$id-g1.jsonl"
-if [ "$seed" = 8 ]; then
+if [ "$seed" = 10 ]; then
   # the REAL checker, staged ($3 holds the stages): a real recording's first two lines (the session
   # line and hello_ok, as every game opens), then its next lines, then a line that leaks
   log="$dir/$id-g1.jsonl"
@@ -126,7 +127,7 @@ if [ "$seed" = 7 ]; then
   while :; do sleep 0.1; done
 fi
 if [ "$seed" = 6 ]; then echo $$ > "$dir/leader.pid"; trap '' TERM; while :; do sleep 0.1; done; fi
-if [ "$seed" = 9 ]; then
+if [ "$seed" = 11 ]; then
   # an llm: drafter's claude -p, in a process group of its own (model.mjs), with a grandchild; the
   # watch ignores SIGTERM, so only the runner's SIGKILL ends it
   echo $$ > "$dir/leader.pid"; trap '' TERM
@@ -224,8 +225,8 @@ const m = makeClaudeModel({ model: 'haiku', bin: process.argv[2], cwd: process.a
 await m.call({ system: 'S', user: 'U' });
 `);
 const wk = createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, redactionCheck: fakeCheck, command: (q, dir) => ['bash', FAKE, dir, String(q.seed), K] });
-wk.post({ cube: 'pauper-cube-180', seed: 9 });
-const kdir = join(ROOT, 'var/spectate/watch-pauper-cube-180-9');
+wk.post({ cube: 'pauper-cube-180', seed: 11 });
+const kdir = join(ROOT, 'var/spectate/watch-pauper-cube-180-11');
 const kpid = (f) => (existsSync(join(kdir, f)) ? Number(readFileSync(join(kdir, f), 'utf8').trim()) || null : null);
 const kgroups = () => { try { return readdirSync(join(kdir, '.child-groups')); } catch { return []; } };
 await until(() => kpid('claude.pid') && kpid('grand.pid') && kgroups().length === 1, 8000);
@@ -237,7 +238,7 @@ check(!alive(kc) && !alive(kg), 'the watch\'s SIGKILL (it ignored SIGTERM) reach
 for (const pid of [kc, kg]) if (pid && pid > 1) { try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } }
 
 // whatever a failed check above left behind is this test's own: never leave it running
-for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid'), join(ROOT, 'var/spectate/watch-pauper-cube-180-9/leader.pid')]) {
+for (const f of [strag, join(ROOT, 'var/spectate/watch-pauper-cube-180-6/leader.pid'), join(ROOT, 'var/spectate/watch-pauper-cube-180-11/leader.pid')]) {
   try { const pid = Number(readFileSync(f, 'utf8').trim()); if (pid > 1) { try { process.kill(-pid, 'SIGKILL'); } catch { /* not a group */ } try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } } catch { /* no file */ }
 }
 // redaction as served: only lines that passed are sent; a failing prefix is never sent, and stops the watch
@@ -302,9 +303,9 @@ writeFileSync(join(STAGE, 'leak.jsonl'), `${JSON.stringify(leakLine)}\n`);
 const liveLog = [];
 const wr = createWatchRunner({ repoRoot: ROOT, available: () => true, killGraceMs: 1000, log: (x) => liveLog.push(x),
   command: (q, dir) => ['bash', FAKE, dir, String(q.seed), STAGE] });
-const lid = 'watch-pauper-cube-180-8';
+const lid = 'watch-pauper-cube-180-10';
 const lfile = join(ROOT, `var/spectate/${lid}/${lid}-g1.jsonl`);
-check(wr.post({ cube: 'pauper-cube-180', seed: 8 }).status === 202, 'the real checker on a running watch: it starts');
+check(wr.post({ cube: 'pauper-cube-180', seed: 10 }).status === 202, 'the real checker on a running watch: it starts');
 await until(() => existsSync(lfile) && readFileSync(lfile, 'utf8').split('\n').filter(Boolean).length === 2 && readFileSync(lfile, 'utf8').startsWith('{"v":1,"kind":"session"'));
 const l1 = await wr.game(lid, '1');
 check(l1.status === 200 && l1.body.length === 0 && l1.headers['X-Log-Next'] === '0' && wr.running() === lid && !liveLog.some((x) => /REDACTION FAIL/.test(x)),
