@@ -45,6 +45,8 @@ import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
 import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExploreTag } from './playexplore.ts';
 import { humanDrafter, parsePicks, runHumanDraft, type Fallback } from './humanpicks.ts';
 import { FORGE_RANKS_WEIGHTS, forgeRanked, runForgeRanksDraft } from './drafters.ts';
+import { isShaped, runShapedDraft, shapePlan, SHAPE_RULES, SHAPES, type Shape, type ShapeExplore, type ShapeRules } from './shapes.ts';
+import { isCardFlow } from './cardflow.ts';
 import {
   cardTexts, claudeDraftModel, fakeDraftModel, LLM_PROMPT_VERSION, runLlmDraft, sumStats, themeSummary,
   type DraftModel, type LlmDraftStats, type LlmModelName, type LlmThinking,
@@ -98,7 +100,15 @@ export interface RunOptions {
   drafter?: RunDrafterOption;
   /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2); not part of the identity. */
   llmJobs?: number;
+  /** D446: each seat's shape (`--shape-a`, `--shape-b`) and the exploration share (`--shape-explore`); absent or all auto with share 0 = off, and the run is the old one. */
+  shapes?: RunShapes;
 }
+
+/** D446: the shapes a run's seats draft and build to. */
+export interface RunShapes { A: Shape; B: Shape; explore: ShapeExplore | null }
+
+/** Whether a run's shape options do anything (otherwise run.ts never enters shapes.ts: today's run, byte for byte). */
+export const shapesOn = (s: RunShapes | undefined | null): s is RunShapes => !!s && (s.A !== 'auto' || s.B !== 'auto' || (!!s.explore && s.explore.share > 0));
 
 /**
  * The drafter one seat is given (`--drafter`): D416's human pick model, or D439's forge-ranks seat or LLM.
@@ -180,7 +190,11 @@ export interface RunMeta {
   playExplore?: PlayExploreOptions;
   /** D416: the seat that drafted with the human pick model, its file, and how much of the cube the file covered. */
   drafter?: RunDrafter;
+  /** D446: the seats' shapes, the exploration share, the rules' numbers and the card-flow rule (absent: shapes off). */
+  shapes?: RunShapesMeta;
 }
+
+export interface RunShapesMeta { A: Shape; B: Shape; explore: ShapeExplore | null; rules: ShapeRules; flow: 'D446' }
 
 export type RunDrafter =
   | { kind: 'human-picks'; seat: 'A' | 'B'; file: string; sha: string; cards: number; covered: number; fallback: Fallback }
@@ -214,7 +228,7 @@ export function defaultRatings(cubeFile: string): string | null {
  * carries `ver` and its own `profiles`, so readers split by either.  Before D394 the mix sat here too,
  * which no flag could pass: night 4 (J096) failed every chunk on it.
  */
-export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore', 'drafter'] as const;
+export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore', 'drafter', 'shapes'] as const;
 
 /** The identity fields that differ between a folder's run.json and this run's meta (empty: the same population). */
 export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): string[] {
@@ -227,11 +241,12 @@ export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): stri
  * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
  * off it is the plain weights, so the version id of an ordinary run is what it always was.
  */
-export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number } | null }): unknown {
-  if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter) return w;
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number } | null; shapes?: RunShapesMeta | null }): unknown {
+  if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter && !x.shapes) return w;
   return {
     ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}),
     ...(x.drafter ? { drafter: drafterVersion(x.drafter) } : {}),
+    ...(x.shapes ? { shapes: x.shapes } : {}),
   };
 }
 
@@ -325,6 +340,18 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
         + `${d.seesOpponent ? 'the prompt lists the opponent\'s pool; ' : ''}two failed replies take the lab drafter's line; decisions kept in ${path.join(o.out, 'llm')}; seat ${seat === 'A' ? 'B' : 'A'} the lab drafter`);
     }
   }
+  let shapesMeta: RunShapesMeta | null = null;
+  if (shapesOn(o.shapes)) {
+    // D446: each seat drafts and builds to its shape; an auto seat may be forced by the exploration share.
+    const sh = o.shapes;
+    if (bridge || o.mixed || o.synergyFile || explore || o.drafter) throw new Error('shapes (D446) run on one cube with the lab drafter: no --bridge, --synergy, head-to-head, --explore or --drafter');
+    if (o.format !== 'grid') throw new Error('shapes (D446) are grid only');
+    const ex = sh.explore && sh.explore.share > 0 ? sh.explore : null;
+    draftOne = (seed) => runShapedDraft(lc, seed, o.weights, shapePlan(seed, { A: sh.A, B: sh.B }, ex ?? 0));
+    shapesMeta = { A: sh.A, B: sh.B, explore: ex, rules: SHAPE_RULES, flow: 'D446' };
+    say(`shapes (D446): seat A ${sh.A}, seat B ${sh.B}${ex ? `; each auto seat forced with probability ${ex.share} to a shape drawn by the weights ${SHAPES.map((x, i) => `${x} ${ex.weights[i]}`).join(', ')} (never both seats to one shape)` : ''}`);
+    if ([sh.A, sh.B].some((x) => !isShaped(x) && x !== 'auto')) say('shapes: two-colour is the lab drafter and builder exactly (the control arm)');
+  }
   const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
   if (playExplore) {
     if (o.games < 1) throw new Error('--play-explore explores games: it needs --games 1 or more');
@@ -346,6 +373,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(explore ? { explore } : {}),
     ...(playExplore ? { playExplore } : {}),
     ...(drafterMeta ? { drafter: drafterMeta } : {}),
+    ...(shapesMeta ? { shapes: shapesMeta } : {}),
   };
   const version = labVersion(env.repo, {
     cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
@@ -355,7 +383,8 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     // version change: refused unless --allow-version-change, and logged); off, the id is the old one.
     // D394: so does the profile mix (each line also carries its seats' `profiles`).
     // D416: the human-pick drafter changes the drafts, so its seat and file are part of the version; off, the id is the old one.
-    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null, drafter: drafterMeta }),
+    // D446: so do the shapes; off, the id is the old one.
+    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null, drafter: drafterMeta, shapes: shapesMeta }),
   });
   const metaFile = path.join(o.out, 'run.json');
   const jsonl = path.join(o.out, 'drafts.jsonl');
@@ -394,8 +423,12 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (o.recordEvery) fs.writeFileSync(cubeCopy, text);
   // What the report needs to know about each card, as this run saw it.
   const info: Record<string, CardInfo> = {};
+  // D446: with shapes on, each card-flow card is marked (cardflow.ts), so the shape measures can count a deck's.
+  const flowFacts = shapesMeta ? new Map((loaded?.facts ?? []).filter((f) => f.found && f.name).map((f) => [f.name as string, f])) : null;
   for (const c of lc.cards) {
     info[c.name] = { section: c.section, colors: c.colors, cmc: c.cmc, land: c.land, themes: c.themes, rating: c.rating, remAIDeck: c.remAIDeck, type: c.type };
+    const fact = flowFacts?.get(c.name);
+    if (fact && isCardFlow(fact)) info[c.name] = { ...info[c.name] as CardInfo, flow: true };
   }
   fs.writeFileSync(path.join(o.out, 'cards.json'), `${JSON.stringify(info, null, 1)}\n`);
 

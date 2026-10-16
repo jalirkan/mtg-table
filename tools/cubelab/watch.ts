@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   tools/cubelab.sh watch cubes/fair-fight-cube-180.md [--format grid] [--seed S] [--games 3]
-//       [--drafter-a lab|human-picks:<x.picks.json>] [--drafter-b ...]
+//       [--drafter-a lab|human-picks:<x.picks.json>] [--drafter-b ...] [--shape-a|--shape-b <shape>] (D446)
 //       [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>]
 //       [--ratings <tsv>] [--game-timeout <sec>]
 //
@@ -52,6 +52,7 @@ import { engineEnv, type EngineEnv } from './engine.ts';
 import { dckText } from './deck.ts';
 import { LINES } from './draft.ts';
 import { defaultRatings, runLab, sha, type DraftRecord, type RunMeta } from './run.ts';
+import { isShape, SHAPE_NAMES, type Shape } from './shapes.ts';
 import { DEFAULT_WEIGHTS } from './weights.ts';
 import { RESERVED_SEED_MIN, VERIFY_SEED_MIN } from './seeds.ts';
 
@@ -346,6 +347,8 @@ export interface WatchOptions {
   out: string;
   ratingsFile: string | null;
   gameTimeoutSec: number;
+  /** D446: the shapes the two seats draft and build to (absent: both auto, today's drafter and builder). */
+  shapes?: Record<Side, Shape>;
 }
 
 /** What a watch folder may hold; anything else and `watch` refuses to clear it. */
@@ -430,6 +433,7 @@ export async function watch(env: EngineEnv, o: WatchOptions, say: (s: string) =>
       profiles: [seatSpecOf(o.players.A), seatSpecOf(o.players.B)], ratingsFile: o.ratingsFile, record: 0, out: labOut,
       builder: 'lab', gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: DEFAULT_WEIGHTS,
       ...(human.length === 1 ? { drafter: { kind: 'human-picks' as const, file: (o.drafters[human[0] as Side]).slice('human-picks:'.length), seat: human[0] as Side } } : {}),
+      ...(o.shapes && (o.shapes.A !== 'auto' || o.shapes.B !== 'auto') ? { shapes: { A: o.shapes.A, B: o.shapes.B, explore: null } } : {}),
     }, (s) => say(`  lab: ${s}`));
     const lines = fs.readFileSync(path.join(labOut, 'drafts.jsonl'), 'utf8').split('\n').filter(Boolean);
     const rec = JSON.parse(lines.at(-1) as string) as DraftRecord;
@@ -551,6 +555,9 @@ export async function watchCommand(repo: string, cubeFile: string | undefined, f
     if (d !== 'lab' && !/^human-picks:.+/.test(d)) throw new Error(`--drafter-${s.toLowerCase()} is lab or human-picks:<x.picks.json>, got ${d}`);
   }
   if (drafters.A !== 'lab' && drafters.B !== 'lab') throw new Error('one seat at most drafts with human-picks (D416); the other is the lab drafter');
+  const shapes = { A: one('shape-a') ?? 'auto', B: one('shape-b') ?? 'auto' };
+  for (const s of ['A', 'B'] as const) if (!isShape(shapes[s])) throw new Error(`--shape-${s.toLowerCase()} is ${SHAPE_NAMES.join(', ')}; got ${shapes[s]}`);
+  if ((shapes.A !== 'auto' || shapes.B !== 'auto') && (drafters.A !== 'lab' || drafters.B !== 'lab')) throw new Error('--shape-a/-b shape the lab drafter (D446): not with --drafter-a/-b human-picks');
   const slug = path.basename(cubeFile, '.md').replace(/[^A-Za-z0-9._-]/g, '-');
   const out = one('out') ?? path.join('var/spectate', `watch-${slug}-${seed}`);
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(path.basename(path.resolve(out)))) throw new Error(`--out's folder name must be letters, digits, . _ - (got ${out})`);
@@ -558,5 +565,6 @@ export async function watchCommand(repo: string, cubeFile: string | undefined, f
   return watch(env, {
     cubeFile, seed, games, players, drafters, paceMs: num('pace', 600, 0, 60_000), out,
     ratingsFile: one('ratings') ?? defaultRatings(cubeFile), gameTimeoutSec: num('game-timeout', 300, 30, 3600),
+    ...(shapes.A !== 'auto' || shapes.B !== 'auto' ? { shapes: shapes as Record<Side, Shape> } : {}),
   }, say);
 }

@@ -14,6 +14,7 @@ import { aiChooser, gridDraft, winstonDraft, type DraftResult, type PickRecord }
 import type { ExploreRecord } from './explore.ts';
 import type { LlmDraftStats } from './llmdraft.ts';
 import type { PairTable } from './pairs.ts';
+import type { Shape } from './shapes.ts';
 import { initialRating } from './ratings.ts';
 import { rng } from './rng.ts';
 import type { Weights } from './weights.ts';
@@ -56,6 +57,10 @@ export interface DrafterOut {
   deck: DeckBuild | null;
   /** What the lab's deck checker says about `deck` (empty = legal). */
   deckErrors: string[];
+  /** D446, present whenever the run has shapes on: the shape this seat drafted and built to, whether the exploration forced it, and whether today's builder played because the shape had no build. */
+  shape?: Shape;
+  shapeForced?: boolean;
+  shapeFallback?: true;
 }
 
 export interface DraftOut {

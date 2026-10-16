@@ -85,13 +85,22 @@ export function thirdColourCards(spells: LabCard[], colors: string): number {
   return spells.length - best;
 }
 
-interface BuildOpts {
+export interface BuildOpts {
   maxSplash: number; eighteen: boolean; stretched: boolean;
   /** Learned pair synergy (`run --deck-synergy`, D301): a candidate gains its points with the spells already chosen, and the deck scores its pairs. */
   table?: PairTable;
+  /**
+   * D446's shaped builds only (shapes.ts); absent, the build is today's exactly.
+   *  - lands: `{ fixed: n }` plays n lands and 40 - n spells; `{ monoAt: x }` plays 16 lands and 24 spells, or 17 and 23
+   *    when those 24 average a mana value of x or more (or when only 23 are castable);
+   *  - minPerColour: every main colour is needed by at least this many spells, and every colour but the two with the most
+   *    pips has a source (a land or fixer making it); replaces the three-colour checks below;
+   *  - shapeScore: the score leaves out the two parts that choose a colour or land count (threeColour, eighteenLands).
+   */
+  shaped?: { lands: { fixed: number } | { monoAt: number }; minPerColour?: number; shapeScore: boolean };
 }
 
-function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weights, o: BuildOpts): DeckBuild | null {
+export function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weights, o: BuildOpts): DeckBuild | null {
   const { maxSplash } = o;
   const allowed = pair + (splash ?? '');
   // Candidates: castable in the pair, or a legal splash card of `splash`.
@@ -135,12 +144,28 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
   };
 
   let landCount = o.eighteen ? 18 : 17;
-  let chosen = choose(DECK_SIZE - landCount);
-  if (chosen.length < DECK_SIZE - landCount) return null;
-  const avg = chosen.reduce((s, x) => s + x.card.cmc, 0) / chosen.length;
-  if (!o.eighteen && avg <= w.sixteenLandsAt) {
-    const more = choose(24);
-    if (more.length === 24) { chosen = more; landCount = 16; }
+  let chosen: Candidate[];
+  const sh = o.shaped;
+  if (sh && 'fixed' in sh.lands) {
+    landCount = sh.lands.fixed;
+    chosen = choose(DECK_SIZE - landCount);
+    if (chosen.length < DECK_SIZE - landCount) return null;
+  } else if (sh && 'monoAt' in sh.lands) {
+    // D446 mono: 16 lands and 24 spells, or 17 and 23 when those 24 average monoAt or more (or only 23 exist)
+    const mono = sh.lands.monoAt;
+    chosen = choose(24);
+    if (chosen.length < 23) return null;
+    const avg24 = chosen.reduce((s, x) => s + x.card.cmc, 0) / chosen.length;
+    if (chosen.length === 24 && avg24 < mono) landCount = 16;
+    else { landCount = 17; chosen = choose(23); }
+  } else {
+    chosen = choose(DECK_SIZE - landCount);
+    if (chosen.length < DECK_SIZE - landCount) return null;
+    const avg = chosen.reduce((s, x) => s + x.card.cmc, 0) / chosen.length;
+    if (!o.eighteen && avg <= w.sixteenLandsAt) {
+      const more = choose(24);
+      if (more.length === 24) { chosen = more; landCount = 16; }
+    }
   }
   const spells = chosen.map((x) => x.card);
 
@@ -165,7 +190,15 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     if (need > 2) return null;                       // a splash on basics alone is not a splash
     if (need > 0) { basics[splash as Colour] = need; slots -= need; }
   }
-  if (pair.length === 3) {
+  if (sh?.minPerColour !== undefined) {
+    // D446: each main colour needed by minPerColour spells; every colour but the two with the most pips has a source
+    for (const k of pair) if (spells.filter((c) => (c.pips[k as Colour] ?? 0) > 0).length < sh.minPerColour) return null;
+    const byPips = [...pair].sort((a, b) => (pipW[b] ?? 0) - (pipW[a] ?? 0) || COLOURS.indexOf(a as Colour) - COLOURS.indexOf(b as Colour));
+    for (const k of byPips.slice(2)) {
+      const src = lands.filter((l) => makes(l, k)).length + spells.filter((c) => c.fixer && makes(c, k)).length;
+      if (src === 0) return null;
+    }
+  } else if (pair.length === 3) {
     for (const k of pair) {
       if (spells.every((c) => !(c.pips[k as Colour] ?? 0))) return null;     // a colour no spell uses: build the pair instead
       const src = lands.filter((l) => makes(l, k)).length + spells.filter((c) => c.fixer && makes(c, k)).length;
@@ -204,8 +237,8 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     curve: -w.deckCurve * curvePenalty,
     creatures: -w.deckCreatures * Math.max(0, w.creaturesMin - creatures),
     splash: -w.deckSplash * splashCards,
-    threeColour: -w.deckThreeColour * thirdColourCards(spells, pair),
-    eighteenLands: o.eighteen ? -w.deckEighteenLands : 0,
+    threeColour: sh?.shapeScore ? 0 : -w.deckThreeColour * thirdColourCards(spells, pair),
+    eighteenLands: o.eighteen && !sh?.shapeScore ? -w.deckEighteenLands : 0,
     ...(o.table ? { pairs: spells.reduce((s, c, i) => s + pairPoints(o.table, c.name, spells.slice(i + 1)), 0) / spells.length } : {}),
   };
   const score = Object.values(parts).reduce((s, x) => s + x, 0);
