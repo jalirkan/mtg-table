@@ -1,0 +1,79 @@
+==== J136 pilot3 started 2026-10-16T12:37:13-04:00 in unit lab-J136-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+cube lab evolve: cubes/omega-cube-180.md, pool cubes/library/library-pool.tsv, notes cubes/omega-notes.tsv, 1 generation(s) x 8 draft(s) from seed 188500001, 3 job(s), at most 6 swap(s) a generation, out var/lab-j136/pilot/evolve/omega, exploring 0.3 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+facts: booting the engine to look up 1592 cards ...
+facts: 2.8 s
+== generation 1/1: Omega — the greatest-hits cube, version 1 (180 cards, two-player) (180 cards), seeds 188500001-188500008
+exploring (D356): 0.3 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 8 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/8] seed 188500003: A:RG 0-1 B:WU  games B
+[2/8] seed 188500001: A:WU 0-1 B:BR+u  games B
+[3/8] seed 188500002: A:WU 1-0 B:WB  games A
+[4/8] seed 188500005: A:WG 0-1 B:RG  games B
+[5/8] seed 188500004: A:WU 1-0 B:BR+u  games A
+[6/8] seed 188500008: A:UB 0-1 B:RG  games B
+[7/8] seed 188500007: A:UG 0-1 B:WR  games B
+[8/8] seed 188500006: A:UR 1-0 B:WU  games A
+matches: 14 s for 8 (1.7 s a draft wall-clock on 3 worker(s))
+done in 14 s -> var/lab-j136/pilot/evolve/omega/gen-01/run/drafts.jsonl
+generation 1: 2 of 8 draft(s) explored (D356); the game rules read the other 6
+generation 1: Insufficient data: no card was confirmed at 8 drafts; 39 lead(s) to watch — about 80 drafts per generation would find half of them. Run more drafts. 28 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+done: var/lab-j136/pilot/evolve/omega/changelog.md, var/lab-j136/pilot/evolve/omega/index.html, var/lab-j136/pilot/evolve/omega/omega-cube-180.md
+var/lab-j136/notes-hits.tsv: 11 POWER, 42 NEVER-ADD; left in (in the input, judged by the data): Minsc & Boo, Timeless Heroes
+cube lab evolve: cubes/library/hits-180.md, pool cubes/library/library-pool.tsv, notes var/lab-j136/notes-hits.tsv, 1 generation(s) x 8 draft(s) from seed 188500001, 3 job(s), at most 6 swap(s) a generation, out var/lab-j136/pilot/evolve/hits, exploring 0.3 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+== generation 1/1: Library hits — the greatest hits by lab rating, version 1 (180 cards, two-player) (180 cards), seeds 188500001-188500008
+exploring (D356): 0.3 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 8 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/8] seed 188500001: A:WR 1-0 B:UB  games A
+[2/8] seed 188500003: A:UB+r 0-1 B:RG+u  games B
+[3/8] seed 188500002: A:UB+w 0-1 B:BR+g  games B
+[4/8] seed 188500006: A:WB+r 1-0 B:UR+w  games A
+[5/8] seed 188500005: A:RG 1-0 B:WB  games A
+[6/8] seed 188500007: A:WU 0-1 B:BR  games B
+[7/8] seed 188500008: A:UB+w 1-0 B:UR  games A
+[8/8] seed 188500004: A:UR+b 0-1 B:WU+b  games B
+matches: 14 s for 8 (1.7 s a draft wall-clock on 3 worker(s))
+done in 14 s -> var/lab-j136/pilot/evolve/hits/gen-01/run/drafts.jsonl
+generation 1: 2 of 8 draft(s) explored (D356); the game rules read the other 6
+generation 1: 4 swap(s): 4 by the notes; 34 more lead(s) are insufficient data. 47 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+  OUT Ancestral Recall (note-cut)  IN Miscalculation
+  OUT Mox Emerald (note-cut)  IN Chrome Mox
+  OUT Mox Jet (note-cut)  IN Grim Monolith
+  OUT Time Walk (note-cut)  IN Chart a Course
+done: var/lab-j136/pilot/evolve/hits/changelog.md, var/lab-j136/pilot/evolve/hits/index.html, var/lab-j136/pilot/evolve/hits/hits-180.md
+var/lab-j136/notes-random.tsv: 11 POWER, 40 NEVER-ADD; left in (in the input, judged by the data): Nadu, Winged Wisdom; Archon of Cruelty; Flash
+cube lab evolve: cubes/library/random-180.md, pool cubes/library/library-pool.tsv, notes var/lab-j136/notes-random.tsv, 1 generation(s) x 8 draft(s) from seed 188500001, 3 job(s), at most 6 swap(s) a generation, out var/lab-j136/pilot/evolve/random, exploring 0.3 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+== generation 1/1: Library random — the seeded control, version 1 (180 cards, two-player) (180 cards), seeds 188500001-188500008
+exploring (D356): 0.3 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 8 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/8] seed 188500003: A:UR+b 0-1 B:WU  games B
+[2/8] seed 188500001: A:UB+r 0-1 B:WR+u  games B
+[3/8] seed 188500004: A:WU 0-1 B:UB+w  games B
+[4/8] seed 188500002: A:UR+b 1-0 B:WB  games A
+[5/8] seed 188500006: A:UG+r 0-1 B:BR+u  games B
+[6/8] seed 188500005: A:UB+r 0-1 B:WU+g  games B
+[7/8] seed 188500007: A:WU 1-0 B:UB+g  games A
+[8/8] seed 188500008: A:WU+g 1-0 B:UB+w  games A
+matches: 15 s for 8 (1.9 s a draft wall-clock on 3 worker(s))
+done in 15 s -> var/lab-j136/pilot/evolve/random/gen-01/run/drafts.jsonl
+generation 1: 2 of 8 draft(s) explored (D356); the game rules read the other 6
+generation 1: 1 swap(s): 1 by the notes; 32 more lead(s) are insufficient data. 44 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+  OUT Mox Jet (note-cut)  IN Chrome Mox
+done: var/lab-j136/pilot/evolve/random/changelog.md, var/lab-j136/pilot/evolve/random/index.html, var/lab-j136/pilot/evolve/random/random-180.md
+var/lab-j136/notes-synergy.tsv: 11 POWER, 41 NEVER-ADD; left in (in the input, judged by the data): Faithless Looting; Archon of Cruelty
+cube lab evolve: var/lab-j136/cubes/synergy-v2-cube-180.md, pool cubes/library/library-pool.tsv, notes var/lab-j136/notes-synergy.tsv, 1 generation(s) x 8 draft(s) from seed 188500001, 3 job(s), at most 6 swap(s) a generation, out var/lab-j136/pilot/evolve/synergy, exploring 0.3 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+== generation 1/1: The Synergy Cube — version 2 (180 cards, two-player) (180 cards), seeds 188500001-188500008
+exploring (D356): 0.3 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 8 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/8] seed 188500001: A:BG 1-0 B:WU  games A
+[2/8] seed 188500002: A:WG 0-1 B:UR+g  games B
+[3/8] seed 188500003: A:WU 1-0 B:UR  games A
+[4/8] seed 188500006: A:UR+g 0-1 B:WU  games B
+[5/8] seed 188500004: A:UG+w 0-1 B:WG  games B
+[6/8] seed 188500005: A:BG 1-0 B:UG+w  games A
+[7/8] seed 188500008: A:UB+w 1-0 B:UR+g  games A
+[8/8] seed 188500007: A:UB 0-1 B:WU  games B
+matches: 17 s for 8 (2.1 s a draft wall-clock on 3 worker(s))
+done in 17 s -> var/lab-j136/pilot/evolve/synergy/gen-01/run/drafts.jsonl
+generation 1: 2 of 8 draft(s) explored (D356); the game rules read the other 6
+generation 1: Insufficient data: no card was confirmed at 8 drafts; 43 lead(s) to watch — about 78 drafts per generation would find half of them. Run more drafts. 27 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+done: var/lab-j136/pilot/evolve/synergy/changelog.md, var/lab-j136/pilot/evolve/synergy/index.html, var/lab-j136/pilot/evolve/synergy/synergy-v2-cube-180.md

@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-16T12:37:13-04:00",
- "heartbeat": "2026-10-16T12:37:13-04:00",
+ "updated": "2026-10-16T12:38:19-04:00",
+ "heartbeat": "2026-10-16T12:38:19-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.47,
-  "memUsedGb": 4.6,
+  "load1": 13.89,
+  "memUsedGb": 4.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 1905,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J136",
    "title": "The best 180 out of the whole library -- four candidate cubes (Omega, library hits by lab rating, a seeded random control, ForgeCoach's Synergy v2) compared on D439's measures: 400 grid drafts each on one seed block (836,000,001-836,000,400), then each evolved 2 generations x 200 drafts from the 1,592-card library pool (Omega with its own notes; the others cut the Power Nine, Sol Ring and Library of Alexandria wherever present and never add Omega's other 43 design exclusions; exploration on), then the four evolved cubes compared on a fresh block (836,100,001-836,100,400); best of three, Default vs Default, unrecorded; no verdict rule",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-10-16T12:34:12-04:00",
-   "elapsed": 182,
+   "elapsed": 247,
    "done": 0,
    "total": 4800,
    "unit": "drafts",
@@ -62,7 +62,7 @@
     "all.timeouts": 0,
     "base.written": 0,
     "bstrict": 0,
-    "elapsed_s": 131,
+    "elapsed_s": 196,
     "ev_hits.bridge_drafts": 0,
     "ev_hits.cpu_ms_per_turn": 0,
     "ev_hits.drafts": 0,
@@ -87,7 +87,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J136-pilot3"
+   "detail": "lab-J136-pilot4"
   }
  ],
  "queue": [
