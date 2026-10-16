@@ -6,7 +6,7 @@
 //                                       [--min-games 80] [--date YYYY-MM-DD]
 //
 // "The best 180 out of the whole library" (Justin, 2026-10-15): seed several candidate 180s by
-// different ideas, play each on the same seeds, evolve each, and compare them on D439's
+// different ideas, play each on the same seeds, evolve each, and compare them on D441's
 // pre-registered measures (`tools/cubelab.sh compare`).  This writes the candidates:
 //
 //   <out>/library-pool.tsv   THE LIBRARY: every card of every cube document ForgeCoach ships
