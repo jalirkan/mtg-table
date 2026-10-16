@@ -1,0 +1,43 @@
+==== J136 pilot1 started 2026-10-16T12:35:53-04:00 in unit lab-J136-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+1
+1
+✔ the flatness port gives ForgeCoach's numbers on its golden metas (77.760296ms)
+✔ compare's flatness from the drafts is the port on buildMeta's meta.json, exactly (102.703029ms)
+✔ spreadOf: a flat population of independent games reads near zero, a spread one near its truth (3.617967ms)
+✔ the measures read two synthetic populations back (30.76621ms)
+✔ the paired bootstrap: a known difference excludes 0, no difference holds 0 (448.821433ms)
+✔ every population must hold the same seeds (67.178822ms)
+✔ compare.json is numbers only, compare.md tables every measure, and a rule decides only past its margin (118.023365ms)
+✔ names and variants (0.350695ms)
+✔ readPopulation reads a run folder and leaves exploring drafts out (2.062289ms)
+✔ library-pool.tsv: one row a card, evolve reads it, unsupported cards marked (3.892227ms)
+✔ every candidate: 180 cards, no duplicates, supported, and evolve can write it back (4.647348ms)
+✔ hits-180 and random-180 fill Omega's skeleton exactly (1.720511ms)
+✔ hits-180 is the lab-rating rule on the committed pool; random-180 is seed 180 (18.35133ms)
+✔ synergy-v2-180 is ForgeCoach's version 2 with its provenance line (0.557296ms)
+✔ the selection: exact quotas, larger keys first, and a skeleton it cannot fill is refused (0.520496ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 949.497503
+var/lab-j136/cubes/synergy-v2-cube-180.md: OK
+ForgeCoach 3e3b007b6a6a46bfa80cafe729934e6874e63b38 public/cubes/synergy-cube-180.md (v2, sha256 OK)
+# The Synergy Cube — version 2 (180 cards, two-player)
+{"power":11,"never_add":43,"listed":54,"same_as_omega_notes":1,"power_named":11}
+cards listed    180
+in Forge's DB   180
+unsupported     0
+cards listed    180
+in Forge's DB   180
+unsupported     0
+cards listed    180
+in Forge's DB   180
+unsupported     0
+cards listed    180
+in Forge's DB   180
+unsupported     0
+{"cubes":4,"cubes_ok":4}
