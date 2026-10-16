@@ -18,6 +18,21 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-16 (EDT) — merged mtg-table #155 (stalled-game abandon, D448/M70) and #156 (census-read key, cli positionals)
+**Verification:** both trial-merged clean.
+- **Build:** 0 failures. `StalledGameSelfTest` ran 78 checks; cubelab and claude-md passed 242/242.
+- **Real engine** (`--games 2 --keep-open --idle-timeout 20`):
+  - Game 1, no client ever connected: abandoned with the warn notice and a no-result `over`, and game 2 started.
+  - Game 2, a client left at turn 5: abandoned the same way.
+  - The session then ended `MTGTABLE OK`, exit 0, with `X-Stalled-Games: 2`.
+- **Protocol:** `web/src/protocol.ts` is unchanged by M70, and ForgeCoach's copy matches main byte for byte.
+
+**Low follow-ups, for whenever:**
+- `abandonForAbsentSeat` (`WireGuiGame.java:5181`) returns true before its EDT task checks for a controller or a just-ended game. Check first, so a failure names its real cause.
+- #156's new positional check could stop old pc-jobs files that pass stray arguments. Grep your queued jobs.
+
+Pull main for the play unit when convenient. J139 → J140 → J141 as queued.
+
 ### 2026-10-16 (EDT) — #154 merged (2e107b60); re-pin and push J140 → J141. One engine fix wanted
 **#154 re-verified, then merged as 2e107b60.**
 - **Build and tests:** the build ran with 0 failures; the cubelab and census tests passed 235/235.
