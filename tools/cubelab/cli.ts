@@ -4,6 +4,9 @@
 //
 //   check   <cube.md>                       every card against the engine's database
 //   library-candidates --fc <ForgeCoach> [--out cubes/library] [--seed 180] [--min-games 80]   the library pool and its candidate 180s (library-candidates.ts)
+//   census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   the census's population (census.ts, D445)
+//   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
+//           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
 //   ratings apply <cube.md> --from <evolve-dir|changelog.md> --rule explore-eb --out <tsv> [--base <tsv>] [--report <md>]
 //           raise the low-rated cards exploration found holding their own (D360, raisecmd.ts)
@@ -108,6 +111,9 @@ function usage(msg?: string): never {
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
        tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|human-picks:<f>] [--drafter-b ...]
                         [--player-a <Profile>|search] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]   (D440)
+       tools/cubelab.sh census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   (D445, no engine)
+       tools/cubelab.sh sample --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff>
+                        --seed S --count N --out <dir> [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   (D445, no engine)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
@@ -123,7 +129,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -359,6 +365,8 @@ async function main(): Promise<number> {
   switch (cmd) {
     case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
     case 'library-candidates': return (await import('./library-candidates.ts')).libraryCandidates(REPO, f, say);   // the library pool and its candidate 180s (J136)
+    case 'census': return (await import('./census.ts')).censusCommand(REPO, pos, f, say);   // the library census's population (D445)
+    case 'sample': return (await import('./sample.ts')).sampleCommand(REPO, f, say);   // the census's stratified cubes (D445)
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');
