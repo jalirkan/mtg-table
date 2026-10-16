@@ -1,4 +1,4 @@
-# cube lab ratings for: The Synergy Cube — version 1 (180 cards, two-player)
+# cube lab ratings for: The Synergy Cube — version 3 (2026-10-17), 180 cards, two-player
 # Seeded by `tools/cubelab.sh ratings init` from Forge's draft ranks (CardRanker.getRawScore of the
 # best-ranked printing; source cube = CubeCobra's list, set = that set's rank file). A card Forge has no
 # rank for starts at 40. Edit the rating column; the other two say where it started.
@@ -17,25 +17,23 @@ Ephemerate	22.9	22.9	set:STA
 Blade Splicer	63	63	cube:NPH
 Intangible Virtue	26.2	26.2	set:CNS
 Battle Screech	73.4	73.4	cube:DMR
-Adeline, Resplendent Cathar	92.7	92.7	cube:FCA
-Welcoming Vampire	80.5	80.5	cube:VOW
+Militia Bugler	61.6	61.6	cube:M19
+Kor Skyfisher	90.4	90.4	cube:ZEN
 Brimaz, King of Oreskos	76.1	76.1	cube:BNG
 Swords to Plowshares	99.4	99.4	cube:C16
 Prismatic Ending	57.8	57.8	cube:MH2
 March of Otherworldly Light	30.6	30.6	set:NEO
 Sun Titan	64.8	64.8	cube:M11
-Elspeth, Sun's Champion	91.3	91.3	cube:THS
+Serra Paragon	49.5	49.5	set:DMU
 Mentor of the Meek	66.3	66.3	cube:E01
 Reveillark	49	49	set:MOR
 Opt	82.3	82.3	cube:M21
-Consider	94.9	94.9	cube:PIO
-Brainstorm	85	85	cube:C15
-Ponder	98.1	98.1	cube:MAR
+Tolarian Terror	57.9	57.9	cube:DMU
+Brazen Borrower	71.4	71.4	cube:ELD
+Sower of Temptation	95.7	95.7	cube:LRW
 Thought Scour	80.4	80.4	cube:2X2
 Delver of Secrets	19.7	19.7	set:ISD
-Ledger Shredder	72.4	72.4	cube:SPG
 Snapcaster Mage	98.3	98.3	cube:UMA
-Man-o'-War	86.9	86.9	cube:DMR
 Mulldrifter	71.5	71.5	cube:2X2
 Phantasmal Image	68.2	68.2	cube:SPG
 Thieving Skydiver	52.8	52.8	cube:ZNR
@@ -47,7 +45,7 @@ Champion of Wits	68.4	68.4	cube:HOU
 Mana Leak	98.6	98.6	cube:STH
 Remand	98.8	98.8	cube:MM2
 Unsummon	39.8	39.8	set:6ED
-Deep Analysis	94.5	94.5	cube:TOR
+Mist Raven	82.8	82.8	cube:AVR
 Torrential Gearhulk	70.9	70.9	cube:MPS_KLD
 Watcher for Tomorrow	31.3	31.3	set:MH1
 Jace, Vryn's Prodigy	98	98	cube:PIO
@@ -75,6 +73,8 @@ Midnight Reaper	47.4	47.4	set:RVR
 Archon of Cruelty	98.5	98.5	cube:MH2
 Marionette Master	44.8	44.8	set:KLD
 Ophiomancer	91.2	91.2	cube:MH3
+Yawgmoth, Thran Physician	55.9	55.9	cube:DMR
+Reanimate	99	99	cube:ARC
 Monastery Swiftspear	87.2	87.2	cube:PIO
 Soul-Scar Mage	9.4	9.4	set:AKH
 Young Pyromancer	42.4	42.4	set:2X2
@@ -129,6 +129,7 @@ Prized Amalgam	35.6	35.6	set:SIR
 Baleful Strix	54	54	cube:E01
 Mayhem Devil	33.9	33.9	set:WAR
 Juri, Master of the Revue	13.6	13.6	set:MUL
+Murderous Redcap	85.8	85.8	cube:SHM
 Grumgully, the Generous	40.7	40.7	set:ELD
 Omnath, Locus of Rage	47.4	47.4	set:BFZ
 Conclave Mentor	41.8	41.8	set:2X2
@@ -142,7 +143,7 @@ Grist, the Hunger Tide	51.5	51.5	cube:MH2
 Lightning Helix	80.7	80.7	cube:RAV
 Showdown of the Skalds	45.1	45.1	set:KHM
 Risen Reef	88.4	88.4	cube:SPG
-Lonis, Cryptozoologist	38.8	38.8	set:MH2
+Uro, Titan of Nature's Wrath	54.2	54.2	cube:THB
 Walking Ballista	84.5	84.5	cube:2XM
 Hangarback Walker	52	52	cube:MPS_KLD
 Smuggler's Copter	49.3	49.3	set:FCA
@@ -157,7 +158,6 @@ Shadowspear	83	83	cube:THB
 Mind Stone	60.4	60.4	cube:C14
 Prophetic Prism	90.5	90.5	cube:WOE
 Candy Trail	57.9	57.9	cube:WOE
-Skullclamp	99.1	99.1	cube:DST
 Cranial Plating	54.9	54.9	cube:5DN
 Solemn Simulacrum	54.7	54.7	cube:MPS_KLD
 Lotus Petal	98.7	98.7	cube:MPS_KLD

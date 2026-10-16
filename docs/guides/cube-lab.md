@@ -905,9 +905,11 @@ tools/cubelab.sh library-candidates --fc ~/code/ForgeCoach [--out cubes/library]
   ones out would make it a selected cube. The hits hold none and Omega none by design, and the lab's
   default weights do not mark the flag down (`remAIDeck: 0`), so Forge's AI may play those three
   poorly in random-180's games: a difference against the control includes those 3 slots of 180.
-- **`synergy-v2-180.md`**: ForgeCoach's current Synergy Cube, copied with one provenance line under its
-  title, for reference. J136 does not read it: its Synergy population is ForgeCoach's v2 only, copied from
-  its pinned clone and checked by sha256. Synergy v2 against a v3 is a separate job, J137.
+- **`synergy-v2-180.md`**: ForgeCoach's Synergy Cube as it was then, version 2, copied with one provenance
+  line under its title, for reference. J136 does not read it: its Synergy population is ForgeCoach's v2 only,
+  copied from its pinned clone and checked by sha256. Synergy v2 against a v3 is a separate job, J137.
+  Version 3 shipped after J137 ([D449](../decisions/D449-synergy-v3-shipped.md)) and is
+  `cubes/synergy-cube-180.md`; this file stays as v2's reference.
 - Omega is used as it is, `cubes/omega-cube-180.md`.
 
 **Omega's skeleton**, for the two that are drawn: 24 mono-coloured nonland cards a colour, 2 gold cards a
