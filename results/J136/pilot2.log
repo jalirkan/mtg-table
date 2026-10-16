@@ -1,0 +1,55 @@
+==== J136 pilot2 started 2026-10-16T12:36:06-04:00 in unit lab-J136-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+cube lab compare: omega, hits, random, synergy; 4 draft(s) each from seed 836900001 (the same block for every population); out var/lab-j136/pilot/baseline
+== population omega: cubes/omega-cube-180.md
+cube lab: cubes/omega-cube-180.md, grid, 4 draft(s) from seed 836900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/baseline/runs/omega
+drafted and built 4 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/4] seed 836900002: A:UR 1-2 B:WG  games BAB
+[2/4] seed 836900003: A:WU 2-0 B:BG  games AA
+[3/4] seed 836900001: A:WG+b 1-2 B:WU  games ABB
+[4/4] seed 836900004: A:WG 1-2 B:UR  games ABB
+matches: 19 s for 4 (4.7 s a draft wall-clock on 3 worker(s))
+done in 19 s -> var/lab-j136/pilot/baseline/runs/omega/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/baseline/runs/omega
+== population hits: cubes/library/hits-180.md
+cube lab: cubes/library/hits-180.md, grid, 4 draft(s) from seed 836900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/baseline/runs/hits
+drafted and built 4 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/4] seed 836900002: A:UB 0-2 B:UR  games BB
+[2/4] seed 836900001: A:WB 0-2 B:UR  games BB
+[3/4] seed 836900003: A:BR 1-2 B:WU  games ABB
+[4/4] seed 836900004: A:UB+r 2-0 B:RG+u  games AA
+matches: 12 s for 4 (3.0 s a draft wall-clock on 3 worker(s))
+done in 12 s -> var/lab-j136/pilot/baseline/runs/hits/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/baseline/runs/hits
+== population random: cubes/library/random-180.md
+cube lab: cubes/library/random-180.md, grid, 4 draft(s) from seed 836900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/baseline/runs/random
+drafted and built 4 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/4] seed 836900003: A:UB+r 2-0 B:WU+g  games AA
+[2/4] seed 836900001: A:UB 2-1 B:WU+b  games BAA
+[3/4] seed 836900002: A:BG+u 0-2 B:WU  games BB
+[4/4] seed 836900004: A:BR+u 2-0 B:WU+r  games AA
+matches: 13 s for 4 (3.3 s a draft wall-clock on 3 worker(s))
+done in 13 s -> var/lab-j136/pilot/baseline/runs/random/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/baseline/runs/random
+== population synergy: var/lab-j136/cubes/synergy-v2-cube-180.md
+cube lab: var/lab-j136/cubes/synergy-v2-cube-180.md, grid, 4 draft(s) from seed 836900001, best of 3, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/lab-j136/pilot/baseline/runs/synergy
+drafted and built 4 draft(s) in 0.0 s; playing best of 3 each on 3 worker(s)
+[1/4] seed 836900003: A:WR+u 1-2 B:WU  games BAB
+[2/4] seed 836900001: A:WU 2-1 B:UB  games BAA
+[3/4] seed 836900004: A:WU 2-0 B:BG  games AA
+[4/4] seed 836900002: A:WU 1-2 B:UB+g  games BAB
+matches: 17 s for 4 (4.3 s a draft wall-clock on 3 worker(s))
+done in 17 s -> var/lab-j136/pilot/baseline/runs/synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j136/pilot/baseline/runs/synergy
+same seeds in every population: 4 (836900001..836900004)
+flatness          omega 0.00 [0.00, 8.34]   hits - [0.00, 13.47]   random - [0.00, 15.96]   synergy 0.00 [0.00, 14.62]
+pair_spread       omega -   hits -   random -   synergy -
+pair_within5      omega -   hits -   random -   synergy -
+draw_rate         omega 0.00 [0.00, 0.00]   hits 0.00 [0.00, 0.00]   random 0.00 [0.00, 0.00]   synergy 0.00 [0.00, 0.00]
+timeout_rate      omega 0.00 [0.00, 0.00]   hits 0.00 [0.00, 0.00]   random 0.00 [0.00, 0.00]   synergy 0.00 [0.00, 0.00]
+game_turns        omega 20.00 [16.58, 24.79]   hits 14.44 [12.80, 16.50]   random 17.44 [15.50, 19.00]   synergy 18.18 [16.75, 20.00]
+lands             omega 17.000 [17.000, 17.000]   hits 17.000 [17.000, 17.000]   random 17.000 [17.000, 17.000]   synergy 16.500 [16.125, 16.875]
+colours           omega 2.125 [2.000, 2.375]   hits 2.250 [2.000, 2.750]   random 2.750 [2.500, 3.000]   synergy 2.250 [2.000, 2.500]
+two_colour        omega 100.0 [100.0, 100.0]   hits 100.0 [100.0, 100.0]   random 100.0 [100.0, 100.0]   synergy 100.0 [100.0, 100.0]
+splash            omega 12.5 [0.0, 37.5]   hits 25.0 [0.0, 75.0]   random 75.0 [50.0, 100.0]   synergy 25.0 [0.0, 50.0]
+first_pick_top10  omega 14.8 [12.3, 16.0]   hits 14.4 [11.5, 15.6]   random 17.6 [16.8, 17.7]   synergy 15.7 [13.5, 16.2]
+wrote var/lab-j136/pilot/baseline/compare.json and var/lab-j136/pilot/baseline/compare.md
