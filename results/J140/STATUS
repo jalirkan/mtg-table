@@ -3,6 +3,7 @@ runner: forgecoach-runner 10896b8e
 started: 2026-10-17T02:49:17-04:00
 phase: commands 1/2
 mtg-table: 2e107b6
-workers: 5 (sized 5: min(cores 7, memory 8, max_workers 7, cap 5); peak 2.15 GB per worker (measured), budget 21.4 GB)
+workers: 4 (sized 5: min(cores 7, memory 8, max_workers 7, cap 5); peak 2.15 GB per worker (measured), budget 21.4 GB)
 peak_worker_rss_gb: 2.15
 resumed: 2026-10-17T02:49:17-04:00: retry after "memory: step run1 was killed without an exit code (oomd or the OOM killer?)"; the pilot had passed; starts again at run1; the tools skip what is done
+pressure-1: 2026-10-17T08:19:56-04:00 drop to 4 worker(s): some avg10 0.0%, swap-in 5682/s, job 7.2/21.4 GB
