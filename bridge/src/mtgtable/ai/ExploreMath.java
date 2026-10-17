@@ -259,7 +259,7 @@ public final class ExploreMath {
         return failures;
     }
 
-    /** D451: a guardrail decided ({@code land}, {@code keep}) or removed an option ({@code noPassMain1}, {@code noRepeatNoOp}). */
+    /** D451: a guardrail decided ({@code land}, {@code keep}) or removed an option ({@code noRepeatNoOp}). */
     public void guardrail(final String name) {
         guardrails.merge(name, 1, Integer::sum);
     }

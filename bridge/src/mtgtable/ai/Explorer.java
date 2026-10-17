@@ -34,7 +34,6 @@ import forge.game.card.Card;
 import forge.game.card.CardCollection;
 import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
-import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.TargetChoices;
@@ -85,9 +84,8 @@ import forge.game.zone.ZoneType;
  * The attack, the blocks and each single target are random as above; mana
  * payment, costs, modes and other choices stay Forge's.  Its guardrails are
  * mechanical, never strategy: (G1) a legal land drop is always taken, uniformly
- * among the lands; (G2) the seat never passes in its own first main phase with
- * the stack empty while a land drop is pending -- implied by G1 here, and
- * counted as a check; (G3) a pure no-op is never repeated twice in a row: an
+ * among the lands -- which also means (G2) it never passes while a land drop
+ * is pending, so G2 has no code of its own; (G3) a pure no-op is never repeated twice in a row: an
  * activated ability whose resolution left the public state unchanged
  * ({@link #fingerprint}) is not offered at the seat's next decision with the
  * stack empty; (G4) the opening hand is always kept.  The turn cap is the
@@ -192,11 +190,8 @@ public final class Explorer {
                 mark = new Decision.Explore("random", forgeTok);
                 return new ArrayList<>(opts.get(tok));
             }
-            final boolean main1 = g.getPhaseHandler().isPlayerTurn(ai) && g.getPhaseHandler().is(PhaseType.MAIN1) && stackEmpty;
-            if (main1 && ai.getLandsPlayedThisTurn() == 0 && !lands.isEmpty()) {
-                math.guardrail("noPassMain1");   // G2: unreachable after G1; counted if it ever is not
-                opts.remove("pass");
-            }
+            // G2 ("no pass in main 1 while a land drop is pending") is G1 itself: any pending land drop
+            // was taken just above, so no separate rule or counter (the #161 review: it never fired).
             if (banned != null && opts.size() > 1 && opts.remove(banned) != null) {
                 math.guardrail("noRepeatNoOp");
             }

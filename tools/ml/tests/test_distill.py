@@ -152,6 +152,29 @@ class TestReader(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    def test_atlas_games_are_never_read(self) -> None:
+        # D451 (#161 review): a begin line marked notForTraining bars its game, even its `search` rows
+        lay = layout()
+        d = tempfile.mkdtemp()
+        try:
+            rng = random.Random(4)
+            g = planted_game(rng, lay, "atlasB:451", 3)
+            h = planted_game(rng, lay, "census:9", 2)
+            for r in g + h:
+                r["policy"] = "search"
+            write_rows(os.path.join(d, "rows-1.jsonl"), [
+                header(lay), {"type": "begin", "game": "atlasB:451", "seed": 451, "notForTraining": "D451 move atlas"}, *g,
+                {"type": "end", "game": "atlasB:451", "ok": True},
+                {"type": "begin", "game": "census:9", "seed": 9}, *h, {"type": "end", "game": "census:9", "ok": True}])
+            r = X.read_rows([d])
+            self.assertEqual(sum(len(v) for v in r["rows"].values()), 2, "only the census game's rows")
+            self.assertEqual(r["notes"]["gamesNotForTraining"], 1)
+            self.assertEqual(r["notes"]["gamesEnded"], 1)
+            st = X.stats([d], NAMES)
+            self.assertEqual((st["games"], st["rows"], st["notForTraining"]), (1, 2, 1), st)
+        finally:
+            shutil.rmtree(d)
+
     def test_same_key_in_two_folders_is_two_games(self) -> None:
         """Two cubes drafted at the same seed give the same lab key; their folders keep them apart (the J126 dry run)."""
         lay = layout()

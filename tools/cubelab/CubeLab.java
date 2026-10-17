@@ -716,6 +716,10 @@ public final class CubeLab {
         u.lab.put("atlas", str(a, "run"));
         u.lab.put("match", id);
         u.lab.put("atlasSeed", u.seed);
+        if (str(a, "notForTraining") != null) {
+            // D451: every branch's begin line and frame-log header says it is never training data
+            u.lab.put("notForTraining", str(a, "notForTraining"));
+        }
         return u;
     }
 
@@ -857,6 +861,8 @@ public final class CubeLab {
             lab.put("onPlay", aOnPlay ? "A" : "B");
             // D341's lab version and D347's seat specs: which code and which AI styles made this game.
             if (str(rec, "ver") != null) lab.put("ver", str(rec, "ver"));
+            // D451: a recording made to measure, never to train on (the atlas); every builder skips it
+            if (str(rec, "notForTraining") != null) lab.put("notForTraining", str(rec, "notForTraining"));
             lab.put("seatA", specA.text);
             lab.put("seatB", specB.text);
             this.name = str(rec, "name");

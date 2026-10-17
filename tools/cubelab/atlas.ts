@@ -45,7 +45,7 @@ import path from 'node:path';
 import { engineEnv, runPool, type MatchJob, type MatchResult, type RecordSpec } from './engine.ts';
 import type { PlayExploreTag } from './playexplore.ts';
 import { fileLines } from './lines.ts';
-import { labPath, shownPath } from './labdata.ts';
+import { labPath, recipePath, shownPath } from './labdata.ts';
 import { checkRowsDir, readMaybeGz } from './rowscheck.ts';
 import { redactionCheck, type Ledger } from './censusplay.ts';
 import {
@@ -98,8 +98,16 @@ function baseJob(o: AtlasOptions, id: string, seed: number, timeoutSec: number):
 
 const deckName = (f: string): string => path.basename(f, '.dck');
 
+/**
+ * The #161 review: an atlas game is random play, a forced option or a redealt hand -- never Forge's
+ * own play, whatever its decks.  Every frame-log header (`lab.notForTraining`) and every rows `begin`
+ * line of an atlas carries this, and every dataset builder skips a game that does
+ * (tools/ml/reserved.py's not_for_training; distill.py for rows).
+ */
+export const ATLAS_NOT_FOR_TRAINING = 'D451 move atlas: random seats, forced options, redealt hidden cards';
+
 function recordBlock(dir: string, name: string, run: string, o: AtlasOptions, extra: Record<string, unknown>): RecordSpec & Record<string, unknown> {
-  return { dir, rel: path.basename(dir), run, cube: '', cubeFile: '', cubeSha: '', format: 'atlas', deckNameA: deckName(o.deckA), deckNameB: deckName(o.deckB), name, atlas: extra };
+  return { dir, rel: path.basename(dir), run, cube: '', cubeFile: '', cubeSha: '', format: 'atlas', deckNameA: deckName(o.deckA), deckNameB: deckName(o.deckB), name, atlas: extra, notForTraining: ATLAS_NOT_FOR_TRAINING };
 }
 
 /** Phase A's job for rollout g (1-based). */
@@ -109,7 +117,7 @@ export function rolloutJob(repo: string, o: AtlasOptions, out: string, g: number
   return {
     ...baseJob(o, `a${g}`, seed, 1800),
     playExplore: { random: true, epsilon: 1, closeCall: 0, opening: false } as unknown as PlayExploreTag,   // D451: the random seat
-    rows: { dir: path.join(A, 'rows'), key: `atlasA:${seed}`, begin: { source: 'atlas-a', g, seed, a: deckName(o.deckA), b: deckName(o.deckB), deckFileA: shownPath(repo, o.deckA), deckFileB: shownPath(repo, o.deckB), policyA: 'random', policyB: 'random', turnCap: o.turnCap } },
+    rows: { dir: path.join(A, 'rows'), key: `atlasA:${seed}`, begin: { source: 'atlas-a', g, seed, a: deckName(o.deckA), b: deckName(o.deckB), deckFileA: recipePath(repo, o.deckA), deckFileB: recipePath(repo, o.deckB), policyA: 'random', policyB: 'random', turnCap: o.turnCap, notForTraining: ATLAS_NOT_FOR_TRAINING } },
     ledger: true,
     record: recordBlock(path.join(A, 'frames'), `g${g}`, path.basename(out), o, { phase: 'A', seed, g }),
   };
@@ -121,7 +129,7 @@ export function baselineJob(repo: string, o: AtlasOptions, out: string): MatchJo
   return {
     ...baseJob(o, 'baseline', o.seed, 1800),
     atlas: { decision: -1, cands: o.options, run: path.basename(out), turnCap: o.turnCap, seed: o.seed },
-    rows: { dir: path.join(B, 'rows'), key: `atlasB:${o.seed}`, begin: { source: 'atlas-baseline', seed: o.seed, a: deckName(o.deckA), b: deckName(o.deckB), deckFileA: shownPath(repo, o.deckA), deckFileB: shownPath(repo, o.deckB), policyA: 'plain', policyB: 'plain', turnCap: o.turnCap } },
+    rows: { dir: path.join(B, 'rows'), key: `atlasB:${o.seed}`, begin: { source: 'atlas-baseline', seed: o.seed, a: deckName(o.deckA), b: deckName(o.deckB), deckFileA: recipePath(repo, o.deckA), deckFileB: recipePath(repo, o.deckB), policyA: 'plain', policyB: 'plain', turnCap: o.turnCap, notForTraining: ATLAS_NOT_FOR_TRAINING } },
     ledger: true,
     record: recordBlock(path.join(B, 'frames'), 'baseline', path.basename(out), o, { phase: 'B', seed: o.seed }),
   };
@@ -154,6 +162,7 @@ export function unitJob(o: AtlasOptions, out: string, u: Unit, listing: Decision
       decision: u.d, continuation: u.c, i0: u.i0, i1: u.i1, seed: o.seed, expect: listing.tokens, cands: o.options, run: path.basename(out),
       turnCap: o.turnCap, branchTimeoutSec: o.branchTimeoutSec, rowsDir: path.join(B, 'rows'), framesDir: path.join(B, 'frames'),
       deckNameA: deckName(o.deckA), deckNameB: deckName(o.deckB), leakChecks: u.i0 === 0 ? o.leakChecks : 0,
+      notForTraining: ATLAS_NOT_FOR_TRAINING,
     },
   };
 }
@@ -337,7 +346,7 @@ export interface GuardrailCheck { logs: number; priority: number; landOffered: n
 /**
  * D451's guardrails, read back from a random seat's own frame log (its D347 decision records): G1, every
  * priority decision that offered a land (`land:<id>` among the legal options) was answered with a land;
- * G4, every opening-hand decision was `keep`.  (G2 is implied by G1; G3 needs the engine's fingerprint and
+ * G4, every opening-hand decision was `keep`.  (G2 is G1 itself, with no code of its own; G3 needs the engine's fingerprint and
  * is counted by the worker, `noRepeatNoOp`.)  `where` names the log in a violation.
  */
 export function guardrailCheck(text: string, where: string, out: GuardrailCheck): void {
@@ -585,15 +594,22 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
  * every fork was the position, every no-leak check stayed put while its negative control moved, the
  * guardrails read back clean, every rows file and frame log passed, and both decisions have both maps.
  */
+/**
+ * The self-test's folder: ABSOLUTE, so LAB_DATA_DIR never re-roots it (D450 moves only relative var/
+ * paths) -- the folder it clears is the folder it writes, always the repo's (the #161 review: it cleared
+ * the repo path and wrote under the drive, so a drive run kept stale output).
+ */
+export const atlasSelftestDir = (repo: string): string => path.resolve(repo, 'var/cubelab/atlas-selftest');
+
 export async function atlasSelftest(repo: string, f: Map<string, string[]>, say: (s: string) => void): Promise<number> {
-  const out = 'var/cubelab/atlas-selftest';
-  fs.rmSync(path.resolve(repo, out), { recursive: true, force: true });
+  const out = atlasSelftestDir(repo);
+  fs.rmSync(out, { recursive: true, force: true });
   const flags = new Map<string, string[]>([
     ['deck-a', ['decks/pacho-shield.dck']], ['deck-b', ['decks/doom-legion.dck']], ['seed', ['4515']], ['rollouts', ['2']], ['decisions', ['2']],
     ['branch-random', ['2']], ['branch-forge', ['2']], ['chunk', ['2']], ['leak-checks', ['2']], ['boot', ['200']], ['jobs', [f.get('jobs')?.at(-1) ?? '2']], ['out', [out]],
   ]);
   const rc = await atlasCommand(repo, flags, say);
-  const doc = JSON.parse(fs.readFileSync(path.join(labPath(repo, out, 'read'), 'atlas.json'), 'utf8')) as {
+  const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as {
     checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number }; problems: string[]; frameLogs: number; rows: number };
     phaseA: { played: number }; phaseB: { decisions: Array<{ complete: boolean }> } | null;
   };

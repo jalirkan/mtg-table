@@ -110,6 +110,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import encode as E  # noqa: E402
 import gates as G  # noqa: E402
 import policy_data as P  # noqa: E402
+import reserved as R  # noqa: E402
 
 Z95 = 1.959963984540054
 LEAF_SCALE = 500.0          # SearchPolicy.LEAF_SCALE (D349): the search's win estimate is sigma(leaf / 500)
@@ -450,6 +451,9 @@ def read_records(logs: list[str], policy: str, max_games: int | None, extra_tags
         h = first_header(f)
         if h is None:
             counts["logs: no session header"] += 1
+            continue
+        if R.not_for_training(h):
+            counts[f"logs: {R.NOT_FOR_TRAINING}"] += 1   # D451: a move-atlas game
             continue
         if policy != "any" and seat_policy(h) != policy:
             counts[f"logs: seat policy is not {policy}"] += 1

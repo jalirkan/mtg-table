@@ -70,6 +70,9 @@ import sys
 import time
 from typing import Any, Iterable
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import reserved as R  # noqa: E402  (D451's not_for_training, in one place)
+
 try:
     import numpy as np
 except ImportError:  # pragma: no cover - the CLI says so
@@ -122,11 +125,13 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
     header: dict[str, Any] | None = None
     kept: dict[str, list[dict[str, Any]]] = {k: [] for k in KINDS}
     notes = {"files": 0, "tornLines": 0, "gamesEnded": 0, "gamesNotOk": 0, "gamesUnended": 0,
-             "gamesDuplicate": 0, "rowsUnended": 0, "rowsOtherKind": 0, "rowsOtherPolicy": 0}
+             "gamesDuplicate": 0, "rowsUnended": 0, "rowsOtherKind": 0, "rowsOtherPolicy": 0,
+             "gamesNotForTraining": 0}
     seen_games: set[str] = set()
     for scope, f in row_files(paths):
         notes["files"] += 1
         pending: dict[str, list[dict[str, Any]]] = {}
+        barred: set[str] = set()   # D451: games whose begin line says notForTraining (the move atlas)
         with open(f, encoding="utf-8") as fh:
             lines = fh.read().split("\n")
         for i, line in enumerate(lines):
@@ -148,6 +153,12 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
                     raise SystemExit(f"distill: {f} was written with another layout ({h['featureVersion']}, "
                                      f"{h['stateSchemaId']}) than the first file ({header['featureVersion']}, "
                                      f"{header['stateSchemaId']})")
+            elif t == "begin":
+                g = f"{scope}|{o.get('game')}"
+                if R.not_for_training(o):
+                    barred.add(g)
+                else:
+                    barred.discard(g)   # a retried game's later run is judged by its own begin line
             elif t == "row":
                 if o.get("kind") not in KINDS:
                     notes["rowsOtherKind"] += 1
@@ -161,6 +172,9 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
             elif t == "end":
                 g = f"{scope}|{o.get('game')}"
                 rows = pending.pop(g, [])
+                if g in barred:
+                    notes["gamesNotForTraining"] += 1
+                    continue
                 if not o.get("ok", False):
                     notes["gamesNotOk"] += 1
                     continue
@@ -620,12 +634,14 @@ def stats(paths: Iterable[str], names_file: str | None = None) -> dict[str, Any]
     """Counts over rows files, streamed (standard library): ended games, rows by kind, fallbacks, the layout, and
     whether the layout is names.json's (the one DistillSelfTest holds the Java side to)."""
     out: dict[str, Any] = {"files": 0, "games": 0, "gamesNotOk": 0, "unended": 0, "p": 0, "a": 0, "b": 0,
-                           "fallback": 0, "overrode": 0, "msSum": 0.0, "layouts": 0, "layoutOk": 0, "duplicate": 0}
+                           "fallback": 0, "overrode": 0, "msSum": 0.0, "layouts": 0, "layoutOk": 0, "duplicate": 0,
+                           "notForTraining": 0}
     layouts = set()
     seen: set[str] = set()
     for scope, f in row_files(paths):
         out["files"] += 1
         pending: dict[str, list[tuple[str, bool, bool, float]]] = {}
+        barred: set[str] = set()   # D451
         with open(f, encoding="utf-8") as fh:
             for line in fh:
                 if not line.strip():
@@ -638,12 +654,18 @@ def stats(paths: Iterable[str], names_file: str | None = None) -> dict[str, Any]
                 if t == "header":
                     layouts.add((o.get("featureVersion"), o.get("stateSchemaId"), o.get("stateSize"),
                                  json.dumps(o.get("cand"), sort_keys=True)))
+                elif t == "begin":
+                    g = f"{scope}|{o.get('game')}"
+                    (barred.add if R.not_for_training(o) else barred.discard)(g)
                 elif t == "row" and o.get("kind") in KINDS and o.get("policy", "search") == "search":   # D450
                     pending.setdefault(f"{scope}|{o['game']}", []).append((o["kind"], bool(o.get("fallback")), int(o.get("chosen", 0)) > 0,
                                                              float(o.get("ms") or 0.0)))
                 elif t == "end":
                     g = f"{scope}|{o.get('game')}"
                     rows = pending.pop(g, [])
+                    if g in barred:
+                        out["notForTraining"] += 1
+                        continue
                     if not o.get("ok"):
                         out["gamesNotOk"] += 1
                         continue

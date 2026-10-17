@@ -33,8 +33,9 @@ maps agree, the value is the move's; where they part, it is the play after it.
      lands). A land drop is not a decision about the game's direction; skipping it at random would
      make most random games mana-screw games.
    - **G2, no pass before the land drop:** in its own first main phase with the stack empty the seat
-     never passes while a land drop is pending. G1 makes it unreachable here; it is kept as a counted
-     check (`noPassMain1`, expected 0).
+     never passes while a land drop is pending. G1 is this rule already — any pending land drop is
+     taken — so G2 has no code of its own (the review of #161: a separate check placed after G1 could
+     never fire, and was dropped).
    - **G3, no pure no-op twice in a row:** an activated ability whose resolution left the public state
      unchanged (the turn and phase, every life total, poison and counter, every zone's size, every
      permanent's id, controller, power, toughness, damage, counters and attachment — not the stack,
@@ -128,3 +129,19 @@ peasant-900000007 A vs B: 736 ladder games, deck A 357 of 736, score 0.051, ahea
   random seats' logs: a land offered at 1,716 of 11,744 priority decisions and taken at all 1,716;
   100 of 100 opening hands kept; G3 never fired (no pure no-op was chosen at random in these games).
 - *Size*: a phase A game 234 KB (rows 74, frame logs 158, ledger 2), a branch game 136 KB.
+
+**Review follow-ups** (the cloud's review of #161, 2026-10-17).
+
+- *Atlas games are marked, and every builder skips them.* Point 3's "its rows cannot reach training"
+  held only for confirm-set decks: with `--deck-a/--deck-b` on other decks, an atlas frame log looked
+  like an exploring lab game, which `dataset.py`'s default `--play-explore include` would take. Now
+  every atlas game carries `notForTraining` (`ATLAS_NOT_FOR_TRAINING`): in each frame log's session
+  header (`lab.notForTraining`, phase A, the baseline and every branch) and in each rows `begin` line.
+  `tools/ml/reserved.py`'s `not_for_training` is the one test, and `dataset.py` (every mode),
+  `policy_data.py`, `gate_regret_build.py`, `search_errors.py`, `encode.py`'s CLI and `distill.py` skip
+  and count such a game as `not for training (D451)`, whatever its decks
+  (`tools/ml/tests/test_not_for_training.py`). The marker is generic: any later recording made to
+  measure rather than to train on sets it the same way (the record block's `notForTraining`).
+- *G2 has no code of its own* (point 2 above): the check sat after G1's `return` and could never fire.
+- *`atlas-selftest`'s folder is absolute* (`atlasSelftestDir`), so `LAB_DATA_DIR` never moves it: it
+  clears the folder it writes. The atlas's begin lines spell deck files as D450's recipes do.

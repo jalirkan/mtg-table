@@ -1228,7 +1228,7 @@ tools/cubelab.sh seat-identity                # the Forge, search and explore se
   (targets drawn at random from the legal ones it can see); the attack, the blocks and single targets
   random as in D358; mana payment (Forge's auto-pay), costs, modes and other choices Forge's. Its
   **guardrails are mechanical**: a legal land drop is always taken (G1); no pass in its first main phase
-  while a land drop is pending (G2, implied by G1); an activated ability that changed nothing public is
+  while a land drop is pending (G2, which is G1 itself and has no code of its own); an activated ability that changed nothing public is
   not repeated at its next decision (G3); the opening hand is kept (G4); a game past `--turn-cap` (40) is
   a draw. G1 and G4 are read back from the seats' decision records after the run.
 - **`--pair auto`** takes the line of `tools/ai-bench/pairs-confirm.txt` with the most ladder games and

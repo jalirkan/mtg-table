@@ -27,10 +27,11 @@ import {
   agreement, gamesFor, pairLines, rankPairs, ranks, regretInterval, regretOf, scoreOf, scoreStat, spearman, spread, wilson, type LadderGame,
 } from '../../tools/cubelab/atlasmath.ts';
 import {
-  atlasMd, decisionAtlas, disagreements, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf,
+  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, baselineJob, decisionAtlas, disagreements, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
+import { labPath } from '../../tools/cubelab/labdata.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 
 test('the arithmetic: Wilson with draws, ranks, Spearman', () => {
@@ -196,6 +197,18 @@ test('the jobs: phase A\'s seeds and random seat, the units, their expected opti
   assert.ok(u0.gameTimeoutSec >= 1800 + 3 * 25 * 120, 'the unit\'s game holds all its branches');
 });
 
+test('every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review)', () => {
+  const a = rolloutJob('/repo', OPTS, '/o', 3) as Record<string, any>;
+  const b = baselineJob('/repo', OPTS, '/o') as Record<string, any>;
+  const u = unitJob(OPTS, '/o', unitsOf([2], OPTS)[0]!, LISTING) as Record<string, any>;
+  assert.match(ATLAS_NOT_FOR_TRAINING, /^D451 /);
+  for (const [what, j] of [['phase A', a], ['the baseline', b]] as const) {
+    assert.equal(j.record.notForTraining, ATLAS_NOT_FOR_TRAINING, `${what}: the record block (CubeLab copies it into lab.notForTraining)`);
+    assert.equal(j.rows.begin.notForTraining, ATLAS_NOT_FOR_TRAINING, `${what}: the rows begin line`);
+  }
+  assert.equal(u.atlas.notForTraining, ATLAS_NOT_FOR_TRAINING, 'a unit: its branches\' begin lines and headers (Atlas.Unit.lab)');
+});
+
 test('atlas.md renders the two maps side by side', () => {
   const d = decisionAtlas(LISTING, [...branchRows('random', 40, [0.3, 0.5, 0.7], 1), ...branchRows('forge', 40, [0.6, 0.4, 0.2], 2)], 100, 1);
   const md = atlasMd({
@@ -221,4 +234,12 @@ test('seat-identity: decisions without frame numbers, the last state and over', 
   assert.ok(!out[0]!.includes('"frame"') && !out[0]!.includes('"stateSeq"') && !out[0]!.includes('"seq"'));
   assert.match(out[1]!, /"turn":2/);
   assert.match(out[2]!, /"type":"over"/);
+});
+
+test('atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review)', () => {
+  const dir = atlasSelftestDir('/repo');
+  assert.equal(dir, '/repo/var/cubelab/atlas-selftest');
+  // the atlas writes where labPath puts its --out: for the self-test's absolute folder, never the drive
+  assert.equal(labPath('/repo', dir, 'write', '/mnt/lab'), dir);
+  assert.equal(labPath('/repo', dir, 'read', '/mnt/lab'), dir);
 });
