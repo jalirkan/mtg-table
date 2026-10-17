@@ -26,6 +26,7 @@ import java.util.Map;
 import forge.ai.AiController;
 import forge.ai.ComputerUtilAbility;
 import forge.ai.ComputerUtilCard;
+import forge.ai.ComputerUtilCost;
 import forge.game.Game;
 import forge.game.GameEntity;
 import forge.game.GameObject;
@@ -73,6 +74,23 @@ import forge.game.zone.ZoneType;
  * A score is read only from a face-up creature on the battlefield, or one the
  * seat controls.  No library, no other hand, no face-down identity.
  *
+ * <p><b>The random seat (D451, {@link ExploreMath.Config#random}).</b>  The
+ * move atlas's seat for "what if both sides played at random": every priority
+ * is a uniform pick among pass, each land it may play, Forge's own answer, and
+ * EVERY spell or non-mana ability the seat can play and pay for now -- Forge's
+ * per-card judgment is not asked, and a targeted one gets targets drawn
+ * uniformly from the legal ones the seat can see (a part with a cross-target
+ * constraint, divided damage, or no visible legal target leaves the play out).
+ * The attack, the blocks and each single target are random as above; mana
+ * payment, costs, modes and other choices stay Forge's.  Its guardrails are
+ * mechanical, never strategy: (G1) a legal land drop is always taken, uniformly
+ * among the lands -- which also means (G2) it never passes while a land drop
+ * is pending, so G2 has no code of its own; (G3) a pure no-op is never repeated twice in a row: an
+ * activated ability whose resolution left the public state unchanged
+ * ({@link #fingerprint}) is not offered at the seat's next decision with the
+ * stack empty; (G4) the opening hand is always kept.  The turn cap is the
+ * game loop's (the cube lab's {@code turnCap}).
+ *
  * <p><b>Its own randomness.</b>  Every draw is {@link ExploreMath}'s seeded
  * generator; the engine calls made to list options run inside
  * {@link Decisions#quiet}, so Forge's {@code MyRandom} stream is not moved by
@@ -106,6 +124,9 @@ public final class Explorer {
     /** Forge's priority answer {@code chosen} (null or empty: pass), or a uniformly random legal one. */
     public List<SpellAbility> priority(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
         mark = null;
+        if (math.config().random) {
+            return randomPriority(ai, aic, chosen);
+        }
         if (!math.coin()) {
             return chosen;
         }
@@ -130,6 +151,218 @@ public final class Explorer {
             math.failed();
             return chosen;
         }
+    }
+
+    // ------------------------------------------------------------------
+    // The random seat (D451)
+    // ------------------------------------------------------------------
+
+    /** G3: the seat's last activated ability, and the public state when it was chosen. */
+    private String lastAbility;
+    private long lastFingerprint;
+
+    /** The random seat's priority answer, under the guardrails. */
+    private List<SpellAbility> randomPriority(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
+        try {
+            final Game g = ai.getGame();
+            final boolean stackEmpty = g.getStack().isEmpty();
+            String banned = null;
+            if (lastAbility != null && stackEmpty) {
+                // G3: judged once the ability has resolved -- a decision with the stack empty again
+                if (Decisions.quiet(() -> fingerprint(g)) == lastFingerprint) {
+                    banned = lastAbility;
+                }
+                lastAbility = null;
+            }
+            final Map<String, List<SpellAbility>> opts = Decisions.quiet(() -> randomOptions(ai, aic, chosen));
+            final String forgeTok = tokenOf(chosen);
+            final List<String> lands = new ArrayList<>();
+            for (final String k : opts.keySet()) {
+                if (k.startsWith("land:")) {
+                    lands.add(k);
+                }
+            }
+            if (!lands.isEmpty()) {
+                // G1: a legal land drop is always taken
+                final String tok = lands.get(math.pick(lands.size()));
+                math.guardrail("land");
+                math.randomised("priority", tok.equals(forgeTok));
+                mark = new Decision.Explore("random", forgeTok);
+                return new ArrayList<>(opts.get(tok));
+            }
+            // G2 ("no pass in main 1 while a land drop is pending") is G1 itself: any pending land drop
+            // was taken just above, so no separate rule or counter (the #161 review: it never fired).
+            if (banned != null && opts.size() > 1 && opts.remove(banned) != null) {
+                math.guardrail("noRepeatNoOp");
+            }
+            final List<String> keys = new ArrayList<>(opts.keySet());
+            if (keys.size() < 2) {
+                final String only = keys.isEmpty() ? "pass" : keys.get(0);
+                mark = null;
+                final List<SpellAbility> l = opts.get(only);
+                return l == null ? null : new ArrayList<>(l);
+            }
+            final String tok = keys.get(math.pick(keys.size()));
+            math.randomised("priority", tok.equals(forgeTok));
+            mark = new Decision.Explore("random", forgeTok);
+            if (tok.startsWith("activate:")) {
+                lastAbility = tok;
+                lastFingerprint = Decisions.quiet(() -> fingerprint(g));
+            }
+            final List<SpellAbility> pick = opts.get(tok);
+            if (pick == chosen) {
+                return chosen;
+            }
+            return pick == null ? null : new ArrayList<>(pick);
+        } catch (final RuntimeException e) {
+            math.failed();
+            return chosen;
+        }
+    }
+
+    /**
+     * The random seat's plays, one per token: pass, each land, Forge's own
+     * answer, then every spell or non-mana ability the seat can play and pay
+     * for now (its controller's or its owner's card), a targeted one with
+     * targets drawn at random.  Forge's judgment of whether a play is wise is
+     * not asked.
+     */
+    private Map<String, List<SpellAbility>> randomOptions(final Player ai, final AiController aic,
+                                                          final List<SpellAbility> chosen) {
+        final Map<String, List<SpellAbility>> out = new LinkedHashMap<>();
+        out.put("pass", null);
+        final Game g = ai.getGame();
+        final CardCollection lands = ComputerUtilAbility.getAvailableLandsToPlay(g, ai);
+        if (lands != null) {
+            for (final Card c : lands) {
+                final List<SpellAbility> las = new ArrayList<>();
+                for (final SpellAbility sa : c.getAllPossibleAbilities(ai, true)) {
+                    if (sa.isLandAbility()) {
+                        las.add(sa);
+                    }
+                }
+                if (!las.isEmpty()) {
+                    out.putIfAbsent("land:" + c.getId(), las);
+                }
+            }
+        }
+        final SpellAbility forgeSa = chosen == null || chosen.isEmpty() ? null : chosen.get(0);
+        if (forgeSa != null && !forgeSa.isLandAbility()) {
+            out.put(tokenOf(chosen), chosen);
+        }
+        final List<SpellAbility> all;
+        try {
+            all = ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    ComputerUtilAbility.getSpellAbilities(ComputerUtilAbility.getAvailableCards(g, ai), ai), ai);
+        } catch (final RuntimeException e) {
+            math.failed();
+            return out;
+        }
+        for (final SpellAbility sa : all) {
+            if (sa == forgeSa || sa.isLandAbility() || sa.isManaAbility() || sa.isTrigger()) {
+                continue;
+            }
+            final Card host = sa.getHostCard();
+            if (host == null || host.getController() != ai && host.getOwner() != ai) {
+                continue;
+            }
+            final String tok = Decisions.saToken(sa);
+            if (out.containsKey(tok)) {
+                continue;
+            }
+            try {
+                sa.setActivatingPlayer(ai);
+                if (!sa.canPlay() || !ComputerUtilCost.canPayCost(sa, ai, false)) {
+                    continue;
+                }
+                if (!randomTargets(sa, ai)) {
+                    continue;
+                }
+                final List<SpellAbility> one = new ArrayList<>(1);
+                one.add(sa);
+                out.put(tok, one);
+            } catch (final RuntimeException e) {
+                math.failed();
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Give every targeting part of {@code sa} targets drawn uniformly from the
+     * legal ones the seat can see; false when a part cannot be targeted that way
+     * (no visible legal target, divided damage, a cross-target constraint) --
+     * the play is then left out.
+     */
+    private boolean randomTargets(final SpellAbility sa, final Player ai) {
+        for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            if (!s.usesTargeting()) {
+                continue;
+            }
+            final TargetRestrictions tr = s.getTargetRestrictions();
+            if (tr == null || s.isDividedAsYouChoose() || tr.isRandomTarget() || tr.isUniqueTargets()
+                    || tr.isSameController() || tr.isDifferentControllers() || tr.isDifferentCMC()
+                    || tr.isDifferentNames() || tr.isEqualToughness() || tr.isWithoutSameCreatureType()) {
+                return false;
+            }
+            final Card host = s.getHostCard();
+            final int min = tr.getMinTargets(host, s);
+            final int max = tr.getMaxTargets(host, s);
+            s.resetTargets();
+            final List<GameEntity> legal = new ArrayList<>();
+            for (final GameEntity e : tr.getAllCandidates(s, true)) {
+                if (Decisions.entityToken("target", e, ai) != null && s.canTarget(e)) {
+                    legal.add(e);
+                }
+            }
+            final int k = Math.min(Math.max(min, 1), Math.min(max, legal.size()));
+            if (k < min || k == 0 && min > 0) {
+                return false;
+            }
+            for (int i = 0; i < k; i++) {
+                s.getTargets().add(legal.remove(math.pick(legal.size())));
+            }
+            if (!s.isTargetNumberValid()) {
+                s.resetTargets();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * G3's public fingerprint of a game: the turn and phase, every player's
+     * life, poison, counters and zone sizes, and every permanent's id,
+     * controller, power, toughness, damage, counters and attachment -- not the
+     * stack, not mana, not tapped status (what a cost changes).  An activated
+     * ability whose resolution leaves it unchanged was a pure no-op.
+     */
+    static long fingerprint(final Game g) {
+        long h = 1125899906842597L;
+        h = 31 * h + g.getPhaseHandler().getTurn();
+        h = 31 * h + String.valueOf(g.getPhaseHandler().getPhase()).hashCode();
+        for (final Player p : g.getPlayers()) {
+            h = 31 * h + p.getId();
+            h = 31 * h + p.getLife();
+            h = 31 * h + p.getPoisonCounters();
+            h = 31 * h + p.getCounters().hashCode();
+            for (final ZoneType z : new ZoneType[] {ZoneType.Hand, ZoneType.Library, ZoneType.Graveyard, ZoneType.Exile,
+                ZoneType.Command}) {
+                h = 31 * h + p.getZone(z).size();
+            }
+        }
+        final List<Card> perms = new ArrayList<>(g.getCardsIn(ZoneType.Battlefield));
+        perms.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
+        for (final Card c : perms) {
+            h = 31 * h + c.getId();
+            h = 31 * h + (c.getController() == null ? -1 : c.getController().getId());
+            h = 31 * h + c.getNetPower();
+            h = 31 * h + c.getNetToughness();
+            h = 31 * h + c.getDamage();
+            h = 31 * h + c.getCounters().hashCode();
+            h = 31 * h + (c.getAttachedTo() == null ? -1 : c.getAttachedTo().getId());
+        }
+        return h;
     }
 
     static String tokenOf(final List<SpellAbility> l) {
@@ -500,6 +733,11 @@ public final class Explorer {
     /** Forge's keep-or-mulligan; with {@code opening} on, the seven-card decision is explorable. */
     public boolean mulligan(final boolean keep, final int cardsToReturn) {
         mark = null;
+        if (math.config().random) {
+            mulliganSeen = true;
+            math.guardrail("keep");   // G4: the random seat always keeps its opening hand
+            return true;
+        }
         if (!math.config().opening || mulliganSeen || cardsToReturn != 0) {
             mulliganSeen = true;
             return keep;

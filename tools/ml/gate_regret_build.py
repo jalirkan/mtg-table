@@ -121,6 +121,9 @@ def scan(logs: list[str], test_pairs: set[str], reserved: dict[str, str] | None,
             continue
         for pg in P.read_policy_games(path):
             counts["games"] += 1
+            if R.not_for_training(pg.header):
+                counts[R.NOT_FOR_TRAINING] += 1      # D451: a move-atlas game
+                continue
             if P.source_of(path, pg.header, []) != "lab":
                 counts["not a lab game"] += 1
                 continue

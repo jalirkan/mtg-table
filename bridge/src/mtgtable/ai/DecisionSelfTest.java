@@ -141,6 +141,7 @@ public final class DecisionSelfTest {
         mullAndTargets();
         evalLeafOnly();
         explore();
+        randomSeat();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
         if (failures > 0) {
@@ -318,6 +319,34 @@ public final class DecisionSelfTest {
         final SearchPolicy.Report r = new SearchPolicy.Report();
         SearchPolicy.Report.fillStats(r, leaves, List.of(), k);
         return r.diffLeaf;
+    }
+
+    /** D451: the random seat's settings, its guardrail counters and the atlas's branch seeds, without the engine. */
+    private static void randomSeat() {
+        final ExploreMath.Config r = ExploreMath.Config.randomSeat();
+        check(r.random && r.epsilon == 1 && r.closeCall == 0 && !r.opening, "the random seat is epsilon 1, no close calls, opening off");
+        final java.util.Map<String, Object> job = new java.util.HashMap<>();
+        job.put("random", Boolean.TRUE);
+        job.put("epsilon", 0.05);
+        check(ExploreMath.Config.of(job).random && ExploreMath.Config.of(job).epsilon == 1, "a job's random:true is the random seat, whatever else it says");
+        check(!new ExploreMath.Config(0.05, 0.02, true).random, "D358's exploration is not the random seat");
+        boolean threw = false;
+        try {
+            new ExploreMath.Config(0.5, 0, false, true);
+        } catch (final IllegalArgumentException e) {
+            threw = true;
+        }
+        check(threw, "a random seat with epsilon below 1 is refused");
+        final ExploreMath m = new ExploreMath(r, 9);
+        m.guardrail("land");
+        m.guardrail("land");
+        m.guardrail("keep");
+        check(m.guardrails().get("land") == 2 && m.guardrails().get("keep") == 1, "the guardrails are counted by name");
+        // branch i of every option shares its seed; branches, decisions and atlases differ
+        final long b = Atlas.branchSeed(451, 3, 7);
+        check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
+        check(b != Atlas.branchSeed(451, 3, 8) && b != Atlas.branchSeed(451, 4, 7) && b != Atlas.branchSeed(452, 3, 7),
+                "branch seeds differ by branch, decision and atlas");
     }
 
     /** D358: play exploration's arithmetic, without the engine. */

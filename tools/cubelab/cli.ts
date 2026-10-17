@@ -12,6 +12,8 @@
 //           [--record none|rows|full] [--rows-check-every N]   rows: both seats' decision rows + a per-turn ledger (default); full: + frame logs (D450)
 //   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--mixed-pilots]   win rate across the spectrum, per card (censusread.ts, D447)
 //   census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   the game again from its recipe, asserted the same (D450)
+//   atlas   (--deck-a <dck> --deck-b <dck> | --pair auto) --seed S --jobs K --out <dir> [--turn-cap 40] [--rollouts 10000]
+//           [--branch-random 200] [--branch-forge 40] [--decisions all|N] [--options 8] [--chunk 25]   the move atlas (atlas.ts, D451)
 //   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
 //           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
@@ -139,6 +141,11 @@ function usage(msg?: string): never {
                         [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout 300]   (D447)
                         [--record none|rows|full] [--rows-check-every N]   (D450; default rows: decision rows + ledger)
        tools/cubelab.sh census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   (D450)
+       tools/cubelab.sh atlas (--deck-a <dck> --deck-b <dck> | --pair auto [--ladder var/ai-ladder]) --seed S --jobs K --out <dir>
+                        [--turn-cap 40] [--rollouts 10000] [--branch-random 200] [--branch-forge 40] [--decisions all|N]
+                        [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--boot 1000] [--phase a|b|both|report]   (D451)
+       tools/cubelab.sh atlas-selftest [--jobs 2]   (D451: a tiny atlas, its forks, no-leak checks and guardrails asserted)
+       tools/cubelab.sh seat-identity [--write]     (D451: the Forge, search and explore seats play origin/main's games)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
@@ -157,7 +164,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged' || a === '--mixed-pilots') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged' || a === '--mixed-pilots' || a === '--write') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -174,7 +181,7 @@ const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k
  * command that reads fewer would drop it in silence (the #154 review): it is refused instead.
  */
 const POSITIONALS: Record<string, number> = {
-  check: 1, 'library-candidates': 0, census: 1, sample: 0, decks: 0, 'census-play': 0, 'census-read': 0, 'census-replay': 1,
+  check: 1, 'library-candidates': 0, census: 1, sample: 0, decks: 0, 'census-play': 0, 'census-read': 0, 'census-replay': 1, atlas: 0, 'atlas-selftest': 0, 'seat-identity': 0,
   ratings: 2, run: 1, queue: 1, report: 1, selfplay: 1, meta: 1, evolve: 1, watch: 1,
 };
 
@@ -433,6 +440,9 @@ async function main(): Promise<number> {
     case 'census-play': return (await import('./censusplay.ts')).censusPlayCommand(REPO, f, say);   // the deck census's games (D447)
     case 'census-read': return (await import('./censusread.ts')).censusReadCommand(REPO, f, say);   // the deck census's spectrum and cards (D447)
     case 'census-replay': return (await import('./censusreplay.ts')).censusReplayCommand(REPO, pos, f, say);   // a census game again from its recipe (D450)
+    case 'atlas': return (await import('./atlas.ts')).atlasCommand(REPO, f, say);   // the move atlas (D451)
+    case 'atlas-selftest': return (await import('./atlas.ts')).atlasSelftest(REPO, f, say);   // D451: the fork, the no-leak check, the guardrails
+    case 'seat-identity': return (await import('./seatidentity.ts')).seatIdentityCommand(REPO, f, say);   // D451: the Forge and search seats untouched
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');

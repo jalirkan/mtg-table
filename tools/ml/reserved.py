@@ -211,6 +211,22 @@ def game_profiles(path: str) -> Optional[list]:
     return None
 
 
+NOT_FOR_TRAINING = "not for training (D451)"
+
+
+def not_for_training(header: Optional[Dict[str, Any]]) -> Optional[str]:
+    """Why a recorded game must never be training data, or None: its session header (or its `lab` or
+    `bench` block) carries `notForTraining`.  The move atlas (D451) writes it on every game it plays --
+    random seats, forced options, redealt hidden cards -- whatever the decks, so the rule does not lean
+    on the reserved decks (the #161 review).  Every builder that reads frame logs skips such a game and
+    counts it under NOT_FOR_TRAINING; distill.py does the same for a rows `begin` line."""
+    h = header or {}
+    for b in (h, h.get("lab"), h.get("bench")):
+        if isinstance(b, dict) and b.get("notForTraining"):
+            return str(b["notForTraining"])
+    return None
+
+
 def reserved_hit(decks: Iterable[Dict[str, int]], reserved: Dict[str, str]) -> Optional[str]:
     """Where the first reserved deck among `decks` comes from, or None.  A lab game whose decks are
     not both known (`Decks.unknown`, from game_decks) is UNKNOWN_DECK: dropped, never passed (D365)."""
