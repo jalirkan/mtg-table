@@ -6,3 +6,4 @@ mtg-table: 2e107b6
 workers: 3
 peak_worker_rss_gb: 1.42
 pressure-1: 2026-10-17T12:11:01-04:00 playing to 3 worker(s): Justin is at the table: new games wait
+pressure-2: 2026-10-17T12:31:14-04:00 play-ended to 3 worker(s): Justin left the table
