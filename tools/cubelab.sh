@@ -17,6 +17,7 @@
 #   tools/cubelab.sh census build --fc ~/code/ForgeCoach                     # D445: cubes/library/census.tsv, no engine
 #   tools/cubelab.sh decks --band legacy --count 40 --seed 1 --out var/cubelab/deck-census/legacy/decks   # D447, no engine
 #   tools/cubelab.sh census-play --decks var/cubelab/deck-census/legacy/decks --pairs 200 --seed 1 --jobs 2 --out var/cubelab/deck-census/legacy/games
+#   tools/cubelab.sh census-replay var/cubelab/deck-census/legacy/games/rows/rows-<pid>.jsonl --game census:<seed>   # D450
 #   tools/cubelab.sh census-read --games var/cubelab/deck-census/legacy/games --decks var/cubelab/deck-census/legacy/decks --out var/cubelab/deck-census/read
 #   tools/cubelab.sh sample --band pauper --structure two-colour --seed 1 --count 40 --out var/cubelab/census/pauper   # D445
 #   tools/cubelab.sh shapes var/lab-j140/runs/*/* --out var/lab-j140/out              # D446: shape measures by band, no engine
@@ -34,13 +35,15 @@
 #   2. builds the bridge if bridge/out is missing, and compiles
 #      tools/cubelab/CubeLab.java into var/cubelab/classes/ when it is stale
 #      (javac through jdk.compiler, never --release; the lint already scans it);
-#   3. for `check`, `ratings`, `run`, `selfplay`, `watch` and `census-play` (not `learn`, `census`, `sample`, `shapes`, `decks` or `census-read`, which read files only), builds one Forge home per job under
+#   3. for `check`, `ratings`, `run`, `selfplay`, `watch`, `census-play` and `census-replay` (not `learn`, `census`, `sample`, `shapes`, `decks` or `census-read`, which read files only), builds one Forge home per job under
 #      var/cubelab/homes/<k>/ (`watch`: var/cubelab/watch-homes/0/) with forge_home_make (D129's helper), so no two
 #      JVMs share a userDir, and hands them to the TypeScript side;
 #   4. runs tools/cubelab/cli.ts under Node (type stripping, no build step).
 #
 # It writes under var/ only (plus `ratings init`'s TSV, beside the cube unless
-# --out says otherwise), and never touches forge-home/ or var/forge/.
+# --out says otherwise), and never touches forge-home/ or var/forge/.  With
+# LAB_DATA_DIR set (D450) the relative var/ paths it is given are re-rooted
+# there (tools/cubelab/labdata.ts); the Forge homes and classes stay in var/.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"

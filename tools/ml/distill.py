@@ -122,7 +122,7 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
     header: dict[str, Any] | None = None
     kept: dict[str, list[dict[str, Any]]] = {k: [] for k in KINDS}
     notes = {"files": 0, "tornLines": 0, "gamesEnded": 0, "gamesNotOk": 0, "gamesUnended": 0,
-             "gamesDuplicate": 0, "rowsUnended": 0, "rowsOtherKind": 0}
+             "gamesDuplicate": 0, "rowsUnended": 0, "rowsOtherKind": 0, "rowsOtherPolicy": 0}
     seen_games: set[str] = set()
     for scope, f in row_files(paths):
         notes["files"] += 1
@@ -151,6 +151,10 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
             elif t == "row":
                 if o.get("kind") not in KINDS:
                     notes["rowsOtherKind"] += 1
+                    continue
+                if o.get("policy", "search") != "search":
+                    # D450: an observing seat's row (Forge's or a random answer), not the search's choice
+                    notes["rowsOtherPolicy"] += 1
                     continue
                 o["game"] = f"{scope}|{o['game']}"
                 pending.setdefault(o["game"], []).append(o)
@@ -634,7 +638,7 @@ def stats(paths: Iterable[str], names_file: str | None = None) -> dict[str, Any]
                 if t == "header":
                     layouts.add((o.get("featureVersion"), o.get("stateSchemaId"), o.get("stateSize"),
                                  json.dumps(o.get("cand"), sort_keys=True)))
-                elif t == "row" and o.get("kind") in KINDS:
+                elif t == "row" and o.get("kind") in KINDS and o.get("policy", "search") == "search":   # D450
                     pending.setdefault(f"{scope}|{o['game']}", []).append((o["kind"], bool(o.get("fallback")), int(o.get("chosen", 0)) > 0,
                                                              float(o.get("ms") or 0.0)))
                 elif t == "end":

@@ -1151,6 +1151,64 @@ with that sentence. Utility lands are never drawn, so the census says nothing ab
 **Rate.** D447's smoke beside a seven-worker job: 2,472 games an hour on 2 workers, about 2.2 CPU-seconds
 a game — some 11,000 games an hour on seven free cores.
 
+### Recording the cake: `--record`, `census-replay` (D450)
+
+A census game keeps more than its result. `census-play --record` takes `none`, `rows` (the
+default) or `full` ([D450](../decisions/D450-record-the-cake.md)):
+
+| mode | per game | about (legacy, 100 games) |
+|---|---|---|
+| `none` | the `games.jsonl` row, as D447 | 0.4 KB |
+| `rows` | + every p, a and b decision of both seats as a D435 row, `<out>/rows/rows-<pid>.jsonl`; + a ledger line, `<out>/ledger.jsonl` | rows 45 KB (gzip 11×), ledger 1.5 KB |
+| `full` | + both seats' frame logs, `<out>/frames/g<g>-seat{0,1}.jsonl.gz` | + 103 KB |
+
+```bash
+tools/cubelab.sh census-play --decks var/census/legacy/decks --pairs 20000 --seed 1401 --jobs 7 --out var/census/legacy/games            # rows
+tools/cubelab.sh census-play ... --record full --out var/census/legacy/games-full
+tools/cubelab.sh census-replay var/census/legacy/games/rows/rows-12345.jsonl --game census:1401000017 --out var/cubelab/replay-17
+```
+
+- **A row** is one seat's decision, from that seat's view: the state (D361's encoder: the other hand
+  and every library by size only), each candidate's vector and token, the index played, and
+  `policy` (`forge` for a plain seat, `search` for a search seat). A plain seat that records is our
+  controller with an observing search (`observe=1`): the search's candidates, Forge's answer played.
+  The rows of a game follow a `begin` line, its recipe (seed, deck ids and files, pilots, who was on
+  the play), and end with an `end` line. The recipe is for `census-replay` only, never a feature: no
+  reader may learn from a path, a file name or a deck id. `tools/ml/distill.py` trains on `search`
+  rows only.
+- **The ledger** is one line a game: per turn, per seat, life, hand and library counts, lands /
+  creatures / other permanents, spells cast, lands played, mana spent, damage dealt (to anything and
+  to players). Public numbers only.
+- **The checks**, at the end of every run, fail it (exit 3) on any problem: every rows file by
+  `rowscheck.ts` (shape, the token grammar, and in `full` mode every id a row names against its
+  seat's own log); every frame log by `tools/check-redaction.mjs`; and in `rows` mode the engine's
+  `RowsLeakCheck` on every `--rows-check-every` (50) rows: the opponent's hidden cards redealt must
+  not move the row's state or any candidate's vector, the seat's own hand swapped must move the state. `census-play.json`'s `record` has the
+  sizes per game (mean, median, p90, max) and the checks' counts.
+- **A folder keeps one mode** (`plan.json`); a folder made before D450 is `none`, so extend it with
+  `--record none`.
+- **`census-replay`** plays one game again from its `begin` line (`--record full` by default) and
+  asserts it is the same game: every row (but its wall time), the winner, and, when the original's
+  frame logs are beside its rows, both logs (but the wall clock, the stack's per-process instance
+  ids, and the order inside an event's `cardIds`). Exit 0 the same, 4 not; `<out>/replay.json` either
+  way. It clears `<out>/rows` and `<out>/frames` first, so an `--out` that is a census folder
+  (`plan.json`, `games.jsonl`) or holds the rows file is refused. Plain pilots only: a search seat is wall-clock bound. Measured: `none`, `rows` and `full` play
+  the same 20 games, and three replays matched row for row and frame for frame.
+
+### Where the heavy outputs live: `LAB_DATA_DIR` (D450)
+
+`LAB_DATA_DIR=/mnt/lab` (or `config.json`'s `labDataDir`) puts the lab's outputs on another drive
+without changing a command: a relative path under `var/` is re-rooted there, so
+`--out var/census/legacy/games` writes `/mnt/lab/census/legacy/games`. Reads look there first and
+fall back to the repo's `var/`. Absolute paths and paths outside `var/` (`cubes/...`, `decks/...`)
+never move. It applies to `census-play`, `census-read`, `census-replay`, `decks`, `run`,
+`evolve` and `queue --root`; the Forge homes and the compiled classes stay in the repo's `var/`. A
+setting that names no existing directory stops the command (an unmounted drive is never replaced by
+a folder on the system disk). A folder begun under the repo's `var/` before the setting is not
+restarted on the drive: a write whose repo copy holds work the drive copy lacks is refused, naming
+both, until it is moved. `web/test/cubelab-record-cake.test.ts` runs a real lab job with it set
+and checks that it wrote there and nothing under the repo's `var/`.
+
 ## Learning the drafters' values from the games (D301–D302)
 
 The ratings start as Forge's draft ranks and the synergy term is a hand

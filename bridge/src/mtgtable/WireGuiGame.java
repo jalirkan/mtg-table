@@ -5228,6 +5228,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     }
 
     /**
+     * {@link #abandonRefusal}'s answer for a game whose {@code over} is already
+     * out: it ended between the loop's idle verdict and the abandon, so the loop
+     * waits for that {@code over} and counts the game as played (#159's review).
+     */
+    static final String REFUSED_OVER = "the game is already over (its `over` is out)";
+
+    /**
      * <b>D448</b>: why a stalled game cannot be abandoned, or null when it can.
      * Pure, so {@code StalledGameSelfTest} holds every reason without an engine;
      * {@link #abandonForAbsentSeat} passes it its own volatiles.  In order:
@@ -5255,7 +5262,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return "the game has not begun (no `hello_ok` yet)";
         }
         if (over) {
-            return "the game is already over (its `over` is out)";
+            return REFUSED_OVER;
         }
         if (!inputSeen) {
             return "the engine has not asked this seat anything yet, so there is no game to concede";

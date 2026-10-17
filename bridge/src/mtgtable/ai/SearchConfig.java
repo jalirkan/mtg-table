@@ -171,6 +171,17 @@ public final class SearchConfig {
      */
     public final String distillModel;
 
+    /**
+     * D450: the observing seat.  The seat generates the search's candidates at
+     * p, a and b, exactly as the search would, and plays Forge's own answer (or
+     * play exploration's, D358) with no rollout and no verdict -- so that
+     * {@link DistillRows} can write a row for a seat the search does not drive
+     * ({@code observe=1}; the cube lab's {@code census-play --record rows}).
+     * Its candidate generation runs inside {@code Decisions.quiet}, so Forge's
+     * random stream is not moved by it.  Off by default: nothing else changes.
+     */
+    public final boolean observe;
+
     /** D417's defaults. */
     public static final int MULL_MS = 6000;
     public static final int MULL_TURNS = 3;
@@ -249,6 +260,7 @@ public final class SearchConfig {
         this.mullTurns = MULL_TURNS;
         this.targets = false;
         this.distillModel = null;
+        this.observe = false;
     }
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
@@ -263,12 +275,12 @@ public final class SearchConfig {
 
     /** D354: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
     private SearchConfig(final SearchConfig base, final String model) {
-        this(base, model, base.mull, base.mullMs, base.mullTurns, base.targets, base.distillModel);
+        this(base, model, base.mull, base.mullMs, base.mullTurns, base.targets, base.distillModel, base.observe);
     }
 
     /** D354 and D417: a copy of {@code base} with the leaf model and the mulligan and target switches given. */
     private SearchConfig(final SearchConfig base, final String model, final boolean mull, final int mullMs,
-                         final int mullTurns, final boolean targets, final String distillModel) {
+                         final int mullTurns, final boolean targets, final String distillModel, final boolean observe) {
         if (mullMs < 50 || mullMs > 60_000) {
             throw new IllegalArgumentException("search mullms must be 50..60000 ms, got " + mullMs);
         }
@@ -302,6 +314,7 @@ public final class SearchConfig {
         this.mullTurns = mullTurns;
         this.targets = targets;
         this.distillModel = distillModel;
+        this.observe = observe;
     }
 
     /** D417: this config with the mulligan search and the target search switched as given. */
@@ -309,7 +322,7 @@ public final class SearchConfig {
         if (mull == this.mull && mullMs == this.mullMs && mullTurns == this.mullTurns && targets == this.targets) {
             return this;
         }
-        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, distillModel);
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, distillModel, observe);
     }
 
     /**
@@ -325,7 +338,18 @@ public final class SearchConfig {
         if (p != null && p.matches(".*[,+\\s].*")) {
             throw new IllegalArgumentException("search distill= is a model file path (no comma, plus or space): " + p);
         }
-        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, p);
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, p, observe);
+    }
+
+    /** D450: this config observing ({@code observe=1}: candidates and rows, Forge's answer played) or not. */
+    public SearchConfig withObserve(final boolean on) {
+        if (on == observe) {
+            return this;
+        }
+        if (on && distillModel != null) {
+            throw new IllegalArgumentException("search observe=1 and distill= are two different seats");
+        }
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, distillModel, on);
     }
 
     /**
@@ -412,6 +436,7 @@ public final class SearchConfig {
         int mullTurns = MULL_TURNS;
         boolean targets = false;
         String distill = null;   // J126
+        boolean observe = false;   // D450
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -454,9 +479,11 @@ public final class SearchConfig {
                 case "mullturns": mullTurns = Integer.parseInt(p[1]); break;
                 case "targets": targets = bit("targets", p[1]); break;
                 case "distill": distill = p[1]; break;   // J126: the distilled policy's model file
+                case "observe": observe = bit("observe", p[1]); break;   // D450: candidates and rows, Forge's answer
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
-                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets, distill)");
+                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets, distill,"
+                        + " observe)");
                 }
             }
         }
@@ -472,7 +499,7 @@ public final class SearchConfig {
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
-                .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill);
+                .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill).withObserve(observe);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -526,6 +553,9 @@ public final class SearchConfig {
         }
         if (distillModel != null) {
             sb.append(",distill=").append(distillModel);   // J126
+        }
+        if (observe) {
+            sb.append(",observe=1");   // D450
         }
         return sb.toString();
     }

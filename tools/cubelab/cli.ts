@@ -9,7 +9,9 @@
 //           40-card decks at random colour makeups straight from a band's pool, no drafter (deckcensus.ts, D447)
 //   census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search] [--policy-b plain|search]
 //           [--replay <games.jsonl>] [--game-timeout 300]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
+//           [--record none|rows|full] [--rows-check-every N]   rows: both seats' decision rows + a per-turn ledger (default); full: + frame logs (D450)
 //   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--mixed-pilots]   win rate across the spectrum, per card (censusread.ts, D447)
+//   census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   the game again from its recipe, asserted the same (D450)
 //   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
 //           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
@@ -84,6 +86,7 @@ import { readJsonLines } from './lines.ts';
 import { watchCommand } from './watch.ts';
 import { compareCommand, COMPARE_DEFAULTS, populationOf } from './compare.ts';
 import { shapeTable } from './shape-measures.ts';
+import { labArg } from './labdata.ts';
 import { isShape, parseShapeExplore, shapeExploreText, SHAPE_NAMES, type Shape, type ShapeExplore } from './shapes.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
@@ -134,6 +137,8 @@ function usage(msg?: string): never {
                         [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D447, no engine)
        tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search]
                         [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout 300]   (D447)
+                        [--record none|rows|full] [--rows-check-every N]   (D450; default rows: decision rows + ledger)
+       tools/cubelab.sh census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   (D450)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
@@ -169,7 +174,7 @@ const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k
  * command that reads fewer would drop it in silence (the #154 review): it is refused instead.
  */
 const POSITIONALS: Record<string, number> = {
-  check: 1, 'library-candidates': 0, census: 1, sample: 0, decks: 0, 'census-play': 0, 'census-read': 0,
+  check: 1, 'library-candidates': 0, census: 1, sample: 0, decks: 0, 'census-play': 0, 'census-read': 0, 'census-replay': 1,
   ratings: 2, run: 1, queue: 1, report: 1, selfplay: 1, meta: 1, evolve: 1, watch: 1,
 };
 
@@ -266,7 +271,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     profiles: [profiles[0] as string, profiles[1] as string], ratingsFile, record: int(f, 'record', 0),
     ...(profileMix ? { profileMix } : {}),
     recordEvery: one(f, 'record-all') ? 1 : int(f, 'record-every', 0),
-    out: one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`),
+    out: labArg(REPO, one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`), 'write'),   // D450
     builder, gameTimeoutSec: int(f, 'game-timeout', 300), winstonCards: int(f, 'winston-cards', 90), weights,
     ...(one(f, 'synergy') ? { synergyFile: one(f, 'synergy') as string, deckSynergy: one(f, 'deck-synergy') === 'on' } : {}),
     ...(f.has('deckset') ? { deckset: true } : {}),
@@ -308,7 +313,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     o.bridge = bridgeOptions(REPO, bridgeArg, one(f, 'bridge-ratio'), int(f, 'bridge-size', 180), one(f, 'bridge-ratings') ?? 'even');
     o.cubeFile = `bridge:${o.bridge.sources.map((s) => s.id).join('+')}`;
     o.ratingsFile = null;
-    if (!one(f, 'out')) o.out = path.join('var/cubelab/runs', `bridge-${o.bridge.sources.map((s) => s.id).join('+')}-${format}-${seed}`);
+    if (!one(f, 'out')) o.out = labArg(REPO, path.join('var/cubelab/runs', `bridge-${o.bridge.sources.map((s) => s.id).join('+')}-${format}-${seed}`), 'write');
     say(`bridge: ${o.bridge.sources.map((s, i) => `${s.id} ${Math.round((o.bridge?.shares[i] ?? 0) * 100)}%`).join(' + ')} of ${o.bridge.size} cards, sampled afresh for every draft from its seed`);
   }
   if (o.jobs > env.homes.length) usage(`--jobs ${o.jobs} but only ${env.homes.length} Forge home(s) were built (tools/cubelab.sh builds --jobs of them)`);
@@ -404,7 +409,7 @@ async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<nu
   const o = {
     cubeFile, poolFile, notesFile: fs.existsSync(notes) ? notes : null, generations: Math.max(1, int(f, 'generations', 1)),
     drafts: Math.max(1, int(f, 'drafts-per-gen', 30)), jobs, seed,
-    out: one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`),
+    out: labArg(REPO, one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`), 'write'),   // D450
     games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
     ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date, recordEvery,
     explore: parseExploreArgs(f.get('explore') ?? []),
@@ -427,6 +432,7 @@ async function main(): Promise<number> {
     case 'decks': return (await import('./deckcensus.ts')).decksCommand(REPO, f, say);   // the deck census's decks (D447)
     case 'census-play': return (await import('./censusplay.ts')).censusPlayCommand(REPO, f, say);   // the deck census's games (D447)
     case 'census-read': return (await import('./censusread.ts')).censusReadCommand(REPO, f, say);   // the deck census's spectrum and cards (D447)
+    case 'census-replay': return (await import('./censusreplay.ts')).censusReplayCommand(REPO, pos, f, say);   // a census game again from its recipe (D450)
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');

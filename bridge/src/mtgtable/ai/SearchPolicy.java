@@ -1685,10 +1685,149 @@ public final class SearchPolicy {
     // J126 (B1): the distilled policy and the row exporter
     // ==================================================================
 
-    /** The search's verdict, or with {@code distill=} the model's (no rollout). */
+    /** The search's verdict, or with {@code distill=} the model's (no rollout); with {@code observe=1} none (D450). */
     private Outcome decide(final Player ai, final List<Cand> cands, final String kind, final long t0,
                            final double[] state) {
+        if (cfg.observe) {
+            return observed(ai, cands, kind, state);
+        }
         return distill != null ? distilled(ai, cands, kind, t0, state) : search(ai, cands, kind, t0);
+    }
+
+    // ==================================================================
+    // D450: the observing seat (observe=1) -- candidates and rows, no verdict
+    // ==================================================================
+
+    /**
+     * What an observing seat's hook sees at each of its p, a and b decisions
+     * (D451's move atlas): the seat, the candidates (Forge's answer first) and
+     * the kind, on the game thread, before the answer is played.  The hook may
+     * fork the game ({@link LenientGameCopier}); it must not change the real
+     * one.  Null = none (the default).
+     */
+    public interface ObserveHook {
+        void decision(Player ai, List<Cand> cands, String kind);
+    }
+
+    private static volatile ObserveHook observeHook;
+
+    /** D451: the observing seats' hook (null = none). */
+    public static void observeHook(final ObserveHook hook) {
+        observeHook = hook;
+    }
+
+    /** No verdict: the hook (if any) sees the decision, and Forge's answer stands. */
+    private Outcome observed(final Player ai, final List<Cand> cands, final String kind, final double[] state) {
+        sink.add("search." + kind + ".observed", 1);
+        final ObserveHook h = observeHook;
+        if (h != null) {
+            h.decision(ai, cands, kind);
+        }
+        return null;
+    }
+
+    /** An observing seat's row, held until the seat's final answer is known (exploration may change Forge's). */
+    private static final class PendingRow {
+        final Player ai;
+        final List<Cand> cands;
+        final String kind;
+        final double[] state;
+        final long t0;
+
+        PendingRow(final Player ai, final List<Cand> cands, final String kind, final double[] state, final long t0) {
+            this.ai = ai;
+            this.cands = cands;
+            this.kind = kind;
+            this.state = state;
+            this.t0 = t0;
+        }
+    }
+
+    private PendingRow pending;
+
+    /**
+     * D450: the observing seat's priority answer was {@code played} (null or
+     * empty = pass): its row is written with that answer's index among the
+     * candidates -- appended as a candidate of its own when the enumeration did
+     * not hold it (an explored play, D358).  {@code policy} names who answered
+     * (forge, random).  Nothing to do when no row is pending.
+     */
+    public void flushObservedPriority(final List<SpellAbility> played, final String policy) {
+        final PendingRow r = pending;
+        pending = null;
+        if (r == null || !"p".equals(r.kind)) {
+            return;
+        }
+        final SpellAbility sa = played == null || played.isEmpty() ? null : played.get(0);
+        writeObserved(r, Decisions.saToken(sa), () -> priorityCand(sa), policy);
+    }
+
+    /** D450: the observing seat declared the attack {@code combat} now holds. */
+    public void flushObservedAttack(final Combat combat, final String policy) {
+        final PendingRow r = pending;
+        pending = null;
+        if (r == null || !"a".equals(r.kind)) {
+            return;
+        }
+        final Map<Card, GameEntity> m = new LinkedHashMap<>();
+        for (final Map.Entry<Card, GameEntity> e : combat.getAttackersAndDefenders().entrySet()) {
+            if (e.getKey().getController() == r.ai) {
+                m.put(e.getKey(), e.getValue());
+            }
+        }
+        writeObserved(r, token(new AttackCand(m)), () -> new AttackCand(m), policy);
+    }
+
+    /** D450: the observing seat declared the blocks {@code combat} now holds. */
+    public void flushObservedBlock(final Combat combat, final String policy) {
+        final PendingRow r = pending;
+        pending = null;
+        if (r == null || !"b".equals(r.kind)) {
+            return;
+        }
+        final Map<Card, Card> m = new LinkedHashMap<>();
+        for (final Card a : combat.getAttackers()) {
+            for (final Card b : combat.getBlockers(a)) {
+                if (b.getController() == r.ai) {
+                    m.putIfAbsent(b, a);
+                }
+            }
+        }
+        writeObserved(r, token(new BlockCand(m)), () -> new BlockCand(m), policy);
+    }
+
+    /** Drop a pending row (a decision that ended some other way). */
+    public void dropObserved() {
+        pending = null;
+    }
+
+    private void writeObserved(final PendingRow r, final String playedToken,
+                               final java.util.function.Supplier<Cand> extra, final String policy) {
+        try {
+            int played = -1;
+            for (int i = 0; i < r.cands.size(); i++) {
+                String t;
+                try {
+                    t = token(r.cands.get(i));
+                } catch (final RuntimeException e) {
+                    t = "?";
+                }
+                if (t.equals(playedToken)) {
+                    played = i;
+                    break;
+                }
+            }
+            List<Cand> cands = r.cands;
+            if (played < 0) {
+                cands = new ArrayList<>(r.cands);
+                cands.add(extra.get());
+                played = cands.size() - 1;
+                sink.add("distill.rows.playedAppended", 1);
+            }
+            writeRow(r.ai, cands, r.kind, played, r.state, r.t0, null, policy);
+        } catch (final RuntimeException e) {
+            sink.add("distill.rowErrors", 1);
+        }
     }
 
     /**
@@ -1784,6 +1923,18 @@ public final class SearchPolicy {
         if (distill != null || state == null || !DistillRows.enabled()) {
             return;
         }
+        if (cfg.observe) {
+            // D450: the observing seat's answer is final only after exploration (D358) had its say
+            pending = new PendingRow(ai, cands, kind, state, t0);
+            return;
+        }
+        final Report rep = report;
+        writeRow(ai, cands, kind, played, state, t0, rep == null ? null : rep.fallback, "search");
+    }
+
+    /** One row (J126's exporter; D450 adds who played it). */
+    private void writeRow(final Player ai, final List<Cand> cands, final String kind, final int played,
+                          final double[] state, final long t0, final String fallback, final String policy) {
         final double ms = (System.nanoTime() - t0) / 1e6;
         try {
             final int[] errors = new int[1];
@@ -1801,10 +1952,13 @@ public final class SearchPolicy {
                 }
                 tokens.add(t);
             }
-            final Report rep = report;
             DistillRows.row(ai.getGame().getId(), ai.getName(), kind, ai.getGame().getPhaseHandler().getTurn(), state,
-                    c, tokens, played, rep == null ? null : rep.fallback, ms);
+                    c, tokens, played, fallback, ms, policy);
             sink.add("distill.rows", 1);
+            if (RowsLeakCheck.due()) {
+                // D450: the row's state and candidates must not move when the opponent's hidden cards do
+                RowsLeakCheck.check(ai, sink, kind, cands);
+            }
         } catch (final RuntimeException e) {
             sink.add("distill.rowErrors", 1);
         }

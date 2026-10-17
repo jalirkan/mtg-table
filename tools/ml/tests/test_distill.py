@@ -133,6 +133,25 @@ class TestReader(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    def test_observing_seats_rows_are_left_out(self) -> None:
+        # D450: rows an observing seat wrote (policy forge / random) are not the search's choices
+        lay = layout()
+        d = tempfile.mkdtemp()
+        try:
+            rng = random.Random(3)
+            g = planted_game(rng, lay, "census:7", 4)
+            for r in g[:3]:
+                r["policy"] = "forge"
+            g[3]["policy"] = "search"
+            write_rows(os.path.join(d, "rows-1.jsonl"), [header(lay), {"type": "begin", "game": "census:7", "seed": 7}, *g,
+                                                        {"type": "end", "game": "census:7", "ok": True}])
+            r = X.read_rows([d])
+            self.assertEqual(sum(len(v) for v in r["rows"].values()), 1)
+            self.assertEqual(r["notes"]["rowsOtherPolicy"], 3)
+            self.assertEqual(X.stats([d], NAMES)["rows"], 1)
+        finally:
+            shutil.rmtree(d)
+
     def test_same_key_in_two_folders_is_two_games(self) -> None:
         """Two cubes drafted at the same seed give the same lab key; their folders keep them apart (the J126 dry run)."""
         lay = layout()

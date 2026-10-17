@@ -70,8 +70,10 @@ import mtgtable.Json.JsonOut;
 import mtgtable.SeatRecorder;
 import mtgtable.ai.DistillRows;
 import mtgtable.ai.ExploreMath;
+import mtgtable.ai.GameLedger;
 import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
+import mtgtable.ai.RowsLeakCheck;
 import mtgtable.ai.SearchConfig;
 import mtgtable.ai.SeatSpec;
 
@@ -135,6 +137,21 @@ import mtgtable.ai.SeatSpec;
  * and {@link SearchConfig#parseLive}{@code (null)}, the 1.5 s budget), and each
  * game row of a search seat gains {@code searchA} / {@code searchB}: that seat's
  * {@code search.*} counters for the game.
+ *
+ * <h2>Recording the cake (D450)</h2>
+ *
+ * A census match line may carry three more blocks ({@code census-play --record
+ * rows|full}).  {@code rows: {dir, key, begin}} seats both plain sides as our
+ * controller with an observing search ({@link SearchConfig} {@code observe=1}:
+ * the search's candidates, Forge's answer played) and points
+ * {@link DistillRows} at {@code dir} for the match: each seat's p, a and b
+ * decisions become rows from that seat's own view, after a {@code begin} line
+ * holding the game's recipe ({@code begin}'s fields plus the game seed and who
+ * was on the play).  {@code ledger: true} subscribes a {@link GameLedger} and
+ * puts the per-turn ledger on the game row.  {@code rowsCheckEvery: N} runs
+ * {@link RowsLeakCheck} on every N-th row (never on a recorded game, whose log
+ * would carry the swaps).  A {@code record} block with a {@code name} writes
+ * {@code <dir>/<name>-seat{0,1}.jsonl.gz} instead of {@code g<n>-seat...}.
  *
  * <h2>The rules it keeps</h2>
  *
@@ -417,10 +434,18 @@ public final class CubeLab {
         final ExploreMath.Config explore = ExploreMath.Config.of(job.get("playExplore"));
         // D447: a census side may be the live search seat (policyA / policyB = "search")
         final boolean searchA = "search".equals(str(job, "policyA")), searchB = "search".equals(str(job, "policyB"));
+        // D450: the census's rows, ledger and leak check
+        final Map<?, ?> rows = job.get("rows") instanceof Map ? (Map<?, ?>) job.get("rows") : null;
+        final boolean ledger = Boolean.TRUE.equals(job.get("ledger"));
+        final int rowsCheckEvery = (int) num(job, "rowsCheckEvery", 0);
         final LobbyPlayer lpA = searchA ? liveSearchSeat("Drafter A", 0, specA.profile)
-                : seat("Drafter A", 0, specA, record != null || explore != null);
+                : seat("Drafter A", 0, specA, record != null || explore != null || rows != null, rows != null);
         final LobbyPlayer lpB = searchB ? liveSearchSeat("Drafter B", 1, specB.profile)
-                : seat("Drafter B", 1, specB, record != null || explore != null);
+                : seat("Drafter B", 1, specB, record != null || explore != null || rows != null, rows != null);
+        final java.nio.file.Path rowsDirBefore = DistillRows.dir();
+        if (rows != null) {
+            DistillRows.useDir(java.nio.file.Path.of(str(rows, "dir")));
+        }
         int winsA = 0, winsB = 0;
         final int need = games / 2 + 1;
         res.key("games").arr();
@@ -446,14 +471,37 @@ public final class CubeLab {
                     : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, specA, specB, exploreHeader);
             // J126: the distilled policy's row exporter names its rows by the draft and game (off unless
             // MTGTABLE_DISTILL_ROWS is set; mtgtable.ai.DistillRows)
-            final String rowsKey = "lab:" + id + ":g" + g;
+            final String rowsKey = rows != null && str(rows, "key") != null ? str(rows, "key") : "lab:" + id + ":g" + g;
             DistillRows.setGame(rowsKey);
-            final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec);
+            if (rows != null) {
+                // D450: the recipe, before the rows -- what census-replay plays again
+                final Map<String, Object> begin = new LinkedHashMap<>();
+                if (rows.get("begin") instanceof Map) {
+                    for (final Map.Entry<?, ?> e : ((Map<?, ?>) rows.get("begin")).entrySet()) {
+                        begin.put(String.valueOf(e.getKey()), e.getValue());
+                    }
+                }
+                begin.put("matchSeed", seed);
+                begin.put("matchGame", (long) g);   // not "game": that key is the rows key
+                begin.put("gameSeed", gameSeed);
+                begin.put("onPlay", aOnPlay ? "A" : "B");
+                begin.put("seat0", "Drafter A");
+                begin.put("seat1", "Drafter B");
+                DistillRows.begin(rowsKey, begin);
+            }
+            RowsLeakCheck.configure(rec == null ? rowsCheckEvery : 0, gameSeed);
+            RowsLeakCheck.reset();
+            final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger);
             DistillRows.endGame(rowsKey, r.winner, !r.stuck && r.error == null);
+            final long[] leak = RowsLeakCheck.counts();
+            RowsLeakCheck.configure(0, 0);
             if (r.stuck) {
                 res.end().n("stuck", true).end();
                 emit(res.done());
                 return 3;
+            }
+            if (rows != null) {
+                DistillRows.close();   // a row file is complete on disk when its match line is
             }
             if ("A".equals(r.winner)) winsA++;
             else if ("B".equals(r.winner)) winsB++;
@@ -470,7 +518,23 @@ public final class CubeLab {
             }
             if (searchA) searchRow(res, "searchA", (PolicyLobbyPlayerAi) lpA);
             if (searchB) searchRow(res, "searchB", (PolicyLobbyPlayerAi) lpB);
+            if (rows != null) {
+                res.key("rows").obj().n("key", rowsKey).n("rowsA", rowsOf(lpA)).n("rowsB", rowsOf(lpB))
+                   .n("errorsA", countOf(lpA, "distill.rowErrors") + countOf(lpA, "distill.stateError"))
+                   .n("errorsB", countOf(lpB, "distill.rowErrors") + countOf(lpB, "distill.stateError")).end();
+            }
+            if (leak[0] + leak[2] > 0) {
+                res.key("rowsCheck").obj().n("checks", leak[0]).n("leaks", leak[1]).n("controls", leak[2])
+                   .n("controlMoved", leak[3]).n("candidates", leak[4]).end();
+            }
+            if (r.ledger != null) {
+                res.key("ledger");
+                r.ledger.write(res);
+            }
             res.end();
+        }
+        if (rows != null) {
+            DistillRows.useDir(rowsDirBefore);
         }
         res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
         emit(res.done());
@@ -534,10 +598,36 @@ public final class CubeLab {
      * decisions.
      */
     static LobbyPlayer seat(final String name, final int avatar, final SeatSpec spec, final boolean recorded) {
+        return seat(name, avatar, spec, recorded, false);
+    }
+
+    /**
+     * {@link #seat(String, int, SeatSpec, boolean)}, and with {@code observe}
+     * (D450: the census's rows) a plain seat's controller generates the
+     * search's candidates and plays Forge's answer ({@code observe=1}).
+     */
+    static LobbyPlayer seat(final String name, final int avatar, final SeatSpec spec, final boolean recorded,
+                            final boolean observe) {
         if (spec.plain() && !recorded) {
             return Bootstrap.createAiPlayer(name, avatar, spec.profile);
         }
-        return Bootstrap.createAiSeat(name, avatar, spec.profile, null, spec.outlets, spec.search);
+        final SearchConfig search = spec.search != null ? spec.search
+                : observe ? SearchConfig.parse("observe=1") : null;
+        return Bootstrap.createAiSeat(name, avatar, spec.profile, null, spec.outlets, search);
+    }
+
+    /** D450: the rows a seat's controller wrote in the game just played. */
+    static long rowsOf(final LobbyPlayer lp) {
+        return countOf(lp, "distill.rows");
+    }
+
+    static long countOf(final LobbyPlayer lp, final String key) {
+        if (!(lp instanceof PolicyLobbyPlayerAi)) {
+            return 0;
+        }
+        final PolicyControllerAi c = ((PolicyLobbyPlayerAi) lp).lastController();
+        final Integer n = c == null ? null : c.counts().get(key);
+        return n == null ? 0 : n;
     }
 
     /**
@@ -617,6 +707,7 @@ public final class CubeLab {
         int recordErrors;
         int recordDecisions;       // D347: decision records written, both chairs
         int recordDecisionErrors;
+        GameLedger ledger;         // D450: the per-turn ledger, or null
     }
 
     /**
@@ -664,10 +755,20 @@ public final class CubeLab {
             if (str(rec, "ver") != null) lab.put("ver", str(rec, "ver"));
             lab.put("seatA", specA.text);
             lab.put("seatB", specB.text);
+            this.name = str(rec, "name");
+            if (rec.get("census") instanceof Map) {
+                // D450: a census game's own fields (deck ids, the census seed and game number)
+                for (final Map.Entry<?, ?> e : ((Map<?, ?>) rec.get("census")).entrySet()) {
+                    lab.put("census." + e.getKey(), e.getValue());
+                }
+            }
         }
 
+        /** D450: the logs' file name before {@code -seat<n>}, or null for {@code g<game>}. */
+        String name;
+
         File out(final int seat) {
-            return new File(dir, "g" + lab.get("game") + "-seat" + seat + ".jsonl.gz");
+            return new File(dir, (name != null ? name : "g" + lab.get("game")) + "-seat" + seat + ".jsonl.gz");
         }
 
         static String relPath(final File f) {
@@ -700,6 +801,12 @@ public final class CubeLab {
     static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
                                final boolean aOnPlay, final long gameSeed, final long timeoutMs,
                                final Recording rec) throws Exception {
+        return playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, false);
+    }
+
+    static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
+                               final boolean aOnPlay, final long gameSeed, final long timeoutMs,
+                               final Recording rec, final boolean ledger) throws Exception {
         final GameRules rules = new GameRules(GameType.Draft);
         rules.setAppliedVariants(EnumSet.of(GameType.Draft));
         rules.setGamesPerMatch(1);
@@ -712,6 +819,9 @@ public final class CubeLab {
         final Game game = match.createGame();
         final GameResult r = new GameResult();
         game.subscribeToEvents(new FirstPlayer(game, aOnPlay ? lpA : lpB, r));
+        if (ledger) {
+            r.ledger = GameLedger.attach(game);   // D450: the per-turn public ledger
+        }
         // D315: both chairs' recorders, subscribed after FirstPlayer and before the game starts.
         final List<SeatRecorder> recorders = new ArrayList<>();
         if (rec != null) {
