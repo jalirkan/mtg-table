@@ -16,6 +16,10 @@
 // - An absolute path, and a relative one outside var/ (cubes/..., decks/..., tools/...), is never moved.
 // - The setting must name an existing directory: a drive that is not mounted is an error, never a new
 //   folder on the system disk.
+// - A WRITE path whose repo copy already holds work the re-rooted copy lacks is refused, naming both: a
+//   census folder resumes from its plan.json, a run or a queue from its own files, and re-rooting one
+//   made before the setting would silently start it again from scratch on the drive (the #160 review).
+//   Move the folder to the drive, or unset the setting for that run.
 // - The Forge homes (var/cubelab/homes/<k>/, D129: small, and forge_home_make keeps them under the repo)
 //   and the compiled classes stay in the repo's var/.
 //
@@ -62,15 +66,52 @@ export function labPath(repo: string, p: string, mode: 'read' | 'write', root: s
   const rest = root ? underVar(p) : null;
   if (root && rest !== null) {
     const moved = path.join(root, rest);
-    if (mode === 'write' || fs.existsSync(moved)) return moved;
+    if (mode === 'write') { refuseStranded(path.resolve(repo, p), moved); return moved; }
+    if (fs.existsSync(moved)) return moved;
   }
   return path.resolve(repo, p);
+}
+
+/** True when `p` is a file, or a directory with at least one entry. */
+function holdsWork(p: string): boolean {
+  try { return fs.statSync(p).isDirectory() ? fs.readdirSync(p).length > 0 : true; } catch { return false; }
+}
+
+/**
+ * Why a write would strand work, or null: the repo copy holds something and the re-rooted copy is
+ * missing or empty, or the repo copy has a plan.json (a census folder in progress) and the re-rooted
+ * one has none.  Exported for the tests.
+ */
+export function strandedReason(repoCopy: string, moved: string): string | null {
+  if (!holdsWork(repoCopy)) return null;
+  const planHere = fs.existsSync(path.join(repoCopy, 'plan.json'));
+  if (holdsWork(moved) && !(planHere && !fs.existsSync(path.join(moved, 'plan.json')))) return null;
+  return `${repoCopy} already holds ${planHere ? 'a run in progress (plan.json)' : 'earlier output'} and ${moved}, where ${LAB_DATA_ENV} puts it, does not: `
+    + `writing there would start it again from scratch. Move what is there to ${moved} first, or unset ${LAB_DATA_ENV} (and config.json's labDataDir) for this run`;
+}
+
+function refuseStranded(repoCopy: string, moved: string): void {
+  const why = strandedReason(repoCopy, moved);
+  if (why) throw new Error(why);
 }
 
 /** A path for a report: relative to the repo when inside it, else absolute. */
 export function shownPath(repo: string, abs: string): string {
   const r = path.relative(repo, abs);
   return r && !r.startsWith('..') && !path.isAbsolute(r) ? r : abs;
+}
+
+/**
+ * A path to keep in a recording (a census begin line's deck files): under the lab data root it is
+ * spelled `var/<rest>`, the spelling {@link labPath} reads back re-rooted, so the recording still
+ * replays when the drive is mounted somewhere else; otherwise as {@link shownPath} spells it.
+ */
+export function recipePath(repo: string, abs: string, root: string | null = labDataDir(repo)): string {
+  if (root) {
+    const r = path.relative(root, abs);
+    if (r && !r.startsWith('..') && !path.isAbsolute(r)) return path.join('var', r);
+  }
+  return shownPath(repo, abs);
 }
 
 /**
@@ -81,5 +122,6 @@ export function labArg(repo: string, p: string, mode: 'read' | 'write', root: st
   const rest = root ? underVar(p) : null;
   if (!root || rest === null) return p;
   const moved = path.join(root, rest);
-  return mode === 'write' || fs.existsSync(moved) ? moved : p;
+  if (mode === 'write') { refuseStranded(path.resolve(repo, p), moved); return moved; }
+  return fs.existsSync(moved) ? moved : p;
 }

@@ -77,7 +77,7 @@ import { engineEnv, runPool, type MatchJob, type MatchResult, type RecordSpec } 
 import { fileLines } from './lines.ts';
 import { rng, shuffle } from './rng.ts';
 import { sha12, type DeckRecord } from './deckcensus.ts';
-import { labPath, shownPath } from './labdata.ts';
+import { labDataDir, labPath, recipePath, shownPath } from './labdata.ts';
 import { checkRowsDir, rowBytesByGame } from './rowscheck.ts';
 
 export const RECORD_MODES = ['none', 'rows', 'full'] as const;
@@ -164,7 +164,7 @@ export interface GameRowOut {
   /** D450: the game's rows (its key in the rows files, rows per seat, row errors). */
   rows?: { key: string; rowsA: number; rowsB: number; errorsA: number; errorsB: number };
   /** D450: the engine's leak check on this game's rows (--rows-check-every). */
-  rowsCheck?: { checks: number; leaks: number; controls: number; controlMoved: number };
+  rowsCheck?: { checks: number; leaks: number; controls: number; controlMoved: number; candidates?: number };
   /** D450: the frame logs (--record full): folder, bytes, state frames, snapshot errors, decision records. */
   recorded?: { dir: string; bytes: number; frames: number; errors: number; decisions?: number; decisionErrors?: number };
   /** D450: turns in the game's ledger line (ledger.jsonl). */
@@ -208,13 +208,13 @@ export const rowsKeyOf = (p: PlannedGame): string => `census:${p.seed}`;
 
 /** D450: the match line's recording blocks for one game under a --record mode. */
 export function recordBlocks(mode: RecordMode, out: string, p: PlannedGame, decks: { a: string; b: string; sha: string; dir: string },
-  policyA: Policy, policyB: Policy, rowsCheckEvery: number, repo: string): Partial<MatchJob> & Record<string, unknown> {
+  policyA: Policy, policyB: Policy, rowsCheckEvery: number, repo: string, root: string | null = labDataDir(repo)): Partial<MatchJob> & Record<string, unknown> {
   if (mode === 'none') return {};
   const blocks: Record<string, unknown> = {
     rows: {
       dir: path.join(out, 'rows'),
       key: rowsKeyOf(p),
-      begin: { source: 'census-play', g: p.g, seed: p.seed, a: p.a, b: p.b, deckFileA: shownPath(repo, decks.a), deckFileB: shownPath(repo, decks.b),
+      begin: { source: 'census-play', g: p.g, seed: p.seed, a: p.a, b: p.b, deckFileA: recipePath(repo, decks.a, root), deckFileB: recipePath(repo, decks.b, root),
         decksSha: decks.sha, policyA, policyB, record: mode },
     },
     ledger: true,
@@ -431,7 +431,7 @@ export function recordReport(repo: string, out: string, record: RecordMode, say:
   if (fs.existsSync(lf)) for (const l of fileLines(lf, { complete: true })) if (l) ledgerBytes.set((JSON.parse(l) as { g: number }).g, Buffer.byteLength(l) + 1);
   const sz = { rows: [] as number[], ledger: [] as number[], full: [] as number[] };
   const logs: string[] = [];
-  let leaks = 0, checks = 0, controls = 0, controlMoved = 0, rowsMissing = 0;
+  let leaks = 0, checks = 0, controls = 0, controlMoved = 0, candidates = 0, rowsMissing = 0;
   for (const r of ok) {
     const key = r.rows?.key ?? rowsKeyOf(r);
     const rb = byKey.get(key);
@@ -443,18 +443,18 @@ export function recordReport(repo: string, out: string, record: RecordMode, say:
       logs.push(...fs2);
       sz.full.push(fs2.reduce((a, f) => a + fs.statSync(f).size, 0));
     }
-    if (r.rowsCheck) { leaks += r.rowsCheck.leaks; checks += r.rowsCheck.checks; controls += r.rowsCheck.controls; controlMoved += r.rowsCheck.controlMoved; }
+    if (r.rowsCheck) { leaks += r.rowsCheck.leaks; checks += r.rowsCheck.checks; controls += r.rowsCheck.controls; controlMoved += r.rowsCheck.controlMoved; candidates += r.rowsCheck.candidates ?? 0; }
   }
   const red = record === 'full' ? redactionCheck(repo, logs) : null;
   const problems = [...rc.problems];
-  if (leaks > 0) problems.push(`the engine's leak check: ${leaks} of ${checks} rows' states moved when only the opponent's hidden cards did`);
+  if (leaks > 0) problems.push(`the engine's leak check: ${leaks} of ${checks} rows' states or candidate vectors moved when only the opponent's hidden cards did`);
   if (red && red.failed.length) problems.push(`${red.failed.length} frame log(s) failed tools/check-redaction.mjs: ${red.failed.slice(0, 5).map((f) => path.basename(f)).join(', ')}`);
   if (rowsMissing > 0) problems.push(`${rowsMissing} game(s) with no rows in ${path.basename(rowsDir)}/`);
   const doc = {
     mode: record, games: ok.length,
     sizes: { rows: sizeStats(sz.rows), ledger: sizeStats(sz.ledger), ...(record === 'full' ? { full: sizeStats(sz.full) } : {}) },
     rowsCheck: { files: rc.files, rows: rc.rows, gamesIdChecked: rc.games, problems: rc.problems.length },
-    leakCheck: { checks, leaks, controls, controlMoved },
+    leakCheck: { checks, leaks, controls, controlMoved, candidates },
     redaction: red ? { logs: red.checked, failed: red.failed.length, ms: red.ms } : null,
     problems: problems.slice(0, 50),
   };
@@ -462,7 +462,7 @@ export function recordReport(repo: string, out: string, record: RecordMode, say:
   const tally = fs.existsSync(tallyFile) ? JSON.parse(fs.readFileSync(tallyFile, 'utf8')) as Record<string, unknown> : {};
   fs.writeFileSync(tallyFile, `${JSON.stringify({ ...tally, record: doc }, null, 2)}\n`);
   const kb = (x: number | null): string => (x === null ? '-' : `${(x / 1024).toFixed(1)} KB`);
-  say(`census-play: record ${record}: per game rows ${kb(doc.sizes.rows.mean)} (median ${kb(doc.sizes.rows.median)}), ledger ${kb(doc.sizes.ledger.mean)}${record === 'full' ? `, frames ${kb(doc.sizes.full?.mean ?? null)}` : ''}; rows checked ${rc.rows} in ${rc.files} file(s)${checks ? `, leak check ${leaks}/${checks} (controls moved ${controlMoved}/${controls})` : ''}${red ? `, ${red.checked} frame log(s) redaction-checked in ${(red.ms / 1000).toFixed(0)} s` : ''}`);
+  say(`census-play: record ${record}: per game rows ${kb(doc.sizes.rows.mean)} (median ${kb(doc.sizes.rows.median)}), ledger ${kb(doc.sizes.ledger.mean)}${record === 'full' ? `, frames ${kb(doc.sizes.full?.mean ?? null)}` : ''}; rows checked ${rc.rows} in ${rc.files} file(s)${checks ? `, leak check ${leaks}/${checks} (candidates compared in ${candidates}; controls moved ${controlMoved}/${controls})` : ''}${red ? `, ${red.checked} frame log(s) redaction-checked in ${(red.ms / 1000).toFixed(0)} s` : ''}`);
   if (problems.length) {
     for (const pr of problems.slice(0, 20)) say(`  RECORD PROBLEM: ${pr}`);
     return 3;

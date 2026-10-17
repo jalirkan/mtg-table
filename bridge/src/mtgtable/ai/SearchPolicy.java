@@ -1956,8 +1956,8 @@ public final class SearchPolicy {
                     c, tokens, played, fallback, ms, policy);
             sink.add("distill.rows", 1);
             if (RowsLeakCheck.due()) {
-                // D450: the row's state must not move when the opponent's hidden cards do
-                RowsLeakCheck.check(ai, sink);
+                // D450: the row's state and candidates must not move when the opponent's hidden cards do
+                RowsLeakCheck.check(ai, sink, kind, cands);
             }
         } catch (final RuntimeException e) {
             sink.add("distill.rowErrors", 1);

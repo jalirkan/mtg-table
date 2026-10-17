@@ -81,6 +81,7 @@ public final class StalledGameSelfTest {
         singleGameStillFails();
         cannotBeConceded();
         refusals();
+        endedBeforeTheAbandon();
         refusalReasons();
         wallClockIsNotIdle();
         abandonedLastGameLingers();
@@ -116,6 +117,8 @@ public final class StalledGameSelfTest {
         boolean over;
         boolean inputSeen = true;
         boolean controlled = true;
+        /** The game reaches `over` on its own between the loop's idle verdict and its abandon. */
+        boolean endsAtAbandon;
         int started = 1;                                   // game 1 begins with the session
         int ended;
         final List<long[]> script = new ArrayList<>();     // {at, kind, arg}
@@ -174,6 +177,10 @@ public final class StalledGameSelfTest {
         @Override public String abandon(final String text) {
             abandons.add(text);
             abandonedAt.add(now);
+            if (endsAtAbandon) {
+                over = true;
+                ended = started;
+            }
             final String refusal = WireGuiGame.abandonRefusal(closed, tableSeat, ready, over, inputSeen, controlled);
             if (refusal == null) {
                 ended = started;                           // the concede ends it: `over`
@@ -286,6 +293,32 @@ public final class StalledGameSelfTest {
         refused("wrong seat", f -> f.tableSeat = true,
                 "this is a seat at a table of two, where an away player is waited for and only the "
                         + "table concedes for them (D403)");
+    }
+
+    /**
+     * #159's review: a game that reached `over` on its own between the idle
+     * verdict and the abandon is refused as "already over" -- and that is not a
+     * failure.  The loop waits for the `over`, counts the game as played (not
+     * stalled, /health never told) and goes on as after an abandoned game, since
+     * nobody is connected to ask for the next one.
+     */
+    private static void endedBeforeTheAbandon() throws InterruptedException {
+        final Fake f = new Fake();
+        f.endsAtAbandon = true;
+        final Run run = play(f, 3, true, 0L, IDLE);
+        eq("ended: the session finished", true, run.r.finished);
+        eq("ended: all three games played", 3, run.r.played);
+        eq("ended: none stalled", 0, run.r.stalled);
+        eq("ended: /health was never told", -1, f.stalledReported);
+        eq("ended: the server started games 2 and 3 itself", 2, f.nextGames);
+        eq("ended: no ABANDONED summary", null, run.r.abandoned);
+        eq("ended: nothing failed", null, run.r.failure);
+        has("ended", run.out, "STALLED GAME 1: it reached `over` on its own before the abandon -- "
+                + "counted as played, not abandoned");
+        hasNot("ended", run.out, "not abandoned --");
+        hasNot("ended", run.out, "over: no result");
+        eq("ended: the refusal is the constant", WireGuiGame.REFUSED_OVER,
+                WireGuiGame.abandonRefusal(false, false, true, true, true, true));
     }
 
     private static void refused(final String what, final java.util.function.Consumer<Fake> seat,

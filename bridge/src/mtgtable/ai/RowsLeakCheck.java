@@ -37,7 +37,8 @@ import forge.game.zone.ZoneType;
  * holds the exporter to that on live decisions, the way {@code EvalLiveCheck}
  * holds the evaluator (D316): the opponent's hand and library are dealt again
  * from their own cards and the deciding seat's library is shuffled -- the state
- * must not move -- and, the negative control, the deciding seat's OWN hand is
+ * must not move, and neither may any candidate's vector ({@link
+ * DistillFeatures#candidates}, the #160 review: a row is both) -- and, the negative control, the deciding seat's OWN hand is
  * swapped with cards of its library, which must move it (else the check could
  * not see a leak at all).  Every zone is put back before the game goes on.
  *
@@ -59,6 +60,7 @@ public final class RowsLeakCheck {
     private static long leaks;
     private static long controls;
     private static long controlMoved;
+    private static long candChecks;
 
     /** Check every {@code n}-th row from now on (0 = off), with a generator seeded by {@code seed}. */
     public static synchronized void configure(final int n, final long seed) {
@@ -76,9 +78,13 @@ public final class RowsLeakCheck {
         return seen % every == 0;
     }
 
-    /** Checks, leaks (the state moved when only hidden cards did), negative controls and how many of those moved. */
+    /**
+     * Checks, leaks (the state or a candidate's vector moved when only hidden
+     * cards did), negative controls, how many of those moved, and how many
+     * checks compared candidate vectors too.
+     */
     public static synchronized long[] counts() {
-        return new long[] {checks, leaks, controls, controlMoved};
+        return new long[] {checks, leaks, controls, controlMoved, candChecks};
     }
 
     /** Zero the counters (one game's worth at a time). */
@@ -87,6 +93,7 @@ public final class RowsLeakCheck {
         leaks = 0;
         controls = 0;
         controlMoved = 0;
+        candChecks = 0;
     }
 
     /**
@@ -94,10 +101,12 @@ public final class RowsLeakCheck {
      * state is encoded again first (the row's own was taken before the answer,
      * and an attack or a block since then changed the combat it reads).
      */
-    static synchronized void check(final Player ai, final SearchPolicy.Sink sink) {
+    static synchronized void check(final Player ai, final SearchPolicy.Sink sink, final String kind,
+                                   final List<SearchPolicy.Cand> cands) {
         try {
             final Game game = ai.getGame();
             final double[] state = DistillFeatures.state(ai);
+            final double[][] cand = cands == null || cands.isEmpty() ? null : DistillFeatures.candidates(kind, ai, cands, null);
             for (final Player opp : game.getPlayers()) {
                 if (opp == ai) {
                     continue;
@@ -118,9 +127,15 @@ public final class RowsLeakCheck {
                     Collections.shuffle(m1, rng);
                     myLib.setCards(m1);
                     checks++;
-                    if (!Arrays.equals(state, DistillFeatures.state(ai))) {
+                    final boolean stateMoved = !Arrays.equals(state, DistillFeatures.state(ai));
+                    boolean candMoved = false;
+                    if (cand != null) {
+                        candChecks++;
+                        candMoved = !Arrays.deepEquals(cand, DistillFeatures.candidates(kind, ai, cands, null));
+                    }
+                    if (stateMoved || candMoved) {
                         leaks++;
-                        sink.add("distill.rowsLeak", 1);
+                        sink.add(stateMoved ? "distill.rowsLeak" : "distill.rowsLeakCandidate", 1);
                     }
                 } finally {
                     hand.setCards(h0);
