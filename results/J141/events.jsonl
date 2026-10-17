@@ -3,3 +3,4 @@
 {"at":"2026-10-17T12:31:50-04:00","kind":"playing","workers":3,"pressure":0,"why":"Justin is at the table: new games wait"}
 {"at":"2026-10-17T12:46:15-04:00","kind":"play-ended","workers":3,"pressure":0,"why":"Justin left the table"}
 {"at":"2026-10-17T12:58:14-04:00","kind":"playing","workers":7,"pressure":0,"why":"Justin is at the table: new games wait"}
+{"at":"2026-10-17T13:22:58-04:00","kind":"play-ended","workers":7,"pressure":0,"why":"Justin left the table"}
