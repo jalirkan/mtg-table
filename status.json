@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-17T12:31:15-04:00",
- "heartbeat": "2026-10-17T12:31:15-04:00",
+ "updated": "2026-10-17T12:31:50-04:00",
+ "heartbeat": "2026-10-17T12:31:50-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.45,
-  "memUsedGb": 9.7,
+  "load1": 10.88,
+  "memUsedGb": 11.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 2205,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 2/3",
    "started": "2026-10-17T12:05:20-04:00",
-   "elapsed": 1555,
+   "elapsed": 1590,
    "done": 0,
    "total": 6000,
    "unit": "lines",
@@ -36,14 +36,14 @@
    "workersMax": 3,
    "cores": 3,
    "errors": 0,
-   "paused": false,
+   "paused": true,
    "dataUpdated": "2026-10-17T12:05:20-04:00",
-   "memGb": 0.06,
+   "memGb": 2.07,
    "live": {
     "played": 0,
     "engine_errors": 0,
     "cards": 0,
-    "elapsed_s": 1523,
+    "elapsed_s": 1590,
     "gzp": 0,
     "gzs": 0,
     "has_tools": 1,
@@ -65,7 +65,7 @@
     "pj.games_per_h": 0,
     "ppj.games": 0,
     "ppj.games_per_h": 0,
-    "pressure_events": 1,
+    "pressure_events": 3,
     "proj_h": 99,
     "pstrict": 0,
     "qwriters": 0,
@@ -97,6 +97,12 @@
     {
      "at": "2026-10-17T12:31:14-04:00",
      "kind": "play-ended",
+     "workers": 3,
+     "pressure": 0
+    },
+    {
+     "at": "2026-10-17T12:31:50-04:00",
+     "kind": "playing",
      "workers": 3,
      "pressure": 0
     }
