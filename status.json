@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-17T12:00:46-04:00",
- "heartbeat": "2026-10-17T12:00:46-04:00",
+ "updated": "2026-10-17T12:05:06-04:00",
+ "heartbeat": "2026-10-17T12:05:06-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.39,
-  "memUsedGb": 11.4,
+  "load1": 5.82,
+  "memUsedGb": 8,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3355,
-  "pressure": 0.54,
+  "swapUsedMb": 2222,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J140",
    "title": "The deck census, night 1 -- per power band (pauper, peasant, legacy, powered) 2,500 40-card decks drawn straight from the band's pool at random colour makeups (cubelab.sh decks, D447: k colours uniform on 1-5, flat Dirichlet shares, cards uniform within the shares, one land formula, every spell castable, a 10% cross-band slice inside each deck; deck seeds 1401-1404), each deck in exactly 16 Bo1 games against random decks of its band (census-play, 20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Default vs Default, numbers only; the win rate across the colour spectrum and per-card rows reported, no verdict",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-10-17T02:49:17-04:00",
-   "elapsed": 33089,
+   "elapsed": 33349,
    "done": 79998,
    "total": 80000,
    "unit": "lines",
-   "ratePerHour": 8027.5,
-   "eta": "2026-10-17T12:00:47-04:00",
+   "ratePerHour": 7029.8,
+   "eta": "2026-10-17T12:05:07-04:00",
    "workers": 5,
    "workersMax": 5,
-   "cores": 7,
+   "cores": 1,
    "errors": 1,
    "paused": false,
    "dataUpdated": "2026-10-17T11:59:49-04:00",
-   "memGb": 2.47,
+   "memGb": 0,
    "live": {
     "played": 79998,
     "engine_errors": 1,
@@ -47,7 +47,7 @@
     "redraws.legacy": 0,
     "redraws.powered": 0,
     "cards": 0,
-    "elapsed_s": 33032,
+    "elapsed_s": 33296,
     "gle.decisive": 19977,
     "gle.draws": 23,
     "gle.engineErrorRate": 0,
@@ -106,7 +106,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J140-run1"
+   "detail": "lab-J140-run2"
   }
  ],
  "queue": [
