@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-17T12:10:39-04:00",
- "heartbeat": "2026-10-17T12:10:39-04:00",
+ "updated": "2026-10-17T12:11:01-04:00",
+ "heartbeat": "2026-10-17T12:11:01-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.89,
-  "memUsedGb": 10.1,
+  "load1": 7.58,
+  "memUsedGb": 8.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 2222,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 2/3",
    "started": "2026-10-17T12:05:20-04:00",
-   "elapsed": 320,
+   "elapsed": 341,
    "done": 0,
    "total": 6000,
    "unit": "lines",
@@ -36,9 +36,9 @@
    "workersMax": 3,
    "cores": 3,
    "errors": 0,
-   "paused": false,
+   "paused": true,
    "dataUpdated": "2026-10-17T12:05:20-04:00",
-   "memGb": 3.1,
+   "memGb": 1.11,
    "live": {
     "played": 0,
     "engine_errors": 0,
@@ -87,7 +87,14 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
+   "pressureEvents": [
+    {
+     "at": "2026-10-17T12:11:01-04:00",
+     "kind": "playing",
+     "workers": 3,
+     "pressure": 0
+    }
+   ],
    "detail": "lab-J141-pilot2"
   }
  ],

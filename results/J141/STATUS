@@ -4,3 +4,5 @@ started: 2026-10-17T12:05:20-04:00
 phase: pilot 2/3
 mtg-table: 2e107b6
 workers: 3
+peak_worker_rss_gb: 1.42
+pressure-1: 2026-10-17T12:11:01-04:00 playing to 3 worker(s): Justin is at the table: new games wait
