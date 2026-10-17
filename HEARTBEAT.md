@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-17T12:45:31-04:00
+- time: 2026-10-17T12:46:15-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J141 pilot 2/3, 0/6000 lines, 3 worker(s), 3 core(s), PAUSED
+- running: J141 pilot 2/3, 0/6000 lines, 3 worker(s), 3 core(s)
 - cores: 3 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.83; memory 6.5/30.5 GB, swap 2199 MB, pressure 0% (lab budget 23.4 GB)
+- load: 1.45; memory 6/30.5 GB, swap 2198 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J142
 - waiting: nothing
 - last finished: J140 done at 2026-10-17T12:05:19-04:00: played 80000 · engine_errors 3 · redraws.pauper 0 · redraws.peasant 0 · redraws.legacy 0 · redraws.powered 0 · sp.bands.pauper.byColours.1.wr 0.574 · sp.bands.peasant.byColours.1.wr 0.599 · sp.bands.legacy.byColours.1.wr 0.597 · sp.bands.powered.byColours.1.wr 0.593 · cards 4271

@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-17T12:45:31-04:00",
- "heartbeat": "2026-10-17T12:45:31-04:00",
+ "updated": "2026-10-17T12:46:15-04:00",
+ "heartbeat": "2026-10-17T12:46:15-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.83,
-  "memUsedGb": 6.5,
+  "load1": 1.45,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2199,
+  "swapUsedMb": 2198,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 2/3",
    "started": "2026-10-17T12:05:20-04:00",
-   "elapsed": 2411,
+   "elapsed": 2455,
    "done": 0,
    "total": 6000,
    "unit": "lines",
@@ -36,7 +36,7 @@
    "workersMax": 3,
    "cores": 3,
    "errors": 0,
-   "paused": true,
+   "paused": false,
    "dataUpdated": "2026-10-17T12:05:20-04:00",
    "memGb": 0.06,
    "live": {
@@ -103,6 +103,12 @@
     {
      "at": "2026-10-17T12:31:50-04:00",
      "kind": "playing",
+     "workers": 3,
+     "pressure": 0
+    },
+    {
+     "at": "2026-10-17T12:46:15-04:00",
+     "kind": "play-ended",
      "workers": 3,
      "pressure": 0
     }
