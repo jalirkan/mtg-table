@@ -1,7 +1,8 @@
 # The search hint — `POST /hint` on the coach helper (D429)
 
 "When I'm playing, can I see what Search AI would recommend that I do?" On a
-button press — never on its own — the engine on the player's PC plays the
+button press — or, when ForgeCoach's coach selector is on Search AI (its
+default), once per decision by itself — the engine on the player's PC plays the
 decision in front of them out for a few seconds and says which option it
 would take and how sure it is: "Attack with both — clearly best", or "Cast
 Shock, or cast nothing now — too close to call". It is the post-game review's
