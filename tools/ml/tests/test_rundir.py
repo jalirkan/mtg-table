@@ -90,10 +90,14 @@ class RunDirTest(unittest.TestCase):
     def test_falls_back_to_run_json_cube_and_checks_its_sha(self):
         with tempfile.TemporaryDirectory() as tmp:
             run = _copy_run(os.path.join(tmp, "r"))
-            os.remove(os.path.join(run, "cube.md"))
-            # run.json's cubeFile, relative to the repo root
-            rd = E.read_run_dir(run, repo=ROOT)
-            self.assertEqual(os.path.abspath(rd.vocab), os.path.join(ROOT, "cubes", "synergy-cube-180.md"))
+            # run.json's cubeFile, relative to the repo root -- a scratch root
+            # holding the run's own copy at that path, not the live cubes/ file,
+            # which moves on (Synergy v3, #157) while this recording stays v1
+            repo = os.path.join(tmp, "repo")
+            os.makedirs(os.path.join(repo, "cubes"))
+            shutil.move(os.path.join(run, "cube.md"), os.path.join(repo, "cubes", "synergy-cube-180.md"))
+            rd = E.read_run_dir(run, repo=repo)
+            self.assertEqual(os.path.abspath(rd.vocab), os.path.join(repo, "cubes", "synergy-cube-180.md"))
             # a cube that is not the one drafted is refused
             other = os.path.join(tmp, "other.md")
             with open(rd.vocab, encoding="utf-8") as f:
@@ -105,7 +109,7 @@ class RunDirTest(unittest.TestCase):
             with open(os.path.join(run, "run.json"), "w", encoding="utf-8") as f:
                 json.dump(meta, f)
             with self.assertRaises(SystemExit) as cm:
-                E.read_run_dir(run, repo=ROOT)
+                E.read_run_dir(run, repo=repo)
             self.assertIn("is not the cube this run drafted", str(cm.exception))
 
     def test_not_a_run_folder(self):
