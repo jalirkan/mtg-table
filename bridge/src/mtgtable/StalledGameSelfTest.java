@@ -44,7 +44,10 @@ import java.util.Map;
  *       client, the count reaches {@code /health}, the server starts the next
  *       game itself and stays up, and the match ends as after any {@code over}.
  *       And the rules around it: a single game still fails (D286, gate step
- *       10h), so does a game that cannot be conceded, a wall-clock timeout is
+ *       10h), so does a game that cannot be conceded -- with its real cause on
+ *       the {@code STALLED GAME n: not abandoned} line, decided before anything
+ *       is posted: no input yet, no controller, already over, or a table seat
+ *       ({@link WireGuiGame#abandonRefusal}) -- a wall-clock timeout is
  *       never an abandonment, an abandoned last game lingers under
  *       {@code --keep-open} and then ends cleanly, and a transport with no
  *       socket never abandons anything;</li>
@@ -77,6 +80,8 @@ public final class StalledGameSelfTest {
         stalledGameGoesOn();
         singleGameStillFails();
         cannotBeConceded();
+        refusals();
+        refusalReasons();
         wallClockIsNotIdle();
         abandonedLastGameLingers();
         noSocketNeverAbandons();
@@ -103,7 +108,14 @@ public final class StalledGameSelfTest {
         long now;
         boolean socket = true;
         boolean connected;
-        boolean canAbandon = true;
+        // The seat's own state, as WireGuiGame.abandonForAbsentSeat reads it:
+        // its refusal comes from the real abandonRefusal over these.
+        boolean closed;
+        boolean tableSeat;
+        boolean ready = true;
+        boolean over;
+        boolean inputSeen = true;
+        boolean controlled = true;
         int started = 1;                                   // game 1 begins with the session
         int ended;
         final List<long[]> script = new ArrayList<>();     // {at, kind, arg}
@@ -159,13 +171,14 @@ public final class StalledGameSelfTest {
         @Override public boolean hasSocket() { return socket; }
         @Override public boolean connected() { return connected; }
         @Override public long nanoTime() { return now; }
-        @Override public boolean abandon(final String text) {
+        @Override public String abandon(final String text) {
             abandons.add(text);
             abandonedAt.add(now);
-            if (canAbandon) {
+            final String refusal = WireGuiGame.abandonRefusal(closed, tableSeat, ready, over, inputSeen, controlled);
+            if (refusal == null) {
                 ended = started;                           // the concede ends it: `over`
             }
-            return canAbandon;
+            return refusal;
         }
         @Override public void startNextGame() {
             nextGames++;
@@ -252,16 +265,75 @@ public final class StalledGameSelfTest {
 
     /** A game the engine has not asked anything in (no input yet) cannot be conceded: the run fails as before. */
     private static void cannotBeConceded() throws InterruptedException {
+        refused("unconcedable", f -> f.inputSeen = false,
+                "the engine has not asked this seat anything yet, so there is no game to concede");
+    }
+
+    /**
+     * The three refusals the cloud's review of #155 asked for, each decided
+     * BEFORE anything is posted to the EDT: no controller, a game that is already
+     * over, a seat that is not one the loop may concede for (a table seat, D403).
+     * Each fails a {@code --games N} run exactly as #155's "cannot be conceded"
+     * did -- tried once, no next game, no stalled count, ABANDONED in the
+     * summary -- with its own reason on the STALLED GAME line; and a single game
+     * never asks, keeping D286's failure.
+     */
+    private static void refusals() throws InterruptedException {
+        refused("no controller", f -> f.controlled = false,
+                "the seat has no controller, so the game cannot be conceded");
+        refused("already over", f -> f.over = true,
+                "the game is already over (its `over` is out)");
+        refused("wrong seat", f -> f.tableSeat = true,
+                "this is a seat at a table of two, where an away player is waited for and only the "
+                        + "table concedes for them (D403)");
+    }
+
+    private static void refused(final String what, final java.util.function.Consumer<Fake> seat,
+                                final String reason) throws InterruptedException {
         final Fake f = new Fake();
-        f.canAbandon = false;
+        seat.accept(f);
         final Run run = play(f, 3, true, 0L, IDLE);
-        eq("unconcedable: the run fails", false, run.r.finished);
-        eq("unconcedable: it was tried once", 1, f.abandons.size());
-        eq("unconcedable: no next game", 0, f.nextGames);
-        eq("unconcedable: no stalled count", 0, run.r.stalled);
-        eq("unconcedable: the summary says why", true,
-                run.r.abandoned != null && run.r.abandoned.contains("could not be ended with no result"));
-        has("unconcedable", run.out, "the engine has not asked this seat anything yet");
+        eq(what + ": the run fails", false, run.r.finished);
+        eq(what + ": it was tried once", 1, f.abandons.size());
+        eq(what + ": no game reached `over`", 0, run.r.played);
+        eq(what + ": no next game", 0, f.nextGames);
+        eq(what + ": no stalled count", 0, run.r.stalled);
+        eq(what + ": /health was never told", -1, f.stalledReported);
+        eq(what + ": nothing else failed", null, run.r.failure);
+        eq(what + ": the summary is #155's", "ABANDONED: game 1 had no client for " + IDLE
+                + " s and could not be ended with no result, so the session ends (D448)", run.r.abandoned);
+        has(what, run.out, "STALLED GAME 1 (fake-g1): no client connected for 3600 s");
+        has(what, run.out, "STALLED GAME 1: not abandoned -- " + reason + "\n");
+        hasNot(what, run.out, "no `over` within");
+        hasNot(what, run.out, "STALLED GAME 1 over");
+        // --games 1: the loop never asks the seat, so its state cannot matter (D286, gate step 10h).
+        final Fake g = new Fake();
+        seat.accept(g);
+        final Run one = play(g, 1, true, 0L, IDLE);
+        eq(what + ", single game: the run fails", false, one.r.finished);
+        eq(what + ", single game: the seat is not asked", 0, g.abandons.size());
+        eq(what + ", single game: 10h's line", "ABANDONED: no client connected for " + IDLE
+                + " s, so the session ends; --idle-timeout 0 turns this off", one.r.abandoned);
+        hasNot(what + ", single game", one.out, "not abandoned");
+    }
+
+    /** {@link WireGuiGame#abandonRefusal} itself: null only when every condition holds, and the first cause wins. */
+    private static void refusalReasons() {
+        eq("refusal: a game that can be abandoned", null,
+                WireGuiGame.abandonRefusal(false, false, true, false, true, true));
+        eq("refusal: closed", "the seat is closed",
+                WireGuiGame.abandonRefusal(true, false, true, false, true, true));
+        eq("refusal: not begun", "the game has not begun (no `hello_ok` yet)",
+                WireGuiGame.abandonRefusal(false, false, false, false, false, false));
+        eq("refusal: closed comes first", "the seat is closed",
+                WireGuiGame.abandonRefusal(true, true, false, true, false, false));
+        eq("refusal: the seat before the game", true,
+                WireGuiGame.abandonRefusal(false, true, true, true, false, false).startsWith("this is a seat at a table"));
+        eq("refusal: over before no input (the reset hook has not run yet)",
+                "the game is already over (its `over` is out)",
+                WireGuiGame.abandonRefusal(false, false, true, true, false, false));
+        eq("refusal: no input before no controller (the controller is read at an input)", true,
+                WireGuiGame.abandonRefusal(false, false, true, false, false, false).startsWith("the engine has not asked"));
     }
 
     /** --game-timeout is the wedged-engine limit, not an absent player: never abandoned. */

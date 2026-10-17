@@ -59,93 +59,94 @@
  * sec  lines      what is there, and its members (line)
  *                 thread | lock | governed by
  * ---  ---------  --------------------------------------------------------------
- * -    220-262    the class comment, then the class declaration (261): the three
+ * -    221-263    the class comment, then the class declaration (262): the three
  *                 rules this file is written to -- a push touches only getId() on a
  *                 view; only the game thread may block; no thread of ours is named Game*
  *                 - | - | report 07 section 2.5, hard rules 2 and 3
- * -    263-992    construction and injected wiring: the constructor (645),
- *                 setHostedMatch (665), setSession (670), setLogFactory (680),
- *                 awaitGameEnd (814) and awaitGameStart (819) with their await
- *                 (846), the run summary's counters from unimplemented (863) to
- *                 refreshesSkipped (985)
+ * -    264-1003   construction and injected wiring: the constructor (656),
+ *                 setHostedMatch (676), setSession (681), setLogFactory (691),
+ *                 awaitGameEnd (825) and awaitGameStart (830) with their await
+ *                 (857), the run summary's counters from unimplemented (874) to
+ *                 refreshesSkipped (996)
  *                 MAIN | LIFE, for the game counters | report 07 section 3; D44
- * -    993-1182   frame emission: emit (1004), logC2s (1087), envelope (1123),
- *                 notice (1150), unimpl (1171), fired (1179)
+ * -    1004-1193  frame emission: emit (1015), logC2s (1098), envelope (1134),
+ *                 notice (1161), unimpl (1182), fired (1190)
  *                 whichever thread emits: GAME (`state`), EDT (`input`, notices),
  *                 IO, MAIN (game 1's `hello_ok`), and BG in the build | LOG, taken
- *                 at 1042 and 1107, with `over` re-checked under it at 1063 and 1108 |
+ *                 at 1053 and 1118, with `over` re-checked under it at 1074 and 1119 |
  *                 protocol sections 1 and 8.4: `over` is terminal (OverRaceSelfTest)
- * 1    1183-1401  openView, the wiring hook: openView (1195), seedPhaseStops (1287),
- *                 resetForGame (1342), the one reset hook between games
+ * 1    1194-1413  openView, the wiring hook: openView (1206), seedPhaseStops (1298),
+ *                 resetForGame (1353), the one reset hook between games
  *                 game 1: MAIN, the caller of HostedMatch.startMatch; later games:
  *                 EDT, from an `act: newGame` | LIFE; `deferred` and INPUT inside the
  *                 reset | report 07 section 4.1; D44 and amendment M38; D38
- * 2    1402-1765  handleGameEvents, THE snapshot hook: handleGameEvents (1422),
- *                 flushState (1437), OutcomeWatcher (1527), FinishWatcher (1549),
- *                 engineFinished (1565), the test hooks (1589-1697), captureOutcome
- *                 (1711; its hop is at 1717, tagged D39)
+ * 2    1414-1777  handleGameEvents, THE snapshot hook: handleGameEvents (1434),
+ *                 flushState (1449), OutcomeWatcher (1539), FinishWatcher (1561),
+ *                 engineFinished (1577), the test hooks (1601-1709), captureOutcome
+ *                 (1723; its hop is at 1729, tagged D39)
  *                 GAME; a batch that arrives on any other thread is buffered in
- *                 `deferred` (1425-1430); engineFinished runs on the EDT | `deferred`'s
+ *                 `deferred` (1437-1442); engineFinished runs on the EDT | `deferred`'s
  *                 monitor; LOG through emit | hard rule 3, D5; D114 (FinishWatcher);
  *                 D39 (the hop); amendments M4 and M11
- * 3    1766-2160  the input path: InputState (1771), engineInput (1836),
- *                 mutateInput (1859), inputBody (1875), showPromptMessage (1986),
- *                 updateButtons (2001), setSelectables (2024), setHighlighted (2050),
- *                 setCard (2086), peekInput (1971, M65 / M66's InputPeek read) and the
+ * 3    1778-2174  the input path: InputState (1783), engineInput (1848),
+ *                 mutateInput (1873), inputBody (1889), showPromptMessage (2000),
+ *                 updateButtons (2015), setSelectables (2038), setHighlighted (2064),
+ *                 setCard (2100), peekInput (1986, M65 / M66's InputPeek read) and the
  *                 rest of the prompt pushes
  *                 Forge pushes from the EDT, from GAME and from the thread of a click
- *                 | INPUT (1864-1871); the push goes out after it is released
- *                 (1872) | D22 (inputGen), amendment M42 (inputSeen), protocol
+ *                 | INPUT (1878-1885); the push goes out after it is released
+ *                 (1886) | D22 (inputGen), amendment M42 (inputSeen), protocol
  *                 section 4
- * 4    2161-2333  the other pushes: updateCurrentPlayer (2171, AbstractGuiGame's
- *                 own abstract member), the overlays, message (2222), showErrorDialog
- *                 (2228), finishGame (2234), engineCrashed (2256), afterGameEnd
- *                 (2269), emitOver (2286)
+ * 4    2175-2347  the other pushes: updateCurrentPlayer (2185, AbstractGuiGame's
+ *                 own abstract member), the overlays, message (2236), showErrorDialog
+ *                 (2242), finishGame (2248), engineCrashed (2270), afterGameEnd
+ *                 (2283), emitOver (2300)
  *                 mostly the EDT; engineCrashed on the dying Game-n thread; emitOver
  *                 on whichever thread saw the outcome | `this`, so `over` goes out
  *                 once; LIFE, for games finished | amendments M4 and M11; D114; D115
- * 5    2334-2446  openZones / tempShowZones, hints and not questions: tempShowZones
- *                 (2348), openZones (2364), restoreOldZones (2385), hideZones (2391),
- *                 the zone-hint helpers (2396-2445)
+ * 5    2348-2460  openZones / tempShowZones, hints and not questions: tempShowZones
+ *                 (2362), openZones (2378), restoreOldZones (2399), hideZones (2405),
+ *                 the zone-hint helpers (2410-2459)
  *                 EDT (openZones sometimes GAME) | INPUT, through engineInput |
  *                 protocol section 4.3
- * 6    2447-2470  phase stops: isUiSetToSkipPhase (2457), asked on every step (and
+ * 6    2461-2484  phase stops: isUiSetToSkipPhase (2471), asked on every step (and
  *                 M64's one-step stop at the end step a yield reached)
  *                 GAME | none (a ConcurrentHashMap) | D19, D38
- * 6b   2471-2761  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
- *                 (2480), playableNow (2529), activatableNow (after it), stopNames (2482), activeYieldJson (2513),
- *                 undoStateJson (2517), rawYieldKey (2706; lint rule 4b's one tagged
- *                 key read is at 2707), handleFor (2711), standingYield (2736)
+ * 6b   2485-2775  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
+ *                 (2494), playableNow (2543), activatableNow (after it), stopNames (2496), activeYieldJson (2527),
+ *                 undoStateJson (2531), rawYieldKey (2720; lint rule 4b's one tagged
+ *                 key read is at 2721), handleFor (2725), standingYield (2750)
  *                 GAME, inside Snap.state | none | D41, D42, D413, D420
- * 7    2762-3946  the ask path: ask (2780), decode (2838), askChecked (2881, M68), the option writers
- *                 (2921-3024), then the blocking members: getAbilityToPlay (3028)
- *                 and its asynchronous menu (3105-3314; its hop is at 3168, tagged
- *                 D22; M69's lone-ability menu at 3050), confirm (3317), getChoices (3417), order (3463),
- *                 chooseSingleEntityForEffect (3527), assignCombatDamage (3613),
- *                 assignGenericAmount (3743), manipulateCardList (3873), sideboard
- *                 (3924) and the rest
+ * 7    2776-3960  the ask path: ask (2794), decode (2852), askChecked (2895, M68), the option writers
+ *                 (2935-3038), then the blocking members: getAbilityToPlay (3042)
+ *                 and its asynchronous menu (3119-3328; its hop is at 3182, tagged
+ *                 D22; M69's lone-ability menu at 3064), confirm (3331), getChoices (3431), order (3477),
+ *                 chooseSingleEntityForEffect (3541), assignCombatDamage (3627),
+ *                 assignGenericAmount (3757), manipulateCardList (3887), sideboard
+ *                 (3938) and the rest
  *                 GAME, which parks until the answer comes; getAbilityToPlay arrives
  *                 on the EDT and hops (D22) | LOG while the ask is numbered
- *                 (2823-2831); none while parked | protocol sections 5 and 5.4 (null
+ *                 (2837-2845); none while parked | protocol sections 5 and 5.4 (null
  *                 is always an answer); D15, D24; D20, D22
- * 8    3947-4895  the inbound path, acts: onAct (3952), applyAct (3979), concede
- *                 (4102), setPhaseStop (4298), newGame (4400), yieldTo (4468) with
- *                 M64's yieldToEndStepOrOpponent (4543) and EndStepWatcher (4605, GAME),
- *                 setYield (4711), refreshState (4803; its hop is at 4812, tagged
- *                 D39), refreshSnapshot (4836), enginePausedForSeat (4884)
+ * 8    3961-4909  the inbound path, acts: onAct (3966), applyAct (3993), concede
+ *                 (4116), setPhaseStop (4312), newGame (4414), yieldTo (4482) with
+ *                 M64's yieldToEndStepOrOpponent (4557) and EndStepWatcher (4619, GAME),
+ *                 setYield (4725), refreshState (4817; its hop is at 4826, tagged
+ *                 D39), refreshSnapshot (4850), enginePausedForSeat (4898)
  *                 onAct on IO; applyAct and every act on the EDT; refreshSnapshot on
  *                 a second Game-n worker | LOG, for the act's c2s line | D17, D39,
  *                 D41, D42, D114, amendment M8
- * 8b   4896-5219  the acts that write the engine from the EDT, then answers, resync
- *                 and disconnect: notNow (4916), engineFacts (4961), GuardFeeds (4970),
- *                 pressOk (5013), onAnswer (5033), onResync (5068), onDisconnect (5123),
- *                 close (5142); D448's abandonForAbsentSeat (5181), newGameAfterAbandon (5209)
+ * 8b   4910-5285  the acts that write the engine from the EDT, then answers, resync
+ *                 and disconnect: notNow (4930), engineFacts (4975), GuardFeeds (4984),
+ *                 pressOk (5027), onAnswer (5047), onResync (5082), onDisconnect (5137),
+ *                 close (5156); D448's abandonForAbsentSeat (5204), its pure check
+ *                 abandonRefusal (5245), newGameAfterAbandon (5275)
  *                 notNow and pressOk on the EDT; onAnswer, onResync and onDisconnect
  *                 on IO; D448's pair on MAIN, posting to the EDT | none of its own:
  *                 volatile reads and atomics (a frame written here takes LOG in emit or
  *                 logC2s) | D136, amendment M48; D27, amendment M42; D24; D448, M70
- * 9    5220-5276  answer coercion: asInt (5232), asBool (5236), asIntArray (5240),
- *                 asIntMap (5244), indexOfIdentity (5249), actBody (5254); the
+ * 9    5286-5342  answer coercion: asInt (5298), asBool (5302), asIntArray (5306),
+ *                 asIntMap (5310), indexOfIdentity (5315), actBody (5320); the
  *                 rest of it lives in Ask.java
  *                 any thread (pure functions) | none | protocol section 5.3
  */
@@ -626,6 +627,16 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * struct and a client that acted on it had its act dropped.
      */
     private volatile boolean inputSeen;
+    /**
+     * <b>D448</b>: whether {@link #controller()} resolved to a controller at the
+     * engine's last {@link #engineInput} this game.  Written on that push's
+     * thread just BEFORE {@link #inputSeen} is armed, so a reader that sees
+     * {@code inputSeen} sees this push's value too; reset with it in
+     * {@link #resetForGame}.  {@link #abandonForAbsentSeat} reads it on MAIN,
+     * where calling {@code controller()} itself -- Forge's plain {@code HashMap}
+     * of controllers -- would read state no MAIN thread owns.
+     */
+    private volatile boolean inputControlled;
 
     /**
      * The session's own clock, in games (<b>M6</b>).
@@ -1385,6 +1396,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         gameOverStateEmitted = false;
         captureInFlight = false;
         inputSeen = false;
+        inputControlled = false;
         forwarder = null;
         engineFinished = false;                // D114: game n has only just begun
         queuedNewGame = null;
@@ -1834,12 +1846,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * throws {@code IndexOutOfBoundsException} inside Forge's own setup.
      */
     private void engineInput(final Consumer<InputState> f) {
+        final IGameController seat = controller();
+        inputControlled = seat != null;        // D448: before inputSeen, which publishes it
         inputSeen = true;
         engineInputs.incrementAndGet();        // M59: the table's decision clock
         // M65 / M66: read the input Forge is showing BEFORE taking the lock --
         // Forge code runs here (sa.canTarget, the combat), and none of it may
         // run under inputLock.  On this push's own thread: see InputPeek.
-        final InputPeek.Facts facts = peekInput();
+        final InputPeek.Facts facts = peekInput(seat);
         mutateInput(s -> {
             f.accept(s);
             // A targeting or list input's facts hold only while its
@@ -1965,11 +1979,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
     /**
      * M65 / M66: {@link InputPeek}'s facts for the input on this seat's queue,
-     * or {@link InputPeek.Facts#NONE}.  A read that throws is counted and says
+     * or {@link InputPeek.Facts#NONE}.  {@code c} is {@link #controller()},
+     * resolved once by {@link #engineInput}.  A read that throws is counted and says
      * "cannot say" -- the frame still goes out.
      */
-    private InputPeek.Facts peekInput() {
-        final IGameController c = controller();
+    private InputPeek.Facts peekInput(final IGameController c) {
         if (!(c instanceof PlayerControllerHuman h)) {
             return InputPeek.Facts.NONE;
         }
@@ -5173,22 +5187,35 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * {@code over} carries M11's null body, because an absent player did not
      * lose a game.
      *
+     * <p><b>Whether it can be done is decided here, before anything is posted</b>
+     * ({@link #abandonRefusal}), so a refusal names its real cause and the loop
+     * fails the run at once with it -- not 60 s later as "no {@code over}" after
+     * an EDT task that had quietly found nothing to concede.  Every input is a
+     * volatile this class already keeps (hard rule 3: no view is walked and no
+     * Forge map is read on MAIN); the controller is the one {@link #engineInput}
+     * resolved at the engine's last ask ({@link #inputControlled}).  The EDT task
+     * still checks again, because the game may end between the two.
+     *
      * @param text the notice's text, the bridge's own words (no engine string)
-     * @return false when there is nothing to concede into yet -- the engine has
-     *         not asked this seat anything ({@code inputSeen}), or the game is
-     *         already over; the caller then fails the run as before
+     * @return null when the concede has been posted to the EDT; otherwise why the
+     *         game cannot be abandoned, which the caller logs before failing the
+     *         run as before
      */
-    boolean abandonForAbsentSeat(final String text) {
-        if (!ready || !inputSeen || overEmitted || closed) {
-            return false;
+    String abandonForAbsentSeat(final String text) {
+        final String refusal = abandonRefusal(closed, table != null, ready, overEmitted, inputSeen,
+                inputControlled);
+        if (refusal != null) {
+            return refusal;                    // MtgTable's STALLED GAME line prints it
         }
         FThreads.invokeInEdtNowOrLater(() -> {
             if (overEmitted || closed) {
+                System.err.println("ABANDON " + gameId + ": the game ended before the concede ran (D448)");
                 return;
             }
             final IGameController c = controller();
             if (c == null) {
-                System.err.println("ABANDON: the seat has no controller, so the game cannot be conceded (D448)");
+                System.err.println("ABANDON " + gameId + ": the seat lost its controller before the concede "
+                        + "ran, so the game cannot be conceded (D448)");
                 return;
             }
             abandonedGameId = gameId;
@@ -5197,7 +5224,46 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                     + "is the no-result body (D448, amendment M70)");
             concede(c);
         });
-        return true;
+        return null;
+    }
+
+    /**
+     * <b>D448</b>: why a stalled game cannot be abandoned, or null when it can.
+     * Pure, so {@code StalledGameSelfTest} holds every reason without an engine;
+     * {@link #abandonForAbsentSeat} passes it its own volatiles.  In order:
+     *
+     * @param closed      the seat has been closed
+     * @param tableSeat   a seat at a table of two (M59): an away player there is
+     *                    waited for, and only {@code TableMatch} concedes for one,
+     *                    once the opponent claims the win (D403)
+     * @param ready       {@link #openView} has written the header: a game exists
+     * @param over        this game's {@code over} is already out
+     * @param inputSeen   the engine has asked this seat something (a concede
+     *                    before that throws inside Forge's own setup)
+     * @param controlled  the seat had a controller at the engine's last ask
+     */
+    static String abandonRefusal(final boolean closed, final boolean tableSeat, final boolean ready,
+                                 final boolean over, final boolean inputSeen, final boolean controlled) {
+        if (closed) {
+            return "the seat is closed";
+        }
+        if (tableSeat) {
+            return "this is a seat at a table of two, where an away player is waited for and only the "
+                    + "table concedes for them (D403)";
+        }
+        if (!ready) {
+            return "the game has not begun (no `hello_ok` yet)";
+        }
+        if (over) {
+            return "the game is already over (its `over` is out)";
+        }
+        if (!inputSeen) {
+            return "the engine has not asked this seat anything yet, so there is no game to concede";
+        }
+        if (!controlled) {
+            return "the seat has no controller, so the game cannot be conceded";
+        }
+        return null;
     }
 
     /**
