@@ -851,3 +851,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J139/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 0c9bab7
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J140 DONE: The deck census, night 1 -- per power band (pauper, peasant, legacy, powered) 2,500 40-card decks drawn straight from the band's pool at random colour makeups (cubelab.sh decks, D447: k colours uniform on 1-5, flat Dirichlet shares, cards uniform within the shares, one land formula, every spell castable, a 10% cross-band slice inside each deck; deck seeds 1401-1404), each deck in exactly 16 Bo1 games against random decks of its band (census-play, 20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Default vs Default, numbers only; the win rate across the colour spectrum and per-card rows reported, no verdict
+
+- finished: 2026-10-17T12:05:19-04:00
+- decides: nothing by itself. It is the census's first data: how win rate moves across the colour spectrum in each band, and each card's rate in context, for Justin to read and for Phase 3's model to learn from. Any surprise is a candidate until it holds on fresh seeds (D447 point 9)
+- hypothesis: none to confirm, and none is tested. Read the Forge pilot's known bias first: it plays aggro well and control poorly. Uniform draws with no curve rule give clunky decks, more so in legacy, whose pool's mean mana value is high (most legacy decks land on 18 lands), so the band rates are rates of random decks as Forge plays them, not of built decks: every rate and every card value is "in a random deck of this makeup" (D447 point 10). Within a band every decisive game is one win and one loss, so the band's own rate is 0.5 by construction and the bins are read against it
+- rule: D447, written 2026-10-16 before any census game. The prior, the draw, the land formula, castability, the bands, the pairing and the read are the decision's points 1-8. There is no verdict rule and no label beyond the bins. Point 9 is the confirmation rule: any difference reported (a bin, a card, a combination) is a candidate until it holds on a fresh deck seed and a fresh game seed under the same method, read on the same interval
+- outcome: done
+- headline: played 80000, engine_errors 3, redraws.pauper 0, redraws.peasant 0, redraws.legacy 0, redraws.powered 0, sp.bands.pauper.byColours.1.wr 0.5739, sp.bands.peasant.byColours.1.wr 0.5993, sp.bands.legacy.byColours.1.wr 0.5972, sp.bands.powered.byColours.1.wr 0.5926, cards 4271
+- summary: results/J140/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 2e107b6
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

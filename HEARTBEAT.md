@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-17T12:05:06-04:00
+- time: 2026-10-17T12:05:20-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J140 commands 2/2, 79998/80000 lines, 7029.8/h, ETA 2026-10-17T12:05:07-04:00, 5 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5.82; memory 8/30.5 GB, swap 2222 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J141, J142
+- running: J141 prepare, 0/6000 lines, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 5.2; memory 8.1/30.5 GB, swap 2222 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J142
 - waiting: nothing
-- last finished: J139 done at 2026-10-17T01:29:26-04:00: cm.played 4800 · cm.score 0.503 · cm.lo 0.493 · cm.hi 0.513 · cm.elo 2.2 · cm.eloLo -4.7 · cm.eloHi 9 · cm.aSearch.msPerDecision 907.116 · cm.bSearch.msPerDecision 909.544 · cm.aSearch.evalLeafUs 158.275 · v.adopt 0
+- last finished: J140 done at 2026-10-17T12:05:19-04:00: played 80000 · engine_errors 3 · redraws.pauper 0 · redraws.peasant 0 · redraws.legacy 0 · redraws.powered 0 · sp.bands.pauper.byColours.1.wr 0.574 · sp.bands.peasant.byColours.1.wr 0.599 · sp.bands.legacy.byColours.1.wr 0.597 · sp.bands.powered.byColours.1.wr 0.593 · cards 4271
 
 ## Messages
+
+- FOLLOW-UP READY [J140@2026-10-17T12:05:19-04:00] (the runner, for the cloud session): J140 is done; write and post the template morning-read. It decides: nothing by itself. It is the census's first data: how win rate moves across the colour spectrum in each band, and each card's rate in context, for Justin to read and for Phase 3's model to learn from. Any surprise is a candidate until it holds on fresh seeds (D447 point 9). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J139@2026-10-17T01:29:26-04:00] (the runner, for the cloud session): J139 is done; write and post the template morning-read. It decides: whether the next search version (search-v3) scores the leaves of its unfinished rollouts with the learned evaluator (D354's leaf=eval, evaluator v2) instead of the hand-written leaf. Ledger: LEDGER.md. Delete this line once posted.
 

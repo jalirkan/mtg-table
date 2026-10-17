@@ -1,0 +1,404 @@
+{
+  "pauper": {
+    "decks": {
+      "v": 2,
+      "decision": "D447",
+      "band": "pauper",
+      "seed": 1401,
+      "count": 2500,
+      "crossBand": 0.1,
+      "poolBands": [
+        "pauper"
+      ],
+      "crossBands": [
+        "peasant"
+      ],
+      "fillBands": [
+        "peasant",
+        "legacy",
+        "powered"
+      ],
+      "colourlessShare": 0.084,
+      "rejections": 0,
+      "makeupRedraws": 0,
+      "decksRedrawn": 0,
+      "makeupK": {
+        "k1": 495,
+        "k2": 526,
+        "k3": 500,
+        "k4": 513,
+        "k5": 466
+      },
+      "decksOf40": 2500,
+      "decksAllCastable": 2500,
+      "coloursWith3": {
+        "c0": 0,
+        "c1": 650,
+        "c2": 797,
+        "c3": 695,
+        "c4": 302,
+        "c5": 56
+      },
+      "mainShare": {
+        "lt40": 316,
+        "s40_50": 351,
+        "s50_60": 453,
+        "s60_70": 346,
+        "s70_80": 236,
+        "s80_90": 175,
+        "s90_100": 96,
+        "eq100": 527
+      },
+      "meanCross": 2.358,
+      "means": {
+        "lands": 15.9096,
+        "fixers": 5.2708,
+        "fixersReal": 5.1152,
+        "nColours": 2.8408,
+        "creatures": 12.2528,
+        "xSpells": 0.444,
+        "cardFlow": 1.3264,
+        "avgMv": 2.4562
+      },
+      "mvHist": [
+        585,
+        16459,
+        20972,
+        9986,
+        6334,
+        2889,
+        3001
+      ],
+      "censusSha": "260724cbc9f8",
+      "poolSha": "ccd1123660dd",
+      "scripts": "/home/justin-a/forge/res/cardsfolder/cardsfolder.zip",
+      "noScript": [],
+      "decksSha": "11df4827761c"
+    },
+    "games": {
+      "v": 1,
+      "games": 20000,
+      "decisive": 19989,
+      "draws": 11,
+      "timeouts": 10,
+      "engineErrors": 0,
+      "retried": 1,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5015,
+      "meanTurns": 22.59,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 13080,
+          "ms": 9050328,
+          "workers": 5,
+          "gamesPerHour": 5203,
+          "at": "2026-10-17T09:20:32.771Z"
+        }
+      ]
+    }
+  },
+  "peasant": {
+    "decks": {
+      "v": 2,
+      "decision": "D447",
+      "band": "peasant",
+      "seed": 1402,
+      "count": 2500,
+      "crossBand": 0.1,
+      "poolBands": [
+        "peasant"
+      ],
+      "crossBands": [
+        "pauper",
+        "legacy"
+      ],
+      "fillBands": [
+        "pauper",
+        "legacy",
+        "powered"
+      ],
+      "colourlessShare": 0.103,
+      "rejections": 0,
+      "makeupRedraws": 0,
+      "decksRedrawn": 0,
+      "makeupK": {
+        "k1": 485,
+        "k2": 493,
+        "k3": 503,
+        "k4": 515,
+        "k5": 504
+      },
+      "decksOf40": 2500,
+      "decksAllCastable": 2500,
+      "coloursWith3": {
+        "c0": 0,
+        "c1": 570,
+        "c2": 664,
+        "c3": 707,
+        "c4": 452,
+        "c5": 107
+      },
+      "mainShare": {
+        "lt40": 407,
+        "s40_50": 450,
+        "s50_60": 443,
+        "s60_70": 295,
+        "s70_80": 200,
+        "s80_90": 148,
+        "s90_100": 64,
+        "eq100": 493
+      },
+      "meanCross": 2.3272,
+      "means": {
+        "lands": 16.8436,
+        "fixers": 6.1024,
+        "fixersReal": 5.9968,
+        "nColours": 2.9692,
+        "creatures": 13.1084,
+        "xSpells": 0.2496,
+        "cardFlow": 0.2792,
+        "avgMv": 2.9281
+      },
+      "mvHist": [
+        187,
+        8849,
+        18375,
+        12787,
+        9155,
+        4662,
+        3876
+      ],
+      "censusSha": "260724cbc9f8",
+      "poolSha": "ccd1123660dd",
+      "scripts": "/home/justin-a/forge/res/cardsfolder/cardsfolder.zip",
+      "noScript": [],
+      "decksSha": "a61f20222c54"
+    },
+    "games": {
+      "v": 1,
+      "games": 20000,
+      "decisive": 19983,
+      "draws": 16,
+      "timeouts": 5,
+      "engineErrors": 1,
+      "retried": 1,
+      "gameErrors": 0,
+      "engineErrorRate": 5e-05,
+      "firstPlayerWinRate": 0.5169,
+      "meanTurns": 19.18,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 20000,
+          "ms": 8795970,
+          "workers": 5,
+          "gamesPerHour": 8186,
+          "at": "2026-10-17T11:47:09.088Z"
+        }
+      ]
+    }
+  },
+  "legacy": {
+    "decks": {
+      "v": 2,
+      "decision": "D447",
+      "band": "legacy",
+      "seed": 1403,
+      "count": 2500,
+      "crossBand": 0.1,
+      "poolBands": [
+        "legacy"
+      ],
+      "crossBands": [
+        "peasant",
+        "powered"
+      ],
+      "fillBands": [
+        "peasant",
+        "pauper",
+        "powered"
+      ],
+      "colourlessShare": 0.1136,
+      "rejections": 0,
+      "makeupRedraws": 0,
+      "decksRedrawn": 0,
+      "makeupK": {
+        "k1": 559,
+        "k2": 479,
+        "k3": 485,
+        "k4": 496,
+        "k5": 481
+      },
+      "decksOf40": 2500,
+      "decksAllCastable": 2500,
+      "coloursWith3": {
+        "c0": 0,
+        "c1": 637,
+        "c2": 636,
+        "c3": 640,
+        "c4": 445,
+        "c5": 142
+      },
+      "mainShare": {
+        "lt40": 372,
+        "s40_50": 448,
+        "s50_60": 439,
+        "s60_70": 276,
+        "s70_80": 190,
+        "s80_90": 138,
+        "s90_100": 70,
+        "eq100": 567
+      },
+      "meanCross": 2.2256,
+      "means": {
+        "lands": 17.5864,
+        "fixers": 6.1292,
+        "fixersReal": 6.1252,
+        "nColours": 2.904,
+        "creatures": 14.31,
+        "xSpells": 0.6936,
+        "cardFlow": 0.118,
+        "avgMv": 3.3774
+      },
+      "mvHist": [
+        647,
+        5991,
+        12885,
+        14061,
+        10183,
+        5369,
+        6898
+      ],
+      "censusSha": "260724cbc9f8",
+      "poolSha": "ccd1123660dd",
+      "scripts": "/home/justin-a/forge/res/cardsfolder/cardsfolder.zip",
+      "noScript": [],
+      "decksSha": "77240a608651"
+    },
+    "games": {
+      "v": 1,
+      "games": 20000,
+      "decisive": 19977,
+      "draws": 23,
+      "timeouts": 7,
+      "engineErrors": 0,
+      "retried": 1,
+      "gameErrors": 1,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5347,
+      "meanTurns": 16.58,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 20000,
+          "ms": 7605759,
+          "workers": 5,
+          "gamesPerHour": 9467,
+          "at": "2026-10-17T13:53:55.166Z"
+        }
+      ]
+    }
+  },
+  "powered": {
+    "decks": {
+      "v": 2,
+      "decision": "D447",
+      "band": "powered",
+      "seed": 1404,
+      "count": 2500,
+      "crossBand": 0.1,
+      "poolBands": [
+        "powered",
+        "legacy"
+      ],
+      "crossBands": [
+        "peasant"
+      ],
+      "fillBands": [
+        "peasant",
+        "pauper"
+      ],
+      "colourlessShare": 0.1291,
+      "rejections": 0,
+      "makeupRedraws": 0,
+      "decksRedrawn": 0,
+      "makeupK": {
+        "k1": 509,
+        "k2": 514,
+        "k3": 499,
+        "k4": 483,
+        "k5": 495
+      },
+      "decksOf40": 2500,
+      "decksAllCastable": 2500,
+      "coloursWith3": {
+        "c0": 0,
+        "c1": 601,
+        "c2": 677,
+        "c3": 649,
+        "c4": 439,
+        "c5": 134
+      },
+      "mainShare": {
+        "lt40": 378,
+        "s40_50": 425,
+        "s50_60": 454,
+        "s60_70": 295,
+        "s70_80": 207,
+        "s80_90": 149,
+        "s90_100": 75,
+        "eq100": 517
+      },
+      "meanCross": 2.2188,
+      "means": {
+        "lands": 17.4924,
+        "fixers": 6.1636,
+        "fixersReal": 6.1624,
+        "nColours": 2.9264,
+        "creatures": 13.9116,
+        "xSpells": 0.6632,
+        "cardFlow": 0.2036,
+        "avgMv": 3.3053
+      },
+      "mvHist": [
+        1233,
+        6271,
+        12804,
+        14140,
+        10012,
+        5168,
+        6641
+      ],
+      "censusSha": "260724cbc9f8",
+      "poolSha": "ccd1123660dd",
+      "scripts": "/home/justin-a/forge/res/cardsfolder/cardsfolder.zip",
+      "noScript": [],
+      "decksSha": "438c34c9ec16"
+    },
+    "games": {
+      "v": 1,
+      "games": 20000,
+      "decisive": 19989,
+      "draws": 9,
+      "timeouts": 1,
+      "engineErrors": 2,
+      "retried": 2,
+      "gameErrors": 0,
+      "engineErrorRate": 0.0001,
+      "firstPlayerWinRate": 0.5295,
+      "meanTurns": 16.51,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 20000,
+          "ms": 7864017,
+          "workers": 5,
+          "gamesPerHour": 9156,
+          "at": "2026-10-17T16:04:59.669Z"
+        }
+      ]
+    }
+  }
+}
