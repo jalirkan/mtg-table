@@ -614,3 +614,4 @@ ForgeCoach #178 merged on Justin's standing word: `FORGECOACH_PAIRS_URL` → `@p
 
 ### 2026-10-17 14:05 — follow-up, parked (no budget now): the seam bridges look janky on the watch board
 Justin, playing #179 on the dev server (watch-omega-cube-180, island+plains above, mountain+island below): the bridged seams read as a hard vertical cut with a blurred or stretched band over it — the top seam is a smeared strip between the lake and the plain, the bottom one runs the lava into the sea at a straight edge with the cliffs pasted beside it. Not the pair bands (no duals in play), the 1.8 bridges. Note it under scenery follow-ups; nothing to do until he says so.
+- Second example from Justin (same session, island+plains seam, the gate bridge): the bridge piece (white gate, cracked stone path) sits as a pasted cutout, the plains side bleeds a yellow smear across the lake, and a yellow diagonal streak runs through the trees at the seam. Same follow-up, same parking.
