@@ -1,0 +1,44 @@
+==== J140 pilot2 started 2026-10-17T01:30:15-04:00 in unit lab-J140-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+census-play: 12 game(s) planned over 2500 deck(s), seed 1491; 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain
+[12/12] 2154 games/h
+census-play: 12 game(s) in pauper/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 20 s on 3 worker(s) = 2154 games/h
+census-play: 12 game(s) planned over 2500 deck(s), seed 1492; 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain
+[12/12] 2971 games/h
+census-play: 12 game(s) in peasant/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 15 s on 3 worker(s) = 2971 games/h
+census-play: 12 game(s) planned over 2500 deck(s), seed 1493; 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain
+[12/12] 1511 games/h
+census-play: 12 game(s) in legacy/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 29 s on 3 worker(s) = 1511 games/h
+census-play: 12 game(s) planned over 2500 deck(s), seed 1494; 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain
+[12/12] 2290 games/h
+census-play: 12 game(s) in powered/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 19 s on 3 worker(s) = 2290 games/h
+census-read: 48 game(s), 10000 deck(s), pilots plain/plain, pauper, peasant, legacy, powered; 1640 card row(s) -> var/lab-j140/pilot/out/spectrum.json, spectrum.md, cards.tsv
+# Deck census: win rate across the colour spectrum (D447)
+
+Every deck here is a random draw from its band's pool at a random colour makeup, with no curve, synergy or rating rule, so it is mostly weaker than a drafted or built deck: **every rate, and every card's value, is "in a random deck of this makeup", as Forge's AI plays it**, not in a built deck.
+
+48 games, 10000 decks, pilots plain/plain; bootstrap 200 replicates (seed 1), clustered by deck. Bins are the realised profiles, read after the games; no bin is a verdict, and any difference is a candidate until it holds on fresh seeds. Every rate is as Forge's AI plays it.
+
+## pauper
+
+12 games (12 decisive, 0 drawn, 0 timeouts, 0 engine errors); 24 decks, deck-games min 1, median 1; the first player won 0.583 of 12.
+
+**The weak-deck tail** (every deck played is castable, so the uncastable ones are the draws rejected before it): 0 rejected draw(s) and 0 new makeup(s) over the band's 2500 decks; 0 deck(s) came after at least one; 0.000 of all draws were rejected.
+
+| colours with 3+ spells | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| 1 | 7 | 7 | 7 | 0.571 | 0.286–0.857 | 0.250–0.842 |
+| 2 | 6 | 6 | 6 | 0.333 | 0.000–0.667 | 0.097–0.700 |
+| 3 | 7 | 7 | 7 | 0.429 | 0.000–0.857 | 0.158–0.750 |
+| 4 | 3 | 3 | 3 | 1.000 | 1.000–1.000 | 0.438–1.000 |
+| 5 | 1 | 1 | 1 | 0.000 | – | 0.000–0.793 |
+
+| main-colour share of pips | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| < 0.4 | 3 | 3 | 3 | 1.000 | 1.000–1.000 | 0.438–1.000 |
+| 0.4–0.5 | 4 | 4 | 4 | 0.750 | 0.250–1.000 | 0.301–0.954 |
+| 0.5–0.6 | 3 | 3 | 3 | 0.000 | 0.000–0.000 | 0.000–0.562 |
+| 0.6–0.7 | 2 | 2 | 2 | 0.000 | 0.000–0.000 | 0.000–0.658 |
+| 0.7–0.8 | 3 | 3 | 3 | 0.333 | 0.000–1.000 | 0.061–0.792 |
+| 0.8–0.9 | 3 | 3 | 3 | 0.667 | 0.000–1.000 | 0.208–0.939 |
+| 1.0 (mono) | 6 | 6 | 6 | 0.500 | 0.167–1.000 | 0.188–0.812 |
+
