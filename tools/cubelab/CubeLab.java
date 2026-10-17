@@ -68,6 +68,7 @@ import mtgtable.Config;
 import mtgtable.Json;
 import mtgtable.Json.JsonOut;
 import mtgtable.SeatRecorder;
+import mtgtable.ai.Atlas;
 import mtgtable.ai.DistillRows;
 import mtgtable.ai.ExploreMath;
 import mtgtable.ai.GameLedger;
@@ -75,6 +76,7 @@ import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
 import mtgtable.ai.RowsLeakCheck;
 import mtgtable.ai.SearchConfig;
+import mtgtable.ai.SearchPolicy;
 import mtgtable.ai.SeatSpec;
 
 /**
@@ -152,6 +154,23 @@ import mtgtable.ai.SeatSpec;
  * {@link RowsLeakCheck} on every N-th row (never on a recorded game, whose log
  * would carry the swaps).  A {@code record} block with a {@code name} writes
  * {@code <dir>/<name>-seat{0,1}.jsonl.gz} instead of {@code g<n>-seat...}.
+ *
+ * <h2>The move atlas (D451)</h2>
+ *
+ * A match line may carry {@code turnCap: N} (a game past turn N is ended as a
+ * draw, reason {@code TurnCap}) and an {@code atlas} block.  With the block,
+ * both seats are our controller with an observing search of {@code cands}
+ * candidates, and {@link Atlas.Hook} is the search's observe hook for the game:
+ * with {@code decision: -1} it lists the atlas seat's decisions (the baseline,
+ * recorded like a census game), with {@code decision: d} the game is played
+ * again from the same seed to decision d, the listed options are checked
+ * against {@code expect}, and every option is played out on branches
+ * {@code [i0, i1)} under the {@code continuation} (Forge, or the random seat on
+ * both sides), each recorded under {@code rowsDir} / {@code framesDir}.  The
+ * game row gains {@code atlas}: the listing and the branches.  A
+ * {@code playExplore} block with {@code random: true} seats the random seat
+ * (phase A's rollouts); its game row's {@code playExplore} gains the guardrails'
+ * counts.
  *
  * <h2>The rules it keeps</h2>
  *
@@ -438,10 +457,16 @@ public final class CubeLab {
         final Map<?, ?> rows = job.get("rows") instanceof Map ? (Map<?, ?>) job.get("rows") : null;
         final boolean ledger = Boolean.TRUE.equals(job.get("ledger"));
         final int rowsCheckEvery = (int) num(job, "rowsCheckEvery", 0);
+        // D451: the move atlas's block, and the turn cap
+        final Map<?, ?> atlas = job.get("atlas") instanceof Map ? (Map<?, ?>) job.get("atlas") : null;
+        final int turnCap = (int) num(job, "turnCap", 0);
+        final SearchConfig observeCfg = atlas != null ? SearchConfig.parse("observe=1,cands=" + num(atlas, "cands", 8))
+                : rows != null ? SearchConfig.parse("observe=1") : null;
+        final boolean ours = record != null || explore != null || rows != null || atlas != null;
         final LobbyPlayer lpA = searchA ? liveSearchSeat("Drafter A", 0, specA.profile)
-                : seat("Drafter A", 0, specA, record != null || explore != null || rows != null, rows != null);
+                : seat("Drafter A", 0, specA, ours, observeCfg);
         final LobbyPlayer lpB = searchB ? liveSearchSeat("Drafter B", 1, specB.profile)
-                : seat("Drafter B", 1, specB, record != null || explore != null || rows != null, rows != null);
+                : seat("Drafter B", 1, specB, ours, observeCfg);
         final java.nio.file.Path rowsDirBefore = DistillRows.dir();
         if (rows != null) {
             DistillRows.useDir(java.nio.file.Path.of(str(rows, "dir")));
@@ -489,9 +514,22 @@ public final class CubeLab {
                 begin.put("seat1", "Drafter B");
                 DistillRows.begin(rowsKey, begin);
             }
-            RowsLeakCheck.configure(rec == null ? rowsCheckEvery : 0, gameSeed);
+            RowsLeakCheck.configure(rec == null && atlas == null ? rowsCheckEvery : 0, gameSeed);
             RowsLeakCheck.reset();
-            final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger);
+            Atlas.Hook hook = null;
+            if (atlas != null) {
+                hook = new Atlas.Hook(atlasUnit(atlas, observeCfg, decks, deckFiles, specA, specB, id, seed));
+                if (num(atlas, "decision", -1) >= 0) {
+                    DistillRows.useDir(null);   // a branch unit's replay writes no rows; its branches do
+                }
+                SearchPolicy.observeHook(hook);
+            }
+            final GameResult r;
+            try {
+                r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger, turnCap);
+            } finally {
+                SearchPolicy.observeHook(null);
+            }
             DistillRows.endGame(rowsKey, r.winner, !r.stuck && r.error == null);
             final long[] leak = RowsLeakCheck.counts();
             RowsLeakCheck.configure(0, 0);
@@ -531,9 +569,16 @@ public final class CubeLab {
                 res.key("ledger");
                 r.ledger.write(res);
             }
+            if (r.capped) {
+                res.n("capped", true);
+            }
+            if (hook != null) {
+                res.key("atlas");
+                hook.write(res);
+            }
             res.end();
         }
-        if (rows != null) {
+        if (rows != null || atlas != null) {
             DistillRows.useDir(rowsDirBefore);
         }
         res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
@@ -569,6 +614,19 @@ public final class CubeLab {
         for (final Map.Entry<String, Long> e : byKind.entrySet()) res.n(e.getKey(), (long) e.getValue());
         res.end();
         if (cfg.opening) res.n("onPlayDrawn", aOnPlay ? "A" : "B");
+        if (cfg.random) {
+            // D451: the random seat's guardrails, both seats summed
+            final Map<String, Long> g = new java.util.TreeMap<>();
+            for (final PolicyLobbyPlayerAi lp : List.of(a, b)) {
+                final PolicyControllerAi c = lp.lastController();
+                if (c != null && c.explorer() != null) {
+                    for (final Map.Entry<String, Integer> e : c.explorer().math().guardrails().entrySet()) g.merge(e.getKey(), (long) e.getValue(), Long::sum);
+                }
+            }
+            res.n("random", true).key("guardrails").obj();
+            for (final Map.Entry<String, Long> e : g.entrySet()) res.n(e.getKey(), (long) e.getValue());
+            res.end();
+        }
         res.end();
     }
 
@@ -608,12 +666,61 @@ public final class CubeLab {
      */
     static LobbyPlayer seat(final String name, final int avatar, final SeatSpec spec, final boolean recorded,
                             final boolean observe) {
+        return seat(name, avatar, spec, recorded, observe ? SearchConfig.parse("observe=1") : null);
+    }
+
+    /** {@link #seat(String, int, SeatSpec, boolean, boolean)} with the observing config given (D451: the atlas's {@code cands}). */
+    static LobbyPlayer seat(final String name, final int avatar, final SeatSpec spec, final boolean recorded,
+                            final SearchConfig observe) {
         if (spec.plain() && !recorded) {
             return Bootstrap.createAiPlayer(name, avatar, spec.profile);
         }
-        final SearchConfig search = spec.search != null ? spec.search
-                : observe ? SearchConfig.parse("observe=1") : null;
+        final SearchConfig search = spec.search != null ? spec.search : observe;
         return Bootstrap.createAiSeat(name, avatar, spec.profile, null, spec.outlets, search);
+    }
+
+    /** D451: the atlas block as the hook's unit. */
+    static Atlas.Unit atlasUnit(final Map<?, ?> a, final SearchConfig observe, final Deck[] decks, final File[] deckFiles,
+                                final SeatSpec specA, final SeatSpec specB, final String id, final long seed) {
+        final Atlas.Unit u = new Atlas.Unit();
+        u.decision = (int) num(a, "decision", -1);
+        u.continuation = str(a, "continuation") == null ? "forge" : str(a, "continuation");
+        u.i0 = (int) num(a, "i0", 0);
+        u.i1 = (int) num(a, "i1", 0);
+        u.seed = num(a, "seed", seed);
+        u.turnCap = (int) num(a, "turnCap", 40);
+        u.branchTimeoutMs = num(a, "branchTimeoutSec", 120) * 1000L;
+        u.leakChecks = (int) num(a, "leakChecks", 0);
+        u.observe = observe;
+        if (a.get("expect") instanceof Object[]) {
+            u.expect = new ArrayList<>();
+            for (final Object o : (Object[]) a.get("expect")) {
+                u.expect.add(String.valueOf(o));
+            }
+        }
+        if (str(a, "rowsDir") != null) {
+            u.rowsDir = java.nio.file.Path.of(str(a, "rowsDir"));
+        }
+        if (str(a, "framesDir") != null) {
+            u.framesDir = new File(str(a, "framesDir"));
+            u.jarSha = jarSha();
+            u.seats = new ArrayList<>();
+            final String[] names = {"Drafter A", "Drafter B"};
+            final SeatSpec[] specs = {specA, specB};
+            for (int s = 0; s < 2; s++) {
+                u.seats.add(new SeatRecorder.Seat(str(a, s == 0 ? "deckNameA" : "deckNameB") == null ? names[s]
+                        : str(a, s == 0 ? "deckNameA" : "deckNameB"), deckFiles[s], Recording.relPath(deckFiles[s]), decks[s],
+                        specs[s].profile, "forge", null));
+            }
+        }
+        u.lab.put("atlas", str(a, "run"));
+        u.lab.put("match", id);
+        u.lab.put("atlasSeed", u.seed);
+        if (str(a, "notForTraining") != null) {
+            // D451: every branch's begin line and frame-log header says it is never training data
+            u.lab.put("notForTraining", str(a, "notForTraining"));
+        }
+        return u;
     }
 
     /** D450: the rows a seat's controller wrote in the game just played. */
@@ -708,6 +815,7 @@ public final class CubeLab {
         int recordDecisions;       // D347: decision records written, both chairs
         int recordDecisionErrors;
         GameLedger ledger;         // D450: the per-turn ledger, or null
+        boolean capped;            // D451: ended as a draw at the turn cap
     }
 
     /**
@@ -753,13 +861,17 @@ public final class CubeLab {
             lab.put("onPlay", aOnPlay ? "A" : "B");
             // D341's lab version and D347's seat specs: which code and which AI styles made this game.
             if (str(rec, "ver") != null) lab.put("ver", str(rec, "ver"));
+            // D451: a recording made to measure, never to train on (the atlas); every builder skips it
+            if (str(rec, "notForTraining") != null) lab.put("notForTraining", str(rec, "notForTraining"));
             lab.put("seatA", specA.text);
             lab.put("seatB", specB.text);
             this.name = str(rec, "name");
-            if (rec.get("census") instanceof Map) {
-                // D450: a census game's own fields (deck ids, the census seed and game number)
-                for (final Map.Entry<?, ?> e : ((Map<?, ?>) rec.get("census")).entrySet()) {
-                    lab.put("census." + e.getKey(), e.getValue());
+            for (final String block : new String[] {"census", "atlas"}) {
+                if (rec.get(block) instanceof Map) {
+                    // D450 / D451: a census or atlas game's own fields (deck ids, seeds, game number)
+                    for (final Map.Entry<?, ?> e : ((Map<?, ?>) rec.get(block)).entrySet()) {
+                        lab.put(block + "." + e.getKey(), e.getValue());
+                    }
                 }
             }
         }
@@ -807,6 +919,12 @@ public final class CubeLab {
     static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
                                final boolean aOnPlay, final long gameSeed, final long timeoutMs,
                                final Recording rec, final boolean ledger) throws Exception {
+        return playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger, 0);
+    }
+
+    static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
+                               final boolean aOnPlay, final long gameSeed, final long timeoutMs,
+                               final Recording rec, final boolean ledger, final int turnCap) throws Exception {
         final GameRules rules = new GameRules(GameType.Draft);
         rules.setAppliedVariants(EnumSet.of(GameType.Draft));
         rules.setGamesPerMatch(1);
@@ -821,6 +939,9 @@ public final class CubeLab {
         game.subscribeToEvents(new FirstPlayer(game, aOnPlay ? lpA : lpB, r));
         if (ledger) {
             r.ledger = GameLedger.attach(game);   // D450: the per-turn public ledger
+        }
+        if (turnCap > 0) {
+            game.subscribeToEvents(new TurnCap(game, turnCap, r));   // D451: past the cap, a draw
         }
         // D315: both chairs' recorders, subscribed after FirstPlayer and before the game starts.
         final List<SeatRecorder> recorders = new ArrayList<>();
@@ -899,7 +1020,36 @@ public final class CubeLab {
             r.reason = o.getWinCondition() == null ? null : o.getWinCondition().name();
         }
         if (r.timeout) r.reason = "Timeout";
+        if (r.capped && !r.timeout) {
+            r.reason = "TurnCap";
+            r.winner = "draw";
+        }
         return r;
+    }
+
+    /**
+     * D451: the turn cap.  At the first {@code GameEventTurnBegan} past
+     * {@code cap} the game is ended as a draw, on the game thread, inside the
+     * event's dispatch (as a game lost to a state-based action ends).
+     */
+    public static final class TurnCap {
+        private final Game game;
+        private final int cap;
+        private final GameResult result;
+
+        TurnCap(final Game game, final int cap, final GameResult result) {
+            this.game = game;
+            this.cap = cap;
+            this.result = result;
+        }
+
+        @Subscribe
+        public void turn(final GameEventTurnBegan e) {
+            if (e.turnNumber() > cap && !game.isGameOver()) {
+                result.capped = true;
+                game.setGameOver(GameEndReason.Draw);
+            }
+        }
     }
 
     /**

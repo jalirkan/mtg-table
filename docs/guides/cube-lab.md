@@ -1201,13 +1201,61 @@ tools/cubelab.sh census-replay var/census/legacy/games/rows/rows-12345.jsonl --g
 without changing a command: a relative path under `var/` is re-rooted there, so
 `--out var/census/legacy/games` writes `/mnt/lab/census/legacy/games`. Reads look there first and
 fall back to the repo's `var/`. Absolute paths and paths outside `var/` (`cubes/...`, `decks/...`)
-never move. It applies to `census-play`, `census-read`, `census-replay`, `decks`, `run`,
+never move. It applies to `census-play`, `census-read`, `census-replay`, `decks`, `atlas`, `run`,
 `evolve` and `queue --root`; the Forge homes and the compiled classes stay in the repo's `var/`. A
 setting that names no existing directory stops the command (an unmounted drive is never replaced by
 a folder on the system disk). A folder begun under the repo's `var/` before the setting is not
 restarted on the drive: a write whose repo copy holds work the drive copy lacks is refused, naming
 both, until it is moved. `web/test/cubelab-record-cake.test.ts` runs a real lab job with it set
 and checks that it wrote there and nothing under the repo's `var/`.
+
+## The move atlas (D451)
+
+Two decks, one seed: what each option of a decision is worth when the rest of the game is played at
+random by BOTH seats, and when it is played by Forge on both — two regret maps of the same decisions,
+side by side ([D451](../decisions/D451-move-atlas.md)). Method only: no verdict.
+
+```bash
+tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 10000 --branch-random 200 --branch-forge 40 --jobs 7 --out var/cubelab/atlas/j142
+tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke
+tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
+tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted (~2 min, engine)
+tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
+```
+
+- **The random seat** is D358's exploration at epsilon 1 with a wider list: at a priority, a uniform pick
+  among pass, each land, Forge's own answer and every spell or non-mana ability it can play and pay for
+  (targets drawn at random from the legal ones it can see); the attack, the blocks and single targets
+  random as in D358; mana payment (Forge's auto-pay), costs, modes and other choices Forge's. Its
+  **guardrails are mechanical**: a legal land drop is always taken (G1); no pass in its first main phase
+  while a land drop is pending (G2, which is G1 itself and has no code of its own); an activated ability that changed nothing public is
+  not repeated at its next decision (G3); the opening hand is kept (G4); a game past `--turn-cap` (40) is
+  a draw. G1 and G4 are read back from the seats' decision records after the run.
+- **`--pair auto`** takes the line of `tools/ai-bench/pairs-confirm.txt` with the most ladder games and
+  the most even record: the smallest |p − ½| + 1.96·√(p(1−p)/n) over the line's decisive ladder games
+  (`--ladder`, default `var/ai-ladder`). The plan keeps the choice for a resumed atlas.
+- **Phase A** plays `--rollouts` games from the opening, both seats random; **phase B** plays the baseline
+  (Forge both sides, seed `--seed`), lists seat A's decisions with two or more options (the search's
+  candidates, up to `--options` 8, Forge's answer first), picks `--decisions` of them evenly spaced
+  (default all), and at each plays every option out `--branch-random` times (random continuation) and
+  `--branch-forge` times (Forge), from a fork: a copy, the option forced, what seat A cannot see redealt
+  from the multiset, branch i of every option on one seed. Work goes out in units of one decision, one
+  continuation and `--chunk` (25) branches; a unit replays the baseline to its decision and checks the
+  options are the same.
+- **Everything is recorded**: every phase A game and every branch as D450's rows (both seats), ledger and
+  both frame logs; `phaseA/`, `phaseB/` under `--out`. Every fork is checked (the position, card for card);
+  `--leak-checks` (1 a unit) plays a branch again after seat B's real hidden cards were redealt in the real
+  game (nothing may move) and after seat A's own hand was (something must). Every rows file and frame log
+  is checked as D450's are. A problem exits 3.
+- **`atlas.json`** (strict): the plan and the pair's table, phase A's outcome distribution, game length
+  and the rollouts a ± 2-point interval needs; per decision every option's value under each continuation
+  (Wilson), each map's regret (best − played, a paired bootstrap interval), the rank correlation between
+  the two maps (bootstrap interval) and whether they name the same best; the decisions where they disagree
+  most; the checks; timings. **`atlas.md`** is the same as two tables side by side and a paragraph.
+- **Rate** (the smoke, two workers beside the lab's seven): a phase A game 5.5 s a worker (8 CPU-s), a
+  branch game 3.0 s (random 3.0, Forge 2.0); a phase A game keeps 234 KB, a branch 136 KB. A random game
+  is slower than a Forge game: every random priority lists every play the seat could make, and the
+  observing seat lists the search's candidates for its row.
 
 ## Learning the drafters' values from the games (D301–D302)
 

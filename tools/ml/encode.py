@@ -955,10 +955,14 @@ def main(argv: list[str] | None = None) -> int:
             json.dump(schema.to_json(phases), f, indent=1, ensure_ascii=False)
             f.write("\n")
     out = open(a.out, "w", encoding="utf-8") if a.out else sys.stdout
-    n_rows = n_games = 0
+    import reserved as R  # D451's not_for_training, in one place
+    n_rows = n_games = n_skipped = 0
     try:
         for path in find_logs(logs):
             for g in read_games(path):
+                if R.not_for_training(g.header):
+                    n_skipped += 1           # D451: a move-atlas game, never training data
+                    continue
                 rows = encode_game(g, schema, phases)
                 n_games += 1 if rows else 0
                 for r in rows:
@@ -969,8 +973,8 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         if a.out:
             out.close()
-    print(f"encode: {n_rows} row(s) from {n_games} game(s), {schema.n} features, schema {schema.schema_id}",
-          file=sys.stderr)
+    print(f"encode: {n_rows} row(s) from {n_games} game(s), {schema.n} features, schema {schema.schema_id}"
+          + (f"; {n_skipped} game(s) {R.NOT_FOR_TRAINING} left out" if n_skipped else ""), file=sys.stderr)
     return 0
 
 

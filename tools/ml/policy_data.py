@@ -303,7 +303,9 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                 group = "match:" + pg.game.match_key()
             why = None
             hit = R.reserved_hit(m["decks"], reserved) if reserved else None
-            if hit:
+            if R.not_for_training(pg.header):
+                why = R.NOT_FOR_TRAINING             # D451: a move-atlas game
+            elif hit:
                 why = "reserved deck (D340)"
                 reserved_hits[hit] += 1
             elif isinstance(m["draftSeed"], int) and m["draftSeed"] >= RESERVED_SEED_MIN and reserved is not None:

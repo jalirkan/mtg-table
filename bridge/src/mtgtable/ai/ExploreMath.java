@@ -45,15 +45,37 @@ public final class ExploreMath {
         public final double closeCall;
         /** Play/draw by a fair coin, and the seven-card mulligan decision explorable. */
         public final boolean opening;
+        /**
+         * D451: the RANDOM seat of the move atlas.  Every explorable decision is
+         * random (epsilon 1), over a wider list of plays (every castable spell
+         * and non-mana ability, targets drawn at random), under the mechanical
+         * guardrails of D451 (a legal land drop is always taken, no pass in main
+         * phase 1 while one is pending, a pure no-op is never repeated twice in a
+         * row, the opening hand is always kept); no close calls.
+         */
+        public final boolean random;
 
         public Config(final double epsilon, final double closeCall, final boolean opening) {
+            this(epsilon, closeCall, opening, false);
+        }
+
+        public Config(final double epsilon, final double closeCall, final boolean opening, final boolean random) {
             if (!(epsilon >= 0 && epsilon <= 1) || !(closeCall >= 0 && closeCall < 1)) {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "play exploration: epsilon in [0, 1] and closeCall in [0, 1), got %s and %s", epsilon, closeCall));
             }
+            if (random && (epsilon != 1 || closeCall != 0 || opening)) {
+                throw new IllegalArgumentException("the random seat (D451) is epsilon 1, no close calls, opening off");
+            }
             this.epsilon = epsilon;
             this.closeCall = closeCall;
             this.opening = opening;
+            this.random = random;
+        }
+
+        /** D451: the random seat's settings. */
+        public static Config randomSeat() {
+            return new Config(1, 0, false, true);
         }
 
         /** From a job line's {@code playExplore} object (Jetty's parser: numbers are Long or Double); null in, null out. */
@@ -62,6 +84,9 @@ public final class ExploreMath {
                 return null;
             }
             final Map<?, ?> m = (Map<?, ?>) o;
+            if (Boolean.TRUE.equals(m.get("random"))) {
+                return randomSeat();
+            }
             return new Config(num(m.get("epsilon")), num(m.get("closeCall")), Boolean.TRUE.equals(m.get("opening")));
         }
 
@@ -101,6 +126,8 @@ public final class ExploreMath {
     private int closeCalls;
     private int closeCallsChanged;
     private int failures;
+    /** D451: the random seat's guardrails, by name: how often each decided or removed an option. */
+    private final Map<String, Integer> guardrails = new TreeMap<>();
 
     public ExploreMath(final Config cfg, final long seed) {
         this.cfg = cfg;
@@ -230,6 +257,16 @@ public final class ExploreMath {
 
     public int failures() {
         return failures;
+    }
+
+    /** D451: a guardrail decided ({@code land}, {@code keep}) or removed an option ({@code noRepeatNoOp}). */
+    public void guardrail(final String name) {
+        guardrails.merge(name, 1, Integer::sum);
+    }
+
+    /** D451: the guardrails' counts. */
+    public Map<String, Integer> guardrails() {
+        return guardrails;
     }
 
     /** Randomised decisions per kind: {kind: {randomised, changed}}. */

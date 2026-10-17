@@ -178,6 +178,10 @@ def _encode_file(path: str) -> list[tuple]:
     schema, phases, reserved, vers = _W["schema"], _W["phases"], _W["reserved"], _W["vers"]
     out: list[tuple] = []
     for g in E.read_games(path):
+        if R.not_for_training(g.header):
+            # D451: a move-atlas game (random seats, forced options) -- never training data, any mode
+            out.append(("skip", R.NOT_FOR_TRAINING, None))
+            continue
         # D340: never a game played with a deck of the AI ladder's dev/confirm sets, matched card for card
         decks, ver = R.game_decks(path, g.hello)
         hit = R.reserved_hit(decks, reserved) if reserved else None
