@@ -26,10 +26,10 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 
-import { labArg, labDataDir, labPath, underVar } from '../../tools/cubelab/labdata.ts';
+import { labArg, labDataDir, labPath, recipePath, strandedReason, underVar } from '../../tools/cubelab/labdata.ts';
 import { planExtension, recordBlocks, rowOf, rowsKeyOf, sizeStats, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
 import { checkRowsDir, checkRowsText, tokenIds, TOKEN, visibleIds, type RowsCheck } from '../../tools/cubelab/rowscheck.ts';
-import { compareFrames, compareGames, framesFace, gameLines } from '../../tools/cubelab/censusreplay.ts';
+import { censusReplayCommand, compareFrames, compareGames, framesFace, gameLines, replayOutRefusal } from '../../tools/cubelab/censusreplay.ts';
 import type { MatchResult } from '../../tools/cubelab/engine.ts';
 
 const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
@@ -44,7 +44,8 @@ test('LAB_DATA_DIR: var/ paths re-rooted, the rest untouched, unset is the old b
     assert.equal(underVar('var/../etc'), null);
     assert.equal(underVar('var'), null);
     // write: always re-rooted; read: re-rooted only when it exists there
-    assert.equal(labPath(REPO, 'var/census/games', 'write', root), join(root, 'census', 'games'));
+    const uniq = `labdata-t-${process.pid}`;
+    assert.equal(labPath(REPO, `var/${uniq}/games`, 'write', root), join(root, uniq, 'games'));
     assert.equal(labPath(REPO, 'var/census/decks', 'read', root), join(REPO, 'var/census/decks'));
     mkdirSync(join(root, 'census', 'decks'), { recursive: true });
     assert.equal(labPath(REPO, 'var/census/decks', 'read', root), join(root, 'census', 'decks'));
@@ -53,7 +54,7 @@ test('LAB_DATA_DIR: var/ paths re-rooted, the rest untouched, unset is the old b
     // unset: exactly path.resolve, and labArg leaves the spelling alone
     assert.equal(labPath(REPO, 'var/census/games', 'write', null), join(REPO, 'var/census/games'));
     assert.equal(labArg(REPO, 'var/cubelab/runs/x', 'write', null), 'var/cubelab/runs/x');
-    assert.equal(labArg(REPO, 'var/cubelab/runs/x', 'write', root), join(root, 'cubelab', 'runs', 'x'));
+    assert.equal(labArg(REPO, `var/${uniq}/runs/x`, 'write', root), join(root, uniq, 'runs', 'x'));
     assert.equal(labDataDir(REPO, { LAB_DATA_DIR: root }), root);
     assert.throws(() => labDataDir(REPO, { LAB_DATA_DIR: join(root, 'not-mounted') }), /not an existing directory/);
   } finally {
@@ -88,6 +89,41 @@ test('LAB_DATA_DIR: a lab job writes under it and nowhere under the repo\'s var/
   }
 });
 
+test('LAB_DATA_DIR: a write whose repo copy holds a run the drive copy lacks is refused, naming both (#160 review)', () => {
+  const root = mkdtempSync(join(tmpdir(), 'labdata-strand-'));
+  const rel = `var/labdata-strand-${process.pid}`;
+  const here = join(REPO, rel);
+  try {
+    // a census folder in progress under the repo's var/, nothing on the drive yet
+    mkdirSync(join(here, 'census'), { recursive: true });
+    writeFileSync(join(here, 'census', 'plan.json'), '{}');
+    writeFileSync(join(here, 'census', 'games.jsonl'), '{}\n');
+    assert.throws(() => labPath(REPO, `${rel}/census`, 'write', root), (e: Error) => e.message.includes(join(here, 'census')) && e.message.includes(join(root, `labdata-strand-${process.pid}`, 'census')) && /plan\.json/.test(e.message));
+    assert.throws(() => labArg(REPO, `${rel}/census`, 'write', root), /start it again from scratch/);
+    // a run folder (no plan.json) with output: refused too; reads are never refused
+    mkdirSync(join(here, 'run'), { recursive: true });
+    writeFileSync(join(here, 'run', 'games.jsonl'), '{}\n');
+    assert.throws(() => labArg(REPO, `${rel}/run`, 'write', root), /earlier output/);
+    assert.equal(labPath(REPO, `${rel}/census`, 'read', root), join(here, 'census'));
+    // a drive copy with an empty folder is no answer; one without plan.json while the repo's has one is none either
+    const moved = join(root, `labdata-strand-${process.pid}`, 'census');
+    mkdirSync(moved, { recursive: true });
+    assert.match(String(strandedReason(join(here, 'census'), moved)), /plan\.json/);
+    writeFileSync(join(moved, 'games.jsonl'), '{}\n');
+    assert.match(String(strandedReason(join(here, 'census'), moved)), /plan\.json/);
+    // moved: the drive copy has the plan, so the write goes there
+    writeFileSync(join(moved, 'plan.json'), '{}');
+    assert.equal(labPath(REPO, `${rel}/census`, 'write', root), moved);
+    // an empty repo folder strands nothing; unset, nothing is refused
+    mkdirSync(join(here, 'empty'), { recursive: true });
+    assert.equal(labPath(REPO, `${rel}/empty`, 'write', root), join(root, `labdata-strand-${process.pid}`, 'empty'));
+    assert.equal(labPath(REPO, `${rel}/census`, 'write', null), join(here, 'census'));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(here, { recursive: true, force: true });
+  }
+});
+
 const P: PlannedGame = { g: 17, seed: 1401000017, a: 'legacy-1401-00811', b: 'legacy-1401-02213' };
 
 test('census-play --record: the match line\'s blocks, the plan\'s mode, the game row, the sizes', () => {
@@ -101,6 +137,22 @@ test('census-play --record: the match line\'s blocks, the plan\'s mode, the game
   assert.equal(rows.ledger, true);
   assert.equal(rows.rowsCheckEvery, 50);
   assert.equal(rows.record, undefined, 'rows mode writes no frame log');
+  // under LAB_DATA_DIR the recipe spells a deck file var/<rest>, so a remounted drive still replays (#160 review)
+  const drive = mkdtempSync(join(tmpdir(), 'recipe-'));
+  const remount = mkdtempSync(join(tmpdir(), 'recipe-remount-'));
+  try {
+    const onDrive = recordBlocks('rows', '/o', P, { a: join(drive, 'census', 'decks', 'a.dck'), b: join(REPO, 'decks', 'b.dck'), sha: 'abc', dir: '/d' }, 'plain', 'plain', 50, REPO, drive) as Record<string, any>;
+    assert.equal(onDrive.rows.begin.deckFileA, join('var', 'census', 'decks', 'a.dck'));
+    assert.equal(onDrive.rows.begin.deckFileB, join('decks', 'b.dck'), 'a repo file stays repo-relative');
+    mkdirSync(join(remount, 'census', 'decks'), { recursive: true });
+    writeFileSync(join(remount, 'census', 'decks', 'a.dck'), '');
+    assert.equal(labPath(REPO, onDrive.rows.begin.deckFileA, 'read', remount), join(remount, 'census', 'decks', 'a.dck'), 'read back from the drive where it is mounted now');
+    assert.equal(recipePath(REPO, '/elsewhere/a.dck', drive), '/elsewhere/a.dck');
+    assert.equal(recipePath(REPO, join(drive, 'x.dck'), null), join(drive, 'x.dck'), 'unset: as before');
+  } finally {
+    rmSync(drive, { recursive: true, force: true });
+    rmSync(remount, { recursive: true, force: true });
+  }
   const full = recordBlocks('full', '/o', P, { a: '/d/a.dck', b: '/d/b.dck', sha: 'abc', dir: '/d' }, 'plain', 'plain', 50, REPO) as Record<string, any>;
   assert.equal(full.record.dir, '/o/frames');
   assert.equal(full.record.name, 'g17');
@@ -199,4 +251,37 @@ test('census-replay: two recordings of one game are equal but for the wall clock
   const st = (ids: number[]): string => ids.map((id, i) => JSON.stringify({ seq: i, dir: 's2c', type: 'state', body: { stack: [{ id, name: 'x' }], events: [{ type: 'cast', stackId: id }] } })).join('\n');
   assert.equal(compareFrames(st([1376, 1380, 1376]), st([1, 5, 1])), null);
   assert.notEqual(compareFrames(st([1376, 1380, 1376]), st([1, 5, 5])), null, 'a different stack order still shows');
+});
+
+test('census-replay: --out naming a census folder, or one holding the rows file, is refused before anything is deleted (#160 review)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'replay-out-'));
+  try {
+    const census = join(dir, 'census');
+    mkdirSync(join(census, 'rows'), { recursive: true });
+    mkdirSync(join(census, 'frames'), { recursive: true });
+    for (const d of ['a', 'b']) writeFileSync(join(dir, `${d}.dck`), '[metadata]\nName=x\n[Main]\n');
+    const rowsFile = join(census, 'rows', 'rows-1.jsonl');
+    writeFileSync(rowsFile, [HEADER, BEGIN('census:5', { deckFileA: join(dir, 'a.dck'), deckFileB: join(dir, 'b.dck') }), ROW('census:5'), END('census:5')].join('\n') + '\n');
+    writeFileSync(join(census, 'frames', 'g3-seat0.jsonl.gz'), 'x');
+    writeFileSync(join(census, 'plan.json'), '{}');
+    writeFileSync(join(census, 'games.jsonl'), '{}\n');
+    const f = (out: string): Map<string, string[]> => new Map([['game', ['census:5']], ['out', [out]]]);
+    // the whole command: it refuses, and the night is still there
+    await assert.rejects(censusReplayCommand(dir, [rowsFile], f(census), () => {}), /holds plan\.json, so it is a census folder/);
+    assert.ok(existsSync(rowsFile), 'the rows survive');
+    assert.ok(existsSync(join(census, 'frames', 'g3-seat0.jsonl.gz')), 'the frame logs survive');
+    // games.jsonl alone marks a census folder too; a folder holding the rows file (no plan) is refused
+    rmSync(join(census, 'plan.json'));
+    assert.match(String(replayOutRefusal(census, rowsFile)), /holds games\.jsonl/);
+    rmSync(join(census, 'games.jsonl'));
+    assert.match(String(replayOutRefusal(census, rowsFile)), /contains the rows file/);
+    assert.match(String(replayOutRefusal(join(census, 'rows'), rowsFile)), /contains the rows file/);
+    await assert.rejects(censusReplayCommand(dir, [rowsFile], f(join(census, 'rows')), () => {}), /contains the rows file/);
+    assert.ok(existsSync(rowsFile), 'the rows survive');
+    // a folder of its own is fine
+    assert.equal(replayOutRefusal(join(dir, 'replay'), rowsFile), null);
+    assert.equal(replayOutRefusal(join(dir, 'census-2'), rowsFile), null, 'a sibling whose name starts the same is not inside');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

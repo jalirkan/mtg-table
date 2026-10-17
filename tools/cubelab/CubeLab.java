@@ -563,7 +563,7 @@ public final class CubeLab {
             }
             if (leak[0] + leak[2] > 0) {
                 res.key("rowsCheck").obj().n("checks", leak[0]).n("leaks", leak[1]).n("controls", leak[2])
-                   .n("controlMoved", leak[3]).end();
+                   .n("controlMoved", leak[3]).n("candidates", leak[4]).end();
             }
             if (r.ledger != null) {
                 res.key("ledger");

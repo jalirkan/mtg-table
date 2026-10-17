@@ -122,6 +122,22 @@ export function compareGames(a: GameLines, b: GameLines): { same: boolean; rows:
   return { same: true, rows: n, firstDiff: null };
 }
 
+/**
+ * Why --out must not be used, or null.  A replay clears <out>/rows and <out>/frames before it plays, so
+ * --out naming a census folder (its plan.json or games.jsonl) or any folder holding the input rows file
+ * would delete the night it replays (the #160 review: a 131-row night became 41 rows).
+ */
+export function replayOutRefusal(out: string, rowsFile: string): string | null {
+  const real = (p: string): string => { try { return fs.realpathSync(p); } catch { return path.resolve(p); } };
+  const o = real(out);
+  for (const f of ['plan.json', 'games.jsonl']) {
+    if (fs.existsSync(path.join(o, f))) return `census-replay: --out ${out} holds ${f}, so it is a census folder; a replay clears <out>/rows and <out>/frames and would delete its recordings. Give --out a folder of its own`;
+  }
+  const rel = path.relative(o, real(rowsFile));
+  if (!rel.startsWith('..') && !path.isAbsolute(rel)) return `census-replay: --out ${out} contains the rows file being replayed (${rowsFile}); a replay clears <out>/rows and <out>/frames. Give --out a folder of its own`;
+  return null;
+}
+
 export async function censusReplayCommand(repo: string, pos: string[], f: Map<string, string[]>, say: (s: string) => void): Promise<number> {
   const one = (k: string): string | undefined => f.get(k)?.at(-1);
   const fileArg = pos[0];
@@ -140,6 +156,8 @@ export async function censusReplayCommand(repo: string, pos: string[], f: Map<st
   for (const d of [deckA, deckB]) if (!fs.existsSync(d)) throw new Error(`census-replay: the recipe's deck ${d} is not there`);
   const p: PlannedGame = { g: Number(b.g), seed: Number(b.seed), a: String(b.a), b: String(b.b) };
   const out = labPath(repo, one('out') ?? path.join('var/cubelab/census-replay', key.replace(/[^A-Za-z0-9_-]/g, '_')), 'write');
+  const refusal = replayOutRefusal(out, file);
+  if (refusal) throw new Error(refusal);
   fs.rmSync(path.join(out, 'rows'), { recursive: true, force: true });
   fs.rmSync(path.join(out, 'frames'), { recursive: true, force: true });
   fs.mkdirSync(out, { recursive: true });

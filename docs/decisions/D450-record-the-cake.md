@@ -99,3 +99,22 @@ seed 4501).
 - Recipe → cake: `census-replay` of g1 and g4 from the `rows` run (leak-checked) and of g37 from
   the `full` run: every row identical, the same winner, and both frame logs equal to the `full`
   run's independent recordings of the same games under the normalisation in point 7.
+
+**Review follow-ups** (the cloud's review of #160, 2026-10-17).
+
+- `census-replay` refuses an `--out` holding `plan.json` or `games.jsonl`, or containing the rows file
+  it replays, before it clears anything: it empties `<out>/rows` and `<out>/frames`, and a census
+  folder given as `--out` lost its night (131 rows became 41).
+- `LAB_DATA_DIR` refuses a write whose repo copy holds work the re-rooted copy lacks (a non-empty
+  folder against a missing or empty one, or a `plan.json` against none), naming both: re-rooting a
+  folder begun before the setting would start it again from scratch on the drive.
+- The begin line's deck files are the recipe and nothing else: `census-replay` reads them to play
+  the game again, and no reader may use a path, a file name or a deck id as a feature. Under
+  `LAB_DATA_DIR` a deck file is stored as `var/<path under the data root>`, the spelling `labPath`
+  reads back re-rooted, so a recording still replays when the drive is mounted elsewhere.
+- `RowsLeakCheck` holds every candidate's vector to the same rule as the state: neither may move
+  when only the opponent's hidden cards do (`rowsCheck.candidates` counts the checks that compared
+  them).
+- #159's follow-up (D448): an abandon refused because the game is already over is not a failure —
+  the loop waits for that `over`, counts the game as played (not stalled) and starts the next one
+  itself, since nobody is connected to ask.

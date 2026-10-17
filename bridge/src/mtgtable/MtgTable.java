@@ -601,8 +601,11 @@ public final class MtgTable {
         /** {@link System#nanoTime()}, or the fake's clock. */
         long nanoTime();
 
-        /** D448: {@link WireGuiGame#abandonForAbsentSeat}. */
-        boolean abandon(String noticeText);
+        /**
+         * D448: {@link WireGuiGame#abandonForAbsentSeat} -- null when the concede
+         * was posted, else why the game cannot be abandoned.
+         */
+        String abandon(String noticeText);
 
         /** D448: {@link WireGuiGame#newGameAfterAbandon}. */
         void startNextGame();
@@ -644,7 +647,7 @@ public final class MtgTable {
             @Override public boolean hasSocket() { return ws != null; }
             @Override public boolean connected() { return ws != null && ws.connected(); }
             @Override public long nanoTime() { return System.nanoTime(); }
-            @Override public boolean abandon(final String text) { return gui.abandonForAbsentSeat(text); }
+            @Override public String abandon(final String text) { return gui.abandonForAbsentSeat(text); }
             @Override public void startNextGame() { gui.newGameAfterAbandon(); }
             @Override public String clientLine() { return ws == null ? "no socket" : ws.clientLine(); }
             @Override public void stalledGames(final int count) {
@@ -705,15 +708,21 @@ public final class MtgTable {
                     r.finished = false;
                     break;
                 }
-                if (!abandonStalled(l, n, idleSec, out)) {
+                final Stall stall = abandonStalled(l, n, idleSec, out);
+                if (stall == Stall.FAILED) {
                     r.abandoned = "ABANDONED: game " + n + " had no client for " + idleSec
                             + " s and could not be ended with no result, so the session ends (D448)";
                     out.println(r.abandoned);
                     r.finished = false;
                     break;
                 }
-                r.stalled++;
-                l.stalledGames(r.stalled);
+                if (stall == Stall.ABANDONED) {
+                    r.stalled++;
+                    l.stalledGames(r.stalled);
+                }
+                // ENDED: it reached `over` on its own -- played, not stalled; but
+                // nobody is connected to ask for the next game either, so the
+                // server starts it as after an abandoned one.
                 wasAbandoned = true;
             }
             r.played = n;
@@ -761,28 +770,51 @@ public final class MtgTable {
     /**
      * <b>D448.</b>  Game {@code n} has had no client for {@code idleSec}: say who
      * began it and when it last spoke, end it with no result, and wait for its
-     * {@code over}.  False when it cannot be ended that way (the engine has not
-     * asked the seat anything yet) or no {@code over} came within
-     * {@link #ABANDON_OVER_MS}; the session then fails as before.
+     * {@code over}.  {@link Stall#FAILED} when it cannot be ended that way -- the seat says why
+     * before anything is posted ({@link WireGuiGame#abandonRefusal}), and the
+     * {@code STALLED GAME n: not abandoned -- <reason>} line prints it -- or no
+     * {@code over} came within {@link #ABANDON_OVER_MS}; the session then fails
+     * as before.  One refusal is not a failure: a game already over ended on its
+     * own a moment ago, so its {@code over} is waited for and it counts as
+     * played ({@link Stall#ENDED}).
      */
-    static boolean abandonStalled(final Loop l, final int n, final long idleSec, final java.io.PrintStream out)
+    /** What {@link #abandonStalled} did with a game nobody was connected to. */
+    enum Stall {
+        /** Ended with no result through the concede path: a stalled game. */
+        ABANDONED,
+        /**
+         * It reached {@code over} on its own between the idle verdict and the
+         * abandon ({@link WireGuiGame#REFUSED_OVER}): a game played, not
+         * stalled (#159's review).
+         */
+        ENDED,
+        /** It could not be ended: the run fails as before. */
+        FAILED
+    }
+
+    static Stall abandonStalled(final Loop l, final int n, final long idleSec, final java.io.PrintStream out)
             throws InterruptedException {
         out.println("STALLED GAME " + n + " (" + l.gameId() + "): no client connected for " + idleSec + " s -- "
                 + l.clientLine() + "; ending it with no result (D448)");
         final long mins = idleSec / 60;
         final String text = "Nobody was connected to this game for "
                 + (mins > 0 ? mins + " min" : idleSec + " s") + ", so the server ended it with no result.";
-        if (!l.abandon(text)) {
-            out.println("STALLED GAME " + n + ": the engine has not asked this seat anything yet, so there "
-                    + "is no game to concede");
-            return false;
+        final String refusal = l.abandon(text);
+        if (WireGuiGame.REFUSED_OVER.equals(refusal) && l.awaitGameEnd(n, ABANDON_OVER_MS)) {
+            out.println("STALLED GAME " + n + ": it reached `over` on its own before the abandon -- "
+                    + "counted as played, not abandoned");
+            return Stall.ENDED;
+        }
+        if (refusal != null) {
+            out.println("STALLED GAME " + n + ": not abandoned -- " + refusal);
+            return Stall.FAILED;
         }
         if (!l.awaitGameEnd(n, ABANDON_OVER_MS)) {
             out.println("STALLED GAME " + n + ": no `over` within " + ABANDON_OVER_MS + " ms of conceding it");
-            return false;
+            return Stall.FAILED;
         }
         out.println("STALLED GAME " + n + " over: no result (amendment M70)");
-        return true;
+        return Stall.ABANDONED;
     }
 
     /**
