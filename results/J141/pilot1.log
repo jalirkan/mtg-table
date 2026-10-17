@@ -1,0 +1,29 @@
+==== J141 pilot1 started 2026-10-17T12:05:48-04:00 in unit lab-J141-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+1
+1
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (2.310081ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (838.881132ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (719.286582ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.327349ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2302.320718ms)
+✔ the prior covers the spectrum over 1,000 decks (1210.41769ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (52.720374ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.134817ms)
+✔ the land formula on fixture decks (0.505945ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.298266ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.181562ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (522.156587ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (1.893271ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.383111ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.078894ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (24.923443ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.110578ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6026.007131
+{"decksMatch": 4, "dckMissing": 0, "j140Games": 80000, "slice": 2000, "pilot": 20, "shortfall": 0, "strata": {"pauper": {"LL": 84, "LM": 84, "LH": 83, "MM": 83, "MH": 83, "HH": 83}, "peasant": {"LL": 84, "LM": 84, "LH": 83, "MM": 83, "MH": 83, "HH": 83}, "legacy": {"LL": 84, "LM": 84, "LH": 83, "MM": 83, "MH": 83, "HH": 83}, "powered": {"LL": 84, "LM": 84, "LH": 83, "MM": 83, "MH": 83, "HH": 83}}}
