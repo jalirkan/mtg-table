@@ -1,0 +1,44 @@
+==== J140 pilot1 started 2026-10-17T01:29:51-04:00 in unit lab-J140-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+1
+1
+✔ census.tsv: one row a card of library-pool.tsv, its columns, the pool's facts, every label provisional (5.648495ms)
+✔ census.tsv: every band is the written rule applied to the row's own rarity and membership (1.718396ms)
+✔ the band rule on known cards (0.234405ms)
+✔ the edition reader: rarities, L as C, tokens skipped, a paper set named first (0.453261ms)
+✔ census build: deterministic, games-weighted lab numbers, and --check says when it is stale (5.747183ms)
+✔ the sampler is deterministic by seed (214.031122ms)
+✔ every band x structure: a cube `check` passes, evolve can write back, the plan exact (916.992751ms)
+✔ each structure's counts hold (1199.338118ms)
+✔ the cross-band share is within 2 points of the ask over 20 cubes, and 0 when asked for none (1924.412644ms)
+✔ AI-flagged cards only when asked (62.347546ms)
+✔ sample, the command: N files and a manifest, the same bytes twice, and a stale census refused (346.190961ms)
+✔ selectSlots: an item offering two groups is taken once, costs decide, and an impossible plan is refused (0.286113ms)
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (2.04112ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (924.869922ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (779.758928ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.348542ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2479.98553ms)
+✔ the prior covers the spectrum over 1,000 decks (1246.284663ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (53.238544ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.127933ms)
+✔ the land formula on fixture decks (0.50527ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.34171ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.170203ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (544.030118ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (2.23104ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.390142ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.074131ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (24.18729ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (7.737515ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6476.008858
+decks: 2500 pauper deck(s), seed 1401, into var/lab-j140/decks/pauper: k = 1..5 495 / 526 / 500 / 513 / 466; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2500 peasant deck(s), seed 1402, into var/lab-j140/decks/peasant: k = 1..5 485 / 493 / 503 / 515 / 504; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2500 legacy deck(s), seed 1403, into var/lab-j140/decks/legacy: k = 1..5 559 / 479 / 485 / 496 / 481; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2500 powered deck(s), seed 1404, into var/lab-j140/decks/powered: k = 1..5 509 / 514 / 499 / 483 / 495; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant

@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-17T01:29:52-04:00",
- "heartbeat": "2026-10-17T01:29:52-04:00",
+ "updated": "2026-10-17T01:30:15-04:00",
+ "heartbeat": "2026-10-17T01:30:15-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.13,
-  "memUsedGb": 8.5,
+  "load1": 2.3,
+  "memUsedGb": 8.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 2642,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J140",
    "title": "The deck census, night 1 -- per power band (pauper, peasant, legacy, powered) 2,500 40-card decks drawn straight from the band's pool at random colour makeups (cubelab.sh decks, D447: k colours uniform on 1-5, flat Dirichlet shares, cards uniform within the shares, one land formula, every spell castable, a 10% cross-band slice inside each deck; deck seeds 1401-1404), each deck in exactly 16 Bo1 games against random decks of its band (census-play, 20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Default vs Default, numbers only; the win rate across the colour spectrum and per-card rows reported, no verdict",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-17T01:29:27-04:00",
-   "elapsed": 25,
+   "elapsed": 48,
    "done": 0,
    "total": 80000,
    "unit": "lines",
@@ -64,7 +64,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J140-pilot1"
+   "detail": "lab-J140-pilot2"
   }
  ],
  "queue": [
