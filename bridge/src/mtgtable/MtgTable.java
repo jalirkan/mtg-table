@@ -601,8 +601,11 @@ public final class MtgTable {
         /** {@link System#nanoTime()}, or the fake's clock. */
         long nanoTime();
 
-        /** D448: {@link WireGuiGame#abandonForAbsentSeat}. */
-        boolean abandon(String noticeText);
+        /**
+         * D448: {@link WireGuiGame#abandonForAbsentSeat} -- null when the concede
+         * was posted, else why the game cannot be abandoned.
+         */
+        String abandon(String noticeText);
 
         /** D448: {@link WireGuiGame#newGameAfterAbandon}. */
         void startNextGame();
@@ -644,7 +647,7 @@ public final class MtgTable {
             @Override public boolean hasSocket() { return ws != null; }
             @Override public boolean connected() { return ws != null && ws.connected(); }
             @Override public long nanoTime() { return System.nanoTime(); }
-            @Override public boolean abandon(final String text) { return gui.abandonForAbsentSeat(text); }
+            @Override public String abandon(final String text) { return gui.abandonForAbsentSeat(text); }
             @Override public void startNextGame() { gui.newGameAfterAbandon(); }
             @Override public String clientLine() { return ws == null ? "no socket" : ws.clientLine(); }
             @Override public void stalledGames(final int count) {
@@ -761,9 +764,11 @@ public final class MtgTable {
     /**
      * <b>D448.</b>  Game {@code n} has had no client for {@code idleSec}: say who
      * began it and when it last spoke, end it with no result, and wait for its
-     * {@code over}.  False when it cannot be ended that way (the engine has not
-     * asked the seat anything yet) or no {@code over} came within
-     * {@link #ABANDON_OVER_MS}; the session then fails as before.
+     * {@code over}.  False when it cannot be ended that way -- the seat says why
+     * before anything is posted ({@link WireGuiGame#abandonRefusal}), and the
+     * {@code STALLED GAME n: not abandoned -- <reason>} line prints it -- or no
+     * {@code over} came within {@link #ABANDON_OVER_MS}; the session then fails
+     * as before.
      */
     static boolean abandonStalled(final Loop l, final int n, final long idleSec, final java.io.PrintStream out)
             throws InterruptedException {
@@ -772,9 +777,9 @@ public final class MtgTable {
         final long mins = idleSec / 60;
         final String text = "Nobody was connected to this game for "
                 + (mins > 0 ? mins + " min" : idleSec + " s") + ", so the server ended it with no result.";
-        if (!l.abandon(text)) {
-            out.println("STALLED GAME " + n + ": the engine has not asked this seat anything yet, so there "
-                    + "is no game to concede");
+        final String refusal = l.abandon(text);
+        if (refusal != null) {
+            out.println("STALLED GAME " + n + ": not abandoned -- " + refusal);
             return false;
         }
         if (!l.awaitGameEnd(n, ABANDON_OVER_MS)) {
