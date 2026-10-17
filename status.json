@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-17T01:29:13-04:00",
- "heartbeat": "2026-10-17T01:29:13-04:00",
+ "updated": "2026-10-17T01:29:27-04:00",
+ "heartbeat": "2026-10-17T01:29:27-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.37,
+  "load1": 2.22,
   "memUsedGb": 8.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 2642,
@@ -19,65 +19,55 @@
  },
  "running": [
   {
-   "publicTitle": "Search with the learned evaluator as its leaf: one fixed match",
-   "publicEst": "~8-9 h (one night)",
-   "id": "J139",
-   "title": "Evaluator-leaf confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-evalleaf (D437) vs search-v2 (search-v1-anytime) on the confirm deck set, read alone on a 95% interval; Justin asked for it after J131's +8.7 Elo [-4.7, +22.1]",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-10-16T16:40:10-04:00",
-   "elapsed": 31743,
-   "done": 6608,
-   "total": 4800,
-   "unit": "games",
-   "ratePerHour": 567.3,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-17T01:26:47-04:00",
-   "memGb": 0.01,
-   "live": {
-    "cm.played": 0,
-    "cm.score": 0,
-    "cm.lo": 0,
-    "cm.hi": 0,
-    "v.adopt": 0,
-    "cm.errors": 0,
-    "cm.timeouts": 0,
-    "elapsed_s": 31723,
-    "j139_err": 7,
-    "j139_games": 6608,
-    "peak_worker_rss_gb": 1.12,
-    "pressure_events": 0,
-    "v.complete": 0,
-    "v.written": 0,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "cm.played",
-    "cm.score",
-    "cm.lo",
-    "cm.hi",
-    "v.adopt"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J139-run2"
-  }
- ],
- "queue": [
-  {
    "publicTitle": "Library deck census night 1: random decks across the colour spectrum",
    "publicEst": "~7-9 h",
    "id": "J140",
    "title": "The deck census, night 1 -- per power band (pauper, peasant, legacy, powered) 2,500 40-card decks drawn straight from the band's pool at random colour makeups (cubelab.sh decks, D447: k colours uniform on 1-5, flat Dirichlet shares, cards uniform within the shares, one land formula, every spell castable, a 10% cross-band slice inside each deck; deck seeds 1401-1404), each deck in exactly 16 Bo1 games against random decks of its band (census-play, 20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Default vs Default, numbers only; the win rate across the colour spectrum and per-card rows reported, no verdict",
    "cpu": "heavy",
-   "est": "~7 h at the engine smoke's CPU cost (2.2 CPU-seconds a game: about 11,400 games an hour on 7 cores), ~9.2 h at its loaded rate (2,472 games an hour on 2 workers beside J136's 7, so 1,236 a worker); plus ~10 min of pilot and ~2 min to read. 80,000 games is sized to that: one night"
-  },
+   "phase": "prepare",
+   "started": "2026-10-17T01:29:27-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": 80000,
+   "unit": "lines",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": 0,
+   "paused": false,
+   "dataUpdated": "2026-10-17T01:29:27-04:00",
+   "memGb": null,
+   "live": {
+    "played": 0,
+    "engine_errors": 0,
+    "cards": 0,
+    "elapsed_s": 0,
+    "gle.games": 0,
+    "gpa.games": 0,
+    "gpe.games": 0,
+    "gpo.games": 0,
+    "gz": 0,
+    "pressure_events": 0,
+    "qwriters": 0,
+    "sp.games": 0,
+    "strict": 0,
+    "timeouts": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "played",
+    "engine_errors",
+    "cards"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J140-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Deck census pilot slice: Forge AI against search AI on the same games",
    "publicEst": "~7-8 h",
@@ -97,6 +87,28 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Search with the learned evaluator as its leaf: one fixed match",
+   "publicEst": "~8-9 h (one night)",
+   "id": "J139",
+   "title": "Evaluator-leaf confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-evalleaf (D437) vs search-v2 (search-v1-anytime) on the confirm deck set, read alone on a 95% interval; Justin asked for it after J131's +8.7 Elo [-4.7, +22.1]",
+   "status": "done",
+   "finished": "2026-10-17T01:29:26-04:00",
+   "headline": "cm.played 4800 · cm.score 0.503 · cm.lo 0.493 · cm.hi 0.513 · cm.elo 2.2 · cm.eloLo -4.7 · cm.eloHi 9 · cm.aSearch.msPerDecision 907.116 · cm.bSearch.msPerDecision 909.544 · cm.aSearch.evalLeafUs 158.275 · v.adopt 0",
+   "numbers": {
+    "cm.played": 4800,
+    "cm.score": 0.5031,
+    "cm.lo": 0.4933,
+    "cm.hi": 0.513,
+    "cm.elo": 2.2,
+    "cm.eloLo": -4.7,
+    "cm.eloHi": 9,
+    "cm.aSearch.msPerDecision": 907.116,
+    "cm.bSearch.msPerDecision": 909.544,
+    "cm.aSearch.evalLeafUs": 158.275,
+    "v.adopt": 0
+   }
+  },
   {
    "publicTitle": "Synergy v2 against the designed v3",
    "publicEst": "~3 h",
@@ -899,17 +911,6 @@
     "fit.pass": 1,
     "cmp.better": 1
    }
-  },
-  {
-   "publicTitle": "Queue night 4",
-   "publicEst": "~11 h",
-   "id": "J082",
-   "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
-   "status": "failed",
-   "finished": "2026-10-05T23:43:06-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot: rq3.written == 1 and rq3.newKinds == 0 (rq3.written = 1, rq3.newKinds = 3)"
   }
  ],
  "runner": {

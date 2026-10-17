@@ -1,0 +1,16 @@
+# J139: search-v2 with the learned evaluator at its leaves (D437)
+
+**Reading under the pre-registered rule: NOT SHOWN: the lower end 0.4933 is not above 0.5.**
+
+| match | played / planned | complete | score [95%] | Elo [95%] | draws, errors, timeouts |
+|---|---|---|---|---|---|
+| search-v2-evalleaf vs search-v1-anytime | 4800 / 4800 | true | 0.5031 [0.4933, 0.513] | 2.2 [-4.7, 9] | 0, 0, 7 |
+
+Players' config hashes: search-v2-evalleaf c6d9a3990415, search-v1-anytime cdd55e02a89c. Deck set tools/ai-bench/pairs-confirm.txt; 2400 mirrored pairs.
+
+| side | decisions searched (games) | changed Forge: p | a | b | all | ms per decision (p+a+b) | ms p / a / b | budget fallbacks [95%] | other fallbacks | evaluator leaves | us per leaf |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| search-v2-evalleaf | 110800 (4798) | 18477/78097 (23.7%) | 4995/23935 (20.9%) | 2317/8768 (26.4%) | 25789/110800 (23.3%) | 907.116 | 911.598 / 830.565 / 1076.164 | 683 = 0.6% [0.5%, 0.7%] | unmappable 143, rolloutErrors 236 | 1600784 | 158.275 |
+| search-v1-anytime | 113761 (4798) | 15890/78438 (20.3%) | 3186/24685 (12.9%) | 1600/10638 (15.0%) | 20676/113761 (18.2%) | 909.544 | 910.307 / 856.649 / 1026.661 | 643 = 0.6% [0.5%, 0.6%] | unmappable 154, rolloutErrors 254 | 0 | - |
+
+Rule parts: complete 1 (complete: true, 4800 games, errors + timeouts at most 240), lower end above 0.5: 0; ADOPT 0.

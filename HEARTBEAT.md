@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-17T01:29:13-04:00
+- time: 2026-10-17T01:29:27-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J139 commands 2/2, 6608/4800 games, 567.3/h, 7 worker(s), 7 core(s)
+- running: J140 prepare, 0/80000 lines, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.37; memory 8.3/30.5 GB, swap 2642 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J140, J141, J142
+- load: 2.22; memory 8.3/30.5 GB, swap 2642 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J141, J142
 - waiting: nothing
-- last finished: J137 done at 2026-10-16T16:40:10-04:00: vv.verdict.better_balanced 0 · vv.verdict.decided 1 · vv.spread.v2.est 0.389 · vv.spread.v2.lo 0.337 · vv.spread.v3.est 0.271 · vv.spread.v3.hi 0.351 · vv.verdict.low_pairs 0 · all.engine_error_rate 0.001
+- last finished: J139 done at 2026-10-17T01:29:26-04:00: cm.played 4800 · cm.score 0.503 · cm.lo 0.493 · cm.hi 0.513 · cm.elo 2.2 · cm.eloLo -4.7 · cm.eloHi 9 · cm.aSearch.msPerDecision 907.116 · cm.bSearch.msPerDecision 909.544 · cm.aSearch.evalLeafUs 158.275 · v.adopt 0
 
 ## Messages
+
+- FOLLOW-UP READY [J139@2026-10-17T01:29:26-04:00] (the runner, for the cloud session): J139 is done; write and post the template morning-read. It decides: whether the next search version (search-v3) scores the leaves of its unfinished rollouts with the learned evaluator (D354's leaf=eval, evaluator v2) instead of the hand-written leaf. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J137@2026-10-16T16:40:10-04:00] (the runner, for the cloud session): J137 is done; write and post the template morning-read. It decides: whether the designed Synergy v3 (8 swaps, pc-results study/synergy-v3-design.md) is shown better balanced than v2 for the lab's AI, by the study's rule; a pass ships nothing -- Justin decides whether v3 ships. Ledger: LEDGER.md. Delete this line once posted.
 
