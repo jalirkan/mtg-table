@@ -2086,11 +2086,13 @@ public final class WsTransport implements Transport {
                 }
             }
             owner = true;
-            client = ctx.channel();
             connects.incrementAndGet();
             System.err.println("WS CONNECT " + ctx.channel().remoteAddress()
                     + " (connection #" + connects.get() + ")");
+            // D448: record who took the seat before publishing the channel, so a
+            // reader that sees connected() also sees this client in clientLine().
             markConnect(String.valueOf(ctx.channel().remoteAddress()), connects.get());
+            client = ctx.channel();
             if (pool != null) {
                 // Belt and braces: channelInactive already lifted the latch a
                 // disconnect's cancelAll() set, so an ask raised while nobody
@@ -2211,8 +2213,8 @@ public final class WsTransport implements Transport {
                 owner = false;
             } else if (owner) {
                 owner = false;
+                lastLeftAt = System.currentTimeMillis();    // D448, before the seat reads as free
                 client = null;
-                lastLeftAt = System.currentTimeMillis();    // D448
                 System.err.println("WS DISCONNECT " + ctx.channel().remoteAddress()
                         + " -- cancelling " + (pool == null ? 0 : pool.pending()) + " pending ask(s)");
                 if (inbound != null) {

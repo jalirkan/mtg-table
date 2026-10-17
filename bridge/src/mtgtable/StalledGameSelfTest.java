@@ -424,6 +424,8 @@ public final class StalledGameSelfTest {
                 has("socket, connected", line, ", still connected");
             }
             eq("socket: the client left", true, waitFor(() -> !ws.connected()));
+            // The channel reads inactive before channelInactive records the leave on the event loop.
+            eq("socket: its leave is recorded", true, waitFor(() -> ws.clientLine().contains(", left ")));
             final String line = ws.clientLine();
             has("socket, left", line, "began by /127.0.0.1:");
             has("socket, left", line, "the last client /127.0.0.1:");
@@ -448,6 +450,7 @@ public final class StalledGameSelfTest {
                 hasNot("socket, joined", ws.clientLine(), "no client held the seat");
             }
             eq("socket: it left too", true, waitFor(() -> !ws.connected()));
+            eq("socket: its leave is recorded too", true, waitFor(() -> ws.clientLine().contains(", left ")));
 
             ws.stalledGames(1);
             h = health(port);
