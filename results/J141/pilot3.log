@@ -1,0 +1,42 @@
+==== J141 pilot3 started 2026-10-17T12:51:46-04:00 in unit lab-J141-pilot3, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"games": 20, "integrity": {"ss": {"rows": 20, "missing": 0, "idMismatch": 0, "firstMismatch": 0, "errorsTimeouts": 0}, "ps": {"rows": 20, "missing": 0, "idMismatch": 0, "firstMismatch": 0, "errorsTimeouts": 0}, "sp": {"rows": 20, "missing": 0, "idMismatch": 0, "firstMismatch": 0, "errorsTimeouts": 0}}, "read2": {"bands": ["pauper", "peasant", "legacy"], "ff": {"n": 30, "beta": 149.9165, "lo": -21.1679, "hi": 112.0421}, "ss": {"n": 30, "beta": 98.8314, "lo": -132.3949, "hi": 133.3333}, "diff": {"beta": -51.0851, "lo": -206.6667, "hi": 86.9429}, "censusFF": {"n": 119898, "decks": 7500, "beta": -2.586, "lo": -3.0818, "hi": -2.1689}}, "spearman": {"shrunk": {"rho": 0.5197, "lo": 0.2273, "hi": 0.7641}, "raw": {"rho": 0.5306, "lo": 0.3002, "hi": 0.7082}, "swapReference": {"median": 0.4997, "lo": 0.4852, "hi": 0.52, "swaps": 20}}, "counters": {"ss": {"seats": 40, "searched": 774}, "ps": {"seats": 20, "searched": 413}, "sp": {"seats": 20, "searched": 433}}}
+# J141: the pilot slice -- Forge against search-v2 on the same census games
+
+20 slice games, 40 deck-games, 40 decks. Every interval is a deck-clustered percentile bootstrap (200 replicates, seed 1411). No verdict: any difference is a candidate until it holds on a fresh slice (D447 point 9). The decks are random draws from a band pool, so every rate is "in a random deck of this makeup", not in a built deck.
+
+## Integrity
+
+| arm | rows | expected | missing | id mismatch | first mismatch / compared | policy mismatch | counters missing | engine errors | timeouts | draws |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ss | 20 | 20 | 0 | 0 | 0 / 20 | 0 | 0 | 0 | 0 | 0 |
+| ps | 20 | 20 | 0 | 0 | 0 / 20 | 0 | 0 | 0 | 0 | 0 |
+| sp | 20 | 20 | 0 | 0 | 0 / 20 | 0 | 0 | 0 | 0 | 0 |
+
+## Read 1: win rate by colour, Forge vs Forge (J140) against search vs search (arm S)
+
+| main colour | deck-games | FF | 95% | SS | 95% | SS − FF (paired) | 95% |
+|---|---|---|---|---|---|---|---|
+| W | 13 | 0.385 | 0.091–0.636 | 0.385 | 0.100–0.636 | 0.000 | -0.231–0.214 |
+| U | 9 | 0.778 | 0.500–1.000 | 0.556 | 0.250–0.857 | -0.222 | -0.500–0.000 |
+| B | 4 | 0.500 | 0.000–1.000 | 0.500 | 0.000–1.000 | 0.000 | -1.000–1.000 |
+| R | 7 | 0.286 | 0.000–0.714 | 0.571 | 0.143–1.000 | 0.286 | -0.400–1.000 |
+| G | 7 | 0.571 | 0.200–1.000 | 0.571 | 0.200–1.000 | 0.000 | 0.000–0.000 |
+
+| colours with 3+ spells | deck-games | FF | 95% | SS | 95% | SS − FF (paired) | 95% |
+|---|---|---|---|---|---|---|---|
+| 1 | 11 | 0.545 | 0.250–0.857 | 0.545 | 0.250–0.833 | 0.000 | -0.286–0.267 |
+| 2 | 8 | 0.375 | 0.091–0.667 | 0.500 | 0.200–0.875 | 0.125 | -0.333–0.625 |
+| 3 | 8 | 0.625 | 0.250–1.000 | 0.375 | 0.000–0.750 | -0.250 | -0.750–0.222 |
+| 4 | 10 | 0.400 | 0.100–0.750 | 0.500 | 0.167–0.833 | 0.100 | 0.000–0.333 |
+| 5 | 3 | 0.667 | 0.000–1.000 | 0.667 | 0.000–1.000 | 0.000 | 0.000–0.000 |
+
+| has the colour (any pip) | deck-games | FF | 95% | SS | 95% | SS − FF (paired) | 95% |
+|---|---|---|---|---|---|---|---|
+| W | 21 | 0.524 | 0.286–0.700 | 0.476 | 0.235–0.684 | -0.048 | -0.292–0.143 |
+| U | 22 | 0.455 | 0.263–0.647 | 0.455 | 0.261–0.640 | 0.000 | -0.200–0.191 |
+| B | 26 | 0.462 | 0.259–0.680 | 0.462 | 0.259–0.640 | 0.000 | -0.231–0.208 |
+| R | 24 | 0.417 | 0.194–0.619 | 0.417 | 0.167–0.600 | 0.000 | -0.263–0.217 |
+| G | 26 | 0.538 | 0.333–0.731 | 0.577 | 0.360–0.778 | 0.038 | -0.125–0.200 |
+
+## Read 2: the card-flow coefficient (points of win rate per card-flow card, colours held fixed)
+
