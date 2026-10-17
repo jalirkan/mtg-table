@@ -1,10 +1,10 @@
 running
 runner: forgecoach-runner 10896b8e
 started: 2026-10-17T12:05:20-04:00
-phase: pilot 2/3
+phase: pilot 3/3
 mtg-table: 2e107b6
 workers: 3
-peak_worker_rss_gb: 1.42
+peak_worker_rss_gb: 1.51
 pressure-1: 2026-10-17T12:11:01-04:00 playing to 3 worker(s): Justin is at the table: new games wait
 pressure-2: 2026-10-17T12:31:14-04:00 play-ended to 3 worker(s): Justin left the table
 pressure-3: 2026-10-17T12:31:50-04:00 playing to 3 worker(s): Justin is at the table: new games wait

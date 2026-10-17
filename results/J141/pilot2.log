@@ -1,0 +1,43 @@
+==== J141 pilot2 started 2026-10-17T12:06:01-04:00 in unit lab-J141-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/pauper.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b search
+[5/5] 201 games/h
+census-play: 5 game(s) in pauper/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 90 s on 3 worker(s) = 201 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/pauper.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a plain, b search
+[5/5] 322 games/h
+census-play: 5 game(s) in pauper/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 56 s on 3 worker(s) = 322 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/pauper.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b plain
+[5/5] 175 games/h
+census-play: 5 game(s) in pauper/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 103 s on 3 worker(s) = 175 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/peasant.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b search
+[5/5] 355 games/h
+census-play: 5 game(s) in peasant/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 51 s on 3 worker(s) = 355 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/peasant.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a plain, b search
+worker 0: unparked (maxWorkers 3)
+worker 1: unparked (maxWorkers 3)
+worker 2: unparked (maxWorkers 3)
+[5/5] 14 games/h
+census-play: 5 game(s) in peasant/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 1260 s on 3 worker(s) = 14 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/peasant.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b plain
+worker 0: unparked (maxWorkers 3)
+worker 1: unparked (maxWorkers 3)
+worker 2: unparked (maxWorkers 3)
+[5/5] 20 games/h
+census-play: 5 game(s) in peasant/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 888 s on 3 worker(s) = 20 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/legacy.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b search
+[5/5] 296 games/h
+census-play: 5 game(s) in legacy/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 61 s on 3 worker(s) = 296 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/legacy.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a plain, b search
+[5/5] 484 games/h
+census-play: 5 game(s) in legacy/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 37 s on 3 worker(s) = 484 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/legacy.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b plain
+[5/5] 583 games/h
+census-play: 5 game(s) in legacy/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 31 s on 3 worker(s) = 583 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/powered.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b search
+[5/5] 240 games/h
+census-play: 5 game(s) in powered/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 75 s on 3 worker(s) = 240 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/powered.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a plain, b search
+[5/5] 363 games/h
+census-play: 5 game(s) in powered/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 50 s on 3 worker(s) = 363 games/h
+census-play: 5 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/pilot-slice/powered.jsonl); 0 already played, 5 to play on 3 worker(s); pilots a search, b plain
+[5/5] 455 games/h
+census-play: 5 game(s) in powered/games.jsonl: 5 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 5 in 40 s on 3 worker(s) = 455 games/h
