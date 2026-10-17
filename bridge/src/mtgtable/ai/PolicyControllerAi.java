@@ -188,9 +188,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
         return search != null && search.config().observe;
     }
 
-    /** D450: who answered an observing seat's decision, for its row. */
+    /** D450: who answered an observing seat's decision, for its row (D451: the move atlas's random seat). */
     private String observedPolicy() {
-        return explorer == null ? "forge" : "explore";
+        return explorer == null ? "forge" : explorer.math().config().random ? "random" : "explore";
     }
 
     /** D450: the observing seat's pending priority row, written with the answer actually played. */

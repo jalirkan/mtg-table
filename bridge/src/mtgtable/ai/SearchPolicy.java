@@ -2355,6 +2355,21 @@ public final class SearchPolicy {
         }
     }
 
+    /**
+     * D451: a copy of {@code game} for the move atlas's branch games, made the
+     * way {@link #playout} makes its own (lobby players seat plain controllers
+     * while it is built; the caller installs its own).  New code beside the
+     * search's; the search does not call it.
+     */
+    static Game copyForAtlas(final LenientGameCopier cp, final Player ai) {
+        COPYING.set(Boolean.TRUE);
+        try {
+            return cp.makeCopy(null, ai);
+        } finally {
+            COPYING.set(Boolean.FALSE);
+        }
+    }
+
     /** One rollout: null if the deadline passed before its leaf. */
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                             final boolean first, final int horizon) {

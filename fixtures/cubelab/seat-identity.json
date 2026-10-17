@@ -1,0 +1,75 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "decks": [
+    "decks/pacho-shield.dck",
+    "decks/doom-legion.dck"
+  ],
+  "games": [
+    {
+      "name": "forge",
+      "profileA": "Default",
+      "profileB": "Default",
+      "seed": 4511,
+      "record": true
+    },
+    {
+      "name": "search",
+      "profileA": "Default+search:ms=60000,cands=4,rounds=2,maxrounds=2,seed=1",
+      "profileB": "Default",
+      "seed": 4512,
+      "record": true
+    },
+    {
+      "name": "explore",
+      "profileA": "Default",
+      "profileB": "Default",
+      "seed": 4513,
+      "record": true,
+      "playExplore": {
+        "epsilon": 0.05,
+        "closeCall": 0.02,
+        "opening": true
+      }
+    },
+    {
+      "name": "plain",
+      "profileA": "Default",
+      "profileB": "Default",
+      "seed": 4514,
+      "record": false
+    }
+  ],
+  "results": {
+    "forge": {
+      "winner": "B",
+      "turns": 15,
+      "first": "B",
+      "reason": "AllOpponentsLost",
+      "digest": "70b36c8575ab6574",
+      "lines": 59
+    },
+    "search": {
+      "winner": "A",
+      "turns": 13,
+      "first": "A",
+      "reason": "AllOpponentsLost",
+      "digest": "19995346a6342137",
+      "lines": 93
+    },
+    "explore": {
+      "winner": "A",
+      "turns": 18,
+      "first": "B",
+      "reason": "AllOpponentsLost",
+      "digest": "20e2d8a32e35f445",
+      "lines": 193
+    },
+    "plain": {
+      "winner": "B",
+      "turns": 14,
+      "first": "A",
+      "reason": "AllOpponentsLost"
+    }
+  }
+}
