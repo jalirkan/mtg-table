@@ -1,93 +1,23 @@
 {
  "schema": 1,
- "updated": "2026-10-17T02:34:00-04:00",
- "heartbeat": "2026-10-17T02:34:00-04:00",
+ "updated": "2026-10-17T02:34:15-04:00",
+ "heartbeat": "2026-10-17T02:34:15-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-17T02:34:15-04:00",
+ "idleReason": "memory backoff",
  "host": {
-  "load1": 17.63,
-  "memUsedGb": 20.5,
+  "load1": 15.15,
+  "memUsedGb": 6.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4308,
-  "pressure": 49.45,
+  "swapUsedMb": 3859,
+  "pressure": 16.01,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
-  {
-   "publicTitle": "Library deck census night 1: random decks across the colour spectrum",
-   "publicEst": "~7-9 h",
-   "id": "J140",
-   "title": "The deck census, night 1 -- per power band (pauper, peasant, legacy, powered) 2,500 40-card decks drawn straight from the band's pool at random colour makeups (cubelab.sh decks, D447: k colours uniform on 1-5, flat Dirichlet shares, cards uniform within the shares, one land formula, every spell castable, a 10% cross-band slice inside each deck; deck seeds 1401-1404), each deck in exactly 16 Bo1 games against random decks of its band (census-play, 20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Default vs Default, numbers only; the win rate across the colour spectrum and per-card rows reported, no verdict",
-   "cpu": "heavy",
-   "phase": "commands 1/2",
-   "started": "2026-10-17T01:29:27-04:00",
-   "elapsed": 3873,
-   "done": 6918,
-   "total": 80000,
-   "unit": "lines",
-   "ratePerHour": 7083.1,
-   "eta": "2026-10-17T12:53:04-04:00",
-   "workers": 6,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-10-17T02:33:14-04:00",
-   "memGb": 12.77,
-   "live": {
-    "played": 6917,
-    "engine_errors": 0,
-    "redraws.pauper": 0,
-    "redraws.peasant": 0,
-    "redraws.legacy": 0,
-    "redraws.powered": 0,
-    "cards": 0,
-    "elapsed_s": 3828,
-    "gle.games": 0,
-    "gle.games_per_h": 0,
-    "gpa.games": 0,
-    "gpa.games_per_h": 0,
-    "gpe.games": 0,
-    "gpe.games_per_h": 0,
-    "gpo.games": 0,
-    "gpo.games_per_h": 0,
-    "gz": 0,
-    "peak_worker_rss_gb": 2.15,
-    "pressure_events": 0,
-    "qwriters": 0,
-    "sp.games": 0,
-    "sp.games_per_h": 0,
-    "strict": 0,
-    "timeouts": 6,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "played",
-    "engine_errors",
-    "redraws.pauper",
-    "redraws.peasant",
-    "redraws.legacy",
-    "redraws.powered",
-    "cards"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-17T02:33:37-04:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 49.5
-    }
-   ],
-   "detail": "lab-J140-run1"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": "Deck census pilot slice: Forge AI against search AI on the same games",
@@ -106,7 +36,17 @@
    "est": "~4 h on 7 workers at the smoke's loaded per-worker rates (D451): phase A 10,000 games x 5.5 s / 7 = 2.2 h; phase B 15 decisions, 37 options x 240 branches = 8,880 branch games x 3.07 s / 7 = 1.1 h (replays and leak checks included); then the checks in one process, ~40 min (rows of 18,880 games, ~38,000 frame logs through check-redaction at ~46 ms each); plus ~10 min of pilot. Disk ~3.5 GB (a phase A game 234 KB, a branch 136 KB) in the clone's var/"
   }
  ],
- "waiting": [],
+ "waiting": [
+  {
+   "publicTitle": "Library deck census night 1: random decks across the colour spectrum",
+   "publicEst": "~7-9 h",
+   "id": "J140",
+   "title": "The deck census, night 1 -- per power band (pauper, peasant, legacy, powered) 2,500 40-card decks drawn straight from the band's pool at random colour makeups (cubelab.sh decks, D447: k colours uniform on 1-5, flat Dirichlet shares, cards uniform within the shares, one land formula, every spell castable, a 10% cross-band slice inside each deck; deck seeds 1401-1404), each deck in exactly 16 Bo1 games against random decks of its band (census-play, 20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Default vs Default, numbers only; the win rate across the colour spectrum and per-card rows reported, no verdict",
+   "reason": "stopped for memory; will retry",
+   "est": "~7 h at the engine smoke's CPU cost (2.2 CPU-seconds a game: about 11,400 games an hour on 7 cores), ~9.2 h at its loaded rate (2,472 games an hour on 2 workers beside J136's 7, so 1,236 a worker); plus ~10 min of pilot and ~2 min to read. 80,000 games is sized to that: one night",
+   "detail": "memory: step run1 was killed without an exit code (oomd or the OOM killer?); retry after 2026-10-17T02:49:14-04:00"
+  }
+ ],
  "finished": [
   {
    "publicTitle": "Search with the learned evaluator as its leaf: one fixed match",
