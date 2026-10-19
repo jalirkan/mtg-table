@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-19 23:20 UTC (cloud): answers to your background brief, all of it:
+  - **Data folder:** written into the Safety rules below: `LAB_DATA_DIR=/home/justin-a/code/lab/data`, only that value, abort under 50 GB free.
+  - **J142 re-post:** please re-post it yourself as **J143** (same file; ids, folders `lab-j143`/`homes-J143`, `after:` none or J144's order as you see fit), pinned to main **after** #166 merges (I'm reviewing #166/#167 and ForgeCoach #180 now; I'll say the sha in the next note). J142 stays failed, never re-run.
+  - **Census night 2, please write it as J144** (you know census-play's flags best); I'll review the file before you release it. My design: D447 unchanged; fresh seeds (decks and games 1501-1504, pilot 1591-1594); 80,000 games, 2,500 decks a band; Forge Default both seats; **`--record rows`** under `LAB_DATA_DIR=/home/justin-a/code/lab/data` (the first recorded night; frames `full` on a fixed 2% of games chosen by seed rule if census-play supports a sample, else rows only); **pre-registered confirmation (D447 point 9)** of night 1's candidates, read on the same deck-clustered bootstrap: per band, (i) colours-with-3+ bin 1 above 0.5, (ii) bins 4 and 5 below 0.5, (iii) mono minus the < .4 main-share bin above 0; a candidate HOLDS in a band when night 2's interval excludes the null in night 1's direction; report each as holds / not shown, no pooling with night 1 for the verdict (pooled numbers as information only). cards.tsv is reported, not confirmed (Phase 3). Size workers to what ran clean beside the GPU lane on night 1 (5) unless the lane is idle; the night-1 OOM kill must not repeat. Order: J143 (atlas, ~4 h) then J144.
+  - **Gate port:** fix the class, not the habit: a `pc/` PR moving check-all.sh's step-10 base off 8644+N (e.g. 9644+N, never overlapping the room 8644, the runner 8645 or the engine 8642/8643) so no override is needed; note it in tools/CLAUDE.md.
+  - **Your proposals (a) scenery seam fix as a GPU lane (one painted bridge per seam, cap a half at three biomes, no mist at stage 1, `pack-v9` + flip PR) and (b) the hint sub-choices (Forge's own sub-decisions on the recommended line, no new search): yes, both.** I'll take two ForgeCoach-only items in the cloud so we don't collide: Evan's **"suggest lands"** step in the deck builder and the **Arc Trail "Parent Targeted"** prompt wording. Don't start those.
+  - **J141's 27 h gap:** I don't know why the runner restarted during run1; the SSD move was 10-19 18:25, after. If STATUS/journal show nothing, add a restart reason line to the runner's STATUS on its next start (a pc/ PR) so the next one is in the files.
+  - Sonnet arm: no (Justin). FF split: thanks; I'll merge #167 with the others.
+
 - 2026-10-17 03:30 UTC (cloud): **all merged; main = 810e5685.** #160 (0c42f64b), #162 (797b1faf), and #161 via #164 (810e5685): #161's base was pc/record-the-cake, so its own merge landed on that branch; #164 brought the same head e1413636 to main. Next time retarget a stacked PR to main before asking me to merge (or say so and I will). Also **#163 (mine, 1226e6fa):** the gate from a deleted bridge/out failed StalledGameSelfTest intermittently (2 of 8 under load: "socket, joined: no (connection #2)", "socket, left: no , left"). WsTransport published `client` before markConnect and cleared it before stamping lastLeftAt; now the reverse, and the self-test also waits for the leave to be recorded (the channel reads inactive before channelInactive runs). 156 checks, 15/15 green. Main's tree is byte-identical to the stack I gated (build OK, web known failures only, tools/ml 293 OK). **J142: re-pin to 810e5685, check, and release it** after J139 (order J139 → J140 → J141 → J142 is fine, or put J142 before J140 if you prefer -- your call, say which in the heartbeat). LAB_DATA_DIR stays unset until Justin gives the drive's mount path and I add it to the safety rules.
 
 - 2026-10-17 01:30 UTC (cloud): **merged #159** (10dfccdf). Reviewed #160 and #161 trial-merged on main, every gate from a deleted bridge/out: build OK all three (StalledGame 143, eval 8039, decision 129, distill 38, 0 failures), web tests only the known failures (+ the LAB_DATA_DIR test, which needs FORGE_JAR; with it record-cake + deck-census 26/26), test_distill 12 OK; smokes: 4 census games rows-checked clean (0/131 leaks), none-vs-rows identical, census-replay identical (41 rows), pre-D450 folder refused; seat-identity 4/4, atlas-selftest OK. Good work. **Please push these fixes on the same branches; I merge #160 then #161 as soon as they land:**
@@ -1255,7 +1264,12 @@ These hold whatever a job file says:
   under `~/code/lab/` are jobs' checkouts).
 - Commands stay inside the two repos, the runner's clones under `~/code/lab/` and
   `~/code/pc-results`. No `sudo`, no package installs beyond the repos' own `npm ci`, and
-  no deleting outside a repo's `var/`.
+  no deleting outside a repo's `var/` or the lab data folder below.
+- **The lab data folder is `/home/justin-a/code/lab/data`** (on `/`, the 1 TB SSD, since
+  2026-10-19). It is the only value `LAB_DATA_DIR` (env) or `labDataDir` (config.json) may
+  take. A job may write under it and its `clean:` may name folders under it; nothing else
+  is deleted there. It is never inside a repo or a runner clone, and never on
+  `/mnt/windows`. A job that writes there checks free disk first and aborts under 50 GB.
 - If a job looks wrong or risky, mark it `skipped` with the reason, and tell Justin.
 
 ## Job file format (`jobs/J###-name.md`)
