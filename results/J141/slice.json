@@ -1,0 +1,289 @@
+{
+  "v": 1,
+  "seed": 1411,
+  "perBand": 500,
+  "pilotPerBand": 5,
+  "source": {
+    "file": "var/lab-j140/out/census-games.jsonl.gz",
+    "sha256": "352784ceaaec",
+    "rows": 80000
+  },
+  "games": 2000,
+  "pilotGames": 20,
+  "shortfall": 0,
+  "strataBelowQuota": 0,
+  "minStratumDrawn": 83,
+  "bands": {
+    "pauper": {
+      "rows": 20000,
+      "eligible": 19990,
+      "games": 500,
+      "pilotGames": 5,
+      "decks": 782,
+      "deckGames": 1000,
+      "strata": {
+        "LL": {
+          "available": 1374,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LM": {
+          "available": 6116,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LH": {
+          "available": 1529,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MM": {
+          "available": 7194,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MH": {
+          "available": 3356,
+          "quota": 83,
+          "drawn": 83
+        },
+        "HH": {
+          "available": 421,
+          "quota": 83,
+          "drawn": 83
+        }
+      },
+      "groups": {
+        "H": 332,
+        "L": 335,
+        "M": 333
+      },
+      "coloursWith3": {
+        "c1": 335,
+        "c2": 170,
+        "c3": 163,
+        "c4": 285,
+        "c5": 47
+      },
+      "mainColour": {
+        "B": 234,
+        "G": 187,
+        "R": 179,
+        "U": 189,
+        "W": 211
+      },
+      "cardFlow": {
+        "f0": 353,
+        "f1": 306,
+        "f2": 165,
+        "f3": 176
+      },
+      "firstA": 255,
+      "sha256": "bdfaa6d1717b",
+      "dckMissing": 0
+    },
+    "peasant": {
+      "rows": 20000,
+      "eligible": 19994,
+      "games": 500,
+      "pilotGames": 5,
+      "decks": 795,
+      "deckGames": 1000,
+      "strata": {
+        "LL": {
+          "available": 1026,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LM": {
+          "available": 5076,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LH": {
+          "available": 1991,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MM": {
+          "available": 5984,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MH": {
+          "available": 4882,
+          "quota": 83,
+          "drawn": 83
+        },
+        "HH": {
+          "available": 1035,
+          "quota": 83,
+          "drawn": 83
+        }
+      },
+      "groups": {
+        "H": 332,
+        "L": 335,
+        "M": 333
+      },
+      "coloursWith3": {
+        "c1": 335,
+        "c2": 164,
+        "c3": 169,
+        "c4": 267,
+        "c5": 65
+      },
+      "mainColour": {
+        "B": 208,
+        "G": 199,
+        "R": 195,
+        "U": 200,
+        "W": 198
+      },
+      "cardFlow": {
+        "f0": 760,
+        "f1": 200,
+        "f2": 38,
+        "f3": 2
+      },
+      "firstA": 236,
+      "sha256": "bc0165784825",
+      "dckMissing": 0
+    },
+    "legacy": {
+      "rows": 20000,
+      "eligible": 19993,
+      "games": 500,
+      "pilotGames": 5,
+      "decks": 819,
+      "deckGames": 1000,
+      "strata": {
+        "LL": {
+          "available": 1334,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LM": {
+          "available": 5122,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LH": {
+          "available": 2397,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MM": {
+          "available": 5222,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MH": {
+          "available": 4843,
+          "quota": 83,
+          "drawn": 83
+        },
+        "HH": {
+          "available": 1075,
+          "quota": 83,
+          "drawn": 83
+        }
+      },
+      "groups": {
+        "H": 332,
+        "L": 335,
+        "M": 333
+      },
+      "coloursWith3": {
+        "c1": 335,
+        "c2": 170,
+        "c3": 163,
+        "c4": 251,
+        "c5": 81
+      },
+      "mainColour": {
+        "B": 221,
+        "G": 209,
+        "R": 180,
+        "U": 206,
+        "W": 184
+      },
+      "cardFlow": {
+        "f0": 882,
+        "f1": 106,
+        "f2": 12
+      },
+      "firstA": 258,
+      "sha256": "b028da657cb4",
+      "dckMissing": 0
+    },
+    "powered": {
+      "rows": 20000,
+      "eligible": 19997,
+      "games": 500,
+      "pilotGames": 5,
+      "decks": 816,
+      "deckGames": 1000,
+      "strata": {
+        "LL": {
+          "available": 1178,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LM": {
+          "available": 5056,
+          "quota": 84,
+          "drawn": 84
+        },
+        "LH": {
+          "available": 2204,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MM": {
+          "available": 5619,
+          "quota": 83,
+          "drawn": 83
+        },
+        "MH": {
+          "available": 4916,
+          "quota": 83,
+          "drawn": 83
+        },
+        "HH": {
+          "available": 1024,
+          "quota": 83,
+          "drawn": 83
+        }
+      },
+      "groups": {
+        "H": 332,
+        "L": 335,
+        "M": 333
+      },
+      "coloursWith3": {
+        "c1": 335,
+        "c2": 171,
+        "c3": 162,
+        "c4": 257,
+        "c5": 75
+      },
+      "mainColour": {
+        "B": 205,
+        "G": 184,
+        "R": 212,
+        "U": 200,
+        "W": 199
+      },
+      "cardFlow": {
+        "f0": 828,
+        "f1": 147,
+        "f2": 23,
+        "f3": 2
+      },
+      "firstA": 226,
+      "sha256": "1e9658d40f45",
+      "dckMissing": 0
+    }
+  }
+}

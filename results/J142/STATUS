@@ -1,0 +1,7 @@
+failed
+reason: prepare: step prepare exited 128 after 7 retries over 10 min: git could not reach the remote (fatal: could not read Username for 'https://github.com': No such device or address)
+runner: forgecoach-runner 10896b8e
+started: 2026-10-19T06:23:18-04:00
+finished: 2026-10-19T06:33:46-04:00
+workers: 1
+exit: 128

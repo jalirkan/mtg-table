@@ -1,0 +1,37 @@
+{
+  "v": 1,
+  "bands": {
+    "pauper": {
+      "source": "j140",
+      "decks": 2500,
+      "sha256": "11df4827761c",
+      "censusSha256": "11df4827761c",
+      "match": 1
+    },
+    "peasant": {
+      "source": "j140",
+      "decks": 2500,
+      "sha256": "a61f20222c54",
+      "censusSha256": "a61f20222c54",
+      "match": 1
+    },
+    "legacy": {
+      "source": "j140",
+      "decks": 2500,
+      "sha256": "77240a608651",
+      "censusSha256": "77240a608651",
+      "match": 1
+    },
+    "powered": {
+      "source": "j140",
+      "decks": 2500,
+      "sha256": "438c34c9ec16",
+      "censusSha256": "438c34c9ec16",
+      "match": 1
+    }
+  },
+  "decksMatch": 4,
+  "dckMissing": 0,
+  "j140Games": 80000,
+  "j140GamesSha256": "352784ceaaec"
+}

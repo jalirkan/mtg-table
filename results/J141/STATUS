@@ -1,10 +1,12 @@
-running
+done
 runner: forgecoach-runner 10896b8e
 started: 2026-10-17T12:05:20-04:00
-phase: commands 1/2
+finished: 2026-10-19T06:23:17-04:00
 mtg-table: 2e107b6
-workers: 7 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.51), budget 21.4 GB)
+workers: 6 (sized 6: min(cores 7, memory 9, max_workers 7, cap 6); peak 2.00 GB per worker (declared; measured 1.51), budget 21.4 GB)
 peak_worker_rss_gb: 1.51
+resumed: 2026-10-19T00:18:03-04:00: the runner restarted during run1; it runs again and skips what is done, at most 6 worker(s)
+blocks_done: run1 exit 0 at 2026-10-19T06:23:07-04:00, run2 exit 0 at 2026-10-19T06:23:17-04:00
 pressure-1: 2026-10-17T12:11:01-04:00 playing to 3 worker(s): Justin is at the table: new games wait
 pressure-2: 2026-10-17T12:31:14-04:00 play-ended to 3 worker(s): Justin left the table
 pressure-3: 2026-10-17T12:31:50-04:00 playing to 3 worker(s): Justin is at the table: new games wait

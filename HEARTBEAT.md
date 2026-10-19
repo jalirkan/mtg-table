@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-17T20:36:59-04:00
-- runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J141 commands 1/2, 4360/6000 lines, 1554.4/h, ETA 2026-10-17T21:40:17-04:00, 7 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.74; memory 13.9/30.5 GB, swap 2061 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J142
+- time: 2026-10-19T16:46:37-04:00
+- runner: 10896b8e, up since 2026-10-19T16:16:27-04:00
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 1.74; memory 5.4/30.5 GB, swap 0 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J140 done at 2026-10-17T12:05:19-04:00: played 80000 · engine_errors 3 · redraws.pauper 0 · redraws.peasant 0 · redraws.legacy 0 · redraws.powered 0 · sp.bands.pauper.byColours.1.wr 0.574 · sp.bands.peasant.byColours.1.wr 0.599 · sp.bands.legacy.byColours.1.wr 0.597 · sp.bands.powered.byColours.1.wr 0.593 · cards 4271
+- last finished: J142 failed at 2026-10-19T06:33:46-04:00
 
 ## Messages
+
+- FOLLOW-UP READY [J141@2026-10-19T06:23:17-04:00] (the runner, for the cloud session): J141 is done; write and post the template morning-read. It decides: nothing by itself. It is exploration, asked by Justin: does Forge's AI, the census's pilot, undersell blue and card draw, and which cards move when search-v2 pilots the same decks in the same games. Any difference it shows is a candidate until it holds on a fresh slice (D447 point 9). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J140@2026-10-17T12:05:19-04:00] (the runner, for the cloud session): J140 is done; write and post the template morning-read. It decides: nothing by itself. It is the census's first data: how win rate moves across the colour spectrum in each band, and each card's rate in context, for Justin to read and for Phase 3's model to learn from. Any surprise is a candidate until it holds on fresh seeds (D447 point 9). Ledger: LEDGER.md. Delete this line once posted.
 

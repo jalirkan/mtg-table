@@ -1,0 +1,173 @@
+==== J141 run1 started 2026-10-17T12:52:00-04:00 in unit lab-J141-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/pauper.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a search, b search
+[100/500] 172 games/h
+[200/500] 273 games/h
+[300/500] 334 games/h
+[400/500] 381 games/h
+  g16643 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+census-play: retrying 1 game(s) that hit an engine error, once, on fresh workers
+  g16643 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in pauper/games.jsonl: 499 decisive, 0 drawn (0 timeouts), 1 engine error(s); this session 500 in 5656 s on 7 worker(s) = 318 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/pauper.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a plain, b search
+[100/500] 1059 games/h
+[200/500] 1079 games/h
+[300/500] 1080 games/h
+[400/500] 1048 games/h
+  g16643 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+census-play: retrying 1 game(s) that hit an engine error, once, on fresh workers
+  g16643 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in pauper/games.jsonl: 499 decisive, 0 drawn (0 timeouts), 1 engine error(s); this session 500 in 3251 s on 7 worker(s) = 554 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/pauper.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a search, b plain
+[100/500] 1068 games/h
+[200/500] 1084 games/h
+[300/500] 1057 games/h
+[400/500] 1080 games/h
+[500/500] 992 games/h
+census-play: 500 game(s) in pauper/games.jsonl: 500 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 500 in 1815 s on 7 worker(s) = 992 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/peasant.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a search, b search
+[100/500] 635 games/h
+  g2320 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g2707 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g4325 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+[200/500] 470 games/h
+  g5163 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g7060 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+[300/500] 518 games/h
+[400/500] 500 games/h
+  g12109 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g14937 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g15007 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g15304 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g17737 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g17834 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g19440 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+census-play: retrying 12 game(s) that hit an engine error, once, on fresh workers
+  g12109 retried: played
+  g2320 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g2707 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g4325 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g5163 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g7060 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g14937 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g15007 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g15304 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g17737 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g17834 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g19440 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in peasant/games.jsonl: 488 decisive, 1 drawn (0 timeouts), 11 engine error(s); this session 500 in 6291 s on 7 worker(s) = 286 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/peasant.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a plain, b search
+[100/500] 1340 games/h
+[200/500] 1147 games/h
+[300/500] 1016 games/h
+  g4325 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g5163 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g7060 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+[400/500] 942 games/h
+  g12109 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g14937 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g15304 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g17737 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+census-play: retrying 7 game(s) that hit an engine error, once, on fresh workers
+  g4325 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g5163 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g7060 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g12109 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g14937 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g15304 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g17737 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in peasant/games.jsonl: 492 decisive, 1 drawn (0 timeouts), 7 engine error(s); this session 500 in 3550 s on 7 worker(s) = 507 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/peasant.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a search, b plain
+[100/500] 1198 games/h
+[200/500] 1157 games/h
+[300/500] 1169 games/h
+  g2320 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+[400/500] 1187 games/h
+  g15007 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+  g17834 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+census-play: retrying 3 game(s) that hit an engine error, once, on fresh workers
+  g15007 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g2320 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+  g17834 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in peasant/games.jsonl: 497 decisive, 0 drawn (0 timeouts), 3 engine error(s); this session 500 in 3180 s on 7 worker(s) = 566 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/legacy.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a search, b search
+[100/500] 770 games/h
+[200/500] 810 games/h
+[300/500] 833 games/h
+[400/500] 827 games/h
+[500/500] 855 games/h
+census-play: 500 game(s) in legacy/games.jsonl: 499 decisive, 1 drawn (0 timeouts), 0 engine error(s); this session 500 in 2104 s on 7 worker(s) = 855 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/legacy.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a plain, b search
+[100/500] 1363 games/h
+[200/500] 1516 games/h
+[300/500] 1521 games/h
+[400/500] 1531 games/h
+[500/500] 1576 games/h
+census-play: 500 game(s) in legacy/games.jsonl: 500 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 500 in 1142 s on 7 worker(s) = 1576 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/legacy.jsonl); 0 already played, 500 to play on 7 worker(s); pilots a search, b plain
+[100/500] 1269 games/h
+[200/500] 1434 games/h
+[300/500] 1444 games/h
+==== J141 run1 started 2026-10-19T00:18:03-04:00 in unit lab-J141-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/pauper.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a search, b search
+census-play: 500 game(s) in pauper/games.jsonl: 499 decisive, 0 drawn (0 timeouts), 1 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/pauper.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a plain, b search
+census-play: 500 game(s) in pauper/games.jsonl: 499 decisive, 0 drawn (0 timeouts), 1 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/pauper.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a search, b plain
+census-play: 500 game(s) in pauper/games.jsonl: 500 decisive, 0 drawn (0 timeouts), 0 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/peasant.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a search, b search
+census-play: 500 game(s) in peasant/games.jsonl: 488 decisive, 1 drawn (0 timeouts), 11 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/peasant.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a plain, b search
+census-play: 500 game(s) in peasant/games.jsonl: 492 decisive, 1 drawn (0 timeouts), 7 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/peasant.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a search, b plain
+census-play: 500 game(s) in peasant/games.jsonl: 497 decisive, 0 drawn (0 timeouts), 3 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/legacy.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a search, b search
+census-play: 500 game(s) in legacy/games.jsonl: 499 decisive, 1 drawn (0 timeouts), 0 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/legacy.jsonl); 500 already played, 0 to play on 1 worker(s); pilots a plain, b search
+census-play: 500 game(s) in legacy/games.jsonl: 500 decisive, 0 drawn (0 timeouts), 0 engine error(s)
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/legacy.jsonl); 373 already played, 127 to play on 6 worker(s); pilots a search, b plain
+worker 0: no answer in 1060 s (hung) during g14464; recorded as an engine error, starting a fresh worker
+  g14464 ENGINE ERROR: no answer in 1060 s (hung) (will retry once)
+worker 1: no answer in 1060 s (hung) during g14757; recorded as an engine error, starting a fresh worker
+  g14757 ENGINE ERROR: no answer in 1060 s (hung) (will retry once)
+worker 2: no answer in 1060 s (hung) during g14886; recorded as an engine error, starting a fresh worker
+  g14886 ENGINE ERROR: no answer in 1060 s (hung) (will retry once)
+worker 3: no answer in 1060 s (hung) during g14372; recorded as an engine error, starting a fresh worker
+  g14372 ENGINE ERROR: no answer in 1060 s (hung) (will retry once)
+worker 4: no answer in 1060 s (hung) during g14971; recorded as an engine error, starting a fresh worker
+  g14971 ENGINE ERROR: no answer in 1060 s (hung) (will retry once)
+worker 5: no answer in 1060 s (hung) during g14103; recorded as an engine error, starting a fresh worker
+  g14103 ENGINE ERROR: no answer in 1060 s (hung) (will retry once)
+[100/127] 25 games/h
+census-play: retrying 6 game(s) that hit an engine error, once, on fresh workers
+  g14886 retried: played
+  g14971 retried: played
+  g14372 retried: played
+  g14757 retried: played
+  g14464 retried: played
+  g14103 retried: played
+census-play: 500 game(s) in legacy/games.jsonl: 500 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 127 in 14811 s on 6 worker(s) = 31 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/powered.jsonl); 0 already played, 500 to play on 6 worker(s); pilots a search, b search
+[100/500] 645 games/h
+[200/500] 661 games/h
+[300/500] 670 games/h
+  g5829 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+[400/500] 705 games/h
+census-play: retrying 1 game(s) that hit an engine error, once, on fresh workers
+  g5829 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in powered/games.jsonl: 499 decisive, 0 drawn (0 timeouts), 1 engine error(s); this session 500 in 3422 s on 6 worker(s) = 526 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/powered.jsonl); 0 already played, 500 to play on 6 worker(s); pilots a plain, b search
+[100/500] 1129 games/h
+[200/500] 1302 games/h
+[300/500] 1345 games/h
+[400/500] 1381 games/h
+[500/500] 1309 games/h
+census-play: 500 game(s) in powered/games.jsonl: 499 decisive, 1 drawn (0 timeouts), 0 engine error(s); this session 500 in 1375 s on 6 worker(s) = 1309 games/h
+census-play: 500 game(s) planned over 2500 deck(s) (a replay of var/lab-j141/slice/powered.jsonl); 0 already played, 500 to play on 6 worker(s); pilots a search, b plain
+[100/500] 1267 games/h
+[200/500] 1352 games/h
+[300/500] 1338 games/h
+[400/500] 1331 games/h
+  g5829 ENGINE ERROR: a game thread would not stop after its timeout; the worker was restarted (will retry once)
+census-play: retrying 1 game(s) that hit an engine error, once, on fresh workers
+  g5829 retried: ENGINE ERROR again (a game thread would not stop after its timeout; the worker was restarted); marked
+census-play: 500 game(s) in powered/games.jsonl: 498 decisive, 1 drawn (0 timeouts), 1 engine error(s); this session 500 in 2286 s on 6 worker(s) = 787 games/h

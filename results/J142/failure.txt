@@ -1,0 +1,18 @@
+step prepare exited 128: git could not reach the remote for 10 min (7 retries)
+
+==== J142 prepare started 2026-10-19T06:23:18-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:23:48-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:24:28-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:25:39-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:27:51-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:30:02-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:32:14-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address
+==== J142 prepare started 2026-10-19T06:33:35-04:00 in unit lab-J142-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7
+fatal: could not read Username for 'https://github.com': No such device or address

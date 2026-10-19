@@ -1,0 +1,2684 @@
+{
+  "v": 1,
+  "job": "J141",
+  "decision": "D447",
+  "options": {
+    "boot": 1000,
+    "swaps": 200,
+    "seed": 1411,
+    "shrink": 20.0,
+    "minGames": 20,
+    "top": 20
+  },
+  "games": 2000,
+  "deckGames": 4000,
+  "decks": 3212,
+  "integrity": {
+    "ss": {
+      "expected": 2000,
+      "rows": 2000,
+      "missing": 0,
+      "extra": 0,
+      "duplicate": 0,
+      "idMismatch": 0,
+      "firstMismatch": 0,
+      "firstCompared": 1987,
+      "policyMismatch": 0,
+      "countersMissing": 0,
+      "countersUnexpected": 0,
+      "engineErrors": 13,
+      "timeouts": 0,
+      "draws": 2,
+      "decisive": 1985,
+      "errorsTimeouts": 13,
+      "errorShare": 0.0065
+    },
+    "ps": {
+      "expected": 2000,
+      "rows": 2000,
+      "missing": 0,
+      "extra": 0,
+      "duplicate": 0,
+      "idMismatch": 0,
+      "firstMismatch": 0,
+      "firstCompared": 1992,
+      "policyMismatch": 0,
+      "countersMissing": 0,
+      "countersUnexpected": 0,
+      "engineErrors": 8,
+      "timeouts": 0,
+      "draws": 2,
+      "decisive": 1990,
+      "errorsTimeouts": 8,
+      "errorShare": 0.004
+    },
+    "sp": {
+      "expected": 2000,
+      "rows": 2000,
+      "missing": 0,
+      "extra": 0,
+      "duplicate": 0,
+      "idMismatch": 0,
+      "firstMismatch": 0,
+      "firstCompared": 1996,
+      "policyMismatch": 0,
+      "countersMissing": 0,
+      "countersUnexpected": 0,
+      "engineErrors": 4,
+      "timeouts": 0,
+      "draws": 1,
+      "decisive": 1995,
+      "errorsTimeouts": 4,
+      "errorShare": 0.002
+    },
+    "ff": {
+      "games": 2000,
+      "decisive": 1998,
+      "notPlain": 0
+    }
+  },
+  "read1": {
+    "all": {
+      "ff": {
+        "n": 3996,
+        "decks": 3210,
+        "est": 0.5,
+        "lo": 0.4849,
+        "hi": 0.5159
+      },
+      "ss": {
+        "n": 3970,
+        "decks": 3192,
+        "est": 0.5,
+        "lo": 0.4843,
+        "hi": 0.5163
+      },
+      "diff": {
+        "n": 3966,
+        "decks": 3190,
+        "est": 0.0,
+        "lo": -0.0151,
+        "hi": 0.0173
+      }
+    },
+    "byMainColour": {
+      "W": {
+        "ff": {
+          "n": 792,
+          "decks": 635,
+          "est": 0.5189,
+          "lo": 0.4877,
+          "hi": 0.5534
+        },
+        "ss": {
+          "n": 776,
+          "decks": 626,
+          "est": 0.5438,
+          "lo": 0.5104,
+          "hi": 0.5832
+        },
+        "diff": {
+          "n": 776,
+          "decks": 626,
+          "est": 0.0245,
+          "lo": -0.0107,
+          "hi": 0.0602
+        }
+      },
+      "U": {
+        "ff": {
+          "n": 795,
+          "decks": 637,
+          "est": 0.4327,
+          "lo": 0.3952,
+          "hi": 0.4667
+        },
+        "ss": {
+          "n": 792,
+          "decks": 635,
+          "est": 0.4255,
+          "lo": 0.39,
+          "hi": 0.4639
+        },
+        "diff": {
+          "n": 792,
+          "decks": 635,
+          "est": -0.0063,
+          "lo": -0.0441,
+          "hi": 0.0294
+        }
+      },
+      "B": {
+        "ff": {
+          "n": 868,
+          "decks": 696,
+          "est": 0.4873,
+          "lo": 0.4532,
+          "hi": 0.5209
+        },
+        "ss": {
+          "n": 867,
+          "decks": 695,
+          "est": 0.4533,
+          "lo": 0.4196,
+          "hi": 0.4853
+        },
+        "diff": {
+          "n": 867,
+          "decks": 695,
+          "est": -0.0334,
+          "lo": -0.0687,
+          "hi": 0.0
+        }
+      },
+      "R": {
+        "ff": {
+          "n": 762,
+          "decks": 620,
+          "est": 0.5315,
+          "lo": 0.4962,
+          "hi": 0.566
+        },
+        "ss": {
+          "n": 762,
+          "decks": 620,
+          "est": 0.5446,
+          "lo": 0.5098,
+          "hi": 0.5785
+        },
+        "diff": {
+          "n": 758,
+          "decks": 618,
+          "est": 0.0132,
+          "lo": -0.0205,
+          "hi": 0.0486
+        }
+      },
+      "G": {
+        "ff": {
+          "n": 779,
+          "decks": 622,
+          "est": 0.5327,
+          "lo": 0.4974,
+          "hi": 0.5703
+        },
+        "ss": {
+          "n": 773,
+          "decks": 616,
+          "est": 0.5408,
+          "lo": 0.5013,
+          "hi": 0.5756
+        },
+        "diff": {
+          "n": 773,
+          "decks": 616,
+          "est": 0.0065,
+          "lo": -0.0353,
+          "hi": 0.0445
+        }
+      }
+    },
+    "byColours": {
+      "1": {
+        "ff": {
+          "n": 1338,
+          "decks": 1035,
+          "est": 0.5859,
+          "lo": 0.5589,
+          "hi": 0.6115
+        },
+        "ss": {
+          "n": 1328,
+          "decks": 1031,
+          "est": 0.5776,
+          "lo": 0.5521,
+          "hi": 0.6051
+        },
+        "diff": {
+          "n": 1326,
+          "decks": 1030,
+          "est": -0.0098,
+          "lo": -0.0365,
+          "hi": 0.0173
+        }
+      },
+      "2": {
+        "ff": {
+          "n": 674,
+          "decks": 601,
+          "est": 0.5401,
+          "lo": 0.5014,
+          "hi": 0.5792
+        },
+        "ss": {
+          "n": 668,
+          "decks": 596,
+          "est": 0.509,
+          "lo": 0.4686,
+          "hi": 0.5492
+        },
+        "diff": {
+          "n": 667,
+          "decks": 595,
+          "est": -0.0315,
+          "lo": -0.0744,
+          "hi": 0.0092
+        }
+      },
+      "3": {
+        "ff": {
+          "n": 657,
+          "decks": 593,
+          "est": 0.4764,
+          "lo": 0.4387,
+          "hi": 0.5142
+        },
+        "ss": {
+          "n": 654,
+          "decks": 590,
+          "est": 0.4847,
+          "lo": 0.447,
+          "hi": 0.526
+        },
+        "diff": {
+          "n": 654,
+          "decks": 590,
+          "est": 0.0107,
+          "lo": -0.0324,
+          "hi": 0.0504
+        }
+      },
+      "4": {
+        "ff": {
+          "n": 1059,
+          "decks": 776,
+          "est": 0.4108,
+          "lo": 0.3831,
+          "hi": 0.4423
+        },
+        "ss": {
+          "n": 1053,
+          "decks": 771,
+          "est": 0.4292,
+          "lo": 0.4006,
+          "hi": 0.4587
+        },
+        "diff": {
+          "n": 1052,
+          "decks": 771,
+          "est": 0.019,
+          "lo": -0.0114,
+          "hi": 0.0501
+        }
+      },
+      "5": {
+        "ff": {
+          "n": 268,
+          "decks": 205,
+          "est": 0.3806,
+          "lo": 0.3261,
+          "hi": 0.4411
+        },
+        "ss": {
+          "n": 267,
+          "decks": 204,
+          "est": 0.4082,
+          "lo": 0.3513,
+          "hi": 0.4679
+        },
+        "diff": {
+          "n": 267,
+          "decks": 204,
+          "est": 0.0262,
+          "lo": -0.0319,
+          "hi": 0.0784
+        }
+      }
+    },
+    "byHas": {
+      "W": {
+        "ff": {
+          "n": 2330,
+          "decks": 1861,
+          "est": 0.4635,
+          "lo": 0.4444,
+          "hi": 0.4836
+        },
+        "ss": {
+          "n": 2303,
+          "decks": 1842,
+          "est": 0.4737,
+          "lo": 0.4536,
+          "hi": 0.4962
+        },
+        "diff": {
+          "n": 2302,
+          "decks": 1842,
+          "est": 0.0109,
+          "lo": -0.0086,
+          "hi": 0.0318
+        }
+      },
+      "U": {
+        "ff": {
+          "n": 2326,
+          "decks": 1865,
+          "est": 0.4398,
+          "lo": 0.4191,
+          "hi": 0.4618
+        },
+        "ss": {
+          "n": 2315,
+          "decks": 1855,
+          "est": 0.4479,
+          "lo": 0.4277,
+          "hi": 0.4688
+        },
+        "diff": {
+          "n": 2313,
+          "decks": 1854,
+          "est": 0.0091,
+          "lo": -0.0117,
+          "hi": 0.0308
+        }
+      },
+      "B": {
+        "ff": {
+          "n": 2367,
+          "decks": 1887,
+          "est": 0.4559,
+          "lo": 0.4369,
+          "hi": 0.4775
+        },
+        "ss": {
+          "n": 2357,
+          "decks": 1879,
+          "est": 0.4603,
+          "lo": 0.4417,
+          "hi": 0.4808
+        },
+        "diff": {
+          "n": 2355,
+          "decks": 1878,
+          "est": 0.0047,
+          "lo": -0.0163,
+          "hi": 0.0255
+        }
+      },
+      "R": {
+        "ff": {
+          "n": 2327,
+          "decks": 1872,
+          "est": 0.4744,
+          "lo": 0.4547,
+          "hi": 0.4943
+        },
+        "ss": {
+          "n": 2318,
+          "decks": 1865,
+          "est": 0.4771,
+          "lo": 0.4559,
+          "hi": 0.4985
+        },
+        "diff": {
+          "n": 2314,
+          "decks": 1863,
+          "est": 0.0026,
+          "lo": -0.0184,
+          "hi": 0.0234
+        }
+      },
+      "G": {
+        "ff": {
+          "n": 2377,
+          "decks": 1899,
+          "est": 0.4691,
+          "lo": 0.4492,
+          "hi": 0.4902
+        },
+        "ss": {
+          "n": 2364,
+          "decks": 1887,
+          "est": 0.4818,
+          "lo": 0.4599,
+          "hi": 0.5032
+        },
+        "diff": {
+          "n": 2363,
+          "decks": 1887,
+          "est": 0.0131,
+          "lo": -0.0089,
+          "hi": 0.0363
+        }
+      }
+    },
+    "byBandMainColour": {
+      "pauper": {
+        "W": {
+          "ff": {
+            "n": 211,
+            "decks": 165,
+            "est": 0.4882,
+            "lo": 0.4217,
+            "hi": 0.5584
+          },
+          "ss": {
+            "n": 210,
+            "decks": 164,
+            "est": 0.5238,
+            "lo": 0.4575,
+            "hi": 0.5932
+          },
+          "diff": {
+            "n": 210,
+            "decks": 164,
+            "est": 0.0381,
+            "lo": -0.0315,
+            "hi": 0.1017
+          }
+        },
+        "U": {
+          "ff": {
+            "n": 189,
+            "decks": 146,
+            "est": 0.4233,
+            "lo": 0.3505,
+            "hi": 0.4974
+          },
+          "ss": {
+            "n": 189,
+            "decks": 146,
+            "est": 0.4603,
+            "lo": 0.3817,
+            "hi": 0.5355
+          },
+          "diff": {
+            "n": 189,
+            "decks": 146,
+            "est": 0.037,
+            "lo": -0.0471,
+            "hi": 0.114
+          }
+        },
+        "B": {
+          "ff": {
+            "n": 234,
+            "decks": 186,
+            "est": 0.5299,
+            "lo": 0.4638,
+            "hi": 0.5973
+          },
+          "ss": {
+            "n": 234,
+            "decks": 186,
+            "est": 0.5085,
+            "lo": 0.4454,
+            "hi": 0.5726
+          },
+          "diff": {
+            "n": 234,
+            "decks": 186,
+            "est": -0.0214,
+            "lo": -0.0901,
+            "hi": 0.0476
+          }
+        },
+        "R": {
+          "ff": {
+            "n": 179,
+            "decks": 143,
+            "est": 0.5028,
+            "lo": 0.4231,
+            "hi": 0.5793
+          },
+          "ss": {
+            "n": 179,
+            "decks": 143,
+            "est": 0.4637,
+            "lo": 0.3911,
+            "hi": 0.5388
+          },
+          "diff": {
+            "n": 179,
+            "decks": 143,
+            "est": -0.0391,
+            "lo": -0.1099,
+            "hi": 0.038
+          }
+        },
+        "G": {
+          "ff": {
+            "n": 187,
+            "decks": 142,
+            "est": 0.5508,
+            "lo": 0.474,
+            "hi": 0.6256
+          },
+          "ss": {
+            "n": 186,
+            "decks": 141,
+            "est": 0.5376,
+            "lo": 0.4593,
+            "hi": 0.6069
+          },
+          "diff": {
+            "n": 186,
+            "decks": 141,
+            "est": -0.0161,
+            "lo": -0.089,
+            "hi": 0.0628
+          }
+        }
+      },
+      "peasant": {
+        "W": {
+          "ff": {
+            "n": 198,
+            "decks": 156,
+            "est": 0.5253,
+            "lo": 0.4581,
+            "hi": 0.5922
+          },
+          "ss": {
+            "n": 184,
+            "decks": 149,
+            "est": 0.5326,
+            "lo": 0.4632,
+            "hi": 0.6149
+          },
+          "diff": {
+            "n": 184,
+            "decks": 149,
+            "est": 0.0054,
+            "lo": -0.0735,
+            "hi": 0.0952
+          }
+        },
+        "U": {
+          "ff": {
+            "n": 200,
+            "decks": 161,
+            "est": 0.47,
+            "lo": 0.402,
+            "hi": 0.5349
+          },
+          "ss": {
+            "n": 199,
+            "decks": 160,
+            "est": 0.4322,
+            "lo": 0.362,
+            "hi": 0.5
+          },
+          "diff": {
+            "n": 199,
+            "decks": 160,
+            "est": -0.0352,
+            "lo": -0.1127,
+            "hi": 0.0402
+          }
+        },
+        "B": {
+          "ff": {
+            "n": 208,
+            "decks": 164,
+            "est": 0.4952,
+            "lo": 0.4271,
+            "hi": 0.5593
+          },
+          "ss": {
+            "n": 207,
+            "decks": 163,
+            "est": 0.4348,
+            "lo": 0.3684,
+            "hi": 0.5046
+          },
+          "diff": {
+            "n": 207,
+            "decks": 163,
+            "est": -0.058,
+            "lo": -0.1315,
+            "hi": 0.0269
+          }
+        },
+        "R": {
+          "ff": {
+            "n": 193,
+            "decks": 153,
+            "est": 0.5337,
+            "lo": 0.4581,
+            "hi": 0.6096
+          },
+          "ss": {
+            "n": 191,
+            "decks": 152,
+            "est": 0.5864,
+            "lo": 0.5185,
+            "hi": 0.6528
+          },
+          "diff": {
+            "n": 189,
+            "decks": 151,
+            "est": 0.0529,
+            "lo": -0.0161,
+            "hi": 0.1179
+          }
+        },
+        "G": {
+          "ff": {
+            "n": 199,
+            "decks": 160,
+            "est": 0.4774,
+            "lo": 0.4076,
+            "hi": 0.5481
+          },
+          "ss": {
+            "n": 195,
+            "decks": 156,
+            "est": 0.5231,
+            "lo": 0.4381,
+            "hi": 0.598
+          },
+          "diff": {
+            "n": 195,
+            "decks": 156,
+            "est": 0.041,
+            "lo": -0.0455,
+            "hi": 0.1257
+          }
+        }
+      },
+      "legacy": {
+        "W": {
+          "ff": {
+            "n": 184,
+            "decks": 154,
+            "est": 0.5543,
+            "lo": 0.4809,
+            "hi": 0.6332
+          },
+          "ss": {
+            "n": 184,
+            "decks": 154,
+            "est": 0.5815,
+            "lo": 0.51,
+            "hi": 0.6566
+          },
+          "diff": {
+            "n": 184,
+            "decks": 154,
+            "est": 0.0272,
+            "lo": -0.0349,
+            "hi": 0.1038
+          }
+        },
+        "U": {
+          "ff": {
+            "n": 206,
+            "decks": 171,
+            "est": 0.4126,
+            "lo": 0.3406,
+            "hi": 0.4889
+          },
+          "ss": {
+            "n": 205,
+            "decks": 171,
+            "est": 0.4098,
+            "lo": 0.3413,
+            "hi": 0.4854
+          },
+          "diff": {
+            "n": 205,
+            "decks": 171,
+            "est": -0.0049,
+            "lo": -0.0773,
+            "hi": 0.0707
+          }
+        },
+        "B": {
+          "ff": {
+            "n": 221,
+            "decks": 174,
+            "est": 0.4525,
+            "lo": 0.3868,
+            "hi": 0.5217
+          },
+          "ss": {
+            "n": 221,
+            "decks": 174,
+            "est": 0.4525,
+            "lo": 0.3846,
+            "hi": 0.5182
+          },
+          "diff": {
+            "n": 221,
+            "decks": 174,
+            "est": 0.0,
+            "lo": -0.0694,
+            "hi": 0.0625
+          }
+        },
+        "R": {
+          "ff": {
+            "n": 180,
+            "decks": 152,
+            "est": 0.5556,
+            "lo": 0.4826,
+            "hi": 0.6269
+          },
+          "ss": {
+            "n": 180,
+            "decks": 152,
+            "est": 0.5611,
+            "lo": 0.4795,
+            "hi": 0.6257
+          },
+          "diff": {
+            "n": 180,
+            "decks": 152,
+            "est": 0.0056,
+            "lo": -0.0642,
+            "hi": 0.0765
+          }
+        },
+        "G": {
+          "ff": {
+            "n": 209,
+            "decks": 168,
+            "est": 0.5407,
+            "lo": 0.467,
+            "hi": 0.62
+          },
+          "ss": {
+            "n": 208,
+            "decks": 167,
+            "est": 0.5144,
+            "lo": 0.441,
+            "hi": 0.5871
+          },
+          "diff": {
+            "n": 208,
+            "decks": 167,
+            "est": -0.024,
+            "lo": -0.099,
+            "hi": 0.0478
+          }
+        }
+      },
+      "powered": {
+        "W": {
+          "ff": {
+            "n": 199,
+            "decks": 160,
+            "est": 0.5126,
+            "lo": 0.4439,
+            "hi": 0.5856
+          },
+          "ss": {
+            "n": 198,
+            "decks": 159,
+            "est": 0.5404,
+            "lo": 0.4677,
+            "hi": 0.6149
+          },
+          "diff": {
+            "n": 198,
+            "decks": 159,
+            "est": 0.0253,
+            "lo": -0.0509,
+            "hi": 0.0938
+          }
+        },
+        "U": {
+          "ff": {
+            "n": 200,
+            "decks": 159,
+            "est": 0.425,
+            "lo": 0.3571,
+            "hi": 0.5
+          },
+          "ss": {
+            "n": 199,
+            "decks": 158,
+            "est": 0.402,
+            "lo": 0.3294,
+            "hi": 0.4729
+          },
+          "diff": {
+            "n": 199,
+            "decks": 158,
+            "est": -0.0201,
+            "lo": -0.0947,
+            "hi": 0.0492
+          }
+        },
+        "B": {
+          "ff": {
+            "n": 205,
+            "decks": 172,
+            "est": 0.4683,
+            "lo": 0.3972,
+            "hi": 0.5421
+          },
+          "ss": {
+            "n": 205,
+            "decks": 172,
+            "est": 0.4098,
+            "lo": 0.3433,
+            "hi": 0.4807
+          },
+          "diff": {
+            "n": 205,
+            "decks": 172,
+            "est": -0.0585,
+            "lo": -0.1275,
+            "hi": 0.0116
+          }
+        },
+        "R": {
+          "ff": {
+            "n": 210,
+            "decks": 172,
+            "est": 0.5333,
+            "lo": 0.4657,
+            "hi": 0.5962
+          },
+          "ss": {
+            "n": 212,
+            "decks": 173,
+            "est": 0.5613,
+            "lo": 0.4954,
+            "hi": 0.6271
+          },
+          "diff": {
+            "n": 210,
+            "decks": 172,
+            "est": 0.0286,
+            "lo": -0.0431,
+            "hi": 0.1
+          }
+        },
+        "G": {
+          "ff": {
+            "n": 184,
+            "decks": 152,
+            "est": 0.5652,
+            "lo": 0.4897,
+            "hi": 0.6368
+          },
+          "ss": {
+            "n": 184,
+            "decks": 152,
+            "est": 0.5924,
+            "lo": 0.5266,
+            "hi": 0.6613
+          },
+          "diff": {
+            "n": 184,
+            "decks": 152,
+            "est": 0.0272,
+            "lo": -0.0476,
+            "hi": 0.1047
+          }
+        }
+      }
+    }
+  },
+  "read2": {
+    "bands": [
+      "pauper",
+      "peasant",
+      "legacy",
+      "powered"
+    ],
+    "rule": "a band enters when 50 or more of its slice deck-games hold 1+ card-flow cards",
+    "flowDeckGames": {
+      "pauper": 647,
+      "peasant": 240,
+      "legacy": 118,
+      "powered": 172
+    },
+    "ff": {
+      "n": 3996,
+      "beta": -2.7449,
+      "lo": -4.903,
+      "hi": -0.7461
+    },
+    "ss": {
+      "n": 3970,
+      "beta": -3.1605,
+      "lo": -5.21,
+      "hi": -1.2527
+    },
+    "diff": {
+      "beta": -0.4156,
+      "lo": -2.5078,
+      "hi": 1.5858
+    },
+    "censusFF": {
+      "n": 159876,
+      "decks": 10000,
+      "beta": -2.6075,
+      "lo": -3.0577,
+      "hi": -2.1908
+    },
+    "byFlow": {
+      "f0": {
+        "ff": {
+          "n": 2819,
+          "decks": 2282,
+          "est": 0.5101,
+          "lo": 0.4908,
+          "hi": 0.5293
+        },
+        "ss": {
+          "n": 2798,
+          "decks": 2268,
+          "est": 0.5136,
+          "lo": 0.4933,
+          "hi": 0.5336
+        },
+        "diff": {
+          "n": 2794,
+          "decks": 2266,
+          "est": 0.0036,
+          "lo": -0.0154,
+          "hi": 0.0231
+        }
+      },
+      "f1": {
+        "ff": {
+          "n": 759,
+          "decks": 604,
+          "est": 0.4967,
+          "lo": 0.4626,
+          "hi": 0.5315
+        },
+        "ss": {
+          "n": 754,
+          "decks": 600,
+          "est": 0.4881,
+          "lo": 0.4514,
+          "hi": 0.5267
+        },
+        "diff": {
+          "n": 754,
+          "decks": 600,
+          "est": -0.0093,
+          "lo": -0.0461,
+          "hi": 0.0271
+        }
+      },
+      "f2": {
+        "ff": {
+          "n": 238,
+          "decks": 187,
+          "est": 0.4454,
+          "lo": 0.3856,
+          "hi": 0.5099
+        },
+        "ss": {
+          "n": 238,
+          "decks": 187,
+          "est": 0.416,
+          "lo": 0.3532,
+          "hi": 0.4817
+        },
+        "diff": {
+          "n": 238,
+          "decks": 187,
+          "est": -0.0294,
+          "lo": -0.0913,
+          "hi": 0.0412
+        }
+      },
+      "f3p": {
+        "ff": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.4278,
+          "lo": 0.3523,
+          "hi": 0.5087
+        },
+        "ss": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.45,
+          "lo": 0.3687,
+          "hi": 0.5253
+        },
+        "diff": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.0222,
+          "lo": -0.0492,
+          "hi": 0.0909
+        }
+      }
+    }
+  },
+  "read3": {
+    "cards": 4129,
+    "included": 2103,
+    "rule": "min(decisive slice deck-games under Forge, under search) >= 20",
+    "spearman": {
+      "shrunk": {
+        "rho": 0.6145,
+        "lo": 0.4858,
+        "hi": 0.609
+      },
+      "raw": {
+        "rho": 0.6129,
+        "lo": 0.4848,
+        "hi": 0.6042
+      },
+      "swapReference": {
+        "median": 0.6203,
+        "lo": 0.5923,
+        "hi": 0.6456,
+        "swaps": 200
+      }
+    },
+    "moveByCardColour": {
+      "W": {
+        "cards": 268,
+        "meanMove": 0.0057,
+        "lo": -0.0132,
+        "hi": 0.0255
+      },
+      "U": {
+        "cards": 271,
+        "meanMove": 0.0011,
+        "lo": -0.0189,
+        "hi": 0.0215
+      },
+      "B": {
+        "cards": 278,
+        "meanMove": -0.0141,
+        "lo": -0.0349,
+        "hi": 0.0063
+      },
+      "R": {
+        "cards": 266,
+        "meanMove": -0.0012,
+        "lo": -0.0206,
+        "hi": 0.0181
+      },
+      "G": {
+        "cards": 282,
+        "meanMove": 0.0033,
+        "lo": -0.0177,
+        "hi": 0.0245
+      },
+      "M": {
+        "cards": 522,
+        "meanMove": 0.0087,
+        "lo": -0.0059,
+        "hi": 0.0244
+      },
+      "C": {
+        "cards": 216,
+        "meanMove": -0.0026,
+        "lo": -0.0154,
+        "hi": 0.0105
+      },
+      "flow": {
+        "cards": 13,
+        "meanMove": -0.0153,
+        "lo": -0.0538,
+        "hi": 0.0207
+      }
+    },
+    "up": [
+      {
+        "band": "peasant",
+        "card": "Untamed Wilds",
+        "colour": "G",
+        "type": "Sorcery",
+        "flow": 0,
+        "decks": 46,
+        "deckGames": 53,
+        "ffN": 53,
+        "ffWr": 0.3585,
+        "ffShrunk": 0.3973,
+        "ssN": 53,
+        "ssWr": 0.5849,
+        "ssShrunk": 0.5616,
+        "move": 0.1644,
+        "pairedN": 53,
+        "pairedDiff": 0.2264,
+        "pairedLo": 0.0784,
+        "pairedHi": 0.36
+      },
+      {
+        "band": "pauper",
+        "card": "Mirkwood Nurturer",
+        "colour": "UG",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 27,
+        "deckGames": 35,
+        "ffN": 35,
+        "ffWr": 0.2571,
+        "ffShrunk": 0.3455,
+        "ssN": 35,
+        "ssWr": 0.5143,
+        "ssShrunk": 0.5091,
+        "move": 0.1636,
+        "pairedN": 35,
+        "pairedDiff": 0.2571,
+        "pairedLo": 0.0789,
+        "pairedHi": 0.439
+      },
+      {
+        "band": "powered",
+        "card": "Oracle of Mul Daya",
+        "colour": "G",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 26,
+        "deckGames": 31,
+        "ffN": 31,
+        "ffWr": 0.4194,
+        "ffShrunk": 0.451,
+        "ssN": 31,
+        "ssWr": 0.6774,
+        "ssShrunk": 0.6078,
+        "move": 0.1569,
+        "pairedN": 31,
+        "pairedDiff": 0.2581,
+        "pairedLo": 0.069,
+        "pairedHi": 0.4444
+      },
+      {
+        "band": "peasant",
+        "card": "Greta, Sweettooth Scourge",
+        "colour": "BG",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 31,
+        "deckGames": 41,
+        "ffN": 41,
+        "ffWr": 0.3171,
+        "ffShrunk": 0.377,
+        "ssN": 41,
+        "ssWr": 0.5366,
+        "ssShrunk": 0.5246,
+        "move": 0.1475,
+        "pairedN": 41,
+        "pairedDiff": 0.2195,
+        "pairedLo": 0.0476,
+        "pairedHi": 0.3947
+      },
+      {
+        "band": "peasant",
+        "card": "Talisman of Dominance",
+        "colour": "UB",
+        "type": "Artifact",
+        "flow": 0,
+        "decks": 45,
+        "deckGames": 56,
+        "ffN": 56,
+        "ffWr": 0.3393,
+        "ffShrunk": 0.3816,
+        "ssN": 54,
+        "ssWr": 0.537,
+        "ssShrunk": 0.527,
+        "move": 0.1454,
+        "pairedN": 54,
+        "pairedDiff": 0.2037,
+        "pairedLo": 0.0678,
+        "pairedHi": 0.3404
+      },
+      {
+        "band": "legacy",
+        "card": "Concealing Curtains",
+        "colour": "B",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 37,
+        "deckGames": 51,
+        "ffN": 51,
+        "ffWr": 0.4118,
+        "ffShrunk": 0.4366,
+        "ssN": 51,
+        "ssWr": 0.6078,
+        "ssShrunk": 0.5775,
+        "move": 0.1408,
+        "pairedN": 51,
+        "pairedDiff": 0.1961,
+        "pairedLo": 0.0488,
+        "pairedHi": 0.36
+      },
+      {
+        "band": "peasant",
+        "card": "Hunter's Talent",
+        "colour": "G",
+        "type": "Enchantment",
+        "flow": 0,
+        "decks": 42,
+        "deckGames": 52,
+        "ffN": 52,
+        "ffWr": 0.4423,
+        "ffShrunk": 0.4583,
+        "ssN": 52,
+        "ssWr": 0.6346,
+        "ssShrunk": 0.5972,
+        "move": 0.1389,
+        "pairedN": 52,
+        "pairedDiff": 0.1923,
+        "pairedLo": 0.05,
+        "pairedHi": 0.3478
+      },
+      {
+        "band": "legacy",
+        "card": "Godless Shrine",
+        "colour": "WB",
+        "type": "Land",
+        "flow": 0,
+        "decks": 45,
+        "deckGames": 60,
+        "ffN": 60,
+        "ffWr": 0.3333,
+        "ffShrunk": 0.375,
+        "ssN": 60,
+        "ssWr": 0.5167,
+        "ssShrunk": 0.5125,
+        "move": 0.1375,
+        "pairedN": 60,
+        "pairedDiff": 0.1833,
+        "pairedLo": 0.0545,
+        "pairedHi": 0.3182
+      },
+      {
+        "band": "legacy",
+        "card": "Atraxa, Grand Unifier",
+        "colour": "WUBG",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 24,
+        "deckGames": 32,
+        "ffN": 32,
+        "ffWr": 0.3438,
+        "ffShrunk": 0.4038,
+        "ssN": 32,
+        "ssWr": 0.5625,
+        "ssShrunk": 0.5385,
+        "move": 0.1346,
+        "pairedN": 32,
+        "pairedDiff": 0.2188,
+        "pairedLo": 0.0244,
+        "pairedHi": 0.439
+      },
+      {
+        "band": "peasant",
+        "card": "Dockside Chef",
+        "colour": "B",
+        "type": "Enchantment Creature",
+        "flow": 0,
+        "decks": 28,
+        "deckGames": 32,
+        "ffN": 32,
+        "ffWr": 0.2812,
+        "ffShrunk": 0.3654,
+        "ssN": 32,
+        "ssWr": 0.5,
+        "ssShrunk": 0.5,
+        "move": 0.1346,
+        "pairedN": 32,
+        "pairedDiff": 0.2188,
+        "pairedLo": 0.037,
+        "pairedHi": 0.4
+      },
+      {
+        "band": "powered",
+        "card": "Krenko, Tin Street Kingpin",
+        "colour": "R",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 37,
+        "deckGames": 47,
+        "ffN": 47,
+        "ffWr": 0.4894,
+        "ffShrunk": 0.4925,
+        "ssN": 47,
+        "ssWr": 0.6809,
+        "ssShrunk": 0.6269,
+        "move": 0.1343,
+        "pairedN": 47,
+        "pairedDiff": 0.1915,
+        "pairedLo": 0.0392,
+        "pairedHi": 0.3529
+      },
+      {
+        "band": "powered",
+        "card": "Avenger of Zendikar",
+        "colour": "G",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 28,
+        "deckGames": 40,
+        "ffN": 40,
+        "ffWr": 0.4,
+        "ffShrunk": 0.4333,
+        "ssN": 40,
+        "ssWr": 0.6,
+        "ssShrunk": 0.5667,
+        "move": 0.1333,
+        "pairedN": 40,
+        "pairedDiff": 0.2,
+        "pairedLo": 0.0488,
+        "pairedHi": 0.3415
+      },
+      {
+        "band": "peasant",
+        "card": "Land Tax",
+        "colour": "W",
+        "type": "Enchantment",
+        "flow": 0,
+        "decks": 47,
+        "deckGames": 62,
+        "ffN": 62,
+        "ffWr": 0.4355,
+        "ffShrunk": 0.4512,
+        "ssN": 57,
+        "ssWr": 0.614,
+        "ssShrunk": 0.5844,
+        "move": 0.1332,
+        "pairedN": 57,
+        "pairedDiff": 0.1579,
+        "pairedLo": 0.0233,
+        "pairedHi": 0.3
+      },
+      {
+        "band": "powered",
+        "card": "Hexdrinker",
+        "colour": "G",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 24,
+        "deckGames": 33,
+        "ffN": 33,
+        "ffWr": 0.3636,
+        "ffShrunk": 0.4151,
+        "ssN": 33,
+        "ssWr": 0.5758,
+        "ssShrunk": 0.5472,
+        "move": 0.1321,
+        "pairedN": 33,
+        "pairedDiff": 0.2121,
+        "pairedLo": 0.0588,
+        "pairedHi": 0.3585
+      },
+      {
+        "band": "powered",
+        "card": "Delighted Halfling",
+        "colour": "G",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 28,
+        "deckGames": 34,
+        "ffN": 34,
+        "ffWr": 0.6176,
+        "ffShrunk": 0.5741,
+        "ssN": 34,
+        "ssWr": 0.8235,
+        "ssShrunk": 0.7037,
+        "move": 0.1296,
+        "pairedN": 34,
+        "pairedDiff": 0.2059,
+        "pairedLo": 0.0857,
+        "pairedHi": 0.3256
+      },
+      {
+        "band": "legacy",
+        "card": "Ledger Shredder",
+        "colour": "U",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 32,
+        "deckGames": 42,
+        "ffN": 42,
+        "ffWr": 0.4048,
+        "ffShrunk": 0.4355,
+        "ssN": 42,
+        "ssWr": 0.5952,
+        "ssShrunk": 0.5645,
+        "move": 0.129,
+        "pairedN": 42,
+        "pairedDiff": 0.1905,
+        "pairedLo": 0.0513,
+        "pairedHi": 0.3095
+      },
+      {
+        "band": "pauper",
+        "card": "Memory Lapse",
+        "colour": "U",
+        "type": "Instant",
+        "flow": 0,
+        "decks": 46,
+        "deckGames": 58,
+        "ffN": 58,
+        "ffWr": 0.431,
+        "ffShrunk": 0.4487,
+        "ssN": 58,
+        "ssWr": 0.6034,
+        "ssShrunk": 0.5769,
+        "move": 0.1282,
+        "pairedN": 58,
+        "pairedDiff": 0.1724,
+        "pairedLo": 0.0217,
+        "pairedHi": 0.3115
+      },
+      {
+        "band": "pauper",
+        "card": "Psychic Purge",
+        "colour": "U",
+        "type": "Sorcery",
+        "flow": 0,
+        "decks": 27,
+        "deckGames": 37,
+        "ffN": 37,
+        "ffWr": 0.2973,
+        "ffShrunk": 0.3684,
+        "ssN": 37,
+        "ssWr": 0.4865,
+        "ssShrunk": 0.4912,
+        "move": 0.1228,
+        "pairedN": 37,
+        "pairedDiff": 0.1892,
+        "pairedLo": 0.0,
+        "pairedHi": 0.375
+      },
+      {
+        "band": "peasant",
+        "card": "Umbral Collar Zealot",
+        "colour": "B",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 29,
+        "deckGames": 37,
+        "ffN": 37,
+        "ffWr": 0.4054,
+        "ffShrunk": 0.4386,
+        "ssN": 37,
+        "ssWr": 0.5946,
+        "ssShrunk": 0.5614,
+        "move": 0.1228,
+        "pairedN": 37,
+        "pairedDiff": 0.1892,
+        "pairedLo": 0.0,
+        "pairedHi": 0.3947
+      },
+      {
+        "band": "legacy",
+        "card": "Xira Arien",
+        "colour": "BRG",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 25,
+        "deckGames": 30,
+        "ffN": 30,
+        "ffWr": 0.4,
+        "ffShrunk": 0.44,
+        "ssN": 30,
+        "ssWr": 0.6,
+        "ssShrunk": 0.56,
+        "move": 0.12,
+        "pairedN": 30,
+        "pairedDiff": 0.2,
+        "pairedLo": 0.069,
+        "pairedHi": 0.3226
+      }
+    ],
+    "down": [
+      {
+        "band": "peasant",
+        "card": "Dreadwing Scavenger",
+        "colour": "UB",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 34,
+        "deckGames": 43,
+        "ffN": 43,
+        "ffWr": 0.5814,
+        "ffShrunk": 0.5556,
+        "ssN": 43,
+        "ssWr": 0.3488,
+        "ssShrunk": 0.3968,
+        "move": -0.1587,
+        "pairedN": 43,
+        "pairedDiff": -0.2326,
+        "pairedLo": -0.3929,
+        "pairedHi": -0.0789
+      },
+      {
+        "band": "powered",
+        "card": "Arcbound Ravager",
+        "colour": "",
+        "type": "Artifact Creature",
+        "flow": 0,
+        "decks": 22,
+        "deckGames": 25,
+        "ffN": 25,
+        "ffWr": 0.64,
+        "ffShrunk": 0.5778,
+        "ssN": 25,
+        "ssWr": 0.36,
+        "ssShrunk": 0.4222,
+        "move": -0.1556,
+        "pairedN": 25,
+        "pairedDiff": -0.28,
+        "pairedLo": -0.5,
+        "pairedHi": -0.0417
+      },
+      {
+        "band": "powered",
+        "card": "Tetravus",
+        "colour": "",
+        "type": "Artifact Creature",
+        "flow": 0,
+        "decks": 26,
+        "deckGames": 32,
+        "ffN": 32,
+        "ffWr": 0.6562,
+        "ffShrunk": 0.5962,
+        "ssN": 32,
+        "ssWr": 0.4062,
+        "ssShrunk": 0.4423,
+        "move": -0.1538,
+        "pairedN": 32,
+        "pairedDiff": -0.25,
+        "pairedLo": -0.4375,
+        "pairedHi": -0.075
+      },
+      {
+        "band": "powered",
+        "card": "Courser of Kruphix",
+        "colour": "G",
+        "type": "Enchantment Creature",
+        "flow": 0,
+        "decks": 27,
+        "deckGames": 32,
+        "ffN": 32,
+        "ffWr": 0.75,
+        "ffShrunk": 0.6538,
+        "ssN": 32,
+        "ssWr": 0.5,
+        "ssShrunk": 0.5,
+        "move": -0.1538,
+        "pairedN": 32,
+        "pairedDiff": -0.25,
+        "pairedLo": -0.4324,
+        "pairedHi": -0.1
+      },
+      {
+        "band": "legacy",
+        "card": "Reveillark",
+        "colour": "W",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 25,
+        "deckGames": 27,
+        "ffN": 27,
+        "ffWr": 0.6667,
+        "ffShrunk": 0.5957,
+        "ssN": 27,
+        "ssWr": 0.4074,
+        "ssShrunk": 0.4468,
+        "move": -0.1489,
+        "pairedN": 27,
+        "pairedDiff": -0.2593,
+        "pairedLo": -0.5,
+        "pairedHi": -0.0625
+      },
+      {
+        "band": "powered",
+        "card": "Black Widow, Super Spy",
+        "colour": "B",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 38,
+        "deckGames": 42,
+        "ffN": 42,
+        "ffWr": 0.5714,
+        "ffShrunk": 0.5484,
+        "ssN": 42,
+        "ssWr": 0.3571,
+        "ssShrunk": 0.4032,
+        "move": -0.1452,
+        "pairedN": 42,
+        "pairedDiff": -0.2143,
+        "pairedLo": -0.3939,
+        "pairedHi": -0.027
+      },
+      {
+        "band": "legacy",
+        "card": "Earthquake",
+        "colour": "R",
+        "type": "Sorcery",
+        "flow": 0,
+        "decks": 35,
+        "deckGames": 44,
+        "ffN": 44,
+        "ffWr": 0.7727,
+        "ffShrunk": 0.6875,
+        "ssN": 44,
+        "ssWr": 0.5682,
+        "ssShrunk": 0.5469,
+        "move": -0.1406,
+        "pairedN": 44,
+        "pairedDiff": -0.2045,
+        "pairedLo": -0.3846,
+        "pairedHi": -0.0417
+      },
+      {
+        "band": "powered",
+        "card": "Fear of Missing Out",
+        "colour": "R",
+        "type": "Enchantment Creature",
+        "flow": 0,
+        "decks": 39,
+        "deckGames": 45,
+        "ffN": 45,
+        "ffWr": 0.6667,
+        "ffShrunk": 0.6154,
+        "ssN": 45,
+        "ssWr": 0.4667,
+        "ssShrunk": 0.4769,
+        "move": -0.1385,
+        "pairedN": 45,
+        "pairedDiff": -0.2,
+        "pairedLo": -0.3556,
+        "pairedHi": -0.0667
+      },
+      {
+        "band": "powered",
+        "card": "Botanical Sanctum",
+        "colour": "UG",
+        "type": "Land",
+        "flow": 0,
+        "decks": 59,
+        "deckGames": 74,
+        "ffN": 74,
+        "ffWr": 0.5541,
+        "ffShrunk": 0.5426,
+        "ssN": 74,
+        "ssWr": 0.3784,
+        "ssShrunk": 0.4043,
+        "move": -0.1383,
+        "pairedN": 74,
+        "pairedDiff": -0.1757,
+        "pairedLo": -0.2812,
+        "pairedHi": -0.0746
+      },
+      {
+        "band": "legacy",
+        "card": "Talrand, Sky Summoner",
+        "colour": "U",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 34,
+        "deckGames": 39,
+        "ffN": 39,
+        "ffWr": 0.4872,
+        "ffShrunk": 0.4915,
+        "ssN": 39,
+        "ssWr": 0.2821,
+        "ssShrunk": 0.3559,
+        "move": -0.1356,
+        "pairedN": 39,
+        "pairedDiff": -0.2051,
+        "pairedLo": -0.4054,
+        "pairedHi": 0.0
+      },
+      {
+        "band": "peasant",
+        "card": "Cult Conscript",
+        "colour": "B",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 43,
+        "deckGames": 59,
+        "ffN": 59,
+        "ffWr": 0.6271,
+        "ffShrunk": 0.5949,
+        "ssN": 58,
+        "ssWr": 0.4483,
+        "ssShrunk": 0.4615,
+        "move": -0.1334,
+        "pairedN": 58,
+        "pairedDiff": -0.1897,
+        "pairedLo": -0.3265,
+        "pairedHi": -0.0377
+      },
+      {
+        "band": "powered",
+        "card": "Ugin, Eye of the Storms",
+        "colour": "",
+        "type": "Planeswalker",
+        "flow": 0,
+        "decks": 27,
+        "deckGames": 34,
+        "ffN": 34,
+        "ffWr": 0.6471,
+        "ffShrunk": 0.5926,
+        "ssN": 34,
+        "ssWr": 0.4412,
+        "ssShrunk": 0.463,
+        "move": -0.1296,
+        "pairedN": 34,
+        "pairedDiff": -0.2059,
+        "pairedLo": -0.3235,
+        "pairedHi": -0.0952
+      },
+      {
+        "band": "legacy",
+        "card": "Icetill Explorer",
+        "colour": "G",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 31,
+        "deckGames": 34,
+        "ffN": 34,
+        "ffWr": 0.5588,
+        "ffShrunk": 0.537,
+        "ssN": 34,
+        "ssWr": 0.3529,
+        "ssShrunk": 0.4074,
+        "move": -0.1296,
+        "pairedN": 34,
+        "pairedDiff": -0.2059,
+        "pairedLo": -0.4167,
+        "pairedHi": 0.0
+      },
+      {
+        "band": "legacy",
+        "card": "Jace, Wielder of Mysteries",
+        "colour": "U",
+        "type": "Planeswalker",
+        "flow": 0,
+        "decks": 29,
+        "deckGames": 35,
+        "ffN": 35,
+        "ffWr": 0.6286,
+        "ffShrunk": 0.5818,
+        "ssN": 35,
+        "ssWr": 0.4286,
+        "ssShrunk": 0.4545,
+        "move": -0.1273,
+        "pairedN": 35,
+        "pairedDiff": -0.2,
+        "pairedLo": -0.3478,
+        "pairedHi": -0.0345
+      },
+      {
+        "band": "legacy",
+        "card": "Esika's Chariot",
+        "colour": "G",
+        "type": "Artifact",
+        "flow": 0,
+        "decks": 23,
+        "deckGames": 30,
+        "ffN": 30,
+        "ffWr": 0.7667,
+        "ffShrunk": 0.66,
+        "ssN": 30,
+        "ssWr": 0.5667,
+        "ssShrunk": 0.54,
+        "move": -0.12,
+        "pairedN": 30,
+        "pairedDiff": -0.2,
+        "pairedLo": -0.375,
+        "pairedHi": -0.0741
+      },
+      {
+        "band": "pauper",
+        "card": "Okiba Reckoner Raid",
+        "colour": "B",
+        "type": "Enchantment",
+        "flow": 0,
+        "decks": 45,
+        "deckGames": 56,
+        "ffN": 56,
+        "ffWr": 0.6786,
+        "ffShrunk": 0.6316,
+        "ssN": 56,
+        "ssWr": 0.5179,
+        "ssShrunk": 0.5132,
+        "move": -0.1184,
+        "pairedN": 56,
+        "pairedDiff": -0.1607,
+        "pairedLo": -0.2727,
+        "pairedHi": -0.0476
+      },
+      {
+        "band": "powered",
+        "card": "Phlage, Titan of Fire's Fury",
+        "colour": "WR",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 29,
+        "deckGames": 31,
+        "ffN": 31,
+        "ffWr": 0.6774,
+        "ffShrunk": 0.6078,
+        "ssN": 31,
+        "ssWr": 0.4839,
+        "ssShrunk": 0.4902,
+        "move": -0.1176,
+        "pairedN": 31,
+        "pairedDiff": -0.1935,
+        "pairedLo": -0.4545,
+        "pairedHi": 0.0714
+      },
+      {
+        "band": "pauper",
+        "card": "Gurmag Angler",
+        "colour": "B",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 41,
+        "deckGames": 48,
+        "ffN": 48,
+        "ffWr": 0.5625,
+        "ffShrunk": 0.5441,
+        "ssN": 48,
+        "ssWr": 0.3958,
+        "ssShrunk": 0.4265,
+        "move": -0.1176,
+        "pairedN": 48,
+        "pairedDiff": -0.1667,
+        "pairedLo": -0.3,
+        "pairedHi": -0.0233
+      },
+      {
+        "band": "powered",
+        "card": "Blightstep Pathway",
+        "colour": "BR",
+        "type": "Land",
+        "flow": 0,
+        "decks": 49,
+        "deckGames": 57,
+        "ffN": 57,
+        "ffWr": 0.4912,
+        "ffShrunk": 0.4935,
+        "ssN": 57,
+        "ssWr": 0.3333,
+        "ssShrunk": 0.3766,
+        "move": -0.1169,
+        "pairedN": 57,
+        "pairedDiff": -0.1579,
+        "pairedLo": -0.2826,
+        "pairedHi": -0.0364
+      },
+      {
+        "band": "pauper",
+        "card": "Mintstrosity",
+        "colour": "B",
+        "type": "Creature",
+        "flow": 0,
+        "decks": 43,
+        "deckGames": 49,
+        "ffN": 49,
+        "ffWr": 0.6735,
+        "ffShrunk": 0.6232,
+        "ssN": 49,
+        "ssWr": 0.5102,
+        "ssShrunk": 0.5072,
+        "move": -0.1159,
+        "pairedN": 49,
+        "pairedDiff": -0.1633,
+        "pairedLo": -0.3125,
+        "pairedHi": 0.0
+      }
+    ]
+  },
+  "read4": {
+    "all": {
+      "edge": {
+        "n": 3970,
+        "decks": 3193,
+        "est": 0.5887,
+        "lo": 0.5803,
+        "hi": 0.5975
+      },
+      "searchPilotWr": {
+        "n": 3985,
+        "decks": 3204,
+        "est": 0.589,
+        "lo": 0.5736,
+        "hi": 0.605
+      },
+      "forgePilotWr": {
+        "n": 3985,
+        "decks": 3201,
+        "est": 0.411,
+        "lo": 0.3956,
+        "hi": 0.4268
+      },
+      "lift": {
+        "n": 3982,
+        "decks": 3203,
+        "est": 0.0889,
+        "lo": 0.0733,
+        "hi": 0.1044
+      }
+    },
+    "byMainColour": {
+      "W": {
+        "edge": {
+          "n": 779,
+          "decks": 629,
+          "est": 0.5834,
+          "lo": 0.5646,
+          "hi": 0.6025
+        },
+        "searchPilotWr": {
+          "n": 781,
+          "decks": 630,
+          "est": 0.6108,
+          "lo": 0.5786,
+          "hi": 0.646
+        },
+        "forgePilotWr": {
+          "n": 790,
+          "decks": 634,
+          "est": 0.443,
+          "lo": 0.4084,
+          "hi": 0.4786
+        },
+        "lift": {
+          "n": 781,
+          "decks": 630,
+          "est": 0.0922,
+          "lo": 0.0591,
+          "hi": 0.1288
+        }
+      },
+      "U": {
+        "edge": {
+          "n": 791,
+          "decks": 634,
+          "est": 0.5879,
+          "lo": 0.5707,
+          "hi": 0.6055
+        },
+        "searchPilotWr": {
+          "n": 794,
+          "decks": 637,
+          "est": 0.5164,
+          "lo": 0.4825,
+          "hi": 0.5531
+        },
+        "forgePilotWr": {
+          "n": 792,
+          "decks": 634,
+          "est": 0.3396,
+          "lo": 0.3072,
+          "hi": 0.3739
+        },
+        "lift": {
+          "n": 794,
+          "decks": 637,
+          "est": 0.0831,
+          "lo": 0.047,
+          "hi": 0.1188
+        }
+      },
+      "B": {
+        "edge": {
+          "n": 867,
+          "decks": 695,
+          "est": 0.5911,
+          "lo": 0.575,
+          "hi": 0.6082
+        },
+        "searchPilotWr": {
+          "n": 868,
+          "decks": 696,
+          "est": 0.5818,
+          "lo": 0.5489,
+          "hi": 0.6127
+        },
+        "forgePilotWr": {
+          "n": 867,
+          "decks": 695,
+          "est": 0.3991,
+          "lo": 0.3657,
+          "hi": 0.4311
+        },
+        "lift": {
+          "n": 868,
+          "decks": 696,
+          "est": 0.0945,
+          "lo": 0.0622,
+          "hi": 0.1269
+        }
+      },
+      "R": {
+        "edge": {
+          "n": 758,
+          "decks": 617,
+          "est": 0.5831,
+          "lo": 0.564,
+          "hi": 0.6031
+        },
+        "searchPilotWr": {
+          "n": 764,
+          "decks": 620,
+          "est": 0.6047,
+          "lo": 0.5685,
+          "hi": 0.6388
+        },
+        "forgePilotWr": {
+          "n": 760,
+          "decks": 619,
+          "est": 0.4355,
+          "lo": 0.4019,
+          "hi": 0.4728
+        },
+        "lift": {
+          "n": 761,
+          "decks": 619,
+          "est": 0.0723,
+          "lo": 0.0393,
+          "hi": 0.1035
+        }
+      },
+      "G": {
+        "edge": {
+          "n": 775,
+          "decks": 618,
+          "est": 0.5974,
+          "lo": 0.5792,
+          "hi": 0.6147
+        },
+        "searchPilotWr": {
+          "n": 778,
+          "decks": 621,
+          "est": 0.6337,
+          "lo": 0.5997,
+          "hi": 0.6646
+        },
+        "forgePilotWr": {
+          "n": 776,
+          "decks": 619,
+          "est": 0.4407,
+          "lo": 0.407,
+          "hi": 0.475
+        },
+        "lift": {
+          "n": 778,
+          "decks": 621,
+          "est": 0.1015,
+          "lo": 0.0646,
+          "hi": 0.1376
+        }
+      }
+    },
+    "byColours": {
+      "1": {
+        "edge": {
+          "n": 1324,
+          "decks": 1030,
+          "est": 0.5789,
+          "lo": 0.5646,
+          "hi": 0.594
+        },
+        "searchPilotWr": {
+          "n": 1330,
+          "decks": 1032,
+          "est": 0.6459,
+          "lo": 0.6198,
+          "hi": 0.6717
+        },
+        "forgePilotWr": {
+          "n": 1334,
+          "decks": 1034,
+          "est": 0.4865,
+          "lo": 0.4586,
+          "hi": 0.5127
+        },
+        "lift": {
+          "n": 1329,
+          "decks": 1032,
+          "est": 0.0594,
+          "lo": 0.0338,
+          "hi": 0.085
+        }
+      },
+      "2": {
+        "edge": {
+          "n": 670,
+          "decks": 597,
+          "est": 0.5985,
+          "lo": 0.5787,
+          "hi": 0.619
+        },
+        "searchPilotWr": {
+          "n": 674,
+          "decks": 601,
+          "est": 0.6291,
+          "lo": 0.5935,
+          "hi": 0.663
+        },
+        "forgePilotWr": {
+          "n": 671,
+          "decks": 598,
+          "est": 0.4322,
+          "lo": 0.3947,
+          "hi": 0.4701
+        },
+        "lift": {
+          "n": 673,
+          "decks": 600,
+          "est": 0.0892,
+          "lo": 0.0497,
+          "hi": 0.1284
+        }
+      },
+      "3": {
+        "edge": {
+          "n": 654,
+          "decks": 590,
+          "est": 0.607,
+          "lo": 0.5851,
+          "hi": 0.6268
+        },
+        "searchPilotWr": {
+          "n": 655,
+          "decks": 591,
+          "est": 0.5893,
+          "lo": 0.552,
+          "hi": 0.6281
+        },
+        "forgePilotWr": {
+          "n": 656,
+          "decks": 592,
+          "est": 0.375,
+          "lo": 0.3407,
+          "hi": 0.4142
+        },
+        "lift": {
+          "n": 655,
+          "decks": 591,
+          "est": 0.1145,
+          "lo": 0.0773,
+          "hi": 0.1542
+        }
+      },
+      "4": {
+        "edge": {
+          "n": 1056,
+          "decks": 773,
+          "est": 0.5895,
+          "lo": 0.574,
+          "hi": 0.6049
+        },
+        "searchPilotWr": {
+          "n": 1058,
+          "decks": 775,
+          "est": 0.5198,
+          "lo": 0.4905,
+          "hi": 0.5482
+        },
+        "forgePilotWr": {
+          "n": 1058,
+          "decks": 774,
+          "est": 0.3403,
+          "lo": 0.3127,
+          "hi": 0.3702
+        },
+        "lift": {
+          "n": 1057,
+          "decks": 775,
+          "est": 0.1079,
+          "lo": 0.0763,
+          "hi": 0.1374
+        }
+      },
+      "5": {
+        "edge": {
+          "n": 266,
+          "decks": 203,
+          "est": 0.5639,
+          "lo": 0.5336,
+          "hi": 0.5952
+        },
+        "searchPilotWr": {
+          "n": 268,
+          "decks": 205,
+          "est": 0.4776,
+          "lo": 0.4196,
+          "hi": 0.5415
+        },
+        "forgePilotWr": {
+          "n": 266,
+          "decks": 203,
+          "est": 0.3496,
+          "lo": 0.291,
+          "hi": 0.4057
+        },
+        "lift": {
+          "n": 268,
+          "decks": 205,
+          "est": 0.097,
+          "lo": 0.05,
+          "hi": 0.1515
+        }
+      }
+    },
+    "byFlow": {
+      "f0": {
+        "edge": {
+          "n": 2799,
+          "decks": 2270,
+          "est": 0.5925,
+          "lo": 0.5831,
+          "hi": 0.6024
+        },
+        "searchPilotWr": {
+          "n": 2810,
+          "decks": 2278,
+          "est": 0.6039,
+          "lo": 0.5852,
+          "hi": 0.6222
+        },
+        "forgePilotWr": {
+          "n": 2812,
+          "decks": 2276,
+          "est": 0.4182,
+          "lo": 0.4002,
+          "hi": 0.437
+        },
+        "lift": {
+          "n": 2807,
+          "decks": 2277,
+          "est": 0.0933,
+          "lo": 0.0756,
+          "hi": 0.1112
+        }
+      },
+      "f1": {
+        "edge": {
+          "n": 753,
+          "decks": 599,
+          "est": 0.5823,
+          "lo": 0.5641,
+          "hi": 0.6023
+        },
+        "searchPilotWr": {
+          "n": 757,
+          "decks": 602,
+          "est": 0.5826,
+          "lo": 0.549,
+          "hi": 0.6195
+        },
+        "forgePilotWr": {
+          "n": 755,
+          "decks": 601,
+          "est": 0.4172,
+          "lo": 0.3816,
+          "hi": 0.4532
+        },
+        "lift": {
+          "n": 757,
+          "decks": 602,
+          "est": 0.0872,
+          "lo": 0.0507,
+          "hi": 0.1228
+        }
+      },
+      "f2": {
+        "edge": {
+          "n": 238,
+          "decks": 187,
+          "est": 0.5861,
+          "lo": 0.5556,
+          "hi": 0.6213
+        },
+        "searchPilotWr": {
+          "n": 238,
+          "decks": 187,
+          "est": 0.5126,
+          "lo": 0.4475,
+          "hi": 0.5802
+        },
+        "forgePilotWr": {
+          "n": 238,
+          "decks": 187,
+          "est": 0.3403,
+          "lo": 0.2769,
+          "hi": 0.4
+        },
+        "lift": {
+          "n": 238,
+          "decks": 187,
+          "est": 0.0672,
+          "lo": 0.0043,
+          "hi": 0.1376
+        }
+      },
+      "f3p": {
+        "edge": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.5583,
+          "lo": 0.5142,
+          "hi": 0.601
+        },
+        "searchPilotWr": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.4833,
+          "lo": 0.4082,
+          "hi": 0.5613
+        },
+        "forgePilotWr": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.3667,
+          "lo": 0.2941,
+          "hi": 0.4421
+        },
+        "lift": {
+          "n": 180,
+          "decks": 137,
+          "est": 0.0556,
+          "lo": -0.0238,
+          "hi": 0.1342
+        }
+      }
+    },
+    "byBand": {
+      "pauper": {
+        "edge": {
+          "n": 998,
+          "decks": 780,
+          "est": 0.5661,
+          "lo": 0.5494,
+          "hi": 0.5838
+        },
+        "searchPilotWr": {
+          "n": 999,
+          "decks": 781,
+          "est": 0.5666,
+          "lo": 0.5372,
+          "hi": 0.5998
+        },
+        "forgePilotWr": {
+          "n": 999,
+          "decks": 781,
+          "est": 0.4334,
+          "lo": 0.4037,
+          "hi": 0.4648
+        },
+        "lift": {
+          "n": 999,
+          "decks": 781,
+          "est": 0.0671,
+          "lo": 0.0336,
+          "hi": 0.0995
+        }
+      },
+      "peasant": {
+        "edge": {
+          "n": 978,
+          "decks": 782,
+          "est": 0.6135,
+          "lo": 0.5979,
+          "hi": 0.6285
+        },
+        "searchPilotWr": {
+          "n": 989,
+          "decks": 790,
+          "est": 0.6138,
+          "lo": 0.5833,
+          "hi": 0.6435
+        },
+        "forgePilotWr": {
+          "n": 989,
+          "decks": 787,
+          "est": 0.3862,
+          "lo": 0.3561,
+          "hi": 0.4162
+        },
+        "lift": {
+          "n": 988,
+          "decks": 790,
+          "est": 0.1144,
+          "lo": 0.0832,
+          "hi": 0.1442
+        }
+      },
+      "legacy": {
+        "edge": {
+          "n": 1000,
+          "decks": 819,
+          "est": 0.593,
+          "lo": 0.5774,
+          "hi": 0.6102
+        },
+        "searchPilotWr": {
+          "n": 1000,
+          "decks": 819,
+          "est": 0.593,
+          "lo": 0.5634,
+          "hi": 0.625
+        },
+        "forgePilotWr": {
+          "n": 1000,
+          "decks": 819,
+          "est": 0.407,
+          "lo": 0.3767,
+          "hi": 0.4384
+        },
+        "lift": {
+          "n": 1000,
+          "decks": 819,
+          "est": 0.093,
+          "lo": 0.0659,
+          "hi": 0.1209
+        }
+      },
+      "powered": {
+        "edge": {
+          "n": 994,
+          "decks": 812,
+          "est": 0.5825,
+          "lo": 0.566,
+          "hi": 0.599
+        },
+        "searchPilotWr": {
+          "n": 997,
+          "decks": 814,
+          "est": 0.5827,
+          "lo": 0.5528,
+          "hi": 0.6118
+        },
+        "forgePilotWr": {
+          "n": 997,
+          "decks": 814,
+          "est": 0.4173,
+          "lo": 0.3854,
+          "hi": 0.4504
+        },
+        "lift": {
+          "n": 995,
+          "decks": 813,
+          "est": 0.0814,
+          "lo": 0.052,
+          "hi": 0.1129
+        }
+      }
+    }
+  },
+  "read5": {
+    "ff": {
+      "games": 2000,
+      "decisive": 1998,
+      "meanTurns": 18.7565,
+      "meanGameS": 2.2167,
+      "firstPlayerWr": 0.5235,
+      "aWr": 0.516
+    },
+    "ss": {
+      "games": 2000,
+      "decisive": 1985,
+      "meanTurns": 17.5023,
+      "meanGameS": 32.4144,
+      "firstPlayerWr": 0.5199,
+      "aWr": 0.4997,
+      "searchSeats": 3974,
+      "searched": 79253,
+      "changed": 13174,
+      "changedShare": 0.1662,
+      "msPerDecision": 769.1584,
+      "searchedPerSeatGame": 19.9429,
+      "searchedPerSeatGameMedian": 19.0,
+      "byKind": {
+        "a": {
+          "searched": 20402,
+          "changed": 2702,
+          "changedShare": 0.1324,
+          "msPerDecision": 723.075
+        },
+        "b": {
+          "searched": 7257,
+          "changed": 1050,
+          "changedShare": 0.1447,
+          "msPerDecision": 869.9625
+        },
+        "p": {
+          "searched": 51594,
+          "changed": 9422,
+          "changedShare": 0.1826,
+          "msPerDecision": 773.2026
+        }
+      },
+      "fallbacks": {
+        "budget": 349,
+        "copyError": 1155,
+        "rolloutErrors": 86,
+        "unmappable": 130
+      },
+      "budgetFallbackShare": {
+        "n": 349,
+        "share": 0.0044,
+        "lo": 0.004,
+        "hi": 0.0049
+      },
+      "rollouts": 1315960
+    },
+    "ps": {
+      "games": 2000,
+      "decisive": 1990,
+      "meanTurns": 18.0492,
+      "meanGameS": 18.3404,
+      "firstPlayerWr": 0.5432,
+      "aWr": 0.4156,
+      "searchSeats": 1992,
+      "searched": 40576,
+      "changed": 6835,
+      "changedShare": 0.1684,
+      "msPerDecision": 794.1763,
+      "searchedPerSeatGame": 20.3695,
+      "searchedPerSeatGameMedian": 19.0,
+      "byKind": {
+        "a": {
+          "searched": 10865,
+          "changed": 1601,
+          "changedShare": 0.1474,
+          "msPerDecision": 772.5734
+        },
+        "b": {
+          "searched": 2912,
+          "changed": 273,
+          "changedShare": 0.0938,
+          "msPerDecision": 843.2654
+        },
+        "p": {
+          "searched": 26799,
+          "changed": 4961,
+          "changedShare": 0.1851,
+          "msPerDecision": 797.6007
+        }
+      },
+      "fallbacks": {
+        "budget": 303,
+        "copyError": 559,
+        "rolloutErrors": 44,
+        "unmappable": 59
+      },
+      "budgetFallbackShare": {
+        "n": 303,
+        "share": 0.0075,
+        "lo": 0.0067,
+        "hi": 0.0084
+      },
+      "rollouts": 655311
+    },
+    "sp": {
+      "games": 2000,
+      "decisive": 1995,
+      "meanTurns": 18.004,
+      "meanGameS": 18.1421,
+      "firstPlayerWr": 0.5133,
+      "aWr": 0.5935,
+      "searchSeats": 1996,
+      "searched": 40586,
+      "changed": 6657,
+      "changedShare": 0.164,
+      "msPerDecision": 791.424,
+      "searchedPerSeatGame": 20.3337,
+      "searchedPerSeatGameMedian": 19.0,
+      "byKind": {
+        "a": {
+          "searched": 10979,
+          "changed": 1482,
+          "changedShare": 0.135,
+          "msPerDecision": 764.9395
+        },
+        "b": {
+          "searched": 2939,
+          "changed": 307,
+          "changedShare": 0.1045,
+          "msPerDecision": 834.4694
+        },
+        "p": {
+          "searched": 26668,
+          "changed": 4868,
+          "changedShare": 0.1825,
+          "msPerDecision": 797.5835
+        }
+      },
+      "fallbacks": {
+        "budget": 284,
+        "copyError": 523,
+        "rolloutErrors": 38,
+        "unmappable": 63
+      },
+      "budgetFallbackShare": {
+        "n": 284,
+        "share": 0.007,
+        "lo": 0.0062,
+        "hi": 0.0079
+      },
+      "rollouts": 659250
+    }
+  },
+  "counters": {
+    "ss": {
+      "seats": 3974,
+      "searched": 79253
+    },
+    "ps": {
+      "seats": 1992,
+      "searched": 40576
+    },
+    "sp": {
+      "seats": 1996,
+      "searched": 40586
+    }
+  }
+}

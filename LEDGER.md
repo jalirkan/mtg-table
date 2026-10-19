@@ -863,3 +863,26 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J140/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 2e107b6
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J141 DONE: The pilot slice -- search-v2 as the deck census's pilot: 2,000 of J140's games (500 a band, stratified by the two decks' colour counts, slice seed 1411) replayed with search-v2 on both sides (arm S, 2,000 games) and Forge against search-v2 with sides swapped (arm M, 4,000 games), census-play --replay, numbers only; five pre-registered reads (win rate by colour under each pilot, the card-flow coefficient under each, per-card ratings and their rank correlation, search's edge by deck profile, search's own counters), no verdict
+
+- finished: 2026-10-19T06:23:17-04:00
+- decides: nothing by itself. It is exploration, asked by Justin: does Forge's AI, the census's pilot, undersell blue and card draw, and which cards move when search-v2 pilots the same decks in the same games. Any difference it shows is a candidate until it holds on a fresh slice (D447 point 9)
+- hypothesis: none to confirm, and none is tested. The Synergy v3 study (pc-results study/synergy-v3-design.md) found each of its 17 card-flow cards costs -2.9 points [-3.7, -2.1] of win share under Forge, colours held fixed, and that card flow accounts for all of blue's deficit there; the question is whether that is the cards or the pilot. Search-v2 is Forge's AI with a rollout search on top (it changed Forge's answer at 18% of searched decisions in J131), so it inherits Forge's play inside its rollouts and is not an independent pilot
+- rule: exploration; the method below (the slice, the arms, the five reads and their estimators) is pre-registered, written 2026-10-16 before any slice game. There is no outcome rule and no verdict. D447 point 9 applies: a difference reported here (a colour, a coefficient, a card) is a candidate until it holds on a fresh slice (a fresh slice seed over fresh census seeds), same method, read on the same interval
+- outcome: done
+- headline: played 6000, engine_errors 25, pj.read1.byMainColour.U.diff.est -0.0063, pj.read2.diff.beta -0.4156, pj.read3.spearman.shrunk.rho 0.6145, pj.read4.all.edge.est 0.5887, pj.read5.ss.msPerDecision 769.1584
+- summary: results/J141/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 2e107b6
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J142 FAILED: The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule
+
+- finished: 2026-10-19T06:33:46-04:00
+- decides: nothing by itself. It is the first full move atlas: how often and how strongly the random map and Forge's map of the same decisions agree, reported with intervals, for Justin to read ("what we'd gain")
+- hypothesis: none to confirm, and none is tested. The smoke (50 rollouts, 3 decisions at 16 + 8 branches) is too small to say anything about agreement: every interval straddles the other
+- rule: D451, written 2026-10-16 before this run: the guardrails (point 2), the pair rule (point 3), the fork and its checks (points 5-6) and the arithmetic (point 7). Method only: no pass/fail rule on what the maps say; the agreement is reported with intervals. The only checks are mechanical (the pilot's and the final ones below)
+- outcome: failed (prepare: step prepare exited 128 after 7 retries over 10 min: git could not reach the remote (fatal: could not read Username for 'https://github.com': No such device or address))
+- headline: played_a 0, branches 0, atlas.problems -1
+- summary: results/J142/summary.md (the PC session's; judge it against the rule)
+- follow-up: template morning-read: not due (the job did not finish done)

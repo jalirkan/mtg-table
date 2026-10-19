@@ -1,119 +1,55 @@
 {
  "schema": 1,
- "updated": "2026-10-17T20:36:59-04:00",
- "heartbeat": "2026-10-17T20:36:59-04:00",
+ "updated": "2026-10-19T16:46:37-04:00",
+ "heartbeat": "2026-10-19T16:46:37-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-19T06:33:46-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 8.74,
-  "memUsedGb": 13.9,
+  "load1": 1.74,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2061,
+  "swapUsedMb": 0,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
-  {
-   "publicTitle": "Deck census pilot slice: Forge AI against search AI on the same games",
-   "publicEst": "~7-8 h",
-   "id": "J141",
-   "title": "The pilot slice -- search-v2 as the deck census's pilot: 2,000 of J140's games (500 a band, stratified by the two decks' colour counts, slice seed 1411) replayed with search-v2 on both sides (arm S, 2,000 games) and Forge against search-v2 with sides swapped (arm M, 4,000 games), census-play --replay, numbers only; five pre-registered reads (win rate by colour under each pilot, the card-flow coefficient under each, per-card ratings and their rank correlation, search's edge by deck profile, search's own counters), no verdict",
-   "cpu": "heavy",
-   "phase": "commands 1/2",
-   "started": "2026-10-17T12:05:20-04:00",
-   "elapsed": 30699,
-   "done": 4360,
-   "total": 6000,
-   "unit": "lines",
-   "ratePerHour": 1554.4,
-   "eta": "2026-10-17T21:40:17-04:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": 23,
-   "paused": false,
-   "dataUpdated": "2026-10-17T20:36:39-04:00",
-   "memGb": 8.55,
-   "live": {
-    "played": 4360,
-    "engine_errors": 23,
-    "cards": 0,
-    "elapsed_s": 30679,
-    "gzp": 0,
-    "gzs": 0,
-    "peak_worker_rss_gb": 1.51,
-    "pj.games": 0,
-    "pj.games_per_h": 0,
-    "pressure_events": 6,
-    "qwriters": 0,
-    "strict": 0,
-    "timeouts": 0,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "played",
-    "engine_errors"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-17T12:11:01-04:00",
-     "kind": "playing",
-     "workers": 3,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-17T12:31:14-04:00",
-     "kind": "play-ended",
-     "workers": 3,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-17T12:31:50-04:00",
-     "kind": "playing",
-     "workers": 3,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-17T12:46:15-04:00",
-     "kind": "play-ended",
-     "workers": 3,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-17T12:58:14-04:00",
-     "kind": "playing",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-17T13:22:58-04:00",
-     "kind": "play-ended",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J141-run1"
-  }
- ],
- "queue": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Move atlas: random play vs Forge play, one deck pair",
    "publicEst": "~4 h",
    "id": "J142",
    "title": "The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule",
-   "cpu": "heavy",
-   "est": "~4 h on 7 workers at the smoke's loaded per-worker rates (D451): phase A 10,000 games x 5.5 s / 7 = 2.2 h; phase B 15 decisions, 37 options x 240 branches = 8,880 branch games x 3.07 s / 7 = 1.1 h (replays and leak checks included); then the checks in one process, ~40 min (rows of 18,880 games, ~38,000 frame logs through check-redaction at ~46 ms each); plus ~10 min of pilot. Disk ~3.5 GB (a phase A game 234 KB, a branch 136 KB) in the clone's var/"
-  }
- ],
- "waiting": [],
- "finished": [
+   "status": "failed",
+   "finished": "2026-10-19T06:33:46-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "prepare: step prepare exited 128 after 7 retries over 10 min: git could not reach the remote (fatal: could not read Username for 'https://github.com': No such device or address)"
+  },
+  {
+   "publicTitle": "Deck census pilot slice: Forge AI against search AI on the same games",
+   "publicEst": "~7-8 h",
+   "id": "J141",
+   "title": "The pilot slice -- search-v2 as the deck census's pilot: 2,000 of J140's games (500 a band, stratified by the two decks' colour counts, slice seed 1411) replayed with search-v2 on both sides (arm S, 2,000 games) and Forge against search-v2 with sides swapped (arm M, 4,000 games), census-play --replay, numbers only; five pre-registered reads (win rate by colour under each pilot, the card-flow coefficient under each, per-card ratings and their rank correlation, search's edge by deck profile, search's own counters), no verdict",
+   "status": "done",
+   "finished": "2026-10-19T06:23:17-04:00",
+   "headline": "played 6000 · engine_errors 25 · pj.read1.byMainColour.U.diff.est -0.006 · pj.read2.diff.beta -0.416 · pj.read3.spearman.shrunk.rho 0.615 · pj.read4.all.edge.est 0.589 · pj.read5.ss.msPerDecision 769.158",
+   "numbers": {
+    "played": 6000,
+    "engine_errors": 25,
+    "pj.read1.byMainColour.U.diff.est": -0.0063,
+    "pj.read2.diff.beta": -0.4156,
+    "pj.read3.spearman.shrunk.rho": 0.6145,
+    "pj.read4.all.edge.est": 0.5887,
+    "pj.read5.ss.msPerDecision": 769.1584
+   }
+  },
   {
    "publicTitle": "Library deck census night 1: random decks across the colour spectrum",
    "publicEst": "~7-9 h",
@@ -914,41 +850,11 @@
    "numbers": {
     "written": 1
    }
-  },
-  {
-   "publicTitle": "Archive nights 1 and 2",
-   "publicEst": "~6 h",
-   "id": "J070",
-   "title": "Move queue nights 1 and 2 to the cold drive: one verified tar.zst a key folder plus each night's quarantine folder, on /mnt/e/forgecoach-archive, then free the hot disk (D378)",
-   "status": "failed",
-   "finished": "2026-10-06T04:59:58-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot: step pilot1 exited 3"
-  },
-  {
-   "publicTitle": "Regret gate scoring v2",
-   "publicEst": "~20 min",
-   "id": "J081",
-   "title": "Evaluator gate 2 on v2 (D354): rank J050's set with evaluator v2 at the live horizon and score it against J050's truth tables, no new truth",
-   "status": "done",
-   "finished": "2026-10-06T04:59:00-04:00",
-   "headline": "g2.scored 291 · g2.regretHand 0.021 · g2.regretEval 0.022 · g2.diffHandMinusEval_estimate -0.001 · g2.diffHandMinusEval_lo -0.006 · g2.diffHandMinusEval_hi 0.005 · power.realisedMde 0.008 · g2.pass 0",
-   "numbers": {
-    "g2.scored": 291,
-    "g2.regretHand": 0.020838213575982197,
-    "g2.regretEval": 0.02172763392156204,
-    "g2.diffHandMinusEval_estimate": -0.000889420345579845,
-    "g2.diffHandMinusEval_lo": -0.006280462747258762,
-    "g2.diffHandMinusEval_hi": 0.004725781434777197,
-    "power.realisedMde": 0.007738467264903555,
-    "g2.pass": 0
-   }
   }
  ],
  "runner": {
   "commit": "10896b8e",
-  "started": "2026-10-15T21:58:11-04:00",
+  "started": "2026-10-19T16:16:27-04:00",
   "dryRun": false
  }
 }

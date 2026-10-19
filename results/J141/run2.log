@@ -1,0 +1,82 @@
+==== J141 run2 started 2026-10-19T06:23:07-04:00 in unit lab-J141-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"games": 2000, "integrity": {"ss": {"rows": 2000, "missing": 0, "idMismatch": 0, "firstMismatch": 0, "errorsTimeouts": 13}, "ps": {"rows": 2000, "missing": 0, "idMismatch": 0, "firstMismatch": 0, "errorsTimeouts": 8}, "sp": {"rows": 2000, "missing": 0, "idMismatch": 0, "firstMismatch": 0, "errorsTimeouts": 4}}, "read2": {"bands": ["pauper", "peasant", "legacy", "powered"], "ff": {"n": 3996, "beta": -2.7449, "lo": -4.903, "hi": -0.7461}, "ss": {"n": 3970, "beta": -3.1605, "lo": -5.21, "hi": -1.2527}, "diff": {"beta": -0.4156, "lo": -2.5078, "hi": 1.5858}, "censusFF": {"n": 159876, "decks": 10000, "beta": -2.6075, "lo": -3.0577, "hi": -2.1908}}, "spearman": {"shrunk": {"rho": 0.6145, "lo": 0.4858, "hi": 0.609}, "raw": {"rho": 0.6129, "lo": 0.4848, "hi": 0.6042}, "swapReference": {"median": 0.6203, "lo": 0.5923, "hi": 0.6456, "swaps": 200}}, "counters": {"ss": {"seats": 3974, "searched": 79253}, "ps": {"seats": 1992, "searched": 40576}, "sp": {"seats": 1996, "searched": 40586}}}
+# J141: the pilot slice -- Forge against search-v2 on the same census games
+
+2000 slice games, 4000 deck-games, 3212 decks. Every interval is a deck-clustered percentile bootstrap (1000 replicates, seed 1411). No verdict: any difference is a candidate until it holds on a fresh slice (D447 point 9). The decks are random draws from a band pool, so every rate is "in a random deck of this makeup", not in a built deck.
+
+## Integrity
+
+| arm | rows | expected | missing | id mismatch | first mismatch / compared | policy mismatch | counters missing | engine errors | timeouts | draws |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ss | 2000 | 2000 | 0 | 0 | 0 / 1987 | 0 | 0 | 13 | 0 | 2 |
+| ps | 2000 | 2000 | 0 | 0 | 0 / 1992 | 0 | 0 | 8 | 0 | 2 |
+| sp | 2000 | 2000 | 0 | 0 | 0 / 1996 | 0 | 0 | 4 | 0 | 1 |
+
+## Read 1: win rate by colour, Forge vs Forge (J140) against search vs search (arm S)
+
+| main colour | deck-games | FF | 95% | SS | 95% | SS − FF (paired) | 95% |
+|---|---|---|---|---|---|---|---|
+| W | 792 | 0.519 | 0.488–0.553 | 0.544 | 0.510–0.583 | 0.025 | -0.011–0.060 |
+| U | 795 | 0.433 | 0.395–0.467 | 0.425 | 0.390–0.464 | -0.006 | -0.044–0.029 |
+| B | 868 | 0.487 | 0.453–0.521 | 0.453 | 0.420–0.485 | -0.033 | -0.069–0.000 |
+| R | 762 | 0.531 | 0.496–0.566 | 0.545 | 0.510–0.579 | 0.013 | -0.021–0.049 |
+| G | 779 | 0.533 | 0.497–0.570 | 0.541 | 0.501–0.576 | 0.006 | -0.035–0.044 |
+
+| colours with 3+ spells | deck-games | FF | 95% | SS | 95% | SS − FF (paired) | 95% |
+|---|---|---|---|---|---|---|---|
+| 1 | 1338 | 0.586 | 0.559–0.612 | 0.578 | 0.552–0.605 | -0.010 | -0.036–0.017 |
+| 2 | 674 | 0.540 | 0.501–0.579 | 0.509 | 0.469–0.549 | -0.032 | -0.074–0.009 |
+| 3 | 657 | 0.476 | 0.439–0.514 | 0.485 | 0.447–0.526 | 0.011 | -0.032–0.050 |
+| 4 | 1059 | 0.411 | 0.383–0.442 | 0.429 | 0.401–0.459 | 0.019 | -0.011–0.050 |
+| 5 | 268 | 0.381 | 0.326–0.441 | 0.408 | 0.351–0.468 | 0.026 | -0.032–0.078 |
+
+| has the colour (any pip) | deck-games | FF | 95% | SS | 95% | SS − FF (paired) | 95% |
+|---|---|---|---|---|---|---|---|
+| W | 2330 | 0.464 | 0.444–0.484 | 0.474 | 0.454–0.496 | 0.011 | -0.009–0.032 |
+| U | 2326 | 0.440 | 0.419–0.462 | 0.448 | 0.428–0.469 | 0.009 | -0.012–0.031 |
+| B | 2367 | 0.456 | 0.437–0.477 | 0.460 | 0.442–0.481 | 0.005 | -0.016–0.025 |
+| R | 2327 | 0.474 | 0.455–0.494 | 0.477 | 0.456–0.498 | 0.003 | -0.018–0.023 |
+| G | 2377 | 0.469 | 0.449–0.490 | 0.482 | 0.460–0.503 | 0.013 | -0.009–0.036 |
+
+## Read 2: the card-flow coefficient (points of win rate per card-flow card, colours held fixed)
+
+Bands entered: pauper, peasant, legacy, powered (a band enters when 50 or more of its slice deck-games hold 1+ card-flow cards).
+
+| pilot | deck-games | β | 95% |
+|---|---|---|---|
+| Forge (slice) | 3996 | -2.74 | -4.90 – -0.75 |
+| search (slice) | 3970 | -3.16 | -5.21 – -1.25 |
+| Forge (all of J140) | 159876 | -2.61 | -3.06 – -2.19 |
+| search − Forge (slice, paired) | | -0.42 | -2.51 – 1.59 |
+
+## Read 3: cards
+
+4129 band-and-card rows, 2103 with min(decisive slice deck-games under Forge, under search) >= 20.
+Spearman, shrunk ratings: 0.615 [0.486, 0.609]; raw: 0.613 [0.485, 0.604]. The swap reference (the pilots exchanged at random, 200 times): median 0.620 [0.592, 0.646].
+
+| card colour | cards | mean move (SS − FF, shrunk) | 95% |
+|---|---|---|---|
+| W | 268 | 0.006 | -0.013–0.025 |
+| U | 271 | 0.001 | -0.019–0.021 |
+| B | 278 | -0.014 | -0.035–0.006 |
+| R | 266 | -0.001 | -0.021–0.018 |
+| G | 282 | 0.003 | -0.018–0.025 |
+| M | 522 | 0.009 | -0.006–0.024 |
+| C | 216 | -0.003 | -0.015–0.011 |
+| flow | 13 | -0.015 | -0.054–0.021 |
+
+**The 20 that rise most under search**
+
+| band | card | colour | FF n | FF shrunk | SS n | SS shrunk | move | paired diff | 95% |
+|---|---|---|---|---|---|---|---|---|---|
+| peasant | Untamed Wilds | G | 53 | 0.397 | 53 | 0.562 | 0.164 | 0.226 | 0.078–0.360 |
+| pauper | Mirkwood Nurturer | UG | 35 | 0.345 | 35 | 0.509 | 0.164 | 0.257 | 0.079–0.439 |
+| powered | Oracle of Mul Daya | G | 31 | 0.451 | 31 | 0.608 | 0.157 | 0.258 | 0.069–0.444 |
+| peasant | Greta, Sweettooth Scourge | BG | 41 | 0.377 | 41 | 0.525 | 0.147 | 0.220 | 0.048–0.395 |
+| peasant | Talisman of Dominance | UB | 56 | 0.382 | 54 | 0.527 | 0.145 | 0.204 | 0.068–0.340 |
+| legacy | Concealing Curtains | B | 51 | 0.437 | 51 | 0.578 | 0.141 | 0.196 | 0.049–0.360 |
+| peasant | Hunter's Talent | G | 52 | 0.458 | 52 | 0.597 | 0.139 | 0.192 | 0.050–0.348 |
+| legacy | Godless Shrine | WB | 60 | 0.375 | 60 | 0.512 | 0.138 | 0.183 | 0.054–0.318 |
+| legacy | Atraxa, Grand Unifier | WUBG | 32 | 0.404 | 32 | 0.538 | 0.135 | 0.219 | 0.024–0.439 |
+| peasant | Dockside Chef | B | 32 | 0.365 | 32 | 0.500 | 0.135 | 0.219 | 0.037–0.400 |
+| powered | Krenko, Tin Street Kingpin | R | 47 | 0.492 | 47 | 0.627 | 0.134 | 0.192 | 0.039–0.353 |
