@@ -1,0 +1,12 @@
+# cubes/synergy-fic-notes.tsv — notes for the Synergy x Final Fantasy evolve (cubes/synergy-fic-pool.tsv), passed with
+# --notes so the cube's own notes file stays Justin's verdicts from real games. card<TAB>verdict<TAB>note.
+# These `try` lines are a suggestion from reading the cards (2026-10-10), not from games: the seven counters
+# cards that looked strongest for a 40-card deck. `try` adds a card when a cut makes room; it never forces a cut.
+card	verdict	note
+Auron, Venerated Guardian	try	Counter Blitz (FIC): a strong counters card on paper
+Summon: Ixion	try	Counter Blitz (FIC): a strong counters card on paper
+Kimahri, Valiant Guardian	try	Counter Blitz (FIC): a strong counters card on paper
+Tromell, Seymour's Butler	try	Counter Blitz (FIC): a strong counters card on paper
+Maester Seymour	try	Counter Blitz (FIC): a strong counters card on paper
+Shelinda, Yevon Acolyte	try	Counter Blitz (FIC): a strong counters card on paper
+Wakka, Devoted Guardian	try	Counter Blitz (FIC): a strong counters card on paper

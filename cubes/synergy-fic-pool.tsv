@@ -1,0 +1,45 @@
+# cubes/synergy-fic-pool.tsv — the seed pool for an evolve of the Synergy Cube with the counters cards of
+# Justin's Final Fantasy X Commander deck, Counter Blitz (Final Fantasy Commander, FIC, 2025): every one of its
+# nonland cards of at most two colours (evolve adds no three-colour card) that is a +1/+1 counters card or
+# removal, less the three the cube already has (Hardened Scales, Tireless Tracker, Walking Ballista).
+# theme_tags use the cube's own codes; sources: fic = new in Final Fantasy, fic-reprint = reprinted there.
+# forge_supported and forge_ai_flag are placeholders: the engine's own facts replace them at the run (enrichPool),
+# so a card Forge 2.0.14 lacks is never added.
+name	colour_identity	type	mana_value	theme_tags	sources	forge_supported	forge_ai_flag
+Lord Jyscal Guado	W	Legendary Creature	2	CTR ART	fic	yes	none
+Protection Magic	W	Instant	2	CTR	fic	yes	none
+Summoner's Sending	W	Enchantment	2	GY TOK CTR	fic	yes	none
+Gatta and Luzzu	W	Legendary Creature	3	CTR	fic	yes	none
+Summon: Ixion	W	Enchantment Creature	3	CTR LIFE removal	fic	yes	none
+Auron, Venerated Guardian	W	Legendary Creature	4	CTR removal	fic	yes	none
+Chocobo Knights	W	Creature	4	CTR	fic	yes	none
+Summon: Yojimbo	W	Enchantment Creature	4	removal ART	fic	yes	none
+O'aka, Traveling Merchant	U	Legendary Creature	2	CTR	fic	yes	none
+Blitzball Stadium	U	Artifact	1	CTR ART	fic	yes	none
+Lulu, Stern Guardian	U	Legendary Creature	3	CTR	fic	yes	none
+Rikku, Resourceful Guardian	U	Legendary Creature	3	CTR	fic	yes	none
+Summon: Valefor	U	Enchantment Creature	5	removal	fic	yes	none
+Sphere Grid	G	Enchantment	2	CTR	fic	yes	none
+Maester Seymour	G	Legendary Creature	3	CTR	fic	yes	none
+Tromell, Seymour's Butler	G	Legendary Creature	3	CTR ETB	fic	yes	none
+Yuna's Whistle	G	Instant	3	CTR	fic	yes	none
+Yuna's Decision	G	Sorcery	4	SAC GY	fic	yes	none
+Summon: Magus Sisters	G	Enchantment Creature	5	CTR LIFE removal	fic	yes	none
+Shelinda, Yevon Acolyte	WG	Legendary Creature	2	CTR LIFE ETB	fic	yes	none
+Wakka, Devoted Guardian	WG	Legendary Creature	4	CTR	fic	yes	none
+Kimahri, Valiant Guardian	UG	Legendary Creature	4	CTR removal	fic	yes	none
+Sin, Unending Cataclysm	UG	Legendary Creature	7	CTR	fic	yes	none
+Grateful Apparition	W	Creature	2	CTR	fic-reprint	yes	none
+Fathom Mage	UG	Creature	4	CTR	fic-reprint	yes	none
+Duskshell Crawler	G	Creature	2	CTR ETB	fic-reprint	yes	none
+Generous Patron	G	Creature	3	CTR ETB	fic-reprint	yes	none
+Incubation Druid	G	Creature	2	CTR ramp	fic-reprint	yes	none
+Gyre Sage	G	Creature	2	CTR ramp	fic-reprint	yes	none
+Forgotten Ancient	G	Creature	4	CTR SPL	fic-reprint	yes	none
+Scholar of New Horizons	W	Creature	2	CTR LND	fic-reprint	yes	none
+Together Forever	W	Enchantment	2	CTR	fic-reprint	yes	none
+Resourceful Defense	W	Enchantment	3	CTR	fic-reprint	yes	none
+Inspiring Call	G	Instant	3	CTR	fic-reprint	yes	none
+Rampant Rejuvenator	G	Creature	4	CTR LND SAC	fic-reprint	yes	none
+Chasm Skulker	U	Creature	3	CTR TOK	fic-reprint	yes	none
+Bred for the Hunt	UG	Enchantment	3	CTR	fic-reprint	yes	none
