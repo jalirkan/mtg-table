@@ -38,8 +38,12 @@
 //     to files; the analysis runs HiddenPool.checkLive on every request.  With
 //     no pool the opponent's hidden cards are basic lands, and the answer's
 //     `knowledge.opponentModel` says "basic-lands".
-//   - A game between two people (`friend-...`, D402/D407) is refused: a seat's
-//     log there holds that player's hand, and this door is the host's.
+//   - A game between two people (`friend-...`, D402/D407) is refused on this
+//     door: a seat's log there holds that player's hand, and this door is the
+//     host's.  D453: the draft room asks for it instead (POST /room/<id>/hint,
+//     tools/draft-room.mjs), behind that seat's token, for that seat's own log
+//     only -- `post(q, { room: true })`, an option the helper's own route never
+//     passes and a request cannot set.
 //   - One analysis at a time (one booted engine, `coach-grade.sh serve`, started
 //     on the first request, at low priority -- nice 10 -- so the live game is
 //     never slowed; stopped after `idleMs` without a request).  A newer request
@@ -421,13 +425,16 @@ export function createHintRunner(opts) {
     describe() {
       return available() ? `/hint on: tools/coach-grade.sh serve, started on the first hint (now ${engine})` : '/hint off: the bridge is not built (./bridge/build.sh)';
     },
-    /** POST /hint -> Promise<{status, body}>. */
-    post(q) {
+    /**
+     * POST /hint -> Promise<{status, body}>.  `opts` is the helper's own, never a request's: { room } (D453:
+     * true only from the draft room, which names the seat's own log of the room's game itself).
+     */
+    post(q, opts = {}) {
       if (!available()) return Promise.resolve(err(503, 'the search hint is off here: the bridge is not built (./bridge/build.sh)'));
       const { req, problems } = validateHint(q);
       if (!req) return Promise.resolve({ status: 400, body: { ok: false, type: 'error', message: problems[0], problems } });
-      if (FRIEND_GAME.test(req.gameId)) {
-        return Promise.resolve(err(403, 'a game between two people has no search hint: its log holds one player\'s hand, and this computer is the host\'s'));
+      if (FRIEND_GAME.test(req.gameId) && opts.room !== true) {
+        return Promise.resolve(err(403, 'a game between two people has no search hint on this door: its log holds one player\'s hand, and this door is the host\'s -- each seat asks through the draft room (POST /room/<id>/hint, D453)'));
       }
       if (!GAME_ID.test(req.gameId)) return Promise.resolve(err(400, 'bad game id'));
       const key = req.gameId;

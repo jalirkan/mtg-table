@@ -45,7 +45,7 @@ its last pick, and 72 hours after it was made.
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
 | Coach helper (8643) | `POST /room/<id>/close`, `POST /room/<id>/friend-link` (D408) | The same owner's door. Only the owner closes a room or replaces the friend's link; the room listener has no such route. |
-| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `GET /room/<id>/cube` (D444), `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407), `POST /room/<id>/bug` (D411) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
+| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `GET /room/<id>/cube` (D444), `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407), `POST /room/<id>/hint` (D453), `POST /room/<id>/bug` (D411) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
 Tokens are 128 bits (22 base64url characters). The server stores only their
@@ -338,6 +338,22 @@ this machine.
   so it is never served to the other seat — and the coach helper's own `/review`
   (8643) never serves a game between two people at all (`POST` 403, `GET` 404,
   left out of the list).
+
+### Each player's own search hint (D453)
+
+- `POST /room/<id>/hint` `{"stateSeq": n, "inputSeq"?: n, "budgetMs"?: 1500-6000}`
+  → the coach helper's `POST /hint` answer (`docs/search-hint.md`) for **this
+  seat's** decision in the game the room is playing now, read from this seat's
+  own log only (`var/games/friend-<matchId>-seat<N>/`). The room names the game
+  and the seat; the opponent's hidden cards are modelled from the cube minus
+  this seat's picks, the other seat's picks first. `409 {code: "no-game"}` when
+  no game is being played, `409 {code: "game"}` for a `gameId` that is not the
+  room's game, `403 {code: "seat"}` for another seat, `400` for `oppPool` /
+  `oppKnown` or another field, `503 {code: "off"}` when the room's computer has
+  no hint, `429 {code: "slow"}` past 30 a minute (a burst of 10) per seat; the
+  body at most 1 KB. The state's `"hint": 1|0` says whether it can answer here
+  (absent before D453: off). `docs/search-hint.md`'s *At a table of two* is the
+  long form.
 
 ## The tunnel (Phase 4, D405, D408)
 
