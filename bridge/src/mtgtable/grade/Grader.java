@@ -43,6 +43,7 @@ import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.trigger.Trigger;
 import mtgtable.Json;
+import mtgtable.ai.LineRecorder;
 import mtgtable.ai.SearchPolicy;
 
 /**
@@ -124,6 +125,12 @@ public final class Grader {
          * triage, D353: a cheap look must stay cheap).
          */
         public int maxOptions;
+        /**
+         * D454, the search hint: replay the best option once more (round 0's
+         * seed and base) recording what Forge's AI answered inside it, and
+         * write it as {@code line} ({@link HintLine}).  The live analysis only.
+         */
+        public boolean line;
     }
 
     /** One option: its bench token, and how to set it up on a rebuilt base. */
@@ -247,6 +254,9 @@ public final class Grader {
             j.n("status", "trivial").n("error", opts.size() + " option(s): nothing to grade");
             writeNotes(j);
             writeOptions(j, opts, null, null);
+            if (set.line && opts.size() == 1) {
+                writeLine(j, rb, b0, opts.get(0));
+            }
             return j.n("ms", (System.nanoTime() - t0) / 1_000_000L).end().done();
         }
         // The rounds: one rebuilt base per round (and per option with tweaks of its own).
@@ -313,6 +323,9 @@ public final class Grader {
         }
         writeNotes(j);
         writeOptions(j, opts, rows, res);
+        if (set.line && bestIdx >= 0) {
+            writeLine(j, rb, first, opts.get(bestIdx));
+        }
         j.key("config").obj().n("seed", set.seed).n("target", set.race.target).n("initial", set.race.initial)
                 .n("batch", set.race.batch).n("zElim", set.race.zElim).n("race", set.race.race)
                 .n("horizon", set.horizon).n("maxTurns", set.maxTurns).n("yardstick", "forge-default")
@@ -328,6 +341,47 @@ public final class Grader {
         }
         j.end();
         return j.n("ms", ms).n("msPerPlayout", res.playouts == 0 ? 0 : ms / res.playouts).end().done();
+    }
+
+    /** How long the line's replay may take, ms (it stops at the end of the turn, usually far sooner). */
+    static final long LINE_MS = 2000;
+
+    /**
+     * D454: the line of option {@code o} -- one more playout of it on round
+     * 0's seed and base, Forge's AI answering every sub-decision as it did in
+     * the race, recorded until the seat hands priority back -- as
+     * {@code line}, {@code lineFor} (the option's token) and {@code lineStop};
+     * or {@code lineError} when the replay failed (the hint then has no line).
+     */
+    private void writeLine(final Json.JsonOut j, final Rebuild rb, final Rebuild.Base first, final Opt o) {
+        final long seed0 = GradeMath.roundSeed(set.seed, key, 0);
+        final SearchPolicy.Sink quiet = new SearchPolicy.Sink() {
+            @Override
+            public void add(final String k, final int n) {
+                // the line's replay is not part of the grade's counters
+            }
+
+            @Override
+            public void event(final String text) {
+                // nothing
+            }
+        };
+        try {
+            final Rebuild.Base base = o.tweaks == null ? first : rb.build(seed0, o.tweaks);
+            final SearchPolicy.Cand cand = o.cand.apply(base);
+            final LineRecorder rec = new LineRecorder(HintLine.MAX_STEPS * 2, HintLine.MAX_THEN);
+            SearchPolicy.playout(base.game, base.viewer, cand, seed0, new SearchPolicy.Limits(
+                    System.nanoTime() + LINE_MS * 1_000_000L, 0, set.maxSteps, 1.0, false, false, false, false, null, null, rec),
+                    quiet, false, null);
+            final Map<Integer, Integer> wireOfId = new HashMap<>();
+            for (final Map.Entry<Card, Integer> e : base.wireOf.entrySet()) {
+                wireOfId.put(e.getKey().getId(), e.getValue());
+            }
+            HintLine.write(j, HintLine.render(rec.steps(), wireOfId, wireCards));
+            j.n("lineFor", o.token).n("lineStop", rec.stop());
+        } catch (final RuntimeException | StackOverflowError e) {
+            j.n("lineError", String.valueOf(e.getClass().getSimpleName()));
+        }
     }
 
     private void writeNotes(final Json.JsonOut j) {

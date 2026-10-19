@@ -18,7 +18,8 @@
 // never stronger than the intervals (best / tie / close / worse; clear only
 // when every other option is worse; the runner-up the best tie or close call);
 // the request the engine gets (type auto, the frame count, the pool a file,
-// the known picks, the budget); a game between two people refused; the seat;
+// the known picks, the budget); the line (D454: only the pick's, every name
+// one the moment shows this seat, a planted hidden name withheld); a game between two people refused; the seat;
 // supersede (waiting and running); the queue and 429; refused -> 403; a dead
 // engine -> 500 and a restart; the default spawn under nice; and the helper's
 // route (/health, POST, 405, Origin, --no-hint).
@@ -30,7 +31,7 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join, resolve } from 'node:path';
-import { createHintRunner, hintOf, momentOf, optionVerdict, validateHint } from './hint-runner.mjs';
+import { checkLine, createHintRunner, hintOf, momentOf, optionVerdict, validateHint, visibleNames } from './hint-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
 
 const REL = 'var/hint-runner-selftest';
@@ -51,7 +52,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const header = (id, seat = 0) => JSON.stringify({ v: 1, kind: 'session', gameId: id, seat, decks: [{ player: seat, path: 'decks/x.dck' }] });
 const frames = [
   { v: 1, seq: 1, dir: 's2c', type: 'hello_ok', body: { gameId: 'x', you: 0 } },
-  { v: 1, seq: 5, dir: 's2c', type: 'state', body: { turn: 3, phase: 'MAIN1' } },
+  { v: 1, seq: 5, dir: 's2c', type: 'state', body: { turn: 3, phase: 'MAIN1', players: [
+    { id: 0, zones: { hand: { count: 1, cards: [{ id: 9, zone: 'hand', name: 'Reanimate' }] },
+      graveyard: { count: 1, cards: [{ id: 12, zone: 'graveyard', name: 'Griselbrand' }] },
+      battlefield: { count: 2, cards: [{ id: 13, zone: 'battlefield', name: 'Memnite' }, { id: 14, zone: 'battlefield', name: 'Crossbones, Malicious Mercenary' }] } } },
+    { id: 1, zones: { hand: { count: 1, cards: [{ id: 20, zone: 'hand', owner: 1, controller: 1, hidden: true }] },
+      battlefield: { count: 1, cards: [{ id: 21, zone: 'battlefield', faceDown: true, name: '', setCode: '???' }] } } }] } },
   { v: 1, seq: 6, dir: 's2c', type: 'input', body: { prompt: 'Priority: You' } },
   { v: 1, seq: 2, dir: 'c2s', type: 'act', body: { action: 'clickCard', cardId: 9 } },
 ].map((f) => JSON.stringify(f));
@@ -59,7 +65,8 @@ const game = (id, seat = 0) => {
   mkdirSync(join(DIR, 'games', id), { recursive: true });
   writeFileSync(join(DIR, 'games', id, 'frames.jsonl'), `${header(id, seat)}\n${frames.join('\n')}\n`);
 };
-for (const id of ['g1', 'g2', 'g3', 'slow-1', 'slow-2', 'slow-3', 'refuse-1', 'trivial-1', 'none-1', 'crash-1', 'friend-m1234567890123']) game(id);
+for (const id of ['g1', 'g2', 'g3', 'slow-1', 'slow-2', 'slow-3', 'refuse-1', 'trivial-1', 'none-1', 'crash-1', 'friend-m1234567890123',
+  'leak-1', 'leakid-1', 'other-1']) game(id);
 game('seat1', 1);
 
 // --- the fake coach-grade.sh serve ----------------------------------------------------------------
@@ -86,8 +93,15 @@ rl.on('line', async (line) => {
   let a;
   if (id.startsWith('refuse-')) a = { id: q.id, v: 1, status: 'refused', error: 'live analysis does not take the opponent deck list' };
   else if (id.startsWith('none-')) a = { id: q.id, v: 1, status: 'unsupported', error: 'no decision the analysis grades is open here', frame: q.frame };
-  else if (id.startsWith('trivial-')) a = { ...base, status: 'trivial', options: [{ token: 'pass', label: 'pass', forge: true }] };
+  else if (id.startsWith('trivial-')) a = { ...base, status: 'trivial', options: [{ token: 'pass', label: 'pass', forge: true }], line: [], lineFor: 'pass', lineStop: 'passed' };
   else a = { ...base, status: 'ok', measure: 'leaf', rounds: 6, playouts: 30, best: 'cast:9', forgeChoice: 'pass', landFirst: 4, nFrames,
+    lineFor: id.startsWith('other-') ? 'pass' : 'cast:9', lineStop: 'passed',
+    line: [{ kind: 'target', text: 'Reanimate → Griselbrand', ids: [9, 12] }, { kind: 'sacrifice', text: 'sacrifice → Crossbones, Malicious Mercenary', ids: [14] },
+      { kind: 'x', text: 'X = 3', ids: [] },
+      // PLANTED (leak-1): a name the seat was never shown, in the text; (leakid-1) behind the id of a hidden stub
+      ...(id.startsWith('leak-') ? [{ kind: 'target', text: 'Reanimate → Lightning Bolt', ids: [9] }] : []),
+      ...(id.startsWith('leakid-') ? [{ kind: 'choose', text: 'choose → Lightning Bolt', ids: [20] }] : []),
+      { kind: 'then', text: 'then equip an unseen card → Memnite', ids: [13] }],
     options: [opt('pass', 0.50, 0.04, 0.01, 0.07, false, 8, { forge: true }), opt('cast:9', 0.54, 0, 0, 0.02, true),
       opt('cast:10', 0.52, 0.02, -0.01, 0.05, false), { token: 'cast:11', label: 'x', forge: false, alias: 'cast:10', n: 8, winRate: 0.52 }] };
   console.log(JSON.stringify(a));
@@ -155,6 +169,35 @@ check(gt.pick === 'pass' && gt.strength === 'only', 'one legal option: picked, s
 const gu = hintOf({ status: 'unsupported', error: 'no decision' }, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000 });
 check(gu.status === 'unsupported' && gu.pick === undefined && /no decision/.test(gu.message), 'unsupported: no pick, the reason');
 
+// 3b. The line (D454): only names the moment shows this seat; a planted hidden name fails it.
+console.log('the line');
+const ST = JSON.parse(frames[1]).body;
+const vis = visibleNames(ST);
+check(vis.get(9) === 'Reanimate' && vis.get(14) === 'Crossbones, Malicious Mercenary' && !vis.has(20) && !vis.has(21),
+  'the visible names: the seat\'s cards and public ones; never a hidden stub or a face-down card without its face');
+const okLine = [{ kind: 'target', text: 'Reanimate → Griselbrand', ids: [9, 12] }, { kind: 'sacrifice', text: 'sacrifice → Memnite, an unseen card', ids: [13] },
+  { kind: 'x', text: 'X = 2', ids: [] }, { kind: 'choose', text: 'choose → Crossbones, Malicious Mercenary, a token', ids: [14] },
+  { kind: 'trigger', text: 'Memnite trigger → the opponent', ids: [13] }, { kind: 'mode', text: 'mode → Destroy target artifact.', ids: [] },
+  { kind: 'then', text: 'then cast Reanimate', ids: [9] }, { kind: 'number', text: 'number = 4', ids: [] }];
+const cl = checkLine(okLine, ST);
+check(cl.ok && cl.line.length === 8, `every shape of step passes when it names only visible cards (${cl.why ?? ''})`);
+const bad = (step) => checkLine([step], ST);
+check(!bad({ kind: 'target', text: 'Reanimate → Lightning Bolt', ids: [9] }).ok, 'PLANTED: a hidden card\'s name in the text fails the line');
+check(!bad({ kind: 'choose', text: 'choose → Lightning Bolt', ids: [20] }).ok, 'PLANTED: a name behind a hidden stub\'s id fails the line');
+check(!bad({ kind: 'choose', text: 'choose → an unseen card', ids: [21] }).ok, 'a face-down card\'s id fails the line (it is not shown by name)');
+check(!bad({ kind: 'target', text: 'Reanimate → Griselbrand', ids: [9] }).ok && !bad({ kind: 'target', text: 'Reanimate → Memnite', ids: [9, 12] }).ok,
+  'a visible name its ids do not list, or an id its text does not name: fails');
+check(!bad({ kind: 'mode', text: 'mode → Reanimate', ids: [9] }).ok && !bad({ kind: 'whatever', text: 'X = 1', ids: [] }).ok
+  && !bad({ kind: 'x', text: 'X = three', ids: [] }).ok, 'a mode lists no ids; an unknown kind or shape fails');
+check(!checkLine(Array.from({ length: 9 }, () => ({ kind: 'x', text: 'X = 1', ids: [] })), ST).ok, 'more than 8 steps: fails');
+const gl = { ...g0, line: okLine.slice(0, 2), lineFor: 'attack:1,2', lineStop: 'applied' };
+const hl = hintOf(gl, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000, state: ST });
+check(hl.line?.length === 2 && hl.lineStop === 'applied' && hl.line[0].text === 'Reanimate → Griselbrand', 'the pick\'s line rides on the answer');
+check(hintOf({ ...gl, lineFor: 'attack:none' }, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000, state: ST }).line === undefined,
+  'a line for another option than the pick: withheld');
+check(hintOf({ ...gl, line: [{ kind: 'target', text: 'Reanimate → Lightning Bolt', ids: [9] }] }, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000, state: ST }).line === undefined,
+  'PLANTED through hintOf: the line is withheld, and lineWithheld names no card');
+
 // 4. The runner against the fake engine.
 console.log('the runner');
 const hr = mk();
@@ -174,6 +217,15 @@ check(readFileSync(join(DIR, 'work', 'pool.txt'), 'utf8').split('\n')[0] === '2 
 check(hr.health().hintEngine === 'ready', 'the engine stays up for the next hint');
 const r2 = await hr.post({ gameId: 'g1', stateSeq: 5 });
 check(r2.status === 200 && r2.body.knowledge.opponentModel === 'basic-lands', 'no pool: basic lands, said in the answer');
+check(r1.body.line?.length === 4 && r1.body.line[1].text === 'sacrifice → Crossbones, Malicious Mercenary' && r1.body.lineStop === 'passed',
+  'the engine\'s line for the pick rides on the answer, checked against the moment in the bridge\'s own log');
+for (const id of ['leak-1', 'leakid-1']) {
+  const lk = await hr.post({ gameId: id, stateSeq: 5 });
+  check(lk.status === 200 && lk.body.pick === 'cast:9' && lk.body.line === undefined && typeof lk.body.lineWithheld === 'string'
+    && !JSON.stringify(lk.body).includes('Lightning Bolt'), `PLANTED (${id}): a line naming a card the seat cannot see is withheld, the hint still answers, the name appears nowhere`);
+}
+const ot = await hr.post({ gameId: 'other-1', stateSeq: 5 });
+check(ot.status === 200 && ot.body.line === undefined && /not the pick/.test(ot.body.lineWithheld ?? ''), 'a line for another option: withheld');
 check((await hr.post({ gameId: 'friend-m1234567890123', stateSeq: 5 })).status === 403, 'a game between two people: 403');
 check((await hr.post({ gameId: 'nope', stateSeq: 5 })).status === 404, 'no such game: 404');
 check((await hr.post({ gameId: 'seat1', seat: 0, stateSeq: 5 })).status === 400, 'a seat other than the log\'s: 400');
@@ -185,7 +237,8 @@ check(ny.status === 409 && ny.body.code === 'not-yet' && Date.now() - t0 >= 190,
 const rf = await hr.post({ gameId: 'refuse-1', stateSeq: 5 });
 check(rf.status === 403 && rf.body.status === 'refused', 'the live guard refuses: 403 refused');
 const tv = await hr.post({ gameId: 'trivial-1', stateSeq: 5 });
-check(tv.status === 200 && tv.body.status === 'trivial' && tv.body.pick === 'pass', 'one option: trivial, picked');
+check(tv.status === 200 && tv.body.status === 'trivial' && tv.body.pick === 'pass' && Array.isArray(tv.body.line) && tv.body.line.length === 0,
+  'one option: trivial, picked; its line rides too (empty: nothing to choose)');
 const nn = await hr.post({ gameId: 'none-1', stateSeq: 5 });
 check(nn.status === 200 && nn.body.status === 'unsupported' && !nn.body.pick, 'no decision the analysis grades: unsupported');
 

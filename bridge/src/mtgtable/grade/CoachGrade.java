@@ -244,6 +244,7 @@ public final class CoachGrade {
         final Grader.Settings s = settings(g);
         s.budgetMs = g.l("budget-ms", 3000);
         s.race.minRounds = g.i("min-rounds", 2);
+        s.line = true;   // D454: the hint's answer carries the best option's line
         if (!g.v.containsKey("leaf-scale")) {
             final File fitted = new File(Config.load().root(), FITTED_SCALE);
             if (fitted.isFile()) {
@@ -885,7 +886,8 @@ public final class CoachGrade {
      * {@code analyse}'s object with the request's {@code id}.  {@code "type":
      * "auto"} (D429, the search hint) grades whatever decision is open at the
      * moment ({@link Review#liveType}), or answers {@code "status":
-     * "unsupported"} when none the analysis grades is.  Requests are
+     * "unsupported"} when none the analysis grades is.  The answer carries
+     * the best option's {@code line} (D454, {@link HintLine}).  Requests are
      * answered one at a time, in order; EOF ends the process.
      */
     static int serve(final String[] argv) throws Exception {

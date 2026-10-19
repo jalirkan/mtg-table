@@ -8,7 +8,8 @@ would take and how sure it is: "Attack with both — clearly best", or "Cast
 Shock, or cast nothing now — too close to call". It is the post-game review's
 **triage** (`docs/game-review.md`) for one moment of a game still in play,
 with the same hidden-information rule. ForgeCoach's `src/searchHint.ts` is
-built against exactly this file. Decision **D429**.
+built against exactly this file. Decision **D429**; the pick's line of
+sub-choices (what to target, sacrifice, equip …) is **D454**.
 
 ## What it runs
 
@@ -105,9 +106,52 @@ Answer, **200** (seed 42's turn-12 block from the probe below, numbers rounded, 
 | `runnerUp` | with `close`: the best of the ties and close calls (a tie first) |
 | `landFirst` | the land played first in every option (a `spell` decision with the land drop open) |
 | `forgeChoice` | what Forge's own AI would do here |
+| `line` | D454: what Forge's AI answered inside the pick — `[{kind, text, ids}]`, below; `[]` when the move asks nothing more; absent when none was recorded or it was withheld |
+| `lineStop`, `lineWithheld` | why the line ends (`passed`, `applied`, `turn`, `full`, `cut`); why a line was withheld (never a card name) |
 | `measure` | `leaf` (to the end of this turn): a short-horizon estimate, never a win rate |
 | `knowledge.opponentModel` | `pool` or `basic-lands` (never `deck`: there is no field for one) |
 | `ms`, `wallMs` | the analysis's own time, and the request's (the engine's start included on the first) |
+
+### The line (D454)
+
+"Cast Quantum Reduction" does not say on what. The pick's `line` does: the
+sub-decisions Forge's own AI answered inside that move, **reported as the
+engine's default, never graded** (the grader chooses the top-level move only;
+the target search stays off). The grader plays the pick once more on round 0's
+seed and base — the same playout the race began with — and records, from its
+forced answer until the seat hands priority back with the stack empty (an
+attack or block: until that combat's damage), what the AI answered:
+
+| `kind` | `text` | what it is |
+|---|---|---|
+| `target` | `Quantum Reduction → Peggy Carter, Secret Agent` | the spell's targets (every part of it) |
+| `x` | `X = 3` | the X it paid |
+| `sacrifice` · `discard` · `exile` · `return` · `tap` | `sacrifice → Memnite` | what a cost took, or a resolution made it sacrifice or discard |
+| `mode` | `mode → Destroy target artifact.` | a charm's chosen mode (the card script's own words; no `ids`) |
+| `choose` | `choose → Griselbrand` | a choice the resolution asked for |
+| `number` | `number = 2` | a number it chose |
+| `trigger` | `Memnite trigger → the opponent` | a trigger of the seat's and its targets |
+| `then` | `then equip S.H.I.E.L.D. Spy Kit → Quake, Agent of S.H.I.E.L.D.` | what it played next before passing (`cast`, `activate`, `equip`, `play`), at most 3 |
+
+At most 8 steps. `ids` are the wire ids of exactly the cards `text` names.
+**A card is named only when the moment's state — the bridge's own redacted log
+for this seat — shows it by name** (hard rule 8): anything else is "an unseen
+card" (a hidden card, a face-down one without its face, a card the playout drew
+or redealt, an opponent card dealt from the pool model, a card tutored from the
+library), or "a token" for one the playout made. The helper checks every line
+again before it leaves (`checkLine`: every id shown by name, the text one of the
+shapes above with only "you", "the opponent", "an unseen card" and "a token"
+besides those names); a step that fails withholds the whole line
+(`lineWithheld`) and the hint still answers.
+
+Seed 42, turn 7's MAIN2 (`fixtures/games/human-auto-42.jsonl` cut there, the
+real engine):
+
+```json
+{"status": "ok", "type": "spell", "turn": 7, "pick": "cast:5", "strength": "clear",
+ "line": [{"kind": "target", "text": "Quantum Reduction → Peggy Carter, Secret Agent", "ids": [5, 44]}],
+ "lineStop": "passed"}
+```
 
 Refusals are `{"ok": false, "type": "error", "message", "code"?}`: **400** a
 body that is not this (`problems` lists every one), **403** a game between two

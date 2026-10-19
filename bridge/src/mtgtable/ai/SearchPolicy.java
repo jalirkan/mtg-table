@@ -2419,6 +2419,21 @@ public final class SearchPolicy {
                       final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
                       final java.util.function.ToDoubleBiFunction<Game, Player> score,
                       final mtgtable.eval.PositionEvaluator evaluator) {
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, outletsUs, outletsThem, untilApplied, score, evaluator, null);
+        }
+
+        /**
+         * D454, the search hint's line: a playout that records what Forge's AI
+         * answered after the forced first answer, and stops when the recording
+         * ends ({@link LineRecorder#done}).  Null everywhere else.
+         */
+        public final LineRecorder line;
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
+                      final java.util.function.ToDoubleBiFunction<Game, Player> score,
+                      final mtgtable.eval.PositionEvaluator evaluator, final LineRecorder line) {
+            this.line = line;
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
             this.maxSteps = maxSteps;
@@ -2499,7 +2514,11 @@ public final class SearchPolicy {
             RolloutForcing rc = null;
             for (final Player p : copy.getPlayers()) {
                 if (p == aiCopy) {
-                    if (lim.outletsUs) {
+                    if (lim.line != null) {
+                        final RecordingController c = new RecordingController(copy, p, p.getLobbyPlayer(), lim.line);   // D454
+                        rc = c;
+                        p.dangerouslySetController(c);
+                    } else if (lim.outletsUs) {
                         final RolloutController.Outlets o = new RolloutController.Outlets(copy, p, p.getLobbyPlayer());
                         rc = o;
                         p.dangerouslySetController(o);
@@ -2549,6 +2568,12 @@ public final class SearchPolicy {
                 }
                 ph.mainLoopStep();
                 steps++;
+                if (lim.line != null) {
+                    lim.line.afterStep(copy, rc);   // D454: the hint's line ends where its recording does
+                    if (lim.line.done()) {
+                        break;
+                    }
+                }
             }
             final boolean capped = steps >= lim.maxSteps;
             if (capped && !lim.untilApplied) {
