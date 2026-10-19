@@ -383,7 +383,10 @@ function realUnder(root, p) {
  *            null when no engine can be started here), gameRunning (D404: matchId -> bool),
  * gameResult (D406: matchId -> {winnerSeat, draw, reason, finished} | null, the bridge's result.json),
  * reviewOf (D407: a seat log's gameId -> {state, report?, why?}: that log's automatic engine review),
- * seatLog (D407: a seat log's gameId -> its text, or null) }
+ * seatLog (D407: a seat log's gameId -> its text, or null),
+ * onDeck (D455: ({roomId, seat, cubeId, cubeHash, format, main, record}) after a seat hands in a deck or
+ *         changes its consent -- draft-decks.mjs writes the deck to its ledger only when `record` is true,
+ *         and takes it out when it turns false; never throws into the room) }
  */
 export function createRoomStore(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -494,6 +497,15 @@ export function createRoomStore(opts = {}) {
         recorded: !!g.record?.[seat], review: reviewWord(g, seat) })),
       record: { you: !!r.record[seat], default: !!r.recordDefault },
     };
+  };
+
+  /** D455: this seat's deck to the draft-deck ledger, with its consent as it stands (draft-decks.mjs). */
+  const ledger = (r, seat) => {
+    if (!opts.onDeck) return;
+    const d = r.decks[seat];
+    try {
+      opts.onDeck({ roomId: r.id, seat, cubeId: r.cubeId, cubeHash: r.cubeHash, format: 'grid', main: d ? d.main.map(([n, card]) => [n, card]) : null, record: !!r.record[seat] && !!d });
+    } catch (e) { log(`ROOM ${r.id} seat ${seat}: the draft-deck ledger refused (${e.message})`); }
   };
 
   const broadcast = (r) => {
@@ -712,6 +724,7 @@ export function createRoomStore(opts = {}) {
       r.version++;
       r.activeAt = now();
       log(`ROOM ${id} seat ${seat} handed in a deck (${c.deck.mainCount} cards)`);
+      ledger(r, seat);
       if (r.ready[0] && r.ready[1]) begin(r);
       save();
       broadcast(r);
@@ -726,6 +739,7 @@ export function createRoomStore(opts = {}) {
         r.record[seat] = value;
         r.activeAt = now();
         log(`ROOM ${id} seat ${seat} ${value ? 'agrees to' : 'opts out of'} recording its next game (D407)`);
+        if (r.decks[seat]) ledger(r, seat);   // D455: the deck it handed in follows its consent
         save();
         broadcast(r);
       }
