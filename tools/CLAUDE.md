@@ -216,10 +216,15 @@ its worker homes under the job's own) → **12h**, `python3 -m unittest discover
 the ML dataset's encoder over every committed recording with the hidden zones
 scrambled, which must change no feature; the numpy half is skipped, and says
 so, where numpy is missing; about thirty seconds) → `npm run build && npm test`.
-`SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes. **Pass
-`WSPORT=<n>` if 8644 is busy** (8644 since **D292**: `play.sh` holds 8642 for the
-bridge and 8643 for the coach helper) — step 10 starts **eight** servers: on `WSPORT`,
-one after another, serially; on `WSPORT` .. `WSPORT+7`, at once, in parallel.
+`SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes.
+**The gate's ports are not the live ones:** `WSPORT` defaults to **9644**, so a
+parallel gate's step 10 takes 9644..9654 and 9662, clear of 8642..8646 (the
+bridge, the coach helper, the draft room, the lab runner's status server and the
+table), and `check-all.sh` refuses a `WSPORT` whose span `WSPORT` .. `WSPORT+18`
+covers one of those (the base was 8644 until 2026-10-19, when a parallel gate's
+10b landed on the lab runner's 8645). Pass `WSPORT=<n>` to run two gates at once
+— step 10 starts **eight** servers: on `WSPORT`, one after another, serially; on
+`WSPORT` .. `WSPORT+7`, at once, in parallel.
 **`GATE_ONLY="<job> …"` runs those jobs alone** (**D291**), over a build you
 already made — their dependencies are not run — and says it was a partial run:
 it is for re-running a step while you work on it, and it is never the gate.

@@ -196,6 +196,8 @@ still its manual.
                                             # table under var/check-all/<run>/ (D129, D130); the last
                                             # GATE_KEEP_RUNS (20) runs are kept
 GATE_JOBS=1 ./tools/check-all.sh            # the serial gate: the old order and lines (not bytes), then the table
+WSPORT=9750 ./tools/check-all.sh            # step 10's ports from 9750 (default 9644: 9644..9654 and 9662;
+                                            # a base whose span covers the live 8642..8646 is refused)
 ./tools/check-forge.sh                      # gate: asserts the jar + 8 classes, prints sha256
 ./tools/make-forge-home.sh                  # symlink res, profile properties, custom-card overlay
 ./tools/lint-bridge.sh                      # the banned-accessor grep (hard rule 10), bridge/src + tools/

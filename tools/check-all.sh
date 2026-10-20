@@ -289,7 +289,12 @@
 #     or 12h (the ML dataset's Python tests, which read only fixtures/).
 #
 # Step 10's servers listen on WSPORT+0 .. WSPORT+7 (10a..10h) when GATE_JOBS >
-# 1, so all eight can be up at once; GATE_JOBS=1 keeps the single WSPORT.
+# 1, so all eight can be up at once, 10i on WSPORT+8 and WSPORT+18, 10j and
+# 10k on WSPORT+9 and WSPORT+10; GATE_JOBS=1 keeps WSPORT (and WSPORT+10 for
+# 10i's table).  The default base is 9644, so 9644..9654 and 9662: the gate's
+# ports are not the live ones (8642..8646 -- the bridge, the coach helper, the
+# draft room, the lab runner's status server, the table), and a WSPORT whose
+# range would cover one of those is refused before anything starts.
 #
 # The console shows one line when a job starts and one when it ends, then a
 # TIMING TABLE -- every job's start and end (seconds since the gate started),
@@ -311,7 +316,7 @@
 # Usage:  ./tools/check-all.sh            # ~5 minutes at GATE_JOBS=4 (D129); ~15 serially
 #         GATE_JOBS=1 ./tools/check-all.sh        # the serial gate, one step at a time
 #         GATE_JOBS=8 ./tools/check-all.sh        # eight at a time (needs ~16 GB free)
-#         WSPORT=8750 ./tools/check-all.sh        # step 10's ports: 8750..8757 in parallel
+#         WSPORT=9750 ./tools/check-all.sh        # step 10's ports: 9750..9760 and 9768 in parallel
 #         GATE_ONLY="10c-auto 10h-idle" ./tools/check-all.sh   # those jobs alone, over an existing build (D291)
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
 #         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
@@ -365,13 +370,29 @@ case "$GATE_JOBS" in
   '' | *[!0-9]* | 0) echo "check-all: GATE_JOBS must be a positive integer, got '$GATE_JOBS'" >&2; exit 2 ;;
 esac
 
-# Port 8644, not config.json's 8642 or 8643: a developer with `scripts/play.sh`
-# running should be able to run the gate without the two fighting over a port,
-# and play.sh holds 8642 (the bridge) and, since D292, 8643 (the coach helper,
-# config.json's coachPort).  With GATE_JOBS > 1, 10a..10h listen on WSPORT+0 ..
-# WSPORT+7 (D131), so 8644..8651.
-WSPORT="${WSPORT:-8644}"
+# The gate's ports are not the live ones.  A developer's or the lab's live
+# services hold 8642 (the bridge, config.json's wsPort), 8643 (the coach
+# helper, coachPort, D292), 8644 (the draft room's roomPort, D400), 8645 (the
+# lab runner's status server, tools/runner/serve.ts --http-port) and 8646 (the
+# table, tablePort, D402), and the gate must run beside all of them.  The base
+# was 8644 until 2026-10-19, when a parallel gate's 10b landed on the runner's
+# 8645 and died "Address already in use"; it is 9644 now, clear of the whole
+# block.  With GATE_JOBS > 1, 10a..10h listen on WSPORT+0 .. WSPORT+7 (D131),
+# 10i on WSPORT+8 and WSPORT+18, 10j and 10k on WSPORT+9 and WSPORT+10, so
+# 9644..9654 and 9662; serially WSPORT and WSPORT+10.  An override is checked
+# against the live block over the whole span WSPORT .. WSPORT+18.
+WSPORT="${WSPORT:-9644}"
 case "$WSPORT" in '' | *[!0-9]*) echo "check-all: WSPORT must be a port number, got '$WSPORT'" >&2; exit 2 ;; esac
+GATE_LIVE_PORTS="8642 8643 8644 8645 8646"
+for _p in $GATE_LIVE_PORTS; do
+  if [ "$_p" -ge "$WSPORT" ] && [ "$_p" -le $(( WSPORT + 18 )) ]; then
+    echo "check-all: WSPORT=$WSPORT puts the gate's ports ($WSPORT..$(( WSPORT + 18 ))) over live port $_p" \
+         "(live: $GATE_LIVE_PORTS -- the bridge, the coach helper, the draft room, the lab runner, the table);" \
+         "leave WSPORT unset (9644) or pick a base outside 8624..8646" >&2
+    exit 2
+  fi
+done
+unset _p
 
 # One directory per run: every job's log, the timing table, gate.log (D130).
 RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"
