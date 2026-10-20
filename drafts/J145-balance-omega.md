@@ -210,8 +210,12 @@ import numpy as np
 #  decks; 4- and 5-colour decks are excluded everywhere (and 0-colour ones, which have no colour to count).
 #  A deck's colours are its colours with 3+ spells (the census's rule, deckcensus.ts profileOf).
 #  PULL (arm A, drafted decks): the share of two-colour decks containing colour c, target 2/5; mono and
-#  three-colour shares beside it, not judged; one reading per drafter, never pooled; the human-pick model's
-#  is the primary one, the lab's and forge-ranks' context.  Intervals: a percentile bootstrap clustered by
+#  three-colour shares beside it, not judged; one reading per drafter, never pooled.  REGISTERED CHANGE (the
+#  cloud, 2026-10-20, before any data): the human-pick model, first named the primary reading, is demoted to
+#  context (its Omega file covers 105 of 180 cards, unevenly by colour, which biases what pull measures), so
+#  NO drafter's pull is judged tonight: all three are reported with their labels as information and the
+#  model's per-colour coverage beside it; pull is judged once the draft-deck ledger holds 30+ real Omega
+#  decks (real drafts then primary, the same band) or a full-coverage human model exists.  Intervals: a percentile bootstrap clustered by
 #  draft (the drafts resampled with replacement, 1,000 replicates), since a lab-vs-lab draft's two decks
 #  compete for colours.
 #  PAYOFF (arm B, the drafted decks played against each other; arm C, the cube's census): colour c's win rate
@@ -221,15 +225,16 @@ import numpy as np
 #  builder, so a colour's rate is not a drafter's strength); the other folders' games are context.
 #  "CLEARLY OFF EVEN": a cell is OFF when its 95% interval excludes the target AND the point is at least
 #  0.08 from it for pull (0.05 for payoff); else EVEN if its interval sits inside [target - 0.08, target +
-#  0.08] for pull ([0.45, 0.55] for payoff); else UNCLEAR.  The cube is BALANCED at colour level when no
-#  colour is OFF on primary pull or on arm-B payoff.  Everything else is a candidate (D447 point 9).
+#  0.08] for pull ([0.45, 0.55] for payoff); else UNCLEAR.  Tonight's verdict: BALANCED ON PAYOFF when no
+#  colour is OFF on arm B's judged payoff (lab vs lab), else NOT BALANCED ON PAYOFF; pull is not judged.
+#  Everything else is a candidate (D447 point 9).
 #  A vs C: OFF in B but EVEN in C reads "the drafter/deck-building favours or starves it"; OFF in both "the
 #  cards".  CLOSENESS: per colour and pair, the winner's final life and the game's turns, median and IQR.
 #  Real drafts (the coach helper's aggregate): shown; labelled (as context, never in the verdict) only at 30+.
 ap = argparse.ArgumentParser()
 ap.add_argument('--pull', action='append', default=[])     # name=<drafter>,<profile dir>: that drafter's decks of one run (decks.jsonl)
 ap.add_argument('--payoff', action='append', default=[])   # name=<decks dir>,<census-play games dir>
-ap.add_argument('--primary-pull', default='hp')
+ap.add_argument('--coverage', action='append', default=[])  # name=<coverage.json>: a pick model's coverage, shown beside that drafter's pull
 ap.add_argument('--judged-payoff', default='Blab')
 ap.add_argument('--census', default=None)                  # name=<decks dir>,<games dir>: arm C
 ap.add_argument('--real', default=None)                    # the coach helper's GET /draft-decks?cube=... answer
@@ -435,21 +440,24 @@ if a.real and os.path.exists(a.real):
         real = {'decks': 0, 'note': 'the coach helper did not answer, or answered no decks'}
 doc['real'] = real
 
-# the verdict
-prim = doc['pull'].get(a.primary_pull)
+for spec in a.coverage:
+    name, f = spec.split('=', 1)
+    if name in doc['pull'] and os.path.exists(f):
+        doc['pull'][name]['coverage'] = json.load(open(f))
+
+# the verdict: payoff only (the registered change: no drafter's pull is judged tonight)
 pay = doc['payoff'].get(a.judged_payoff)
 cens = doc['payoff'].get(doc.get('censusArm')) if doc.get('censusArm') else None
-off_pull = [c for c in C5 if prim and prim['twoColour'][c].get('label') == 'OFF'] if prim else []
 off_pay = [c for c in C5 if pay and pay['colour'][c].get('label') == 'OFF'] if pay else []
-verdict = 'INCOMPLETE' if not prim or not pay or prim['decks'] == 0 or pay['games'] == 0 else ('BALANCED' if not off_pull and not off_pay else 'NOT BALANCED')
+verdict = 'INCOMPLETE' if not pay or pay['games'] == 0 else ('BALANCED ON PAYOFF' if not off_pay else 'NOT BALANCED ON PAYOFF')
 avc = {}
 for c in C5:
     b = pay['colour'][c]['label'] if pay else None
     cc = cens['colour'][c]['label'] if cens else None
     avc[c] = {'B': b, 'C': cc, 'reads': 'the drafter/deck-building favours or starves it' if b == 'OFF' and cc == 'EVEN' else 'the cards' if b == 'OFF' and cc == 'OFF' else None}
-doc['verdict'] = {'colourLevel': verdict, 'code': {'BALANCED': 1, 'NOT BALANCED': 0, 'INCOMPLETE': -1}[verdict], 'offPrimaryPull': off_pull, 'offPayoffB': off_pay,
-                  'primaryPull': a.primary_pull, 'judgedPayoff': a.judged_payoff,
-                  'unclearPrimaryPull': [c for c in C5 if prim and prim['twoColour'][c].get('label') == 'UNCLEAR'],
+doc['verdict'] = {'colourLevel': verdict, 'code': {'BALANCED ON PAYOFF': 1, 'NOT BALANCED ON PAYOFF': 0, 'INCOMPLETE': -1}[verdict], 'offPayoffB': off_pay,
+                  'pullJudged': False, 'pullNote': 'pull is not judged tonight: the human-pick model is context (105 of 180 cards covered, unevenly by colour); pull is judged once the draft-deck ledger holds 30+ real Omega decks or a full-coverage human model exists',
+                  'judgedPayoff': a.judged_payoff,
                   'unclearPayoffB': [c for c in C5 if pay and pay['colour'][c].get('label') == 'UNCLEAR'], 'aVsC': avc}
 doc['labels'] = {f'pull.{n}.{c}': {'OFF': 1, 'EVEN': 0, 'UNCLEAR': -1}[p['twoColour'][c]['label']] for n, p in doc['pull'].items() for c in C5}
 doc['labels'].update({f'payoff.{n}.{c}': {'OFF': 1, 'EVEN': 0, 'UNCLEAR': -1}[p['colour'][c]['label']] for n, p in doc['payoff'].items() for c in C5})
@@ -475,15 +483,19 @@ with open(os.path.join(a.out, 'balance.json'), 'w') as f:
 f3 = lambda x: '–' if x is None else f'{x:.3f}'
 iv = lambda c: '–' if not c or c.get('lo') is None else f"{f3(c['lo'])}–{f3(c['hi'])}"
 L = [f"**Forge-pilot caveat:** {doc['caveat']}", '', '# J145: is Omega balanced by colour?', '',
-     f"**Colour level: {verdict}.** OFF on primary pull ({a.primary_pull}): {', '.join(off_pull) or 'none'}; OFF on arm-B payoff ({a.judged_payoff}): {', '.join(off_pay) or 'none'}. "
+     f"**Colour level: {verdict}.** OFF on arm-B payoff ({a.judged_payoff}, lab vs lab): {', '.join(off_pay) or 'none'}. **Pull is not judged tonight**: the human-pick model was demoted to context (it covers 105 of Omega's 180 cards, unevenly by colour), so all three drafters' pull is reported as information; pull is judged once the draft-deck ledger holds 30+ real Omega decks or a full-coverage human model exists. "
      'The registered rule: a cell is OFF when its 95% interval excludes the target and the point is at least 0.08 (pull) or 0.05 (payoff) from it; EVEN when the interval sits inside that band; else UNCLEAR. '
-     'BALANCED when no colour is OFF on primary pull or arm-B payoff. Everything else below is a candidate (D447 point 9). No card is swapped on this night.', '',
-     '## Pull (arm A): share of two-colour decks containing the colour (target 0.400)', '',
+     'BALANCED ON PAYOFF when no colour is OFF on arm-B payoff. Everything else below is a candidate (D447 point 9). No card is swapped on this night.', '',
+     '## Pull (arm A, not judged tonight): share of two-colour decks containing the colour (target 0.400; labels are information)', '',
      '| drafter | decks | k = 1 / 2 / 3 (excluded 0, 4, 5) | ' + ' | '.join(C5) + ' |', '|---|---|---|' + '---|' * 5]
 for n, p in doc['pull'].items():
     bk = p['byK']
-    L.append(f"| {n}{' (primary)' if n == a.primary_pull else ''} | {p['decks']} | {bk['1']} / {bk['2']} / {bk['3']} ({bk['0']}, {bk['4']}, {bk['5']}) | " +
+    L.append(f"| {n} ({p.get('drafter', n)}) | {p['decks']} | {bk['1']} / {bk['2']} / {bk['3']} ({bk['0']}, {bk['4']}, {bk['5']}) | " +
              ' | '.join(f"{f3(p['twoColour'][c]['est'])} [{iv(p['twoColour'][c])}] {p['twoColour'][c]['label']}" for c in C5) + ' |')
+for n, p in doc['pull'].items():
+    cv = p.get('coverage')
+    if cv:
+        L.append(f"\n{n}'s pick model covers {cv.get('covered')} of the cube's {cv.get('cards')} cards: " + ', '.join(f"{k} {v['covered']}/{v['cards']}" for k, v in (cv.get('bySection') or {}).items()) + ' (the rest valued by its rating fallback).')
 L += ['', 'Beside it, not judged: mono decks by colour (share of mono decks) and three-colour decks containing the colour (share of three-colour decks, average 0.6).', '',
       '| drafter | ' + ' | '.join(f'mono {c}' for c in C5) + ' | ' + ' | '.join(f'3c {c}' for c in C5) + ' |', '|---|' + '---|' * 10]
 for n, p in doc['pull'].items():
@@ -519,7 +531,7 @@ else:
     L.append((real or {}).get('note', 'not read'))
 with open(os.path.join(a.out, 'balance.md'), 'w') as f:
     f.write('\n'.join(L) + '\n')
-print(json.dumps({'verdict': verdict, 'offPull': off_pull, 'offPayoff': off_pay, 'pull': {n: p['decks'] for n, p in doc['pull'].items()}, 'payoff': {n: p['games'] for n, p in doc['payoff'].items()}}))
+print(json.dumps({'verdict': verdict, 'offPayoff': off_pay, 'pull': {n: p['decks'] for n, p in doc['pull'].items()}, 'payoff': {n: p['games'] for n, p in doc['payoff'].items()}}))
 PY
 # the read's self-test: fabricated games over arm C's real decks, black decks given +0.10; black must read OFF, no other colour OFF
 python3 - <<'PY'
@@ -700,7 +712,7 @@ check: bal.payoff.Blab.games >= 3000 and bal.payoff.C.games >= 7000
 
 What the checks mean: every draft and every planned game was played (engine errors at most 1%, timeouts at most 2%),
 every deck profiled from known Omega cards, every recorded game checked clean, and the read wrote strict JSON with
-a verdict (BALANCED or NOT BALANCED; -1, INCOMPLETE, fails) over at least 595 decks of each drafter and 3,000
+a verdict (BALANCED ON PAYOFF or NOT BALANCED ON PAYOFF; -1, INCOMPLETE, fails) over at least 595 decks of each drafter and 3,000
 judged games (Blab's 4,000 less draws and decks outside 1-3 colours). No check is on a share, a rate or a label.
 
 ## Abort if
