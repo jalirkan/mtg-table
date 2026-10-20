@@ -6,7 +6,8 @@
  *
  *  - LAB_DATA_DIR: a var/ path re-rooted for writes and (when there) reads, everything else untouched,
  *    unset meaning exactly what it meant before, a missing drive refused; and a real lab job (`decks`,
- *    which needs no engine) run with the setting writes under it and nothing under the repo's var/;
+ *    which needs no engine) run with the setting writes under it and nothing under the var/ folders it
+ *    re-roots (with a planted file and a run with the drive unset as the controls that the check sees);
  *  - census-play --record: the match line's blocks for rows and full, plan.json refusing a folder of
  *    another mode (an old plan reads as `none`), the game row picking up rows / leak check / frames /
  *    ledger, the size statistics;
@@ -19,9 +20,9 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
@@ -62,30 +63,77 @@ test('LAB_DATA_DIR: var/ paths re-rooted, the rest untouched, unset is the old b
   }
 });
 
-test('LAB_DATA_DIR: a lab job writes under it and nowhere under the repo\'s var/', () => {
+// What a lab job could write under the repo's var/ if LAB_DATA_DIR failed to re-root it: the folders
+// labdata.ts re-roots -- the lab's own default homes (var/cubelab, var/census, var/lab-*) and the job's
+// own --out -- less the parts it keeps in the repo by design (Forge homes, compiled classes, the engine's
+// facts cache, the atlas self-test's absolute folder).  NOT the whole of var/: in the parallel gate,
+// 13c-node runs beside jobs that write var/check-all*, var/games and logs the whole time, and a check
+// on all of var/ failed on their writes, not the lab's.
+const LAB_KEPT_IN_REPO = ['cubelab/classes', 'cubelab/homes', 'cubelab/watch-homes', 'cubelab/facts', 'cubelab/atlas-selftest'];
+function labRootsUnderVar(outRel: string): string[] {
+  const v = join(REPO, 'var');
+  const top = underVar(outRel)?.split(sep)[0];
+  const names = ['cubelab', 'census', ...readdirSync(v).filter((n) => n.startsWith('lab-')), ...(top ? [top] : [])];
+  return [...new Set(names)].map((n) => join(v, n)).filter((p) => existsSync(p));
+}
+/**
+ * The first FILE under those folders newer than `marker`, or '' (`find`, pruning what stays in the repo).  Files
+ * only: a folder's own mtime moves when anything inside it is added or removed (the gate's 12g compiling
+ * into var/cubelab/classes moves var/cubelab's), and the lab writes nothing that is not a file.
+ */
+function labWriteSince(marker: string, outRel: string): string {
+  const roots = labRootsUnderVar(outRel);
+  if (roots.length === 0) return '';
+  const prune = LAB_KEPT_IN_REPO.flatMap((p, i) => [...(i ? ['-o'] : []), '-path', join(REPO, 'var', p)]);
+  const found = spawnSync('find', [...roots, '(', ...prune, ')', '-prune', '-o', '-type', 'f', '-newer', marker, '-print', '-quit'], { encoding: 'utf8' });
+  assert.equal(found.status, 0, `find failed: ${found.stderr}`);
+  return found.stdout.trim();
+}
+const decksJob = (rel: string, env: NodeJS.ProcessEnv) => spawnSync(process.execPath,
+  [join(REPO, 'tools/cubelab/cli.ts'), 'decks', '--band', 'pauper', '--count', '4', '--seed', '7', '--out', rel],
+  { cwd: REPO, encoding: 'utf8', env, timeout: 120_000 });
+
+test('LAB_DATA_DIR: a lab job writes under it and nowhere it re-roots under the repo\'s var/', async (t) => {
   mkdirSync(join(REPO, 'var'), { recursive: true });   // so `find` below looks at a real folder, never a missing one
   const root = mkdtempSync(join(tmpdir(), 'labdata-job-'));
   const marker = join(root, '.t0');
   writeFileSync(marker, '');
   const rel = `var/labdata-selftest-${process.pid}/decks`;
-  const control = join(REPO, 'var', `labdata-selftest-control-${process.pid}`);
+  const relUnset = `var/labdata-selftest-unset-${process.pid}/decks`;
+  const control = join(REPO, 'var', 'cubelab', `labdata-selftest-control-${process.pid}`);
+  // the drive unset: no LAB_DATA_DIR, and a config with no labDataDir (the machine's may name one)
+  const noCfg = join(root, 'no-labdata-config.json');
+  writeFileSync(noCfg, '{}');
+  const { LAB_DATA_DIR: _drop, ...envUnset } = process.env;
+  let madeCubelab = false;
   try {
-    const r = spawnSync(process.execPath, [join(REPO, 'tools/cubelab/cli.ts'), 'decks', '--band', 'pauper', '--count', '4', '--seed', '7', '--out', rel],
-      { cwd: REPO, encoding: 'utf8', env: { ...process.env, LAB_DATA_DIR: root }, timeout: 120_000 });
-    assert.equal(r.status, 0, `decks failed: ${r.stderr.slice(-800)}`);
-    assert.ok(existsSync(join(root, `labdata-selftest-${process.pid}`, 'decks', 'decks.jsonl')), 'the decks are under LAB_DATA_DIR');
-    assert.ok(!existsSync(join(REPO, rel)), 'nothing at the repo path');
-    // nothing anywhere under the repo's var/ is newer than the marker
-    const found = spawnSync('find', [join(REPO, 'var'), '-newer', marker, '-print', '-quit'], { encoding: 'utf8' });
-    assert.equal(found.status, 0, `find failed: ${found.stderr}`);
-    assert.equal(found.stdout.trim(), '', `something under the repo's var/ was written: ${found.stdout.trim()}`);
-    // the positive control: the same `find` sees a file written there now
-    writeFileSync(control, 'x');
-    const seen = spawnSync('find', [join(REPO, 'var'), '-newer', marker, '-name', `labdata-selftest-control-${process.pid}`, '-print'], { encoding: 'utf8' });
-    assert.ok(seen.stdout.includes('labdata-selftest-control'), 'the check can see a write under var/');
+    await t.test('set: the decks land under LAB_DATA_DIR and nothing is written where the check watches', () => {
+      const r = decksJob(rel, { ...process.env, LAB_DATA_DIR: root });
+      assert.equal(r.status, 0, `decks failed: ${r.stderr.slice(-800)}`);
+      assert.ok(existsSync(join(root, `labdata-selftest-${process.pid}`, 'decks', 'decks.jsonl')), 'the decks are under LAB_DATA_DIR');
+      assert.ok(!existsSync(join(REPO, rel)), 'nothing at the repo path');
+      const w = labWriteSince(marker, rel);
+      assert.equal(w, '', `something the lab re-roots under the repo's var/ was written: ${w}`);
+    });
+    await t.test('control: a file planted under a watched folder is seen', () => {
+      madeCubelab = !existsSync(join(REPO, 'var', 'cubelab'));
+      mkdirSync(join(REPO, 'var', 'cubelab'), { recursive: true });
+      writeFileSync(control, 'x');
+      assert.equal(labWriteSince(marker, rel), control, 'the check can see a write under var/cubelab');
+      rmSync(control, { force: true });
+    });
+    await t.test('control: the same job with the drive unset writes under the repo\'s var/, and the check catches it', () => {
+      const r = decksJob(relUnset, { ...envUnset, MTG_TABLE_CONFIG: noCfg });
+      assert.equal(r.status, 0, `decks (unset) failed: ${r.stderr.slice(-800)}`);
+      assert.ok(existsSync(join(REPO, relUnset, 'decks.jsonl')), 'unset, the decks are at the repo path');
+      const w = labWriteSince(marker, relUnset);
+      assert.ok(w.startsWith(join(REPO, 'var', `labdata-selftest-unset-${process.pid}`)), `the check missed the unset run's write (saw '${w}')`);
+    });
   } finally {
     rmSync(root, { recursive: true, force: true });
     rmSync(control, { force: true });
+    rmSync(join(REPO, 'var', `labdata-selftest-unset-${process.pid}`), { recursive: true, force: true });
+    if (madeCubelab) try { rmdirSync(join(REPO, 'var', 'cubelab')); } catch { /* something else wrote there since: leave it */ }
   }
 });
 
