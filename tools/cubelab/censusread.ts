@@ -17,7 +17,9 @@
 // what was dropped (`dropped`) and the pilots (`pilots`).
 //
 // Reads census-play's games.jsonl in each --games folder and decks.jsonl in each --decks folder (a
-// deck id names its band, so the folders of several bands may be read together), and writes
+// deck id names its band, so the folders of several bands may be read together; a cube's census decks,
+// D456, carry the group `cube:<name>` in their band field and are read as a group of their own after the
+// four bands), and writes
 // <out>/spectrum.json (strict JSON: no NaN, no Infinity; null where a number does not exist),
 // <out>/spectrum.md and <out>/cards.tsv.
 //
@@ -57,11 +59,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { BANDS, type Band } from './census.ts';
+import { BANDS } from './census.ts';
 import { fileLines } from './lines.ts';
 import { wilson } from './report.ts';
 import { rng } from './rng.ts';
-import { MAIN_SHARE_KEYS, mainShareKey, type DeckRecord } from './deckcensus.ts';
+import { MAIN_SHARE_KEYS, mainShareKey, type DeckGroup, type DeckRecord } from './deckcensus.ts';
 import type { GameRowOut } from './censusplay.ts';
 import { labPath, shownPath } from './labdata.ts';
 
@@ -131,7 +133,7 @@ export function contextOf(d: DeckRecord, opp: DeckRecord): Record<CtxColumn, num
 }
 
 export interface CardRow {
-  band: Band; card: string; decks: number; deckGames: number; decisive: number; wins: number; wr: number | null; wrShrunk: number | null;
+  band: DeckGroup; card: string; decks: number; deckGames: number; decisive: number; wins: number; wr: number | null; wrShrunk: number | null;
   /** CTX_COLUMNS' means over the card's deck-games. */
   ctx: Record<CtxColumn, number | null>;
   crossShare: number; fillShare: number;
@@ -199,14 +201,22 @@ export function redrawsOf(decks: DeckRecord[]): Redraws {
   };
 }
 
+/** The groups a read reports: the four bands in their order, then every cube's census group (D456) by name. */
+export function groupsOf(decks: Array<Pick<DeckRecord, 'band'>>): DeckGroup[] {
+  const cubes = [...new Set(decks.map((d) => d.band).filter((b) => !(BANDS as readonly string[]).includes(b)))].sort();
+  return [...BANDS, ...cubes];
+}
+const groupRank = (g: DeckGroup): number => { const i = (BANDS as readonly string[]).indexOf(g); return i < 0 ? BANDS.length : i; };
+
 /** The read itself, pure: decks and game rows in (already de-duplicated), the spectrum and the card rows out. */
 export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptions): { doc: CensusRead; cards: CardRow[] } {
   const byId = new Map(decks.map((d) => [d.id, d]));
   const bands: CensusRead['bands'] = {};
-  const cardAcc = new Map<string, { band: Band; card: string; decks: Set<string>; g: number; dec: number; wins: number; sum: number[]; n: number[]; cross: number; fill: number }>();
+  const cardAcc = new Map<string, { band: DeckGroup; card: string; decks: Set<string>; g: number; dec: number; wins: number; sum: number[]; n: number[]; cross: number; fill: number }>();
   const CTX = CTX_COLUMNS.length;
   const used = rows.filter((r) => byId.has(r.a) && byId.has(r.b));
-  for (const band of BANDS) {
+  // the bands, then any cube's census group (`cube:<name>`, D456), each read on its own
+  for (const band of groupsOf(decks)) {
     const bRows = used.filter((r) => (byId.get(r.a) as DeckRecord).band === band);
     if (!bRows.length) continue;
     const axes: Record<'byColours' | 'byPriorK' | 'byMainShare', Map<string, Acc>> = { byColours: new Map(), byPriorK: new Map(), byMainShare: new Map() };
@@ -266,7 +276,7 @@ export function readCensus(decks: DeckRecord[], rows: GameRowOut[], o: ReadOptio
     wr: c.dec ? r4(c.wins / c.dec) : null, wrShrunk: r4((c.wins + o.shrink * 0.5) / (c.dec + o.shrink)),
     ctx: Object.fromEntries(CTX_COLUMNS.map((col, i) => [col, (c.n[i] as number) > 0 ? r4((c.sum[i] as number) / (c.n[i] as number)) : null])) as Record<CtxColumn, number | null>,
     crossShare: r4(c.cross / c.g), fillShare: r4(c.fill / c.g),
-  })).sort((x, y) => (x.band === y.band ? (x.card < y.card ? -1 : x.card > y.card ? 1 : 0) : BANDS.indexOf(x.band) - BANDS.indexOf(y.band)));
+  })).sort((x, y) => (x.band === y.band ? (x.card < y.card ? -1 : x.card > y.card ? 1 : 0) : groupRank(x.band) - groupRank(y.band) || (x.band < y.band ? -1 : 1)));
   return { doc: { v: 1, decision: 'D447', games: used.length, decks: decks.length, options: o, bands, cards: cards.length }, cards };
 }
 

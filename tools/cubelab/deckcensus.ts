@@ -6,6 +6,8 @@
 //   tools/cubelab.sh decks --band <pauper|peasant|legacy|powered> --count N --seed S --out <dir>
 //                          [--cross-band 0.10] [--census cubes/library/census.tsv] [--pool cubes/library/library-pool.tsv]
 //                          [--scripts <Forge res/cardsfolder/cardsfolder.zip>]
+//   tools/cubelab.sh decks --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
+//                          the same rules on one cube's own list (D456, cubeDecksCommand below)
 //
 // Justin's amendment of 2026-10-17 (pc-results/HEARTBEAT.md): the census plays decks drawn at random
 // colour makeups over the whole spectrum, and "mono", "two-colour", "mostly red with a little white"
@@ -68,6 +70,7 @@ import path from 'node:path';
 import { BANDS, parseCensus, recordedInputs, type Band } from './census.ts';
 import { BASIC_OF, COLOURS, type Colour } from './cards.ts';
 import { dckText } from './deck.ts';
+import { parseCube } from './cube.ts';
 import { parseLibraryPool } from './library-candidates.ts';
 import { rng, shuffle, type Rng } from './rng.ts';
 import { eligibleFor, FILL_ORDER, joinCensus, NEIGHBOURS, type SampleCard } from './sample.ts';
@@ -232,8 +235,11 @@ export function crossBands(pool: Band[]): Band[] {
 
 export interface Makeup { k: number; colours: string; shares: Partial<Record<Colour, number>> }
 
-export function makeupOf(r: Rng): Makeup {
-  const k = 1 + r.int(5);
+/** D447's k: uniform on 1..5.  A cube's census (D456) draws k uniform on its own list, 1..3. */
+export const BAND_KS: readonly number[] = [1, 2, 3, 4, 5];
+
+export function makeupOf(r: Rng, ks: readonly number[] = BAND_KS): Makeup {
+  const k = ks[r.int(ks.length)] as number;   // with BAND_KS this is D447's 1 + r.int(5), draw for draw
   const cols = shuffle([...COLOURS], r).slice(0, k);
   const e = cols.map(() => -Math.log(1 - r.next()));
   const sum = e.reduce((a, b) => a + b, 0);
@@ -261,7 +267,7 @@ export function coloursOf(c: Pick<CensusCard, 'colors' | 'cost'>): string {
 export type Role = 'in' | 'cross' | 'fill';
 export interface Drawn { card: CensusCard; role: Role }
 
-interface DrawCtx { lib: CensusCard[]; pool: Band[]; cross: Band[]; fill: Band[]; colourlessShare: number; crossBand: number }
+export interface DrawCtx { lib: CensusCard[]; pool: Band[]; cross: Band[]; fill: Band[]; colourlessShare: number; crossBand: number }
 
 /** The band pool's colourless share among its eligible nonland cards (q in rule 2). */
 export function colourlessShareOf(lib: CensusCard[], pool: Band[]): number {
@@ -447,7 +453,8 @@ const r4 = (x: number): number => Math.round(x * 10000) / 10000;
 export interface DeckRecord {
   v: number;
   id: string;
-  band: Band;
+  /** The pool: a census band (D447), or `cube:<name>` for a cube's census (D456). */
+  band: DeckGroup;
   seed: number;
   index: number;
   makeup: Makeup;
@@ -487,8 +494,12 @@ export interface DeckRecord {
 
 export interface DeckOptions { band: Band; seed: number; crossBand: number }
 
-export function deckId(band: Band, seed: number, i: number): string {
-  return `${band}-${seed}-${String(i).padStart(5, '0')}`;
+/** A cube's census group (D456): `cube:<the cube file's name>`, in a deck's `band` field and its streams. */
+export type CubeBand = `cube:${string}`;
+export type DeckGroup = Band | CubeBand;
+
+export function deckId(band: DeckGroup, seed: number, i: number): string {
+  return `${band.startsWith('cube:') ? band.slice(5) : band}-${seed}-${String(i).padStart(5, '0')}`;
 }
 
 /** Deck i (1-based) of a run: rules 1-4, redrawn on rejection. */
@@ -499,11 +510,23 @@ export function generateDeck(lib: CensusCard[], o: DeckOptions, i: number): Deck
     colourlessShare: 0, crossBand: o.crossBand,
   };
   ctx.colourlessShare = colourlessShareOf(ctx.lib, pool);
+  return drawDeck(ctx, o.band, o.seed, i, BAND_KS);
+}
+
+/**
+ * Rules 1-4 on one pool: deck i of `group` at `seed`, its makeup's k from `ks`, redrawn on rejection.
+ * The streams are rng(seed, 'deck-census/<group>/<i>/makeup/<m>') and '.../cards/<m>/<a>', so a band's
+ * decks are D447's byte for byte.
+ */
+export function drawDeck(ctx0: DrawCtx, group: DeckGroup, seed: number, i: number, ks: readonly number[], blocked?: (k: number) => ReadonlySet<string>): DeckRecord {
   let rejections = 0;
   for (let mk = 0; mk < 1000; mk++) {
-    const makeup = makeupOf(rng(o.seed, `deck-census/${o.band}/${i}/makeup/${mk}`));
+    const makeup = makeupOf(rng(seed, `deck-census/${group}/${i}/makeup/${mk}`), ks);
+    // D456's repeat cap: the cards that reached it are out of this makeup's pool (q stays the pool's own)
+    const out = blocked?.(makeup.k);
+    const ctx = out && out.size ? { ...ctx0, lib: ctx0.lib.filter((c) => !out.has(c.name)) } : ctx0;
     for (let a = 0; a < MAX_CARD_ATTEMPTS; a++) {
-      const r = rng(o.seed, `deck-census/${o.band}/${i}/cards/${mk}/${a}`);
+      const r = rng(seed, `deck-census/${group}/${i}/cards/${mk}/${a}`);
       const drawn = drawSpells(ctx, makeup, r);
       if (!drawn) { rejections++; continue; }
       const avgMvDrawn = mean(drawn.slice(0, LAND_FROM_FIRST).map((d) => d.card.mv));
@@ -517,9 +540,9 @@ export function generateDeck(lib: CensusCard[], o: DeckOptions, i: number): Deck
       const spells = kept.map((d) => d.card);
       const main: Array<[number, string]> = [...spells.map((c): [number, string] => [1, c.name]), ...plan.fixers.map((f): [number, string] => [1, f.card.name]),
         ...COLOURS.filter((c) => plan.basics[c] > 0).map((c): [number, string] => [plan.basics[c], BASIC_OF[c]])];
-      const id = deckId(o.band, o.seed, i);
+      const id = deckId(group, seed, i);
       return {
-        v: DECK_CENSUS_VERSION, id, band: o.band, seed: o.seed, index: i, makeup: { ...makeup, shares: roundShares(makeup.shares) }, rejections, makeupRedraws: mk,
+        v: DECK_CENSUS_VERSION, id, band: group, seed, index: i, makeup: { ...makeup, shares: roundShares(makeup.shares) }, rejections, makeupRedraws: mk,
         main, spells: spells.map((c) => c.name), fixers: plan.fixers.map((f) => f.card.name), basics: plan.basics,
         lands, fixerTarget: plan.fixerTarget, avgMv: r4(mean(spells.map((c) => c.mv))), avgMvDrawn: r4(avgMvDrawn),
         profile: profileOf(spells), ...deckVars(spells, plan),
@@ -547,6 +570,60 @@ export function deckVars(spells: CensusCard[], plan: Pick<LandPlan, 'fixers' | '
 
 function roundShares(s: Partial<Record<Colour, number>>): Partial<Record<Colour, number>> {
   return Object.fromEntries(Object.entries(s).map(([c, v]) => [c, r4(v as number)]));
+}
+
+// ---------------------------------------------------------------- a cube's census (D456)
+
+/** A cube's census draws k uniform on these (D456): 4- and 5-colour decks are not what a 180-card cube for two plays. */
+export const CUBE_KS: readonly number[] = [1, 2, 3];
+
+/** A cube's deck pool: its document's cards that the library knows, Forge supports and the AI may play; the rest named. */
+export interface CubePool {
+  name: string;
+  /** The drawable cards (spells and nonbasic lands), each one copy, the document's order. */
+  cards: CensusCard[];
+  /** Every card the document lists. */
+  listed: number;
+  notInLibrary: string[];
+  unsupported: string[];
+  aiRemoved: string[];
+  /** Basic lands the document lists: the decks take basics as they need them, so these are not drawn. */
+  basics: string[];
+}
+
+/** The cube's name from its file: `cubes/omega-cube-180.md` -> `omega-cube-180`, the deck ids' prefix. */
+export function cubeNameOf(file: string): string {
+  const name = path.basename(file).replace(/\.md$/i, '');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) throw new Error(`decks: a cube's file name must be lower-case letters, digits and hyphens (it names the decks), got ${name}`);
+  if ((BANDS as readonly string[]).includes(name)) throw new Error(`decks: a cube may not be named after a band (${name})`);
+  return name;
+}
+
+/** Rule 2's eligibility on a cube's own list (D456): the census's population, restricted to the document's cards. */
+export function cubePool(cubeText: string, lib: CensusCard[], name: string): CubePool {
+  const cube = parseCube(cubeText);
+  if (!cube.cards.length) throw new Error(`decks: ${name} lists no card (${cube.warnings.join('; ') || 'no "## The list" section'})`);
+  const byName = new Map(lib.map((c) => [c.name, c]));
+  const out: CubePool = { name, cards: [], listed: cube.cards.length, notInLibrary: [], unsupported: [], aiRemoved: [], basics: [] };
+  const seen = new Set<string>();
+  for (const { name: n } of cube.cards) {
+    if (seen.has(n)) continue;
+    seen.add(n);
+    const c = byName.get(n);
+    if (!c) { out.notInLibrary.push(n); continue; }
+    if (c.basic || (c.land && /\bBasic\b/.test(c.type))) { out.basics.push(n); continue; }
+    if (!c.supported) { out.unsupported.push(n); continue; }
+    if (!eligibleFor(false)(c)) { out.aiRemoved.push(n); continue; }
+    out.cards.push(c);
+  }
+  return out;
+}
+
+/** The draw's context for a cube: one pool, no cross-band slice, nothing to fill from; q is the cube's own colourless share. */
+export function cubeCtx(pool: Pick<CubePool, 'cards'>): DrawCtx {
+  const ctx: DrawCtx = { lib: pool.cards, pool: [...BANDS], cross: [], fill: [], colourlessShare: 0, crossBand: 0 };
+  ctx.colourlessShare = colourlessShareOf(pool.cards, ctx.pool);
+  return ctx;
 }
 
 // ---------------------------------------------------------------- the population, from files
@@ -597,6 +674,8 @@ function costFromColours(colors: string): Cost {
 
 export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: string) => void): number {
   const one = (k: string): string | undefined => f.get(k)?.at(-1);
+  if (f.has('cube')) return cubeDecksCommand(repo, f, say);
+  for (const k of ['k', 'max-share-k1']) if (f.has(k)) throw new Error(`decks: --${k} is for --cube (D456); a band's census is D447's, k on 1..5`);
   const band = one('band') as Band | undefined;
   if (!band || !BANDS.includes(band)) throw new Error(`decks: --band wants one of ${BANDS.join(', ')}`);
   const seed = Number(one('seed'));
@@ -654,6 +733,179 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   };
   fs.writeFileSync(path.join(out, 'decks.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   say(`decks: ${count} ${band} deck(s), seed ${seed}, into ${shownPath(repo, out) || '.'}: k = 1..5 ${byK.slice(1).join(' / ')}; ${rej} rejected draw(s), ${redraws} new makeup(s); pool ${pool.join('+')}, cross ${crossBands(pool).join('+') || '-'}${noScript.length ? `; ${noScript.length} card(s) with no script, costed by colour: ${noScript.slice(0, 5).join(', ')}` : ''}`);
+  return 0;
+}
+
+// ---------------------------------------------------------------- a cube's census: the command (D456)
+
+/** D456's repeat cap: a card is in at most this share of the run's k = 1 decks. */
+export const DEFAULT_MAX_SHARE_K1 = 0.25;
+/** ...but never under this many decks, so a short run (a pilot, a test) is not starved. */
+export const REPEAT_CAP_FLOOR = 10;
+
+/** The repeat cap as a count: a card is in at most max(floor, floor(share x N1)) of a run's k = 1 decks. */
+export function repeatCapCount(share: number, n1: number): number {
+  return Math.max(REPEAT_CAP_FLOOR, Math.floor(share * n1 + 1e-9));
+}
+
+/**
+ * A cube's run under the repeat cap.  Round 1 caps at the count the run's FIRST makeups give N1 (the decks
+ * whose makeup 0 is k = 1); a round whose cap removed decks (k = 1 makeups that could not be drawn and
+ * were redrawn) ends with fewer k = 1 decks, so the run is drawn again from deck 1 with the cap of the N1
+ * it got, until the cap is the run's own: max(REPEAT_CAP_FLOOR, floor(share x N1)) for its N1.  While no
+ * card reaches the cap, the decks are the uncapped draw's, deck for deck, and there is one round.
+ */
+export function drawCubeRun(ctx: DrawCtx, group: CubeBand, seed: number, count: number, ks: readonly number[], share: number): {
+  decks: DeckRecord[]; capCount: number; capped: Set<string>; decksUnderCap: number; k1Uses: Map<string, number>; rounds: number;
+} {
+  const none: ReadonlySet<string> = new Set();
+  const n1First = ks.includes(1) ? Array.from({ length: count }, (_, j) => makeupOf(rng(seed, `deck-census/${group}/${j + 1}/makeup/0`), ks).k).filter((k) => k === 1).length : 0;
+  let capCount = repeatCapCount(share, n1First);
+  for (let round = 1; ; round++) {
+    const k1Uses = new Map<string, number>();
+    const capped = new Set<string>();
+    let decksUnderCap = 0;
+    const decks: DeckRecord[] = [];
+    for (let i = 1; i <= count; i++) {
+      const d = drawDeck(ctx, group, seed, i, ks, (k) => (k === 1 ? capped : none));
+      if (d.makeup.k === 1) {
+        if (capped.size) decksUnderCap++;
+        for (const n of [...d.spells, ...d.fixers]) {
+          const u = (k1Uses.get(n) ?? 0) + 1;
+          k1Uses.set(n, u);
+          if (u >= capCount) capped.add(n);
+        }
+      }
+      decks.push(d);
+    }
+    const own = repeatCapCount(share, decks.filter((d) => d.makeup.k === 1).length);
+    if (own >= capCount || round >= 50) return { decks, capCount, capped, decksUnderCap, k1Uses, rounds: round };
+    capCount = own;
+  }
+}
+
+/** One card's deck shares over a run (card-shares.tsv). */
+export interface CardShare {
+  card: string; colours: string; mv: number; land: boolean;
+  decks: number; share: number;
+  /** Per k: the decks of that k holding it, their share of that k's decks, the decks of that k whose makeup admits it, and its share of those. */
+  byK: Record<string, { decks: number; share: number | null; admitting: number; shareOfAdmitting: number | null }>;
+}
+
+/** Each card's share of the decks, overall and per k (of that k's decks, and of the decks whose makeup admits it). */
+export function cardShares(pool: CensusCard[], decks: DeckRecord[], ks: readonly number[]): CardShare[] {
+  const byK = new Map<number, DeckRecord[]>(ks.map((k) => [k, decks.filter((d) => d.makeup.k === k)]));
+  return pool.map((c) => {
+    const holds = (d: DeckRecord): boolean => d.spells.includes(c.name) || d.fixers.includes(c.name);
+    const n = decks.filter(holds).length;
+    const per: CardShare['byK'] = {};
+    for (const k of ks) {
+      const ds = byK.get(k) as DeckRecord[];
+      const h = ds.filter(holds).length;
+      const adm = ds.filter((d) => (c.land ? [...reachable(c)].filter((x) => d.makeup.colours.includes(x)).length >= 2 : eligibleIn(c, d.makeup.colours))).length;
+      per[`k${k}`] = { decks: h, share: ds.length ? r4(h / ds.length) : null, admitting: adm, shareOfAdmitting: adm ? r4(h / adm) : null };
+    }
+    return { card: c.name, colours: coloursOf(c), mv: c.mv, land: c.land, decks: n, share: decks.length ? r4(n / decks.length) : 0, byK: per };
+  });
+}
+
+export function cardSharesTsv(rows: CardShare[], ks: readonly number[]): string {
+  const head = ['card', 'colours', 'mv', 'land', 'decks', 'share', ...ks.flatMap((k) => [`k${k}_decks`, `k${k}_share`, `k${k}_admitting`, `k${k}_share_of_admitting`])];
+  const v = (x: number | null): string => (x === null ? '' : String(x));
+  return `${head.join('\t')}\n${rows.map((r) => [r.card, r.colours, r.mv, r.land ? 1 : 0, r.decks, r.share,
+    ...ks.flatMap((k) => { const b = r.byK[`k${k}`]; return b ? [b.decks, v(b.share), b.admitting, v(b.shareOfAdmitting)] : ['', '', '', '']; })].join('\t')).join('\n')}\n`;
+}
+
+/**
+ * `decks --cube <cube.md>` (D456): D447's rules 1-4 on one cube's own list instead of a band's pool.
+ * The pool is the document's cards that the library knows, Forge supports and the AI may play (the
+ * rest are named in decks.json); k is uniform on --k (1,2,3); the colourless share q is the cube's own;
+ * there is no cross-band slice and nothing to fill from (a list that runs dry rejects the draw, as in
+ * D447).  THE REPEAT CAP: a card is in at most max(10, floor(--max-share-k1 x N1)) of the run's N1
+ * k = 1 decks (0.25 by default); a card that reached it is out of every later k = 1 deck's pool, and a
+ * deck that cannot then be drawn is rejected and redrawn as D447 says, counted (drawCubeRun: the run is
+ * drawn again until the cap is the one its own N1 gives).  Until a card reaches it the decks are the
+ * uncapped draw's, deck for deck.  decks.json and card-shares.tsv report every card's share of the decks, overall, per k,
+ * and of the decks whose makeup admits it.
+ */
+export function cubeDecksCommand(repo: string, f: Map<string, string[]>, say: (s: string) => void): number {
+  const one = (k: string): string | undefined => f.get(k)?.at(-1);
+  for (const k of ['band', 'cross-band']) if (f.has(k)) throw new Error(`decks: --${k} is a band's (D447); a cube's census draws from the cube alone (D456)`);
+  const cubeFile = path.resolve(repo, one('cube') as string);
+  const seed = Number(one('seed'));
+  const count = Number(one('count'));
+  if (!Number.isInteger(seed) || seed < 0 || !Number.isInteger(count) || count < 1) throw new Error('decks: --seed wants a whole number and --count a positive one');
+  const ks = (one('k') ?? CUBE_KS.join(',')).split(',').map(Number);
+  if (!ks.length || ks.some((k) => !Number.isInteger(k) || k < 1 || k > 5) || new Set(ks).size !== ks.length) throw new Error('decks: --k wants distinct numbers of colours from 1 to 5, as 1,2,3');
+  const maxShare = Number(one('max-share-k1') ?? DEFAULT_MAX_SHARE_K1);
+  if (!(maxShare > 0 && maxShare <= 1)) throw new Error('decks: --max-share-k1 wants a share above 0 and at most 1');
+  const outArg = one('out');
+  if (!outArg) throw new Error('decks: --out <dir> is required');
+  const out = labPath(repo, outArg, 'write');   // D450
+  const censusText = fs.readFileSync(path.resolve(repo, one('census') ?? 'cubes/library/census.tsv'), 'utf8');
+  const poolText = fs.readFileSync(path.resolve(repo, one('pool') ?? 'cubes/library/library-pool.tsv'), 'utf8');
+  const zip = path.resolve(repo, one('scripts') ?? defaultScriptsZip(repo));
+  const scripts = openForgeScripts(zip);
+  if (!scripts) throw new Error(`decks: no Forge card scripts at ${zip} (pass --scripts)`);
+  const { lib, noScript } = censusPopulation(poolText, censusText, scriptLookup(scripts));
+  const cubeText = fs.readFileSync(cubeFile, 'utf8');
+  const name = cubeNameOf(cubeFile);
+  const pool = cubePool(cubeText, lib, name);
+  const ctx = cubeCtx(pool);
+  const group: CubeBand = `cube:${name}`;
+  const run = drawCubeRun(ctx, group, seed, count, ks, maxShare);
+  const { decks, capCount, capped, decksUnderCap, k1Uses } = run;
+  fs.mkdirSync(path.join(out, 'decks'), { recursive: true });
+  for (const d of decks) {
+    if (d.main.reduce((a, [n]) => a + n, 0) !== DECK_SIZE || d.castable !== d.spells.length) throw new Error(`decks: deck ${d.id} is not ${DECK_SIZE} castable cards (a bug)`);
+    fs.writeFileSync(path.join(out, d.file), dckText(`census ${d.id}`, d.main, []));
+  }
+  const jsonl = `${decks.map((d) => JSON.stringify(d)).join('\n')}\n`;
+  fs.writeFileSync(path.join(out, 'decks.jsonl'), jsonl);
+  const shares = cardShares(pool.cards, decks, ks);
+  fs.writeFileSync(path.join(out, 'card-shares.tsv'), cardSharesTsv(shares, ks));
+  const cnt = (f2: (d: DeckRecord) => number, n: number): number[] => { const a = new Array(n).fill(0) as number[]; for (const d of decks) a[f2(d)] = (a[f2(d)] as number) + 1; return a; };
+  const cc3 = cnt((d) => d.profile.coloursWith3, 6);
+  const byK = cnt((d) => d.makeup.k, 6);
+  const bins: Record<string, number> = Object.fromEntries(MAIN_SHARE_KEYS.map((k) => [k, 0]));
+  for (const d of decks) { const b = mainShareKey(d.profile.mainShare); if (b) bins[b] = (bins[b] as number) + 1; }
+  const sums = Object.fromEntries(MEAN_KEYS.map((k) => [k, decks.reduce((a, d) => a + (k === 'fixers' ? d.fixers.length : d[k]), 0)])) as Record<(typeof MEAN_KEYS)[number], number>;
+  const mvHist = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of decks) d.mvHist.forEach((n, b) => { mvHist[b] = (mvHist[b] as number) + n; });
+  const stat = (xs: number[]): { max: number | null; median: number | null } => {
+    const s2 = [...xs].sort((a, b) => a - b);
+    return { max: s2.length ? s2[s2.length - 1] as number : null, median: s2.length ? s2[Math.floor((s2.length - 1) / 2)] as number : null };
+  };
+  const top = (key: (r: CardShare) => number | null): Array<[string, number]> => shares.filter((r) => key(r) !== null).sort((a, b) => (key(b) as number) - (key(a) as number) || (a.card < b.card ? -1 : 1)).slice(0, 10).map((r) => [r.card, key(r) as number]);
+  const manifest = {
+    v: DECK_CENSUS_VERSION, decision: 'D456', cube: shownPath(repo, cubeFile), cubeName: name, cubeSha: sha12(cubeText), group, seed, count, ks,
+    pool: { listed: pool.listed, drawable: pool.cards.length, nonland: pool.cards.filter((c) => !c.land).length, lands: pool.cards.filter((c) => c.land).length,
+      notInLibrary: pool.notInLibrary, unsupported: pool.unsupported, aiRemoved: pool.aiRemoved, basicsListed: pool.basics },
+    colourlessShare: r4(ctx.colourlessShare),
+    rejections: decks.reduce((a, d) => a + d.rejections, 0), makeupRedraws: decks.reduce((a, d) => a + d.makeupRedraws, 0),
+    decksRedrawn: decks.filter((d) => d.rejections > 0 || d.makeupRedraws > 0).length,
+    makeupK: Object.fromEntries(ks.map((k) => [`k${k}`, byK[k]])),
+    decksOf40: decks.length, decksAllCastable: decks.length,
+    coloursWith3: { c0: cc3[0], c1: cc3[1], c2: cc3[2], c3: cc3[3], c4: cc3[4], c5: cc3[5] }, mainShare: bins,
+    means: Object.fromEntries(MEAN_KEYS.map((k) => [k, r4(sums[k] / count)])), mvHist,
+    repeatCap: { k: 1, maxShare, floor: REPEAT_CAP_FLOOR, rounds: run.rounds, k1Decks: byK[1] ?? 0, perCard: capCount, cardsAtCap: [...capped].sort(), decksDrawnUnderCap: decksUnderCap,
+      maxK1Uses: Math.max(0, ...k1Uses.values()), maxShareOfK1: (byK[1] ?? 0) ? r4(Math.max(0, ...k1Uses.values()) / (byK[1] as number)) : null },
+    cardShares: {
+      file: 'card-shares.tsv', cards: shares.length, neverDrawn: shares.filter((r) => r.decks === 0).map((r) => r.card),
+      all: { ...stat(shares.map((r) => r.share)), top: top((r) => r.share) },
+      ...Object.fromEntries(ks.map((k) => [`k${k}`, {
+        ofDecks: { ...stat(shares.map((r) => r.byK[`k${k}`]?.share ?? 0)), top: top((r) => r.byK[`k${k}`]?.share ?? null) },
+        ofAdmitting: { ...stat(shares.filter((r) => (r.byK[`k${k}`]?.admitting ?? 0) > 0).map((r) => r.byK[`k${k}`]?.shareOfAdmitting as number)), top: top((r) => r.byK[`k${k}`]?.shareOfAdmitting ?? null) },
+      }])),
+    },
+    censusSha: sha12(censusText), poolSha: sha12(poolText), scripts: scripts.path, noScript: noScript.filter((n) => pool.cards.some((c) => c.name === n)), decksSha: sha12(jsonl),
+    rules: { ...RULES_TEXT, prior: `k uniform on ${ks.join(', ')}; the colours a uniform k-subset of WUBRG; shares Dirichlet(1,...,1)`,
+      draw: `${SPELLS_DRAWN} spells without replacement from the cube's own drawable cards; a draw is colourless with the cube's colourless share, else a colour by the shares and a uniform eligible card of it; no cross-band slice; an empty list falls back to the other colours by share, else the draw is rejected`,
+      bands: 'none: the pool is the cube document cards (D456)',
+      repeatCap: `a card is in at most max(${REPEAT_CAP_FLOOR}, floor(${maxShare} x N1)) of the run's N1 k = 1 decks; once there it is out of every later k = 1 deck's pool; the run is drawn again with the cap of its own N1 until the cap holds` },
+  };
+  fs.writeFileSync(path.join(out, 'decks.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  say(`decks: ${count} deck(s) from ${name} (${pool.cards.length} of its ${pool.listed} cards drawable), seed ${seed}, into ${shownPath(repo, out) || '.'}: k = ${ks.join(' / ')} ${ks.map((k) => byK[k]).join(' / ')}; ${manifest.rejections} rejected draw(s), ${manifest.makeupRedraws} new makeup(s); repeat cap ${capCount} of ${byK[1] ?? 0} k=1 decks, ${capped.size} card(s) reached it; a card's share of k=1 decks at most ${manifest.repeatCap.maxShareOfK1 ?? '-'}`);
   return 0;
 }
 
