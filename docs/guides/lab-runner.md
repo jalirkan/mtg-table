@@ -402,6 +402,17 @@ restart:
   (under `var/` only) are moved aside to `.restart-<time>-<name>`. The job's globs never
   match those.
 
+**Every daemon start says why it happened** (`tools/runner/restart.ts`). The daemon keeps
+`var/runner/last-exit.json`: `running` from its start, then `exited` with the reason on the
+way out (`SIGTERM`/`SIGINT`, an uncaught error and its message, or `exit <code>`, plus
+whether it was paused by `tools/runner.sh pause`/`stop`, and `install`'s note when an install
+restarted it). A SIGKILL, an OOM kill, a power loss or a crash writes nothing, so the next
+start finds `running` and says *no record*. That start writes one line from the record:
+the previous exit, the boot id compared with the last one (`same boot`: the service
+restarted; `the machine rebooted since`), the uptime and systemd's `INVOCATION_ID`. The
+line goes into the journal (`runner: start: …`) and, as `restart_reason:`, into the STATUS
+of every job the start adopts, resumes or restarts.
+
 **A retry starts at the block that was stopped** (D365). Every `## Commands` block that
 finishes is recorded in the job's `run.json` (`blocksDone`: its exit code, when, and a hash
 of its text) and in STATUS (`blocks_done: run1 exit 0 at …`). A retry after a memory stop or

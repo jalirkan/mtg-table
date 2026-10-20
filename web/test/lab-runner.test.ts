@@ -21,7 +21,8 @@
  *  - the runner end to end: pilot -> checks -> sized commands -> final checks -> collect ->
  *    pushed STATUS / outputs / status.json / HEARTBEAT.md, the public copy on lab-status;
  *    an old-format job stopping after its pilot and `approve`; a failed pilot; an abort; a
- *    memory stop and its retry; a restart that adopts, resumes or restarts;
+ *    memory stop and its retry; a restart that adopts, resumes or restarts, and the
+ *    daemon start's restart reason in STATUS (restart.ts; its own tests: lab-runner-restart.test.ts);
  *  - the public copy's own clock (every minute while busy and changed, five minutes
  *    otherwise, backed off on failure); the local server's CORS allowlist, Private
  *    Network Access preflight, 127.0.0.1 bind and public-only paths;
@@ -1713,6 +1714,47 @@ test('runner: a restart adopts a running unit, resumes a resumable step, restart
   assert.equal(r.runs.get('J021')?.outcome?.state, 'done', w.sys.lines.join('\n'));
   assert.match(show(w.mtg, 'pc-results:results/J021/STATUS'), /restarted: .*not resumable/);
   assert.match(show(w.mtg, 'pc-results:results/J020/STATUS'), /resumed: .*skips what is done/);
+});
+
+test('runner: a daemon start\'s restart reason goes into every running job\'s STATUS as restart_reason (adopted or resumed); a start without one writes none', () => {
+  const w = world({ 'J026-x.md': NEW_JOB.replace('id: J010', 'id: J026'), 'J027-y.md': NEW_JOB.replace('id: J010', 'id: J027').replace('cpu: heavy', 'cpu: light') });
+  let r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  for (const id of ['J026', 'J027']) w.sys.release(`lab-${id}-prepare`, 'ok');
+  r.tick();
+  for (const id of ['J026', 'J027']) w.sys.release(`lab-${id}-pilot1`, 'ok');
+  r.tick();
+  assert.equal(r.runs.get('J026')?.unit, 'lab-J026-run1');
+  const statusOf = (id: string) => parseStatus(r.runs.get(id)?.pendingStatus ?? '')!;
+  assert.equal(statusOf('J026').fields.restart_reason, undefined, 'no restart yet');
+  // A start without a cause (`once`, or a runner older than restart.ts): no restart_reason.
+  r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  assert.equal(r.runs.get('J026')?.restarts.at(-1)?.how, 'adopted');
+  assert.equal(statusOf('J026').fields.restart_reason, undefined);
+  // A daemon start: J027's unit lives on (adopted), J026's died with the machine (resumed); both say why.
+  w.sys.held.delete('lab-J026-run1');
+  w.sys.states.delete('lab-J026-run1');
+  const cause = 'no record: the previous runner (pid 41, test123, started x) ended without writing its exit; the machine rebooted since (boot aaaaaaaa -> bbbbbbbb)';
+  r = new Runner(w.cfg, w.sys);
+  r.reconcile(cause);
+  assert.equal(r.runs.get('J026')?.restarts.at(-1)?.how, 'resumed');
+  assert.equal(r.runs.get('J027')?.restarts.at(-1)?.how, 'adopted');
+  for (const id of ['J026', 'J027']) {
+    const st = statusOf(id);
+    assert.equal(st.state, 'running');
+    assert.match(st.fields.restart_reason ?? '', /: no record: the previous runner \(pid 41.*the machine rebooted since/);
+    assert.equal(r.runs.get(id)?.restarts.at(-1)?.cause, cause);
+  }
+  assert.match(statusOf('J026').fields.resumed ?? '', /the runner restarted during run1/);
+  // It survives to the pushed STATUS once the job finishes.
+  w.sys.mode = 'run';
+  w.sys.release('lab-J027-run1', 'ok');
+  r.tick();
+  assert.equal(r.runs.get('J026')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.match(show(w.mtg, 'pc-results:results/J026/STATUS'), /^done\n[\s\S]*restart_reason: .*the machine rebooted since/);
 });
 
 test('runner: someone else\'s running job (the PC session\'s own unit) blocks heavy work and shows in status.json', () => {
