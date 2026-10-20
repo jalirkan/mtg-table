@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-19T21:14:26-04:00",
- "heartbeat": "2026-10-19T21:14:26-04:00",
+ "updated": "2026-10-19T21:19:09-04:00",
+ "heartbeat": "2026-10-19T21:19:09-04:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-10-19T21:09:53-04:00",
  "idleReason": "memory backoff",
  "host": {
-  "load1": 1.2,
+  "load1": 0.72,
   "memUsedGb": 6.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 1737,
