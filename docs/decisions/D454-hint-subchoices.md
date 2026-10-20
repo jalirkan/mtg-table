@@ -20,7 +20,7 @@ searched, only reported.
 
 1. **The line is Forge's own answers, reported as the engine's default — never graded.** The answer
    gains `line`: an ordered list of `{kind, text, ids}` steps — `target` ("Quantum Reduction → Peggy
-   Carter, Secret Agent"), `x` ("X = 3"), `sacrifice` / `discard` / `exile` / `return` / `tap` (what a
+   Carter, Secret Agent"), `x` ("Fireball: X = 3"), `sacrifice` / `discard` / `exile` / `return` / `tap` (what a
    cost took), `mode` (a charm's mode, its script description), `choose` (what a resolution asked
    for), `number`, `trigger` (a trigger of the seat's that it aimed), and `then` (what Forge's AI went
    on to play before handing priority back: "then equip S.H.I.E.L.D. Spy Kit → Quake, Agent of
@@ -58,14 +58,22 @@ searched, only reported.
    face-down card without its face, a card the playout drew or redealt (the determinizer only
    shuffles hidden cards between hand and library), an opponent card dealt from the pool model, a
    card tutored from the seat's own library. A step's `ids` are the wire ids of exactly the cards its
-   text names. The mode description is the card script's own `SpellDescription` (`CARDNAME` as "it"),
-   never a stack description (which lint rule `stackDescription` bans for the same reason).
+   text names. A step that describes its source — a mode's text, its X — is written only when that
+   source is named ("Abrade mode → …", "Fireball: X = 3"): "then cast an unseen card" followed by its
+   mode text would say which card it is (amended after the cloud's review of #168). The mode
+   description is the card script's own `SpellDescription` (`CARDNAME` as "it"), never a stack
+   description (which lint rule `stackDescription` bans for the same reason).
 4. **The helper checks every line again before it leaves** (`tools/hint-runner.mjs` `checkLine`):
    every id must be a card the moment's state (the bridge's own log, `momentOf`'s last state) shows
    this seat by name, and the text — those names taken out — must be one of the fixed shapes, whose
-   only other words are "you", "the opponent", "an unseen card" and "a token" (`mode` lists no ids).
+   only other words are "you", "the opponent", "an unseen card" and "a token"; a `mode` or `x` step names exactly one card, its own.
    A step that fails withholds the whole line (`lineWithheld` says why and names no card); so does a
    line for another option than the pick (`lineFor`). The hint still answers.
+5. **The answers are UTF-8 whatever the locale.** Java 18+ encodes stdout by the locale
+   (`stdout.encoding`), not by `-Dfile.encoding`: under `LANG=C` (a systemd unit, the launcher) every
+   "→" printed as "?" and item 4 withheld every line. `CoachGrade.main` sets stdout and stderr to
+   UTF-8 print streams first (in code, not as launch flags, so every way of starting it agrees), and
+   `bridge/build.sh` runs `GradeSelfTest utf8-probe` under `LC_ALL=C` and checks the bytes.
 
 **Evidence.** The real engine through `createHintRunner` (`coach-grade.sh serve`), cuts of
 `fixtures/games/human-auto-42.jsonl`: turn 7 MAIN2 "cast Quantum Reduction" **clear**, `line`

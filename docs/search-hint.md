@@ -127,9 +127,9 @@ attack or block: until that combat's damage), what the AI answered:
 | `kind` | `text` | what it is |
 |---|---|---|
 | `target` | `Quantum Reduction → Peggy Carter, Secret Agent` | the spell's targets (every part of it) |
-| `x` | `X = 3` | the X it paid |
+| `x` | `Fireball: X = 3` | the X it paid (only for a card you are shown by name) |
 | `sacrifice` · `discard` · `exile` · `return` · `tap` | `sacrifice → Memnite` | what a cost took, or a resolution made it sacrifice or discard |
-| `mode` | `mode → Destroy target artifact.` | a charm's chosen mode (the card script's own words; no `ids`) |
+| `mode` | `Abrade mode → Destroy target artifact.` | a charm's chosen mode, in the card script's own words (only for a card you are shown by name: an unseen card's mode would say which card it is) |
 | `choose` | `choose → Griselbrand` | a choice the resolution asked for |
 | `number` | `number = 2` | a number it chose |
 | `trigger` | `Memnite trigger → the opponent` | a trigger of the seat's and its targets |
@@ -143,8 +143,11 @@ or redealt, an opponent card dealt from the pool model, a card tutored from the
 library), or "a token" for one the playout made. The helper checks every line
 again before it leaves (`checkLine`: every id shown by name, the text one of the
 shapes above with only "you", "the opponent", "an unseen card" and "a token"
-besides those names); a step that fails withholds the whole line
-(`lineWithheld`) and the hint still answers.
+besides those names; a `mode` or `x` step names exactly its own card); a step
+that fails withholds the whole line (`lineWithheld`) and the hint still answers.
+The analysis prints its answers in UTF-8 whatever the locale (`CoachGrade.main`;
+under `LANG=C` Java would print "→" as "?"), and `bridge/build.sh` checks that
+under `LC_ALL=C`.
 
 Seed 42, turn 7's MAIN2 (`fixtures/games/human-auto-42.jsonl` cut there, the
 real engine):
