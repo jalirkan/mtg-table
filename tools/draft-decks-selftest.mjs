@@ -15,16 +15,20 @@
 //      ledger, and GET's answer -- colour counts only, never a card name, a key, a
 //      room id or a time of day;
 //   4. the draft room: a seat's handed-in deck reaches the ledger only with that
-//      seat's consent (D407), an opt-out after hand-in takes it out, an opt-in puts
-//      it back; the room never throws when the ledger does;
+//      seat's consent (D407); an opt-out after hand-in DELETES its lines from the
+//      file (no card of it left on disk), past a full ledger's cap, and a rewrite
+//      that fails is an ERROR and still stops it being served; an opt-in puts it
+//      back; the room never throws when the ledger does;
 //   5. the helper's door: both routes behind it (a foreign Origin, a tunnel's header,
 //      405s, 413), /health's "draftDecks": 1 -- with a fake `claude` first on PATH;
-//   6. `import`: a table game's consenting seats only, a Draft vs Bot match's you.dck
-//      (never ai.dck), a deck outside the cube refused, the same deck once.
+//   6. `import`: a table game's consenting seats only, keyed `table:<matchId>:<seat>`
+//      and dated by the match id, so the room's own seat can withdraw it; a Draft vs
+//      Bot match's you.dck (never ai.dck); a deck outside the cube refused; the same
+//      deck once; `withdraw` by key.
 //
 // Its files are under var/draft-decks-selftest/.  No network, no engine, no claude.
 
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -183,12 +187,35 @@ section('4. the draft room: a seat\'s deck reaches the ledger only with its cons
   const disk = readFileSync(rl.file, 'utf8');
   ok(!disk.includes('Justin') && !disk.includes('Evan') && !disk.includes(made.body.token), 'the ledger holds no player name, no deck name and no token');
   ok(disk.includes(`"key":"room:${rid}:0"`) && disk.includes('"cubeHash"'), 'its line is keyed by room and seat, with the cube\'s hash');
+  rs.deck(rid, 0, deck(pk[0]));   // handed in again (sideboarded): a second line of the same key
+  eq(readFileSync(rl.file, 'utf8').split('\n').filter(Boolean).length, 2, 'a deck handed in again appends a second line of its key');
   rs.record(rid, 0, false);
-  eq(rl.shares('omega').body.decks.length, 0, 'seat 0 opts out after handing in: its deck is taken out (a withdrawn line)');
+  eq(rl.shares('omega').body.decks.length, 0, 'seat 0 opts out after handing in: its deck is no longer served');
+  eq(readFileSync(rl.file, 'utf8'), '', '... and every line of it is DELETED from the file (no withdrawn line, no card left on disk)');
+  eq((statSync(rl.file).mode & 0o777).toString(8), '600', 'the rewritten ledger is still mode 600');
+  ok(!require_tmp(join(VAR, 'room-ledger')), 'no temp file left behind');
   rs.record(rid, 1, true);
   eq(rl.shares('omega').body.decks.length, 1, 'seat 1 opts in with its deck in the room: its deck is in');
   rs.deck(rid, 1, { ...deck(pk[1]), record: false });
   eq(rl.shares('omega').body.decks.length, 0, 'a deck handed in with "record": false takes the seat\'s deck out again');
+  // A full ledger: a new deck is refused (507), an opt-out is not.
+  const fullL = createDraftDecks({ dir: join(VAR, 'full-ledger'), varRoot: join(ROOT, 'var'), maxBytes: 1, scriptOf: () => scriptOf });
+  mkdirSync(join(VAR, 'full-ledger'), { recursive: true });
+  writeFileSync(join(VAR, 'full-ledger', 'decks.jsonl'), JSON.stringify({ v: 1, at: '2026-10-17T00:00:00Z', source: 'room', key: 'room:rFULL1:1', cubeId: 'omega', main: [[23, 'Ancestral Vision'], [17, 'Island']] }) + '\n', { mode: 0o600 });
+  eq(fullL.postSolo(body()).status, 507, 'a full ledger refuses a new deck (507)');
+  eq(fullL.recordRoom({ roomId: 'rFULL1', seat: 1, cubeId: 'omega', record: false }), true, '... but a seat\'s opt-out still goes through');
+  eq([readFileSync(fullL.file, 'utf8'), fullL.shares('omega').body.decks.length], ['', 0], '... its line deleted and nothing served');
+  // A rewrite that fails: loud, and the deck still stops being served.
+  const brokenDir = join(VAR, 'broken-ledger');
+  const errs = [];
+  const broken = createDraftDecks({ dir: brokenDir, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, log: (x) => errs.push(x) });
+  broken.recordRoom({ roomId: 'rBROKE1', seat: 1, cubeId: 'omega', main: [[23, 'Ancestral Vision'], [17, 'Island']], record: true });
+  chmodSync(brokenDir, 0o500);   // the folder read-only: the temp file cannot be written
+  let threwW = false;
+  try { broken.recordRoom({ roomId: 'rBROKE1', seat: 1, cubeId: 'omega', record: false }); } catch { threwW = true; }
+  chmodSync(brokenDir, 0o700);
+  ok(threwW && errs.some((x) => /ERROR .*could NOT be deleted/.test(x)), 'a deletion that fails throws and is logged as an ERROR');
+  eq(broken.shares('omega').body.decks.length, 0, '... and the deck is not served by this process any more');
   const angry = createRoomStore({ dir: null, log: () => {}, onDeck: () => { throw new Error('disk full'); } });
   const m2 = angry.create((() => { const c = {}; checkCreate({ cubeId: 'omega', cards, name: 'A', firstSeat: 0, record: true }, c); return c; })());
   angry.join(m2.body.id, 1, 'B');
@@ -257,17 +284,30 @@ section('6. import: a recorded table game\'s consenting seats, a Draft vs Bot ma
   const names = new Set(['thalia, guardian of thraben', 'kitchen finks', 'lightning helix', 'birthing pod', 'ancestral vision']);
   const r1 = importMatch({ store: il, dir: table, cube: 'omega', names });
   eq(r1.map((m) => [m.file, m.added]), [['seat0.dck', true], ['seat1.dck', false]], 'a table game: the consenting seat imported, the other skipped');
+  const first = JSON.parse(readFileSync(il.file, 'utf8').split('\n')[0]);
+  eq([first.key, first.at.slice(0, 10)], ['table:m1792262156023:0', '2026-10-17'], 'keyed table:<matchId>:<seat>, dated by the match id');
   ok(/did not agree/.test(r1[1].what), 'it says why the other was skipped');
   eq(importMatch({ store: il, dir: table2, cube: 'omega', names }).map((m) => m.added), [false, false], 'game 2 of the same match (the same deck): nothing twice');
   eq(importMatch({ store: il, dir: solo, cube: 'omega', names }).map((m) => [m.file, m.added]), [['you.dck', true]], 'a Draft vs Bot match: your deck, never the AI\'s');
   eq(il.shares('omega').body.decks.map((d) => d.source).sort(), ['room', 'solo'], 'both in GET, as a room deck and a solo one');
   eq(importMatch({ store: il, dir: solo, cube: 'vintage', names: new Set(['kitchen finks']) })[0].added, false, 'a deck with a card outside the cube\'s list: refused');
   ok(!readFileSync(il.file, 'utf8').includes('Practice draft') && !readFileSync(il.file, 'utf8').includes('Justin'), 'the ledger keeps no deck name and no player name');
+  // The room that played that match: its seat 0 opts out, and the imported line goes with it.
+  eq(il.recordRoom({ roomId: 'rROOM01', seat: 1, cubeId: 'omega', record: false, matchIds: ['m1792262156023', 'm1792263293677'] }), false, 'the other seat opting out removes nothing of seat 0');
+  eq(il.recordRoom({ roomId: 'rROOM01', seat: 0, cubeId: 'omega', record: false, matchIds: ['m1792262156023', 'm1792263293677'] }), true, 'the room\'s seat 0 opting out removes its imported table line');
+  eq(il.shares('omega').body.decks.map((d) => d.source), ['solo'], '... leaving the solo deck');
+  ok(!readFileSync(il.file, 'utf8').includes('Thalia'), '... and none of its cards on disk');
+  eq(il.withdraw(['solo:nothing-here']), 0, 'withdraw of an unknown key: nothing removed');
+  const soloKey = il.summary()[0].key;
+  eq(il.withdraw([soloKey]), 1, '`withdraw <key>`: the line removed');
+  eq(readFileSync(il.file, 'utf8'), '', '... and the ledger is empty');
 }
 
 console.log(`\ndraft-decks-selftest: ${checks - failed}/${checks} checks passed${failed ? `, ${failed} FAILED` : ''}`);
 rmSync(VAR, { recursive: true, force: true });
 process.exit(failed ? 1 : 0);
+
+function require_tmp(d) { return readdirSync(d).some((f) => f.endsWith('.tmp')); }
 
 // ---------------------------------------------------------------------------
 // HTTP helper.

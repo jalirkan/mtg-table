@@ -8,26 +8,35 @@
 // the human ground truth the lab's bot-drafted shares are compared against.  Nothing
 // here is a verdict; it is a count.
 //
-// ONE FILE, APPEND ONLY: var/draft-decks/decks.jsonl (mode 600, folder 700, its real
-// path under var/).  One JSON object a line:
+// ONE FILE: var/draft-decks/decks.jsonl (mode 600, folder 700, its real path under
+// var/).  Decks are appended; a withdrawal REWRITES it.  One JSON object a line:
 //
 //   {"v":1,"at":"<ISO>","source":"room","key":"room:<roomId>:<seat>","cubeId":"omega",
 //    "cubeHash":"<hex>","format":"grid","main":[[1,"Card"],...,[17,"Plains"]]}
 //   {"v":1,"at":"<ISO>","source":"solo","key":"solo:<draftId>","cubeId":"omega",
 //    "format":"grid"|"winston"|"booster","main":[[n,"Card"],...]}
-//   {"v":1,"at":"<ISO>","source":"room","key":"room:<roomId>:<seat>","cubeId":"omega","withdrawn":true}
+//   {"v":1,"at":"<ISO>","source":"room","key":"table:<matchId>:<seat>",...}   (`import` of a
+//    table game: keyed by the game's match id, so its room can still withdraw it)
 //
 // A later line with the same key REPLACES the earlier one (a deck handed in again
-// between games is the same draft's final deck, sideboarded); a `withdrawn` line takes
-// the key out.  Only the main deck is kept -- the sideboard says nothing about the
-// colours played.  No player name, no token, no deck name.
+// between games is the same draft's final deck, sideboarded).  Only the main deck is
+// kept -- the sideboard says nothing about the colours played.  No player name, no
+// token, no deck name.
+//
+// A WITHDRAWAL DELETES (the review of #169): when a seat opts out, every line of its
+// keys -- `room:<roomId>:<seat>` and `table:<matchId>:<seat>` for each of the room's
+// games -- is removed by rewriting the file (a temp file, then rename), never hidden by
+// a later line, so the friend's list is gone from disk.  It is never refused for size
+// (the 32 MB cap is for new decks only), and a rewrite that fails throws and is logged
+// as an ERROR; either way this process stops serving those keys at once.  (Older
+// ledgers may hold `"withdrawn": true` lines; the fold still honours them.)
 //
 // WHERE A LINE COMES FROM:
 //
 //   - a draft room seat (D400/D404) that hands in a deck WITH ITS OWN CONSENT TO
 //     RECORDING ON (D407's per-seat `record`, as it stands when the deck goes in):
 //     draft-room.mjs calls `onDeck`, and this store writes the line.  A seat whose
-//     consent is off writes nothing -- and, if it had a line, a `withdrawn` one.  The
+//     consent is off writes nothing -- and, if it had lines, they are deleted.  The
 //     friend's list is the friend's (D407): it stays in this file on the owner's
 //     machine and LEAVES IT ONLY AS ITS COLOUR MAKEUP (the GET below).
 //   - a draft against the bot, from ForgeCoach: `POST /draft-deck` on the coach
@@ -66,13 +75,17 @@
 //   node tools/draft-decks.mjs import <var/match/m…> --cube <id>
 //        a table game's seat<N>.dck whose seats.json says that seat consented (D407),
 //        or a Draft vs Bot match's you.dck; every nonbasic must be in cubes/<id>.md
-//        when that file exists.  The same deck imported twice is one line.
+//        when that file exists.  The same deck imported twice is one line (game 2 of a
+//        match is game 1's deck).  A table seat's line is keyed `table:<matchId>:<seat>`
+//        and dated by the match id (its epoch milliseconds).
+//   node tools/draft-decks.mjs withdraw <key> [...]      # delete a deck's lines (a friend
+//        who asks after their room expired); `list --keys` prints the keys
 //
 // Run from the repo root (hard rule 9).  Self-test: tools/draft-decks-selftest.mjs
 // (gate 12f, CI).
 
 import { createHash } from 'node:crypto';
-import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkDeck, realInside } from './match-launcher.mjs';
@@ -88,6 +101,7 @@ export const COLOURS = ['W', 'U', 'B', 'R', 'G'];
 const CUBE_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;   // draft-room.mjs's, and a custom cube's my-<slug>
 const DRAFT_ID = /^[A-Za-z0-9_-]{1,80}$/;
 const ROOM_ID = /^r[A-Za-z0-9_-]{4,16}$/;
+const MATCH_ID = /^m[0-9]{13}$/;   // match-launcher.mjs's
 const BASICS = new Map([['plains', 'W'], ['island', 'U'], ['swamp', 'B'], ['mountain', 'R'], ['forest', 'G'], ['wastes', ''],
   ['snow-covered plains', 'W'], ['snow-covered island', 'U'], ['snow-covered swamp', 'B'], ['snow-covered mountain', 'R'], ['snow-covered forest', 'G']]);
 const COLOUR_WORD = { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' };
@@ -197,20 +211,41 @@ export function createDraftDecks(opts = {}) {
     return null;
   };
   const has = (key) => foldLedger(read()).some((l) => l.key === key);
+  // Keys withdrawn in this process: never served again, even if the rewrite below failed.
+  const gone = new Set();
+  /** Delete every line whose key is in `keys` (a temp file, then rename; no size cap).  Throws on failure.  -> lines removed. */
+  const remove = (keys) => {
+    for (const k of keys) gone.add(k);
+    if (!existsSync(file)) return 0;
+    if (!inside()) throw new Error('the draft-deck folder is not where it should be');
+    const lines = read().split('\n').filter((l) => l.trim());
+    const keep = lines.filter((l) => { try { return !keys.has(JSON.parse(l)?.key); } catch { return true; } });
+    if (keep.length === lines.length) return 0;
+    const tmp = `${file}.${process.pid}.tmp`;
+    writeFileSync(tmp, keep.map((l) => l + '\n').join(''), { mode: 0o600 });
+    renameSync(tmp, file);
+    return lines.length - keep.length;
+  };
   const iso = () => new Date(now()).toISOString();
   return {
     file,
     health: () => ({ draftDecks: 1 }),
     /** D455: a room seat handed in a deck (draft-room.mjs onDeck).  Written only with that seat's consent. */
-    recordRoom({ roomId, seat, cubeId, cubeHash, format = 'grid', main, record }) {
+    recordRoom({ roomId, seat, cubeId, cubeHash, format = 'grid', main, record, matchIds = [] }) {
       if (!ROOM_ID.test(String(roomId)) || (seat !== 0 && seat !== 1) || !CUBE_ID.test(String(cubeId))) return false;
       const key = `room:${roomId}:${seat}`;
       if (!record) {
-        if (!has(key)) return false;
-        const fail = append({ v: DRAFT_DECKS_VERSION, at: iso(), source: 'room', key, cubeId, withdrawn: true });
-        if (!fail) log(`DRAFT-DECKS room ${roomId} seat ${seat} opted out: its deck taken out of the ledger`);
-        return !fail;
+        // The seat's own keys: this room's, and each of its games' (an imported table game's).
+        const keys = new Set([key, ...matchIds.filter((m) => MATCH_ID.test(String(m))).map((m) => `table:${m}:${seat}`)]);
+        let n;
+        try { n = remove(keys); } catch (e) {
+          log(`DRAFT-DECKS ERROR room ${roomId} seat ${seat} opted out but its deck could NOT be deleted from ${file} (${e.message}): no longer served; delete it by hand`);
+          throw e;
+        }
+        if (n) log(`DRAFT-DECKS room ${roomId} seat ${seat} opted out: ${n} line(s) of its deck deleted from the ledger`);
+        return n > 0;
       }
+      gone.delete(key);
       const line = { v: DRAFT_DECKS_VERSION, at: iso(), source: 'room', key, cubeId, ...(typeof cubeHash === 'string' ? { cubeHash } : {}), format, main: main.map(([n, card]) => [n, card]) };
       const fail = append(line);
       if (fail) { log(`DRAFT-DECKS room ${roomId} seat ${seat}: not recorded (${fail.body.message})`); return false; }
@@ -231,7 +266,7 @@ export function createDraftDecks(opts = {}) {
     shares(cube) {
       if (typeof cube !== 'string' || !CUBE_ID.test(cube)) return { status: 400, body: { ok: false, type: 'error', message: '?cube= must be a cube id (lowercase letters, digits, dashes)' } };
       const s = scripts();
-      const decks = foldLedger(read()).filter((l) => l.cubeId === cube).map((l) => ({
+      const decks = foldLedger(read()).filter((l) => l.cubeId === cube && !gone.has(l.key)).map((l) => ({
         source: l.source, day: String(l.at).slice(0, 10), format: FORMATS.includes(l.format) ? l.format : null, ...makeupOf(l.main, s, memo),
       }));
       const order = (d) => `${d.day}|${d.source}|${COLOURS.map((c) => String(d.spells[c]).padStart(3, '0')).join('')}|${d.colourless}|${d.lands}|${d.unread}`;
@@ -239,10 +274,15 @@ export function createDraftDecks(opts = {}) {
       return { status: 200, body: { ok: true, v: DRAFT_DECKS_VERSION, cube, scripts: !!s, decks } };
     },
     /** Every deck's cube and source, for `list`: [{cubeId, source, day}]. */
-    summary: () => foldLedger(read()).map((l) => ({ cubeId: l.cubeId, source: l.source, day: String(l.at).slice(0, 10) })),
+    summary: () => foldLedger(read()).filter((l) => !gone.has(l.key)).map((l) => ({ key: l.key, cubeId: l.cubeId, source: l.source, day: String(l.at).slice(0, 10) })),
+    /** `withdraw`: delete these keys' lines (no size cap).  -> lines removed. */
+    withdraw: (keys) => remove(new Set(keys)),
     /** `import`: a line made elsewhere (its key already chosen); false when that key is already there. */
     importLine(line) {
       if (has(line.key)) return false;
+      // The same deck already in under another key (game 2 of a match is game 1's deck): once.
+      const same = JSON.stringify(line.main);
+      if (foldLedger(read()).some((l) => l.source === line.source && l.cubeId === line.cubeId && JSON.stringify(l.main) === same)) return false;
       const fail = append(line);
       if (fail) throw new Error(fail.body.message);
       return true;
@@ -283,9 +323,13 @@ export function importMatch({ store, dir, cube, names = null }) {
     const missing = names ? list.map(([, c]) => c).filter((c) => !BASICS.has(c.toLowerCase()) && !names.has(c.toLowerCase())) : [];
     if (missing.length) { out.push({ file, what: `not imported -- ${missing.length} card(s) not in cube ${cube} (${missing.slice(0, 3).join(', ')})`, added: false }); continue; }
     const sha = createHash('sha256').update(text).digest('hex').slice(0, 16);
-    const at = new Date(statSync(p).mtimeMs).toISOString();
+    const matchId = basename(dir);
+    // The match id is its start in epoch milliseconds: the day it was played, whatever the file's mtime.
+    const at = new Date(MATCH_ID.test(matchId) ? Number(matchId.slice(1)) : statSync(p).mtimeMs).toISOString();
+    if (room && !MATCH_ID.test(matchId)) { out.push({ file, what: `not imported -- ${matchId} is not a match folder (m + 13 digits)`, added: false }); continue; }
+    const seat = Number(file.slice(4, 5));
     const line = room
-      ? { v: DRAFT_DECKS_VERSION, at, source: 'room', key: `room:import-${sha}`, cubeId: cube, format: 'grid', main: list }
+      ? { v: DRAFT_DECKS_VERSION, at, source: 'room', key: `table:${matchId}:${seat}`, cubeId: cube, format: 'grid', main: list }
       : { v: DRAFT_DECKS_VERSION, at, source: 'solo', key: `solo:import-${sha}`, cubeId: cube, format: null, main: list };
     const fresh = store.importLine(line);
     out.push({ file, what: fresh ? `imported (${line.source})` : 'already there', added: fresh });
@@ -313,6 +357,7 @@ async function main(argv) {
       counts.set(k, c);
     }
     if (!counts.size) console.log(`no decks in ${store.file} yet`);
+    if (rest.includes('--keys')) for (const d of store.summary()) console.log(`  ${d.key}  ${d.cubeId} ${d.source} ${d.day}`);
     for (const [cube, c] of [...counts].sort()) console.log(`${cube}: ${c.room + c.solo} deck(s) -- ${c.room} from draft rooms (consenting seats), ${c.solo} against the bot; ${c.first} to ${c.last}`);
     return 0;
   }
@@ -343,7 +388,13 @@ async function main(argv) {
     console.log(`${added} deck(s) added to ${store.file}`);
     return 0;
   }
-  console.error('usage: node tools/draft-decks.mjs list | import <var/match/m…> [...] --cube <id>');
+  if (cmd === 'withdraw') {
+    if (!rest.length || rest.some((k) => !/^(room|table|solo):[A-Za-z0-9_:-]{1,120}$/.test(k))) { console.error('usage: node tools/draft-decks.mjs withdraw <key> [...]   (list --keys prints them)'); return 2; }
+    const n = store.withdraw(rest);
+    console.log(`${n} line(s) deleted from ${store.file}`);
+    return 0;
+  }
+  console.error('usage: node tools/draft-decks.mjs list [--keys] | import <var/match/m…> [...] --cube <id> | withdraw <key> [...]');
   return 2;
 }
 

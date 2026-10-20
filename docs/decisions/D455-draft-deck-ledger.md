@@ -28,17 +28,22 @@ Nothing on this machine kept that. Measured on 2026-10-19:
 
 **Decision.**
 
-1. **One ledger, append only**: `var/draft-decks/decks.jsonl` (mode 600, folder 700, real path
-   under `var/`), one line per deck, `{v, at, source, key, cubeId, format, main}`; a later line
-   with the same key replaces it (a deck handed in again between games is the same draft's final
-   deck, sideboarded) and a `withdrawn` line takes it out. The main deck only; no player name, no
+1. **One ledger**: `var/draft-decks/decks.jsonl` (mode 600, folder 700, real path under `var/`),
+   one line per deck, `{v, at, source, key, cubeId, format, main}`, appended; a later line with
+   the same key replaces it (a deck handed in again between games is the same draft's final
+   deck, sideboarded). **A withdrawal deletes** (#169's review): every line of the seat's keys is
+   removed by rewriting the file (a temp file, then rename), so no card of an opted-out seat's
+   deck stays on disk; it is never refused by the 32 MB cap, which is for new decks only; a
+   rewrite that fails throws and is logged as an ERROR, and the process stops serving those keys
+   either way. The main deck only; no player name, no
    deck name, no token. `tools/draft-decks.mjs` is the store, the reader and the contract; the lab
    can read the file as it is.
 2. **Where lines come from.**
    - **A draft room seat, only with that seat's own consent** (D407's `record`, as it stands when
      the deck goes in). `draft-room.mjs` calls `onDeck` after a seat hands in a deck and after a
      seat changes its consent: a consenting seat's deck is written, a seat that is not consenting
-     writes nothing, and a seat that opts out after its deck was written gets a `withdrawn` line.
+     writes nothing, and a seat that opts out after its deck was written has its lines deleted —
+     its `room:<roomId>:<seat>` key and the `table:<matchId>:<seat>` key of each of the room's games.
      The consent D407 asks for ("record our games") covers keeping what the seat played; a seat
      that said no is not counted at all.
    - **A draft against the bot**: ForgeCoach's `POST /draft-deck` on the coach helper's own door
@@ -48,8 +53,11 @@ Nothing on this machine kept that. Measured on 2026-10-19:
    - **`node tools/draft-decks.mjs import <var/match/m…> --cube <id>`** for a match recorded
      before the ledger: a table game's `seat<N>.dck` only where its `seats.json` says that seat
      consented, a Draft vs Bot match's `you.dck` (never `ai.dck`); every nonbasic must be in
-     `cubes/<id>.md` when that file exists; keyed by the file's digest, so both games of one match
-     are one deck. Nothing runs it on its own: the owner decides what goes in.
+     `cubes/<id>.md` when that file exists. A table seat's line is keyed `table:<matchId>:<seat>`
+     (so its room's seat can still withdraw it while the room lives) and dated by the match id; the
+     same deck from game 2 of the match is not added twice. Nothing runs it on its own: the owner
+     decides what goes in. `withdraw <key>` deletes a deck's lines by hand (a friend who asks after
+     their room expired; `list --keys` prints the keys).
 3. **A friend's list leaves the ledger only as its colour makeup.** `GET /draft-decks?cube=<id>`
    (the coach helper's door, D386: loopback, the Origin list, never a tunnel) answers each deck as
    `{source, day, format, spells: {W,U,B,R,G}, colourless, lands, unread}` — the count of its
@@ -73,10 +81,10 @@ Nothing on this machine kept that. Measured on 2026-10-19:
   a count; the colour makeup is all the page needs.
 - *Counting a seat that opted out, as an anonymous colour profile.* It said no to being recorded.
 
-**Measured.** `tools/draft-decks-selftest.mjs` (gate 12f, CI): 92 checks — the census's colour rule
+**Measured.** `tools/draft-decks-selftest.mjs` (gate 12f, CI): 109 checks — the census's colour rule
 on hand-written scripts and on 2.0.14's own, a deck's makeup, the fold, the body checks, the 600
 file and the full ledger, GET carrying no name, key or time; a room seat's deck in only with its
-consent, out on an opt-out, back on an opt-in, a throwing ledger never stopping a deck; both routes
+consent, deleted from the file on an opt-out (past a full ledger, and loudly when the rewrite fails), back on an opt-in, a throwing ledger never stopping a deck; both routes
 behind the helper's door; `import` taking only consenting seats and your own deck, once. On this
 machine's five match folders `import` would give Omega three decks (Justin's and Evan's from the
 friend draft of 2026-10-17, Justin's Rakdos against the bot) and Synergy none (its 2026-10-10 deck

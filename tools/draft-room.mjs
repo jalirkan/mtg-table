@@ -95,6 +95,17 @@
 //   GET  /room/<id>/log/<matchId>  (D407) -> 200 application/x-ndjson: THIS seat's own frame log of that
 //                               game (the bridge's, redacted for this seat), when this seat was recorded --
 //                               the review's frame numbers are this file's; 404 otherwise
+//   POST /room/<id>/hint     (D453) {"stateSeq": n, "inputSeq"?: n, "budgetMs"?: 1500-6000, "gameId"?: string,
+//                               "seat"?: 0|1} (body at most 1 KB) -> the coach helper's POST /hint answer
+//                               (docs/search-hint.md), for THIS seat's own log of the game the room is playing
+//                               now (var/games/friend-<matchId>-seat<N>/) -- never the other seat's.  The room
+//                               names the game and the seat: a "gameId" other than friend-<matchId>[-seat<N>]
+//                               is 409 {code:"game"}, a "seat" other than the token's 403 {code:"seat"}; no game
+//                               being played 409 {code:"no-game"}; the opponent's hidden cards are modelled from
+//                               the room itself -- the cube list minus this seat's picks, the other seat's picks
+//                               drawn first (a grid draft is face up) -- so "oppPool"/"oppKnown" are 400; the
+//                               hint off on the room's computer 503 {code:"off"} (the state's `hint` says so
+//                               first); per seat 30 a minute past a burst of 10, then 429 {code:"slow"}
 //   POST /room/<id>/bug      (D411) a bug report from this seat's page (tools/bug-reports.mjs: at most
 //                               6 MB, 3 a seat in 10 minutes past a burst of 3) -> 201 {ok, id, screenshot},
 //                               saved in var/bugs/ with the room and the seat; 404 {code:"off"} when this
@@ -113,7 +124,8 @@
 //            match: null | {n, bestOf: 3, wins: [a, b], over, winner, next: {game, chooser}}  (D406),
 //            games: [{match, game, matchId, winner, reason, recorded, review}]  (D406/D407: every finished
 //                   game, newest last; `recorded` and `review` are THIS seat's own),
-//            record: {you: bool, default: bool}  (D407: this seat's consent for the next game)}
+//            record: {you: bool, default: bool}  (D407: this seat's consent for the next game),
+//            hint: 0|1  (D453: 1 when POST /room/<id>/hint can answer on the room's computer)}
 //
 // BEST OF THREE (D406): the room runs the match, one engine start per game.  Game 1 starts when both
 // decks are in; when it ends the bridge's result.json (beside the seats file) names the winning seat, the
@@ -144,7 +156,8 @@ import { connect as netConnect } from 'node:net';
 import { networkInterfaces } from 'node:os';
 import { extname, join, resolve, sep } from 'node:path';
 
-import { checkDeck } from './match-launcher.mjs';
+import { cardNameOf, checkDeck } from './match-launcher.mjs';
+import { MAX_KNOWN, MIN_POOL } from './review-runner.mjs';
 import { MAX_BUG_BODY } from './bug-reports.mjs';
 
 export const ROOM_VERSION = 1;
@@ -384,6 +397,8 @@ function realUnder(root, p) {
  * gameResult (D406: matchId -> {winnerSeat, draw, reason, finished} | null, the bridge's result.json),
  * reviewOf (D407: a seat log's gameId -> {state, report?, why?}: that log's automatic engine review),
  * seatLog (D407: a seat log's gameId -> its text, or null),
+ * hint (D453: async (POST /hint body) -> {status, body}, the coach helper's hint runner for a seat's own
+ *       log of the room's game; null when the helper has none), hintOn (D453: () -> bool, it can answer now),
  * onDeck (D455: ({roomId, seat, cubeId, cubeHash, format, main, record}) after a seat hands in a deck or
  *         changes its consent -- draft-decks.mjs writes the deck to its ledger only when `record` is true,
  *         and takes it out when it turns false; never throws into the room) }
@@ -407,6 +422,9 @@ export function createRoomStore(opts = {}) {
   const gameResult = opts.gameResult ?? (() => null);
   const reviewOf = opts.reviewOf ?? null;
   const seatLogOf = opts.seatLog ?? (() => null);
+  // D453: the coach helper's search hint, for a seat's own log of the game being played.
+  const hintRun = opts.hint ?? null;
+  const hintOn = hintRun ? (opts.hintOn ?? (() => true)) : () => false;
   // D407: each finished game's review, per seat, as last seen ("<matchId>/<seat>" -> state word): memory only.
   const reviewSeen = new Map();
   /** A room from before D404, or from disk: the game fields it may lack. */
@@ -496,6 +514,8 @@ export function createRoomStore(opts = {}) {
       games: r.games.map((g) => ({ match: g.match, game: g.game, matchId: g.matchId, winner: g.winner, reason: g.reason ?? null,
         recorded: !!g.record?.[seat], review: reviewWord(g, seat) })),
       record: { you: !!r.record[seat], default: !!r.recordDefault },
+      // D453: whether POST /room/<id>/hint can answer here (a friend's browser cannot read the helper's /health).
+      hint: hintOn() ? 1 : 0,
     };
   };
 
@@ -504,7 +524,9 @@ export function createRoomStore(opts = {}) {
     if (!opts.onDeck) return;
     const d = r.decks[seat];
     try {
-      opts.onDeck({ roomId: r.id, seat, cubeId: r.cubeId, cubeHash: r.cubeHash, format: 'grid', main: d ? d.main.map(([n, card]) => [n, card]) : null, record: !!r.record[seat] && !!d });
+      // matchIds: the room's games, whose `table:<matchId>:<seat>` lines (an import) an opt-out deletes too.
+      const matchIds = [...new Set([...r.games.map((g) => g.matchId), r.game?.matchId].filter(Boolean))];
+      opts.onDeck({ roomId: r.id, seat, cubeId: r.cubeId, cubeHash: r.cubeHash, format: 'grid', main: d ? d.main.map(([n, card]) => [n, card]) : null, record: !!r.record[seat] && !!d, matchIds });
     } catch (e) { log(`ROOM ${r.id} seat ${seat}: the draft-deck ledger refused (${e.message})`); }
   };
 
@@ -739,7 +761,7 @@ export function createRoomStore(opts = {}) {
         r.record[seat] = value;
         r.activeAt = now();
         log(`ROOM ${id} seat ${seat} ${value ? 'agrees to' : 'opts out of'} recording its next game (D407)`);
-        if (r.decks[seat]) ledger(r, seat);   // D455: the deck it handed in follows its consent
+        if (r.decks[seat] || !value) ledger(r, seat);   // D455: the deck it handed in follows its consent; an opt-out deletes
         save();
         broadcast(r);
       }
@@ -771,6 +793,45 @@ export function createRoomStore(opts = {}) {
       const g = r.games.find((x) => x.matchId === matchId);
       if (!g || !g.record?.[seat]) return null;
       try { return seatLogOf(seatLog(matchId, seat)) ?? null; } catch { return null; }
+    },
+    /**
+     * D453: THIS seat's search hint for the game the room is playing now -- its own seat log's
+     * (friend-<matchId>-seat<N>), never the other seat's and never one a request names.  The opponent's
+     * hidden cards come from the room: the cube list minus this seat's picks as the pool, the other seat's
+     * picks (public: a grid draft is face up) drawn first.  Promise<{status, body}>.
+     */
+    async hint(id, seat, q) {
+      const r = rooms.get(id);
+      if (!r) return { status: 404, body: { ok: false, code: 'gone', message: 'no such room' } };
+      withGame(r);
+      if (!hintRun || !hintOn()) return { status: 503, body: { ok: false, code: 'off', message: 'the search hint is off on the room’s computer' } };
+      for (const k of Object.keys(q)) {
+        if (k === 'oppPool' || k === 'oppKnown') return { status: 400, body: { ok: false, code: 'bad', message: `"${k}" is not taken here: the room models your opponent's hidden cards from its own cube and your friend's picks` } };
+        if (!['gameId', 'seat', 'stateSeq', 'inputSeq', 'budgetMs'].includes(k)) return { status: 400, body: { ok: false, code: 'bad', message: `unknown field "${k}" (docs/search-hint.md)` } };
+      }
+      if (q.seat !== undefined && q.seat !== seat) return { status: 403, body: { ok: false, code: 'seat', message: 'a seat asks for its own hint only' } };
+      const g = r.game;
+      if (!g || g.state !== 'ready' || g.result || !g.matchId || !gameRunning(g.matchId)) {
+        return { status: 409, body: { ok: false, code: 'no-game', message: 'no game between you is being played in this room' } };
+      }
+      const gameId = seatLog(g.matchId, seat);
+      if (q.gameId !== undefined && q.gameId !== gameId && q.gameId !== `friend-${g.matchId}`) {
+        return { status: 409, body: { ok: false, code: 'game', message: 'that is not the game this room is playing now' } };
+      }
+      const body = { gameId, seat, stateSeq: q.stateSeq };
+      if (q.inputSeq !== undefined) body.inputSeq = q.inputSeq;
+      if (q.budgetMs !== undefined) body.budgetMs = q.budgetMs;
+      // The pool: the cube's names this seat did not take (one copy each; names the review's rule refuses left out).
+      const mine = new Set(r.picks[seat]);
+      const pool = [...new Set((Array.isArray(r.cubeCards) ? r.cubeCards : []).filter((n) => !mine.has(n)).map(cardNameOf).filter((n) => n !== null))];
+      if (pool.length >= MIN_POOL) {
+        body.oppPool = pool.map((n) => [1, n]);
+        const known = [...new Set(r.picks[1 - seat].map(cardNameOf).filter((n) => n !== null))].slice(0, MAX_KNOWN);
+        if (known.length) body.oppKnown = known;
+      }
+      let res;
+      try { res = await hintRun(body); } catch (e) { res = { status: 500, body: { ok: false, type: 'error', message: `the hint failed: ${e.message}` } }; }
+      return res && Number.isInteger(res.status) ? res : { status: 500, body: { ok: false, message: 'the hint gave no answer' } };
     },
     /** D406/D407: results and reviews (the room server calls it every POLL_MS). */
     poll,
@@ -998,14 +1059,14 @@ export function roomBases({ port, lan, publicUrl = null, interfaces = networkInt
 
 /**
  * opts: { store, port, bindHost, origins, extraOrigins, siteDir, log, now, limits: {apiPerMin, apiBurst,
- * sitePerMin, failPerMin, streamsPerSeat, streamsTotal, bugsPerMin, bugsBurst}, pingMs, tablePort (a test's
+ * sitePerMin, failPerMin, streamsPerSeat, streamsTotal, bugsPerMin, bugsBurst, hintsPerMin, hintsBurst}, pingMs, tablePort (a test's
  * fixed `/ws` target; default: the store's running game's), bugs (D411: tools/bug-reports.mjs's store, or
  * null: POST /room/<id>/bug is then 404 {code:"off"}) }
  */
 export function startRoomServer(opts) {
   const { store, port = DEFAULT_ROOM_PORT, bindHost = '127.0.0.1', origins = [], extraOrigins = [], siteDir = null, log = (s) => console.log(s) } = opts;
   const now = opts.now ?? Date.now;
-  const L = { seatPerMin: 120, seatBurst: 60, allPerMin: 1200, allBurst: 300, sitePerMin: 600, siteBurst: 200, failPerMin: 10, streamsPerSeat: 3, streamsTotal: 32, bugsPerMin: 0.3, bugsBurst: 3, ...(opts.limits ?? {}) };
+  const L = { seatPerMin: 120, seatBurst: 60, allPerMin: 1200, allBurst: 300, sitePerMin: 600, siteBurst: 200, failPerMin: 10, streamsPerSeat: 3, streamsTotal: 32, bugsPerMin: 0.3, bugsBurst: 3, hintsPerMin: 30, hintsBurst: 10, ...(opts.limits ?? {}) };
   const pingMs = opts.pingMs ?? PING_MS;
   const seats = createLimiter({ perMinute: L.seatPerMin, burst: L.seatBurst, now });
   const all = createLimiter({ perMinute: L.allPerMin, burst: L.allBurst, now });
@@ -1014,6 +1075,8 @@ export function startRoomServer(opts) {
   // D411: bug reports, per seat -- a burst of 3, then one every ~3 minutes; each may be 6 MB.
   const bugLimit = createLimiter({ perMinute: L.bugsPerMin, burst: L.bugsBurst, now });
   const bugs = opts.bugs ?? null;
+  // D453: search hints, per seat -- one a decision is a few a minute; each one runs the engine for seconds.
+  const hintLimit = createLimiter({ perMinute: L.hintsPerMin, burst: L.hintsBurst, now });
   const open = new Set();
   const sweeper = setInterval(() => store.sweep(), 60_000);
   sweeper.unref();
@@ -1067,7 +1130,7 @@ export function startRoomServer(opts) {
       }
       if (!all.take('all')) { send(res, 429, { ok: false, code: 'slow', message: 'the room is busy — try again in a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ' (all)'); return; }
       if (fails.empty(who)) { send(res, 429, { ok: false, code: 'slow', message: 'too many wrong links from this address — wait a minute' }, { ...cors, 'Retry-After': '60' }); say(429, ' (failures)'); return; }
-      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log|bug|cube)(?:\/(m[0-9]{13}))?)?$/.exec(path);
+      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log|bug|cube|hint)(?:\/(m[0-9]{13}))?)?$/.exec(path);
       if (!m || !ROOM_ID.test(m[1])) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const [, id, action, sub] = m;
       if ((action === 'review' || action === 'log') !== (sub !== undefined)) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
@@ -1162,6 +1225,7 @@ export function startRoomServer(opts) {
         say(r.status, r.status === 201 ? ` (seat ${seat} bug ${r.body.id})` : ` (seat ${seat} bug: ${String(r.body.message).slice(0, 120)})`);
         return;
       }
+      if (action === 'hint' && !hintLimit.take(`${id}/${seat}`)) { send(res, 429, { ok: false, code: 'slow', message: 'too many hints from this seat -- wait a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ` (seat ${seat} hint)`); return; }
       const cap = action === 'deck' ? MAX_DECK_BODY : MAX_SEAT_BODY;   // D404: a deck is a few KB
       const raw = await readBody(req, cap);
       if (raw.tooLarge) { send(res, 413, { ok: false, code: 'size', message: `request too large (at most ${cap / 1024} KB)` }, { ...cors, Connection: 'close' }); say(413); req.destroy(); return; }
@@ -1169,6 +1233,13 @@ export function startRoomServer(opts) {
       let q;
       try { q = raw.text === '' ? {} : JSON.parse(raw.text); } catch { send(res, 400, { ok: false, code: 'bad', message: 'the body is not JSON' }, cors); say(400); return; }
       if (!q || typeof q !== 'object' || Array.isArray(q)) { send(res, 400, { ok: false, code: 'bad', message: 'the body must be a JSON object' }, cors); say(400); return; }
+      if (action === 'hint') {
+        // D453: this seat's search hint for the room's game, from its own seat log only.
+        const r = await store.hint(id, seat, q);
+        send(res, r.status, r.body, cors);
+        say(r.status, ` (seat ${seat} hint ${r.body?.status ?? r.body?.code ?? ''}${r.body?.pick ? ` ${r.body.pick}` : ''})`);
+        return;
+      }
       if (action === 'join') {
         const name = q.name === undefined ? null : cleanText(q.name, MAX_SEAT_NAME);
         if (q.name !== undefined && name === null) { send(res, 400, { ok: false, code: 'bad', message: `a name is 1-${MAX_SEAT_NAME} characters` }, cors); say(400); return; }
