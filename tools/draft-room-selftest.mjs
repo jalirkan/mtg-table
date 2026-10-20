@@ -25,6 +25,9 @@
 //      sideboarded decks between games, the loser chooses play or draw, a draw
 //      played again, a game with no result not counted, two wins take the match
 //      and the next decks start another; each seat's consent and its own review.
+//   3d. D453: each seat's own search hint for the game being played -- its own seat
+//      log only, the opponent modelled from the room (the cube minus its picks, the
+//      other seat's picks first), what a request may not say, off, per-seat limits.
 //   8. revoking (D408): the owner's door closes a room or gives the friend's seat a
 //      new link; the old link is refused at once and after a restart; open streams
 //      are told; the room listener and a tunnel's Host cannot do either.
@@ -595,6 +598,98 @@ section('3c. D406/D407: best of three, sideboarding, play or draw, consent, each
   bs.record(rid, 1, true);
   await play(sb, deck(pk[1]));
   eq([bo.calls[5].match, bo.calls[5].record, bs.view(rid, 0).match.n, bs.view(rid, 0).match.wins], [{ bestOf: 3, game: 1, wins: [0, 0] }, [true, true], 2, [0, 0]], 'decks after the match: match 2, game 1, 0-0, with seat 1\'s new consent');
+  srv.close();
+}
+
+// ---------------------------------------------------------------------------
+section('3d. D453: each seat\'s own search hint for the game being played, POST /room/<id>/hint');
+{
+  const hb = { asked: [], running: true, results: new Map(), on: true };
+  const hs = createRoomStore({ dir: null, log: () => {},
+    startGame: async () => ({ ok: true, matchId: 'm1790000000042', tablePort: 8646 }),
+    gameRunning: () => hb.running,
+    gameResult: (m) => hb.results.get(m) ?? null,
+    hint: async (q) => { hb.asked.push(q); return { status: 200, body: { ok: true, v: 1, kind: 'search-hint', gameId: q.gameId, seat: q.seat, stateSeq: q.stateSeq, status: 'ok', pick: 'pass', strength: 'clear' } }; },
+    hintOn: () => hb.on });
+  const srv = startRoomServer({ store: hs, port: 0, origins: ORIGINS, log: () => {}, pollMs: 3_600_000, limits: { hintsPerMin: 60, hintsBurst: 14 } });
+  const B = `http://127.0.0.1:${await srv.listen()}`;
+  const mk = hs.create((() => { const c = {}; checkCreate({ cubeId: 'c', cards, name: 'Justin', firstSeat: 0 }, c); return c; })());
+  const rid = mk.body.id;
+  const [K0, K1] = [mk.body.token, mk.body.friendToken];
+  hs.join(rid, 1, 'Sam');
+  eq([hs.view(rid, 0).hint, hs.view(rid, 1).hint], [1, 1], 'the state says the hint can answer here, to both seats');
+  const ask = (token, body) => call(B, `/room/${rid}/hint`, { method: 'POST', token, body });
+  const nog = await ask(K0, { stateSeq: 5 });
+  eq([nog.status, nog.json.code], [409, 'no-game'], 'no game being played (still drafting): 409 no-game');
+  for (let v = hs.view(rid, 0); !v.done; v = hs.view(rid, 0)) {
+    const line = [0, 1, 2, 3, 4, 5].find((l) => l !== v.firstLine && lineCards(v.slots, l).length > 0);
+    hs.pick(rid, v.toAct, line, v.version);
+  }
+  const pk = [hs.view(rid, 0).seats[0].picks, hs.view(rid, 0).seats[1].picks];
+  const deck = (p) => ({ name: 'D', main: [...p.slice(0, 23).map((c) => [1, c]), [17, 'Plains']] });
+  hs.deck(rid, 0, deck(pk[0]));
+  hs.deck(rid, 1, deck(pk[1]));
+  for (let i = 0; i < 200 && hs.view(rid, 0).game?.state !== 'ready'; i++) await new Promise((r) => setTimeout(r, 5));
+  const mid = hs.view(rid, 0).game.matchId;
+  eq(mid, 'm1790000000042', 'the game between the two is being played');
+  hb.asked.length = 0;
+  const a0 = await ask(K0, { stateSeq: 812, inputSeq: 816, budgetMs: 2500 });
+  const q0 = hb.asked[0];
+  eq([a0.status, a0.json.kind, a0.json.gameId, q0.gameId, q0.seat, q0.stateSeq, q0.inputSeq, q0.budgetMs],
+    [200, 'search-hint', `friend-${mid}-seat0`, `friend-${mid}-seat0`, 0, 812, 816, 2500], "seat 0's hint is asked of seat 0's own log, its seq and budget passed on");
+  const a1 = await ask(K1, { stateSeq: 813 });
+  const q1 = hb.asked[1];
+  eq([a1.status, q1.gameId, q1.seat, 'inputSeq' in q1, 'budgetMs' in q1], [200, `friend-${mid}-seat1`, 1, false, false], "seat 1's hint: seat 1's own log; nothing the body did not carry");
+  ok(hb.asked.every((q) => /^friend-m\d{13}-seat[01]$/.test(q.gameId)), 'never the game\'s other logs (no omniscient one, no bare id)');
+  // The opponent's hidden cards, from the room alone.
+  ok(q0.oppPool.every(([n]) => n === 1), 'the pool: one copy of each name, as the room keeps its cube');
+  const poolNames = q0.oppPool.map(([, c]) => c);
+  eq([poolNames.length, poolNames.some((c) => pk[0].includes(c)), pk[1].every((c) => poolNames.includes(c))],
+    [cards.length - pk[0].length, false, true], "seat 0's pool: the cube minus seat 0's own picks; seat 1's picks in it");
+  eq(q0.oppKnown, pk[1], "seat 0's known cards: seat 1's picks, which both saw (a grid draft is face up)");
+  eq([q1.oppPool.some(([, c]) => pk[1].includes(c)), q1.oppKnown], [false, pk[0]], "and the same the other way for seat 1");
+  // What a request may not say.
+  hb.asked.length = 0;
+  const pl = await ask(K0, { stateSeq: 5, oppPool: [[80, 'Island']] });
+  eq([pl.status, pl.json.code, /room models/.test(pl.json.message)], [400, 'bad', true], 'an oppPool from the page: 400 (the room models the opponent itself)');
+  eq((await ask(K0, { stateSeq: 5, oppKnown: ['Shock'] })).status, 400, 'an oppKnown from the page: 400');
+  eq((await ask(K0, { stateSeq: 5, oppDeck: 'decks/x.dck' })).status, 400, 'an unknown field (a deck): 400');
+  const sx = await ask(K1, { stateSeq: 5, seat: 0 });
+  eq([sx.status, sx.json.code], [403, 'seat'], "seat 1 asking for seat 0's hint: 403 seat");
+  const gx = await ask(K1, { stateSeq: 5, gameId: `friend-${mid}-seat0` });
+  eq([gx.status, gx.json.code], [409, 'game'], "seat 1 naming seat 0's log: 409 game");
+  eq((await ask(K0, { stateSeq: 5, gameId: 'friend-m1790000000001-seat0' })).status, 409, 'another game\'s id: 409 game');
+  eq((await ask(K0, { stateSeq: 5, gameId: 'human-ws-42' })).status, 409, 'a game against the AI by name: 409 game');
+  eq(hb.asked.length, 0, 'none of those reached the engine');
+  const ok0 = await ask(K0, { stateSeq: 5, gameId: `friend-${mid}`, seat: 0 });
+  eq([ok0.status, hb.asked[0]?.gameId], [200, `friend-${mid}-seat0`], 'the game\'s own id (friend-<matchId>) and the token\'s seat: taken, still seat 0\'s log');
+  eq((await call(B, `/room/${rid}/hint`, { token: K0 })).status, 405, 'GET: 405');
+  eq((await call(B, `/room/${rid}/hint`, { method: 'POST', token: 'B'.repeat(22), body: { stateSeq: 5 } })).status, 403, 'a wrong token: 403');
+  eq((await call(B, `/room/${rid}/hint`, { method: 'POST', body: { stateSeq: 5 } })).status, 403, 'no token, from loopback too: 403');
+  eq((await ask(K0, { stateSeq: 5, budgetMs: 3000, gameId: 'x'.repeat(1100) })).status, 413, 'a body over 1 KB: 413');
+  // Off on the room's computer: the state says so, and the route answers 503.
+  hb.on = false;
+  const offr = await ask(K0, { stateSeq: 5 });
+  eq([hs.view(rid, 1).hint, offr.status, offr.json.code], [0, 503, 'off'], 'the hint off here: the state says 0, the route 503 off');
+  hb.on = true;
+  // Per seat: one seat's burst does not spend the other's.
+  let slow = null;
+  for (let i = 0; i < 20 && !slow; i++) { const r = await ask(K0, { stateSeq: 5 }); if (r.status === 429) slow = r; }
+  eq([slow?.status, slow?.json.code], [429, 'slow'], "seat 0 past its burst of hints: 429 slow");
+  eq((await ask(K1, { stateSeq: 5 })).status, 200, "seat 1's hints are its own: still answered");
+  // The game over: no more hints for it.
+  hb.results.set(mid, { winnerSeat: 0, draw: false, reason: 'AllOpponentsLost', finished: true });
+  hs.poll();
+  const over = await ask(K1, { stateSeq: 5 });
+  eq([over.status, over.json.code], [409, 'no-game'], 'the game over: 409 no-game');
+  // A room listener with no hint runner (a helper started --no-hint).
+  const ns = createRoomStore({ dir: null, log: () => {} });
+  const nmk = ns.create((() => { const c = {}; checkCreate({ cubeId: 'c', cards }, c); return c; })());
+  const nsrv = startRoomServer({ store: ns, port: 0, origins: ORIGINS, log: () => {}, pollMs: 3_600_000 });
+  const NB = `http://127.0.0.1:${await nsrv.listen()}`;
+  const nr = await call(NB, `/room/${nmk.body.id}/hint`, { method: 'POST', token: nmk.body.token, body: { stateSeq: 5 } });
+  eq([ns.view(nmk.body.id, 0).hint, nr.status, nr.json.code], [0, 503, 'off'], 'no hint runner: the state says 0, the route 503 off');
+  nsrv.close();
   srv.close();
 }
 

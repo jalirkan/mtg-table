@@ -22,7 +22,8 @@
 // one the moment shows this seat, a planted hidden name withheld); a game between two people refused; the seat;
 // supersede (waiting and running); the queue and 429; refused -> 403; a dead
 // engine -> 500 and a restart; the default spawn under nice; and the helper's
-// route (/health, POST, 405, Origin, --no-hint).
+// route (/health, POST, 405, Origin, --no-hint); and D453's draft room route,
+// each seat's hint from its own seat log of the room's game, never the other's.
 //
 //   node tools/hint-runner-selftest.mjs      # exit 0 iff every check passes; ~10 s
 //
@@ -33,6 +34,7 @@ import { request } from 'node:http';
 import { join, resolve } from 'node:path';
 import { checkLine, createHintRunner, hintOf, momentOf, optionVerdict, validateHint, visibleNames } from './hint-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
+import { checkCreate, createRoomStore, lineCards, startRoomServer } from './draft-room.mjs';
 
 const REL = 'var/hint-runner-selftest';
 const DIR = resolve(REL);
@@ -68,6 +70,9 @@ const game = (id, seat = 0) => {
 for (const id of ['g1', 'g2', 'g3', 'slow-1', 'slow-2', 'slow-3', 'refuse-1', 'trivial-1', 'none-1', 'crash-1', 'friend-m1234567890123',
   'leak-1', 'leakid-1', 'other-1']) game(id);
 game('seat1', 1);
+// D453: a table of two writes a log per seat (D402); the room asks for one seat's alone.
+game('friend-m1234567890123-seat0', 0);
+game('friend-m1234567890123-seat1', 1);
 
 // --- the fake coach-grade.sh serve ----------------------------------------------------------------
 const FAKE_JS = join(DIR, 'fake-serve.mjs');
@@ -227,6 +232,14 @@ for (const id of ['leak-1', 'leakid-1']) {
 const ot = await hr.post({ gameId: 'other-1', stateSeq: 5 });
 check(ot.status === 200 && ot.body.line === undefined && /not the pick/.test(ot.body.lineWithheld ?? ''), 'a line for another option: withheld');
 check((await hr.post({ gameId: 'friend-m1234567890123', stateSeq: 5 })).status === 403, 'a game between two people: 403');
+check((await hr.post({ gameId: 'friend-m1234567890123-seat0', seat: 0, stateSeq: 5 })).status === 403
+  && (await hr.post({ gameId: 'friend-m1234567890123-seat0', seat: 0, stateSeq: 5 }, { room: 'yes' })).status === 403,
+  "a seat's log of a game between two people, without the draft room's own option: 403");
+const fr0 = await hr.post({ gameId: 'friend-m1234567890123-seat0', seat: 0, stateSeq: 5 }, { room: true });
+check(fr0.status === 200 && fr0.body.gameId === 'friend-m1234567890123-seat0' && fr0.body.seat === 0 && fr0.body.status === 'ok',
+  "D453: the draft room's call (room: true) for seat 0's own log: answered");
+check((await hr.post({ gameId: 'friend-m1234567890123-seat1', seat: 0, stateSeq: 5 }, { room: true })).status === 400,
+  "the room's call naming seat 1's log for seat 0: 400 (the header's seat decides)");
 check((await hr.post({ gameId: 'nope', stateSeq: 5 })).status === 404, 'no such game: 404');
 check((await hr.post({ gameId: 'seat1', seat: 0, stateSeq: 5 })).status === 400, 'a seat other than the log\'s: 400');
 const mv = await hr.post({ gameId: 'g1', stateSeq: 4 });
@@ -306,12 +319,54 @@ check(p.status === 200 && p.body.pick === 'cast:9', 'POST /hint: 200 with the hi
 check((await call(port, 'GET', '/hint')).status === 405, 'GET /hint: 405');
 check((await call(port, 'POST', '/hint', { gameId: 'g1', stateSeq: 5, oppDeck: 'x' })).status === 400, 'an opponent deck through the route: 400');
 check((await call(port, 'POST', '/hint', { gameId: 'g1', stateSeq: 5 }, { Origin: 'http://evil.example' })).status === 403, 'another Origin: 403');
+check((await call(port, 'POST', '/hint', { gameId: 'friend-m1234567890123-seat0', seat: 0, stateSeq: 5 })).status === 403,
+  "the helper's own door: a seat's log of a game between two people is still 403 (D453 goes through the room)");
 h.close();
 const h2 = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins, timeoutS: 5, hint: null, log: () => {} });
 const port2 = await h2.listen();
 check((await call(port2, 'GET', '/health')).body.hint === 0 && (await call(port2, 'POST', '/hint', { gameId: 'g1', stateSeq: 5 })).status === 503,
   '--no-hint: "hint": 0 and 503');
 h2.close();
+
+// 6. D453: through the draft room's listener, wired as the coach helper wires it (hint.post(q, {room: true})).
+console.log('the draft room route (D453)');
+{
+  const rh = mk();
+  const cards = Array.from({ length: 240 }, (_, i) => `Cube Card ${i + 1}`);
+  const store = createRoomStore({ dir: null, log: () => {},
+    startGame: async () => ({ ok: true, matchId: 'm1234567890123', tablePort: 8646 }), gameRunning: () => true,
+    hint: (q) => rh.post(q, { room: true }), hintOn: () => rh.available() });
+  const srv = startRoomServer({ store, port: 0, origins, log: () => {}, pollMs: 3_600_000 });
+  const rport = await srv.listen();
+  const c = {};
+  checkCreate({ cubeId: 'c', cards, name: 'Justin', firstSeat: 0 }, c);
+  const mkr = store.create(c);
+  const rid = mkr.body.id;
+  store.join(rid, 1, 'Sam');
+  for (let v = store.view(rid, 0); !v.done; v = store.view(rid, 0)) {
+    store.pick(rid, v.toAct, [0, 1, 2, 3, 4, 5].find((l) => l !== v.firstLine && lineCards(v.slots, l).length > 0), v.version);
+  }
+  const picks = store.view(rid, 0).seats.map((x) => x.picks);
+  for (const seat of [0, 1]) store.deck(rid, seat, { name: 'D', main: [...picks[seat].slice(0, 23).map((n) => [1, n]), [17, 'Plains']] });
+  for (let i = 0; i < 200 && store.view(rid, 0).game?.state !== 'ready'; i++) await sleep(5);
+  check(store.view(rid, 1).hint === 1 && store.view(rid, 0).game?.matchId === 'm1234567890123', 'the game is on, and the state says the hint can answer');
+  for (const [seat, token] of [[0, mkr.body.token], [1, mkr.body.friendToken]]) {
+    const before = requests().length;
+    const a = await call(rport, 'POST', `/room/${rid}/hint`, { stateSeq: 5, inputSeq: 6 }, { 'X-Room-Token': token });
+    const q = requests().slice(before);
+    const moment = readFileSync(join(DIR, 'work', 'moment.jsonl'), 'utf8');
+    check(a.status === 200 && a.body.kind === 'search-hint' && a.body.gameId === `friend-m1234567890123-seat${seat}` && a.body.seat === seat
+      && a.body.knowledge.opponentModel === 'pool', `seat ${seat}: its own hint, from its own log, the opponent modelled from the room's pool`);
+    check(q.length === 1 && JSON.parse(moment.split('\n')[0]).gameId === `friend-m1234567890123-seat${seat}`, `seat ${seat}: the engine read seat ${seat}'s log and no other`);
+    const poolTxt = readFileSync(join(DIR, 'work', 'pool.txt'), 'utf8');
+    check(!picks[seat].some((n) => poolTxt.includes(`1 ${n}\n`)) && JSON.stringify(q[0].oppKnown) === JSON.stringify(picks[1 - seat]),
+      `seat ${seat}: the pool leaves out its own picks; the known cards are the other seat's picks`);
+  }
+  const no = await call(rport, 'POST', `/room/${rid}/hint`, { stateSeq: 5 });
+  check(no.status === 403, 'no seat token: 403, loopback or not');
+  srv.close();
+  rh.close();
+}
 
 rmSync(DIR, { recursive: true, force: true });
 console.log(`hint-runner-selftest ${failures ? 'FAILED' : 'OK'} (${checks} checks, ${failures} failure(s))`);

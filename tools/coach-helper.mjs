@@ -89,7 +89,9 @@
 //                 booted on the first hint, at low priority).  tools/hint-runner.mjs's
 //                 header is that contract (docs/search-hint.md the copyable form);
 //                 /health carries "hint": 1 when the bridge is built (else 0),
-//                 --no-hint turns it off.
+//                 --no-hint turns it off.  Never for a game between two people
+//                 (`friend-...`): each seat of one asks through the draft room's
+//                 POST /room/<id>/hint, behind its seat token, for its own log (D453).
 //
 //   GET  /match, POST /match  -- THE MATCH LAUNCHER (D303): start a match with two
 //                 decks the browser built.  tools/match-launcher.mjs's header is that
@@ -1234,7 +1236,10 @@ async function main() {
         gameResult: (matchId) => (match ? match.gameResult(matchId) : null),
         reviewOf: (gameId) => seatReviewOf({ review, auto }, gameId),
         // D407: a seat's own log, for that seat's review screen (the room checks the seat and its consent).
-        seatLog: (gameId) => { const g = gameLog(cfg.repoRoot, 'var/games', gameId); return g.error ? null : readLogText(g.abs); } });
+        seatLog: (gameId) => { const g = gameLog(cfg.repoRoot, 'var/games', gameId); return g.error ? null : readLogText(g.abs); },
+        // D453: a seat's search hint, through this helper's hint runner -- the room names the seat's own log.
+        hint: hint ? (q) => hint.post(q, { room: true }) : null,
+        hintOn: () => !!hint && hint.available() });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,

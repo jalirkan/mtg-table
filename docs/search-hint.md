@@ -59,8 +59,10 @@ the hint and a search decision mean the same thing.
   pool the opponent's hidden cards are basic lands, and the answer's
   `knowledge.opponentModel` says `basic-lands` — ForgeCoach's caveat then
   says "hidden cards as lands".
-- **A game between two people** (`friend-…`, D402/D407) is refused (403): a
-  seat's log there holds that player's hand, and this door is the host's.
+- **A game between two people** (`friend-…`, D402/D407) is refused on this
+  door (403): a seat's log there holds that player's hand, and this door is the
+  host's. Each seat asks through the draft room instead — *At a table of two*,
+  below (D453).
 
 ## `POST /hint`
 
@@ -155,7 +157,7 @@ real engine):
 
 Refusals are `{"ok": false, "type": "error", "message", "code"?}`: **400** a
 body that is not this (`problems` lists every one), **403** a game between two
-people, or knowledge the live guard refuses (`"status": "refused"`), **404** no
+people (on this door; D453's room route below), or knowledge the live guard refuses (`"status": "refused"`), **404** no
 such game, **405**, **409** `code: "moved-on" | "not-yet" | "superseded"`, **413**
 over 256 KB, **429** hints for two other games already waiting, **503** off
 (`--no-hint`, the bridge not built, or the engine could not start — its last
@@ -167,6 +169,53 @@ newer request for the same game supersedes the older: a waiting one is
 answered `409 superseded` at once, a running one when it ends (a grading
 cannot be stopped mid-round; at most `budgetMs` plus a rebuild). Requests for
 other games wait, two at most.
+
+## At a table of two — `POST /room/<id>/hint` (D453)
+
+A game between two people (a room's game, `friend-m<13 digits>`, D402/D404)
+has the hint too, for **both** seats, each for its own decisions only. It is
+asked on the draft room's listener (`roomPort`, 8644; `docs/draft-room.md`),
+behind the seat's own `X-Room-Token` — loopback included — exactly like that
+seat's review and log (D407), never on the coach helper's door, which still
+refuses every `friend-…` game.
+
+```json
+{"stateSeq": 1004, "inputSeq": 1008, "budgetMs": 3000}
+```
+
+- **The seat is the token's seat; the game is the room's.** The room names
+  the log itself: `var/games/friend-<matchId>-seat<N>/frames.jsonl`, the
+  bridge's redacted view for that seat (D402's per-seat logs) — never the other
+  seat's log and never a name the page sends. `gameId` and `seat` may be sent
+  and are checked: a `gameId` other than `friend-<matchId>` or
+  `friend-<matchId>-seat<N>` is **409 `code: "game"`** (the room is playing
+  another game now), a `seat` other than the token's **403 `code: "seat"`**.
+  No game being played (still drafting, between games, the game over) is **409
+  `code: "no-game"`**.
+- **The opponent is modelled from the room, not from the page.** `oppPool` and
+  `oppKnown` are refused (400): the room sends the cube list minus this seat's
+  own picks as the pool (one copy of each name; under 80 names, none — basic
+  lands) and the other seat's picks as the cards drawn first. A grid draft is
+  face up, so both are what this player saw; the other seat's deck is never
+  read (the room holds it, and the hint has no field for it). The live guard
+  (`HiddenPool.checkLive`) runs as on every hint.
+- **Everything else is `/hint`'s.** The same runner, engine, queue and Forge
+  home (`var/coach-grade/hint-home`); the same answer; `409 moved-on |
+  not-yet | superseded`, `429`, `504`, `500` as above. The two seats are two
+  games to the queue (each log its own key), so one seat's hint never
+  supersedes the other's.
+- **Off and limits.** The seat's state carries `"hint": 1` when the room's
+  computer can answer (the helper has a hint runner and the bridge is built),
+  else `0` — a friend's browser cannot read the helper's `/health` on
+  `127.0.0.1:8643`, so this is the page's switch. A helper without the hint
+  answers **503 `code: "off"`**; a helper from before D453 has no such route
+  (404) and no `hint` key in the state, and ForgeCoach treats both as off. Per
+  seat at most 30 hints a minute past a burst of 10, then **429 `code:
+  "slow"`**; the body at most 1 KB (413).
+- **No recording is needed.** The hint reads the seat's working log, which the
+  bridge writes for every game (D402), and keeps nothing: its moment file is
+  replaced by the next hint. A seat that opted out of recording (D407) still
+  gets its hints.
 
 ## Measured (the real engine, `tools/hint-probe.mjs`)
 
