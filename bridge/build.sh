@@ -171,6 +171,15 @@ java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.eval.EvalSelfTest "$RE
 # the engine half is tools/coach-grade.sh selftest (not in the build).
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.grade.GradeSelfTest
 
+# D454: the coach grader's answers are UTF-8 under ANY locale (Java 18+ encodes
+# stdout by the locale, not -Dfile.encoding; under LANG=C the search hint's "→"
+# came out as "?" and the helper withheld every line).  Run under C, check bytes.
+probe=$(env LC_ALL=C LANG=C java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.grade.GradeSelfTest utf8-probe | od -An -tx1 | tr -d ' \n')
+case "$probe" in
+  *e28692*) echo "grade utf8 probe: UTF-8 stdout under LC_ALL=C" ;;
+  *) echo "FAIL: CoachGrade's stdout is not UTF-8 under LC_ALL=C (got bytes $probe)" >&2; exit 1 ;;
+esac
+
 # Unit-check the AI seats' decision records (D347): the token grammar the
 # redaction checker also holds, the attack and block spellings agreeing with the
 # grader's, the JSON body, and a token that could carry a card name refused

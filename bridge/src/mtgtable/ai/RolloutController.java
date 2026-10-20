@@ -47,7 +47,7 @@ import forge.game.spellability.SpellAbility;
  * forcing with D310's outlet policy in front of Forge afterwards
  * ({@code rollout=outlets}, D390).
  */
-final class RolloutController extends PlayerControllerAi implements RolloutForcing {
+class RolloutController extends PlayerControllerAi implements RolloutForcing {
 
     /** The forcing itself, shared by both controllers. */
     static final class Forced {
@@ -173,6 +173,11 @@ final class RolloutController extends PlayerControllerAi implements RolloutForci
     @Override
     public boolean applied(final Game copy) {
         return forced.applied(copy);
+    }
+
+    /** The forced answer has been taken (D454: {@link RecordingController} starts its line there). */
+    final boolean forcedUsed() {
+        return forced.used;
     }
 
     @Override

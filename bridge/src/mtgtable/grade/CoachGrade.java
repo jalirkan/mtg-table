@@ -133,7 +133,17 @@ public final class CoachGrade {
 
     private CoachGrade() { }
 
+    /** D454: stdout and stderr in UTF-8, whatever the locale (main's first act; GradeSelfTest's utf8-probe). */
+    static void utf8Std() {
+        System.setOut(HintLine.utf8(java.io.FileDescriptor.out));
+        System.setErr(HintLine.utf8(java.io.FileDescriptor.err));
+    }
+
     public static void main(final String[] args) {
+        // D454: the answers are UTF-8 whatever the locale.  Java 18+ encodes stdout by the locale
+        // (stdout.encoding), not by -Dfile.encoding, so under LANG=C (a systemd unit, a launcher) the
+        // line's "→" printed as "?" and the helper withheld every line.
+        utf8Std();
         int exit;
         try {
             if (args.length == 0) {
@@ -244,6 +254,7 @@ public final class CoachGrade {
         final Grader.Settings s = settings(g);
         s.budgetMs = g.l("budget-ms", 3000);
         s.race.minRounds = g.i("min-rounds", 2);
+        s.line = true;   // D454: the hint's answer carries the best option's line
         if (!g.v.containsKey("leaf-scale")) {
             final File fitted = new File(Config.load().root(), FITTED_SCALE);
             if (fitted.isFile()) {
@@ -885,7 +896,8 @@ public final class CoachGrade {
      * {@code analyse}'s object with the request's {@code id}.  {@code "type":
      * "auto"} (D429, the search hint) grades whatever decision is open at the
      * moment ({@link Review#liveType}), or answers {@code "status":
-     * "unsupported"} when none the analysis grades is.  Requests are
+     * "unsupported"} when none the analysis grades is.  The answer carries
+     * the best option's {@code line} (D454, {@link HintLine}).  Requests are
      * answered one at a time, in order; EOF ends the process.
      */
     static int serve(final String[] argv) throws Exception {

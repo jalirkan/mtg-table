@@ -33,7 +33,8 @@ import java.util.Set;
  * moments; and D348–D351's: the leaf measure's intervals and their coverage in a
  * small simulation, racing at live round counts, the leaf-scale fit, the
  * search's override rules, the pool-mode arithmetic and the planted-leak test
- * of the live knowledge guard.  No Forge class is initialised (Jetty's JSON
+ * of the live knowledge guard; and D454's: the search hint's line in words,
+ * with a hidden card's name planted that its gate must never print.  No Forge class is initialised (Jetty's JSON
  * parser aside, through {@link WireLog}).
  */
 public final class GradeSelfTest {
@@ -129,6 +130,12 @@ public final class GradeSelfTest {
     }
 
     public static void main(final String[] args) {
+        if (args.length == 1 && "utf8-probe".equals(args[0])) {
+            // D454: bridge/build.sh runs this under LC_ALL=C and checks the bytes are UTF-8.
+            CoachGrade.utf8Std();   // what CoachGrade.main does first: no Forge class is touched
+            System.out.println("{\"text\":\"Quantum Reduction \u2192 Peggy Carter\"}");
+            return;
+        }
         seeds();
         intervals();
         regretTable();
@@ -144,6 +151,7 @@ public final class GradeSelfTest {
         hiddenPool();
         review();
         rolloutLabels();
+        hintLine();
         try {
             zstdRefused();
             plantedLeak();
@@ -152,6 +160,92 @@ public final class GradeSelfTest {
         }
         System.out.println("grade selftest: " + checks + " check(s), " + failures + " failure(s)");
         System.exit(failures == 0 ? 0 : 1);
+    }
+
+    private static Map<String, Object> wcard(final int id, final Object... kv) {
+        final Map<String, Object> m = new java.util.HashMap<>();
+        m.put("id", (long) id);
+        for (int i = 0; i < kv.length; i += 2) {
+            m.put((String) kv[i], kv[i + 1]);
+        }
+        return m;
+    }
+
+    /**
+     * D454: the search hint's line in words, and its gate -- a card is named
+     * only when the moment's wire card (the seat's redacted view) gives its
+     * name; a planted name on a hidden stub, a face-down card without its face,
+     * a card the playout made or drew, are never named, and a step's ids are
+     * exactly the cards its text names.
+     */
+    static void hintLine() {
+        final Map<Integer, Map<?, ?>> wire = new java.util.HashMap<>();
+        wire.put(10, wcard(10, "name", "Reanimate", "zone", "hand"));
+        wire.put(20, wcard(20, "name", "Griselbrand", "zone", "graveyard"));
+        wire.put(25, wcard(25, "name", "Memnite", "zone", "battlefield"));
+        // PLANTED: a hidden stub that (wrongly) carries a name -- the gate must never print it
+        wire.put(30, wcard(30, "hidden", true, "name", "Lightning Bolt", "zone", "hand"));
+        wire.put(40, wcard(40, "faceDown", true, "name", "", "zone", "battlefield"));
+        wire.put(41, wcard(41, "faceDown", true, "name", "", "alt", wcard(41, "name", "Morph Guy"), "zone", "battlefield"));
+        final Map<Integer, Integer> wireOfId = new java.util.HashMap<>();
+        wireOfId.put(110, 10);
+        wireOfId.put(120, 20);
+        wireOfId.put(125, 25);
+        wireOfId.put(130, 30);
+        wireOfId.put(140, 40);
+        wireOfId.put(141, 41);
+        final mtgtable.ai.LineRecorder.Ent reanimate = new mtgtable.ai.LineRecorder.Ent(110, false, 0);
+        final mtgtable.ai.LineRecorder.Ent you = new mtgtable.ai.LineRecorder.Ent(-1, false, mtgtable.ai.LineRecorder.YOU);
+        final mtgtable.ai.LineRecorder.Ent opp = new mtgtable.ai.LineRecorder.Ent(-1, false, mtgtable.ai.LineRecorder.OPPONENT);
+        final List<mtgtable.ai.LineRecorder.Raw> raws = new ArrayList<>();
+        raws.add(new mtgtable.ai.LineRecorder.Raw("target", reanimate, List.of(new mtgtable.ai.LineRecorder.Ent(120, false, 0)), 0, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("x", reanimate, null, 3, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("sacrifice", reanimate, List.of(new mtgtable.ai.LineRecorder.Ent(125, false, 0),
+                new mtgtable.ai.LineRecorder.Ent(130, false, 0)), 0, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("choose", null, List.of(new mtgtable.ai.LineRecorder.Ent(140, false, 0),
+                new mtgtable.ai.LineRecorder.Ent(141, false, 0), new mtgtable.ai.LineRecorder.Ent(999, true, 0)), 0, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("trigger", new mtgtable.ai.LineRecorder.Ent(130, false, 0), List.of(opp, you), 0, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("mode", reanimate, null, 0, "CARDNAME deals 2 damage\n to any target."));
+        // A card the playout drew (no wire id): its mode text and its X would say which card it is.
+        raws.add(new mtgtable.ai.LineRecorder.Raw("mode", new mtgtable.ai.LineRecorder.Ent(777, false, 0), null, 0, "Destroy target artifact."));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("x", new mtgtable.ai.LineRecorder.Ent(130, false, 0), null, 5, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("then-equip", new mtgtable.ai.LineRecorder.Ent(888, false, 0),
+                List.of(new mtgtable.ai.LineRecorder.Ent(125, false, 0)), 0, null));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("target", reanimate, List.of(), 0, null));   // nothing targeted: no step
+        final List<HintLine.Step> st = HintLine.render(raws, wireOfId, wire);
+        final List<String> texts = new ArrayList<>();
+        for (final HintLine.Step x : st) {
+            texts.add(x.kind + "|" + x.text + "|" + x.ids);
+        }
+        check(texts.equals(List.of(
+                "target|Reanimate → Griselbrand|[10, 20]",
+                "x|Reanimate: X = 3|[10]",
+                "sacrifice|sacrifice → Memnite, an unseen card|[25]",
+                "choose|choose → an unseen card, Morph Guy, a token|[41]",
+                "trigger|an unseen card trigger → the opponent, you|[]",
+                "mode|Reanimate mode → it deals 2 damage to any target.|[10]",
+                "then|then equip an unseen card → Memnite|[25]")), "the line in words, every card through the gate: " + texts);
+        boolean leaked = false;
+        for (final HintLine.Step x : st) {
+            leaked |= x.text.contains("Lightning Bolt") || x.ids.contains(30) || x.ids.contains(40);
+        }
+        check(!leaked, "PLANTED: a hidden stub's name (and a face-down card without its face) is never named, nor its id listed");
+        boolean described = false;
+        for (final HintLine.Step x : st) {
+            described |= x.text.contains("Destroy target artifact") || x.text.contains("X = 5");
+        }
+        check(!described, "an unseen source's mode text or X is never printed (it would say which card it is)");
+        final List<mtgtable.ai.LineRecorder.Raw> many = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            many.add(new mtgtable.ai.LineRecorder.Raw("number", null, null, i, null));
+        }
+        check(HintLine.render(many, wireOfId, wire).size() == HintLine.MAX_STEPS, "a line carries at most " + HintLine.MAX_STEPS + " steps");
+        final StringBuilder longMode = new StringBuilder();
+        for (int i = 0; i < 50; i++) {
+            longMode.append("word ");
+        }
+        check(HintLine.mode(longMode.toString()).length() == HintLine.MAX_MODE && HintLine.mode(" ") == null,
+                "a mode's description is one line, cut at " + HintLine.MAX_MODE);
     }
 
     static void seeds() {

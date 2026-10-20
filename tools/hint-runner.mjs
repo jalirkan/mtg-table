@@ -19,7 +19,9 @@
 //                  "oppKnown"?: ["Card", ...]       (AI picks the player saw: 60 at most),
 //                  "budgetMs"?: 1500-6000}
 //                 -> 200 {"ok":true,"v":1,"kind":"search-hint","status":"ok"|"trivial"|"unsupported", ...}
-//                 (the full answer is docs/search-hint.md's)
+//                 (the full answer is docs/search-hint.md's; D454 adds the pick's
+//                 "line": [{kind, text, ids}] -- what Forge's AI answered inside it --
+//                 checked by checkLine against the moment before it leaves)
 //                 409 {"ok":false,"code":"moved-on"|"superseded"|"not-yet", "message"}
 //                 400 bad input · 403 a game between two people, or knowledge the
 //                 live guard refuses (status "refused") · 404 no such game · 405 ·
@@ -121,12 +123,14 @@ export function momentOf(text, stateSeq, inputSeq = null) {
   let lastState = -1;
   let lastInput = -1;
   let seen = false;
+  let stateBody = null;
   for (let i = 1; i < lines.length; i++) {
     let f;
     try { f = JSON.parse(lines[i]); } catch { return { state: 'bad', why: `line ${i} is not JSON` }; }
     if (!f || f.dir === 'c2s') continue;
     if (f.type === 'state' && Number.isInteger(f.seq)) {
       lastState = Math.max(lastState, f.seq);
+      stateBody = f.body ?? null;   // the moment's state, as the analysis reads it (the last one in the file)
       if (f.seq === stateSeq) seen = true;
     } else if (f.type === 'input' && Number.isInteger(f.seq)) {
       lastInput = Math.max(lastInput, f.seq);
@@ -136,7 +140,7 @@ export function momentOf(text, stateSeq, inputSeq = null) {
   }
   if (lastState > stateSeq || (inputSeq !== null && lastInput > inputSeq)) return { state: 'moved' };
   if (!seen || (inputSeq !== null && lastInput < inputSeq)) return { state: 'behind' };
-  return { state: 'ok', text: `${lines.join('\n')}\n`, frames: lines.length - 1, seat: Number.isInteger(head.seat) ? head.seat : null };
+  return { state: 'ok', text: `${lines.join('\n')}\n`, frames: lines.length - 1, seat: Number.isInteger(head.seat) ? head.seat : null, stateBody };
 }
 
 /** knowledge.opponentModel from the grader's `opponent` (Review.opponentModel). */
@@ -160,6 +164,98 @@ export function optionVerdict(o) {
   if (o.best === true) return 'best';
   if (num(o.regret) !== null && Math.abs(o.regret) < TIE_REGRET) return 'tie';
   return num(o.regretLo) !== null && o.regretLo > CLEAR ? 'worse' : 'close';
+}
+
+/** Most steps a line carries (HintLine.MAX_STEPS). */
+export const LINE_MAX = 8;
+const LINE_ZONES = ['hand', 'battlefield', 'graveyard', 'exile', 'library', 'command'];
+
+/**
+ * D454: the cards a moment's state shows this seat by name, id -> name --
+ * Rebuild.knownName in JS: not a hidden stub; a face-down card only by its
+ * face (`alt.name`, which the bridge sends only to a seat allowed to see it);
+ * else a non-empty name.  The state is the seat's own log, redacted by the
+ * bridge's single serialiser (hard rule 8).
+ */
+export function visibleNames(state) {
+  const out = new Map();
+  const take = (c) => {
+    if (!c || typeof c !== 'object' || !Number.isInteger(c.id) || c.hidden === true || c.faceDownHidden === true) return;
+    const n = c.faceDown === true ? c.alt?.name : c.name;
+    if (typeof n === 'string' && n !== '' && !out.has(c.id)) out.set(c.id, n);
+  };
+  for (const pl of Array.isArray(state?.players) ? state.players : []) {
+    for (const z of LINE_ZONES) for (const c of pl?.zones?.[z]?.cards ?? []) take(c);
+  }
+  for (const c of Array.isArray(state?.stackCards) ? state.stackCards : []) take(c);
+  return out;
+}
+
+const L_ITEM = '(?:\u0001|an unseen card|a token|you|the opponent)';
+const L_LIST = `${L_ITEM}(?:, ${L_ITEM})*`;
+const LINE_GRAMMAR = {
+  target: new RegExp(`^${L_ITEM} → ${L_LIST}$`),
+  trigger: new RegExp(`^${L_ITEM} trigger → ${L_LIST}$`),
+  x: new RegExp(`^\u0001: X = \\d+$`),
+  number: /^number = \d+$/,
+  sacrifice: new RegExp(`^sacrifice → ${L_LIST}$`),
+  discard: new RegExp(`^discard → ${L_LIST}$`),
+  exile: new RegExp(`^exile → ${L_LIST}$`),
+  return: new RegExp(`^return → ${L_LIST}$`),
+  tap: new RegExp(`^tap → ${L_LIST}$`),
+  choose: new RegExp(`^choose → ${L_LIST}$`),
+  then: new RegExp(`^then (?:cast|activate|equip|play) ${L_ITEM}(?: → ${L_LIST})?$`),
+  mode: new RegExp('^\u0001 mode → [^\\n\u0001]{1,120}$'),
+};
+
+/**
+ * D454: the line's leak check, run on every answer before it leaves.  A step
+ * passes only when every id it lists is a card the moment's state shows this
+ * seat by name, and its text, with exactly those names taken out, is one of
+ * the line's fixed shapes (`target`: "<card> → <cards>", `sacrifice` → ...,
+ * "<card>: X = n", `then cast <card>`, ...), whose only other words are
+ * "you", "the opponent", "an unseen card" and "a token".  So a name the seat
+ * cannot see -- planted in the text, or behind an id it was not shown -- fails
+ * it, and the whole line is withheld.  `mode` ("<card> mode → <its script
+ * text>") and `x` describe their card, so each names exactly one, a card the
+ * seat is shown by name.  -> { ok: true, line } | { ok: false, why } (`why`
+ * names no card).
+ */
+export function checkLine(line, state) {
+  if (!Array.isArray(line)) return { ok: false, why: 'not a list' };
+  if (line.length > LINE_MAX) return { ok: false, why: `more than ${LINE_MAX} steps` };
+  const seen = visibleNames(state);
+  const out = [];
+  for (let i = 0; i < line.length; i++) {
+    const st = line[i];
+    const g = st && typeof st.kind === 'string' && Object.hasOwn(LINE_GRAMMAR, st.kind) ? LINE_GRAMMAR[st.kind] : null;
+    if (!g || typeof st.text !== 'string' || st.text.length > 300) return { ok: false, why: `step ${i + 1} is not a line step` };
+    const ids = Array.isArray(st.ids) ? st.ids : [];
+    if (ids.some((id) => !seen.has(id))) return { ok: false, why: `step ${i + 1} lists a card this seat is not shown by name` };
+    // A mode's text and an X describe their card: only for one the seat is shown by name (D454).
+    if ((st.kind === 'mode' || st.kind === 'x') && ids.length !== 1) return { ok: false, why: `step ${i + 1}: a ${st.kind} step names exactly its card` };
+    let t = st.text;
+    for (const n of ids.map((id) => seen.get(id)).sort((a, b) => b.length - a.length)) {
+      if (!t.includes(n)) return { ok: false, why: `step ${i + 1} lists a card its text does not name` };
+      t = t.split(n).join('\u0001');
+    }
+    if (!g.test(t)) return { ok: false, why: `step ${i + 1} names something outside its shape (a card this seat is not shown?)` };
+    out.push({ kind: st.kind, text: st.text, ids: [...ids] });
+  }
+  return { ok: true, line: out };
+}
+
+/**
+ * The line onto an answer (D454): only the pick's (`lineFor` must be the
+ * pick), only when it passes checkLine against the moment's state; else no
+ * `line`, and `lineWithheld` says why (never a card name).
+ */
+function withLine(out, g, state) {
+  if (!Array.isArray(g.line) || typeof out.pick !== 'string') return out;
+  if (g.lineFor !== out.pick) return { ...out, lineWithheld: 'the engine\'s line is not the pick\'s' };
+  const c = checkLine(g.line, state);
+  if (!c.ok) return { ...out, lineWithheld: c.why };
+  return { ...out, line: c.line, ...(typeof g.lineStop === 'string' ? { lineStop: g.lineStop } : {}) };
 }
 
 /**
@@ -196,8 +292,8 @@ export function hintOf(g, ctx) {
     return r;
   });
   if (g.status === 'trivial') {
-    return { ...base, options: rows, ...(rows.length === 1 ? { pick: rows[0].token, strength: 'only' } : {}),
-      ...(Number.isInteger(g.landFirst) ? { landFirst: g.landFirst } : {}) };
+    return withLine({ ...base, options: rows, ...(rows.length === 1 ? { pick: rows[0].token, strength: 'only' } : {}),
+      ...(Number.isInteger(g.landFirst) ? { landFirst: g.landFirst } : {}) }, g, ctx.state);
   }
   const order = { best: 0, tie: 1, close: 2, worse: 3, 'not-graded': 4 };
   rows.sort((a, b) => (order[a.verdict] - order[b.verdict]) || ((b.winRate ?? -1) - (a.winRate ?? -1)));
@@ -210,7 +306,7 @@ export function hintOf(g, ctx) {
   out.pick = best.token;
   out.strength = rivals.length ? 'close' : 'clear';
   if (rivals.length) out.runnerUp = rivals[0].token;
-  return out;
+  return withLine(out, g, ctx.state);
 }
 
 /**
@@ -344,6 +440,7 @@ export function createHintRunner(opts) {
     } else {
       const body = hintOf(o, { ...j.ctx, budgetMs: j.req.budgetMs });
       body.wallMs = wallMs;
+      if (body.lineWithheld) log(`HINT ${j.req.gameId} state ${j.req.stateSeq}: the line was withheld (${body.lineWithheld})`);
       log(`HINT ${j.req.gameId} state ${j.req.stateSeq}: ${body.status}${body.pick ? ` ${body.pick} (${body.strength}${body.runnerUp ? `, ${body.runnerUp}` : ''})` : ''} in ${wallMs} ms`);
       j.resolve({ status: 200, body });
     }
@@ -385,7 +482,7 @@ export function createHintRunner(opts) {
       sreq.oppPool = join(workDir, 'pool.txt');
     }
     if (j.req.known && j.req.known.length) sreq.oppKnown = j.req.known;
-    j.ctx = { gameId: j.req.gameId, seat: m.seat, stateSeq: j.req.stateSeq, inputSeq: j.req.inputSeq, frame: m.frames };
+    j.ctx = { gameId: j.req.gameId, seat: m.seat, stateSeq: j.req.stateSeq, inputSeq: j.req.inputSeq, frame: m.frames, state: m.stateBody };
     // Handed to the engine: answered() (or the timer, or the engine's exit) answers the job.
     const timer = setTimeout(() => {
       if (!running || running.job !== j) return;
