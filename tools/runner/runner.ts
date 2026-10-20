@@ -176,7 +176,8 @@ export interface JobRun {
   shas: Record<string, string>;
   /** Full commits the first prepare checked out: a retry or resume checks these out again, never a branch that moved (D341's version refusal). */
   pinned?: Record<string, string>;
-  restarts: Array<{ at: number; how: 'resumed' | 'restarted' | 'adopted'; why: string }>;
+  /** `cause`: the start's restart reason (restart.ts), on the entries a daemon start made. */
+  restarts: Array<{ at: number; how: 'resumed' | 'restarted' | 'adopted'; why: string; cause?: string }>;
   /** The `## Commands` blocks that finished (D365), by step name: exit code, when, and the block text's hash. */
   blocksDone?: Record<string, BlockDone>;
   /** The `.restart-*` copies beside the job's clean: paths, as last measured (never deleted, D365). */
@@ -1302,7 +1303,10 @@ export class Runner {
     else if (r.workers) f.workers = String(r.workers);
     if (r.peakRssGb !== null) f.peak_worker_rss_gb = (Math.round(r.peakRssGb * 100) / 100).toString();
     if (r.approved) f.approved = 'pilot approved; the runner skipped it';
-    for (const x of r.restarts) f[x.how] = `${isoLocal(x.at)}: ${x.why}`;
+    for (const x of r.restarts) {
+      f[x.how] = `${isoLocal(x.at)}: ${x.why}`;
+      if (x.cause) f.restart_reason = `${isoLocal(x.at)}: ${x.cause}`;
+    }
     const done = Object.entries(r.blocksDone ?? {}).sort((a, b) => Number(a[0].slice(3)) - Number(b[0].slice(3)));
     if (done.length) f.blocks_done = done.map(([n, d]) => `${n} exit ${d.rc} at ${isoLocal(d.at)}`).join(', ');
     if (r.heldFor && r.waitingCores) f.waits = r.heldFor;
@@ -1317,16 +1321,21 @@ export class Runner {
 
   // ------------------------------------------------------------------ restart
 
-  /** On start: adopt, read, resume or restart every job that was running. */
-  reconcile(): void {
+  /**
+   * On start: adopt, read, resume or restart every job that was running.  `cause` is the daemon's
+   * restart reason (restart.ts: the previous instance's exit, reboot or not); each restart entry made
+   * here carries it, and STATUS shows it as `restart_reason:`.
+   */
+  reconcile(cause: string | null = null): void {
     this.readQueue(true);
+    const note = (r: JobRun, e: JobRun['restarts'][number]): void => { r.restarts.push(cause ? { ...e, cause } : e); };
     for (const r of this.active()) {
       const job = this.jobOf(r);
       if (!job) continue;
       if (r.unit) {
         const state = this.sys.unitState(r.unit);
         if (state === 'active' || state === 'activating' || state === 'deactivating') {
-          r.restarts.push({ at: this.sys.now(), how: 'adopted', why: `the runner restarted; ${r.unit} was still running` });
+          note(r, { at: this.sys.now(), how: 'adopted', why: `the runner restarted; ${r.unit} was still running` });
           this.setStatus(r, 'running', { phase: this.phaseOf(r) });
           continue;
         }
@@ -1338,11 +1347,11 @@ export class Runner {
       }
       const step = r.steps[r.stepIndex];
       if (!step || step.kind !== 'shell' || step.phase === 'prepare') {
-        r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted at ${step?.name ?? 'the end'}` });
+        note(r, { at: this.sys.now(), how: 'resumed', why: `the runner restarted at ${step?.name ?? 'the end'}` });
       } else if (job.resumable || step.phase === 'pilot') {
         // No exit code: maybe memory; the step runs again with one worker fewer.
         if (step.phase === 'commands') { r.cap = retryCap(r.backoff?.workers ?? r.workers); r.sizing = null; }
-        r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted during ${step.name}; it runs again${job.resumable ? ' and skips what is done' : ' (a pilot is short)'}${step.phase === 'commands' ? `, at most ${r.cap} worker(s)` : ''}` });
+        note(r, { at: this.sys.now(), how: 'resumed', why: `the runner restarted during ${step.name}; it runs again${job.resumable ? ' and skips what is done' : ' (a pilot is short)'}${step.phase === 'commands' ? `, at most ${r.cap} worker(s)` : ''}` });
       } else {
         // A non-resumable job's commands block died with the runner: it starts again at that block (D365),
         // after prepare, its pilot passed; what that block (and those after it) make is moved aside.
@@ -1353,7 +1362,7 @@ export class Runner {
         r.blocksDone = resume.kept;
         r.stepIndex = 0;
         r.sizing = null;
-        r.restarts.push({ at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it ${resume.from ? resume.why.replace(/^resumes (at|after)/, 'starts again $1') : 'starts again from the top'}${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
+        note(r, { at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it ${resume.from ? resume.why.replace(/^resumes (at|after)/, 'starts again $1') : 'starts again from the top'}${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
       }
       this.setStatus(r, 'running', { phase: this.phaseOf(r) });
       this.save(r);
@@ -1364,7 +1373,7 @@ export class Runner {
         const job = this.jobs.find((j) => j.id === id);
         if (!job || job.errors.length) continue;
         const r = this.begin(job, null);
-        r.restarts.push({ at: this.sys.now(), how: 'restarted', why: 'STATUS said running but the runner had no record of it' });
+        note(r, { at: this.sys.now(), how: 'restarted', why: 'STATUS said running but the runner had no record of it' });
         this.setStatus(r, 'running', { phase: this.phaseOf(r) });
       }
     }

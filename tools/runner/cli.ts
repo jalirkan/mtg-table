@@ -38,6 +38,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { readControl, writeControl } from './control.ts';
+import { exitRecorder, noteExit, readExit, restartReason, startFacts } from './restart.ts';
 import { activeHolds, holdReason, releaseHold, takeHold } from './holds.ts';
 import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
@@ -184,6 +185,7 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
   write(path.join(unitDir, 'app-.scope.d', '50-forgecoach-oomd.conf'), DESKTOP_DROPIN);
   sh(['systemctl', '--user', 'daemon-reload']);
   sh(['systemctl', '--user', 'enable', SERVICE]);
+  if (!dry) noteExit(cfg.stateDir, `tools/runner.sh install restarted the service to ${head.slice(0, 7)}`);
   sh(['systemctl', '--user', 'restart', SERVICE]);
   console.log(`
 Installed: the runner runs ${head.slice(0, 7)} from ${runnerDir}; jobs run in ${SLICE} (MemoryMax ${b.labGb} G of ${m.memTotalGb.toFixed(1)} G).
@@ -239,6 +241,9 @@ function logs(cfg: RunnerConfig, id: string | undefined, f: Map<string, string>)
   return r.status ?? 0;
 }
 
+/** The daemon's exit recorder (restart.ts), once it has the lock. */
+let exitRec: ReturnType<typeof exitRecorder> | null = null;
+
 async function main(): Promise<number> {
   const [cmd, ...rest] = process.argv.slice(2);
   const { pos, f } = flags(rest);
@@ -248,17 +253,26 @@ async function main(): Promise<number> {
     case 'once': {
       if (f.has('dry-run')) return plan(cfg, pos[0] ?? null);
       lock(cfg);
+      // The daemon (not `once`): why this start happened -- the last instance's recorded exit, reboot
+      // or not -- read before this instance marks itself running (restart.ts).
+      let cause: string | null = null;
+      if (cmd === 'daemon') {
+        const facts = startFacts();
+        cause = restartReason(readExit(cfg.stateDir), facts);
+        console.log(`runner: start: ${cause}`);
+        exitRec = exitRecorder(cfg.stateDir, cfg.commit, facts);
+      }
       const r = new Runner(cfg, realSys());
       r.clearStaleGitLocks();                  // under the daemon lock: no other runner is mid-commit
-      r.reconcile();
+      r.reconcile(cause);
       if (cmd === 'once') { r.tick(); return printStatus(cfg); }
       const port = Number(f.get('http-port') ?? 8645);
       if (f.has('http-host')) console.error('--http-host is gone: the status server binds 127.0.0.1 only (a phone: tailscale serve, docs/guides/lab-runner.md)');
       if (port > 0) serve(cfg, r, port);
       console.log(`runner ${cfg.commit}: lab ${cfg.labRoot}, state ${cfg.stateDir}, public status ${cfg.publicStatus ? 'on' : 'off'}`);
       let stopping = false;
-      process.on('SIGTERM', () => { stopping = true; });
-      process.on('SIGINT', () => { stopping = true; });
+      process.on('SIGTERM', () => { exitRec?.signal('SIGTERM'); stopping = true; });
+      process.on('SIGINT', () => { exitRec?.signal('SIGINT'); stopping = true; });
       while (!stopping) {
         try { r.tick(); } catch (e) { console.error(`tick: ${(e as Error).stack ?? e}`); }
         for (let i = 0; i < 10 && !stopping; i++) await new Promise((res) => setTimeout(res, 1000));
@@ -356,5 +370,5 @@ async function main(): Promise<number> {
   }
 }
 
-main().then((code) => process.exit(code), (e) => { console.error(`runner: ${(e as Error).message}`); process.exit(1); });
+main().then((code) => process.exit(code), (e) => { exitRec?.fatal(e); console.error(`runner: ${(e as Error).message}`); process.exit(1); });
 
