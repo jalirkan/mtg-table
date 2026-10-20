@@ -80,6 +80,7 @@
 **`sideboard` ask**, which needs a session that survives `over`
 **eight fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
 **three games back to back over one socket** (`--games 3 --comfort`), which is
+**The gate's ports are not the live ones:** `WSPORT` defaults to **9644**, so a
 **`GATE_ONLY="<job> …"` runs those jobs alone** (**D291**), over a build you
 **Adding a step is adding a JOB** (D129): a function that prints its own `===`
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
@@ -411,7 +412,7 @@ span: eight fresh `--transport ws` servers
 span: three games back to back over one socket
 span: It plays `decks/yield-probe.dck`
 span: Since the 2026-09-27 hardening pass 10g's server runs with `MTGTABLE_HOLD_GAME_END_MS=2000`
-span: Pass `WSPORT=<n>` if 8644 is busy
+span: The gate's ports are not the live ones:
 span: `GATE_ONLY="<job> …"` runs those jobs alone
 span: Adding a step is adding a JOB
 span: Every JVM step runs under `timeout`
