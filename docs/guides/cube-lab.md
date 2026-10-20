@@ -1151,6 +1151,29 @@ with that sentence. Utility lands are never drawn, so the census says nothing ab
 **Rate.** D447's smoke beside a seven-worker job: 2,472 games an hour on 2 workers, about 2.2 CPU-seconds
 a game — some 11,000 games an hour on seven free cores.
 
+### A cube's pool: `decks --cube` (D456)
+
+`decks --cube <cube.md>` draws the same decks from one cube's own list instead of a band's pool
+([D456](../decisions/D456-decks-from-a-cube.md)): the document's cards that the library knows, Forge
+supports and the AI may play (the rest named in `decks.json`), k uniform on `--k` (default 1, 2, 3), the
+cube's own colourless share, no cross-band slice and nothing to fill from; the land formula and
+castability are D447's. Deck ids are `<cube>-<seed>-<i>` and each deck's `band` is `cube:<cube>`, which
+`census-read` reports as a group of its own; `census-play` plays the folder as it plays a band's.
+
+```bash
+tools/cubelab.sh decks --cube cubes/omega-cube-180.md --count 2000 --seed 1601 --out var/census/omega/decks   # no engine, ~2 s
+```
+
+- **The repeat cap.** A mono deck keeps about 23 spells from its colour's cards, so on a 180-card cube a
+  coloured card is in most of its colour's mono decks (Omega: median 0.80): that repeat is structural and
+  reported, not capped. What is capped is a card's share of ALL the k = 1 decks: at most
+  max(10, floor(`--max-share-k1` × N1)) of the run's N1 (0.25 by default; a coloured card's ceiling is
+  about a fifth, Omega's largest 0.194, so it never binds there). It binds on a pool whose mono decks pile
+  onto a few colours, and then the run keeps fewer k = 1 decks, every redraw counted.
+- **`card-shares.tsv`**, a row a card: its decks and share of all decks, and per k its decks, its share of
+  that k's decks, the decks whose makeup admits it and its share of those. `decks.json` has the summary
+  (max, median, top ten per k) and the cap's numbers.
+
 ### Recording the cake: `--record`, `census-replay` (D450)
 
 A census game keeps more than its result. `census-play --record` takes `none`, `rows` (the

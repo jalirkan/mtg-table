@@ -15,7 +15,11 @@
  *    and a replay's plan the pairing exactly; the search summary's arithmetic;
  *  - the read on a synthetic games folder with planted effects: a mono advantage shows in its bin
  *    with a deck-bootstrap interval clear of 0.5, a planted card's shrunk rate stands out, the
- *    within-band rate is 0.5, and the JSON is strict.
+ *    within-band rate is 0.5, and the JSON is strict;
+ *  - a cube's census (`decks --cube`, D456): Omega's 180 cards yield 40-card decks of 1, 2 and 3
+ *    colours, every one castable by the independent checker and drawn from the cube alone; band decks
+ *    are unchanged by it; the repeat cap holds where it binds (a mono-heavy cube) and changes nothing
+ *    where it does not (Omega); census-read reads the cube's group.
  *
  * The real library's mana costs and lands come from Forge's card scripts (the zip beside $FORGE_JAR or
  * config.json's jar, else forge-home/res).  WITHOUT THEM THE SUITE FAILS (#154 review): costed by
@@ -40,6 +44,7 @@ import { fileURLToPath } from 'node:url';
 import {
   castable, censusPopulation, CARD_FLOW_STUDY, landSources, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
   scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
+  coloursOf, cubeCtx, cubeNameOf, cubePool, drawCubeRun, drawDeck, makeupOf, repeatCapCount, CUBE_KS, DEFAULT_MAX_SHARE_K1, REPEAT_CAP_FLOOR,
 } from '../../tools/cubelab/deckcensus.ts';
 import { pairingOf, planExtension, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
 import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, spectrumMd, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
@@ -528,4 +533,131 @@ test('the cube lab CLI refuses a positional argument its command would ignore: -
   const s = spawnSync(process.execPath, [join(REPO, 'tools/cubelab/cli.ts'), 'decks', '--band', 'pauper', 'extra', '--count', '1'], { encoding: 'utf8' });
   assert.equal(s.status, 2, s.stderr);
   assert.match(s.stderr, /decks takes no positional argument, and "extra" would be ignored/);
+});
+
+// ---------------------------------------------------------------- a cube's census (D456)
+
+const omegaText = readFileSync(join(REPO, 'cubes', 'omega-cube-180.md'), 'utf8');
+
+test('decks --cube: Omega\'s 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone', () => {
+  const pool = cubePool(omegaText, lib, 'omega-cube-180');
+  assert.equal(pool.listed, 180);
+  assert.equal(pool.cards.length, 180, 'every Omega card is a supported library card the AI may play');
+  assert.deepEqual([pool.notInLibrary, pool.unsupported, pool.aiRemoved, pool.basics], [[], [], [], []]);
+  const inCube = new Set(pool.cards.map((c) => c.name));
+  const ctx = cubeCtx(pool);
+  assert.ok(ctx.colourlessShare > 0.09 && ctx.colourlessShare < 0.14, `q is the cube's own colourless share: ${ctx.colourlessShare}`);
+  const byK = new Map<number, number>();
+  const monoColours = new Set<string>();
+  const bad: string[] = [];
+  for (let i = 1; i <= 450; i++) {
+    const d = drawDeck(ctx, 'cube:omega-cube-180', 1601, i, CUBE_KS);
+    assert.equal(d.id, `omega-cube-180-1601-${String(i).padStart(5, '0')}`);
+    assert.equal(d.band, 'cube:omega-cube-180');
+    assert.ok(CUBE_KS.includes(d.makeup.k), `${d.id}: k ${d.makeup.k}`);
+    assert.equal(d.makeup.colours.length, d.makeup.k);
+    byK.set(d.makeup.k, (byK.get(d.makeup.k) ?? 0) + 1);
+    if (d.makeup.k === 1) monoColours.add(d.makeup.colours);
+    assert.equal(d.main.reduce((a, [n]) => a + n, 0), 40, `${d.id}: 40 cards`);
+    assert.ok(d.lands >= 15 && d.lands <= 18);
+    const names = [...d.spells, ...d.fixers];
+    assert.equal(new Set(names).size, names.length, `${d.id}: one of each card`);
+    for (const n of names) assert.ok(inCube.has(n), `${d.id}: ${n} is an Omega card`);
+    assert.deepEqual([d.cross, d.fill], [[], []], 'no cross-band slice, nothing filled from outside the cube');
+    for (const n of d.spells) for (const x of coloursOf(byName.get(n) as CensusCard)) assert.ok(d.makeup.colours.includes(x), `${d.id}: ${n} fits ${d.makeup.colours}`);
+    assert.ok(d.profile.coloursWith3 <= d.makeup.k && d.nColours <= d.makeup.k);
+    const r = independentCheck(d.main, scriptOf);
+    if (r.zeroSource.length || r.short.length) bad.push(`${d.id}: ${[...r.zeroSource, ...r.short].join(', ')}`);
+    assert.equal(d.castable, d.spells.length);
+  }
+  assert.deepEqual(bad, [], 'every spell castable from its own lands (the independent checker)');
+  for (const k of CUBE_KS) assert.ok((byK.get(k) ?? 0) >= 120, `k = ${k}: ${byK.get(k)} decks of 450`);
+  assert.equal(monoColours.size, 5, 'a mono deck of every colour');
+  // a cube's k is uniform on its own list; with the band's list it is D447's draw for draw
+  const r1 = rng(5, 'x'), r2 = rng(5, 'x');
+  assert.deepEqual(makeupOf(r1), makeupOf(r2, [1, 2, 3, 4, 5]));
+});
+
+test('decks --cube: the command writes the same bytes twice, reports every card\'s share, refuses band flags', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cube-census-'));
+  const quiet = (): void => {};
+  try {
+    const run = (out: string, extra: Array<[string, string[]]> = []): number => decksCommand(REPO, new Map<string, string[]>([['cube', ['cubes/omega-cube-180.md']], ['count', ['120']], ['seed', ['1601']], ['out', [join(dir, out)]], ['scripts', [scripts.path]], ...extra]), quiet);
+    assert.equal(run('a'), 0);
+    assert.equal(run('b'), 0);
+    for (const f of ['decks.jsonl', 'decks.json', 'card-shares.tsv']) assert.equal(readFileSync(join(dir, 'a', f), 'utf8'), readFileSync(join(dir, 'b', f), 'utf8'), f);
+    const m = JSON.parse(readFileSync(join(dir, 'a', 'decks.json'), 'utf8'));
+    assert.equal(m.decision, 'D456');
+    assert.equal(m.cubeName, 'omega-cube-180');
+    assert.deepEqual(m.ks, [1, 2, 3]);
+    assert.equal(m.decksOf40, 120);
+    assert.equal(m.makeupK.k1 + m.makeupK.k2 + m.makeupK.k3, 120);
+    assert.equal(m.coloursWith3.c4 + m.coloursWith3.c5, 0, 'no 4- or 5-colour deck');
+    assert.equal(m.repeatCap.maxShare, DEFAULT_MAX_SHARE_K1);
+    assert.equal(m.repeatCap.perCard, repeatCapCount(DEFAULT_MAX_SHARE_K1, m.makeupK.k1));
+    assert.ok(m.repeatCap.maxK1Uses <= m.repeatCap.perCard);
+    const tsv = readFileSync(join(dir, 'a', 'card-shares.tsv'), 'utf8').trim().split('\n');
+    assert.equal(tsv.length, 181, 'a row for each of the 180 cards');
+    const head = (tsv[0] as string).split('\t');
+    assert.deepEqual(head.slice(0, 6), ['card', 'colours', 'mv', 'land', 'decks', 'share']);
+    assert.ok(head.includes('k1_share_of_admitting') && head.includes('k3_share'));
+    // the shares add up: each deck holds its spells and fixers once
+    const decks = readFileSync(join(dir, 'a', 'decks.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l) as DeckRecord);
+    const held = decks.reduce((a, d) => a + d.spells.length + d.fixers.length, 0);
+    assert.equal(tsv.slice(1).reduce((a, l) => a + Number(l.split('\t')[4]), 0), held);
+    // flags that belong to a band, and a k outside 1..5
+    assert.throws(() => run('c', [['band', ['pauper']]]), /--band is a band's/);
+    assert.throws(() => run('c', [['cross-band', ['0.1']]]), /--cross-band is a band's/);
+    assert.throws(() => run('c', [['k', ['0,1']]]), /--k wants distinct numbers/);
+    assert.throws(() => decksCommand(REPO, new Map([['band', ['pauper']], ['count', ['1']], ['seed', ['1']], ['out', [join(dir, 'd')]], ['k', ['1,2']]]), quiet), /--k is for --cube/);
+    assert.throws(() => cubeNameOf('cubes/Omega Cube.md'), /lower-case letters/);
+    assert.throws(() => cubeNameOf('x/pauper.md'), /named after a band/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds', () => {
+  // Omega at J145's size: no card reaches a quarter of the k = 1 decks (a coloured card's ceiling there is
+  // about a fifth: its colour's mono decks are a fifth of them), so the run is the uncapped draw.  (A run
+  // of a few hundred decks can reach it by chance: a colour's share of ~130 mono decks has an SD of 0.035.)
+  const omega = cubeCtx(cubePool(omegaText, lib, 'omega-cube-180'));
+  const capped = drawCubeRun(omega, 'cube:omega-cube-180', 1601, 2000, CUBE_KS, DEFAULT_MAX_SHARE_K1);
+  assert.equal(capped.capped.size, 0);
+  assert.equal(capped.rounds, 1);
+  assert.ok(Math.max(...capped.k1Uses.values()) / capped.decks.filter((d) => d.makeup.k === 1).length < 0.21);
+  for (let i = 1; i <= 2000; i++) assert.deepEqual(capped.decks[i - 1], drawDeck(omega, 'cube:omega-cube-180', 1601, i, CUBE_KS), `deck ${i} is the uncapped draw's`);
+  // a mono-heavy cube: 60 white cards, 15 of each other colour, so only white has mono decks and they repeat white's cards
+  const spellsOf = (c: string, n: number): string[] => lib.filter((x) => x.supported && x.aiFlag !== 'All' && !x.land && x.colors === c && coloursOf(x) === c).slice(0, n).map((x) => x.name);
+  const colourless = lib.filter((x) => x.supported && x.aiFlag !== 'All' && !x.land && coloursOf(x) === '').slice(0, 12).map((x) => x.name);
+  const sections: Array<[string, string[]]> = [['White', spellsOf('W', 60)], ['Blue', spellsOf('U', 15)], ['Black', spellsOf('B', 15)], ['Red', spellsOf('R', 15)], ['Green', spellsOf('G', 15)], ['Colorless', colourless]];
+  const doc = `# Heavy\n\n## The list\n\n${sections.map(([t, ns]) => `### ${t} (${ns.length})\n${ns.join(' · ')}\n`).join('\n')}`;
+  const heavy = cubePool(doc, lib, 'heavy-test');
+  assert.equal(heavy.cards.length, 132);
+  const ctx = cubeCtx(heavy);
+  const free = drawCubeRun(ctx, 'cube:heavy-test', 9, 300, CUBE_KS, 1);
+  const k1Free = free.decks.filter((d) => d.makeup.k === 1);
+  assert.ok(k1Free.every((d) => d.makeup.colours === 'W'), 'only white can be drawn mono');
+  const maxFree = Math.max(...free.k1Uses.values());
+  assert.ok(maxFree / k1Free.length > 0.3, `uncapped, a white card is in ${maxFree} of ${k1Free.length} mono decks`);
+  const run = drawCubeRun(ctx, 'cube:heavy-test', 9, 300, CUBE_KS, DEFAULT_MAX_SHARE_K1);
+  const k1 = run.decks.filter((d) => d.makeup.k === 1);
+  assert.ok(run.capped.size > 0, 'the cap binds');
+  assert.equal(run.capCount, repeatCapCount(DEFAULT_MAX_SHARE_K1, k1.length), 'the cap is the run\'s own: max(floor, floor(share x N1))');
+  for (const [n, u] of run.k1Uses) assert.ok(u <= run.capCount, `${n} is in ${u} k = 1 decks, the cap is ${run.capCount}`);
+  assert.ok(Math.max(...run.k1Uses.values()) <= Math.max(REPEAT_CAP_FLOOR, DEFAULT_MAX_SHARE_K1 * k1.length));
+  for (const d of run.decks) assert.equal(d.castable, d.spells.length);
+});
+
+test('census-read reads a cube\'s group beside the bands, and its cards are keyed by it', () => {
+  const cube = Array.from({ length: 12 }, (_, i) => ({ ...synthDeck(`omega-cube-180-1601-${String(i + 1).padStart(5, '0')}`, 0.5 + (i % 5) / 10, 1 + (i % 3), 1 + (i % 3), [`card${i % 4}`]), band: 'cube:omega-cube-180' as const }));
+  const rows: GameRowOut[] = pairingOf(cube.map((d) => d.id), 30, 1601).map((g, k) => ({
+    v: 1, g: g.g, seed: g.seed, a: g.a, b: g.b, policyA: 'plain', policyB: 'plain', winner: k % 2 ? 'a' : 'b', first: 'a', turns: 9, ms: 900,
+    timeout: false, reason: null, error: null, engineError: null, worker: 0,
+  }));
+  const { doc, cards } = readCensus(cube, rows, { boot: 20, bootSeed: 1, shrink: 20 });
+  assert.deepEqual(Object.keys(doc.bands), ['cube:omega-cube-180']);
+  assert.equal(doc.bands['cube:omega-cube-180']?.games, 30);
+  assert.equal(doc.bands['cube:omega-cube-180']?.decks, 12);
+  assert.ok(cards.length === 4 && cards.every((c) => c.band === 'cube:omega-cube-180'));
+  assert.doesNotThrow(() => strictJson(doc));
+  assert.match(spectrumMd(doc), /## cube:omega-cube-180/);
 });
