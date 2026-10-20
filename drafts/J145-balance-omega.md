@@ -1,18 +1,18 @@
 id: J145
-title: Is Omega balanced by colour? Three arms on the Omega 180, Forge Default piloting every game: (A) PULL -- grid drafts by three drafters, each against the lab drafter, 600 drafts each for the human-pick model (primary) and Forge's ranks, 2,000 lab-vs-lab drafts (seeds 814,500,001 and up), and the share of each drafter's two-colour decks holding each colour (target 2/5); (B) PAYOFF -- each draft's two decks played against each other twice, each on the play once (census-play --replay, Bo1, recorded rows), and each colour's win rate in games between decks that differ in it (target 0.5), judged on the lab-vs-lab drafts; (C) the pool's own payoff -- 2,000 decks drawn from Omega's list by decks --cube (D456: k on 1-3, D447's land and castability rules, the repeat cap reported) in 8,000 Bo1 games; registered rules: a cell OFF / EVEN / UNCLEAR, the cube BALANCED at colour level when no colour is OFF on primary pull or arm-B payoff; pairs, triples, A vs C and closeness reported as candidates; no swaps
+title: Is Omega balanced by colour? Three arms on the Omega 180, Forge Default piloting every game: (A) PULL -- grid drafts by three drafters, each against the lab drafter, 600 drafts each for the human-pick model and Forge's ranks, 2,000 lab-vs-lab drafts (seeds 814,500,001 and up), and the share of each drafter's two-colour decks holding each colour (target 2/5), reported, not judged tonight; (B) PAYOFF -- each draft's two decks played against each other twice, each on the play once (census-play --replay, Bo1, recorded rows), and each colour's win rate in games between decks that differ in it (target 0.5), judged on the lab-vs-lab drafts; (C) the pool's own payoff -- 2,000 decks drawn from Omega's list by decks --cube (D456: k on 1-3, D447's land and castability rules, the repeat cap reported) in 8,000 Bo1 games; registered rules: a cell OFF / EVEN / UNCLEAR, the night's verdict BALANCED ON PAYOFF when no colour is OFF on arm B's lab-vs-lab payoff (pull is not judged tonight: the human-pick model was demoted to context, 105 of 180 cards covered); pairs, triples, A vs C and closeness reported as candidates; no swaps
 public_title: Omega colour balance: drafted pull, drafted payoff and the pool payoff
 public_est: ~2 to 4 h
-public_decides: Whether the Omega cube is balanced by colour
+public_decides: Whether the Omega cube is balanced by colour on payoff
 cpu: heavy
 cores: 7
 pilot_cores: 3
 max_workers: 7
 mem_per_worker_gb: 3
 after: J144
-repos: mtg-table@89d9cd68 (the head of branch pc/decks-cube, mtg-table PR #173, D456: `cubelab.sh decks --cube`, rebased on main 8719fbac; RE-PIN to the commit on origin/main that merges #173 before posting -- FILL IN -- the pilot fails on merged == 1 until then), ForgeCoach@866c256 (J114's pick files: public/cubes/omega-cube-180.picks.json, sha256 9ee28421c115..., the same bytes on ForgeCoach main; checked by the pilot)
-decides: whether Omega is BALANCED at colour level by the registered rule below (no colour OFF on the human-pick model's pull or on the lab-vs-lab drafts' payoff), with every other reading (pairs, triples, the pool's payoff, A vs C, closeness) reported as a candidate (D447 point 9). No card is swapped on this night: the swap / evolve-objective rule is written after this report, as its own pre-registration
+repos: mtg-table@60252b32 (origin/main: the merge of #173, D456's `cubelab.sh decks --cube`), ForgeCoach@866c256 (J114's pick files: public/cubes/omega-cube-180.picks.json, sha256 9ee28421c115..., the same bytes on ForgeCoach main; checked by the pilot)
+decides: whether Omega is BALANCED ON PAYOFF at colour level by the registered rule below (no colour OFF on the lab-vs-lab drafts' payoff); pull is reported and NOT judged tonight (the rule's registered change), and every other reading (pairs, triples, the pool's payoff, A vs C, closeness) reported as a candidate (D447 point 9). No card is swapped on this night: the swap / evolve-objective rule is written after this report, as its own pre-registration
 hypothesis: none to confirm. Omega was built with 24 cards a colour and 8 gold a colour (2 a pair), so if the cards are even the pull is near 0.4 and the payoff near 0.5 for every colour; J111/J114 saw the lab drafter over-draft blue and Forge play blue worse (J141: blue's main-colour rate .433 under Forge), so blue is the colour most likely to read OFF, in pull (up) and in payoff (down)
-rule: registered by the cloud on 2026-10-19 23:55 UTC (pc-jobs README), before any data, verbatim in substance. CELLS: colour level (5) decides; pairs (10) reported with intervals; triples only where a cell has 40+ decks; 4-5-colour decks excluded everywhere; a deck's colours = colours with 3+ spells. PULL (arm A, drafted decks): share of two-colour decks containing colour c, target 2/5; mono and three-colour shares reported beside it, not judged; one reading per drafter (lab, forge-ranks, the human-pick model), never pooled; the human-pick model's reading is the primary one for pull, the other two context; real drafts (the draft-deck ledger, #169) shown, never judged until 30+ decks. PAYOFF (arm B, the drafted decks played makeup-vs-makeup, Forge Default both seats): each colour's win rate in games between decks that differ in that colour, deck-clustered bootstrap; target 0.5. Arm C (decks --cube census on Omega's pool, k in {1,2,3}, same land/castability rules) gives the pool's intrinsic payoff by colour, same target, same read. "Clearly off even": a cell is OFF when its 95% interval excludes the target AND the point is at least 0.08 from it for pull (outside [0.32, 0.48]) or 0.05 for payoff (outside [0.45, 0.55]); else EVEN if its interval sits inside that band; else UNCLEAR. The cube is BALANCED at colour level when no colour is OFF on primary pull or on arm-B payoff. Everything else (pairs, A vs C contrasts, closeness) is a candidate per D447 point 9. A vs C: a colour OFF in B but EVEN in C reads "the drafter/deck-building favours or starves it"; OFF in both reads "the cards"; report, don't act. CLOSENESS: per colour and pair, median final life margin of the winner and median turns, with IQR, reported only. The report's first line carries the Forge-pilot caveat (J141: search lifts every colour about equally, +8.9 pts, so a Forge-only payoff is the right first cut). No swaps from this night. THIS JOB'S CHOICES, fixed here before any game: pull intervals are a percentile bootstrap clustered by draft (1,000 replicates); payoff intervals a deck-clustered bootstrap (J141's multinomial deck weights, 1,000 replicates); arm B's judged reading is the lab-vs-lab drafts (both seats one drafter and one builder, so no colour's rate is a drafter's strength), the human-pick and forge-ranks drafts' own games context; "games between decks that differ in c" means one deck has c among its colours with 3+ spells and the other does not, both decks with 1-3 such colours, decisive games only; the winner's final life is its life on the ledger's last line; real drafts labelled as context (never in the verdict) at 30+ Omega decks
+rule: registered by the cloud on 2026-10-19 23:55 UTC (pc-jobs README), before any data, verbatim in substance. CELLS: colour level (5) decides; pairs (10) reported with intervals; triples only where a cell has 40+ decks; 4-5-colour decks excluded everywhere; a deck's colours = colours with 3+ spells. PULL (arm A, drafted decks): share of two-colour decks containing colour c, target 2/5; mono and three-colour shares reported beside it, not judged; one reading per drafter (lab, forge-ranks, the human-pick model), never pooled; the human-pick model's reading is the primary one for pull, the other two context; real drafts (the draft-deck ledger, #169) shown, never judged until 30+ decks. PAYOFF (arm B, the drafted decks played makeup-vs-makeup, Forge Default both seats): each colour's win rate in games between decks that differ in that colour, deck-clustered bootstrap; target 0.5. Arm C (decks --cube census on Omega's pool, k in {1,2,3}, same land/castability rules) gives the pool's intrinsic payoff by colour, same target, same read. "Clearly off even": a cell is OFF when its 95% interval excludes the target AND the point is at least 0.08 from it for pull (outside [0.32, 0.48]) or 0.05 for payoff (outside [0.45, 0.55]); else EVEN if its interval sits inside that band; else UNCLEAR. The cube is BALANCED at colour level when no colour is OFF on primary pull or on arm-B payoff. Everything else (pairs, A vs C contrasts, closeness) is a candidate per D447 point 9. A vs C: a colour OFF in B but EVEN in C reads "the drafter/deck-building favours or starves it"; OFF in both reads "the cards"; report, don't act. CLOSENESS: per colour and pair, median final life margin of the winner and median turns, with IQR, reported only. The report's first line carries the Forge-pilot caveat (J141: search lifts every colour about equally, +8.9 pts, so a Forge-only payoff is the right first cut). No swaps from this night. THIS JOB'S CHOICES, fixed here before any game: pull intervals are a percentile bootstrap clustered by draft (1,000 replicates); payoff intervals a deck-clustered bootstrap (J141's multinomial deck weights, 1,000 replicates); arm B's judged reading is the lab-vs-lab drafts (both seats one drafter and one builder, so no colour's rate is a drafter's strength), the human-pick and forge-ranks drafts' own games context; "games between decks that differ in c" means one deck has c among its colours with 3+ spells and the other does not, both decks with 1-3 such colours, decisive games only; the winner's final life is its life on the ledger's last line; real drafts labelled as context (never in the verdict) at 30+ Omega decks. REGISTERED CHANGE (the cloud, 2026-10-20, before any J145 data): the human-pick model is DEMOTED to context for pull. Reason: its Omega file covers 105 of the 180 cards, unevenly by colour (W 15/24, U 13/24, B 11/24, R 14/24, G 13/24, gold 12/20, colourless 7/18, lands 20/22), and the other 75 are valued by its rating fallback, so its coverage biases exactly the quantity pull measures (how much each colour is drafted). So tonight NO drafter's pull is judged: all three readings (lab, forge-ranks, the human-pick model) are reported with their intervals, the OFF / EVEN / UNCLEAR labels shown as information, and the model's per-colour coverage beside its reading. The night's verdict is BALANCED ON PAYOFF when no colour is OFF on arm B's lab-vs-lab payoff, else NOT BALANCED ON PAYOFF, and the report says pull is not judged. Pull becomes judged in a later night when the draft-deck ledger reaches 30+ real Omega decks (the real drafts then the primary reading, the same OFF / EVEN band, target 2/5) or a human pick model covering the whole cube exists
 followup: morning-read
 est: ~2.5 h (2-3.5 h) on 6 workers (the memory rule below gives 6 on this PC's budget). Arm A: 3,200 grid drafts with --games 0 (draft and build only: the lab's builder and Forge's for each seat, about a second of a worker each; J134 measured the drafters at well under 1 s a draft) ~0.2 h. Games: 6,400 (arm B: two a draft) + 8,000 (arm C) = 14,400 Bo1 games. J136 measured an Omega game at 2.91 s of a worker (1,007 games, 7 workers), and D450 rows mode costs ~4% more, so ~3.0 s: 14,400 x 3.0 / 6 = 2.0 h; J140's census ran 9,000-9,500 games an hour on 5 workers at 16.5 turns, which gives ~1.4 h. Plus ~15 min of pilot and ~2 min to read. Storage on the data folder: ~14,400 x 47 KB = ~0.7 GB of rows and ledgers, plus ~6,400 + 2,000 small deck files
 resumable: yes
@@ -30,13 +30,14 @@ metrics: cd = sh: cat /home/justin-a/code/lab/data/lab-j145/census/decks/decks.j
 metrics: rec = sh: python3 -c "import json; d=[json.load(open(f'/home/justin-a/code/lab/data/lab-j145/{p}/census-play.json')).get('record') or {} for p in ['games/B-lab', 'games/B-hp', 'games/B-fr', 'census/games']]; print(json.dumps({'arms': sum(1 for x in d if x.get('mode') == 'rows'), 'games': sum(x.get('games', 0) for x in d), 'problems': sum(len(x.get('problems') or []) for x in d), 'rowsProblems': sum((x.get('rowsCheck') or {}).get('problems', 0) for x in d), 'leaks': sum((x.get('leakCheck') or {}).get('leaks', 0) for x in d)}))" 2>/dev/null || echo '{"arms":0}'
 metrics: bal = sh: cat /home/justin-a/code/lab/data/lab-j145/out/balance.json 2>/dev/null || echo '{"verdict":{"code":-9}}'
 metrics: balstrict = sh: python3 -c "import json,sys; json.load(open('/home/justin-a/code/lab/data/lab-j145/out/balance.json'), parse_constant=lambda c: sys.exit(1)); print(1)" 2>/dev/null || echo 0
-headline: played, engine_errors, bal.verdict.code, bal.labels.pull.hp.W, bal.labels.pull.hp.U, bal.labels.pull.hp.B, bal.labels.pull.hp.R, bal.labels.pull.hp.G, bal.labels.payoff.Blab.W, bal.labels.payoff.Blab.U, bal.labels.payoff.Blab.B, bal.labels.payoff.Blab.R, bal.labels.payoff.Blab.G
+headline: played, engine_errors, bal.verdict.code, bal.labels.payoff.Blab.W, bal.labels.payoff.Blab.U, bal.labels.payoff.Blab.B, bal.labels.payoff.Blab.R, bal.labels.payoff.Blab.G, bal.labels.payoff.C.W, bal.labels.payoff.C.U, bal.labels.payoff.C.B, bal.labels.payoff.C.R, bal.labels.payoff.C.G
 
 **Why (the cloud, pc-jobs README, 2026-10-19 23:55 UTC: "cube colour balance, Omega first: approved as you
 designed it, with these rules fixed now (before any data)").** A cube is balanced by colour when drafters are
 drawn to each colour about equally (pull) and a colour's decks win about as often as the decks without it
-(payoff). Bots draft like bots, so the human-pick model is the primary reading of pull; Forge pilots every game,
-so payoff is Forge's. Arm C separates the cards from the drafting: the same read on decks drawn straight from
+(payoff). Bots draft like bots, so the cloud first named the human-pick model the primary reading of pull; it is demoted
+to context tonight (below, and the rule's registered change), so tonight judges payoff only. Forge pilots every
+game, so payoff is Forge's. Arm C separates the cards from the drafting: the same read on decks drawn straight from
 Omega's list, with no drafter at all.
 
 **The arms.**
@@ -62,7 +63,9 @@ same ForgeCoach commit ships `omega-cube-180.picks.json` (the same bytes on Forg
 of Omega's 180 cards to the 17Lands Powered Cube data: by section W 15/24, U 13/24, B 11/24, R 14/24, G 13/24, gold
 12/20, colourless 7/18, lands 20/22. The other 75 are valued by D416's fallback (s = a + b x rating, the least-squares
 line over the covered cards). So its pull is the model's on 58% of the cube, and the colours are covered unevenly
-(black least, white most): `balance.md` says so beside the primary reading, and the summary must too.
+(black least, white most): that biases exactly what pull measures, so the cloud demoted it to context (the rule's
+registered change) and NO drafter's pull is judged tonight. `balance.md` prints the coverage beside its reading
+(`coverage.json`, written by the pilot from the pick file and the cube's sections).
 
 **Real drafts.** The draft-deck ledger (#169, D455) lives in Justin's checkout, which the runner never lets a job
 read; the coach helper serves it as colour counts only (`GET /draft-decks?cube=omega-cube-180` on 127.0.0.1:8643,
@@ -109,6 +112,8 @@ sha256sum {ForgeCoach}/public/cubes/omega-cube-180.picks.json | cut -c1-64 > var
 test "$(cat var/lab-j145-local/picks-sha.txt)" = 9ee28421c115570839e46ab270288ec6b982db18cc467bb5899b436ae6901b23 && echo 1 > var/lab-j145-local/picks-ok.txt || echo 0 > var/lab-j145-local/picks-ok.txt
 cat var/lab-j145-local/datadir.txt var/lab-j145-local/merged.txt var/lab-j145-local/has-tools.txt var/lab-j145-local/picks-ok.txt
 env -u LAB_DATA_DIR node --test web/test/cubelab-deck-census.test.ts web/test/cubelab-humanpicks.test.ts
+# the human-pick model's coverage of Omega, by the cube's sections (shown beside its pull reading: the reason it is context tonight)
+node --input-type=module -e "import fs from 'node:fs'; import { parseCube } from './tools/cubelab/cube.ts'; const p = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); const by = {}; for (const c of parseCube(fs.readFileSync('cubes/omega-cube-180.md', 'utf8')).cards) { const x = by[c.section] ??= { covered: 0, cards: 0 }; x.cards++; if (p.cards[c.name]) x.covered++; } const all = Object.values(by).reduce((a, x) => ({ covered: a.covered + x.covered, cards: a.cards + x.cards }), { covered: 0, cards: 0 }); fs.writeFileSync('var/lab-j145-local/coverage.json', JSON.stringify({ file: 'omega-cube-180.picks.json', ...all, bySection: by }, null, 2)); console.log(JSON.stringify(all));" {ForgeCoach}/public/cubes/omega-cube-180.picks.json
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 # arm C's decks: the run's own (deterministic, no engine)
 tools/cubelab.sh decks --cube cubes/omega-cube-180.md --count 2000 --seed 1455 --out var/lab-j145/census/decks
@@ -545,6 +550,7 @@ metrics: has_tools = sh: cat var/lab-j145-local/has-tools.txt 2>/dev/null || ech
 metrics: datadir = sh: cat var/lab-j145-local/datadir.txt 2>/dev/null || echo 0
 metrics: picks_ok = sh: cat var/lab-j145-local/picks-ok.txt 2>/dev/null || echo 0
 metrics: selftest = sh: cat var/lab-j145-local/selftest-ok.txt 2>/dev/null || echo 0
+metrics: cov = sh: cat var/lab-j145-local/coverage.json 2>/dev/null || echo '{"cards":0}'
 cores: 3
 ```bash
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
@@ -565,7 +571,7 @@ mkdir -p "$D/pilot/out"
 curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega-cube-180' > "$D/pilot/out/real-drafts.json" || echo '{"ok":false}' > "$D/pilot/out/real-drafts.json"
 python3 var/lab-j145-local/bin/balance.py --pull "lab=lab,$D/pilot/prof/lab" --pull "hp=human-picks,$D/pilot/prof/hp" --pull "fr=forge-ranks,$D/pilot/prof/fr" \
     --payoff "Blab=$D/pilot/prof/lab,$D/pilot/games/B-lab" --payoff "Bhp=$D/pilot/prof/hp,$D/pilot/games/B-hp" --payoff "Bfr=$D/pilot/prof/fr,$D/pilot/games/B-fr" \
-    --census "C=$D/pilot/census/decks,$D/pilot/census/games" --real "$D/pilot/out/real-drafts.json" --boot 200 --out "$D/pilot/out"
+    --census "C=$D/pilot/census/decks,$D/pilot/census/games" --real "$D/pilot/out/real-drafts.json" --coverage hp=var/lab-j145-local/coverage.json --boot 200 --out "$D/pilot/out"
 head -20 "$D/pilot/out/balance.md"
 ```
 metrics: pruns = cubelab /home/justin-a/code/lab/data/lab-j145/pilot/runs/lab /home/justin-a/code/lab/data/lab-j145/pilot/runs/hp /home/justin-a/code/lab/data/lab-j145/pilot/runs/fr
@@ -580,6 +586,7 @@ check: has_tools == 1
 check: datadir == 1
 check: picks_ok == 1
 check: selftest == 1
+check: cov.cards == 180 and cov.covered == 105
 check: data_free_gb >= 50
 check: qwriters == 0
 check: cd.count == 2000
@@ -662,7 +669,7 @@ mkdir -p "$D/out"
 curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega-cube-180' > "$D/out/real-drafts.json" || echo '{"ok":false}' > "$D/out/real-drafts.json"
 python3 var/lab-j145-local/bin/balance.py --pull "lab=lab,$D/prof/lab" --pull "hp=human-picks,$D/prof/hp" --pull "fr=forge-ranks,$D/prof/fr" \
     --payoff "Blab=$D/prof/lab,$D/games/B-lab" --payoff "Bhp=$D/prof/hp,$D/games/B-hp" --payoff "Bfr=$D/prof/fr,$D/games/B-fr" \
-    --census "C=$D/census/decks,$D/census/games" --real "$D/out/real-drafts.json" --primary-pull hp --judged-payoff Blab --boot 1000 --seed 145 --out "$D/out"
+    --census "C=$D/census/decks,$D/census/games" --real "$D/out/real-drafts.json" --coverage hp=var/lab-j145-local/coverage.json --judged-payoff Blab --boot 1000 --seed 145 --out "$D/out"
 for N in lab hp fr; do cat "$D/prof/$N/decks.jsonl"; done | gzip -9 > "$D/out/drafted-decks.jsonl.gz"
 for P in games/B-lab games/B-hp games/B-fr census/games; do cat "$D/$P/games.jsonl"; done | gzip -9 > "$D/out/games.jsonl.gz"
 python3 - <<'PY'
@@ -711,14 +718,17 @@ collect: /home/justin-a/code/lab/data/lab-j145/out/real-drafts.json
 collect: /home/justin-a/code/lab/data/lab-j145/out/drafted-decks.jsonl.gz
 collect: /home/justin-a/code/lab/data/lab-j145/out/games.jsonl.gz
 collect: var/lab-j145-local/selftest/balance.json
+collect: var/lab-j145-local/coverage.json
 
 summary.md is the PC session's. Its FIRST LINE is the Forge-pilot caveat (`balance.md`'s first line: every game is
 Forge's Default AI on both seats; J141 found search lifts every colour about equally, +8.9 points, so a Forge-only
 payoff is the right first cut). Then, in this order:
-- **The verdict at colour level**, by the registered rule: BALANCED or NOT BALANCED, naming any colour OFF on the
-  human-pick model's pull or on the lab-vs-lab payoff, with the UNCLEAR ones beside it. Say that the human-pick
-  model covers 105 of Omega's 180 cards (unevenly by colour) and the rest are valued by its rating fallback.
-- **Pull**, per drafter, never pooled: each colour's two-colour share with its interval and label; the k counts
+- **The verdict at colour level**, by the registered rule: BALANCED ON PAYOFF or NOT BALANCED ON PAYOFF, naming any
+  colour OFF on the lab-vs-lab payoff, with the UNCLEAR ones beside it. Say in so many words that pull is NOT judged
+  tonight: the human-pick model was demoted to context (it covers 105 of Omega's 180 cards, unevenly by colour, and
+  values the rest by its rating fallback), and pull becomes judged when the draft-deck ledger holds 30+ real Omega
+  decks or a full-coverage human model exists.
+- **Pull**, per drafter, never pooled, all three as context with the model's per-colour coverage beside its reading: each colour's two-colour share with its interval and label; the k counts
   (and how many decks were excluded at 0, 4 or 5 colours); mono and three-colour shares beside it; the pairs with
   intervals; triples with 40+ decks.
 - **Payoff**: arm B judged (lab vs lab), arm B context (human-pick and forge-ranks drafts, each against the lab
