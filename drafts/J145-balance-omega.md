@@ -1,7 +1,7 @@
 id: J145
 title: Is Omega balanced by colour? Three arms on the Omega 180, Forge Default piloting every game: (A) PULL -- grid drafts by three drafters, each against the lab drafter, 600 drafts each for the human-pick model (primary) and Forge's ranks, 2,000 lab-vs-lab drafts (seeds 814,500,001 and up), and the share of each drafter's two-colour decks holding each colour (target 2/5); (B) PAYOFF -- each draft's two decks played against each other twice, each on the play once (census-play --replay, Bo1, recorded rows), and each colour's win rate in games between decks that differ in it (target 0.5), judged on the lab-vs-lab drafts; (C) the pool's own payoff -- 2,000 decks drawn from Omega's list by decks --cube (D456: k on 1-3, D447's land and castability rules, the repeat cap reported) in 8,000 Bo1 games; registered rules: a cell OFF / EVEN / UNCLEAR, the cube BALANCED at colour level when no colour is OFF on primary pull or arm-B payoff; pairs, triples, A vs C and closeness reported as candidates; no swaps
-public_title: Omega colour balance: drafted pull, drafted payoff, the pool's payoff
-public_est: ~2-3.5 h
+public_title: Omega colour balance: drafted pull, drafted payoff and the pool payoff
+public_est: ~2 to 4 h
 public_decides: Whether the Omega cube is balanced by colour
 cpu: heavy
 cores: 7
@@ -30,7 +30,7 @@ metrics: cd = sh: cat /home/justin-a/code/lab/data/lab-j145/census/decks/decks.j
 metrics: rec = sh: python3 -c "import json; d=[json.load(open(f'/home/justin-a/code/lab/data/lab-j145/{p}/census-play.json')).get('record') or {} for p in ['games/B-lab', 'games/B-hp', 'games/B-fr', 'census/games']]; print(json.dumps({'arms': sum(1 for x in d if x.get('mode') == 'rows'), 'games': sum(x.get('games', 0) for x in d), 'problems': sum(len(x.get('problems') or []) for x in d), 'rowsProblems': sum((x.get('rowsCheck') or {}).get('problems', 0) for x in d), 'leaks': sum((x.get('leakCheck') or {}).get('leaks', 0) for x in d)}))" 2>/dev/null || echo '{"arms":0}'
 metrics: bal = sh: cat /home/justin-a/code/lab/data/lab-j145/out/balance.json 2>/dev/null || echo '{"verdict":{"code":-9}}'
 metrics: balstrict = sh: python3 -c "import json,sys; json.load(open('/home/justin-a/code/lab/data/lab-j145/out/balance.json'), parse_constant=lambda c: sys.exit(1)); print(1)" 2>/dev/null || echo 0
-headline: played, engine_errors, bal.verdict.code, bal.labels.pull.human-picks.W, bal.labels.pull.human-picks.U, bal.labels.pull.human-picks.B, bal.labels.pull.human-picks.R, bal.labels.pull.human-picks.G, bal.labels.payoff.B-lab.W, bal.labels.payoff.B-lab.U, bal.labels.payoff.B-lab.B, bal.labels.payoff.B-lab.R, bal.labels.payoff.B-lab.G
+headline: played, engine_errors, bal.verdict.code, bal.labels.pull.hp.W, bal.labels.pull.hp.U, bal.labels.pull.hp.B, bal.labels.pull.hp.R, bal.labels.pull.hp.G, bal.labels.payoff.Blab.W, bal.labels.payoff.Blab.U, bal.labels.payoff.Blab.B, bal.labels.payoff.Blab.R, bal.labels.payoff.Blab.G
 
 **Why (the cloud, pc-jobs README, 2026-10-19 23:55 UTC: "cube colour balance, Omega first: approved as you
 designed it, with these rules fixed now (before any data)").** A cube is balanced by colour when drafters are
@@ -222,10 +222,10 @@ import numpy as np
 #  cards".  CLOSENESS: per colour and pair, the winner's final life and the game's turns, median and IQR.
 #  Real drafts (the coach helper's aggregate): shown; labelled (as context, never in the verdict) only at 30+.
 ap = argparse.ArgumentParser()
-ap.add_argument('--pull', action='append', default=[])     # name=<profile dir>: decks.jsonl of one drafter's run
+ap.add_argument('--pull', action='append', default=[])     # name=<drafter>,<profile dir>: that drafter's decks of one run (decks.jsonl)
 ap.add_argument('--payoff', action='append', default=[])   # name=<decks dir>,<census-play games dir>
-ap.add_argument('--primary-pull', default='human-picks')
-ap.add_argument('--judged-payoff', default='B-lab')
+ap.add_argument('--primary-pull', default='hp')
+ap.add_argument('--judged-payoff', default='Blab')
 ap.add_argument('--census', default=None)                  # name=<decks dir>,<games dir>: arm C
 ap.add_argument('--real', default=None)                    # the coach helper's GET /draft-decks?cube=... answer
 ap.add_argument('--boot', type=int, default=1000)
@@ -396,9 +396,11 @@ doc = {'v': 1, 'job': 'J145', 'cube': 'omega-cube-180', 'options': {'boot': a.bo
        'caveat': 'Every game is piloted by Forge\'s Default AI on both seats. J141 found the live search seat lifts every colour about equally (+8.9 points), so a Forge-only payoff is the right first cut, but it is Forge\'s.',
        'pull': {}, 'payoff': {}}
 for t, spec in enumerate(a.pull):
-    name, d = spec.split('=', 1)
-    decks = [x for x in jsonl(os.path.join(d, 'decks.jsonl')) if x.get('drafter') == name]
+    name, rest = spec.split('=', 1)
+    kind, d = rest.split(',', 1)
+    decks = [x for x in jsonl(os.path.join(d, 'decks.jsonl')) if x.get('drafter') == kind]
     doc['pull'][name] = pull_of(decks, 100 + t)
+    doc['pull'][name]['drafter'] = kind
 for t, spec in enumerate(a.payoff):
     name, decks, rows, led = load_payoff(spec)
     doc['payoff'][name] = payoff_of(decks, rows, led, 200 + t)
@@ -561,8 +563,8 @@ tools/cubelab.sh decks --cube cubes/omega-cube-180.md --count 60 --seed 1495 --o
 tools/cubelab.sh census-play --decks var/lab-j145/pilot/census/decks --pairs 40 --seed 1495 --jobs {workers} --record rows --out var/lab-j145/pilot/census/games
 mkdir -p "$D/pilot/out"
 curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega-cube-180' > "$D/pilot/out/real-drafts.json" || echo '{"ok":false}' > "$D/pilot/out/real-drafts.json"
-python3 var/lab-j145-local/bin/balance.py --pull "lab=$D/pilot/prof/lab" --pull "human-picks=$D/pilot/prof/hp" --pull "forge-ranks=$D/pilot/prof/fr" \
-    --payoff "B-lab=$D/pilot/prof/lab,$D/pilot/games/B-lab" --payoff "B-hp=$D/pilot/prof/hp,$D/pilot/games/B-hp" --payoff "B-fr=$D/pilot/prof/fr,$D/pilot/games/B-fr" \
+python3 var/lab-j145-local/bin/balance.py --pull "lab=lab,$D/pilot/prof/lab" --pull "hp=human-picks,$D/pilot/prof/hp" --pull "fr=forge-ranks,$D/pilot/prof/fr" \
+    --payoff "Blab=$D/pilot/prof/lab,$D/pilot/games/B-lab" --payoff "Bhp=$D/pilot/prof/hp,$D/pilot/games/B-hp" --payoff "Bfr=$D/pilot/prof/fr,$D/pilot/games/B-fr" \
     --census "C=$D/pilot/census/decks,$D/pilot/census/games" --real "$D/pilot/out/real-drafts.json" --boot 200 --out "$D/pilot/out"
 head -20 "$D/pilot/out/balance.md"
 ```
@@ -581,7 +583,7 @@ check: selftest == 1
 check: data_free_gb >= 50
 check: qwriters == 0
 check: cd.count == 2000
-check: cd.decision == 'D456'
+check: cd.v == 2
 check: cd.pool.drawable == 180
 check: cd.decksOf40 == 2000 and cd.decksAllCastable == 2000
 check: cd.makeupK.k1 between 580 and 760 and cd.makeupK.k2 between 580 and 760 and cd.makeupK.k3 between 580 and 760
@@ -597,7 +599,7 @@ check: perr <= 1
 check: prec.arms == 4
 check: prec.problems + prec.rowsProblems + prec.leaks == 0
 check: pstrict == 1
-check: pbal.pull.human-picks.decks == 6 and pbal.pull.forge-ranks.decks == 6 and pbal.pull.lab.decks == 12
+check: pbal.pull.hp.decks == 6 and pbal.pull.fr.decks == 6 and pbal.pull.lab.decks == 12
 
 The pilot asks whether anything is broken:
 - **The setting, the pin, the tools and the pick file.** The data folder as the README says; the pin on origin/main
@@ -658,9 +660,9 @@ test "$(wc -l < "$D/census/games/games.jsonl")" -eq 8000
 test -s var/lab-j145-local/bin/balance.py
 mkdir -p "$D/out"
 curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega-cube-180' > "$D/out/real-drafts.json" || echo '{"ok":false}' > "$D/out/real-drafts.json"
-python3 var/lab-j145-local/bin/balance.py --pull "lab=$D/prof/lab" --pull "human-picks=$D/prof/hp" --pull "forge-ranks=$D/prof/fr" \
-    --payoff "B-lab=$D/prof/lab,$D/games/B-lab" --payoff "B-hp=$D/prof/hp,$D/games/B-hp" --payoff "B-fr=$D/prof/fr,$D/games/B-fr" \
-    --census "C=$D/census/decks,$D/census/games" --real "$D/out/real-drafts.json" --primary-pull human-picks --judged-payoff B-lab --boot 1000 --seed 145 --out "$D/out"
+python3 var/lab-j145-local/bin/balance.py --pull "lab=lab,$D/prof/lab" --pull "hp=human-picks,$D/prof/hp" --pull "fr=forge-ranks,$D/prof/fr" \
+    --payoff "Blab=$D/prof/lab,$D/games/B-lab" --payoff "Bhp=$D/prof/hp,$D/games/B-hp" --payoff "Bfr=$D/prof/fr,$D/games/B-fr" \
+    --census "C=$D/census/decks,$D/census/games" --real "$D/out/real-drafts.json" --primary-pull hp --judged-payoff Blab --boot 1000 --seed 145 --out "$D/out"
 for N in lab hp fr; do cat "$D/prof/$N/decks.jsonl"; done | gzip -9 > "$D/out/drafted-decks.jsonl.gz"
 for P in games/B-lab games/B-hp games/B-fr census/games; do cat "$D/$P/games.jsonl"; done | gzip -9 > "$D/out/games.jsonl.gz"
 python3 - <<'PY'
@@ -686,13 +688,13 @@ check: rec.arms == 4
 check: rec.problems + rec.rowsProblems + rec.leaks == 0
 check: balstrict == 1
 check: bal.verdict.code >= 0
-check: bal.pull.human-picks.decks >= 595 and bal.pull.forge-ranks.decks >= 595 and bal.pull.lab.decks >= 3980
-check: bal.payoff.B-lab.games >= 3000 and bal.payoff.C.games >= 7000
+check: bal.pull.hp.decks >= 595 and bal.pull.fr.decks >= 595 and bal.pull.lab.decks >= 3980
+check: bal.payoff.Blab.games >= 3000 and bal.payoff.C.games >= 7000
 
 What the checks mean: every draft and every planned game was played (engine errors at most 1%, timeouts at most 2%),
 every deck profiled from known Omega cards, every recorded game checked clean, and the read wrote strict JSON with
 a verdict (BALANCED or NOT BALANCED; -1, INCOMPLETE, fails) over at least 595 decks of each drafter and 3,000
-judged games (B-lab's 4,000 less draws and decks outside 1-3 colours). No check is on a share, a rate or a label.
+judged games (Blab's 4,000 less draws and decks outside 1-3 colours). No check is on a share, a rate or a label.
 
 ## Abort if
 abort: qwriters > 0
