@@ -398,7 +398,10 @@ function realUnder(root, p) {
  * reviewOf (D407: a seat log's gameId -> {state, report?, why?}: that log's automatic engine review),
  * seatLog (D407: a seat log's gameId -> its text, or null),
  * hint (D453: async (POST /hint body) -> {status, body}, the coach helper's hint runner for a seat's own
- *       log of the room's game; null when the helper has none), hintOn (D453: () -> bool, it can answer now) }
+ *       log of the room's game; null when the helper has none), hintOn (D453: () -> bool, it can answer now),
+ * onDeck (D455: ({roomId, seat, cubeId, cubeHash, format, main, record}) after a seat hands in a deck or
+ *         changes its consent -- draft-decks.mjs writes the deck to its ledger only when `record` is true,
+ *         and takes it out when it turns false; never throws into the room) }
  */
 export function createRoomStore(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -514,6 +517,17 @@ export function createRoomStore(opts = {}) {
       // D453: whether POST /room/<id>/hint can answer here (a friend's browser cannot read the helper's /health).
       hint: hintOn() ? 1 : 0,
     };
+  };
+
+  /** D455: this seat's deck to the draft-deck ledger, with its consent as it stands (draft-decks.mjs). */
+  const ledger = (r, seat) => {
+    if (!opts.onDeck) return;
+    const d = r.decks[seat];
+    try {
+      // matchIds: the room's games, whose `table:<matchId>:<seat>` lines (an import) an opt-out deletes too.
+      const matchIds = [...new Set([...r.games.map((g) => g.matchId), r.game?.matchId].filter(Boolean))];
+      opts.onDeck({ roomId: r.id, seat, cubeId: r.cubeId, cubeHash: r.cubeHash, format: 'grid', main: d ? d.main.map(([n, card]) => [n, card]) : null, record: !!r.record[seat] && !!d, matchIds });
+    } catch (e) { log(`ROOM ${r.id} seat ${seat}: the draft-deck ledger refused (${e.message})`); }
   };
 
   const broadcast = (r) => {
@@ -732,6 +746,7 @@ export function createRoomStore(opts = {}) {
       r.version++;
       r.activeAt = now();
       log(`ROOM ${id} seat ${seat} handed in a deck (${c.deck.mainCount} cards)`);
+      ledger(r, seat);
       if (r.ready[0] && r.ready[1]) begin(r);
       save();
       broadcast(r);
@@ -746,6 +761,7 @@ export function createRoomStore(opts = {}) {
         r.record[seat] = value;
         r.activeAt = now();
         log(`ROOM ${id} seat ${seat} ${value ? 'agrees to' : 'opts out of'} recording its next game (D407)`);
+        if (r.decks[seat] || !value) ledger(r, seat);   // D455: the deck it handed in follows its consent; an opt-out deletes
         save();
         broadcast(r);
       }

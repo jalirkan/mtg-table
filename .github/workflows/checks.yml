@@ -232,6 +232,10 @@ jobs:
       # D440: the helper's /watch (two bots draft and play) against a fake watch.
       - name: watch-runner-selftest.mjs
         run: node tools/watch-runner-selftest.mjs
+      # D455: real drafts' decks -- the ledger, a room seat's consent, the helper's aggregate-only routes.
+      - name: draft-decks-selftest.mjs
+        run: node tools/draft-decks-selftest.mjs
+
       # Step 12h's standard-library half: the ML encoder over every committed
       # recording, hidden zones scrambled (D305). numpy is not installed here,
       # so the dataset and baseline tests report themselves skipped.

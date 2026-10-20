@@ -124,6 +124,14 @@
 //                 reports through the room listener instead (POST /room/<id>/bug, its seat token).
 //                 tools/bugs-sync.mjs --push copies new reports to pc-results under bugs/.
 //
+//   POST /draft-deck, GET /draft-decks?cube=<id>  -- REAL DRAFTS' DECKS (D455): the deck a player
+//                 built after a draft against the bot (POST, 16 KB, from the owner's page), and
+//                 every recorded deck of one cube as its COLOUR MAKEUP only (GET: per deck the
+//                 count of its nonland cards of each colour, the day and the source -- never a
+//                 card name).  A draft room seat's deck is recorded by the room itself, only with
+//                 that seat's consent (D407).  tools/draft-decks.mjs's header is that contract;
+//                 the ledger is var/draft-decks/decks.jsonl.  /health carries "draftDecks": 1.
+//
 //   POST /watch, GET /watch, GET /watch/<id>, GET /watch/<id>/game/<n>, POST /watch/<id>/stop
 //                 -- WATCH TWO BOTS (D440): two AIs grid-draft a cube with the cube lab's drafters,
 //                 then play a best of three, recorded paced from seat 0's eyes; one watch at a
@@ -259,6 +267,8 @@ import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } 
 import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
 import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
 import { DEFAULT_WATCH_LLM_CAP, MAX_WATCH_BODY, createWatchRunner } from './watch-runner.mjs';
+import { DRAFT_DECKS_DIR, MAX_DRAFT_DECK_BODY, createDraftDecks } from './draft-decks.mjs';
+import { openForgeScripts } from './forge-scripts.ts';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -659,7 +669,7 @@ export function seatReviewOf({ review, auto }, gameId) {
 }
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, hint = null, auto = null, evaluator = null, room = null, bugs = null, watch = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, hint = null, auto = null, evaluator = null, room = null, bugs = null, watch = null, draftDecks = null, log = (s) => console.log(s) } = opts;
   // D411: bug reports through this door -- a few a minute is plenty for a person at a board.
   const bugLimit = createLimiter({ perMinute: opts.bugsPerMinute ?? 6, burst: opts.bugsBurst ?? 10 });
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
@@ -724,7 +734,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1, replaceRunning: 1 };   // D325; D410
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}), ...(watch ? watch.health() : { watch: 0 }) };   // D361; D400 (no key without --draft-room); D411; D440
+      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}), ...(watch ? watch.health() : { watch: 0 }), ...(draftDecks ? draftDecks.health() : {}) };   // D361; D400 (no key without --draft-room); D411; D440; D455
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }, cors);
@@ -804,6 +814,27 @@ export function startHelper(opts) {
       const r = bugs.save({ body: q, via: 'helper', secrets: [token, url.searchParams.get('token') ?? '', String(req.headers['x-forgecoach-token'] ?? '')] });
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 201 ? ` (bug ${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/draft-deck' || path === '/draft-decks') {
+      // D455: real drafts' decks (tools/draft-decks.mjs).  Behind this port's door, like every route: a deck
+      // from the owner's page goes in; a cube's decks come out as colour counts only, never a list.
+      if (!draftDecks) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+      if (path === '/draft-decks') {
+        if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
+        const r = draftDecks.shares(url.searchParams.get('cube'));
+        send(res, r.status, r.body, cors);
+        say(r.status, r.status === 200 ? ` (${r.body.decks.length} decks)` : '');
+        return;
+      }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      const raw = await readBody(req, res, MAX_DRAFT_DECK_BODY, '16 KB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = draftDecks.postSolo(q);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 201 ? ` (${r.body.key})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/watch' || path.startsWith('/watch/')) {
@@ -1215,6 +1246,14 @@ async function main() {
   // D411: bug reports from the board, var/bugs/ (the helper's POST /bug, the room listener's POST /room/<id>/bug).
   let bugs = null;
   try { bugs = createBugStore({ dir: resolve(cfg.repoRoot, 'var', 'bugs'), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(`COACH ${s}`) }); } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
+  // D455: real drafts' decks, var/draft-decks/ (the helper's POST /draft-deck and GET /draft-decks; the room's
+  // consenting seats).  A card's colours from Forge's own scripts, opened on the first GET.
+  let draftDecks = null;
+  try {
+    const zip = join(resolve(cfg.repoRoot, cfg.forgeHome), 'res', 'cardsfolder', 'cardsfolder.zip');
+    draftDecks = createDraftDecks({ dir: resolve(cfg.repoRoot, DRAFT_DECKS_DIR), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(`COACH ${s}`),
+      scriptOf: () => { const s = openForgeScripts(zip); return s ? (n) => s.scriptOf(n) : null; } });
+  } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
   // D400: the draft room -- its store and its own listener, before the helper's port opens.
   let room = null;
   let roomServer = null;
@@ -1239,7 +1278,9 @@ async function main() {
         seatLog: (gameId) => { const g = gameLog(cfg.repoRoot, 'var/games', gameId); return g.error ? null : readLogText(g.abs); },
         // D453: a seat's search hint, through this helper's hint runner -- the room names the seat's own log.
         hint: hint ? (q) => hint.post(q, { room: true }) : null,
-        hintOn: () => !!hint && hint.available() });
+        hintOn: () => !!hint && hint.available(),
+        // D455: a seat's handed-in deck to the draft-deck ledger, with its consent (D407).
+        onDeck: (d) => draftDecks.recordRoom(d) });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,
@@ -1254,7 +1295,7 @@ async function main() {
   // D440: watch two bots draft and play (tools/cubelab.sh watch), one at a time.
   if (a.watchKeep !== undefined && (!Number.isInteger(a.watchKeep) || a.watchKeep < 1)) { console.error('coach-helper: --watch-keep is a whole number of watch folders >= 1'); process.exit(2); }
   const watch = a.watch ? createWatchRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`), llmCap: cfg.watchLlmCap, ...(a.watchKeep !== undefined ? { keep: a.watchKeep } : {}) }) : null;
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch });
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs, watch, draftDecks });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -1275,6 +1316,7 @@ async function main() {
   if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   console.log(`COACH BUGS      POST /bug saves to var/bugs/ (D411); tools/bugs-sync.mjs --push sends new ones to pc-results`);
+  console.log(`COACH DRAFTS    POST /draft-deck and GET /draft-decks (D455): real drafts' decks in ${DRAFT_DECKS_DIR}/, read back as colour counts only`);
   console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
   console.log(!watch ? 'COACH WATCH     /watch off (--no-watch)'
     : watch.available() ? `COACH WATCH     /watch on: two bots grid-draft a cube and play a best of three (D440), one at a time; an llm: drafter at most $${cfg.watchLlmCap.maxUsd} and ${cfg.watchLlmCap.maxCalls} calls a watch (D443)`

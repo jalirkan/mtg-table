@@ -2120,6 +2120,9 @@ s12e_skipped() {
 #      drafting and playing, against a FAKE watch (the body, one at a time and
 #      409, stop, a watch that dies, the game log as complete lines by ?from=
 #      and by Range, the door on every route); about 3 s.
+#      Since D455 also tools/draft-decks-selftest.mjs: real drafts' decks --
+#      a card's colours (the census rule), a room seat's deck only with its
+#      consent, the helper's two routes, GET's colour counts and no list; ~1 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
@@ -2148,6 +2151,9 @@ s12f_coach() {
   # D440: the helper's /watch against a fake watch.
   node tools/watch-runner-selftest.mjs \
     || die "watch-runner-selftest.mjs (12f: watching two bots broke its contract with ForgeCoach or its door -- see the FAIL lines above)"
+  # D455: real drafts' decks -- the ledger, the room's consent, the helper's two routes.
+  node tools/draft-decks-selftest.mjs \
+    || die "draft-decks-selftest.mjs (12f: the draft-deck ledger broke its consent rule, its door or its aggregate-only answer -- see the FAIL lines above)"
 }
 
 # 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid

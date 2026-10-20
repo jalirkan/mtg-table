@@ -324,6 +324,14 @@ priority. A seat that opted out is neither. One seat is a whole test game, so a
 game in which only one player agreed gives that player's seat. Nothing leaves
 this machine.
 
+A recorded seat's **deck** (D455) goes into the draft-deck ledger,
+`var/draft-decks/decks.jsonl`, when it is handed in — its main deck, keyed by
+room and seat, with no name — and comes out of it again if that seat opts out
+later. The cube's page on the owner's computer reads the ledger only as colour
+counts (`GET /draft-decks?cube=<id>` on the coach helper): how many decks
+played each colour, pair and triple, never a list. A seat that never agreed is
+not counted.
+
 ### Each player's own review
 
 - `GET /room/<id>/review/<matchId>` → `200 {ok, matchId, match, game, state,
