@@ -102,7 +102,7 @@ rl.on('line', async (line) => {
   else a = { ...base, status: 'ok', measure: 'leaf', rounds: 6, playouts: 30, best: 'cast:9', forgeChoice: 'pass', landFirst: 4, nFrames,
     lineFor: id.startsWith('other-') ? 'pass' : 'cast:9', lineStop: 'passed',
     line: [{ kind: 'target', text: 'Reanimate → Griselbrand', ids: [9, 12] }, { kind: 'sacrifice', text: 'sacrifice → Crossbones, Malicious Mercenary', ids: [14] },
-      { kind: 'x', text: 'X = 3', ids: [] },
+      { kind: 'x', text: 'Reanimate: X = 3', ids: [9] },
       // PLANTED (leak-1): a name the seat was never shown, in the text; (leakid-1) behind the id of a hidden stub
       ...(id.startsWith('leak-') ? [{ kind: 'target', text: 'Reanimate → Lightning Bolt', ids: [9] }] : []),
       ...(id.startsWith('leakid-') ? [{ kind: 'choose', text: 'choose → Lightning Bolt', ids: [20] }] : []),
@@ -181,8 +181,8 @@ const vis = visibleNames(ST);
 check(vis.get(9) === 'Reanimate' && vis.get(14) === 'Crossbones, Malicious Mercenary' && !vis.has(20) && !vis.has(21),
   'the visible names: the seat\'s cards and public ones; never a hidden stub or a face-down card without its face');
 const okLine = [{ kind: 'target', text: 'Reanimate → Griselbrand', ids: [9, 12] }, { kind: 'sacrifice', text: 'sacrifice → Memnite, an unseen card', ids: [13] },
-  { kind: 'x', text: 'X = 2', ids: [] }, { kind: 'choose', text: 'choose → Crossbones, Malicious Mercenary, a token', ids: [14] },
-  { kind: 'trigger', text: 'Memnite trigger → the opponent', ids: [13] }, { kind: 'mode', text: 'mode → Destroy target artifact.', ids: [] },
+  { kind: 'x', text: 'Reanimate: X = 2', ids: [9] }, { kind: 'choose', text: 'choose → Crossbones, Malicious Mercenary, a token', ids: [14] },
+  { kind: 'trigger', text: 'Memnite trigger → the opponent', ids: [13] }, { kind: 'mode', text: 'Reanimate mode → Destroy target artifact.', ids: [9] },
   { kind: 'then', text: 'then cast Reanimate', ids: [9] }, { kind: 'number', text: 'number = 4', ids: [] }];
 const cl = checkLine(okLine, ST);
 check(cl.ok && cl.line.length === 8, `every shape of step passes when it names only visible cards (${cl.why ?? ''})`);
@@ -192,8 +192,11 @@ check(!bad({ kind: 'choose', text: 'choose → Lightning Bolt', ids: [20] }).ok,
 check(!bad({ kind: 'choose', text: 'choose → an unseen card', ids: [21] }).ok, 'a face-down card\'s id fails the line (it is not shown by name)');
 check(!bad({ kind: 'target', text: 'Reanimate → Griselbrand', ids: [9] }).ok && !bad({ kind: 'target', text: 'Reanimate → Memnite', ids: [9, 12] }).ok,
   'a visible name its ids do not list, or an id its text does not name: fails');
-check(!bad({ kind: 'mode', text: 'mode → Reanimate', ids: [9] }).ok && !bad({ kind: 'whatever', text: 'X = 1', ids: [] }).ok
-  && !bad({ kind: 'x', text: 'X = three', ids: [] }).ok, 'a mode lists no ids; an unknown kind or shape fails');
+check(!bad({ kind: 'mode', text: 'mode → Destroy target artifact.', ids: [] }).ok && !bad({ kind: 'mode', text: 'an unseen card mode → Destroy target artifact.', ids: [] }).ok
+  && !bad({ kind: 'x', text: 'X = 1', ids: [] }).ok && !bad({ kind: 'x', text: 'an unseen card: X = 1', ids: [] }).ok,
+  'a mode\'s text or an X only for a card the seat is shown by name (it would say which card an unseen one is)');
+check(!bad({ kind: 'whatever', text: 'Reanimate: X = 1', ids: [9] }).ok && !bad({ kind: 'x', text: 'Reanimate: X = three', ids: [9] }).ok
+  && !bad({ kind: 'mode', text: 'Reanimate mode → Griselbrand', ids: [9, 12] }).ok, 'an unknown kind or shape fails; a mode names only its card');
 check(!checkLine(Array.from({ length: 9 }, () => ({ kind: 'x', text: 'X = 1', ids: [] })), ST).ok, 'more than 8 steps: fails');
 const gl = { ...g0, line: okLine.slice(0, 2), lineFor: 'attack:1,2', lineStop: 'applied' };
 const hl = hintOf(gl, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000, state: ST });
@@ -238,6 +241,7 @@ check((await hr.post({ gameId: 'friend-m1234567890123-seat0', seat: 0, stateSeq:
 const fr0 = await hr.post({ gameId: 'friend-m1234567890123-seat0', seat: 0, stateSeq: 5 }, { room: true });
 check(fr0.status === 200 && fr0.body.gameId === 'friend-m1234567890123-seat0' && fr0.body.seat === 0 && fr0.body.status === 'ok',
   "D453: the draft room's call (room: true) for seat 0's own log: answered");
+check(Array.isArray(fr0.body.line) && fr0.body.line.length === 4, "D454: the room's call carries the pick's line");
 check((await hr.post({ gameId: 'friend-m1234567890123-seat1', seat: 0, stateSeq: 5 }, { room: true })).status === 400,
   "the room's call naming seat 1's log for seat 0: 400 (the header's seat decides)");
 check((await hr.post({ gameId: 'nope', stateSeq: 5 })).status === 404, 'no such game: 404');
@@ -357,6 +361,8 @@ console.log('the draft room route (D453)');
     const moment = readFileSync(join(DIR, 'work', 'moment.jsonl'), 'utf8');
     check(a.status === 200 && a.body.kind === 'search-hint' && a.body.gameId === `friend-m1234567890123-seat${seat}` && a.body.seat === seat
       && a.body.knowledge.opponentModel === 'pool', `seat ${seat}: its own hint, from its own log, the opponent modelled from the room's pool`);
+    check(a.body.line?.length === 4 && a.body.line[0].text === 'Reanimate → Griselbrand' && a.body.lineStop === 'passed',
+      `seat ${seat}: the room's hint carries the pick's line too (D454), checked against that seat's own log`);
     check(q.length === 1 && JSON.parse(moment.split('\n')[0]).gameId === `friend-m1234567890123-seat${seat}`, `seat ${seat}: the engine read seat ${seat}'s log and no other`);
     const poolTxt = readFileSync(join(DIR, 'work', 'pool.txt'), 'utf8');
     check(!picks[seat].some((n) => poolTxt.includes(`1 ${n}\n`)) && JSON.stringify(q[0].oppKnown) === JSON.stringify(picks[1 - seat]),

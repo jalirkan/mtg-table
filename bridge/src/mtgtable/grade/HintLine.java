@@ -84,6 +84,9 @@ public final class HintLine {
             }
             final List<Integer> ids = new ArrayList<>();
             final String src = r.source == null ? null : name(r.source, wireOfId, wireCards, ids);
+            // A step that describes its source -- a mode's text, its X -- only for a source the seat is shown
+            // by name: "an unseen card" with its mode text would say which card it is.
+            final boolean srcKnown = src != null && !ids.isEmpty();
             final String list = list(r.what, wireOfId, wireCards, ids);
             final Step s;
             switch (r.kind) {
@@ -94,7 +97,7 @@ public final class HintLine {
                 s = list.isEmpty() || src == null ? null : new Step("trigger", src + " trigger → " + list, ids);
                 break;
             case "x":
-                s = new Step("x", "X = " + r.number, new ArrayList<>());
+                s = srcKnown ? new Step("x", src + ": X = " + r.number, ids) : null;
                 break;
             case "number":
                 s = new Step("number", "number = " + r.number, new ArrayList<>());
@@ -109,7 +112,7 @@ public final class HintLine {
                 s = list.isEmpty() ? null : new Step(r.kind, r.kind + " → " + list, onlyListed(r, wireOfId, wireCards));
                 break;
             case "mode":
-                s = src == null || mode(r.text) == null ? null : new Step("mode", "mode → " + mode(r.text), new ArrayList<>());
+                s = !srcKnown || mode(r.text) == null ? null : new Step("mode", src + " mode → " + mode(r.text), ids);
                 break;
             case "then-cast":
             case "then-activate":
@@ -182,6 +185,15 @@ public final class HintLine {
             ids.add(wire);
         }
         return n;
+    }
+
+    /**
+     * A UTF-8 print stream on a standard descriptor, whatever the locale's
+     * {@code stdout.encoding} (D454: an ASCII locale turned the line's "→" into
+     * "?"); {@code CoachGrade.main} sets stdout and stderr to it.
+     */
+    public static java.io.PrintStream utf8(final java.io.FileDescriptor fd) {
+        return new java.io.PrintStream(new java.io.FileOutputStream(fd), true, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /** The answer's {@code "line"} array. */

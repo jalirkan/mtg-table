@@ -196,7 +196,7 @@ const L_LIST = `${L_ITEM}(?:, ${L_ITEM})*`;
 const LINE_GRAMMAR = {
   target: new RegExp(`^${L_ITEM} → ${L_LIST}$`),
   trigger: new RegExp(`^${L_ITEM} trigger → ${L_LIST}$`),
-  x: /^X = \d+$/,
+  x: new RegExp(`^\u0001: X = \\d+$`),
   number: /^number = \d+$/,
   sacrifice: new RegExp(`^sacrifice → ${L_LIST}$`),
   discard: new RegExp(`^discard → ${L_LIST}$`),
@@ -205,7 +205,7 @@ const LINE_GRAMMAR = {
   tap: new RegExp(`^tap → ${L_LIST}$`),
   choose: new RegExp(`^choose → ${L_LIST}$`),
   then: new RegExp(`^then (?:cast|activate|equip|play) ${L_ITEM}(?: → ${L_LIST})?$`),
-  mode: /^mode → [^\n\u0001]{1,120}$/,
+  mode: new RegExp('^\u0001 mode → [^\\n\u0001]{1,120}$'),
 };
 
 /**
@@ -213,11 +213,13 @@ const LINE_GRAMMAR = {
  * passes only when every id it lists is a card the moment's state shows this
  * seat by name, and its text, with exactly those names taken out, is one of
  * the line's fixed shapes (`target`: "<card> → <cards>", `sacrifice` → ...,
- * `X = n`, `then cast <card>`, ...), whose only other words are "you", "the
- * opponent", "an unseen card" and "a token".  So a name the seat cannot see
- * -- planted in the text, or behind an id it was not shown -- fails it, and
- * the whole line is withheld.  `mode` (a mode's script description) lists no
- * ids.  -> { ok: true, line } | { ok: false, why } (`why` names no card).
+ * "<card>: X = n", `then cast <card>`, ...), whose only other words are
+ * "you", "the opponent", "an unseen card" and "a token".  So a name the seat
+ * cannot see -- planted in the text, or behind an id it was not shown -- fails
+ * it, and the whole line is withheld.  `mode` ("<card> mode → <its script
+ * text>") and `x` describe their card, so each names exactly one, a card the
+ * seat is shown by name.  -> { ok: true, line } | { ok: false, why } (`why`
+ * names no card).
  */
 export function checkLine(line, state) {
   if (!Array.isArray(line)) return { ok: false, why: 'not a list' };
@@ -230,7 +232,8 @@ export function checkLine(line, state) {
     if (!g || typeof st.text !== 'string' || st.text.length > 300) return { ok: false, why: `step ${i + 1} is not a line step` };
     const ids = Array.isArray(st.ids) ? st.ids : [];
     if (ids.some((id) => !seen.has(id))) return { ok: false, why: `step ${i + 1} lists a card this seat is not shown by name` };
-    if (st.kind === 'mode' && ids.length) return { ok: false, why: `step ${i + 1}: a mode lists no cards` };
+    // A mode's text and an X describe their card: only for one the seat is shown by name (D454).
+    if ((st.kind === 'mode' || st.kind === 'x') && ids.length !== 1) return { ok: false, why: `step ${i + 1}: a ${st.kind} step names exactly its card` };
     let t = st.text;
     for (const n of ids.map((id) => seen.get(id)).sort((a, b) => b.length - a.length)) {
       if (!t.includes(n)) return { ok: false, why: `step ${i + 1} lists a card its text does not name` };

@@ -133,7 +133,17 @@ public final class CoachGrade {
 
     private CoachGrade() { }
 
+    /** D454: stdout and stderr in UTF-8, whatever the locale (main's first act; GradeSelfTest's utf8-probe). */
+    static void utf8Std() {
+        System.setOut(HintLine.utf8(java.io.FileDescriptor.out));
+        System.setErr(HintLine.utf8(java.io.FileDescriptor.err));
+    }
+
     public static void main(final String[] args) {
+        // D454: the answers are UTF-8 whatever the locale.  Java 18+ encodes stdout by the locale
+        // (stdout.encoding), not by -Dfile.encoding, so under LANG=C (a systemd unit, a launcher) the
+        // line's "→" printed as "?" and the helper withheld every line.
+        utf8Std();
         int exit;
         try {
             if (args.length == 0) {

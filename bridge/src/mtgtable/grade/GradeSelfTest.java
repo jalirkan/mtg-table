@@ -130,6 +130,12 @@ public final class GradeSelfTest {
     }
 
     public static void main(final String[] args) {
+        if (args.length == 1 && "utf8-probe".equals(args[0])) {
+            // D454: bridge/build.sh runs this under LC_ALL=C and checks the bytes are UTF-8.
+            CoachGrade.utf8Std();   // what CoachGrade.main does first: no Forge class is touched
+            System.out.println("{\"text\":\"Quantum Reduction \u2192 Peggy Carter\"}");
+            return;
+        }
         seeds();
         intervals();
         regretTable();
@@ -200,6 +206,9 @@ public final class GradeSelfTest {
                 new mtgtable.ai.LineRecorder.Ent(141, false, 0), new mtgtable.ai.LineRecorder.Ent(999, true, 0)), 0, null));
         raws.add(new mtgtable.ai.LineRecorder.Raw("trigger", new mtgtable.ai.LineRecorder.Ent(130, false, 0), List.of(opp, you), 0, null));
         raws.add(new mtgtable.ai.LineRecorder.Raw("mode", reanimate, null, 0, "CARDNAME deals 2 damage\n to any target."));
+        // A card the playout drew (no wire id): its mode text and its X would say which card it is.
+        raws.add(new mtgtable.ai.LineRecorder.Raw("mode", new mtgtable.ai.LineRecorder.Ent(777, false, 0), null, 0, "Destroy target artifact."));
+        raws.add(new mtgtable.ai.LineRecorder.Raw("x", new mtgtable.ai.LineRecorder.Ent(130, false, 0), null, 5, null));
         raws.add(new mtgtable.ai.LineRecorder.Raw("then-equip", new mtgtable.ai.LineRecorder.Ent(888, false, 0),
                 List.of(new mtgtable.ai.LineRecorder.Ent(125, false, 0)), 0, null));
         raws.add(new mtgtable.ai.LineRecorder.Raw("target", reanimate, List.of(), 0, null));   // nothing targeted: no step
@@ -210,17 +219,22 @@ public final class GradeSelfTest {
         }
         check(texts.equals(List.of(
                 "target|Reanimate → Griselbrand|[10, 20]",
-                "x|X = 3|[]",
+                "x|Reanimate: X = 3|[10]",
                 "sacrifice|sacrifice → Memnite, an unseen card|[25]",
                 "choose|choose → an unseen card, Morph Guy, a token|[41]",
                 "trigger|an unseen card trigger → the opponent, you|[]",
-                "mode|mode → it deals 2 damage to any target.|[]",
+                "mode|Reanimate mode → it deals 2 damage to any target.|[10]",
                 "then|then equip an unseen card → Memnite|[25]")), "the line in words, every card through the gate: " + texts);
         boolean leaked = false;
         for (final HintLine.Step x : st) {
             leaked |= x.text.contains("Lightning Bolt") || x.ids.contains(30) || x.ids.contains(40);
         }
         check(!leaked, "PLANTED: a hidden stub's name (and a face-down card without its face) is never named, nor its id listed");
+        boolean described = false;
+        for (final HintLine.Step x : st) {
+            described |= x.text.contains("Destroy target artifact") || x.text.contains("X = 5");
+        }
+        check(!described, "an unseen source's mode text or X is never printed (it would say which card it is)");
         final List<mtgtable.ai.LineRecorder.Raw> many = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             many.add(new mtgtable.ai.LineRecorder.Raw("number", null, null, i, null));
