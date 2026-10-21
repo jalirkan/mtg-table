@@ -1,6 +1,8 @@
 running
 runner: forgecoach-runner 10896b8e
 started: 2026-10-21T18:30:17-04:00
-phase: pilot 1/1
+phase: commands 1/1
 mtg-table: 60252b3
-workers: 3
+workers: 2
+peak_worker_rss_gb: 1.48
+waits: needs 7 core(s) for run1; 3 of 8 free (it waits for them; nothing is stopped)
