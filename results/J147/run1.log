@@ -134,3 +134,17 @@ census-play: 20000 game(s) planned over 2500 deck(s), seed 1501; 8706 already pl
 census-play: 20000 game(s) planned over 2500 deck(s), seed 1501; 12891 already played, 7109 to play on 5 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j144/games/pauper)
 [100/7109] 3895 games/h
 [200/7109] 4907 games/h
+==== J147 run1 started 2026-10-21T19:43:21-04:00 in unit lab-J147-run1, 5 worker(s), 5 core(s), BLAS/OpenMP threads 5
+census-play: 20000 game(s) planned over 2500 deck(s), seed 1501; 13095 already played, 6905 to play on 5 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j144/games/pauper)
+[100/6905] 3776 games/h
+[200/6905] 4557 games/h
+[300/6905] 4940 games/h
+[400/6905] 5020 games/h
+[500/6905] 5478 games/h
+[600/6905] 5606 games/h
+[700/6905] 5420 games/h
+[800/6905] 5296 games/h
+[900/6905] 5278 games/h
+[1000/6905] 5276 games/h
+[1100/6905] 5335 games/h
+[1200/6905] 5360 games/h
