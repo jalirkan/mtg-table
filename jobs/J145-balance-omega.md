@@ -8,7 +8,7 @@ cores: 7
 pilot_cores: 3
 max_workers: 7
 mem_per_worker_gb: 3
-after: J144
+after: J147
 repos: mtg-table@60252b32 (origin/main: the merge of #173, D456's `cubelab.sh decks --cube`), ForgeCoach@866c256 (J114's pick files: public/cubes/omega-cube-180.picks.json, sha256 9ee28421c115..., the same bytes on ForgeCoach main; checked by the pilot)
 decides: whether Omega is BALANCED ON PAYOFF at colour level by the registered rule below (no colour OFF on the lab-vs-lab drafts' payoff); pull is reported and NOT judged tonight (the rule's registered change), and every other reading (pairs, triples, the pool's payoff, A vs C, closeness) reported as a candidate (D447 point 9). No card is swapped on this night: the swap / evolve-objective rule is written after this report, as its own pre-registration
 hypothesis: none to confirm. Omega was built with 24 cards a colour and 8 gold a colour (2 a pair), so if the cards are even the pull is near 0.4 and the payoff near 0.5 for every colour; J111/J114 saw the lab drafter over-draft blue and Forge play blue worse (J141: blue's main-colour rate .433 under Forge), so blue is the colour most likely to read OFF, in pull (up) and in payoff (down)
