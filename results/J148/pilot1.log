@@ -1,0 +1,56 @@
+==== J148 pilot1 started 2026-10-21T19:57:53-04:00 in unit lab-J148-pilot1, 2 worker(s), 2 core(s), BLAS/OpenMP threads 2
+✔ the arithmetic: Wilson with draws, ranks, Spearman (1.168174ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (17.32832ms)
+✔ the agreement of two maps (13.999812ms)
+✔ how many rollouts, and the even spread of decisions (0.210379ms)
+✔ the deck pair rule: the most even record with the most games (0.670862ms)
+✔ a decision's two maps from its branch rows (16.437683ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.334995ms)
+✔ the guardrails read back from the decision records (0.265644ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.504707ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.313965ms)
+✔ atlas.md renders the two maps side by side (1.063375ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.218454ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.094229ms)
+✔ LAB_DATA_DIR: var/ paths re-rooted, the rest untouched, unset is the old behaviour, a missing drive refused (1.578372ms)
+▶ LAB_DATA_DIR: a lab job writes under it and nowhere it re-roots under the repo's var/
+  ✔ set: the decks land under LAB_DATA_DIR and nothing is written where the check watches (9802.449574ms)
+  ✔ control: a file planted under a watched folder is seen (297.604145ms)
+  ✔ control: the same job with the drive unset writes under the repo's var/, and the check catches it (2480.675407ms)
+✔ LAB_DATA_DIR: a lab job writes under it and nowhere it re-roots under the repo's var/ (12581.905183ms)
+✔ LAB_DATA_DIR: a write whose repo copy holds a run the drive copy lacks is refused, naming both (#160 review) (0.804164ms)
+✔ census-play --record: the match line's blocks, the plan's mode, the game row, the sizes (1.089975ms)
+✔ the rows' redaction check: shape (0.690809ms)
+✔ the rows' redaction check: every id a row names is one its seat's own log shows (2.818261ms)
+✔ census-replay: the last complete run of a game is read, the wall time ignored, the first difference named (0.39563ms)
+✔ census-replay: two recordings of one game are equal but for the wall clock; a changed frame is named (0.483757ms)
+✔ census-replay: --out naming a census folder, or one holding the rows file, is refused before anything is deleted (#160 review) (0.936976ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12694.674711
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 990 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/4] d0-forge-0: 4/4 branch game(s); 517 branch games/h
+  [B 2/4] d17-random-0: 4/4 branch game(s); 852 branch games/h
+  [B 3/4] d17-forge-0: 4/4 branch game(s); 1153 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1470 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas-selftest: OK (16 forks, 8 no-leak checks, 38 frame logs, 538 rows)
+seat-identity: forge: the same game (B in 15 turns, 59 lines, digest 70b36c8575ab6574; golden B in 15, 59 lines, 70b36c8575ab6574)
+seat-identity: search: the same game (A in 13 turns, 93 lines, digest 19995346a6342137; golden A in 13, 93 lines, 19995346a6342137)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 20e2d8a32e35f445; golden A in 18, 193 lines, 20e2d8a32e35f445)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas: --pair auto: the plan's pair, line 2 (fair-fight-900000005-A vs fair-fight-900000005-B), chosen when the atlas began
+atlas phase A: 20 rollout(s) from the opening, both seats random; 20 done, 0 to play on 1 worker(s)
+atlas phase B: the baseline (16 turns, winner B) lists 16 decision(s) of seat A; branching at 2: d0 (p, turn 1, 2 options), d15 (p, turn 15, 2 options)
+atlas phase B: 0 unit(s) to play (6 done), chunks of 4 branches, on 1 worker(s)
+atlas: var/lab-j142/pilot/atlas.json and atlas.md; phase A 20 game(s), phase B 48 branch game(s) at 2 decision(s); checks: clean (3157 rows, 138 frame logs, 4 leak check(s))

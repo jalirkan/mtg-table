@@ -1,0 +1,7 @@
+PASS  merged == 1   [merged = 1]
+PASS  selftest == 1   [selftest = 1]
+PASS  identity == 1   [identity = 1]
+PASS  pilot.problems == 0   [pilot.problems = 0]
+PASS  pilot.played == 20   [pilot.played = 20]
+PASS  pilot.decisions == 2   [pilot.decisions = 2]
+PASS  disk_gb >= 8   [disk_gb = 747.9]

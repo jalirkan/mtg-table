@@ -1,0 +1,18 @@
+{
+ "played_a": 10000,
+ "branches": 19343,
+ "engine_errors": 0,
+ "unit_errors": 9,
+ "atlas.problems": -1,
+ "disk_gb": 747.9,
+ "merged": 1,
+ "selftest": 1,
+ "identity": 1,
+ "pilot.problems": 0,
+ "pilot.played": 20,
+ "pilot.decisions": 2,
+ "elapsed_s": 111,
+ "workers": 3,
+ "pressure_events": 0,
+ "peak_worker_rss_gb": 1.31
+}
