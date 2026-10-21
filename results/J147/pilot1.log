@@ -1,0 +1,54 @@
+==== J147 pilot1 started 2026-10-21T16:43:12-04:00 in unit lab-J147-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+J144: data folder free GB 749.6
+1
+1
+1
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.643958ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (793.223101ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (707.869425ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.308754ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2165.512548ms)
+✔ the prior covers the spectrum over 1,000 decks (1199.133721ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (53.459781ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.13723ms)
+✔ the land formula on fixture decks (0.665639ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.309475ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.175332ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (522.29666ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (1.867101ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.376873ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.086393ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (22.436171ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.168508ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.471244ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (202.637191ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (178.636211ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (559.498436ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1956.158862ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.941581ms)
+✔ LAB_DATA_DIR: var/ paths re-rooted, the rest untouched, unset is the old behaviour, a missing drive refused (1.415286ms)
+▶ LAB_DATA_DIR: a lab job writes under it and nowhere it re-roots under the repo's var/
+  ✔ set: the decks land under LAB_DATA_DIR and nothing is written where the check watches (12039.68071ms)
+  ✔ control: a file planted under a watched folder is seen (290.72358ms)
+  ✔ control: the same job with the drive unset writes under the repo's var/, and the check catches it (2486.241667ms)
+✔ LAB_DATA_DIR: a lab job writes under it and nowhere it re-roots under the repo's var/ (14818.102862ms)
+✔ LAB_DATA_DIR: a write whose repo copy holds a run the drive copy lacks is refused, naming both (#160 review) (0.760468ms)
+✔ census-play --record: the match line's blocks, the plan's mode, the game row, the sizes (1.070455ms)
+✔ the rows' redaction check: shape (0.686799ms)
+✔ the rows' redaction check: every id a row names is one its seat's own log shows (1.721886ms)
+✔ census-replay: the last complete run of a game is read, the wall time ignored, the first difference named (0.398583ms)
+✔ census-replay: two recordings of one game are equal but for the wall clock; a changed frame is named (0.488163ms)
+✔ census-replay: --out naming a census folder, or one holding the rows file, is refused before anything is deleted (#160 review) (0.872149ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14950.290541
+decks: 2500 pauper deck(s), seed 1501, into /home/justin-a/code/lab/data/lab-j144/decks/pauper: k = 1..5 514 / 510 / 523 / 484 / 469; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2500 peasant deck(s), seed 1502, into /home/justin-a/code/lab/data/lab-j144/decks/peasant: k = 1..5 501 / 522 / 479 / 502 / 496; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2500 legacy deck(s), seed 1503, into /home/justin-a/code/lab/data/lab-j144/decks/legacy: k = 1..5 468 / 506 / 494 / 526 / 506; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2500 powered deck(s), seed 1504, into /home/justin-a/code/lab/data/lab-j144/decks/powered: k = 1..5 530 / 479 / 528 / 502 / 461; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+{"holds": 12, "of": 12, "byCandidate": {"i": 4, "ii": 4, "iii": 4}, "check": {"cellsCompared": 52, "estimatesEqual": 52, "intervalsWithinTol": 52, "maxIntervalGap": 0.0047}}
