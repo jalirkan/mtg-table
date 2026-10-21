@@ -1,5 +1,5 @@
-id: J146
-title: RESUME of J143 (its folder var/lab-j142 kept: phase A done, 237 of 490 phase-B units done; no clean) -- The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule
+id: J148
+title: RESUME of J143 (second try as J148: J146 was OOM-killed at 7 workers beside the GPU lane; phase B workers measure ~2.8 GB, so mem 3 and no GPU lane beside it) (its folder var/lab-j142 kept: phase A done, 237 of 490 phase-B units done; no clean) -- The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule
 public_title: Move atlas: random play vs Forge play, one deck pair
 public_est: ~4 h
 public_decides: None by itself; the first full run of the method, for Justin to read
@@ -7,7 +7,7 @@ cpu: heavy
 cores: 7
 pilot_cores: 2
 max_workers: 7
-mem_per_worker_gb: 2.5
+mem_per_worker_gb: 3
 repos: mtg-table@60252b32 (J146 re-posted 2026-10-21 by the PC at Justin's request after J143 hit its 9 h wall timeout -- a 4 h clock jump at boot counted as run time -- with phase B 237/490 units done; the atlas code is unchanged since 3051b41b) (the head of pc/move-atlas after the #161 review fixes, PR 2, D451, stacked on pc/record-the-cake; RE-PIN to the commit on origin/main that merges it before posting: the pilot fails on merged == 1 until then)
 decides: nothing by itself. It is the first full move atlas: how often and how strongly the random map and Forge's map of the same decisions agree, reported with intervals, for Justin to read ("what we'd gain")
 hypothesis: none to confirm, and none is tested. The smoke (50 rollouts, 3 decisions at 16 + 8 branches) is too small to say anything about agreement: every interval straddles the other
