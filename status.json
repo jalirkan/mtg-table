@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-21T15:56:17-04:00",
- "heartbeat": "2026-10-21T15:56:17-04:00",
+ "updated": "2026-10-21T16:00:59-04:00",
+ "heartbeat": "2026-10-21T16:00:59-04:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-10-21T15:42:36-04:00",
  "idleReason": "blocked after J144",
  "host": {
-  "load1": 0.01,
+  "load1": 0,
   "memUsedGb": 3,
   "memTotalGb": 30.5,
   "swapUsedMb": 2409,
