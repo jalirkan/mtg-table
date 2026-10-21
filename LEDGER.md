@@ -886,3 +886,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: played_a 0, branches 0, atlas.problems -1
 - summary: results/J142/summary.md (the PC session's; judge it against the rule)
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J143 FAILED: The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule
+
+- finished: 2026-10-21T15:40:01-04:00
+- decides: nothing by itself. It is the first full move atlas: how often and how strongly the random map and Forge's map of the same decisions agree, reported with intervals, for Justin to read ("what we'd gain")
+- hypothesis: none to confirm, and none is tested. The smoke (50 rollouts, 3 decisions at 16 + 8 branches) is too small to say anything about agreement: every interval straddles the other
+- rule: D451, written 2026-10-16 before this run: the guardrails (point 2), the pair rule (point 3), the fork and its checks (points 5-6) and the arithmetic (point 7). Method only: no pass/fail rule on what the maps say; the agreement is reported with intervals. The only checks are mechanical (the pilot's and the final ones below)
+- outcome: failed (timeout: step run1 ran past 32400 s)
+- headline: played_a 10000, branches 19193, atlas.problems -1
+- summary: results/J143/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 3051b41
+- follow-up: template morning-read: not due (the job did not finish done)
