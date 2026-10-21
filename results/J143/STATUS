@@ -3,6 +3,7 @@ runner: forgecoach-runner 10896b8e
 started: 2026-10-19T21:24:57-04:00
 phase: commands 1/1
 mtg-table: 3051b41
-workers: 3 (sized 3: min(cores 7, memory 7, max_workers 7, cap 3); peak 2.50 GB per worker (declared; measured 1.85), budget 21.4 GB)
+workers: 2 (sized 3: min(cores 7, memory 7, max_workers 7, cap 3); peak 2.50 GB per worker (declared; measured 1.85), budget 21.4 GB)
 peak_worker_rss_gb: 1.85
 resumed: 2026-10-21T06:39:42-04:00: the runner restarted during run1; it runs again and skips what is done, at most 3 worker(s)
+pressure-1: 2026-10-21T11:43:11-04:00 drop to 2 worker(s): some avg10 0.1%, swap-in 3799/s, job 13.0/21.4 GB
