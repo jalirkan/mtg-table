@@ -1,5 +1,6 @@
-running
+failed
+reason: aborted: data_free_gb < 50 (data_free_gb = 0)
 runner: forgecoach-runner 10896b8e
 started: 2026-10-21T15:42:22-04:00
-phase: stopping
+finished: 2026-10-21T15:42:35-04:00
 workers: 1
