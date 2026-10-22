@@ -172,6 +172,15 @@ import mtgtable.ai.SeatSpec;
  * (phase A's rollouts); its game row's {@code playExplore} gains the guardrails'
  * counts.
  *
+ * <p>D465: a branch unit's block may carry {@code skip} (the branches an
+ * earlier attempt recorded, {@code o<o>:b<i>}), which are not played again;
+ * each branch is streamed as it ends, a {@code CUBELAB {"type":"progress",
+ * "id", "branch"}} line (the same object as in the game row); and after a
+ * second {@code OutOfMemoryError} in a row the match line carries
+ * {@code retire} (as after an {@code OutOfMemoryError} in the replay game itself)
+ * and the worker exits {@link #RETIRED} -- cleanly, its answer
+ * given -- for the pool to start a fresh one.
+ *
  * <h2>The rules it keeps</h2>
  *
  * Hard rule 1: {@link Bootstrap#installGui} is the first Forge call.  Hard rule
@@ -472,6 +481,7 @@ public final class CubeLab {
             DistillRows.useDir(java.nio.file.Path.of(str(rows, "dir")));
         }
         int winsA = 0, winsB = 0;
+        String retire = null;   // D465: why this worker retires after the match line (the heap is exhausted)
         final int need = games / 2 + 1;
         res.key("games").arr();
         for (int g = 1; g <= games && winsA < need && winsB < need; g++) {
@@ -531,6 +541,19 @@ public final class CubeLab {
                 SearchPolicy.observeHook(null);
             }
             DistillRows.endGame(rowsKey, r.winner, !r.stuck && r.error == null);
+            if (atlas != null && r.error != null && r.error.endsWith("OutOfMemoryError")) {
+                // D465: the replay itself ran out of heap (a branch's own is counted by the hook)
+                Atlas.noteOom();
+                System.gc();
+                System.err.println("[atlas] " + id + ": the game threw OutOfMemoryError; heap in use after one GC: "
+                        + Atlas.heapInUse());
+                // one game needs little heap: an OOM in the replay itself means this JVM's is spent
+                retire = "the game threw OutOfMemoryError; heap in use after GC " + Atlas.heapInUse();
+            }
+            if (atlas != null && retire == null && Atlas.heapExhausted()) {
+                retire = hook != null && hook.retire != null ? hook.retire
+                        : Atlas.OOM_RETIRE + " OutOfMemoryErrors in a row; heap in use after GC " + Atlas.heapInUse();
+            }
             final long[] leak = RowsLeakCheck.counts();
             RowsLeakCheck.configure(0, 0);
             if (r.stuck) {
@@ -581,10 +604,22 @@ public final class CubeLab {
         if (rows != null || atlas != null) {
             DistillRows.useDir(rowsDirBefore);
         }
-        res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
+        res.end().n("winsA", (long) winsA).n("winsB", (long) winsB);
+        if (retire != null) {
+            res.n("retire", retire);
+        }
+        res.end();
         emit(res.done());
+        if (retire != null) {
+            // D465: the match line is out; a fresh JVM (the pool starts one) resumes the unit where this one stopped
+            System.err.println("[atlas] worker retiring after " + id + ": " + retire);
+            return RETIRED;
+        }
         return 0;
     }
+
+    /** D465: the exit code of a worker that retired because its heap is exhausted (3 is a stuck game thread). */
+    static final int RETIRED = 4;
 
     /**
      * A game row's {@code playExplore} (D358): both seats' counts summed --
@@ -712,6 +747,22 @@ public final class CubeLab {
                         : str(a, s == 0 ? "deckNameA" : "deckNameB"), deckFiles[s], Recording.relPath(deckFiles[s]), decks[s],
                         specs[s].profile, "forge", null));
             }
+        }
+        if (a.get("skip") instanceof Object[]) {
+            // D465: the branches an earlier attempt of this unit recorded, as Atlas.skipKey writes them
+            final java.util.Set<String> skip = new java.util.HashSet<>();
+            for (final Object o : (Object[]) a.get("skip")) {
+                skip.add(String.valueOf(o));
+            }
+            u.skip = skip;
+        }
+        if (u.decision >= 0) {
+            // D465: each branch reaches the pool as it ends, so a worker that dies keeps what it finished
+            u.onBranch = b -> {
+                final JsonOut j = new JsonOut().obj().n("type", "progress").n("id", id).key("branch");
+                Atlas.writeBranch(j, b);
+                emit(j.end().done());
+            };
         }
         u.lab.put("atlas", str(a, "run"));
         u.lab.put("match", id);

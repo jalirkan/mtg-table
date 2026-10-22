@@ -36,6 +36,7 @@ import forge.game.spellability.SpellAbility;
  * with whatever policy the branch's continuation names: Forge's own AI, or the
  * random seat ({@link Explorer} with {@link ExploreMath.Config#randomSeat}),
  * with an observing search ({@code observe=1}) so its decisions become rows.
+ * A seat Forge pilots carries the pay cap ({@link PayCap}, D465).
  */
 final class AtlasController extends PolicyControllerAi implements RolloutForcing {
 
@@ -43,6 +44,7 @@ final class AtlasController extends PolicyControllerAi implements RolloutForcing
 
     AtlasController(final Game game, final Player p, final LobbyPlayer lp, final SearchConfig observe) {
         super(game, p, lp, null, observe);
+        enablePayCap(PayCap.LIMIT);   // D465: Forge's refused plays, capped (a random seat has G5 instead)
     }
 
     @Override

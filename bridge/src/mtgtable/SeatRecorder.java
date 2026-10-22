@@ -316,6 +316,11 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
             }
             o.end();
         }
+        // D465 (protocol M72): a Forge-piloted atlas seat's pay-cap passes, so the atlas reads them back from the log
+        final Integer payCap = controller == null ? null : controller.payCapEvents();
+        if (payCap != null) {
+            o.key("guardrails").obj().n("forgePayCap", (long) payCap).end();
+        }
         log.ai("decisions", o.end().done());
     }
 

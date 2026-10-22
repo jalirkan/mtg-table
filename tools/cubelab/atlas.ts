@@ -28,7 +28,11 @@
 // redealt from the multiset; branch i of every option on one seed).  A unit (one decision, one
 // continuation, --chunk branches of every option) replays the baseline from its seed to the decision,
 // checks the options are the baseline's, and plays its branches there.  A unit that has not answered in
-// --unit-timeout minutes of monotonic time (D459) is killed as hung and recorded as not finished.  Every branch recorded (rows,
+// --unit-timeout minutes of monotonic time (D459) is killed as hung and recorded as not finished.  D465: every branch reaches
+// branches.jsonl as it ends (the worker streams it); a unit left unfinished -- its worker retired after two OutOfMemoryErrors
+// in a row, died or hung -- is played again at once from the branches it has no row for (`atlas.skip`), up to
+// UNIT_ATTEMPTS_MAX attempts, each after the second only when the one before recorded a branch; a rerun of the command resumes
+// an unfinished unit the same way, and units.jsonl gets one line per unit, when it is done.  Every branch recorded (rows,
 // ledger, frame logs), its fork checked; --leak-checks per unit play a branch again after seat B's real
 // hidden cards were dealt again (it must not move) and after seat A's own hand was (it must).
 //
@@ -43,7 +47,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { engineEnv, runPool, type MatchJob, type MatchResult, type RecordSpec } from './engine.ts';
+import { engineEnv, runPool, type MatchJob, type MatchResult, type ProgressMsg, type RecordSpec } from './engine.ts';
 import type { PlayExploreTag } from './playexplore.ts';
 import { fileLines } from './lines.ts';
 import { labPath, recipePath, shownPath } from './labdata.ts';
@@ -77,6 +81,8 @@ export interface BranchRow {
   v: 1; d: number; kind: string; turn: number; c: Continuation; o: number; token: string; label: string; i: number; seed: number;
   result: number; score: number; capped: boolean; timedOut: boolean; turns: number; steps: number; ms: number; bytes: number;
   standIns: number; error: string | null; forkProblems: string[]; leakSame?: boolean; controlMoved?: boolean; key: string;
+  /** D465: the branch threw a Java Error (an OutOfMemoryError above all): an engine error, never a result. */
+  engineError?: boolean;
 }
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
@@ -175,7 +181,30 @@ export function unitsOf(decisions: number[], o: AtlasOptions): Unit[] {
 
 export const unitId = (u: Unit): string => `d${u.d}-${u.c}-${u.i0}`;
 
-export function unitJob(o: AtlasOptions, out: string, u: Unit, listing: DecisionListing): MatchJob & Record<string, unknown> {
+/** D465: a branch's key within its unit, as mtgtable.ai.Atlas.skipKey writes it. */
+export const branchKey = (o: number, i: number): string => `o${o}:b${i}`;
+
+/** D465: the most attempts at one unit in one run: the first, a second always, and more only while each records a branch. */
+export const UNIT_ATTEMPTS_MAX = 4;
+
+/**
+ * D465: whether an unfinished unit is played again at once, from the branches it has no row for.  The second attempt always
+ * runs (a worker that retired or died leaves a fresh one); a later one only when the attempt before it recorded at least one
+ * branch, so a unit that dies at the same place every time is given up after two attempts, not retried forever.
+ */
+export function resumeUnit(attempts: number, newBranches: number, complete: boolean): boolean {
+  if (complete || attempts >= UNIT_ATTEMPTS_MAX) return false;
+  return attempts === 1 || newBranches > 0;
+}
+
+/** D465: the branch keys `rows` already holds for unit `u` (rows of other units ignored). */
+export function doneBranches(rows: Array<Pick<BranchRow, 'd' | 'c' | 'o' | 'i'>>, u: Unit): Set<string> {
+  const done = new Set<string>();
+  for (const r of rows) if (r.d === u.d && r.c === u.c && r.i >= u.i0 && r.i < u.i1) done.add(branchKey(r.o, r.i));
+  return done;
+}
+
+export function unitJob(o: AtlasOptions, out: string, u: Unit, listing: DecisionListing, skip: string[] = []): MatchJob & Record<string, unknown> {
   const B = path.join(out, 'phaseB');
   const k = listing.tokens.length;
   // the whole unit runs inside one game: the replay, then k x (i1 - i0) branches of up to --branch-timeout each
@@ -188,11 +217,14 @@ export function unitJob(o: AtlasOptions, out: string, u: Unit, listing: Decision
       turnCap: o.turnCap, branchTimeoutSec: o.branchTimeoutSec, rowsDir: path.join(B, 'rows'), framesDir: path.join(B, 'frames'),
       deckNameA: deckName(o.deckA), deckNameB: deckName(o.deckB), leakChecks: u.i0 === 0 ? o.leakChecks : 0,
       notForTraining: ATLAS_NOT_FOR_TRAINING,
+      ...(skip.length ? { skip } : {}),
     },
   };
 }
 
-interface AtlasGame { atlas?: { error?: string; decisions: DecisionListing[]; branches: Array<Omit<BranchRow, 'v' | 'd' | 'kind' | 'turn' | 'c' | 'token' | 'label' | 'score'> & { o: number; ledger?: Ledger }> }; capped?: boolean; ledger?: Ledger; playExplore?: { guardrails?: Record<string, number> }; rows?: unknown }
+/** A branch as the worker writes it (the game row's atlas.branches, and D465's progress line). */
+export type WorkerBranch = Omit<BranchRow, 'v' | 'd' | 'kind' | 'turn' | 'c' | 'token' | 'label' | 'score'> & { o: number; ledger?: Ledger };
+interface AtlasGame { atlas?: { error?: string; decisions: DecisionListing[]; branches: WorkerBranch[]; copiesRetained?: number }; capped?: boolean; ledger?: Ledger; playExplore?: { guardrails?: Record<string, number> }; rows?: unknown }
 
 function gameOf(r: MatchResult): (MatchResult['games'][number] & AtlasGame) | undefined {
   return r.games[0] as (MatchResult['games'][number] & AtlasGame) | undefined;
@@ -324,8 +356,11 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
   const unitsFile = path.join(B, 'units.jsonl');
   const doneUnits = new Set(readJsonl<{ id: string; ok: boolean }>(unitsFile).filter((u) => u.ok).map((u) => u.id));
   const units = unitsOf(picked, o).filter((u) => !doneUnits.has(unitId(u)));
-  const byId = new Map(units.map((u) => [unitId(u), u]));
-  say(`atlas phase B: ${units.length} unit(s) to play (${doneUnits.size} done), chunks of ${o.chunk} branches, on ${Math.min(jobs, Math.max(1, units.length))} worker(s)`);
+  // D465: an unfinished unit's recorded branches (an earlier run's, or this run's streamed ones) are not played again
+  const priorRows = readJsonl<BranchRow>(branchesFile);
+  const states = new Map(units.map((u) => [unitId(u), newUnitState(u, doneBranches(priorRows, u))]));
+  const resumed = units.filter((u) => (states.get(unitId(u))?.done.size ?? 0) > 0).length;
+  say(`atlas phase B: ${units.length} unit(s) to play (${doneUnits.size} done${resumed ? `, ${resumed} resumed at the branches they lack` : ''}), chunks of ${o.chunk} branches, on ${Math.min(jobs, Math.max(1, units.length))} worker(s)`);
   if (!units.length) return { baselineMs: Date.now() - tb, units: 0, ms: 0 };
   const homes = env.homes.slice(0, Math.max(1, Math.min(jobs, units.length)));
   const fd = fs.openSync(branchesFile, 'a');
@@ -333,34 +368,121 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
   const lfd = fs.openSync(path.join(B, 'ledger.jsonl'), 'a');
   const t0 = Date.now();
   let n = 0, branchGames = 0;
-  try {
-    await runPool({ ...env, homes }, units.map((u) => unitJob(o, out, u, all[u.d] as DecisionListing)), path.join(B, 'logs'), (job, r) => {
-      const u = byId.get(job.id) as Unit;
-      const listing = all[u.d] as DecisionListing;
-      const x = gameOf(r);
-      const err = r.engineError ?? x?.atlas?.error ?? (x?.atlas ? null : 'no atlas block');
-      const got = x?.atlas?.branches ?? [];
-      for (const b of got) {
-        const row: BranchRow = { v: 1, d: u.d, kind: listing.kind, turn: listing.turn, c: u.c, o: b.o, token: listing.tokens[b.o] ?? '?', label: listing.labels[b.o] ?? '?',
-          i: b.i, seed: b.seed, result: b.result, score: scoreOf(b.result), capped: b.capped, timedOut: b.timedOut, turns: b.turns, steps: b.steps, ms: b.ms,
-          bytes: b.bytes, standIns: b.standIns, error: b.error, forkProblems: b.forkProblems, key: b.key,
-          ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
-        if (b.ledger) fs.writeSync(lfd, `${JSON.stringify({ v: 1, key: b.key, ledger: b.ledger })}\n`);
-        fs.writeSync(fd, `${JSON.stringify(row)}\n`);
-      }
-      const expected = listing.tokens.length * (u.i1 - u.i0);
-      const ok = !err && got.length === expected;
-      fs.writeSync(ufd, `${JSON.stringify({ v: 1, id: job.id, d: u.d, c: u.c, i0: u.i0, i1: u.i1, ok, branches: got.length, expected, error: err, ms: x?.ms ?? null, cpuMs: x?.cpuMs ?? null })}\n`);
-      branchGames += got.length;
+  const sink: UnitSink = {
+    branch: (row, ledger) => {
+      if (ledger) fs.writeSync(lfd, `${JSON.stringify({ v: 1, key: row.key, ledger })}\n`);
+      fs.writeSync(fd, `${JSON.stringify(row)}\n`);
+      branchGames++;
+    },
+    unit: (line) => {
+      fs.writeSync(ufd, `${JSON.stringify(line)}\n`);
       n++;
-      say(`  [B ${n}/${units.length}] ${job.id}: ${got.length}/${expected} branch game(s)${err ? ` -- ${err}` : ''}; ${(branchGames / ((Date.now() - t0) / 3_600_000)).toFixed(0)} branch games/h`);
-    }, say);
+      say(`  [B ${n}/${units.length}] ${line.id}: ${line.branches}/${line.expected} branch game(s)${line.attempts > 1 ? ` in ${line.attempts} attempts` : ''}${line.engineErrors ? `, ${line.engineErrors} engine error(s)` : ''}${line.error ? ` -- ${line.error}` : ''}; ${(branchGames / ((Date.now() - t0) / 3_600_000)).toFixed(0)} branch games/h`);
+    },
+    resume: (st, why) => {
+      say(`  [B] ${unitId(st.u)}: ${st.done.size}/${st.expected} branch game(s) after attempt ${st.attempts - 1} (${why}); resuming at the ${st.expected - st.done.size} it lacks`);
+      return unitJob(o, out, st.u, all[st.u.d] as DecisionListing, [...st.done]);
+    },
+  };
+  for (const st of states.values()) st.expected = (all[st.u.d] as DecisionListing).tokens.length * (st.u.i1 - st.u.i0);
+  // a unit whose every branch already has a row (its worker died after streaming the last) is done without a game
+  for (const st of states.values()) {
+    if (st.done.size < st.expected) continue;
+    const u = st.u;
+    sink.unit({ v: 1, id: unitId(u), d: u.d, c: u.c, i0: u.i0, i1: u.i1, ok: true, branches: st.done.size, expected: st.expected, error: null,
+      ms: null, cpuMs: null, attempts: 0, engineErrors: priorRows.filter((r) => r.engineError && doneBranches([r], u).size).length });
+  }
+  const toPlay = units.filter((u) => { const st = states.get(unitId(u)) as UnitState; return st.done.size < st.expected; });
+  try {
+    await runPool({ ...env, homes }, toPlay.map((u) => unitJob(o, out, u, all[u.d] as DecisionListing, [...(states.get(unitId(u))?.done ?? [])])), path.join(B, 'logs'),
+      (job, r) => unitResult(states.get(job.id) as UnitState, all, r, sink),
+      say,
+      { onProgress: (job, msg) => unitProgress(states.get(job.id) as UnitState, all, msg, sink) });
   } finally {
     fs.closeSync(fd);
     fs.closeSync(ufd);
     fs.closeSync(lfd);
   }
   return { baselineMs: t0 - tb, units: n, branchGames, ms: Date.now() - t0, workers: homes.length };
+}
+
+/** D465: one unit's progress over its attempts in this run. */
+export interface UnitState {
+  u: Unit;
+  /** Branch keys with a row in branches.jsonl (earlier runs' included). */
+  done: Set<string>;
+  expected: number;
+  attempts: number;
+  /** Branches the current attempt recorded. */
+  fresh: number;
+  engineErrors: number;
+  attemptErrors: string[];
+  ms: number;
+  cpuMs: number;
+  copiesRetained: number | null;
+}
+
+export function newUnitState(u: Unit, done: Set<string>): UnitState {
+  return { u, done, expected: 0, attempts: 1, fresh: 0, engineErrors: 0, attemptErrors: [], ms: 0, cpuMs: 0, copiesRetained: null };
+}
+
+/** D465: units.jsonl's line for a unit, written once, when it is done (or given up). */
+export interface UnitLine {
+  v: 1; id: string; d: number; c: Continuation; i0: number; i1: number; ok: boolean; branches: number; expected: number; error: string | null;
+  ms: number | null; cpuMs: number | null; attempts: number; engineErrors: number; attemptErrors?: string[]; copiesRetained?: number;
+}
+
+/** D465: where phase B's results go (files in the command; arrays in the tests). */
+export interface UnitSink {
+  branch(row: BranchRow, ledger: Ledger | undefined): void;
+  unit(line: UnitLine): void;
+  resume(st: UnitState, why: string): MatchJob;
+}
+
+/** One worker branch as a branches.jsonl row, written unless the unit already holds it (streamed, then in the match line). */
+function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink: UnitSink): void {
+  const key = branchKey(b.o, b.i);
+  if (st.done.has(key)) return;
+  const u = st.u;
+  const listing = all[u.d] as DecisionListing;
+  const row: BranchRow = { v: 1, d: u.d, kind: listing.kind, turn: listing.turn, c: u.c, o: b.o, token: listing.tokens[b.o] ?? '?', label: listing.labels[b.o] ?? '?',
+    i: b.i, seed: b.seed, result: b.result, score: scoreOf(b.result), capped: b.capped, timedOut: b.timedOut, turns: b.turns, steps: b.steps, ms: b.ms,
+    bytes: b.bytes, standIns: b.standIns, error: b.error, forkProblems: b.forkProblems, key: b.key,
+    ...(b.engineError ? { engineError: true } : {}),
+    ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
+  st.done.add(key);
+  st.fresh++;
+  if (b.engineError) st.engineErrors++;
+  sink.branch(row, b.ledger);
+}
+
+/** D465: a branch the worker streamed as it ended. */
+export function unitProgress(st: UnitState, all: DecisionListing[], msg: ProgressMsg, sink: UnitSink): void {
+  const b = msg.branch as WorkerBranch | undefined;
+  if (b && typeof b.o === 'number' && typeof b.i === 'number') addBranch(st, all, b, sink);
+}
+
+/** D465: a unit's answer: its branches written, then either a resume job (returned) or its units.jsonl line. */
+export function unitResult(st: UnitState, all: DecisionListing[], r: MatchResult, sink: UnitSink): MatchJob[] {
+  const x = gameOf(r);
+  for (const b of x?.atlas?.branches ?? []) addBranch(st, all, b, sink);
+  const err = r.engineError ?? x?.atlas?.error ?? (x?.atlas ? null : 'no atlas block');
+  st.ms += x?.ms ?? 0;
+  st.cpuMs += x?.cpuMs ?? 0;
+  if (typeof x?.atlas?.copiesRetained === 'number') st.copiesRetained = Math.max(st.copiesRetained ?? 0, x.atlas.copiesRetained);
+  const complete = st.done.size >= st.expected;
+  const why = err ?? (r.retire ? `the worker retired: ${r.retire}` : null) ?? (x?.error ? `the game threw ${x.error}` : 'unfinished');
+  if (resumeUnit(st.attempts, st.fresh, complete)) {
+    st.attemptErrors.push(why);
+    st.attempts++;
+    st.fresh = 0;
+    return [sink.resume(st, why)];
+  }
+  const u = st.u;
+  sink.unit({ v: 1, id: unitId(u), d: u.d, c: u.c, i0: u.i0, i1: u.i1, ok: !err && complete, branches: st.done.size, expected: st.expected,
+    error: complete ? err : err ?? why, ms: x ? st.ms : null, cpuMs: x ? st.cpuMs : null, attempts: st.attempts, engineErrors: st.engineErrors,
+    ...(st.attemptErrors.length ? { attemptErrors: st.attemptErrors } : {}), ...(st.copiesRetained !== null ? { copiesRetained: st.copiesRetained } : {}) });
+  return [];
 }
 
 // ------------------------------------------------------------------
@@ -487,7 +609,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const baseFile = path.join(B, 'baseline.json');
   const baseline = fs.existsSync(baseFile) ? JSON.parse(fs.readFileSync(baseFile, 'utf8')) as { decisions: DecisionListing[]; winner: string; turns: number; first: string } : null;
   const bRows = readJsonl<BranchRow>(path.join(B, 'branches.jsonl'));
-  const units = readJsonl<{ id: string; ok: boolean; error: string | null; ms: number | null; branches: number; c: string }>(path.join(B, 'units.jsonl'));
+  const units = readJsonl<{ id: string; ok: boolean; error: string | null; ms: number | null; branches: number; c: string; copiesRetained?: number }>(path.join(B, 'units.jsonl'));
   // checks: rows (ids against the seat's own log), frame logs, the forks, the leak checks
   const problems: string[] = [];
   const logA = (b: Record<string, unknown>, s: number): string => path.join(A, 'frames', `g${String(b.g)}-seat${s}.jsonl.gz`);
@@ -516,9 +638,11 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   if (leaks.length) problems.push(`${leaks.length} of ${leak.length} no-leak check(s) moved when only seat B's hidden cards did`);
   // the guardrails, read back from every random seat's log: phase A's, and the random branches'
   const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [], counted: {} };
+  let forgePayCap = 0;
   for (const f of frames) {
     const base = path.basename(f);
     if (f.startsWith(path.join(A, 'frames')) || /^d\d+-random-/.test(base)) guardrailCheck(readMaybeGz(f), base, gc);
+    else if (/^d\d+-forge-/.test(base)) forgePayCap += forgePayCapOf(readMaybeGz(f));   // D465: the Forge seats' pay-cap passes
   }
   problems.push(...gc.violations.slice(0, 10));
   const overCap = aRows.filter((r) => !r.engineError && (r.turns ?? 0) > o.turnCap + 1);
@@ -528,6 +652,9 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const unitErrors = units.filter((u) => !u.ok);
   if (unitErrors.length) problems.push(`${unitErrors.length} unit(s) did not finish: ${unitErrors[0]?.id}: ${unitErrors[0]?.error}`);
   const branchErrors = bRows.filter((r) => r.error);
+  // D465: a branch whose engine threw an Error (an OutOfMemoryError above all) is an engine error, counted on its own
+  const branchEngineErrors = bRows.filter((r) => r.engineError).length;
+  const retained = units.map((u) => u.copiesRetained).filter((x): x is number => typeof x === 'number');
   // the maps
   const byD = new Map<number, BranchRow[]>();
   for (const r of bRows) byD.set(r.d, [...(byD.get(r.d) ?? []), r]);
@@ -549,7 +676,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       decisions: ds,
       agreement: { decisions: complete.length, meanRho: rhoAll.mean, meanRhoInterval: [rhoAll.lo, rhoAll.hi], sameBest: same, sameBestInterval: Object.values(wilson(same, complete.length)) },
       disagreeMost: disagreements(ds).map((d) => ({ d: d.d, kind: d.kind, turn: d.turn, rho: d.rho, rhoInterval: [d.rhoLo, d.rhoHi], sameBest: d.sameBest, bestRandom: d.random.best, bestForge: d.forge.best })),
-      branchGames: bRows.length, branchErrors: branchErrors.length, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
+      branchGames: bRows.length, branchErrors: branchErrors.length, branchEngineErrors, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
       meanBranchMs: { random: meanMs(msOf('random')), forge: meanMs(msOf('forge')) },
       standInsMax: bRows.reduce((a, r) => Math.max(a, r.standIns), 0),
     } : null,
@@ -557,7 +684,9 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       frameLogs: red.checked, frameLogsFailed: red.failed.length, redactionMs: red.ms, forks: bRows.length, forkProblems: forkBad.length,
       leakChecks: leak.length, leaks: leaks.length, leakControlsMoved: leak.filter((r) => r.controlMoved).length,
       guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: gc.violations.length,
-        ...countedGuardrails(gc) },
+        ...countedGuardrails(gc), forgePayCap },
+      // D465: the most branch copies any unit's worker still held after one GC at its end (null: no unit measured)
+      copiesRetainedMax: retained.length ? Math.max(...retained) : null,
       problems },
     sizes, timing,
   };
@@ -571,10 +700,26 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
 interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
-  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; cappedRandom: number; cappedForge: number };
+  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; cappedRandom: number; cappedForge: number };
   checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
-      noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number } };
+      noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number } };
+}
+
+/**
+ * D465: the pay-cap passes a Forge-piloted branch seat counted, from its log's `decisions` summary (`guardrails.forgePayCap`,
+ * protocol M72); 0 for a log without one.
+ */
+export function forgePayCapOf(text: string): number {
+  let n = 0;
+  for (const line of text.split('\n')) {
+    if (!line.includes('"type":"decisions"')) continue;
+    try {
+      const v = (JSON.parse(line) as { body?: { guardrails?: { forgePayCap?: unknown } } }).body?.guardrails?.forgePayCap;
+      if (typeof v === 'number') n += v;
+    } catch { /* a torn line: the redaction check reports it */ }
+  }
+  return n;
 }
 
 /** D458: checks.guardrails' counted keys -- G3's no-op removals, G5's refused picks and the removals after them -- read from the logs. */
@@ -631,12 +776,12 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       for (const op of d.options) L.push(`| ${op.o}${op.o === 0 ? ' (played)' : ''} | \`${op.token}\` | ${op.label.replace(/\|/g, '/')} | ${pct(op.random.mean)}${iv(op.random.lo, op.random.hi)} (n ${op.random.n}) | ${pct(op.forge.mean)}${iv(op.forge.lo, op.forge.hi)} (n ${op.forge.n}) |`);
       L.push('');
     }
-    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out); ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.`, '');
+    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}); ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.`, '');
   }
   const c = doc.checks;
   L.push('## Checks', '');
   const g = c.guardrails;
-  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
+  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
   return `${L.join('\n')}\n`;
 }
 
@@ -666,7 +811,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   ]);
   const rc = await atlasCommand(repo, flags, say);
   const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as {
-    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number }; problems: string[]; frameLogs: number; rows: number };
+    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number }; problems: string[]; frameLogs: number; rows: number; copiesRetainedMax?: number | null };
     phaseA: { played: number }; phaseB: { decisions: Array<{ complete: boolean }> } | null;
   };
   const c = doc.checks;
@@ -680,8 +825,11 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   want(c.leakControlsMoved === c.leakChecks, `every negative control moved (${c.leakControlsMoved} of ${c.leakChecks})`);
   want(c.guardrails.violations === 0 && c.guardrails.landOffered > 0 && c.guardrails.landTaken === c.guardrails.landOffered, 'G1 and G4 read back clean, with lands offered');
   want(COUNTED_GUARDRAILS.every((k) => typeof c.guardrails[k] === 'number'), 'G3 and G5 (D458) counted from the logs');
+  want(typeof c.guardrails.forgePayCap === 'number', 'the Forge seats\' pay cap (D465) counted from the logs');
+  // D465: before GameLedger.detach every unit held all four of its copies (each branch's ledger held its game); after it, 0 or 1
+  want(typeof c.copiesRetainedMax === 'number' && c.copiesRetainedMax <= 1, `a unit's worker holds at most one branch copy after one GC at its end, never one a branch (D465; most held: ${String(c.copiesRetainedMax)})`);
   want(c.frameLogs > 0 && c.rows > 0, 'frame logs and rows were checked');
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
-  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0})`);
+  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)})`);
   return fails.length ? 1 : 0;
 }

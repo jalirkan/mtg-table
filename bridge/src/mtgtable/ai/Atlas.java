@@ -20,6 +20,7 @@ package mtgtable.ai;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import forge.game.Game;
 import forge.game.GameEndReason;
@@ -81,6 +84,19 @@ import mtgtable.SeatRecorder;
  * control, the atlas seat's own hand swapped with its library, must (its state
  * at the fork reads its hand; a swap that changes no card's name cannot show).
  *
+ * <p><b>A branch that throws</b> (D465): a {@code RuntimeException} or an
+ * {@code Error} -- {@code OutOfMemoryError} above all -- is caught at the
+ * branch's boundary ({@link #play}), its row carries the error (an
+ * {@code Error} is marked {@code engineError}), its copy and ledger are let go,
+ * and the unit goes on with its next branch.  After an {@code OutOfMemoryError}
+ * the hook runs one {@code System.gc()} and logs the heap in use; a second in a
+ * row ({@link #OOM_RETIRE}) means the heap is genuinely exhausted, so the hook
+ * stops branching, ends the replay, and the worker retires after its match line
+ * ({@link #heapExhausted}) -- the pool's fresh worker resumes the unit at the
+ * branches it has no row for ({@link Unit#skip}).  Each finished branch is also
+ * handed to {@link Unit#onBranch} as it ends, so a worker that dies outright
+ * loses none of the branches it finished.
+ *
  * <p>Threads: the hook runs on the game thread, inside the seat's decision
  * callback (and inside {@code Decisions.quiet}); the copies are played on the
  * same thread, as the search plays its rollouts.  No hop, no thread.
@@ -92,6 +108,38 @@ public final class Atlas {
 
     /** The most engine steps a branch may take before it is stopped (and scored a draw). */
     static final int MAX_STEPS = 400_000;
+
+    /** D465: this many {@code OutOfMemoryError}s in a row (branches or games) and the worker retires. */
+    public static final int OOM_RETIRE = 2;
+
+    /** D465: {@code OutOfMemoryError}s in a row in this JVM; a branch or game that ends without one resets it. */
+    private static int oomStreak;
+
+    /** D465: one more {@code OutOfMemoryError} in a row (a branch's, or a whole game's in the worker). */
+    public static synchronized void noteOom() {
+        oomStreak++;
+    }
+
+    /** D465: a branch ended without one. */
+    static synchronized void noteNoOom() {
+        oomStreak = 0;
+    }
+
+    /** D465: whether the heap is genuinely exhausted -- {@link #OOM_RETIRE} in a row -- and the worker should retire. */
+    public static synchronized boolean heapExhausted() {
+        return oomStreak >= OOM_RETIRE;
+    }
+
+    /** D465: the heap in use and its cap, in MB, for the log line after a caught {@code OutOfMemoryError}. */
+    public static String heapInUse() {
+        final Runtime rt = Runtime.getRuntime();
+        return ((rt.totalMemory() - rt.freeMemory()) >> 20) + " MB of " + (rt.maxMemory() >> 20) + " MB";
+    }
+
+    /** D465: a branch's key in {@link Unit#skip}. */
+    public static String skipKey(final int o, final int i) {
+        return "o" + o + ":b" + i;
+    }
 
     /** One worker job's settings (the cube lab's {@code atlas} block). */
     public static final class Unit {
@@ -121,6 +169,10 @@ public final class Atlas {
         public Map<String, Object> lab = new LinkedHashMap<>();
         /** How many branches of this unit get the no-leak check (0 = none): branch i0 of the first options. */
         public int leakChecks;
+        /** D465: branches an earlier attempt of this unit recorded ({@link #skipKey}): not played again. */
+        public Set<String> skip = Collections.emptySet();
+        /** D465: each branch as it ends (the worker streams it to the pool), or null. */
+        public Consumer<Branch> onBranch;
     }
 
     /** One decision of the atlas seat. */
@@ -145,6 +197,12 @@ public final class Atlas {
         public int steps;
         public long ms;
         public String error;
+        /** D465: the branch threw an {@code Error} (an engine error, not a game's result). */
+        public boolean engineError;
+        /** D465: ... and it was an {@code OutOfMemoryError}. */
+        public boolean oom;
+        /** D465: the copy, weakly: whether anything still holds it once the unit is done. */
+        WeakReference<Game> copyRef;
         public long bytes;
         public int standIns;
         public final List<String> forkProblems = new ArrayList<>();
@@ -171,6 +229,10 @@ public final class Atlas {
         public final List<Branch> branches = new ArrayList<>();
         public DecisionInfo branched;
         public String error;
+        /** D465: why this worker retires after the match (the heap is exhausted), or null. */
+        public String retire;
+        /** D465: of this unit's copies, how many were still reachable after one GC at its end (-1 = not measured). */
+        public int copiesRetained = -1;
 
         public Hook(final Unit unit) {
             this.unit = unit;
@@ -207,21 +269,59 @@ public final class Atlas {
             }
             final Path rowsBefore = DistillRows.dir();
             try {
+                branching:
                 for (int i = unit.i0; i < unit.i1; i++) {
                     final long seed = branchSeed(unit.seed, d.index, i);
                     for (int o = 0; o < cands.size(); o++) {
+                        if (unit.skip.contains(skipKey(o, i))) {
+                            continue;   // D465: an earlier attempt of this unit recorded it
+                        }
                         final String key = "atlas:d" + d.index + ":" + unit.continuation + ":o" + o + ":b" + i;
                         DistillRows.useDir(unit.rowsDir);
                         final Branch b = play(ai, cands.get(o), o, i, seed, key, d);
-                        if (i - unit.i0 < unit.leakChecks && o == 0) {
+                        if (i - unit.i0 < unit.leakChecks && o == 0 && !b.engineError) {
                             leakCheck(ai, cands.get(o), b, seed, d);
                         }
                         branches.add(b);
+                        if (ended(b)) {
+                            ai.getGame().setGameOver(GameEndReason.Draw);   // the replay's rest is not played either
+                            break branching;
+                        }
                     }
                 }
             } finally {
                 DistillRows.useDir(rowsBefore);
             }
+            copiesRetained = retained(branches);
+        }
+
+        /**
+         * D465: the bookkeeping after one branch: the OOM streak, one GC and the
+         * heap logged after an {@code OutOfMemoryError}, the branch streamed.
+         * True when the heap is exhausted and the unit must stop here.
+         */
+        private boolean ended(final Branch b) {
+            if (b.oom) {
+                noteOom();
+                System.gc();
+                System.err.println("[atlas] " + b.key + ": " + b.error + " caught at the branch's boundary; heap in use after one GC: "
+                        + heapInUse() + (heapExhausted() ? " -- " + OOM_RETIRE + " in a row, the worker retires" : ""));
+            } else {
+                noteNoOom();
+            }
+            if (unit.onBranch != null) {
+                try {
+                    unit.onBranch.accept(b);
+                } catch (final RuntimeException e) {
+                    System.err.println("[atlas] " + b.key + ": streaming the branch failed: " + e);
+                }
+            }
+            if (heapExhausted()) {
+                retire = OOM_RETIRE + " OutOfMemoryErrors in a row (the last at " + b.key + "); heap in use after GC "
+                        + heapInUse();
+                return true;
+            }
+            return false;
         }
 
         /** One branch, recorded as the unit says. */
@@ -356,33 +456,68 @@ public final class Atlas {
                 j.end().end();
             }
             j.end();
+            if (copiesRetained >= 0) {
+                j.n("copiesRetained", (long) copiesRetained);
+            }
             j.key("branches").arr();
             for (final Branch b : branches) {
-                j.obj().n("o", (long) b.option).n("i", (long) b.i).n("seed", b.seed).n("result", (long) b.result)
-                        .n("capped", b.capped).n("timedOut", b.timedOut).n("turns", (long) b.turns)
-                        .n("steps", (long) b.steps).n("ms", b.ms).n("bytes", b.bytes).n("standIns", (long) b.standIns)
-                        .n("key", b.key);
-                if (b.error == null) {
-                    j.nNull("error");
-                } else {
-                    j.n("error", b.error);
-                }
-                if (b.leakSame != null) {
-                    j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
-                }
-                j.key("forkProblems").arr();
-                for (final String p : b.forkProblems) {
-                    j.v(p);
-                }
-                j.end();
-                if (b.ledger != null) {
-                    j.key("ledger");
-                    b.ledger.write(j);
-                }
-                j.end();
+                writeBranch(j, b);
             }
             j.end().end();
         }
+    }
+
+    /** One branch as JSON: a game row's {@code atlas.branches} entry, and (D465) a worker's {@code progress} line. */
+    public static void writeBranch(final JsonOut j, final Branch b) {
+        j.obj().n("o", (long) b.option).n("i", (long) b.i).n("seed", b.seed).n("result", (long) b.result)
+                .n("capped", b.capped).n("timedOut", b.timedOut).n("turns", (long) b.turns)
+                .n("steps", (long) b.steps).n("ms", b.ms).n("bytes", b.bytes).n("standIns", (long) b.standIns)
+                .n("key", b.key);
+        if (b.error == null) {
+            j.nNull("error");
+        } else {
+            j.n("error", b.error);
+        }
+        if (b.engineError) {
+            j.n("engineError", true);
+        }
+        if (b.leakSame != null) {
+            j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
+        }
+        j.key("forkProblems").arr();
+        for (final String p : b.forkProblems) {
+            j.v(p);
+        }
+        j.end();
+        if (b.ledger != null) {
+            j.key("ledger");
+            b.ledger.write(j);
+        }
+        j.end();
+    }
+
+    /**
+     * D465: how many of these branches' copies are still reachable after one
+     * {@code System.gc()} -- a branch keeps its numbers, never its game.  A
+     * copy an AI thread Forge could not stop still holds (AiController's eval
+     * thread outlives its timeout on Java 21) counts too.  -1 with no branch.
+     */
+    static int retained(final List<Branch> bs) {
+        boolean any = false;
+        for (final Branch b : bs) {
+            any |= b.copyRef != null;
+        }
+        if (!any) {
+            return -1;
+        }
+        System.gc();
+        int n = 0;
+        for (final Branch b : bs) {
+            if (b.copyRef != null && b.copyRef.get() != null) {
+                n++;
+            }
+        }
+        return n;
     }
 
     /**
@@ -417,6 +552,7 @@ public final class Atlas {
         try {
             final LenientGameCopier cp = new LenientGameCopier(game);
             copy = SearchPolicy.copyForAtlas(cp, ai);
+            b.copyRef = new WeakReference<>(copy);
             aiCopy = (Player) cp.find(ai);
             AtlasController forcing = null;
             final List<Player> ps = new ArrayList<>(copy.getPlayers());
@@ -488,7 +624,26 @@ public final class Atlas {
             for (final SeatRecorder r : recs) {
                 r.crashed();
             }
+        } catch (final Error e) {
+            // D465: an Error (OutOfMemoryError above all) ends this branch, never the unit: the copy and its
+            // ledger are let go here, the row says so, and the hook decides whether the worker can go on
+            copy = null;
+            aiCopy = null;
+            b.ledger = null;
+            b.engineError = true;
+            b.oom = e instanceof OutOfMemoryError;
+            b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            for (final SeatRecorder r : recs) {
+                try {
+                    r.crashed();
+                } catch (final RuntimeException | Error x) {
+                    // the recorder's own notice may not fit in the heap either; its close below says what it can
+                }
+            }
         } finally {
+            if (b.ledger != null) {
+                b.ledger.detach();   // D465: the ledger keeps its numbers, never the copy
+            }
             for (final SeatRecorder r : recs) {
                 try {
                     r.close();
@@ -496,8 +651,15 @@ public final class Atlas {
                     if (r.errors() > 0 && b.error == null) {
                         b.error = "recording: " + r.errors() + " snapshot error(s)";
                     }
-                } catch (final IOException e) {
+                } catch (final IOException | RuntimeException e) {
                     b.error = "recording: " + e;
+                } catch (final Error e) {
+                    // D465: as above -- the branch ends, the unit does not
+                    b.engineError = true;
+                    b.oom |= e instanceof OutOfMemoryError;
+                    if (b.error == null) {
+                        b.error = "recording: " + e.getClass().getSimpleName();
+                    }
                 }
             }
             if (rows) {
