@@ -1,4 +1,4 @@
-id: J153
+id: J154
 title: The move atlas, rung 2 -- three deck pairs by D451's pair rule (fair-fight-900000005 again as the repeat, peasant-900000007, vintage-900000007) x three Forge-vs-Forge spine games each at fresh seeds 452-460; phase A 2,400 random-vs-random rollouts a pair; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; the random seat under G5 (D458, no re-pick of a play the engine refused to pay for); pre-registered reads, numbers only. Method only, no outcome rule beyond D451's
 public_title: Move atlas 2: three deck pairs, nine spine games
 public_est: ~16 h
