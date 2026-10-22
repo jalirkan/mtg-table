@@ -135,8 +135,11 @@ export function uptimeText(s: number): string {
 
 const short = (id: string | null): string => (id ? id.replace(/-/g, '').slice(0, 8) : '?');
 
-/** The one line a start writes: the previous instance's exit, reboot or not, this start's invocation and uptime. */
-export function restartReason(prev: ExitRecord | null, now: StartFacts): string {
+/**
+ * The one line a start writes: the previous instance's exit, reboot or not, this start's invocation and
+ * uptime, and (D461) the clock's state as the daemon started (`clockText`: synced, how long the unit waited).
+ */
+export function restartReason(prev: ExitRecord | null, now: StartFacts, clock: string | null = null): string {
   let what: string;
   if (!prev) what = `no record of a previous runner (no ${EXIT_FILE}: the first start that keeps one, or a new state folder)`;
   else if (prev.state === 'exited') what = `the previous runner (pid ${prev.pid}, ${prev.commit}) exited at ${prev.exitedAt ?? '?'}: ${prev.reason ?? 'no reason recorded'}`;
@@ -145,5 +148,5 @@ export function restartReason(prev: ExitRecord | null, now: StartFacts): string 
   if (!prev?.bootId || !now.bootId) boot = `boot ${short(now.bootId)}`;
   else if (prev.bootId === now.bootId) boot = `same boot ${short(now.bootId)}: the service restarted, not the machine`;
   else boot = `the machine rebooted since (boot ${short(prev.bootId)} -> ${short(now.bootId)})`;
-  return `${what}; ${boot}; up ${uptimeText(now.uptimeS)}; invocation ${now.invocationId ? short(now.invocationId) : 'none (not under systemd)'}`;
+  return `${what}; ${boot}; up ${uptimeText(now.uptimeS)}; invocation ${now.invocationId ? short(now.invocationId) : 'none (not under systemd)'}${clock ? `; ${clock}` : ''}`;
 }

@@ -3179,7 +3179,9 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
           if (!EXPLORE_SUMMARY_KEYS.has(k)) bad(lineNo, `decisions summary explore carries an unexpected key "${k}"`);
           else if (k === 'guardrails') {
             if (!header.playExplore || header.playExplore.epsilon !== 1) bad(lineNo, 'decisions summary explore.guardrails outside a random seat\'s log (epsilon 1; M71, D451)');
-            for (const [kk, n] of Object.entries(v ?? {})) {
+            // D462 (the #177 review): an object of counts -- an array, a string or null would iterate as something else
+            if (!plainObject(v)) bad(lineNo, `decisions summary explore.guardrails is not an object of counts: ${JSON.stringify(v)?.slice(0, 80)} (M71)`);
+            else for (const [kk, n] of Object.entries(v)) {
               if (!GUARDRAIL_NAMES.includes(kk) || !Number.isInteger(n) || n < 0) bad(lineNo, `decisions summary explore.guardrails ${JSON.stringify(kk)}: ${JSON.stringify(n)} (M71)`);
             }
           } else if (k === 'byKind') {

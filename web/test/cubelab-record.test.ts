@@ -183,7 +183,7 @@ test('negative control: an explore mark in a log that did not explore FAILS the 
 // M71 / D458: a random seat's decisions summary carries its guardrail counts. Rewritten as a random
 // seat's header (epsilon 1, no close calls) the explore fixture passes with G5's counts; the same
 // counts in a D358 log (epsilon 0.2), or an unknown or non-integer count, FAIL the checker.
-const withGuardrails = (frames: Array<Record<string, any>>, g: Record<string, unknown>): void => {
+const withGuardrails = (frames: Array<Record<string, any>>, g: unknown): void => {
   frames.find((f) => f.dir === 'ai' && f.type === 'decisions')!.body.explore.guardrails = g;
 };
 
@@ -206,4 +206,15 @@ test('negative control: guardrail counts outside a random seat\'s log, or of an 
   assert.equal(odd.status, 1, odd.out);
   assert.match(odd.out, /explore\.guardrails "refusedCast": 1\.5/);
   assert.match(odd.out, /explore\.guardrails "castFromHand"/);
+});
+
+test('negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462)', () => {
+  for (const g of [null, [], '']) {
+    const r = rewrite(EXP_LOGS[0] as string, (frames) => {
+      frames[0]!.playExplore = { epsilon: 1, closeCall: 0, opening: false };
+      withGuardrails(frames, g);
+    });
+    assert.equal(r.status, 1, `${JSON.stringify(g)}: ${r.out}`);
+    assert.match(r.out, /explore\.guardrails is not an object of counts/);
+  }
 });

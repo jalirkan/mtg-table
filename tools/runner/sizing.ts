@@ -18,6 +18,8 @@
 // estimate down below the declared or default floor (2.5 GB: the cube lab's
 // worst seen, 2.4).  A pilot runs at most PILOT_MAX_WORKERS.
 
+import { CLOCK_WAIT_MAX_S } from './clock.ts';
+
 export interface Machine {
   memTotalGb: number;
   physicalCores: number;
@@ -119,10 +121,18 @@ Description=ForgeCoach lab runner (runs the pc-jobs queue)
 # A runner that cannot start (a bad install) gives up after five tries in ten minutes, not forever.
 StartLimitIntervalSec=600
 StartLimitBurst=5
+# D461: start on a wall clock NTP has set.  A USER manager sees only its own units, so it cannot order
+# after the system's time-sync.target (nor systemd-time-wait-sync.service): this line is inert here and
+# kept for a system-level install.  The ExecStartPre wait below is what holds the start.
+After=time-sync.target
 
 [Service]
 Type=simple
 WorkingDirectory=${o.runnerDir}
+# D461: wait for \`timedatectl show -p NTPSynchronized --value\` = yes, at most ${CLOCK_WAIT_MAX_S} s; it always
+# exits 0 (an unsynced clock is said in the start line, not fatal), and the daemon says what it found.
+ExecStartPre=${o.runnerDir}/tools/runner.sh wait-clock ${o.args.join(' ')} --max-wait-s ${CLOCK_WAIT_MAX_S}
+TimeoutStartSec=${CLOCK_WAIT_MAX_S + 60}
 ExecStart=${o.runnerDir}/tools/runner.sh daemon ${o.args.join(' ')}
 Environment=PATH=${o.node}:/usr/local/bin:/usr/bin:/bin
 # git never prompts and never waits on ssh: a push or fetch fails fast instead of stalling the loop.

@@ -725,9 +725,23 @@ public class PolicyControllerAi extends PlayerControllerAi {
         // D458 (G5): the random seat learns whether the engine refused its pick.  Forge's
         // own payment marks a play it could not pay for skipped (ComputerUtilMana's "Didn't
         // find what to pay for", ComputerUtil.handlePlayingSpellAbility's failed costs).
+        // D462: the mark can still be on from an earlier refusal -- Forge clears it only in
+        // AiController.getSpellAbilityToPlay, and only for the plays it had already set aside
+        // as skipped there, so a play refused after that list was made stays marked through
+        // the next one (and a priority answered by a land drop never reaches it).  Forge's own
+        // AI never plays a marked play; the random seat can.  So the mark comes off for the
+        // play, and what it says afterwards is this play's own verdict; a play that went
+        // through gets it back, leaving Forge's bookkeeping as it was.
         final boolean skippedBefore = sa.isSkip();
+        if (skippedBefore) {
+            sa.setSkip(false);
+        }
         final boolean r = playChosen(sa);
-        explorer.played(player.getGame(), sa, !skippedBefore && sa.isSkip());
+        final boolean refusedNow = sa.isSkip();
+        if (skippedBefore && !refusedNow) {
+            sa.setSkip(true);
+        }
+        explorer.played(player, sa, refusedNow);
         return r;
     }
 
