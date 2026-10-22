@@ -1,7 +1,8 @@
 running
 runner: forgecoach-runner 6fb13bf9
 started: 2026-10-22T14:55:35-04:00
-phase: prepare
-workers: 1
+phase: commands 1/4
+mtg-table: 8fca725
+workers: 4 (sized 4: min(cores 7, memory 4, max_workers 7); peak 4.20 GB per worker (declared; measured 2.45), budget 21.4 GB)
 peak_worker_rss_gb: 2.45
 resumed: 2026-10-22T14:55:35-04:00: retry after "stopped: tools/runner.sh stop"; the pilot had passed; starts again at run1; the tools skip what is done
