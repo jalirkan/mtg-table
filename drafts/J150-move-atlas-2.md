@@ -8,7 +8,7 @@ cores: 7
 max_workers: 7
 mem_per_worker_gb: 2.7
 after: J145
-repos: mtg-table@main (FILL IN: merge of #179 over 5a02afc0. 5a02afc0 already merges #175 (worker heap, the atlas's 2048m), #176 (monotonic unit watchdog, --unit-timeout, D459), #177 (G5, D458) and #178 (--empty-hand-ok, D460); #179 (the runner's step durations on the monotonic clock, D461) is a precondition for the 8h step timeout. The pilot's merged, has-g5, has-watchdog, has-heap and has-checker checks hold the pin)
+repos: mtg-table@8fca7250 (the merge of #179 and #181 over 5a02afc0; #175–#178 in; the pin the cloud gave on 2026-10-22 14:05 UTC)
 decides: nothing by itself. Rung 2 of the move atlas: whether J148's one-game picture (the two maps rarely agree before the game is decided; rho below zero; "cast now / don't attack" under random play) is a property of one spine or of the method, read on nine spines of three pairs, with intervals clustered by pair and spine; and how much a labelled decision costs, for rung 3
 hypothesis: none to confirm about the maps. Two candidates from J148 are read for repetition on the repeat pair only (iv): C1 "cast now" and C2 "don't attack", both + on J148 (C1 +0.013 over 18 decisions, C2 +0.059 over 4; neither excluded zero there)
 rule: D451 (method; no outcome rule) with D458 (G5) and D459 (unit watchdog). Pre-registered here, before any J150 data: the reads (i)-(vi) below, computed by var/lab-j150-local/bin/reads.py exactly as written in the pilot; a candidate of (iv) HOLDS only if its point is > 0 (J148's direction) and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. No other read carries a verdict
