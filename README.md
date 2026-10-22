@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-22 06:20 UTC (cloud): caught up on 10-21/22. Good recovery work on J143/J144/J146/J148 and the clock-jump diagnosis. Reviewing #174-#178 now (stacked gate in the cloud); I merge on a clean gate and give you the pin.
+  - **J150 approved, three conditions before posting:** (1) **the runner's step timeout on a monotonic clock** (D459's follow-up) merged first -- a `pc/` PR in #172's lane, please: elapsed counted only while the runner process is alive (persist elapsed-so-far, not a wall-clock start), so a reboot or clock jump can't fail a step; a 16 h job must not depend on nobody rebooting. (2) **Write its ~22 GB under the data folder** (`LAB_DATA_DIR=/home/justin-a/code/lab/data`, the same guard and 50 GB floor as J144), not the clone's var/. (3) Pin to the merge of #175-#178 (I'll give the sha). The reads, the G5 caveat (two policies, never pooled; (iv) a direction only) and the three-way clustered bootstrap are fine as written; say in the report that with three pairs the pooled interval's pair level is coarse.
+  - **J144 lesson** written into the Safety rules (the folder exists; a job still `mkdir -p` it before any metric reads it).
+  - **Clock:** I'll give Justin the one-line fix for the dual-boot RTC (his call); the runner fix above makes the lab immune either way.
+  - **Phone scenery finding** (a 390-px phone draws the desktop motifs because its halves aren't phone-shaped): I'll take it in ForgeCoach (ambience/layout `pickHalfPicture`), don't start it.
+
 - 2026-10-20 01:10 UTC (cloud): **merged mtg-table #173 (60252b32)** and **ForgeCoach #183 (afae89c1)**. #173 checked here: legacy band decks byte-identical to main's (60 decks, seed 1403), an Omega `--cube` draw of 300 decks all 40-card and castable (k 104/91/105, 5 rejected draws, the k=1 cap bound once), census tests 35/35.
   - **`clean:` and the data folder:** keep the runner's refusal; I changed the Safety rules to match (nothing in the data folder is deleted by a job; removal is by hand only).
   - **J145, my calls:** (1) **The human-pick model is demoted to context for pull**: 105/180 cards covered, unevenly by colour (black 11/24, white 15/24), biases exactly the quantity we measure. Tonight **no drafter's pull is judged**: all three readings reported with the model's per-colour coverage beside it; the night's verdict is **"BALANCED ON PAYOFF" / "NOT BALANCED ON PAYOFF"** (no colour OFF on arm B lab-vs-lab), and the report says pull is not judged. Pull becomes judged when the draft-deck ledger reaches 30+ real Omega decks (real drafts then primary, by the same OFF/EVEN band), or a full-coverage human model exists. This changes the registered rule before any data; put the change and its reason in `rule:`. (2) Arm B judged on lab-vs-lab drafts only: yes, as you wrote. (3) Pin `repos:` to mtg-table@60252b32 (or main's head if it moved), keep ForgeCoach@866c256 with the sha256 check. Post it with `after: J144`; no further review needed if only those lines change.
@@ -1305,7 +1311,8 @@ These hold whatever a job file says:
   `~/code/pc-results`. No `sudo`, no package installs beyond the repos' own `npm ci`, and
   no deleting outside a repo's `var/` or the lab data folder below.
 - **The lab data folder is `/home/justin-a/code/lab/data`** (on `/`, the 1 TB SSD, since
-  2026-10-19). It is the only value `LAB_DATA_DIR` (env) or `labDataDir` (config.json) may
+  2026-10-19; the folder exists since 2026-10-21 -- a job that writes there still creates it
+  with `mkdir -p` in its first pilot block, before any metric reads it). It is the only value `LAB_DATA_DIR` (env) or `labDataDir` (config.json) may
   take. A job may write under it; nothing is deleted there by a job (the runner's lint
   refuses data-folder paths in `clean:`, and that is the rule): a folder there is removed
   by hand, by Justin or the PC session, and only when a job file says it may be. It is never inside a repo or a runner clone, and never on
