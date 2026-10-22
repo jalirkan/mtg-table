@@ -169,6 +169,9 @@
  * downgrades each assertion to a WARN only when the file itself shows there was
  * nothing to conceal:
  *
+ *   - both: every state body lists the viewer's seat and every seat any state
+ *     lists, at least two (a state that leaves the opponent out shows no hand of
+ *     theirs, which proves nothing -- the #178 review);
  *   - "not one card was redacted": every state body shows every non-viewer seat's
  *     hand at count 0 (and no cards), every non-viewer library.cards is [], and no
  *     frame of any type lists a card in a hand or a library that the viewer does
@@ -1637,9 +1640,13 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    * opponentHand -- a non-viewer hand whose count is not 0 (or that lists a card);
    * opponentListed -- a non-viewer library.cards that is not [], or any frame that
    * lists a card in a hand or library the viewer does not own; viewerHand -- the
-   * viewer's own hand at a count other than 0.
+   * viewer's own hand at a count other than 0.  seats -- every seat any state
+   * lists, and the state listing the fewest of them (a state that leaves a seat
+   * out proves nothing about that seat's hand: both proofs need every state to
+   * list the viewer and every other seat, and at least one other).
    */
   const emptyProof = { opponentHand: null, opponentListed: null, viewerHand: null };
+  const proofSeats = { all: new Set(), fewest: Infinity, fewestLine: null, viewerMissing: null };
   let sawState = false;
   const seat = header.seat;
   /** M65 / M66: the last state body, which an input's selection is checked against. */
@@ -2593,6 +2600,13 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       note(lineNo, 'state.players is not an array');
       continue;
     }
+    {
+      // --empty-hand-ok (D460): which seats this state lists (a seat left out is a hand never shown).
+      const ids = new Set(players.filter((p) => plainObject(p) && num(p.id)).map((p) => p.id));
+      for (const id of ids) proofSeats.all.add(id);
+      if (ids.size < proofSeats.fewest) { proofSeats.fewest = ids.size; proofSeats.fewestLine = lineNo; }
+      if (!ids.has(seat) && proofSeats.viewerMissing === null) proofSeats.viewerMissing = lineNo;
+    }
     if (Array.isArray(body.events)) stats.events += body.events.length;
     if (Array.isArray(body.stackCards)) stats.stackCards += body.stackCards.length;
     // How many stack ITEMS were shape-checked (not stackCards): the summary's
@@ -2964,20 +2978,29 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    * conceal, from this file alone -- or, under the flag, why it does not hold.
    */
   const provable = emptyHandOk && num(seat) && stats.state > 0;
-  const opponentEmpty = !provable || emptyProof.opponentHand !== null || emptyProof.opponentListed !== null
+  // Every state lists the viewer and every other seat any state lists -- at least one other.  A state
+  // without the opponent shows no hand of theirs at all, which proves nothing (the #178 review).
+  const seatsWhyNot = !provable ? null
+    : proofSeats.viewerMissing !== null ? `the viewing seat ${seat} is not listed in the state at line ${proofSeats.viewerMissing}`
+    : proofSeats.all.size < 2 ? 'no state lists any seat but the viewer\'s, so no other seat\'s hand was ever shown'
+    : proofSeats.fewest < proofSeats.all.size ? `the state at line ${proofSeats.fewestLine} lists ${proofSeats.fewest} of the ${proofSeats.all.size} seats, so a hand is missing from it`
+    : null;
+  const opponentEmpty = !provable || seatsWhyNot !== null || emptyProof.opponentHand !== null || emptyProof.opponentListed !== null
     ? null
     : `every one of the ${stats.state} state bodies shows each other seat's hand at count 0 and their ` +
       `library.cards as [], and no frame lists a card in a hand or library the viewer does not own`;
   const opponentWhyNot = !emptyHandOk ? null
     : !provable ? 'no state body, or no numeric seat in the header'
+    : seatsWhyNot !== null ? seatsWhyNot
     : emptyProof.opponentHand !== null ? `another seat's hand is not empty at line ${emptyProof.opponentHand}`
     : emptyProof.opponentListed !== null ? `a card of another seat's hand or library is listed at line ${emptyProof.opponentListed}`
     : null;
-  const viewerEmpty = !provable || emptyProof.viewerHand !== null
+  const viewerEmpty = !provable || seatsWhyNot !== null || emptyProof.viewerHand !== null
     ? null
     : `every one of the ${stats.state} state bodies shows the viewer's own hand at count 0`;
   const viewerWhyNot = !emptyHandOk ? null
     : !provable ? 'no state body, or no numeric seat in the header'
+    : seatsWhyNot !== null ? seatsWhyNot
     : emptyProof.viewerHand !== null ? `the viewer's hand is not empty at line ${emptyProof.viewerHand}`
     : null;
   const provesNothing = (msg, emptyWhy, whyNot) => {

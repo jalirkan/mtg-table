@@ -42,8 +42,11 @@
 // var/draft-decks/decks.lock (created exclusively, holding the writer's pid), so the
 // CLI and the helper never interleave: a CLI `withdraw` cannot drop a deck the helper
 // is appending, and an `import` cannot bring back a line an opt-out is deleting.  A
-// lock whose pid is gone, or older than LOCK_STALE_MS, is taken over; a writer waits
-// up to LOCK_WAIT_MS, then gives up (the helper answers 503, an opt-out throws).
+// lock whose pid is gone, or older than LOCK_STALE_MS, is taken over -- through a
+// claim on that one lock file (withLedgerLock), so two writers that both find it dead
+// cannot each delete the other's fresh lock; a writer waits up to LOCK_WAIT_MS, then
+// gives up (the helper answers 503, an opt-out throws).  The helper waits without
+// blocking its event loop (the store's *Async methods), one change after another.
 //
 // WHERE A LINE COMES FROM:
 //
@@ -98,9 +101,9 @@
 // Run from the repo root (hard rule 9).  Self-test: tools/draft-decks-selftest.mjs
 // (gate 12f, CI).
 
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import * as realFs from 'node:fs';
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeSync } from 'node:fs';
+import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkDeck, realInside } from './match-launcher.mjs';
@@ -197,42 +200,92 @@ export function checkSoloBody(body, at) {
 }
 
 const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
 
 /**
- * Run fn() holding `dir`/decks.lock: created with O_EXCL, holding this pid.  A lock whose pid is not
- * alive, or older than staleMs, is taken over; otherwise wait (polling) up to waitMs, then throw
- * {code: 'LOCKED'}.  The lock is removed afterwards, whatever fn() did.  Synchronous, like the store.
+ * One try at the lock file `lock`: {ino} when this process now holds it (the lock file's inode, which
+ * the release checks), {holder} when another writer does, {again} when it changed under us (try again
+ * at once).
+ *
+ * TAKING OVER A DEAD LOCK (the #174 review).  A lock whose pid is not alive, or older than staleMs, is
+ * never unlinked by its name alone: two writers that both read the dead pid would each unlink whatever
+ * is at that name, the slower one deleting the faster one's fresh lock, and both would write.  The
+ * takeover of that one lock FILE (its inode and mtime) is claimed instead -- `<lock>.takeover-<ino>-<mtime>`,
+ * created with O_EXCL, has exactly one winner -- and the winner unlinks the lock only if it is still
+ * that file and still dead.  A loser, and a winner that finds another file there, just try again, and
+ * see the new holder's live pid.  A claim left by a writer that died mid-takeover is removed once it is
+ * older than staleMs.  (Not covered: a holder ALIVE past staleMs releasing in the instant between a
+ * taker's re-check and its unlink -- a lease that long is already a broken writer.)
  */
-export function withLedgerLock(dir, fn, { waitMs = LOCK_WAIT_MS, staleMs = LOCK_STALE_MS, now = Date.now } = {}) {
+function tryLedgerLock(lock, { staleMs, now, onStale }) {
+  try {
+    const fd = openSync(lock, 'wx', 0o600);
+    try {
+      writeSync(fd, String(process.pid));
+      return { ino: fstatSync(fd).ino };
+    } finally { closeSync(fd); }
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+  }
+  const look = () => {
+    const st = statSync(lock);
+    const holder = Number(readFileSync(lock, 'utf8').trim());
+    return statSync(lock).ino === st.ino ? { st, holder } : null;
+  };
+  const dead = ({ st, holder }) => (Number.isInteger(holder) && holder > 0 && !alive(holder)) || now() - st.mtimeMs > staleMs;
+  let seen;
+  try { seen = look(); } catch { return { again: true }; }   // gone between: try again
+  if (!seen) return { again: true };
+  if (!dead(seen)) return { holder: seen.holder };
+  if (onStale) onStale(seen.holder);   // the self-test's seam: another writer moves here
+  const claim = `${lock}.takeover-${seen.st.ino}-${Math.round(seen.st.mtimeMs * 1000)}`;
+  let cfd;
+  try { cfd = openSync(claim, 'wx', 0o600); } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    try { if (now() - statSync(claim).mtimeMs > staleMs) unlinkSync(claim); } catch { /* gone: its taker finished */ }
+    return { again: true };
+  }
+  try {
+    let still = null;
+    try { still = look(); } catch { /* gone: taken over and released already */ }
+    if (still && still.st.ino === seen.st.ino && still.st.mtimeMs === seen.st.mtimeMs && dead(still)) {
+      try { unlinkSync(lock); } catch { /* none */ }
+    }
+  } finally {
+    closeSync(cfd);
+    try { unlinkSync(claim); } catch { /* best effort */ }
+  }
+  return { again: true };
+}
+
+/** Release a lock this process holds: unlinked only while it is still our file (a taker may have replaced it). */
+function releaseLedgerLock(lock, ino) {
+  try { if (statSync(lock).ino === ino) unlinkSync(lock); } catch { /* best effort */ }
+}
+
+function lockedError(lock, holder) {
+  const err = new Error(`the draft-deck ledger is locked by pid ${Number.isInteger(holder) ? holder : '?'} (${lock})`);
+  err.code = 'LOCKED';
+  return err;
+}
+
+/**
+ * Run fn() holding `dir`/decks.lock: created with O_EXCL, holding this pid.  A dead or stale lock is
+ * taken over (tryLedgerLock); otherwise wait (polling) up to waitMs, then throw {code: 'LOCKED'}.  The
+ * lock is removed afterwards, whatever fn() did.  Synchronous, like the store: the CLI's path.
+ */
+export function withLedgerLock(dir, fn, { waitMs = LOCK_WAIT_MS, staleMs = LOCK_STALE_MS, now = Date.now, onStale } = {}) {
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   const lock = join(dir, LOCK_FILE);
   const until = now() + waitMs;
-  let fd;
   for (;;) {
-    try { fd = openSync(lock, 'wx', 0o600); break; } catch (e) {
-      if (e.code !== 'EEXIST') throw e;
+    const r = tryLedgerLock(lock, { staleMs, now, onStale });
+    if (r.ino !== undefined) {
+      try { return fn(); } finally { releaseLedgerLock(lock, r.ino); }
     }
-    let holder = NaN;
-    let age = 0;
-    try { holder = Number(readFileSync(lock, 'utf8').trim()); age = now() - statSync(lock).mtimeMs; } catch { continue; }   // gone between: try again
-    if ((Number.isInteger(holder) && holder > 0 && !alive(holder)) || age > staleMs) {
-      try { unlinkSync(lock); } catch { /* another writer took it over first */ }
-      continue;
-    }
-    if (now() >= until) {
-      const err = new Error(`the draft-deck ledger is locked by pid ${Number.isInteger(holder) ? holder : '?'} (${lock})`);
-      err.code = 'LOCKED';
-      throw err;
-    }
-    pause(10);
-  }
-  try {
-    writeSync(fd, String(process.pid));
-    closeSync(fd);
-    return fn();
-  } finally {
-    try { unlinkSync(lock); } catch { /* best effort */ }
+    if (now() >= until) throw lockedError(lock, r.holder);
+    pause(r.again ? 1 : 10);
   }
 }
 
@@ -240,6 +293,11 @@ export function withLedgerLock(dir, fn, { waitMs = LOCK_WAIT_MS, staleMs = LOCK_
  * The store.  opts: { dir (the ledger's folder), varRoot (its real path must stay inside), scriptOf
  * (() => lookup | null, called once, lazily), now, log, maxBytes, fs (the writes, for the self-test:
  * {appendFileSync, writeFileSync, renameSync, chmodSync}), lockWaitMs, lockStaleMs }.
+ *
+ * Every change is synchronous under the lock.  postSolo / recordRoom wait for a held lock with
+ * Atomics.wait (the CLI and the self-test); postSoloAsync / recordRoomAsync, the helper's, make the
+ * same change but wait with timers, so a CLI holding the lock does not stall the helper's every route,
+ * and run one after another in the order they were asked (an opt-in and the opt-out after it never swap).
  */
 export function createDraftDecks(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -261,7 +319,30 @@ export function createDraftDecks(opts = {}) {
   const memo = new Map();
   const fsx = { appendFileSync: realFs.appendFileSync, writeFileSync: realFs.writeFileSync, renameSync: realFs.renameSync, chmodSync: realFs.chmodSync, ...(opts.fs ?? {}) };
   const tombFile = join(dir, WITHDRAWN_FILE);
-  const locked = (fn) => withLedgerLock(dir, fn, { waitMs: opts.lockWaitMs ?? LOCK_WAIT_MS, staleMs: opts.lockStaleMs ?? LOCK_STALE_MS });
+  const lockWaitMs = opts.lockWaitMs ?? LOCK_WAIT_MS;
+  const lockStaleMs = opts.lockStaleMs ?? LOCK_STALE_MS;
+  // One attempt, no wait, while an *Async method is running its change (patiently, below).
+  let noWait = false;
+  const locked = (fn) => withLedgerLock(dir, fn, { waitMs: noWait ? 0 : lockWaitMs, staleMs: lockStaleMs });
+  // The *Async methods: one at a time, in order; each tries its synchronous change, and on a held lock
+  // waits 10 ms on a timer and tries again, up to lockWaitMs, then throws {code: 'LOCKED'}.
+  let queue = Promise.resolve();
+  const patiently = (call) => {
+    const run = async () => {
+      const until = Date.now() + lockWaitMs;
+      for (;;) {
+        noWait = true;
+        try { return call(); } catch (e) {
+          if (e.code !== 'LOCKED' || Date.now() >= until) throw e;
+        } finally { noWait = false; }
+        await sleep(10);
+      }
+    };
+    const p = queue.then(run, run);
+    queue = p.catch(() => {});
+    return p;
+  };
+  const busy = (e) => ({ status: 503, body: { ok: false, type: 'error', message: `${e.message}: try again in a moment` } });
   const read = () => (existsSync(file) ? readFileSync(file, 'utf8') : '');
   /** The withdrawn keys on disk. */
   const tombs = () => new Set(existsSync(tombFile) ? readFileSync(tombFile, 'utf8').split('\n').map((k) => k.trim()).filter(Boolean) : []);
@@ -276,8 +357,8 @@ export function createDraftDecks(opts = {}) {
   // A change under the lock: a lock that cannot be had is the helper's 503.
   const lockedAppend = (line, before = () => {}) => {
     try { return locked(() => { before(); return append(line); }); } catch (e) {
-      if (e.code === 'LOCKED') return { status: 503, body: { ok: false, type: 'error', message: `${e.message}: try again in a moment` } };
-      throw e;
+      if (e.code === 'LOCKED' && !noWait) return busy(e);
+      throw e;   // under patiently: tried again there
     }
   };
   const append = (line) => {
@@ -316,7 +397,8 @@ export function createDraftDecks(opts = {}) {
     });
   };
   const iso = () => new Date(now()).toISOString();
-  return {
+  const optOutFailed = (roomId, seat, e) => log(`DRAFT-DECKS ERROR room ${roomId} seat ${seat} opted out but its deck could NOT be deleted from ${file} (${e.message}): no longer served; delete it by hand`);
+  const api = {
     file,
     health: () => ({ draftDecks: 1 }),
     /** D455: a room seat handed in a deck (draft-room.mjs onDeck).  Written only with that seat's consent. */
@@ -328,7 +410,7 @@ export function createDraftDecks(opts = {}) {
         const keys = new Set([key, ...matchIds.filter((m) => MATCH_ID.test(String(m))).map((m) => `table:${m}:${seat}`)]);
         let n;
         try { n = remove(keys); } catch (e) {
-          log(`DRAFT-DECKS ERROR room ${roomId} seat ${seat} opted out but its deck could NOT be deleted from ${file} (${e.message}): no longer served; delete it by hand`);
+          if (!(noWait && e.code === 'LOCKED')) optOutFailed(roomId, seat, e);   // under patiently: logged if its last try fails
           throw e;
         }
         if (n) log(`DRAFT-DECKS room ${roomId} seat ${seat} opted out: ${n} line(s) of its deck deleted from the ledger`);
@@ -341,6 +423,22 @@ export function createDraftDecks(opts = {}) {
       if (fail) { log(`DRAFT-DECKS room ${roomId} seat ${seat}: not recorded (${fail.body.message})`); return false; }
       log(`DRAFT-DECKS room ${roomId} seat ${seat}: its deck recorded for cube ${cubeId} (D455, with its consent)`);
       return true;
+    },
+    /** recordRoom for the helper: waits for the lock on a timer, in order.  -> Promise<boolean>; an opt-out that cannot be done rejects. */
+    async recordRoomAsync(d) {
+      try { return await patiently(() => api.recordRoom(d)); } catch (e) {
+        if (e.code !== 'LOCKED') throw e;
+        if (!d.record) { optOutFailed(d.roomId, d.seat, e); throw e; }
+        log(`DRAFT-DECKS room ${d.roomId} seat ${d.seat}: not recorded (${busy(e).body.message})`);
+        return false;
+      }
+    },
+    /** postSolo for the helper: waits for the lock on a timer, in order.  -> Promise<{status, body}>. */
+    async postSoloAsync(body) {
+      try { return await patiently(() => api.postSolo(body)); } catch (e) {
+        if (e.code === 'LOCKED') return busy(e);
+        throw e;
+      }
     },
     /** POST /draft-deck: {status, body}. */
     postSolo(body) {
@@ -366,7 +464,7 @@ export function createDraftDecks(opts = {}) {
       return { status: 200, body: { ok: true, v: DRAFT_DECKS_VERSION, cube, scripts: !!s, decks } };
     },
     /** Every deck's cube and source, for `list`: [{cubeId, source, day}]. */
-    summary: () => foldLedger(read()).filter((l) => !gone.has(l.key) && !tombs().has(l.key)).map((l) => ({ key: l.key, cubeId: l.cubeId, source: l.source, day: String(l.at).slice(0, 10) })),
+    summary: () => { const t = tombs(); return foldLedger(read()).filter((l) => !gone.has(l.key) && !t.has(l.key)).map((l) => ({ key: l.key, cubeId: l.cubeId, source: l.source, day: String(l.at).slice(0, 10) })); },
     /** `withdraw`: delete these keys' lines (no size cap).  -> lines removed. */
     withdraw: (keys) => remove(new Set(keys)),
     /**
@@ -387,6 +485,7 @@ export function createDraftDecks(opts = {}) {
     /** The withdrawn keys (for `list --keys` and the self-test). */
     withdrawnKeys: () => [...tombs()],
   };
+  return api;
 }
 
 /** A `.dck` file's main section: [[n, card], ...] (the `|SET` suffix dropped). */

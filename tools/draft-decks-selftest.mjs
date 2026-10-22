@@ -27,19 +27,22 @@
 //      deck once; a withdrawn key never imported again (withdrawn.txt, keys only); `withdraw`
 //      by key.
 //   7. one writer at a time: decks.lock, waited for, taken over from a dead or stale
-//      holder, never left behind; another process holding it delays a write, loses none.
+//      holder, never left behind; another process holding it delays a write, loses none;
+//      two writers that both find a dead holder end with exactly one inside (the #174
+//      review); the helper's *Async methods wait on a timer (its event loop runs) and
+//      in the order they were asked.
 //
 // Its files are under var/draft-decks-selftest/.  No network, no engine, no claude.
 
 import { spawn, spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startHelper } from './coach-helper.mjs';
 import { applyPick, checkCreate, createRoomStore, lineCards } from './draft-room.mjs';
 import {
-  MAX_DRAFT_DECK_BODY, checkSoloBody, createDraftDecks, dckMain, foldLedger, importMatch, makeupOf, scriptMakeup,
+  MAX_DRAFT_DECK_BODY, checkSoloBody, createDraftDecks, dckMain, foldLedger, importMatch, makeupOf, scriptMakeup, withLedgerLock,
 } from './draft-decks.mjs';
 import { CARDS_ZIP, openForgeScripts } from './forge-scripts.ts';
 
@@ -372,6 +375,77 @@ section('7. one writer at a time: decks.lock, between the CLI and the helper');
   eq(child.exitCode, 0, 'the other process ended cleanly');
   eq(patient.summary().map((d) => d.key).sort(), ['solo:draft-abc-123', 'solo:lock-1', 'solo:lock-3', 'solo:lock-4', 'solo:lock-5'].filter((k) => k !== 'solo:draft-abc-123').sort(), 'every deck that got the lock is in, none lost');
   ok(!existsSync(lockPath), 'no lock left behind');
+
+  // The #174 review: two writers both read a dead holder's pid.  Writer B has just judged the lock dead
+  // (its onStale seam) when writer A, another process, takes it over and goes inside; B then carries on
+  // with the dead pid it read.  Unlinking by name, B deleted A's fresh lock and went in beside it.
+  const holdIn = (dir, who, ms, marks) => spawn(process.execPath, ['--input-type=module', '-e', `
+    import { appendFileSync } from 'node:fs';
+    import { withLedgerLock } from ${JSON.stringify(new URL('./draft-decks.mjs', import.meta.url).href)};
+    withLedgerLock(${JSON.stringify(dir)}, () => {
+      ${marks ? `appendFileSync(${JSON.stringify(marks)}, 'in ${who}\\n');` : ''}
+      process.stdout.write('held\\n');
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${ms});
+      ${marks ? `appendFileSync(${JSON.stringify(marks)}, 'out ${who}\\n');` : ''}
+    });
+  `], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const exited = (c) => new Promise((r) => (c.exitCode !== null ? r() : c.once('exit', r)));
+  const race = join(VAR, 'race');
+  mkdirSync(race, { recursive: true });
+  const marks = join(race, 'marks.txt');
+  const deadAgain = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8' }).stdout;
+  writeFileSync(join(race, 'decks.lock'), deadAgain, { mode: 0o600 });
+  let writerA = null;
+  let staleSeen = 0;
+  withLedgerLock(race, () => { appendFileSync(marks, 'in B\n'); appendFileSync(marks, 'out B\n'); }, {
+    waitMs: 10_000,
+    onStale: (holder) => {
+      staleSeen++;
+      if (writerA || String(holder) !== deadAgain) return;
+      writerA = holdIn(race, 'A', 400, marks);
+      const until = Date.now() + 10_000;
+      while (!(existsSync(marks) && readFileSync(marks, 'utf8').includes('in A')) && Date.now() < until) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+    },
+  });
+  await exited(writerA);
+  eq(readFileSync(marks, 'utf8').split('\n').filter(Boolean), ['in A', 'out A', 'in B', 'out B'],
+    `two writers that both read the dead pid ${deadAgain}: A takes the lock over, B waits for A -- exactly one inside at a time`);
+  eq(staleSeen, 1, '... B judged the lock dead once, and saw A\'s live pid after that');
+  ok(readdirSync(race).every((f) => f === 'marks.txt'), `... no lock and no takeover claim left behind (${readdirSync(race).join(', ')})`);
+
+  // The helper's path: a held lock is waited for on a timer, so its event loop keeps running.
+  const ad = join(VAR, 'async-ledger');
+  const asyncLog = [];
+  const as = createDraftDecks({ dir: ad, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, lockWaitMs: 5000, log: (x) => asyncLog.push(x) });
+  let ticks = 0;
+  const iv = setInterval(() => { ticks++; }, 20);
+  const holder = holdIn(ad, 'cli', 400);
+  await new Promise((r) => holder.stdout.once('data', r));
+  const ta = Date.now();
+  const posted = await as.postSoloAsync(body({ draftId: 'async-1' }));
+  const waited = Date.now() - ta;
+  clearInterval(iv);
+  eq(posted.status, 201, 'postSoloAsync while another process holds the lock: waits, then goes in');
+  ok(waited >= 250 && ticks >= 8, `... and the event loop ran while it waited (${ticks} timer ticks in ${waited} ms)`);
+  await exited(holder);
+  // An opt-in, then the opt-out after it, both asked while the lock is held: they run in that order.
+  const held2 = holdIn(ad, 'cli', 300);
+  await new Promise((r) => held2.stdout.once('data', r));
+  const seatDeck = { roomId: 'rASYNC1', seat: 0, cubeId: 'omega', format: 'grid', main: MAIN };
+  const optIn = as.recordRoomAsync({ ...seatDeck, record: true });
+  const optOut = as.recordRoomAsync({ ...seatDeck, record: false });
+  eq([await optIn, await optOut], [true, true], 'an opt-in and the opt-out after it, both waiting on the lock: each done');
+  ok(!as.summary().some((d) => d.key === 'room:rASYNC1:0') && as.withdrawnKeys().includes('room:rASYNC1:0'), '... in the order asked: the deck is out and its key withdrawn');
+  await exited(held2);
+  // Held past its wait: a 503 for a POST, and an opt-out that rejects -- logged once, as an ERROR.
+  const short = createDraftDecks({ dir: ad, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, lockWaitMs: 200, log: (x) => asyncLog.push(x) });
+  writeFileSync(join(ad, 'decks.lock'), String(process.ppid), { mode: 0o600 });
+  eq((await short.postSoloAsync(body({ draftId: 'async-2' }))).status, 503, 'postSoloAsync on a lock held past lockWaitMs: 503');
+  asyncLog.length = 0;
+  let rejected = null;
+  try { await short.recordRoomAsync({ ...seatDeck, roomId: 'rASYNC2', record: false }); } catch (e) { rejected = e.code; }
+  eq([rejected, asyncLog.filter((x) => /ERROR .*could NOT be deleted/.test(x)).length], ['LOCKED', 1], 'an opt-out that cannot get the lock rejects, and is logged as an ERROR once (not once a try)');
+  rmSync(join(ad, 'decks.lock'));
 }
 
 console.log(`\ndraft-decks-selftest: ${checks - failed}/${checks} checks passed${failed ? `, ${failed} FAILED` : ''}`);

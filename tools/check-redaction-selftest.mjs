@@ -394,6 +394,24 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
     p.zones.hand = { ...empty };
     if (i === firstState) p.zones.library = { count: p.zones.library.count, cards: [{ ...oppCard, zone: 'library', owner: p.id, controller: p.id }] };
   }, 'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
+  // the opponent seat left out of the states (the #178 review): an empty hand nobody listed proves nothing
+  const dropOpp = (which) => `${base.map((f, i) => {
+    if (i === 0 || f.type !== 'state') return JSON.stringify(f);
+    const g = structuredClone(f);
+    for (const p of g.body.players) if (p.id === seat) p.zones.hand = { ...empty };
+    if (which(i)) g.body.players = g.body.players.filter((p) => p.id === seat);
+    else for (const p of g.body.players) if (p.id !== seat) p.zones.hand = { ...empty };
+    return JSON.stringify(g);
+  }).join('\n')}\n`;
+  for (const [name, which, why] of [
+    ['opp-seat-never-listed.jsonl', () => true, 'no state lists any seat but the viewer\'s'],
+    ['opp-seat-missing-once.jsonl', (i) => i === firstState, `the state at line ${firstState + 1} lists 1 of the 2 seats`],
+  ]) {
+    const r = run(name, dropOpp(which), true);
+    const ok = (msg) => r.problems.some((p) => p.includes(msg) && p.includes(`--empty-hand-ok does not apply: ${why}`));
+    if (!ok(NOTHING) || !ok(NAMED)) bad(`${name} under --empty-hand-ok: "${NOTHING}" and "${NAMED}" must both still FAIL, saying "${why}"; got ${r.problems.find((p) => p.includes(NOTHING)) ?? r.problems[0] ?? 'a pass'}`);
+    else lead(`${name}: still a failure under --empty-hand-ok (${why})`);
+  }
   // and the twin: the viewer's hand at count 1 served as a stub
   {
     const r = run('viewer-count-1-stub.jsonl', variant((p, v, i) => {

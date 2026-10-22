@@ -401,7 +401,8 @@ function realUnder(root, p) {
  *       log of the room's game; null when the helper has none), hintOn (D453: () -> bool, it can answer now),
  * onDeck (D455: ({roomId, seat, cubeId, cubeHash, format, main, record}) after a seat hands in a deck or
  *         changes its consent -- draft-decks.mjs writes the deck to its ledger only when `record` is true,
- *         and takes it out when it turns false; never throws into the room) }
+ *         and takes it out when it turns false; never throws into the room -- it may return a promise
+ *         (the helper's recordRoomAsync), whose rejection is logged like a throw) }
  */
 export function createRoomStore(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -526,7 +527,9 @@ export function createRoomStore(opts = {}) {
     try {
       // matchIds: the room's games, whose `table:<matchId>:<seat>` lines (an import) an opt-out deletes too.
       const matchIds = [...new Set([...r.games.map((g) => g.matchId), r.game?.matchId].filter(Boolean))];
-      opts.onDeck({ roomId: r.id, seat, cubeId: r.cubeId, cubeHash: r.cubeHash, format: 'grid', main: d ? d.main.map(([n, card]) => [n, card]) : null, record: !!r.record[seat] && !!d, matchIds });
+      const p = opts.onDeck({ roomId: r.id, seat, cubeId: r.cubeId, cubeHash: r.cubeHash, format: 'grid', main: d ? d.main.map(([n, card]) => [n, card]) : null, record: !!r.record[seat] && !!d, matchIds });
+      // The helper's onDeck is a promise (recordRoomAsync waits for the ledger's lock on a timer).
+      if (p && typeof p.then === 'function') p.then(null, (e) => log(`ROOM ${r.id} seat ${seat}: the draft-deck ledger refused (${e.message})`));
     } catch (e) { log(`ROOM ${r.id} seat ${seat}: the draft-deck ledger refused (${e.message})`); }
   };
 

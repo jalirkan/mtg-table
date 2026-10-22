@@ -832,7 +832,7 @@ export function startHelper(opts) {
       if (raw === null) return;
       let q;
       try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
-      const r = draftDecks.postSolo(q);
+      const r = await draftDecks.postSoloAsync(q);   // waits for a held lock on a timer, not Atomics.wait
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 201 ? ` (${r.body.key})` : ` (${r.body.message.slice(0, 160)})`);
       return;
@@ -1280,7 +1280,7 @@ async function main() {
         hint: hint ? (q) => hint.post(q, { room: true }) : null,
         hintOn: () => !!hint && hint.available(),
         // D455: a seat's handed-in deck to the draft-deck ledger, with its consent (D407).
-        onDeck: (d) => draftDecks.recordRoom(d) });
+        onDeck: (d) => draftDecks.recordRoomAsync(d) });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,
