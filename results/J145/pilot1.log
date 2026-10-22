@@ -1,0 +1,48 @@
+==== J145 pilot1 started 2026-10-22T09:08:19-04:00 in unit lab-J145-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+J145: data folder free GB 735.5
+1
+1
+1
+1
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.420756ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (812.675794ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (726.348717ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.439884ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2247.92868ms)
+✔ the prior covers the spectrum over 1,000 decks (1278.498208ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (56.901585ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.12636ms)
+✔ the land formula on fixture decks (0.51136ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.296923ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.172939ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (562.060234ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (1.975759ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.389449ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.085653ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (22.777392ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.849642ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.579926ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (219.224866ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (190.323584ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (544.3736ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1782.685933ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.900839ms)
+✔ features and probabilities match fit.py on 30 held-out Vintage picks (2.957472ms)
+✔ utilities from LabCards reproduce humanPicks.ts on hand-made packs (both cubes) (1.900307ms)
+✔ uncovered cards: s = a + b * rating, least squares over the covered cards (0.36861ms)
+✔ a line is worth the sum of exp(u) in pick order, whatever the logit offset (0.597113ms)
+✔ the chooser takes the best line, never the line already taken, and refuses Winston (0.436729ms)
+✔ a human-pick draft: the deal is a plain run's, one seat picks by lineValue, both build decks (28.369984ms)
+✔ run plumbing: the drafter is part of the folder identity and the version, off changes nothing (0.499959ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8884.087757
+{"covered":105,"cards":180}
+decks: 2000 deck(s) from omega-cube-180 (180 of its 180 cards drawable), seed 1455, into /home/justin-a/code/lab/data/lab-j145/census/decks: k = 1 / 2 / 3 676 / 638 / 686; 35 rejected draw(s), 0 new makeup(s); repeat cap 169 of 676 k=1 decks, 0 card(s) reached it; a card's share of k=1 decks at most 0.1967
+{"verdict": "INCOMPLETE", "offPayoff": [], "pull": {}, "payoff": {"C": 8000}}
+{"W": "EVEN", "U": "EVEN", "B": "OFF", "R": "EVEN", "G": "EVEN"}
