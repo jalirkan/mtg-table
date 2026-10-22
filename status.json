@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-22T01:25:07-04:00",
- "heartbeat": "2026-10-22T01:25:07-04:00",
+ "updated": "2026-10-22T01:25:22-04:00",
+ "heartbeat": "2026-10-22T01:25:22-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.69,
-  "memUsedGb": 5.1,
+  "load1": 1.75,
+  "memUsedGb": 5.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 1528,
-  "pressure": 0.67,
+  "pressure": 0.21,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -24,9 +24,9 @@
    "id": "J149",
    "title": "The deck census, night 2 -- D447 unchanged on fresh seeds (decks and games 1501-1504, one a band; pilot games 1591-1594), 2,500 decks a band, each in 16 Bo1 games against random decks of its band (20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Forge Default both seats, the first RECORDED census night (census-play --record rows: both seats' decision rows and a per-turn ledger, under LAB_DATA_DIR=/home/justin-a/code/lab/data); then the pre-registered confirmation (D447 point 9) of night 1's three candidates per band -- (i) colours-with-3+ bin 1 above 0.5, (ii) bins 4 and 5 below 0.5, (iii) mono minus the < 0.4 main-share bin above 0 -- each HOLDS or NOT SHOWN on night 2's own deck-clustered bootstrap",
    "cpu": "heavy",
-   "phase": "commands 1/5",
+   "phase": "commands 2/5",
    "started": "2026-10-22T01:23:54-04:00",
-   "elapsed": 73,
+   "elapsed": 87,
    "done": 20272,
    "total": 80000,
    "unit": "lines",
@@ -89,7 +89,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J149-run1"
+   "detail": "lab-J149-run2"
   }
  ],
  "queue": [

@@ -1,0 +1,4 @@
+==== J149 run1 started 2026-10-22T01:25:06-04:00 in unit lab-J149-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+census-play: 20000 game(s) planned over 2500 deck(s), seed 1501; 20000 already played, 0 to play on 1 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j144/games/pauper)
+census-play: 20000 game(s) in pauper/games.jsonl: 19982 decisive, 18 drawn (16 timeouts), 0 engine error(s)
+census-play: record rows: per game rows 73.5 KB (median 65.9 KB), ledger 2.0 KB; rows checked 1146574 in 24 file(s), leak check 0/12616 (candidates compared in 12616; controls moved 11990/12173)
