@@ -1,0 +1,79 @@
+==== J145 pilot2 started 2026-10-22T09:08:32-04:00 in unit lab-J145-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+cube lab: cubes/omega-cube-180.md, grid, 6 draft(s) from seed 814590001, best of 0, 3 job(s), AI Default vs Default, ratings Forge's ranks, out /home/justin-a/code/lab/data/lab-j145/pilot/runs/lab
+facts: booting the engine to look up 180 cards ...
+facts: 2.5 s
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 814590001: A:WU 0-0 B:RG+w  games -
+[2/6] seed 814590002: A:UG+r 0-0 B:WB  games -
+[3/6] seed 814590003: A:UR 0-0 B:WU+r  games -
+[4/6] seed 814590004: A:UB+g 0-0 B:WU  games -
+[5/6] seed 814590005: A:WB 0-0 B:UG  games -
+[6/6] seed 814590006: A:WR+g 0-0 B:WB  games -
+matches: 4 s for 6 (0.7 s a draft wall-clock on 3 worker(s))
+done in 7 s -> /home/justin-a/code/lab/data/lab-j145/pilot/runs/lab/drafts.jsonl
+next: tools/cubelab.sh report /home/justin-a/code/lab/data/lab-j145/pilot/runs/lab
+cube lab: cubes/omega-cube-180.md, grid, 6 draft(s) from seed 814590001, best of 0, 3 job(s), AI Default vs Default, ratings Forge's ranks, out /home/justin-a/code/lab/data/lab-j145/pilot/runs/hp, seat A drafting with human picks /home/justin-a/code/lab/ForgeCoach/public/cubes/omega-cube-180.picks.json (D416)
+drafter (D416): seat A drafts with the human pick model /home/justin-a/code/lab/ForgeCoach/public/cubes/omega-cube-180.picks.json (105 of 180 cards covered, 105 in the file); the rest at s = -2.873 + 0.0423 x rating (least squares over the covered cards, r 0.61); seat B the current drafter
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 814590001: A:WR 0-0 B:UB  games -
+[2/6] seed 814590002: A:BG+r 0-0 B:UB  games -
+[3/6] seed 814590003: A:WU 0-0 B:RG  games -
+[4/6] seed 814590004: A:UG+b 0-0 B:UB  games -
+[5/6] seed 814590006: A:UB 0-0 B:WB  games -
+[6/6] seed 814590005: A:WB+u 0-0 B:UB  games -
+matches: 4 s for 6 (0.7 s a draft wall-clock on 3 worker(s))
+done in 4 s -> /home/justin-a/code/lab/data/lab-j145/pilot/runs/hp/drafts.jsonl
+next: tools/cubelab.sh report /home/justin-a/code/lab/data/lab-j145/pilot/runs/hp
+cube lab: cubes/omega-cube-180.md, grid, 6 draft(s) from seed 814590001, best of 0, 3 job(s), AI Default vs Default, ratings Forge's ranks, out /home/justin-a/code/lab/data/lab-j145/pilot/runs/fr, seat A drafting with Forge's ranks (D439)
+drafter (D439): seat A drafts on Forge's ranks (180 of 180 cards ranked, 0 rated differently from the cube's ratings; synergy 0, lean 0, commits after its first line); seat B the lab drafter
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 814590001: A:WU 0-0 B:UG+b  games -
+[2/6] seed 814590003: A:WU 0-0 B:BG  games -
+[3/6] seed 814590002: A:UB 0-0 B:WB  games -
+[4/6] seed 814590004: A:WU 0-0 B:UB  games -
+[5/6] seed 814590005: A:WB 0-0 B:UG  games -
+[6/6] seed 814590006: A:WG 0-0 B:UB  games -
+matches: 4 s for 6 (0.7 s a draft wall-clock on 3 worker(s))
+done in 4 s -> /home/justin-a/code/lab/data/lab-j145/pilot/runs/fr/drafts.jsonl
+next: tools/cubelab.sh report /home/justin-a/code/lab/data/lab-j145/pilot/runs/fr
+{"v":1,"run":"lab","cube":"omega-cube-180","drafter":null,"seedBase":1491,"drafts":6,"decks":12,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,0,12,0,0,0],"pairs":12}
+census-play: 12 game(s) planned over 12 deck(s) (a replay of var/lab-j145/pilot/prof/lab/pairs.jsonl); 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j145/pilot/games/B-lab)
+[12/12] 2045 games/h
+census-play: 12 game(s) in B-lab/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 21 s on 3 worker(s) = 2045 games/h
+census-play: record rows: per game rows 61.1 KB (median 54.7 KB), ledger 1.7 KB; rows checked 562 in 3 file(s), leak check 0/5 (candidates compared in 5; controls moved 4/4)
+{"v":1,"run":"hp","cube":"omega-cube-180","drafter":{"kind":"human-picks","seat":"A","file":"../ForgeCoach/public/cubes/omega-cube-180.picks.json","sha":"9ee28421c115570839e46ab270288ec6b982db18cc467bb5899b436ae6901b23","cards":180,"covered":105,"fallback":{"intercept":-2.8729974909306146,"slope":0.0423417318659016,"n":105,"r":0.6056723899899558}},"seedBase":1492,"drafts":6,"decks":12,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,0,12,0,0,0],"pairs":12}
+census-play: 12 game(s) planned over 12 deck(s) (a replay of var/lab-j145/pilot/prof/hp/pairs.jsonl); 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j145/pilot/games/B-hp)
+[12/12] 2346 games/h
+census-play: 12 game(s) in B-hp/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 18 s on 3 worker(s) = 2346 games/h
+census-play: record rows: per game rows 58.8 KB (median 57.7 KB), ledger 1.7 KB; rows checked 536 in 3 file(s), leak check 0/4 (candidates compared in 4; controls moved 4/4)
+{"v":1,"run":"fr","cube":"omega-cube-180","drafter":{"kind":"forge-ranks","seat":"A","weights":{"synergy":0,"lean":0,"commitAt":0.04},"cards":180,"ranked":180,"differ":0},"seedBase":1493,"drafts":6,"decks":12,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,0,12,0,0,0],"pairs":12}
+census-play: 12 game(s) planned over 12 deck(s) (a replay of var/lab-j145/pilot/prof/fr/pairs.jsonl); 0 already played, 12 to play on 3 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j145/pilot/games/B-fr)
+[12/12] 2613 games/h
+census-play: 12 game(s) in B-fr/games.jsonl: 12 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 12 in 17 s on 3 worker(s) = 2613 games/h
+census-play: record rows: per game rows 56.5 KB (median 60.5 KB), ledger 1.7 KB; rows checked 517 in 3 file(s), leak check 0/5 (candidates compared in 5; controls moved 4/4)
+decks: 60 deck(s) from omega-cube-180 (180 of its 180 cards drawable), seed 1495, into /home/justin-a/code/lab/data/lab-j145/pilot/census/decks: k = 1 / 2 / 3 24 / 17 / 19; 0 rejected draw(s), 0 new makeup(s); repeat cap 10 of 24 k=1 decks, 0 card(s) reached it; a card's share of k=1 decks at most 0.2917
+census-play: 40 game(s) planned over 60 deck(s), seed 1495; 0 already played, 40 to play on 3 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j145/pilot/census/games)
+[40/40] 4210 games/h
+census-play: 40 game(s) in games/games.jsonl: 40 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 40 in 34 s on 3 worker(s) = 4210 games/h
+census-play: record rows: per game rows 55.3 KB (median 53.1 KB), ledger 1.6 KB; rows checked 1750 in 3 file(s), leak check 0/14 (candidates compared in 14; controls moved 11/11)
+{"verdict": "NOT BALANCED ON PAYOFF", "offPayoff": ["W", "R"], "pull": {"lab": 12, "hp": 6, "fr": 6}, "payoff": {"Blab": 12, "Bhp": 12, "Bfr": 12, "C": 40}}
+**Forge-pilot caveat:** Every game is piloted by Forge's Default AI on both seats. J141 found the live search seat lifts every colour about equally (+8.9 points), so a Forge-only payoff is the right first cut, but it is Forge's.
+
+# J145: is Omega balanced by colour?
+
+**Colour level: NOT BALANCED ON PAYOFF.** OFF on arm-B payoff (Blab, lab vs lab): W, R. **Pull is not judged tonight**: the human-pick model was demoted to context (it covers 105 of Omega's 180 cards, unevenly by colour), so all three drafters' pull is reported as information; pull is judged once the draft-deck ledger holds 30+ real Omega decks or a full-coverage human model exists. The registered rule: a cell is OFF when its 95% interval excludes the target and the point is at least 0.08 (pull) or 0.05 (payoff) from it; EVEN when the interval sits inside that band; else UNCLEAR. BALANCED ON PAYOFF when no colour is OFF on arm-B payoff. Everything else below is a candidate (D447 point 9). No card is swapped on this night.
+
+## Pull (arm A, not judged tonight): share of two-colour decks containing the colour (target 0.400; labels are information)
+
+| drafter | decks | k = 1 / 2 / 3 (excluded 0, 4, 5) | W | U | B | R | G |
+|---|---|---|---|---|---|---|---|
+| lab (lab) | 12 | 0 / 12 / 0 (0, 0, 0) | 0.583 [0.500–0.750] OFF | 0.583 [0.333–0.833] UNCLEAR | 0.333 [0.083–0.500] UNCLEAR | 0.250 [0.083–0.500] UNCLEAR | 0.250 [0.083–0.500] UNCLEAR |
+| hp (human-picks) | 6 | 0 / 6 / 0 (0, 0, 0) | 0.500 [0.167–0.833] UNCLEAR | 0.500 [0.000–0.833] UNCLEAR | 0.500 [0.167–1.000] UNCLEAR | 0.167 [0.000–0.500] UNCLEAR | 0.333 [0.000–0.667] UNCLEAR |
+| fr (forge-ranks) | 6 | 0 / 6 / 0 (0, 0, 0) | 0.833 [0.500–1.000] OFF | 0.667 [0.333–1.000] UNCLEAR | 0.333 [0.000–0.833] UNCLEAR | 0.000 [0.000–0.000] OFF | 0.167 [0.000–0.500] UNCLEAR |
+
+hp's pick model covers 105 of the cube's 180 cards: White 15/24, Blue 13/24, Black 11/24, Red 14/24, Green 13/24, Gold 12/20, Colorless 7/18, Lands 20/22 (the rest valued by its rating fallback).
+
+Beside it, not judged: mono decks by colour (share of mono decks) and three-colour decks containing the colour (share of three-colour decks, average 0.6).
+
+| drafter | mono W | mono U | mono B | mono R | mono G | 3c W | 3c U | 3c B | 3c R | 3c G |
+|---|---|---|---|---|---|---|---|---|---|---|
