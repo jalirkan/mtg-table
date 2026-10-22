@@ -14,20 +14,26 @@
  *    the most-disagreeing decisions come first;
  *  - phase A's report: draws by the cap, the variance, the rollouts needed;
  *  - the guardrails read back from decision records: G1 (a land offered is a land played) and G4 (keep),
- *    each violation caught;
+ *    each violation caught; G3's and G5's counts (D458) summed from each log's decisions summary, and
+ *    written into atlas.json's checks by writeAtlas;
  *  - the jobs: phase A's seed and random seat, a unit's expected options and its leak checks on the
  *    first chunk only, the units' chunking; atlas.md renders;
  *  - seat-identity's decision lines: the frame numbers dropped, the last state and `over` kept.
  */
 
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 
 import {
   agreement, gamesFor, pairLines, rankPairs, ranks, regretInterval, regretOf, scoreOf, scoreStat, spearman, spread, wilson, type LadderGame,
 } from '../../tools/cubelab/atlasmath.ts';
 import {
-  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, baselineJob, decisionAtlas, disagreements, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf,
+  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, baselineJob, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf, writeAtlas,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
@@ -176,6 +182,45 @@ test('the guardrails read back from the decision records', () => {
   assert.match(gc.violations.join(), /took a mulligan \(G4\)/);
 });
 
+test('G3 and G5 (D458) are counted from each random seat\'s decisions summary, and atlas.json\'s checks carry them', () => {
+  const summary = (g: Record<string, number> | undefined): string => JSON.stringify({ v: 1, seq: 99, dir: 'ai', type: 'decisions',
+    body: { seat: 0, written: 3, explore: { decisionsRandomised: 3, changed: 1, closeCalls: 0, closeCallsChanged: 0, coins: 3, failures: 0, byKind: {}, ...(g ? { guardrails: g } : {}) } } });
+  const dec = JSON.stringify({ v: 1, seq: 1, dir: 'ai', type: 'decision', body: { seat: 0, n: 0, kind: 'priority', options: ['pass', 'cast:18'], chosen: 'cast:18', by: 'forge' } });
+  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [] };
+  // a seat whose Spellbinder-taxed cast was refused twice, each left out at the next decision of its window
+  guardrailCheck([dec, summary({ land: 4, keep: 1, refusedCast: 2, noRepeatRefused: 2, noRepeatNoOp: 1 })].join('\n'), 'b1', gc);
+  guardrailCheck([dec, summary({ land: 3, keep: 1, refusedCast: 1, noRepeatRefused: 0 })].join('\n'), 'b2', gc);
+  guardrailCheck([dec, summary(undefined)].join('\n'), 'old', gc);   // a log from before M71: nothing to add
+  assert.equal(gc.priority, 3, 'the summary line is not read as a decision');
+  assert.deepEqual(countedGuardrails(gc), { noRepeatNoOp: 1, refusedCast: 3, noRepeatRefused: 2 });
+  assert.deepEqual([...COUNTED_GUARDRAILS], ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused']);
+  assert.deepEqual(countedGuardrails({ ...gc, counted: undefined }), { noRepeatNoOp: 0, refusedCast: 0, noRepeatRefused: 0 }, 'zero, never absent');
+});
+
+test('writeAtlas puts G5\'s counts in atlas.json\'s checks, from phase A\'s and the random branches\' logs only (D458)', () => {
+  const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-g5-'));
+  try {
+    const log = (g: Record<string, number>): Buffer => zlib.gzipSync([
+      JSON.stringify({ v: 1, seq: 1, dir: 'ai', type: 'decision', body: { seat: 0, n: 0, kind: 'priority', options: ['pass', 'cast:18'], chosen: 'cast:18', by: 'forge' } }),
+      JSON.stringify({ v: 1, seq: 2, dir: 'ai', type: 'decisions', body: { seat: 0, explore: { guardrails: g } } }),
+    ].join('\n'));
+    const put = (dir: string, name: string, g: Record<string, number>): void => { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, name), log(g)); };
+    put(path.join(out, 'phaseA', 'frames'), 'g1-seat0.jsonl.gz', { refusedCast: 2, noRepeatRefused: 1 });
+    put(path.join(out, 'phaseB', 'frames'), 'd6-random-o0-b0-seat0.jsonl.gz', { refusedCast: 3, noRepeatRefused: 3, noRepeatNoOp: 1 });
+    put(path.join(out, 'phaseB', 'frames'), 'd6-forge-o0-b0-seat0.jsonl.gz', { refusedCast: 50 });   // not a random seat's log: not read
+    writeAtlas(repo, OPTS, out, {}, {}, () => {});
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { guardrails: Record<string, number> } };
+    assert.equal(doc.checks.guardrails.logs, 2);
+    assert.equal(doc.checks.guardrails.refusedCast, 5);
+    assert.equal(doc.checks.guardrails.noRepeatRefused, 4);
+    assert.equal(doc.checks.guardrails.noRepeatNoOp, 1);
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /G5 \(D458\): the engine refused 5 pick\(s\)/);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
 const OPTS: AtlasOptions = { deckA: '/d/a.dck', deckB: '/d/b.dck', seed: 451, turnCap: 40, rollouts: 10, branchRandom: 60, branchForge: 25, decisions: 3, options: 8, chunk: 25, leakChecks: 1, branchTimeoutSec: 120, boot: 100, pair: null };
 
 test('the jobs: phase A\'s seeds and random seat, the units, their expected options and leak checks', () => {
@@ -214,9 +259,10 @@ test('atlas.md renders the two maps side by side', () => {
   const md = atlasMd({
     plan: { pairRule: null }, phaseA: phaseAReport([]) as any,
     phaseB: { baseline: { winner: 'A', turns: 12, decisionsListed: 9 }, decisions: [d], agreement: { decisions: 1, meanRho: d.rho, meanRhoInterval: [null, null], sameBest: 0, sameBestInterval: [0, 0.79] }, disagreeMost: [{ d: 4 }], branchGames: 240, branchErrors: 0, cappedRandom: 0, cappedForge: 0 },
-    checks: { problems: [], rows: 10, frameLogs: 4, leakChecks: 1, leaks: 0, leakControlsMoved: 1, forks: 240, forkProblems: 0, guardrails: { logs: 1, priorityDecisions: 5, landOffered: 2, landTaken: 2, mulligans: 1, kept: 1, violations: 0 } },
+    checks: { problems: [], rows: 10, frameLogs: 4, leakChecks: 1, leaks: 0, leakControlsMoved: 1, forks: 240, forkProblems: 0, guardrails: { logs: 1, priorityDecisions: 5, landOffered: 2, landTaken: 2, mulligans: 1, kept: 1, violations: 0, noRepeatNoOp: 4, refusedCast: 7, noRepeatRefused: 5 } },
   } as any, OPTS);
   assert.match(md, /## Phase B: the two regret maps/);
+  assert.match(md, /G3 left out a repeated no-op 4 time\(s\); G5 \(D458\): the engine refused 7 pick\(s\) it could not pay for, and 5 later offer\(s\)/);
   assert.match(md, /\| d4 \| 7 \| p \| 3 \|/);
   assert.match(md, /What the two maps agree and disagree about/);
   assert.match(md, /`cast:9` \| Bear/);

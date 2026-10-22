@@ -305,7 +305,16 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
             for (final Map.Entry<String, int[]> e : m.byKind().entrySet()) {
                 o.n(e.getKey(), (long) e.getValue()[0]);
             }
-            o.end().end();
+            o.end();
+            if (m.config().random) {
+                // D458 (protocol M71): the random seat's guardrail counts, so the atlas reads them back from the log
+                o.key("guardrails").obj();
+                for (final Map.Entry<String, Integer> e : m.guardrails().entrySet()) {
+                    o.n(e.getKey(), (long) e.getValue());
+                }
+                o.end();
+            }
+            o.end();
         }
         log.ai("decisions", o.end().done());
     }

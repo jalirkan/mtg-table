@@ -341,17 +341,31 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
 // The guardrails, checked from the recordings
 // ------------------------------------------------------------------
 
-export interface GuardrailCheck { logs: number; priority: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: string[] }
+export interface GuardrailCheck { logs: number; priority: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: string[];
+  /** D458: the random seats' own guardrail counts, summed from each log's `decisions` summary (protocol M71): G3's `noRepeatNoOp`, G5's `refusedCast` and `noRepeatRefused`. */
+  counted?: Record<string, number> }
+
+/** D458: the guardrail counts every atlas reports, zero when no log counted one (G3; G5's refused picks and the removals after them). */
+export const COUNTED_GUARDRAILS = ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused'] as const;
 
 /**
  * D451's guardrails, read back from a random seat's own frame log (its D347 decision records): G1, every
  * priority decision that offered a land (`land:<id>` among the legal options) was answered with a land;
  * G4, every opening-hand decision was `keep`.  (G2 is G1 itself, with no code of its own; G3 needs the engine's fingerprint and
- * is counted by the worker, `noRepeatNoOp`.)  `where` names the log in a violation.
+ * is counted by the worker, `noRepeatNoOp`.)  D458: the seat's own counts -- G3's and G5's, a play the engine refused to pay
+ * for (`refusedCast`) and each later removal of it in that priority window (`noRepeatRefused`) -- are summed from the log's
+ * `decisions` summary (`explore.guardrails`, protocol M71) into `counted`.  `where` names the log in a violation.
  */
 export function guardrailCheck(text: string, where: string, out: GuardrailCheck): void {
   out.logs++;
+  out.counted ??= {};
   for (const line of text.split('\n')) {
+    if (line.includes('"type":"decisions"')) {
+      let o: { body?: { explore?: { guardrails?: Record<string, unknown> } } };
+      try { o = JSON.parse(line) as typeof o; } catch { continue; }
+      for (const [k, v] of Object.entries(o.body?.explore?.guardrails ?? {})) if (typeof v === 'number') out.counted[k] = (out.counted[k] ?? 0) + v;
+      continue;
+    }
     if (!line.includes('"type":"decision"')) continue;
     let o: { body?: { kind?: string; options?: string[]; chosen?: string; n?: number } };
     try { o = JSON.parse(line) as typeof o; } catch { continue; }
@@ -467,7 +481,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const leaks = leak.filter((r) => !r.leakSame);
   if (leaks.length) problems.push(`${leaks.length} of ${leak.length} no-leak check(s) moved when only seat B's hidden cards did`);
   // the guardrails, read back from every random seat's log: phase A's, and the random branches'
-  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [] };
+  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [], counted: {} };
   for (const f of frames) {
     const base = path.basename(f);
     if (f.startsWith(path.join(A, 'frames')) || /^d\d+-random-/.test(base)) guardrailCheck(readMaybeGz(f), base, gc);
@@ -508,7 +522,8 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
     checks: { rowsFiles: rc.reduce((a, c) => a + c.files, 0), rows: rc.reduce((a, c) => a + c.rows, 0), gamesIdChecked: rc.reduce((a, c) => a + c.games, 0),
       frameLogs: red.checked, frameLogsFailed: red.failed.length, redactionMs: red.ms, forks: bRows.length, forkProblems: forkBad.length,
       leakChecks: leak.length, leaks: leaks.length, leakControlsMoved: leak.filter((r) => r.controlMoved).length,
-      guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: gc.violations.length },
+      guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: gc.violations.length,
+        ...countedGuardrails(gc) },
       problems },
     sizes, timing,
   };
@@ -524,7 +539,14 @@ interface AtlasDoc {
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
   phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; cappedRandom: number; cappedForge: number };
   checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
-    guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number } };
+    guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
+      noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number } };
+}
+
+/** D458: checks.guardrails' counted keys -- G3's no-op removals, G5's refused picks and the removals after them -- read from the logs. */
+export function countedGuardrails(gc: GuardrailCheck): Record<(typeof COUNTED_GUARDRAILS)[number], number> {
+  const c = gc.counted ?? {};
+  return { noRepeatNoOp: c.noRepeatNoOp ?? 0, refusedCast: c.refusedCast ?? 0, noRepeatRefused: c.noRepeatRefused ?? 0 };
 }
 
 const pct = (x: number | null | undefined): string => (x === null || x === undefined ? '-' : (x * 100).toFixed(1));
@@ -580,7 +602,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   const c = doc.checks;
   L.push('## Checks', '');
   const g = c.guardrails;
-  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
+  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
   return `${L.join('\n')}\n`;
 }
 
@@ -610,7 +632,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   ]);
   const rc = await atlasCommand(repo, flags, say);
   const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as {
-    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number }; problems: string[]; frameLogs: number; rows: number };
+    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number }; problems: string[]; frameLogs: number; rows: number };
     phaseA: { played: number }; phaseB: { decisions: Array<{ complete: boolean }> } | null;
   };
   const c = doc.checks;
@@ -623,8 +645,9 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   want(c.leakChecks >= 4 && c.leaks === 0, `no-leak checks ran on every unit and stayed put (${c.leaks} of ${c.leakChecks} moved)`);
   want(c.leakControlsMoved === c.leakChecks, `every negative control moved (${c.leakControlsMoved} of ${c.leakChecks})`);
   want(c.guardrails.violations === 0 && c.guardrails.landOffered > 0 && c.guardrails.landTaken === c.guardrails.landOffered, 'G1 and G4 read back clean, with lands offered');
+  want(COUNTED_GUARDRAILS.every((k) => typeof c.guardrails[k] === 'number'), 'G3 and G5 (D458) counted from the logs');
   want(c.frameLogs > 0 && c.rows > 0, 'frame logs and rows were checked');
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
-  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows)`);
+  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0})`);
   return fails.length ? 1 : 0;
 }

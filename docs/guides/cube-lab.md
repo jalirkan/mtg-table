@@ -1252,8 +1252,12 @@ tools/cubelab.sh seat-identity                # the Forge, search and explore se
   random as in D358; mana payment (Forge's auto-pay), costs, modes and other choices Forge's. Its
   **guardrails are mechanical**: a legal land drop is always taken (G1); no pass in its first main phase
   while a land drop is pending (G2, which is G1 itself and has no code of its own); an activated ability that changed nothing public is
-  not repeated at its next decision (G3); the opening hand is kept (G4); a game past `--turn-cap` (40) is
-  a draw. G1 and G4 are read back from the seats' decision records after the run.
+  not repeated at its next decision (G3); the opening hand is kept (G4); a play the engine refused to pay
+  for (a tax such as Elite Spellbinder's) is not picked again in the same priority window (G5, D458); a
+  game past `--turn-cap` (40) is a draw. G1 and G4 are read back from the seats' decision records after
+  the run, and G3's and G5's counts from each random seat's `decisions` summary (protocol M71) into
+  `atlas.json`'s `checks.guardrails` (`noRepeatNoOp`, `refusedCast`, `noRepeatRefused`). G5 changed the
+  random policy: an atlas from before D458 and one after it are two policies, not a repeat.
 - **`--pair auto`** takes the line of `tools/ai-bench/pairs-confirm.txt` with the most ladder games and
   the most even record: the smallest |p − ½| + 1.96·√(p(1−p)/n) over the line's decisive ladder games
   (`--ladder`, default `var/ai-ladder`). The plan keeps the choice for a resumed atlas.

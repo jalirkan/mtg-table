@@ -719,6 +719,19 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     @Override
     public boolean playChosenSpellAbility(final SpellAbility sa) {
+        if (explorer == null || !explorer.math().config().random || sa.isLandAbility()) {
+            return playChosen(sa);
+        }
+        // D458 (G5): the random seat learns whether the engine refused its pick.  Forge's
+        // own payment marks a play it could not pay for skipped (ComputerUtilMana's "Didn't
+        // find what to pay for", ComputerUtil.handlePlayingSpellAbility's failed costs).
+        final boolean skippedBefore = sa.isSkip();
+        final boolean r = playChosen(sa);
+        explorer.played(player.getGame(), sa, !skippedBefore && sa.isSkip());
+        return r;
+    }
+
+    private boolean playChosen(final SpellAbility sa) {
         final Card host = sa.getHostCard();
         final boolean outlet = OutletPolicy.creatureSacCost(sa) != null;
         if (host != null && WATCH.contains(host.getName())) {

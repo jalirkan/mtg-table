@@ -51,7 +51,9 @@ public final class ExploreMath {
          * and non-mana ability, targets drawn at random), under the mechanical
          * guardrails of D451 (a legal land drop is always taken, no pass in main
          * phase 1 while one is pending, a pure no-op is never repeated twice in a
-         * row, the opening hand is always kept); no close calls.
+         * row, the opening hand is always kept, a play the engine refused to pay
+         * for is not picked again in the same priority window -- G5, D458); no
+         * close calls.
          */
         public final boolean random;
 
