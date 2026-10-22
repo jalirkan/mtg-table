@@ -158,10 +158,15 @@ export interface JobRun {
   unit: string | null;
   /** When the current unit started, wall clock: STATUS, the logs, journalctl --since. */
   unitStartedAt: number;
-  /** D461: the same instant on the monotonic clock: the step timeout reads this. */
-  unitStartedMono?: number;
   /**
-   * D461: the boot this run's monotonic stamps (unitStartedMono, metricsAt, prepareRetry's sinceMono and
+   * D461: how long the current unit has run WHILE A RUNNER WAS ALIVE to see it: monotonic deltas added
+   * every tick (`Runner.accrue`) and saved in run.json with the run.  The step timeout reads this, never
+   * a start stamp, so a restart, a reboot or a step of the wall clock resumes the count where it was; the
+   * runner's own downtime is not counted.  Absent in a run.json from before D461: 0 from its first load.
+   */
+  stepElapsedMs?: number;
+  /**
+   * D461: the boot this run's monotonic stamps (metricsAt, prepareRetry's sinceMono and
    * nextAtMono, backoff's lastDrop and lastRaise) were taken in.  Another boot, or none (a run.json from
    * before D461, whose stamps are wall-clock), is carried over once, on load (`Runner.carryClocks`).
    */
@@ -330,6 +335,8 @@ export class Runner {
   gitCheckedAt = -Infinity;
   /** D461: this runner's start on the monotonic clock (`p.started` is its wall time, for status.json). */
   readonly startedMono: number;
+  /** D461: per run, the mono() at which `accrue` last counted its unit (never persisted). */
+  elapsedMark = new Map<string, number>();
   /**
    * D461: the loop's own cadences on the monotonic clock -- the last fetch, publish and public push, and
    * when a failed one may try again.  `p` keeps their wall times for people and for the next start, which
@@ -371,7 +378,12 @@ export class Runner {
     }
     const wall = this.sys.now(), mono = this.sys.mono();
     const past = (w: unknown): number => monoFromWall(w, wall, mono);
-    r.unitStartedMono = r.unit ? past(r.unitStartedAt) : undefined;
+    if (r.unit && r.stepElapsedMs === undefined) {
+      // A run.json from before D461: its step's age is not read from unitStartedAt (a wall-clock start);
+      // the count starts now, so this one step may run up to its timeout longer than it would have.
+      r.stepElapsedMs = 0;
+      this.sys.log(`${r.id}: ${r.unit}: no elapsed time on record (a run.json from before D461); its timeout counts from now`);
+    }
     r.metricsAt = past(r.metricsAt);
     if (r.backoff) { r.backoff.lastDrop = past(r.backoff.lastDrop); r.backoff.lastRaise = past(r.backoff.lastRaise); }
     if (r.prepareRetry) {
@@ -381,11 +393,20 @@ export class Runner {
     r.monoBoot = boot;
   }
 
-  /** D461: how long the current unit has run, on the monotonic clock. */
-  stepElapsedMs(r: JobRun): number {
-    if (r.unitStartedMono === undefined || r.monoBoot !== this.sys.bootId()) this.carryClocks(r);
-    return Math.max(0, this.sys.mono() - (r.unitStartedMono ?? this.sys.mono()));
+  /**
+   * D461: add the monotonic time since this process last looked at the run's unit to its
+   * `stepElapsedMs`.  The first look after a start (of the unit, or of this runner) adds nothing: the
+   * mark is in memory only, so a restart or a reboot never counts its downtime, nor a wall-clock step.
+   */
+  accrue(r: JobRun): void {
+    const now = this.sys.mono();
+    const last = this.elapsedMark.get(r.id);
+    if (last !== undefined && now > last) r.stepElapsedMs = (r.stepElapsedMs ?? 0) + (now - last);
+    this.elapsedMark.set(r.id, now);
   }
+
+  /** D461: how long the current unit has run while a runner was alive, as of the last tick. */
+  elapsedOf(r: JobRun): number { return r.stepElapsedMs ?? 0; }
 
   // ------------------------------------------------------------------ paths
 
@@ -1008,7 +1029,8 @@ export class Runner {
     r.unit = u.unit;
     r.unitStartedAt = this.sys.now();
     if (r.monoBoot !== this.sys.bootId()) this.carryClocks(r);
-    r.unitStartedMono = this.sys.mono();
+    r.stepElapsedMs = 0;
+    this.elapsedMark.set(r.id, this.sys.mono());
     r.lastWidth = this.stepWidth(r, step, job);
     this.setStatus(r, 'running', { phase: this.phaseOf(r) });
     this.save(r);
@@ -1126,8 +1148,9 @@ export class Runner {
       const peaks = this.sys.unitJavaPeaksGb(r.unit);
       if (peaks.length) r.peakRssGb = Math.max(r.peakRssGb ?? 0, ...peaks);
     }
-    if (r.stopping || unknown) return;           // stopping, or systemctl did not answer: wait for the next tick
-    if (job.timeoutSec && this.stepElapsedMs(r) > job.timeoutSec * 1000) {
+    this.accrue(r);                              // D461: the step's elapsed time, saved with the run every tick
+    if (r.stopping || unknown) { this.save(r); return; }   // stopping, or systemctl did not answer: wait for the next tick
+    if (job.timeoutSec && this.elapsedOf(r) > job.timeoutSec * 1000) {
       this.stop(r, 'timeout', `step ${step.name} ran past ${job.timeoutSec} s`);
       return;
     }

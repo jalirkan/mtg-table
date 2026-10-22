@@ -419,8 +419,12 @@ of every job the start adopts, resumes or restarts. Since D461 it ends with the 
 `ExecStartPre` found NTP synchronized and after how long a wait (`var/runner/clock-wait.json`),
 and whether it is synchronized now.
 
-**Every duration that decides anything runs on the monotonic clock** (D461): a step's
-`timeout:`, the prepare-retry window, the git probe's wait after a start, the memory-stop
+**A step's `timeout:` counts only the time a runner watched it** (D461): its elapsed time is
+added up from the monotonic clock on every tick and saved in the job's `run.json`, so a runner
+restart, a reboot or a step of the wall clock resumes the count where it was and never fails the
+step; the runner's own downtime is not counted.
+
+**Every other duration that decides anything runs on the monotonic clock** (D461): the prepare-retry window, the git probe's wait after a start, the memory-stop
 settle, the pressure backoff's cooldowns and the loop's fetch and publish cadences read
 CLOCK_MONOTONIC, which NTP never steps. Wall times stay for what people read (STATUS,
 status.json, the logs). `retry_after:` is a wall time in STATUS; one further ahead than the

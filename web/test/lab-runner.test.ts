@@ -2881,9 +2881,9 @@ test('local server: /public-ledger.json serves the public ledger, 404 without on
 
 // ------------------------------------------------------------------ D461: durations on the monotonic clock
 
-/** NEW_JOB as `id`, with a step timeout of an hour, at run1 in hold mode (its unit active). */
-function atRun1(id: string): { w: World; r: Runner; run: JobRun } {
-  const w = world({ [`${id}-x.md`]: NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', 'max_workers: 3\ntimeout: 1h') });
+/** NEW_JOB as `id`, with a step timeout (an hour), at run1 in hold mode (its unit active). */
+function atRun1(id: string, timeout = '1h'): { w: World; r: Runner; run: JobRun } {
+  const w = world({ [`${id}-x.md`]: NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', `max_workers: 3\ntimeout: ${timeout}`) });
   const r = new Runner(w.cfg, w.sys);
   r.reconcile();
   w.sys.mode = 'hold';
@@ -2917,35 +2917,63 @@ test('D461: the wall clock jumping 4 h forward (NTP fixing an RTC Windows set) d
   assert.match(run.outcome?.reason ?? '', /^timeout: step run1 ran past 3600 s$/);
 });
 
-test('D461: a runner restart in the same boot keeps the monotonic stamp; a run.json from before D461 (wall stamps) or from another boot is carried over by the wall time since', () => {
-  const { w, r } = atRun1('J462');
-  w.sys.t += 30 * 60_000; r.tick();
-  // A restart after the jump, same boot: the stamp is CLOCK_MONOTONIC's, still valid; 30 min run, not 4 h 30.
+test('D461: a step\'s elapsed time is counted only while a runner is alive and saved with the run: a restart after 2 h of runtime and a 4-h clock jump shows 2 h', () => {
+  const { w, r } = atRun1('J462', '3h');
+  const file = path.join(w.cfg.stateDir, 'jobs', 'J462', 'run.json');
+  const saved = (): number => (JSON.parse(fs.readFileSync(file, 'utf8')) as JobRun).stepElapsedMs ?? -1;
+  // Two hours of runtime, a tick every 10 s for the first minute, then every 10 min: each tick adds its delta and saves it.
+  for (let i = 0; i < 6; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.equal(saved(), 60_000, 'saved at the tick cadence');
+  for (let m = 1; m < 120; m += 10) { w.sys.t += Math.min(10, 120 - m) * 60_000; r.tick(); }
+  assert.equal(r.elapsedOf(r.runs.get('J462')!), 2 * 3600_000);
+  assert.equal(saved(), 2 * 3600_000);
+  // The daemon dies, is down 20 min, and the wall clock steps 4 h while it is: the new daemon resumes at 2 h.
+  w.sys.t += 20 * 60_000;
   w.sys.wallSkew += 4 * 3600_000;
   const r2 = new Runner(w.cfg, w.sys);
   r2.reconcile('test restart');
+  const run2 = r2.runs.get('J462')!;
+  assert.equal(r2.elapsedOf(run2), 2 * 3600_000, 'from the saved elapsed, not from the start stamp (2 h 20 min) nor the wall clock (6 h 20 min)');
   r2.tick();
+  assert.equal(r2.elapsedOf(run2), 2 * 3600_000, 'the first look after a start adds nothing');
   assert.deepEqual(w.sys.stopped, []);
-  assert.equal(Math.round(r2.stepElapsedMs(r2.runs.get('J462')!) / 60_000), 30);
-  // An old run.json (no monoBoot, no unitStartedMono, metricsAt wall-clock): carried over from unitStartedAt.
-  const file = path.join(w.cfg.stateDir, 'jobs', 'J462', 'run.json');
+  w.sys.t += 10_000; r2.tick();
+  assert.equal(r2.elapsedOf(run2), 2 * 3600_000 + 10_000);
+  // A reboot (another boot id; CLOCK_MONOTONIC starts again near 0) with the RTC 4 h behind: still 2 h, and counting on.
+  w.sys.boot = 'boot-b';
+  w.sys.t = 90_000;
+  w.sys.wallSkew = Date.parse('2026-10-03T14:00:00Z') + 2 * 3600_000 - 4 * 3600_000;
+  const r3 = new Runner(w.cfg, w.sys);
+  r3.reconcile('test reboot');
+  const run3 = r3.runs.get('J462')!;
+  assert.equal(r3.elapsedOf(run3), 2 * 3600_000 + 10_000);
+  r3.tick();
+  w.sys.t += 10_000; r3.tick();
+  assert.equal(r3.elapsedOf(run3), 2 * 3600_000 + 20_000);
+  assert.deepEqual(w.sys.stopped, []);
+  // The timeout still fires on the counted time: 3 h of it.
+  for (let i = 0; i < 61 && !w.sys.stopped.length; i++) { w.sys.t += 60_000; r3.tick(); }
+  assert.deepEqual(w.sys.stopped, ['lab-J462-run1']);
+  assert.ok(r3.elapsedOf(run3) > 3 * 3600_000 && r3.elapsedOf(run3) <= 3 * 3600_000 + 60_000, String(r3.elapsedOf(run3)));
+});
+
+test('D461: a run.json from before D461 (no elapsed on record) counts its step from its first load, never from its wall-clock start; other stamps are carried over', () => {
+  const { w } = atRun1('J467');
+  const file = path.join(w.cfg.stateDir, 'jobs', 'J467', 'run.json');
   const old = JSON.parse(fs.readFileSync(file, 'utf8')) as JobRun;
-  delete old.monoBoot; delete old.unitStartedMono;
-  old.unitStartedAt = w.sys.now() - 20 * 60_000;
+  delete old.monoBoot; delete old.stepElapsedMs;
+  old.unitStartedAt = w.sys.now() - 20 * 3600_000;
   old.metricsAt = w.sys.now() - 30_000;
   fs.writeFileSync(file, JSON.stringify(old));
-  const r3 = new Runner(w.cfg, w.sys);
-  const carried = r3.runs.get('J462')!;
+  const r = new Runner(w.cfg, w.sys);
+  const carried = r.runs.get('J467')!;
   assert.equal(carried.monoBoot, 'boot-a');
-  assert.equal(carried.unitStartedMono, w.sys.mono() - 20 * 60_000);
+  assert.equal(r.elapsedOf(carried), 0);
   assert.equal(carried.metricsAt, w.sys.mono() - 30_000);
-  // Another boot: the same, and a wall stamp "in the future" (the clock now behind) is "just now", never ahead.
-  w.sys.boot = 'boot-b';
-  old.monoBoot = 'boot-a'; old.unitStartedMono = 123; old.unitStartedAt = w.sys.now() + 4 * 3600_000;
-  fs.writeFileSync(file, JSON.stringify(old));
-  const r4 = new Runner(w.cfg, w.sys);
-  assert.equal(r4.runs.get('J462')!.unitStartedMono, w.sys.mono());
-  assert.equal(r4.stepElapsedMs(r4.runs.get('J462')!), 0);
+  assert.ok(w.sys.lines.some((l) => /J467: lab-J467-run1: no elapsed time on record/.test(l)));
+  r.reconcile();
+  r.tick();
+  assert.deepEqual(w.sys.stopped, [], 'not stopped for its 20 h of wall-clock age');
 });
 
 test('D461: the prepare-retry window and the git probe after a start measure monotonic time, not a 4-h step of the wall clock', () => {
