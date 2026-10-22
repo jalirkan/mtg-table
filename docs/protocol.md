@@ -30,6 +30,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-22 — a Forge-piloted atlas branch seat's pay-cap count is in its log
+
+The move atlas's Forge seats got a cap on Forge's refused-play loop (D465: a play the engine refused
+to pay for three times in one priority window is answered with a pass), and the atlas reads its
+guardrail counts back from the logs (D451 point 6, M71). Decision **D465** (M72). Held by
+`web/test/cubelab-record.test.ts` (such a summary passes with the count; the block in a log that is
+not an atlas Forge branch, in a random branch's log, under another name, with a non-integer count or
+not an object fails).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M72 | §8.2, M71 | **A Forge-piloted move-atlas branch seat's `decisions` summary carries its pay-cap count.** In a log whose session header's `lab` block says `continuation: "forge"` (a branch game of the move atlas played on by Forge, D451) and that has no `playExplore`, the summary may carry, beside `byKind` and the rest, **`guardrails: {forgePayCap: n}`**: the passes the seat's pay cap made in place of a play refused three times in one priority window (D465); a non-negative integer, 0 when it never fired. It names no card. Its decision records keep their shape; a capped pass is `chosen: "pass"`, `by: "forge"`, `why: "PAY_CAP"`. **Optional**: absent from every log before this amendment and from every log that is not such a seat's; `tools/check-redaction.mjs` fails one elsewhere, an unknown name, a count that is not a non-negative integer, or a value that is not an object. | D465 |
+
 ### 2026-10-22 — the random seat's guardrail counts are in its log
 
 The move atlas (D451) read G1 and G4 back from the random seats' decision

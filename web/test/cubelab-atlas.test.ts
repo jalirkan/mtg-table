@@ -140,13 +140,18 @@ test('a decision\'s two maps from its branch rows', () => {
   rows.push({ ...(rows[0] as BranchRow), i: 999, o: 0, key: 'lonely' });   // a branch with one option only: not paired, left out
   rows.push({ ...(rows[1] as BranchRow), i: 5, o: 2, error: 'boom', key: 'err' });   // an error row is left out (the branch stays: its own row is fine)
   const d = decisionAtlas(LISTING, rows, 300, 11);
+  // J153's pilot saw the assertion below false once on 8fca7250; the map is a pure function of its rows and its seed (every
+  // draw from rng(seed, stream), never Math.random), so a second call must agree to the last digit, and the planted gap is
+  // far from the bar (regret 0.3583 >> 0.25, its lower bound 0.229 >> 0.1; 50 runs in a loop all agreed, D465)
+  assert.deepEqual(decisionAtlas(LISTING, rows, 300, 11), d, 'the same rows and seed give the same map');
+  assert.deepEqual([d.random.regret, d.random.regretLo], [0.3583, 0.229], 'the bootstrap is the seeded one');
   assert.equal(d.chosen, 0);
   assert.equal(d.random.branches, 120);
   assert.equal(d.forge.branches, 120);
   assert.equal(d.random.best, 2);
   assert.equal(d.forge.best, 0);
   assert.equal(d.forge.regret, 0);
-  assert.ok((d.random.regret as number) > 0.25 && (d.random.regretLo as number) > 0.1);
+  assert.ok((d.random.regret as number) > 0.25 && (d.random.regretLo as number) > 0.1, `regret ${String(d.random.regret)}, lower bound ${String(d.random.regretLo)}`);
   assert.ok((d.rho as number) < 0, 'the two maps order the options in reverse');
   assert.equal(d.sameBest, false);
   assert.equal(d.options[2]?.random.n, 120);

@@ -384,11 +384,55 @@ public final class DecisionSelfTest {
         check(!afterLand.equals(w5) && ex.refusedIn(afterLand).isEmpty()
                 && Explorer.dropRefused(landed, ex.refusedIn(afterLand), m) == 0 && landed.containsKey("cast:18"),
                 "G5: a land drop (the same turn, phase and stack) is another window, and offers the refused cast again");
+        payCap();
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
         check(b != Atlas.branchSeed(451, 3, 8) && b != Atlas.branchSeed(451, 4, 7) && b != Atlas.branchSeed(452, 3, 7),
                 "branch seeds differ by branch, decision and atlas");
+    }
+
+    /**
+     * D465: the Forge seat's pay cap, with the refusal loop planted as Forge
+     * runs it under Elite Spellbinder's tax (J151's d2 and d5 units): two plays
+     * neither of which can be paid for, Forge choosing the one it did not set
+     * aside last time (AiController clears the old marks and sets aside the new),
+     * each refused, the priority back to the seat after every refusal.
+     */
+    private static void payCap() {
+        final PayCap cap = new PayCap(PayCap.LIMIT);
+        final String w = Explorer.windowKey(9, "MAIN1", 0, -1, 4);
+        final String x = "cast:19", y = "cast:22";   // The Mightstone and Weakstone, Thragtusk
+        String setAside = null;
+        int refusals = 0;
+        String passedOn = null;
+        for (int loop = 0; loop < 999 && passedOn == null; loop++) {   // 999: PhaseHandler's own bound on an AI's loop
+            final String forge = x.equals(setAside) ? y : x;             // Forge's choice: the play not set aside
+            if (cap.caps(w, forge)) {
+                passedOn = forge;                                        // the seat passes instead
+                break;
+            }
+            cap.refused(w, forge);                                       // "AI failed to play" / "Didn't find what to pay for"
+            refusals++;
+            setAside = forge;
+        }
+        check(passedOn != null && refusals == 2 * PayCap.LIMIT,
+                "pay cap: the X, Y, X, Y ... refusal loop ends in a pass after " + PayCap.LIMIT + " refusals of each ("
+                        + refusals + " refusals, passed on " + passedOn + ")");
+        check(x.equals(passedOn) && cap.events() == 1, "pay cap: the pass is counted once (forgePayCap " + cap.events() + ")");
+        check(cap.caps(w, x) && cap.caps(w, y) && cap.events() == 3, "pay cap: both plays stay capped in the window, each pass counted");
+        check(!cap.caps(w, "cast:37") && cap.events() == 3, "pay cap: a play never refused is not touched");
+        final PayCap one = new PayCap(PayCap.LIMIT);
+        for (int k = 0; k < PayCap.LIMIT - 1; k++) {
+            one.refused(w, x);
+        }
+        check(!one.caps(w, x) && one.events() == 0, "pay cap: under the limit, Forge's choice stands");
+        one.refused(w, x);
+        check(one.caps(w, x) && one.events() == 1, "pay cap: at the limit, the next choice of it is a pass");
+        final String landed = Explorer.windowKey(9, "MAIN1", 0, -1, 5);
+        check(!one.caps(landed, x) && one.refusalsOf(x) == 0 && one.events() == 1,
+                "pay cap: another window (a land drop) forgets the refusals and offers the play again");
+        check(!one.caps(Explorer.windowKey(9, "MAIN1", 1, 301, 4), x), "pay cap: the stack moving is another window");
     }
 
     /** D358: play exploration's arithmetic, without the engine. */

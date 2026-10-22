@@ -114,6 +114,28 @@ public class PolicyControllerAi extends PlayerControllerAi {
     /** The targets exploration changed in the answer being played (D358), by part. */
     private final Map<SpellAbility, Decision.Explore> targetMarks = new java.util.IdentityHashMap<>();
 
+    /** D465: the Forge seat's pay cap (the move atlas's branch games), or null: off. */
+    private PayCap payCap;
+
+    /**
+     * D465: cap Forge's refused plays at {@code limit} refusals of one play in one
+     * priority window ({@link PayCap}).  Only a seat Forge pilots: the random
+     * seat has G5 (D458) instead, and takes no part of this path.
+     */
+    void enablePayCap(final int limit) {
+        this.payCap = new PayCap(limit);
+    }
+
+    /** D465: the passes the pay cap made (the log's {@code guardrails.forgePayCap}), or null when this seat has no cap. */
+    public Integer payCapEvents() {
+        return payCapOn() ? payCap.events() : null;
+    }
+
+    /** D465: a pay cap, on a seat Forge pilots (never the random seat, which has G5). */
+    private boolean payCapOn() {
+        return payCap != null && (explorer == null || !explorer.math().config().random);
+    }
+
     /** Explore this seat's decisions (D358); null = off.  Set before the game starts. */
     public void setExplorer(final Explorer e) {
         this.explorer = e;
@@ -204,13 +226,13 @@ public class PolicyControllerAi extends PlayerControllerAi {
     @Override
     public List<SpellAbility> chooseSpellAbilityToPlay() {
         if (decisions == null) {
-            return flushObserved(explored(choose()));
+            return flushObserved(payCapped(explored(choose())));
         }
         if (search != null) {
             search.takeReport();
             search.takeTargetReport();
         }
-        final List<SpellAbility> r = flushObserved(explored(choose()));
+        final List<SpellAbility> r = flushObserved(payCapped(explored(choose())));
         final Decision.Explore explored = explorer == null ? null : explorer.takeMark();
         final long t0 = System.nanoTime();
         try {
@@ -259,6 +281,27 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         decisions.cost(System.nanoTime() - t0);
         return r;
+    }
+
+    /**
+     * D465: Forge's answer, unless it is a play refused {@link PayCap#LIMIT}
+     * times in this priority window: then a pass (null, as Forge says it --
+     * {@code PhaseHandler.mainLoopStep} loops on an empty list), counted.
+     */
+    private List<SpellAbility> payCapped(final List<SpellAbility> r) {
+        if (!payCapOn() || r == null || r.size() != 1 || r.get(0).isLandAbility()) {
+            return r;
+        }
+        final String tok = Decisions.saToken(r.get(0));
+        if (!payCap.caps(Explorer.window(getGame(), player), tok)) {
+            return r;
+        }
+        count("forgePayCap");
+        event("pay cap: " + tok + " refused " + payCap.limit() + " times in this window; passing");
+        lastWhy = "PAY_CAP";
+        steerSa = null;
+        steerVictim = null;
+        return null;
     }
 
     /**
@@ -719,6 +762,18 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     @Override
     public boolean playChosenSpellAbility(final SpellAbility sa) {
+        if (payCapOn() && !sa.isLandAbility()) {
+            // D465: Forge's own pick is never marked skipped when chosen (getSpellAbilityToPlay
+            // sets the marked ones aside), so a mark after the play is this play's refusal
+            final String w = Explorer.window(getGame(), player);
+            final String tok = Decisions.saToken(sa);
+            final boolean before = sa.isSkip();
+            final boolean r = playChosen(sa);
+            if (!before && sa.isSkip()) {
+                payCap.refused(w, tok);
+            }
+            return r;
+        }
         if (explorer == null || !explorer.math().config().random || sa.isLandAbility()) {
             return playChosen(sa);
         }

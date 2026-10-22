@@ -87,8 +87,11 @@ public final class GameLedger {
         int damageToPlayers;
     }
 
-    private final Game game;
+    /** The game read, until {@link #detach}: null after it. */
+    private Game game;
     private final List<Player> seats = new ArrayList<>();
+    /** The number of seats, which outlives {@link #detach}. */
+    private int seatCount;
     /** turn number -> [active seat index, entries per seat]. */
     private final Map<Integer, Object[]> turns = new LinkedHashMap<>();
     private int errors;
@@ -103,6 +106,26 @@ public final class GameLedger {
     private GameLedger(final Game game) {
         this.game = game;
         seats.addAll(game.getPlayers());
+        seatCount = seats.size();
+    }
+
+    /**
+     * Let go of the game and its players, keeping the turns read so far
+     * (D465).  A ledger lives on after its game -- the move atlas holds every
+     * branch's ledger until its unit ends -- and until this was called each
+     * held the whole played-out copy it was attached to: J151's workers held
+     * one copy per branch and ran out of a 2 GB heap about 70 branches into a
+     * unit.  After it {@link #snapshot} reads nothing; {@link #write} is
+     * unchanged.  Game thread, after the game's last event.
+     */
+    public void detach() {
+        game = null;
+        seats.clear();
+    }
+
+    /** Whether {@link #detach} has let go of the game (the self-test). */
+    public boolean detached() {
+        return game == null;
     }
 
     @Subscribe
@@ -117,6 +140,9 @@ public final class GameLedger {
 
     /** Read the current turn's entry now (the copies of the move atlas call it at their end). */
     public void snapshot() {
+        if (game == null) {
+            return;
+        }
         try {
             final int turn = game.getPhaseHandler().getTurn();
             if (turn <= 0) {
@@ -196,7 +222,7 @@ public final class GameLedger {
      * -- each seat's numbers in {@link #FIELDS} order, seats in the game's player order.
      */
     public void write(final JsonOut j) {
-        j.obj().n("v", 1L).n("seats", (long) seats.size()).n("errors", (long) errors);
+        j.obj().n("v", 1L).n("seats", (long) seatCount).n("errors", (long) errors);
         j.key("fields").arr();
         for (final String f : FIELDS) {
             j.v(f);

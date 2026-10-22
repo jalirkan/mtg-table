@@ -218,3 +218,39 @@ test('negative control: guardrails that are not an object of counts (null, [], "
     assert.match(r.out, /explore\.guardrails is not an object of counts/);
   }
 });
+
+// M72 / D465: a Forge-piloted move-atlas branch seat's decisions summary carries its pay cap's passes
+// (`guardrails.forgePayCap`). Rewritten as such a log (the header's lab block says continuation
+// "forge") the decision fixture passes with the count; the same block in a log that is not an atlas
+// Forge branch, in a random seat's log, under another name or with a non-integer count FAILS.
+const withForgeGuardrails = (frames: Array<Record<string, any>>, g: unknown, lab: Record<string, unknown> | null = { atlas: 't', continuation: 'forge' }): void => {
+  if (lab) frames[0]!.lab = { ...(frames[0]!.lab ?? {}), ...lab };
+  frames.find((f) => f.dir === 'ai' && f.type === 'decisions')!.body.guardrails = g;
+};
+
+test('M72: a Forge-piloted atlas branch seat\'s summary may carry its pay-cap count', () => {
+  for (const n of [0, 3]) {
+    const r = rewrite(DEC_LOGS[0] as string, (frames) => withForgeGuardrails(frames, { forgePayCap: n }));
+    assert.equal(r.status, 0, r.out);
+  }
+});
+
+test('negative control: forgePayCap outside an atlas Forge branch, in a random seat\'s log, or malformed FAILS the checker (M72)', () => {
+  const plain = rewrite(DEC_LOGS[0] as string, (frames) => withForgeGuardrails(frames, { forgePayCap: 1 }, null));
+  assert.equal(plain.status, 1, plain.out);
+  assert.match(plain.out, /summary guardrails outside a Forge-piloted atlas branch's log/);
+  const random = rewrite(DEC_LOGS[0] as string, (frames) => {
+    withForgeGuardrails(frames, { forgePayCap: 1 }, { atlas: 't', continuation: 'random' });
+  });
+  assert.equal(random.status, 1, random.out);
+  assert.match(random.out, /summary guardrails outside a Forge-piloted atlas branch's log/);
+  const odd = rewrite(DEC_LOGS[0] as string, (frames) => withForgeGuardrails(frames, { forgePayCap: 1.5, refusedCast: 1 }));
+  assert.equal(odd.status, 1, odd.out);
+  assert.match(odd.out, /summary guardrails "forgePayCap": 1\.5/);
+  assert.match(odd.out, /summary guardrails "refusedCast"/);
+  for (const g of [null, [], '']) {
+    const r = rewrite(DEC_LOGS[0] as string, (frames) => withForgeGuardrails(frames, g));
+    assert.equal(r.status, 1, `${JSON.stringify(g)}: ${r.out}`);
+    assert.match(r.out, /summary guardrails is not an object of counts/);
+  }
+});

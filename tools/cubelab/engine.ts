@@ -27,6 +27,12 @@
 // whose match ended while more than `maxWorkers` JVMs are alive quits (its
 // memory comes back); a parked worker starts again when the cap rises.
 // Without LAB_CONTROL nothing here changes.
+//
+// D465: a worker may stream a match's progress before its answer (`CUBELAB {"type":"progress","id",...}`,
+// the atlas's finished branches), which `hooks.onProgress` receives; and it may RETIRE: a match line
+// carrying `retire` (its heap is exhausted) is the worker's last, it exits by itself, and the pool starts a
+// fresh one for the rest -- neither a boot failure nor a death.  `onResult` may return follow-up jobs (the
+// atlas's resume of an unfinished unit), queued first, before the pool counts the job done.
 
 import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -212,7 +218,15 @@ export interface MatchResult {
   stuck?: boolean;
   /** Set on this side: the worker died or hung. */
   engineError?: string;
+  /** D465: the worker retires after this answer (why: its heap is exhausted); the pool starts a fresh one. */
+  retire?: string;
 }
+
+/** D465: a line a worker streams while a match plays (the atlas's finished branches). */
+export interface ProgressMsg { type: 'progress'; id: string; [k: string]: unknown }
+
+/** D465: what else the pool reports: a match's streamed progress, as it arrives. */
+export interface PoolHooks { onProgress?: (job: MatchJob, msg: ProgressMsg, worker: number) => void }
 
 interface Slot {
   k: number;
@@ -225,6 +239,8 @@ interface Slot {
   bootFailures: number;
   /** Let go by the control file's maxWorkers; started again when the cap allows. */
   parked: boolean;
+  /** D465: it answered with `retire` and is exiting by itself; a fresh worker takes its place. */
+  retiring: boolean;
 }
 
 /**
@@ -240,12 +256,13 @@ export interface PoolLoad { busy: number; alive: number; load1: number; cpus: nu
  * Resolves when every job has a result.
  */
 export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
-  onResult: (job: MatchJob, r: MatchResult, worker: number, load: PoolLoad) => void, say: (s: string) => void): Promise<void> {
+  onResult: (job: MatchJob, r: MatchResult, worker: number, load: PoolLoad) => MatchJob[] | void, say: (s: string) => void,
+  hooks: PoolHooks = {}): Promise<void> {
   fs.mkdirSync(logDir, { recursive: true });
   const queue = [...jobs];
   let pending = jobs.length;
   if (pending === 0) return;
-  const slots: Slot[] = env.homes.map((_, k) => ({ k, proc: null, ready: false, job: null, startedAt: 0, last: null, bootFailures: 0, parked: false }));
+  const slots: Slot[] = env.homes.map((_, k) => ({ k, proc: null, ready: false, job: null, startedAt: 0, last: null, bootFailures: 0, parked: false, retiring: false }));
   let fatal: Error | null = null;
   const control = controlReader();
   const cap = (): number => Math.min(slots.length, control().maxWorkers ?? slots.length);
@@ -254,6 +271,13 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
   const loadNow = (): PoolLoad => ({ busy: slots.filter((x) => x.job).length, alive: alive(), load1: Math.round((os.loadavg()[0] ?? 0) * 100) / 100, cpus: os.cpus().length });
 
   return new Promise<void>((resolve, reject) => {
+    /** A match is answered: its follow-up jobs (D465) go first in the queue, and count as pending. */
+    const answered = (j: MatchJob, r: MatchResult, k: number, load: PoolLoad): void => {
+      const more = onResult(j, r, k, load) ?? [];
+      queue.unshift(...more);
+      pending += more.length - 1;
+      // no other slot is woken: this one goes on (giveWork), or retired, died or hung -- and each of those starts a fresh worker here
+    };
     const finish = (): void => {
       clearInterval(timer);
       for (const s of slots) if (s.proc) { s.proc.stdin.end(`${JSON.stringify({ type: 'quit' })}\n`); }
@@ -288,8 +312,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
       s.job = null;
       if (j) {
         say(`worker ${s.k}: ${why} during ${j.id}; recorded as an engine error, starting a fresh worker`);
-        onResult(j, { type: 'match', id: j.id, forge: [], games: [], engineError: why }, s.k, load);
-        pending--;
+        answered(j, { type: 'match', id: j.id, forge: [], games: [], engineError: why }, s.k, load);
       }
       if (pending === 0) { finish(); return; }
       if (queue.length > 0) restart(s);
@@ -307,15 +330,20 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
       log.write(`\n==== worker ${s.k} started ${new Date().toISOString()} (home ${home})\n`);
       const proc = spawn('env', javaArgs(env, home, ['play']), { cwd: env.repo, stdio: ['pipe', 'pipe', 'pipe'] });
       s.proc = proc;
+      proc.stdin.on('error', () => { /* a worker that already exited (EPIPE): its close is handled below */ });
       s.ready = false;
       s.job = null;
       proc.stderr.pipe(log);
       const rl = readline.createInterface({ input: proc.stdout });
       rl.on('line', (line) => {
         if (!line.startsWith('CUBELAB ')) { log.write(`${line}\n`); return; }
-        let msg: { type?: string };
+        let msg: { type?: string; id?: string };
         try { msg = JSON.parse(line.slice(8)) as typeof msg; } catch { log.write(`unparsable: ${line}\n`); return; }
         if (msg.type === 'ready') { s.ready = true; s.bootFailures = 0; giveWork(s); return; }
+        if (msg.type === 'progress') {
+          if (s.job && msg.id === s.job.id) hooks.onProgress?.(s.job, msg as ProgressMsg, s.k);
+          return;
+        }
         if (msg.type === 'match' && s.job) {
           const j = s.job;
           const r = msg as unknown as MatchResult;
@@ -326,15 +354,28 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
           }
           const load = loadNow();
           s.job = null;
-          pending--;
-          onResult(j, r, s.k, load);
+          if (r.retire) {
+            // D465: its last answer; it exits by itself and the close below starts a fresh worker
+            s.retiring = true;
+            s.ready = false;
+            s.proc = null;      // not alive for the cap or for finish()'s quit: it is on its way out
+            say(`worker ${s.k}: retiring after ${j.id} (${r.retire}); a fresh worker takes its place`);
+          }
+          answered(j, r, s.k, load);
           if (pending === 0) { finish(); return; }
-          giveWork(s);
+          if (!s.retiring) giveWork(s);
         }
       });
-      proc.on('exit', (code, signal) => {
+      // 'close', not 'exit': every line the worker wrote has been read by then (a retiring worker's answer, D465)
+      proc.on('close', (code, signal) => {
         log.write(`==== worker ${s.k} exited ${code ?? ''}${signal ?? ''}\n`);
         if (s.proc !== proc && s.proc !== null) return;      // replaced already
+        const retired = s.retiring;
+        if (retired) {
+          s.retiring = false;
+          if (!s.job && queue.length > 0) restart(s);
+          return;
+        }
         const wasReady = s.ready;
         s.proc = null;
         s.ready = false;
@@ -342,8 +383,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
           const j = s.job;
           if (s.last && s.last.id === j.id) {
             s.job = null;
-            pending--;
-            onResult(j, { ...s.last, engineError: 'a game thread would not stop after its timeout; the worker was restarted' }, s.k, loadNow());
+            answered(j, { ...s.last, engineError: 'a game thread would not stop after its timeout; the worker was restarted' }, s.k, loadNow());
             s.last = null;
             if (pending === 0) { finish(); return; }
             if (queue.length > 0) restart(s);

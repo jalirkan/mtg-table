@@ -3099,7 +3099,9 @@ const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', '
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
 const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']);
 const SEARCH_RULES = ['margin', 'lcb'];
-const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore']);
+const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore', 'guardrails']);
+// M72 / D465: a Forge-piloted move-atlas branch seat's own guardrail count (its pay cap's passes), by name.
+const FORGE_GUARDRAIL_NAMES = ['forgePayCap'];
 const FALLBACKS = [null, 'budget', 'copyError', 'unmappable', 'rolloutErrors', 'invalidAtEnd'];
 
 /** The card ids a state shows its viewer: full cards in every zone but a hidden one, and stackCards. */
@@ -3148,6 +3150,14 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
         for (const [kk, v] of Object.entries(b[k] ?? {})) {
           if (!DECISION_KINDS.includes(kk) && !DECISION_BY.includes(kk)) bad(lineNo, `decisions summary ${k} key ${JSON.stringify(kk)}`);
           if (typeof v !== 'number') bad(lineNo, `decisions summary ${k}.${kk} is not a number`);
+        }
+      }
+      if (b.guardrails !== undefined) {
+        // M72 / D465: only a Forge-piloted atlas branch's seat (its header's lab block says continuation "forge"), never a random seat's
+        if (header.lab?.continuation !== 'forge' || header.playExplore) bad(lineNo, 'decisions summary guardrails outside a Forge-piloted atlas branch\'s log (lab.continuation "forge"; M72, D465)');
+        if (!plainObject(b.guardrails)) bad(lineNo, `decisions summary guardrails is not an object of counts: ${JSON.stringify(b.guardrails)?.slice(0, 80)} (M72)`);
+        else for (const [kk, n] of Object.entries(b.guardrails)) {
+          if (!FORGE_GUARDRAIL_NAMES.includes(kk) || !Number.isInteger(n) || n < 0) bad(lineNo, `decisions summary guardrails ${JSON.stringify(kk)}: ${JSON.stringify(n)} (M72)`);
         }
       }
       if (b.explore !== undefined) {
