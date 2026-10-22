@@ -1275,6 +1275,18 @@ tools/cubelab.sh seat-identity                # the Forge, search and explore se
   (Wilson), each map's regret (best − played, a paired bootstrap interval), the rank correlation between
   the two maps (bootstrap interval) and whether they name the same best; the decisions where they disagree
   most; the checks; timings. **`atlas.md`** is the same as two tables side by side and a paragraph.
+- **The worker heap**: the atlas's workers run at `-Xmx2048m`, every other command's at hard rule 6's
+  4096m; `CUBELAB_WORKER_XMX=2560m` (or `3g`) sets every worker's heap, the atlas's included, and wins
+  over both. Phase B keeps a worker alive over hundreds of branch games and the heap grows to its cap:
+  under 4096m four workers sat at 3.6–4.7 GB RSS, and three atlases (J143, J146, J148) were killed by the
+  kernel when the runner fitted 6–7 of them into 21.4 GB from a declared 2.5–3 GB. The atlas-selftest
+  (`--jobs 2`) passes at 2048m (peak RSS 1.53 GB) and at 1536m (1.08 GB), but is too short to fill a
+  heap; J148's long-lived workers held 0.9–1.1 GB of old generation, so 1536m would leave 1.4× that and
+  2048m leaves 2×. Expect about 2.6 GB RSS a worker (the cap plus ~0.5 GB off-heap).
+- **A long-lived worker fills its heap to `-Xmx`; declare `mem_per_worker_gb` from the cap, not from
+  phase A's measurement.** Phase A's short games peaked at 1.3–1.85 GB under 4096m and never showed it;
+  an atlas job at the default heap declares `mem_per_worker_gb: 2.7`, one with `CUBELAB_WORKER_XMX` its
+  cap plus 0.6 GB.
 - **Rate** (the smoke, two workers beside the lab's seven): a phase A game 5.5 s a worker (8 CPU-s), a
   branch game 3.0 s (random 3.0, Forge 2.0); a phase A game keeps 234 KB, a branch 136 KB. A random game
   is slower than a Forge game: every random priority lists every play the seat could make, and the

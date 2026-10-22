@@ -72,6 +72,19 @@ export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' |
 const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
 
 /** The pair the rule chooses, from the ladder's results (every results/*.jsonl under `ladderDir`). */
+/**
+ * The atlas's worker heap when CUBELAB_WORKER_XMX is not set (every other command keeps 4096m).
+ * Phase B keeps a worker alive over hundreds of branch games and G1 grows its heap to the cap: under
+ * 4096m four workers sat at 3.6-4.7 GB RSS, so the lab runner, sizing from a declared 2.5-3 GB, put
+ * 6-7 of them in a 21.4 GB budget and the kernel killed the atlas three times (J143, J146, J148).
+ * Measured 2026-10-21: the selftest (--jobs 2) passes at 2048m (peak RSS 1.53 GB) and at 1536m (1.08
+ * GB; post-GC heap at most 562 MB), but it is too short to fill anything; J148's own phase B workers,
+ * 38 minutes in, held 0.9-1.1 GB of old generation (jstat).  1536m would leave 1.4x that, 2048m twice,
+ * so 2048m: about 2.6 GB RSS a worker (the cap plus the ~0.5 GB off-heap 4096m showed), seven in the
+ * budget.  A game that runs away (an AI pay loop) exhausts any cap and is an engine error either way.
+ */
+export const ATLAS_WORKER_XMX = '2048m';
+
 export function autoPair(repo: string, ladderDir: string, pairsFile: string): { chosen: PairRow; table: PairRow[]; games: number } {
   const pairs = pairLines(fs.readFileSync(pairsFile, 'utf8'));
   const dir = path.join(ladderDir, 'results');
@@ -248,7 +261,7 @@ async function phaseA(repo: string, o: AtlasOptions, out: string, jobs: number, 
   const todo = Array.from({ length: o.rollouts }, (_, r) => r + 1).filter((g) => !done.has(g));
   say(`atlas phase A: ${o.rollouts} rollout(s) from the opening, both seats random; ${done.size} done, ${todo.length} to play on ${Math.min(jobs, Math.max(1, todo.length))} worker(s)`);
   if (!todo.length) return { games: 0, ms: 0 };
-  const env = engineEnv(repo);
+  const env = engineEnv(repo, ATLAS_WORKER_XMX);
   const homes = env.homes.slice(0, Math.max(1, Math.min(jobs, todo.length)));
   const fd = fs.openSync(gamesFile, 'a');
   const lfd = fs.openSync(path.join(A, 'ledger.jsonl'), 'a');
@@ -277,7 +290,7 @@ async function phaseA(repo: string, o: AtlasOptions, out: string, jobs: number, 
 async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, say: (s: string) => void): Promise<Record<string, unknown>> {
   const B = path.join(out, 'phaseB');
   fs.mkdirSync(B, { recursive: true });
-  const env = engineEnv(repo);
+  const env = engineEnv(repo, ATLAS_WORKER_XMX);
   const baseFile = path.join(B, 'baseline.json');
   const tb = Date.now();
   if (!fs.existsSync(baseFile)) {
