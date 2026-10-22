@@ -171,14 +171,27 @@ public final class Explorer {
     private String refusedWindow;
 
     /**
-     * G5's priority window: the turn, the phase, and the stack (its size and
-     * the top item's id).  A refused play leaves all of them as they were, so
-     * the engine's next priority to the seat is the same window; a play that
-     * resolves or is added, a new step or a new turn is another one.
+     * G5's priority window: the turn, the phase, the stack (its size and the
+     * top item's id), and how many lands the seat has on the battlefield.  A
+     * refused play leaves all of them as they were, so the engine's next
+     * priority to the seat is the same window; a play that resolves or is
+     * added, a new step or a new turn is another one, and so is a land drop
+     * (D462, the #177 review: more mana, so a refused cast may be payable now).
+     * Not the mana pool: a refused payment taps its sources and refunds what
+     * it spent into the pool (Forge's {@code ComputerUtilMana.payManaCost},
+     * {@code manapool.refundMana(manaSpentToPay)}), so the pool moves BECAUSE
+     * of the refusal and the window would never hold.  Not untapped lands, for
+     * the same reason.
      */
-    static String window(final Game g) {
+    static String window(final Game g, final Player seat) {
         final int top = g.getStack().isEmpty() || g.getStack().peekAbility() == null ? -1 : g.getStack().peekAbility().getId();
-        return g.getPhaseHandler().getTurn() + "/" + g.getPhaseHandler().getPhase() + "/" + g.getStack().size() + "/" + top;
+        return windowKey(g.getPhaseHandler().getTurn(), String.valueOf(g.getPhaseHandler().getPhase()), g.getStack().size(), top,
+                seat == null ? -1 : seat.getLandsInPlay().size());
+    }
+
+    /** G5's window as a string: engine-free, for the self-test. */
+    static String windowKey(final int turn, final String phase, final int stackSize, final int top, final int lands) {
+        return turn + "/" + phase + "/" + stackSize + "/" + top + "/" + lands;
     }
 
     /**
@@ -188,13 +201,13 @@ public final class Explorer {
      * ({@code refusedCast}) and is not offered again in this priority window.
      * Nothing for a seat that is not the random seat.
      */
-    public void played(final Game g, final SpellAbility sa, final boolean refusedNow) {
+    public void played(final Player seat, final SpellAbility sa, final boolean refusedNow) {
         final String tok = pendingPick != null ? pendingPick : Decisions.saToken(sa);
         pendingPick = null;
         if (!math.config().random || !refusedNow || tok == null || "pass".equals(tok)) {
             return;
         }
-        noteRefused(window(g), tok);
+        noteRefused(window(seat.getGame(), seat), tok);
     }
 
     /** G5: {@code tok} was refused in window {@code w}: counted, and left out of the rest of that window. */
@@ -238,7 +251,7 @@ public final class Explorer {
         pendingPick = null;
         try {
             final Game g = ai.getGame();
-            final Set<String> refusedHere = refusedIn(window(g));
+            final Set<String> refusedHere = refusedIn(window(g, ai));
             final boolean stackEmpty = g.getStack().isEmpty();
             String banned = null;
             if (lastAbility != null && stackEmpty) {
