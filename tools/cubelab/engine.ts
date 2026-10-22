@@ -13,9 +13,13 @@
 // <out>/logs/worker-<k>.log).  The pool hands each idle worker the next match.
 // Its watchdog: the Java side ends a game that runs past --game-timeout as a
 // draw and exits 3 if the game thread will not come back; this side kills a
-// worker whose match is past games x (timeout + 40 s) + 120 s, or that died,
-// records that match as an engine error with whatever games it finished, and
-// starts a fresh worker for the rest.  A worker that dies before it is ready
+// worker whose match is past its deadline (the job's `deadlineSec`, else
+// games x (timeout + 40 s) + 120 s), or that died, records that match as an
+// engine error with whatever games it finished, and starts a fresh worker for
+// the rest.  The deadline is measured on a MONOTONIC clock (D459,
+// `monotonicMs`): `Date.now()` is the wall clock, and on 2026-10-20 and 10-21 it
+// jumped 4 h forward minutes after boot (Windows keeps local time in the RTC;
+// NTP corrects it later), which "hung" every running worker at once.  A worker that dies before it is ready
 // twice in a row stops the run: the engine cannot boot, and retrying is noise.
 //
 // The lab runner's control file (tools/runner/control.ts, D337): with
@@ -29,6 +33,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import readline from 'node:readline';
 
 import type { Fact } from './cards.ts';
@@ -120,6 +125,25 @@ export interface MatchJob {
   record?: RecordSpec;
   /** D358: both seats of every game explore (playexplore.ts; CubeLab.java seeds each seat's draws). */
   playExplore?: PlayExploreTag;
+  /**
+   * D459: how long the pool waits for this match's answer before it kills the worker as hung,
+   * in seconds of monotonic time.  Absent: games x (gameTimeoutSec + 40) + 120 (`matchDeadlineMs`).
+   * The atlas sets it from `--unit-timeout <minutes>`; the Java side never reads it.
+   */
+  deadlineSec?: number;
+}
+
+/**
+ * D459: the clock every duration that DECIDES something in the pool is read from -- milliseconds
+ * since an arbitrary origin that only moves forward, at the rate of real time, whatever the wall
+ * clock does.  `Date.now()` stays for timestamps and for durations that are only reported.
+ */
+export const monotonicMs = (): number => performance.now();
+
+/** D459: the pool's watchdog deadline for a match, in milliseconds of `monotonicMs`. */
+export function matchDeadlineMs(j: Pick<MatchJob, 'games' | 'gameTimeoutSec' | 'deadlineSec'>): number {
+  if (j.deadlineSec !== undefined) return j.deadlineSec * 1000;
+  return (j.games * (j.gameTimeoutSec + 40) + 120) * 1000;
 }
 
 /** Where and how a match's games are recorded (D315); CubeLab.java's `Recording` reads it. */
@@ -178,6 +202,7 @@ interface Slot {
   proc: ChildProcessWithoutNullStreams | null;
   ready: boolean;
   job: MatchJob | null;
+  /** When `job` was handed over, in `monotonicMs` (D459) -- never the wall clock. */
   startedAt: number;
   last: MatchResult | null;
   bootFailures: number;
@@ -217,8 +242,6 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
       for (const s of slots) if (s.proc) { s.proc.stdin.end(`${JSON.stringify({ type: 'quit' })}\n`); }
       if (fatal) reject(fatal); else resolve();
     };
-    const deadlineMs = (j: MatchJob): number => (j.games * (j.gameTimeoutSec + 40) + 120) * 1000;
-
     const giveWork = (s: Slot): void => {
       if (!s.ready || s.job || !s.proc) return;
       if (queue.length > 0) {
@@ -238,7 +261,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
         return;
       }
       s.job = j;
-      s.startedAt = Date.now();
+      s.startedAt = monotonicMs();
       s.proc.stdin.write(`${JSON.stringify(j)}\n`);
     };
 
@@ -332,11 +355,11 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
           say(`worker ${s.k}: unparked (maxWorkers ${cap()})`);
           start(s);
         }
-        if (s.job && s.proc && Date.now() - s.startedAt > deadlineMs(s.job)) {
+        if (s.job && s.proc && monotonicMs() - s.startedAt > matchDeadlineMs(s.job)) {
           const p = s.proc;
           s.proc = null;
           p.kill('SIGKILL');
-          fail(s, `no answer in ${Math.round(deadlineMs(s.job) / 1000)} s (hung)`);
+          fail(s, `no answer in ${Math.round(matchDeadlineMs(s.job) / 1000)} s (hung)`);
         }
       }
     }, 2000);

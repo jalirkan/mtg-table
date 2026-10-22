@@ -147,7 +147,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   (D450)
        tools/cubelab.sh atlas (--deck-a <dck> --deck-b <dck> | --pair auto [--ladder var/ai-ladder]) --seed S --jobs K --out <dir>
                         [--turn-cap 40] [--rollouts 10000] [--branch-random 200] [--branch-forge 40] [--decisions all|N]
-                        [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--boot 1000] [--phase a|b|both|report]   (D451)
+                        [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--unit-timeout 30] [--boot 1000] [--phase a|b|both|report]   (D451; --unit-timeout minutes, D459)
        tools/cubelab.sh atlas-selftest [--jobs 2]   (D451: a tiny atlas, its forks, no-leak checks and guardrails asserted)
        tools/cubelab.sh seat-identity [--write]     (D451: the Forge, search and explore seats play origin/main's games)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)

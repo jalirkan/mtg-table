@@ -5,7 +5,7 @@
 //
 //   tools/cubelab.sh atlas (--deck-a <dck> --deck-b <dck> | --pair auto) --seed S --jobs K --out <dir>
 //       [--turn-cap 40] [--rollouts 10000] [--branch-random 200] [--branch-forge 40] [--decisions all|N]
-//       [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--boot 1000]
+//       [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--unit-timeout 30] [--boot 1000]
 //       [--ladder var/ai-ladder] [--pairs tools/ai-bench/pairs-confirm.txt] [--phase a|b|both]
 //
 // THE PAIR (--pair auto): the line of the pairs file with the most ladder games and the most even record,
@@ -27,7 +27,8 @@
 // from a fork of the real position (mtgtable.ai.Atlas: a copy, the option forced, what seat A cannot see
 // redealt from the multiset; branch i of every option on one seed).  A unit (one decision, one
 // continuation, --chunk branches of every option) replays the baseline from its seed to the decision,
-// checks the options are the baseline's, and plays its branches there.  Every branch recorded (rows,
+// checks the options are the baseline's, and plays its branches there.  A unit that has not answered in
+// --unit-timeout minutes of monotonic time (D459) is killed as hung and recorded as not finished.  Every branch recorded (rows,
 // ledger, frame logs), its fork checked; --leak-checks per unit play a branch again after seat B's real
 // hidden cards were dealt again (it must not move) and after seat A's own hand was (it must).
 //
@@ -59,7 +60,17 @@ export type Continuation = (typeof CONTINUATIONS)[number];
 export interface AtlasOptions {
   deckA: string; deckB: string; seed: number; turnCap: number; rollouts: number; branchRandom: number; branchForge: number;
   decisions: number | 'all'; options: number; chunk: number; leakChecks: number; branchTimeoutSec: number; boot: number; pair: PairRow | null;
+  /** D459: the pool's watchdog for one unit, in minutes of monotonic time (the job's `deadlineSec`). */
+  unitTimeoutMin: number;
 }
+
+/**
+ * D459: the default --unit-timeout.  J148's 488 finished units took 115 s at the median, 358 s at the
+ * 90th percentile, 777 s at the 99th and 976 s at most (d6's 150-branch random unit, under 3-7 workers
+ * and swap); 30 minutes is nearly twice the longest, and a hung unit is let go in half an hour instead
+ * of the 7,960 s the game timeout's formula gave it.
+ */
+export const UNIT_TIMEOUT_MIN_DEFAULT = 30;
 
 export interface DecisionListing { d: number; kind: string; turn: number; tokens: string[]; labels: string[] }
 export interface BranchRow {
@@ -158,6 +169,7 @@ export function unitJob(o: AtlasOptions, out: string, u: Unit, listing: Decision
   const timeout = 1800 + k * (u.i1 - u.i0) * Math.max(60, o.branchTimeoutSec);
   return {
     ...baseJob(o, unitId(u), o.seed, timeout),
+    deadlineSec: o.unitTimeoutMin * 60,
     atlas: {
       decision: u.d, continuation: u.c, i0: u.i0, i1: u.i1, seed: o.seed, expect: listing.tokens, cands: o.options, run: path.basename(out),
       turnCap: o.turnCap, branchTimeoutSec: o.branchTimeoutSec, rowsDir: path.join(B, 'rows'), framesDir: path.join(B, 'frames'),
@@ -216,6 +228,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
     rollouts: int('rollouts', 10000), branchRandom: int('branch-random', 200), branchForge: int('branch-forge', 40),
     decisions: decisionsArg === 'all' ? 'all' : int('decisions', 0, 1), options: int('options', 8, 2), chunk: int('chunk', 25, 1),
     leakChecks: int('leak-checks', 1), branchTimeoutSec: int('branch-timeout', 120, 10), boot: int('boot', 1000), pair,
+    unitTimeoutMin: int('unit-timeout', UNIT_TIMEOUT_MIN_DEFAULT, 1),
   };
   for (const d of [o.deckA, o.deckB]) if (!fs.existsSync(d)) throw new Error(`atlas: no deck ${d}`);
   const phase = one(f, 'phase') ?? 'both';
@@ -224,7 +237,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
   fs.mkdirSync(out, { recursive: true });
   const planFile = path.join(out, 'plan.json');
   const plan = { v: 1, decision: 'D451', deckA: shownPath(repo, o.deckA), deckB: shownPath(repo, o.deckB), seed: o.seed, turnCap: o.turnCap, options: o.options,
-    rollouts: o.rollouts, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, chunk: o.chunk, branchTimeoutSec: o.branchTimeoutSec,
+    rollouts: o.rollouts, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, chunk: o.chunk, branchTimeoutSec: o.branchTimeoutSec, unitTimeoutMin: o.unitTimeoutMin,
     pairRule: pair ? { rule: '|p - 1/2| + 1.96 sqrt(p (1 - p) / n) over the decisive ladder games of the line, smallest wins; ties more games, then the earlier line', chosen: pair, top: pairTable, ladderGames } : null };
   if (fs.existsSync(planFile)) {
     const was = JSON.parse(fs.readFileSync(planFile, 'utf8')) as Record<string, unknown>;

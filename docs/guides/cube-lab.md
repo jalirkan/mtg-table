@@ -245,7 +245,9 @@ game (and game 1 alternates draft by draft), so being on the play is spread
 evenly; the report shows how much it is worth. A game that runs past
 `--game-timeout` (300 s) is ended and recorded as a draw (`timeout: true`); a
 game whose engine thread will not stop, or a worker that dies, is recorded as
-an engine error with the games it finished, and a fresh worker carries on.
+an engine error with the games it finished, and a fresh worker carries on. The
+pool's own watchdog kills a worker that has not answered a draft's games in
+games × (timeout + 40 s) + 120 s, timed on a monotonic clock (D459).
 
 `--record M` plays the first M drafts' decks once more through
 `mtgtable.RecordMatch` and keeps each game as a frame log in `<out>/frames/`,
@@ -1264,7 +1266,9 @@ tools/cubelab.sh seat-identity                # the Forge, search and explore se
   `--branch-forge` times (Forge), from a fork: a copy, the option forced, what seat A cannot see redealt
   from the multiset, branch i of every option on one seed. Work goes out in units of one decision, one
   continuation and `--chunk` (25) branches; a unit replays the baseline to its decision and checks the
-  options are the same.
+  options are the same. A unit that has not answered in `--unit-timeout` minutes (30) is killed as hung
+  and recorded as not finished; the pool measures it on a monotonic clock, so a jump of the wall clock
+  cannot trip it ([D459](../decisions/D459-monotonic-unit-watchdog.md)).
 - **Everything is recorded**: every phase A game and every branch as D450's rows (both seats), ledger and
   both frame logs; `phaseA/`, `phaseB/` under `--out`. Every fork is checked (the position, card for card);
   `--leak-checks` (1 a unit) plays a branch again after seat B's real hidden cards were redealt in the real
