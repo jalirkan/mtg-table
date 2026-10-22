@@ -1,0 +1,4 @@
+==== J147 run2 started 2026-10-22T01:17:08-04:00 in unit lab-J147-run2, 5 worker(s), 5 core(s), BLAS/OpenMP threads 5
+census-play: 20000 game(s) planned over 2500 deck(s), seed 1502; 0 already played, 20000 to play on 5 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j144/games/peasant)
+[100/20000] 5452 games/h
+[200/20000] 6267 games/h
