@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-22T12:46:23-04:00
+- time: 2026-10-22T12:46:39-04:00
 - runner: 8fca7250, up since 2026-10-22T09:13:24-04:00
-- running: J152 stopping, 4848/125700 lines, 1 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.77; memory 7.3/30.5 GB, swap 910 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 8.39; memory 7.3/30.5 GB, swap 910 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J151 failed at 2026-10-22T12:45:01-04:00
+- last finished: J152 failed at 2026-10-22T12:46:38-04:00
 
 ## Messages
 

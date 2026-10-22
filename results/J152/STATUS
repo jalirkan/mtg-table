@@ -1,5 +1,6 @@
-running
+failed
+reason: aborted: unit_errors > 30 (unit_errors = 32)
 runner: forgecoach-runner 8fca7250
 started: 2026-10-22T12:46:23-04:00
-phase: stopping
+finished: 2026-10-22T12:46:38-04:00
 workers: 1
