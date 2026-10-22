@@ -6,6 +6,8 @@
 //
 //   install [opts]        the runner's own checkout (<lab>/runner), the user units, enable + start
 //   daemon  [opts]        the loop (what forgecoach-runner.service runs)
+//   wait-clock [opts] [--max-wait-s 600]   the unit's ExecStartPre (D461): wait for NTPSynchronized=yes, at
+//                         most that long, record it in <state>/clock-wait.json; always exits 0
 //   once    [opts]        one tick: fetch, reconcile, advance, start, publish
 //   plan    [J###]        --dry-run: the scripts and systemd-run commands the next start would run
 //   status                what runs, the queue, the machine (var/runner/status.json)
@@ -39,6 +41,7 @@ import path from 'node:path';
 
 import { readControl, writeControl } from './control.ts';
 import { exitRecorder, noteExit, readExit, restartReason, startFacts } from './restart.ts';
+import { CLOCK_WAIT_MAX_S, clockText, monoMs, parseNtpSynchronized, readBootId, readClockWait, waitForClockSync, writeClockWait, type ClockSync } from './clock.ts';
 import { activeHolds, holdReason, releaseHold, takeHold } from './holds.ts';
 import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
@@ -241,6 +244,25 @@ function logs(cfg: RunnerConfig, id: string | undefined, f: Map<string, string>)
   return r.status ?? 0;
 }
 
+/** `timedatectl show -p NTPSynchronized --value`: yes, no, or unknown (no timedated, no answer in 5 s). */
+function ntpSynchronized(): ClockSync {
+  const r = spawnSync('timedatectl', ['show', '-p', 'NTPSynchronized', '--value'], { encoding: 'utf8', timeout: 5000 });
+  return parseNtpSynchronized(r.status ?? 1, r.stdout ?? '');
+}
+
+/** D461: the unit's ExecStartPre.  Never fails the start: a clock that never syncs is said, not fatal. */
+async function waitClock(cfg: RunnerConfig, f: Map<string, string>): Promise<number> {
+  const maxS = Number(f.get('max-wait-s') ?? CLOCK_WAIT_MAX_S);
+  const w = await waitForClockSync({
+    check: ntpSynchronized, mono: monoMs, sleep: (ms) => new Promise((res) => setTimeout(res, ms)),
+    maxS: Number.isFinite(maxS) && maxS >= 0 ? maxS : CLOCK_WAIT_MAX_S, log: (s) => console.log(`runner: ${s}`),
+  });
+  const rec = { ...w, invocationId: process.env.INVOCATION_ID?.trim() || null, bootId: readBootId(), monoAt: monoMs(), at: isoLocal(Date.now()) };
+  try { writeClockWait(cfg.stateDir, rec); } catch (e) { console.error(`runner: clock-wait.json: ${(e as Error).message}`); }
+  console.log(`runner: ${clockText(rec, w.sync)}`);
+  return 0;
+}
+
 /** The daemon's exit recorder (restart.ts), once it has the lock. */
 let exitRec: ReturnType<typeof exitRecorder> | null = null;
 
@@ -258,7 +280,8 @@ async function main(): Promise<number> {
       let cause: string | null = null;
       if (cmd === 'daemon') {
         const facts = startFacts();
-        cause = restartReason(readExit(cfg.stateDir), facts);
+        const wait = readClockWait(cfg.stateDir, { invocationId: facts.invocationId, bootId: facts.bootId, mono: monoMs() });
+        cause = restartReason(readExit(cfg.stateDir), facts, clockText(wait, ntpSynchronized()));
         console.log(`runner: start: ${cause}`);
         exitRec = exitRecorder(cfg.stateDir, cfg.commit, facts);
       }
@@ -280,6 +303,7 @@ async function main(): Promise<number> {
       console.log('runner: stopping (the jobs keep running in their own units; a restart adopts them)');
       return 0;
     }
+    case 'wait-clock': return waitClock(cfg, f);
     case 'plan': return plan(cfg, pos[0] ?? null);
     case 'status': return printStatus(cfg);
     case 'pause': setPaused(cfg, true); console.log('paused: games in flight finish, nothing new starts. tools/runner.sh resume to carry on.'); return 0;

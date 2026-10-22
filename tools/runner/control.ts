@@ -60,8 +60,10 @@ export function readControl(file: string | undefined | null): Control {
 /**
  * A cached reader for a pool's hot path: re-reads the file at most every `ms`.
  * With no path (LAB_CONTROL unset) it always answers FREE without touching the disk.
+ * The cache's clock is monotonic (D461): on Date.now(), a wall clock stepped back 4 h kept the
+ * runner's pause and worker cap from reaching the pool for 4 h.
  */
-export function controlReader(file: string | undefined | null = process.env.LAB_CONTROL, ms = 1000, now: () => number = Date.now): () => Control {
+export function controlReader(file: string | undefined | null = process.env.LAB_CONTROL, ms = 1000, now: () => number = () => performance.now()): () => Control {
   if (!file) return () => FREE;
   let at = -Infinity;
   let last: Control = FREE;

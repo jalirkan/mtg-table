@@ -19,6 +19,7 @@
 #   tools/runner.sh dry-run jobs/J003-x.md --root <checkout> [--max-seconds 60]   # blocks over an overlay of var/
 #   tools/runner.sh metrics aibench var/ai-bench/night-*
 #   tools/runner.sh daemon [...]                 # what the service runs
+#   tools/runner.sh wait-clock [...]             # its ExecStartPre (D461): wait, at most 10 min, for NTP to sync
 #
 # Node 24 runs the TypeScript directly (type stripping); nothing to build.
 set -euo pipefail
