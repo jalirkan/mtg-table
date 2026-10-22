@@ -1,4 +1,4 @@
-id: J155
+id: J156
 title: The move atlas, rung 2 -- three deck pairs by D451's pair rule (fair-fight-900000005 again as the repeat, peasant-900000007, vintage-900000007) x three Forge-vs-Forge spine games each at fresh seeds 452-460; phase A 2,400 random-vs-random rollouts a pair; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; the random seat under G5 (D458, no re-pick of a play the engine refused to pay for); pre-registered reads, numbers only. Method only, no outcome rule beyond D451's
 public_title: Move atlas 2: three deck pairs, nine spine games
 public_est: ~16 h
@@ -6,8 +6,8 @@ public_decides: None by itself; the second rung of the move atlas, for Justin to
 cpu: heavy
 cores: 7
 max_workers: 7
-mem_per_worker_gb: 4.2
-repos: mtg-table@8fca7250 (the merge of #179 and #181 over 5a02afc0; #175–#178 in; the pin the cloud gave on 2026-10-22 14:05 UTC)
+mem_per_worker_gb: 2.7
+repos: mtg-table@6fb13bf9 (the merge of #180, #182 and #183 over 8fca7250: the atlas leak fixed (D465), the runner's elapsed_s monotonic (D464), the ledger follow-ups (D463))
 decides: nothing by itself. Rung 2 of the move atlas: whether J148's one-game picture (the two maps rarely agree before the game is decided; rho below zero; "cast now / don't attack" under random play) is a property of one spine or of the method, read on nine spines of three pairs, with intervals clustered by pair and spine; and how much a labelled decision costs, for rung 3
 hypothesis: none to confirm about the maps. Two candidates from J148 are read for repetition on the repeat pair only (iv): C1 "cast now" and C2 "don't attack", both + on J148 (C1 +0.013 over 18 decisions, C2 +0.059 over 4; neither excluded zero there)
 rule: D451 (method; no outcome rule) with D458 (G5) and D459 (unit watchdog). Pre-registered here, before any J150 data: the reads (i)-(vi) below, computed by var/lab-j150-local/bin/reads.py exactly as written in the pilot; a candidate of (iv) HOLDS only if its point is > 0 (J148's direction) and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. No other read carries a verdict
@@ -172,7 +172,7 @@ the pilot proves it on J148's own `atlas.json`, where it must give J148's publis
   `exits.txt` (each atlas command's exit code).
 - Never `summary.md` or `metrics.json`.
 
-**Heap (2026-10-22, after J151):** J151 ran the atlas's 2048m default and aborted at `unit_errors > 30` two hours in: the workers hit `java.lang.OutOfMemoryError: Java heap space` inside Forge's AI payment search (`ComputerUtilMana` / `AiController.chooseSpellAbilityToPlayFromList`) on this pair's Elite Spellbinder games -- Forge's OWN seat, not the random seat, so G5 does not reach it -- and each OOM killed the worker mid-unit (69/75, 0/150 branches). J148 at 4096m lost 2 units to the same loop. This file runs every worker at `CUBELAB_WORKER_XMX=4096m` and declares 4.2 GB a worker (5 workers fit the 21.4 GB budget); the est. scales accordingly. The class fix (a branch game surviving its own OOM; a cap on Forge's failed-cast retries) is a separate pc/ PR.
+**Heap (2026-10-22, after J151; superseded by #183 the same day):** the OOMs were the atlas's own leak (each branch's GameLedger kept its game copy until the unit ended, D465); with #183 merged this file runs the atlas's 2048m default again at 2.7 GB a worker (7 workers). The earlier text follows for the record.  J151 ran the atlas's 2048m default and aborted at `unit_errors > 30` two hours in: the workers hit `java.lang.OutOfMemoryError: Java heap space` inside Forge's AI payment search (`ComputerUtilMana` / `AiController.chooseSpellAbilityToPlayFromList`) on this pair's Elite Spellbinder games -- Forge's OWN seat, not the random seat, so G5 does not reach it -- and each OOM killed the worker mid-unit (69/75, 0/150 branches). J148 at 4096m lost 2 units to the same loop. This file runs every worker at `CUBELAB_WORKER_XMX=4096m` and declares 4.2 GB a worker (5 workers fit the 21.4 GB budget); the est. scales accordingly. The class fix (a branch game surviving its own OOM; a cap on Forge's failed-cast retries) is a separate pc/ PR.
 
 **Pilot note (2026-10-22, J153/J154):** the pilot's node tests skip `cubelab-atlas.test.ts` "a decision's two maps from its branch rows" (`--test-skip-pattern`): it failed in two consecutive pilot units on this pin (`regretLo > 0.1` false) and passes 30/30 in every reproduction the PC tried (alone, under the pilot's env, in a user unit, in the runner's dry-run sandbox). It is a pure-arithmetic test of the read, not of the engine; the class-fix lane (pc/atlas-oom-class) pins its determinism. The rest of the file's checks are unchanged.
 
@@ -473,7 +473,6 @@ PY
 python3 -I var/lab-j150-local/bin/reads.py ff5:451:var/lab-j142/atlas/atlas.json > var/lab-j150-local/reads-j148.json
 python3 -I -c "import json; d = json.load(open('var/lab-j150-local/reads-j148.json')); ok = (d['decided'], d['Q'], d['i_sameBest']['point'], d['ii_rho']['n'], d['ii_rho']['point'], d['iv_repeat']['C1_castNow']['random']['point'], d['iv_repeat']['C2_dontAttack']['random']['point']) == (27, 22, 0.3182, 18, -0.3416, 0.0129, 0.0588); print(1 if ok else 0)" > var/lab-j150-local/reads-self.txt
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
-export CUBELAB_WORKER_XMX=4096m
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 tools/cubelab.sh atlas-selftest --jobs {workers} && echo 1 > var/lab-j150-local/selftest.txt || echo 0 > var/lab-j150-local/selftest.txt
 tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j150-local/identity.txt || echo 0 > var/lab-j150-local/identity.txt
@@ -520,7 +519,6 @@ mkdir -p /home/justin-a/code/lab/data/lab-j150
 python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
-export CUBELAB_WORKER_XMX=4096m
 S=tools/ai-bench/decks/sets
 A=$S/fair-fight-900000005-A.dck; B=$S/fair-fight-900000005-B.dck
 rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 452 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-ff5 || rc=$?; echo "a-ff5 $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
@@ -534,7 +532,6 @@ mkdir -p /home/justin-a/code/lab/data/lab-j150
 python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
-export CUBELAB_WORKER_XMX=4096m
 S=tools/ai-bench/decks/sets
 A=$S/peasant-900000007-A.dck; B=$S/peasant-900000007-B.dck
 rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 455 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-peasant7 || rc=$?; echo "a-peasant7 $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
@@ -548,7 +545,6 @@ mkdir -p /home/justin-a/code/lab/data/lab-j150
 python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
-export CUBELAB_WORKER_XMX=4096m
 S=tools/ai-bench/decks/sets
 A=$S/vintage-900000007-A.dck; B=$S/vintage-900000007-B.dck
 rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 458 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-vintage7 || rc=$?; echo "a-vintage7 $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
