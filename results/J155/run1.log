@@ -1,0 +1,90 @@
+==== J155 run1 started 2026-10-22T13:01:55-04:00 in unit lab-J155-run1, 4 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase A: 2400 rollout(s) from the opening, both seats random; 0 done, 2400 to play on 4 worker(s)
+  [A 50/2400] 2431 games/h
+  [A 100/2400] 2847 games/h
+  [A 150/2400] 3024 games/h
+  [A 200/2400] 3284 games/h
+  [A 250/2400] 3424 games/h
+  [A 300/2400] 3486 games/h
+  [A 350/2400] 3549 games/h
+  [A 400/2400] 3532 games/h
+  [A 450/2400] 3521 games/h
+  [A 500/2400] 3515 games/h
+  [A 550/2400] 3580 games/h
+  [A 600/2400] 3635 games/h
+  [A 650/2400] 3631 games/h
+  [A 700/2400] 3628 games/h
+  [A 750/2400] 3649 games/h
+  [A 800/2400] 3651 games/h
+  [A 850/2400] 3655 games/h
+  [A 900/2400] 3682 games/h
+  [A 950/2400] 3704 games/h
+  [A 1000/2400] 3731 games/h
+  [A 1050/2400] 3745 games/h
+  [A 1100/2400] 3730 games/h
+  [A 1150/2400] 3750 games/h
+  [A 1200/2400] 3763 games/h
+  [A 1250/2400] 3780 games/h
+  [A 1300/2400] 3775 games/h
+  [A 1350/2400] 3786 games/h
+  [A 1400/2400] 3784 games/h
+  [A 1450/2400] 3780 games/h
+  [A 1500/2400] 3802 games/h
+  [A 1550/2400] 3817 games/h
+  [A 1600/2400] 3815 games/h
+  [A 1650/2400] 3827 games/h
+  [A 1700/2400] 3837 games/h
+  [A 1750/2400] 3840 games/h
+  [A 1800/2400] 3843 games/h
+  [A 1850/2400] 3838 games/h
+  [A 1900/2400] 3845 games/h
+  [A 1950/2400] 3835 games/h
+  [A 2000/2400] 3853 games/h
+  [A 2050/2400] 3854 games/h
+  [A 2100/2400] 3859 games/h
+  [A 2150/2400] 3867 games/h
+  [A 2200/2400] 3862 games/h
+  [A 2250/2400] 3864 games/h
+  [A 2300/2400] 3872 games/h
+  [A 2350/2400] 3878 games/h
+  [A 2400/2400] 3881 games/h
+atlas: /home/justin-a/code/lab/data/lab-j150/a-ff5/atlas.json and atlas.md; phase A 2400 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (159116 rows, 4800 frame logs, 0 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (20 turns, winner B) lists 26 decision(s) of seat A; branching at 16: d0 (p, turn 5, 3 options), d2 (p, turn 9, 6 options), d3 (a, turn 9, 2 options), d5 (a, turn 11, 4 options), d7 (p, turn 11, 2 options), d8 (p, turn 13, 6 options), d10 (p, turn 13, 7 options), d12 (p, turn 13, 2 options), d13 (p, turn 13, 2 options), d15 (p, turn 15, 6 options), d17 (a, turn 15, 4 options), d18 (p, turn 15, 5 options), d20 (a, turn 17, 5 options), d22 (p, turn 19, 4 options), d23 (a, turn 19, 5 options), d25 (b, turn 20, 4 options)
+atlas phase B: 160 unit(s) to play (0 done), chunks of 25 branches, on 4 worker(s)
+  [B 1/160] d0-random-50: 75/75 branch game(s); 932 branch games/h
+  [B 2/160] d0-random-25: 75/75 branch game(s); 1757 branch games/h
+  [B 3/160] d0-random-0: 75/75 branch game(s); 2304 branch games/h
+  [B 4/160] d0-random-75: 75/75 branch game(s); 2781 branch games/h
+  [B 5/160] d0-random-100: 75/75 branch game(s); 2435 branch games/h
+  [B 6/160] d0-random-125: 75/75 branch game(s); 2790 branch games/h
+worker 1: parked (maxWorkers 3)
+  [B 7/160] d0-random-150: 75/75 branch game(s); 3245 branch games/h
+  [B 8/160] d0-random-175: 75/75 branch game(s); 3321 branch games/h
+  [B 9/160] d0-forge-25: 45/45 branch game(s); 3242 branch games/h
+  [B 10/160] d0-forge-0: 75/75 branch game(s); 3550 branch games/h
+worker 1: unparked (maxWorkers 4)
+  [B 11/160] d2-random-25: 148/150 branch game(s); 1827 branch games/h
+worker 2: parked (maxWorkers 3)
+  [B 12/160] d2-random-0: 136/150 branch game(s); 1945 branch games/h
+  [B 13/160] d2-random-100: 0/150 branch game(s); 1945 branch games/h
+  [B 14/160] d2-random-50: 145/150 branch game(s); 2070 branch games/h
+  [B 15/160] d2-random-75: 144/150 branch game(s); 2099 branch games/h
+  [B 16/160] d2-random-175: 0/150 branch game(s); 2099 branch games/h
+worker 2: unparked (maxWorkers 4)
+  [B 17/160] d2-random-150: 149/150 branch game(s); 1663 branch games/h
+  [B 18/160] d3-random-0: 0/50 branch game(s); 1663 branch games/h
+  [B 19/160] d2-random-125: 135/150 branch game(s); 1812 branch games/h
+  [B 20/160] d3-random-50: 0/50 branch game(s); 1812 branch games/h
+  [B 21/160] d2-forge-25: 90/90 branch game(s); 1778 branch games/h
+  [B 22/160] d3-random-25: 50/50 branch game(s); 1826 branch games/h
+  [B 23/160] d3-random-75: 50/50 branch game(s); 1847 branch games/h
+  [B 24/160] d2-forge-0: 150/150 branch game(s); 1992 branch games/h
+  [B 25/160] d3-random-100: 50/50 branch game(s); 1988 branch games/h
+  [B 26/160] d3-random-125: 50/50 branch game(s); 2038 branch games/h
+  [B 27/160] d3-random-150: 50/50 branch game(s); 2055 branch games/h
+  [B 28/160] d3-random-175: 50/50 branch game(s); 2098 branch games/h
+  [B 29/160] d3-forge-25: 30/30 branch game(s); 2121 branch games/h
+  [B 30/160] d3-forge-0: 50/50 branch game(s); 2086 branch games/h
+  [B 31/160] d5-random-25: 100/100 branch game(s); 2046 branch games/h
+  [B 32/160] d5-random-50: 100/100 branch game(s); 2111 branch games/h

@@ -1,129 +1,35 @@
 {
  "schema": 1,
- "updated": "2026-10-22T14:54:46-04:00",
- "heartbeat": "2026-10-22T14:54:46-04:00",
+ "updated": "2026-10-22T14:55:02-04:00",
+ "heartbeat": "2026-10-22T14:55:02-04:00",
  "paused": true,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-22T14:55:02-04:00",
+ "idleReason": "paused",
  "host": {
-  "load1": 10.29,
-  "memUsedGb": 22.1,
+  "load1": 8.23,
+  "memUsedGb": 4.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5488,
-  "pressure": 0.01,
+  "swapUsedMb": 4602,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [
   {
    "publicTitle": "Move atlas 2: three deck pairs, nine spine games",
    "publicEst": "~16 h",
    "id": "J155",
    "title": "The move atlas, rung 2 -- three deck pairs by D451's pair rule (fair-fight-900000005 again as the repeat, peasant-900000007, vintage-900000007) x three Forge-vs-Forge spine games each at fresh seeds 452-460; phase A 2,400 random-vs-random rollouts a pair; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; the random seat under G5 (D458, no re-pick of a play the engine refused to pay for); pre-registered reads, numbers only. Method only, no outcome rule beyond D451's",
-   "cpu": "heavy",
-   "phase": "stopping",
-   "started": "2026-10-22T12:57:28-04:00",
-   "elapsed": 7038,
-   "done": 4697,
-   "total": 125700,
-   "unit": "lines",
-   "ratePerHour": 2063,
-   "eta": "2026-10-25T01:34:05-04:00",
-   "workers": 4,
-   "workersMax": 4,
-   "cores": 7,
-   "errors": 0,
-   "paused": true,
-   "dataUpdated": "2026-10-22T14:54:02-04:00",
-   "memGb": 17.15,
-   "live": {
-    "played_a": 2400,
-    "branches": 2297,
-    "atlas.spinesDone": 0,
-    "atlas.decisions": 0,
-    "atlas.sameBest": 0,
-    "atlas.refusedCast": 344,
-    "atlas.refusedCastSpinesFf5": 0,
-    "atlas.problems": 0,
-    "atlas.atlases": 1,
-    "atlas.g5keys": 1,
-    "atlas.guardViolations": 0,
-    "atlas.noRepeatNoOp": 8117,
-    "atlas.noRepeatRefused": 0,
-    "atlas.reads": 0,
-    "atlas.refusedCastFf5": 344,
-    "atlas.unitsShort": 139,
-    "data_free_gb": 726.3,
-    "data_used_gb": 1.53,
-    "elapsed_s": 6994,
-    "engine_errors": 0,
-    "payfail": 289,
-    "peak_worker_rss_gb": 2.45,
-    "played_a_ff5": 2400,
-    "played_a_peasant7": 0,
-    "played_a_vintage7": 0,
-    "pressure_events": 6,
-    "unit_errors": 10,
-    "workers": 4
-   },
-   "liveHeadline": [
-    "played_a",
-    "branches",
-    "atlas.spinesDone",
-    "atlas.decisions",
-    "atlas.sameBest",
-    "atlas.refusedCast",
-    "atlas.refusedCastSpinesFf5",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-22T13:55:20-04:00",
-     "kind": "drop",
-     "workers": 3,
-     "pressure": 0.6
-    },
-    {
-     "at": "2026-10-22T14:00:59-04:00",
-     "kind": "raise",
-     "workers": 4,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-22T14:03:35-04:00",
-     "kind": "drop",
-     "workers": 3,
-     "pressure": 1.6
-    },
-    {
-     "at": "2026-10-22T14:10:24-04:00",
-     "kind": "raise",
-     "workers": 4,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-22T14:13:26-04:00",
-     "kind": "drop",
-     "workers": 3,
-     "pressure": 2.2
-    },
-    {
-     "at": "2026-10-22T14:28:25-04:00",
-     "kind": "raise",
-     "workers": 4,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J155-run1"
+   "reason": "the runner is paused",
+   "est": "~16 h at 7 workers (sizing below): pilot ~25 min; per pair ~5.3 h (phase A 2,400 games ~0.5 h + its checks ~5 min; three spines of ~13,200 branch games ~1.2 h each + their checks ~25 min each); reads ~1 min. Disk ~22 GB on the lab data folder /home/justin-a/code/lab/data (a phase A game 234 KB, a branch ~173 KB as J148 measured)",
+   "detail": "the runner is paused"
   }
  ],
- "queue": [],
- "waiting": [],
  "finished": [
   {
    "publicTitle": null,
