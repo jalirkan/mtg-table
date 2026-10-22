@@ -35,20 +35,37 @@ import type { Fact } from './cards.ts';
 import { controlReader } from '../runner/control.ts';
 import type { PlayExploreGame, PlayExploreTag } from './playexplore.ts';
 
-export interface EngineEnv { cp: string; homes: string[]; repo: string }
+/** `xmx`: the worker JVM's -Xmx when a command chose one (the atlas, below); absent, workerXmx() decides. */
+export interface EngineEnv { cp: string; homes: string[]; repo: string; xmx?: string }
 
-export function engineEnv(repo: string): EngineEnv {
+/** Every worker's -Xmx unless CUBELAB_WORKER_XMX or a command says otherwise: hard rule 6's value, unchanged. */
+export const WORKER_XMX_DEFAULT = '4096m';
+
+/**
+ * The worker JVM's -Xmx: CUBELAB_WORKER_XMX when it is set (always wins), else the command's own
+ * default, else 4096m.  A long-lived worker fills its heap to this cap -- the atlas's phase B workers
+ * measured 3.9-4.1 GB RSS each under 4096m -- so the lab runner's mem_per_worker_gb is declared from
+ * the cap, never from a short game's measurement.  A value Java would not take (`2560m`, `3g`) throws.
+ */
+export function workerXmx(commandDefault?: string): string {
+  const v = (process.env.CUBELAB_WORKER_XMX ?? '').trim() || commandDefault || WORKER_XMX_DEFAULT;
+  if (!/^[1-9][0-9]*[mMgG]$/.test(v)) throw new Error(`CUBELAB_WORKER_XMX: '${v}' is not a heap size like 2560m or 3g`);
+  return v;
+}
+
+/** `xmxDefault`: this command's worker heap when CUBELAB_WORKER_XMX is not set (the atlas's; D451). */
+export function engineEnv(repo: string, xmxDefault?: string): EngineEnv {
   const cp = process.env.CUBELAB_CP;
   const homes = (process.env.CUBELAB_HOMES ?? '').split(',').filter(Boolean);
   if (!cp || homes.length === 0) {
     throw new Error('CUBELAB_CP / CUBELAB_HOMES are not set -- run the lab through tools/cubelab.sh, which builds them');
   }
-  return { cp, homes, repo };
+  return { cp, homes, repo, xmx: workerXmx(xmxDefault) };
 }
 
-/** Hard rule 6's JVM, plus the Forge home's config. */
+/** Hard rule 6's JVM (its -Xmx from env.xmx or workerXmx()), plus the Forge home's config. */
 export function javaArgs(env: EngineEnv, home: string, main: string[]): string[] {
-  return ['-u', 'DISPLAY', 'java', '-Xmx4096m', '-Djava.awt.headless=true',
+  return ['-u', 'DISPLAY', 'java', `-Xmx${env.xmx ?? workerXmx()}`, '-Djava.awt.headless=true',
     '-Dio.netty.tryReflectionSetAccessible=true', '-Dfile.encoding=UTF-8',
     '-Dsentry.uncaught.handler.enabled=false', `-Dmtgtable.config=${home}`,
     '-cp', env.cp, 'mtgtable.cubelab.CubeLab', ...main];
