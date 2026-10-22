@@ -992,3 +992,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J153/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 8fca725
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J154 FAILED: The move atlas, rung 2 -- three deck pairs by D451's pair rule (fair-fight-900000005 again as the repeat, peasant-900000007, vintage-900000007) x three Forge-vs-Forge spine games each at fresh seeds 452-460; phase A 2,400 random-vs-random rollouts a pair; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; the random seat under G5 (D458, no re-pick of a play the engine refused to pay for); pre-registered reads, numbers only. Method only, no outcome rule beyond D451's
+
+- finished: 2026-10-22T12:51:47-04:00
+- decides: nothing by itself. Rung 2 of the move atlas: whether J148's one-game picture (the two maps rarely agree before the game is decided; rho below zero; "cast now / don't attack" under random play) is a property of one spine or of the method, read on nine spines of three pairs, with intervals clustered by pair and spine; and how much a labelled decision costs, for rung 3
+- hypothesis: none to confirm about the maps. Two candidates from J148 are read for repetition on the repeat pair only (iv): C1 "cast now" and C2 "don't attack", both + on J148 (C1 +0.013 over 18 decisions, C2 +0.059 over 4; neither excluded zero there)
+- rule: D451 (method; no outcome rule) with D458 (G5) and D459 (unit watchdog). Pre-registered here, before any J150 data: the reads (i)-(vi) below, computed by var/lab-j150-local/bin/reads.py exactly as written in the pilot; a candidate of (iv) HOLDS only if its point is > 0 (J148's direction) and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. No other read carries a verdict
+- outcome: failed (pilot: step pilot1 exited 1)
+- headline: played_a 0, branches 0, atlas.spinesDone 0, atlas.decisions 0, atlas.sameBest 0, atlas.refusedCast 0, atlas.refusedCastSpinesFf5 0, atlas.problems 0
+- summary: results/J154/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 8fca725
+- follow-up: template morning-read: not due (the job did not finish done)
