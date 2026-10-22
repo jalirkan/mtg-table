@@ -309,6 +309,17 @@ prefix as it fails a whole file. Exit 0 is a full pass, 3 a pass that stops at
 is still checked without it. `check-redaction-selftest.mjs` holds every control
 to the same verdict under it and sweeps prefixes of the committed recordings.
 
+`--empty-hand-ok` is the move atlas's flag (D460), passed by
+`tools/cubelab/atlas.ts` for its branch logs and by nothing else. A branch
+forked late in a game can end with the opponent's hand empty in every frame,
+so "not one card was redacted" (or, from that seat, "the viewer never saw a
+named card") has nothing to find. The flag makes either one a WARN only where
+the file itself proves the hand in question was empty: hand count 0 in every
+state, and for the opponent no `library.cards` entry and no card in a hand or
+library they own listed in any frame. A full opponent card, or a non-zero
+count with no stub, still fails under it, and every leak rule is unchanged;
+`check-redaction-selftest.mjs` holds both.
+
 ## The coach helper — the conventions D292 added
 
 `tools/coach-helper.mjs` lets ForgeCoach coach through the Claude Code CLI the
