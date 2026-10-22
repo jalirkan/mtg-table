@@ -344,12 +344,13 @@ public final class DecisionSelfTest {
         check(m.guardrails().get("land") == 2 && m.guardrails().get("keep") == 1, "the guardrails are counted by name");
         // G5 (D458): a play the engine refused is not offered again in the same priority window, and is counted
         final Explorer ex = new Explorer(m);
-        ex.noteRefused("8/MAIN1/0/-1", "cast:18");
+        final String w5 = Explorer.windowKey(8, "MAIN1", 0, -1, 3);
+        ex.noteRefused(w5, "cast:18");
         final java.util.Map<String, Object> opts = new java.util.LinkedHashMap<>();
         for (final String t : List.of("pass", "cast:18", "activate:145")) {
             opts.put(t, null);
         }
-        check(Explorer.dropRefused(opts, ex.refusedIn("8/MAIN1/0/-1"), m) == 1 && !opts.containsKey("cast:18")
+        check(Explorer.dropRefused(opts, ex.refusedIn(w5), m) == 1 && !opts.containsKey("cast:18")
                 && opts.keySet().equals(new java.util.LinkedHashSet<>(List.of("pass", "activate:145"))),
                 "G5: the refused cast is left out at the next decision of its window, the rest kept");
         boolean repicked = false;
@@ -358,22 +359,31 @@ public final class DecisionSelfTest {
             for (final String t : List.of("pass", "cast:18", "activate:145")) {
                 again.put(t, null);
             }
-            Explorer.dropRefused(again, ex.refusedIn("8/MAIN1/0/-1"), m);
+            Explorer.dropRefused(again, ex.refusedIn(w5), m);
             repicked |= "cast:18".equals(new ArrayList<>(again.keySet()).get(m.pick(again.size())));
         }
         check(!repicked, "G5: 200 random picks in the window never take the refused cast again");
         final java.util.Map<String, Object> alone = new java.util.LinkedHashMap<>();
         alone.put("cast:18", null);
-        check(Explorer.dropRefused(alone, ex.refusedIn("8/MAIN1/0/-1"), m) == 0 && alone.containsKey("cast:18"),
+        check(Explorer.dropRefused(alone, ex.refusedIn(w5), m) == 0 && alone.containsKey("cast:18"),
                 "G5 never removes the last option (as G3)");
         check(m.guardrails().get("refusedCast") == 1 && m.guardrails().get("noRepeatRefused") == 201,
                 "G5 counts the refused pick once and each removal: " + m.guardrails());
         final java.util.Map<String, Object> later = new java.util.LinkedHashMap<>();
         later.put("pass", null);
         later.put("cast:18", null);
-        check(ex.refusedIn("8/MAIN1/1/301").isEmpty() && Explorer.dropRefused(later, ex.refusedIn("8/MAIN1/1/301"), m) == 0
+        check(ex.refusedIn(Explorer.windowKey(8, "MAIN1", 1, 301, 3)).isEmpty() && Explorer.dropRefused(later, ex.refusedIn(Explorer.windowKey(8, "MAIN1", 1, 301, 3)), m) == 0
                 && later.containsKey("cast:18"), "G5: another window (the stack moved) offers the play again");
-        check(ex.refusedIn("8/MAIN1/0/-1").isEmpty(), "G5: a window left is forgotten");
+        check(ex.refusedIn(w5).isEmpty(), "G5: a window left is forgotten");
+        // D462 (the #177 review): a land drop is another window -- more mana, so the refused cast is offered again
+        ex.noteRefused(w5, "cast:18");
+        final String afterLand = Explorer.windowKey(8, "MAIN1", 0, -1, 4);
+        final java.util.Map<String, Object> landed = new java.util.LinkedHashMap<>();
+        landed.put("pass", null);
+        landed.put("cast:18", null);
+        check(!afterLand.equals(w5) && ex.refusedIn(afterLand).isEmpty()
+                && Explorer.dropRefused(landed, ex.refusedIn(afterLand), m) == 0 && landed.containsKey("cast:18"),
+                "G5: a land drop (the same turn, phase and stack) is another window, and offers the refused cast again");
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
