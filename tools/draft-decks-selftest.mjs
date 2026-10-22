@@ -24,11 +24,15 @@
 //   6. `import`: a table game's consenting seats only, keyed `table:<matchId>:<seat>`
 //      and dated by the match id, so the room's own seat can withdraw it; a Draft vs
 //      Bot match's you.dck (never ai.dck); a deck outside the cube refused; the same
-//      deck once; `withdraw` by key.
+//      deck once; a withdrawn key never imported again (withdrawn.txt, keys only); `withdraw`
+//      by key.
+//   7. one writer at a time: decks.lock, waited for, taken over from a dead or stale
+//      holder, never left behind; another process holding it delays a write, loses none.
 //
 // Its files are under var/draft-decks-selftest/.  No network, no engine, no claude.
 
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -210,12 +214,29 @@ section('4. the draft room: a seat\'s deck reaches the ledger only with its cons
   const errs = [];
   const broken = createDraftDecks({ dir: brokenDir, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, log: (x) => errs.push(x) });
   broken.recordRoom({ roomId: 'rBROKE1', seat: 1, cubeId: 'omega', main: [[23, 'Ancestral Vision'], [17, 'Island']], record: true });
-  chmodSync(brokenDir, 0o500);   // the folder read-only: the temp file cannot be written
+  // The rename fails (an injected fs: chmod would not stop root, and the cloud's gate runs as root).
+  let failRename = false;
+  const sameDir = createDraftDecks({ dir: brokenDir, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, log: (x) => errs.push(x),
+    fs: { renameSync: (a, b) => { if (failRename && String(b).endsWith('decks.jsonl')) throw Object.assign(new Error('EIO: injected'), { code: 'EIO' }); return renameSync(a, b); } } });
+  failRename = true;
   let threwW = false;
-  try { broken.recordRoom({ roomId: 'rBROKE1', seat: 1, cubeId: 'omega', record: false }); } catch { threwW = true; }
-  chmodSync(brokenDir, 0o700);
-  ok(threwW && errs.some((x) => /ERROR .*could NOT be deleted/.test(x)), 'a deletion that fails throws and is logged as an ERROR');
-  eq(broken.shares('omega').body.decks.length, 0, '... and the deck is not served by this process any more');
+  try { sameDir.recordRoom({ roomId: 'rBROKE1', seat: 1, cubeId: 'omega', record: false }); } catch { threwW = true; }
+  failRename = false;
+  ok(threwW && errs.some((x) => /ERROR .*could NOT be deleted/.test(x)), 'a deletion whose rename fails throws and is logged as an ERROR');
+  eq(sameDir.shares('omega').body.decks.length, 0, '... and the deck is not served by this process any more');
+  eq(broken.shares('omega').body.decks.length, 0, '... nor by another process reading the same ledger (its key is on the withdrawn list)');
+  ok(!require_tmp(brokenDir) && !existsSync(join(brokenDir, 'decks.lock')), '... with no temp file and no lock left behind');
+  eq(sameDir.withdraw(['room:rBROKE1:1']), 1, 'withdrawing it again once the disk is well: the line deleted');
+  // A withdrawal is remembered: withdrawn.txt holds the keys, never a card, and an opt-in clears its own key.
+  const tomb = readFileSync(join(VAR, 'room-ledger', 'withdrawn.txt'), 'utf8');
+  ok(tomb.includes(`room:${rid}:0`) && !/Thalia|Helix|Pod|Plains/.test(tomb), 'withdrawn.txt holds the opted-out key, and no card');
+  eq((statSync(join(VAR, 'room-ledger', 'withdrawn.txt')).mode & 0o777).toString(8), '600', 'withdrawn.txt is mode 600');
+  const back = createDraftDecks({ dir: join(VAR, 'optin-ledger'), varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf });
+  back.recordRoom({ roomId: 'rOPTIN1', seat: 0, cubeId: 'omega', main: MAIN, record: true });
+  back.recordRoom({ roomId: 'rOPTIN1', seat: 0, cubeId: 'omega', record: false, matchIds: ['m1792262156023'] });
+  eq(back.withdrawnKeys().sort(), ['room:rOPTIN1:0', 'table:m1792262156023:0'], 'an opt-out remembers the room key and its games\' table keys');
+  back.recordRoom({ roomId: 'rOPTIN1', seat: 0, cubeId: 'omega', main: MAIN, record: true });
+  eq([back.withdrawnKeys(), back.shares('omega').body.decks.length], [['table:m1792262156023:0'], 1], 'opting in again: the room key comes off the list and its deck is served; the imported table key stays withdrawn');
   const angry = createRoomStore({ dir: null, log: () => {}, onDeck: () => { throw new Error('disk full'); } });
   const m2 = angry.create((() => { const c = {}; checkCreate({ cubeId: 'omega', cards, name: 'A', firstSeat: 0, record: true }, c); return c; })());
   angry.join(m2.body.id, 1, 'B');
@@ -297,10 +318,60 @@ section('6. import: a recorded table game\'s consenting seats, a Draft vs Bot ma
   eq(il.recordRoom({ roomId: 'rROOM01', seat: 0, cubeId: 'omega', record: false, matchIds: ['m1792262156023', 'm1792263293677'] }), true, 'the room\'s seat 0 opting out removes its imported table line');
   eq(il.shares('omega').body.decks.map((d) => d.source), ['solo'], '... leaving the solo deck');
   ok(!readFileSync(il.file, 'utf8').includes('Thalia'), '... and none of its cards on disk');
+  const again = importMatch({ store: il, dir: table, cube: 'omega', names });
+  eq(again.map((m) => [m.file, m.added]), [['seat0.dck', false], ['seat1.dck', false]], 'importing that match again (seats.json still says yes): the withdrawn seat is NOT re-added');
+  ok(/was withdrawn/.test(again[0].what), '... and it says why');
+  ok(!readFileSync(il.file, 'utf8').includes('Thalia'), '... nothing of it on disk');
   eq(il.withdraw(['solo:nothing-here']), 0, 'withdraw of an unknown key: nothing removed');
   const soloKey = il.summary()[0].key;
   eq(il.withdraw([soloKey]), 1, '`withdraw <key>`: the line removed');
   eq(readFileSync(il.file, 'utf8'), '', '... and the ledger is empty');
+}
+
+// ---------------------------------------------------------------------------
+section('7. one writer at a time: decks.lock, between the CLI and the helper');
+{
+  const ld = join(VAR, 'lock-ledger');
+  const lockPath = join(ld, 'decks.lock');
+  const st = createDraftDecks({ dir: ld, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, lockWaitMs: 300 });
+  eq(st.postSolo(body({ draftId: 'lock-1' })).status, 201, 'a deck goes in');
+  ok(!existsSync(lockPath), 'the lock is gone after the write');
+  // A live writer holds it (the parent process: alive, and not us).
+  writeFileSync(lockPath, String(process.ppid), { mode: 0o600 });
+  const t0 = Date.now();
+  const busy = st.postSolo(body({ draftId: 'lock-2' }));
+  eq(busy.status, 503, 'held by a live process: POST /draft-deck waits, then 503');
+  ok(Date.now() - t0 >= 280 && /locked by pid/.test(busy.body.message), `... after waiting its lockWaitMs (${Date.now() - t0} ms), naming the holder`);
+  let threwL = false;
+  try { st.importLine({ v: 1, at: 'x', source: 'solo', key: 'solo:import-x', cubeId: 'omega', main: MAIN }); } catch (e) { threwL = e.code === 'LOCKED'; }
+  ok(threwL, 'an import waits for it too, then gives up');
+  let threwO = false;
+  try { st.recordRoom({ roomId: 'rLOCK01', seat: 1, cubeId: 'omega', record: false }); } catch (e) { threwO = e.code === 'LOCKED'; }
+  ok(threwO, 'an opt-out that cannot get the lock throws (loud), never silently skips');
+  eq(st.shares('omega').body.decks.length, 1, 'a read never waits for the lock');
+  // A lock left by a process that died is taken over.
+  const dead = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8' });
+  writeFileSync(lockPath, dead.stdout, { mode: 0o600 });
+  eq(st.postSolo(body({ draftId: 'lock-3' })).status, 201, `a lock whose pid (${dead.stdout}) is gone is taken over`);
+  // A lock older than lockStaleMs is taken over whatever its pid says.
+  const old = createDraftDecks({ dir: ld, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, lockWaitMs: 300, lockStaleMs: 50 });
+  writeFileSync(lockPath, String(process.ppid), { mode: 0o600 });
+  utimesSync(lockPath, new Date(Date.now() - 10_000), new Date(Date.now() - 10_000));
+  eq(old.postSolo(body({ draftId: 'lock-4' })).status, 201, 'a stale lock is taken over');
+  // Another process (the CLI) holds the lock for a while: the helper's write waits for it, then goes in.
+  const child = spawn(process.execPath, ['--input-type=module', '-e', `
+    import { withLedgerLock } from ${JSON.stringify(new URL('./draft-decks.mjs', import.meta.url).href)};
+    withLedgerLock(${JSON.stringify(ld)}, () => { process.stdout.write('held\\n'); Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 600); });
+  `], { stdio: ['ignore', 'pipe', 'inherit'] });
+  await new Promise((r) => child.stdout.once('data', r));
+  const patient = createDraftDecks({ dir: ld, varRoot: join(ROOT, 'var'), scriptOf: () => scriptOf, lockWaitMs: 5000 });
+  const t1 = Date.now();
+  eq(patient.postSolo(body({ draftId: 'lock-5' })).status, 201, 'a write while another process holds the lock: waits, then goes in');
+  ok(Date.now() - t1 >= 300, `... after the other process let go (${Date.now() - t1} ms)`);
+  await new Promise((r) => (child.exitCode !== null ? r() : child.once('exit', r)));
+  eq(child.exitCode, 0, 'the other process ended cleanly');
+  eq(patient.summary().map((d) => d.key).sort(), ['solo:draft-abc-123', 'solo:lock-1', 'solo:lock-3', 'solo:lock-4', 'solo:lock-5'].filter((k) => k !== 'solo:draft-abc-123').sort(), 'every deck that got the lock is in, none lost');
+  ok(!existsSync(lockPath), 'no lock left behind');
 }
 
 console.log(`\ndraft-decks-selftest: ${checks - failed}/${checks} checks passed${failed ? `, ${failed} FAILED` : ''}`);
