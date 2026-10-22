@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-22T01:19:53-04:00
-- runner: 10896b8e, up since 2026-10-21T06:39:42-04:00, PAUSED (tools/runner.sh resume)
-- running: nothing
-- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5.45; memory 3.4/30.5 GB, swap 1528 MB, pressure 0% (lab budget 23.4 GB)
+- time: 2026-10-22T01:23:55-04:00
+- runner: 10896b8e, up since 2026-10-21T06:39:42-04:00
+- running: J149 prepare, 20272/80000 lines, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 0.78; memory 3.9/30.5 GB, swap 1528 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J145
-- waiting: J149 (the runner is paused)
+- waiting: nothing
 - last finished: J148 failed at 2026-10-22T00:10:08-04:00
 
 ## Messages
