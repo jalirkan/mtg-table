@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: step pilot1 exited 1
 runner: forgecoach-runner 8fca7250
 started: 2026-10-22T12:47:58-04:00
-phase: pilot 1/1
+finished: 2026-10-22T12:48:39-04:00
 mtg-table: 8fca725
 workers: 3
+exit: 1

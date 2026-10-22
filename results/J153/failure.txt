@@ -1,0 +1,62 @@
+step pilot1 exited 1
+
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (17.187922ms)
+✔ the agreement of two maps (12.398229ms)
+✔ how many rollouts, and the even spread of decisions (0.402522ms)
+✔ the deck pair rule: the most even record with the most games (0.685837ms)
+✖ a decision's two maps from its branch rows (10.954246ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.306169ms)
+✔ the guardrails read back from the decision records (0.258549ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.483344ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.286312ms)
+✔ atlas.md renders the two maps side by side (1.137142ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.183417ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.089019ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.177977ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (93.829776ms)
+✔ both chairs of a lab recording pass the redaction checker (148.068933ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (25.351939ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (102.373432ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (124.168952ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (126.89044ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (117.386658ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (147.943194ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (115.768376ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (107.909878ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 included) (116.992021ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (233.46972ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (356.794354ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.939218ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2632.387819ms)
+✔ a worker that never answers is still killed as hung at its deadline (2002.981843ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 29
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4700.644138
+
+✖ failing tests:
+
+test at web/test/cubelab-atlas.test.ts:138:1
+✖ a decision's two maps from its branch rows (10.954246ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok((d.random.regret          ) > 0.25 && (d.random.regretLo          ) > 0.1)
+  
+      at TestContext.<anonymous> (file:///home/justin-a/code/lab/mtg-table/web/test/cubelab-atlas.test.ts:149:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
