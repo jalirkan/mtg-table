@@ -978,7 +978,9 @@ class FakeSys implements Sys {
     return { code: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
   }
   machine() { return { memTotalGb: 30, physicalCores: 8, threads: 16 }; }
-  host(): HostSample { return { at: this.t, load1: 1, memTotalGb: 30, memUsedGb: 10, swapUsedMb: 0, some10: this.some10, pswpin: 0 }; }
+  host(): HostSample { return { at: this.t, load1: 1, memTotalGb: 30, memUsedGb: 10, swapUsedMb: 0, some10: this.some10, pswpin: this.pswpin }; }
+  /** /proc/vmstat's pswpin: the kernel's swap-ins since boot (D464). */
+  pswpin = 0;
   /** D391: the next this-many prepares fail as git did at boot: "could not read Username", exit 128 (the script is not run). */
   prepareGitFails = 0;
   exec(u: UnitSpec): void {
@@ -2882,8 +2884,8 @@ test('local server: /public-ledger.json serves the public ledger, 404 without on
 // ------------------------------------------------------------------ D461: durations on the monotonic clock
 
 /** NEW_JOB as `id`, with a step timeout (an hour), at run1 in hold mode (its unit active). */
-function atRun1(id: string, timeout = '1h'): { w: World; r: Runner; run: JobRun } {
-  const w = world({ [`${id}-x.md`]: NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', `max_workers: 3\ntimeout: ${timeout}`) });
+function atRun1(id: string, timeout = '1h', abort = 'n > 100'): { w: World; r: Runner; run: JobRun } {
+  const w = world({ [`${id}-x.md`]: NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', `max_workers: 3\ntimeout: ${timeout}`).replace('abort: n > 100', `abort: ${abort}`) });
   const r = new Runner(w.cfg, w.sys);
   r.reconcile();
   w.sys.mode = 'hold';
@@ -3023,4 +3025,90 @@ test('D461: retry_after: in the past is due; 10 min ahead holds; further ahead t
   // Written at 12:00 on a right clock; the PC reboots with the RTC 4 h behind: it reads 4 h 10 min ahead.
   assert.deepEqual(run('2026-10-22T16:10:00Z').start.map((j) => j.id), ['J466'], 'the clock went backwards: due');
   assert.deepEqual(run('not a date').start.map((j) => j.id), ['J466']);
+});
+
+// ------------------------------------------------------------------ D464: elapsed_s and the swap-in baseline
+
+test('D464: elapsed_s (an abort: name) is the run\'s counted monotonic time: a 4-h wall jump neither moves it nor fires `abort: elapsed_s > 7200`; a restart resumes it; two real hours do', () => {
+  const { w, r, run } = atRun1('J470', '8h', 'elapsed_s > 7200');
+  const t0 = run.runElapsedMs ?? 0;
+  w.sys.t += 30 * 60_000; r.tick();
+  assert.equal(r.runnerFacts(run).elapsed_s, Math.round((t0 + 30 * 60_000) / 1000));
+  w.sys.wallSkew += 4 * 3600_000;                // NTP steps the clock: 4 h 30 min "since the start" on the wall
+  for (let i = 0; i < 3; i++) { w.sys.t += 61_000; r.tick(); }   // past the metrics cadence: the abort is evaluated
+  assert.equal(r.runnerFacts(run).elapsed_s, Math.round((t0 + 30 * 60_000 + 3 * 61_000) / 1000));
+  assert.equal(run.metrics.elapsed_s, r.runnerFacts(run).elapsed_s, 'what abort: and check: read');
+  assert.equal(run.stopping, null);
+  assert.deepEqual(w.sys.stopped, []);
+  // The daemon dies, is down 20 min, the clock steps back 8 h: the new one resumes from the saved count.
+  const saved = run.runElapsedMs ?? 0;
+  w.sys.t += 20 * 60_000;
+  w.sys.wallSkew -= 8 * 3600_000;
+  const r2 = new Runner(w.cfg, w.sys);
+  r2.reconcile('test restart');
+  const run2 = r2.runs.get('J470')!;
+  assert.equal(run2.runElapsedMs, saved, 'not the downtime, not the wall clock');
+  r2.tick();
+  assert.equal(run2.runElapsedMs, saved, 'the first tick after a start adds nothing');
+  // Real time runs on: the abort fires once the counted time passes 2 h.
+  for (let i = 0; i < 120 && !w.sys.stopped.length; i++) { w.sys.t += 61_000; r2.tick(); }
+  assert.deepEqual(w.sys.stopped, ['lab-J470-run1']);
+  assert.ok((run2.runElapsedMs ?? 0) > 7200_000 && (run2.runElapsedMs ?? 0) <= 7200_000 + 2 * 61_000, String(run2.runElapsedMs));
+  r2.tick();
+  assert.match(run2.outcome?.reason ?? '', /^aborted: elapsed_s > 7200/);
+});
+
+test('D464: a run.json from before D464 gets elapsed_s from its wall-clock start once, then counts (not the first tick after the start)', () => {
+  const { w } = atRun1('J471');
+  const file = path.join(w.cfg.stateDir, 'jobs', 'J471', 'run.json');
+  const old = JSON.parse(fs.readFileSync(file, 'utf8')) as JobRun;
+  delete old.runElapsedMs;
+  old.startedAt = w.sys.now() - 3 * 3600_000;
+  fs.writeFileSync(file, JSON.stringify(old));
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  assert.equal(r.runnerFacts(r.runs.get('J471')!).elapsed_s, 3 * 3600);
+  w.sys.t += 10_000; r.tick();
+  assert.equal(r.runnerFacts(r.runs.get('J471')!).elapsed_s, 3 * 3600, 'the first tick after a start adds nothing');
+  w.sys.t += 10_000; r.tick();
+  assert.equal(r.runnerFacts(r.runs.get('J471')!).elapsed_s, 3 * 3600 + 10);
+});
+
+test('D464: the swap-in rate never compares against another boot\'s pswpin; within a boot a restart keeps the baseline', () => {
+  const w = world({ 'J472-x.md': NEW_JOB.replace('id: J010', 'id: J472') });
+  w.sys.pswpin = 1_000_000;
+  const r = new Runner(w.cfg, w.sys);
+  r.sampleHost();
+  w.sys.t += 10_000; w.sys.pswpin += 5_000; r.sampleHost();
+  assert.equal(r.swapInRate, 500);
+  r.save();
+  assert.equal(r.p.lastHostBoot, 'boot-a');
+  // A runner restart in the same boot: the saved sample is a baseline.
+  w.sys.t += 10_000; w.sys.pswpin += 1_000;
+  const r2 = new Runner(w.cfg, w.sys);
+  r2.sampleHost();
+  assert.equal(r2.swapInRate, 100);
+  r2.save();
+  // A reboot: the kernel's count starts again (lower), CLOCK_MONOTONIC too, and by chance the new clock reads
+  // past the old sample's: without the boot id that is a rate of max(0, negative) -- or, with a count that
+  // happens to be higher, a burst of swap that never happened.  No rate until two samples of this boot.
+  w.sys.boot = 'boot-b';
+  w.sys.t += 3600_000; w.sys.pswpin = 2_000_000;
+  const r3 = new Runner(w.cfg, w.sys);
+  r3.swapInRate = 999;
+  r3.sampleHost();
+  assert.equal(r3.swapInRate, 0, 'the previous boot\'s sample is no baseline');
+  assert.equal(r3.p.lastHostBoot, 'boot-b');
+  w.sys.t += 10_000; w.sys.pswpin += 2_000; r3.sampleHost();
+  assert.equal(r3.swapInRate, 200);
+  // A runner.json from before D464 (no lastHostBoot): no baseline either.
+  r3.save();
+  const rj = path.join(w.cfg.stateDir, 'runner.json');
+  const p = JSON.parse(fs.readFileSync(rj, 'utf8'));
+  delete p.lastHostBoot;
+  fs.writeFileSync(rj, JSON.stringify(p));
+  w.sys.t += 10_000; w.sys.pswpin += 50_000;
+  const r4 = new Runner(w.cfg, w.sys);
+  r4.sampleHost();
+  assert.equal(r4.swapInRate, 0);
 });
