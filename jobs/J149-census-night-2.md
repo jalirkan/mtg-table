@@ -110,7 +110,7 @@ games in flight. To stop cleanly: `tools/runner.sh stop J144`, and `resume` carr
 About 15 minutes. It checks the data folder, the pin and the tools, runs the census and record tests, draws the four
 bands' 2,500 decks onto the data folder (the run's own decks: no engine), writes the confirmation read and runs its
 self-test on night 1, then plays 12 recorded games a band on the pilot seeds and reads them.
-cores: 7
+cores: 1
 ```bash
 mkdir -p var/lab-j144-local/bin
 # the lab data folder: exactly /home/justin-a/code/lab/data (README safety rules), created if absent, 50 GB free or stop
@@ -434,7 +434,7 @@ metrics: dpa = sh: cat /home/justin-a/code/lab/data/lab-j144/decks/pauper/decks.
 metrics: dpe = sh: cat /home/justin-a/code/lab/data/lab-j144/decks/peasant/decks.json 2>/dev/null || echo '{"count":0}'
 metrics: dle = sh: cat /home/justin-a/code/lab/data/lab-j144/decks/legacy/decks.json 2>/dev/null || echo '{"count":0}'
 metrics: dpo = sh: cat /home/justin-a/code/lab/data/lab-j144/decks/powered/decks.json 2>/dev/null || echo '{"count":0}'
-cores: 7
+cores: 3
 ```bash
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J144
@@ -546,7 +546,7 @@ python3 -c "import shutil, sys; sys.exit(0 if shutil.disk_usage('/home/justin-a/
 test -s /home/justin-a/code/lab/data/lab-j144/decks/powered/decks.json || tools/cubelab.sh decks --band powered --count 2500 --seed 1504 --cross-band 0.10 --out var/lab-j144/decks/powered
 tools/cubelab.sh census-play --decks var/lab-j144/decks/powered --pairs 20000 --seed 1504 --jobs {workers} --record rows --out var/lab-j144/games/powered
 ```
-cores: 7
+cores: 1
 ```bash
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 D=/home/justin-a/code/lab/data/lab-j144
