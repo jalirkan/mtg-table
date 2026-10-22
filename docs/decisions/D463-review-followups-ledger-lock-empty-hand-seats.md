@@ -1,7 +1,8 @@
-## D461 — The ledger's stale lock is taken over through a claim, the helper waits for it on a timer, and `--empty-hand-ok` needs every seat in every state (amends D457 and D460)
+## D463 — The ledger's stale lock is taken over through a claim, the helper waits for it on a timer, and `--empty-hand-ok` needs every seat in every state (amends D457 and D460)
 
-*Branch `pc/review-followups-oct22`. `node tools/decisions.mjs next` gave D461 on 2026-10-22; this
-lane reserved D461–D462 (D462 is the G5 follow-up's, amending D458).*
+*Branch `pc/review-followups-oct22`. Written as D461 and renumbered D463 before its merge: #179 took
+D461 (the lab runner's monotonic clock and time sync), and D462 is this lane's G5 follow-up (#181),
+so `node tools/decisions.mjs next` on main `8fca7250` gave D463.*
 
 **2026-10-22**
 

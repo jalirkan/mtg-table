@@ -1,6 +1,6 @@
 ## D462 — G5's priority window counts the seat's lands, and Forge's `skip` mark is read as the play's own verdict (amends D458)
 
-*Branch `pc/review-followups-oct22-g5`. This lane reserved D461–D462. D461 is the JS follow-ups' PR.*
+*Branch `pc/review-followups-oct22-g5`. This lane reserved D461–D462; #179 took D461, so the JS follow-ups' PR is D463.*
 
 **2026-10-22**
 

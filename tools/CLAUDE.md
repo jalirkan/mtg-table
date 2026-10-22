@@ -315,7 +315,7 @@ forked late in a game can end with the opponent's hand empty in every frame,
 so "not one card was redacted" (or, from that seat, "the viewer never saw a
 named card") has nothing to find. The flag makes either one a WARN only where
 the file itself proves the hand in question was empty: hand count 0 in every
-state, every state listing every seat (D461), and for the opponent no `library.cards` entry and no card in a hand or
+state, every state listing every seat (D463), and for the opponent no `library.cards` entry and no card in a hand or
 library they own listed in any frame. A full opponent card, or a non-zero
 count with no stub, still fails under it, and every leak rule is unchanged;
 `check-redaction-selftest.mjs` holds both.
