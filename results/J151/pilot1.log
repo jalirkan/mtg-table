@@ -1,0 +1,60 @@
+==== J151 pilot1 started 2026-10-22T10:52:18-04:00 in unit lab-J151-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J150: data folder free GB 732.3
+✔ the arithmetic: Wilson with draws, ranks, Spearman (0.924836ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (13.638674ms)
+✔ the agreement of two maps (10.815704ms)
+✔ how many rollouts, and the even spread of decisions (0.222513ms)
+✔ the deck pair rule: the most even record with the most games (0.542961ms)
+✔ a decision's two maps from its branch rows (15.089057ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.344464ms)
+✔ the guardrails read back from the decision records (0.288517ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.442469ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.281454ms)
+✔ atlas.md renders the two maps side by side (0.996321ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.207414ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.094519ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.167087ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (93.692171ms)
+✔ both chairs of a lab recording pass the redaction checker (134.286442ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (26.010232ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (103.587287ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (126.028653ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (125.815569ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (119.929253ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (157.212278ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (114.320816ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (119.739403ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 included) (115.280908ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (233.161932ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (355.497263ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.322562ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2624.268235ms)
+✔ a worker that never answers is still killed as hung at its deadline (2005.4581ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4687.376167
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 1005 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 3 worker(s)
+  [B 1/4] d17-random-0: 4/4 branch game(s); 994 branch games/h
+  [B 2/4] d17-forge-0: 4/4 branch game(s); 1534 branch games/h
+  [B 3/4] d0-forge-0: 4/4 branch game(s); 1275 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1224 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas-selftest: OK (16 forks, 8 no-leak checks, 38 frame logs, 538 rows; G3 0, G5 refused 0 / left out 0)
+seat-identity: forge: the same game (B in 15 turns, 59 lines, digest 70b36c8575ab6574; golden B in 15, 59 lines, 70b36c8575ab6574)
+seat-identity: search: the same game (A in 13 turns, 93 lines, digest 19995346a6342137; golden A in 13, 93 lines, 19995346a6342137)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 20e2d8a32e35f445; golden A in 18, 193 lines, 20e2d8a32e35f445)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas phase A: 60 rollout(s) from the opening, both seats random; 60 done, 0 to play on 1 worker(s)
+atlas phase B: the baseline (17 turns, winner A) lists 28 decision(s) of seat A; branching at 2: d0 (p, turn 1, 2 options), d27 (a, turn 17, 2 options)
+atlas phase B: 0 unit(s) to play (6 done), chunks of 4 branches, on 1 worker(s)
+atlas: /home/justin-a/code/lab/data/lab-j150/pilot/atlas.json and atlas.md; phase A 60 game(s), phase B 48 branch game(s) at 2 decision(s); checks: clean (5961 rows, 218 frame logs, 4 leak check(s))

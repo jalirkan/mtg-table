@@ -1,6 +1,7 @@
 running
 runner: forgecoach-runner 8fca7250
 started: 2026-10-22T10:52:02-04:00
-phase: pilot 1/1
+phase: commands 1/4
 mtg-table: 8fca725
-workers: 3
+workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.53), budget 21.4 GB)
+peak_worker_rss_gb: 1.53
