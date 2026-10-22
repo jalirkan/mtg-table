@@ -422,7 +422,8 @@ and whether it is synchronized now.
 **A step's `timeout:` counts only the time a runner watched it** (D461): its elapsed time is
 added up from the monotonic clock on every tick and saved in the job's `run.json`, so a runner
 restart, a reboot or a step of the wall clock resumes the count where it was and never fails the
-step; the runner's own downtime is not counted.
+step; the runner's own downtime is not counted. The job's `elapsed_s`, which `abort:` and `check:` lines can name,
+is counted the same way, for the whole run (D464).
 
 **Every other duration that decides anything runs on the monotonic clock** (D461): the prepare-retry window, the git probe's wait after a start, the memory-stop
 settle, the pressure backoff's cooldowns and the loop's fetch and publish cadences read

@@ -166,6 +166,13 @@ export interface JobRun {
    */
   stepElapsedMs?: number;
   /**
+   * D464: the run's `elapsed_s` (an `abort:` / `check:` name), counted like `stepElapsedMs`: monotonic
+   * deltas added every tick while a runner advances the run, and saved with it, so a wall-clock jump never
+   * moves it and a runner's downtime is not counted.  Absent in an older run.json: the wall time since
+   * `startedAt` on its first load (the unit now starts on a synced clock, D461), then counted.
+   */
+  runElapsedMs?: number;
+  /**
    * D461: the boot this run's monotonic stamps (metricsAt, prepareRetry's sinceMono and
    * nextAtMono, backoff's lastDrop and lastRaise) were taken in.  Another boot, or none (a run.json from
    * before D461, whose stamps are wall-clock), is carried over once, on load (`Runner.carryClocks`).
@@ -225,6 +232,11 @@ export interface JobRun {
 
 interface Persist {
   paused: boolean; lastPublish: number; lastFetch: number; dirty: boolean; lastHost: HostSample | null; started: number; ladderSig?: string;
+  /**
+   * D464: the boot `lastHost` was sampled in.  Its `at` is monotonic and its `pswpin` the kernel's count
+   * since boot, so a sample from another boot (or from before D464: absent) is no baseline for a rate.
+   */
+  lastHostBoot?: string | null;
   /** Failed publishes in a row, and when the next try may come (exponential: 30 s, 1, 2, 4 … 30 min). */
   publishFailures?: number; nextPublishAt?: number;
   /** The public copy's own clock: when it was last pushed, what it held (publicSig), and its failures and backoff. */
@@ -337,6 +349,8 @@ export class Runner {
   readonly startedMono: number;
   /** D461: per run, the mono() at which `accrue` last counted its unit (never persisted). */
   elapsedMark = new Map<string, number>();
+  /** D464: the same for each run's `runElapsedMs`. */
+  runMark = new Map<string, number>();
   /**
    * D461: the loop's own cadences on the monotonic clock -- the last fetch, publish and public push, and
    * when a failed one may try again.  `p` keeps their wall times for people and for the next start, which
@@ -360,7 +374,11 @@ export class Runner {
     };
     for (const id of fs.readdirSync(path.join(cfg.stateDir, 'jobs'))) {
       const r = this.readJson<JobRun>(path.join('jobs', id, 'run.json'));
-      if (r) { this.carryClocks(r); this.runs.set(id, r); }
+      if (r) {
+        this.carryClocks(r);
+        if (r.runElapsedMs === undefined) r.runElapsedMs = Math.max(0, wall - r.startedAt);    // D464: once, from an older run.json
+        this.runs.set(id, r);
+      }
     }
   }
 
@@ -403,6 +421,17 @@ export class Runner {
     const last = this.elapsedMark.get(r.id);
     if (last !== undefined && now > last) r.stepElapsedMs = (r.stepElapsedMs ?? 0) + (now - last);
     this.elapsedMark.set(r.id, now);
+  }
+
+  /** D464: add the monotonic time since this process last advanced the run to its `runElapsedMs` (as `accrue`). */
+  accrueRun(r: JobRun): void {
+    const now = this.sys.mono();
+    const last = this.runMark.get(r.id);
+    this.runMark.set(r.id, now);
+    if (last !== undefined && now > last) {
+      r.runElapsedMs = (r.runElapsedMs ?? 0) + (now - last);
+      this.save(r);                              // every tick: a restart resumes from here
+    }
   }
 
   /** D461: how long the current unit has run while a runner was alive, as of the last tick. */
@@ -603,7 +632,7 @@ export class Runner {
       unit: null, unitStartedAt: 0, workers: 1, sizing: null, cap: Number.isFinite(cap) ? cap : null,
       pinned: retry ? prev?.pinned : undefined,
       peakRssGb: prev?.peakRssGb ?? null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null,
-      metrics: {}, metricsAt: 0, monoBoot: this.sys.bootId(), shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
+      metrics: {}, metricsAt: 0, monoBoot: this.sys.bootId(), runElapsedMs: 0, shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
       blocksDone: resume?.kept ?? {}, aside: prev?.aside ?? null, lastWidth: widthOf(job, this.machineBudget()),
     };
     if (retry) {
@@ -612,6 +641,7 @@ export class Runner {
     fs.rmSync(path.join(this.jobDir(job.id), 'out'), { recursive: true, force: true });
     fs.mkdirSync(path.join(this.jobDir(job.id), 'out'), { recursive: true });
     this.runs.set(job.id, r);
+    this.runMark.set(job.id, this.sys.mono());   // D464: a retry's count starts now, not at the last run's last tick
     this.sys.log(`${job.id}: start (${job.cpu}${lane ? `, lane ${lane + 1}` : ''}; ${steps.map((s) => s.name).join(', ')})`);
     this.setStatus(r, 'running', { phase: 'prepare' });
     this.save(r);
@@ -675,6 +705,7 @@ export class Runner {
   // ------------------------------------------------------------------ advancing
 
   advance(r: JobRun): void {
+    this.accrueRun(r);
     const job = this.jobOf(r);
     if (!job) {
       // The job file is gone from two successful reads of pc-jobs: stop what runs, and say so.
@@ -944,7 +975,7 @@ export class Runner {
       if (!only && s && s.state !== 'waiting') continue;
       print(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
       if (job.errors.length) { print(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
-      const run: JobRun = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps: this.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: this.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, monoBoot: this.sys.bootId(), shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
+      const run: JobRun = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps: this.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: this.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, monoBoot: this.sys.bootId(), runElapsedMs: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
       for (const step of run.steps) {
         if (step.kind !== 'shell') { print(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
         const u = this.unitSpec(run, job, step);
@@ -1270,7 +1301,7 @@ export class Runner {
   }
 
   runnerFacts(r: JobRun): Flat {
-    const f: Flat = { elapsed_s: Math.round((this.sys.now() - r.startedAt) / 1000), workers: r.backoff?.workers ?? r.workers, pressure_events: r.events.length };
+    const f: Flat = { elapsed_s: Math.round((r.runElapsedMs ?? 0) / 1000), workers: r.backoff?.workers ?? r.workers, pressure_events: r.events.length };
     if (r.peakRssGb !== null) f.peak_worker_rss_gb = Math.round(r.peakRssGb * 100) / 100;
     return f;
   }
@@ -1572,10 +1603,15 @@ export class Runner {
 
   sampleHost(): void {
     const h = this.sys.host();
-    const prev = this.host ?? this.p.lastHost;
-    if (prev && h.at > prev.at) this.swapInRate = Math.max(0, (h.pswpin - prev.pswpin) / ((h.at - prev.at) / 1000));
+    const boot = this.sys.bootId();
+    // D464: the previous runner's sample only from this boot; another boot's pswpin and clock mean nothing here.
+    const saved = this.p.lastHostBoot !== undefined && this.p.lastHostBoot === boot ? this.p.lastHost : null;
+    const prev = this.host ?? saved;
+    if (!prev) this.swapInRate = 0;
+    else if (h.at > prev.at) this.swapInRate = Math.max(0, (h.pswpin - prev.pswpin) / ((h.at - prev.at) / 1000));
     this.host = h;
     this.p.lastHost = h;
+    this.p.lastHostBoot = boot;
   }
 
   statusDoc(): StatusDoc {
