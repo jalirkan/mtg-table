@@ -1,0 +1,2020 @@
+{
+ "schema": 1,
+ "written": "2026-10-22",
+ "horizonDefinition": "y of the far ground or sea line (eye level), 0 = top of the picture, 1 = bottom; read off each picture on a 5% grid, +-0.02. `skyline` (where given) is where the land silhouette meets the sky across the middle half. `horizonDerived` is what the manifest fields alone imply (spec 1.5: horizon ~57% up the desktop half; phone mapped y -> 0.25 + y/2; a panorama's focal y); `scan` is an automatic sky/ground step scan, kept as a cross-check only (it often locks onto a ridge or a foreground water edge).",
+ "stages": [
+  {
+   "pack": "pack-v8",
+   "biome": "island",
+   "stage": 1,
+   "hour": 6.5,
+   "key": "dawn",
+   "notes": "pale cream overcast dawn, calm cove. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "island/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.43,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.312
+    },
+    {
+     "src": "island/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.444
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "island",
+   "stage": 2,
+   "hour": 12,
+   "key": "noon",
+   "notes": "sapphire noon, blue sky. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "island/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.312
+    },
+    {
+     "src": "island/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.422
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "island",
+   "stage": 3,
+   "hour": 16.5,
+   "key": "afternoon",
+   "notes": "lilac sky, low sun glow on the horizon. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "island/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.43,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.263
+    },
+    {
+     "src": "island/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.397
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "island",
+   "stage": 4,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "sunset: sun on the sea line, rays, red-orange sky. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "island/s4-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.43,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.338
+    },
+    {
+     "src": "island/s4-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.456
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "island",
+   "stage": 5,
+   "hour": 20.5,
+   "key": "dusk",
+   "notes": "afterglow: magenta sky, first aurora. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "island/s5-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.275
+    },
+    {
+     "src": "island/s5-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.431
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "island",
+   "stage": 6,
+   "hour": 23,
+   "key": "night",
+   "notes": "night: aurora curtains, stars. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "island/s6-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.287
+    },
+    {
+     "src": "island/s6-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.362
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "mountain",
+   "stage": 1,
+   "hour": 6,
+   "key": "dawn",
+   "notes": "grey-pink dawn. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "mountain/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.588,
+     "skyline": 0.38
+    },
+    {
+     "src": "mountain/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.52,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.566
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "mountain",
+   "stage": 2,
+   "hour": 12,
+   "key": "noon",
+   "notes": "hard blue noon. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "mountain/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.55,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.375,
+     "skyline": 0.4
+    },
+    {
+     "src": "mountain/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.53,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.45
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "mountain",
+   "stage": 3,
+   "hour": 16,
+   "key": "afternoon",
+   "notes": "hazy lilac-and-amber afternoon. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "mountain/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.588,
+     "skyline": 0.42
+    },
+    {
+     "src": "mountain/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.52,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.447
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "mountain",
+   "stage": 4,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "storm-red sunset, glow behind the peaks. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "mountain/s4-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.375,
+     "skyline": 0.42
+    },
+    {
+     "src": "mountain/s4-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.453
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "mountain",
+   "stage": 5,
+   "hour": 20.5,
+   "key": "dusk",
+   "notes": "dark red dusk, lava light. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "mountain/s5-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.375,
+     "skyline": 0.4
+    },
+    {
+     "src": "mountain/s5-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.388
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "mountain",
+   "stage": 6,
+   "hour": 23,
+   "key": "night",
+   "notes": "night: black starry sky, fire-rimmed peaks. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "mountain/s6-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.237,
+     "skyline": 0.4
+    },
+    {
+     "src": "mountain/s6-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.397
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "swamp",
+   "stage": 1,
+   "hour": 6,
+   "key": "dawn",
+   "notes": "grey misty dawn. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "swamp/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.438
+    },
+    {
+     "src": "swamp/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.653
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "swamp",
+   "stage": 2,
+   "hour": 12,
+   "key": "noon",
+   "notes": "sickly yellow-green haze, daylight (no sun, no blue). Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "swamp/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.43,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.838
+    },
+    {
+     "src": "swamp/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.659
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "swamp",
+   "stage": 3,
+   "hour": 16.5,
+   "key": "afternoon",
+   "notes": "grey-violet overcast, late. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "swamp/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.812
+    },
+    {
+     "src": "swamp/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.65
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "swamp",
+   "stage": 4,
+   "hour": 19.5,
+   "key": "dusk",
+   "notes": "violet dusk, no sun (no sunset stage). Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "swamp/s4-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.775
+    },
+    {
+     "src": "swamp/s4-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.644
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "swamp",
+   "stage": 5,
+   "hour": 22,
+   "key": "night",
+   "notes": "night: moon up, mist (night one stage early). Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "swamp/s5-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.787
+    },
+    {
+     "src": "swamp/s5-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.52,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.647
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "swamp",
+   "stage": 6,
+   "hour": 23.5,
+   "key": "night",
+   "notes": "night: moon, carcass rim-lit. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "swamp/s6-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.312
+    },
+    {
+     "src": "swamp/s6-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.53,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.65
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "plains",
+   "stage": 1,
+   "hour": 6,
+   "key": "dawn",
+   "notes": "pale pink-cream dawn. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "plains/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.45
+    },
+    {
+     "src": "plains/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.494
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "plains",
+   "stage": 2,
+   "hour": 12,
+   "key": "noon",
+   "notes": "blue noon, high cirrus. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "plains/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.475
+    },
+    {
+     "src": "plains/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.49,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.506
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "plains",
+   "stage": 3,
+   "hour": 16.5,
+   "key": "afternoon",
+   "notes": "lilac-blue sky, halo, low light. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "plains/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.475
+    },
+    {
+     "src": "plains/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.509
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "plains",
+   "stage": 4,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "sunset: sun on the horizon in a halo. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "plains/s4-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.487
+    },
+    {
+     "src": "plains/s4-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.512
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "plains",
+   "stage": 5,
+   "hour": 20.5,
+   "key": "dusk",
+   "notes": "dusk: magenta, first stars, milky way. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "plains/s5-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.44,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.487
+    },
+    {
+     "src": "plains/s5-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.512
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "plains",
+   "stage": 6,
+   "hour": 23,
+   "key": "night",
+   "notes": "star night, moon, pillars of light. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "plains/s6-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.512
+    },
+    {
+     "src": "plains/s6-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.49,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.381
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "forest",
+   "stage": 1,
+   "hour": 6,
+   "key": "dawn",
+   "notes": "pink dawn through mist. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "forest/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.46,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.45
+    },
+    {
+     "src": "forest/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.494
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "forest",
+   "stage": 2,
+   "hour": 12,
+   "key": "noon",
+   "notes": "green-gold midday, bright cloud. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "forest/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.43,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.688
+    },
+    {
+     "src": "forest/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.48,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.597
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "forest",
+   "stage": 3,
+   "hour": 17,
+   "key": "afternoon",
+   "notes": "golden late afternoon haze. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "forest/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.425
+    },
+    {
+     "src": "forest/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.15
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "forest",
+   "stage": 4,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "amber sunset behind the giants. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "forest/s4-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.375
+    },
+    {
+     "src": "forest/s4-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.55,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.453
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "forest",
+   "stage": 5,
+   "hour": 20.5,
+   "key": "dusk",
+   "notes": "dusk: dark canopy, lit crowns, orange sky. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "forest/s5-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.425
+    },
+    {
+     "src": "forest/s5-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.456
+    }
+   ]
+  },
+  {
+   "pack": "pack-v8",
+   "biome": "forest",
+   "stage": 6,
+   "hour": 23,
+   "key": "night",
+   "notes": "night: starry violet sky, fireflies. Same file in pack-v9.",
+   "pictures": [
+    {
+     "src": "forest/s6-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6], no focal)",
+     "scan": 0.362
+    },
+    {
+     "src": "forest/s6-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.53,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.45,0.56]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.294
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+island",
+   "stage": 1,
+   "hour": 8,
+   "key": "morning",
+   "notes": "pastel pink-teal morning",
+   "pictures": [
+    {
+     "src": "pairs/forest-island/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.625
+    },
+    {
+     "src": "pairs/forest-island/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.522
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+island",
+   "stage": 2,
+   "hour": 13,
+   "key": "noon",
+   "notes": "hazy daylight",
+   "pictures": [
+    {
+     "src": "pairs/forest-island/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.625
+    },
+    {
+     "src": "pairs/forest-island/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.522
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+island",
+   "stage": 3,
+   "hour": 19.5,
+   "key": "dusk",
+   "notes": "magenta dusk",
+   "pictures": [
+    {
+     "src": "pairs/forest-island/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.637
+    },
+    {
+     "src": "pairs/forest-island/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.384
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+mountain",
+   "stage": 1,
+   "hour": 7,
+   "key": "dawn",
+   "notes": "pink dawn mist",
+   "pictures": [
+    {
+     "src": "pairs/forest-mountain/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.4
+    },
+    {
+     "src": "pairs/forest-mountain/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.441
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+mountain",
+   "stage": 2,
+   "hour": 13,
+   "key": "noon",
+   "notes": "hazy day",
+   "pictures": [
+    {
+     "src": "pairs/forest-mountain/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.45
+    },
+    {
+     "src": "pairs/forest-mountain/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.453
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+mountain",
+   "stage": 3,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "red sunset sky",
+   "pictures": [
+    {
+     "src": "pairs/forest-mountain/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.4
+    },
+    {
+     "src": "pairs/forest-mountain/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.45
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+plains",
+   "stage": 1,
+   "hour": 7,
+   "key": "dawn",
+   "notes": "lilac dawn, sun behind the tree",
+   "pictures": [
+    {
+     "src": "pairs/forest-plains/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.463
+    },
+    {
+     "src": "pairs/forest-plains/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.412
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+plains",
+   "stage": 2,
+   "hour": 15,
+   "key": "afternoon",
+   "notes": "golden afternoon",
+   "pictures": [
+    {
+     "src": "pairs/forest-plains/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.463
+    },
+    {
+     "src": "pairs/forest-plains/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.463
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+plains",
+   "stage": 3,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "sunset, embers in the tree",
+   "pictures": [
+    {
+     "src": "pairs/forest-plains/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.45
+    },
+    {
+     "src": "pairs/forest-plains/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.463
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+swamp",
+   "stage": 1,
+   "hour": 8,
+   "key": "morning",
+   "notes": "misty morning",
+   "pictures": [
+    {
+     "src": "pairs/forest-swamp/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.45
+    },
+    {
+     "src": "pairs/forest-swamp/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.459
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+swamp",
+   "stage": 2,
+   "hour": 15,
+   "key": "afternoon",
+   "notes": "green overcast afternoon",
+   "pictures": [
+    {
+     "src": "pairs/forest-swamp/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.438
+    },
+    {
+     "src": "pairs/forest-swamp/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.459
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "forest+swamp",
+   "stage": 3,
+   "hour": 21,
+   "key": "night",
+   "notes": "violet night, lights in the trees",
+   "pictures": [
+    {
+     "src": "pairs/forest-swamp/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.438
+    },
+    {
+     "src": "pairs/forest-swamp/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.45
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+mountain",
+   "stage": 1,
+   "hour": 7,
+   "key": "dawn",
+   "notes": "pink dawn, steam",
+   "pictures": [
+    {
+     "src": "pairs/island-mountain/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.46,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.512
+    },
+    {
+     "src": "pairs/island-mountain/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.478
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+mountain",
+   "stage": 2,
+   "hour": 16,
+   "key": "afternoon",
+   "notes": "purple-blue late afternoon",
+   "pictures": [
+    {
+     "src": "pairs/island-mountain/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.46,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.512
+    },
+    {
+     "src": "pairs/island-mountain/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.475
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+mountain",
+   "stage": 3,
+   "hour": 19.5,
+   "key": "dusk",
+   "notes": "red-violet dusk, eruption",
+   "pictures": [
+    {
+     "src": "pairs/island-mountain/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.46,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.512
+    },
+    {
+     "src": "pairs/island-mountain/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.475
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+plains",
+   "stage": 1,
+   "hour": 8,
+   "key": "morning",
+   "notes": "pale overcast morning",
+   "pictures": [
+    {
+     "src": "pairs/island-plains/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.44,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.425
+    },
+    {
+     "src": "pairs/island-plains/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.438
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+plains",
+   "stage": 2,
+   "hour": 15,
+   "key": "afternoon",
+   "notes": "lilac afternoon",
+   "pictures": [
+    {
+     "src": "pairs/island-plains/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.44,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.263
+    },
+    {
+     "src": "pairs/island-plains/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.375
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+plains",
+   "stage": 3,
+   "hour": 20,
+   "key": "dusk",
+   "notes": "violet dusk (the phone shows stars)",
+   "pictures": [
+    {
+     "src": "pairs/island-plains/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.44,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.412
+    },
+    {
+     "src": "pairs/island-plains/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.381
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+swamp",
+   "stage": 1,
+   "hour": 9,
+   "key": "morning",
+   "notes": "cave interior: daylight beyond the arches",
+   "pictures": [
+    {
+     "src": "pairs/island-swamp/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.65
+    },
+    {
+     "src": "pairs/island-swamp/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.459
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+swamp",
+   "stage": 2,
+   "hour": 17,
+   "key": "afternoon",
+   "notes": "dim teal-violet, late",
+   "pictures": [
+    {
+     "src": "pairs/island-swamp/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.475
+    },
+    {
+     "src": "pairs/island-swamp/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.409
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "island+swamp",
+   "stage": 3,
+   "hour": 21,
+   "key": "night",
+   "notes": "violet night; horizon is the cave's far waterline",
+   "pictures": [
+    {
+     "src": "pairs/island-swamp/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.65
+    },
+    {
+     "src": "pairs/island-swamp/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.794
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "mountain+plains",
+   "stage": 1,
+   "hour": 9,
+   "key": "morning",
+   "notes": "pale blue morning",
+   "pictures": [
+    {
+     "src": "pairs/mountain-plains/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.225,
+     "skyline": 0.22
+    },
+    {
+     "src": "pairs/mountain-plains/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.369
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "mountain+plains",
+   "stage": 2,
+   "hour": 13,
+   "key": "noon",
+   "notes": "plain daylight",
+   "pictures": [
+    {
+     "src": "pairs/mountain-plains/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.225,
+     "skyline": 0.22
+    },
+    {
+     "src": "pairs/mountain-plains/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.369
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "mountain+plains",
+   "stage": 3,
+   "hour": 19,
+   "key": "dusk",
+   "notes": "red sunset sky; mesa top (skyline) at ~0.22 desktop",
+   "pictures": [
+    {
+     "src": "pairs/mountain-plains/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.42,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.225,
+     "skyline": 0.22
+    },
+    {
+     "src": "pairs/mountain-plains/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.366
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "mountain+swamp",
+   "stage": 1,
+   "hour": 7,
+   "key": "dawn",
+   "notes": "pink dawn haze",
+   "pictures": [
+    {
+     "src": "pairs/mountain-swamp/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.512
+    },
+    {
+     "src": "pairs/mountain-swamp/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.478
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "mountain+swamp",
+   "stage": 2,
+   "hour": 16,
+   "key": "afternoon",
+   "notes": "hazy amber afternoon",
+   "pictures": [
+    {
+     "src": "pairs/mountain-swamp/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.512
+    },
+    {
+     "src": "pairs/mountain-swamp/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.481
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "mountain+swamp",
+   "stage": 3,
+   "hour": 21.5,
+   "key": "night",
+   "notes": "night: stars, red glow on the rim",
+   "pictures": [
+    {
+     "src": "pairs/mountain-swamp/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.4,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.512
+    },
+    {
+     "src": "pairs/mountain-swamp/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.478
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "plains+swamp",
+   "stage": 1,
+   "hour": 9,
+   "key": "morning",
+   "notes": "grey overcast morning",
+   "pictures": [
+    {
+     "src": "pairs/plains-swamp/s1-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.425
+    },
+    {
+     "src": "pairs/plains-swamp/s1-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.438
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "plains+swamp",
+   "stage": 2,
+   "hour": 18,
+   "key": "dusk",
+   "notes": "blue-grey dusk, first star (dusk already at pair stage 2)",
+   "pictures": [
+    {
+     "src": "pairs/plains-swamp/s2-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.438
+    },
+    {
+     "src": "pairs/plains-swamp/s2-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.453
+    }
+   ]
+  },
+  {
+   "pack": "pairs-v2",
+   "pair": "plains+swamp",
+   "stage": 3,
+   "hour": 22,
+   "key": "night",
+   "notes": "night, crescent moon",
+   "pictures": [
+    {
+     "src": "pairs/plains-swamp/s3-half.webp",
+     "shape": "desktop",
+     "width": 2048,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.43,
+     "derivedFrom": "spec 1.5 default (subjectBand [0.35,0.6])",
+     "scan": 0.662
+    },
+    {
+     "src": "pairs/plains-swamp/s3-phone.webp",
+     "shape": "phone",
+     "width": 1024,
+     "height": 1280,
+     "horizon": 0.5,
+     "horizonSource": "measured",
+     "horizonDerived": 0.465,
+     "derivedFrom": "phone subjectBand [0.416,0.514]; desktop horizon mapped 0.25 + y/2",
+     "scan": 0.216
+    }
+   ]
+  },
+  {
+   "pack": "panoramas-v1",
+   "pair": "forest+swamp",
+   "stage": 3,
+   "hour": 21,
+   "key": "night",
+   "notes": "violet night, lantern glows. Stages 1-2: batch 2, not painted yet.",
+   "pictures": [
+    {
+     "src": "pairs/forest-swamp/s3-panorama.webp",
+     "shape": "panorama",
+     "width": 3277,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.52,
+     "derivedFrom": "panorama focal y 0.52 (subjectBand [0.38,0.72])",
+     "scan": 0.719
+    }
+   ]
+  },
+  {
+   "pack": "panoramas-v1",
+   "pair": "island+mountain",
+   "stage": 3,
+   "hour": 21.5,
+   "key": "night",
+   "notes": "purple night, eruptions (pairs-v2 s3 of this pair is dusk). Stages 1-2: batch 2, not painted yet.",
+   "pictures": [
+    {
+     "src": "pairs/island-mountain/s3-panorama.webp",
+     "shape": "panorama",
+     "width": 3277,
+     "height": 640,
+     "horizon": 0.45,
+     "horizonSource": "measured",
+     "horizonDerived": 0.52,
+     "derivedFrom": "panorama focal y 0.52 (subjectBand [0.38,0.72])",
+     "scan": 0.453
+    }
+   ]
+  },
+  {
+   "pack": "panoramas-v1",
+   "pair": "island+plains",
+   "stage": 3,
+   "hour": 21,
+   "key": "night",
+   "notes": "aurora night (pairs-v2 s3 of this pair is dusk). Stages 1-2: batch 2, not painted yet.",
+   "pictures": [
+    {
+     "src": "pairs/island-plains/s3-panorama.webp",
+     "shape": "panorama",
+     "width": 3277,
+     "height": 640,
+     "horizon": 0.46,
+     "horizonSource": "measured",
+     "horizonDerived": 0.52,
+     "derivedFrom": "panorama focal y 0.52 (subjectBand [0.38,0.72])",
+     "scan": 0.453
+    }
+   ]
+  },
+  {
+   "pack": "panoramas-v1",
+   "pair": "plains+swamp",
+   "stage": 3,
+   "hour": 22,
+   "key": "night",
+   "notes": "overcast night, moon. Stages 1-2: batch 2, not painted yet.",
+   "pictures": [
+    {
+     "src": "pairs/plains-swamp/s3-panorama.webp",
+     "shape": "panorama",
+     "width": 3277,
+     "height": 640,
+     "horizon": 0.47,
+     "horizonSource": "measured",
+     "horizonDerived": 0.52,
+     "derivedFrom": "panorama focal y 0.52 (subjectBand [0.38,0.72])",
+     "scan": 0.516
+    }
+   ]
+  }
+ ]
+}
