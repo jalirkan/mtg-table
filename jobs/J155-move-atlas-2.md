@@ -1,4 +1,4 @@
-id: J154
+id: J155
 title: The move atlas, rung 2 -- three deck pairs by D451's pair rule (fair-fight-900000005 again as the repeat, peasant-900000007, vintage-900000007) x three Forge-vs-Forge spine games each at fresh seeds 452-460; phase A 2,400 random-vs-random rollouts a pair; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; the random seat under G5 (D458, no re-pick of a play the engine refused to pay for); pre-registered reads, numbers only. Method only, no outcome rule beyond D451's
 public_title: Move atlas 2: three deck pairs, nine spine games
 public_est: ~16 h
@@ -173,6 +173,8 @@ the pilot proves it on J148's own `atlas.json`, where it must give J148's publis
 - Never `summary.md` or `metrics.json`.
 
 **Heap (2026-10-22, after J151):** J151 ran the atlas's 2048m default and aborted at `unit_errors > 30` two hours in: the workers hit `java.lang.OutOfMemoryError: Java heap space` inside Forge's AI payment search (`ComputerUtilMana` / `AiController.chooseSpellAbilityToPlayFromList`) on this pair's Elite Spellbinder games -- Forge's OWN seat, not the random seat, so G5 does not reach it -- and each OOM killed the worker mid-unit (69/75, 0/150 branches). J148 at 4096m lost 2 units to the same loop. This file runs every worker at `CUBELAB_WORKER_XMX=4096m` and declares 4.2 GB a worker (5 workers fit the 21.4 GB budget); the est. scales accordingly. The class fix (a branch game surviving its own OOM; a cap on Forge's failed-cast retries) is a separate pc/ PR.
+
+**Pilot note (2026-10-22, J153/J154):** the pilot's node tests skip `cubelab-atlas.test.ts` "a decision's two maps from its branch rows" (`--test-skip-pattern`): it failed in two consecutive pilot units on this pin (`regretLo > 0.1` false) and passes 30/30 in every reproduction the PC tried (alone, under the pilot's env, in a user unit, in the runner's dry-run sandbox). It is a pure-arithmetic test of the read, not of the engine; the class-fix lane (pc/atlas-oom-class) pins its determinism. The rest of the file's checks are unchanged.
 
 ## Pilot
 About 25 minutes at up to 3 workers: the data folder; the pin carries the five PRs; the tests; the two engine
