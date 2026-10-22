@@ -1,0 +1,131 @@
+==== J149 run5 started 2026-10-22T09:06:22-04:00 in unit lab-J149-run5, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+census-read: 80000 game(s), 10000 deck(s), pilots plain/plain, pauper, peasant, legacy, powered; 4263 card row(s) -> /home/justin-a/code/lab/data/lab-j144/out/spectrum.json, spectrum.md, cards.tsv
+{"pauper": {"decks": 2500, "rejections": 0, "games": 20000, "engineErrors": 0, "rowsKbMean": 75.3}, "peasant": {"decks": 2500, "rejections": 0, "games": 20000, "engineErrors": 0, "rowsKbMean": 59.2}, "legacy": {"decks": 2500, "rejections": 0, "games": 20000, "engineErrors": 0, "rowsKbMean": 50.8}, "powered": {"decks": 2500, "rejections": 0, "games": 20000, "engineErrors": 0, "rowsKbMean": 50.1}}
+{"holds": 12, "of": 12, "byCandidate": {"i": 4, "ii": 4, "iii": 4}, "check": {"cellsCompared": 52, "estimatesEqual": 51, "intervalsWithinTol": 52, "maxIntervalGap": 0.0055}}
+# J144: does night 1's colour-count pattern hold on fresh seeds? (night 2 (J144, seeds 1501-1504))
+
+Every rate is "in a random deck of this makeup", as Forge's Default AI plays it (D447 point 10). Pre-registered (D447 point 9; the job file, before any night-2 game): a candidate HOLDS in a band when night 2's 95% deck-clustered bootstrap interval excludes the null in night 1's direction, else NOT SHOWN. No pooling with night 1 for the verdict; the pooled column is information only. cards.tsv is reported, not confirmed.
+
+**12 of 12 hold**: (i) in 4 of 4 bands, (ii) in 4 of 4 bands, (iii) in 4 of 4 bands.
+
+| band | candidate | cell | night 2 | 95% | night 1 | 95% | pooled (info) | 95% | verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| pauper | (i) above 0.5 | byColours.1 | 0.577 | 0.564–0.590 | 0.574 | 0.560–0.588 | 0.575 | 0.565–0.585 | holds |
+| pauper | **(i)** | | | | | | | | **holds** |
+| pauper | (ii) below 0.5 | byColours.4 | 0.412 | 0.394–0.429 | 0.402 | 0.386–0.420 | 0.407 | 0.395–0.420 | holds |
+| pauper | (ii) below 0.5 | byColours.5 | 0.381 | 0.333–0.429 | 0.354 | 0.305–0.407 | 0.363 | 0.326–0.402 | holds |
+| pauper | **(ii)** | | | | | | | | **holds** |
+| pauper | (iii) above 0.0 | diff.eq100-lt40 | 0.195 | 0.170–0.217 | 0.179 | 0.153–0.203 | 0.187 | 0.171–0.205 | holds |
+| pauper | **(iii)** | | | | | | | | **holds** |
+| peasant | (i) above 0.5 | byColours.1 | 0.609 | 0.597–0.622 | 0.599 | 0.586–0.612 | 0.604 | 0.595–0.613 | holds |
+| peasant | **(i)** | | | | | | | | **holds** |
+| peasant | (ii) below 0.5 | byColours.4 | 0.394 | 0.381–0.409 | 0.393 | 0.380–0.407 | 0.394 | 0.385–0.404 | holds |
+| peasant | (ii) below 0.5 | byColours.5 | 0.360 | 0.331–0.389 | 0.400 | 0.371–0.429 | 0.380 | 0.358–0.399 | holds |
+| peasant | **(ii)** | | | | | | | | **holds** |
+| peasant | (iii) above 0.0 | diff.eq100-lt40 | 0.228 | 0.210–0.248 | 0.210 | 0.191–0.230 | 0.219 | 0.204–0.233 | holds |
+| peasant | **(iii)** | | | | | | | | **holds** |
+| legacy | (i) above 0.5 | byColours.1 | 0.611 | 0.597–0.623 | 0.597 | 0.585–0.609 | 0.603 | 0.595–0.613 | holds |
+| legacy | **(i)** | | | | | | | | **holds** |
+| legacy | (ii) below 0.5 | byColours.4 | 0.405 | 0.392–0.419 | 0.408 | 0.394–0.421 | 0.406 | 0.397–0.416 | holds |
+| legacy | (ii) below 0.5 | byColours.5 | 0.365 | 0.343–0.389 | 0.378 | 0.353–0.401 | 0.372 | 0.356–0.389 | holds |
+| legacy | **(ii)** | | | | | | | | **holds** |
+| legacy | (iii) above 0.0 | diff.eq100-lt40 | 0.219 | 0.200–0.239 | 0.203 | 0.181–0.224 | 0.210 | 0.195–0.224 | holds |
+| legacy | **(iii)** | | | | | | | | **holds** |
+| powered | (i) above 0.5 | byColours.1 | 0.586 | 0.572–0.601 | 0.593 | 0.579–0.605 | 0.589 | 0.580–0.599 | holds |
+| powered | **(i)** | | | | | | | | **holds** |
+| powered | (ii) below 0.5 | byColours.4 | 0.419 | 0.405–0.434 | 0.415 | 0.402–0.429 | 0.417 | 0.407–0.427 | holds |
+| powered | (ii) below 0.5 | byColours.5 | 0.390 | 0.369–0.414 | 0.341 | 0.316–0.366 | 0.366 | 0.350–0.384 | holds |
+| powered | **(ii)** | | | | | | | | **holds** |
+| powered | (iii) above 0.0 | diff.eq100-lt40 | 0.179 | 0.158–0.199 | 0.208 | 0.187–0.229 | 0.193 | 0.178–0.209 | holds |
+| powered | **(iii)** | | | | | | | | **holds** |
+
+(iii)'s interval is census-read's per-cell scheme on each cell, differenced (the verdict); a joint deck bootstrap of the difference (both cells moved by one replicate, information only):
+
+- pauper: 0.195, verdict interval 0.170–0.217, joint 0.171–0.219
+- peasant: 0.228, verdict interval 0.210–0.248, joint 0.208–0.248
+- legacy: 0.219, verdict interval 0.200–0.239, joint 0.197–0.240
+- powered: 0.179, verdict interval 0.158–0.199, joint 0.159–0.199
+
+**The check.** This script re-derived 52 cells of census-read's spectrum.json: 51 point estimates equal, 52 intervals within 0.02 (largest gap 0.0055; two independent 1,000-replicate bootstraps).
+
+80000 games, 10000 decks read.
+# Deck census: win rate across the colour spectrum (D447)
+
+Every deck here is a random draw from its band's pool at a random colour makeup, with no curve, synergy or rating rule, so it is mostly weaker than a drafted or built deck: **every rate, and every card's value, is "in a random deck of this makeup", as Forge's AI plays it**, not in a built deck.
+
+80000 games, 10000 decks, pilots plain/plain; bootstrap 1000 replicates (seed 1), clustered by deck. Bins are the realised profiles, read after the games; no bin is a verdict, and any difference is a candidate until it holds on fresh seeds. Every rate is as Forge's AI plays it.
+
+## pauper
+
+20000 games (19982 decisive, 18 drawn, 16 timeouts, 0 engine errors); 2500 decks, deck-games min 16, median 16; the first player won 0.506 of 19982.
+
+**The weak-deck tail** (every deck played is castable, so the uncastable ones are the draws rejected before it): 0 rejected draw(s) and 0 new makeup(s) over the band's 2500 decks; 0 deck(s) came after at least one; 0.000 of all draws were rejected.
+
+| colours with 3+ spells | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| 1 | 656 | 10496 | 10484 | 0.577 | 0.564–0.590 | 0.567–0.586 |
+| 2 | 797 | 12752 | 12740 | 0.518 | 0.507–0.530 | 0.510–0.527 |
+| 3 | 697 | 11152 | 11140 | 0.452 | 0.440–0.466 | 0.443–0.461 |
+| 4 | 320 | 5120 | 5120 | 0.412 | 0.394–0.429 | 0.399–0.426 |
+| 5 | 30 | 480 | 480 | 0.381 | 0.333–0.429 | 0.339–0.425 |
+
+| main-colour share of pips | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| < 0.4 | 284 | 4544 | 4542 | 0.391 | 0.372–0.410 | 0.377–0.405 |
+| 0.4–0.5 | 391 | 6256 | 6250 | 0.438 | 0.422–0.454 | 0.426–0.450 |
+| 0.5–0.6 | 463 | 7408 | 7402 | 0.486 | 0.470–0.502 | 0.475–0.498 |
+| 0.6–0.7 | 343 | 5488 | 5481 | 0.501 | 0.483–0.516 | 0.488–0.514 |
+| 0.7–0.8 | 217 | 3472 | 3471 | 0.533 | 0.510–0.556 | 0.516–0.549 |
+| 0.8–0.9 | 179 | 2864 | 2861 | 0.529 | 0.504–0.553 | 0.511–0.547 |
+| 0.9–<1.0 | 91 | 1456 | 1455 | 0.535 | 0.496–0.575 | 0.510–0.561 |
+| 1.0 (mono) | 532 | 8512 | 8502 | 0.586 | 0.572–0.601 | 0.576–0.597 |
+
+| the prior's k | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| 1 | 514 | 8224 | 8214 | 0.587 | 0.572–0.602 | 0.576–0.598 |
+| 2 | 510 | 8160 | 8153 | 0.545 | 0.530–0.560 | 0.534–0.556 |
+| 3 | 523 | 8368 | 8360 | 0.498 | 0.485–0.512 | 0.487–0.509 |
+| 4 | 484 | 7744 | 7736 | 0.445 | 0.431–0.459 | 0.434–0.456 |
+| 5 | 469 | 7504 | 7501 | 0.415 | 0.402–0.430 | 0.404–0.426 |
+
+## peasant
+
+20000 games (19982 decisive, 18 drawn, 12 timeouts, 0 engine errors); 2500 decks, deck-games min 16, median 16; the first player won 0.520 of 19982.
+
+**The weak-deck tail** (every deck played is castable, so the uncastable ones are the draws rejected before it): 0 rejected draw(s) and 0 new makeup(s) over the band's 2500 decks; 0 deck(s) came after at least one; 0.000 of all draws were rejected.
+
+| colours with 3+ spells | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| 1 | 582 | 9312 | 9304 | 0.609 | 0.597–0.622 | 0.599–0.619 |
+| 2 | 695 | 11120 | 11108 | 0.528 | 0.516–0.541 | 0.519–0.537 |
+| 3 | 698 | 11168 | 11156 | 0.466 | 0.455–0.477 | 0.457–0.475 |
+| 4 | 421 | 6736 | 6732 | 0.394 | 0.381–0.409 | 0.383–0.406 |
+| 5 | 104 | 1664 | 1664 | 0.360 | 0.331–0.389 | 0.337–0.383 |
+
+| main-colour share of pips | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| < 0.4 | 393 | 6288 | 6284 | 0.385 | 0.370–0.399 | 0.373–0.397 |
+| 0.4–0.5 | 419 | 6704 | 6698 | 0.435 | 0.420–0.448 | 0.423–0.447 |
+| 0.5–0.6 | 468 | 7488 | 7480 | 0.479 | 0.465–0.494 | 0.468–0.491 |
+| 0.6–0.7 | 303 | 4848 | 4845 | 0.500 | 0.484–0.518 | 0.486–0.515 |
+| 0.7–0.8 | 199 | 3184 | 3181 | 0.549 | 0.526–0.573 | 0.532–0.566 |
+| 0.8–0.9 | 145 | 2320 | 2316 | 0.563 | 0.536–0.587 | 0.542–0.583 |
+| 0.9–<1.0 | 68 | 1088 | 1088 | 0.597 | 0.562–0.632 | 0.567–0.625 |
+| 1.0 (mono) | 505 | 8080 | 8072 | 0.612 | 0.598–0.626 | 0.602–0.623 |
+
+| the prior's k | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|
+| 1 | 501 | 8016 | 8008 | 0.612 | 0.599–0.625 | 0.601–0.623 |
+| 2 | 522 | 8352 | 8343 | 0.551 | 0.537–0.566 | 0.540–0.562 |
+| 3 | 479 | 7664 | 7656 | 0.511 | 0.496–0.525 | 0.500–0.522 |
+| 4 | 502 | 8032 | 8026 | 0.442 | 0.428–0.457 | 0.432–0.453 |
+| 5 | 496 | 7936 | 7931 | 0.381 | 0.369–0.394 | 0.370–0.392 |
+
+## legacy
+
+20000 games (19975 decisive, 25 drawn, 6 timeouts, 0 engine errors); 2500 decks, deck-games min 16, median 16; the first player won 0.537 of 19975.
+
+**The weak-deck tail** (every deck played is castable, so the uncastable ones are the draws rejected before it): 0 rejected draw(s) and 0 new makeup(s) over the band's 2500 decks; 0 deck(s) came after at least one; 0.000 of all draws were rejected.
+
+| colours with 3+ spells | decks | deck-games | decisive | win rate | 95% (deck bootstrap) | Wilson (unclustered) |
+|---|---|---|---|---|---|---|

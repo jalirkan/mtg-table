@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-22T09:06:23-04:00
+- time: 2026-10-22T09:06:38-04:00
 - runner: 10896b8e, up since 2026-10-22T02:30:08-04:00
-- running: J149 commands 5/5, 79999/80000 lines, 9913.8/h, ETA 2026-10-22T09:06:23-04:00, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 4.58; memory 5.6/30.5 GB, swap 542 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 4.1; memory 5.4/30.5 GB, swap 542 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J145
 - waiting: nothing
-- last finished: J148 failed at 2026-10-22T00:10:08-04:00
+- last finished: J149 failed at 2026-10-22T09:06:37-04:00: played 80000 · engine_errors 0 · cf.summary.holds 12 · cf.summary.notShown 0 · cf.summary.holdsByCandidate.i 4 · cf.summary.holdsByCandidate.ii 4 · cf.summary.holdsByCandidate.iii 4 · rec.rowsKbMean 58.9 · data_used_gb 4.93
 
 ## Messages
 

@@ -1,110 +1,23 @@
 {
  "schema": 1,
- "updated": "2026-10-22T09:06:23-04:00",
- "heartbeat": "2026-10-22T09:06:23-04:00",
+ "updated": "2026-10-22T09:06:38-04:00",
+ "heartbeat": "2026-10-22T09:06:38-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-22T09:06:38-04:00",
+ "idleReason": "blocked after J149",
  "host": {
-  "load1": 4.58,
-  "memUsedGb": 5.6,
+  "load1": 4.1,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 542,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
-  {
-   "publicTitle": "Library deck census night 2: fresh seeds, recorded, confirming night 1",
-   "publicEst": "~11-12 h",
-   "id": "J149",
-   "title": "The deck census, night 2 -- D447 unchanged on fresh seeds (decks and games 1501-1504, one a band; pilot games 1591-1594), 2,500 decks a band, each in 16 Bo1 games against random decks of its band (20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Forge Default both seats, the first RECORDED census night (census-play --record rows: both seats' decision rows and a per-turn ledger, under LAB_DATA_DIR=/home/justin-a/code/lab/data); then the pre-registered confirmation (D447 point 9) of night 1's three candidates per band -- (i) colours-with-3+ bin 1 above 0.5, (ii) bins 4 and 5 below 0.5, (iii) mono minus the < 0.4 main-share bin above 0 -- each HOLDS or NOT SHOWN on night 2's own deck-clustered bootstrap",
-   "cpu": "heavy",
-   "phase": "commands 5/5",
-   "started": "2026-10-22T03:35:59-04:00",
-   "elapsed": 19824,
-   "done": 79999,
-   "total": 80000,
-   "unit": "lines",
-   "ratePerHour": 9913.8,
-   "eta": "2026-10-22T09:06:23-04:00",
-   "workers": 6,
-   "workersMax": 6,
-   "cores": 1,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-10-22T09:05:50-04:00",
-   "memGb": 0,
-   "live": {
-    "played": 79999,
-    "engine_errors": 0,
-    "data_used_gb": 4.92,
-    "cards": 0,
-    "cf.summary.candidates": 0,
-    "cfstrict": 0,
-    "data_free_gb": 735.5,
-    "elapsed_s": 19792,
-    "gle.decisive": 19975,
-    "gle.draws": 25,
-    "gle.engineErrorRate": 0,
-    "gle.engineErrors": 0,
-    "gle.firstPlayerWinRate": 0.5367,
-    "gle.gameErrors": 4,
-    "gle.games": 20000,
-    "gle.games_per_h": 0,
-    "gle.meanTurns": 16.71,
-    "gle.record.games": 20000,
-    "gle.record.games_per_h": 0,
-    "gle.record.leakCheck.candidates": 4459,
-    "gle.record.leakCheck.checks": 4459,
-    "gle.record.leakCheck.controlMoved": 4172,
-    "gle.record.leakCheck.controls": 4219,
-    "gle.record.leakCheck.leaks": 0,
-    "gle.record.rowsCheck.files": 6,
-    "gle.record.rowsCheck.gamesIdChecked": 0,
-    "gle.record.rowsCheck.problems": 0,
-    "gle.record.rowsCheck.rows": 780092,
-    "gle.record.sizes.ledger.games": 20000,
-    "gle.record.sizes.ledger.games_per_h": 0,
-    "gle.record.sizes.ledger.max": 17745,
-    "gle.record.sizes.ledger.mean": 1568,
-    "gle.record.sizes.ledger.median": 1511,
-    "gle.record.sizes.ledger.p90": 2056,
-    "gle.record.sizes.ledger.total": 31363593,
-    "gle.record.sizes.rows.games": 20000,
-    "gle.record.sizes.rows.games_per_h": 0,
-    "gle.record.sizes.rows.max": 13648311,
-    "gle.record.sizes.rows.mean": 50815,
-    "gle.record.sizes.rows.median": 44640
-   },
-   "liveHeadline": [
-    "played",
-    "engine_errors",
-    "data_used_gb"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-22T03:50:09-04:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.4
-    },
-    {
-     "at": "2026-10-22T03:56:57-04:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J149-run5"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": "Omega colour balance: drafted pull, drafted payoff and the pool payoff",
@@ -117,6 +30,27 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Library deck census night 2: fresh seeds, recorded, confirming night 1",
+   "publicEst": "~11-12 h",
+   "id": "J149",
+   "title": "The deck census, night 2 -- D447 unchanged on fresh seeds (decks and games 1501-1504, one a band; pilot games 1591-1594), 2,500 decks a band, each in 16 Bo1 games against random decks of its band (20,000 games a band, 80,000 in all; game seeds S x 1,000,000 + g), Forge Default both seats, the first RECORDED census night (census-play --record rows: both seats' decision rows and a per-turn ledger, under LAB_DATA_DIR=/home/justin-a/code/lab/data); then the pre-registered confirmation (D447 point 9) of night 1's three candidates per band -- (i) colours-with-3+ bin 1 above 0.5, (ii) bins 4 and 5 below 0.5, (iii) mono minus the < 0.4 main-share bin above 0 -- each HOLDS or NOT SHOWN on night 2's own deck-clustered bootstrap",
+   "status": "failed",
+   "finished": "2026-10-22T09:06:37-04:00",
+   "headline": "played 80000 · engine_errors 0 · cf.summary.holds 12 · cf.summary.notShown 0 · cf.summary.holdsByCandidate.i 4 · cf.summary.holdsByCandidate.ii 4 · cf.summary.holdsByCandidate.iii 4 · rec.rowsKbMean 58.9 · data_used_gb 4.93",
+   "numbers": {
+    "played": 80000,
+    "engine_errors": 0,
+    "cf.summary.holds": 12,
+    "cf.summary.notShown": 0,
+    "cf.summary.holdsByCandidate.i": 4,
+    "cf.summary.holdsByCandidate.ii": 4,
+    "cf.summary.holdsByCandidate.iii": 4,
+    "rec.rowsKbMean": 58.9,
+    "data_used_gb": 4.93
+   },
+   "detail": "check: cf.check.estimatesEqual == cf.check.cellsCompared (cf.check.estimatesEqual = 51, cf.check.cellsCompared = 52)"
+  },
   {
    "publicTitle": "Move atlas: random play vs Forge play, one deck pair",
    "publicEst": "~4 h",
@@ -933,18 +867,6 @@
    "headline": "",
    "numbers": {},
    "detail": "pilot: inp.truth == 291 and inp.hand3 == 291 and inp.hand12 == 291 (inp.truth = 291, inp.hand3 = 344)"
-  },
-  {
-   "publicTitle": "M55 frames",
-   "publicEst": "~2 min",
-   "id": "J095",
-   "title": "The M55 recording's frames in full: where card 99 is (or is not) in the state frames of decisions 55, 58, 60 and 63",
-   "status": "done",
-   "finished": "2026-10-06T06:08:13-04:00",
-   "headline": "written 1",
-   "numbers": {
-    "written": 1
-   }
   }
  ],
  "runner": {
