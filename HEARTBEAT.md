@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-22T10:45:56-04:00
+- time: 2026-10-22T10:49:42-04:00
 - runner: 8fca7250, up since 2026-10-22T09:13:24-04:00
-- running: J150 pilot 1/1, 0/125700 lines, 3 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5.6; memory 6.9/30.5 GB, swap 734 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 7.06; memory 6.7/30.5 GB, swap 734 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J145 done at 2026-10-22T10:45:30-04:00: played 14400 · engine_errors 0 · bal.verdict.code 1
+- last finished: J150 failed at 2026-10-22T10:49:42-04:00
 
 ## Messages
 

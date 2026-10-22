@@ -1,74 +1,37 @@
 {
  "schema": 1,
- "updated": "2026-10-22T10:45:56-04:00",
- "heartbeat": "2026-10-22T10:45:56-04:00",
+ "updated": "2026-10-22T10:49:42-04:00",
+ "heartbeat": "2026-10-22T10:49:42-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-22T10:49:42-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 5.6,
-  "memUsedGb": 6.9,
+  "load1": 7.06,
+  "memUsedGb": 6.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 734,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Move atlas 2: three deck pairs, nine spine games",
    "publicEst": "~16 h",
    "id": "J150",
    "title": "The move atlas, rung 2 -- three deck pairs by D451's pair rule (fair-fight-900000005 again as the repeat, peasant-900000007, vintage-900000007) x three Forge-vs-Forge spine games each at fresh seeds 452-460; phase A 2,400 random-vs-random rollouts a pair; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; the random seat under G5 (D458, no re-pick of a play the engine refused to pay for); pre-registered reads, numbers only. Method only, no outcome rule beyond D451's",
-   "cpu": "heavy",
-   "phase": "pilot 1/1",
-   "started": "2026-10-22T10:45:31-04:00",
-   "elapsed": 25,
-   "done": 0,
-   "total": 125700,
-   "unit": "lines",
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 7,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-10-22T10:45:31-04:00",
-   "memGb": 0,
-   "live": {
-    "played_a": 0,
-    "branches": 0,
-    "atlas.problems": -1,
-    "data_free_gb": 732.3,
-    "data_used_gb": 0,
-    "elapsed_s": 0,
-    "engine_errors": 0,
-    "payfail": 0,
-    "played_a_ff5": 0,
-    "played_a_peasant7": 0,
-    "played_a_vintage7": 0,
-    "pressure_events": 0,
-    "unit_errors": 0,
-    "workers": 1
-   },
-   "liveHeadline": [
-    "played_a",
-    "branches",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J150-pilot1"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "status": "failed",
+   "finished": "2026-10-22T10:49:42-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot: selftest == 1 (selftest = 0); pilot.noRepeatRefused >= 1 (pilot.noRepeatRefused = 0)"
+  },
   {
    "publicTitle": "Omega colour balance: drafted pull, drafted payoff and the pool payoff",
    "publicEst": "~2 to 4 h",
@@ -889,25 +852,6 @@
     "r2.pairwise_diff_hi": 0.003963937656102844,
     "r2.sign_discordant": 70,
     "r2.edge": 0
-   }
-  },
-  {
-   "publicTitle": "Card ratings vs human results",
-   "publicEst": "~20 min",
-   "id": "J098",
-   "title": "The lab's card strengths against human results (D396): J062's M0 power and the Vintage meta win rates against 17Lands' Powered Cube GIH WR, by Spearman with a bootstrap interval, the biggest disagreements and colour groups; no Forge",
-   "status": "done",
-   "finished": "2026-10-06T08:07:03-04:00",
-   "headline": "p.compared 147 · p.nonland 126 · p.rho 0.295 · p.lo 0.137 · p.hi 0.439 · p.reading 1 · p.R_mean -0.736 · p.cheapCreature_mean -0.347",
-   "numbers": {
-    "p.compared": 147,
-    "p.nonland": 126,
-    "p.rho": 0.29460561620672987,
-    "p.lo": 0.13748345655965868,
-    "p.hi": 0.4388161806516716,
-    "p.reading": 1,
-    "p.R_mean": -0.7363670601370568,
-    "p.cheapCreature_mean": -0.3474889006298763
    }
   }
  ],

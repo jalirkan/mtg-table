@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: selftest == 1 (selftest = 0); pilot.noRepeatRefused >= 1 (pilot.noRepeatRefused = 0)
 runner: forgecoach-runner 8fca7250
 started: 2026-10-22T10:45:31-04:00
-phase: pilot 1/1
+finished: 2026-10-22T10:49:42-04:00
 mtg-table: 8fca725
 workers: 3
+peak_worker_rss_gb: 1.58
