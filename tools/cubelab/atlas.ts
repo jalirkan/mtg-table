@@ -82,7 +82,6 @@ export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' |
 
 const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
 
-/** The pair the rule chooses, from the ladder's results (every results/*.jsonl under `ladderDir`). */
 /**
  * The atlas's worker heap when CUBELAB_WORKER_XMX is not set (every other command keeps 4096m).
  * Phase B keeps a worker alive over hundreds of branch games and G1 grows its heap to the cap: under
@@ -96,6 +95,7 @@ const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k
  */
 export const ATLAS_WORKER_XMX = '2048m';
 
+/** The pair the rule chooses, from the ladder's results (every results/*.jsonl under `ladderDir`). */
 export function autoPair(repo: string, ladderDir: string, pairsFile: string): { chosen: PairRow; table: PairRow[]; games: number } {
   const pairs = pairLines(fs.readFileSync(pairsFile, 'utf8'));
   const dir = path.join(ladderDir, 'results');
