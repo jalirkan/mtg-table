@@ -8,26 +8,27 @@ cores: 7
 max_workers: 7
 mem_per_worker_gb: 2.7
 after: J145
-repos: mtg-table@main (FILL IN before posting: the commit on origin/main that merges #175 (worker heap, the atlas's 2048m), #176 (monotonic unit watchdog, --unit-timeout, D459), the checker PR (pc/check-redaction-empty-hand, --empty-hand-ok) and #177 (G5, D458); the pilot's merged, has-g5, has-watchdog, has-heap and has-checker checks fail until then)
+repos: mtg-table@main (FILL IN: merge of #179 over 5a02afc0. 5a02afc0 already merges #175 (worker heap, the atlas's 2048m), #176 (monotonic unit watchdog, --unit-timeout, D459), #177 (G5, D458) and #178 (--empty-hand-ok, D460); #179 (the runner's step durations on the monotonic clock, D461) is a precondition for the 8h step timeout. The pilot's merged, has-g5, has-watchdog, has-heap and has-checker checks hold the pin)
 decides: nothing by itself. Rung 2 of the move atlas: whether J148's one-game picture (the two maps rarely agree before the game is decided; rho below zero; "cast now / don't attack" under random play) is a property of one spine or of the method, read on nine spines of three pairs, with intervals clustered by pair and spine; and how much a labelled decision costs, for rung 3
 hypothesis: none to confirm about the maps. Two candidates from J148 are read for repetition on the repeat pair only (iv): C1 "cast now" and C2 "don't attack", both + on J148 (C1 +0.013 over 18 decisions, C2 +0.059 over 4; neither excluded zero there)
 rule: D451 (method; no outcome rule) with D458 (G5) and D459 (unit watchdog). Pre-registered here, before any J150 data: the reads (i)-(vi) below, computed by var/lab-j150-local/bin/reads.py exactly as written in the pilot; a candidate of (iv) HOLDS only if its point is > 0 (J148's direction) and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. No other read carries a verdict
 followup: morning-read
-est: ~16 h at 7 workers (sizing below): pilot ~20 min; per pair ~5.3 h (phase A 2,400 games ~0.5 h + its checks ~5 min; three spines of ~13,200 branch games ~1.2 h each + their checks ~25 min each); reads ~1 min. Disk ~22 GB in the clone's var/ (a phase A game 234 KB, a branch ~173 KB as J148 measured)
+est: ~16 h at 7 workers (sizing below): pilot ~25 min; per pair ~5.3 h (phase A 2,400 games ~0.5 h + its checks ~5 min; three spines of ~13,200 branch games ~1.2 h each + their checks ~25 min each); reads ~1 min. Disk ~22 GB on the lab data folder /home/justin-a/code/lab/data (a phase A game 234 KB, a branch ~173 KB as J148 measured)
 resumable: yes
 timeout: 8h
-progress: lines var/lab-j150/a-*/phaseA/games.jsonl var/lab-j150/b-*/phaseB/branches.jsonl of 125700
-metrics: played_a = lines var/lab-j150/a-*/phaseA/games.jsonl
-metrics: played_a_ff5 = lines var/lab-j150/a-ff5/phaseA/games.jsonl
-metrics: played_a_peasant7 = lines var/lab-j150/a-peasant7/phaseA/games.jsonl
-metrics: played_a_vintage7 = lines var/lab-j150/a-vintage7/phaseA/games.jsonl
-metrics: branches = lines var/lab-j150/b-*/phaseB/branches.jsonl
-metrics: engine_errors = count var/lab-j150/a-*/phaseA/games.jsonl "\"engineError\":\""
-metrics: unit_errors = count var/lab-j150/b-*/phaseB/units.jsonl "\"ok\":false"
-metrics: payfail = count var/lab-j150/b-*/phaseB/logs/*.log "Didn't find what to pay for"
+progress: lines /home/justin-a/code/lab/data/lab-j150/a-*/phaseA/games.jsonl /home/justin-a/code/lab/data/lab-j150/b-*/phaseB/branches.jsonl of 125700
+metrics: played_a = lines /home/justin-a/code/lab/data/lab-j150/a-*/phaseA/games.jsonl
+metrics: played_a_ff5 = lines /home/justin-a/code/lab/data/lab-j150/a-ff5/phaseA/games.jsonl
+metrics: played_a_peasant7 = lines /home/justin-a/code/lab/data/lab-j150/a-peasant7/phaseA/games.jsonl
+metrics: played_a_vintage7 = lines /home/justin-a/code/lab/data/lab-j150/a-vintage7/phaseA/games.jsonl
+metrics: branches = lines /home/justin-a/code/lab/data/lab-j150/b-*/phaseB/branches.jsonl
+metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j150/a-*/phaseA/games.jsonl "\"engineError\":\""
+metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j150/b-*/phaseB/units.jsonl "\"ok\":false"
+metrics: payfail = count /home/justin-a/code/lab/data/lab-j150/b-*/phaseB/logs/*.log "Didn't find what to pay for"
 metrics: atlas = sh: python3 -I var/lab-j150-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
-metrics: disk_gb = sh: python3 -c "import shutil; print(round(shutil.disk_usage('.').free / 1e9, 1))"
-headline: played_a, branches, atlas.spinesDone, atlas.decisions, atlas.meanRho, atlas.sameBest, atlas.refusedCast, atlas.problems
+metrics: data_free_gb = sh: python3 -c "import shutil; print(round(shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9, 1))" 2>/dev/null || echo 0
+metrics: data_used_gb = sh: python3 -c "import os; print(round(sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk('/home/justin-a/code/lab/data/lab-j150') for f in fs) / 1e9, 2))" 2>/dev/null || echo 0
+headline: played_a, branches, atlas.spinesDone, atlas.decisions, atlas.meanRho, atlas.sameBest, atlas.refusedCast, atlas.refusedCastSpinesFf5, atlas.problems
 
 **Why.** J148 (results/J148/summary.md) was the first full atlas: one pair, one spine game, one seed. On that
 game the maps named the same best option at 32 of 49 decisions, but 21 of those were moves after the game
@@ -52,10 +53,32 @@ method on three pairs, three fresh spines each, so the reads have a between-game
   self-test peaked at 1.53 GB): 7 x 2.7 = 18.9 GB, inside the heavy budget.
 - **The unit watchdog (#176, D459).** A monotonic clock and `--unit-timeout 30` minutes (J148's longest
   honest unit 976 s), so a boot-time clock jump no longer "hangs" every worker.
-- **The checker (FILL IN: PR number).** `check-redaction.mjs --empty-hand-ok` turns the two "proves
-  nothing" assertions into a WARN only when the file itself shows the opponent's hand count 0 and no
-  opponent library card in every state; the atlas passes it for branch logs (J148's 24 false positives).
-  FILL IN if the PR puts the flag on the atlas's command line instead: then add it to every atlas line below.
+- **The checker (#178, D460).** `check-redaction.mjs --empty-hand-ok` turns the two "proves nothing"
+  assertions into a WARN only when the file itself shows the opponent's hand count 0 and no opponent
+  library card in every state; the atlas passes it for branch logs itself (J148's 24 false positives), so
+  no atlas line below names it.
+- **The runner's step clock (#179, D461; the pin waits for it).** Step durations on the monotonic clock, so
+  a boot-time RTC jump cannot fire the 8h `timeout:` early, as it fired J143's 9 h after ~5 h.
+
+**Where it writes: the lab data folder.** Every atlas command runs under
+`LAB_DATA_DIR=/home/justin-a/code/lab/data` (the README's safety rules: the only value it may take). The
+atlas honours it: `atlasCommand` resolves `--out` through `labPath(..., 'write')` (tools/cubelab/labdata.ts,
+as census-play does), and every phase A and phase B path (rows, frames, ledgers, units, logs, atlas.json) is
+built from that absolute folder; so `--out var/lab-j150/b-ff5-452` lands at
+`/home/justin-a/code/lab/data/lab-j150/b-ff5-452`. `labPath` refuses a write whose repo copy already holds
+work (none does: nothing is written to the clone's `var/lab-j150`). The ladder is read through
+`labPath(..., 'read')` and is not used here (the decks are named). The Forge homes
+(`CUBELAB_HOME_ROOT=var/cubelab/homes-J150`), `atlas-selftest`'s own folder (absolute,
+`var/cubelab/atlas-selftest`) and the job's scripts (`var/lab-j150-local/`) stay in the clone. As J144/J149:
+- the pilot's first lines assert that `LAB_DATA_DIR` is unset or exactly that path, and so is `config.json`'s
+  `labDataDir`;
+- they `mkdir -p` the data folder before anything (a metric, a tool) reads it, and stop under 50 GB free;
+- every run block asserts the path and the 50 GB again before it plays;
+- `abort:` fires under 50 GB;
+- the metrics, `progress:` and `collect:` read the data folder by its absolute path.
+- **No `clean:`** (the runner refuses data-folder paths there, and the job is `resumable: yes`). A restart
+  from scratch would need `/home/justin-a/code/lab/data/lab-j150` removed by hand, by Justin or the PC
+  session; no job deletes there.
 
 **Nothing beside it.** `cores: 7` of the PC's 8 reserves the box for this job: post nothing heavy beside it,
 and hold the GPU lane for the whole run (J146 was OOM-killed beside it). There is no `pilot_cores:` on
@@ -69,8 +92,8 @@ bench or nothing.
 |---|---|
 | pairs | D451's rule (point 3), the three best-scored lines of `tools/ai-bench/pairs-confirm.txt` over the ladder's 25,056 games (checked 2026-10-22 with `autoPair` on the lab's `var/ai-ladder`; the same table as J148's atlas.md): **line 2 fair-fight-900000005** (844 games, A 439 of 844, score 0.0538) -- the repeat pair; **line 18 peasant-900000007** (828, A 397, 0.0546); **line 28 vintage-900000007** (832, A 395, 0.0592). Named here by deck file, not `--pair auto`, so a growing ladder cannot change them |
 | spines | three Forge-vs-Forge baseline games a pair at fresh seeds: fair-fight **452, 453, 454**; peasant **455, 456, 457**; vintage **458, 459, 460** (J148 was 451) |
-| phase A | **2,400 rollouts a pair** from the opening, both seats random, seeds S x 1,000,000 + r with S the pair's first spine seed (452, 455, 458); J148 measured ~2,300 for a +/- 2-point interval on seat A's score. `--phase a`, its own folder `var/lab-j150/a-<pair>` |
-| phase B | each spine `--phase b`, its own folder `var/lab-j150/b-<pair>-<seed>`; **16 of seat A's decisions** with two or more options, evenly spaced by D451's `spread` (all of them if the game lists 16 or fewer); every option forked and played out **200 times random, 40 times Forge**, units of 25 branches, one no-leak check a unit-chunk as before |
+| phase A | **2,400 rollouts a pair** from the opening, both seats random, seeds S x 1,000,000 + r with S the pair's first spine seed (452, 455, 458); J148 measured ~2,300 for a +/- 2-point interval on seat A's score. `--phase a`, its own folder `var/lab-j150/a-<pair>` (re-rooted to the data folder, above) |
+| phase B | each spine `--phase b`, its own folder `var/lab-j150/b-<pair>-<seed>` (likewise); **16 of seat A's decisions** with two or more options, evenly spaced by D451's `spread` (all of them if the game lists 16 or fewer); every option forked and played out **200 times random, 40 times Forge**, units of 25 branches, one no-leak check a unit-chunk as before |
 | why 16 decisions | J148 branched all 49 of its spine (40,213 branch games). All decisions of nine spines would be ~363,000 branch games, ~31 h of phase B plus ~10 h of checks at 7 workers. 16 a spine is ~118,500 and ~16 h in all. The between-game interval is set by the nine spines, not by decisions within one, so the cap costs the reads little; turns 2-12 still get ~5 decisions a spine |
 | checks | D451 point 6 on every folder, with `--empty-hand-ok` for branch logs (above); guardrails G1/G4 read back, G3/G5 counted from the logs |
 
@@ -92,14 +115,14 @@ bench or nothing.
 - **A pair's block** is ~0.57 h of phase A and its checks, plus 3 x 1.6 h of spines, **~5.3 h**. Three
   blocks, ~16 h; the pilot ~20 min.
 - **`timeout: 8h`** is one block's 5.3 h + 50%, and it bounds each step (each block is one step).
-  - The runner's step clock is wall time (`Date.now()`; #176's follow-up). A boot-time jump of the RTC
-    (Windows writes local time) can still fire it early, as it did J143's.
+  - The runner's step clock is monotonic from #179 (D461), which the pin waits for; before it, a
+    boot-time jump of the RTC (Windows writes local time) fired J143's 9 h timeout after ~5 h.
   - The job is `resumable: yes`, so a stop or a restart resumes at the block. The PC watches the first
     boot after posting.
 - **Unit timeout: `--unit-timeout 30`** (minutes, monotonic). A random unit of 25 branches at J148's
   early-game 3.94 s is ~100 s plus its replay.
-- **Disk:** ~1.7 GB for phase A and ~20.5 GB for phase B (J148: 9.3 GB for ~50,000 games), all in the
-  clone's `var/` as J148's was. The pilot requires 40 GB free and `abort:` fires under 10 GB.
+- **Disk:** ~1.7 GB for phase A and ~20.5 GB for phase B (J148: 9.3 GB for ~50,000 games), on the lab
+  data folder. The pilot and every run block require 50 GB free, and `abort:` fires under 50 GB.
 
 **Pre-registered reads** (numbers only, no verdict beyond D451; `reads.py` below computes every one, and
 the pilot proves it on J148's own `atlas.json`, where it must give J148's published numbers):
@@ -107,8 +130,9 @@ the pilot proves it on J148's own `atlas.json`, where it must give J148's publis
   (21 of them at exactly 100.0); Q is the complete decisions not decided, 22 in J148.
 - **Intervals.** 95% percentile bootstrap, 10,000 draws, seed 150, clustered three ways: the pairs with
   replacement, then each drawn pair's spines, then each drawn spine's decisions. A per-pair interval
-  starts at the spine level. With three pairs and three spines a pair these intervals are wide by design,
-  and that width is the honest answer.
+  starts at the spine level. With three pairs the pooled interval's pair level is coarse (a resample of
+  three pairs has only ten distinct compositions), and with three spines a pair so is a pair's spine
+  level; these intervals are wide by design, and that width is the honest answer.
 - **(i) Agreement before the game is decided:** the same best option's share over Q, pooled with its
   interval, and per pair.
 - **(ii) rho:** the mean Spearman correlation between the maps over the rankable decisions (both maps
@@ -129,7 +153,8 @@ the pilot proves it on J148's own `atlas.json`, where it must give J148's publis
     otherwise it is **NOT SHOWN**.
   - The Forge map's same statistics are reported beside, as information.
   - Under G5 this is the same direction read under a changed random policy (above).
-- **(v) Guardrails:** per pair and in total, from every atlas.json's checks.
+- **(v) Guardrails:** per pair and in total, from every atlas.json's checks. G5 must have fired on the repeat
+  pair (pilot and final checks, below); how often it fired on the other two pairs is reported, not checked.
   - G1: lands offered and taken.
   - G4: hands kept.
   - Violations.
@@ -141,27 +166,44 @@ the pilot proves it on J148's own `atlas.json`, where it must give J148's publis
   labelled decision (options x 240), worker-seconds a labelled decision, labelled decisions per 7-worker
   hour and per 10-hour night, and Q's share of the decisions (the labels that are not already won).
 
-**Outputs.**
-- `var/lab-j150/a-<pair>/` and `var/lab-j150/b-<pair>-<seed>/`: each with `plan.json`, `atlas.json`,
-  `atlas.md`, and `phaseA/` or `phaseB/`.
-- `var/lab-j150/report/`: each folder's `atlas.json` and `atlas.md` copied under its folder's name, and
-  `reads.json`.
+**Outputs** (on the data folder, `/home/justin-a/code/lab/data/lab-j150/`).
+- `a-<pair>/` and `b-<pair>-<seed>/`: each with `plan.json`, `atlas.json`, `atlas.md`, and `phaseA/` or
+  `phaseB/`; `pilot/`, the pilot's smoke.
+- `report/`: each folder's `atlas.json` and `atlas.md` copied under its folder's name, `reads.json` and
+  `exits.txt` (each atlas command's exit code).
 - Never `summary.md` or `metrics.json`.
 
 ## Pilot
-About 20 minutes at up to 3 workers: the pin carries the four PRs; the tests; the two engine self-tests (the
-atlas's checks with G3/G5's keys asserted; the Forge, search and explore seats still play origin/main's
-games); `reads.py` written and proved on J148's atlas; a 2-decision smoke of the repeat pair.
+About 25 minutes at up to 3 workers: the data folder; the pin carries the five PRs; the tests; the two engine
+self-tests (the atlas's checks with G3/G5's keys asserted; the Forge, search and explore seats still play
+origin/main's games); `reads.py` written and proved on J148's atlas; a smoke of the repeat pair with 60
+rollouts and 2 decisions, in which G5 must fire.
+
+**Why the pilot's G5 check is on a smoke of the repeat pair and not on its spines.** Spines 452-454 are the
+run itself (~3.5 h of phase B); the pilot cannot play them without becoming the job. It plays the repeat
+pair instead, deck for deck, at its own seed 4600: 60 random-vs-random rollouts and a 2-decision phase B.
+Elite Spellbinder is in deck B. In J148's phase A (the same pair, the same random seat) 1,389 of 10,000
+games logged at least one refused payment ("Didn't find what to pay for", attributed to games by the worker
+log's game lines), 13.9% a game. So 60 games all without one has a chance of 0.861^60, about 1 in 8,000:
+`pilot.refusedCast >= 1` is a mechanical check that G5 is wired, not a gamble. The spines themselves are
+held to it by the final checks: `atlas.refusedCastFf5 >= 1` (phase A's 2,400 games and the three spines;
+J148's 13.9% makes a miss impossible in practice) and `atlas.refusedCastSpinesFf5 >= 1` (the three spines'
+random branches alone; J148's random branches of this pair logged 1,066 refusals in 217 of its unit
+attempts).
 ```bash
-mkdir -p var/lab-j150 var/lab-j150-local/bin
+# the lab data folder: exactly /home/justin-a/code/lab/data (README safety rules), created before anything reads it, 50 GB free or stop
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J150: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import json, sys; v = json.load(open('config.json')).get('labDataDir'); sys.exit(0 if v in (None, '', '/home/justin-a/code/lab/data') else 'J150: config.json labDataDir is %r, not /home/justin-a/code/lab/data' % v)"
+mkdir -p /home/justin-a/code/lab/data/lab-j150 var/lab-j150-local/bin
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; print('J150: data folder free GB', round(f, 1)); sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
+echo 1 > var/lab-j150-local/datadir.txt
 git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j150-local/merged.txt || echo 0 > var/lab-j150-local/merged.txt
 grep -q 'COUNTED_GUARDRAILS' tools/cubelab/atlas.ts && grep -q 'noRepeatRefused' bridge/src/mtgtable/ai/Explorer.java && echo 1 > var/lab-j150-local/has-g5.txt || echo 0 > var/lab-j150-local/has-g5.txt
 grep -q 'unit-timeout' tools/cubelab/atlas.ts && grep -q 'monotonicMs' tools/cubelab/engine.ts && echo 1 > var/lab-j150-local/has-watchdog.txt || echo 0 > var/lab-j150-local/has-watchdog.txt
 grep -rq 'CUBELAB_WORKER_XMX' tools/cubelab && echo 1 > var/lab-j150-local/has-heap.txt || echo 0 > var/lab-j150-local/has-heap.txt
-# FILL IN with the checker PR: the flag's name in the checker and where the atlas passes it
 grep -q 'empty-hand-ok' tools/check-redaction.mjs && grep -q 'empty-hand-ok' tools/cubelab/atlas.ts && echo 1 > var/lab-j150-local/has-checker.txt || echo 0 > var/lab-j150-local/has-checker.txt
 test -z "${CUBELAB_WORKER_XMX:-}" && echo 1 > var/lab-j150-local/xmx-unset.txt || echo 0 > var/lab-j150-local/xmx-unset.txt
-node --test web/test/cubelab-atlas.test.ts web/test/cubelab-record.test.ts web/test/cubelab-watchdog.test.ts
+env -u LAB_DATA_DIR node --test web/test/cubelab-atlas.test.ts web/test/cubelab-record.test.ts web/test/cubelab-watchdog.test.ts
 cat > var/lab-j150-local/bin/reads.py <<'PY'
 # J150's pre-registered reads (pc-results drafts/J150-move-atlas-2.md), from the phase-B atlas.json files
 # of the spines named on the command line as PAIR:SEED:PATH. Standard library only; no engine.
@@ -367,12 +409,13 @@ print(json.dumps(out, indent=1))
 PY
 cat > var/lab-j150-local/bin/metrics.py <<'PY'
 # J150's metrics (pc-results drafts/J150-move-atlas-2.md): one JSON object over every atlas.json under
-# var/lab-j150 (3 phase-A folders a-*, 9 spine folders b-*). Standard library only; no engine.
+# the data folder's lab-j150 (3 phase-A folders a-*, 9 spine folders b-*). Standard library only; no engine.
 import glob, json, math, os
 out = {'atlases': 0, 'spinesDone': 0, 'problems': 0, 'guardViolations': 0, 'g5keys': 0, 'refusedCast': 0,
-       'noRepeatRefused': 0, 'noRepeatNoOp': 0, 'decisions': 0, 'sameBest': 0, 'meanRho': None, 'unitsShort': 0, 'reads': 0}
+       'noRepeatRefused': 0, 'noRepeatNoOp': 0, 'refusedCastFf5': 0, 'refusedCastSpinesFf5': 0, 'decisions': 0, 'sameBest': 0, 'meanRho': None, 'unitsShort': 0, 'reads': 0}
 rhos = []
-for f in sorted(glob.glob('var/lab-j150/[ab]-*/atlas.json')):
+D = '/home/justin-a/code/lab/data/lab-j150'
+for f in sorted(glob.glob(D + '/[ab]-*/atlas.json')):
     d = json.load(open(f))
     c = d['checks']
     g = c['guardrails']
@@ -382,6 +425,11 @@ for f in sorted(glob.glob('var/lab-j150/[ab]-*/atlas.json')):
     out['g5keys'] += 1 if 'refusedCast' in g else 0
     for k in ('refusedCast', 'noRepeatRefused', 'noRepeatNoOp'):
         out[k] += g.get(k, 0)
+    name = os.path.basename(os.path.dirname(f))
+    if name == 'a-ff5' or name.startswith('b-ff5-'):
+        out['refusedCastFf5'] += g.get('refusedCast', 0)
+    if name.startswith('b-ff5-'):
+        out['refusedCastSpinesFf5'] += g.get('refusedCast', 0)
     b = d.get('phaseB')
     if b:
         out['spinesDone'] += 1
@@ -390,7 +438,7 @@ for f in sorted(glob.glob('var/lab-j150/[ab]-*/atlas.json')):
         rhos += [x['rho'] for x in b['decisions'] if x['complete'] and x['rho'] is not None]
 out['meanRho'] = round(sum(rhos) / len(rhos), 4) if rhos else None
 # every planned unit of every spine finished: min(--decisions, listed) x (ceil(R / chunk) + ceil(F / chunk)) distinct ok ids
-for p in sorted(glob.glob('var/lab-j150/b-*/plan.json')):
+for p in sorted(glob.glob(D + '/b-*/plan.json')):
     dd = os.path.dirname(p)
     plan = json.load(open(p))
     base = os.path.join(dd, 'phaseB', 'baseline.json')
@@ -412,7 +460,7 @@ for p in sorted(glob.glob('var/lab-j150/b-*/plan.json')):
                 ok.add(u['id'])
     out['unitsShort'] += max(0, n * per - len(ok))
 try:
-    r = json.load(open('var/lab-j150/report/reads.json'))
+    r = json.load(open(D + '/report/reads.json'))
     out['reads'] = 1 if len(r['spines']) == 3 and sum(len(v) for v in r['spines'].values()) == 9 else 0
 except (OSError, ValueError, KeyError):
     pass
@@ -422,11 +470,13 @@ PY
 python3 -I var/lab-j150-local/bin/reads.py ff5:451:var/lab-j142/atlas/atlas.json > var/lab-j150-local/reads-j148.json
 python3 -I -c "import json; d = json.load(open('var/lab-j150-local/reads-j148.json')); ok = (d['decided'], d['Q'], d['i_sameBest']['point'], d['ii_rho']['n'], d['ii_rho']['point'], d['iv_repeat']['C1_castNow']['random']['point'], d['iv_repeat']['C2_dontAttack']['random']['point']) == (27, 22, 0.3182, 18, -0.3416, 0.0129, 0.0588); print(1 if ok else 0)" > var/lab-j150-local/reads-self.txt
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
 tools/cubelab.sh atlas-selftest --jobs {workers} && echo 1 > var/lab-j150-local/selftest.txt || echo 0 > var/lab-j150-local/selftest.txt
 tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j150-local/identity.txt || echo 0 > var/lab-j150-local/identity.txt
 S=tools/ai-bench/decks/sets
-tools/cubelab.sh atlas --deck-a $S/fair-fight-900000005-A.dck --deck-b $S/fair-fight-900000005-B.dck --seed 4600 --rollouts 20 --decisions 2 --branch-random 8 --branch-forge 4 --chunk 4 --unit-timeout 30 --jobs {workers} --out var/lab-j150/pilot || true
+tools/cubelab.sh atlas --deck-a $S/fair-fight-900000005-A.dck --deck-b $S/fair-fight-900000005-B.dck --seed 4600 --rollouts 60 --decisions 2 --branch-random 8 --branch-forge 4 --chunk 4 --unit-timeout 30 --jobs {workers} --out var/lab-j150/pilot || true
 ```
+metrics: datadir = sh: cat var/lab-j150-local/datadir.txt 2>/dev/null || echo 0
 metrics: merged = sh: cat var/lab-j150-local/merged.txt 2>/dev/null || echo 0
 metrics: has_g5 = sh: cat var/lab-j150-local/has-g5.txt 2>/dev/null || echo 0
 metrics: has_watchdog = sh: cat var/lab-j150-local/has-watchdog.txt 2>/dev/null || echo 0
@@ -436,7 +486,9 @@ metrics: xmx_unset = sh: cat var/lab-j150-local/xmx-unset.txt 2>/dev/null || ech
 metrics: reads_self = sh: cat var/lab-j150-local/reads-self.txt 2>/dev/null || echo 0
 metrics: selftest = sh: cat var/lab-j150-local/selftest.txt 2>/dev/null || echo 0
 metrics: identity = sh: cat var/lab-j150-local/identity.txt 2>/dev/null || echo 0
-metrics: pilot = sh: python3 -c "import json; d=json.load(open('var/lab-j150/pilot/atlas.json')); g=d['checks']['guardrails']; print(json.dumps({'problems': len(d['checks']['problems']), 'played': d['phaseA']['played'], 'decisions': len(d['phaseB']['decisions']), 'g5': 1 if 'refusedCast' in g and 'noRepeatRefused' in g and 'noRepeatNoOp' in g else 0, 'guardViolations': g['violations']}))" 2>/dev/null || echo '{"problems":-1}'
+metrics: pilot = sh: python3 -c "import json; d=json.load(open('/home/justin-a/code/lab/data/lab-j150/pilot/atlas.json')); g=d['checks']['guardrails']; print(json.dumps({'problems': len(d['checks']['problems']), 'played': d['phaseA']['played'], 'decisions': len(d['phaseB']['decisions']), 'g5': 1 if 'refusedCast' in g and 'noRepeatRefused' in g and 'noRepeatNoOp' in g else 0, 'refusedCast': g.get('refusedCast', 0), 'noRepeatRefused': g.get('noRepeatRefused', 0), 'guardViolations': g['violations']}))" 2>/dev/null || echo '{"problems":-1}'
+check: datadir == 1
+check: data_free_gb >= 50
 check: merged == 1
 check: has_g5 == 1
 check: has_watchdog == 1
@@ -447,58 +499,72 @@ check: reads_self == 1
 check: selftest == 1
 check: identity == 1
 check: pilot.problems == 0
-check: pilot.played == 20
+check: pilot.played == 60
 check: pilot.decisions == 2
 check: pilot.g5 == 1
+check: pilot.refusedCast >= 1
 check: pilot.guardViolations == 0
-check: disk_gb >= 40
 
 ## Commands
 One block a pair: its phase A, then its three spines. Every atlas command resumes what is done. An atlas
 that finds a problem exits 3 and the block goes on to the next spine (the exit is kept in
-`var/lab-j150/exits.txt`); the final checks read every folder's `atlas.json`.
+`/home/justin-a/code/lab/data/lab-j150/exits.txt`); the final checks read every folder's `atlas.json`. Each block asserts the data folder
+and its 50 GB again before it plays.
 ```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J150: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j150
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
 S=tools/ai-bench/decks/sets
 A=$S/fair-fight-900000005-A.dck; B=$S/fair-fight-900000005-B.dck
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 452 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-ff5 || rc=$?; echo "a-ff5 $rc" >> var/lab-j150/exits.txt
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 452 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-ff5 || rc=$?; echo "a-ff5 $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
 for s in 452 453 454; do
-  rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed $s --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j150/b-ff5-$s || rc=$?; echo "b-ff5-$s $rc" >> var/lab-j150/exits.txt
+  rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed $s --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j150/b-ff5-$s || rc=$?; echo "b-ff5-$s $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
 done
 ```
 ```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J150: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j150
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
 S=tools/ai-bench/decks/sets
 A=$S/peasant-900000007-A.dck; B=$S/peasant-900000007-B.dck
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 455 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-peasant7 || rc=$?; echo "a-peasant7 $rc" >> var/lab-j150/exits.txt
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 455 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-peasant7 || rc=$?; echo "a-peasant7 $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
 for s in 455 456 457; do
-  rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed $s --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j150/b-peasant7-$s || rc=$?; echo "b-peasant7-$s $rc" >> var/lab-j150/exits.txt
+  rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed $s --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j150/b-peasant7-$s || rc=$?; echo "b-peasant7-$s $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
 done
 ```
 ```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J150: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j150
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J150: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
 export CUBELAB_HOME_ROOT=var/cubelab/homes-J150
 S=tools/ai-bench/decks/sets
 A=$S/vintage-900000007-A.dck; B=$S/vintage-900000007-B.dck
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 458 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-vintage7 || rc=$?; echo "a-vintage7 $rc" >> var/lab-j150/exits.txt
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 458 --rollouts 2400 --phase a --jobs {workers} --out var/lab-j150/a-vintage7 || rc=$?; echo "a-vintage7 $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
 for s in 458 459 460; do
-  rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed $s --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j150/b-vintage7-$s || rc=$?; echo "b-vintage7-$s $rc" >> var/lab-j150/exits.txt
+  rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed $s --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j150/b-vintage7-$s || rc=$?; echo "b-vintage7-$s $rc" >> /home/justin-a/code/lab/data/lab-j150/exits.txt
 done
 ```
 cores: 1
 ```bash
-mkdir -p var/lab-j150/report
-for d in var/lab-j150/a-* var/lab-j150/b-*; do
+D=/home/justin-a/code/lab/data/lab-j150
+mkdir -p $D/report
+for d in $D/a-* $D/b-*; do
   n=$(basename "$d")
-  cp "$d/atlas.json" "var/lab-j150/report/$n.atlas.json"
-  cp "$d/atlas.md" "var/lab-j150/report/$n.atlas.md"
+  cp "$d/atlas.json" "$D/report/$n.atlas.json"
+  cp "$d/atlas.md" "$D/report/$n.atlas.md"
 done
 args=""
 for p in ff5 peasant7 vintage7; do
-  args="$args $p:A:var/lab-j150/a-$p/atlas.json"
-  for d in var/lab-j150/b-$p-*; do args="$args $p:${d##*-}:$d/atlas.json"; done
+  args="$args $p:A:$D/a-$p/atlas.json"
+  for d in $D/b-$p-*; do args="$args $p:${d##*-}:$d/atlas.json"; done
 done
-python3 -I var/lab-j150-local/bin/reads.py $args > var/lab-j150/report/reads.json
-cp var/lab-j150/exits.txt var/lab-j150/report/exits.txt
+python3 -I var/lab-j150-local/bin/reads.py $args > $D/report/reads.json
+cp $D/exits.txt $D/report/exits.txt
 ```
 check: played_a_ff5 == 2400
 check: played_a_peasant7 == 2400
@@ -509,6 +575,8 @@ check: atlas.atlases == 12
 check: atlas.spinesDone == 9
 check: atlas.unitsShort == 0
 check: atlas.g5keys == 12
+check: atlas.refusedCastFf5 >= 1
+check: atlas.refusedCastSpinesFf5 >= 1
 check: atlas.guardViolations == 0
 check: atlas.problems == 0
 check: atlas.reads == 1
@@ -516,17 +584,17 @@ check: atlas.reads == 1
 ## Abort if
 abort: played_a >= 500 and engine_errors > played_a * 0.02
 abort: unit_errors > 30
-abort: disk_gb < 10
+abort: data_free_gb < 50
 `unit_errors` counts every `"ok":false` line, a first attempt that a retry then finished included (J148 had
 11 such lines for 6 units), so the final `unit_errors == 0` is strict on purpose: every unit finished on its
 first try. `atlas.unitsShort` is the plainer "every planned unit finished": min(16, listed) x (8 + 2) distinct
 ok units a spine, summed over the nine.
 
 ## Report
-collect: var/lab-j150/report/*.atlas.md
-collect: var/lab-j150/report/*.atlas.json
-collect: var/lab-j150/report/reads.json
-collect: var/lab-j150/report/exits.txt
+collect: /home/justin-a/code/lab/data/lab-j150/report/*.atlas.md
+collect: /home/justin-a/code/lab/data/lab-j150/report/*.atlas.json
+collect: /home/justin-a/code/lab/data/lab-j150/report/reads.json
+collect: /home/justin-a/code/lab/data/lab-j150/report/exits.txt
 The summary says, for Justin, in plain words and numbers only:
 - **Phase A, per pair:** the outcome distribution, the game length, and the rollouts a +/- 2-point interval
   needed.
@@ -540,5 +608,8 @@ The summary says, for Justin, in plain words and numbers only:
   - (vi) the rung 3 sizing line.
 - **Per spine,** one line: its decisions, decided / Q, same best, and mean rho.
 - **The checks,** with any exit in `exits.txt` explained.
+- **The intervals' coarseness:** with three pairs the pooled interval's pair level is coarse (three pairs
+  resample to only ten distinct compositions), and with three spines a pair so is each pair's spine level;
+  say so beside every pooled and per-pair interval.
 - **No verdict:** D451 has none. Any other surprise is a candidate until a fresh seed and a second pair
   show it again.
