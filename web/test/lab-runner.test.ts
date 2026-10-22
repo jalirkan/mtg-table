@@ -46,7 +46,7 @@ import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { followupMessage, ledgerCheckLines, ledgerEntry, ledgerKeys, ledgerMarkdown, ledgerWarnings, withMessages } from '../../tools/runner/ledger.ts';
 import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
 import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
-import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, stderrGist, THREAD_CAP_VARS, threadCaps, transientGitFailure, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, stderrGist, THREAD_CAP_VARS, threadCaps, transientGitFailure, type JobRun, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
@@ -960,7 +960,15 @@ class FakeSys implements Sys {
   inSlice: string[] = [];
   /** git subcommands that fail (exit 128), e.g. ['fetch', 'push', 'ls-tree']. */
   gitFails = new Set<string>();
-  now(): number { return this.t; }
+  /**
+   * D461: `t` is the monotonic clock and moves both; `wallSkew` moves the wall clock alone (an NTP step,
+   * an RTC that Windows set to local time).
+   */
+  wallSkew = 0;
+  boot: string | null = 'boot-a';
+  now(): number { return this.t + this.wallSkew; }
+  mono(): number { return this.t; }
+  bootId(): string | null { return this.boot; }
   run(argv: string[], o: { cwd?: string; timeoutMs?: number; env?: Record<string, string>; input?: string } = {}) {
     if (argv[0] === 'git') {
       const sub = argv.slice(1).find((a, i, all) => !a.startsWith('-') && all[i - 1] !== '-C' && all[i - 1] !== '-c');
@@ -2869,4 +2877,122 @@ test('local server: /public-ledger.json serves the public ledger, 404 without on
   const src = { status: () => null, ladder: () => null, ledger: () => '{"schema":1}\n' };
   assert.deepEqual([answer('GET', '/public-ledger.json', {}, src).status, answer('GET', '/public-ledger.json', {}, src).body], [200, '{"schema":1}']);
   assert.equal(answer('GET', '/public-ledger.json', {}, { status: () => null, ladder: () => null }).status, 404);
+});
+
+// ------------------------------------------------------------------ D461: durations on the monotonic clock
+
+/** NEW_JOB as `id`, with a step timeout of an hour, at run1 in hold mode (its unit active). */
+function atRun1(id: string): { w: World; r: Runner; run: JobRun } {
+  const w = world({ [`${id}-x.md`]: NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', 'max_workers: 3\ntimeout: 1h') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release(`lab-${id}-prepare`, 'ok'); r.tick();
+  w.sys.release(`lab-${id}-pilot1`, 'ok'); r.tick();
+  const run = r.runs.get(id)!;
+  assert.equal(run.unit, `lab-${id}-run1`, w.sys.lines.join('\n'));
+  return { w, r, run };
+}
+
+test('D461: the wall clock jumping 4 h forward (NTP fixing an RTC Windows set) does not fire a 1-h step timeout; an hour of real time does', () => {
+  const { w, r, run } = atRun1('J461');
+  w.sys.t += 10 * 60_000; r.tick();
+  w.sys.wallSkew += 4 * 3600_000;                // the boot's clock was 4 h behind; NTP steps it
+  w.sys.t += 10_000; r.tick();
+  assert.equal(run.stopping, null, 'not stopped');
+  assert.deepEqual(w.sys.stopped, []);
+  assert.equal(run.unit, 'lab-J461-run1');
+  // Backwards too: a clock stepped back never makes the step look younger.
+  w.sys.wallSkew -= 8 * 3600_000;
+  w.sys.t += 10_000; r.tick();
+  assert.deepEqual(w.sys.stopped, []);
+  // The real hour passes (10 min + 20 s so far): the timeout fires at 60 min of monotonic time.
+  w.sys.t += 49 * 60_000; r.tick();
+  assert.deepEqual(w.sys.stopped, [], '59 min 20 s: not yet');
+  w.sys.t += 60_000; r.tick();
+  assert.deepEqual(w.sys.stopped, ['lab-J461-run1']);
+  r.tick();                                      // the unit is gone: the job fails
+  assert.equal(run.outcome?.state, 'failed');
+  assert.match(run.outcome?.reason ?? '', /^timeout: step run1 ran past 3600 s$/);
+});
+
+test('D461: a runner restart in the same boot keeps the monotonic stamp; a run.json from before D461 (wall stamps) or from another boot is carried over by the wall time since', () => {
+  const { w, r } = atRun1('J462');
+  w.sys.t += 30 * 60_000; r.tick();
+  // A restart after the jump, same boot: the stamp is CLOCK_MONOTONIC's, still valid; 30 min run, not 4 h 30.
+  w.sys.wallSkew += 4 * 3600_000;
+  const r2 = new Runner(w.cfg, w.sys);
+  r2.reconcile('test restart');
+  r2.tick();
+  assert.deepEqual(w.sys.stopped, []);
+  assert.equal(Math.round(r2.stepElapsedMs(r2.runs.get('J462')!) / 60_000), 30);
+  // An old run.json (no monoBoot, no unitStartedMono, metricsAt wall-clock): carried over from unitStartedAt.
+  const file = path.join(w.cfg.stateDir, 'jobs', 'J462', 'run.json');
+  const old = JSON.parse(fs.readFileSync(file, 'utf8')) as JobRun;
+  delete old.monoBoot; delete old.unitStartedMono;
+  old.unitStartedAt = w.sys.now() - 20 * 60_000;
+  old.metricsAt = w.sys.now() - 30_000;
+  fs.writeFileSync(file, JSON.stringify(old));
+  const r3 = new Runner(w.cfg, w.sys);
+  const carried = r3.runs.get('J462')!;
+  assert.equal(carried.monoBoot, 'boot-a');
+  assert.equal(carried.unitStartedMono, w.sys.mono() - 20 * 60_000);
+  assert.equal(carried.metricsAt, w.sys.mono() - 30_000);
+  // Another boot: the same, and a wall stamp "in the future" (the clock now behind) is "just now", never ahead.
+  w.sys.boot = 'boot-b';
+  old.monoBoot = 'boot-a'; old.unitStartedMono = 123; old.unitStartedAt = w.sys.now() + 4 * 3600_000;
+  fs.writeFileSync(file, JSON.stringify(old));
+  const r4 = new Runner(w.cfg, w.sys);
+  assert.equal(r4.runs.get('J462')!.unitStartedMono, w.sys.mono());
+  assert.equal(r4.stepElapsedMs(r4.runs.get('J462')!), 0);
+});
+
+test('D461: the prepare-retry window and the git probe after a start measure monotonic time, not a 4-h step of the wall clock', () => {
+  const w = world({ 'J463-x.md': NEW_JOB.replace('id: J010', 'id: J463') });
+  w.sys.prepareGitFails = 1;
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  const run = r.runs.get('J463')!;
+  assert.equal(run.prepareRetry?.attempts, 1);
+  w.sys.wallSkew += 4 * 3600_000;                // 4 h "since" the first failure: still inside 10 min
+  w.sys.t += 15_000;
+  r.tick();
+  assert.equal(run.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.ok(w.sys.lines.some((l) => /J463: prepare passed after 1 retry/.test(l)));
+  // The git probe: the remote not answering yet, the wall clock steps 4 h: no "240 min after the start".
+  const w2 = world({ 'J464-x.md': NEW_JOB.replace('id: J010', 'id: J464') });
+  new Runner(w2.cfg, w2.sys).reconcile();
+  w2.sys.gitFails.add('ls-remote');
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  r2.tick();
+  w2.sys.wallSkew += 4 * 3600_000;
+  w2.sys.t += GIT_GATE_EVERY_MS;
+  r2.tick();
+  assert.equal(r2.runs.get('J464'), undefined, 'still waiting for git');
+  assert.ok(!w2.sys.lines.some((l) => /still does not answer/.test(l)), w2.sys.lines.join('\n'));
+});
+
+test('D461: the memory-stop settle is monotonic: a wall clock stepped back does not hold the next stop back for hours', () => {
+  const { w, r } = atRun1('J465');
+  r.lastMemoryStop = w.sys.mono() - 2 * 60_000;  // the last memory stop: two real minutes ago
+  w.sys.wallSkew -= 4 * 3600_000;
+  const run = r.runs.get('J465')!;
+  (r as unknown as { apply: (r: JobRun, a: { kind: 'stop'; why: string }) => void }).apply(run, { kind: 'stop', why: 'test' });
+  assert.equal(run.stopping?.why, 'memory', w.sys.lines.join('\n'));
+  assert.ok(!w.sys.lines.some((l) => /memory stop held back/.test(l)));
+});
+
+test('D461: retry_after: in the past is due; 10 min ahead holds; further ahead than the runner ever writes means the clock went backwards, and is due', () => {
+  const job = parseJobFile('J466.md', 'id: J466\ncpu: light\nrepos: mtg-table@main\n', parse);
+  const now = Date.parse('2026-10-22T12:00:00Z');
+  const run = (retry: string) => schedule({ jobs: [job], active: new Map(), playing: false, paused: false, now, statuses: new Map([['J466', st(`waiting\nretry_after: ${retry}\n`)]]) });
+  assert.deepEqual(run('2026-10-22T11:59:00Z').start.map((j) => j.id), ['J466'], 'past: due');
+  assert.equal(run('2026-10-22T12:10:00Z').blocked[0]?.code, 'memory', '10 min ahead: holds');
+  assert.equal(run('2026-10-22T12:15:30Z').blocked[0]?.code, 'memory', 'the full 15 min (and a minute of slack): holds');
+  // Written at 12:00 on a right clock; the PC reboots with the RTC 4 h behind: it reads 4 h 10 min ahead.
+  assert.deepEqual(run('2026-10-22T16:10:00Z').start.map((j) => j.id), ['J466'], 'the clock went backwards: due');
+  assert.deepEqual(run('not a date').start.map((j) => j.id), ['J466']);
 });

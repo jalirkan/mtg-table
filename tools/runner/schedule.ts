@@ -38,6 +38,10 @@
 
 import type { JobFile } from './jobfile.ts';
 import { DEFAULT_PEAK_GB } from './sizing.ts';
+import { retryHolds } from './clock.ts';
+
+/** A memory stop's `retry_after:` is this far ahead of the stop (runner.ts `memoryStop`); D461 reads it back against it. */
+export const MEMORY_RETRY_MS = 15 * 60_000;
 
 export type State = 'waiting' | 'running' | 'done' | 'failed' | 'skipped';
 export const STATES: State[] = ['waiting', 'running', 'done', 'failed', 'skipped'];
@@ -172,8 +176,9 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     };
     if (job.errors.length) { b('invalid', `the job file has errors: ${job.errors[0]}`); continue; }
     if (st && /^(check|human)/i.test(st.fields.needs ?? '')) { b('needs-check', st.fields.reason ?? 'needs a human/Claude check'); continue; }
+    // D461: a wall time, read defensively: further ahead than the runner ever writes, the clock went backwards: due.
     const retry = st?.fields.retry_after ? Date.parse(st.fields.retry_after) : NaN;
-    if (Number.isFinite(retry) && retry > inp.now) { b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`); continue; }
+    if (retryHolds(retry, inp.now, MEMORY_RETRY_MS + 60_000)) { b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`); continue; }
     const notDone = job.after.filter((a) => inp.statuses.get(a)?.state !== 'done');
     if (notDone.length) { b('after', `after ${notDone.join(', ')}`); continue; }
     if (inp.paused) { b('paused', 'the runner is paused'); continue; }

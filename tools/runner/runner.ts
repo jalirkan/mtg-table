@@ -79,10 +79,11 @@ import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from '
 import { followupMessage, LEDGER_MD_HEAD, ledgerEntry, ledgerJsonLine, ledgerKeys, ledgerMarkdown, withMessages, type LedgerEntry } from './ledger.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
 import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS, sizeWorkers, systemdRunLine, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
-import { formatStatus, isOurs, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
+import { formatStatus, isOurs, MEMORY_RETRY_MS, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
 import { fit, headlineOf, idleReasonOf, isoLocal, liveOf, REASONS, sanitise, type FinishedItem, type PressureEvent, type RunningJob, type StatusDoc } from './statusjson.ts';
 import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
 import { activeHolds, holdReason } from './holds.ts';
+import { monoFromWall, wallOfMono } from './clock.ts';
 
 export interface RunnerConfig {
   /** The runner's own checkout (its commit is reported). */
@@ -155,7 +156,16 @@ export interface JobRun {
   steps: Step[];
   stepIndex: number;
   unit: string | null;
+  /** When the current unit started, wall clock: STATUS, the logs, journalctl --since. */
   unitStartedAt: number;
+  /** D461: the same instant on the monotonic clock: the step timeout reads this. */
+  unitStartedMono?: number;
+  /**
+   * D461: the boot this run's monotonic stamps (unitStartedMono, metricsAt, prepareRetry's sinceMono and
+   * nextAtMono, backoff's lastDrop and lastRaise) were taken in.  Another boot, or none (a run.json from
+   * before D461, whose stamps are wall-clock), is carried over once, on load (`Runner.carryClocks`).
+   */
+  monoBoot?: string | null;
   workers: number;
   sizing: Sizing | null;
   cap: number | null;
@@ -168,6 +178,7 @@ export interface JobRun {
   progressUnit: string | null;
   dataUpdated: number | null;
   metrics: Flat;
+  /** Monotonic (D461): when the metrics were last read. */
   metricsAt: number;
   /** The live counters' recent values (`drafts`, `games`), for their rates per hour. */
   liveHist?: Array<{ at: number; v: Record<string, number> }>;
@@ -190,7 +201,7 @@ export interface JobRun {
    * boot, DNS, the network): when the first such failure came, the retries so far, when the next may
    * start, and the git line that said so.  Null or absent: none pending.
    */
-  prepareRetry?: { since: number; attempts: number; nextAt: number; last: string } | null;
+  prepareRetry?: { since: number; attempts: number; nextAt: number; last: string; sinceMono?: number; nextAtMono?: number } | null;
   /** The width the next step waits for, when it waits for cores other jobs hold (D365's per-step widths); null: not waiting. */
   waitingCores?: number | null;
   /** The width its last step started at (at first, the width it was admitted at): a step no wider never waits (D365). */
@@ -312,11 +323,19 @@ export class Runner {
   /** Job files that vanished from a successful read of pc-jobs: the reads in a row they were missing, and their last text. */
   missing = new Map<string, number>();
   retained = new Map<string, JobFile>();
-  /** When the last memory stop was sent (one at a time: `apply`). */
+  /** When the last memory stop was sent (one at a time: `apply`); monotonic (D461). */
   lastMemoryStop = -Infinity;
-  /** D391: whether `git ls-remote` has reached the remote since this runner started, and when it was last tried. */
+  /** D391: whether `git ls-remote` has reached the remote since this runner started, and when it was last tried (monotonic). */
   gitReady = false;
   gitCheckedAt = -Infinity;
+  /** D461: this runner's start on the monotonic clock (`p.started` is its wall time, for status.json). */
+  readonly startedMono: number;
+  /**
+   * D461: the loop's own cadences on the monotonic clock -- the last fetch, publish and public push, and
+   * when a failed one may try again.  `p` keeps their wall times for people and for the next start, which
+   * carries them over from there (`monoFromWall`).
+   */
+  clock: { fetch: number; publish: number; nextPublish: number; publicAt: number; nextPublic: number };
 
   constructor(cfg: RunnerConfig, sys: Sys) {
     this.cfg = cfg;
@@ -324,10 +343,48 @@ export class Runner {
     fs.mkdirSync(path.join(cfg.stateDir, 'jobs'), { recursive: true });
     this.p = this.readJson<Persist>('runner.json') ?? { paused: false, lastPublish: 0, lastFetch: 0, dirty: true, lastHost: null, started: sys.now() };
     this.p.started = sys.now();
+    this.startedMono = sys.mono();
+    const wall = sys.now(), mono = this.startedMono, MAX_BACKOFF = 30 * 60_000;
+    this.clock = {
+      fetch: monoFromWall(this.p.lastFetch, wall, mono), publish: monoFromWall(this.p.lastPublish, wall, mono),
+      nextPublish: Math.max(mono, monoFromWall(this.p.nextPublishAt ?? 0, wall, mono, MAX_BACKOFF)),
+      publicAt: monoFromWall(this.p.lastPublic ?? 0, wall, mono),
+      nextPublic: Math.max(mono, monoFromWall(this.p.nextPublicAt ?? 0, wall, mono, MAX_BACKOFF)),
+    };
     for (const id of fs.readdirSync(path.join(cfg.stateDir, 'jobs'))) {
       const r = this.readJson<JobRun>(path.join('jobs', id, 'run.json'));
-      if (r) this.runs.set(id, r);
+      if (r) { this.carryClocks(r); this.runs.set(id, r); }
     }
+  }
+
+  /**
+   * D461: a run loaded from run.json whose monotonic stamps are from another boot, or from before D461
+   * (wall-clock, no `monoBoot`): each is carried over by the wall time since it, once.  A past stamp
+   * never lands in the future, a pending retry is at most its longest delay away; within one boot (a
+   * runner restart) the stamps are kept as they are, since CLOCK_MONOTONIC did not restart.
+   */
+  carryClocks(r: JobRun): void {
+    const boot = this.sys.bootId();
+    if (r.monoBoot !== undefined && r.monoBoot === boot) {
+      if (r.backoff) { r.backoff.lastDrop ??= -Infinity; r.backoff.lastRaise ??= -Infinity; }
+      return;
+    }
+    const wall = this.sys.now(), mono = this.sys.mono();
+    const past = (w: unknown): number => monoFromWall(w, wall, mono);
+    r.unitStartedMono = r.unit ? past(r.unitStartedAt) : undefined;
+    r.metricsAt = past(r.metricsAt);
+    if (r.backoff) { r.backoff.lastDrop = past(r.backoff.lastDrop); r.backoff.lastRaise = past(r.backoff.lastRaise); }
+    if (r.prepareRetry) {
+      r.prepareRetry.sinceMono = past(r.prepareRetry.since);
+      r.prepareRetry.nextAtMono = Math.max(mono, monoFromWall(r.prepareRetry.nextAt, wall, mono, prepareRetryDelay(Infinity)));
+    }
+    r.monoBoot = boot;
+  }
+
+  /** D461: how long the current unit has run, on the monotonic clock. */
+  stepElapsedMs(r: JobRun): number {
+    if (r.unitStartedMono === undefined || r.monoBoot !== this.sys.bootId()) this.carryClocks(r);
+    return Math.max(0, this.sys.mono() - (r.unitStartedMono ?? this.sys.mono()));
   }
 
   // ------------------------------------------------------------------ paths
@@ -371,12 +428,13 @@ export class Runner {
    * row before its running job is stopped (retained, below).
    */
   readQueue(force = false): void {
-    if (!force && this.sys.now() - this.p.lastFetch < this.cfg.fetchEveryMs && this.jobs.length) return;
+    if (!force && this.sys.mono() - this.clock.fetch < this.cfg.fetchEveryMs && this.jobs.length) return;
     const repo = this.queueRepo();
     try { this.ensureClone('mtg-table', repo); } catch (e) { this.sys.log(`queue: ${(e as Error).message}`); return; }
     const f = this.git(repo, 'fetch', '--quiet', 'origin', '+refs/heads/pc-jobs:refs/remotes/origin/pc-jobs', '+refs/heads/pc-results:refs/remotes/origin/pc-results');
     if (f.code !== 0) this.sys.log(`fetch failed: ${f.stderr.trim().split('\n').at(-1)}`);
     this.p.lastFetch = this.sys.now();
+    this.clock.fetch = this.sys.mono();
     const ls = this.git(repo, 'ls-tree', '--name-only', 'origin/pc-jobs', 'jobs/');
     if (ls.code === 0) {
       const prev = new Map(this.jobs.map((j) => [j.id, j]));
@@ -466,10 +524,10 @@ export class Runner {
     }
     const doc = this.writeStatusJson();
     if (this.ladderSig() !== (this.p.ladderSig ?? '')) this.p.dirty = true;
-    const now = this.sys.now();
+    const mono = this.sys.mono();
     const stateChanged = this.p.dirty;
-    const due = this.p.dirty || now - this.p.lastPublish >= this.cfg.publishEveryMs;
-    if (due && now >= (this.p.nextPublishAt ?? 0)) this.publish();
+    const due = this.p.dirty || mono - this.clock.publish >= this.cfg.publishEveryMs;
+    if (due && mono >= this.clock.nextPublish) this.publish();
     if (this.cfg.publicStatus) this.maybePublishPublic(sanitise(doc), stateChanged);
     this.save();
   }
@@ -481,12 +539,12 @@ export class Runner {
    */
   gitReachable(): boolean {
     if (this.gitReady) return true;
-    const now = this.sys.now();
+    const now = this.sys.mono();                 // D461: "since the start" is a duration
     const repo = this.queueRepo();
     if (!fs.existsSync(path.join(repo, '.git'))) return true;
-    if (now - this.p.started >= GIT_GATE_MAX_MS) {
+    if (now - this.startedMono >= GIT_GATE_MAX_MS) {
       this.gitReady = true;
-      this.sys.log(`git: the remote still does not answer ${Math.round((now - this.p.started) / 60_000)} min after the start; admitting jobs (a prepare that cannot reach it retries, then fails)`);
+      this.sys.log(`git: the remote still does not answer ${Math.round((now - this.startedMono) / 60_000)} min after the start; admitting jobs (a prepare that cannot reach it retries, then fails)`);
       return true;
     }
     if (now - this.gitCheckedAt < GIT_GATE_EVERY_MS) return false;
@@ -494,7 +552,7 @@ export class Runner {
     const r = this.git(repo, 'ls-remote', '--exit-code', 'origin', 'refs/heads/pc-jobs');
     if (r.code === 0) {
       this.gitReady = true;
-      this.sys.log(`git: the remote answers (${Math.round((now - this.p.started) / 1000)} s after the start); admitting jobs`);
+      this.sys.log(`git: the remote answers (${Math.round((now - this.startedMono) / 1000)} s after the start); admitting jobs`);
       return true;
     }
     this.sys.log(`git: ls-remote failed (exit ${r.code}): ${r.stderr.trim().split('\n').at(-1) ?? ''}; no job starts until it answers`);
@@ -524,7 +582,7 @@ export class Runner {
       unit: null, unitStartedAt: 0, workers: 1, sizing: null, cap: Number.isFinite(cap) ? cap : null,
       pinned: retry ? prev?.pinned : undefined,
       peakRssGb: prev?.peakRssGb ?? null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null,
-      metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
+      metrics: {}, metricsAt: 0, monoBoot: this.sys.bootId(), shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
       blocksDone: resume?.kept ?? {}, aside: prev?.aside ?? null, lastWidth: widthOf(job, this.machineBudget()),
     };
     if (retry) {
@@ -673,21 +731,27 @@ export class Runner {
     const attemptLog = (t: string): string => t.slice(t.lastIndexOf(`==== ${r.id} ${step.name} started`));
     const transient = step.phase === 'prepare' ? transientGitFailure(rc, attemptLog(this.tail(this.logFile(r, step), 200))) : null;
     if (transient) {
-      const now = this.sys.now();
-      const since = r.prepareRetry?.since ?? now;
+      // D461: the window and the next try are monotonic; `since` and `nextAt` are their wall times, for the log.
+      const wall = this.sys.now();
+      const now = this.sys.mono();
+      if (r.prepareRetry && r.monoBoot !== this.sys.bootId()) this.carryClocks(r);
+      const sinceMono = r.prepareRetry?.sinceMono ?? now;
+      const since = r.prepareRetry?.since ?? wall;
       const attempts = (r.prepareRetry?.attempts ?? 0) + 1;
-      if (now - since < PREPARE_RETRY_WINDOW_MS) {
-        const nextAt = Math.min(now + prepareRetryDelay(attempts), since + PREPARE_RETRY_WINDOW_MS);
-        r.prepareRetry = { since, attempts, nextAt, last: transient };
-        this.sys.log(`${r.id}: prepare exited ${rc}: ${transient}; retry ${attempts} at ${isoLocal(nextAt)} (until ${isoLocal(since + PREPARE_RETRY_WINDOW_MS)})`);
+      if (now - sinceMono < PREPARE_RETRY_WINDOW_MS) {
+        const nextAtMono = Math.min(now + prepareRetryDelay(attempts), sinceMono + PREPARE_RETRY_WINDOW_MS);
+        const nextAt = wallOfMono(nextAtMono, wall, now);
+        r.prepareRetry = { since, attempts, nextAt, last: transient, sinceMono, nextAtMono };
+        r.monoBoot = this.sys.bootId();
+        this.sys.log(`${r.id}: prepare exited ${rc}: ${transient}; retry ${attempts} at ${isoLocal(nextAt)} (until ${isoLocal(wallOfMono(sinceMono + PREPARE_RETRY_WINDOW_MS, wall, now))})`);
         this.setStatus(r, 'running', { phase: 'prepare', prepare_retry: `${attempts}: ${transient}` });
         this.save(r);
         return true;
       }
       const n = r.prepareRetry?.attempts ?? 0;
       r.prepareRetry = null;
-      this.writeOut(r, 'failure.txt', `step ${step.name} exited ${rc}: git could not reach the remote for ${Math.round((now - since) / 60_000)} min (${n} retries)\n\n${this.tail(this.logFile(r, step), 60)}`);
-      this.finish(r, 'failed', `prepare: step ${step.name} exited ${rc} after ${n} retries over ${Math.round((now - since) / 60_000)} min: git could not reach the remote (${transient})`, { exit: String(rc) });
+      this.writeOut(r, 'failure.txt', `step ${step.name} exited ${rc}: git could not reach the remote for ${Math.round((now - sinceMono) / 60_000)} min (${n} retries)\n\n${this.tail(this.logFile(r, step), 60)}`);
+      this.finish(r, 'failed', `prepare: step ${step.name} exited ${rc} after ${n} retries over ${Math.round((now - sinceMono) / 60_000)} min: git could not reach the remote (${transient})`, { exit: String(rc) });
       return true;
     }
     // SIGKILL's exit code, and evidence of an OOM kill in the unit: a memory stop, retried, not a failure (D365).
@@ -722,7 +786,7 @@ export class Runner {
       return;
     }
     const cap = retryCap(r.backoff?.workers ?? r.workers);
-    this.finish(r, 'waiting', `memory: ${detail}`, { workers_cap: String(cap), retry_after: isoLocal(this.sys.now() + 15 * 60_000), memory_stops: stops });
+    this.finish(r, 'waiting', `memory: ${detail}`, { workers_cap: String(cap), retry_after: isoLocal(this.sys.now() + MEMORY_RETRY_MS), memory_stops: stops });
   }
 
   /**
@@ -859,7 +923,7 @@ export class Runner {
       if (!only && s && s.state !== 'waiting') continue;
       print(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
       if (job.errors.length) { print(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
-      const run: JobRun = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps: this.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: this.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
+      const run: JobRun = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps: this.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: this.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, monoBoot: this.sys.bootId(), shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
       for (const step of run.steps) {
         if (step.kind !== 'shell') { print(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
         const u = this.unitSpec(run, job, step);
@@ -876,7 +940,7 @@ export class Runner {
   holdReason(r: JobRun): string | null {
     if (this.isPaused()) return 'the runner is paused';
     const pr = r.prepareRetry;
-    if (pr && r.steps[r.stepIndex]?.phase === 'prepare' && this.sys.now() < pr.nextAt) {
+    if (pr && r.steps[r.stepIndex]?.phase === 'prepare' && this.sys.mono() < (pr.nextAtMono ?? -Infinity)) {
       return `prepare retry ${pr.attempts} at ${isoLocal(pr.nextAt)}: git could not reach the remote (${pr.last})`;
     }
     if (r.cpu === 'heavy' && this.sys.playing(this.cfg.bridgePort)) return 'Justin is at the table';
@@ -943,6 +1007,8 @@ export class Runner {
     }
     r.unit = u.unit;
     r.unitStartedAt = this.sys.now();
+    if (r.monoBoot !== this.sys.bootId()) this.carryClocks(r);
+    r.unitStartedMono = this.sys.mono();
     r.lastWidth = this.stepWidth(r, step, job);
     this.setStatus(r, 'running', { phase: this.phaseOf(r) });
     this.save(r);
@@ -1055,13 +1121,13 @@ export class Runner {
 
   private monitor(r: JobRun, job: JobFile, unknown = false): void {
     const step = r.steps[r.stepIndex] as Step;
-    const now = this.sys.now();
+    const now = this.sys.mono();                 // D461: every duration below is monotonic
     if (step.phase === 'pilot' && r.unit) {
       const peaks = this.sys.unitJavaPeaksGb(r.unit);
       if (peaks.length) r.peakRssGb = Math.max(r.peakRssGb ?? 0, ...peaks);
     }
     if (r.stopping || unknown) return;           // stopping, or systemctl did not answer: wait for the next tick
-    if (job.timeoutSec && now - r.unitStartedAt > job.timeoutSec * 1000) {
+    if (job.timeoutSec && this.stepElapsedMs(r) > job.timeoutSec * 1000) {
       this.stop(r, 'timeout', `step ${step.name} ran past ${job.timeoutSec} s`);
       return;
     }
@@ -1103,14 +1169,14 @@ export class Runner {
       // work when stopping one frees the memory.  Another job stopping (or just stopped)
       // for memory: this one waits, and its own hard line has to hold again from zero.
       // (Not when this job's own memory is at its cap: only stopping it helps that.)
-      const now = this.sys.now();
+      const now = this.sys.mono();
       const other = this.active().find((x) => x !== r && x.stopping?.why === 'memory');
       if (other || now - this.lastMemoryStop < MEMORY_STOP_SETTLE_MS) {
         this.sys.log(`${r.id}: memory stop held back (${other ? `${other.id} is stopping for memory` : 'a job was just stopped for memory'}): ${a.why}`);
         return;
       }
     }
-    if (kind === 'stop') this.lastMemoryStop = this.sys.now();
+    if (kind === 'stop') this.lastMemoryStop = this.sys.mono();
     this.event(r, kind, a.why);
     if (kind === 'stop') this.stop(r, 'memory', a.why);
   }
@@ -1592,18 +1658,21 @@ ${keep.trimEnd()}
   /** Push STATUS files, outputs, status.json and HEARTBEAT.md to pc-results; the public copy to lab-status. */
   publish(): void {
     const doc = this.writeStatusJson();
-    if (!this.cfg.push) { this.p.dirty = false; this.p.lastPublish = this.sys.now(); this.p.ladderSig = this.ladderSig(); return; }
+    if (!this.cfg.push) { this.p.dirty = false; this.p.lastPublish = this.sys.now(); this.clock.publish = this.sys.mono(); this.p.ladderSig = this.ladderSig(); return; }
     const ok = this.publishResults(doc);
     if (!this.cfg.publicStatus) this.p.ladderSig = this.ladderSig();
     if (ok) {
       this.p.dirty = false;
       this.p.lastPublish = this.sys.now();
+      this.clock.publish = this.sys.mono();
       this.p.publishFailures = 0;
       this.p.nextPublishAt = 0;
+      this.clock.nextPublish = -Infinity;
     } else {
       // Exponential backoff: 30 s, 1, 2, 4 … 30 minutes; never a push every tick while the network is down.
       this.p.publishFailures = (this.p.publishFailures ?? 0) + 1;
       this.p.nextPublishAt = retryAt(this.sys.now(), this.p.publishFailures);
+      this.clock.nextPublish = retryAt(this.sys.mono(), this.p.publishFailures);
       this.sys.log(`publish failed ${this.p.publishFailures} time(s) in a row; next try at ${isoLocal(this.p.nextPublishAt)}`);
     }
   }
@@ -1656,7 +1725,7 @@ ${keep.trimEnd()}
       }
       for (const id of changed) { const r = this.runs.get(id); if (r) { r.published = true; if (r.outcome) r.pendingStatus = null; this.save(r); } }
       this.markLedgered(ledgered);
-      if (changed.length) this.p.lastFetch = 0;      // read the STATUS just pushed back at the next tick, not a minute later
+      if (changed.length) { this.p.lastFetch = 0; this.clock.fetch = -Infinity; }      // read the STATUS just pushed back at the next tick, not a minute later
       return true;
     }
     return false;
@@ -1736,21 +1805,25 @@ ${keep.trimEnd()}
    */
   maybePublishPublic(doc: StatusDoc, stateChanged: boolean): void {
     const now = this.sys.now();
-    if (now < (this.p.nextPublicAt ?? 0)) return;
+    const mono = this.sys.mono();
+    if (mono < this.clock.nextPublic) return;
     const sig = publicSignature(doc, this.ladderSig());
-    const since = now - (this.p.lastPublic ?? 0);
+    const since = mono - this.clock.publicAt;
     const changed = sig !== this.p.publicSig;
     const due = since >= this.cfg.publicHeartbeatMs || (changed && (stateChanged || since >= this.cfg.publicEveryMs));
     if (!due) return;
-    if (!this.cfg.push) { this.p.lastPublic = now; this.p.publicSig = sig; this.p.ladderSig = this.ladderSig(); return; }
+    if (!this.cfg.push) { this.p.lastPublic = now; this.clock.publicAt = mono; this.p.publicSig = sig; this.p.ladderSig = this.ladderSig(); return; }
     if (this.publishPublic(doc)) {
       this.p.lastPublic = now;
+      this.clock.publicAt = mono;
       this.p.publicSig = sig;
       this.p.publicFailures = 0;
       this.p.nextPublicAt = 0;
+      this.clock.nextPublic = -Infinity;
     } else {
       this.p.publicFailures = (this.p.publicFailures ?? 0) + 1;
       this.p.nextPublicAt = retryAt(now, this.p.publicFailures);
+      this.clock.nextPublic = retryAt(mono, this.p.publicFailures);
       this.sys.log(`public status: failed ${this.p.publicFailures} time(s) in a row; next try at ${isoLocal(this.p.nextPublicAt)}`);
     }
   }
@@ -1867,7 +1940,7 @@ ${keep.trimEnd()}
         must('git commit', this.git(tmp, '-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost', 'commit', '--quiet', '-m', `${id}: approved after its pilot`));
         if (!this.cfg.push) return;
         const p = this.git(tmp, 'push', '--quiet', 'origin', 'HEAD:refs/heads/pc-results');
-        if (p.code === 0) { this.p.lastFetch = 0; return; }
+        if (p.code === 0) { this.p.lastFetch = 0; this.clock.fetch = -Infinity; return; }
         this.sys.log(`approve ${id}: push refused (attempt ${attempt + 1}); fetching and trying again`);
         this.git(repo, 'worktree', 'remove', '--force', tmp);
       }

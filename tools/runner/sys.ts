@@ -14,12 +14,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import { parsePressure } from './backoff.ts';
+import { monoMs, readBootId } from './clock.ts';
 import type { Machine, UnitSpec } from './sizing.ts';
 import { SLICE, systemdRunArgs, systemdRunLine } from './sizing.ts';
 
 export interface Run { code: number; stdout: string; stderr: string }
 
 export interface HostSample {
+  /** mono(), D461: the swap-in rate and the backoff's cooldowns are durations. */
   at: number;
   load1: number;
   memTotalGb: number;
@@ -43,7 +45,15 @@ export const LIVE_STATES: ReadonlySet<UnitState> = new Set(['active', 'activatin
 export const GIT_ENV: Record<string, string> = { GIT_TERMINAL_PROMPT: '0', GIT_SSH_COMMAND: 'ssh -oBatchMode=yes -oConnectTimeout=10' };
 
 export interface Sys {
+  /** The wall clock (Date.now()): for timestamps people read, never for a duration that decides anything. */
   now(): number;
+  /**
+   * D461: CLOCK_MONOTONIC in ms, never stepped by NTP or an RTC fix.  Every elapsed-time decision reads
+   * this.  It counts from the boot: comparable across the runner's restarts within one boot, not across boots.
+   */
+  mono(): number;
+  /** The boot a mono() stamp belongs to (/proc/sys/kernel/random/boot_id); null off Linux. */
+  bootId(): string | null;
   /** Run a program (never a shell string): git, systemctl, the extractors' `sh:` lines go through `bash -c`. */
   run(argv: string[], o?: { cwd?: string; timeoutMs?: number; env?: Record<string, string>; input?: string }): Run;
   machine(): Machine;
@@ -146,8 +156,11 @@ function systemctlShow(unit: string, props: string[]): Record<string, string> | 
 }
 
 export function realSys(): Sys {
+  const boot = readBootId();
   return {
     now: () => Date.now(),
+    mono: monoMs,
+    bootId: () => boot,
     run,
     machine() {
       const threads = os.cpus().length;
@@ -156,7 +169,7 @@ export function realSys(): Sys {
     host() {
       const mi = readMeminfo(readOr('/proc/meminfo'));
       return {
-        at: Date.now(),
+        at: monoMs(),
         load1: os.loadavg()[0] ?? 0,
         memTotalGb: mi.totalGb,
         memUsedGb: mi.totalGb - mi.availGb,

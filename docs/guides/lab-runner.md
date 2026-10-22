@@ -38,7 +38,11 @@ sudo loginctl enable-linger $USER           # ONCE, by Justin: the service keeps
 2. It writes `~/.config/systemd/user/forgecoach-lab.slice`. This is the lab's memory budget,
    with oomd told to act inside the slice first.
 3. It writes `forgecoach-runner.service`, with `ExecStart=~/code/lab/runner/tools/runner.sh
-   daemon …` and the options you gave.
+   daemon …` and the options you gave. Before it, `ExecStartPre=… wait-clock …` waits for
+   `timedatectl show -p NTPSynchronized --value` to say `yes`, at most 10 minutes, and always
+   exits 0 (D461: the PC dual-boots and has come up with the clock 4 h behind). A user unit
+   cannot order itself after the system's `time-sync.target` — the user manager does not see
+   system units — so the unit's `After=time-sync.target` is inert and the wait is what holds.
 4. It writes a drop-in for every `app-*.scope` (the desktop's apps, Firefox and the Claude
    app among them) with `ManagedOOMPreference=avoid`. Then it reloads systemd, enables the
    service and restarts it.
@@ -411,7 +415,16 @@ start finds `running` and says *no record*. That start writes one line from the 
 the previous exit, the boot id compared with the last one (`same boot`: the service
 restarted; `the machine rebooted since`), the uptime and systemd's `INVOCATION_ID`. The
 line goes into the journal (`runner: start: …`) and, as `restart_reason:`, into the STATUS
-of every job the start adopts, resumes or restarts.
+of every job the start adopts, resumes or restarts. Since D461 it ends with the clock: whether
+`ExecStartPre` found NTP synchronized and after how long a wait (`var/runner/clock-wait.json`),
+and whether it is synchronized now.
+
+**Every duration that decides anything runs on the monotonic clock** (D461): a step's
+`timeout:`, the prepare-retry window, the git probe's wait after a start, the memory-stop
+settle, the pressure backoff's cooldowns and the loop's fetch and publish cadences read
+CLOCK_MONOTONIC, which NTP never steps. Wall times stay for what people read (STATUS,
+status.json, the logs). `retry_after:` is a wall time in STATUS; one further ahead than the
+15 minutes the runner writes means the clock went backwards since, and the job is due.
 
 **A retry starts at the block that was stopped** (D365). Every `## Commands` block that
 finishes is recorded in the job's `run.json` (`blocksDone`: its exit code, when, and a hash
