@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-22T10:45:17-04:00
+- time: 2026-10-22T10:45:31-04:00
 - runner: 8fca7250, up since 2026-10-22T09:13:24-04:00
-- running: J145 commands 4/4, 14347 games, 10673.7/h, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.57; memory 7.7/30.5 GB, swap 735 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J150
+- running: J150 prepare, 0/125700 lines, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 6.89; memory 7/30.5 GB, swap 735 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J149 failed at 2026-10-22T09:06:37-04:00: played 80000 · engine_errors 0 · cf.summary.holds 12 · cf.summary.notShown 0 · cf.summary.holdsByCandidate.i 4 · cf.summary.holdsByCandidate.ii 4 · cf.summary.holdsByCandidate.iii 4 · rec.rowsKbMean 58.9 · data_used_gb 4.93
+- last finished: J145 done at 2026-10-22T10:45:30-04:00: played 14400 · engine_errors 0 · bal.verdict.code 1
 
 ## Messages
+
+- FOLLOW-UP READY [J145@2026-10-22T10:45:30-04:00] (the runner, for the cloud session): J145 is done; write and post the template morning-read. It decides: whether Omega is BALANCED ON PAYOFF at colour level by the registered rule below (no colour OFF on the lab-vs-lab drafts' payoff); pull is reported and NOT judged tonight (the rule's registered change), and every other reading (pairs, triples, the pool's payoff, A vs C, closeness) reported as a candidate (D447 point 9). No card is swapped on this night: the swap / evolve-objective rule is written after this report, as its own pre-registration. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J141@2026-10-19T06:23:17-04:00] (the runner, for the cloud session): J141 is done; write and post the template morning-read. It decides: nothing by itself. It is exploration, asked by Justin: does Forge's AI, the census's pilot, undersell blue and card draw, and which cards move when search-v2 pilots the same decks in the same games. Any difference it shows is a candidate until it holds on a fresh slice (D447 point 9). Ledger: LEDGER.md. Delete this line once posted.
 

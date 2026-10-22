@@ -1,0 +1,62 @@
+==== J145 run4 started 2026-10-22T10:45:17-04:00 in unit lab-J145-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"verdict": "BALANCED ON PAYOFF", "offPayoff": [], "pull": {"lab": 4000, "hp": 600, "fr": 600}, "payoff": {"Blab": 4000, "Bhp": 1200, "Bfr": 1200, "C": 7996}}
+**Forge-pilot caveat:** Every game is piloted by Forge's Default AI on both seats. J141 found the live search seat lifts every colour about equally (+8.9 points), so a Forge-only payoff is the right first cut, but it is Forge's.
+
+# J145: is Omega balanced by colour?
+
+**Colour level: BALANCED ON PAYOFF.** OFF on arm-B payoff (Blab, lab vs lab): none. **Pull is not judged tonight**: the human-pick model was demoted to context (it covers 105 of Omega's 180 cards, unevenly by colour), so all three drafters' pull is reported as information; pull is judged once the draft-deck ledger holds 30+ real Omega decks or a full-coverage human model exists. The registered rule: a cell is OFF when its 95% interval excludes the target and the point is at least 0.08 (pull) or 0.05 (payoff) from it; EVEN when the interval sits inside that band; else UNCLEAR. BALANCED ON PAYOFF when no colour is OFF on arm-B payoff. Everything else below is a candidate (D447 point 9). No card is swapped on this night.
+
+## Pull (arm A, not judged tonight): share of two-colour decks containing the colour (target 0.400; labels are information)
+
+| drafter | decks | k = 1 / 2 / 3 (excluded 0, 4, 5) | W | U | B | R | G |
+|---|---|---|---|---|---|---|---|
+| lab (lab) | 4000 | 1 / 3841 / 158 (0, 0, 0) | 0.485 [0.474–0.496] OFF | 0.598 [0.587–0.609] OFF | 0.382 [0.369–0.394] EVEN | 0.294 [0.281–0.306] OFF | 0.242 [0.230–0.254] OFF |
+| hp (human-picks) | 600 | 0 / 497 / 103 (0, 0, 0) | 0.433 [0.387–0.477] EVEN | 0.519 [0.476–0.561] OFF | 0.555 [0.512–0.598] OFF | 0.360 [0.315–0.404] UNCLEAR | 0.133 [0.104–0.163] OFF |
+| fr (forge-ranks) | 600 | 0 / 584 / 16 (0, 0, 0) | 0.493 [0.454–0.536] OFF | 0.594 [0.555–0.632] OFF | 0.387 [0.347–0.425] EVEN | 0.294 [0.260–0.336] OFF | 0.231 [0.197–0.265] OFF |
+
+hp's pick model covers 105 of the cube's 180 cards: White 15/24, Blue 13/24, Black 11/24, Red 14/24, Green 13/24, Gold 12/20, Colorless 7/18, Lands 20/22 (the rest valued by its rating fallback).
+
+Beside it, not judged: mono decks by colour (share of mono decks) and three-colour decks containing the colour (share of three-colour decks, average 0.6).
+
+| drafter | mono W | mono U | mono B | mono R | mono G | 3c W | 3c U | 3c B | 3c R | 3c G |
+|---|---|---|---|---|---|---|---|---|---|---|
+| lab | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | 0.620 | 0.683 | 0.646 | 0.487 | 0.563 |
+| hp | – | – | – | – | – | 0.592 | 0.660 | 0.825 | 0.563 | 0.359 |
+| fr | – | – | – | – | – | 0.750 | 0.688 | 0.500 | 0.562 | 0.500 |
+
+**Pairs** (share of two-colour decks, average 0.100; candidates):
+
+| drafter | WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
+|---|---|---|---|---|---|---|---|---|---|---|
+| lab | 0.209 [0.197–0.221] | 0.088 [0.080–0.097] | 0.112 [0.102–0.122] | 0.075 [0.067–0.083] | 0.212 [0.201–0.224] | 0.105 [0.096–0.115] | 0.071 [0.064–0.080] | 0.031 [0.026–0.037] | 0.050 [0.043–0.057] | 0.046 [0.038–0.052] |
+| hp | 0.143 [0.113–0.174] | 0.143 [0.114–0.176] | 0.103 [0.075–0.132] | 0.044 [0.026–0.063] | 0.245 [0.207–0.284] | 0.105 [0.077–0.132] | 0.026 [0.014–0.043] | 0.129 [0.099–0.159] | 0.038 [0.022–0.057] | 0.024 [0.012–0.038] |
+| fr | 0.221 [0.186–0.258] | 0.092 [0.070–0.115] | 0.104 [0.081–0.129] | 0.075 [0.054–0.098] | 0.214 [0.181–0.246] | 0.104 [0.080–0.129] | 0.055 [0.036–0.075] | 0.033 [0.019–0.048] | 0.048 [0.032–0.067] | 0.053 [0.036–0.070] |
+
+## Payoff: the colour's win rate in games between decks that differ in it (target 0.500)
+
+| arm | decks | games | W | U | B | R | G |
+|---|---|---|---|---|---|---|---|
+| Blab (judged) | 4000 | 4000 | 0.495 [0.475–0.513] n 2982 EVEN | 0.480 [0.459–0.498] n 2756 EVEN | 0.519 [0.498–0.538] n 2672 EVEN | 0.527 [0.506–0.548] n 2222 EVEN | 0.468 [0.446–0.489] n 1938 UNCLEAR |
+| Bhp (context) | 1200 | 1200 | 0.478 [0.447–0.515] n 880 UNCLEAR | 0.468 [0.433–0.503] n 846 UNCLEAR | 0.495 [0.460–0.528] n 850 EVEN | 0.542 [0.506–0.582] n 682 UNCLEAR | 0.506 [0.458–0.554] n 490 UNCLEAR |
+| Bfr (context) | 1200 | 1200 | 0.512 [0.477–0.545] n 900 EVEN | 0.482 [0.446–0.517] n 838 UNCLEAR | 0.510 [0.472–0.544] n 814 EVEN | 0.513 [0.476–0.551] n 666 UNCLEAR | 0.493 [0.449–0.534] n 542 UNCLEAR |
+| C (census, the pool) | 2000 | 7996 | 0.507 [0.489–0.525] n 3771 EVEN | 0.445 [0.429–0.462] n 3754 OFF | 0.493 [0.474–0.510] n 3736 EVEN | 0.508 [0.489–0.524] n 3640 EVEN | 0.457 [0.441–0.474] n 3566 UNCLEAR |
+
+**A vs C** (report, don't act): W: B EVEN, C EVEN; U: B EVEN, C OFF; B: B EVEN, C EVEN; R: B EVEN, C EVEN; G: B UNCLEAR, C UNCLEAR
+
+**Pairs' payoff** (a pair's decks against decks that are not that pair; candidates):
+
+| arm | WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Blab | 0.476 [0.450–0.501] | 0.525 [0.483–0.563] | 0.545 [0.507–0.578] | 0.472 [0.428–0.510] | 0.515 [0.491–0.540] | 0.517 [0.481–0.554] | 0.423 [0.382–0.465] | 0.563 [0.496–0.634] | 0.521 [0.464–0.578] | 0.497 [0.444–0.553] |
+| Bhp | 0.473 [0.431–0.518] | 0.509 [0.439–0.581] | 0.553 [0.485–0.627] | 0.493 [0.408–0.585] | 0.461 [0.410–0.505] | 0.551 [0.491–0.617] | 0.500 [0.392–0.618] | 0.574 [0.493–0.660] | 0.615 [0.522–0.708] | 0.526 [0.432–0.625] |
+| Bfr | 0.492 [0.444–0.540] | 0.509 [0.434–0.579] | 0.546 [0.491–0.601] | 0.477 [0.401–0.548] | 0.487 [0.440–0.535] | 0.477 [0.418–0.538] | 0.427 [0.356–0.507] | 0.476 [0.357–0.595] | 0.534 [0.439–0.636] | 0.559 [0.457–0.660] |
+| C | 0.475 [0.433–0.520] | 0.538 [0.499–0.576] | 0.520 [0.475–0.567] | 0.470 [0.421–0.516] | 0.455 [0.412–0.496] | 0.496 [0.455–0.538] | 0.424 [0.388–0.465] | 0.504 [0.459–0.545] | 0.468 [0.427–0.514] | 0.522 [0.480–0.565] |
+
+**By colour count** (decks with k colours against decks with another k; information): Blab: k1 1.000 [1.000–1.000], k2 0.567 [0.513–0.620], k3 0.430 [0.376–0.483]; Bhp: k1 – [–], k2 0.582 [0.514–0.649], k3 0.418 [0.359–0.481]; Bfr: k1 – [–], k2 0.368 [0.257–0.485], k3 0.632 [0.515–0.742]; C: k1 0.554 [0.537–0.570], k2 0.479 [0.460–0.496], k3 0.451 [0.430–0.473]
+
+## Closeness (reported only): the winner's final life and the game's turns, median [IQR]
+
+| arm | cell | games | winner life | turns |
+|---|---|---|---|---|
+| Blab | all | 4000 | 20.000 [15.000–25.000] | 18.000 [15.000–21.000] |
+| Blab | W | 3452 | 20.000 [15.000–25.000] | 18.000 [15.000–21.000] |

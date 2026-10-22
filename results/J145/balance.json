@@ -1,0 +1,485 @@
+{
+  "v": 1,
+  "job": "J145",
+  "cube": "omega-cube-180",
+  "options": {
+    "boot": 400,
+    "seed": 145,
+    "minTriple": 40,
+    "realMin": 30
+  },
+  "caveat": "Every game is piloted by Forge's Default AI on both seats. J141 found the live search seat lifts every colour about equally (+8.9 points), so a Forge-only payoff is the right first cut, but it is Forge's.",
+  "pull": {},
+  "payoff": {
+    "C": {
+      "decks": 2000,
+      "games": 8000,
+      "excluded": {
+        "engineError": 0,
+        "notDecisive": 0,
+        "deckOutside1to3": 0
+      },
+      "colour": {
+        "W": {
+          "n": 3749,
+          "hits": 1793,
+          "est": 0.4783,
+          "lo": 0.4619,
+          "hi": 0.4934,
+          "target": 0.5,
+          "label": "EVEN"
+        },
+        "U": {
+          "n": 3699,
+          "hits": 1748,
+          "est": 0.4726,
+          "lo": 0.4585,
+          "hi": 0.4901,
+          "target": 0.5,
+          "label": "EVEN"
+        },
+        "B": {
+          "n": 3671,
+          "hits": 2198,
+          "est": 0.5987,
+          "lo": 0.5836,
+          "hi": 0.6145,
+          "target": 0.5,
+          "label": "OFF"
+        },
+        "R": {
+          "n": 3698,
+          "hits": 1812,
+          "est": 0.49,
+          "lo": 0.4739,
+          "hi": 0.5048,
+          "target": 0.5,
+          "label": "EVEN"
+        },
+        "G": {
+          "n": 3554,
+          "hits": 1701,
+          "est": 0.4786,
+          "lo": 0.4625,
+          "hi": 0.495,
+          "target": 0.5,
+          "label": "EVEN"
+        }
+      },
+      "pairs": {
+        "WU": {
+          "n": 695,
+          "hits": 289,
+          "est": 0.4158,
+          "lo": 0.3821,
+          "hi": 0.4486
+        },
+        "WB": {
+          "n": 663,
+          "hits": 370,
+          "est": 0.5581,
+          "lo": 0.5223,
+          "hi": 0.5938
+        },
+        "WR": {
+          "n": 598,
+          "hits": 292,
+          "est": 0.4883,
+          "lo": 0.45,
+          "hi": 0.5291
+        },
+        "WG": {
+          "n": 525,
+          "hits": 236,
+          "est": 0.4495,
+          "lo": 0.4053,
+          "hi": 0.4892
+        },
+        "UB": {
+          "n": 589,
+          "hits": 328,
+          "est": 0.5569,
+          "lo": 0.5165,
+          "hi": 0.5939
+        },
+        "UR": {
+          "n": 534,
+          "hits": 244,
+          "est": 0.4569,
+          "lo": 0.417,
+          "hi": 0.4953
+        },
+        "UG": {
+          "n": 634,
+          "hits": 272,
+          "est": 0.429,
+          "lo": 0.3937,
+          "hi": 0.4655
+        },
+        "BR": {
+          "n": 597,
+          "hits": 350,
+          "est": 0.5863,
+          "lo": 0.5547,
+          "hi": 0.6245
+        },
+        "BG": {
+          "n": 527,
+          "hits": 299,
+          "est": 0.5674,
+          "lo": 0.5145,
+          "hi": 0.617
+        },
+        "RG": {
+          "n": 523,
+          "hits": 244,
+          "est": 0.4665,
+          "lo": 0.424,
+          "hi": 0.513
+        }
+      },
+      "triples": {
+        "WUR": {
+          "n": 334,
+          "hits": 152,
+          "est": 0.4551,
+          "lo": 0.3938,
+          "hi": 0.5123
+        },
+        "WUG": {
+          "n": 335,
+          "hits": 161,
+          "est": 0.4806,
+          "lo": 0.4311,
+          "hi": 0.5302
+        },
+        "WBR": {
+          "n": 416,
+          "hits": 225,
+          "est": 0.5409,
+          "lo": 0.4898,
+          "hi": 0.5971
+        },
+        "UBR": {
+          "n": 367,
+          "hits": 202,
+          "est": 0.5504,
+          "lo": 0.5,
+          "hi": 0.5935
+        },
+        "UBG": {
+          "n": 350,
+          "hits": 203,
+          "est": 0.58,
+          "lo": 0.5355,
+          "hi": 0.6324
+        },
+        "URG": {
+          "n": 310,
+          "hits": 142,
+          "est": 0.4581,
+          "lo": 0.4072,
+          "hi": 0.5055
+        }
+      },
+      "byK": {
+        "1": {
+          "n": 3922,
+          "hits": 1937,
+          "est": 0.4939,
+          "lo": 0.4776,
+          "hi": 0.5086
+        },
+        "2": {
+          "n": 3783,
+          "hits": 1873,
+          "est": 0.4951,
+          "lo": 0.4795,
+          "hi": 0.512
+        },
+        "3": {
+          "n": 2617,
+          "hits": 1351,
+          "est": 0.5162,
+          "lo": 0.4971,
+          "hi": 0.5362
+        }
+      },
+      "closeness": {
+        "all": {
+          "winnerLife": {
+            "n": 8000,
+            "median": 10.0,
+            "q1": 5.0,
+            "q3": 16.0
+          },
+          "turns": {
+            "n": 8000,
+            "median": 14.0,
+            "q1": 11.0,
+            "q3": 17.0
+          }
+        },
+        "colour": {
+          "W": {
+            "winnerLife": {
+              "n": 4870,
+              "median": 10.0,
+              "q1": 5.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 4870,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "U": {
+            "winnerLife": {
+              "n": 4815,
+              "median": 10.0,
+              "q1": 5.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 4815,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "B": {
+            "winnerLife": {
+              "n": 4724,
+              "median": 11.0,
+              "q1": 6.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 4724,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "R": {
+            "winnerLife": {
+              "n": 4660,
+              "median": 11.0,
+              "q1": 5.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 4660,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "G": {
+            "winnerLife": {
+              "n": 4397,
+              "median": 11.0,
+              "q1": 6.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 4397,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          }
+        },
+        "pairs": {
+          "WU": {
+            "winnerLife": {
+              "n": 711,
+              "median": 10.0,
+              "q1": 5.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 711,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 18.0
+            }
+          },
+          "WB": {
+            "winnerLife": {
+              "n": 682,
+              "median": 11.0,
+              "q1": 5.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 682,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "WR": {
+            "winnerLife": {
+              "n": 604,
+              "median": 11.0,
+              "q1": 6.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 604,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "WG": {
+            "winnerLife": {
+              "n": 533,
+              "median": 10.0,
+              "q1": 6.0,
+              "q3": 15.0
+            },
+            "turns": {
+              "n": 533,
+              "median": 15.0,
+              "q1": 11.0,
+              "q3": 18.0
+            }
+          },
+          "UB": {
+            "winnerLife": {
+              "n": 604,
+              "median": 10.0,
+              "q1": 5.75,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 604,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "UR": {
+            "winnerLife": {
+              "n": 543,
+              "median": 10.0,
+              "q1": 5.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 543,
+              "median": 15.0,
+              "q1": 11.0,
+              "q3": 18.0
+            }
+          },
+          "UG": {
+            "winnerLife": {
+              "n": 645,
+              "median": 10.0,
+              "q1": 6.0,
+              "q3": 15.0
+            },
+            "turns": {
+              "n": 645,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "BR": {
+            "winnerLife": {
+              "n": 612,
+              "median": 11.0,
+              "q1": 6.0,
+              "q3": 15.0
+            },
+            "turns": {
+              "n": 612,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "BG": {
+            "winnerLife": {
+              "n": 538,
+              "median": 10.5,
+              "q1": 6.0,
+              "q3": 16.0
+            },
+            "turns": {
+              "n": 538,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          },
+          "RG": {
+            "winnerLife": {
+              "n": 528,
+              "median": 10.5,
+              "q1": 5.0,
+              "q3": 15.0
+            },
+            "turns": {
+              "n": 528,
+              "median": 14.0,
+              "q1": 11.0,
+              "q3": 17.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "censusArm": "C",
+  "real": null,
+  "verdict": {
+    "colourLevel": "INCOMPLETE",
+    "code": -1,
+    "offPayoffB": [],
+    "pullJudged": false,
+    "pullNote": "pull is not judged tonight: the human-pick model is context (105 of 180 cards covered, unevenly by colour); pull is judged once the draft-deck ledger holds 30+ real Omega decks or a full-coverage human model exists",
+    "judgedPayoff": "Blab",
+    "unclearPayoffB": [],
+    "aVsC": {
+      "W": {
+        "B": null,
+        "C": "EVEN",
+        "reads": null
+      },
+      "U": {
+        "B": null,
+        "C": "EVEN",
+        "reads": null
+      },
+      "B": {
+        "B": null,
+        "C": "OFF",
+        "reads": null
+      },
+      "R": {
+        "B": null,
+        "C": "EVEN",
+        "reads": null
+      },
+      "G": {
+        "B": null,
+        "C": "EVEN",
+        "reads": null
+      }
+    }
+  },
+  "labels": {
+    "payoff.C.W": 0,
+    "payoff.C.U": 0,
+    "payoff.C.B": 1,
+    "payoff.C.R": 0,
+    "payoff.C.G": 0
+  }
+}

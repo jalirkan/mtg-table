@@ -1,11 +1,11 @@
-running
+done
 runner: forgecoach-runner 8fca7250
 started: 2026-10-22T09:07:55-04:00
-phase: commands 4/4
+finished: 2026-10-22T10:45:30-04:00
 mtg-table: 60252b3
 ForgeCoach: 866c256
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 3.00 GB per worker (declared; measured 2.24), budget 21.4 GB)
 peak_worker_rss_gb: 2.24
 adopted: 2026-10-22T09:13:25-04:00: the runner restarted; lab-J145-run2 was still running
 restart_reason: 2026-10-22T09:13:25-04:00: no record of a previous runner (no last-exit.json: the first start that keeps one, or a new state folder); boot b19e3fad; up 5 h 39 min; invocation 7c8e9926; clock: NTP synchronized at once; synchronized now; elapsed times are monotonic (D461)
-blocks_done: run1 exit 0 at 2026-10-22T09:12:21-04:00, run2 exit 0 at 2026-10-22T09:58:31-04:00, run3 exit 0 at 2026-10-22T10:45:17-04:00
+blocks_done: run1 exit 0 at 2026-10-22T09:12:21-04:00, run2 exit 0 at 2026-10-22T09:58:31-04:00, run3 exit 0 at 2026-10-22T10:45:17-04:00, run4 exit 0 at 2026-10-22T10:45:30-04:00

@@ -1,0 +1,762 @@
+{
+  "profiles": {
+    "lab": {
+      "v": 1,
+      "run": "lab",
+      "cube": "omega-cube-180",
+      "drafter": null,
+      "seedBase": 1451,
+      "drafts": 2000,
+      "decks": 4000,
+      "skippedDrafts": 0,
+      "forgeBuilt": 0,
+      "notInCube": 0,
+      "unknown": 0,
+      "byK": [
+        0,
+        1,
+        3841,
+        158,
+        0,
+        0
+      ],
+      "pairs": 4000
+    },
+    "hp": {
+      "v": 1,
+      "run": "hp",
+      "cube": "omega-cube-180",
+      "drafter": {
+        "kind": "human-picks",
+        "seat": "A",
+        "file": "../ForgeCoach/public/cubes/omega-cube-180.picks.json",
+        "sha": "9ee28421c115570839e46ab270288ec6b982db18cc467bb5899b436ae6901b23",
+        "cards": 180,
+        "covered": 105,
+        "fallback": {
+          "intercept": -2.8729974909306146,
+          "slope": 0.0423417318659016,
+          "n": 105,
+          "r": 0.6056723899899558
+        }
+      },
+      "seedBase": 1452,
+      "drafts": 600,
+      "decks": 1200,
+      "skippedDrafts": 0,
+      "forgeBuilt": 0,
+      "notInCube": 0,
+      "unknown": 0,
+      "byK": [
+        0,
+        0,
+        1088,
+        112,
+        0,
+        0
+      ],
+      "pairs": 1200
+    },
+    "fr": {
+      "v": 1,
+      "run": "fr",
+      "cube": "omega-cube-180",
+      "drafter": {
+        "kind": "forge-ranks",
+        "seat": "A",
+        "weights": {
+          "synergy": 0,
+          "lean": 0,
+          "commitAt": 0.04
+        },
+        "cards": 180,
+        "ranked": 180,
+        "differ": 0
+      },
+      "seedBase": 1453,
+      "drafts": 600,
+      "decks": 1200,
+      "skippedDrafts": 0,
+      "forgeBuilt": 0,
+      "notInCube": 0,
+      "unknown": 0,
+      "byK": [
+        0,
+        0,
+        1166,
+        34,
+        0,
+        0
+      ],
+      "pairs": 1200
+    }
+  },
+  "censusDecks": {
+    "v": 2,
+    "decision": "D456",
+    "cube": "cubes/omega-cube-180.md",
+    "cubeName": "omega-cube-180",
+    "cubeSha": "f6432a75975e",
+    "group": "cube:omega-cube-180",
+    "seed": 1455,
+    "count": 2000,
+    "ks": [
+      1,
+      2,
+      3
+    ],
+    "pool": {
+      "listed": 180,
+      "drawable": 180,
+      "nonland": 158,
+      "lands": 22,
+      "notInLibrary": [],
+      "unsupported": [],
+      "aiRemoved": [],
+      "basicsListed": []
+    },
+    "colourlessShare": 0.1139,
+    "rejections": 35,
+    "makeupRedraws": 0,
+    "decksRedrawn": 31,
+    "makeupK": {
+      "k1": 676,
+      "k2": 638,
+      "k3": 686
+    },
+    "decksOf40": 2000,
+    "decksAllCastable": 2000,
+    "coloursWith3": {
+      "c0": 0,
+      "c1": 818,
+      "c2": 777,
+      "c3": 405,
+      "c4": 0,
+      "c5": 0
+    },
+    "mainShare": {
+      "lt40": 26,
+      "s40_50": 154,
+      "s50_60": 327,
+      "s60_70": 273,
+      "s70_80": 250,
+      "s80_90": 161,
+      "s90_100": 125,
+      "eq100": 684
+    },
+    "means": {
+      "lands": 17.41,
+      "fixers": 2.384,
+      "fixersReal": 2.384,
+      "nColours": 1.9845,
+      "creatures": 13.4115,
+      "xSpells": 0.2965,
+      "cardFlow": 0.784,
+      "avgMv": 3.254
+    },
+    "mvHist": [
+      900,
+      7304,
+      9033,
+      9395,
+      8125,
+      4927,
+      5496
+    ],
+    "repeatCap": {
+      "k": 1,
+      "maxShare": 0.25,
+      "floor": 10,
+      "rounds": 1,
+      "k1Decks": 676,
+      "perCard": 169,
+      "cardsAtCap": [],
+      "decksDrawnUnderCap": 0,
+      "maxK1Uses": 133,
+      "maxShareOfK1": 0.1967
+    },
+    "cardShares": {
+      "file": "card-shares.tsv",
+      "cards": 180,
+      "neverDrawn": [
+        "Mishra's Factory",
+        "Mutavault"
+      ],
+      "all": {
+        "max": 0.1765,
+        "median": 0.1495,
+        "top": [
+          [
+            "Liliana of the Veil",
+            0.1765
+          ],
+          [
+            "Sun Titan",
+            0.1705
+          ],
+          [
+            "Bitterblossom",
+            0.17
+          ],
+          [
+            "Demonic Tutor",
+            0.17
+          ],
+          [
+            "Liliana, the Last Hope",
+            0.169
+          ],
+          [
+            "Lingering Souls",
+            0.169
+          ],
+          [
+            "Bone Shards",
+            0.1685
+          ],
+          [
+            "Elspeth, Sun's Champion",
+            0.168
+          ],
+          [
+            "Reanimate",
+            0.168
+          ],
+          [
+            "Ponder",
+            0.167
+          ]
+        ]
+      },
+      "k1": {
+        "ofDecks": {
+          "max": 0.1967,
+          "median": 0.1583,
+          "top": [
+            [
+              "Ephemerate",
+              0.1967
+            ],
+            [
+              "Flickerwisp",
+              0.1923
+            ],
+            [
+              "Swords to Plowshares",
+              0.1923
+            ],
+            [
+              "Blade Splicer",
+              0.1908
+            ],
+            [
+              "Skyclave Apparition",
+              0.1908
+            ],
+            [
+              "Path to Exile",
+              0.1893
+            ],
+            [
+              "Sun Titan",
+              0.1893
+            ],
+            [
+              "Adeline, Resplendent Cathar",
+              0.1879
+            ],
+            [
+              "Baneslayer Angel",
+              0.1879
+            ],
+            [
+              "Lingering Souls",
+              0.1879
+            ]
+          ]
+        },
+        "ofAdmitting": {
+          "max": 0.9323,
+          "median": 0.8182,
+          "top": [
+            [
+              "Sheoldred, the Apocalypse",
+              0.9323
+            ],
+            [
+              "Demonic Tutor",
+              0.9023
+            ],
+            [
+              "Vampire Nighthawk",
+              0.8947
+            ],
+            [
+              "Scavenging Ooze",
+              0.887
+            ],
+            [
+              "Liliana of the Veil",
+              0.8797
+            ],
+            [
+              "Phyrexian Arena",
+              0.8797
+            ],
+            [
+              "Inferno Titan",
+              0.8788
+            ],
+            [
+              "Bitterblossom",
+              0.8722
+            ],
+            [
+              "Fable of the Mirror-Breaker",
+              0.8712
+            ],
+            [
+              "Jace, Vryn's Prodigy",
+              0.8652
+            ]
+          ]
+        }
+      },
+      "k2": {
+        "ofDecks": {
+          "max": 0.2006,
+          "median": 0.1458,
+          "top": [
+            [
+              "Liliana, the Last Hope",
+              0.2006
+            ],
+            [
+              "Hymn to Tourach",
+              0.1897
+            ],
+            [
+              "Demonic Tutor",
+              0.1881
+            ],
+            [
+              "Bitterblossom",
+              0.185
+            ],
+            [
+              "Bone Shards",
+              0.185
+            ],
+            [
+              "Reanimate",
+              0.185
+            ],
+            [
+              "Sheoldred, the Apocalypse",
+              0.185
+            ],
+            [
+              "Grave Titan",
+              0.1834
+            ],
+            [
+              "Liliana of the Veil",
+              0.1834
+            ],
+            [
+              "Damnation",
+              0.1787
+            ]
+          ]
+        },
+        "ofAdmitting": {
+          "max": 0.9701,
+          "median": 0.3933,
+          "top": [
+            [
+              "Flooded Strand",
+              0.9701
+            ],
+            [
+              "Scrubland",
+              0.96
+            ],
+            [
+              "Misty Rainforest",
+              0.9577
+            ],
+            [
+              "Marsh Flats",
+              0.9467
+            ],
+            [
+              "Wooded Foothills",
+              0.9444
+            ],
+            [
+              "Badlands",
+              0.9375
+            ],
+            [
+              "Polluted Delta",
+              0.9351
+            ],
+            [
+              "Verdant Catacombs",
+              0.9298
+            ],
+            [
+              "Savannah",
+              0.9231
+            ],
+            [
+              "Windswept Heath",
+              0.9231
+            ]
+          ]
+        }
+      },
+      "k3": {
+        "ofDecks": {
+          "max": 0.2872,
+          "median": 0.1443,
+          "top": [
+            [
+              "Plateau",
+              0.2872
+            ],
+            [
+              "Polluted Delta",
+              0.2828
+            ],
+            [
+              "Arid Mesa",
+              0.2799
+            ],
+            [
+              "Scalding Tarn",
+              0.2784
+            ],
+            [
+              "Tundra",
+              0.2784
+            ],
+            [
+              "Volcanic Island",
+              0.2755
+            ],
+            [
+              "Underground Sea",
+              0.2697
+            ],
+            [
+              "Flooded Strand",
+              0.2682
+            ],
+            [
+              "Scrubland",
+              0.2682
+            ],
+            [
+              "Misty Rainforest",
+              0.2638
+            ]
+          ]
+        },
+        "ofAdmitting": {
+          "max": 0.9183,
+          "median": 0.2463,
+          "top": [
+            [
+              "Scalding Tarn",
+              0.9183
+            ],
+            [
+              "Volcanic Island",
+              0.9087
+            ],
+            [
+              "Badlands",
+              0.899
+            ],
+            [
+              "Polluted Delta",
+              0.8981
+            ],
+            [
+              "Taiga",
+              0.8969
+            ],
+            [
+              "Bloodstained Mire",
+              0.8939
+            ],
+            [
+              "Misty Rainforest",
+              0.8829
+            ],
+            [
+              "Plateau",
+              0.8795
+            ],
+            [
+              "Tropical Island",
+              0.878
+            ],
+            [
+              "Tundra",
+              0.8721
+            ]
+          ]
+        }
+      }
+    },
+    "censusSha": "260724cbc9f8",
+    "poolSha": "ccd1123660dd",
+    "scripts": "/home/justin-a/forge/res/cardsfolder/cardsfolder.zip",
+    "noScript": [],
+    "decksSha": "4a259bee7feb"
+  },
+  "games": {
+    "games/B-lab": {
+      "v": 1,
+      "games": 4000,
+      "decisive": 4000,
+      "draws": 0,
+      "timeouts": 0,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5285,
+      "meanTurns": 18.57,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 4000,
+          "ms": 1646583,
+          "workers": 6,
+          "gamesPerHour": 8745,
+          "at": "2026-10-22T13:39:49.493Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 4000,
+        "sizes": {
+          "rows": {
+            "games": 4000,
+            "total": 248784564,
+            "mean": 62196,
+            "median": 56934,
+            "p90": 101807,
+            "max": 253460
+          },
+          "ledger": {
+            "games": 4000,
+            "total": 6839312,
+            "mean": 1710,
+            "median": 1663,
+            "p90": 2222,
+            "max": 4730
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 186190,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 1541,
+          "leaks": 0,
+          "controls": 1336,
+          "controlMoved": 1312,
+          "candidates": 1541
+        },
+        "redaction": null,
+        "problems": []
+      }
+    },
+    "games/B-hp": {
+      "v": 1,
+      "games": 1200,
+      "decisive": 1200,
+      "draws": 0,
+      "timeouts": 0,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5125,
+      "meanTurns": 18.84,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 1200,
+          "ms": 615786,
+          "workers": 6,
+          "gamesPerHour": 7015,
+          "at": "2026-10-22T13:50:07.712Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 1200,
+        "sizes": {
+          "rows": {
+            "games": 1200,
+            "total": 74639320,
+            "mean": 62199,
+            "median": 56590,
+            "p90": 101496,
+            "max": 238722
+          },
+          "ledger": {
+            "games": 1200,
+            "total": 2073893,
+            "mean": 1728,
+            "median": 1661,
+            "p90": 2294,
+            "max": 3806
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 55769,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 467,
+          "leaks": 0,
+          "controls": 409,
+          "controlMoved": 400,
+          "candidates": 467
+        },
+        "redaction": null,
+        "problems": []
+      }
+    },
+    "games/B-fr": {
+      "v": 1,
+      "games": 1200,
+      "decisive": 1200,
+      "draws": 0,
+      "timeouts": 0,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5142,
+      "meanTurns": 18.59,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 1200,
+          "ms": 492661,
+          "workers": 6,
+          "gamesPerHour": 8769,
+          "at": "2026-10-22T13:58:21.695Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 1200,
+        "sizes": {
+          "rows": {
+            "games": 1200,
+            "total": 73821978,
+            "mean": 61518,
+            "median": 55435,
+            "p90": 103362,
+            "max": 201253
+          },
+          "ledger": {
+            "games": 1200,
+            "total": 2049954,
+            "mean": 1708,
+            "median": 1660,
+            "p90": 2278,
+            "max": 3881
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 55509,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 445,
+          "leaks": 0,
+          "controls": 377,
+          "controlMoved": 368,
+          "candidates": 445
+        },
+        "redaction": null,
+        "problems": []
+      }
+    },
+    "census/games": {
+      "v": 1,
+      "games": 8000,
+      "decisive": 7996,
+      "draws": 4,
+      "timeouts": 4,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5423,
+      "meanTurns": 17.83,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 8000,
+          "ms": 2801417,
+          "workers": 6,
+          "gamesPerHour": 10281,
+          "at": "2026-10-22T14:45:13.502Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 8000,
+        "sizes": {
+          "rows": {
+            "games": 8000,
+            "total": 444709089,
+            "mean": 55589,
+            "median": 49476,
+            "p90": 89715,
+            "max": 7851636
+          },
+          "ledger": {
+            "games": 8000,
+            "total": 13392791,
+            "mean": 1674,
+            "median": 1603,
+            "p90": 2158,
+            "max": 188822
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 339926,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 2323,
+          "leaks": 0,
+          "controls": 1904,
+          "controlMoved": 1869,
+          "candidates": 2323
+        },
+        "redaction": null,
+        "problems": []
+      }
+    }
+  }
+}
