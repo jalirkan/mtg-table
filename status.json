@@ -1,67 +1,23 @@
 {
  "schema": 1,
- "updated": "2026-10-22T00:06:58-04:00",
- "heartbeat": "2026-10-22T00:06:58-04:00",
+ "updated": "2026-10-22T00:10:08-04:00",
+ "heartbeat": "2026-10-22T00:10:08-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-22T00:10:08-04:00",
+ "idleReason": "blocked after J147",
  "host": {
-  "load1": 1.33,
-  "memUsedGb": 4.1,
+  "load1": 1.84,
+  "memUsedGb": 3.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 1533,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
-  {
-   "publicTitle": "Move atlas: random play vs Forge play, one deck pair",
-   "publicEst": "~4 h",
-   "id": "J148",
-   "title": "RESUME of J143 (second try as J148: J146 was OOM-killed at 7 workers beside the GPU lane; phase B workers measure ~2.8 GB, so mem 3 and no GPU lane beside it) (its folder var/lab-j142 kept: phase A done, 237 of 490 phase-B units done; no clean) -- The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-21T20:22:26-04:00",
-   "elapsed": 13472,
-   "done": 50356,
-   "total": 22250,
-   "unit": "lines",
-   "ratePerHour": 0,
-   "eta": null,
-   "workers": 4,
-   "workersMax": 4,
-   "cores": 7,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-10-21T22:33:39-04:00",
-   "memGb": 10.15,
-   "live": {
-    "played_a": 10000,
-    "branches": 40356,
-    "atlas.problems": -1,
-    "disk_gb": 745.2,
-    "elapsed_s": 13429,
-    "engine_errors": 0,
-    "peak_worker_rss_gb": 1.31,
-    "pressure_events": 0,
-    "unit_errors": 11,
-    "workers": 4
-   },
-   "liveHeadline": [
-    "played_a",
-    "branches",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J148-run1"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": "Omega colour balance: drafted pull, drafted payoff and the pool payoff",
@@ -82,6 +38,17 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Move atlas: random play vs Forge play, one deck pair",
+   "publicEst": "~4 h",
+   "id": "J148",
+   "title": "RESUME of J143 (second try as J148: J146 was OOM-killed at 7 workers beside the GPU lane; phase B workers measure ~2.8 GB, so mem 3 and no GPU lane beside it) (its folder var/lab-j142 kept: phase A done, 237 of 490 phase-B units done; no clean) -- The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule",
+   "status": "failed",
+   "finished": "2026-10-22T00:10:08-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "step run1 exited 3"
+  },
   {
    "publicTitle": "Library deck census night 2: fresh seeds, recorded, confirming night 1",
    "publicEst": "~11-12 h",
@@ -899,17 +866,6 @@
    "numbers": {
     "written": 1
    }
-  },
-  {
-   "publicTitle": "Queue night 4",
-   "publicEst": "~11 h",
-   "id": "J096",
-   "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
-   "status": "failed",
-   "finished": "2026-10-06T06:08:13-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "step run1 exited 1"
   }
  ],
  "runner": {

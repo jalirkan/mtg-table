@@ -909,3 +909,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: played 0, engine_errors 0, data_used_gb 0
 - summary: results/J144/summary.md (the PC session's; judge it against the rule)
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J148 FAILED: RESUME of J143 (second try as J148: J146 was OOM-killed at 7 workers beside the GPU lane; phase B workers measure ~2.8 GB, so mem 3 and no GPU lane beside it) (its folder var/lab-j142 kept: phase A done, 237 of 490 phase-B units done; no clean) -- The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule
+
+- finished: 2026-10-22T00:10:08-04:00
+- decides: nothing by itself. It is the first full move atlas: how often and how strongly the random map and Forge's map of the same decisions agree, reported with intervals, for Justin to read ("what we'd gain")
+- hypothesis: none to confirm, and none is tested. The smoke (50 rollouts, 3 decisions at 16 + 8 branches) is too small to say anything about agreement: every interval straddles the other
+- rule: D451, written 2026-10-16 before this run: the guardrails (point 2), the pair rule (point 3), the fork and its checks (points 5-6) and the arithmetic (point 7). Method only: no pass/fail rule on what the maps say; the agreement is reported with intervals. The only checks are mechanical (the pilot's and the final ones below)
+- outcome: failed (step run1 exited 3)
+- headline: played_a 10000, branches 40356, atlas.problems -1
+- summary: results/J148/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 60252b3
+- follow-up: template morning-read: not due (the job did not finish done)
