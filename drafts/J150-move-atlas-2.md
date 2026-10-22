@@ -503,6 +503,7 @@ check: pilot.played == 60
 check: pilot.decisions == 2
 check: pilot.g5 == 1
 check: pilot.refusedCast >= 1
+check: pilot.noRepeatRefused >= 1
 check: pilot.guardViolations == 0
 
 ## Commands
