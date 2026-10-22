@@ -3003,7 +3003,9 @@ const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn',
 // M57 / D358: a decision play exploration answered: the rule, and the seat's own answer as a token.
 const EXPLORE_KEYS = new Set(['rule', 'forge']);
 const EXPLORE_RULES = ['random', 'closeCall'];
-const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind']);
+const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind', 'guardrails']);
+// M71 / D451, D458: the random seat's guardrail counts, by name (G1 land, G4 keep, G3 noRepeatNoOp, G5 refusedCast / noRepeatRefused).
+const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused'];
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
@@ -3064,7 +3066,12 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
         if (!header.playExplore) bad(lineNo, 'decisions summary carries "explore" but the session header has no playExplore (M57, D358)');
         for (const [k, v] of Object.entries(b.explore ?? {})) {
           if (!EXPLORE_SUMMARY_KEYS.has(k)) bad(lineNo, `decisions summary explore carries an unexpected key "${k}"`);
-          else if (k === 'byKind') {
+          else if (k === 'guardrails') {
+            if (!header.playExplore || header.playExplore.epsilon !== 1) bad(lineNo, 'decisions summary explore.guardrails outside a random seat\'s log (epsilon 1; M71, D451)');
+            for (const [kk, n] of Object.entries(v ?? {})) {
+              if (!GUARDRAIL_NAMES.includes(kk) || !Number.isInteger(n) || n < 0) bad(lineNo, `decisions summary explore.guardrails ${JSON.stringify(kk)}: ${JSON.stringify(n)} (M71)`);
+            }
+          } else if (k === 'byKind') {
             for (const [kk, n] of Object.entries(v ?? {})) {
               if (!DECISION_KINDS.includes(kk) || typeof n !== 'number') bad(lineNo, `decisions summary explore.byKind ${JSON.stringify(kk)}`);
             }

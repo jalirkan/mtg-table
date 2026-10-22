@@ -20,8 +20,10 @@ package mtgtable.ai;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import forge.ai.AiController;
 import forge.ai.ComputerUtilAbility;
@@ -88,7 +90,9 @@ import forge.game.zone.ZoneType;
  * is pending, so G2 has no code of its own; (G3) a pure no-op is never repeated twice in a row: an
  * activated ability whose resolution left the public state unchanged
  * ({@link #fingerprint}) is not offered at the seat's next decision with the
- * stack empty; (G4) the opening hand is always kept.  The turn cap is the
+ * stack empty; (G4) the opening hand is always kept; (G5, D458) a play the
+ * engine refused to pay for is not offered again in the same priority window
+ * ({@link #played}, {@link #window}).  The turn cap is the
  * game loop's (the cube lab's {@code turnCap}).
  *
  * <p><b>Its own randomness.</b>  Every draw is {@link ExploreMath}'s seeded
@@ -160,11 +164,81 @@ public final class Explorer {
     /** G3: the seat's last activated ability, and the public state when it was chosen. */
     private String lastAbility;
     private long lastFingerprint;
+    /** G5 (D458): the play the random seat just returned (null: a pass or a land), until the engine plays it. */
+    private String pendingPick;
+    /** G5: the plays the engine refused to pay for in {@link #refusedWindow}, the priority window they were refused in. */
+    private final Set<String> refused = new LinkedHashSet<>();
+    private String refusedWindow;
+
+    /**
+     * G5's priority window: the turn, the phase, and the stack (its size and
+     * the top item's id).  A refused play leaves all of them as they were, so
+     * the engine's next priority to the seat is the same window; a play that
+     * resolves or is added, a new step or a new turn is another one.
+     */
+    static String window(final Game g) {
+        final int top = g.getStack().isEmpty() || g.getStack().peekAbility() == null ? -1 : g.getStack().peekAbility().getId();
+        return g.getPhaseHandler().getTurn() + "/" + g.getPhaseHandler().getPhase() + "/" + g.getStack().size() + "/" + top;
+    }
+
+    /**
+     * G5 (D458): the random seat's pick was just handed to the engine, and
+     * {@code refused} says whether the engine refused it (its cost could not be
+     * paid -- Forge marks such a play skipped).  A refused pick is counted
+     * ({@code refusedCast}) and is not offered again in this priority window.
+     * Nothing for a seat that is not the random seat.
+     */
+    public void played(final Game g, final SpellAbility sa, final boolean refusedNow) {
+        final String tok = pendingPick != null ? pendingPick : Decisions.saToken(sa);
+        pendingPick = null;
+        if (!math.config().random || !refusedNow || tok == null || "pass".equals(tok)) {
+            return;
+        }
+        noteRefused(window(g), tok);
+    }
+
+    /** G5: {@code tok} was refused in window {@code w}: counted, and left out of the rest of that window. */
+    void noteRefused(final String w, final String tok) {
+        math.guardrail("refusedCast");
+        if (!w.equals(refusedWindow)) {
+            refused.clear();
+            refusedWindow = w;
+        }
+        refused.add(tok);
+    }
+
+    /** G5: the options to leave out at a decision in {@code w} (and the set forgotten once the window has moved on). */
+    Set<String> refusedIn(final String w) {
+        if (!refused.isEmpty() && !w.equals(refusedWindow)) {
+            refused.clear();
+            refusedWindow = null;
+        }
+        return refused;
+    }
+
+    /**
+     * G5 on an option list: each refused option is removed while another
+     * remains (as G3 removes its no-op), and each removal is counted
+     * ({@code noRepeatRefused}).  Engine-free, for the self-test.
+     */
+    static int dropRefused(final Map<String, ?> opts, final Set<String> refused, final ExploreMath math) {
+        int n = 0;
+        for (final String t : refused) {
+            if (opts.size() > 1 && opts.containsKey(t)) {
+                opts.remove(t);
+                math.guardrail("noRepeatRefused");
+                n++;
+            }
+        }
+        return n;
+    }
 
     /** The random seat's priority answer, under the guardrails. */
     private List<SpellAbility> randomPriority(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
+        pendingPick = null;
         try {
             final Game g = ai.getGame();
+            final Set<String> refusedHere = refusedIn(window(g));
             final boolean stackEmpty = g.getStack().isEmpty();
             String banned = null;
             if (lastAbility != null && stackEmpty) {
@@ -195,14 +269,18 @@ public final class Explorer {
             if (banned != null && opts.size() > 1 && opts.remove(banned) != null) {
                 math.guardrail("noRepeatNoOp");
             }
+            // G5 (D458): a play the engine refused to pay for in this priority window is not picked again in it
+            dropRefused(opts, refusedHere, math);
             final List<String> keys = new ArrayList<>(opts.keySet());
             if (keys.size() < 2) {
                 final String only = keys.isEmpty() ? "pass" : keys.get(0);
                 mark = null;
                 final List<SpellAbility> l = opts.get(only);
+                pendingPick = l == null ? null : only;
                 return l == null ? null : new ArrayList<>(l);
             }
             final String tok = keys.get(math.pick(keys.size()));
+            pendingPick = "pass".equals(tok) ? null : tok;
             math.randomised("priority", tok.equals(forgeTok));
             mark = new Decision.Explore("random", forgeTok);
             if (tok.startsWith("activate:")) {

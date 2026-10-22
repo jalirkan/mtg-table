@@ -179,3 +179,31 @@ test('negative control: an explore mark in a log that did not explore FAILS the 
   assert.equal(r.status, 1, r.out);
   assert.match(r.out, /no playExplore/);
 });
+
+// M71 / D458: a random seat's decisions summary carries its guardrail counts. Rewritten as a random
+// seat's header (epsilon 1, no close calls) the explore fixture passes with G5's counts; the same
+// counts in a D358 log (epsilon 0.2), or an unknown or non-integer count, FAIL the checker.
+const withGuardrails = (frames: Array<Record<string, any>>, g: Record<string, unknown>): void => {
+  frames.find((f) => f.dir === 'ai' && f.type === 'decisions')!.body.explore.guardrails = g;
+};
+
+test('M71: a random seat\'s summary may carry its guardrail counts (G5 included)', () => {
+  const r = rewrite(EXP_LOGS[0] as string, (frames) => {
+    frames[0]!.playExplore = { epsilon: 1, closeCall: 0, opening: false };
+    withGuardrails(frames, { land: 5, keep: 1, noRepeatNoOp: 0, refusedCast: 2, noRepeatRefused: 2 });
+  });
+  assert.equal(r.status, 0, r.out);
+});
+
+test('negative control: guardrail counts outside a random seat\'s log, or of an unknown name, FAIL the checker (M71)', () => {
+  const d358 = rewrite(EXP_LOGS[0] as string, (frames) => withGuardrails(frames, { refusedCast: 1 }));
+  assert.equal(d358.status, 1, d358.out);
+  assert.match(d358.out, /explore\.guardrails outside a random seat's log/);
+  const odd = rewrite(EXP_LOGS[0] as string, (frames) => {
+    frames[0]!.playExplore = { epsilon: 1, closeCall: 0, opening: false };
+    withGuardrails(frames, { refusedCast: 1.5, castFromHand: 1 });
+  });
+  assert.equal(odd.status, 1, odd.out);
+  assert.match(odd.out, /explore\.guardrails "refusedCast": 1\.5/);
+  assert.match(odd.out, /explore\.guardrails "castFromHand"/);
+});

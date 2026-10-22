@@ -30,6 +30,20 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-22 — the random seat's guardrail counts are in its log
+
+The move atlas (D451) read G1 and G4 back from the random seats' decision
+records but had G3's count only from phase A's workers, and G5 (D458, a play
+the engine refused to pay for) has no decision record of its own. Decision
+**D458** (M71). Held by `web/test/cubelab-record.test.ts` (a random seat's
+summary passes with the counts; a D358 log carrying them, an unknown name and a
+non-integer count fail) and `web/test/cubelab-atlas.test.ts` (the atlas sums
+them into `atlas.json`'s checks).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M71 | §8.2, M57 | **A random seat's `decisions` summary carries its guardrail counts.** In a log whose session header's `playExplore` has `epsilon` 1 (the move atlas's random seat, D451), the summary's `explore` block (M57) may carry **`guardrails: {name: count}`**: `land` (G1 took a land drop), `keep` (G4 kept the opening hand), `noRepeatNoOp` (G3 left out a repeated no-op), `refusedCast` (G5: the engine refused to pay for the seat's pick) and `noRepeatRefused` (G5: that pick left out at a later decision of the same priority window); non-negative integers, a name absent when it never fired. The counts name no card. **Optional**: absent from every log before this amendment and from every log that is not a random seat's; `tools/check-redaction.mjs` fails one outside an `epsilon` 1 log, an unknown name or a count that is not a non-negative integer. | D458 |
+
 ### 2026-10-16 — a stalled game on a multi-game server has no result
 
 Found on the PC's long-lived server (2026-10-16): a game nobody was connected to
