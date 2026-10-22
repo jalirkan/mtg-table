@@ -31,6 +31,7 @@ import {
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
+import { matchDeadlineMs } from '../../tools/cubelab/engine.ts';
 import { labPath } from '../../tools/cubelab/labdata.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 
@@ -176,7 +177,7 @@ test('the guardrails read back from the decision records', () => {
   assert.match(gc.violations.join(), /took a mulligan \(G4\)/);
 });
 
-const OPTS: AtlasOptions = { deckA: '/d/a.dck', deckB: '/d/b.dck', seed: 451, turnCap: 40, rollouts: 10, branchRandom: 60, branchForge: 25, decisions: 3, options: 8, chunk: 25, leakChecks: 1, branchTimeoutSec: 120, boot: 100, pair: null };
+const OPTS: AtlasOptions = { deckA: '/d/a.dck', deckB: '/d/b.dck', seed: 451, turnCap: 40, rollouts: 10, branchRandom: 60, branchForge: 25, decisions: 3, options: 8, chunk: 25, leakChecks: 1, branchTimeoutSec: 120, boot: 100, pair: null, unitTimeoutMin: 30 };
 
 test('the jobs: phase A\'s seeds and random seat, the units, their expected options and leak checks', () => {
   const j = rolloutJob('/repo', OPTS, '/o', 7) as Record<string, any>;
@@ -195,6 +196,8 @@ test('the jobs: phase A\'s seeds and random seat, the units, their expected opti
   assert.equal(u1.atlas.leakChecks, 0, 'only the first chunk of a decision and continuation');
   assert.equal(u0.seed, 451, 'a unit replays the baseline from its seed');
   assert.ok(u0.gameTimeoutSec >= 1800 + 3 * 25 * 120, 'the unit\'s game holds all its branches');
+  assert.equal(u0.deadlineSec, 30 * 60, 'D459: the pool\'s watchdog is --unit-timeout minutes, not the game timeout\'s formula');
+  assert.equal(matchDeadlineMs(u0 as never), 30 * 60 * 1000);
 });
 
 test('every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review)', () => {
