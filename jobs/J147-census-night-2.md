@@ -8,7 +8,6 @@ cores: 5
 pilot_cores: 3
 max_workers: 5
 mem_per_worker_gb: 3
-after: J148
 repos: mtg-table@60252b32 (origin/main on 2026-10-20 after #168, #169, #171 and #172 merged; tools/cubelab is byte-identical to 3c398ff2, where the 4-game smoke below ran. D447's census, D450's --record and LAB_DATA_DIR are on it. RE-PIN to origin/main's head when posting if main has moved: the pilot checks merged == 1)
 decides: whether each of night 1's three colour-count candidates HOLDS in each band on fresh seeds (D447 point 9), pre-registered below: twelve verdicts (3 candidates x 4 bands), each holds or not shown. Nothing is promoted, removed or re-banded by this job; a candidate that holds stops being a candidate and becomes a finding "in a random deck of this makeup, as Forge's AI plays it". It is also the census's first recorded night: 80,000 games of both seats' decision rows for Phase 3
 hypothesis: night 1 (J140, seeds 1401-1404) found in every band: decks with one colour of 3+ spells won .574-.599 (every interval above .5); four colours .393-.415 and five .341-.400 (every interval below .5); mono minus < .4 main share about +.18 to +.21. If those are properties of random decks of these makeups under Forge's AI and not of night 1's seeds, all twelve hold on night 2 (night 1's intervals clear the null by .06 or more, so the power is high); a candidate that is not shown is the method working, not a failure
