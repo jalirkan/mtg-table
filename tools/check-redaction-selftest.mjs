@@ -10,6 +10,10 @@
  *
  *   node tools/check-redaction-selftest.mjs
  *
+ * Its flag sections hold each of the checker's flags to its one relaxation:
+ * --pre-amendment, --opponent-library-ok, --partial and --empty-hand-ok (D460,
+ * whose controls are variants of the baseline built here, not files).
+ *
  * It exists because the checker's own regression is invisible by construction.
  * For one afternoon check-redaction.mjs downgraded the absence of `owner`,
  * `token`, `alt` and `library.cards` to a per-file WARN, so five probes that
@@ -308,6 +312,97 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
   for (const f of readdirSync('fixtures/synthetic').filter((x) => x.endsWith('.jsonl'))) sweep(`fixtures/synthetic/${f}`, 1);
   for (const f of readdirSync('fixtures/games').filter((x) => x.endsWith('.jsonl')).sort()) sweep(`fixtures/games/${f}`, 97);
   lead(`${prefixes} prefixes of the committed recordings pass --partial (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
+}
+
+// --- and --empty-hand-ok (D460: the move atlas's branch logs) ----------------
+// It turns "not one card was redacted" and "the viewer never saw a named card"
+// into WARNs only where the file proves the hand empty in every state -- and
+// nothing else.  So: the default is unchanged, every probe keeps its verdict
+// under the flag, an emptied hand passes with a WARN, and a hand that is not
+// empty -- a full opponent card at count 1, a count of 1 with no stub, a listed
+// library card -- still fails, with the flag saying why it does not apply.
+{
+  const { checkFile } = await import('./check-redaction.mjs');
+  const lead = (s) => console.log(`  ok    ${s}`);
+  let same = 0;
+  for (const { file, level, expect } of manifest) {
+    const r = checkFile(`${DIR}/${file}`, { emptyHandOk: true });
+    if (level === 'fail') {
+      if (!r.problems.some((p) => p.includes(expect))) bad(`--empty-hand-ok does not reject ${file} for its reason (${JSON.stringify(expect)})`);
+      else same++;
+    } else if (r.problems.length > 0) bad(`--empty-hand-ok rejects ${file}, which passes without it: ${r.problems[0]}`);
+    else same++;
+  }
+  if (same === manifest.length) lead(`--empty-hand-ok: every one of the ${manifest.length} controls has the same verdict, for the same reason`);
+
+  const base = readFileSync(`${DIR}/baseline.jsonl`, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const seat = base[0].seat;
+  /** The baseline with `edit(player, isViewer, stateIndex)` applied to every state's players. */
+  const variant = (edit) => `${base.map((f, i) => {
+    if (i === 0 || f.type !== 'state') return JSON.stringify(f);
+    const g = structuredClone(f);
+    for (const p of g.body.players) edit(p, p.id === seat, i);
+    return JSON.stringify(g);
+  }).join('\n')}\n`;
+  const empty = { count: 0, cards: [] };
+  const firstState = base.findIndex((f) => f.type === 'state');
+  // a full card's shape, under an id this log never showed the viewer (so nothing revealed it)
+  const oppCard = { ...structuredClone(base[firstState].body.players.find((p) => p.id === seat).zones.hand.cards[0]), id: 9001 };
+  const NOTHING = 'not one card was redacted';
+  const NAMED = 'the viewer never saw a named card in their own hand';
+  const run = (name, text, flag) => checkFile(name, { text, emptyHandOk: flag });
+  const has = (r, msg) => r.problems.some((p) => p.includes(msg));
+  const warns = (r, msg) => r.warnings.some((w) => w.includes(msg) && w.includes('--empty-hand-ok'));
+
+  // The proof holds: the opponent's hand empty in every state, its library a bare count.
+  const oppEmpty = variant((p, v) => { if (!v) p.zones.hand = { ...empty }; });
+  const o0 = run('opp-empty.jsonl', oppEmpty, false);
+  const o1 = run('opp-empty.jsonl', oppEmpty, true);
+  if (!has(o0, NOTHING)) bad('an opponent hand empty in every state, WITHOUT the flag: "not one card was redacted" must still fail (the default is unchanged)');
+  else if (o1.problems.length > 0 || !warns(o1, NOTHING)) bad(`the same file under --empty-hand-ok: want a pass with a WARN, got ${o1.problems[0] ?? 'no warning'}`);
+  else lead('an opponent hand empty in every state: a failure by default, a WARN under --empty-hand-ok');
+
+  // The seat-1 twin: the viewer's own hand empty in every state.
+  const viewerEmpty = variant((p, v) => { if (v) p.zones.hand = { ...empty }; });
+  const v0 = run('viewer-empty.jsonl', viewerEmpty, false);
+  const v1 = run('viewer-empty.jsonl', viewerEmpty, true);
+  if (!has(v0, NAMED)) bad('a viewer hand empty in every state, WITHOUT the flag: "the viewer never saw a named card" must still fail');
+  else if (v1.problems.length > 0 || !warns(v1, NAMED)) bad(`the same file under --empty-hand-ok: want a pass with a WARN, got ${v1.problems[0] ?? 'no warning'}`);
+  else lead('a viewer hand empty in every state: a failure by default, a WARN under --empty-hand-ok');
+
+  // Negative controls: the proof does not hold, so the coverage failure stands under the flag.
+  const plant = (name, edit, why, also) => {
+    const r = run(name, variant(edit), true);
+    if (!has(r, NOTHING) || !r.problems.some((p) => p.includes(NOTHING) && p.includes(`--empty-hand-ok does not apply: ${why}`))) {
+      bad(`${name} under --empty-hand-ok: "${NOTHING}" must still FAIL, saying "${why}"; got ${r.problems.find((p) => p.includes(NOTHING)) ?? r.problems[0] ?? 'a pass'}`);
+    } else if (also && !has(r, also)) bad(`${name} under --empty-hand-ok: want the leak rule's own failure too (${JSON.stringify(also)})`);
+    else lead(`${name}: still a failure under --empty-hand-ok (${why})`);
+  };
+  // a broken canBeShownTo: the opponent's one card, full, at count 1 (the other states empty)
+  plant('opp-full-card-count-1.jsonl', (p, v, i) => {
+    if (v) return;
+    p.zones.hand = i === firstState ? { count: 1, cards: [{ ...oppCard, owner: p.id, controller: p.id }] } : { ...empty };
+  }, 'another seat\'s hand is not empty', 'is not marked hidden');
+  // a count of 1 with no stub: the card went missing instead of being redacted
+  plant('opp-count-1-no-stub.jsonl', (p, v, i) => {
+    if (v) return;
+    p.zones.hand = i === firstState ? { count: 1, cards: [] } : { ...empty };
+  }, 'another seat\'s hand is not empty', 'count=1 but cards.length=0');
+  // the opponent's library listed: full cards where a bare count belongs
+  plant('opp-library-listed.jsonl', (p, v, i) => {
+    if (v) return;
+    p.zones.hand = { ...empty };
+    if (i === firstState) p.zones.library = { count: p.zones.library.count, cards: [{ ...oppCard, zone: 'library', owner: p.id, controller: p.id }] };
+  }, 'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
+  // and the twin: the viewer's hand at count 1 served as a stub
+  {
+    const r = run('viewer-count-1-stub.jsonl', variant((p, v, i) => {
+      if (!v) return;
+      p.zones.hand = i === firstState ? { count: 1, cards: [{ id: oppCard.id, zone: 'hand', owner: seat, controller: seat, hidden: true }] } : { ...empty };
+    }), true);
+    if (!r.problems.some((p) => p.includes(NAMED) && p.includes('--empty-hand-ok does not apply: the viewer\'s hand is not empty'))) bad(`a viewer hand at count 1 (a stub) under --empty-hand-ok: "${NAMED}" must still FAIL; got ${r.problems[0] ?? 'a pass'}`);
+    else lead('viewer-count-1-stub.jsonl: still a failure under --empty-hand-ok (the viewer\'s hand is not empty)');
+  }
 }
 
 if (failures > 0) {

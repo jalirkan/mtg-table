@@ -36,7 +36,7 @@
 // <out>/atlas.json (strict) and <out>/atlas.md.  Never summary.md or metrics.json.  Resumable: a game or
 // unit already in its jsonl is not played again; a plan with other options is refused.
 // After the games every rows file is checked (rowscheck.ts, ids against the seat's own frame log) and
-// every frame log goes through tools/check-redaction.mjs; a problem is written into atlas.json's
+// every frame log goes through tools/check-redaction.mjs (a branch's with --empty-hand-ok, D460); a problem is written into atlas.json's
 // `checks` and exits 3.
 
 import fs from 'node:fs';
@@ -456,11 +456,19 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const rc = [checkRowsDir(path.join(A, 'rows'), logA), checkRowsDir(path.join(B, 'baseline', 'rows'), logBase), checkRowsDir(path.join(B, 'rows'), logBr)];
   for (const c of rc) problems.push(...c.problems);
   const frames: string[] = [];
+  const branchFrames: string[] = [];
   for (const d of [path.join(A, 'frames'), path.join(B, 'baseline', 'frames'), path.join(B, 'frames')]) {
-    if (fs.existsSync(d)) for (const x of fs.readdirSync(d)) if (x.endsWith('.jsonl.gz')) frames.push(path.join(d, x));
+    if (!fs.existsSync(d)) continue;
+    for (const x of fs.readdirSync(d)) if (x.endsWith('.jsonl.gz')) (d === path.join(B, 'frames') ? branchFrames : frames).push(path.join(d, x));
   }
-  const red = redactionCheck(repo, frames);
+  // D460: a branch starts from a fork late in a game, and a short one can end with seat B's hand empty
+  // in every frame -- nothing to redact.  Its logs pass --empty-hand-ok, which excuses the two coverage
+  // checks only where the file proves that hand empty; phase A's games and the baseline pass nothing.
+  const redA = redactionCheck(repo, frames);
+  const redB = redactionCheck(repo, branchFrames, 100, ['--empty-hand-ok']);
+  const red = { checked: redA.checked + redB.checked, failed: [...redA.failed, ...redB.failed], ms: redA.ms + redB.ms };
   if (red.failed.length) problems.push(`${red.failed.length} frame log(s) failed tools/check-redaction.mjs: ${red.failed.slice(0, 5).map((x) => path.basename(x)).join(', ')}`);
+  frames.push(...branchFrames);
   const forkBad = bRows.filter((r) => r.forkProblems.length);
   if (forkBad.length) problems.push(`${forkBad.length} branch fork(s) were not the position: ${forkBad[0]?.key}: ${forkBad[0]?.forkProblems.join('; ')}`);
   const leak = bRows.filter((r) => r.leakSame !== undefined);

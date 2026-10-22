@@ -395,17 +395,20 @@ export function sizeStats(xs: number[]): { games: number; total: number; mean: n
   return { games: xs.length, total, mean: xs.length ? Math.round(total / xs.length) : null, median: quantile(xs, 0.5), p90: quantile(xs, 0.9), max: xs.length ? Math.max(...xs) : null };
 }
 
-/** Run tools/check-redaction.mjs over `files`, a batch at a time; the files that failed. */
-export function redactionCheck(repo: string, files: string[], batch = 100): { checked: number; failed: string[]; ms: number } {
+/**
+ * Run tools/check-redaction.mjs over `files`, a batch at a time; the files that failed.  `flags` go to
+ * every call (the atlas's branch logs pass `--empty-hand-ok`, D460; nothing else passes any).
+ */
+export function redactionCheck(repo: string, files: string[], batch = 100, flags: string[] = []): { checked: number; failed: string[]; ms: number } {
   const t0 = Date.now();
   const failed: string[] = [];
   for (let i = 0; i < files.length; i += batch) {
     const part = files.slice(i, i + batch);
-    const r = spawnSync('node', [path.join(repo, 'tools/check-redaction.mjs'), ...part], { cwd: repo, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+    const r = spawnSync('node', [path.join(repo, 'tools/check-redaction.mjs'), ...flags, ...part], { cwd: repo, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
     if (r.status === 0) continue;
     // which ones: the checker names a failing file on its FAIL lines; else check them one by one
     for (const f of part) {
-      const one = spawnSync('node', [path.join(repo, 'tools/check-redaction.mjs'), f], { cwd: repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+      const one = spawnSync('node', [path.join(repo, 'tools/check-redaction.mjs'), ...flags, f], { cwd: repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
       if (one.status !== 0) failed.push(f);
     }
   }

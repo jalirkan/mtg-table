@@ -157,6 +157,31 @@
  * opponent's library still buys no permanent name-before-reveal exemption
  * (fixtures/negative/redaction/a6-library-reveal-is-not-a-whitelist.jsonl).
  * ---------------------------------------------------------------------------
+ *
+ * --empty-hand-ok (D460): A WARN FOR "NOTHING TO REDACT" ONLY WHERE THE FILE PROVES IT.
+ *
+ * "Not one card was redacted" and "the viewer never saw a named card in their own
+ * hand" are coverage checks: a recording with no hidden information in it would
+ * pass every leak rule vacuously.  The move atlas's branch games (D451) start from
+ * a fork late in a game, and a short one can end with the opponent's hand empty in
+ * every frame and their library sent as `count` with `cards: []` -- nothing to
+ * redact, and nothing broken (J148: 24 such logs of 40,213 branches).  The flag
+ * downgrades each assertion to a WARN only when the file itself shows there was
+ * nothing to conceal:
+ *
+ *   - "not one card was redacted": every state body shows every non-viewer seat's
+ *     hand at count 0 (and no cards), every non-viewer library.cards is [], and no
+ *     frame of any type lists a card in a hand or a library that the viewer does
+ *     not own;
+ *   - "the viewer never saw a named card": every state body shows the viewer's own
+ *     hand at count 0.
+ *
+ * A broken canBeShownTo shows non-zero counts with full cards, and a non-zero
+ * count with no stub fails the count check (and this proof) by itself, so both
+ * still fail under the flag (check-redaction-selftest.mjs's negative controls).
+ * Every leak rule is unchanged.  tools/cubelab's atlas passes it for its branch
+ * logs alone; phase A's games and the baseline are checked without it.
+ * ---------------------------------------------------------------------------
  */
 
 import { readFileSync, realpathSync, statSync } from 'node:fs';
@@ -444,6 +469,23 @@ const perFile = (f, label) => {
 };
 const arrayOf = (f) => (v) => Array.isArray(v) && v.every(f);
 const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * --empty-hand-ok (D460): does `x` (a frame body, any type) list a card in a hand
+ * or a library that `seat` does not own?  A card here is any object with a numeric
+ * `id` and a `zone` of "hand" or "library"; its owner is `owner`, else (the
+ * pre-P1 stub) `controller`.  A stub counts as much as a full card: either says
+ * the opponent held something.
+ */
+function listsOthersHiddenCard(x, seat, depth = 0) {
+  if (depth > 64 || x === null || typeof x !== 'object') return false;
+  if (Array.isArray(x)) return x.some((v) => listsOthersHiddenCard(v, seat, depth + 1));
+  if (num(x.id) && (x.zone === 'hand' || x.zone === 'library')) {
+    const owner = num(x.owner) ? x.owner : x.controller;
+    if (owner !== seat) return true;
+  }
+  return Object.values(x).some((v) => listsOthersHiddenCard(v, seat, depth + 1));
+}
 const mapOf = (f) => (v) => plainObject(v) && Object.values(v).every(f);
 const oneOf = (...values) => (v) => values.includes(v);
 
@@ -1366,7 +1408,7 @@ function readLogText(path) {
  * One log's verdict -> {problems, warnings, stats, undecided, skipped, decidedBytes}.  Exported for
  * check-redaction-selftest.mjs's prefix sweep, which passes `text` (a prefix, in memory) for `path`.
  */
-export function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false, partial = false, text: given = null } = {}) {
+export function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false, partial = false, emptyHandOk = false, text: given = null } = {}) {
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
   /*
@@ -1590,6 +1632,14 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     damageRefusalsSeen: 0, answerRefusalsSeen: 0,
   };
   const seq = { s2c: 0, c2s: 0, ai: 0 };
+  /**
+   * --empty-hand-ok (D460): the first line that spoils each proof (null: none did).
+   * opponentHand -- a non-viewer hand whose count is not 0 (or that lists a card);
+   * opponentListed -- a non-viewer library.cards that is not [], or any frame that
+   * lists a card in a hand or library the viewer does not own; viewerHand -- the
+   * viewer's own hand at a count other than 0.
+   */
+  const emptyProof = { opponentHand: null, opponentListed: null, viewerHand: null };
   let sawState = false;
   const seat = header.seat;
   /** M65 / M66: the last state body, which an input's selection is checked against. */
@@ -2463,6 +2513,9 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       continue;
     }
     const dir = f.dir ?? 's2c';
+    if (emptyHandOk && emptyProof.opponentListed === null && listsOthersHiddenCard(f.body, seat)) {
+      emptyProof.opponentListed = lineNo;
+    }
     if (dir === 'ai') {
       // M55 (D347): a recorder-only line, its own seq series, audited once the
       // whole file is read (a decision names a state frame and the ids in it).
@@ -2595,6 +2648,17 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       const p = players[pi];
       const zones = p.zones || {};
       const isViewer = (p.id === seat) || (seat === undefined && pi === 0);
+      {
+        // --empty-hand-ok (D460): is this hand empty, and is this library a bare count?
+        const handEmpty = zones.hand?.count === 0 && Array.isArray(zones.hand?.cards) && zones.hand.cards.length === 0;
+        if (isViewer) {
+          if (!handEmpty && emptyProof.viewerHand === null) emptyProof.viewerHand = lineNo;
+        } else {
+          if (!handEmpty && emptyProof.opponentHand === null) emptyProof.opponentHand = lineNo;
+          const libEmpty = Array.isArray(zones.library?.cards) && zones.library.cards.length === 0;
+          if (!libEmpty && emptyProof.opponentListed === null) emptyProof.opponentListed = lineNo;
+        }
+      }
 
       // --- A3: a library is a count, PLUS whatever a continuous "may look"
       //     static reveals (amendment P2).  The shape half is in
@@ -2895,7 +2959,28 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
   // own documented command produced an artifact the repo's own gate rejected.
   // A file that reached turn 1 has had a card dealt, and both stay failures.
   const preGameOnly = stats.state > 0 && stats.maxTurn === 0;
-  const provesNothing = (msg) => {
+  /*
+   * --empty-hand-ok (D460): each assertion's proof that there was nothing to
+   * conceal, from this file alone -- or, under the flag, why it does not hold.
+   */
+  const provable = emptyHandOk && num(seat) && stats.state > 0;
+  const opponentEmpty = !provable || emptyProof.opponentHand !== null || emptyProof.opponentListed !== null
+    ? null
+    : `every one of the ${stats.state} state bodies shows each other seat's hand at count 0 and their ` +
+      `library.cards as [], and no frame lists a card in a hand or library the viewer does not own`;
+  const opponentWhyNot = !emptyHandOk ? null
+    : !provable ? 'no state body, or no numeric seat in the header'
+    : emptyProof.opponentHand !== null ? `another seat's hand is not empty at line ${emptyProof.opponentHand}`
+    : emptyProof.opponentListed !== null ? `a card of another seat's hand or library is listed at line ${emptyProof.opponentListed}`
+    : null;
+  const viewerEmpty = !provable || emptyProof.viewerHand !== null
+    ? null
+    : `every one of the ${stats.state} state bodies shows the viewer's own hand at count 0`;
+  const viewerWhyNot = !emptyHandOk ? null
+    : !provable ? 'no state body, or no numeric seat in the header'
+    : emptyProof.viewerHand !== null ? `the viewer's hand is not empty at line ${emptyProof.viewerHand}`
+    : null;
+  const provesNothing = (msg, emptyWhy, whyNot) => {
     if (partial) {
       // A prefix of a healthy game has not had to redact or name anything yet:
       // the whole recording is held to this when it is finished (D440).
@@ -2904,15 +2989,18 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       warn(lines.length, `${msg}. Every \`state\` in this file is turn 0, so no card was ever ` +
         `dealt: this is a pre-game session (a concede during the opening prompts), and the ` +
         `assertion is a WARN rather than a failure because there was nothing to conceal`);
+    } else if (emptyWhy !== null) {
+      warn(lines.length, `${msg}. --empty-hand-ok: ${emptyWhy}, so there was nothing to conceal ` +
+        `and the assertion is a WARN (D460)`);
     } else {
-      problems.push(`${path}: ${msg}`);
+      problems.push(`${path}: ${msg}${whyNot ? ` (--empty-hand-ok does not apply: ${whyNot})` : ''}`);
     }
   };
   if (stats.redacted === 0) {
-    provesNothing('not one card was redacted -- either the opponent never held a card, or canBeShownTo is not being consulted');
+    provesNothing('not one card was redacted -- either the opponent never held a card, or canBeShownTo is not being consulted', opponentEmpty, opponentWhyNot);
   }
   if (stats.viewerHandNamed === 0) {
-    provesNothing('the viewer never saw a named card in their own hand -- the test proves nothing');
+    provesNothing('the viewer never saw a named card in their own hand -- the test proves nothing', viewerEmpty, viewerWhyNot);
   }
   stats.everRevealed = everRevealed.size;
   stats.missed = [...missed].sort();
@@ -3233,7 +3321,13 @@ function main() {
    * undecided (read `decided=`); 1 a failure; 2 usage.
    */
   const partial = argv.includes('--partial');
-  const FLAGS = ['--pre-amendment', '--opponent-library-ok', '--client-log', '--partial'];
+  /**
+   * --empty-hand-ok (D460, see the header): "not one card was redacted" and "the
+   * viewer never saw a named card" become WARNs only where the file proves the
+   * hand in question was empty in every state.  The atlas's branch logs only.
+   */
+  const emptyHandOk = argv.includes('--empty-hand-ok');
+  const FLAGS = ['--pre-amendment', '--opponent-library-ok', '--client-log', '--partial', '--empty-hand-ok'];
   const files = argv.filter((a) => !a.startsWith('--'));
   const unknownFlag = argv.find((a) => a.startsWith('--') && !FLAGS.includes(a));
   if (unknownFlag !== undefined) {
@@ -3242,7 +3336,7 @@ function main() {
   }
   if (files.length === 0) {
     console.error('usage: node tools/check-redaction.mjs [--pre-amendment] ' +
-      '[--opponent-library-ok] [--client-log] [--partial] <frames.jsonl> [...]');
+      '[--opponent-library-ok] [--client-log] [--partial] [--empty-hand-ok] <frames.jsonl> [...]');
     console.error('  --pre-amendment       accept a log recorded before the 2026-09-11 amendments');
     console.error('                        (a four-key stub, a library with no `cards`, a card with');
     console.error('                        no `token`/`alt`, a `faceDownHidden` object) as a WARN.');
@@ -3261,6 +3355,10 @@ function main() {
     console.error('                        undecided; every leak rule still fails. Exit 0 a full');
     console.error('                        pass, 3 no failure but skipped/undecided (decided=<bytes>),');
     console.error('                        1 a failure.');
+    console.error('  --empty-hand-ok       "not one card was redacted" / "the viewer never saw a named');
+    console.error('                        card" are WARNs where the file proves that hand empty in');
+    console.error('                        every state (count 0, no card listed anywhere; D460). For');
+    console.error('                        the move atlas\'s branch logs. Every leak rule still fails.');
     process.exit(2);
   }
   if (preAmendment) {
@@ -3269,11 +3367,14 @@ function main() {
   if (opponentLibraryOk) {
     console.log('--opponent-library-ok: a non-viewer library.cards with content is a WARN, not a failure');
   }
+  if (emptyHandOk) {
+    console.log('--empty-hand-ok: "nothing redacted" / "no named card in the viewer\'s hand" are WARNs where the file proves that hand empty in every state');
+  }
 
   let failed = 0;
   let short = 0;
   for (const path of files) {
-    const { problems, warnings = [], stats, undecided = [], skipped = [], decidedBytes = 0 } = checkFile(path, { preAmendment, opponentLibraryOk, clientLog, partial });
+    const { problems, warnings = [], stats, undecided = [], skipped = [], decidedBytes = 0 } = checkFile(path, { preAmendment, opponentLibraryOk, clientLog, partial, emptyHandOk });
     const ok = problems.length === 0;
     if (!ok) failed++;
     const whole = undecided.length === 0 && skipped.length === 0;
