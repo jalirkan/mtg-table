@@ -1,14 +1,7 @@
-waiting
-reason: stopped: tools/runner.sh stop
-runner: forgecoach-runner 8fca7250
-started: 2026-10-22T12:57:28-04:00
-finished: 2026-10-22T14:55:01-04:00
-mtg-table: 8fca725
-workers: 4 (sized 4: min(cores 7, memory 4, max_workers 7); peak 4.20 GB per worker (declared; measured 2.45), budget 21.4 GB)
+running
+runner: forgecoach-runner 6fb13bf9
+started: 2026-10-22T14:55:35-04:00
+phase: prepare
+workers: 1
 peak_worker_rss_gb: 2.45
-pressure-1: 2026-10-22T13:55:20-04:00 drop to 3 worker(s): some avg10 0.6%, swap-in 8360/s, job 15.9/21.4 GB
-pressure-2: 2026-10-22T14:00:59-04:00 raise to 4 worker(s): some avg10 0.0%, swap-in 8/s, job 11.4/21.4 GB
-pressure-3: 2026-10-22T14:03:35-04:00 drop to 3 worker(s): some avg10 1.6%, swap-in 9919/s, job 15.3/21.4 GB
-pressure-4: 2026-10-22T14:10:24-04:00 raise to 4 worker(s): some avg10 0.0%, swap-in 7/s, job 17.6/21.4 GB
-pressure-5: 2026-10-22T14:13:26-04:00 drop to 3 worker(s): some avg10 2.1%, swap-in 6910/s, job 17.3/21.4 GB
-pressure-6: 2026-10-22T14:28:25-04:00 raise to 4 worker(s): some avg10 0.0%, swap-in 1/s, job 13.1/21.4 GB
+resumed: 2026-10-22T14:55:35-04:00: retry after "stopped: tools/runner.sh stop"; the pilot had passed; starts again at run1; the tools skip what is done
