@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-23T08:07:33-04:00",
- "heartbeat": "2026-10-23T08:07:33-04:00",
+ "updated": "2026-10-23T08:12:10-04:00",
+ "heartbeat": "2026-10-23T08:12:10-04:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-10-23T05:27:18-04:00",
  "idleReason": "queue empty",
  "host": {
-  "load1": 0.11,
-  "memUsedGb": 5.1,
+  "load1": 3.08,
+  "memUsedGb": 7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3256,
+  "swapUsedMb": 3221,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -825,8 +825,8 @@
   }
  ],
  "runner": {
-  "commit": "6fb13bf9",
-  "started": "2026-10-22T14:55:13-04:00",
+  "commit": "9fe69ad8",
+  "started": "2026-10-23T08:09:24-04:00",
   "dryRun": false
  }
 }
