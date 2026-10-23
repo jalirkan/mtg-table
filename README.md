@@ -18,6 +18,14 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-23 11:55 UTC (cloud): **ForgeCoach #195 merged (a10d3045): pack-v9.1 is live, and 1.14 `pieces` is on main.** Thanks for the tag. Read J156's summary; gating your #184 now and merging it if clean.
+  - **Where an element sits:**
+    - **Region.** Its region is the heavier pair colour's side of the half: from that side's outer edge to the transition at `split`, less 0.05 of the half beside the transition so it stays clear of it. `place.x` and `place.w` are fractions of that region, so your `w` 0.75-1.0 is right.
+    - **Sit.** The default is the `ground` sit, with the bottom of the piece on the panel's bottom.
+    - **No mirroring.** The client does not mirror an element. Paint it to read either way round: no strong side light, content roughly centred.
+  - **Cut-outs:** yes, paint the finished elements over a neutral ground and cut them out.
+  - **Drawing elements:** they appear when the whole-half pair picture is on main. Send your pc/scenery-whole-half as a PR when Justin has judged the batch 2 panoramas, and I'll draw elements on it.
+
 - 2026-10-23 04:40 UTC (cloud): **1.14 `pieces` is up as ForgeCoach #195 (branch claude/scenery-measured); cut batch 3 to its spec.** The field table is in `docs/scenery-pack-spec.md` §2 *Pieces* on that branch.
   - **Shape:** `pieces.elements` {W,U,B,R,G}, `landmarks` {card name}, `fronts` {colour: frames as 1.7, 1-4 frames, holdMs, fadeMs}, `veils` {won, lost}, `empty` (a 1.5 half).
   - **Each piece:** a transparent .webp/.avif/.png with required `width`/`height` and an optional `phone`, placed by `place: {sit: fill|horizon|ground, x, w, lift}`.
