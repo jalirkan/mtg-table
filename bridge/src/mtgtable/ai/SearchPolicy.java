@@ -2514,7 +2514,12 @@ public final class SearchPolicy {
      * {@code seed}), and play under {@code seed}'s engine randomness to the
      * horizon.  The real {@code MyRandom} is restored afterwards.  The same seed
      * on the same game gives the same determinization and engine stream for
-     * every candidate: common random numbers.  Null when the deadline passed.
+     * every candidate: common random numbers.  Null when the deadline passed --
+     * between steps, or (D468) inside one: an {@link Atlas.StepClock} on the
+     * copy's event bus throws {@link Atlas.BranchTimeout} out of a step still
+     * running {@link #STEP_GRACE_NS} past the deadline, and that is counted
+     * ({@code search.stepTimeouts}, {@code search.prior.stepTimeouts} for the
+     * ranking's playouts) and answered null here, never thrown to the caller.
      * Shared by the search (D312) and the coach grader ({@code mtgtable.grade}).
      *
      * @throws CopyFailed when the copier throws; CandidateUnmappable when the
@@ -2524,6 +2529,7 @@ public final class SearchPolicy {
                                   final Sink sink, final boolean first, final RuntimeException failCopy) {
         final java.util.Random realRandom = MyRandom.getRandom();
         MyRandom.setRandom(new Random(seed));
+        Atlas.StepClock clock = null;
         try {
             final long tc = System.nanoTime();
             final LenientGameCopier cp = new LenientGameCopier(game);
@@ -2539,6 +2545,10 @@ public final class SearchPolicy {
             } finally {
                 COPYING.set(Boolean.FALSE);
             }
+            // D468: the deadline inside a step, too (D467's clock, on this copy's own bus), STEP_GRACE_NS late
+            clock = new Atlas.StepClock(lim.deadline > Long.MAX_VALUE - STEP_GRACE_NS ? Long.MAX_VALUE
+                    : lim.deadline + STEP_GRACE_NS);
+            copy.subscribeToEvents(clock);
             sink.add(lim.untilApplied ? "search.prior.copyUs" : "search.copyUs", (int) ((System.nanoTime() - tc) / 1000L));
             // Forge's own per-decision limit inside a rollout: 1 s, not 5 (an
             // eval that times out plays nothing, which a rollout survives).
@@ -2612,6 +2622,7 @@ public final class SearchPolicy {
                     }
                 }
             }
+            clock.disarm();   // D468: the leaf is scored past the loop, never cut by the clock
             final boolean capped = steps >= lim.maxSteps;
             if (capped && !lim.untilApplied) {
                 sink.add("search.rolloutStepCap", 1);
@@ -2637,9 +2648,45 @@ public final class SearchPolicy {
                 leaf = leaf(copy, aiCopy, lim.untapped);
             }
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
+        } catch (final Atlas.BranchTimeout | RuntimeException e) {
+            // D468: an Error, so a caller's catch (RuntimeException) would never see it; and a Forge
+            // wrapper (AbilityFactory's, or our CandidateUnmappable) may carry it as a cause
+            if (stepTimedOut(e, sink, lim.untilApplied)) {
+                return null;
+            }
+            throw e;
         } finally {
+            if (clock != null) {
+                clock.disarm();
+            }
             MyRandom.setRandom(realRandom);
         }
+    }
+
+    /**
+     * D468: how long past a playout's deadline its step clock fires.  Not at
+     * the deadline itself: a search spends its budget to the deadline, so its
+     * last rollout usually straddles it, and the loop's own check (every 8th
+     * step) lets that rollout finish its step and a few more -- and keeps it
+     * when it ends there.  A bare clock cut 461 such rollouts in 39 ordinary
+     * games (1,038 searched decisions) and so would change rounds and budget
+     * fallbacks.  Two of Forge's 1 s rollout think limits ({@code AI_TIMEOUT})
+     * is far beyond any ordinary step, and nothing against one that never ends.
+     */
+    public static final long STEP_GRACE_NS = 2_000_000_000L;
+
+    /**
+     * D468: whether {@code t} is the step clock's throw, or wraps it -- the
+     * playout's deadline passed inside one engine step.  Counted once, apart
+     * from the deadline passing between steps (which counts nothing here), so
+     * a match line can tell them apart; the copy is mid-resolution and let go.
+     */
+    static boolean stepTimedOut(final Throwable t, final Sink sink, final boolean prior) {
+        if (Atlas.timeoutIn(t) == null) {
+            return false;
+        }
+        sink.add(prior ? "search.prior.stepTimeouts" : "search.stepTimeouts", 1);
+        return true;
     }
 
     /** +1 when {@code ai} won the copy, -1 when it lost, 0 for a draw or a game still going. */

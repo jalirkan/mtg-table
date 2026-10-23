@@ -322,6 +322,8 @@ async function cmdMatch(a: Args, argv: string[]): Promise<void> {
     if (t.msPerDecision !== null) console.log(`${who} time per decision: ${t.msPerDecision} ms (p+a+b); by kind ${Object.entries(t.msMean).map(([k, v]) => `${k} ${v ?? '-'}`).join(', ')}`);
     // J128: the learned evaluator at the leaves (leaf=eval:<model>), when this side used it
     if (t.evalLeaves > 0) console.log(`${who} evaluator leaves: ${t.evalLeaves}, ${t.evalLeafUs} us each`);
+    // D468: rollouts the step clock ended inside one engine step (0 on a normal game)
+    if (t.stepTimeouts > 0) console.log(`${who} rollouts timed out inside one engine step: ${t.stepTimeouts}`);
   }
 }
 

@@ -1499,6 +1499,104 @@ public final class AiBench {
                 });
         evalLeafScenarios();
         d416Scenarios(castBoard);
+        stepClockScenario();
+    }
+
+    /** D468's engine half: a subscriber on a rollout's copy that counts its events and the longest gap between two. */
+    public static final class EventGaps {
+        long events;
+        long last = System.nanoTime();
+        long maxGapNs;
+
+        @com.google.common.eventbus.Subscribe
+        public void tick(final Object event) {
+            final long now = System.nanoTime();
+            events++;
+            maxGapNs = Math.max(maxGapNs, now - last);
+            last = now;
+        }
+    }
+
+    /**
+     * D468: the real playout, a real copy.  A step that never comes back --
+     * planted through the probe, which runs on the copy after the clock is
+     * armed, firing the copy's own events forever (bounded at 10 s) -- must end
+     * soon after the deadline plus the clock's grace as a null playout, counted once as
+     * search.stepTimeouts (search.prior.stepTimeouts for the ranking's
+     * until-applied playouts), never thrown, with the real MyRandom put back.
+     * Its control: the same board's normal rollouts count no step timeout, and
+     * their copies fire events throughout (D467's LOW: the clock only reads a
+     * step that fires them), the longest silence between two printed.
+     */
+    static void stepClockScenario() throws Exception {
+        System.out.println("== ai-bench selftest: the search's step clock (D468, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Grizzly Bears", "humanhand=Forest", "humanlibrary=Forest;Island;Forest;Forest;Forest",
+                "aihand=Typhoid Rats", "ailibrary=Swamp;Mountain;Plains;Swamp;Swamp", "aibattlefield=Swamp;Swamp");
+        scenario("search-step-clock", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final java.util.Random real = forge.util.MyRandom.getRandom();
+            final long grace = mtgtable.ai.SearchPolicy.STEP_GRACE_NS / 1_000_000L;
+            for (final boolean prior : new boolean[] {false, true}) {
+                final CountSink sink = new CountSink();
+                mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> {
+                    final long end = System.nanoTime() + 10_000_000_000L;
+                    while (System.nanoTime() < end) {
+                        copy.fireEvent(new forge.game.event.GameEventShuffle(aiC));
+                    }
+                });
+                final long t0 = System.nanoTime();
+                mtgtable.ai.SearchPolicy.Playout p = null;
+                String thrown = null;
+                try {
+                    p = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.forgeCand(), 7,
+                            new mtgtable.ai.SearchPolicy.Limits(t0 + 200_000_000L, prior ? 0 : 3, 2_000, 1.0, false, false,
+                                    false, prior, null, null), sink, false, null);
+                } catch (final RuntimeException | Error e) {
+                    thrown = e.getClass().getSimpleName();
+                } finally {
+                    mtgtable.ai.SearchPolicy.probeForTest(null);
+                }
+                final long ms = (System.nanoTime() - t0) / 1_000_000L;
+                final String key = prior ? "search.prior.stepTimeouts" : "search.stepTimeouts";
+                final String other = prior ? "search.stepTimeouts" : "search.prior.stepTimeouts";
+                check(p == null && thrown == null && ms >= 200 + grace && ms < 2_000 + grace && sink.get(key) == 1 && sink.get(other) == 0
+                                && forge.util.MyRandom.getRandom() == real,
+                        "a rollout step that never comes back ends as a null playout, " + grace + " ms past its deadline, "
+                                + "counted once as " + key + " ("
+                                + ms + " ms, thrown " + thrown + ", " + sink.counts + ")");
+            }
+            final CountSink sink = new CountSink();
+            final List<EventGaps> gaps = new ArrayList<>();
+            int done = 0;
+            int turns = 0;
+            mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> {
+                final EventGaps e = new EventGaps();
+                gaps.add(e);
+                copy.subscribeToEvents(e);
+            });
+            try {
+                for (long seed = 1; seed <= 6; seed++) {
+                    final mtgtable.ai.SearchPolicy.Playout p = mtgtable.ai.SearchPolicy.playout(g, ai,
+                            mtgtable.ai.SearchPolicy.forgeCand(), seed,
+                            new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 3, 20_000), sink, false, null);
+                    done += p != null ? 1 : 0;
+                    turns += p != null ? p.turns : 0;
+                }
+            } finally {
+                mtgtable.ai.SearchPolicy.probeForTest(null);
+            }
+            long events = Long.MAX_VALUE;
+            long maxGap = 0;
+            for (final EventGaps e : gaps) {
+                events = Math.min(events, e.events);
+                maxGap = Math.max(maxGap, e.maxGapNs);
+            }
+            check(done == 6 && sink.get("search.stepTimeouts") == 0 && gaps.size() == 6 && events > turns / 6,
+                    "normal rollouts count no step timeout, and their copies fire events as they play (" + done + " of 6 done, "
+                            + turns + " turns, fewest events in one copy " + events + ", longest silence "
+                            + maxGap / 1_000_000L + " ms)");
+        });
     }
 
     // ------------------------------------------------------------------

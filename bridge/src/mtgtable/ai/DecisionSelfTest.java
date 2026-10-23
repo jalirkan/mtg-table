@@ -388,6 +388,7 @@ public final class DecisionSelfTest {
         optionalCosts();
         payCap();
         stepClock();
+        searchStepClock();
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
@@ -465,6 +466,110 @@ public final class DecisionSelfTest {
         check(caught != null && Atlas.timeoutIn(new RuntimeException("AbilityFactory:getAbility: crash", caught)) == caught
                 && Atlas.timeoutIn(new RuntimeException("an engine bug")) == null,
                 "D467: the clock's throw is found inside a Forge wrapper, and only there");
+    }
+
+    /**
+     * D468: the search's playout under D467's clock, planted without the
+     * engine.  The same never-returning step as {@link #stepClock} (a bus built
+     * as Forge builds its own, posting forever with a nested post), inside the
+     * shape {@code SearchPolicy.playout} has around its copy -- the clock
+     * subscribed to the bus, {@code catch (Atlas.BranchTimeout |
+     * RuntimeException)} into {@link SearchPolicy#stepTimedOut}, null on a
+     * timeout and a rethrow otherwise, the disarm in {@code finally}.  Three
+     * throws: the clock's own, the clock's inside Forge's
+     * {@code AbilityFactory} wrapper (and inside the playout's own
+     * {@code CandidateUnmappable}), and an engine bug, which must still reach
+     * the caller and count nothing.  The engine half -- the real playout, a
+     * real copy -- is {@code tools/ai-bench.sh selftest}'s "step clock" case.
+     */
+    private static void searchStepClock() {
+        final Map<String, Integer> counts = new java.util.HashMap<>();
+        final SearchPolicy.Sink sink = new SearchPolicy.Sink() {
+            @Override
+            public void add(final String key, final int n) {
+                counts.merge(key, n, Integer::sum);
+            }
+
+            @Override
+            public void event(final String text) {
+                // nothing
+            }
+        };
+        final long t0 = System.nanoTime();
+        final Object[] direct = plantedPlayout(sink, false, 0);
+        final long ms = (System.nanoTime() - t0) / 1_000_000L;
+        check(direct[0] == null && "answered".equals(direct[1]) && ms < 2_000,
+                "D468: a playout step that never comes back is ended by the clock and answered null, never thrown ("
+                        + ms + " ms)");
+        check(Integer.valueOf(1).equals(counts.get("search.stepTimeouts")) && !counts.containsKey("search.prior.stepTimeouts"),
+                "D468: and counted once, as search.stepTimeouts (" + counts + ")");
+        final Object[] wrapped = plantedPlayout(sink, true, 1);
+        final Object[] unmappable = plantedPlayout(sink, false, 2);
+        check(wrapped[0] == null && "answered".equals(wrapped[1]) && unmappable[0] == null && "answered".equals(unmappable[1])
+                        && Integer.valueOf(1).equals(counts.get("search.prior.stepTimeouts"))
+                        && Integer.valueOf(2).equals(counts.get("search.stepTimeouts")),
+                "D468: the clock's throw inside AbilityFactory's RuntimeException, or the playout's CandidateUnmappable, "
+                        + "is the same timeout, under the prior's key for the ranking's playouts (" + counts + ")");
+        final Object[] bug = plantedPlayout(sink, false, 3);
+        check("thrown".equals(bug[1]) && bug[0] instanceof IllegalStateException
+                        && Integer.valueOf(2).equals(counts.get("search.stepTimeouts")),
+                "D468's control: an engine bug in a step is no timeout -- rethrown to the caller's catch, counted nowhere");
+    }
+
+    /**
+     * {@link #searchStepClock}'s planted playout: {@code how} 0 lets the clock's
+     * throw out as itself, 1 wraps it as AbilityFactory does, 2 as the
+     * playout's {@code CandidateUnmappable}, and 3 throws an engine bug instead,
+     * 50 ms in, before the deadline.  Returns {answer or thrown, "answered" |
+     * "thrown"}; bounded at 10 s, so a clock that never fires fails the check.
+     */
+    private static Object[] plantedPlayout(final SearchPolicy.Sink sink, final boolean prior, final int how) {
+        final com.google.common.eventbus.EventBus bus = new com.google.common.eventbus.EventBus("game events");
+        bus.register(new Object() {
+            @com.google.common.eventbus.Subscribe
+            public void nest(final Integer token) {
+                bus.post("entered " + token);
+            }
+        });
+        bus.post(Integer.valueOf(-1));
+        final long t0 = System.nanoTime();
+        final long deadline = t0 + 100_000_000L;   // 100 ms
+        Atlas.StepClock clock = null;
+        try {
+            try {
+                clock = new Atlas.StepClock(deadline);
+                bus.register(clock);
+                long posted = 0;
+                while (System.nanoTime() - t0 < 10_000_000_000L) {
+                    if (how == 3 && System.nanoTime() > t0 + 50_000_000L) {   // before the deadline: no timeout in flight
+                        throw new IllegalStateException("an engine bug");
+                    }
+                    try {
+                        bus.post(Integer.valueOf((int) posted++));
+                    } catch (final Error e) {
+                        if (how == 1) {
+                            throw new RuntimeException("AbilityFactory:getAbility: crash", e);   // Forge's one catch of Error
+                        }
+                        if (how == 2) {
+                            throw new SearchPolicy.CandidateUnmappable(e);
+                        }
+                        throw e;
+                    }
+                }
+                return new Object[] {"ran past", "answered"};
+            } catch (final Atlas.BranchTimeout | RuntimeException e) {
+                if (SearchPolicy.stepTimedOut(e, sink, prior)) {
+                    return new Object[] {null, "answered"};
+                }
+                throw e;
+            } finally {
+                if (clock != null) {
+                    clock.disarm();
+                }
+            }
+        } catch (final RuntimeException e) {
+            return new Object[] {e, "thrown"};
+        }
     }
 
     /**
