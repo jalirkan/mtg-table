@@ -147,7 +147,9 @@ test('a decision\'s two maps from its branch rows', () => {
   const d = decisionAtlas(LISTING, rows, 300, 11);
   // J153's pilot saw the assertion below false once on 8fca7250; the map is a pure function of its rows and its seed (every
   // draw from rng(seed, stream), never Math.random), so a second call must agree to the last digit, and the planted gap is
-  // far from the bar (regret 0.3583 >> 0.25, its lower bound 0.229 >> 0.1; 50 runs in a loop all agreed, D465)
+  // far from the bar (regret 0.3583 >> 0.25, its lower bound 0.229 >> 0.1; 50 runs in a loop all agreed, D465).
+  // D466: it was not the rows -- Node 24.20's Maglev handed `d` the Forge map's regret and interval (6 runs in 8 failed,
+  // 0 under `node --no-maglev --test`); decisionAtlas's mapOf is the workaround, and its comment has the repro.
   assert.deepEqual(decisionAtlas(LISTING, rows, 300, 11), d, 'the same rows and seed give the same map');
   assert.deepEqual([d.random.regret, d.random.regretLo], [0.3583, 0.229], 'the bootstrap is the seeded one');
   assert.equal(d.chosen, 0);
@@ -429,9 +431,13 @@ test('a truncated frame log is skipped and named, and atlas.json is still writte
       JSON.stringify({ type: 'row', v: 1, game: 'atlas:d9:random:o0:b165', seat: 'Drafter A', kind: 'p', turn: 9, n: 1, chosen: 0, tokens: ['cast:9'], s: [[0, 1]], c: [[1]] }),
     ].join('\n') + '\n');
     assert.throws(() => zlib.gunzipSync(fs.readFileSync(path.join(frames, 'd9-random-o0-b165-seat0.jsonl.gz'))), /unexpected end of file/, 'the file is what J156 left');
-    const rc = writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    const said: string[] = [];
+    const rc = writeAtlas(REPO, OPTS, out, {}, {}, (x) => said.push(x));
     assert.equal(rc, 3);
-    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; frameLogs: number; unreadableFrameLogs: Array<{ log: string; why: string }> } };
+    // #184's review: the rows' id check says which game it skipped, and why
+    assert.ok(said.includes('  atlas: rows of atlas:d9:random:o0:b165: id check skipped, its frame log phaseB/frames/d9-random-o0-b165-seat0.jsonl.gz could not be read'), said.join('\n'));
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; frameLogs: number; unreadableFrameLogs: Array<{ log: string; why: string }>; idChecksSkipped: Array<{ game: string; log: string }> } };
+    assert.deepEqual(doc.checks.idChecksSkipped, [{ game: 'atlas:d9:random:o0:b165', log: 'phaseB/frames/d9-random-o0-b165-seat0.jsonl.gz' }]);
     assert.deepEqual(doc.checks.unreadableFrameLogs.map((t) => t.log), ['phaseB/frames/d9-forge-o0-b1-seat0.jsonl.gz', 'phaseB/frames/d9-random-o0-b165-seat0.jsonl.gz', 'phaseB/frames/d9-random-o0-b165-seat1.jsonl.gz']);
     assert.ok(doc.checks.unreadableFrameLogs.every((t) => t.why === 'unexpected end of file'));
     assert.equal(doc.checks.frameLogs, 0, 'not sent to the redaction checker');

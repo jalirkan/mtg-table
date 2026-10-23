@@ -633,6 +633,10 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
   // the second call: web/test/cubelab-atlas.test.ts's "two maps" test failed 6 runs in 8 under `node --test` and 0 in 3 under
   // `--no-maglev` -- J153's and J154's pilot failures, which this lane's additions to that file made nearly every run's.  None of J156's
   // atlases shows it (no decision has a best other than option 0 with a regret that is not above zero).
+  // Repro (keep it with the workaround): put `const rR = regretInterval(...)`, `const rF = regretInterval(...)` back with the
+  // blocks read from them in the return, then `cd web && for i in 1 2 3 4 5 6 7 8; do node --test test/cubelab-atlas.test.ts;
+  // done` fails "a decision's two maps" most runs, and the same loop with `node --no-maglev --test ...` never does.
+  // If a Node upgrade passes the loop without mapOf, the workaround can go.
   const random = mapOf(mR.length, regretInterval(mR, k, boot, seed + 1, 0));
   const forge = mapOf(mF.length, regretInterval(mF, k, boot, seed + 2, 0));
   const ag = agreement(mR, mF, k, boot, seed + 3);
@@ -714,6 +718,10 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const reader = frameLogReader();
   const rc = [checkRowsDir(path.join(A, 'rows'), logA, reader.read), checkRowsDir(path.join(B, 'baseline', 'rows'), logBase, reader.read), checkRowsDir(path.join(B, 'rows'), logBr, reader.read)];
   for (const c of rc) problems.push(...c.problems);
+  // D466 (#184's review): say which games' id checks a truncated log cost
+  const idSkipped = rc.flatMap((c) => c.skipped ?? []).map((x) => ({ game: x.game, log: path.relative(out, x.log) }));
+  for (const x of idSkipped.slice(0, 20)) say(`  atlas: rows of ${x.game}: id check skipped, its frame log ${x.log} could not be read`);
+  if (idSkipped.length > 20) say(`  atlas: ... and ${idSkipped.length - 20} more game(s) whose id check was skipped`);
   const frames: string[] = [];
   const branchFrames: string[] = [];
   for (const d of [path.join(A, 'frames'), path.join(B, 'baseline', 'frames'), path.join(B, 'frames')]) {
@@ -801,6 +809,8 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       branchErrors: be,
       // D466: the frame logs gunzip could not read, left out of the checks
       unreadableFrameLogs: truncated,
+      // D466 (#184's review): the games whose rows went without the id check because of one of those logs
+      idChecksSkipped: idSkipped,
       // D465: the most branch copies any unit's worker still held after one GC at its end (null: no unit measured)
       copiesRetainedMax: retained.length ? Math.max(...retained) : null,
       problems },
@@ -933,6 +943,8 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
  * decisions, two branches of each continuation, the no-leak check on EVERY unit -- and the assertions:
  * every fork was the position, every no-leak check stayed put while its negative control moved, the
  * guardrails read back clean, every rows file and frame log passed, and both decisions have both maps.
+ * D466: then a G5 leg -- phase A of a pair with a tax (SELFTEST_G5) -- where a refused cast and the
+ * removal after it must both be counted.
  */
 /**
  * The self-test's folder: ABSOLUTE, so LAB_DATA_DIR never re-roots it (D450 moves only relative var/
@@ -968,7 +980,29 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   // D465: before GameLedger.detach every unit held all four of its copies (each branch's ledger held its game); after it, 0 or 1
   want(typeof c.copiesRetainedMax === 'number' && c.copiesRetainedMax <= 1, `a unit's worker holds at most one branch copy after one GC at its end, never one a branch (D465; most held: ${String(c.copiesRetainedMax)})`);
   want(c.frameLogs > 0 && c.rows > 0, 'frame logs and rows were checked');
+  // D466 (#184's review): G5 on a pair with a tax.  The self-test's own decks are the user's (pacho-shield) and the gate's
+  // villain (doom-legion, written from its spec), and neither carries a cost-raising card (D462 point 4), so the G5 leg plays
+  // phase A of the committed repeat pair, fair-fight-900000005 (seat B's Elite Spellbinder), at a seed whose rollout 6 J156
+  // saw refused (J156's a-ff5, seed 452): the random seat must be refused a cast and must leave it out after (the D466 put-back).
+  const g5 = await atlasSelftestG5(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
+  want(g5.rc === 0 && g5.problems.length === 0, `the G5 leg's own checks: ${g5.problems.join('; ') || `exit ${g5.rc}`}`);
+  want(g5.refusedCast >= 1 && g5.noRepeatRefused >= 1, `G5 fired on the tax pair: refused ${g5.refusedCast}, left out ${g5.noRepeatRefused} (both >= 1)`);
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
-  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)})`);
+  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused})`);
   return fails.length ? 1 : 0;
+}
+
+/** D466 (#184's review): the G5 leg's pair, seed and rollouts (see atlasSelftest). */
+export const SELFTEST_G5 = { deckA: 'tools/ai-bench/decks/sets/fair-fight-900000005-A.dck', deckB: 'tools/ai-bench/decks/sets/fair-fight-900000005-B.dck', seed: 452, rollouts: 6 } as const;
+
+/** D466: phase A of the tax pair into `<selftest>/g5`, and its G5 counts. */
+async function atlasSelftestG5(repo: string, out: string, jobs: string, say: (s: string) => void): Promise<{ rc: number; refusedCast: number; noRepeatRefused: number; problems: string[] }> {
+  const g5out = path.join(out, 'g5');
+  const flags = new Map<string, string[]>([
+    ['deck-a', [SELFTEST_G5.deckA]], ['deck-b', [SELFTEST_G5.deckB]], ['seed', [String(SELFTEST_G5.seed)]], ['rollouts', [String(SELFTEST_G5.rollouts)]],
+    ['phase', ['a']], ['boot', ['200']], ['jobs', [jobs]], ['out', [g5out]],
+  ]);
+  const rc = await atlasCommand(repo, flags, say);
+  const doc = JSON.parse(fs.readFileSync(path.join(g5out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; guardrails: { refusedCast?: number; noRepeatRefused?: number } } };
+  return { rc, refusedCast: doc.checks.guardrails.refusedCast ?? 0, noRepeatRefused: doc.checks.guardrails.noRepeatRefused ?? 0, problems: doc.checks.problems };
 }

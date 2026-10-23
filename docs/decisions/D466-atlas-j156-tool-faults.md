@@ -109,6 +109,41 @@ how the run ended:
 - **Point 4 changes the game after every refusal.** The refused card stays in the game and can be cast
   again in a later window. An atlas after this decision is a fourth random policy. The Forge map is
   unchanged, and so are the decisions and seats that never see a refusal.
+- **Point 1 changes the search everywhere, not only the atlas** (added 2026-10-23, #184's review).
+  `mapSa` is how every search seat installs a candidate on its rollout copy (`PriorityCand.install`,
+  and the target search). That covers search-v2 on the ladder, in the SPRT and tuner, in census games,
+  and the coach helper's live hint. Before #184, a candidate built with an optional cost (retrace,
+  kicker, buyback, entwine, jump-start, ...) threw on the copy:
+  - when it was Forge's own answer, the search kept that answer with no verdict
+    (`search.fallback.unmappable`);
+  - when it was any other candidate, the search dropped it and searched without it
+    (`search.candidateUnmappable`).
+
+  After #184 such a play is a candidate like any other and is ranked. **So search-v2 results (ladder
+  ratings, SPRT verdicts, tuner winners, census numbers) from before and after #184 (merged as 9fe69ad8)
+  are two engines and are not pooled**, even though the player's config hash did not change. Split them
+  by the experiment log's git sha. The change can only show in games where such a play was a candidate,
+  but nothing records which games those were.
+
+**Follow-ups from #184's review (2026-10-23, `pc/d466-followups`).**
+- **The search's comparability:** see the last bullet under *Comparability* above, and
+  `docs/guides/ai-ladder.md`'s *A code change is not a config change*. `docs/search-hint.md` states no
+  comparability, so it is unchanged.
+- **The repro is kept with the workaround.** The `mapOf` comment in `decisionAtlas` gives the loop that
+  fails without it and passes under `--no-maglev`, and says when the workaround can go.
+- **The rows' id check names what it skipped.** When the reader cannot read a game's frame log, the atlas
+  prints that game's id check as skipped, naming the game and the log. The list is
+  `checks.idChecksSkipped`.
+- **atlas-selftest shows G5 firing.** Its decks are not ours to change for this:
+  - `pacho-shield` is the user's deck in play;
+  - `doom-legion` is the gate's villain, written from its spec, and changing it would move the gate's
+    recordings.
+
+  So a second leg plays phase A of the committed repeat pair, fair-fight-900000005 (Elite Spellbinder
+  in seat B). It uses seed 452 and 6 rollouts, because J156 saw a refusal in that seed's rollout 6. It
+  requires `refusedCast` >= 1 and `noRepeatRefused` >= 1, and in two runs it gave 2 and 2, from the same
+  game each time. The leg adds about 30 s. The self-test has no golden digests, so nothing was
+  regenerated.
 
 **Rejected.**
 - **Call `GameActionUtil.rollbackAbility` itself.** Its refund (`CostPayment.refundPayment`, then

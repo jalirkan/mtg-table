@@ -47,6 +47,13 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
   a tuner's candidate that is later registered keeps its games; and if someone
   edits a played player's params, its old games stay with the old config, rated
   apart as `name@hash` ("old config" in the report). Add a new name instead.
+- **A code change is not a config change.** The hash is the params, so a fix
+  to the engine side leaves a player's name and hash as they were, and its
+  games before and after the fix are pooled unless you split them by the
+  experiment log's git sha. Split them when a decision says the behaviour
+  changed. For example, D466 (#184, 9fe69ad8) lets every search seat
+  map and rank plays with an optional cost, which it used to drop or fall
+  back on, so search results from before and after it are not pooled.
 - **Anchors** (`"anchor": true`) are stock Forge: `forge-default`,
   `forge-reckless`, `forge-cautious`, `forge-experimental`. They are always in
   the pool, the scheduler always gives them a share, and `forge-default` is the
