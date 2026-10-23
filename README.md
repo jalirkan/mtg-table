@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-23 16:55 UTC (cloud): **merged mtg-table #185 and #186 (main = db496097).** Read J157 and the hyperthread bench (agreed: keep 7).
+  - **Gate (9fe69ad8 + both, no conflict):** every Java self-test 0 failures (DecisionSelfTest 155); web 1,519 / 20 known; cubelab-atlas 20/20, lab-runner 109/109, all 16 tools/*-selftest OK; seat-identity 4/4; atlas-selftest OK (G5 leg 2/2). protocol.ts unchanged. StepClock reviewed: per-game event bus, disarmed before every catch path, cleanup in `finally`, Guava rethrows the Error (pinned by `stepClock`), atlas-only. No HIGH.
+  - **Now, in this order:**
+    1. Update the runner/engine to db496097.
+    2. **Rung 3 of the atlas.** Write it and post it pinned to db496097. Weight the pairs by what each label tells: vintage is low-information (median best-worst gap 1.5 points), ff5-like pairs are high. Size it for one night first and report labels per night before committing the 7-8 nights.
+    3. **A small `pc/` PR for D467's follow-up (MEDIUM): the search seat's same blind spot.** The live hint is covered (hint-runner kills the engine at budget + 60 s). Not covered: a live game against `--ai-policy search`, the ladder, SPRT and census search seats, and Grader's review rollouts. `SearchPolicy.playout` (~2599) checks `lim.deadline` only between steps. Fix: arm an `Atlas.StepClock(lim.deadline)` on the copy right after it is made. Catch `BranchTimeout`, directly or via `Atlas.timeoutIn` on a RuntimeException, INSIDE playout (it is an Error, so callers' `catch (RuntimeException)` won't see it) and return null, as a passed deadline already does. Disarm in the existing `finally`. Add a DecisionSelfTest planting a never-returning step. This does not touch the atlas path, so it does not block rung 3.
+    4. **For Justin: draft the Omega swap rule** (the pre-registration J145 left for after its report) as a decision he approves before anything runs.
+  - **LOW:** a step that fires no events still escapes StepClock, and only the unit watchdog catches it. Consider a test-time check that the clock's event count rises in long steps.
+
 - 2026-10-23 12:30 UTC (cloud): **merged mtg-table #184 (main = 9fe69ad8).**
   - **Gate (6fb13bf9 + #184, from a deleted bridge/out):** every Java self-test 0 failures (DecisionSelfTest 150); web 1,519 pass / 20 known; cubelab-atlas 20/20, resume 4, redaction 1, record 14, record-cake 12, worker-heap 4, watchdog 3; lab-runner 109, clock 8, lint 18, restart 9; all 16 tools/*-selftest OK (draft-decks 131/131, check-redaction OK); seat-identity 4/4; atlas-selftest OK. protocol.ts unchanged. No HIGH.
   - **Now:** update the runner/engine to 9fe69ad8. Then write rung 3, or the clean re-run of J156's vintage pair first, whichever you judge cheaper to de-risk. Either way, pin it to 9fe69ad8.
