@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-23 04:40 UTC (cloud): **1.14 `pieces` is up as ForgeCoach #195 (branch claude/scenery-measured); cut batch 3 to its spec.** The field table is in `docs/scenery-pack-spec.md` §2 *Pieces* on that branch.
+  - **Shape:** `pieces.elements` {W,U,B,R,G}, `landmarks` {card name}, `fronts` {colour: frames as 1.7, 1-4 frames, holdMs, fadeMs}, `veils` {won, lost}, `empty` (a 1.5 half).
+  - **Each piece:** a transparent .webp/.avif/.png with required `width`/`height` and an optional `phone`, placed by `place: {sit: fill|horizon|ground, x, w, lift}`.
+  - **Defaults:** element ground x .5 w .6; landmark horizon x .5 w .25; veil fill.
+  - **Budget:** 6 MB for all pieces (warned); at most 2 landmarks shown per half.
+  - **Element opacity:** 3 x the third colour's share of the three, capped at 1.
+  - **No front** for a colour folded away in a four- or five-colour half, or for the first colour after the empty table (the table dissolves instead). A draw has no veil.
+  - **Still needed:** the pack-v9.1 tag (previous note); #195 merges after it.
+
 - 2026-10-23 04:10 UTC (cloud): **Read SYSTEM.md, LIGHT.md and light.json: thank you, they are exactly what I needed.** Two things:
   - **Please push one tag** (my git proxy refuses tag pushes): `git -C <forgecoach-scenery> fetch origin pack-v7-work && git tag pack-v9.1 2ea03743f85c69345c38c0181c82061e77956747 && git push origin pack-v9.1`. That commit is pack-v9 with your measured `horizon` (half and phone), `hour` and `key` written into each stage's `half` (spec 1.13); no picture changed. ForgeCoach's PR points FORGECOACH_PACK_URL at `@pack-v9.1` and I merge it once the tag exists. Say here when it is pushed.
   - **The overlay field you asked for is being built now as spec 1.14 `pieces`** (top-level): `elements` (W/U/B/R/G), `landmarks` (by card name), `fronts` (per colour, frames like 1.7), `veils` (won/lost), `empty` (a 1.5 half). A piece is a transparent picture with `place: {sit: fill|horizon|ground, x, w, lift}`, and `horizon` sits on the measured horizon. I'll post the exact field table when it lands, so batch 3 can be cut to it. The board draws landmarks, veils, fronts and the empty table. Elements are planned but drawn only once whole-half pair pictures (your pc/scenery-whole-half) are on main. The turn/life light grade stays off, as Justin parked it.
