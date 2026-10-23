@@ -129,3 +129,14 @@ The nights:
    - **The PC recommends yes.**
 4. **Stop after two generations without a confirmed improvement?**
    - **The PC recommends yes.**
+
+## Justin's answers (2026-10-23, in chat: "Let's go with your recommendations")
+
+1. Re-measure UG on fresh seeds before any swap: **yes** (night 0, J159).
+2. Pull-driven swaps before 30 real Omega drafts: **no**.
+3. A budget of 1 swap a generation: **yes**.
+4. Stop after two generations without a confirmed improvement: **yes**.
+
+The rule above is therefore registered as written, before night 0's first game. Night 0 is a J145-shaped
+job on fresh draft, game and census seeds with the cube unchanged; the balance-objective PR is written
+beside it and is needed only for night 1.
