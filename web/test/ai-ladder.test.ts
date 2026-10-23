@@ -638,6 +638,20 @@ test('J128 (D437): the match tally counts the evaluator\'s leaves and their mean
   assert.equal(tb.evalLeafUs, null, 'and no cost: null, never 0');
 });
 
+test('D468: the match tally counts rollouts the step clock ended (search.stepTimeouts and the prior\'s), 0 when none', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-steptimeouts-tally-'));
+  const f = join(dir, 'b0.jsonl');
+  const a1 = { 'search.p.considered': 3, 'search.stepTimeouts': 1 };
+  const a2 = { 'search.a.considered': 2, 'search.prior.stepTimeouts': 2 };
+  const b1 = { 'search.p.considered': 4 };
+  writeFileSync(f, [JSON.stringify({ aStats: { counts: a1 }, bStats: { counts: b1 } }), JSON.stringify({ aStats: { counts: a2 } })].join('\n'));
+  const a = emptyTally(), b = emptyTally();
+  tallyBatch(f, a, b);
+  assert.equal(tallyLine(a).stepTimeouts, 3);
+  assert.equal(tallyLine(b).stepTimeouts, 0, 'a normal game counts none');
+  assert.equal(tallyLine({ ...emptyTally(), stepTimeouts: undefined }).stepTimeouts, 0, 'a tally from before the counter reads 0');
+});
+
 // ------------------------------------------------------------ match (D398)
 
 test('match (D398): the pair-score interval, in Elo too; no interval under 2 pairs', () => {
