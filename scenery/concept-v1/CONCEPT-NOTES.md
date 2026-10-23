@@ -241,3 +241,23 @@ These notes go with `sheets/storyboard.jpg`, `sheets/situations.jpg` and `previe
 
 Once these four are answered, COVERAGE's batch 3 can be re-cut against them. The fronts, the prologue, the peril
 veils and the end are the beats this storyboard shows working.
+
+## 4. Settled (2026-10-22)
+
+Justin found §3's questions confusing. The PC translated them, he did not object, and the translation is now the
+default. **`../SYSTEM.md` is the spec**, and its decision list (§A) and slot table (§B) are what later batches fill.
+
+1. **One view or two postcards → two landscapes.** Each player's land situation gets its own picture. The two are
+   stacked, and their light is matched by far-half haze plus a capped pull toward one table hour (SYSTEM §A9). They
+   are never one continuous valley.
+2. **What owns time → the land pictures.** The light stays painted into each stage. The turn/life grade, the storm
+   and the end's sunrise are optional later layers, outside the system (SYSTEM §C).
+3. **What is a place → the combination on the board now.**
+   - The heaviest pair names the base picture, and it re-keys when that pair changes. Evan's Plateau → Tundra at T8
+     is therefore the intended behaviour.
+   - A third colour is an element in the picture. Triples are elements, not paintings.
+   - A transition plays whenever the makeup changes.
+   - A unique land is a landmark on top: the spirit of the card's art, never the art. A fetch or utility land changes
+     nothing.
+4. **How loud is the game → quiet.** Only the land system is in. Every other event (the storm, combat, the turn,
+   the stack, inhabitants) is parked by name in SYSTEM §C.
