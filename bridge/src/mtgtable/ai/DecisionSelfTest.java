@@ -384,12 +384,82 @@ public final class DecisionSelfTest {
         check(!afterLand.equals(w5) && ex.refusedIn(afterLand).isEmpty()
                 && Explorer.dropRefused(landed, ex.refusedIn(afterLand), m) == 0 && landed.containsKey("cast:18"),
                 "G5: a land drop (the same turn, phase and stack) is another window, and offers the refused cast again");
+        g5Planted(r);
+        optionalCosts();
         payCap();
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
         check(b != Atlas.branchSeed(451, 3, 8) && b != Atlas.branchSeed(451, 4, 7) && b != Atlas.branchSeed(452, 3, 7),
                 "branch seeds differ by branch, decision and atlas");
+    }
+
+    /**
+     * D466: G5's count, planted the way the engine runs it -- the refusal and
+     * the seat's next priority in one window (the same turn, phase, stack and
+     * lands, so the same {@link Explorer#windowKey}).  When the next listing
+     * still holds the refused play, it is left out and counted once; J156's
+     * 0 of 4,942 was the other case, the listing no longer holding it, because
+     * the refused cast had left its card in the Stack zone (PolicyControllerAi's
+     * putBack), which counts nothing.
+     */
+    private static void g5Planted(final ExploreMath.Config r) {
+        final ExploreMath m = new ExploreMath(r, 11);
+        final Explorer ex = new Explorer(m);
+        final String atRefusal = Explorer.windowKey(6, "MAIN1", 0, -1, 4);
+        ex.noteRefused(atRefusal, "cast:77");
+        final String nextPriority = Explorer.windowKey(6, "MAIN1", 0, -1, 4);
+        final java.util.Map<String, Object> listed = new java.util.LinkedHashMap<>();
+        for (final String t : List.of("pass", "cast:77", "cast:81")) {
+            listed.put(t, null);
+        }
+        final int left = Explorer.dropRefused(listed, ex.refusedIn(nextPriority), m);
+        check(left == 1 && !listed.containsKey("cast:77") && m.guardrails().get("refusedCast") == 1
+                && m.guardrails().get("noRepeatRefused") == 1,
+                "G5 planted: a refusal, then a same-window decision that still lists the play, counts 1: " + m.guardrails());
+        final ExploreMath m2 = new ExploreMath(r, 12);
+        final Explorer ex2 = new Explorer(m2);
+        ex2.noteRefused(atRefusal, "cast:77");
+        final java.util.Map<String, Object> stranded = new java.util.LinkedHashMap<>();
+        for (final String t : List.of("pass", "cast:81")) {
+            stranded.put(t, null);   // the refused card stranded in the Stack zone: the listing no longer holds it
+        }
+        check(Explorer.dropRefused(stranded, ex2.refusedIn(nextPriority), m2) == 0
+                && m2.guardrails().getOrDefault("noRepeatRefused", 0) == 0,
+                "G5 planted: with the refused card gone from the listing, nothing is left out (J156's 0 of 4,942)");
+    }
+
+    /**
+     * D466: a play with an optional cost maps onto the fork's copy.  Planted:
+     * a retrace cast (Six gives a graveyard permanent card retrace) is the base
+     * spell with {@code OptionalCost.Retrace} added; the copy's base is offered
+     * retrace (its card is in the copy's graveyard) and gets exactly that cost
+     * back, in Forge's order, and nothing it was not built with; a cost the copy
+     * does not offer fails the mapping naming it.
+     */
+    private static void optionalCosts() {
+        final forge.game.spellability.OptionalCostValue retrace =
+                new forge.game.spellability.OptionalCostValue(forge.game.spellability.OptionalCost.Retrace, null);
+        final forge.game.spellability.OptionalCostValue k1 =
+                new forge.game.spellability.OptionalCostValue(forge.game.spellability.OptionalCost.Kicker1, null);
+        final forge.game.spellability.OptionalCostValue k2 =
+                new forge.game.spellability.OptionalCostValue(forge.game.spellability.OptionalCost.Kicker2, null);
+        final List<forge.game.spellability.OptionalCostValue> got = SearchPolicy.chosenOptionalCosts(
+                List.of(forge.game.spellability.OptionalCost.Retrace), List.of(retrace));
+        check(got.size() == 1 && got.get(0) == retrace, "a retrace cast maps: the copy's base gets Retrace back");
+        final List<forge.game.spellability.OptionalCostValue> kicked = SearchPolicy.chosenOptionalCosts(
+                List.of(forge.game.spellability.OptionalCost.Kicker2, forge.game.spellability.OptionalCost.Kicker1),
+                List.of(k1, retrace, k2));
+        check(kicked.size() == 2 && kicked.get(0) == k1 && kicked.get(1) == k2,
+                "the costs the play was built with, in the order Forge offers them, and no other");
+        check(SearchPolicy.chosenOptionalCosts(List.of(), List.of(k1, k2)).isEmpty(), "no optional cost, none added");
+        String why = null;
+        try {
+            SearchPolicy.chosenOptionalCosts(List.of(forge.game.spellability.OptionalCost.Retrace), List.of(k1));
+        } catch (final IllegalStateException e) {
+            why = e.getMessage();
+        }
+        check(why != null && why.contains("Retrace"), "a cost the copy does not offer fails, naming it: " + why);
     }
 
     /**

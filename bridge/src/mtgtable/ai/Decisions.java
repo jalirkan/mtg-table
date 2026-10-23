@@ -174,12 +174,7 @@ public final class Decisions {
         final Game g = ai.getGame();
         final Set<String> lands = new TreeSet<>(Decisions::byId);
         final Set<String> plays = new TreeSet<>(Decisions::byId);
-        final CardCollection landCards = ComputerUtilAbility.getAvailableLandsToPlay(g, ai);
-        if (landCards != null) {
-            for (final Card c : landCards) {
-                lands.add("land:" + c.getId());
-            }
-        }
+        lands.addAll(landPlays(ai).keySet());   // D466: the seat's own listing of its land plays
         // A permanent with no activated ability but mana abilities (most lands, a vanilla creature) offers no
         // option of its own: skipping it before Forge builds each card's ability
         // list is most of the enumeration's saving on a full board.
@@ -213,6 +208,40 @@ public final class Decisions {
         d.options.addAll(lands);
         d.options.addAll(plays);
         return d;
+    }
+
+    /**
+     * D466: every land the seat may play now, by token, with its land
+     * abilities -- the ONE listing the decision record's options and the random
+     * and exploring seats' options are built from, so the record never offers a
+     * land the seat could not play.  Forge's {@code
+     * ComputerUtilAbility.getAvailableLandsToPlay} checks the land drop
+     * ({@code Player.canPlayLand}) only for the hand; a land in exile, the
+     * graveyard or on top of the library is listed when something lets the seat
+     * play it (Laelia, the Blade Reforged's "you may play that card this turn"),
+     * land drop used or not.  A land ability's own {@code canPlay} is the land
+     * drop ({@code LandAbility.canPlay} calls {@code Player.canPlayLand}), and
+     * {@code Card.getAllPossibleAbilities(seat, true)} keeps only the ones that
+     * can be played -- so a land is listed when it has one.
+     */
+    public static java.util.Map<String, List<SpellAbility>> landPlays(final Player ai) {
+        final java.util.Map<String, List<SpellAbility>> out = new java.util.LinkedHashMap<>();
+        final CardCollection lands = ComputerUtilAbility.getAvailableLandsToPlay(ai.getGame(), ai);
+        if (lands == null) {
+            return out;
+        }
+        for (final Card c : lands) {
+            final List<SpellAbility> las = new ArrayList<>();
+            for (final SpellAbility sa : c.getAllPossibleAbilities(ai, true)) {
+                if (sa.isLandAbility()) {
+                    las.add(sa);
+                }
+            }
+            if (!las.isEmpty()) {
+                out.putIfAbsent("land:" + c.getId(), las);
+            }
+        }
+        return out;
     }
 
     private static boolean onlyManaAbilities(final Card c) {

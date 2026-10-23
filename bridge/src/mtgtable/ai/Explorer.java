@@ -33,7 +33,6 @@ import forge.game.Game;
 import forge.game.GameEntity;
 import forge.game.GameObject;
 import forge.game.card.Card;
-import forge.game.card.CardCollection;
 import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
 import forge.game.player.Player;
@@ -323,20 +322,7 @@ public final class Explorer {
         final Map<String, List<SpellAbility>> out = new LinkedHashMap<>();
         out.put("pass", null);
         final Game g = ai.getGame();
-        final CardCollection lands = ComputerUtilAbility.getAvailableLandsToPlay(g, ai);
-        if (lands != null) {
-            for (final Card c : lands) {
-                final List<SpellAbility> las = new ArrayList<>();
-                for (final SpellAbility sa : c.getAllPossibleAbilities(ai, true)) {
-                    if (sa.isLandAbility()) {
-                        las.add(sa);
-                    }
-                }
-                if (!las.isEmpty()) {
-                    out.putIfAbsent("land:" + c.getId(), las);
-                }
-            }
-        }
+        out.putAll(Decisions.landPlays(ai));   // D466: the record's listing too
         final SpellAbility forgeSa = chosen == null || chosen.isEmpty() ? null : chosen.get(0);
         if (forgeSa != null && !forgeSa.isLandAbility()) {
             out.put(tokenOf(chosen), chosen);
@@ -469,20 +455,8 @@ public final class Explorer {
         if (forgeSa != null) {
             out.put(tokenOf(chosen), chosen);
         }
-        final Game g = ai.getGame();
-        final CardCollection lands = ComputerUtilAbility.getAvailableLandsToPlay(g, ai);
-        if (lands != null) {
-            for (final Card c : lands) {
-                final List<SpellAbility> las = new ArrayList<>();
-                for (final SpellAbility sa : c.getAllPossibleAbilities(ai, true)) {
-                    if (sa.isLandAbility()) {
-                        las.add(sa);
-                    }
-                }
-                if (!las.isEmpty()) {
-                    out.putIfAbsent("land:" + c.getId(), las);
-                }
-            }
+        for (final Map.Entry<String, List<SpellAbility>> e : Decisions.landPlays(ai).entrySet()) {
+            out.putIfAbsent(e.getKey(), e.getValue());   // D466: the record's listing too
         }
         final SearchPolicy.Sink quiet = new SearchPolicy.Sink() {
             @Override

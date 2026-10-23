@@ -1244,6 +1244,7 @@ side by side ([D451](../decisions/D451-move-atlas.md)). Method only: no verdict.
 tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 10000 --branch-random 200 --branch-forge 40 --jobs 7 --out var/cubelab/atlas/j142
 tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke
 tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
+tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
 tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted (~2 min, engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
@@ -1260,7 +1261,18 @@ tools/cubelab.sh seat-identity                # the Forge, search and explore se
   game past `--turn-cap` (40) is a draw. G1 and G4 are read back from the seats' decision records after
   the run, and G3's and G5's counts from each random seat's `decisions` summary (protocol M71) into
   `atlas.json`'s `checks.guardrails` (`noRepeatNoOp`, `refusedCast`, `noRepeatRefused`). G5 changed the
-  random policy: an atlas from before D458 and one after it are two policies, not a repeat.
+  random policy: an atlas from before D458 and one after it are two policies, not a repeat. Since
+  [D466](../decisions/D466-atlas-j156-tool-faults.md) the record's land options and the seat's are one
+  listing with the land drop checked (a land exile lets the seat play is not offered after the drop), the
+  count of violations is the true one (`violations`, `violationsBy`; the first 50 are named), and a cast
+  the engine refused to pay for puts its card back where it was instead of leaving it in the Stack zone,
+  so G5 has a play to leave out -- a third change to the random policy.
+- **Branch errors** ([D466](../decisions/D466-atlas-j156-tool-faults.md)): every branch game that errored
+  is counted by error text in `checks.branchErrors`, and an option whose branch games errored more than
+  `--branch-error-max` (0.1) of the time is a problem naming the option and its errors (atlas.md's
+  *Branch games that errored*). A frame log gunzip cannot read -- a worker the watchdog killed leaves its
+  branch's two logs truncated -- is left out of the checks and named (`checks.unreadableFrameLogs`), and
+  `atlas.json` is still written.
 - **`--pair auto`** takes the line of `tools/ai-bench/pairs-confirm.txt` with the most ladder games and
   the most even record: the smallest |p − ½| + 1.96·√(p(1−p)/n) over the line's decisive ladder games
   (`--ladder`, default `var/ai-ladder`). The plan keeps the choice for a resumed atlas.

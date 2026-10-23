@@ -117,11 +117,36 @@ export function readMaybeGz(file: string): string {
 }
 
 /**
+ * D466: a frame log a reader can skip.  A worker the pool's watchdog killed mid-branch leaves its two
+ * frame logs truncated, and gunzip throws on them ("unexpected end of file", zlib's Z_BUF_ERROR); J156's
+ * spine 458 lost its whole end-of-spine check, and so its atlas.json, to two such files.  `read` returns
+ * a log's text, or null for one zlib cannot inflate, which it records in `unreadable` with zlib's reason;
+ * any other error (a missing file, a permission) still throws.
+ */
+export function frameLogReader(): { read: (file: string) => string | null; unreadable: Map<string, string> } {
+  const unreadable = new Map<string, string>();
+  const read = (file: string): string | null => {
+    if (unreadable.has(file)) return null;
+    try {
+      return readMaybeGz(file);
+    } catch (e) {
+      const code = (e as { code?: unknown }).code;
+      if (typeof code !== 'string' || !code.startsWith('Z_')) throw e;
+      unreadable.set(file, (e as Error).message);
+      return null;
+    }
+  };
+  return { read, unreadable };
+}
+
+/**
  * Check every rows-*.jsonl under `rowsDir`; with `logOf(begin, seatIndex)` naming a game's frame log for
  * a seat (or null), also the ids.  The seats are the rows' `seat` names in the begin line's `seat0` /
- * `seat1` order.
+ * `seat1` order.  `read` reads a log (D466: the atlas passes `frameLogReader`'s, which skips a truncated
+ * one -- its rows go unchecked, and the atlas names the log as a problem of its own).
  */
-export function checkRowsDir(rowsDir: string, logOf?: (begin: Record<string, unknown>, seat: number) => string | null): RowsCheck {
+export function checkRowsDir(rowsDir: string, logOf?: (begin: Record<string, unknown>, seat: number) => string | null,
+  read: (file: string) => string | null = readMaybeGz): RowsCheck {
   const out: RowsCheck = { files: 0, rows: 0, games: 0, problems: [] };
   if (!fs.existsSync(rowsDir)) return out;
   const byGame = logOf ? new Map<string, { begin: Record<string, unknown> | null; rows: Array<{ seat: string; tokens: string[] }> }>() : undefined;
@@ -139,7 +164,8 @@ export function checkRowsDir(rowsDir: string, logOf?: (begin: Record<string, unk
         if (k < 0) { out.problems.push(`${key}: a row from seat ${r.seat}, which the begin line does not name`); continue; }
         if (!vis.has(k)) {
           const log = logOf(g.begin, k);
-          vis.set(k, log && fs.existsSync(log) ? visibleIds(readMaybeGz(log)) : null);
+          const text = log && fs.existsSync(log) ? read(log) : null;   // D466: null for a log the reader cannot inflate
+          vis.set(k, text === null ? null : visibleIds(text));
         }
         const v = vis.get(k);
         if (!v) continue;
