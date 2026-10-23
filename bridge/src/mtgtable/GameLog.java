@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -172,8 +173,16 @@ public final class GameLog implements AutoCloseable {
     public GameLog(final File out, final boolean gzip) throws IOException {
         this.file = out.getAbsoluteFile();
         final File dir = file.getParentFile();
-        if (dir != null && !dir.isDirectory() && !dir.mkdirs()) {
-            throw new IOException("cannot create directory " + dir);
+        if (dir != null) {
+            // Idempotent, and safe against a second writer creating the same
+            // folder: the atlas's workers (two JVMs at atlas-selftest --jobs 2)
+            // open their first logs in one fresh frames/ at once, and the old
+            // isDirectory()-then-mkdirs() threw "cannot create directory" in the
+            // worker whose mkdirs() lost the race.  createDirectories accepts a
+            // directory that already exists, and still throws if the path is a
+            // file.  The folder is shared on purpose -- each log's file name is
+            // its own game, branch and seat -- so only its creation can race.
+            Files.createDirectories(dir.toPath());
         }
         this.counting = new Counting(new BufferedOutputStream(new FileOutputStream(file), 1 << 16));
         this.writer = new OutputStreamWriter(gzip ? new GZIPOutputStream(counting, 1 << 16) : counting,

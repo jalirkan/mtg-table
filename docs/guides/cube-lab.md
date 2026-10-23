@@ -1245,9 +1245,16 @@ tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 10000 --branch-random 2
 tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke
 tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
 tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
-tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair (~1.5 min, engine)
+tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair (~2 min at the default --jobs 2, ~3 at --jobs 1, engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
+
+`atlas-selftest` runs at `--jobs 2` by default, so two workers open their first frame logs in one fresh
+`frames/` folder at the same moment. `GameLog` used to create that folder with `isDirectory()` and then
+`mkdirs()`, and the worker whose `mkdirs()` lost the race threw `cannot create directory`. It now uses
+`Files.createDirectories`, which accepts a folder that already exists. Sharing the folder is correct, because
+each log's file name is its own game, branch and seat. A run that fails only at `--jobs` above 1 is a race
+like this one, not a fault in the atlas.
 
 - **The random seat** is D358's exploration at epsilon 1 with a wider list: at a priority, a uniform pick
   among pass, each land, Forge's own answer and every spell or non-mana ability it can play and pay for
