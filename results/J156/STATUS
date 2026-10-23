@@ -1,8 +1,8 @@
 running
 runner: forgecoach-runner 6fb13bf9
 started: 2026-10-22T14:56:37-04:00
-phase: commands 3/4
+phase: commands 4/4
 mtg-table: 6fb13bf
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.17), budget 21.4 GB)
 peak_worker_rss_gb: 1.17
-blocks_done: run1 exit 0 at 2026-10-22T22:32:39-04:00, run2 exit 0 at 2026-10-23T02:28:35-04:00
+blocks_done: run1 exit 0 at 2026-10-22T22:32:39-04:00, run2 exit 0 at 2026-10-23T02:28:35-04:00, run3 exit 0 at 2026-10-23T05:27:03-04:00
