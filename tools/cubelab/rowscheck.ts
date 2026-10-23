@@ -28,7 +28,9 @@ export const TOKEN = /^(pass|\?|land:\d+|cast:\d+|activate:\d+(#\d+)?|attack:(no
 const ROW_KEYS = new Set(['type', 'v', 'game', 'seat', 'kind', 'turn', 'n', 'chosen', 'overrode', 'fallback', 'ms', 'policy', 'tokens', 's', 'c']);
 const BEGIN_BANNED = /name|card|hand|library|list/i;
 
-export interface RowsCheck { files: number; rows: number; games: number; problems: string[] }
+export interface RowsCheck { files: number; rows: number; games: number; problems: string[];
+  /** D466 (#184's review): the games whose id check was skipped because `read` could not read the seat's frame log, with that log. */
+  skipped?: Array<{ game: string; log: string }> }
 
 /** Every id a token names. */
 export function tokenIds(tok: string): number[] {
@@ -165,6 +167,7 @@ export function checkRowsDir(rowsDir: string, logOf?: (begin: Record<string, unk
         if (!vis.has(k)) {
           const log = logOf(g.begin, k);
           const text = log && fs.existsSync(log) ? read(log) : null;   // D466: null for a log the reader cannot inflate
+          if (log && text === null && fs.existsSync(log)) (out.skipped ??= []).push({ game: key, log });
           vis.set(k, text === null ? null : visibleIds(text));
         }
         const v = vis.get(k);

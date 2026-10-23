@@ -1245,7 +1245,7 @@ tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 10000 --branch-random 2
 tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke
 tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
 tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
-tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted (~2 min, engine)
+tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair (~1.5 min, engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
 
