@@ -18,7 +18,11 @@
  *    written into atlas.json's checks by writeAtlas;
  *  - the jobs: phase A's seed and random seat, a unit's expected options and its leak checks on the
  *    first chunk only, the units' chunking; atlas.md renders;
- *  - seat-identity's decision lines: the frame numbers dropped, the last state and `over` kept.
+ *  - seat-identity's decision lines: the frame numbers dropped, the last state and `over` kept;
+ *  - D466: branch errors counted by text and an option past --branch-error-max made a problem (atlas.json's checks and
+ *    atlas.md); every guardrail violation counted though only the first 50 are named; G1's planted controls (a land the
+ *    seat's listing does not hold is no flag, a land in hand with the drop unused and not played is one); a truncated
+ *    frame log skipped and named while atlas.json is still written.
  */
 
 import assert from 'node:assert/strict';
@@ -33,7 +37,8 @@ import {
   agreement, gamesFor, pairLines, rankPairs, ranks, regretInterval, regretOf, scoreOf, scoreStat, spearman, spread, wilson, type LadderGame,
 } from '../../tools/cubelab/atlasmath.ts';
 import {
-  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, baselineJob, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf, writeAtlas,
+  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, BRANCH_ERROR_MAX_DEFAULT, baselineJob, branchErrors, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, erroredOptionProblem,
+  errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf, writeAtlas,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
@@ -293,6 +298,145 @@ test('writeAtlas puts G5\'s counts in atlas.json\'s checks, from phase A\'s and 
     assert.equal(doc.checks.guardrails.noRepeatRefused, 4);
     assert.equal(doc.checks.guardrails.noRepeatNoOp, 1);
     assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /G5 \(D458\): the engine refused 5 pick\(s\)/);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+// ------------------------------------------------------------------
+// D466: J156's four tool faults
+// ------------------------------------------------------------------
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+/** A branch row of decision `d`, option `o`, continuation `c`, branch `i`, with `error`. */
+const brow = (d: number, o: number, c: 'random' | 'forge', i: number, error: string | null, token = `cast:${30 + o}`): BranchRow => ({
+  v: 1, d, kind: 'p', turn: 5, c, o, token, label: o === 0 ? 'pass' : `Card ${o}`, i, seed: 1000 + i, result: error ? 0 : (i % 2 ? 1 : -1), score: error ? 0.5 : (i % 2 ? 1 : 0),
+  capped: false, timedOut: false, turns: 9, steps: 100, ms: 10, bytes: 0, standIns: 0, error, forkProblems: [], key: `atlas:d${d}:${c}:o${o}:b${i}`,
+});
+
+test('branch errors are counted by text, and an option past --branch-error-max is named with its error (D466, J156 spine 458)', () => {
+  const rows: BranchRow[] = [];
+  for (let i = 0; i < 12; i++) {
+    const c = i < 8 ? 'random' : 'forge';
+    rows.push(brow(5, 0, c, i, i === 3 ? 'NullPointerException: Cannot read field "x" of card 145' : null, 'pass'));   // 1 of 12: under the threshold
+    rows.push(brow(5, 1, c, i, 'IllegalStateException: optional costs are not copied'));                                // 12 of 12: J156's retrace cast
+    rows.push(brow(5, 2, c, i, i < 2 ? `NullPointerException: Cannot read field "x" of card ${140 + i}` : null));       // 2 of 12: over
+  }
+  const be = branchErrors(rows, BRANCH_ERROR_MAX_DEFAULT);
+  assert.equal(be.branches, 36);
+  assert.equal(be.errored, 15);
+  assert.deepEqual(be.byError, [
+    { error: 'IllegalStateException: optional costs are not copied', n: 12 },
+    { error: 'NullPointerException: Cannot read field "x" of card #', n: 3 },
+  ], 'one text per fault: the ids taken out');
+  assert.deepEqual(be.options.map((x) => [x.d, x.o, x.errored, x.branches]), [[5, 1, 12, 12], [5, 2, 2, 12]], 'option 0 (1 of 12) is under one in ten');
+  assert.deepEqual(be.options[0]?.byContinuation, { random: { branches: 8, errored: 8 }, forge: { branches: 4, errored: 4 } });
+  assert.match(erroredOptionProblem(be.options[0] as NonNullable<typeof be.options[0]>), /^d5 option 1 `cast:31` \(Card 1\): 12 of 12 branch game\(s\) errored \(random 8 of 8, forge 4 of 4\): 12 x IllegalStateException: optional costs are not copied$/);
+  assert.equal(branchErrors(rows, 0.2).options.length, 1, 'the threshold is the job\'s: at 0.2 only the retrace option');
+  assert.equal(branchErrors(rows.filter((r) => !r.error), 0.1).options.length, 0, 'no error, no option');
+  assert.equal(errorText('no Bolt on the copy\'s Card 123 (77)'), 'no Bolt on the copy\'s Card # (#)');
+});
+
+test('writeAtlas makes an errored option a problem and shows the errors in atlas.md\'s checks (D466)', () => {
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-err-'));
+  try {
+    const B = path.join(out, 'phaseB');
+    fs.mkdirSync(B, { recursive: true });
+    const listing: DecisionListing = { d: 5, kind: 'p', turn: 5, tokens: ['pass', 'cast:31'], labels: ['pass', 'Orcish Bowmasters'] };
+    fs.writeFileSync(path.join(B, 'baseline.json'), JSON.stringify({ v: 1, seed: 458, winner: 'A', first: 'A', turns: 11, decisions: [0, 1, 2, 3, 4].map((d) => ({ ...listing, d })).concat([listing]) }));
+    const rows: BranchRow[] = [];
+    for (let i = 0; i < 4; i++) {
+      rows.push(brow(5, 0, 'random', i, null, 'pass'), brow(5, 1, 'random', i, 'IllegalStateException: optional costs are not copied'));
+      rows.push(brow(5, 0, 'forge', i, null, 'pass'), brow(5, 1, 'forge', i, 'IllegalStateException: optional costs are not copied'));
+    }
+    fs.writeFileSync(path.join(B, 'branches.jsonl'), `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`);
+    const rc = writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    assert.equal(rc, 3, 'a problem exits 3');
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { plan: unknown; checks: { problems: string[]; branchErrors: { errored: number; threshold: number; options: unknown[] } } };
+    assert.equal(doc.checks.branchErrors.errored, 8);
+    assert.equal(doc.checks.branchErrors.threshold, 0.1);
+    assert.equal(doc.checks.branchErrors.options.length, 1);
+    assert.ok(doc.checks.problems.some((p) => /^d5 option 1 `cast:31` \(Card 1\): 8 of 8 branch game\(s\) errored/.test(p)), doc.checks.problems.join('\n'));
+    const md = fs.readFileSync(path.join(out, 'atlas.md'), 'utf8');
+    assert.match(md, /### Branch games that errored/);
+    assert.match(md, /\| 8 \| IllegalStateException: optional costs are not copied \|/);
+    assert.match(md, /\| d5 \| 1 \| `cast:31` \| Card 1 \| 8 \/ 8 \| 4 \/ 4 \| 4 \/ 4 \|/);
+    // the job sets the threshold: 1 (never) leaves the same errors counted and no option a problem
+    writeAtlas(REPO, { ...OPTS, branchErrorMax: 1 }, out, {}, {}, () => {});
+    const doc1 = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; branchErrors: { errored: number; options: unknown[] } } };
+    assert.equal(doc1.checks.branchErrors.errored, 8);
+    assert.equal(doc1.checks.branchErrors.options.length, 0);
+    assert.ok(!doc1.checks.problems.some((p) => /branch game\(s\) errored/.test(p)));
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+/** A priority decision record (D347) of seat 1. */
+const pdec = (n: number, options: string[], chosen: string): string => JSON.stringify({ v: 1, seq: n, dir: 'ai', type: 'decision', body: { seat: 1, n, kind: 'priority', turn: 6, phase: 'MAIN2', options, chosen, by: 'forge' } });
+
+test('G1, planted (D466): a land the seat\'s own listing does not hold is no flag; a land in hand, drop unused, not played, is one', () => {
+  // negative control: Laelia, the Blade Reforged attacked after the seat's land drop and exiled a land ("you may play that card
+  // this turn"); the record and the seat list from ONE listing (Decisions.landPlays, the land drop checked), so it is not offered
+  const laelia = [pdec(40, ['pass', 'land:61', 'cast:92'], 'land:61'), pdec(41, ['pass', 'cast:92'], 'pass'), pdec(42, ['pass', 'activate:92'], 'pass')].join('\n');
+  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [] };
+  guardrailCheck(laelia, 'laelia', gc);
+  assert.deepEqual([gc.landOffered, gc.landTaken, gc.violations.length, gc.violationCount?.G1], [1, 1, 0, 0]);
+  // positive control: a land in hand with the drop unused, offered and not played: the seat's own fault, flagged
+  guardrailCheck(pdec(7, ['pass', 'land:12', 'cast:30'], 'cast:30'), 'hand', gc);
+  assert.deepEqual([gc.landOffered, gc.violations.length, gc.violationCount?.G1], [2, 1, 1]);
+  assert.match(gc.violations[0] as string, /^hand: decision 7 offered a land and played cast:30 \(G1\)$/);
+});
+
+test('every guardrail violation is counted, though only the first 50 are named (D466: J156 vintage, 200 shown of 3,071)', () => {
+  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [] };
+  guardrailCheck(Array.from({ length: 70 }, (_, n) => pdec(n, ['pass', 'land:5'], 'pass')).join('\n'), 'g9', gc);
+  assert.equal(gc.violations.length, GUARDRAIL_VIOLATIONS_LISTED);
+  assert.deepEqual(gc.violationCount, { G1: 70, G4: 0 });
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-g1-'));
+  try {
+    fs.mkdirSync(path.join(out, 'phaseA', 'frames'), { recursive: true });
+    fs.writeFileSync(path.join(out, 'phaseA', 'frames', 'g1-seat1.jsonl.gz'), zlib.gzipSync(Array.from({ length: 70 }, (_, n) => pdec(n, ['pass', 'land:5'], 'pass')).join('\n')));
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; guardrails: { violations: number; violationsBy: Record<string, number> } } };
+    assert.equal(doc.checks.guardrails.violations, 70, 'the true count, not the list\'s length');
+    assert.deepEqual(doc.checks.guardrails.violationsBy, { G1: 70, G4: 0 });
+    assert.equal(doc.checks.problems.filter((p) => /\(G1\)$/.test(p)).length, 10, 'ten named in the problems');
+    assert.ok(doc.checks.problems.includes('70 guardrail violation(s) in all (G1 70, G4 0); the first 10 named above'), doc.checks.problems.join('\n'));
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /70 guardrail violation\(s\) \(G1 70, G4 0\)/);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('a truncated frame log is skipped and named, and atlas.json is still written (D466: J156 spine 458\'s hung branch)', () => {
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-trunc-'));
+  try {
+    const B = path.join(out, 'phaseB');
+    const frames = path.join(B, 'frames');
+    const rowsDir = path.join(B, 'rows');
+    fs.mkdirSync(frames, { recursive: true });
+    fs.mkdirSync(rowsDir, { recursive: true });
+    const full = zlib.gzipSync(Array.from({ length: 400 }, (_, n) => pdec(n, ['pass', 'cast:9'], 'pass')).join('\n'));
+    // the hung branch: the watchdog killed its worker mid-write, so both seats' logs end mid-stream
+    for (const s of [0, 1]) fs.writeFileSync(path.join(frames, `d9-random-o0-b165-seat${s}.jsonl.gz`), full.subarray(0, Math.floor(full.length / 2)));
+    fs.writeFileSync(path.join(frames, 'd9-forge-o0-b1-seat0.jsonl.gz'), full.subarray(0, 40));
+    // ...and its rows name it, so the rows' id check reads it too
+    fs.writeFileSync(path.join(rowsDir, 'rows-w0.jsonl'), [
+      JSON.stringify({ type: 'header', v: 1, stateSize: 4, cand: { p: ['a'] } }),
+      JSON.stringify({ type: 'begin', game: 'atlas:d9:random:o0:b165', decision: 9, continuation: 'random', option: 0, branch: 165, seat0: 'Drafter A', seat1: 'Drafter B' }),
+      JSON.stringify({ type: 'row', v: 1, game: 'atlas:d9:random:o0:b165', seat: 'Drafter A', kind: 'p', turn: 9, n: 1, chosen: 0, tokens: ['cast:9'], s: [[0, 1]], c: [[1]] }),
+    ].join('\n') + '\n');
+    assert.throws(() => zlib.gunzipSync(fs.readFileSync(path.join(frames, 'd9-random-o0-b165-seat0.jsonl.gz'))), /unexpected end of file/, 'the file is what J156 left');
+    const rc = writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    assert.equal(rc, 3);
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; frameLogs: number; unreadableFrameLogs: Array<{ log: string; why: string }> } };
+    assert.deepEqual(doc.checks.unreadableFrameLogs.map((t) => t.log), ['phaseB/frames/d9-forge-o0-b1-seat0.jsonl.gz', 'phaseB/frames/d9-random-o0-b165-seat0.jsonl.gz', 'phaseB/frames/d9-random-o0-b165-seat1.jsonl.gz']);
+    assert.ok(doc.checks.unreadableFrameLogs.every((t) => t.why === 'unexpected end of file'));
+    assert.equal(doc.checks.frameLogs, 0, 'not sent to the redaction checker');
+    assert.ok(doc.checks.problems.some((p) => p.startsWith('3 frame log(s) could not be read (gzip: unexpected end of file) and were left out of the checks')), doc.checks.problems.join('\n'));
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /3 frame log\(s\) could not be read/);
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }

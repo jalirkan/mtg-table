@@ -37,6 +37,7 @@ import forge.game.player.Player;
 import forge.game.player.PlayerActionConfirmMode;
 import forge.game.spellability.SpellAbility;
 import forge.game.trigger.WrappedAbility;
+import forge.game.zone.Zone;
 import forge.game.zone.ZoneType;
 import forge.util.collect.FCollectionView;
 
@@ -791,13 +792,56 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (skippedBefore) {
             sa.setSkip(false);
         }
+        // D466: where the spell's card is before the cast, so a refused cast can be put back
+        final Card host = sa.getHostCard();
+        final Zone from = sa.isSpell() && host != null && !host.isCopiedSpell() ? getGame().getZoneOf(host) : null;
+        final int at = from == null ? -1 : from.getCards().indexOf(host);
         final boolean r = playChosen(sa);
         final boolean refusedNow = sa.isSkip();
         if (skippedBefore && !refusedNow) {
             sa.setSkip(true);
         }
+        if (refusedNow) {
+            putBack(getGame(), sa, host, from, at);
+        }
         explorer.played(player, sa, refusedNow);
         return r;
+    }
+
+    /**
+     * D466: a cast the engine refused to pay for leaves its card in the Stack
+     * zone and on no stack.  Forge's AI moves the card to the stack before it
+     * pays ({@code ComputerUtil.handlePlayingSpellAbility}, forge-ai
+     * ComputerUtil.java:100 at the {@code forge-2.0.14} tag) and, when the
+     * payment fails, prints "AI failed to play ... [Stack]", marks the play
+     * skipped and moves the card back only when it was cast FROM the stack
+     * ({@code :136}, under its own "FIXME: Should not arrive here, ... the card
+     * seems to be stuck on stack zone and invalidated and nowhere to be found");
+     * the stack it froze stays frozen ({@code :123}).  Forge's own AI almost
+     * never gets there; the random seat does at every refusal (J156: all 4,961
+     * of ff5's refusals said "[Stack]"), so each one took a card out of the game
+     * -- and G5 never had a play to leave out.  The card goes back where it was,
+     * as the same object (so a may-play effect that names it, Elite
+     * Spellbinder's, still does), at the same position, the way Forge's own
+     * cancelled cast does it ({@code GameActionUtil.rollbackAbility},
+     * GameActionUtil.java:947-963, then {@code MagicStack.clearFrozen}) --
+     * without that method's refund, which would undo the mana abilities
+     * whose mana the failed payment already refunded to the pool
+     * ({@code ComputerUtilMana.java:800}).  True when it put a card back.
+     */
+    static boolean putBack(final Game g, final SpellAbility sa, final Card host, final Zone from, final int at) {
+        final Card stuck = sa.getHostCard();
+        if (from == null || from.is(ZoneType.Stack) || host == null || stuck == null || stuck.getZone() == null
+                || !stuck.getZone().is(ZoneType.Stack) || g.getStack().getSpellMatchingHost(stuck) != null) {
+            return false;
+        }
+        stuck.getZone().remove(stuck);
+        host.setCastSA(null);
+        host.setCastFrom(null);
+        from.add(host, at < 0 ? null : Math.min(at, from.size()), null, true);
+        sa.setHostCard(host);
+        g.getStack().clearFrozen();
+        return true;
     }
 
     private boolean playChosen(final SpellAbility sa) {

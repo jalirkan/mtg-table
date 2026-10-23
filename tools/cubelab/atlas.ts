@@ -6,7 +6,8 @@
 //   tools/cubelab.sh atlas (--deck-a <dck> --deck-b <dck> | --pair auto) --seed S --jobs K --out <dir>
 //       [--turn-cap 40] [--rollouts 10000] [--branch-random 200] [--branch-forge 40] [--decisions all|N]
 //       [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--unit-timeout 30] [--boot 1000]
-//       [--ladder var/ai-ladder] [--pairs tools/ai-bench/pairs-confirm.txt] [--phase a|b|both]
+//       [--ladder var/ai-ladder] [--pairs tools/ai-bench/pairs-confirm.txt] [--phase a|b|both|report]
+//       [--branch-error-max 0.1]
 //
 // THE PAIR (--pair auto): the line of the pairs file with the most ladder games and the most even record,
 // as one rule (atlasmath.ts rankPairs: the smallest |p - 1/2| + 1.96 sqrt(p(1-p)/n) over the decisive
@@ -42,7 +43,9 @@
 // unit already in its jsonl is not played again; a plan with other options is refused.
 // After the games every rows file is checked (rowscheck.ts, ids against the seat's own frame log) and
 // every frame log goes through tools/check-redaction.mjs (a branch's with --empty-hand-ok, D460); a problem is written into atlas.json's
-// `checks` and exits 3.
+// `checks` and exits 3.  D466: so is an option whose branch games errored more than --branch-error-max of the time (a fraction,
+// 0.1 by default; each such option named with its error texts, every error counted by text in `checks.branchErrors`), and a
+// frame log gunzip cannot read (a worker killed mid-branch leaves its logs truncated): it is left out of the checks and named.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,7 +54,7 @@ import { engineEnv, runPool, type MatchJob, type MatchResult, type ProgressMsg, 
 import type { PlayExploreTag } from './playexplore.ts';
 import { fileLines } from './lines.ts';
 import { labPath, recipePath, shownPath } from './labdata.ts';
-import { checkRowsDir, readMaybeGz } from './rowscheck.ts';
+import { checkRowsDir, frameLogReader } from './rowscheck.ts';
 import { redactionCheck, type Ledger } from './censusplay.ts';
 import {
   agreement, gamesFor, meanInterval, pairLines, rankPairs, regretInterval, scoreOf, scoreStat, spread, variance,
@@ -66,7 +69,17 @@ export interface AtlasOptions {
   decisions: number | 'all'; options: number; chunk: number; leakChecks: number; branchTimeoutSec: number; boot: number; pair: PairRow | null;
   /** D459: the pool's watchdog for one unit, in minutes of monotonic time (the job's `deadlineSec`). */
   unitTimeoutMin: number;
+  /** D466: an option whose branch games errored more than this share of the time is a problem (default BRANCH_ERROR_MAX_DEFAULT). */
+  branchErrorMax?: number;
 }
+
+/**
+ * D466: the default --branch-error-max.  A branch that errors is left out of its option's mean, so past some share the
+ * option's value is no longer the option's; J156's spine 458 lost every branch of six options from d5 on (6,480 of its
+ * 16,990, "optional costs are not copied") and its atlas named none of them.  One in ten is far above the stray NPE (133
+ * on 458, 23 on 460) and far below a play the fork cannot copy (all of them).
+ */
+export const BRANCH_ERROR_MAX_DEFAULT = 0.1;
 
 /**
  * D459: the default --unit-timeout.  J148's 488 finished units took 115 s at the median, 358 s at the
@@ -87,6 +100,14 @@ export interface BranchRow {
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
 const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
+
+/** D466: --branch-error-max, a share between 0 and 1. */
+function fraction(v: string | undefined, d: number): number {
+  if (v === undefined) return d;
+  const x = Number(v);
+  if (!Number.isFinite(x) || x < 0 || x > 1) throw new Error('atlas: --branch-error-max wants a share between 0 and 1 (0.1 = one branch game in ten)');
+  return x;
+}
 
 /**
  * The atlas's worker heap when CUBELAB_WORKER_XMX is not set (every other command keeps 4096m).
@@ -274,6 +295,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
     decisions: decisionsArg === 'all' ? 'all' : int('decisions', 0, 1), options: int('options', 8, 2), chunk: int('chunk', 25, 1),
     leakChecks: int('leak-checks', 1), branchTimeoutSec: int('branch-timeout', 120, 10), boot: int('boot', 1000), pair,
     unitTimeoutMin: int('unit-timeout', UNIT_TIMEOUT_MIN_DEFAULT, 1),
+    branchErrorMax: fraction(one(f, 'branch-error-max'), BRANCH_ERROR_MAX_DEFAULT),
   };
   for (const d of [o.deckA, o.deckB]) if (!fs.existsSync(d)) throw new Error(`atlas: no deck ${d}`);
   const phase = one(f, 'phase') ?? 'both';
@@ -283,6 +305,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
   const planFile = path.join(out, 'plan.json');
   const plan = { v: 1, decision: 'D451', deckA: shownPath(repo, o.deckA), deckB: shownPath(repo, o.deckB), seed: o.seed, turnCap: o.turnCap, options: o.options,
     rollouts: o.rollouts, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, chunk: o.chunk, branchTimeoutSec: o.branchTimeoutSec, unitTimeoutMin: o.unitTimeoutMin,
+    branchErrorMax: o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT,
     pairRule: pair ? { rule: '|p - 1/2| + 1.96 sqrt(p (1 - p) / n) over the decisive ladder games of the line, smallest wins; ties more games, then the earlier line', chosen: pair, top: pairTable, ladderGames } : null };
   if (fs.existsSync(planFile)) {
     const was = JSON.parse(fs.readFileSync(planFile, 'utf8')) as Record<string, unknown>;
@@ -489,9 +512,16 @@ export function unitResult(st: UnitState, all: DecisionListing[], r: MatchResult
 // The guardrails, checked from the recordings
 // ------------------------------------------------------------------
 
-export interface GuardrailCheck { logs: number; priority: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: string[];
+export interface GuardrailCheck { logs: number; priority: number; landOffered: number; landTaken: number; mulligans: number; kept: number;
+  /** The first GUARDRAIL_VIOLATIONS_LISTED violations, named. */
+  violations: string[];
+  /** D466: every violation, G1's and G4's, however many the list leaves out. */
+  violationCount?: { G1: number; G4: number };
   /** D458: the random seats' own guardrail counts, summed from each log's `decisions` summary (protocol M71): G3's `noRepeatNoOp`, G5's `refusedCast` and `noRepeatRefused`. */
   counted?: Record<string, number> }
+
+/** How many guardrail violations a check names; D466: the count past it is still counted (`violationCount`). */
+export const GUARDRAIL_VIOLATIONS_LISTED = 50;
 
 /** D458: the guardrail counts every atlas reports, zero when no log counted one (G3; G5's refused picks and the removals after them). */
 export const COUNTED_GUARDRAILS = ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused'] as const;
@@ -500,13 +530,16 @@ export const COUNTED_GUARDRAILS = ['noRepeatNoOp', 'refusedCast', 'noRepeatRefus
  * D451's guardrails, read back from a random seat's own frame log (its D347 decision records): G1, every
  * priority decision that offered a land (`land:<id>` among the legal options) was answered with a land;
  * G4, every opening-hand decision was `keep`.  (G2 is G1 itself, with no code of its own; G3 needs the engine's fingerprint and
- * is counted by the worker, `noRepeatNoOp`.)  D458: the seat's own counts -- G3's and G5's, a play the engine refused to pay
+ * is counted by the worker, `noRepeatNoOp`.)  D466: the decision record's land options and the seat's are one listing
+ * (mtgtable.ai.Decisions.landPlays, the land drop checked), so a land offered is a land the seat could have played; the first
+ * GUARDRAIL_VIOLATIONS_LISTED violations are named, and every one is counted (`violationCount`).  D458: the seat's own counts -- G3's and G5's, a play the engine refused to pay
  * for (`refusedCast`) and each later removal of it in that priority window (`noRepeatRefused`) -- are summed from the log's
  * `decisions` summary (`explore.guardrails`, protocol M71) into `counted`.  `where` names the log in a violation.
  */
 export function guardrailCheck(text: string, where: string, out: GuardrailCheck): void {
   out.logs++;
   out.counted ??= {};
+  const vc = (out.violationCount ??= { G1: 0, G4: 0 });
   for (const line of text.split('\n')) {
     if (line.includes('"type":"decisions"')) {
       let o: { body?: { explore?: { guardrails?: Record<string, unknown> } } };
@@ -524,12 +557,18 @@ export function guardrailCheck(text: string, where: string, out: GuardrailCheck)
       if ((b.options ?? []).some((t) => t.startsWith('land:'))) {
         out.landOffered++;
         if (String(b.chosen).startsWith('land:')) out.landTaken++;
-        else if (out.violations.length < 50) out.violations.push(`${where}: decision ${String(b.n)} offered a land and played ${String(b.chosen)} (G1)`);
+        else {
+          vc.G1++;
+          if (out.violations.length < GUARDRAIL_VIOLATIONS_LISTED) out.violations.push(`${where}: decision ${String(b.n)} offered a land and played ${String(b.chosen)} (G1)`);
+        }
       }
     } else if (b.kind === 'mulligan') {
       out.mulligans++;
       if (b.chosen === 'keep') out.kept++;
-      else if (out.violations.length < 50) out.violations.push(`${where}: decision ${String(b.n)} took a mulligan (G4)`);
+      else {
+        vc.G4++;
+        if (out.violations.length < GUARDRAIL_VIOLATIONS_LISTED) out.violations.push(`${where}: decision ${String(b.n)} took a mulligan (G4)`);
+      }
     }
   }
 }
@@ -569,6 +608,12 @@ export interface DecisionAtlas {
   complete: boolean;
 }
 
+/** D466: one map's regret block, its numbers copied out as strings and back (see decisionAtlas). */
+function mapOf(branches: number, r: { regret: number | null; best: number | null; lo: number | null; hi: number | null }): DecisionAtlas['random'] {
+  const num = (x: number | null): number | null => (x === null ? null : Number(String(x)));
+  return { branches, regret: num(r.regret), regretLo: num(r.lo), regretHi: num(r.hi), best: r.best };
+}
+
 /** One decision's two option maps, from its branch rows. */
 export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot: number, seed: number): DecisionAtlas {
   const k = listing.tokens.length;
@@ -583,18 +628,67 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
     return [...byI.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).filter((row) => row.every((x) => !Number.isNaN(x)));   // paired: complete branches only
   };
   const mR = matrix('random'), mF = matrix('forge');
-  const rR = regretInterval(mR, k, boot, seed + 1);
-  const rF = regretInterval(mF, k, boot, seed + 2);
+  // D466: each map's numbers are taken out of regretInterval's answer before the next call.  On Node 24.20's V8 (Maglev), the
+  // random map's answer came back holding the Forge map's regret and interval (its `best` its own) when both were read after
+  // the second call: web/test/cubelab-atlas.test.ts's "two maps" test failed 6 runs in 8 under `node --test` and 0 in 3 under
+  // `--no-maglev` -- J153's and J154's pilot failures, which this lane's additions to that file made nearly every run's.  None of J156's
+  // atlases shows it (no decision has a best other than option 0 with a regret that is not above zero).
+  const random = mapOf(mR.length, regretInterval(mR, k, boot, seed + 1, 0));
+  const forge = mapOf(mF.length, regretInterval(mF, k, boot, seed + 2, 0));
   const ag = agreement(mR, mF, k, boot, seed + 3);
   const col = (m: number[][], o: number): number[] => m.map((row) => row[o] as number);
   return {
     d: listing.d, kind: listing.kind, turn: listing.turn, chosen: 0,
     options: listing.tokens.map((token, o) => ({ o, token, label: listing.labels[o] ?? token, random: scoreStat(col(mR, o)), forge: scoreStat(col(mF, o)) })),
-    random: { branches: mR.length, regret: rR.regret, regretLo: rR.lo, regretHi: rR.hi, best: rR.best },
-    forge: { branches: mF.length, regret: rF.regret, regretLo: rF.lo, regretHi: rF.hi, best: rF.best },
+    random,
+    forge,
     rho: ag.rho, rhoLo: ag.lo, rhoHi: ag.hi, sameBest: ag.sameBest,
     complete: mR.length > 0 && mF.length > 0,
   };
+}
+
+/** D466: an error text with its ids taken out, so one fault reads as one text across cards and branches. */
+export const errorText = (e: string): string => e.replace(/\d+/g, '#').slice(0, 240);
+
+/** D466: one option of one decision whose branch games errored past the threshold. */
+export interface ErroredOption { d: number; o: number; token: string; label: string; branches: number; errored: number;
+  byContinuation: Record<string, { branches: number; errored: number }>; errors: Array<{ error: string; n: number }> }
+export interface BranchErrors { branches: number; errored: number; threshold: number; byError: Array<{ error: string; n: number }>; options: ErroredOption[] }
+
+/**
+ * D466: the branch games that errored, by error text (ids taken out) and by option: an option -- one decision's one option,
+ * over both continuations -- is listed when more than `threshold` of its branch games errored, with its error texts by count.
+ * The atlas makes each listed option a problem: its value rests on the branches that did not error, or on none.
+ */
+export function branchErrors(rows: BranchRow[], threshold: number): BranchErrors {
+  const tally = (m: Map<string, number>, k: string): void => { m.set(k, (m.get(k) ?? 0) + 1); };
+  const sorted = (m: Map<string, number>): Array<{ error: string; n: number }> => [...m].map(([error, n]) => ({ error, n })).sort((a, b) => b.n - a.n || (a.error < b.error ? -1 : 1));
+  const all = new Map<string, number>();
+  const byOpt = new Map<string, { d: number; o: number; token: string; label: string; branches: number; errored: number; byContinuation: Record<string, { branches: number; errored: number }>; errors: Map<string, number> }>();
+  for (const r of rows) {
+    const k = `${r.d}:${r.o}`;
+    const x = byOpt.get(k) ?? { d: r.d, o: r.o, token: r.token, label: r.label, branches: 0, errored: 0, byContinuation: {}, errors: new Map<string, number>() };
+    const c = (x.byContinuation[r.c] ??= { branches: 0, errored: 0 });
+    x.branches++;
+    c.branches++;
+    if (r.error) {
+      x.errored++;
+      c.errored++;
+      tally(x.errors, errorText(r.error));
+      tally(all, errorText(r.error));
+    }
+    byOpt.set(k, x);
+  }
+  const options = [...byOpt.values()].filter((x) => x.errored > threshold * x.branches)
+    .sort((a, b) => a.d - b.d || a.o - b.o).map((x) => ({ ...x, errors: sorted(x.errors) }));
+  return { branches: rows.length, errored: rows.filter((r) => r.error).length, threshold, byError: sorted(all), options };
+}
+
+/** D466: an errored option as a problem line. */
+export function erroredOptionProblem(x: ErroredOption): string {
+  const cont = Object.entries(x.byContinuation).map(([c, v]) => `${c} ${v.errored} of ${v.branches}`).join(', ');
+  const top = x.errors.slice(0, 3).map((e) => `${e.n} x ${e.error}`).join('; ');
+  return `d${x.d} option ${x.o} \`${x.token}\` (${x.label}): ${x.errored} of ${x.branches} branch game(s) errored (${cont}): ${top}${x.errors.length > 3 ? `; and ${x.errors.length - 3} other error text(s)` : ''}`;
 }
 
 /** The decisions where the two maps disagree most: lowest rank correlation first (null last), then a different best. */
@@ -615,7 +709,10 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const logA = (b: Record<string, unknown>, s: number): string => path.join(A, 'frames', `g${String(b.g)}-seat${s}.jsonl.gz`);
   const logBase = (_b: Record<string, unknown>, s: number): string => path.join(B, 'baseline', 'frames', `baseline-seat${s}.jsonl.gz`);
   const logBr = (b: Record<string, unknown>, s: number): string => path.join(B, 'frames', `d${String(b.decision)}-${String(b.continuation)}-o${String(b.option)}-b${String(b.branch)}-seat${s}.jsonl.gz`);
-  const rc = [checkRowsDir(path.join(A, 'rows'), logA), checkRowsDir(path.join(B, 'baseline', 'rows'), logBase), checkRowsDir(path.join(B, 'rows'), logBr)];
+  // D466: every frame log is read through one reader, which skips (and remembers) a log gunzip cannot inflate -- a worker the
+  // watchdog killed mid-branch leaves its two logs truncated -- instead of the whole check dying on it, and no atlas.json
+  const reader = frameLogReader();
+  const rc = [checkRowsDir(path.join(A, 'rows'), logA, reader.read), checkRowsDir(path.join(B, 'baseline', 'rows'), logBase, reader.read), checkRowsDir(path.join(B, 'rows'), logBr, reader.read)];
   for (const c of rc) problems.push(...c.problems);
   const frames: string[] = [];
   const branchFrames: string[] = [];
@@ -623,37 +720,51 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
     if (!fs.existsSync(d)) continue;
     for (const x of fs.readdirSync(d)) if (x.endsWith('.jsonl.gz')) (d === path.join(B, 'frames') ? branchFrames : frames).push(path.join(d, x));
   }
+  // the guardrails, read back from every random seat's log: phase A's, and the random branches'
+  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [], violationCount: { G1: 0, G4: 0 }, counted: {} };
+  let forgePayCap = 0;
+  for (const f of [...frames, ...branchFrames]) {
+    const base = path.basename(f);
+    const random = f.startsWith(path.join(A, 'frames')) || /^d\d+-random-/.test(base);
+    if (!random && !/^d\d+-forge-/.test(base)) continue;
+    const text = reader.read(f);
+    if (text === null) continue;   // D466: named below
+    if (random) guardrailCheck(text, base, gc);
+    else forgePayCap += forgePayCapOf(text);   // D465: the Forge seats' pay-cap passes
+  }
   // D460: a branch starts from a fork late in a game, and a short one can end with seat B's hand empty
   // in every frame -- nothing to redact.  Its logs pass --empty-hand-ok, which excuses the two coverage
   // checks only where the file proves that hand empty; phase A's games and the baseline pass nothing.
-  const redA = redactionCheck(repo, frames);
-  const redB = redactionCheck(repo, branchFrames, 100, ['--empty-hand-ok']);
+  // D466: a log the reader could not inflate is not sent (it is a problem of its own, below).
+  const readable = (f: string): boolean => !reader.unreadable.has(f);
+  const redA = redactionCheck(repo, frames.filter(readable));
+  const redB = redactionCheck(repo, branchFrames.filter(readable), 100, ['--empty-hand-ok']);
   const red = { checked: redA.checked + redB.checked, failed: [...redA.failed, ...redB.failed], ms: redA.ms + redB.ms };
   if (red.failed.length) problems.push(`${red.failed.length} frame log(s) failed tools/check-redaction.mjs: ${red.failed.slice(0, 5).map((x) => path.basename(x)).join(', ')}`);
+  const truncated = [...reader.unreadable].map(([f, why]) => ({ log: path.relative(out, f), why })).sort((a, b) => (a.log < b.log ? -1 : 1));
+  if (truncated.length) problems.push(`${truncated.length} frame log(s) could not be read (gzip: ${[...new Set(truncated.map((t) => t.why))].join('; ')}) and were left out of the checks -- a worker killed mid-branch leaves its logs truncated: ${truncated.slice(0, 5).map((t) => t.log).join(', ')}${truncated.length > 5 ? ', ...' : ''}`);
   frames.push(...branchFrames);
   const forkBad = bRows.filter((r) => r.forkProblems.length);
   if (forkBad.length) problems.push(`${forkBad.length} branch fork(s) were not the position: ${forkBad[0]?.key}: ${forkBad[0]?.forkProblems.join('; ')}`);
   const leak = bRows.filter((r) => r.leakSame !== undefined);
   const leaks = leak.filter((r) => !r.leakSame);
   if (leaks.length) problems.push(`${leaks.length} of ${leak.length} no-leak check(s) moved when only seat B's hidden cards did`);
-  // the guardrails, read back from every random seat's log: phase A's, and the random branches'
-  const gc: GuardrailCheck = { logs: 0, priority: 0, landOffered: 0, landTaken: 0, mulligans: 0, kept: 0, violations: [], counted: {} };
-  let forgePayCap = 0;
-  for (const f of frames) {
-    const base = path.basename(f);
-    if (f.startsWith(path.join(A, 'frames')) || /^d\d+-random-/.test(base)) guardrailCheck(readMaybeGz(f), base, gc);
-    else if (/^d\d+-forge-/.test(base)) forgePayCap += forgePayCapOf(readMaybeGz(f));   // D465: the Forge seats' pay-cap passes
-  }
   problems.push(...gc.violations.slice(0, 10));
+  // D466: the list is capped, the count is not
+  const vTotal = (gc.violationCount?.G1 ?? 0) + (gc.violationCount?.G4 ?? 0);
+  if (vTotal > Math.min(10, gc.violations.length)) problems.push(`${vTotal} guardrail violation(s) in all (G1 ${gc.violationCount?.G1 ?? 0}, G4 ${gc.violationCount?.G4 ?? 0}); the first ${Math.min(10, gc.violations.length)} named above`);
   const overCap = aRows.filter((r) => !r.engineError && (r.turns ?? 0) > o.turnCap + 1);
   if (overCap.length) problems.push(`${overCap.length} phase A game(s) ran past the turn cap`);
   const cappedNotDrawn = aRows.filter((r) => r.capped && r.winner !== 'draw');
   if (cappedNotDrawn.length) problems.push(`${cappedNotDrawn.length} capped game(s) not scored a draw`);
   const unitErrors = units.filter((u) => !u.ok);
   if (unitErrors.length) problems.push(`${unitErrors.length} unit(s) did not finish: ${unitErrors[0]?.id}: ${unitErrors[0]?.error}`);
-  const branchErrors = bRows.filter((r) => r.error);
+  const errored = bRows.filter((r) => r.error);
   // D465: a branch whose engine threw an Error (an OutOfMemoryError above all) is an engine error, counted on its own
   const branchEngineErrors = bRows.filter((r) => r.engineError).length;
+  // D466: an option whose branch games errored past the threshold is a problem, named with its error texts
+  const be = branchErrors(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
+  for (const x of be.options) problems.push(erroredOptionProblem(x));
   const retained = units.map((u) => u.copiesRetained).filter((x): x is number => typeof x === 'number');
   // the maps
   const byD = new Map<number, BranchRow[]>();
@@ -676,15 +787,20 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       decisions: ds,
       agreement: { decisions: complete.length, meanRho: rhoAll.mean, meanRhoInterval: [rhoAll.lo, rhoAll.hi], sameBest: same, sameBestInterval: Object.values(wilson(same, complete.length)) },
       disagreeMost: disagreements(ds).map((d) => ({ d: d.d, kind: d.kind, turn: d.turn, rho: d.rho, rhoInterval: [d.rhoLo, d.rhoHi], sameBest: d.sameBest, bestRandom: d.random.best, bestForge: d.forge.best })),
-      branchGames: bRows.length, branchErrors: branchErrors.length, branchEngineErrors, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
+      branchGames: bRows.length, branchErrors: errored.length, branchEngineErrors, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
       meanBranchMs: { random: meanMs(msOf('random')), forge: meanMs(msOf('forge')) },
       standInsMax: bRows.reduce((a, r) => Math.max(a, r.standIns), 0),
     } : null,
     checks: { rowsFiles: rc.reduce((a, c) => a + c.files, 0), rows: rc.reduce((a, c) => a + c.rows, 0), gamesIdChecked: rc.reduce((a, c) => a + c.games, 0),
       frameLogs: red.checked, frameLogsFailed: red.failed.length, redactionMs: red.ms, forks: bRows.length, forkProblems: forkBad.length,
       leakChecks: leak.length, leaks: leaks.length, leakControlsMoved: leak.filter((r) => r.controlMoved).length,
-      guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: gc.violations.length,
-        ...countedGuardrails(gc), forgePayCap },
+      // D466: `violations` is every violation (the problems name the first ten), `violationsBy` G1's and G4's
+      guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: vTotal,
+        violationsBy: { G1: gc.violationCount?.G1 ?? 0, G4: gc.violationCount?.G4 ?? 0 }, ...countedGuardrails(gc), forgePayCap },
+      // D466: the branch games that errored, by error text and by option past the threshold
+      branchErrors: be,
+      // D466: the frame logs gunzip could not read, left out of the checks
+      unreadableFrameLogs: truncated,
       // D465: the most branch copies any unit's worker still held after one GC at its end (null: no unit measured)
       copiesRetainedMax: retained.length ? Math.max(...retained) : null,
       problems },
@@ -703,7 +819,8 @@ interface AtlasDoc {
   phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; cappedRandom: number; cappedForge: number };
   checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
-      noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number } };
+      violationsBy?: { G1: number; G4: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number };
+    branchErrors?: BranchErrors; unreadableFrameLogs?: Array<{ log: string; why: string }> };
 }
 
 /**
@@ -781,7 +898,29 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   const c = doc.checks;
   L.push('## Checks', '');
   const g = c.guardrails;
-  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
+  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
+  const be = c.branchErrors;
+  if (be && be.errored) {
+    // D466: the branch errors, by text, and the options past the threshold
+    L.push(`### Branch games that errored`, '');
+    L.push(`${be.errored} of ${be.branches} branch game(s) errored and are left out of their option's value. By error text (ids as #):`, '');
+    L.push('| branch games | error |', '|---|---|');
+    for (const e of be.byError.slice(0, 20)) L.push(`| ${e.n} | ${e.error.replace(/\|/g, '/')} |`);
+    if (be.byError.length > 20) L.push(`| ... | ${be.byError.length - 20} more error text(s) |`);
+    L.push('');
+    if (be.options.length) {
+      L.push(`Options with more than ${pct(be.threshold)}% of their branch games errored (each a problem):`, '');
+      L.push('| decision | option | token | what | errored | random | forge | the commonest error |', '|---|---|---|---|---|---|---|---|');
+      for (const x of be.options) {
+        const cc = (k: string): string => (x.byContinuation[k] ? `${x.byContinuation[k].errored} / ${x.byContinuation[k].branches}` : '-');
+        L.push(`| d${x.d} | ${x.o} | \`${x.token}\` | ${x.label.replace(/\|/g, '/')} | ${x.errored} / ${x.branches} | ${cc('random')} | ${cc('forge')} | ${(x.errors[0]?.error ?? '').replace(/\|/g, '/')} |`);
+      }
+      L.push('');
+    } else L.push(`No option had more than ${pct(be.threshold)}% of its branch games errored.`, '');
+  }
+  if (c.unreadableFrameLogs?.length) {
+    L.push(`${c.unreadableFrameLogs.length} frame log(s) could not be read and were left out of the checks: ${c.unreadableFrameLogs.map((t) => `\`${t.log}\` (${t.why})`).join(', ')}.`, '');
+  }
   return `${L.join('\n')}\n`;
 }
 

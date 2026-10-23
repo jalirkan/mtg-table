@@ -37,6 +37,7 @@ import forge.ai.ComputerUtilCost;
 import forge.ai.PlayerControllerAi;
 import forge.ai.simulation.GameStateEvaluator;
 import forge.game.Game;
+import forge.game.GameActionUtil;
 import forge.game.GameEntity;
 import forge.game.GameObject;
 import forge.game.card.Card;
@@ -47,6 +48,8 @@ import forge.game.phase.PhaseHandler;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.spellability.AbilitySub;
+import forge.game.spellability.OptionalCost;
+import forge.game.spellability.OptionalCostValue;
 import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 import forge.util.MyRandom;
@@ -726,10 +729,16 @@ public final class SearchPolicy {
         if (found == null) {
             throw new IllegalStateException("no " + desc + " on the copy's " + hostCopy);
         }
-        if (orig.getOptionalCosts().iterator().hasNext()) {
-            throw new IllegalStateException("optional costs are not copied");
-        }
         found.setActivatingPlayer(aiCopy);
+        if (orig.getOptionalCosts().iterator().hasNext()) {
+            // D466: a play with an optional cost (retrace, kicker, buyback, jump-start, ...) is a copy of its base
+            // spell with the cost added (Forge's GameActionUtil.addOptionalCosts), and its description is the
+            // base's, so the description found the copy's base: add the same costs to it, as Forge's own
+            // simulation copier does (SpellAbilityChoiceCopier.copyCastChoices)
+            found = GameActionUtil.addOptionalCosts(found,
+                    chosenOptionalCosts(orig.getOptionalCosts(), GameActionUtil.getOptionalCostValues(found)));
+            found.setActivatingPlayer(aiCopy);
+        }
         found.setXManaCostPaid(orig.getXManaCostPaid());
         if (orig.getChosenList() != null) {
             final List<AbilitySub> choices = found.getAdditionalAbilityList("Choices");
@@ -766,6 +775,34 @@ public final class SearchPolicy {
             dst = dst.getSubAbility();
         }
         return found;
+    }
+
+    /**
+     * D466: of the optional costs Forge offers the copy's base spell
+     * ({@code GameActionUtil.getOptionalCostValues}), the ones the original play
+     * was built with, in Forge's order -- every one of them, or the play cannot
+     * be the same play on the copy (a retrace cast whose card is not in the
+     * copy's graveyard, say) and the mapping fails naming the cost.
+     */
+    static List<OptionalCostValue> chosenOptionalCosts(final Iterable<OptionalCost> paid,
+                                                       final List<OptionalCostValue> offered) {
+        final List<OptionalCostValue> out = new ArrayList<>();
+        final Set<OptionalCost> want = new java.util.LinkedHashSet<>();
+        for (final OptionalCost t : paid) {
+            want.add(t);
+        }
+        final Set<OptionalCost> got = new HashSet<>();
+        for (final OptionalCostValue v : offered) {
+            if (want.contains(v.getType()) && got.add(v.getType())) {
+                out.add(v);
+            }
+        }
+        for (final OptionalCost t : want) {
+            if (!got.contains(t)) {
+                throw new IllegalStateException("optional cost " + t + " is not offered on the copy");
+            }
+        }
+        return out;
     }
 
     // ==================================================================
