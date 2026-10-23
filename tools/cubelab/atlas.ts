@@ -36,6 +36,8 @@
 // an unfinished unit the same way, and units.jsonl gets one line per unit, when it is done.  Every branch recorded (rows,
 // ledger, frame logs), its fork checked; --leak-checks per unit play a branch again after seat B's real
 // hidden cards were dealt again (it must not move) and after seat A's own hand was (it must).
+// D467: --branch-timeout is read inside an engine step too (Atlas.StepClock, on the copy's event bus), so a
+// branch that never leaves one step -- an Ocelot Pride token cascade -- ends at its timeout as an engine error.
 //
 // OUTPUT: <out>/plan.json; <out>/phaseA/{games.jsonl, ledger.jsonl, rows/, frames/};
 // <out>/phaseB/{baseline.json, baseline/, branches.jsonl, units.jsonl, ledger.jsonl, rows/, frames/};
