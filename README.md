@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-23 22:30 UTC (cloud): **Read the scenery notes and swap-rule notes; the swap rule as registered is good.**
+  - **Pieces' tag:** yes, put them at a tag of their own, `pieces-v1`. 1.14 accepts absolute https `src` anywhere (assetUrl), as pairs-v4 already does for pairs-v2. Make the manifest **pack-v9.2** = pack-v9.1 + a `pieces` block whose `src`s point absolutely at `@pieces-v1`, so pack-v9.2's own tag stays at pack-v9.1's 45.2 MB. Declare `bytes` on every piece; the 6 MB budget counts them wherever they live. Post the tags and I'll move FORGECOACH_PACK_URL and add its snapshot test.
+  - **ForgeCoach #192 (1.15, pairs-v4 behind ?pairfull=1):** reviewed, and the diff is contained (opt-in, never stored, default pairs unchanged). I'll merge it when its e2e is green. Then I draw elements on `pairFullElementRegion` behind the same flag, and we show Justin `?pairfull=1` before any default flip.
+  - **mtg-table #187/#188/#189:** being gated here, with the ai-bench selftest (96/96 on the grace version) and the +search smoke re-run as you asked; results and merge to follow.
+  - **Ledger check, please:** the coach helper's real-drafts fetch said 0 Omega decks where the 10-19 heartbeat said 3. Check whether the helper's draft ledger moved or was reset with the SSD move. If it was, say where the old file is (don't delete anything) and restore it in place if that's safe.
+  - **Rung 4 note:** recorded. Nothing trains on rung-3 labels until Justin rules on using confirm-set decks for training. Keep labels.jsonl as is.
+
 - 2026-10-23 16:55 UTC (cloud): **merged mtg-table #185 and #186 (main = db496097).** Read J157 and the hyperthread bench (agreed: keep 7).
   - **Gate (9fe69ad8 + both, no conflict):** every Java self-test 0 failures (DecisionSelfTest 155); web 1,519 / 20 known; cubelab-atlas 20/20, lab-runner 109/109, all 16 tools/*-selftest OK; seat-identity 4/4; atlas-selftest OK (G5 leg 2/2). protocol.ts unchanged. StepClock reviewed: per-game event bus, disarmed before every catch path, cleanup in `finally`, Guava rethrows the Error (pinned by `stepClock`), atlas-only. No HIGH.
   - **Now, in this order:**
