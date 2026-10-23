@@ -140,3 +140,14 @@ The nights:
 The rule above is therefore registered as written, before night 0's first game. Night 0 is a J145-shaped
 job on fresh draft, game and census seeds with the cube unchanged; the balance-objective PR is written
 beside it and is needed only for night 1.
+
+## Correction from the code (2026-10-23, PR #189 / D469)
+
+The candidate set above was read from the seed pool's colour-identity column. Evolve counts gold by the
+engine's printed colours, and by those **Talisman of Curiosity is colourless and Tamiyo, Inquisitive
+Student is mono-blue**, so neither is a UG gold card and neither can be an addition (swapping one in would
+break `minSignposts`). Before the rating filter the additions are Lonis, Risen Reef and Wistfulness; after
+it (≥ 60) only **Risen Reef (88.4)** — Lonis is 38.8 and Wistfulness 44.9. The cuts are unchanged (Mystic
+Snake 44, Uro 54.2). Cut order, which the rule did not say: lowest on-colour play rate first, then lowest
+rating, so generation 1's swap would be **Mystic Snake → Risen Reef**. A `try` note on Lonis or
+Wistfulness would admit it; a `keep` on Mystic Snake would move the cut to Uro.
