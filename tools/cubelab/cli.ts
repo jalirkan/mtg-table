@@ -53,6 +53,9 @@
 //           [--record-all | --record-every N]                  record both batches' games (D315)
 //           [--explore on | --explore name=value]...           controlled exploration of low-rated cards (D356):
 //                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
+//           [--balance <balance.json>]                         balance mode (D469): one gold swap in the worst colour pair
+//                                                              of a J145-shaped read, --generations 1; knobs balanceMinGames=400
+//                                                              balanceSwaps=1 balanceBand=0.05 (--evolve)
 //   watch   <cube.md> [--format grid] [--seed S] [--games 3] [--drafter-a lab|forge-ranks|llm:<model>|human-picks:<f>] [--drafter-b ...]
 //           [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>]   (D440, D443, watch.ts)
 //           [--llm-max-usd 1] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   an llm: drafter's cap for the watch (D442)
@@ -84,7 +87,7 @@ import { LlmBudget, llmCapsOf, MAX_LLM_JOBS } from './llmdraft.ts';
 import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
 import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './playexplore.ts';
-import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
+import { BALANCE_KNOBS, EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 import { readJsonLines } from './lines.ts';
 import { watchCommand } from './watch.ts';
@@ -129,6 +132,7 @@ function usage(msg?: string): never {
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
                         [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
+                        [--balance <balance.json>]   (D469: balance mode, --generations 1)
        tools/cubelab.sh watch <cube.md> [--format grid] [--seed S] [--games 3]
                         [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<f>] [--drafter-b ...]   (one side at most not lab)
                         [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
@@ -418,15 +422,21 @@ async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<nu
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) usage(`--date wants YYYY-MM-DD, got ${date}`);
   if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
   const recordEvery = one(f, 'record-all') ? 1 : int(f, 'record-every', 0);
+  // D469: balance mode is opt-in by its read; its knobs mean nothing without one, and it decides one generation.
+  const balanceFile = one(f, 'balance') ?? null;
+  const balanceKnobs = (f.get('evolve') ?? []).filter((a) => (BALANCE_KNOBS as readonly string[]).includes(a.split('=')[0] ?? ''));
+  if (!balanceFile && balanceKnobs.length) usage(`${balanceKnobs.join(', ')}: the balance knobs need --balance <balance.json> (D469)`);
+  if (balanceFile && !fs.existsSync(balanceFile)) usage(`--balance ${balanceFile}: no such file`);
+  if (balanceFile && int(f, 'generations', 1) !== 1) usage('--balance decides one generation: give --generations 1 (D469; the read measured the cube going in)');
   const o = {
     cubeFile, poolFile, notesFile: fs.existsSync(notes) ? notes : null, generations: Math.max(1, int(f, 'generations', 1)),
     drafts: Math.max(1, int(f, 'drafts-per-gen', 30)), jobs, seed,
     out: labArg(REPO, one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`), 'write'),   // D450
     games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
     ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date, recordEvery,
-    explore: parseExploreArgs(f.get('explore') ?? []),
+    explore: parseExploreArgs(f.get('explore') ?? []), balanceFile,
   };
-  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}${recordEvery ? `, recording ${recordEvery === 1 ? 'every game' : `every game of every ${recordEvery}th draft`} (both chairs, both batches)` : ''}${o.explore ? `, exploring ${o.explore.share} of the discovery drafts (D356: cap ${o.explore.cap}, gold ${o.explore.gold}, margin ${o.explore.margin}, minDecks ${o.explore.minDecks})` : ''}`);
+  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), ${balanceFile ? `balance mode on ${balanceFile} (D469: at most ${knobs.balanceSwaps} balance swap(s), no other rule swaps)` : `at most ${knobs.swaps} swap(s) a generation`}, out ${o.out}${recordEvery ? `, recording ${recordEvery === 1 ? 'every game' : `every game of every ${recordEvery}th draft`} (both chairs, both batches)` : ''}${o.explore ? `, exploring ${o.explore.share} of the discovery drafts (D356: cap ${o.explore.cap}, gold ${o.explore.gold}, margin ${o.explore.margin}, minDecks ${o.explore.minDecks})` : ''}`);
   await evolve(env, o, say);
   return 0;
 }
