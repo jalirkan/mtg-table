@@ -103,18 +103,53 @@ Deviations:
 
 Each pair's horizon is the same at all three stages, because each pair's stages are one composition.
 
-## panoramas-v1: stage 3 (batch 1)
+## panoramas-v1: ten pairs × three stages, and the WUB triple (batch 2)
 
-| Pair | Stage | Hour | Key | Horizon | Notes |
+Written by the panoramas lane at the end of batch 2. Every value was read off the picture itself on a 5% grid (`work/grid-*.jpg` in `panoramas-v1/`), not taken from the crop band. Desktop pictures are 3277 × 640 (1.6 × 16:5); phone pictures are 1638 × 1280 (1.28:1, the desktop picture as a band at 0.35–0.60 with sky and ground continued). The same records are in the draft `serve/pairs-panorama/pairs.json`, beside each stage's `panorama` (`horizon`, `hour`, `key`, `skyline` where given, and `phone.horizon`).
+
+| Pair | Stage | Hour | Key | Horizon desktop / phone | Notes |
 |---|---|---|---|---|---|
-| forest+swamp | 3 | 21:00 | night | 0.47 | violet night, lantern glows. Stages 1-2: batch 2, not painted yet. |
-| island+mountain | 3 | 21:30 | night | 0.45 | purple night, eruptions (pairs-v2 s3 of this pair is dusk). Stages 1-2: batch 2, not painted yet. |
-| island+plains | 3 | 21:00 | night | 0.46 | aurora night (pairs-v2 s3 of this pair is dusk). Stages 1-2: batch 2, not painted yet. |
-| plains+swamp | 3 | 22:00 | night | 0.47 | overcast night, moon. Stages 1-2: batch 2, not painted yet. |
+| island+plains | 1 | 08:00 | morning | 0.47 / 0.47 | grey overcast morning, the same coast paler |
+| island+plains | 2 | 15:00 | afternoon | 0.47 / 0.47 | lilac afternoon |
+| island+plains | 3 | 21:00 | night | 0.47 / 0.47 | aurora night over the frozen coast |
+| island+mountain | 1 | 07:00 | dawn | 0.47 (skyline 0.21) / 0.48 | violet dawn, the eruption quieter |
+| island+mountain | 2 | 16:00 | afternoon | 0.47 (skyline 0.21) / 0.48 | purple-grey afternoon, the eruption still going |
+| island+mountain | 3 | 21:30 | night | 0.47 (skyline 0.21) / 0.48 | purple night, the cone and the plume lit by lava |
+| forest+swamp | 1 | 08:00 | morning | 0.5 / 0.48 | misty morning, bright haze between the trunks |
+| forest+swamp | 2 | 15:00 | afternoon | 0.5 / 0.48 | green-grey overcast afternoon |
+| forest+swamp | 3 | 21:00 | night | 0.5 / 0.48 | violet night, glowing moss and lights in the trees |
+| plains+swamp | 1 | 09:00 | morning | 0.52 / 0.49 | grey overcast morning; it keeps the crescent moon and a few stars (a waning moon at dawn) |
+| plains+swamp | 2 | 18:00 | dusk | 0.52 / 0.49 | blue-grey dusk with the moon -- EXCEPTION: pairs-v2's own stage-2 palette for this pair is dusk, and the stage-2 transfer follows it |
+| plains+swamp | 3 | 22:00 | night | 0.52 / 0.49 | moonlit night, crescent moon, the marble shrine pale |
+| forest+island | 1 | 08:00 | morning | 0.46 (skyline 0.33) / 0.47 | green-gold morning mist, a low sun in the jungle |
+| forest+island | 2 | 16:00 | afternoon | 0.46 (skyline 0.33) / 0.47 | pink-gold late afternoon, the sun low behind the far island |
+| forest+island | 3 | 20:00 | dusk | 0.46 (skyline 0.33) / 0.47 | magenta twilight, the sun's last glow behind the far island, the lagoon glowing |
+| forest+mountain | 1 | 07:00 | dawn | 0.45 (skyline 0.25) / 0.46 | pink dawn haze over the peaks; phone: the invented sky holds a far snowy range on its own ground line at ~0.36 |
+| forest+mountain | 2 | 15:00 | afternoon | 0.45 (skyline 0.25) / 0.46 | hazy amber afternoon; phone: a far snowy range at ~0.36 |
+| forest+mountain | 3 | 19:30 | dusk | 0.45 (skyline 0.25) / 0.46 | red sunset sky, lava light on the peaks, smoke along the treeline; phone: a far snowy range at ~0.36 |
+| forest+plains | 1 | 07:00 | dawn | 0.45 / 0.47 | lilac dawn, the sun low between the trunks |
+| forest+plains | 2 | 15:00 | afternoon | 0.45 / 0.47 | golden afternoon |
+| forest+plains | 3 | 19:00 | dusk | 0.45 / 0.47 | sunset: the sun on the horizon between the trunks, gold over the savannah |
+| island+swamp | 1 | 09:00 | morning | 0.5 / 0.52 | cavern: pale lilac daylight in the openings |
+| island+swamp | 2 | 16:00 | afternoon | 0.5 / 0.52 | cavern: dim teal-violet, late |
+| island+swamp | 3 | 21:00 | night | 0.5 / 0.52 | cavern: violet night through the openings, the water glowing; the horizon is the cave's far waterline |
+| mountain+plains | 1 | 08:00 | morning | 0.47 (skyline 0.38) / 0.47 | pale pink morning over the mesas |
+| mountain+plains | 2 | 16:00 | afternoon | 0.47 (skyline 0.38) / 0.47 | amber-pink late afternoon |
+| mountain+plains | 3 | 19:00 | dusk | 0.47 (skyline 0.38) / 0.47 | fiery sunset sky, gold on the far rim, mesa tops at the skyline |
+| mountain+swamp | 1 | 07:00 | dawn | 0.47 (skyline 0.37) / 0.47 | pink-grey dawn haze, smoke |
+| mountain+swamp | 2 | 16:00 | afternoon | 0.47 (skyline 0.37) / 0.47 | hazy amber afternoon |
+| mountain+swamp | 3 | 21:30 | night | 0.47 (skyline 0.37) / 0.47 | red night sky, embers in the cracks, buttes glowing |
+| island+plains+swamp | 3 | 21:00 | night | 0.48 / – | violet night over the frozen coast and the bog channel (WUB triple test, desktop only) |
 
-All four panoramas are night. Two of them, **island+mountain and island+plains, are later than their own pairs-v2 s3 (dusk)**.
+The panoramas run on the pair ladder: **stage 1 dawn or morning (07:00-09:00), stage 2 afternoon (15:00-16:00), stage 3 dusk (19:00-20:00) or night (21:00-22:00)**. Six pairs end at night (island+plains, island+mountain, forest+swamp, plains+swamp, island+swamp, mountain+swamp) and four at dusk (forest+island, forest+mountain, forest+plains, mountain+plains).
 
-Stages 1–2 arrive with batch 2, and their rows get added here when they land. Measure each one off its picture the same way.
+Deviations:
+
+- **plains+swamp stage 2 is dusk (18:00)**, as in pairs-v2: its stage-2 palette is pairs-v2's own, which is already dusk. Its stage 1 keeps the crescent moon (a waning moon at dawn).
+- island+mountain and island+plains end at night, later than their pairs-v2 stage 3 (dusk), as batch 1 recorded.
+- **island+swamp is a cavern**: the hour is read off the openings in the vault, and its horizon is the far waterline.
+
+Each pair's horizon is the same at all three stages, because stages 1-2 are repainted over the stage-3 pick (0.45-0.52 desktop). The phone horizons sit at 0.46-0.52, because the desktop picture is the phone's band at 0.35-0.60. forest+mountain's phone sky holds a second, far range on its own ground line at about 0.36.
 
 ## For the light pass
 
