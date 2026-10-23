@@ -1,0 +1,4 @@
+step run4 exited 1
+
+==== J156 run4 started 2026-10-23T05:27:03-04:00 in unit lab-J156-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+cp: cannot stat '/home/justin-a/code/lab/data/lab-j150/b-vintage7-458/atlas.json': No such file or directory
