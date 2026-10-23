@@ -1016,3 +1016,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J156/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 6fb13bf
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J157 FAILED: The move atlas, rung 2's vintage pair again on the fixed tool -- vintage-900000007 x three Forge-vs-Forge spine games at J156's seeds 458-460; phase A 2,400 random-vs-random rollouts; phase B 16 decisions a spine, every option forked 200 times random and 40 times Forge; on 9fe69ad8 (D466: the fork carries optional costs, branch errors are problems, G1 reads one land listing, a refused cast's card is put back, a truncated frame log is skipped); J156's reads, numbers only, read side by side with J156's vintage numbers and never pooled. Method only, no outcome rule beyond D451's
+
+- finished: 2026-10-23T11:39:55-04:00
+- decides: nothing by itself. The vintage pair of rung 2 as J156 meant it: J156's vintage numbers rest on spine 458 at 9 of 16 complete decisions (retrace casts that did not fork), G1 flags that were the checker's, and a hand repair; this is the same pair at the same seeds on the fixed tool, so its reads stand on their own, beside J156's
+- hypothesis: none to confirm about the maps. J156's vintage reads are the comparison: (i) same best 0.393 [0.214, 0.583] over 28, (ii) rho -0.028 [-0.400, 0.412] over 21; read side by side, never pooled (D466 point 4 changed the random policy)
+- rule: D451 (method; no outcome rule) with D458 and D462 (G5) as D466 amends them, D459 (unit watchdog) and D466. Pre-registered here, before any J157 data: J156's reads (i)-(vi) over the three vintage spines and the side-by-side against J156's vintage numbers, computed by var/lab-j157-local/bin/reads.py exactly as written in the pilot. No read carries a verdict: (iv)'s HOLDS / NOT SHOWN was registered for the repeat pair (fair-fight-900000005) only, which J157 does not play
+- outcome: failed (check: unit_errors == 0 (unit_errors = 1); atlas.unitsShort == 0 (atlas.unitsShort = 1); atlas.problems == 0 (atlas.problems = 2))
+- headline: played_a_vintage7 2400, branches 33550, atlas.spinesDone 3, atlas.decisions 43, atlas.meanRho -0.001, atlas.sameBest 17, atlas.branchErrored 288, atlas.truncatedLogs 2, atlas.problems 2
+- summary: results/J157/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 9fe69ad
+- follow-up: template morning-read: not due (the job did not finish done)
