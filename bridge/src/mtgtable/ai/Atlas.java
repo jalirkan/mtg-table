@@ -32,6 +32,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+import com.google.common.eventbus.Subscribe;
+
 import forge.game.Game;
 import forge.game.GameEndReason;
 import forge.game.card.Card;
@@ -97,6 +99,17 @@ import mtgtable.SeatRecorder;
  * handed to {@link Unit#onBranch} as it ends, so a worker that dies outright
  * loses none of the branches it finished.
  *
+ * <p><b>A branch that never comes back from one engine step</b> (D467): the
+ * branch's deadline is read between {@code mainLoopStep} calls AND by a
+ * {@link StepClock} on the copy's event bus, which throws {@link BranchTimeout}
+ * from inside the step once the deadline has passed.  J156/J157's
+ * {@code d9-random-o0-b165} on the vintage pair spent 30 minutes inside one
+ * step: eighteen Ocelot Prides' end-step triggers, each copying every token
+ * that entered this turn, doubling a battlefield of thousands while every token
+ * scans every card for replacements.  The branch is scored as an engine error
+ * ({@code timedOut} and {@code engineError}), as D465's caught {@code Error}s
+ * are, and the unit goes on.
+ *
  * <p>Threads: the hook runs on the game thread, inside the seat's decision
  * callback (and inside {@code Decisions.quiet}); the copies are played on the
  * same thread, as the search plays its rollouts.  No hop, no thread.
@@ -134,6 +147,70 @@ public final class Atlas {
     public static String heapInUse() {
         final Runtime rt = Runtime.getRuntime();
         return ((rt.totalMemory() - rt.freeMemory()) >> 20) + " MB of " + (rt.maxMemory() >> 20) + " MB";
+    }
+
+    /**
+     * D467: the branch's deadline, read INSIDE an engine step.  A subscriber
+     * on the copy's event bus: every event the copy fires (a token entering is
+     * one) reads the clock, and past the deadline it throws {@link BranchTimeout}
+     * back through {@code Game.fireEvent} into the step -- Guava's
+     * {@code Subscriber.invokeSubscriberMethod} rethrows a subscriber's
+     * {@code Error} as itself (javap, the pinned 2.0.14 jar: offsets 84-102),
+     * where an {@code Exception} would be logged and swallowed.  Disarmed once
+     * the branch's loop has ended, so the copy's own ending (its
+     * {@code setGameOver}, the recorders' last frames) fires events freely.
+     * A step that fires no event at all still reaches the unit's watchdog; none
+     * has been seen.
+     */
+    public static final class StepClock {
+        private final long deadline;
+        private boolean armed = true;
+        /** The events read (while armed). */
+        public long events;
+
+        public StepClock(final long deadline) {
+            this.deadline = deadline;
+        }
+
+        @Subscribe
+        public void tick(final Object event) {
+            if (!armed) {
+                return;
+            }
+            events++;
+            if (System.nanoTime() > deadline) {
+                throw new BranchTimeout(events);
+            }
+        }
+
+        /** The branch's loop is over: let the copy end without the clock. */
+        public void disarm() {
+            armed = false;
+        }
+    }
+
+    /**
+     * D467: a branch's deadline passed inside one engine step.  An {@code Error}
+     * so that it crosses Guava's dispatch and Forge's {@code catch (Exception)}
+     * blocks; no stack trace, it is thrown on every event once due.
+     */
+    public static final class BranchTimeout extends Error {
+        private static final long serialVersionUID = 1L;
+
+        BranchTimeout(final long events) {
+            super("the branch's deadline passed inside one engine step (" + events + " events into its play)", null, false,
+                    false);
+        }
+    }
+
+    /** D467: the {@link BranchTimeout} in {@code t}'s cause chain (Forge wraps some throws), or null. */
+    public static BranchTimeout timeoutIn(final Throwable t) {
+        for (Throwable c = t; c != null; c = c.getCause() == c ? null : c.getCause()) {
+            if (c instanceof BranchTimeout) {
+                return (BranchTimeout) c;
+            }
+        }
+        return null;
     }
 
     /** D465: a branch's key in {@link Unit#skip}. */
@@ -549,6 +626,9 @@ public final class Atlas {
         final List<SeatRecorder> recs = new ArrayList<>();
         Game copy = null;
         Player aiCopy = null;
+        StepClock clock = null;
+        PhaseHandler ph = null;
+        int steps = 0;
         try {
             final LenientGameCopier cp = new LenientGameCopier(game);
             copy = SearchPolicy.copyForAtlas(cp, ai);
@@ -595,9 +675,10 @@ public final class Atlas {
                             seed, unit.jarSha, unit.seats, "lab", lab, explore));
                 }
             }
-            final PhaseHandler ph = copy.getPhaseHandler();
+            ph = copy.getPhaseHandler();
             final long deadline = t0 + unit.branchTimeoutMs * 1_000_000L;
-            int steps = 0;
+            clock = new StepClock(deadline);
+            copy.subscribeToEvents(clock);   // D467: the deadline inside a step, too
             while (!copy.isGameOver() && ph.getTurn() <= unit.turnCap && steps < MAX_STEPS) {
                 if ((steps & 15) == 0 && System.nanoTime() > deadline) {
                     b.timedOut = true;
@@ -606,6 +687,7 @@ public final class Atlas {
                 ph.mainLoopStep();
                 steps++;
             }
+            clock.disarm();
             b.steps = steps;
             b.turns = ph.getTurn();
             if (!copy.isGameOver()) {
@@ -620,11 +702,27 @@ public final class Atlas {
                 r.finish();
             }
         } catch (final RuntimeException | IOException e) {
-            b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            if (clock != null) {
+                clock.disarm();
+            }
+            final BranchTimeout bt = timeoutIn(e);
+            if (bt != null) {
+                // D467: Forge wrapped the clock's throw (AbilityFactory does) -- still the deadline, still an engine error
+                timedOutInStep(b, bt, ph, steps);
+            } else {
+                b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            }
             for (final SeatRecorder r : recs) {
                 r.crashed();
             }
         } catch (final Error e) {
+            if (clock != null) {
+                clock.disarm();
+            }
+            if (e instanceof BranchTimeout) {
+                // D467: the deadline passed inside one engine step -- the copy is mid-resolution, let go like an Error's
+                timedOutInStep(b, (BranchTimeout) e, ph, steps);
+            }
             // D465: an Error (OutOfMemoryError above all) ends this branch, never the unit: the copy and its
             // ledger are let go here, the row says so, and the hook decides whether the worker can go on
             copy = null;
@@ -632,7 +730,9 @@ public final class Atlas {
             b.ledger = null;
             b.engineError = true;
             b.oom = e instanceof OutOfMemoryError;
-            b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            if (b.error == null) {
+                b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            }
             for (final SeatRecorder r : recs) {
                 try {
                     r.crashed();
@@ -670,6 +770,27 @@ public final class Atlas {
             b.ms = (System.nanoTime() - t0) / 1_000_000L;
         }
         return b;
+    }
+
+    /**
+     * D467: a branch stopped inside one engine step: timed out, and an engine
+     * error (its copy is mid-resolution, so it has no result) -- the row's
+     * error says where it stood.
+     */
+    static void timedOutInStep(final Branch b, final BranchTimeout bt, final PhaseHandler ph, final int steps) {
+        b.timedOut = true;
+        b.engineError = true;
+        b.steps = steps;
+        String at = "";
+        try {
+            if (ph != null) {
+                b.turns = ph.getTurn();
+                at = " at turn " + ph.getTurn() + " " + ph.getPhase();
+            }
+        } catch (final RuntimeException e) {
+            // the copy is mid-resolution; where it stood is a courtesy
+        }
+        b.error = "BranchTimeout: " + bt.getMessage() + at + ", step " + steps;
     }
 
     /** The playExplore header of a random-seat recording: D358's three keys, as the redaction checker expects. */

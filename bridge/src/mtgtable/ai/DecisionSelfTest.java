@@ -387,11 +387,84 @@ public final class DecisionSelfTest {
         g5Planted(r);
         optionalCosts();
         payCap();
+        stepClock();
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
         check(b != Atlas.branchSeed(451, 3, 8) && b != Atlas.branchSeed(451, 4, 7) && b != Atlas.branchSeed(452, 3, 7),
                 "branch seeds differ by branch, decision and atlas");
+    }
+
+    /**
+     * D467: the branch kill, planted without the engine.  A "step" that never
+     * comes back -- it fires events forever, as the Ocelot Pride cascade fires
+     * a zone change per token -- posting to a Guava {@code EventBus} built as
+     * {@code forge.game.Game} builds its own ({@code new EventBus("game
+     * events")}), with a nested post inside dispatch as Forge's handlers make,
+     * and a {@link Atlas.StepClock} subscribed: the clock must throw the step
+     * out soon after its deadline, through {@code post}.  Its controls: an
+     * {@code Exception} from a subscriber does NOT reach the poster (Guava logs
+     * and swallows it -- why the clock throws an {@code Error}); a disarmed
+     * clock throws nothing; the clock's throw is found inside a Forge wrapper.
+     * The planted step is bounded at 10 s, so a clock that never fires fails
+     * this check instead of hanging the build.
+     */
+    private static void stepClock() {
+        final com.google.common.eventbus.EventBus bus = new com.google.common.eventbus.EventBus("game events");
+        bus.register(new Object() {
+            @com.google.common.eventbus.Subscribe
+            public void nest(final Integer token) {
+                bus.post("entered " + token);   // a handler that fires another event, queued inside this dispatch
+            }
+        });
+        bus.post(Integer.valueOf(-1));   // Guava's classes loaded before the clock starts
+        final long t0 = System.nanoTime();
+        final Atlas.StepClock clock = new Atlas.StepClock(t0 + 100_000_000L);   // 100 ms
+        bus.register(clock);
+        long posted = 0;
+        Atlas.BranchTimeout caught = null;
+        try {
+            while (System.nanoTime() - t0 < 10_000_000_000L) {
+                bus.post(Integer.valueOf((int) posted));
+                posted++;
+            }
+        } catch (final Atlas.BranchTimeout e) {
+            caught = e;
+        }
+        final long ms = (System.nanoTime() - t0) / 1_000_000L;
+        check(caught != null && ms < 2_000 && posted > 0 && clock.events > posted,
+                "D467: a step that never comes back is thrown out by the clock through EventBus.post (" + ms + " ms, "
+                        + posted + " posts, " + clock.events + " events read)");
+        check(caught != null && caught.getStackTrace().length == 0 && caught.getMessage().contains("inside one engine step"),
+                "D467: the clock's throw names where the deadline passed, without a stack trace");
+        // control: a subscriber's Exception never reaches the poster -- the reason the clock is an Error
+        final com.google.common.eventbus.EventBus quiet = new com.google.common.eventbus.EventBus("d467 control");
+        java.util.logging.Logger.getLogger(com.google.common.eventbus.EventBus.class.getName() + ".d467 control")
+                .setLevel(java.util.logging.Level.OFF);
+        quiet.register(new Object() {
+            @com.google.common.eventbus.Subscribe
+            public void refuse(final Object e) {
+                throw new IllegalStateException("swallowed");
+            }
+        });
+        boolean reached = false;
+        try {
+            quiet.post("x");
+        } catch (final RuntimeException e) {
+            reached = true;
+        }
+        check(!reached, "D467's control: Guava swallows a subscriber's Exception, so a RuntimeException could never end a step");
+        clock.disarm();
+        boolean threw = false;
+        try {
+            bus.post(Integer.valueOf(-1));
+        } catch (final Atlas.BranchTimeout e) {
+            threw = true;
+        }
+        check(!threw, "D467: a disarmed clock lets the copy end (setGameOver, the recorders' last frames) past its deadline");
+        check(caught != null && Atlas.timeoutIn(new RuntimeException("AbilityFactory:getAbility: crash", caught)) == caught
+                && Atlas.timeoutIn(new RuntimeException("an engine bug")) == null,
+                "D467: the clock's throw is found inside a Forge wrapper, and only there");
     }
 
     /**
