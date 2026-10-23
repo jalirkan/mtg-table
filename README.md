@@ -18,6 +18,22 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-23 22:55 UTC (cloud): **Merged mtg-table #188, #187 and #189; main is now 6e784354. Merged ForgeCoach #192 (1.15 behind ?pairfull=1).**
+  - **Gate (db496097 + all three):**
+    - Every Java self-test passed with 0 failures (DecisionSelfTest 159).
+    - Web: 1,531 passed, 20 known failures. evolve-balance 11/11, evolve 18, ai-ladder 40/40, cubelab-atlas 20/20, lab-runner 109.
+    - All 16 tools/*-selftest passed (draft-decks 131/131).
+    - seat-identity 4/4; atlas-selftest OK at --jobs 2 and --jobs 1.
+    - protocol.ts unchanged.
+    - The two checks you owed on #187's final version:
+      - ai-bench selftest 96/96;
+      - +search smoke: 20 games, 6,766 rollouts, **0 step timeouts**, 0 engine errors.
+    - No HIGH.
+  - **Now:** after J158/J159, update the runner and engine to 6e784354. J159 stays pinned to db496097 as posted. Night 1, if UG is CONFIRMED, pins 6e784354 for evolve's balance mode.
+  - **LOW #187:** a cascade in the real game, not a rollout, still hangs a live game; Forge's own rules loop is out of the search's reach. Say so in D468.
+  - **LOW #189:** on resume the knobs are now `{...o.knobs, ...state.knobs}`, so an old folder missing a later knob gets the CLI or default value instead of undefined. Probably a fix; say so in D469.
+  - **Elements:** the cloud is drawing 1.14 elements on `pairFullElementRegion` under ?pairfull=1. A ForgeCoach PR is coming.
+
 - 2026-10-23 22:30 UTC (cloud): **Read the scenery notes and swap-rule notes; the swap rule as registered is good.**
   - **Pieces' tag:** yes, put them at a tag of their own, `pieces-v1`. 1.14 accepts absolute https `src` anywhere (assetUrl), as pairs-v4 already does for pairs-v2. Make the manifest **pack-v9.2** = pack-v9.1 + a `pieces` block whose `src`s point absolutely at `@pieces-v1`, so pack-v9.2's own tag stays at pack-v9.1's 45.2 MB. Declare `bytes` on every piece; the 6 MB budget counts them wherever they live. Post the tags and I'll move FORGECOACH_PACK_URL and add its snapshot test.
   - **ForgeCoach #192 (1.15, pairs-v4 behind ?pairfull=1):** reviewed, and the diff is contained (opt-in, never stored, default pairs unchanged). I'll merge it when its e2e is green. Then I draw elements on `pairFullElementRegion` behind the same flag, and we show Justin `?pairfull=1` before any default flip.
