@@ -83,6 +83,13 @@
 //
 // Every number is a knob in EVOLVE_DEFAULTS (`--evolve name=value`), recorded in
 // <out>/evolve.json and documented in docs/guides/cube-lab.md's *Evolve*.
+//
+// BALANCE MODE (D469, `evolve --balance <balance.json>`, evolve-balance.ts) is a
+// fourth rule, `balance`, and the only one that swaps in that mode: one cut of
+// the worst colour pair's gold cards for one of the pool's gold cards of the
+// same pair, chosen from a J145-shaped balance read.  Its knobs (balanceMinGames,
+// balanceSwaps, balanceBand) are recorded only when the mode is on
+// (recordedKnobs), so an evolve without it writes the evolve.json it always did.
 
 import type { Fact } from './cards.ts';
 import { producesOf } from './cards.ts';
@@ -95,6 +102,7 @@ import { initialRating } from './ratings.ts';
 import { benjaminiHochberg, binomLower, binomUpper, designEffect, holm, requiredN, type DeckGames } from './evolve-stats.ts';
 import { playedDeck, wilson, type CardInfo } from './report.ts';
 import type { DraftRecord, RunMeta } from './run.ts';
+import type { BalanceDecision, BalanceEvidence } from './evolve-balance.ts';
 
 export interface EvolveKnobs {
   swaps: number;
@@ -128,6 +136,12 @@ export interface EvolveKnobs {
   fitTry: number;
   dominantReplaceRatio: number;
   humanTest: number;
+  /** D469 (balance mode only): a colour pair qualifies for the balance objective at this many drafted deck-games. */
+  balanceMinGames: number;
+  /** D469: at most this many balance swaps a generation. */
+  balanceSwaps: number;
+  /** D469: a payoff cell is OFF outside [0.5 - band, 0.5 + band] with its interval excluding 0.5 (J145's band). */
+  balanceBand: number;
 }
 
 export const EVOLVE_DEFAULTS: EvolveKnobs = {
@@ -161,7 +175,23 @@ export const EVOLVE_DEFAULTS: EvolveKnobs = {
   fitTry: 20,
   dominantReplaceRatio: 0.9,
   humanTest: 10,
+  balanceMinGames: 400,
+  balanceSwaps: 1,
+  balanceBand: 0.05,
 };
+
+/** D469: the balance mode's own knobs, recorded in evolve.json only when the mode is on. */
+export const BALANCE_KNOBS = ['balanceMinGames', 'balanceSwaps', 'balanceBand'] as const;
+export type BalanceKnob = (typeof BALANCE_KNOBS)[number];
+/** The knobs as evolve.json records them: without the balance mode's when it is off, so such a folder is byte for byte what it was. */
+export type RecordedKnobs = Omit<EvolveKnobs, BalanceKnob> & Partial<Pick<EvolveKnobs, BalanceKnob>>;
+
+export function recordedKnobs(k: EvolveKnobs, balanceOn: boolean): RecordedKnobs {
+  if (balanceOn) return { ...k };
+  const out: Partial<EvolveKnobs> = { ...k };
+  for (const b of BALANCE_KNOBS) delete out[b];
+  return out as RecordedKnobs;
+}
 
 export function mergeKnobs(base: EvolveKnobs, args: string[]): EvolveKnobs {
   const out: EvolveKnobs = { ...base };
@@ -173,6 +203,9 @@ export function mergeKnobs(base: EvolveKnobs, args: string[]): EvolveKnobs {
     out[k] = Number(m[2]);
   }
   if (out.confirmPool !== 0 && out.confirmPool !== 1) throw new Error(`--evolve confirmPool is 0 (D331) or 1 (D357), got ${out.confirmPool}`);
+  if (!(Number.isInteger(out.balanceMinGames) && out.balanceMinGames >= 1)) throw new Error(`--evolve balanceMinGames is a whole number of deck-games, at least 1, got ${out.balanceMinGames}`);
+  if (!(Number.isInteger(out.balanceSwaps) && out.balanceSwaps >= 1)) throw new Error(`--evolve balanceSwaps is a whole number, at least 1, got ${out.balanceSwaps}`);
+  if (!(out.balanceBand > 0 && out.balanceBand < 0.5)) throw new Error(`--evolve balanceBand is in (0, 0.5), got ${out.balanceBand}`);
   return out;
 }
 
@@ -520,7 +553,7 @@ export function balanceOf(meta: MetaDoc): Balance {
 }
 
 /** 0..1: how far a group's shrunk win rate sits below the mean (a tenth below is 1). */
-function needOf(groups: Group[], mean: number): Map<string, number> {
+export function needOf(groups: Group[], mean: number): Map<string, number> {
   return new Map(groups.filter((g) => g.games > 0).map((g) => [g.key, Math.max(0, Math.min(1, (mean - g.shrunk) / 0.1))]));
 }
 
@@ -985,16 +1018,21 @@ export function ruleWords(t: RuleTest): string {
 
 // ------------------------------------------------------------------ choosing the swaps
 
+/** Why a card went: its status, or (D469, balance mode) the balance rule. */
+export type SwapRule = Status | 'balance';
+
 export interface Swap {
   out: string;
   outSection: string;
   in: string;
   inSection: string;
-  /** Why the card went: its status. */
-  why: Status;
+  /** Why the card went: its status, or `balance` (D469). */
+  why: SwapRule;
   evidence: string;
   /** Why this card came in. */
   fit: string;
+  /** D469: a balance swap's evidence, as numbers (absent on every other rule's swap). */
+  balance?: BalanceEvidence;
 }
 
 export interface Decision {
@@ -1013,7 +1051,7 @@ export interface Decision {
   /** dominant-win's null: D331's batch mean, or D377's colour-adjusted expectation.  Absent: the mean. */
   winNull?: WinNull;
   /** Cuts the evidence supported that found no replacement keeping the constraints. */
-  unmatched: Array<{ name: string; why: Status; reason: string }>;
+  unmatched: Array<{ name: string; why: SwapRule; reason: string }>;
   /** Leads that did not pass their threshold. */
   watch: Assessment[];
   aiLimited: Assessment[];
@@ -1023,6 +1061,8 @@ export interface Decision {
   verdict: string;
   violationsBefore: string[];
   violationsAfter: string[];
+  /** D469: the balance rule's read, target, candidate set and outcome (absent: balance mode off). */
+  balance?: BalanceDecision;
 }
 
 export interface SelectInput {
@@ -1043,11 +1083,14 @@ export interface SelectInput {
   confirmation?: ConfirmInput;
   /** dominant-win's null, discovery and confirmation alike: D331's mean (absent), or D377's colour pairs (a run started after D377). */
   winNull?: WinNull;
+  /** D469 (balance mode): no cut of the AI rules or the notes is made; each goes to `unmatched` with this reason. */
+  holdCuts?: string;
 }
 
-interface Candidate { card: PoolCard; score: number; parts: string }
+export interface Candidate { card: PoolCard; score: number; parts: string }
 
-function fit(cut: EvolveCard, why: Status, cand: PoolCard, need: { theme: Map<string, number>; colour: Map<string, number> }, tryIt: boolean, k: EvolveKnobs): Candidate {
+/** A pool card's fit with the card it would replace (the guide's *The swaps*). */
+export function fit(cut: EvolveCard, why: SwapRule, cand: PoolCard, need: { theme: Map<string, number>; colour: Map<string, number> }, tryIt: boolean, k: EvolveKnobs): Candidate {
   const same = colourClass(cand) === colourClass(cut);
   const themes = cand.themes.filter((t) => cut.themes.includes(t));
   const roles = cand.roles.filter((r) => cut.roles.includes(r));
@@ -1097,12 +1140,7 @@ export function selectSwaps(x: SelectInput): Decision {
   const need = { theme: needOf(x.balance.themes, mean), colour: needOf(x.balance.colours, mean) };
   const inCube = new Set(x.cards.map((c) => c.name));
   const themeCodes = new Set(Object.keys(x.cube.themeNames));
-  const tries = new Set([...x.notes.values()].filter((n) => n.verdict === 'try').map((n) => n.card));
-  const noteCut = new Set([...x.notes.values()].filter((n) => n.verdict === 'cut').map((n) => n.card));
-  const eligible = (p: PoolCard): boolean => p.supported && !inCube.has(p.name) && p.colors.length <= 2
-    && !noteCut.has(p.name) && (!x.tabu.has(p.name) || tries.has(p.name)) && (p.aiFlag !== 'All' || tries.has(p.name))
-    && (p.rating >= k.deadMinRating || tries.has(p.name))
-    && !['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'].includes(p.name);
+  const { tries, noteCut, eligible } = addRules(x);
   const pool = x.pool.filter(eligible);
 
   let current = [...x.cards];
@@ -1111,22 +1149,12 @@ export function selectSwaps(x: SelectInput): Decision {
   const unmatched: Decision['unmatched'] = [];
   const added = new Set<string>();
   for (const a of cuts) {
+    if (x.holdCuts !== undefined) { unmatched.push({ name: a.name, why: a.status, reason: x.holdCuts }); continue; }
     if (swaps.length >= k.swaps) { unmatched.push({ name: a.name, why: a.status, reason: `over the ${k.swaps}-swap budget` }); continue; }
     const cut = byName.get(a.name) as EvolveCard;
     const ranked = pool.filter((p) => !added.has(p.name)).map((p) => fit(cut, a.status, p, need, tries.has(p.name), k))
       .sort((p, q) => q.score - p.score || (p.card.name < q.card.name ? -1 : 1));
-    let chosen: { cand: Candidate; next: EvolveCard[]; card: EvolveCard } | null = null;
-    const baseV = new Set(violations(current, x.constraints));
-    for (const cand of ranked) {
-      const section = sectionFor(x.cube, cand.card, cut.section);
-      const card: EvolveCard = {
-        name: cand.card.name, section, themes: cand.card.themes.filter((t) => !themeCodes.size || themeCodes.has(t)), roles: cand.card.roles,
-        ...(cand.card.colors.length === 2 && !cand.card.land ? { pair: cand.card.colors } : {}),
-        colors: cand.card.colors, mv: cand.card.mv, land: cand.card.land, fixing: cand.card.fixing, aiFlag: cand.card.aiFlag, rating: cand.card.rating,
-      };
-      const next = [...current.filter((c) => c.name !== cut.name), card];
-      if (violations(next, x.constraints).every((v) => baseV.has(v))) { chosen = { cand, next, card }; break; }
-    }
+    const chosen = firstKeeping(x, current, cut, ranked, themeCodes);
     if (!chosen) { unmatched.push({ name: a.name, why: a.status, reason: 'no pool card keeps the constraints' }); continue; }
     current = chosen.next;
     added.add(chosen.card.name);
@@ -1168,6 +1196,44 @@ export function selectSwaps(x: SelectInput): Decision {
     plan, ...(cb ? { confirmBatch: { drafts: cb.drafts, seeds: cb.seeds, games: cb.games, mean: cb.mean, deff: cb.deff } } : {}), confirmations, confirmRule: k.confirmPool >= 1 ? 'D357' : 'D331', winNull: x.winNull ?? 'mean',
     unmatched, watch, aiLimited, humanTest, pendingTries, verdict, violationsBefore: before, violationsAfter: violations(current, x.constraints),
   };
+}
+
+/** A pool card as a cube card, in the section the cube files it under (`fallback`: the cut's). */
+export function asCubeCard(cube: Cube, p: PoolCard, fallback: string, themeCodes: Set<string>): EvolveCard {
+  return {
+    name: p.name, section: sectionFor(cube, p, fallback), themes: p.themes.filter((t) => !themeCodes.size || themeCodes.has(t)), roles: p.roles,
+    ...(p.colors.length === 2 && !p.land ? { pair: p.colors } : {}),
+    colors: p.colors, mv: p.mv, land: p.land, fixing: p.fixing, aiFlag: p.aiFlag, rating: p.rating,
+  };
+}
+
+/** The best-ranked candidate whose swap for `cut` adds no violation the list did not already have (null: none). */
+export function firstKeeping(x: Pick<SelectInput, 'cube' | 'constraints'>, current: EvolveCard[], cut: EvolveCard, ranked: Candidate[], themeCodes: Set<string>): { cand: Candidate; next: EvolveCard[]; card: EvolveCard } | null {
+  const baseV = new Set(violations(current, x.constraints));
+  for (const cand of ranked) {
+    const card = asCubeCard(x.cube, cand.card, cut.section, themeCodes);
+    const next = [...current.filter((c) => c.name !== cut.name), card];
+    if (violations(next, x.constraints).every((v) => baseV.has(v))) return { cand, next, card };
+  }
+  return null;
+}
+
+/**
+ * Which pool cards may come in (every rule's adds, D469's too): supported, not in
+ * the cube, at most two colours, not a basic, no note says `cut`, not cut by an
+ * earlier generation, not AI:RemoveDeck:All and rated at least deadMinRating --
+ * the last three unless a note says `try`.
+ */
+export function addRules(x: Pick<SelectInput, 'cards' | 'notes' | 'tabu' | 'knobs'>): { tries: Set<string>; noteCut: Set<string>; eligible: (p: PoolCard) => boolean } {
+  const k = x.knobs;
+  const inCube = new Set(x.cards.map((c) => c.name));
+  const tries = new Set([...x.notes.values()].filter((n) => n.verdict === 'try').map((n) => n.card));
+  const noteCut = new Set([...x.notes.values()].filter((n) => n.verdict === 'cut').map((n) => n.card));
+  const eligible = (p: PoolCard): boolean => p.supported && !inCube.has(p.name) && p.colors.length <= 2
+    && !noteCut.has(p.name) && (!x.tabu.has(p.name) || tries.has(p.name)) && (p.aiFlag !== 'All' || tries.has(p.name))
+    && (p.rating >= k.deadMinRating || tries.has(p.name))
+    && !['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'].includes(p.name);
+  return { tries, noteCut, eligible };
 }
 
 /** The cube's cards after the swaps, as CubeCards for writeCubeDoc (cut cards gone, added ones without src). */

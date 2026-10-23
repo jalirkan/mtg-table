@@ -8,6 +8,7 @@
 
 import { pooledTest, priorAttempts, ruleWords, type Balance, type CardStat, type ConfirmAttempt, type Confirmation, type Decision, type Group } from './evolve.ts';
 import { exploreHealth, judgeExplored, mergeTables, type ExploreJudgeOptions, type ExploreTable } from './explore.ts';
+import type { BalanceDecision } from './evolve-balance.ts';
 
 export interface GenSummary {
   gen: number;
@@ -102,6 +103,28 @@ function groupRows(gs: Group[]): string[] {
   return gs.map((x) => `| ${x.key} | ${x.decks} | ${x.games} | ${x.games ? r2(x.rate) : '–'} | ${r2(x.ci[0])}–${r2(x.ci[1])} | ${r2(x.shrunk)} |`);
 }
 
+const r3 = (x: number | null): string => (x === null ? '–' : x.toFixed(3));
+
+/** D469: the balance rule's read, as table rows: pair, deck-games, payoff, 95% interval, |payoff − 0.5|, label, qualifies. */
+function balancePairRows(b: BalanceDecision): string[][] {
+  return b.pairs.map((r) => [r.pair, String(r.n), r3(r.est), `${r3(r.lo)}–${r3(r.hi)}`, r3(r.gap), r.label, r.qualifies ? (r.pair === b.worst ? 'yes, the worst' : 'yes') : `no (under ${b.minGames})`]);
+}
+
+/** D469: the balance rule's paragraph (the read, the target, the candidate set, the confirmation gate). */
+function balanceWords(b: BalanceDecision): string[] {
+  const c = b.candidates;
+  return [
+    `Read: ${b.source} (${b.job}, cube ${b.cube}), payoff arm ${b.arm}; pairs qualify at ${b.minGames}+ drafted deck-games; OFF / EVEN / UNCLEAR at ±${b.band} (J145's rule); at most ${b.budget} swap(s). `
+      + `Colours: ${b.colours.map((r) => `${r.colour} ${r3(r.est)} (${r3(r.lo)}–${r3(r.hi)}) ${r.label}`).join(', ')}.`,
+    ...(b.refusal ? [`No swap: ${b.refusal}.`] : []),
+    ...(c ? [`Candidate set (${c.pair}): cuts ${c.cuts.map((x) => `${x.name} (rated ${x.rating}, on colour ${x.onColour}, played ${x.onColourDecks})`).join(', ') || 'none'}`
+      + `${c.cutsExcluded.length ? `; not cut: ${c.cutsExcluded.map((x) => `${x.name} (${x.reason})`).join(', ')}` : ''}; additions ${c.additions.join(', ') || 'none'}`
+      + `${c.additionsExcluded.length ? `; not added: ${c.additionsExcluded.map((x) => `${x.name} (${x.reason})`).join(', ')}` : ''}.`] : []),
+    ...(b.unmatched.length ? [`Cuts with no addition keeping the constraints: ${b.unmatched.map((u) => `${u.name} (${u.reason})`).join('; ')}.`] : []),
+    `Confirmation (the lab's): ${b.gate}.`,
+  ];
+}
+
 /** The changelog section for one generation (Markdown). */
 export function changelogSection(g: GenSummary): string {
   const d = g.decision;
@@ -115,6 +138,11 @@ export function changelogSection(g: GenSummary): string {
     out.push(`Exploration (D356): ${t.explored} of ${g.drafts} drafts explored, ${forced} deck(s) played a forced low-rated card; the win-rate rules, the mean and the balance read the other ${g.explore.plain} drafts, the play and pick rules every draft's choice decks. The judgement of the low-rated cards pools every generation (top of this changelog).`, '');
   }
   out.push(`**Verdict.** ${d.verdict}`, '');
+  if (d.balance) {
+    out.push('**The balance rule (D469).** ' + balanceWords(d.balance).join(' '), '',
+      '| Pair | Deck-games | Payoff | 95% CI | Off 0.5 by | Label | Qualifies |', '|---|---|---|---|---|---|---|',
+      ...balancePairRows(d.balance).map((r) => `| ${r.join(' | ')} |`), '');
+  }
   if (d.confirmations.length) {
     out.push(`**Discovered, then confirmed or not** (${d.discovery.candidates} candidate(s); ${d.confirmBatch ? `the confirmation batch was sized for ${d.plan.drafts} drafts${d.plan.underpowered.length ? `, under-powered for ${d.plan.underpowered.join(', ')}` : ''}` : `a ${d.plan.drafts}-draft confirmation batch is due`}):`, '',
       '| Card | Rule | Discovery (this generation\'s drafts) | Confirmation (fresh drafts) | Every confirmation attempt pooled | Outcome |', '|---|---|---|---|---|---|');
@@ -215,6 +243,7 @@ export function htmlSection(g: GenSummary): string {
   parts.push(`<section><h2>Generation ${g.gen} <span class="dim">v${g.versionIn} → v${g.versionOut} · ${esc(g.date)}</span></h2>`);
   parts.push(`<p class="dim">Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}, ${d.discovery.family} tests at FDR ${d.discovery.q}, design effect ${d.discovery.deff.toFixed(2)}${esc(nullHead(d))}${esc(confirmHead(g))}</p>`);
   parts.push(`<p class="verdict">${esc(d.verdict)}</p>`);
+  if (d.balance) parts.push('<h3>The balance rule (D469)</h3>', `<p>${esc(balanceWords(d.balance).join(' '))}</p>`, table(['Pair', 'Deck-games', 'Payoff', '95% CI', 'Off 0.5 by', 'Label', 'Qualifies'], balancePairRows(d.balance)));
   if (d.confirmations.length) parts.push('<h3>Discovered, then confirmed or not</h3>', table(['Card', 'Rule', 'Discovery (this generation\'s drafts)', 'Confirmation (fresh drafts)', 'Every confirmation attempt pooled', 'Outcome'], d.confirmations.map((c) => candidateRow(c, d.confirmRule))));
   if (d.swaps.length) parts.push('<h3>Swaps</h3>', table(['Out', 'Why', 'Evidence', 'In', 'Why this card'], d.swaps.map((s) => [s.out, s.why, s.evidence, s.in, s.fit])));
   if (d.watch.length) parts.push('<h3>Insufficient data</h3>', table(['Card', 'Lean', 'Evidence', 'Drafts to settle'], d.watch.slice(0, 15).map((w) => [w.name, w.signal, w.evidence, String(w.draftsNeeded ?? '—')])));

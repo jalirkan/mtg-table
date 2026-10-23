@@ -43,6 +43,14 @@
 // changes meaning; the explored drafts judge the low-rated cards in a table of
 // their own (each generation's in stats.json, every generation's pooled in the
 // changelog).  Off (no --explore), the loop and its folders are the old ones.
+//
+// --balance <balance.json> (D469, evolve-balance.ts): balance mode.  One
+// generation only (the read describes the cube going in, and nothing after a
+// swap); the discovery batch is drafted and every rule reported, but the
+// generation's only swap is the balance rule's, no confirmation batch is
+// played (no AI-rule cut is made to confirm), and evolve.json records the read
+// (`balance`: its path, sha, job and arm) and the three balance knobs.  Off,
+// neither is recorded, and the folder is the old one byte for byte.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -53,9 +61,10 @@ import { WIN_NULL_NEW_RUNS, type WinNull } from './colour-null.ts';
 import { writeCubeDoc } from './cubedoc.ts';
 import { engineFacts, type EngineEnv } from './engine.ts';
 import {
-  applySwaps, balanceOf, batchStats, constraintsOf, discoveryStage, enrichPool, evolveCards, parseNotes, parsePool, priorAttempts, selectSwaps,
-  type ConfirmInput, type Constraints, type EvolveKnobs, type MetaDoc, type Note, type Swap,
+  applySwaps, balanceOf, batchStats, constraintsOf, discoveryStage, enrichPool, evolveCards, parseNotes, parsePool, priorAttempts, recordedKnobs, selectSwaps,
+  type ConfirmInput, type Constraints, type EvolveKnobs, type MetaDoc, type Note, type RecordedKnobs, type Swap,
 } from './evolve.ts';
+import { parseBalanceRead, selectBalanceSwaps, type BalanceRead } from './evolve-balance.ts';
 import { exploreHealth, judgeExplored, type ExploreTable } from './explore.ts';
 import { changelog, htmlPage, htmlSection, logEntry, type GenSummary } from './evolve-report.ts';
 import { parseRatings } from './ratings.ts';
@@ -84,6 +93,8 @@ export interface EvolveOptions {
   recordEvery?: number;
   /** D356: controlled exploration in the discovery batches (null or absent: off). */
   explore?: EvolveExplore | null;
+  /** D469: balance mode, on a J145-shaped balance.json (null or absent: off). */
+  balanceFile?: string | null;
 }
 
 /** `--explore name=value`: the drafts' exploration (explore.ts) and how its comparisons are judged. */
@@ -123,7 +134,8 @@ interface State {
   games: number;
   profiles: [string, string];
   weights: Weights;
-  knobs: EvolveKnobs;
+  /** Without the balance knobs when balance mode is off (recordedKnobs), as before D469. */
+  knobs: RecordedKnobs;
   constraints: Constraints;
   date: string;
   generations: GenResult[];
@@ -131,6 +143,8 @@ interface State {
   explore?: EvolveExplore;
   /** D377: dominant-win's null for every generation of this folder.  Absent: a folder started before D377, on the mean. */
   winNull?: WinNull;
+  /** D469: the balance read this folder decides by.  Absent: balance mode off. */
+  balance?: { file: string; sha: string; job: string; arm: string };
 }
 
 /** The notes file beside a cube: `cubes/omega-cube-180.md` -> `cubes/omega-notes.tsv`. */
@@ -193,20 +207,33 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
   const missing = startCube.cards.filter((c) => !poolBy.has(c.name)).map((c) => c.name);
   if (missing.length) say(`WARNING: ${missing.length} cube card(s) not in the pool (their colours come from their sections): ${missing.join(', ')}`);
 
+  // D469: balance mode reads its balance.json once; it decides one generation, on the cube the read measured.
+  let balanceRead: BalanceRead | null = null;
+  let balanceRec: State['balance'];
+  if (o.balanceFile) {
+    if (o.generations !== 1) throw new Error(`--balance decides one generation (the read measured the cube going in, not the cube after a swap): give --generations 1, got ${o.generations}`);
+    const text = fs.readFileSync(o.balanceFile, 'utf8');
+    balanceRead = parseBalanceRead(text, path.relative(env.repo, path.resolve(o.balanceFile)));
+    balanceRec = { file: balanceRead.source, sha: sha(text), job: balanceRead.job, arm: balanceRead.arm };
+    if (balanceRead.cube !== path.basename(o.cubeFile, '.md')) say(`WARNING: the balance read ${balanceRead.source} measured cube "${balanceRead.cube}", and evolve was given ${o.cubeFile} -- the rule trusts that they hold the same list`);
+    say(`balance mode (D469): ${balanceRead.job} ${balanceRead.arm}, at most ${o.knobs.balanceSwaps} swap(s), pairs with ${o.knobs.balanceMinGames}+ deck-games, band ±${o.knobs.balanceBand}`);
+  }
+
   const stateFile = path.join(o.out, 'evolve.json');
   const fresh: State = {
     v: 1, cube: path.relative(env.repo, path.resolve(o.cubeFile)), startSha: sha(startText),
     pool: path.relative(env.repo, path.resolve(o.poolFile)), poolSha: sha(poolText), drafts: o.drafts, seed: o.seed, games: o.games,
-    profiles: o.profiles, weights: o.weights, knobs: o.knobs, constraints: constraintsOf(evolveCards(startCube, poolBy), o.knobs),
+    profiles: o.profiles, weights: o.weights, knobs: recordedKnobs(o.knobs, !!balanceRead), constraints: constraintsOf(evolveCards(startCube, poolBy), o.knobs),
     date: o.date, generations: [],
     ...(o.explore ? { explore: o.explore } : {}),
     winNull: WIN_NULL_NEW_RUNS,
+    ...(balanceRec ? { balance: balanceRec } : {}),
   };
   let state = fresh;
   if (fs.existsSync(stateFile)) {
     const old = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as State;
     // A folder from before D357 has no confirmPool: it was decided by D331's rule, and resumes under it.
-    if ((old.knobs as Partial<EvolveKnobs>).confirmPool === undefined) {
+    if ((old.knobs as Partial<RecordedKnobs>).confirmPool === undefined) {
       old.knobs = { ...old.knobs, confirmPool: 0 };
       if (fresh.knobs.confirmPool !== 0) say(`${o.out} was started before D357: its confirmations stay D331's (each batch alone; confirmPool=0) -- use a new --out for the pooled rule`);
       fresh.knobs = { ...fresh.knobs, confirmPool: 0 };
@@ -216,11 +243,11 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
       old.winNull = 'mean';
       say(`${o.out} was started before D377: dominant-win keeps D331's null (the batch mean) -- use a new --out for the colour-adjusted null`);
     }
-    const key = (s: State): string => JSON.stringify([s.startSha, s.poolSha, s.drafts, s.seed, s.games, s.profiles, s.weights, s.explore ?? null]);
-    if (key(old) !== key(fresh)) throw new Error(`${o.out} holds an evolve run with a different cube, pool, drafts, seed, games, profiles, weights or exploration -- use a new --out`);
+    const key = (s: State): string => JSON.stringify([s.startSha, s.poolSha, s.drafts, s.seed, s.games, s.profiles, s.weights, s.explore ?? null, ...(s.balance ? [s.balance.sha] : [])]);
+    if (key(old) !== key(fresh)) throw new Error(`${o.out} holds an evolve run with a different cube, pool, drafts, seed, games, profiles, weights, exploration or balance read -- use a new --out`);
     // The knobs only decide the swaps: they may change while no generation has been decided under the old ones.
     old.generations = old.generations.filter((r) => fs.existsSync(path.join(o.out, `gen-${pad(r.gen)}`, 'result.json')));
-    const sorted = (x: EvolveKnobs): string => JSON.stringify(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1)));
+    const sorted = (x: RecordedKnobs): string => JSON.stringify(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1)));
     const knobsMoved = sorted(old.knobs) !== sorted(fresh.knobs);
     if (knobsMoved && old.generations.length > 0) throw new Error(`${o.out} has generation(s) decided under other knobs -- use a new --out, or delete their result.json files and the generations after them`);
     state = knobsMoved ? { ...old, knobs: fresh.knobs, constraints: fresh.constraints } : old;
@@ -228,7 +255,8 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
   }
   const save = (): void => fs.writeFileSync(stateFile, `${JSON.stringify(state, null, 2)}\n`);
   save();
-  const knobs = state.knobs;
+  // The balance knobs are not recorded when the mode is off; their defaults then stand (and decide nothing).
+  const knobs: EvolveKnobs = { ...o.knobs, ...state.knobs };
 
   const summaries: GenSummary[] = [];
   for (let g = 1; g <= o.generations; g++) {
@@ -298,7 +326,9 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     // 2. Confirmation: the candidates, tested again on a fresh, disjoint seed range, read on its own.
     let confirmation: ConfirmInput | undefined;
     let confirmSeeds: [number, number] | undefined;
-    if (first.plan.drafts > 0) {
+    if (first.plan.drafts > 0 && balanceRead) {
+      say(`generation ${g}: ${first.candidates.length} candidate(s) at FDR ${knobs.fdrQ}, reported only: balance mode (D469) plays no confirmation batch, since no AI-rule cut is made`);
+    } else if (first.plan.drafts > 0) {
       const c0 = o.seed + knobs.confirmSeedOffset + (g - 1) * knobs.confirmMaxDrafts;
       confirmSeeds = [c0, c0 + first.plan.drafts - 1];
       say(`generation ${g}: ${first.candidates.length} candidate(s) at FDR ${knobs.fdrQ} (${first.candidates.map((a) => `${a.name}: ${a.status}`).join('; ')}); `
@@ -313,7 +343,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
         gen: g, history: priorAttempts(summaries),
       };
     }
-    const decision = selectSwaps({ ...sel, ...(confirmation ? { confirmation } : {}) });
+    const decision = balanceRead ? selectBalanceSwaps(sel, balanceRead) : selectSwaps({ ...sel, ...(confirmation ? { confirmation } : {}) });
     const versionIn = versionOf(cube.title);
     const versionOut = decision.swaps.length ? versionIn + 1 : versionIn;
     const summary: GenSummary = {

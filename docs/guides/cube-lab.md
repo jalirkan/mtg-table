@@ -575,7 +575,7 @@ redefined without a schema 2 on both sides.
 - **lands**: win rate by the played deck's land count; **splash**: the
   splashing decks' win rate, and `vsNoSplash` its difference from the rest.
 
-## Evolve: a cube that changes by simulation (D299–D300, D331, D357)
+## Evolve: a cube that changes by simulation (D299–D300, D331, D357, D469)
 
 `evolve` runs generations of the lab on a cube and swaps cards in from a seed
 pool where the evidence says a card is dead or dominating, writing the next
@@ -625,6 +625,7 @@ decision has looked at. Each card is then assessed:
 | `builder-limited` | every land: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land (Mutavault) never, so a land's deck rate and win rate measure its pair, not the land; a land goes only by a note (the changelog lists the lands never played) |
 | `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the deckbuilder plays by rating, so the data cannot tell a weak card from an underrated one; **never cut** — `--explore` (below, D356) judges it by forcing it into decks at random, or raise its rating in a ratings TSV (`tools/cubelab.sh ratings init`, edit, then `evolve … --ratings <tsv>`; the loop then judges every rating, the pool's too, by that file) |
 | `watch` | a lead — an on-colour play rate at or under `deadPlayRateHi`, or a win rate `watchWinMargin` over the mean — that has **not** passed its test: *insufficient data*, with the drafts per generation at which it would likely be discovered |
+| `balance` | **balance mode only** (`--balance <balance.json>`, D469; *Balance mode* below): a gold card of the colour pair whose drafted payoff sits furthest from .5 in a J145-shaped balance read, swapped for a seed-pool gold card of the same pair. A rule of its own, not `dead`: a rating under `deadMinRating` does not shield the cut |
 
 **Discovery, then confirmation (D331).** About 180 cards are looked at every
 generation, so a test that is wrong one time in twenty per card is wrong
@@ -751,6 +752,78 @@ games are not byte-for-byte repeatable (above), so a fresh run may swap
 differently where the evidence is close — which is why a swap needs the
 evidence to pass a threshold.
 
+### Balance mode: `--balance` (D469)
+
+Evolve's rules above judge cards one at a time; none of them aims at a balance
+between the colour pairs (`fitBalance` only weights the fit of an addition).
+`--balance <balance.json>` turns on the **registered Omega swap rule** (the PC's
+`study/omega-swap-rule.md`, accepted by Justin on 2026-10-23): one gold-for-gold
+swap in the colour pair that a J145-shaped balance read finds furthest from
+even.
+
+```bash
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --balance <J145-shaped run>/balance.json --generations 1 --drafts-per-gen 30 --jobs 4 --seed 1 \
+    --out var/cubelab/evolve/omega-balance-1
+```
+
+- **The read** is a balance job's `balance.json` (J145's shape: `payoff.<arm>.colour`
+  and `.pairs`, each cell `n`, `hits`, `est`, `lo`, `hi`), judged on the arm its
+  `verdict.judgedPayoff` names (`Blab`: lab-drafted decks against each other).
+  Only payoff is read: **pull never drives a swap** (Justin's answer 2 — not
+  before 30 real Omega drafts).
+- **The objective:** over the pairs with at least `balanceMinGames` (400) drafted
+  deck-games — the smallest n at which an interval can sit inside the band at
+  all — minimise max |pair payoff − .5|. The pair furthest from .5 is the
+  target.
+- **It refuses**, and says why, when a colour is OFF on that arm (the rule is
+  written for a cube balanced at colour level), when no pair has 400 deck-games,
+  when the target's interval includes .5 (nothing to fix), or when a label the
+  read carries disagrees with its classifier (a `balanceBand` other than the
+  read's). OFF / EVEN / UNCLEAR is J145's registered classifier
+  (`payoffLabel` in `tools/cubelab/evolve-balance.ts`): OFF when the 95% interval
+  excludes .5 and the point is at least `balanceBand` from it, EVEN when the
+  interval sits inside [.5 − band, .5 + band], else UNCLEAR.
+- **Cuts:** the cube's gold cards of that pair (nonland, exactly its two
+  printed colours). Not a `keep` (or `try`) note's card, and not an AI-limited
+  one unless a note says `cut`. A rating under `deadMinRating` does **not**
+  shield a cut: that guard belongs to the `dead` rule, whose evidence is a play
+  rate the drafters' ratings decide; a pair's payoff is not. They are tried in
+  order of the generation's own evidence that the slot adds least to the pair's
+  decks: the lowest on-colour play rate first, then the lowest rating.
+- **Additions:** the pool's gold cards of that pair that evolve's own add rules
+  admit (supported by Forge, no `cut` note, not cut before, not
+  AI:RemoveDeck:All and rated at least `deadMinRating` unless a note says
+  `try`); evolve's fit picks one, and the swap keeps all five constraints. Gold
+  for gold in one pair, so `minSignposts` and every colour count stay where they
+  were. On Omega v1 and J145's read the target is UG (.423, .382–.465, 544
+  deck-games), the cuts are Uro and Mystic Snake, and the one addition is
+  **Risen Reef** (rated 88.4): Lonis (38.8) and Wistfulness (44.9) are under 60,
+  Oko and Nadu have `cut` notes, Tamiyo, Collector of Tales is
+  AI:RemoveDeck:All, and Talisman of Curiosity (printed colourless) and Tamiyo,
+  Inquisitive Student (printed blue) are not UG gold cards in evolve's colour
+  model — a swap to either would take a signpost from UG.
+- **One swap a generation** (`balanceSwaps`, Justin's answer 3), and **no other
+  rule swaps** in balance mode: every rule is still assessed and reported, but a
+  cut it supports (a note's `cut` too) is held, listed under *Supported cuts not
+  made*, so a move in the pair's payoff can be attributed to the one swap. No
+  confirmation batch is played. **One generation** (`--generations 1`): the read
+  measured the cube going in, not the cube after a swap.
+- **Recorded** with its evidence — the read, the arm, the pair, its payoff,
+  interval and deck-games, the cut, the addition and the rule id `balance` — in
+  `evolve.json` (each swap's `balance` block, and the read's path, sha, job and
+  arm as `balance`), `stats.json`, the changelog (a *balance rule* paragraph and
+  a table of every pair) and the cube's iteration log.
+- **Confirmation and stopping are the lab's**: a fresh-seed, J145-shaped
+  re-measure of the swapped cube keeps the swap only if the pair's interval then
+  includes .5, no colour is OFF and no pair with 400+ deck-games is OFF; else the
+  cube reverts. The rule stops on success, after two generations in a row with
+  no confirmed improvement (Justin's answer 4), or when the candidate set is used
+  up; it never widens the set by itself.
+- **Off** (no `--balance`), evolve and its folders are what they were: the three
+  balance knobs are not recorded in `evolve.json`, and `--evolve balance…=` without
+  `--balance` is refused.
+
 ### The evolve knobs
 
 `tools/cubelab/evolve.ts`'s `EVOLVE_DEFAULTS`; `--evolve name=value` changes one
@@ -789,6 +862,9 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `fitTry` | 20 | fit: the notes say `try` |
 | `dominantReplaceRatio` | 0.9 | a dominant card's replacement is rated up to this share of it |
 | `humanTest` | 10 | human-test candidates listed |
+| `balanceMinGames` | 400 | balance mode (D469): a colour pair counts toward the objective at this many drafted deck-games |
+| `balanceSwaps` | 1 | balance mode: at most this many balance swaps a generation |
+| `balanceBand` | 0.05 | balance mode: OFF / EVEN / UNCLEAR's band around .5 (J145's; a value other than the read's own is refused) |
 
 With 30 drafts a generation a card is dealt about 27 times, sits on colour in
 some 5–15 pools and plays some 10–25 decisive games, so with some 400 tests in
