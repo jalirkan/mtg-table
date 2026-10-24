@@ -1501,6 +1501,7 @@ public final class AiBench {
         d416Scenarios(castBoard);
         stepClockScenario();
         forcedBlockScenarios();
+        altCostScenarios();
     }
 
     /**
@@ -1575,6 +1576,121 @@ public final class AiBench {
                     "a seat never asked at the fork's combat: unavailable at turn 5, not a stale block later (unavailable "
                             + b.unavailable + ", turn " + b.turns + ", error " + b.error + ")");
         });
+    }
+
+    /**
+     * D472 (amending D466 point 1): a play by an alternative cost maps onto the
+     * fork's copy as that alternative.  J158's pauper spine 464 had Forge cast
+     * Snuff Out by its AlternativeCost static (pay 4 life, with a Swamp) at d12,
+     * and all 240 branches of that option failed with "optional cost AltCost is
+     * not offered on the copy": the AltCost mark is the alternative's own, which
+     * {@code getOptionalCostValues} never offers.  Planted here with one Swamp, so
+     * the life payment is the only way to cast it; Think Twice's flashback (the
+     * base's description, its kind the only difference) and Mulldrifter's evoke
+     * (an alternative the card itself carries) beside it, and the plain casts as
+     * controls.
+     */
+    static void altCostScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: alternative costs on a fork (D472, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Island;Island;Island;Island", "aihand=Snuff Out;Mulldrifter", "aigraveyard=Think Twice",
+                "aibattlefield=Swamp;Island;Island;Island;Island");
+        scenario("altcost-map", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final forge.game.spellability.SpellAbility snuff = playOf(ai, "Snuff Out", (sa) -> sa.isOptionalCostPaid(ALT));
+            final forge.game.spellability.SpellAbility snuffBase = playOf(ai, "Snuff Out", (sa) -> !sa.isOptionalCostPaid(ALT)
+                    && sa.getAlternativeCost() == null && sa.getMayPlay() == null);
+            for (final forge.game.spellability.SpellAbility sa : List.of(snuff, snuffBase)) {
+                sa.resetTargets();
+                sa.getTargets().add(bears);
+            }
+            final forge.game.spellability.SpellAbility m = mtgtable.ai.SearchPolicy.mapForTest(ai, snuff);
+            check(m != null && m.isOptionalCostPaid(ALT) && m.getHostCard().getGame() != ai.getGame()
+                            && m.getPayCosts().toString().contains("4 life") && m.getPayCosts().getTotalMana().getCMC() == 0
+                            && m.getTargets().size() == 1 && m.getTargets().getFirstTargetedCard() != bears
+                            && "Grizzly Bears".equals(m.getTargets().getFirstTargetedCard().getName()),
+                    "Snuff Out by its AltCost (pay 4 life) maps to the copy's AltCost play, its target the copy's Bears (got "
+                            + (m == null ? null : m.getPayCosts().toSimpleString() + ", mana value " + m.getPayCosts().getTotalMana().getCMC()
+                            + ", " + m.getTargets() + (m.getTargets().getFirstTargetedCard() == bears ? " (the real game's!)" : "")) + ")");
+            final forge.game.spellability.SpellAbility mb = mtgtable.ai.SearchPolicy.mapForTest(ai, snuffBase);
+            check(mb != null && !mb.isOptionalCostPaid(ALT) && mb.getPayCosts().hasManaCost(),
+                    "control: the mana-cost Snuff Out maps to the copy's mana-cost play (got " + (mb == null ? null : mb.getPayCosts().toSimpleString()) + ")");
+            final forge.game.spellability.SpellAbility fb = playOf(ai, "Think Twice",
+                    (sa) -> sa.isAlternativeCost(forge.game.spellability.AlternativeCost.Flashback));
+            final forge.game.spellability.SpellAbility mfb = mtgtable.ai.SearchPolicy.mapForTest(ai, fb);
+            check(mfb != null && mfb.isAlternativeCost(forge.game.spellability.AlternativeCost.Flashback)
+                            && mfb.getDescription().equals(fb.getDescription()),
+                    "Think Twice's flashback (the base's description) maps to the copy's flashback (got "
+                            + (mfb == null ? null : mfb.getAlternativeCost()) + ")");
+            final forge.game.spellability.SpellAbility ev = playOf(ai, "Mulldrifter",
+                    (sa) -> sa.isAlternativeCost(forge.game.spellability.AlternativeCost.Evoke));
+            final forge.game.spellability.SpellAbility md = playOf(ai, "Mulldrifter", (sa) -> sa.getAlternativeCost() == null);
+            final forge.game.spellability.SpellAbility mev = mtgtable.ai.SearchPolicy.mapForTest(ai, ev);
+            final forge.game.spellability.SpellAbility mmd = mtgtable.ai.SearchPolicy.mapForTest(ai, md);
+            check(mev != null && mev.isAlternativeCost(forge.game.spellability.AlternativeCost.Evoke)
+                            && mmd != null && mmd.getAlternativeCost() == null,
+                    "Mulldrifter's evoke maps to the copy's evoke, its plain cast to the plain cast (got "
+                            + (mev == null ? null : mev.getAlternativeCost()) + ", " + (mmd == null ? null : mmd.getAlternativeCost()) + ")");
+            // the production path that failed 240 of 240: one atlas branch forcing the AltCost Snuff Out
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = ai.getGame().getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(snuff), 0, 0, 7, u,
+                    "d472", new LinkedHashMap<>(), null, "d472", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && b.steps > 0,
+                    "an atlas branch forcing the AltCost Snuff Out plays (" + b.steps + " steps, error " + b.error + ")");
+            // and on the copy it is the life payment: 4 life paid, the Bears destroyed
+            final int[] life = {-1};
+            final boolean[] bears2 = {true};
+            mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                life[0] = aiC.getLife();
+                bears2[0] = false;
+                for (final Card c : copy.getCardsIn(ZoneType.Battlefield)) {
+                    bears2[0] |= "Grizzly Bears".equals(c.getName());
+                }
+            });
+            final CountSink sink = new CountSink();
+            try {
+                mtgtable.ai.SearchPolicy.playout(ai.getGame(), ai, mtgtable.ai.SearchPolicy.priorityCand(snuff), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+            } finally {
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            check(life[0] == 16 && !bears2[0],
+                    "the fork's Snuff Out paid 4 life and destroyed the Bears (life " + life[0] + ", Bears "
+                            + (bears2[0] ? "alive" : "dead") + ", " + sink.counts + ")");
+            check(ai.getLife() == 20 && ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield).contains(bears),
+                    "the real game is untouched: life 20, the Bears alive");
+        });
+    }
+
+    private static final forge.game.spellability.OptionalCost ALT = forge.game.spellability.OptionalCost.AltCost;
+
+    private static Card named(final Iterable<Card> cards, final String name) {
+        for (final Card c : cards) {
+            if (name.equals(c.getName())) {
+                return c;
+            }
+        }
+        throw new IllegalStateException("no " + name);
+    }
+
+    /** D472: the seat's play of {@code name} that {@code which} picks, from Forge's own candidate list (originals and alternatives). */
+    private static forge.game.spellability.SpellAbility playOf(final Player ai, final String name,
+            final java.util.function.Predicate<forge.game.spellability.SpellAbility> which) {
+        final Card c = named(ai.getGame().getCardsInGame(), name);
+        final List<forge.game.spellability.SpellAbility> all = forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                new ArrayList<>(c.getAllPossibleAbilities(ai, false)), ai);
+        for (final forge.game.spellability.SpellAbility sa : all) {
+            if (sa.isSpell() && which.test(sa)) {
+                sa.setActivatingPlayer(ai);
+                return sa;
+            }
+        }
+        throw new IllegalStateException("no such play of " + name + " among " + all);
     }
 
     /** D470: the Bears attack the seat; Forge's block (the Giant on the Bears) is on the combat, untapped or not. {Bears, Giant}. */

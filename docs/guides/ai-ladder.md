@@ -53,7 +53,11 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
   experiment log's git sha. Split them when a decision says the behaviour
   changed. For example, D466 (#184, 9fe69ad8) lets every search seat
   map and rank plays with an optional cost, which it used to drop or fall
-  back on, so search results from before and after it are not pooled.
+  back on, so search results from before and after it are not pooled; and
+  D472 (`pc/atlas-fork-altcost`) lets it map plays by an alternative cost
+  (Snuff Out's life payment, flashback, foretell, ...), which threw or mapped
+  to the base spell, so results from before and after D472 are not pooled
+  either.
 - **Anchors** (`"anchor": true`) are stock Forge: `forge-default`,
   `forge-reckless`, `forge-cautious`, `forge-experimental`. They are always in
   the pool, the scheduler always gives them a share, and `forge-default` is the
