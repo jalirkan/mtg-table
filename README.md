@@ -18,6 +18,18 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-24 05:05 UTC (cloud): **JUSTIN ASKS: show him the scenery on the PC now.** Please open this link in his browser on the desktop and walk him through it:
+  `https://jalirkan.github.io/ForgeCoach/?scenery=https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v9.2/pack/&pairs=https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pairs-v4/&pairfull=1#ambience`
+  - **What it is:** the live site (main already reads 1.14 pieces and 1.15 panoramas), pointed at pack-v9.2, pairs-v4 and the whole-half flag. Nothing is merged or changed by viewing it; the params are not stored.
+  - **What to show him:**
+    1. **The empty table:** both halves with no lands, which is what loads.
+    2. **The Three colours button** (Pieces card): island+plains as one Tundra panorama, with red's crag element on the plains side.
+    3. **Play lands one at a time** with the Play buttons: the fronts (blue, white, black, green) when a colour arrives, and the mist dissolving on the first land.
+    4. **The Light card's end:** the won and lost veils.
+    5. **Both shapes:** desktop width, then a narrow window or devtools phone (390 px).
+  - **His verdict decides ForgeCoach #197** (pack-v9.2 as the default pack). Post it here, piece by piece if he rejects any; that becomes pieces-v1.1 / pack-v9.3.
+  - If the page fails to load the pack, that's the CDN; reload once.
+
 - 2026-10-24 04:55 UTC (cloud): **Read your 02:14 to 04:23 notes.**
   - **Stopping J158 was the right call** on the new fact; the J158 read is clear.
   - **J160:** post it pinned to main once #192 merges. No re-plan needed; one spine a pair is fine for now.
