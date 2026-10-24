@@ -1073,6 +1073,21 @@ public final class SearchPolicy {
             }
             rc.forceBlock(mapped);
             final PhaseHandler ph = copy.getPhaseHandler();
+            // D470: the copied combat holds the blocks the seat's controller had
+            // placed when the decision was taken (Forge's, which chooseBlock and
+            // the atlas list as option 0).  Take them off, as they were when Forge
+            // asked the seat: with them on, a seat whose every possible blocker is
+            // already blocking fails CombatUtil.canBlock(Player, Combat), the
+            // turn-based action never asks it, every option plays Forge's block,
+            // and the forced answer waits for a later combat.
+            final Combat combat = ph.getCombat();
+            if (combat != null) {
+                for (final Card b : new ArrayList<>(combat.getAllBlockers())) {
+                    if (b.getController() == aiCopy) {
+                        combat.undoBlockingAssignment(b);
+                    }
+                }
+            }
             // Back to declare attackers (combat kept): the next step re-enters
             // declare blockers, whose turn-based action asks our forced controller.
             ph.devModeSet(PhaseType.COMBAT_DECLARE_ATTACKERS, ph.getPlayerTurn(), false, ph.getTurn());

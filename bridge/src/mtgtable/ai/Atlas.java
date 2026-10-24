@@ -213,6 +213,16 @@ public final class Atlas {
         return null;
     }
 
+    /** D470: the {@link RolloutController.OptionUnavailable} in {@code t}'s cause chain, or null. */
+    static RolloutController.OptionUnavailable unavailableIn(final Throwable t) {
+        for (Throwable c = t; c != null; c = c.getCause() == c ? null : c.getCause()) {
+            if (c instanceof RolloutController.OptionUnavailable) {
+                return (RolloutController.OptionUnavailable) c;
+            }
+        }
+        return null;
+    }
+
     /** D465: a branch's key in {@link Unit#skip}. */
     public static String skipKey(final int o, final int i) {
         return "o" + o + ":b" + i;
@@ -274,6 +284,13 @@ public final class Atlas {
         public int steps;
         public long ms;
         public String error;
+        /**
+         * D470: the option could not be given in this branch's copy (a forced
+         * combat answer the seat was never asked for, or a block on an attacker
+         * that is not attacking): why, else null.  Not an error and not a
+         * result; the atlas leaves it out of the option's value and counts it.
+         */
+        public String unavailable;
         /** D465: the branch threw an {@code Error} (an engine error, not a game's result). */
         public boolean engineError;
         /** D465: ... and it was an {@code OutOfMemoryError}. */
@@ -356,7 +373,7 @@ public final class Atlas {
                         final String key = "atlas:d" + d.index + ":" + unit.continuation + ":o" + o + ":b" + i;
                         DistillRows.useDir(unit.rowsDir);
                         final Branch b = play(ai, cands.get(o), o, i, seed, key, d);
-                        if (i - unit.i0 < unit.leakChecks && o == 0 && !b.engineError) {
+                        if (i - unit.i0 < unit.leakChecks && o == 0 && !b.engineError && b.unavailable == null) {
                             leakCheck(ai, cands.get(o), b, seed, d);
                         }
                         branches.add(b);
@@ -558,6 +575,9 @@ public final class Atlas {
         if (b.engineError) {
             j.n("engineError", true);
         }
+        if (b.unavailable != null) {
+            j.n("unavailable", b.unavailable);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -602,9 +622,10 @@ public final class Atlas {
      * first answer, redealt from {@code ai}'s knowledge with {@code seed}, played
      * to the end or the cap by the unit's continuation; recorded into
      * {@code framesDir} as {@code <name>-seat<k>.jsonl.gz} (null = no frames) and
-     * the rows of both seats under {@code key} when {@code rows}.
+     * the rows of both seats under {@code key} when {@code rows}.  Public for
+     * the ai-bench self-test's D470 scenario.
      */
-    static Branch play(final Player ai, final SearchPolicy.Cand cand, final int o, final int i, final long seed,
+    public static Branch play(final Player ai, final SearchPolicy.Cand cand, final int o, final int i, final long seed,
                        final Unit unit, final String key, final Map<String, Object> fields, final File framesDir,
                        final String name, final boolean rows) {
         return play(ai, cand, o, i, seed, unit, key, fields, framesDir, name, rows, null);
@@ -686,6 +707,11 @@ public final class Atlas {
                 }
                 ph.mainLoopStep();
                 steps++;
+                // D470: past the fork's combat step and the seat never asked: the option is not this game's
+                final String gone = forcing == null ? null : forcing.expired(copy);
+                if (gone != null) {
+                    throw new RolloutController.OptionUnavailable(gone);
+                }
             }
             clock.disarm();
             b.steps = steps;
@@ -706,9 +732,15 @@ public final class Atlas {
                 clock.disarm();
             }
             final BranchTimeout bt = timeoutIn(e);
+            final RolloutController.OptionUnavailable gone = unavailableIn(e);
             if (bt != null) {
                 // D467: Forge wrapped the clock's throw (AbilityFactory does) -- still the deadline, still an engine error
                 timedOutInStep(b, bt, ph, steps);
+            } else if (gone != null) {
+                // D470: the option cannot be given in this copy -- counted apart, never an error or a result
+                b.unavailable = gone.getMessage();
+                b.steps = steps;
+                b.turns = ph == null ? 0 : ph.getTurn();
             } else {
                 b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
             }
@@ -763,8 +795,9 @@ public final class Atlas {
                 }
             }
             if (rows) {
-                final String winner = b.error != null ? null : b.result > 0 ? "A" : b.result < 0 ? "B" : "draw";
-                DistillRows.endGame(key, winner, b.error == null);
+                final boolean played = b.error == null && b.unavailable == null;
+                final String winner = !played ? null : b.result > 0 ? "A" : b.result < 0 ? "B" : "draw";
+                DistillRows.endGame(key, winner, played);
             }
             MyRandom.setRandom(real);
             b.ms = (System.nanoTime() - t0) / 1_000_000L;

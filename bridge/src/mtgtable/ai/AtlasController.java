@@ -54,17 +54,22 @@ final class AtlasController extends PolicyControllerAi implements RolloutForcing
 
     @Override
     public void forceAttack(final Map<Card, GameEntity> attackers) {
-        forced.attack(attackers);
+        forced.attack(attackers, getGame());
     }
 
     @Override
     public void forceBlock(final Map<Card, Card> blocks) {
-        forced.block(blocks);
+        forced.block(blocks, getGame());
     }
 
     @Override
     public boolean applied(final Game copy) {
         return forced.applied(copy);
+    }
+
+    /** D470: why the forced combat answer can no longer be given in {@code copy}, or null. */
+    String expired(final Game copy) {
+        return forced.expired(copy);
     }
 
     @Override

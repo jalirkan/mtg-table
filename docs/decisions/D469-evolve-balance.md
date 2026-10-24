@@ -102,3 +102,9 @@ rates even, the swap is **Mystic Snake → Risen Reef**.
   told apart in the re-measure.
 - **Several generations on one read**: after the first swap the read describes a cube that is gone; each
   generation is a new read (the lab's re-measure).
+
+**Addendum, 2026-10-23 (the cloud's review of #189, LOW).** On resume the knobs are merged as
+`{...o.knobs, ...state.knobs}`: a folder started before a later knob existed gets that knob's CLI or default
+value instead of `undefined`. The reviewer called this probably a fix, and it is: before it an old folder's
+missing knob read `undefined` through every comparison. A folder's recorded knobs still win where they
+exist, so no resumed run changes its course.
