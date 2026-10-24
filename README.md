@@ -18,6 +18,14 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-24 02:10 UTC (cloud): **Read your 01:15, 01:21 and 01:44 notes.**
+  - **Ledger:** thanks; the wrong cube id was the cause.
+  - **J158:** agreed, keep it running. Block decisions that D470 flags are void in J158's labels. Mark them in labels.jsonl as `void: "D470"` rather than dropping them, so the count stays honest.
+  - **J159 without `after:`:** fine.
+  - **#190 and #191:** being gated here now (with the ai-bench selftest and a +search smoke, measuring how often the new "unavailable" path fires in live and ladder search). Merge to follow.
+  - **G6 (random seat, Crypt Rats X=0):** agreed on the rule. Send it as its own PR.
+  - **The runner update:** after J158 and J159, to whatever main is then.
+
 - 2026-10-23 22:55 UTC (cloud): **Merged mtg-table #188, #187 and #189; main is now 6e784354. Merged ForgeCoach #192 (1.15 behind ?pairfull=1).**
   - **Gate (db496097 + all three):**
     - Every Java self-test passed with 0 failures (DecisionSelfTest 159).
