@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: pilot.smoke.problems == 0 (pilot.smoke.problems = 1)
 runner: forgecoach-runner 8a33ea78
 started: 2026-10-24T05:32:15-04:00
-phase: pilot 1/1
+finished: 2026-10-24T05:36:53-04:00
 mtg-table: 8a33ea7
 workers: 3
+peak_worker_rss_gb: 1.1
