@@ -152,4 +152,6 @@ counted as seat A's win. That is 0.3–0.5% of the long-game pairs' branches, 2.
 mean by up to 2.5 points in J158 and J162 (6.25 on J150's ff5). D478 scores such a branch a draw. It also makes a capped
 branch scored otherwise a problem in phase B, as it already was in phase A, and makes an option capped past
 `--branch-error-max` a problem. No J158 or J162 label changes its `confident` flag. The values move, so labels from before
-and after D478 are not pooled unless they are recomputed. D478 has the numbers.
+and after D478 are not pooled unless they are recomputed. D478 has the numbers. *(Later the same day, D478's addendum: an
+option capped past the bar is a warning, `--branch-capped-warn` 0.25, never a problem; and a game the engine ends drawn
+scores ½ too.)*

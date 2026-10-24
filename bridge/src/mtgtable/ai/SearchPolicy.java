@@ -2879,20 +2879,40 @@ public final class SearchPolicy {
         return true;
     }
 
-    /** +1 when {@code ai} won the copy, -1 when it lost, 0 for a draw or a game still going. */
-    static int resultOf(final Game g, final Player ai) {
-        if (ai.hasLost()) {
-            return -1;
-        }
-        if (ai.hasWon()) {
-            return 1;
-        }
-        for (final Player p : g.getPlayers()) {
-            if (p != ai && p.hasLost()) {
-                return 1;
+    /**
+     * +1 when {@code ai} won the copy, -1 when it lost, 0 for a draw or a game still going -- the one place a fork's
+     * game is read as a result: the atlas's branches ({@link Atlas#play}, a game the engine ended), the search's
+     * rollouts ({@link Playout#result}) and the leaf's decided cases ({@link #leaf}) all read it.
+     *
+     * <p>D478's addendum: a draw is every player carrying an outcome of the same kind.  Forge ends a game drawn two
+     * ways, and neither reads as a win or a loss: every player lost at once (both at 0 life from one effect --
+     * {@code checkGameOverCondition} finds no player left and sets {@code GameEndReason.Draw}), or an effect made
+     * it a draw ({@code GameDrawEffect}, the stack past 999 items: {@code Player.intentionalDraw()}, an outcome whose
+     * {@code lossState} is {@code IntentionalDraw}, so {@code hasLost()} is true of both).  Before, both read -1 for
+     * {@code ai}, because {@code hasLost} was tested first.  And {@code setGameOver(Draw)} on a game with no outcome
+     * yet (ours, a cap) gives every player {@code win()} ({@code Player.onGameOver}), which read +1.
+     */
+    public static int resultOf(final Game g, final Player ai) {
+        final int self = ai.hasLost() ? -1 : ai.hasWon() ? 1 : 0;
+        boolean others = false;
+        boolean same = self != 0;
+        boolean otherLost = false;
+        for (final Player p : g.getRegisteredPlayers()) {
+            if (p == ai) {
+                continue;
             }
+            others = true;
+            final int k = p.hasLost() ? -1 : p.hasWon() ? 1 : 0;
+            same &= k == self;
+            otherLost |= k < 0;
         }
-        return 0;
+        if (others && same) {
+            return 0;   // a draw: every player lost, or every player "won"
+        }
+        if (self != 0) {
+            return self;
+        }
+        return otherLost ? 1 : 0;
     }
 
     // ==================================================================
@@ -2922,17 +2942,11 @@ public final class SearchPolicy {
      */
     public static double leaf(final Game g, final Player ai, final double untapped) {
         final int turn = g.getPhaseHandler().getTurn();
-        // isInGame() is "no outcome yet": a winner is out of the game too.
-        if (ai.hasLost()) {
-            return -WIN + 100.0 * turn;
-        }
-        if (ai.hasWon()) {
-            return WIN - 100.0 * turn;
-        }
-        for (final Player p : g.getPlayers()) {
-            if (p != ai && p.hasLost()) {
-                return WIN - 100.0 * turn;
-            }
+        // isInGame() is "no outcome yet": a winner is out of the game too.  D478's addendum: a decided game is read
+        // through resultOf, the one place, so an engine draw (both lost, or an intentional draw) is 0 here as well
+        final int result = resultOf(g, ai);
+        if (result != 0) {
+            return result * (WIN - 100.0 * turn);
         }
         if (g.isGameOver()) {
             return 0;   // a draw

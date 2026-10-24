@@ -749,7 +749,8 @@ public final class Atlas {
             b.turns = turnsBefore + ph.getTurn();
             // D478: a game this loop ended (the turn cap, the step cap, the deadline between steps) is a draw, 0. Not
             // resultOf: Forge's setGameOver(Draw) gives every player without an outcome a WIN (Player.onGameOver), so
-            // resultOf read the atlas seat's hasWon() and scored every capped lab branch through J162 as seat A's win
+            // resultOf read the atlas seat's hasWon() and scored every capped lab branch through J162 as seat A's win.
+            // A game the ENGINE ended drawn (both lost, an intentional draw) is resultOf's own 0 (D478's addendum)
             final boolean ended = copy.isGameOver();
             if (!ended) {
                 b.capped = b.turns > unit.turnCap;

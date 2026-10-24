@@ -24,7 +24,8 @@
  *    seat's listing does not hold is no flag, a land in hand with the drop unused and not played is one); a truncated
  *    frame log skipped and named while atlas.json is still written.
  *  - D478: a capped (or loop-timed-out) branch scored other than a draw is a problem, as phase A's capped game is; capped
- *    branches are counted by option and an option capped past --branch-error-max is a problem.
+ *    branches are counted by option, and an option capped past --branch-capped-warn (0.25) is a WARNING, never a problem
+ *    or exit 3 (D478's addendum: a long position, scored a half).
  */
 
 import assert from 'node:assert/strict';
@@ -39,7 +40,7 @@ import {
   agreement, gamesFor, pairLines, rankPairs, ranks, regretInterval, regretOf, scoreOf, scoreStat, spearman, spread, wilson, type LadderGame,
 } from '../../tools/cubelab/atlasmath.ts';
 import {
-  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, BRANCH_ERROR_MAX_DEFAULT, baselineJob, branchErrors, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, erroredOptionProblem,
+  ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, BRANCH_CAPPED_WARN_DEFAULT, BRANCH_ERROR_MAX_DEFAULT, baselineJob, branchErrors, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, erroredOptionProblem,
   cappedBranches, errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, newUnitState, phaseAReport, rolloutJob, unavailableBranches, unitJob, unitProgress, unitsOf, writeAtlas,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
@@ -494,9 +495,10 @@ test('a branch whose game Karn restarted is played on: its row carries the resta
   }
 });
 
-test('a capped branch is a draw: one written as seat A\'s win is a problem, and an option capped past the bar is one (D478, J162 modern7)', () => {
+test('a capped branch is a draw: one written as seat A\'s win is a problem; an option capped past --branch-capped-warn is a warning, never a problem (D478 and its addendum)', () => {
   const listing: DecisionListing = { d: 0, kind: 'p', turn: 3, tokens: ['pass', 'cast:31'], labels: ['pass', 'Card 1'] };
-  // 10 branches an option, 8 random and 2 Forge; option 0's branches 0-2 capped (3 of 10: over one in ten), option 1's branch 0
+  // 10 branches an option, 8 random and 2 Forge; option 0's branches 0-2 capped (3 of 10: over the default warning's one in four),
+  // option 1's branch 0
   const rows = (asWritten: boolean): BranchRow[] => {
     const rs: BranchRow[] = [];
     for (let i = 0; i < 10; i++) {
@@ -508,7 +510,8 @@ test('a capped branch is a draw: one written as seat A\'s win is a problem, and 
     }
     return rs;
   };
-  const bc = cappedBranches(rows(false), BRANCH_ERROR_MAX_DEFAULT);
+  assert.equal(BRANCH_CAPPED_WARN_DEFAULT, 0.25);
+  const bc = cappedBranches(rows(false), BRANCH_CAPPED_WARN_DEFAULT);
   assert.equal(bc.errored, 4);
   assert.deepEqual(bc.options.map((x) => [x.d, x.o, x.errored, x.branches]), [[0, 0, 3, 10]], 'option 1, 1 of 10, is under the bar');
   assert.match(erroredOptionProblem(bc.options[0] as NonNullable<typeof bc.options[0]>, 'were capped'), /^d0 option 0 `pass` \(pass\): 3 of 10 branch game\(s\) were capped \(random 3 of 8, forge 0 of 2\): 3 x ended at the turn cap/);
@@ -519,7 +522,7 @@ test('a capped branch is a draw: one written as seat A\'s win is a problem, and 
   assert.equal(d.options[0]?.random.draws, 3);
   assert.equal(decisionAtlas(listing, rows(true), 200, 7).options[0]?.random.draws, 0, 'as J162 wrote them: no draw, three wins');
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-capped-'));
-  type Doc = { phaseB: { cappedRandom: number; cappedForge: number }; checks: { problems: string[]; branchCapped: { errored: number; notDrawn: number; options: unknown[] } } };
+  type Doc = { phaseB: { cappedRandom: number; cappedForge: number }; checks: { problems: string[]; warnings: string[]; branchCapped: { errored: number; notDrawn: number; threshold: number; options: unknown[] } } };
   const run = (rs: BranchRow[], o: AtlasOptions): { rc: number; doc: Doc; md: string } => {
     fs.writeFileSync(path.join(out, 'phaseB', 'branches.jsonl'), `${rs.map((r) => JSON.stringify(r)).join('\n')}\n`);
     const rc = writeAtlas(REPO, o, out, {}, {}, () => {});
@@ -528,28 +531,43 @@ test('a capped branch is a draw: one written as seat A\'s win is a problem, and 
   try {
     fs.mkdirSync(path.join(out, 'phaseB'), { recursive: true });
     fs.writeFileSync(path.join(out, 'phaseB', 'baseline.json'), JSON.stringify({ v: 1, seed: 466, winner: 'B', first: 'A', turns: 17, decisions: [listing] }));
-    // as the fixed worker writes them: counted, the option over the bar a problem, no not-drawn problem
+    // as the fixed worker writes them: counted, the option over the default bar a WARNING, the atlas clean (exit 0)
     const a = run(rows(false), OPTS);
-    assert.equal(a.rc, 3);
+    assert.equal(a.rc, 0, a.doc.checks.problems.join('\n'));
     assert.equal(a.doc.phaseB.cappedRandom, 4);
     assert.equal(a.doc.checks.branchCapped.errored, 4);
     assert.equal(a.doc.checks.branchCapped.notDrawn, 0);
-    assert.ok(a.doc.checks.problems.some((p) => /^d0 option 0 `pass`.* 3 of 10 branch game\(s\) were capped/.test(p)), a.doc.checks.problems.join('\n'));
-    assert.ok(!a.doc.checks.problems.some((p) => /not scored a draw/.test(p)));
+    assert.equal(a.doc.checks.branchCapped.threshold, BRANCH_CAPPED_WARN_DEFAULT);
+    assert.deepEqual(a.doc.checks.problems, []);
+    assert.equal(a.doc.checks.warnings.length, 1);
+    assert.match(a.doc.checks.warnings[0] as string, /^d0 option 0 `pass`.* 3 of 10 branch game\(s\) were capped/);
     assert.match(a.md, /### Branch games the turn cap ended/);
-    // under a bar of one half: counted, no problem at all
-    const b = run(rows(false), { ...OPTS, branchErrorMax: 0.5 });
+    assert.match(a.md, /- a warning: d0 option 0 `pass`/);
+    assert.doesNotMatch(a.md, /a problem: d0 option 0/);
+    // --branch-error-max does not move it: at one in a hundred the capped option is still a warning, not a problem
+    const e = run(rows(false), { ...OPTS, branchErrorMax: 0.01 });
+    assert.equal(e.rc, 0);
+    assert.ok(!e.doc.checks.problems.some((p) => /capped/.test(p)), e.doc.checks.problems.join('\n'));
+    // a pauper night at the 40-turn cap: every branch of the option capped is still a warning, exit 0
+    const all = run(rows(false).map((r) => (r.o === 0 ? { ...r, capped: true, turns: 41, result: 0, score: 0.5 } : r)), OPTS);
+    assert.equal(all.rc, 0);
+    assert.match(all.doc.checks.warnings[0] as string, /10 of 10 branch game\(s\) were capped/);
+    // under a warning bar of one half: counted, no warning, no problem
+    const b = run(rows(false), { ...OPTS, branchCappedWarn: 0.5 });
     assert.equal(b.doc.checks.branchCapped.options.length, 0);
+    assert.deepEqual(b.doc.checks.warnings, []);
     assert.ok(!b.doc.checks.problems.some((p) => /capped/.test(p)), b.doc.checks.problems.join('\n'));
-    // as J162's worker wrote them (result 1): a problem, with the count
-    const c = run(rows(true), { ...OPTS, branchErrorMax: 0.5 });
+    // as J162's worker wrote them (result 1): a problem (tool correctness, still exit 3), with the count
+    const c = run(rows(true), { ...OPTS, branchCappedWarn: 0.5 });
     assert.equal(c.rc, 3);
     assert.equal(c.doc.checks.branchCapped.notDrawn, 4);
     assert.ok(c.doc.checks.problems.some((p) => /^4 capped or timed-out branch game\(s\) not scored a draw \(D478\)/.test(p)), c.doc.checks.problems.join('\n'));
     // a loop timeout (played, no engine error) is a draw too: brow's branch 5 is a win, so timed out it is a problem until it is 0
     const t = (draw: boolean): BranchRow[] => rows(false).map((r) => (r.o === 1 && r.i === 5 ? { ...r, timedOut: true, ...(draw ? { result: 0, score: 0.5 } : {}) } : r));
-    assert.ok(run(t(false), { ...OPTS, branchErrorMax: 0.5 }).doc.checks.problems.some((p) => /^1 capped or timed-out branch game\(s\) not scored a draw/.test(p)));
-    assert.ok(!run(t(true), { ...OPTS, branchErrorMax: 0.5 }).doc.checks.problems.some((p) => /not scored a draw/.test(p)));
+    const tf = run(t(false), { ...OPTS, branchCappedWarn: 0.5 });
+    assert.equal(tf.rc, 3);
+    assert.ok(tf.doc.checks.problems.some((p) => /^1 capped or timed-out branch game\(s\) not scored a draw/.test(p)));
+    assert.ok(!run(t(true), { ...OPTS, branchCappedWarn: 0.5 }).doc.checks.problems.some((p) => /not scored a draw/.test(p)));
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }

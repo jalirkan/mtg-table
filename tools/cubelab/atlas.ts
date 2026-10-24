@@ -7,7 +7,7 @@
 //       [--turn-cap 40] [--rollouts 10000] [--branch-random 200] [--branch-forge 40] [--decisions all|N]
 //       [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--unit-timeout 30] [--boot 1000]
 //       [--ladder var/ai-ladder] [--pairs tools/ai-bench/pairs-confirm.txt] [--phase a|b|both|report]
-//       [--branch-error-max 0.1]
+//       [--branch-error-max 0.1] [--branch-capped-warn 0.25]
 //
 // THE PAIR (--pair auto): the line of the pairs file with the most ladder games and the most even record,
 // as one rule (atlasmath.ts rankPairs: the smallest |p - 1/2| + 1.96 sqrt(p(1-p)/n) over the decisive
@@ -53,8 +53,8 @@
 // counted by option in `checks.optionUnavailable`, and an option unavailable past the same share is a problem.
 // D478: a branch the turn cap ended is a draw (`result` 0, `score` .5); one scored otherwise is a problem (Forge's
 // setGameOver(Draw) makes both seats winners, and every capped branch through J162 was written `result` 1). Capped branches
-// are counted by option in `checks.branchCapped`, and an option capped past the same share is a problem: a capped branch
-// says nothing about the option, only that the game ran long.
+// are counted by option in `checks.branchCapped`, and an option capped past --branch-capped-warn (0.25) is a WARNING
+// (`checks.warnings`, never exit 3; D478's addendum): a capped branch is a long position scored a half, not a fault.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -80,6 +80,8 @@ export interface AtlasOptions {
   unitTimeoutMin: number;
   /** D466: an option whose branch games errored more than this share of the time is a problem (default BRANCH_ERROR_MAX_DEFAULT). */
   branchErrorMax?: number;
+  /** D478's addendum: an option whose branch games the turn cap ended more than this share of the time is a warning (default BRANCH_CAPPED_WARN_DEFAULT). */
+  branchCappedWarn?: number;
 }
 
 /**
@@ -89,6 +91,14 @@ export interface AtlasOptions {
  * on 458, 23 on 460) and far below a play the fork cannot copy (all of them).
  */
 export const BRANCH_ERROR_MAX_DEFAULT = 0.1;
+
+/**
+ * D478's addendum: the default --branch-capped-warn.  A capped branch is a long game scored a half and kept in its option's
+ * value, so an option with many of them is worth a look, never a failed atlas: the most in any lab folder through J162 was
+ * 7.1% (J150 ff5-452), and a pauper or ff5 night at the 40-turn cap can run past D466's one in ten without a fault anywhere.
+ * One in four says the option's value is mostly long games.
+ */
+export const BRANCH_CAPPED_WARN_DEFAULT = 0.25;
 
 /**
  * D459: the default --unit-timeout.  J148's 488 finished units took 115 s at the median, 358 s at the
@@ -114,11 +124,11 @@ export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' |
 
 const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
 
-/** D466: --branch-error-max, a share between 0 and 1. */
-function fraction(v: string | undefined, d: number): number {
+/** D466: --branch-error-max (D478's addendum: and --branch-capped-warn), a share between 0 and 1. */
+function fraction(v: string | undefined, d: number, flag = 'branch-error-max'): number {
   if (v === undefined) return d;
   const x = Number(v);
-  if (!Number.isFinite(x) || x < 0 || x > 1) throw new Error('atlas: --branch-error-max wants a share between 0 and 1 (0.1 = one branch game in ten)');
+  if (!Number.isFinite(x) || x < 0 || x > 1) throw new Error(`atlas: --${flag} wants a share between 0 and 1 (0.1 = one branch game in ten)`);
   return x;
 }
 
@@ -309,6 +319,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
     leakChecks: int('leak-checks', 1), branchTimeoutSec: int('branch-timeout', 120, 10), boot: int('boot', 1000), pair,
     unitTimeoutMin: int('unit-timeout', UNIT_TIMEOUT_MIN_DEFAULT, 1),
     branchErrorMax: fraction(one(f, 'branch-error-max'), BRANCH_ERROR_MAX_DEFAULT),
+    branchCappedWarn: fraction(one(f, 'branch-capped-warn'), BRANCH_CAPPED_WARN_DEFAULT, 'branch-capped-warn'),
   };
   for (const d of [o.deckA, o.deckB]) if (!fs.existsSync(d)) throw new Error(`atlas: no deck ${d}`);
   const phase = one(f, 'phase') ?? 'both';
@@ -318,7 +329,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
   const planFile = path.join(out, 'plan.json');
   const plan = { v: 1, decision: 'D451', deckA: shownPath(repo, o.deckA), deckB: shownPath(repo, o.deckB), seed: o.seed, turnCap: o.turnCap, options: o.options,
     rollouts: o.rollouts, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, chunk: o.chunk, branchTimeoutSec: o.branchTimeoutSec, unitTimeoutMin: o.unitTimeoutMin,
-    branchErrorMax: o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT,
+    branchErrorMax: o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT, branchCappedWarn: o.branchCappedWarn ?? BRANCH_CAPPED_WARN_DEFAULT,
     pairRule: pair ? { rule: '|p - 1/2| + 1.96 sqrt(p (1 - p) / n) over the decisive ladder games of the line, smallest wins; ties more games, then the earlier line', chosen: pair, top: pairTable, ladderGames } : null };
   if (fs.existsSync(planFile)) {
     const was = JSON.parse(fs.readFileSync(planFile, 'utf8')) as Record<string, unknown>;
@@ -723,8 +734,8 @@ function tallyBranches(rows: BranchRow[], threshold: number, why: (r: BranchRow)
 
 /**
  * D478: the branch games the turn cap ended, the same tally (`errored` counts them): by option, an option listed when more
- * than `threshold` of its branch games were capped.  A capped branch is scored a draw and stays in the option's value, but
- * it says nothing about the option, so past the bar the value rests on the branches that ended.
+ * than `threshold` of its branch games were capped.  A capped branch is scored a draw and stays in the option's value: it is
+ * a long position, not a fault, so a listed option is a warning (D478's addendum, --branch-capped-warn), never a problem.
  */
 export function cappedBranches(rows: BranchRow[], threshold: number): BranchErrors {
   return tallyBranches(rows, threshold, (r) => (r.capped && !r.error && !r.unavailable ? 'ended at the turn cap' : null));
@@ -823,11 +834,13 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const ua = unavailableBranches(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
   for (const x of ua.options) problems.push(erroredOptionProblem(x, 'were unavailable'));
   // D478: a branch the loop ended -- the cap, or the deadline between steps (a played `timedOut`; one inside a step is an engine
-  // error) -- is a draw: phase A's check, now phase B's too.  And an option capped past the same share is a problem.
+  // error) -- is a draw: phase A's check, now phase B's too, a problem (tool correctness).  An option capped past
+  // --branch-capped-warn is a WARNING (D478's addendum): a long position, scored a half, never a failed atlas.
+  const warnings: string[] = [];
   const bCappedNotDrawn = bRows.filter((r) => (r.capped || r.timedOut) && !r.error && !r.unavailable && (r.result !== 0 || r.score !== 0.5));
   if (bCappedNotDrawn.length) problems.push(`${bCappedNotDrawn.length} capped or timed-out branch game(s) not scored a draw (D478): ${bCappedNotDrawn[0]?.key} result ${bCappedNotDrawn[0]?.result}`);
-  const bc = cappedBranches(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
-  for (const x of bc.options) problems.push(erroredOptionProblem(x, 'were capped'));
+  const bc = cappedBranches(bRows, o.branchCappedWarn ?? BRANCH_CAPPED_WARN_DEFAULT);
+  for (const x of bc.options) warnings.push(erroredOptionProblem(x, 'were capped'));
   const retained = units.map((u) => u.copiesRetained).filter((x): x is number => typeof x === 'number');
   // the maps
   const byD = new Map<number, BranchRow[]>();
@@ -866,6 +879,8 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       optionUnavailable: ua,
       // D478: the branch games the turn cap ended (`errored` counts them), by option past the threshold, and those not scored a draw
       branchCapped: { ...bc, notDrawn: bCappedNotDrawn.length },
+      // D478's addendum: worth a look, never exit 3 -- the options capped past --branch-capped-warn
+      warnings,
       // D466: the frame logs gunzip could not read, left out of the checks
       unreadableFrameLogs: truncated,
       // D466 (#184's review): the games whose rows went without the id check because of one of those logs
@@ -879,6 +894,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   fs.writeFileSync(path.join(out, 'atlas.md'), atlasMd(doc as unknown as AtlasDoc, o));
   say(`atlas: ${shownPath(repo, path.join(out, 'atlas.json'))} and atlas.md; phase A ${aRows.length} game(s), phase B ${bRows.length} branch game(s) at ${ds.length} decision(s); checks: ${problems.length ? `${problems.length} PROBLEM(S)` : 'clean'} (${doc.checks.rows} rows, ${red.checked} frame logs, ${leak.length} leak check(s))`);
   for (const p of problems.slice(0, 10)) say(`  ATLAS PROBLEM: ${p}`);
+  for (const w of warnings.slice(0, 10)) say(`  atlas warning: ${w}`);
   return problems.length ? 3 : 0;
 }
 
@@ -886,7 +902,7 @@ interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
   phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number };
-  checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
+  checks: { problems: string[]; warnings?: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
       xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number };
@@ -968,7 +984,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   const c = doc.checks;
   L.push('## Checks', '');
   const g = c.guardrails;
-  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.xDrawn === undefined ? '' : `; G6 (D471): ${g.xDrawn} pick(s) of the seats' own X plays had X drawn from 1 up, ${g.zeroXLeftOut ?? 0} offer(s) payable only at X = 0 were left out, and ${g.zeroX ?? 0} own play(s) were paid at X = 0`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4}${g.violationsBy.G6 === undefined ? '' : `, G6 ${g.violationsBy.G6}`})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
+  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.xDrawn === undefined ? '' : `; G6 (D471): ${g.xDrawn} pick(s) of the seats' own X plays had X drawn from 1 up, ${g.zeroXLeftOut ?? 0} offer(s) payable only at X = 0 were left out, and ${g.zeroX ?? 0} own play(s) were paid at X = 0`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4}${g.violationsBy.G6 === undefined ? '' : `, G6 ${g.violationsBy.G6}`})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}${c.warnings?.length ? ` Warnings (never a problem): ${c.warnings.length}, below.` : ''}`, '');
   const be = c.branchErrors;
   if (be && be.errored) {
     // D466: the branch errors, by text, and the options past the threshold
@@ -1003,8 +1019,8 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   if (bc && bc.errored) {
     // D478: the branches the turn cap ended, and the options capped past the threshold
     L.push(`### Branch games the turn cap ended`, '');
-    L.push(`${bc.errored} of ${bc.branches} branch game(s) ended at the turn cap; each is scored a draw (D478)${bc.notDrawn ? `, but ${bc.notDrawn} of them were written otherwise (a problem)` : ''}.`, '');
-    for (const x of bc.options) L.push(`- a problem: ${erroredOptionProblem(x, 'were capped').replace(/\|/g, '/')}`);
+    L.push(`${bc.errored} of ${bc.branches} branch game(s) ended at the turn cap; each is scored a draw (D478)${bc.notDrawn ? `, but ${bc.notDrawn} of them were written otherwise (a problem)` : ''}. An option with more than ${pct(bc.threshold)}% of its branch games capped is a warning, never a problem: a capped branch is a long position, kept in the value at a half.`, '');
+    for (const x of bc.options) L.push(`- a warning: ${erroredOptionProblem(x, 'were capped').replace(/\|/g, '/')}`);
     if (bc.options.length) L.push('');
   }
   if (c.unreadableFrameLogs?.length) {
