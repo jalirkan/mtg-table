@@ -244,3 +244,5 @@ a permanent that exiled something). Only its face and timestamps are taken from 
   names exile, and the check fails.
 - **Measured.** `tools/ai-bench.sh --selftest`: **172 checks, 0 failures**, 6 of them new (`copierFollowUpScenarios`).
   The mirror-zone ablation fails exactly 1. `bridge/build.sh`: OK.
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `6d884c98` (the addendum's
+  code; only this line differs): **OK, 59 of 59 jobs**, 513.8 s wall (load average up to 13.8).
