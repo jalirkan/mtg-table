@@ -156,3 +156,4 @@ The real game is never touched: it restarts through Forge's own loop.
   `tsc --noEmit` is clean.
 - **`bridge/build.sh`: OK.** **`tools/cubelab.sh atlas-selftest --jobs 1`: OK** (16 forks, 8 no-leak checks, 38 frame
   logs, 538 rows), in 2 min 27 s.
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `1f682de2` (rebased onto `0f9275b4`, #201's merge): **OK, 59 of 59 jobs**, 518.2 s wall (load average up to 16.9).
