@@ -1321,7 +1321,7 @@ tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 10000 --branch-random 2
 tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke
 tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
 tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
-tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair (~2 min at the default --jobs 2, ~3 at --jobs 1, engine)
+tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair and G6 on a Crypt Rats pair (~4.5 min at --jobs 1, engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
 
@@ -1341,9 +1341,17 @@ like this one, not a fault in the atlas.
   not repeated at its next decision (G3); the opening hand is kept (G4); a play the engine refused to pay
   for (a tax such as Elite Spellbinder's) is not picked again in the same priority window -- the turn, the
   phase, the stack and the seat's land count, so a land drop opens a new one (G5, D458, D462); a
+  play of its own with {X} in its mana cost gets X drawn uniformly from 1 to the most it can pay
+  (Forge's `ComputerUtilCost.setMaxXValue`), and one payable only at X = 0 is not offered -- Forge's
+  own answer keeps Forge's X (G6, [D471](../decisions/D471-random-seat-zero-x.md): before it, Crypt
+  Rats' free X = 0 activation was picked thousands of times a branch and ran J158's pauper branches to
+  the 120 s kill); a
   game past `--turn-cap` (40) is a draw. G1 and G4 are read back from the seats' decision records after
-  the run, and G3's and G5's counts from each random seat's `decisions` summary (protocol M71) into
-  `atlas.json`'s `checks.guardrails` (`noRepeatNoOp`, `refusedCast`, `noRepeatRefused`). G5 changed the
+  the run, and G3's, G5's and G6's counts from each random seat's `decisions` summary (protocol M71, M73)
+  into `atlas.json`'s `checks.guardrails` (`noRepeatNoOp`, `refusedCast`, `noRepeatRefused`, `xDrawn`,
+  `zeroXLeftOut`, and G6's violation `zeroX` -- an own X play the engine paid at X = 0 -- which is a
+  problem above 0 and is in `violationsBy`). G6, like G5, changed the random policy: atlases from before
+  and after it are not pooled. G5 changed the
   random policy: an atlas from before D458 and one after it are two policies, not a repeat. Since
   [D466](../decisions/D466-atlas-j156-tool-faults.md) the record's land options and the seat's are one
   listing with the land drop checked (a land exile lets the seat play is not offered after the drop), the

@@ -30,6 +30,17 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-24 — a random seat's guardrail counts include G6's
+
+The move atlas's random seat sizes X itself (D471, guardrail G6: X drawn from 1 to the most it can
+pay, a play payable only at X = 0 left out), and the atlas reads G6's counts back from the logs like
+G3's and G5's (M71). Decision **D471** (M73). Held by `web/test/cubelab-record.test.ts` (a random
+seat's summary with G6's counts passes; the names are refused outside such a log as M71's are).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M73 | §8.2, M71 | **A random seat's guardrail counts gain G6's three names.** The `explore.guardrails` block of M71 may also carry **`xDrawn`** (the seat's own pick of a play with {X} in its mana cost, X drawn from 1 up), **`zeroXLeftOut`** (a play payable only at X = 0 left out of a listing) and **`zeroX`** (G6's violation: such an own pick that the engine put on the stack with X = 0); non-negative integers, a name absent when it never fired, no card named. Every M71 rule is unchanged: only in a log whose header's `playExplore` has `epsilon` 1, and `tools/check-redaction.mjs` fails an unknown name or a count that is not a non-negative integer. **Optional**: absent from every log before this amendment. | D471 |
+
 ### 2026-10-22 — a Forge-piloted atlas branch seat's pay-cap count is in its log
 
 The move atlas's Forge seats got a cap on Forge's refused-play loop (D465: a play the engine refused

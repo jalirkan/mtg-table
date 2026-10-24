@@ -3115,8 +3115,9 @@ const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn',
 const EXPLORE_KEYS = new Set(['rule', 'forge']);
 const EXPLORE_RULES = ['random', 'closeCall'];
 const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind', 'guardrails']);
-// M71 / D451, D458: the random seat's guardrail counts, by name (G1 land, G4 keep, G3 noRepeatNoOp, G5 refusedCast / noRepeatRefused).
-const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused'];
+// M71 / D451, D458: the random seat's guardrail counts, by name (G1 land, G4 keep, G3 noRepeatNoOp, G5 refusedCast / noRepeatRefused);
+// M73 / D471: G6's xDrawn / zeroXLeftOut and its violation zeroX.
+const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX'];
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);

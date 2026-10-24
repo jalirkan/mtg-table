@@ -519,14 +519,18 @@ export interface GuardrailCheck { logs: number; priority: number; landOffered: n
   violations: string[];
   /** D466: every violation, G1's and G4's, however many the list leaves out. */
   violationCount?: { G1: number; G4: number };
-  /** D458: the random seats' own guardrail counts, summed from each log's `decisions` summary (protocol M71): G3's `noRepeatNoOp`, G5's `refusedCast` and `noRepeatRefused`. */
+  /** D458: the random seats' own guardrail counts, summed from each log's `decisions` summary (protocol M71): G3's `noRepeatNoOp`, G5's `refusedCast` and `noRepeatRefused`; D471 (M73): G6's `xDrawn`, `zeroXLeftOut` and its violation `zeroX`. */
   counted?: Record<string, number> }
 
 /** How many guardrail violations a check names; D466: the count past it is still counted (`violationCount`). */
 export const GUARDRAIL_VIOLATIONS_LISTED = 50;
 
-/** D458: the guardrail counts every atlas reports, zero when no log counted one (G3; G5's refused picks and the removals after them). */
-export const COUNTED_GUARDRAILS = ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused'] as const;
+/**
+ * D458: the guardrail counts every atlas reports, zero when no log counted one (G3; G5's refused picks and the removals after them).
+ * D471: G6's -- the seat's own X plays with X drawn from 1..max (`xDrawn`), the plays left out because only X = 0 was payable
+ * (`zeroXLeftOut`), and its violation, an own X play the engine paid at X = 0 (`zeroX`, a problem when above 0).
+ */
+export const COUNTED_GUARDRAILS = ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX'] as const;
 
 /**
  * D451's guardrails, read back from a random seat's own frame log (its D347 decision records): G1, every
@@ -761,8 +765,12 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   if (leaks.length) problems.push(`${leaks.length} of ${leak.length} no-leak check(s) moved when only seat B's hidden cards did`);
   problems.push(...gc.violations.slice(0, 10));
   // D466: the list is capped, the count is not
-  const vTotal = (gc.violationCount?.G1 ?? 0) + (gc.violationCount?.G4 ?? 0);
-  if (vTotal > Math.min(10, gc.violations.length)) problems.push(`${vTotal} guardrail violation(s) in all (G1 ${gc.violationCount?.G1 ?? 0}, G4 ${gc.violationCount?.G4 ?? 0}); the first ${Math.min(10, gc.violations.length)} named above`);
+  const g14 = (gc.violationCount?.G1 ?? 0) + (gc.violationCount?.G4 ?? 0);
+  if (g14 > Math.min(10, gc.violations.length)) problems.push(`${g14} guardrail violation(s) in all (G1 ${gc.violationCount?.G1 ?? 0}, G4 ${gc.violationCount?.G4 ?? 0}); the first ${Math.min(10, gc.violations.length)} named above`);
+  // D471: G6's violation is the seats' own count (`zeroX`, read back from the play the engine paid for)
+  const g6 = gc.counted?.zeroX ?? 0;
+  if (g6 > 0) problems.push(`${g6} play(s) the random seats picked themselves went on the stack with X = 0 (G6, D471: X is drawn from 1..max)`);
+  const vTotal = g14 + g6;
   const overCap = aRows.filter((r) => !r.engineError && (r.turns ?? 0) > o.turnCap + 1);
   if (overCap.length) problems.push(`${overCap.length} phase A game(s) ran past the turn cap`);
   const cappedNotDrawn = aRows.filter((r) => r.capped && r.winner !== 'draw');
@@ -804,9 +812,9 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
     checks: { rowsFiles: rc.reduce((a, c) => a + c.files, 0), rows: rc.reduce((a, c) => a + c.rows, 0), gamesIdChecked: rc.reduce((a, c) => a + c.games, 0),
       frameLogs: red.checked, frameLogsFailed: red.failed.length, redactionMs: red.ms, forks: bRows.length, forkProblems: forkBad.length,
       leakChecks: leak.length, leaks: leaks.length, leakControlsMoved: leak.filter((r) => r.controlMoved).length,
-      // D466: `violations` is every violation (the problems name the first ten), `violationsBy` G1's and G4's
+      // D466: `violations` is every violation (the problems name the first ten), `violationsBy` G1's and G4's (and G6's, D471)
       guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: vTotal,
-        violationsBy: { G1: gc.violationCount?.G1 ?? 0, G4: gc.violationCount?.G4 ?? 0 }, ...countedGuardrails(gc), forgePayCap },
+        violationsBy: { G1: gc.violationCount?.G1 ?? 0, G4: gc.violationCount?.G4 ?? 0, G6: g6 }, ...countedGuardrails(gc), forgePayCap },
       // D466: the branch games that errored, by error text and by option past the threshold
       branchErrors: be,
       // D466: the frame logs gunzip could not read, left out of the checks
@@ -831,7 +839,8 @@ interface AtlasDoc {
   phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; cappedRandom: number; cappedForge: number };
   checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
-      violationsBy?: { G1: number; G4: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number };
+      violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
+      xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number };
     branchErrors?: BranchErrors; unreadableFrameLogs?: Array<{ log: string; why: string }> };
 }
 
@@ -851,10 +860,10 @@ export function forgePayCapOf(text: string): number {
   return n;
 }
 
-/** D458: checks.guardrails' counted keys -- G3's no-op removals, G5's refused picks and the removals after them -- read from the logs. */
+/** D458: checks.guardrails' counted keys -- G3's no-op removals, G5's refused picks and the removals after them, G6's (D471) -- read from the logs. */
 export function countedGuardrails(gc: GuardrailCheck): Record<(typeof COUNTED_GUARDRAILS)[number], number> {
   const c = gc.counted ?? {};
-  return { noRepeatNoOp: c.noRepeatNoOp ?? 0, refusedCast: c.refusedCast ?? 0, noRepeatRefused: c.noRepeatRefused ?? 0 };
+  return Object.fromEntries(COUNTED_GUARDRAILS.map((k) => [k, c[k] ?? 0])) as Record<(typeof COUNTED_GUARDRAILS)[number], number>;
 }
 
 const pct = (x: number | null | undefined): string => (x === null || x === undefined ? '-' : (x * 100).toFixed(1));
@@ -910,7 +919,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   const c = doc.checks;
   L.push('## Checks', '');
   const g = c.guardrails;
-  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
+  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.xDrawn === undefined ? '' : `; G6 (D471): ${g.xDrawn} pick(s) of the seats' own X plays had X drawn from 1 up, ${g.zeroXLeftOut ?? 0} offer(s) payable only at X = 0 were left out, and ${g.zeroX ?? 0} own play(s) were paid at X = 0`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4}${g.violationsBy.G6 === undefined ? '' : `, G6 ${g.violationsBy.G6}`})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}`, '');
   const be = c.branchErrors;
   if (be && be.errored) {
     // D466: the branch errors, by text, and the options past the threshold
@@ -946,7 +955,9 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
  * every fork was the position, every no-leak check stayed put while its negative control moved, the
  * guardrails read back clean, every rows file and frame log passed, and both decisions have both maps.
  * D466: then a G5 leg -- phase A of a pair with a tax (SELFTEST_G5) -- where a refused cast and the
- * removal after it must both be counted.
+ * removal after it must both be counted.  D471: then a G6 leg -- phase A of the pauper pair whose Crypt Rats
+ * looped J158's branches (SELFTEST_G6) -- where X must be drawn, an X = 0-only offer left out, and no own
+ * X play paid at 0.
  */
 /**
  * The self-test's folder: ABSOLUTE, so LAB_DATA_DIR never re-roots it (D450 moves only relative var/
@@ -964,7 +975,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   ]);
   const rc = await atlasCommand(repo, flags, say);
   const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as {
-    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number }; problems: string[]; frameLogs: number; rows: number; copiesRetainedMax?: number | null };
+    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number }; problems: string[]; frameLogs: number; rows: number; copiesRetainedMax?: number | null };
     phaseA: { played: number }; phaseB: { decisions: Array<{ complete: boolean }> } | null;
   };
   const c = doc.checks;
@@ -977,7 +988,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   want(c.leakChecks >= 4 && c.leaks === 0, `no-leak checks ran on every unit and stayed put (${c.leaks} of ${c.leakChecks} moved)`);
   want(c.leakControlsMoved === c.leakChecks, `every negative control moved (${c.leakControlsMoved} of ${c.leakChecks})`);
   want(c.guardrails.violations === 0 && c.guardrails.landOffered > 0 && c.guardrails.landTaken === c.guardrails.landOffered, 'G1 and G4 read back clean, with lands offered');
-  want(COUNTED_GUARDRAILS.every((k) => typeof c.guardrails[k] === 'number'), 'G3 and G5 (D458) counted from the logs');
+  want(COUNTED_GUARDRAILS.every((k) => typeof c.guardrails[k] === 'number'), 'G3, G5 (D458) and G6 (D471) counted from the logs');
   want(typeof c.guardrails.forgePayCap === 'number', 'the Forge seats\' pay cap (D465) counted from the logs');
   // D465: before GameLedger.detach every unit held all four of its copies (each branch's ledger held its game); after it, 0 or 1
   want(typeof c.copiesRetainedMax === 'number' && c.copiesRetainedMax <= 1, `a unit's worker holds at most one branch copy after one GC at its end, never one a branch (D465; most held: ${String(c.copiesRetainedMax)})`);
@@ -986,16 +997,36 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   // villain (doom-legion, written from its spec), and neither carries a cost-raising card (D462 point 4), so the G5 leg plays
   // phase A of the committed repeat pair, fair-fight-900000005 (seat B's Elite Spellbinder), at a seed whose rollout 6 J156
   // saw refused (J156's a-ff5, seed 452): the random seat must be refused a cast and must leave it out after (the D466 put-back).
+  // D471: G6 changed that pair's games (Walking Ballista in A, Hangarback Walker in B), and the refusal moved to rollout 16, so 16.
   const g5 = await atlasSelftestG5(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
   want(g5.rc === 0 && g5.problems.length === 0, `the G5 leg's own checks: ${g5.problems.join('; ') || `exit ${g5.rc}`}`);
   want(g5.refusedCast >= 1 && g5.noRepeatRefused >= 1, `G5 fired on the tax pair: refused ${g5.refusedCast}, left out ${g5.noRepeatRefused} (both >= 1)`);
+  // D471: G6 on the pair whose Crypt Rats ({X}, free at X = 0) looped 54 of J158's first 1,332 pauper branches to the 120 s kill
+  const g6 = await atlasSelftestLeg(repo, path.join(out, 'g6'), SELFTEST_G6, f.get('jobs')?.at(-1) ?? '2', say);
+  want(g6.rc === 0 && g6.problems.length === 0, `the G6 leg's own checks: ${g6.problems.join('; ') || `exit ${g6.rc}`}`);
+  want((g6.guardrails.xDrawn ?? 0) >= 1 && (g6.guardrails.zeroXLeftOut ?? 0) >= 1 && g6.guardrails.zeroX === 0,
+    `G6 fired on the Crypt Rats pair: X drawn ${g6.guardrails.xDrawn ?? 0}, X = 0-only offers left out ${g6.guardrails.zeroXLeftOut ?? 0} (both >= 1), own plays paid at X = 0 ${String(g6.guardrails.zeroX)} (0)`);
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
-  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused})`);
+  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
   return fails.length ? 1 : 0;
 }
 
 /** D466 (#184's review): the G5 leg's pair, seed and rollouts (see atlasSelftest). */
-export const SELFTEST_G5 = { deckA: 'tools/ai-bench/decks/sets/fair-fight-900000005-A.dck', deckB: 'tools/ai-bench/decks/sets/fair-fight-900000005-B.dck', seed: 452, rollouts: 6 } as const;
+export const SELFTEST_G5 = { deckA: 'tools/ai-bench/decks/sets/fair-fight-900000005-A.dck', deckB: 'tools/ai-bench/decks/sets/fair-fight-900000005-B.dck', seed: 452, rollouts: 16 } as const;
+
+/** D471: the G6 leg's pair (pauper-900000005, Crypt Rats in deck A), seed and rollouts (see atlasSelftest). */
+export const SELFTEST_G6 = { deckA: 'tools/ai-bench/decks/sets/pauper-900000005-A.dck', deckB: 'tools/ai-bench/decks/sets/pauper-900000005-B.dck', seed: 464, rollouts: 6 } as const;
+
+/** D471: phase A of a leg's pair into `dir`, and the guardrail counts its atlas checks report. */
+async function atlasSelftestLeg(repo: string, dir: string, leg: { deckA: string; deckB: string; seed: number; rollouts: number }, jobs: string, say: (s: string) => void): Promise<{ rc: number; guardrails: Record<string, number>; problems: string[] }> {
+  const flags = new Map<string, string[]>([
+    ['deck-a', [leg.deckA]], ['deck-b', [leg.deckB]], ['seed', [String(leg.seed)]], ['rollouts', [String(leg.rollouts)]],
+    ['phase', ['a']], ['boot', ['200']], ['jobs', [jobs]], ['out', [dir]],
+  ]);
+  const rc = await atlasCommand(repo, flags, say);
+  const doc = JSON.parse(fs.readFileSync(path.join(dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; guardrails: Record<string, number> } };
+  return { rc, guardrails: doc.checks.guardrails, problems: doc.checks.problems };
+}
 
 /** D466: phase A of the tax pair into `<selftest>/g5`, and its G5 counts. */
 async function atlasSelftestG5(repo: string, out: string, jobs: string, say: (s: string) => void): Promise<{ rc: number; refusedCast: number; noRepeatRefused: number; problems: string[] }> {

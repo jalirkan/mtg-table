@@ -37,6 +37,7 @@ import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
+import forge.game.spellability.SpellAbilityStackInstance;
 import forge.game.spellability.TargetChoices;
 import forge.game.spellability.TargetRestrictions;
 import forge.game.zone.ZoneType;
@@ -91,7 +92,11 @@ import forge.game.zone.ZoneType;
  * ({@link #fingerprint}) is not offered at the seat's next decision with the
  * stack empty; (G4) the opening hand is always kept; (G5, D458) a play the
  * engine refused to pay for is not offered again in the same priority window
- * ({@link #played}, {@link #window}).  The turn cap is the
+ * ({@link #played}, {@link #window}); (G6, D471) a play of its own with {X}
+ * in its mana cost gets X drawn uniformly from 1 to the most the seat can pay
+ * ({@code ComputerUtilCost.setMaxXValue}, Forge's own maximum), and is left
+ * out when only X = 0 is payable -- X = 0 is never the seat's own answer, as it
+ * is never Forge's ({@link #drawX}).  Forge's own answer keeps Forge's X.  The turn cap is the
  * game loop's (the cube lab's {@code turnCap}).
  *
  * <p><b>Its own randomness.</b>  Every draw is {@link ExploreMath}'s seeded
@@ -165,6 +170,8 @@ public final class Explorer {
     private long lastFingerprint;
     /** G5 (D458): the play the random seat just returned (null: a pass or a land), until the engine plays it. */
     private String pendingPick;
+    /** G6 (D471): the play just returned is the seat's own pick (not Forge's answer) with {X} in its mana cost. */
+    private boolean pendingOwnX;
     /** G5: the plays the engine refused to pay for in {@link #refusedWindow}, the priority window they were refused in. */
     private final Set<String> refused = new LinkedHashSet<>();
     private String refusedWindow;
@@ -203,10 +210,32 @@ public final class Explorer {
     public void played(final Player seat, final SpellAbility sa, final boolean refusedNow) {
         final String tok = pendingPick != null ? pendingPick : Decisions.saToken(sa);
         pendingPick = null;
+        final boolean ownX = pendingOwnX;
+        pendingOwnX = false;
+        if (math.config().random && ownX && !refusedNow) {
+            // G6's violation, read back from the play the engine put on the stack: an activated ability
+            // goes there as a fresh copy and the original's X is cleared (Forge's MagicStack.add), so the
+            // X is the stack item's.  Not on the stack (nothing to read): no verdict.
+            final SpellAbility onStack = stackItemOf(seat.getGame(), sa);
+            if (onStack != null && zeroXViolation(true, sa.costHasManaX(), onStack.getXManaCostPaid())) {
+                math.guardrail("zeroX");
+            }
+        }
         if (!math.config().random || !refusedNow || tok == null || "pass".equals(tok)) {
             return;
         }
         noteRefused(window(seat.getGame(), seat), tok);
+    }
+
+    /** G6: the stack's item for the play {@code sa} just handed to the engine (itself, or the copy Forge put there), or null. */
+    private static SpellAbility stackItemOf(final Game g, final SpellAbility sa) {
+        for (final SpellAbilityStackInstance si : g.getStack()) {
+            final SpellAbility s = si.getSpellAbility();
+            if (s == sa || s != null && s.getOriginalAbility() == sa) {
+                return s;
+            }
+        }
+        return null;
     }
 
     /** G5: {@code tok} was refused in window {@code w}: counted, and left out of the rest of that window. */
@@ -245,9 +274,47 @@ public final class Explorer {
         return n;
     }
 
+    /**
+     * G6 (D471): X for the random seat's own pick of a play with {X} in its mana
+     * cost, given {@code max}, the most X the seat can pay now (Forge's
+     * {@code ComputerUtilCost.setMaxXValue}): uniform over 1..max, or 0 when
+     * {@code max} is below 1 -- the play is then left out of the listing and the
+     * removal counted ({@code zeroXLeftOut}).  Never 0 for a listed play: the
+     * seat's X was never drawn before G6 -- the play carried whatever Forge's own
+     * evaluation had last written on it, most often nothing, i.e. 0 -- and Forge's
+     * AI itself never answers X = 0 ({@code AiController.canPlaySa}'s
+     * {@code CantAffordX}).  Engine-free, for the self-test.
+     */
+    static int drawX(final int max, final ExploreMath math) {
+        if (max < 1) {
+            math.guardrail("zeroXLeftOut");
+            return 0;
+        }
+        return 1 + math.pick(max);
+    }
+
+    /**
+     * G6's violation: the seat's own pick ({@code own}, not Forge's answer) of a
+     * play with {X} in its mana cost went onto the stack with X (as the engine
+     * paid it, {@code x}; null is 0) below 1.  Forge's own answer is never one:
+     * its X is Forge's.  Engine-free, for the self-test.
+     */
+    static boolean zeroXViolation(final boolean own, final boolean manaX, final Integer x) {
+        return own && manaX && (x == null || x < 1);
+    }
+
+    /** G6: the seat returns its own pick {@code pick} (not Forge's answer); one with {X} had its X drawn at the listing. */
+    private void noteOwnX(final List<SpellAbility> pick) {
+        if (pick != null && !pick.isEmpty() && pick.get(0).costHasManaX()) {
+            pendingOwnX = true;
+            math.guardrail("xDrawn");
+        }
+    }
+
     /** The random seat's priority answer, under the guardrails. */
     private List<SpellAbility> randomPriority(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
         pendingPick = null;
+        pendingOwnX = false;
         try {
             final Game g = ai.getGame();
             final Set<String> refusedHere = refusedIn(window(g, ai));
@@ -289,6 +356,9 @@ public final class Explorer {
                 mark = null;
                 final List<SpellAbility> l = opts.get(only);
                 pendingPick = l == null ? null : only;
+                if (l != chosen) {
+                    noteOwnX(l);
+                }
                 return l == null ? null : new ArrayList<>(l);
             }
             final String tok = keys.get(math.pick(keys.size()));
@@ -303,6 +373,7 @@ public final class Explorer {
             if (pick == chosen) {
                 return chosen;
             }
+            noteOwnX(pick);
             return pick == null ? null : new ArrayList<>(pick);
         } catch (final RuntimeException e) {
             math.failed();
@@ -347,12 +418,29 @@ public final class Explorer {
             if (out.containsKey(tok)) {
                 continue;
             }
+            Integer xBefore = null;
+            boolean xSet = false;
             try {
                 sa.setActivatingPlayer(ai);
-                if (!sa.canPlay() || !ComputerUtilCost.canPayCost(sa, ai, false)) {
+                if (!sa.canPlay()) {
                     continue;
                 }
-                if (!randomTargets(sa, ai)) {
+                if (sa.costHasManaX()) {
+                    // G6 (D471): the seat sizes X itself, from 1 to Forge's own maximum; a play
+                    // payable only at X = 0 is left out (it would be a free no-op, Crypt Rats' loop)
+                    xBefore = sa.getXManaCostPaid();
+                    xSet = true;
+                    final int x = drawX(ComputerUtilCost.setMaxXValue(sa, ai, false), math);
+                    if (x < 1) {
+                        sa.setXManaCostPaid(xBefore);
+                        continue;
+                    }
+                    sa.setXManaCostPaid(x);
+                }
+                if (!ComputerUtilCost.canPayCost(sa, ai, false) || !randomTargets(sa, ai)) {
+                    if (xSet) {
+                        sa.setXManaCostPaid(xBefore);
+                    }
                     continue;
                 }
                 final List<SpellAbility> one = new ArrayList<>(1);

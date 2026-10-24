@@ -385,6 +385,7 @@ public final class DecisionSelfTest {
                 && Explorer.dropRefused(landed, ex.refusedIn(afterLand), m) == 0 && landed.containsKey("cast:18"),
                 "G5: a land drop (the same turn, phase and stack) is another window, and offers the refused cast again");
         g5Planted(r);
+        g6Planted(r);
         optionalCosts();
         payCap();
         stepClock();
@@ -605,6 +606,48 @@ public final class DecisionSelfTest {
         check(Explorer.dropRefused(stranded, ex2.refusedIn(nextPriority), m2) == 0
                 && m2.guardrails().getOrDefault("noRepeatRefused", 0) == 0,
                 "G5 planted: with the refused card gone from the listing, nothing is left out (J156's 0 of 4,942)");
+    }
+
+    /**
+     * D471 (G6): the random seat's X, planted as J158's pauper spine found it.
+     * Crypt Rats ({X}: X damage to each creature and each player) with no black
+     * mana to spend is payable only at X = 0, where it is free and does nothing
+     * -- the activation the seat repeated 3,600-20,700 times a branch: left out
+     * of the listing, and the removal counted.  With black mana for 3, 300 draws
+     * are all in 1..3 and each of 1, 2, 3 comes up; with mana for 1, X is 1.
+     * The violation: the seat's own X pick paid at 0 (or never sized, null) is
+     * one; a pick at 1 is not; a play with no {X} is not.  The positive control:
+     * Forge's own answer at X = 0 (Forge's X, as its Chalice of the Void logic
+     * can choose) is not the seat's draw and is never a violation.
+     */
+    private static void g6Planted(final ExploreMath.Config r) {
+        final ExploreMath m = new ExploreMath(r, 13);
+        check(Explorer.drawX(0, m) == 0 && m.guardrails().get("zeroXLeftOut") == 1,
+                "G6: an X ability payable only at X = 0 (Crypt Rats, no black mana) is left out, and counted: " + m.guardrails());
+        check(Explorer.drawX(-1, m) == 0 && m.guardrails().get("zeroXLeftOut") == 2, "G6: no maximum at all is left out too");
+        final int[] seen = new int[4];
+        boolean zero = false;
+        for (int i = 0; i < 300; i++) {
+            final int x = Explorer.drawX(3, m);
+            zero |= x < 1 || x > 3;
+            if (x >= 1 && x <= 3) {
+                seen[x]++;
+            }
+        }
+        check(!zero && seen[1] > 0 && seen[2] > 0 && seen[3] > 0,
+                "G6: 300 draws with mana for X = 3 are all in 1..3, each value drawn: " + seen[1] + "/" + seen[2] + "/" + seen[3]);
+        check(m.guardrails().get("zeroXLeftOut") == 2, "G6: a payable X is never counted as left out");
+        boolean one = true;
+        for (int i = 0; i < 50; i++) {
+            one &= Explorer.drawX(1, m) == 1;
+        }
+        check(one, "G6: mana for X = 1 only: X is 1, never 0");
+        check(Explorer.zeroXViolation(true, true, 0) && Explorer.zeroXViolation(true, true, null),
+                "G6 violation: the seat's own X pick paid at 0 (or never sized) is one");
+        check(!Explorer.zeroXViolation(true, true, 1) && !Explorer.zeroXViolation(true, false, null),
+                "G6 violation: an own pick at X = 1, or a play with no {X}, is not one");
+        check(!Explorer.zeroXViolation(false, true, 0),
+                "G6 positive control: Forge's own answer at X = 0 is Forge's X, never a violation");
     }
 
     /**

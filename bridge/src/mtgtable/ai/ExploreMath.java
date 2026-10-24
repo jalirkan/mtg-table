@@ -52,8 +52,9 @@ public final class ExploreMath {
          * guardrails of D451 (a legal land drop is always taken, no pass in main
          * phase 1 while one is pending, a pure no-op is never repeated twice in a
          * row, the opening hand is always kept, a play the engine refused to pay
-         * for is not picked again in the same priority window -- G5, D458); no
-         * close calls.
+         * for is not picked again in the same priority window -- G5, D458; its
+         * own X plays get X drawn from 1..max, and one payable only at X = 0 is
+         * not offered -- G6, D471); no close calls.
          */
         public final boolean random;
 
@@ -261,7 +262,11 @@ public final class ExploreMath {
         return failures;
     }
 
-    /** D451: a guardrail decided ({@code land}, {@code keep}) or removed an option ({@code noRepeatNoOp}). */
+    /**
+     * D451: a guardrail decided ({@code land}, {@code keep}, {@code xDrawn}) or removed an option
+     * ({@code noRepeatNoOp}, {@code noRepeatRefused}, {@code zeroXLeftOut}), or counted an event
+     * ({@code refusedCast}; G6's violation {@code zeroX}, D471).
+     */
     public void guardrail(final String name) {
         guardrails.merge(name, 1, Integer::sum);
     }
