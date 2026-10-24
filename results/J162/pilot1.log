@@ -1,0 +1,83 @@
+==== J162 pilot1 started 2026-10-24T06:04:24-04:00 in unit lab-J162-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J162: data folder free GB 677.1
+✔ the arithmetic: Wilson with draws, ranks, Spearman (1.353944ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (15.925599ms)
+✔ the agreement of two maps (14.512021ms)
+✔ how many rollouts, and the even spread of decisions (0.241247ms)
+✔ the deck pair rule: the most even record with the most games (0.668637ms)
+✔ a decision's two maps from its branch rows (16.119667ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.389708ms)
+✔ the guardrails read back from the decision records (0.320236ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.528621ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.30623ms)
+✔ atlas.md renders the two maps side by side (1.217397ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.218635ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.091734ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.228012ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (97.329532ms)
+✔ G6 (D471): X drawn, X = 0-only offers left out and own plays paid at X = 0 are counted; a play paid at 0 is a violation and a problem (208.198934ms)
+✔ branch errors are counted by text, and an option past --branch-error-max is named with its error (D466, J156 spine 458) (0.555683ms)
+✔ writeAtlas makes an errored option a problem and shows the errors in atlas.md's checks (D466) (2.332108ms)
+✔ an option the copy cannot give is unavailable: left out of the map, counted apart from errors, a problem past the bar (D470, J158 spine 461) (3.836138ms)
+✔ G1, planted (D466): a land the seat's own listing does not hold is no flag; a land in hand, drop unused, not played, is one (0.228152ms)
+✔ every guardrail violation is counted, though only the first 50 are named (D466: J156 vintage, 200 shown of 3,071) (38.509983ms)
+✔ a truncated frame log is skipped and named, and atlas.json is still written (D466: J156 spine 458's hung branch) (2.419624ms)
+✔ both chairs of a lab recording pass the redaction checker (156.221447ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (26.680103ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (132.306663ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (141.616329ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (131.236285ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (121.289121ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (163.999651ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (119.797896ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (91.720566ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 and, M73, G6 included) (121.846106ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (253.096036ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (373.529125ms)
+✔ M72: a Forge-piloted atlas branch seat's summary may carry its pay-cap count (252.220588ms)
+✔ negative control: forgePayCap outside an atlas Forge branch, in a random seat's log, or malformed FAILS the checker (M72) (731.947534ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.331328ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2625.787588ms)
+✔ a worker that never answers is still killed as hung at its deadline (2005.029579ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4687.858087
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 1 worker(s)
+  [A 2/2] 1032 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 1 worker(s)
+  [B 1/4] d0-random-0: 4/4 branch game(s); 391 branch games/h
+  [B 2/4] d0-forge-0: 4/4 branch game(s); 505 branch games/h
+  [B 3/4] d17-random-0: 4/4 branch game(s); 693 branch games/h
+  [B 4/4] d17-forge-0: 4/4 branch game(s); 877 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas phase A: 16 rollout(s) from the opening, both seats random; 0 done, 16 to play on 1 worker(s)
+  [A 16/16] 1213 games/h
+atlas: var/cubelab/atlas-selftest/g5/atlas.json and atlas.md; phase A 16 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (1071 rows, 32 frame logs, 0 leak check(s))
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 1 worker(s)
+  [A 6/6] 1357 games/h
+atlas: var/cubelab/atlas-selftest/g6/atlas.json and atlas.md; phase A 6 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (319 rows, 12 frame logs, 0 leak check(s))
+atlas-selftest: OK (16 forks, 8 no-leak checks, 38 frame logs, 538 rows; G3 0, G5 refused 0 / left out 0; pay cap 0; copies held 1; the tax pair's G5 refused 2 / left out 2; the Crypt Rats pair's G6 drew X 10 / left out 63 / paid at 0 0)
+seat-identity: forge: the same game (B in 15 turns, 59 lines, digest 70b36c8575ab6574; golden B in 15, 59 lines, 70b36c8575ab6574)
+seat-identity: search: the same game (A in 13 turns, 93 lines, digest 19995346a6342137; golden A in 13, 93 lines, 19995346a6342137)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 20e2d8a32e35f445; golden A in 18, 193 lines, 20e2d8a32e35f445)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 3 worker(s)
+  [A 6/6] 1277 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (23 turns, winner A) lists 42 decision(s) of seat A; branching at 2: d0 (p, turn 3, 2 options), d41 (a, turn 23, 6 options)
+atlas phase B: 6 unit(s) to play (0 done), chunks of 4 branches, on 3 worker(s)
+  [B 1/6] d0-random-0: 8/8 branch game(s); 2046 branch games/h
+  [B 2/6] d0-random-4: 8/8 branch game(s); 2038 branch games/h
+  [B 3/6] d0-forge-0: 8/8 branch game(s); 2019 branch games/h
+  [B 4/6] d41-forge-0: 24/24 branch game(s); 5588 branch games/h
+  [B 5/6] d41-random-4: 24/24 branch game(s); 6492 branch games/h
+  [B 6/6] d41-random-0: 24/24 branch game(s); 6630 branch games/h
+atlas: /home/justin-a/code/lab/data/lab-j162/pilot-pauper5/atlas.json and atlas.md; phase A 6 game(s), phase B 96 branch game(s) at 2 decision(s); checks: clean (1941 rows, 206 frame logs, 4 leak check(s))
