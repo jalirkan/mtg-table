@@ -1,8 +1,8 @@
 running
 runner: forgecoach-runner 8a33ea78
 started: 2026-10-24T02:31:57-04:00
-phase: commands 3/7
+phase: commands 4/7
 mtg-table: 8a33ea7
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 3.00 GB per worker (declared; measured 2.34), budget 21.4 GB)
 peak_worker_rss_gb: 2.34
-blocks_done: run1 exit 0 at 2026-10-24T03:03:30-04:00, run2 exit 0 at 2026-10-24T03:36:22-04:00
+blocks_done: run1 exit 0 at 2026-10-24T03:03:30-04:00, run2 exit 0 at 2026-10-24T03:36:22-04:00, run3 exit 0 at 2026-10-24T04:19:07-04:00
