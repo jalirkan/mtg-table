@@ -1,0 +1,59 @@
+==== J160 pilot2 started 2026-10-24T02:34:19-04:00 in unit lab-J160-pilot2, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+cube lab: cubes/library/balanced/balanced-legacy-even-mid.md, grid, 20 draft(s) from seed 818900001, best of 0, 3 job(s), AI Default vs Default, ratings Forge's ranks, out /home/justin-a/code/lab/data/lab-j160/pilot/runs/lab
+facts: booting the engine to look up 180 cards ...
+facts: 2.5 s
+drafted and built 20 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/20] seed 818900001: A:UB+r 0-0 B:UB+r  games -
+[2/20] seed 818900002: A:BR+u 0-0 B:WU+b  games -
+[3/20] seed 818900003: A:UB+r 0-0 B:WU+r  games -
+[4/20] seed 818900004: A:WU+r 0-0 B:UB  games -
+[5/20] seed 818900005: A:UG+r 0-0 B:WR  games -
+[6/20] seed 818900006: A:WU+r 0-0 B:BR+u  games -
+[7/20] seed 818900007: A:UB+r 0-0 B:UR  games -
+[8/20] seed 818900008: A:UB+r 0-0 B:UB+r  games -
+[9/20] seed 818900010: A:WU+r 0-0 B:UB  games -
+[10/20] seed 818900009: A:UR 0-0 B:WB+u  games -
+[11/20] seed 818900011: A:WU+b 0-0 B:UB+r  games -
+[12/20] seed 818900012: A:UR+w 0-0 B:WU+r  games -
+[13/20] seed 818900013: A:BR 0-0 B:WU  games -
+[14/20] seed 818900014: A:UR+w 0-0 B:WB+u  games -
+[15/20] seed 818900015: A:UB 0-0 B:WU+r  games -
+[16/20] seed 818900016: A:UG+r 0-0 B:WU+r  games -
+[17/20] seed 818900018: A:UR+w 0-0 B:WB+u  games -
+[18/20] seed 818900017: A:UB 0-0 B:WU  games -
+[19/20] seed 818900019: A:UR 0-0 B:WU+g  games -
+[20/20] seed 818900020: A:UB+r 0-0 B:UG  games -
+matches: 6 s for 20 (0.3 s a draft wall-clock on 3 worker(s))
+done in 9 s -> /home/justin-a/code/lab/data/lab-j160/pilot/runs/lab/drafts.jsonl
+next: tools/cubelab.sh report /home/justin-a/code/lab/data/lab-j160/pilot/runs/lab
+{"v":1,"run":"lab","cube":"balanced-legacy-even-mid","drafter":null,"seedBase":1809,"drafts":20,"decks":40,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,0,20,20,0,0],"pairs":40}
+census-play: 40 game(s) planned over 40 deck(s) (a replay of var/lab-j160/pilot/prof/lab/pairs.jsonl); 0 already played, 40 to play on 3 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j160/pilot/games/B-lab)
+[40/40] 2304 games/h
+census-play: 40 game(s) in B-lab/games.jsonl: 40 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 40 in 63 s on 3 worker(s) = 2304 games/h
+census-play: record rows: per game rows 62.9 KB (median 55.9 KB), ledger 1.5 KB; rows checked 1895 in 3 file(s), leak check 0/14 (candidates compared in 14; controls moved 14/14)
+{"verdict": "BALANCED ON PAYOFF", "offPayoff": [], "pull": {"lab": 40}, "payoff": {"Blab": 40}}
+**Forge-pilot caveat:** Every game is piloted by Forge's Default AI on both seats. J141 found the live search seat lifts every colour about equally (+8.9 points), so a Forge-only payoff is the right first cut, but it is Forge's.
+
+# J160: is balanced-legacy-even-mid balanced by colour? (J145's judged arm: lab vs lab)
+
+**Colour level: BALANCED ON PAYOFF.** OFF on arm-B payoff (Blab, lab vs lab): none. **Pull is reported, never judged** (the library loop optimises payoff only; the lab drafter is the one drafter). The registered rule: a cell is OFF when its 95% interval excludes the target and the point is at least 0.08 (pull) or 0.05 (payoff) from it; EVEN when the interval sits inside that band; else UNCLEAR. BALANCED ON PAYOFF when no colour is OFF on arm-B payoff. Everything else below is a candidate (D447 point 9). No card is swapped on this night.
+
+## Pull (arm A, reported, never judged): share of two-colour decks containing the colour (target 0.400; labels are information)
+
+| drafter | decks | k = 1 / 2 / 3 (excluded 0, 4, 5) | W | U | B | R | G |
+|---|---|---|---|---|---|---|---|
+| lab (lab) | 40 | 0 / 20 / 20 (0, 0, 0) | 0.400 [0.214–0.591] UNCLEAR | 0.850 [0.667–1.000] OFF | 0.400 [0.263–0.550] UNCLEAR | 0.300 [0.100–0.476] UNCLEAR | 0.050 [0.000–0.158] OFF |
+
+{"code": 1, "tested": 1, "pooled": {"rmseColour": 0.1222, "maxAbsColour": 0.2503, "transferSdColour": 0.0831, "nColour": 5, "missBeyondIntervalsColour": 0}, "candidates": ["balanced-legacy-even-mid"]}
+**Forge-pilot caveat:** Every game is piloted by Forge's Default AI on both seats, and every deck is the lab drafter's and builder's; the model predicts exactly that and nothing about people.
+
+# J160: the library model tested -- predicted against measured, per generated cube
+
+The registered reads (written before any game): (i) the transfer error, RMSE(pred, measured) over the five colours and the pairs with 400+ arm-B deck-games, per cube and pooled; (ii) the selection bias, the measured max pair gap minus the predicted searched gap; (iii) the power effect, the max colour gap with power minus without; (iv) a candidate (D447 point 9), a cube with no colour OFF and no qualifying pair OFF on this night alone. No cube is promoted, swapped or regenerated.
+
+**(i) Transfer error, pooled over 1 cube(s):** colours RMSE 0.122 (max 0.250, transfer SD 0.083, n 5); qualifying pairs RMSE - (max -, transfer SD -, n 0); cells missed beyond both intervals: 0 colour(s), 0 pair(s). The programme was simulated at transfer SD 0, .015 and .03.
+
+**(iv) Candidates (no colour OFF, no qualifying pair OFF, this night alone):** balanced-legacy-even-mid. The v2 draft rule's stricter PASS (every colour EVEN, no qualifying pair OFF): none. Confirmed only on fresh seeds later; nothing is promoted.
+
+## Per cube
+
