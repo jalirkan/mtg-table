@@ -103,6 +103,8 @@ export interface BranchRow {
   engineError?: boolean;
   /** D470: the option could not be given in this branch's copy, and why: no error, no result, left out of the option's value. */
   unavailable?: string;
+  /** D477: Karn Liberated restarted the copy's game this many times; the branch played the new game on (`turns` counts both). */
+  restarts?: number;
 }
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
@@ -480,6 +482,7 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     bytes: b.bytes, standIns: b.standIns, error: b.error, forkProblems: b.forkProblems, key: b.key,
     ...(b.engineError ? { engineError: true } : {}),
     ...(b.unavailable ? { unavailable: b.unavailable } : {}),
+    ...(b.restarts ? { restarts: b.restarts } : {}),
     ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
   st.done.add(key);
   st.fresh++;
@@ -828,7 +831,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       decisions: ds,
       agreement: { decisions: complete.length, meanRho: rhoAll.mean, meanRhoInterval: [rhoAll.lo, rhoAll.hi], sameBest: same, sameBestInterval: Object.values(wilson(same, complete.length)) },
       disagreeMost: disagreements(ds).map((d) => ({ d: d.d, kind: d.kind, turn: d.turn, rho: d.rho, rhoInterval: [d.rhoLo, d.rhoHi], sameBest: d.sameBest, bestRandom: d.random.best, bestForge: d.forge.best })),
-      branchGames: bRows.length, branchErrors: errored.length, branchEngineErrors, branchUnavailable: ua.errored, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
+      branchGames: bRows.length, branchErrors: errored.length, branchEngineErrors, branchUnavailable: ua.errored, branchRestarted: bRows.filter((r) => (r.restarts ?? 0) > 0).length, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
       meanBranchMs: { random: meanMs(msOf('random')), forge: meanMs(msOf('forge')) },
       standInsMax: bRows.reduce((a, r) => Math.max(a, r.standIns), 0),
     } : null,
@@ -861,7 +864,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
 interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
-  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; cappedRandom: number; cappedForge: number };
+  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number };
   checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
@@ -939,7 +942,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       for (const op of d.options) L.push(`| ${op.o}${op.o === 0 ? ' (played)' : ''} | \`${op.token}\` | ${op.label.replace(/\|/g, '/')} | ${pct(op.random.mean)}${iv(op.random.lo, op.random.hi)} (n ${op.random.n}) | ${pct(op.forge.mean)}${iv(op.forge.lo, op.forge.hi)} (n ${op.forge.n}) |`);
       L.push('');
     }
-    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}${b.branchUnavailable ? `; ${b.branchUnavailable} more where the option could not be given in the copy, left out too (D470)` : ''}); ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.`, '');
+    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}${b.branchUnavailable ? `; ${b.branchUnavailable} more where the option could not be given in the copy, left out too (D470)` : ''})${b.branchRestarted ? `; ${b.branchRestarted} played on through a restart of the game by Karn Liberated (D477), counted as played` : ''}; ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.`, '');
   }
   const c = doc.checks;
   L.push('## Checks', '');

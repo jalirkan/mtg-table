@@ -391,6 +391,7 @@ public final class DecisionSelfTest {
         stepClock();
         searchStepClock();
         searchUnavailable();
+        forcedUnanswered();
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
@@ -547,6 +548,21 @@ public final class DecisionSelfTest {
                         && Integer.valueOf(1).equals(counts.get("search.prior.unavailable")) && counts.size() == 2,
                 "D470: an unavailable forced answer is counted as search.unavailable (the prior's key for the ranking), "
                         + "wrapped or not; an engine bug is not (" + counts + ")");
+    }
+
+    /**
+     * D477: a fork whose game Karn restarts asks its forcing controller whether
+     * the forced answer is still to be given ({@link RolloutForcing#unanswered});
+     * if it is, the option was never played in that copy and is unavailable.
+     * Nothing forced is never unanswered (a mulligan candidate, Forge's own answer).
+     */
+    private static void forcedUnanswered() {
+        final RolloutController.Forced none = new RolloutController.Forced();
+        final RolloutController.Forced pass = new RolloutController.Forced();
+        pass.priority(null);
+        check(!none.unanswered() && pass.unanswered(),
+                "D477: a forced answer armed and not given is unanswered; nothing forced is not ("
+                        + none.unanswered() + ", " + pass.unanswered() + ")");
     }
 
     /**

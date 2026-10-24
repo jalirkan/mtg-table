@@ -1498,6 +1498,7 @@ public final class AiBench {
                             "a tight budget: " + ms + " ms, " + (rep == null ? "none" : rep.summary()));
                 });
         evalLeafScenarios();
+        karnRestartScenarios();
         d416Scenarios(castBoard);
         stepClockScenario();
         forcedBlockScenarios();
@@ -1761,6 +1762,99 @@ public final class AiBench {
                     "a seat never asked at the fork's combat: unavailable at turn 5, not a stale block later (unavailable "
                             + b.unavailable + ", turn " + b.turns + ", error " + b.error + ")");
         });
+    }
+
+    /**
+     * D477: Karn Liberated's -14 restarts a fork's game.  Forge's restart sets
+     * the phase to null and leaves the new game to {@code GameAction.startGame}'s
+     * loop, which a fork's own step loop is not: the next priority threw
+     * {@code NullPointerException} at {@code ComputerUtilAbility.getAvailableLandsToPlay}
+     * (J162's modern7 spine, 62 random branches).  Planted here with Karn at 14
+     * loyalty on the seat's turn 5, the -14 forced as the seat's answer: an
+     * atlas branch and a search playout must start the new game (fresh hands
+     * and life, the activator's turn 1) and play it on, its turns counted on
+     * from turn 5's, with the real game untouched.
+     */
+    static void karnRestartScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: Karn Liberated restarts a fork's game (D477, engine)");
+        final String lib = "Grizzly Bears;Forest;Hill Giant;Forest;Mountain;Grizzly Bears;Forest;Mountain;Hill Giant;Forest;"
+                + "Grizzly Bears;Forest;Mountain;Forest;Hill Giant;Forest";
+        final List<String> board = List.of("humanlife=11", "ailife=7", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Forest;Forest", "humanhand=Hill Giant", "humanlibrary=" + lib,
+                "aibattlefield=Karn Liberated|Counters:LOYALTY=14;Mountain;Mountain", "aihand=Grizzly Bears", "ailibrary=" + lib);
+        scenario("karn-restart-fork", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Card karn = named(ai.getCardsIn(ZoneType.Battlefield), "Karn Liberated");
+            forge.game.spellability.SpellAbility restart = null;
+            for (final forge.game.spellability.SpellAbility sa : karn.getSpellAbilities()) {
+                restart = sa.getApi() == forge.game.ability.ApiType.RestartGame ? sa : restart;
+            }
+            restart.setActivatingPlayer(ai);
+            final int loyalty = karn.getCurrentLoyalty();
+            final forge.game.GameStage age = g.getAge();
+            check(loyalty >= 14, "setup: Karn Liberated at " + loyalty + " loyalty, enough for -14");
+            final Map<Player, Integer> cards = new HashMap<>();
+            for (final Player p : g.getPlayers()) {
+                cards.put(p, cardsOf(p));
+            }
+            // 1. an atlas branch: the restart is played on, to the cap counted across both games
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = 8;
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(restart), 0, 0, 7,
+                    u, "d477", new LinkedHashMap<>(), null, "d477", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && b.restarts == 1 && b.steps > 0
+                            && (b.capped ? b.turns == 9 : b.turns > 5 && b.result != 0),
+                    "an atlas branch that plays Karn's -14 starts the new game and plays it on (restarts " + b.restarts
+                            + ", turns " + b.turns + ", capped " + b.capped + ", result " + b.result + ", steps " + b.steps
+                            + ", error " + b.error + ", unavailable " + b.unavailable + ")");
+            // 2. a search playout: the same, to a horizon three turns past turn 5's
+            final String[] seen = {null};
+            mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                final forge.game.phase.PhaseHandler ph = copy.getPhaseHandler();
+                final StringBuilder sb = new StringBuilder("age " + copy.getAge() + ", turn " + ph.getTurn() + " "
+                        + ph.getPhase() + ", first " + (copy.getStartingPlayer() == aiC ? "the seat" : "the other"));
+                boolean ok = copy.getAge() == forge.game.GameStage.Play && ph.getPhase() != null && ph.getTurn() >= 1
+                        && copy.getStartingPlayer() == aiC;
+                for (final Player p : copy.getPlayers()) {
+                    final Player real = p == aiC ? ai : ai.getWeakestOpponent();
+                    sb.append("; ").append(p == aiC ? "seat" : "other").append(" life ").append(p.getLife())
+                            .append(", cards ").append(cardsOf(p)).append(" of ").append(cards.get(real));
+                    ok &= cardsOf(p) == cards.get(real) && p.getLife() > 11;   // 20 at the restart (7 and 11 before)
+                }
+                seen[0] = (ok ? "ok: " : "WRONG: ") + sb;
+            });
+            final CountSink sink = new CountSink();
+            mtgtable.ai.SearchPolicy.Playout po;
+            try {
+                po = mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(restart), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 60_000_000_000L, 3, 20_000), sink, false, null);
+            } finally {
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            check(po != null && sink.get("search.restarts") == 1 && seen[0] != null && seen[0].startsWith("ok")
+                            && (po.over || po.turns == 4),
+                    "a search playout that plays Karn's -14 plays the new game to its horizon (restarts "
+                            + sink.get("search.restarts") + ", " + (po == null ? "no playout" : "turns " + po.turns
+                            + ", over " + po.over) + "; at the leaf " + seen[0] + ")");
+            check(g.getAge() == age && g.getPhaseHandler().getTurn() == 5 && karn.isInPlay()
+                            && karn.getCurrentLoyalty() == loyalty && ai.getLife() == 7,
+                    "the real game is untouched: turn 5, Karn on the battlefield at " + loyalty + " loyalty, the seat at 7 life ("
+                            + g.getAge() + ", turn " + g.getPhaseHandler().getTurn() + ", Karn " + (karn.isInPlay() ? "in play" : "gone")
+                            + " at " + karn.getCurrentLoyalty() + ", life " + ai.getLife() + ")");
+        });
+    }
+
+    /** D477: every card a player owns in the zones a restart gathers (and the battlefield it may return to). */
+    private static int cardsOf(final Player p) {
+        int n = 0;
+        for (final ZoneType z : new ZoneType[] {ZoneType.Library, ZoneType.Hand, ZoneType.Battlefield, ZoneType.Graveyard,
+            ZoneType.Exile}) {
+            n += p.getCardsIn(z).size();
+        }
+        return n;
     }
 
     /**

@@ -110,6 +110,15 @@ import mtgtable.SeatRecorder;
  * ({@code timedOut} and {@code engineError}), as D465's caught {@code Error}s
  * are, and the unit goes on.
  *
+ * <p><b>A branch whose game is restarted</b> (D477): Karn Liberated's -14
+ * restarts the game, and Forge leaves the new game to
+ * {@code GameAction.startGame}'s loop, which a branch's own step loop is not.
+ * {@link ForkRestart#begin} starts it on the copy as that loop would (fresh
+ * hands and mulligans, the activator's first turn) and the branch plays it
+ * on; its turns count on from the old game's, against the same cap, and the
+ * row says {@code restarts}.  J162's modern7 spine had 62 random branches end
+ * in a {@code NullPointerException} on the phase of null instead.
+ *
  * <p>Threads: the hook runs on the game thread, inside the seat's decision
  * callback (and inside {@code Decisions.quiet}); the copies are played on the
  * same thread, as the search plays its rollouts.  No hop, no thread.
@@ -291,6 +300,12 @@ public final class Atlas {
          * result; the atlas leaves it out of the option's value and counts it.
          */
         public String unavailable;
+        /**
+         * D477: how many times Karn Liberated restarted the copy's game.  The
+         * branch plays each new game on (its {@link #turns} count on from the
+         * old game's), so a restarted branch is a played one with a result.
+         */
+        public int restarts;
         /** D465: the branch threw an {@code Error} (an engine error, not a game's result). */
         public boolean engineError;
         /** D465: ... and it was an {@code OutOfMemoryError}. */
@@ -578,6 +593,9 @@ public final class Atlas {
         if (b.unavailable != null) {
             j.n("unavailable", b.unavailable);
         }
+        if (b.restarts > 0) {
+            j.n("restarts", (long) b.restarts);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -650,6 +668,7 @@ public final class Atlas {
         StepClock clock = null;
         PhaseHandler ph = null;
         int steps = 0;
+        int turnsBefore = 0;   // D477: the turns of the games a Karn restart ended, before the copy's current one
         try {
             final LenientGameCopier cp = new LenientGameCopier(game);
             copy = SearchPolicy.copyForAtlas(cp, ai);
@@ -700,13 +719,25 @@ public final class Atlas {
             final long deadline = t0 + unit.branchTimeoutMs * 1_000_000L;
             clock = new StepClock(deadline);
             copy.subscribeToEvents(clock);   // D467: the deadline inside a step, too
-            while (!copy.isGameOver() && ph.getTurn() <= unit.turnCap && steps < MAX_STEPS) {
+            while (!copy.isGameOver() && turnsBefore + ph.getTurn() <= unit.turnCap && steps < MAX_STEPS) {
                 if ((steps & 15) == 0 && System.nanoTime() > deadline) {
                     b.timedOut = true;
                     break;
                 }
+                final int turn = ph.getTurn();
                 ph.mainLoopStep();
                 steps++;
+                if (ForkRestart.pending(copy)) {
+                    // D477: Karn Liberated restarted the copy's game -- start the new one, as Forge's startGame loop
+                    // would, and play on; its turns count on from the old game's, against the same cap
+                    turnsBefore += turn;
+                    b.restarts++;
+                    if (b.ledger != null) {
+                        b.ledger.turnOffset(turnsBefore);
+                    }
+                    ForkRestart.begin(copy, forcing);
+                    continue;
+                }
                 // D470: past the fork's combat step and the seat never asked: the option is not this game's
                 final String gone = forcing == null ? null : forcing.expired(copy);
                 if (gone != null) {
@@ -715,9 +746,9 @@ public final class Atlas {
             }
             clock.disarm();
             b.steps = steps;
-            b.turns = ph.getTurn();
+            b.turns = turnsBefore + ph.getTurn();
             if (!copy.isGameOver()) {
-                b.capped = ph.getTurn() > unit.turnCap;
+                b.capped = b.turns > unit.turnCap;
                 copy.setGameOver(GameEndReason.Draw);
             }
             b.result = SearchPolicy.resultOf(copy, aiCopy);
@@ -735,12 +766,12 @@ public final class Atlas {
             final RolloutController.OptionUnavailable gone = unavailableIn(e);
             if (bt != null) {
                 // D467: Forge wrapped the clock's throw (AbilityFactory does) -- still the deadline, still an engine error
-                timedOutInStep(b, bt, ph, steps);
+                timedOutInStep(b, bt, ph, steps, turnsBefore);
             } else if (gone != null) {
                 // D470: the option cannot be given in this copy -- counted apart, never an error or a result
                 b.unavailable = gone.getMessage();
                 b.steps = steps;
-                b.turns = ph == null ? 0 : ph.getTurn();
+                b.turns = ph == null ? 0 : turnsBefore + ph.getTurn();
             } else {
                 b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
             }
@@ -753,7 +784,7 @@ public final class Atlas {
             }
             if (e instanceof BranchTimeout) {
                 // D467: the deadline passed inside one engine step -- the copy is mid-resolution, let go like an Error's
-                timedOutInStep(b, (BranchTimeout) e, ph, steps);
+                timedOutInStep(b, (BranchTimeout) e, ph, steps, turnsBefore);
             }
             // D465: an Error (OutOfMemoryError above all) ends this branch, never the unit: the copy and its
             // ledger are let go here, the row says so, and the hook decides whether the worker can go on
@@ -810,15 +841,16 @@ public final class Atlas {
      * error (its copy is mid-resolution, so it has no result) -- the row's
      * error says where it stood.
      */
-    static void timedOutInStep(final Branch b, final BranchTimeout bt, final PhaseHandler ph, final int steps) {
+    static void timedOutInStep(final Branch b, final BranchTimeout bt, final PhaseHandler ph, final int steps,
+                               final int turnsBefore) {
         b.timedOut = true;
         b.engineError = true;
         b.steps = steps;
         String at = "";
         try {
             if (ph != null) {
-                b.turns = ph.getTurn();
-                at = " at turn " + ph.getTurn() + " " + ph.getPhase();
+                b.turns = turnsBefore + ph.getTurn();
+                at = " at turn " + ph.getTurn() + " " + ph.getPhase() + (b.restarts > 0 ? " of the restarted game" : "");
             }
         } catch (final RuntimeException e) {
             // the copy is mid-resolution; where it stood is a courtesy

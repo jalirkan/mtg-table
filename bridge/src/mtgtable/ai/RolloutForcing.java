@@ -45,4 +45,7 @@ interface RolloutForcing {
      * declaration made and that combat's damage dealt (or the turn over).
      */
     boolean applied(Game copy);
+
+    /** D477: a forced answer is armed and has not been given yet. */
+    boolean unanswered();
 }

@@ -95,6 +95,8 @@ public final class GameLedger {
     /** turn number -> [active seat index, entries per seat]. */
     private final Map<Integer, Object[]> turns = new LinkedHashMap<>();
     private int errors;
+    /** D477: added to the engine's turn number -- the turns the game played before a Karn restart reset it to 0. */
+    private int turnOffset;
 
     /** Subscribe a ledger to {@code game} (before it starts); seats in the game's player order. */
     public static GameLedger attach(final Game game) {
@@ -121,6 +123,16 @@ public final class GameLedger {
     public void detach() {
         game = null;
         seats.clear();
+    }
+
+    /**
+     * D477: the game was restarted (Karn Liberated) after {@code turnsBefore}
+     * turns in all: the new game's turn 1 is entered as turn
+     * {@code turnsBefore + 1}, so its turns follow the old game's instead of
+     * overwriting them.  Call it before the new game's first turn begins.
+     */
+    public void turnOffset(final int turnsBefore) {
+        turnOffset = turnsBefore;
     }
 
     /** Whether {@link #detach} has let go of the game (the self-test). */
@@ -154,7 +166,7 @@ public final class GameLedger {
                 es[i] = entry(seats.get(i));
             }
             damage(es);
-            turns.put(turn, new Object[] {seats.indexOf(active), es});
+            turns.put(turnOffset + turn, new Object[] {seats.indexOf(active), es});
         } catch (final RuntimeException ex) {
             errors++;
         }
