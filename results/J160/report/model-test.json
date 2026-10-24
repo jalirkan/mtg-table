@@ -1,0 +1,2043 @@
+{
+  "v": 1,
+  "job": "J160",
+  "arm": "Blab",
+  "minPairDeckGames": 400,
+  "band": [
+    0.45,
+    0.55
+  ],
+  "sims": 4000,
+  "seed": 160,
+  "model": {
+    "files": [
+      "var/lab-j160-local/model/model.json",
+      "var/lab-j160-local/model-nopower/model.json"
+    ],
+    "candidates": [
+      "balanced-legacy-even-high",
+      "balanced-legacy-even-high-nopower",
+      "balanced-legacy-even-mid",
+      "balanced-legacy-even-mid-nopower",
+      "balanced-pauper-even",
+      "balanced-pauper-even-nopower"
+    ],
+    "inputs": [
+      {
+        "census-decks": {
+          "file": "/home/justin-a/code/lab/data/lab-j144/out/census-decks.jsonl.gz",
+          "sha256": "b167bf1d5c1f159d79f7064607a17450fa570190199f3166e8a2c607d44dcf55"
+        },
+        "census-games": {
+          "file": "/home/justin-a/code/lab/data/lab-j144/out/census-games.jsonl.gz",
+          "sha256": "d55c0d22c6a5d219f15b6a9b75468c0a63b31e0dbe47d0aef9271d53c79e1510"
+        },
+        "facts": {
+          "file": "var/cubelab/facts/32653ed2fcd7d8d2.json",
+          "sha256": "9b0b65014b87a9f8a62b303bc9513771497f43f641c35ac34acff901a4eaea38"
+        },
+        "omega-drafted-decks": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/out/drafted-decks.jsonl.gz",
+          "sha256": "49fda34e6d2411c00c2158533b6781e085339ba38b0628f917d6d05721490c8d"
+        },
+        "omega-pool-decks": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/census/decks/decks.jsonl",
+          "sha256": "4a259bee7febfe845f489897e6e4446a8e4fefdd49578d833d1756358c7a66ea"
+        },
+        "omega-cube": {
+          "file": "/home/justin-a/code/lab/mtg-table/cubes/omega-cube-180.md",
+          "sha256": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc"
+        },
+        "omega-games": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/out/games.jsonl.gz",
+          "sha256": "38ce348ff403408a3b13766451ceff14dc84bcd35a64b9e85ebf23300a727d39"
+        },
+        "omega-balance": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/out/balance.json",
+          "sha256": "6832c663614632e8e9be04c33149f9fd6fa233de39fb4cdead2e180706248d2d"
+        }
+      },
+      {
+        "census-decks": {
+          "file": "/home/justin-a/code/lab/data/lab-j144/out/census-decks.jsonl.gz",
+          "sha256": "b167bf1d5c1f159d79f7064607a17450fa570190199f3166e8a2c607d44dcf55"
+        },
+        "census-games": {
+          "file": "/home/justin-a/code/lab/data/lab-j144/out/census-games.jsonl.gz",
+          "sha256": "d55c0d22c6a5d219f15b6a9b75468c0a63b31e0dbe47d0aef9271d53c79e1510"
+        },
+        "facts": {
+          "file": "var/cubelab/facts/32653ed2fcd7d8d2.json",
+          "sha256": "9b0b65014b87a9f8a62b303bc9513771497f43f641c35ac34acff901a4eaea38"
+        },
+        "exclude": {
+          "file": "cubes/library/powered-exclude.txt",
+          "sha256": "c9aad552d11e9ad957d8a4b67f436439befae47678212a08f2ba54badc6c50ff"
+        },
+        "omega-drafted-decks": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/out/drafted-decks.jsonl.gz",
+          "sha256": "49fda34e6d2411c00c2158533b6781e085339ba38b0628f917d6d05721490c8d"
+        },
+        "omega-pool-decks": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/census/decks/decks.jsonl",
+          "sha256": "4a259bee7febfe845f489897e6e4446a8e4fefdd49578d833d1756358c7a66ea"
+        },
+        "omega-cube": {
+          "file": "/home/justin-a/code/lab/mtg-table/cubes/omega-cube-180.md",
+          "sha256": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc"
+        },
+        "omega-games": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/out/games.jsonl.gz",
+          "sha256": "38ce348ff403408a3b13766451ceff14dc84bcd35a64b9e85ebf23300a727d39"
+        },
+        "omega-balance": {
+          "file": "/home/justin-a/code/lab/data/lab-j145/out/balance.json",
+          "sha256": "6832c663614632e8e9be04c33149f9fd6fa233de39fb4cdead2e180706248d2d"
+        }
+      }
+    ]
+  },
+  "caveat": "Every game is piloted by Forge's Default AI on both seats, and every deck is the lab drafter's and builder's; the model predicts exactly that and nothing about people.",
+  "cubes": {
+    "balanced-legacy-even-high": {
+      "id": "balanced-legacy-even-high",
+      "balance": "/home/justin-a/code/lab/data/lab-j160/balanced-legacy-even-high/out/balance.json",
+      "predicted": true,
+      "measured": true,
+      "games": 4000,
+      "colourLevel": "NOT BALANCED ON PAYOFF",
+      "colours": {
+        "W": {
+          "meas": {
+            "est": 0.4784,
+            "lo": 0.459,
+            "hi": 0.4982,
+            "n": 2734,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5007,
+            "lo": 0.472,
+            "hi": 0.5297
+          },
+          "diff": -0.0223,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "U": {
+          "meas": {
+            "est": 0.5657,
+            "lo": 0.5463,
+            "hi": 0.5833,
+            "n": 2830,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4979,
+            "lo": 0.4664,
+            "hi": 0.5299
+          },
+          "diff": 0.0678,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "B": {
+          "meas": {
+            "est": 0.4696,
+            "lo": 0.4448,
+            "hi": 0.4952,
+            "n": 1482,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4985,
+            "lo": 0.4637,
+            "hi": 0.5326
+          },
+          "diff": -0.0289,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "R": {
+          "meas": {
+            "est": 0.4461,
+            "lo": 0.4256,
+            "hi": 0.4682,
+            "n": 2338,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4994,
+            "lo": 0.4698,
+            "hi": 0.5338
+          },
+          "diff": -0.0533,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "G": {
+          "meas": {
+            "est": 0.4743,
+            "lo": 0.4511,
+            "hi": 0.4974,
+            "n": 1906,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5034,
+            "lo": 0.4715,
+            "hi": 0.5363
+          },
+          "diff": -0.0291,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "pairs": {
+        "WU": {
+          "meas": {
+            "est": 0.5998,
+            "lo": 0.5666,
+            "hi": 0.6338,
+            "n": 852,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4981,
+            "lo": 0.4632,
+            "hi": 0.5327
+          },
+          "diff": 0.1017,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "WB": {
+          "meas": {
+            "est": 0.4713,
+            "lo": 0.3958,
+            "hi": 0.5482,
+            "n": 174,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4972,
+            "lo": 0.46,
+            "hi": 0.5322
+          },
+          "diff": -0.0259,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "WR": {
+          "meas": {
+            "est": 0.4547,
+            "lo": 0.4307,
+            "hi": 0.482,
+            "n": 1522,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.504,
+            "lo": 0.472,
+            "hi": 0.5376
+          },
+          "diff": -0.0493,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "WG": {
+          "meas": {
+            "est": 0.4907,
+            "lo": 0.4387,
+            "hi": 0.5455,
+            "n": 324,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5027,
+            "lo": 0.4716,
+            "hi": 0.5382
+          },
+          "diff": -0.012,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "UB": {
+          "meas": {
+            "est": 0.5453,
+            "lo": 0.5,
+            "hi": 0.5911,
+            "n": 508,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4981,
+            "lo": 0.466,
+            "hi": 0.5286
+          },
+          "diff": 0.0472,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UR": {
+          "meas": {
+            "est": 0.5475,
+            "lo": 0.5242,
+            "hi": 0.5714,
+            "n": 1830,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4963,
+            "lo": 0.4611,
+            "hi": 0.5335
+          },
+          "diff": 0.0512,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "UG": {
+          "meas": {
+            "est": 0.557,
+            "lo": 0.5113,
+            "hi": 0.6017,
+            "n": 456,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5019,
+            "lo": 0.4611,
+            "hi": 0.5413
+          },
+          "diff": 0.0551,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "BR": {
+          "meas": {
+            "est": 0.4216,
+            "lo": 0.3647,
+            "hi": 0.4752,
+            "n": 306,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4972,
+            "lo": 0.4597,
+            "hi": 0.5335
+          },
+          "diff": -0.0756,
+          "qualifies": false,
+          "missBeyondIntervals": true
+        },
+        "BG": {
+          "meas": {
+            "est": 0.525,
+            "lo": 0.4318,
+            "hi": 0.6077,
+            "n": 120,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5035,
+            "lo": 0.4726,
+            "hi": 0.5362
+          },
+          "diff": 0.0215,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "RG": {
+          "meas": {
+            "est": 0.4418,
+            "lo": 0.3986,
+            "hi": 0.4881,
+            "n": 550,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5009,
+            "lo": 0.464,
+            "hi": 0.5379
+          },
+          "diff": -0.0591,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        }
+      },
+      "qualifyingPairs": [
+        "WU",
+        "WR",
+        "UB",
+        "UR",
+        "UG",
+        "RG"
+      ],
+      "coloursOff": [
+        "U",
+        "R"
+      ],
+      "coloursNotEven": [
+        "U",
+        "B",
+        "R"
+      ],
+      "pairsOff": [
+        "WU",
+        "UG",
+        "RG"
+      ],
+      "candidate": false,
+      "v2Pass": false,
+      "transfer": {
+        "rmseColour": 0.0439,
+        "maxAbsColour": 0.0678,
+        "transferSdColour": 0.0392,
+        "nColour": 5,
+        "missBeyondIntervalsColour": 2,
+        "rmsePair": 0.0634,
+        "maxAbsPair": 0.1017,
+        "transferSdPair": 0.0577,
+        "nPair": 6,
+        "missBeyondIntervalsPair": 4
+      },
+      "gaps": {
+        "measuredColour": 0.0657,
+        "measuredPair": 0.0998,
+        "measuredPairAllTen": 0.0998,
+        "predictedColour": 0.0034,
+        "predictedPair": 0.004,
+        "modelMaxColourGap": 0.0034,
+        "modelMaxPairGap": 0.004,
+        "flowObjective": 0.1143,
+        "searchedObjective": 0.0074,
+        "measuredObjective": 0.1655,
+        "selectionBias": 0.0958,
+        "noiseExpectedColour": 0.0177,
+        "noiseShareAtOrAboveColour": 0.0,
+        "noiseExpectedPair": 0.0332,
+        "noiseShareAtOrAbovePair": 0.0003,
+        "selectionBiasBeyondNoise": 0.0666
+      }
+    },
+    "balanced-legacy-even-high-nopower": {
+      "id": "balanced-legacy-even-high-nopower",
+      "balance": "/home/justin-a/code/lab/data/lab-j160/balanced-legacy-even-high-nopower/out/balance.json",
+      "predicted": true,
+      "measured": true,
+      "games": 4000,
+      "colourLevel": "BALANCED ON PAYOFF",
+      "colours": {
+        "W": {
+          "meas": {
+            "est": 0.5025,
+            "lo": 0.4849,
+            "hi": 0.5212,
+            "n": 2852,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5032,
+            "lo": 0.4699,
+            "hi": 0.53
+          },
+          "diff": -0.0007,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "U": {
+          "meas": {
+            "est": 0.5077,
+            "lo": 0.4883,
+            "hi": 0.5268,
+            "n": 2590,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4876,
+            "lo": 0.4563,
+            "hi": 0.5212
+          },
+          "diff": 0.0201,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "B": {
+          "meas": {
+            "est": 0.4509,
+            "lo": 0.4236,
+            "hi": 0.4813,
+            "n": 1264,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5028,
+            "lo": 0.4666,
+            "hi": 0.5327
+          },
+          "diff": -0.0519,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "R": {
+          "meas": {
+            "est": 0.5005,
+            "lo": 0.4773,
+            "hi": 0.5233,
+            "n": 1968,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5015,
+            "lo": 0.4721,
+            "hi": 0.5385
+          },
+          "diff": -0.001,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "G": {
+          "meas": {
+            "est": 0.4753,
+            "lo": 0.4566,
+            "hi": 0.4942,
+            "n": 2792,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.505,
+            "lo": 0.4732,
+            "hi": 0.5401
+          },
+          "diff": -0.0297,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "pairs": {
+        "WU": {
+          "meas": {
+            "est": 0.5426,
+            "lo": 0.4799,
+            "hi": 0.6069,
+            "n": 258,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4901,
+            "lo": 0.4529,
+            "hi": 0.5251
+          },
+          "diff": 0.0525,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "WB": {
+          "meas": {
+            "est": 0.5,
+            "lo": 0.4219,
+            "hi": 0.58,
+            "n": 180,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5031,
+            "lo": 0.4626,
+            "hi": 0.5349
+          },
+          "diff": -0.0031,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "WR": {
+          "meas": {
+            "est": 0.5237,
+            "lo": 0.5006,
+            "hi": 0.5475,
+            "n": 1814,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5112,
+            "lo": 0.4796,
+            "hi": 0.5444
+          },
+          "diff": 0.0125,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "WG": {
+          "meas": {
+            "est": 0.5021,
+            "lo": 0.4545,
+            "hi": 0.5475,
+            "n": 470,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5041,
+            "lo": 0.4676,
+            "hi": 0.5365
+          },
+          "diff": -0.002,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UB": {
+          "meas": {
+            "est": 0.5253,
+            "lo": 0.4551,
+            "hi": 0.5943,
+            "n": 198,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4897,
+            "lo": 0.4612,
+            "hi": 0.5248
+          },
+          "diff": 0.0356,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "UR": {
+          "meas": {
+            "est": 0.5434,
+            "lo": 0.5149,
+            "hi": 0.5703,
+            "n": 1220,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4892,
+            "lo": 0.4531,
+            "hi": 0.5286
+          },
+          "diff": 0.0542,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "UG": {
+          "meas": {
+            "est": 0.5046,
+            "lo": 0.4629,
+            "hi": 0.5443,
+            "n": 646,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4979,
+            "lo": 0.4618,
+            "hi": 0.5292
+          },
+          "diff": 0.0067,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "BR": {
+          "meas": {
+            "est": 0.4395,
+            "lo": 0.3726,
+            "hi": 0.509,
+            "n": 248,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5034,
+            "lo": 0.4679,
+            "hi": 0.5395
+          },
+          "diff": -0.0639,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "BG": {
+          "meas": {
+            "est": 0.4619,
+            "lo": 0.3982,
+            "hi": 0.5265,
+            "n": 210,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5112,
+            "lo": 0.4774,
+            "hi": 0.5521
+          },
+          "diff": -0.0493,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "RG": {
+          "meas": {
+            "est": 0.5067,
+            "lo": 0.4776,
+            "hi": 0.5356,
+            "n": 1190,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5001,
+            "lo": 0.4605,
+            "hi": 0.5355
+          },
+          "diff": 0.0066,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "qualifyingPairs": [
+        "WR",
+        "WG",
+        "UR",
+        "UG",
+        "RG"
+      ],
+      "coloursOff": [],
+      "coloursNotEven": [
+        "B"
+      ],
+      "pairsOff": [],
+      "candidate": true,
+      "v2Pass": false,
+      "transfer": {
+        "rmseColour": 0.0282,
+        "maxAbsColour": 0.0519,
+        "transferSdColour": 0.0199,
+        "nColour": 5,
+        "missBeyondIntervalsColour": 1,
+        "rmsePair": 0.0252,
+        "maxAbsPair": 0.0542,
+        "transferSdPair": 0.0017,
+        "nPair": 5,
+        "missBeyondIntervalsPair": 1
+      },
+      "gaps": {
+        "measuredColour": 0.0491,
+        "measuredPair": 0.0434,
+        "measuredPairAllTen": 0.0605,
+        "predictedColour": 0.0124,
+        "predictedPair": 0.0112,
+        "modelMaxColourGap": 0.0124,
+        "modelMaxPairGap": 0.0112,
+        "flowObjective": 0.1483,
+        "searchedObjective": 0.0236,
+        "measuredObjective": 0.0925,
+        "selectionBias": 0.0322,
+        "noiseExpectedColour": 0.0204,
+        "noiseShareAtOrAboveColour": 0.0013,
+        "noiseExpectedPair": 0.0299,
+        "noiseShareAtOrAbovePair": 0.1195,
+        "selectionBiasBeyondNoise": 0.0135
+      }
+    },
+    "balanced-legacy-even-mid": {
+      "id": "balanced-legacy-even-mid",
+      "balance": "/home/justin-a/code/lab/data/lab-j160/balanced-legacy-even-mid/out/balance.json",
+      "predicted": true,
+      "measured": true,
+      "games": 3988,
+      "colourLevel": "BALANCED ON PAYOFF",
+      "colours": {
+        "W": {
+          "meas": {
+            "est": 0.4907,
+            "lo": 0.4723,
+            "hi": 0.5076,
+            "n": 2747,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5018,
+            "lo": 0.4674,
+            "hi": 0.5304
+          },
+          "diff": -0.0111,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "U": {
+          "meas": {
+            "est": 0.4905,
+            "lo": 0.4603,
+            "hi": 0.5234,
+            "n": 1111,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5008,
+            "lo": 0.466,
+            "hi": 0.5323
+          },
+          "diff": -0.0103,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "B": {
+          "meas": {
+            "est": 0.4868,
+            "lo": 0.4681,
+            "hi": 0.505,
+            "n": 2876,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5002,
+            "lo": 0.4685,
+            "hi": 0.5325
+          },
+          "diff": -0.0134,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "R": {
+          "meas": {
+            "est": 0.4618,
+            "lo": 0.4405,
+            "hi": 0.4801,
+            "n": 2540,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4969,
+            "lo": 0.4605,
+            "hi": 0.5368
+          },
+          "diff": -0.0351,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "G": {
+          "meas": {
+            "est": 0.5378,
+            "lo": 0.5121,
+            "hi": 0.5622,
+            "n": 1599,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5003,
+            "lo": 0.4713,
+            "hi": 0.5348
+          },
+          "diff": 0.0375,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "pairs": {
+        "WU": {
+          "meas": {
+            "est": 0.5234,
+            "lo": 0.4965,
+            "hi": 0.551,
+            "n": 1282,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5022,
+            "lo": 0.4672,
+            "hi": 0.5365
+          },
+          "diff": 0.0212,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "WB": {
+          "meas": {
+            "est": 0.5392,
+            "lo": 0.4806,
+            "hi": 0.5923,
+            "n": 306,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5029,
+            "lo": 0.472,
+            "hi": 0.5396
+          },
+          "diff": 0.0363,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "WR": {
+          "meas": {
+            "est": 0.4231,
+            "lo": 0.275,
+            "hi": 0.5769,
+            "n": 52,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4979,
+            "lo": 0.4619,
+            "hi": 0.5358
+          },
+          "diff": -0.0748,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "WG": {
+          "meas": {
+            "est": 0.5513,
+            "lo": 0.45,
+            "hi": 0.6622,
+            "n": 78,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.502,
+            "lo": 0.4734,
+            "hi": 0.544
+          },
+          "diff": 0.0493,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "UB": {
+          "meas": {
+            "est": 0.5077,
+            "lo": 0.4827,
+            "hi": 0.5341,
+            "n": 1487,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5018,
+            "lo": 0.4582,
+            "hi": 0.5368
+          },
+          "diff": 0.0059,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UR": {
+          "meas": {
+            "est": 0.4847,
+            "lo": 0.4453,
+            "hi": 0.5229,
+            "n": 751,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4973,
+            "lo": 0.4607,
+            "hi": 0.5287
+          },
+          "diff": -0.0126,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UG": {
+          "meas": {
+            "est": 0.5754,
+            "lo": 0.5342,
+            "hi": 0.6149,
+            "n": 676,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5007,
+            "lo": 0.4709,
+            "hi": 0.5323
+          },
+          "diff": 0.0747,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "BR": {
+          "meas": {
+            "est": 0.5056,
+            "lo": 0.4321,
+            "hi": 0.5753,
+            "n": 178,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4971,
+            "lo": 0.4583,
+            "hi": 0.5304
+          },
+          "diff": 0.0085,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "BG": {
+          "meas": {
+            "est": 0.5668,
+            "lo": 0.4938,
+            "hi": 0.6339,
+            "n": 217,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4987,
+            "lo": 0.4624,
+            "hi": 0.5333
+          },
+          "diff": 0.0681,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "RG": {
+          "meas": {
+            "est": 0.5741,
+            "lo": 0.4483,
+            "hi": 0.6957,
+            "n": 54,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4994,
+            "lo": 0.4597,
+            "hi": 0.5383
+          },
+          "diff": 0.0747,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        }
+      },
+      "qualifyingPairs": [
+        "WU",
+        "UB",
+        "UR",
+        "UG"
+      ],
+      "coloursOff": [],
+      "coloursNotEven": [
+        "R",
+        "G"
+      ],
+      "pairsOff": [
+        "UG"
+      ],
+      "candidate": false,
+      "v2Pass": false,
+      "transfer": {
+        "rmseColour": 0.0247,
+        "maxAbsColour": 0.0375,
+        "transferSdColour": 0.0134,
+        "nColour": 5,
+        "missBeyondIntervalsColour": 0,
+        "rmsePair": 0.0394,
+        "maxAbsPair": 0.0747,
+        "transferSdPair": 0.0307,
+        "nPair": 4,
+        "missBeyondIntervalsPair": 1
+      },
+      "gaps": {
+        "measuredColour": 0.0382,
+        "measuredPair": 0.0754,
+        "measuredPairAllTen": 0.0769,
+        "predictedColour": 0.0031,
+        "predictedPair": 0.0027,
+        "modelMaxColourGap": 0.0031,
+        "modelMaxPairGap": 0.0029,
+        "flowObjective": 0.0297,
+        "searchedObjective": 0.006,
+        "measuredObjective": 0.1136,
+        "selectionBias": 0.0727,
+        "noiseExpectedColour": 0.019,
+        "noiseShareAtOrAboveColour": 0.02,
+        "noiseExpectedPair": 0.0259,
+        "noiseShareAtOrAbovePair": 0.0005,
+        "selectionBiasBeyondNoise": 0.0495
+      }
+    },
+    "balanced-legacy-even-mid-nopower": {
+      "id": "balanced-legacy-even-mid-nopower",
+      "balance": "/home/justin-a/code/lab/data/lab-j160/balanced-legacy-even-mid-nopower/out/balance.json",
+      "predicted": true,
+      "measured": true,
+      "games": 3989,
+      "colourLevel": "BALANCED ON PAYOFF",
+      "colours": {
+        "W": {
+          "meas": {
+            "est": 0.5213,
+            "lo": 0.5026,
+            "hi": 0.5412,
+            "n": 2776,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5003,
+            "lo": 0.4673,
+            "hi": 0.5292
+          },
+          "diff": 0.021,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "U": {
+          "meas": {
+            "est": 0.4824,
+            "lo": 0.4541,
+            "hi": 0.5082,
+            "n": 1389,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5019,
+            "lo": 0.4673,
+            "hi": 0.5312
+          },
+          "diff": -0.0195,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "B": {
+          "meas": {
+            "est": 0.4736,
+            "lo": 0.4547,
+            "hi": 0.4936,
+            "n": 2800,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4998,
+            "lo": 0.4678,
+            "hi": 0.5292
+          },
+          "diff": -0.0262,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "R": {
+          "meas": {
+            "est": 0.4554,
+            "lo": 0.4348,
+            "hi": 0.4739,
+            "n": 2446,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4967,
+            "lo": 0.4662,
+            "hi": 0.5324
+          },
+          "diff": -0.0413,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "G": {
+          "meas": {
+            "est": 0.5233,
+            "lo": 0.4921,
+            "hi": 0.5515,
+            "n": 1290,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5012,
+            "lo": 0.4714,
+            "hi": 0.5373
+          },
+          "diff": 0.0221,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "pairs": {
+        "WU": {
+          "meas": {
+            "est": 0.5604,
+            "lo": 0.5336,
+            "hi": 0.5858,
+            "n": 1622,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5017,
+            "lo": 0.4696,
+            "hi": 0.5386
+          },
+          "diff": 0.0587,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "WB": {
+          "meas": {
+            "est": 0.5121,
+            "lo": 0.472,
+            "hi": 0.5545,
+            "n": 578,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.501,
+            "lo": 0.465,
+            "hi": 0.5351
+          },
+          "diff": 0.0111,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "WR": {
+          "meas": {
+            "est": 0.6329,
+            "lo": 0.5147,
+            "hi": 0.7442,
+            "n": 79,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4965,
+            "lo": 0.4693,
+            "hi": 0.5302
+          },
+          "diff": 0.1364,
+          "qualifies": false,
+          "missBeyondIntervals": true
+        },
+        "WG": {
+          "meas": {
+            "est": 0.5667,
+            "lo": 0.4722,
+            "hi": 0.6618,
+            "n": 120,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5017,
+            "lo": 0.4727,
+            "hi": 0.5425
+          },
+          "diff": 0.065,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "UB": {
+          "meas": {
+            "est": 0.486,
+            "lo": 0.4575,
+            "hi": 0.5138,
+            "n": 1284,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5024,
+            "lo": 0.4655,
+            "hi": 0.5345
+          },
+          "diff": -0.0164,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UR": {
+          "meas": {
+            "est": 0.4656,
+            "lo": 0.4237,
+            "hi": 0.5034,
+            "n": 640,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4983,
+            "lo": 0.4582,
+            "hi": 0.531
+          },
+          "diff": -0.0327,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UG": {
+          "meas": {
+            "est": 0.5572,
+            "lo": 0.505,
+            "hi": 0.603,
+            "n": 472,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5028,
+            "lo": 0.4727,
+            "hi": 0.5357
+          },
+          "diff": 0.0544,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "BR": {
+          "meas": {
+            "est": 0.5217,
+            "lo": 0.4206,
+            "hi": 0.625,
+            "n": 115,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4968,
+            "lo": 0.4616,
+            "hi": 0.5268
+          },
+          "diff": 0.0249,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "BG": {
+          "meas": {
+            "est": 0.5403,
+            "lo": 0.4706,
+            "hi": 0.6081,
+            "n": 211,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4994,
+            "lo": 0.4662,
+            "hi": 0.5329
+          },
+          "diff": 0.0409,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "RG": {
+          "meas": {
+            "est": 0.5333,
+            "lo": 0.375,
+            "hi": 0.6818,
+            "n": 30,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4995,
+            "lo": 0.4681,
+            "hi": 0.5342
+          },
+          "diff": 0.0338,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        }
+      },
+      "qualifyingPairs": [
+        "WU",
+        "WB",
+        "UB",
+        "UR",
+        "UG"
+      ],
+      "coloursOff": [],
+      "coloursNotEven": [
+        "R",
+        "G"
+      ],
+      "pairsOff": [
+        "WU",
+        "UG"
+      ],
+      "candidate": false,
+      "v2Pass": false,
+      "transfer": {
+        "rmseColour": 0.0272,
+        "maxAbsColour": 0.0413,
+        "transferSdColour": 0.0182,
+        "nColour": 5,
+        "missBeyondIntervalsColour": 1,
+        "rmsePair": 0.0397,
+        "maxAbsPair": 0.0587,
+        "transferSdPair": 0.0299,
+        "nPair": 5,
+        "missBeyondIntervalsPair": 1
+      },
+      "gaps": {
+        "measuredColour": 0.0446,
+        "measuredPair": 0.0604,
+        "measuredPairAllTen": 0.1329,
+        "predictedColour": 0.0033,
+        "predictedPair": 0.0028,
+        "modelMaxColourGap": 0.0033,
+        "modelMaxPairGap": 0.0035,
+        "flowObjective": 0.0323,
+        "searchedObjective": 0.0068,
+        "measuredObjective": 0.105,
+        "selectionBias": 0.0576,
+        "noiseExpectedColour": 0.0194,
+        "noiseShareAtOrAboveColour": 0.0067,
+        "noiseExpectedPair": 0.031,
+        "noiseShareAtOrAbovePair": 0.031,
+        "selectionBiasBeyondNoise": 0.0294
+      }
+    },
+    "balanced-pauper-even": {
+      "id": "balanced-pauper-even",
+      "balance": "/home/justin-a/code/lab/data/lab-j160/balanced-pauper-even/out/balance.json",
+      "predicted": true,
+      "measured": true,
+      "games": 4000,
+      "colourLevel": "BALANCED ON PAYOFF",
+      "colours": {
+        "W": {
+          "meas": {
+            "est": 0.5342,
+            "lo": 0.5138,
+            "hi": 0.5539,
+            "n": 2722,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5006,
+            "lo": 0.4555,
+            "hi": 0.5567
+          },
+          "diff": 0.0336,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "U": {
+          "meas": {
+            "est": 0.4965,
+            "lo": 0.4674,
+            "hi": 0.5238,
+            "n": 1446,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4993,
+            "lo": 0.4563,
+            "hi": 0.5407
+          },
+          "diff": -0.0028,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "B": {
+          "meas": {
+            "est": 0.5004,
+            "lo": 0.4809,
+            "hi": 0.52,
+            "n": 2748,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4997,
+            "lo": 0.4485,
+            "hi": 0.5455
+          },
+          "diff": 0.0007,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "R": {
+          "meas": {
+            "est": 0.4624,
+            "lo": 0.4418,
+            "hi": 0.4816,
+            "n": 2870,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4997,
+            "lo": 0.4486,
+            "hi": 0.5547
+          },
+          "diff": -0.0373,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "G": {
+          "meas": {
+            "est": 0.4929,
+            "lo": 0.4724,
+            "hi": 0.514,
+            "n": 2396,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5006,
+            "lo": 0.4508,
+            "hi": 0.5509
+          },
+          "diff": -0.0077,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "pairs": {
+        "WU": {
+          "meas": {
+            "est": 0.5786,
+            "lo": 0.5363,
+            "hi": 0.6187,
+            "n": 636,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5027,
+            "lo": 0.4471,
+            "hi": 0.5562
+          },
+          "diff": 0.0759,
+          "qualifies": true,
+          "missBeyondIntervals": true
+        },
+        "WB": {
+          "meas": {
+            "est": 0.6596,
+            "lo": 0.5568,
+            "hi": 0.75,
+            "n": 94,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4965,
+            "lo": 0.446,
+            "hi": 0.5547
+          },
+          "diff": 0.1631,
+          "qualifies": false,
+          "missBeyondIntervals": true
+        },
+        "WR": {
+          "meas": {
+            "est": 0.5508,
+            "lo": 0.449,
+            "hi": 0.6522,
+            "n": 118,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5003,
+            "lo": 0.4408,
+            "hi": 0.5603
+          },
+          "diff": 0.0505,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "WG": {
+          "meas": {
+            "est": 0.7059,
+            "lo": 0.55,
+            "hi": 0.8462,
+            "n": 34,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.5022,
+            "lo": 0.443,
+            "hi": 0.5627
+          },
+          "diff": 0.2037,
+          "qualifies": false,
+          "missBeyondIntervals": true
+        },
+        "UB": {
+          "meas": {
+            "est": 0.5127,
+            "lo": 0.4652,
+            "hi": 0.5556,
+            "n": 472,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5075,
+            "lo": 0.4569,
+            "hi": 0.5646
+          },
+          "diff": 0.0052,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UR": {
+          "meas": {
+            "est": 0.4342,
+            "lo": 0.3962,
+            "hi": 0.4753,
+            "n": 730,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.4949,
+            "lo": 0.4415,
+            "hi": 0.5498
+          },
+          "diff": -0.0607,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UG": {
+          "meas": {
+            "est": 0.5339,
+            "lo": 0.4444,
+            "hi": 0.6321,
+            "n": 118,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4931,
+            "lo": 0.443,
+            "hi": 0.5365
+          },
+          "diff": 0.0408,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "BR": {
+          "meas": {
+            "est": 0.4474,
+            "lo": 0.3559,
+            "hi": 0.5385,
+            "n": 114,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4966,
+            "lo": 0.4396,
+            "hi": 0.5491
+          },
+          "diff": -0.0492,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "BG": {
+          "meas": {
+            "est": 0.4,
+            "lo": 0.0,
+            "hi": 0.75,
+            "n": 10,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4987,
+            "lo": 0.448,
+            "hi": 0.5512
+          },
+          "diff": -0.0987,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "RG": {
+          "meas": {
+            "est": 0.55,
+            "lo": 0.25,
+            "hi": 0.8333,
+            "n": 20,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5075,
+            "lo": 0.4584,
+            "hi": 0.56
+          },
+          "diff": 0.0425,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        }
+      },
+      "qualifyingPairs": [
+        "WU",
+        "UB",
+        "UR"
+      ],
+      "coloursOff": [],
+      "coloursNotEven": [
+        "W",
+        "R"
+      ],
+      "pairsOff": [
+        "WU",
+        "UR"
+      ],
+      "candidate": false,
+      "v2Pass": false,
+      "transfer": {
+        "rmseColour": 0.0227,
+        "maxAbsColour": 0.0373,
+        "transferSdColour": 0.0,
+        "nColour": 5,
+        "missBeyondIntervalsColour": 0,
+        "rmsePair": 0.0562,
+        "maxAbsPair": 0.0759,
+        "transferSdPair": 0.044,
+        "nPair": 3,
+        "missBeyondIntervalsPair": 1
+      },
+      "gaps": {
+        "measuredColour": 0.0376,
+        "measuredPair": 0.0786,
+        "measuredPairAllTen": 0.2059,
+        "predictedColour": 0.0007,
+        "predictedPair": 0.0075,
+        "modelMaxColourGap": 0.0007,
+        "modelMaxPairGap": 0.0075,
+        "flowObjective": 0.1629,
+        "searchedObjective": 0.0082,
+        "measuredObjective": 0.1162,
+        "selectionBias": 0.0711,
+        "noiseExpectedColour": 0.0178,
+        "noiseShareAtOrAboveColour": 0.0105,
+        "noiseExpectedPair": 0.0293,
+        "noiseShareAtOrAbovePair": 0.0005,
+        "selectionBiasBeyondNoise": 0.0493
+      }
+    }
+  },
+  "reference": {
+    "omega-j159": {
+      "id": "omega-j159",
+      "balance": "/home/justin-a/code/lab/data/lab-j159/out/balance.json",
+      "predicted": true,
+      "measured": true,
+      "games": 4000,
+      "colourLevel": "BALANCED ON PAYOFF",
+      "colours": {
+        "W": {
+          "meas": {
+            "est": 0.5052,
+            "lo": 0.4855,
+            "hi": 0.5242,
+            "n": 2898,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5119,
+            "lo": 0.4877,
+            "hi": 0.5361
+          },
+          "diff": -0.0067,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "U": {
+          "meas": {
+            "est": 0.4768,
+            "lo": 0.4577,
+            "hi": 0.4957,
+            "n": 2804,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4483,
+            "lo": 0.4258,
+            "hi": 0.4751
+          },
+          "diff": 0.0285,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "B": {
+          "meas": {
+            "est": 0.5015,
+            "lo": 0.481,
+            "hi": 0.5204,
+            "n": 2604,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.5256,
+            "lo": 0.4983,
+            "hi": 0.5571
+          },
+          "diff": -0.0241,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "R": {
+          "meas": {
+            "est": 0.5302,
+            "lo": 0.5086,
+            "hi": 0.5517,
+            "n": 2220,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5276,
+            "lo": 0.5021,
+            "hi": 0.5562
+          },
+          "diff": 0.0026,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "G": {
+          "meas": {
+            "est": 0.4808,
+            "lo": 0.4584,
+            "hi": 0.5032,
+            "n": 1930,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4867,
+            "lo": 0.46,
+            "hi": 0.5192
+          },
+          "diff": -0.0059,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        }
+      },
+      "pairs": {
+        "WU": {
+          "meas": {
+            "est": 0.4923,
+            "lo": 0.4656,
+            "hi": 0.5195,
+            "n": 1568,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4676,
+            "lo": 0.4341,
+            "hi": 0.4951
+          },
+          "diff": 0.0247,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "WB": {
+          "meas": {
+            "est": 0.5438,
+            "lo": 0.5016,
+            "hi": 0.5849,
+            "n": 616,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5287,
+            "lo": 0.4956,
+            "hi": 0.5603
+          },
+          "diff": 0.0151,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "WR": {
+          "meas": {
+            "est": 0.5303,
+            "lo": 0.4962,
+            "hi": 0.5646,
+            "n": 826,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5378,
+            "lo": 0.5105,
+            "hi": 0.568
+          },
+          "diff": -0.0075,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "WG": {
+          "meas": {
+            "est": 0.4728,
+            "lo": 0.4328,
+            "hi": 0.5106,
+            "n": 662,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4976,
+            "lo": 0.4681,
+            "hi": 0.5275
+          },
+          "diff": -0.0248,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UB": {
+          "meas": {
+            "est": 0.4829,
+            "lo": 0.4562,
+            "hi": 0.5076,
+            "n": 1578,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4803,
+            "lo": 0.4518,
+            "hi": 0.5099
+          },
+          "diff": 0.0026,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UR": {
+          "meas": {
+            "est": 0.5114,
+            "lo": 0.4749,
+            "hi": 0.5453,
+            "n": 788,
+            "label": "EVEN"
+          },
+          "pred": {
+            "est": 0.4742,
+            "lo": 0.4452,
+            "hi": 0.507
+          },
+          "diff": 0.0372,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "UG": {
+          "meas": {
+            "est": 0.4532,
+            "lo": 0.4057,
+            "hi": 0.5,
+            "n": 470,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.4399,
+            "lo": 0.4137,
+            "hi": 0.4704
+          },
+          "diff": 0.0133,
+          "qualifies": true,
+          "missBeyondIntervals": false
+        },
+        "BR": {
+          "meas": {
+            "est": 0.5821,
+            "lo": 0.5224,
+            "hi": 0.6466,
+            "n": 280,
+            "label": "OFF"
+          },
+          "pred": {
+            "est": 0.547,
+            "lo": 0.5146,
+            "hi": 0.5792
+          },
+          "diff": 0.0351,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "BG": {
+          "meas": {
+            "est": 0.4871,
+            "lo": 0.4343,
+            "hi": 0.5402,
+            "n": 388,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5122,
+            "lo": 0.4796,
+            "hi": 0.5421
+          },
+          "diff": -0.0251,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        },
+        "RG": {
+          "meas": {
+            "est": 0.5421,
+            "lo": 0.4929,
+            "hi": 0.5886,
+            "n": 380,
+            "label": "UNCLEAR"
+          },
+          "pred": {
+            "est": 0.5147,
+            "lo": 0.4871,
+            "hi": 0.5448
+          },
+          "diff": 0.0274,
+          "qualifies": false,
+          "missBeyondIntervals": false
+        }
+      },
+      "qualifyingPairs": [
+        "WU",
+        "WB",
+        "WR",
+        "WG",
+        "UB",
+        "UR",
+        "UG"
+      ],
+      "coloursOff": [],
+      "coloursNotEven": [
+        "R"
+      ],
+      "pairsOff": [],
+      "candidate": true,
+      "v2Pass": false,
+      "transfer": {
+        "rmseColour": 0.0172,
+        "maxAbsColour": 0.0285,
+        "transferSdColour": 0.0,
+        "nColour": 5,
+        "missBeyondIntervalsColour": 0,
+        "rmsePair": 0.021,
+        "maxAbsPair": 0.0372,
+        "transferSdPair": 0.0,
+        "nPair": 7,
+        "missBeyondIntervalsPair": 0
+      },
+      "gaps": {
+        "measuredColour": 0.0302,
+        "measuredPair": 0.0468,
+        "measuredPairAllTen": 0.0821,
+        "predictedColour": 0.0517,
+        "predictedPair": 0.0601,
+        "modelMaxColourGap": null,
+        "modelMaxPairGap": null,
+        "flowObjective": null,
+        "searchedObjective": null,
+        "measuredObjective": 0.077,
+        "selectionBias": -0.0133,
+        "noiseExpectedColour": 0.0522,
+        "noiseShareAtOrAboveColour": 0.994,
+        "noiseExpectedPair": 0.0672,
+        "noiseShareAtOrAbovePair": 0.8912,
+        "selectionBiasBeyondNoise": -0.0204
+      }
+    }
+  },
+  "pooled": {
+    "rmseColour": 0.0303,
+    "maxAbsColour": 0.0678,
+    "transferSdColour": 0.021,
+    "nColour": 25,
+    "missBeyondIntervalsColour": 4,
+    "rmsePair": 0.047,
+    "maxAbsPair": 0.1017,
+    "transferSdPair": 0.0385,
+    "nPair": 23,
+    "missBeyondIntervalsPair": 8
+  },
+  "power": {
+    "balanced-legacy-even-high": {
+      "with": "balanced-legacy-even-high",
+      "without": "balanced-legacy-even-high-nopower",
+      "measuredColourGapWith": 0.0657,
+      "measuredColourGapWithout": 0.0491,
+      "diff": 0.0166,
+      "lo": -0.0147,
+      "hi": 0.0473,
+      "predictedDiff": -0.009,
+      "pairGapDiff": 0.0564
+    },
+    "balanced-legacy-even-mid": {
+      "with": "balanced-legacy-even-mid",
+      "without": "balanced-legacy-even-mid-nopower",
+      "measuredColourGapWith": 0.0382,
+      "measuredColourGapWithout": 0.0446,
+      "diff": -0.0064,
+      "lo": -0.0268,
+      "hi": 0.023,
+      "predictedDiff": -0.0002,
+      "pairGapDiff": 0.015
+    },
+    "balanced-pauper-even": {
+      "with": "balanced-pauper-even",
+      "without": null,
+      "note": "n/a: no -nopower cube measured"
+    }
+  },
+  "candidates": [
+    "balanced-legacy-even-high-nopower"
+  ],
+  "v2Pass": [],
+  "unpredicted": [],
+  "nCubes": 5,
+  "nMeasured": 5,
+  "nPredicted": 5,
+  "nTested": 5,
+  "code": 1,
+  "nCandidates": 1
+}

@@ -1,0 +1,85 @@
+{
+  "present": 5,
+  "predicted": 5,
+  "identical": 5,
+  "mismatch": 0,
+  "unpredicted": [],
+  "mismatched": [],
+  "generatedNotAtPin": [
+    "balanced-pauper-even-nopower"
+  ],
+  "inputs": {
+    "model": {
+      "census-decks": {
+        "file": "/home/justin-a/code/lab/data/lab-j144/out/census-decks.jsonl.gz",
+        "sha256": "b167bf1d5c1f159d79f7064607a17450fa570190199f3166e8a2c607d44dcf55"
+      },
+      "census-games": {
+        "file": "/home/justin-a/code/lab/data/lab-j144/out/census-games.jsonl.gz",
+        "sha256": "d55c0d22c6a5d219f15b6a9b75468c0a63b31e0dbe47d0aef9271d53c79e1510"
+      },
+      "facts": {
+        "file": "var/cubelab/facts/32653ed2fcd7d8d2.json",
+        "sha256": "9b0b65014b87a9f8a62b303bc9513771497f43f641c35ac34acff901a4eaea38"
+      },
+      "omega-drafted-decks": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/out/drafted-decks.jsonl.gz",
+        "sha256": "49fda34e6d2411c00c2158533b6781e085339ba38b0628f917d6d05721490c8d"
+      },
+      "omega-pool-decks": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/census/decks/decks.jsonl",
+        "sha256": "4a259bee7febfe845f489897e6e4446a8e4fefdd49578d833d1756358c7a66ea"
+      },
+      "omega-cube": {
+        "file": "/home/justin-a/code/lab/mtg-table/cubes/omega-cube-180.md",
+        "sha256": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc"
+      },
+      "omega-games": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/out/games.jsonl.gz",
+        "sha256": "38ce348ff403408a3b13766451ceff14dc84bcd35a64b9e85ebf23300a727d39"
+      },
+      "omega-balance": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/out/balance.json",
+        "sha256": "6832c663614632e8e9be04c33149f9fd6fa233de39fb4cdead2e180706248d2d"
+      }
+    },
+    "model-nopower": {
+      "census-decks": {
+        "file": "/home/justin-a/code/lab/data/lab-j144/out/census-decks.jsonl.gz",
+        "sha256": "b167bf1d5c1f159d79f7064607a17450fa570190199f3166e8a2c607d44dcf55"
+      },
+      "census-games": {
+        "file": "/home/justin-a/code/lab/data/lab-j144/out/census-games.jsonl.gz",
+        "sha256": "d55c0d22c6a5d219f15b6a9b75468c0a63b31e0dbe47d0aef9271d53c79e1510"
+      },
+      "facts": {
+        "file": "var/cubelab/facts/32653ed2fcd7d8d2.json",
+        "sha256": "9b0b65014b87a9f8a62b303bc9513771497f43f641c35ac34acff901a4eaea38"
+      },
+      "exclude": {
+        "file": "cubes/library/powered-exclude.txt",
+        "sha256": "c9aad552d11e9ad957d8a4b67f436439befae47678212a08f2ba54badc6c50ff"
+      },
+      "omega-drafted-decks": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/out/drafted-decks.jsonl.gz",
+        "sha256": "49fda34e6d2411c00c2158533b6781e085339ba38b0628f917d6d05721490c8d"
+      },
+      "omega-pool-decks": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/census/decks/decks.jsonl",
+        "sha256": "4a259bee7febfe845f489897e6e4446a8e4fefdd49578d833d1756358c7a66ea"
+      },
+      "omega-cube": {
+        "file": "/home/justin-a/code/lab/mtg-table/cubes/omega-cube-180.md",
+        "sha256": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc"
+      },
+      "omega-games": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/out/games.jsonl.gz",
+        "sha256": "38ce348ff403408a3b13766451ceff14dc84bcd35a64b9e85ebf23300a727d39"
+      },
+      "omega-balance": {
+        "file": "/home/justin-a/code/lab/data/lab-j145/out/balance.json",
+        "sha256": "6832c663614632e8e9be04c33149f9fd6fa233de39fb4cdead2e180706248d2d"
+      }
+    }
+  }
+}
