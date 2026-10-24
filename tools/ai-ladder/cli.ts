@@ -324,6 +324,8 @@ async function cmdMatch(a: Args, argv: string[]): Promise<void> {
     if (t.evalLeaves > 0) console.log(`${who} evaluator leaves: ${t.evalLeaves}, ${t.evalLeafUs} us each`);
     // D468: rollouts the step clock ended inside one engine step (0 on a normal game)
     if (t.stepTimeouts > 0) console.log(`${who} rollouts timed out inside one engine step: ${t.stepTimeouts}`);
+    // D470: rollout errors that were a forced combat answer the copy could not give (0 on a normal game)
+    if (t.unavailable > 0) console.log(`${who} rollouts whose forced answer was unavailable in the copy: ${t.unavailable}`);
   }
 }
 

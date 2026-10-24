@@ -107,12 +107,19 @@ export interface SearchTally {
    * between steps is not one.  Optional so tallies built before the counter stay valid.
    */
   stepTimeouts?: number;
+  /**
+   * D470: rollouts whose forced combat answer the copy could not give (`search.unavailable`, plus the ranking's
+   * `search.prior.unavailable`), summed over every game.  Each is also one of the side's rollout errors
+   * (`search.rolloutErrors` / `search.prior.errors`); this says how many.  Optional so tallies built before the counter
+   * stay valid.
+   */
+  unavailable?: number;
 }
 
 /** The decision kinds the search counts (D312, D417). */
 export const SEARCH_KINDS = ['p', 'a', 'b', 'm', 'k', 't'] as const;
 
-export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {}, us: {}, evalLeaves: 0, evalNs: 0, stepTimeouts: 0 });
+export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {}, us: {}, evalLeaves: 0, evalNs: 0, stepTimeouts: 0, unavailable: 0 });
 
 /** One seat's counters from an ai-bench line (`aStats.counts` / `bStats.counts`) into the tally. */
 export function addCounts(t: SearchTally, counts: Record<string, unknown> | undefined): void {
@@ -132,6 +139,8 @@ export function addCounts(t: SearchTally, counts: Record<string, unknown> | unde
   t.evalNs = (t.evalNs ?? 0) + n('search.leaf.evalNs');
   // D468: the step clock's timeouts (any kind's rollouts and the prior's)
   t.stepTimeouts = (t.stepTimeouts ?? 0) + n('search.stepTimeouts') + n('search.prior.stepTimeouts');
+  // D470: forced combat answers the copy could not give (any kind's rollouts and the prior's)
+  t.unavailable = (t.unavailable ?? 0) + n('search.unavailable') + n('search.prior.unavailable');
   const searched = n('search.p.considered') + n('search.a.considered') + n('search.b.considered');
   if (searched === 0) return;
   t.games++;
@@ -172,7 +181,7 @@ export function tallyBatch(file: string, a: SearchTally, b: SearchTally): void {
 }
 
 /** A tally as the match line keeps it (no per-game rows). */
-export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }>; msMean: Record<string, number | null>; msPerDecision: number | null; evalLeaves: number; evalLeafUs: number | null; stepTimeouts: number } {
+export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }>; msMean: Record<string, number | null>; msPerDecision: number | null; evalLeaves: number; evalLeafUs: number | null; stepTimeouts: number; unavailable: number } {
   const br = budgetRate(t);
   const r6 = (x: number | null): number | null => (x === null ? null : Math.round(x * 1e6) / 1e6);
   const byKind: Record<string, { searched: number; changed: number; rate: number | null }> = {};
@@ -195,5 +204,5 @@ export function tallyLine(t: SearchTally): { games: number; searched: number; ch
   // J128: the evaluator's leaves and the mean cost of one, in microseconds (null where none was scored)
   const evalLeaves = t.evalLeaves ?? 0;
   const evalLeafUs = evalLeaves > 0 ? r3((t.evalNs ?? 0) / 1000 / evalLeaves) : null;
-  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind, msMean, msPerDecision, evalLeaves, evalLeafUs, stepTimeouts: t.stepTimeouts ?? 0 };
+  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind, msMean, msPerDecision, evalLeaves, evalLeafUs, stepTimeouts: t.stepTimeouts ?? 0, unavailable: t.unavailable ?? 0 };
 }

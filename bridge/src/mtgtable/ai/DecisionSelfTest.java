@@ -389,6 +389,7 @@ public final class DecisionSelfTest {
         payCap();
         stepClock();
         searchStepClock();
+        searchUnavailable();
         // branch i of every option shares its seed; branches, decisions and atlases differ
         final long b = Atlas.branchSeed(451, 3, 7);
         check(b == Atlas.branchSeed(451, 3, 7) && b >= 0, "a branch seed is a function of (atlas seed, decision, branch)");
@@ -514,6 +515,37 @@ public final class DecisionSelfTest {
         check("thrown".equals(bug[1]) && bug[0] instanceof IllegalStateException
                         && Integer.valueOf(2).equals(counts.get("search.stepTimeouts")),
                 "D468's control: an engine bug in a step is no timeout -- rethrown to the caller's catch, counted nowhere");
+    }
+
+    /**
+     * D470's follow-up (the cloud's LOW on #191): a forced combat answer the
+     * copy cannot give reaches the search's callers as a rollout error, and
+     * {@link SearchPolicy#countUnavailable} -- what {@code playout}'s catch
+     * calls before it rethrows -- counts it once more under its own key, found
+     * through the cause chain as the step clock's throw is.  An engine bug
+     * counts nothing there.
+     */
+    private static void searchUnavailable() {
+        final Map<String, Integer> counts = new java.util.HashMap<>();
+        final SearchPolicy.Sink sink = new SearchPolicy.Sink() {
+            @Override
+            public void add(final String key, final int n) {
+                counts.merge(key, n, Integer::sum);
+            }
+
+            @Override
+            public void event(final String text) {
+                // nothing
+            }
+        };
+        final RuntimeException gone = new RolloutController.OptionUnavailable("the forced block's attacker is not attacking");
+        final boolean direct = SearchPolicy.countUnavailable(gone, sink, false);
+        final boolean wrapped = SearchPolicy.countUnavailable(new RuntimeException("a Forge wrapper", gone), sink, true);
+        final boolean bug = SearchPolicy.countUnavailable(new IllegalStateException("an engine bug"), sink, false);
+        check(direct && wrapped && !bug && Integer.valueOf(1).equals(counts.get("search.unavailable"))
+                        && Integer.valueOf(1).equals(counts.get("search.prior.unavailable")) && counts.size() == 2,
+                "D470: an unavailable forced answer is counted as search.unavailable (the prior's key for the ranking), "
+                        + "wrapped or not; an engine bug is not (" + counts + ")");
     }
 
     /**

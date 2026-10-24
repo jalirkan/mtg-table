@@ -178,3 +178,48 @@ pinned jar (javap: `Card.isInPlay`, `Combat.getBandOfAttacker`, `Combat.undoBloc
 - **`tools/cubelab.sh atlas-selftest --jobs 1`: OK** (16 forks, 8 no-leak checks, 38 frame logs, 538 rows;
   the tax pair's G5 refused 2 and left out 2), in 3 min 13 s.
 - **Not run:** the full gate, and J158's spine 461. The lab is running J158 on 6 workers.
+
+**Addendum, 2026-10-24 (the cloud's review of #191, two LOWs).**
+
+- **In the search, an unavailable answer is a rollout error, now also counted by name.** The atlas reads
+  `OptionUnavailable` as its own outcome (point 3), but the search does not: `BlockCand.install` is shared,
+  `Forced.blockers` throws from inside `ph.mainLoopStep()`, and `SearchPolicy.playout` rethrows anything that
+  is not D468's step timeout. Its callers then treat it as any other throw:
+  - **the search (D312, `search`)** counts `search.rolloutErrors`, drops the round (`continue rounds`), and
+    on the third error falls back to Forge's answer (`search.fallback.rolloutErrors`);
+  - **the anytime search (search-v2, `searchAnytime`)** counts `search.rolloutErrors`, retires a
+    non-Forge candidate on its second error (`search.anytime.erroredOut`), and falls back
+    (`search.fallback.rolloutErrors`) when Forge's own answer errors three times or the errors reach three per
+    candidate;
+  - **the ranking (`rank=prior`)** counts `search.prior.errors` and drops the candidate from the list.
+
+  So the dropped candidate was there to be seen, but not told apart from an engine bug.
+  **`playout` now also counts it as `search.unavailable`** (`search.prior.unavailable` for the ranking's
+  until-applied playouts), in `SearchPolicy.countUnavailable`, found through the cause chain by
+  `Atlas.unavailableIn`. It is the same place and the same pattern as D468's `search.stepTimeouts`. It
+  is a count only: the throw still reaches the caller, still counts as a rollout error, and is handled as
+  before, so no search answer changes. It reaches the bench line's seat counters (`aStats.counts` /
+  `bStats.counts`) as every `search.*` counter does. The ladder's match tally (`tools/ai-ladder/match.ts`)
+  sums both keys into an `unavailable` field on every match line (0 when none, or on lines from before the
+  counter), and `cli.ts` prints it when it is not 0. The redaction checker reads `counters` as a map of
+  numbers, and no test lists the counter names, so neither needed a change.
+
+  **What the counter cannot see.** The search's playout has no `expired` check, unlike `Atlas.play`. A
+  block candidate whose seat is never asked at the fork's combat is caught only if the rollout reaches a
+  later declare-blockers step, where `sameTurn` throws. At the search's default block horizon (`turns=0`,
+  to the end of this turn) the rollout never reaches one. That candidate is scored as the turn played
+  without its answer, and is counted nowhere. After point 1 the seat is not asked only when nothing it
+  controls can block once its blocks are off, which is the case below. Making it an error would mean a
+  check in the playout loop through `RolloutForcing`, which all three forcing controllers implement. It
+  would also change search answers. Both are larger than this follow-up, so it is left as written here.
+- **"Block none" can read unavailable too.** Before point 1 it could not: it played Forge's block. Now its
+  forced answer, the empty block, waits to be given at the fork's declare-blockers step like any other. If
+  something in the copy, between the rewind and that step, leaves the seat with no creature that can block
+  (for example, the active player's removal or an attack trigger kills its only blocker), Forge does not ask,
+  and `expired` marks the branch unavailable. The game that branch would have played is the no-block game,
+  but the atlas leaves it out, as it leaves out every option it could not force.
+
+**What ran for the addendum.** `bridge/build.sh` (the lint and its self-test, javac, the eight
+self-tests, with `DecisionSelfTest.searchUnavailable`: direct and wrapped, under each key, and an engine bug
+counted nowhere), and `web/test/ai-ladder.test.ts` (the tally sums both keys, 0 for a side with none, 0
+for a tally from before the counter). No engine game.
