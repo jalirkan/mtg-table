@@ -15,17 +15,35 @@
  *  - the generator fills the plan exactly, pulls every class toward its target, keeps the creature floor, and
  *    the balance search narrows the predicted gaps;
  *  - the programme simulation: a perfect model with huge measurements confirms on night 2, a rule nothing can
- *    meet never confirms.
+ *    meet never confirms;
+ *  - by deck: the CV holds out a game only when both its decks are held out, and the split-half keeps every deck
+ *    on one side; the balance search stops at its tolerance;
+ *  - the exclusion list: its parser, and cubes/library/powered-exclude.txt is the census's POWERED list exactly;
+ *  - every committed cube under cubes/library/balanced/ is what `cubelab.sh run`/`draft` load: 180 cards, no
+ *    parse warning, the two-colour plan exact, every card a supported library row and not AI:RemoveDeck:All, no
+ *    ratings file beside it (so Forge's ranks), loadCube finds every card, the lab drafts and builds two 40-card
+ *    decks from it, and a -nopower cube holds no card of the exclusion list.
  */
 
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
-  agreement, balanceSearch, bootstrapFit, buildDesign, cardEffects, classSummary, crossValidate, DEFAULT_GEN, DEFAULT_PENALTY, generateCube, groupOf,
-  maxGap, pearson, playCurve, predictPayoffs, shareBin, simulateProgramme, solveRidge, splitHalf,
+  agreement, BALANCE_TOL, balanceSearch, bootstrapFit, buildDesign, cardEffects, classSummary, clusterParts, crossValidate, DEFAULT_GEN, DEFAULT_PENALTY, generateCube, groupOf,
+  maxGap, parseExcludeList, pearson, playCurve, predictPayoffs, shareBin, simulateProgramme, solveRidge, splitHalf,
   type GenCard, type MDeck, type MGame,
 } from '../../tools/cubelab/balance-model.ts';
+import type { Fact } from '../../tools/cubelab/cards.ts';
+import { POWERED_NAMES } from '../../tools/cubelab/census.ts';
+import { parseCube } from '../../tools/cubelab/cube.ts';
+import { writeCubeDoc } from '../../tools/cubelab/cubedoc.ts';
+import { loadCube, runDraft } from '../../tools/cubelab/lab.ts';
+import { parseLibraryPool, type LibraryCard } from '../../tools/cubelab/library-candidates.ts';
+import { defaultRatings } from '../../tools/cubelab/run.ts';
+import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { MONO, PAIRS, planErrors } from '../../tools/cubelab/skeleton.ts';
 import { structurePlan } from '../../tools/cubelab/sample.ts';
@@ -165,4 +183,124 @@ test('the programme: a perfect model confirms on night 2; an impossible rule nev
   assert.equal(ok.truePass, 1);
   const never = simulateProgramme({ ...base, colourN: 50 });
   assert.equal(never.within, 0);
+});
+
+test('by deck: the CV scores only games whose two decks were both held out; the split-half keeps every deck on one side', () => {
+  const { decks, games } = synth(6, 0.03);
+  const ds = buildDesign(decks, games, 'makeup');
+  const byGame = crossValidate(ds, [50, 1e6], 5, 1);
+  const byDeck = crossValidate(ds, [50, 1e6], 5, 1, DEFAULT_PENALTY, 'deck');
+  assert.equal(byGame.by, 'game');
+  assert.equal(byGame.tested, ds.y.length);
+  const part = clusterParts(ds, 5, 1, 'balance-model/cv-deck');
+  let same = 0;
+  for (let g = 0; g < ds.y.length; g++) if (part[ds.deckCluster[ds.ga[g] as number] as number] === part[ds.deckCluster[ds.gb[g] as number] as number]) same++;
+  assert.equal(byDeck.tested, same, 'by deck: a game is scored only when both its decks sit in the held-out fold');
+  assert.ok(byDeck.tested > 0.1 * ds.y.length && byDeck.tested < 0.35 * ds.y.length, `about a fifth of random pairings: ${byDeck.tested}`);
+  assert.ok(byDeck.skill > 0, 'planted card values still predict games between unseen decks');
+  const pen = { ...DEFAULT_PENALTY, card: 50 };
+  const strong = synth(8, 0.05, 600, 12000);
+  const ds2 = buildDesign(strong.decks, strong.games, 'makeup');
+  const sh = splitHalf(ds2, pen, 0, 'deck', 1);
+  assert.equal(sh.by, 'deck');
+  assert.ok(sh.games[0] + sh.games[1] < ds2.y.length, 'games between the halves are in neither');
+  assert.ok(sh.k > 3 && sh.k < 5, `k ${sh.k}: about 4 for random pairings`);
+  assert.ok(sh.half > 0.2 && sh.full > sh.half, `stepped up ${sh.half} -> ${sh.full}`);
+  const nul = synth(9, 0, 600, 12000);
+  assert.ok(Math.abs(splitHalf(buildDesign(nul.decks, nul.games, 'makeup'), pen, 0, 'deck', 1).half) < 0.25, 'no signal, no repeatability');
+  // Clusters that hold both decks of every game (a draft) put every game in a half: k = 2.
+  const drafted = decks.map((d, i) => ({ ...d, cluster: `draft:${Math.floor(i / 2)}` }));
+  const inDraft: MGame[] = [];
+  for (let i = 0; i + 1 < drafted.length; i += 2) for (let k = 0; k < 10; k++) inDraft.push({ a: (drafted[i] as MDeck).id, b: (drafted[i + 1] as MDeck).id, winner: k % 2 ? 'a' : 'b', first: k % 3 ? 'a' : 'b' });
+  const sd = splitHalf(buildDesign(drafted, inDraft, 'makeup'), pen, 0, 'deck', 1);
+  assert.equal(sd.games[0] + sd.games[1], inDraft.length);
+  assert.ok(Math.abs(sd.k - 2) < 1e-12);
+});
+
+test('the balance search stops at its tolerance', () => {
+  const pool = synthPool(7);
+  const plan = structurePlan('two-colour');
+  const cube = generateCube(pool, plan, { ...DEFAULT_GEN, target: 0.01, minCreaturesPerColour: 16 });
+  const value = (n: string): number => pool.find((c) => c.name === n)?.value ?? 0;
+  const o = { target: 0.01, band: 0.02, minCreaturesPerColour: 16, maxSwaps: 40 };
+  const start = predictPayoffs(cube, (n) => value(n), 0, mix);
+  const startGap = maxGap(start.colour) + maxGap(start.pair);
+  const loose = balanceSearch(cube, pool, value, mix, () => 1, { ...o, tol: startGap + 1 });
+  assert.equal(loose.swaps.length, 0, 'already within the tolerance: no swap');
+  assert.ok(Math.abs(loose.gap - startGap) < 1e-12);
+  const dflt = balanceSearch(cube, pool, value, mix, () => 1, o);
+  const tight = balanceSearch(cube, pool, value, mix, () => 1, { ...o, tol: 0 });
+  assert.equal(BALANCE_TOL, 0.008);
+  assert.ok(dflt.swaps.length <= tight.swaps.length);
+  if (dflt.swaps.length) {
+    // every swap but the last was taken while the gap was still above the tolerance
+    assert.ok(dflt.gap <= BALANCE_TOL || dflt.swaps.length === o.maxSwaps || tight.swaps.length === dflt.swaps.length);
+    const beforeLast = dflt.gap + (dflt.swaps.at(-1) as { gain: number }).gain;
+    assert.ok(beforeLast > BALANCE_TOL, `the last swap started above the tolerance (${beforeLast})`);
+  }
+});
+
+const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
+const LIB = join(REPO, 'cubes', 'library');
+
+test('the exclusion list: its parser, and powered-exclude.txt is the census\'s POWERED list', () => {
+  assert.deepEqual(parseExcludeList('# a comment\nBlack Lotus\n\n  Sol Ring  # trailing\nBlack Lotus\n'), ['Black Lotus', 'Sol Ring']);
+  const list = parseExcludeList(readFileSync(join(LIB, 'powered-exclude.txt'), 'utf8'));
+  assert.deepEqual([...list].sort(), [...POWERED_NAMES].sort(), 'cubes/library/powered-exclude.txt = tools/cubelab/census.ts POWERED (D445)');
+});
+
+test('every committed balanced cube loads as `cubelab.sh run` and `draft` load it, and drafts two decks', () => {
+  const pool = parseLibraryPool(readFileSync(join(LIB, 'library-pool.tsv'), 'utf8'));
+  const row = new Map(pool.map((c) => [c.name, c]));
+  const powered = new Set(parseExcludeList(readFileSync(join(LIB, 'powered-exclude.txt'), 'utf8')));
+  const dir = join(LIB, 'balanced');
+  const files = readdirSync(dir).filter((f) => f.endsWith('.md')).sort();
+  for (const want of ['balanced-legacy-even-high.md', 'balanced-legacy-even-mid.md', 'balanced-pauper-even.md', 'balanced-legacy-even-high-nopower.md', 'balanced-legacy-even-mid-nopower.md']) {
+    assert.ok(files.includes(want), `${want} is committed`);
+  }
+  const plan = structurePlan('two-colour');
+  // Facts as the engine would give them, from the library's own rows (no engine here); a rank so the drafter has an order.
+  const factOf = (c: LibraryCard, i: number): Fact => {
+    const generic = Math.max(0, c.mv - c.colors.length);
+    return {
+      listed: c.name, name: c.name, found: true, colors: c.colors, identity: c.land ? c.produces : c.colors, cmc: c.mv, type: c.type,
+      manaCost: c.land ? '' : `${generic ? `{${generic}}` : ''}${[...c.colors].map((x) => `{${x}}`).join('')}`,
+      land: c.land, creature: /\bCreature\b/.test(c.type), remAIDeck: c.aiFlag === 'All',
+      rank: { source: 'cube', edition: 'X', defaultEdition: 'X', rawScore: 30 + ((i * 37) % 60) },
+    };
+  };
+  for (const f of files) {
+    const file = join(dir, f);
+    const text = readFileSync(file, 'utf8');
+    const cube = parseCube(text);
+    assert.deepEqual(cube.warnings, [], `${f}: parse warnings`);
+    assert.equal(cube.cards.length, 180, `${f}: 180 cards`);
+    assert.equal(new Set(cube.cards.map((c) => c.name)).size, 180, `${f}: no card twice`);
+    for (const s of cube.sections) assert.equal(s.parsed, s.expected, `${f}: section ${s.name} ${s.parsed}/${s.expected}`);
+    assert.match(cube.title, /version \d+/, `${f}: a version for evolve to bump`);
+    assert.equal(writeCubeDoc(text, cube.cards), text, `${f}: evolve's writer gives back the same bytes`);
+    const rows = cube.cards.map((c) => row.get(c.name));
+    for (const [i, r] of rows.entries()) {
+      assert.ok(r, `${f}: ${cube.cards[i]?.name} is a library card`);
+      assert.ok(r.supported, `${f}: ${r.name} is supported by Forge 2.0.14`);
+      assert.notEqual(r.aiFlag, 'All', `${f}: ${r.name} is not AI:RemoveDeck:All`);
+    }
+    assert.deepEqual(planErrors(rows as LibraryCard[], plan), [], `${f}: the two-colour plan, exact`);
+    assert.equal(defaultRatings(file), null, `${f}: no ratings file beside it, so run drafts on Forge's ranks`);
+    if (f.includes('-nopower')) for (const c of cube.cards) assert.ok(!powered.has(c.name), `${f}: ${c.name} is on the exclusion list`);
+    const facts = (rows as LibraryCard[]).map(factOf);
+    const lc = loadCube(cube, facts, null, DEFAULT_WEIGHTS);
+    assert.equal(lc.cards.length, 180, `${f}: loadCube keeps every card`);
+    assert.equal(lc.missing.length, 0);
+    assert.equal(lc.ratedFromFile, 0);
+    for (const seed of [1, 2]) {
+      const d = runDraft(lc, 'grid', seed, DEFAULT_WEIGHTS);
+      assert.equal(d.dealt, 162, `${f}: a full grid draft deals 18 grids`);
+      for (const dr of d.drafters) {
+        assert.ok(dr.deck, `${f} seed ${seed}: seat ${dr.seat} builds a deck`);
+        assert.equal(dr.deck.main.reduce((s, [k]) => s + k, 0), 40);
+        assert.deepEqual(dr.deckErrors, [], `${f} seed ${seed}: seat ${dr.seat}'s deck is legal`);
+      }
+    }
+  }
 });

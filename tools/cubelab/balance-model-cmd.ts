@@ -3,7 +3,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 //   balance-model --census <lab-j144 dir> [--omega <lab-j145 dir>] --facts <facts.json> --out <dir>
-//                 [--reps 200] [--seed 1] [--cubes-out <dir>]
+//                 [--reps 200] [--seed 1] [--cubes-out <dir>] [--search-tol 0.008] [--exclude <file> [--suffix <text>]]
+//
+// `--exclude <file>` keeps the listed cards out of every generated cube (one name a line, `#` comments; every name
+// must be a library card), recorded in each cube document and model.json with the file's sha256; `--suffix` is
+// appended to each cube's id (`--suffix -nopower` beside `cubes/library/powered-exclude.txt`).
 //
 // No engine.  Reads a recorded deck census (D447/D450: `out/census-decks.jsonl.gz`, `out/census-games.jsonl.gz`)
 // and, optionally, a J145-shaped balance night (`out/drafted-decks.jsonl.gz`, `out/games.jsonl.gz`,
@@ -19,9 +23,9 @@ import zlib from 'node:zlib';
 import { createHash } from 'node:crypto';
 
 import {
-  agreement, balanceSearch, bootstrapFit, buildDesign, cardEffects, classSummary, crossValidate, DEFAULT_GEN, DEFAULT_PENALTY, generateCube, groupEffects, groupOf,
+  agreement, BALANCE_TOL, balanceSearch, parseExcludeList, bootstrapFit, buildDesign, cardEffects, classSummary, crossValidate, DEFAULT_GEN, DEFAULT_PENALTY, generateCube, groupEffects, groupOf,
   maxGap, playCurve, predictPayoffs, quantile, sdOf, simulateProgramme, solveRidge, splitHalf, trueSpread,
-  type CardEffect, type DeckMix, type Fit, type GenCard, type GenOptions, type Grouping, type MDeck, type MGame, type PayoffPrediction,
+  type CardEffect, type CvResult, type DeckMix, type Fit, type GenCard, type GenOptions, type Grouping, type MDeck, type MGame, type PayoffPrediction, type SplitHalf,
 } from './balance-model.ts';
 import { parseCensus, type Band } from './census.ts';
 import type { Fact } from './cards.ts';
@@ -50,18 +54,25 @@ const decisive = (gs: RawGame[]): MGame[] => gs.filter((g) => (g.winner === 'a' 
 
 export const LAMBDAS = [100, 200, 400, 800, 1600, 3200];
 
-interface Source { name: string; label: string; grouping: Grouping; fit: Fit; effects: CardEffect[]; cv: ReturnType<typeof crossValidate>; decks: number; games: number; reliability: ReturnType<typeof splitHalf> }
+/**
+ * A fitted source.  `cv` and `reliability` are by game (the lambda the fit uses comes from `cv`); `cvDeck` and
+ * `repeat` are by deck (no deck on both sides), and `repeat.full` is the headline repeatability: the one the
+ * true spreads and the disattenuated agreements use.
+ */
+interface Source { name: string; label: string; grouping: Grouping; fit: Fit; effects: CardEffect[]; cv: CvResult; cvDeck: CvResult; decks: number; games: number; reliability: SplitHalf; repeat: SplitHalf }
 
 function fitSource(name: string, label: string, decks: MDeck[], games: MGame[], grouping: Grouping, reps: number, seed: number, say: (s: string) => void): Source {
   const t0 = Date.now();
   const ds = buildDesign(decks, games, grouping);
   const cv = crossValidate(ds, LAMBDAS, 5, seed);
+  const cvDeck = crossValidate(ds, LAMBDAS, 5, seed, DEFAULT_PENALTY, 'deck');
   const pen = { ...DEFAULT_PENALTY, card: cv.lambda };
   const beta = solveRidge(ds, pen);
   const fit: Fit = { design: ds, pen, beta, reps: bootstrapFit(ds, pen, beta, reps, seed) };
-  const reliability = splitHalf(ds, pen);
-  say(`${name}: ${ds.cards.length} cards, ${ds.groups.length} groups, ${ds.y.length} games; lambda ${cv.lambda}, held-out Brier ${cv.brier.toFixed(4)} vs ${cv.brierGroupsOnly.toFixed(4)} makeup-only (${(100 * cv.skill).toFixed(1)}%); split-half reliability ${reliability.full.toFixed(2)}; ${((Date.now() - t0) / 1000).toFixed(1)} s`);
-  return { name, label, grouping, fit, effects: cardEffects(fit), cv, decks: decks.length, games: ds.y.length, reliability };
+  const reliability = splitHalf(ds, pen, 200, 'game');
+  const repeat = splitHalf(ds, pen, 200, 'deck', seed);
+  say(`${name}: ${ds.cards.length} cards, ${ds.groups.length} groups, ${ds.y.length} games; lambda ${cv.lambda} (by deck ${cvDeck.lambda}), held-out Brier ${cv.brier.toFixed(4)} vs ${cv.brierGroupsOnly.toFixed(4)} makeup-only (${(100 * cv.skill).toFixed(1)}%; by deck ${(100 * cvDeck.skill).toFixed(1)}%); repeatability by deck ${repeat.full.toFixed(2)} (by game ${reliability.full.toFixed(2)}); ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+  return { name, label, grouping, fit, effects: cardEffects(fit), cv, cvDeck, decks: decks.length, games: ds.y.length, reliability, repeat };
 }
 
 /** A card's value in a source, point (rep -1) or replicate; 0 for a card the source never saw. */
@@ -148,6 +159,11 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
   const reps = Number(one(f, 'reps') ?? 200);
   const seed = Number(one(f, 'seed') ?? 1);
   const cubesOut = one(f, 'cubes-out') ?? path.join(out, 'cubes');
+  const searchTol = Number(one(f, 'search-tol') ?? BALANCE_TOL);
+  if (!(searchTol >= 0)) throw new Error(`balance-model: --search-tol wants a number >= 0, got ${one(f, 'search-tol')}`);
+  const excludeFile = one(f, 'exclude');
+  const suffix = one(f, 'suffix') ?? '';
+  if (suffix && !/^[-a-z0-9]+$/.test(suffix)) throw new Error(`balance-model: --suffix wants lower-case letters, digits and '-', got ${suffix}`);
   fs.mkdirSync(out, { recursive: true });
   fs.mkdirSync(cubesOut, { recursive: true });
 
@@ -159,6 +175,12 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
   for (const x of facts) { factBy.set(x.listed, x); if (x.name) factBy.set(x.name, x); }
   const ratingOf = (n: string): number => { const x = factBy.get(n); return x && x.found ? initialRating(x, 40).rating : 40; };
   const info = new Map(lib.map((c) => [c.name, { band: c.band, colors: c.colors, rating: ratingOf(c.name) }]));
+  const excluded = new Set(excludeFile ? parseExcludeList(fs.readFileSync(excludeFile, 'utf8')) : []);
+  const notInLibrary = [...excluded].filter((n) => !info.has(n));
+  if (notInLibrary.length) throw new Error(`balance-model: ${excludeFile} names card(s) the library lacks: ${notInLibrary.join(', ')}`);
+  const exclusion = excludeFile ? {
+    file: path.relative(repo, path.resolve(excludeFile)), sha256: createHash('sha256').update(fs.readFileSync(excludeFile)).digest('hex'), names: excluded.size,
+  } : null;
 
   // ---- the census fits
   const rawDecks = gzLines<RawDeck>(path.join(censusDir, 'out/census-decks.jsonl.gz'));
@@ -221,7 +243,8 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
       band: b, pool: poolCards.length, drawn: es.length, never: poolCards.length - es.length,
       games200: es.filter((e) => e.deckGames >= 200).length, games1000: es.filter((e) => e.deckGames >= 1000).length,
       sd02: es.filter((e) => e.sd <= 0.02).length, sd03: es.filter((e) => e.sd <= 0.03).length,
-      sdMedian: sdMed, gamesMedian: gamesMed, excludesZero: es.filter(excl).length, trueSpread: trueSpread(es, s.reliability.full), reliability: s.reliability.full,
+      sdMedian: sdMed, gamesMedian: gamesMed, excludesZero: es.filter(excl).length, trueSpread: trueSpread(es, s.repeat.full), repeatability: s.repeat.full,
+      trueSpreadByGame: trueSpread(es, s.reliability.full), reliabilityByGame: s.reliability.full,
       inFitTotal: s.effects.length,
       // games a card needs for sd .02 at the band's own rate: sd ~ 1/sqrt(games)
       nightsForSd02: Number.isFinite(sdMed) ? Math.max(0, (sdMed / 0.02) ** 2 - 1) : NaN,
@@ -229,10 +252,14 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
   });
 
   // ---- agreement between sources on shared cards (a card counts when both have 200+ deck-games)
-  const agreements: Array<{ a: string; b: string } & ReturnType<typeof agreement>> = [];
+  // trueCorrelation disattenuates by the by-deck repeatability (the headline); trueCorrelationByGame by the by-game split.
+  const agreements: Array<{ a: string; b: string; trueCorrelationByGame?: number } & ReturnType<typeof agreement>> = [];
   const agree = (a: string, b: string): void => {
     const A = sources.find((s) => s.name === a), B2 = sources.find((s) => s.name === b);
-    if (A && B2) agreements.push({ a, b, ...agreement(A.effects, B2.effects, 200, A.reliability.full, B2.reliability.full) });
+    if (A && B2) {
+      agreements.push({ a, b, ...agreement(A.effects, B2.effects, 200, A.repeat.full, B2.repeat.full),
+        trueCorrelationByGame: agreement(A.effects, B2.effects, 200, A.reliability.full, B2.reliability.full).trueCorrelation });
+    }
   };
   agree('legacy.makeup', 'powered.makeup'); agree('pauper.makeup', 'peasant.makeup'); agree('peasant.makeup', 'legacy.makeup');
   { const A = sources.find((x) => x.name === 'legacy.makeup') as Source, B2 = sources.find((x) => x.name === 'legacy.colour') as Source; agreements.push({ a: 'legacy.makeup', b: 'legacy.colour (same games)', ...agreement(A.effects, B2.effects, 200) }); }
@@ -295,24 +322,25 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
   }
 
   // ---- the generator
+  const med = (xs: number[]): number => quantile([...xs].sort((a, b) => a - b), 0.5);
   const plan = structurePlan('two-colour');
   const ALL = ['pauper', 'peasant', 'legacy', 'powered'];
   const weightOf = (n: string): number => curve.weight(ratingOf(n));
   const genPool = (src: Source, allowed: string[], core: string[] = allowed): Array<SampleCard & GenCard> => {
     const m = byName(src);
-    return lib.filter((c) => allowed.includes(c.band) && c.supported && !c.basic && c.aiFlag !== 'All' && !(c.land && /\bBasic\b/.test(c.type))).map((c) => {
+    return lib.filter((c) => !excluded.has(c.name) && allowed.includes(c.band) && c.supported && !c.basic && c.aiFlag !== 'All' && !(c.land && /\bBasic\b/.test(c.type))).map((c) => {
       const e = m.get(c.name);
       const measured = !!e && e.deckGames >= 200;
       return { ...c, creature: /\bCreature\b/.test(c.type), rating: ratingOf(c.name), value: measured ? (e as CardEffect).est : null, sd: measured ? (e as CardEffect).sd : null, tier: core.includes(c.band) ? 0 : 1 };
     });
   };
-  interface Candidate { id: string; title: string; idea: string; src: Source; bands: string[]; core: string[]; opts: GenOptions; cards: Array<SampleCard & GenCard>; pred: PayoffPrediction; summary: ReturnType<typeof classSummary>; ratingByColour: Record<string, number>; file: string; searchSwaps: number; flowGap: number }
+  interface Candidate { id: string; title: string; idea: string; src: Source; bands: string[]; core: string[]; opts: GenOptions; cards: Array<SampleCard & GenCard>; pred: PayoffPrediction; summary: ReturnType<typeof classSummary>; ratingByColour: Record<string, number>; file: string; searchSwaps: number; flowGap: number; searchedGap: number; excludedSeen: number }
   const candidates: Candidate[] = [];
   const makeCandidate = (id: string, title: string, idea: string, src: Source, bandsAllowed: string[], core: string[], opts: GenOptions): void => {
     const pool = genPool(src, bandsAllowed, core);
     const flow = generateCube(pool, plan, opts);
     const vPoint = valueFn(src);
-    const searched = balanceSearch(flow, pool.filter((c) => c.tier === 0), (n) => vPoint(n, -1), mix, weightOf, { target: opts.target, band: 0.03, minCreaturesPerColour: opts.minCreaturesPerColour, maxSwaps: 40, tol: 1e-4 });
+    const searched = balanceSearch(flow, pool.filter((c) => c.tier === 0), (n) => vPoint(n, -1), mix, weightOf, { target: opts.target, band: 0.03, minCreaturesPerColour: opts.minCreaturesPerColour, maxSwaps: 40, tol: searchTol });
     const cards = searched.cards;
     const errs = planErrors(cards, plan);
     if (errs.length) throw new Error(`balance-model: candidate ${id} misses the plan: ${errs.join('; ')}`);
@@ -325,8 +353,9 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
       const xs = cards.filter((x) => !x.land && x.colors.includes(c)).map((x) => x.rating).sort((a, b) => b - a).slice(0, 24);
       return [c, xs.reduce((s, x) => s + x, 0) / xs.length];
     }));
-    const file = path.join(cubesOut, `${id}.md`);
-    candidates.push({ id, title, idea, src, bands: bandsAllowed, core, opts, cards, pred, summary, ratingByColour, file, searchSwaps: searched.swaps.length, flowGap: maxGap(predFlow.colour) + maxGap(predFlow.pair) });
+    const file = path.join(cubesOut, `${id}${suffix}.md`);
+    candidates.push({ id: `${id}${suffix}`, title: exclusion ? `${title}, without ${path.basename(exclusion.file)}` : title, idea, src, bands: bandsAllowed, core, opts, cards, pred, summary, ratingByColour, file, searchSwaps: searched.swaps.length, flowGap: maxGap(predFlow.colour) + maxGap(predFlow.pair), searchedGap: maxGap(pred.colour) + maxGap(pred.pair),
+      excludedSeen: lib.filter((c) => excluded.has(c.name) && bandsAllowed.includes(c.band) && c.supported && !c.basic && c.aiFlag !== 'All').length });
   };
   // The level a colour class can hold: scan targets, keep the highest whose chosen cards stay within 0.8 points of it on average (a thinner level leaves the balance search no room).
   const scanTarget = (src: Source, bandsAllowed: string[], core: string[], base: GenOptions): number => {
@@ -357,8 +386,10 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
     const made = [
       `Made by tools/cubelab.sh balance-model (tools/cubelab/balance-model.ts) from the recorded deck census J144/J149 (80,000 games, D447/D450)${omega ? ' and J145' : ''}: no designed archetypes, no hand choices. Idea: ${c.idea}.`,
       `The model: ${c.src.label}; a ridge linear-probability model of deck win on card indicators + makeup groups (colour count x main-colour share), the opponent's deck antisymmetric (a D377-style null); lambda ${c.src.fit.pen.card}, ${c.src.fit.reps.length} deck-bootstrap replicates. A card is "measured" with 200+ deck-games.`,
-      `The selection: sample.ts's two-colour structure (Omega's skeleton without its list: 24 a colour, 2 gold a pair, 18 colourless, 2 lands a pair + 2 others, Omega's curve, every count exact) filled by a min-cost flow at cost 1000 x |value - ${c.opts.target}| + 300 x sd (an unmeasured card costs as if ${c.opts.unmeasuredGap} off, a card outside the ${c.core.join(' + ')} band${c.core.length > 1 ? 's' : ''} ${c.opts.offBand} more, a land from outside only where no band land fits), at least ${c.opts.minCreaturesPerColour} creatures a colour, lands by Forge's rating; then ${c.searchSwaps} like-for-like swaps (same colour class and mana value, within 3 points of the level) that even the predicted payoffs out; not AI:RemoveDeck:All, supported by Forge 2.0.14.`,
-      `Predicted payoff when drafted by the lab drafter and played by Forge (deck mix ${mix.perColour.toFixed(1)} cards of each colour, ${mix.gold.toFixed(1)} gold, ${mix.colourless.toFixed(1)} colourless, J145's lab decks): colours ${MONO.map((k) => `${k} ${f3((c.pred.colour[k] as Cell).est)}`).join(', ')}; worst pair gap ${f3(maxGap(c.pred.pair))}. A prediction, not a measurement: it holds only when a J145-shaped night confirms it on fresh seeds (study/omega-balance-model.md).`,
+      `The selection: sample.ts's two-colour structure (Omega's skeleton without its list: 24 a colour, 2 gold a pair, 18 colourless, 2 lands a pair + 2 others, Omega's curve, every count exact) filled by a min-cost flow at cost 1000 x |value - ${c.opts.target}| + 300 x sd (an unmeasured card costs as if ${c.opts.unmeasuredGap} off, a card outside the ${c.core.join(' + ')} band${c.core.length > 1 ? 's' : ''} ${c.opts.offBand} more, a land from outside only where no band land fits), at least ${c.opts.minCreaturesPerColour} creatures a colour, lands by Forge's rating; then ${c.searchSwaps} like-for-like swaps (same colour class and mana value, within 3 points of the level) that even the predicted payoffs out, stopping once max |colour − .5| + max |pair − .5| is at most ${searchTol} (about one card's SD in the census: below it the point estimates differ by their noise); not AI:RemoveDeck:All, supported by Forge 2.0.14.`,
+      `Predicted payoff when drafted by the lab drafter and played by Forge (deck mix ${mix.perColour.toFixed(1)} cards of each colour, ${mix.gold.toFixed(1)} gold, ${mix.colourless.toFixed(1)} colourless, J145's lab decks): colours ${MONO.map((k) => `${k} ${f3((c.pred.colour[k] as Cell).est)}`).join(', ')}; worst pair gap ${f3(maxGap(c.pred.pair))}. Colour + pair gap ${f3(c.flowGap)} after the flow alone, ${f3(c.searchedGap)} after the search${c.searchedGap <= searchTol + 1e-12 ? '' : ` (${c.searchedGap.toFixed(4)}: no like-for-like swap narrowed it further, so it stops above the ${searchTol} tolerance)`}: even to within about the model's own uncertainty (each colour cell's model interval is about ±${f3(1.96 * med(MONO.map((k) => (c.pred.colour[k] as { sd: number }).sd)))}), not to the third decimal.`,
+      ...(exclusion ? [`Excluded before the flow: the ${exclusion.names} cards of ${exclusion.file} (sha256 ${exclusion.sha256.slice(0, 12)}; ${c.excludedSeen} of them in the cube's candidate pool), so none can be chosen; everything else as in the cube without the list.`] : []),
+      `A prediction, not a measurement, and an untested kind: the census model's card values were validated by summing them over the decks J145 actually played (r .84), but this table comes from class means × an assumed deck mix × a rating play curve, which no measurement has tested yet. A J145-shaped night on fresh seeds is that test (study/omega-balance-model.md).`,
     ];
     fs.writeFileSync(c.file, cubeDocument({
       title: `${c.title}, version 1 (180 cards, two-player)`, made, cards: c.cards, themeNames, madeBy: '`tools/cubelab.sh balance-model`',
@@ -402,23 +433,26 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
   }
 
   // ---- the measurement programme, simulated: nights to a confirmed balanced cube
-  const med = (xs: number[]): number => quantile([...xs].sort((a, b) => a - b), 0.5);
   const predColourSd = med(candidates.flatMap((c) => MONO.map((k) => (c.pred.colour[k] as { sd: number }).sd)));
   const predPairSd = med(candidates.flatMap((c) => PAIRS.map((k) => (c.pred.pair[k] as { sd: number }).sd)));
-  const transfer = validation ? Math.max(validation.transferSd['Blab.pred'] ?? 0, 0) : 0.015;
+  // The transfer error (census -> drafted decks) is NOT identified by 15 cells: rmse² − obsVar − predVar came out <= 0,
+  // which bounds it below at 0 and says nothing about its size.  The base case is .015, the pessimistic one .03, and the
+  // measured residual is kept only as the lower bound.
+  const transferLow = validation ? Math.max(validation.transferSd['Blab.pred'] ?? 0, 0) : 0;
+  const TRANSFER_BASE = 0.015, TRANSFER_PESSIMISTIC = 0.03;
   const blab = omega?.read.Blab;
   const colourN = blab ? med(MONO.map((k) => (blab.colour[k] as Cell & { n: number }).n)) : 2500;
   const pairNBot = blab ? PAIRS.map((k) => (blab.pairs[k] as Cell & { n: number }).n) : PAIRS.map(() => 760);
   const totalPair = pairNBot.reduce((a, b) => a + b, 0);
   const pairNEven = PAIRS.map(() => Math.round(totalPair / 10));
   const programme: Array<Record<string, unknown>> = [];
-  for (const tr of [transfer, 0.015, 0.03]) {
+  for (const tr of [TRANSFER_BASE, TRANSFER_PESSIMISTIC, ...(transferLow < TRANSFER_BASE ? [transferLow] : [])]) {
     for (const [pullName, pairN] of [['bot pull (J145)', pairNBot], ['even pull', pairNEven]] as const) {
       for (const [rule, scale] of [['no-off', 1], ['all-even', 1], ['all-even', 3]] as const) {
         for (const perNight of [1, 4, 8]) {
           const sc = Math.sqrt(predColourSd ** 2 + tr ** 2), sp = Math.sqrt(predPairSd ** 2 + tr ** 2);
           const res = simulateProgramme({ perNight, sigmaColour: sc, sigmaPair: sp, kappa: 0.5, colourN: colourN * scale, pairN: pairN.map((n) => n * scale), deff: 1.1, band: 0.05, minPairN: 400, rule, maxNights: 30, sims: 2000, seed });
-          programme.push({ transfer: tr, pull: pullName, rule, scale, perNight, sigmaColour: sc, sigmaPair: sp, median: res.median, p80: res.p80, within: res.within, truePass: res.truePass, by5: res.byNight[4], by10: res.byNight[9] });
+          programme.push({ transfer: tr, case: tr === TRANSFER_BASE ? 'base' : tr === TRANSFER_PESSIMISTIC ? 'pessimistic' : 'lower bound', pull: pullName, rule, scale, perNight, sigmaColour: sc, sigmaPair: sp, median: res.median, p80: res.p80, within: res.within, truePass: res.truePass, by5: res.byNight[4], by10: res.byNight[9] });
         }
       }
     }
@@ -426,16 +460,16 @@ export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => 
 
   // ---- write
   const json = {
-    v: 1, made: 'tools/cubelab.sh balance-model', reps, seed, mix,
+    v: 2, made: 'tools/cubelab.sh balance-model', reps, seed, mix, searchTol, exclude: exclusion ? { ...exclusion, list: [...excluded] } : null, suffix,
     inputs: Object.fromEntries([
-      ['census-decks', path.join(censusDir, 'out/census-decks.jsonl.gz')], ['census-games', path.join(censusDir, 'out/census-games.jsonl.gz')], ['facts', factsFile],
-      ...(omegaDir ? [['omega-drafted-decks', path.join(omegaDir, 'out/drafted-decks.jsonl.gz')], ['omega-games', path.join(omegaDir, 'out/games.jsonl.gz')], ['omega-balance', path.join(omegaDir, 'out/balance.json')]] : []),
-    ].map(([k, file]) => [k, { file, sha256: createHash('sha256').update(fs.readFileSync(file as string)).digest('hex').slice(0, 12) }])), playCurve: { a: curve.a, b: curve.b, cards: curveN },
-    sources: sources.map((s) => ({ name: s.name, label: s.label, grouping: s.grouping, decks: s.decks, games: s.games, cards: s.fit.design.cards.length, groups: groupEffects(s.fit), cv: s.cv, reliability: s.reliability, trueSpread: trueSpread(s.effects.filter((e) => e.deckGames >= 200), s.reliability.full) })),
+      ['census-decks', path.join(censusDir, 'out/census-decks.jsonl.gz')], ['census-games', path.join(censusDir, 'out/census-games.jsonl.gz')], ['facts', factsFile], ...(excludeFile ? [['exclude', excludeFile]] : []),
+      ...(omegaDir ? [['omega-drafted-decks', path.join(omegaDir, 'out/drafted-decks.jsonl.gz')], ['omega-pool-decks', path.join(omegaDir, 'census/decks/decks.jsonl')], ['omega-cube', path.join(repo, 'cubes/omega-cube-180.md')], ['omega-games', path.join(omegaDir, 'out/games.jsonl.gz')], ['omega-balance', path.join(omegaDir, 'out/balance.json')]] : []),
+    ].map(([k, file]) => [k, { file, sha256: createHash('sha256').update(fs.readFileSync(file as string)).digest('hex') }])), playCurve: { a: curve.a, b: curve.b, cards: curveN },
+    sources: sources.map((s) => ({ name: s.name, label: s.label, grouping: s.grouping, decks: s.decks, games: s.games, cards: s.fit.design.cards.length, groups: groupEffects(s.fit), cv: s.cv, cvByDeck: s.cvDeck, reliability: s.reliability, repeatability: s.repeat, trueSpread: trueSpread(s.effects.filter((e) => e.deckGames >= 200), s.repeat.full), trueSpreadByGame: trueSpread(s.effects.filter((e) => e.deckGames >= 200), s.reliability.full) })),
     coverage, agreements, validation,
-    candidates: candidates.map((c) => ({ id: c.id, file: path.relative(repo, c.file), idea: c.idea, source: c.src.name, target: c.opts.target, pred: c.pred, summary: c.summary, ratingByColour: c.ratingByColour, maxPairGap: maxGap(c.pred.pair), maxColourGap: maxGap(c.pred.colour), searchSwaps: c.searchSwaps, flowGap: c.flowGap, unmeasured: c.cards.filter((x) => !x.land && x.value === null).length })),
+    candidates: candidates.map((c) => ({ id: c.id, file: path.relative(repo, c.file), idea: c.idea, source: c.src.name, target: c.opts.target, pred: c.pred, summary: c.summary, ratingByColour: c.ratingByColour, maxPairGap: maxGap(c.pred.pair), maxColourGap: maxGap(c.pred.colour), searchSwaps: c.searchSwaps, flowGap: c.flowGap, searchedGap: c.searchedGap, searchTol, excludedInPool: c.excludedSeen, unmeasured: c.cards.filter((x) => !x.land && x.value === null).length })),
     omega: omegaAppendix,
-    programme: { predColourSd, predPairSd, transferMeasured: transfer, colourN, pairNBot, pairNEven, kappa: 0.5, runs: programme },
+    programme: { predColourSd, predPairSd, transferBase: TRANSFER_BASE, transferPessimistic: TRANSFER_PESSIMISTIC, transferLowerBound: transferLow, colourN, pairNBot, pairNEven, kappa: 0.5, runs: programme },
   };
   fs.writeFileSync(path.join(out, 'model.json'), `${JSON.stringify(json, null, 1)}\n`);
   fs.writeFileSync(path.join(out, 'summary.md'), summaryMd(json, sources, candidates.map((c) => c.cards), info));
@@ -454,14 +488,16 @@ function topTable(s: Source, n: number, sign: 1 | -1, info: Map<string, { band: 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function summaryMd(j: any, sources: Source[], cubes: GenCard[][], info: Map<string, { band: string; colors: string; rating: number }>): string {
   const L: string[] = ['# balance-model: the library card model and the generated cubes', ''];
-  L.push('## Fit quality (5-fold held-out, by game)', '', '| source | decks | games | cards | lambda | Brier, cards | Brier, makeup only | skill | accuracy | split-half reliability | true spread of card values (pts SD) |', '|---|---|---|---|---|---|---|---|---|---|---|');
-  for (const s of j.sources) L.push(`| ${s.name} | ${s.decks} | ${s.games} | ${s.cards} | ${s.cv.lambda} | ${s.cv.brier.toFixed(4)} | ${s.cv.brierGroupsOnly.toFixed(4)} | ${(100 * s.cv.skill).toFixed(1)}% | ${s.cv.accuracy.toFixed(3)} | ${s.reliability.full.toFixed(2)} | ${(100 * s.trueSpread).toFixed(2)} |`);
+  L.push('## Fit quality (5-fold held-out) and repeatability, by game and by deck', '',
+    'By game, a deck\'s games fall on both sides of every split, so what a deck does that its cards absorb counts as signal. By deck (decks, or J145-B\'s drafts, split at random; a held-out game is one whose two decks were both held out), no deck is on both sides: the **repeatability by deck** is the headline, the share of the card values\' spread that holds on new decks. It is stepped up from its halves by Spearman–Brown at k = full games / a half\'s games (the census halves keep only the games inside a half). The fit keeps the by-game lambda.', '',
+    '| source | decks | games | cards | lambda (by game / by deck) | Brier, cards | Brier, makeup only | skill by game | skill by deck (games scored) | accuracy | reliability by game | **repeatability by deck** (half r, k) | true spread of card values (pts SD, by deck / by game) |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+  for (const s of j.sources) L.push(`| ${s.name} | ${s.decks} | ${s.games} | ${s.cards} | ${s.cv.lambda} / ${s.cvByDeck.lambda} | ${s.cv.brier.toFixed(4)} | ${s.cv.brierGroupsOnly.toFixed(4)} | ${(100 * s.cv.skill).toFixed(1)}% | ${(100 * s.cvByDeck.skill).toFixed(1)}% (${s.cvByDeck.tested}) | ${s.cv.accuracy.toFixed(3)} | ${s.reliability.full.toFixed(2)} | **${s.repeatability.full.toFixed(2)}** (${s.repeatability.half.toFixed(2)}, ${s.repeatability.k.toFixed(1)}) | ${(100 * s.trueSpread).toFixed(2)} / ${(100 * s.trueSpreadByGame).toFixed(2)} |`);
   L.push('', '## Coverage by band (census pool: in-band, supported, nonland, not AI:RemoveDeck:All)', '', '| band | pool | drawn | never drawn | 200+ deck-games | 1000+ | sd ≤ 2 pts | sd ≤ 3 pts | median sd | median deck-games | interval excludes 0 | extra census nights for median sd 2 pts |', '|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const c of j.coverage) L.push(`| ${c.band} | ${c.pool} | ${c.drawn} | ${c.never} | ${c.games200} | ${c.games1000} | ${c.sd02} | ${c.sd03} | ${(100 * c.sdMedian).toFixed(2)} | ${c.gamesMedian} | ${c.excludesZero} | ${c.nightsForSd02.toFixed(1)} |`);
-  L.push('', '## Agreement between sources (cards with 200+ deck-games in both)', '', '| A | B | n | Pearson | Spearman | slope B on A | true-value r (disattenuated by split-half) |', '|---|---|---|---|---|---|---|');
-  for (const a of j.agreements) L.push(`| ${a.a} | ${a.b} | ${a.n} | ${f3(a.pearson)} | ${f3(a.spearman)} | ${f3(a.slope)} | ${f3(a.trueCorrelation)} |`);
+  L.push('', '## Agreement between sources (cards with 200+ deck-games in both)', '', '| A | B | n | Pearson | Spearman | slope B on A | true-value r (disattenuated by the by-deck repeatability) | the same by the by-game split |', '|---|---|---|---|---|---|---|---|');
+  for (const a of j.agreements) L.push(`| ${a.a} | ${a.b} | ${a.n} | ${f3(a.pearson)} | ${f3(a.spearman)} | ${f3(a.slope)} | ${f3(a.trueCorrelation)} | ${f3(a.trueCorrelationByGame ?? NaN)} |`);
   if (j.validation) {
-    L.push('', '## Validation: Omega\'s measured payoffs (J145) predicted from the census alone', '', `RMSE census-predicted: Blab ${f3(j.validation.rmse['Blab.pred'])}, C ${f3(j.validation.rmse['C.pred'])}; correlation Blab ${f3(j.validation.corr['Blab.pred'])}, C ${f3(j.validation.corr['C.pred'])}; transfer SD beyond both noises: Blab ${f3(j.validation.transferSd['Blab.pred'])}, C ${f3(j.validation.transferSd['C.pred'])}. In-sample (J145's own card fit): RMSE Blab ${f3(j.validation.rmse['Blab.predOwn'])}, C ${f3(j.validation.rmse['C.predOwn'])}.`, '',
+    L.push('', '## Validation: Omega\'s measured payoffs (J145) predicted from the census alone', '', `RMSE census-predicted: Blab ${f3(j.validation.rmse['Blab.pred'])}, C ${f3(j.validation.rmse['C.pred'])}; correlation Blab ${f3(j.validation.corr['Blab.pred'])}, C ${f3(j.validation.corr['C.pred'])}; residual beyond both noises (sqrt(max(0, RMSE² − read variance − prediction variance))): Blab ${f3(j.validation.transferSd['Blab.pred'])}, C ${f3(j.validation.transferSd['C.pred'])} — 0 here means 15 cells cannot tell the transfer error from 0, a lower bound and not an estimate; the programme below uses .015 as its base case. In-sample (J145's own card fit): RMSE Blab ${f3(j.validation.rmse['Blab.predOwn'])}, C ${f3(j.validation.rmse['C.predOwn'])}.`, '',
       '| arm | cell | observed | census-predicted | J145-fit (in-sample) |', '|---|---|---|---|---|');
     for (const r of j.validation.rows) L.push(`| ${r.arm} | ${r.key} | ${iv(r.obs)} | ${iv(r.pred)} | ${iv(r.predOwn)} |`);
   }
@@ -471,16 +507,16 @@ function summaryMd(j: any, sources: Source[], cubes: GenCard[][], info: Map<stri
     L.push('', `## ${name}: the 20 highest values`, '', ...topTable(s, 20, 1, info), '', `## ${name}: the 20 lowest values`, '', ...topTable(s, 20, -1, info));
   }
   L.push('', '## The generated cubes: predicted payoff (lab drafter, Forge piloting)', '', `Deck mix (J145 lab two-colour decks): ${j.mix.perColour.toFixed(2)} cards of each colour, ${j.mix.gold.toFixed(2)} gold, ${j.mix.colourless.toFixed(2)} colourless. Play weight by Forge rating (J145, ${j.playCurve.cards} cards): ${j.playCurve.a.toFixed(3)} + ${j.playCurve.b.toFixed(4)} x rating, clipped to [.05, 1].`, '');
-  j.candidates.forEach((c: { id: string; idea: string; pred: PayoffPrediction; maxPairGap: number; maxColourGap: number; unmeasured: number; flowGap: number; searchSwaps: number; ratingByColour: Record<string, number>; summary: Array<{ cls: string; n: number; measured: number; meanValue: number; meanRating: number; creatures: number }> }, i: number) => {
-    L.push(`### ${c.id}`, '', c.idea, '', `max |colour − .5| ${f3(c.maxColourGap)}, max |pair − .5| ${f3(c.maxPairGap)} (after the flow alone, colour + pair gap ${f3(c.flowGap)}; ${c.searchSwaps} balancing swaps); unmeasured nonland cards ${c.unmeasured}; ${cubes[i]?.length} cards.`, '',
+  j.candidates.forEach((c: { id: string; idea: string; pred: PayoffPrediction; maxPairGap: number; maxColourGap: number; unmeasured: number; flowGap: number; searchedGap: number; searchTol: number; searchSwaps: number; ratingByColour: Record<string, number>; summary: Array<{ cls: string; n: number; measured: number; meanValue: number; meanRating: number; creatures: number }> }, i: number) => {
+    L.push(`### ${c.id}`, '', c.idea, '', `max |colour − .5| ${f3(c.maxColourGap)}, max |pair − .5| ${f3(c.maxPairGap)}; colour + pair gap ${f3(c.flowGap)} after the flow alone, ${f3(c.searchedGap)} after ${c.searchSwaps} balancing swaps (the search stops at ${c.searchTol}, about one card's SD${c.searchedGap > c.searchTol + 1e-12 ? ', and ran out of improving swaps above it here' : ''}: even to within the model's own uncertainty); unmeasured nonland cards ${c.unmeasured}; ${cubes[i]?.length} cards.`, '',
       '| | ' + MONO.join(' | ') + ' |', '|---|' + '---|'.repeat(5), `| payoff | ${MONO.map((k) => iv(c.pred.colour[k] as Cell)).join(' | ')} |`, `| mean rating, top 24 (pull proxy) | ${MONO.map((k) => (c.ratingByColour[k] as number).toFixed(1)).join(' | ')} |`, '',
       '| ' + PAIRS.join(' | ') + ' |', '|' + '---|'.repeat(10), `| ${PAIRS.map((p) => iv(c.pred.pair[p] as Cell)).join(' | ')} |`, '',
       '| class | cards | measured | mean value (pts) | mean rating | creatures |', '|---|---|---|---|---|---|',
       ...c.summary.map((s) => `| ${s.cls} | ${s.n} | ${s.measured} | ${pts(s.meanValue)} | ${s.meanRating.toFixed(1)} | ${s.creatures} |`), '');
   });
-  L.push('## The measurement programme, simulated', '', `Model error per cell = sqrt(prediction SD² + transfer SD²): prediction SD colour ${f3(j.programme.predColourSd)}, pair ${f3(j.programme.predPairSd)} (the generated cubes' bootstrap, median); transfer SD measured on Omega ${f3(j.programme.transferMeasured)}, and .015 and .03 as what-ifs. A measurement is J145's arm B: ${j.programme.colourN} deck-games per colour cell; pairs at the bots' J145 pull (${j.programme.pairNBot.join('/')}) or even pull (${j.programme.pairNEven[0]} each). Each night's refit divides the error variance by 1 + 0.5 x nights. A pass needs a second fresh-seed measurement (the next night's first slot). 2,000 simulated programmes, 30 nights at most.`, '',
-    '| transfer SD | pull | rule | measurement size (x J145 arm B) | cubes a night | median nights | 80th pct | confirmed by night 5 | by night 10 | within 30 | confirmed cube truly in band |', '|---|---|---|---|---|---|---|---|---|---|---|');
-  for (const r of j.programme.runs) L.push(`| ${f3(r.transfer)} | ${r.pull} | ${r.rule} | ${r.scale} | ${r.perNight} | ${r.median > 30 ? '>30' : Math.ceil(r.median)} | ${r.p80 > 30 ? '>30' : Math.ceil(r.p80)} | ${(100 * r.by5).toFixed(0)}% | ${(100 * r.by10).toFixed(0)}% | ${(100 * r.within).toFixed(0)}% | ${Number.isFinite(r.truePass) ? `${(100 * r.truePass).toFixed(0)}%` : '—'} |`);
+  L.push('## The measurement programme, simulated', '', `Model error per cell = sqrt(prediction SD² + transfer SD²): prediction SD colour ${f3(j.programme.predColourSd)}, pair ${f3(j.programme.predPairSd)} (the generated cubes' bootstrap, median); transfer SD (census values carried to drafted decks) ${f3(j.programme.transferBase)} as the base case and ${f3(j.programme.transferPessimistic)} as the pessimistic one; Omega's residuals (${f3(j.programme.transferLowerBound)}) only bound it from below, so that row is a lower bound, not a case. A measurement is J145's arm B: ${j.programme.colourN} deck-games per colour cell; pairs at the bots' J145 pull (${j.programme.pairNBot.join('/')}) or even pull (${j.programme.pairNEven[0]} each). Each night's refit divides the error variance by 1 + 0.5 x nights. A pass needs a second fresh-seed measurement (the next night's first slot). 2,000 simulated programmes, 30 nights at most.`, '',
+    '| transfer SD | case | pull | rule | measurement size (x J145 arm B) | cubes a night | median nights | 80th pct | confirmed by night 5 | by night 10 | within 30 | confirmed cube truly in band |', '|---|---|---|---|---|---|---|---|---|---|---|---|');
+  for (const r of j.programme.runs) L.push(`| ${f3(r.transfer)} | ${r.case} | ${r.pull} | ${r.rule} | ${r.scale} | ${r.perNight} | ${r.median > 30 ? '>30' : Math.ceil(r.median)} | ${r.p80 > 30 ? '>30' : Math.ceil(r.p80)} | ${(100 * r.by5).toFixed(0)}% | ${(100 * r.by10).toFixed(0)}% | ${(100 * r.within).toFixed(0)}% | ${Number.isFinite(r.truePass) ? `${(100 * r.truePass).toFixed(0)}%` : '—'} |`);
   L.push('');
   if (j.omega) {
     L.push('## Omega (appendix)', '', 'The census model on Omega\'s list (the analytic deck mix, cards weighted by the play curve), and after up to ten like-for-like upgrades under evolve\'s add rules and Omega\'s notes:', '',

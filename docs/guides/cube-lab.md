@@ -1408,11 +1408,14 @@ like this one, not a fault in the atlas.
 
 `balance-model` fits every card the deck census drew — a ridge linear-probability model of deck win on its
 cards and its makeup, the opponent's deck antisymmetric — and generates cubes whose colours and pairs are
-predicted to win evenly when the lab drafter drafts them and Forge plays them. No engine; about 40 s.
+predicted to win evenly when the lab drafter drafts them and Forge plays them. No engine; about 50 s.
 
 ```bash
 tools/cubelab.sh balance-model --census /home/justin-a/code/lab/data/lab-j144 --omega /home/justin-a/code/lab/data/lab-j145 \
     --facts var/cubelab/facts/<library facts>.json --out var/balance-model/j144-j145 --cubes-out cubes/library/balanced
+# the same cubes without the census's powered band (the first night measures both):
+tools/cubelab.sh balance-model ... --out var/balance-model/j144-j145-nopower --cubes-out cubes/library/balanced \
+    --exclude cubes/library/powered-exclude.txt --suffix -nopower
 ```
 
 - **In:** a recorded deck census (`out/census-decks.jsonl.gz`, `out/census-games.jsonl.gz`), optionally a
@@ -1426,13 +1429,30 @@ tools/cubelab.sh balance-model --census /home/justin-a/code/lab/data/lab-j144 --
   one cube document a candidate.
 - **The method** is `tools/cubelab/balance-model.ts`'s header and D473: makeup groups (colour count × main
   share, no colour identity) so a card's value is absolute within its band; a deck bootstrap with each game
-  carried by one of its decks; split-half reliability; the generator's min-cost flow on sample.ts's
-  `two-colour` plan and a balancing search after it.
+  carried by one of its decks; CV and split-half repeatability both by game and **by deck** (no deck on
+  both sides — the headline, what a card's value is worth on new decks); the generator's min-cost flow on
+  sample.ts's `two-colour` plan (`OMEGA_SKELETON`: Omega's counts and curve, a designed prior kept on
+  purpose) and a balancing search after it that stops once the colour + pair gap is at most `--search-tol`
+  (.008, about one card's SD). Each cube prints its gap after the flow alone beside the searched one: even
+  to within the model's own uncertainty, not to the third decimal.
+- **`--exclude <file>`** keeps a list out of every cube (one name a line, `#` comments; every name a
+  library card), recorded with its sha256 in each cube document and `model.json`; `--suffix` names the
+  files apart. `cubes/library/powered-exclude.txt` is the census's `POWERED` list (`census.ts`, D445),
+  held equal to it by the test.
+- **What is validated:** the card values, summed over the decks J145 played, predict its colour and pair
+  payoffs (r .84). The cubes' tables come from class means × an assumed deck mix × a rating play curve,
+  which no measurement has tested yet: the first night on a generated cube is that test. The residual
+  transfer error came out 0, which 15 cells cannot tell from a real one, so `summary.md` simulates the
+  measurement programme at .015 (the base case: median 4 nights, 80th percentile 5–6, at 4–8 candidates a
+  night under the no-off rule) and .03 (pessimistic: 6–8), and keeps 0 only as the lower bound.
 - **What it cannot see:** human pull (every number is the lab drafter's and Forge's AI's), cards that matter
   only together (the model is additive), lands (chosen by the plan, the band and the rating), and anything
   a random census deck never does with a card.
-- The committed candidates, `cubes/library/balanced/balanced-legacy-even-high.md`, `-legacy-even-mid.md` and
-  `-pauper-even.md`, are predictions to measure head to head on fresh seeds, never a verdict.
+- The committed candidates, `cubes/library/balanced/balanced-legacy-even-high.md`, `-legacy-even-mid.md`,
+  `-pauper-even.md`, `-legacy-even-high-nopower.md` and `-legacy-even-mid-nopower.md` (the pauper cube is
+  the same without the list, so it has no `-nopower` file), are predictions to measure head to head on
+  fresh seeds, never a verdict. `web/test/cubelab-balance-model.test.ts` loads each as `run` and `draft`
+  do and drafts it.
 
 ## Learning the drafters' values from the games (D301–D302)
 

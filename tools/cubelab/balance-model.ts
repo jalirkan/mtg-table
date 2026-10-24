@@ -30,8 +30,10 @@
 //     band, so a colour's strength is the sum of its cards', which is what the generator balances.
 //
 // Penalties: beta ~ ridge lambdaCard, chosen by K-fold cross-validation on held-out Brier score (folds by
-// game; a deck's games are spread over the folds, so the choice is mildly optimistic, and the reported
-// held-out skill with it); gamma ~ lambdaGroup = 20 pseudo-games, D377's shrinkage toward the mean; pi
+// game: a deck's games are spread over the folds, so the same decks sit on both sides and the choice and the
+// held-out skill with it are mildly optimistic; the same CV BY DECK — clusters to folds, a game held out only
+// when both its decks are, trained only on games neither deck of the fold plays — is reported beside it, and
+// the fit keeps the by-game lambda); gamma ~ lambdaGroup = 20 pseudo-games, D377's shrinkage toward the mean; pi
 // ~ 1 (essentially free).  Games are weighted as D377 weights them: every decisive game once; the deck is
 // the unit of resampling.  Intervals: a deck bootstrap — multinomial weights over decks, a game weighted
 // by the product of its two decks' weights (arm B of J145, where a game's two decks come from one draft,
@@ -243,31 +245,62 @@ export function solveRidge(ds: Design, pen: Penalty, w?: Float64Array, x0?: Floa
 
 // ------------------------------------------------------------------ cross-validation and fit quality
 
-export interface CvResult { lambda: number; brier: number; brierGroupsOnly: number; brierNull: number; skill: number; byLambda: Array<{ lambda: number; brier: number }>; logLoss: number; accuracy: number }
+export type SplitBy = 'game' | 'deck';
+
+export interface CvResult {
+  by: SplitBy; lambda: number; brier: number; brierGroupsOnly: number; brierNull: number; skill: number; byLambda: Array<{ lambda: number; brier: number }>; logLoss: number; accuracy: number;
+  /** Games scored held out (by game: every game once; by deck: the games whose two decks were both held out). */
+  tested: number;
+}
 
 const clip = (p: number): number => Math.min(0.99, Math.max(0.01, p));
 
-/** K folds by game (a seeded assignment); held-out Brier score for each lambda, and for the cards-off model. */
-export function crossValidate(ds: Design, lambdas: number[], folds = 5, seed = 1, base: Omit<Penalty, 'card'> = DEFAULT_PENALTY): CvResult {
+/** A seeded assignment of every cluster (a deck, or a draft) to one of `k` parts. */
+export function clusterParts(ds: Design, k: number, seed: number, tag: string): Int32Array {
+  const r = rng(seed, tag);
+  const part = new Int32Array(ds.clusters);
+  for (let c = 0; c < ds.clusters; c++) part[c] = r.int(k);
+  return part;
+}
+
+/**
+ * K folds; held-out Brier score for each lambda, and for the cards-off model.  `by: 'game'` folds the games (a
+ * seeded assignment; a deck's other games train the fit that scores it).  `by: 'deck'` folds the clusters
+ * (decks, or drafts): fold k's fit is trained on the games where neither deck's cluster is in k and scored on
+ * the games where both are, so no held-out game shares a deck with the fit that predicts it.
+ */
+export function crossValidate(ds: Design, lambdas: number[], folds = 5, seed = 1, base: Omit<Penalty, 'card'> = DEFAULT_PENALTY, by: SplitBy = 'game'): CvResult {
   const n = ds.y.length;
-  const r = rng(seed, 'balance-model/cv');
-  const fold = new Int32Array(n);
-  for (let g = 0; g < n; g++) fold[g] = r.int(folds);
+  // train[k][g] = 1 when game g trains fold k's fit; test[g] = the fold that scores g (-1: none).
+  const test = new Int32Array(n).fill(-1);
+  const train: Float64Array[] = Array.from({ length: folds }, () => new Float64Array(n));
+  if (by === 'game') {
+    const r = rng(seed, 'balance-model/cv');
+    for (let g = 0; g < n; g++) test[g] = r.int(folds);
+    for (let k = 0; k < folds; k++) for (let g = 0; g < n; g++) (train[k] as Float64Array)[g] = test[g] === k ? 0 : 1;
+  } else {
+    const part = clusterParts(ds, folds, seed, 'balance-model/cv-deck');
+    for (let g = 0; g < n; g++) {
+      const fa = part[ds.deckCluster[ds.ga[g] as number] as number] as number, fb = part[ds.deckCluster[ds.gb[g] as number] as number] as number;
+      if (fa === fb) test[g] = fa;
+      for (let k = 0; k < folds; k++) (train[k] as Float64Array)[g] = fa !== k && fb !== k ? 1 : 0;
+    }
+  }
+  let tested = 0;
+  for (let g = 0; g < n; g++) if (test[g] as number >= 0) tested++;
   const evalPen = (pen: Penalty): { brier: number; ll: number; acc: number } => {
     let se = 0, ll = 0, acc = 0;
     let x: Float64Array | undefined;
     for (let k = 0; k < folds; k++) {
-      const w = new Float64Array(n);
-      for (let g = 0; g < n; g++) w[g] = fold[g] === k ? 0 : 1;
-      x = solveRidge(ds, pen, w, x);
+      x = solveRidge(ds, pen, train[k], x);
       const pr = predictRows(ds, x);
       for (let g = 0; g < n; g++) {
-        if (fold[g] !== k) continue;
+        if (test[g] !== k) continue;
         const p = clip(0.5 + (pr[g] as number)), yy = ds.y[g] as number;
         se += (p - yy) ** 2; ll -= yy ? Math.log(p) : Math.log(1 - p); acc += (p > 0.5) === (yy === 1) ? 1 : p === 0.5 ? 0.5 : 0;
       }
     }
-    return { brier: se / n, ll: ll / n, acc: acc / n };
+    return { brier: se / tested, ll: ll / tested, acc: acc / tested };
   };
   const byLambda = lambdas.map((lambda) => ({ lambda, ...evalPen({ ...base, card: lambda }) }));
   const best = byLambda.reduce((a, b) => (b.brier < a.brier ? b : a));
@@ -277,9 +310,9 @@ export function crossValidate(ds: Design, lambdas: number[], folds = 5, seed = 1
   m /= n;
   const brierNull = m * (1 - m);
   return {
-    lambda: best.lambda, brier: best.brier, brierGroupsOnly: groupsOnly.brier, brierNull,
+    by, lambda: best.lambda, brier: best.brier, brierGroupsOnly: groupsOnly.brier, brierNull,
     skill: (groupsOnly.brier - best.brier) / groupsOnly.brier, logLoss: best.ll, accuracy: best.acc,
-    byLambda: byLambda.map((b) => ({ lambda: b.lambda, brier: b.brier })),
+    byLambda: byLambda.map((b) => ({ lambda: b.lambda, brier: b.brier })), tested,
   };
 }
 
@@ -325,19 +358,40 @@ export function bootstrapFit(ds: Design, pen: Penalty, beta: Float64Array, reps:
 }
 
 /**
- * Split-half reliability of the card values: the model fitted on the even-numbered games and on the odd ones,
- * the two sets of card values correlated (cards with 200+ deck-games), and Spearman-Brown's 2r/(1+r) for the
- * full data.  The reliability is the share of the values' spread that is the cards and not the games' noise,
- * so sd(values) x sqrt(reliability) is the spread of the cards' TRUE values on this scale.
+ * Split-half reliability of the card values: the model fitted on two halves of the data, the two sets of card
+ * values correlated (cards with `minGames`+ deck-games in the full data), and Spearman–Brown for the full data.
+ * The reliability is the share of the values' spread that is the cards and not the noise, so sd(values) x
+ * sqrt(reliability) is the spread of the cards' TRUE values on this scale.
+ *
+ *   by 'game': even- against odd-numbered games.  A deck's games fall in both halves, so whatever a deck does
+ *              that its cards' values absorb (a combination, a curve, a draw) is on both sides and counts as
+ *              signal: the repeatability of the values on THESE decks.
+ *   by 'deck': the clusters (decks, or drafts) split at random into two halves, each half's fit on the games
+ *              whose two decks are both in it (a census game between the halves is in neither).  No deck is
+ *              on both sides: the repeatability of the values on NEW decks, the one a generated cube needs.
+ *              Spearman–Brown steps up by k = full games / a half's games (about 4 in the census, 2 in a
+ *              drafted arm whose games stay inside a draft), k r / (1 + (k - 1) r).
  */
-export function splitHalf(ds: Design, pen: Penalty, minGames = 200): { half: number; full: number; n: number } {
+export interface SplitHalf { by: SplitBy; half: number; full: number; n: number; games: [number, number]; k: number }
+
+export function splitHalf(ds: Design, pen: Penalty, minGames = 200, by: SplitBy = 'game', seed = 1): SplitHalf {
   const n = ds.y.length;
   const w1 = new Float64Array(n), w2 = new Float64Array(n);
-  for (let g = 0; g < n; g++) (g % 2 ? w1 : w2)[g] = 1;
+  if (by === 'game') {
+    for (let g = 0; g < n; g++) (g % 2 ? w1 : w2)[g] = 1;
+  } else {
+    const part = clusterParts(ds, 2, seed, 'balance-model/split-deck');
+    for (let g = 0; g < n; g++) {
+      const pa = part[ds.deckCluster[ds.ga[g] as number] as number], pb = part[ds.deckCluster[ds.gb[g] as number] as number];
+      if (pa === pb) (pa === 0 ? w1 : w2)[g] = 1;
+    }
+  }
+  const n1 = w1.reduce((a, b) => a + b, 0), n2 = w2.reduce((a, b) => a + b, 0);
   const b1 = solveRidge(ds, pen, w1), b2 = solveRidge(ds, pen, w2);
   const ix = ds.cards.map((_, i) => i).filter((i) => (ds.cardGames[i] as number) >= minGames);
   const r = pearson(ix.map((i) => b1[i] as number), ix.map((i) => b2[i] as number));
-  return { half: r, full: (2 * r) / (1 + r), n: ix.length };
+  const k = n1 + n2 > 0 ? (2 * n) / (n1 + n2) : NaN;
+  return { by, half: r, full: (k * r) / (1 + (k - 1) * r), n: ix.length, games: [n1, n2], k };
 }
 
 export interface CardEffect { card: string; est: number; sd: number; lo: number; hi: number; decks: number; deckGames: number }
@@ -482,6 +536,17 @@ export const maxGap = (t: Record<string, { est: number }>): number => Math.max(.
 
 // ------------------------------------------------------------------ the generator
 
+/** An exclusion list (`balance-model --exclude`): one card name a line, `#` starts a comment, blank lines skipped. */
+export function parseExcludeList(text: string): string[] {
+  const out: string[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.replace(/#.*$/, '').trim();
+    if (line && !out.includes(line)) out.push(line);
+  }
+  return out;
+}
+
+
 export interface GenCard {
   name: string;
   colors: string;
@@ -586,20 +651,30 @@ export function classSummary(cards: GenCard[]): Array<{ cls: string; n: number; 
 }
 
 /**
+ * The colour + pair gap the balance search stops at: about one card's SD in the census (median .0076-.0092 by
+ * band), so a cube is called even to within the model's own uncertainty and the search does not go on
+ * choosing between cards on their noise.
+ */
+export const BALANCE_TOL = 0.008;
+
+/**
  * After the flow: best-improvement swaps that even the predicted payoffs out.  A move trades a nonland card for
  * a measured library card of the same colour class and mana-value bucket (so the plan stays exact), keeps the
  * colour's creature floor, and stays within `band` of the generator's level; the objective is max |colour - .5|
- * + max |pair - .5| on the point estimates (shrunk by the ridge already).  Stops when no move helps by `tol`.
+ * + max |pair - .5| on the point estimates (shrunk by the ridge already).  Stops as soon as the objective is at
+ * or below `tol` (BALANCE_TOL by default: below it the point estimates' differences are the cards' noise), or
+ * when no move helps by `minGain`.
  */
 export function balanceSearch<T extends GenCard>(start: T[], pool: T[], value: (name: string) => number, mix: DeckMix, weightOf: (name: string) => number,
-  o: { target: number; band: number; minCreaturesPerColour: number; maxSwaps: number; tol: number }): { cards: T[]; swaps: Array<{ out: string; in: string; gain: number }> } {
+  o: { target: number; band: number; minCreaturesPerColour: number; maxSwaps: number; tol?: number; minGain?: number }): { cards: T[]; swaps: Array<{ out: string; in: string; gain: number }>; gap: number } {
+  const tol = o.tol ?? BALANCE_TOL, minGain = o.minGain ?? 1e-4;
   let cards = [...start];
   const obj = (cs: T[]): number => { const p = predictPayoffs(cs, (n) => value(n), 0, mix, weightOf); return maxGap(p.colour) + maxGap(p.pair); };
   const swaps: Array<{ out: string; in: string; gain: number }> = [];
   const candidates = pool.filter((c) => !c.land && c.value !== null && Math.abs(c.value - o.target) <= o.band);
-  for (let it = 0; it < o.maxSwaps; it++) {
+  let base = obj(cards);
+  for (let it = 0; it < o.maxSwaps && base > tol; it++) {
     const inCube = new Set(cards.map((c) => c.name));
-    const base = obj(cards);
     let best: { i: number; p: T; v: number } | null = null;
     for (let i = 0; i < cards.length; i++) {
       const c = cards[i] as T;
@@ -614,12 +689,13 @@ export function balanceSearch<T extends GenCard>(start: T[], pool: T[], value: (
         if (!best || v < best.v) best = { i, p, v };
       }
     }
-    if (!best || base - best.v < o.tol) break;
+    if (!best || base - best.v < minGain) break;
     swaps.push({ out: (cards[best.i] as T).name, in: best.p.name, gain: base - best.v });
     cards = cards.slice();
     cards[best.i] = best.p;
+    base = best.v;
   }
-  return { cards, swaps };
+  return { cards, swaps, gap: base };
 }
 
 /** A play-weight curve: how often the lab's builder plays a card of this rating in a deck of its colours (least squares, clipped). */
