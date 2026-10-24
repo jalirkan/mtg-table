@@ -1,12 +1,12 @@
 running
 runner: forgecoach-runner db496097
 started: 2026-10-24T00:14:37-04:00
-phase: commands 4/5
+phase: commands 5/5
 mtg-table: db49609
 ForgeCoach: 866c256
 workers: 5 (sized 6: min(cores 7, memory 6, max_workers 7); peak 3.00 GB per worker (declared; measured 2.31), budget 21.4 GB)
 peak_worker_rss_gb: 2.31
-blocks_done: run1 exit 0 at 2026-10-24T00:26:23-04:00, run2 exit 0 at 2026-10-24T01:07:02-04:00, run3 exit 0 at 2026-10-24T02:01:30-04:00
+blocks_done: run1 exit 0 at 2026-10-24T00:26:23-04:00, run2 exit 0 at 2026-10-24T01:07:02-04:00, run3 exit 0 at 2026-10-24T02:01:30-04:00, run4 exit 0 at 2026-10-24T02:01:44-04:00
 pressure-1: 2026-10-24T01:50:53-04:00 drop to 5 worker(s): some avg10 23.3%, swap-in 2758/s, job 9.7/21.4 GB
 pressure-2: 2026-10-24T01:52:05-04:00 drop to 4 worker(s): some avg10 0.0%, swap-in 5927/s, job 6.1/21.4 GB
 pressure-3: 2026-10-24T01:57:15-04:00 raise to 5 worker(s): some avg10 0.0%, swap-in 20/s, job 5.4/21.4 GB
