@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-24T00:22:22-04:00",
- "heartbeat": "2026-10-24T00:22:22-04:00",
+ "updated": "2026-10-24T00:22:36-04:00",
+ "heartbeat": "2026-10-24T00:22:36-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 0.19,
-  "memUsedGb": 5.3,
+  "load1": 0.36,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 2945,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J159",
    "title": "Omega balance, night 0 of the registered swap rule -- J145 again on fresh seeds, the cube unchanged: the same three arms on the Omega 180 with Forge Default piloting every game ((A) 2,000 lab-vs-lab grid drafts plus 600 each for the human-pick model and Forge's ranks, drafts 816,500,001 and up; (B) each draft's two decks played twice, game seeds 1,661 / 1,662 / 1,663 x 1,000,000 + g; (C) 2,000 decks from Omega's list by decks --cube in 8,000 games, seed 1665), none coinciding with J145's (D447 point 9); J145's read unchanged, plus the swap rule's night-0 reading: UG CONFIRMED if UG's arm-B (lab-vs-lab) payoff interval sits below .5 on this night's data alone, else UG NOT CONFIRMED and the swap programme stops; colour verdicts and qualifying pairs (400+ arm-B deck-games) reported as the gates' baseline; pull reported, not judged; no swap registered or made",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-24T00:14:37-04:00",
-   "elapsed": 465,
+   "elapsed": 479,
    "done": 0,
    "total": null,
    "unit": "games",
@@ -38,7 +38,7 @@
    "errors": 0,
    "paused": false,
    "dataUpdated": "2026-10-24T00:14:37-04:00",
-   "memGb": 0,
+   "memGb": 0.01,
    "live": {
     "played": 0,
     "engine_errors": 0,
@@ -90,7 +90,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J159-pilot1"
+   "detail": "lab-J159-pilot2"
   }
  ],
  "queue": [],

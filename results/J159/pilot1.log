@@ -1,0 +1,52 @@
+==== J159 pilot1 started 2026-10-24T00:22:21-04:00 in unit lab-J159-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J159: data folder free GB 683.8
+1
+1
+1
+1
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.37941ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (769.026841ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (692.282479ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.309826ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2185.759908ms)
+✔ the prior covers the spectrum over 1,000 decks (1207.765783ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (53.086522ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.12137ms)
+✔ the land formula on fixture decks (0.47522ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.276704ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.160674ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (525.502643ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (1.98667ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.407451ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.083187ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (21.722559ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.286041ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.35139ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (205.859212ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (178.076877ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (525.853166ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1718.606933ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.800585ms)
+✔ features and probabilities match fit.py on 30 held-out Vintage picks (3.299524ms)
+✔ utilities from LabCards reproduce humanPicks.ts on hand-made packs (both cubes) (2.309931ms)
+✔ uncovered cards: s = a + b * rating, least squares over the covered cards (0.41723ms)
+✔ a line is worth the sum of exp(u) in pick order, whatever the logit offset (0.49684ms)
+✔ the chooser takes the best line, never the line already taken, and refuses Winston (0.836693ms)
+✔ a human-pick draft: the deal is a plain run's, one seat picks by lineValue, both build decks (33.059082ms)
+✔ run plumbing: the drafter is part of the folder identity and the version, off changes nothing (0.558957ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8519.712969
+{"covered":105,"cards":180}
+decks: 2000 deck(s) from omega-cube-180 (180 of its 180 cards drawable), seed 1665, into /home/justin-a/code/lab/data/lab-j159/census/decks: k = 1 / 2 / 3 715 / 656 / 629; 28 rejected draw(s), 0 new makeup(s); repeat cap 178 of 715 k=1 decks, 0 card(s) reached it; a card's share of k=1 decks at most 0.2028
+{"verdict": "INCOMPLETE", "offPayoff": [], "pull": {}, "payoff": {"C": 8000}}
+{"W": "EVEN", "U": "EVEN", "B": "OFF", "R": "EVEN", "G": "EVEN"}
+low UG CONFIRMED [] ['UG'] 10 ok
+even UG NOT CONFIRMED [] [] 10 ok
+thin UG CONFIRMED ['G'] [] 8 ok
+none INCOMPLETE [] [] 0 ok
