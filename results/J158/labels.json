@@ -1,0 +1,312 @@
+{
+ "contract": "mtg-table rung-3 label v1 (J158)",
+ "spines": {
+  "ff5": [
+   "461"
+  ],
+  "peasant7": [
+   "463"
+  ]
+ },
+ "branched": 32,
+ "labels": 32,
+ "rowsUnmatched": 0,
+ "confident": 6,
+ "confidentQ": 6,
+ "confidentForge": 2,
+ "byPair": {
+  "ff5": {
+   "spines": 1,
+   "labels": 16,
+   "inQ": 16,
+   "confident": 4,
+   "confidentQ": 4,
+   "confidentForge": 1,
+   "byKind": {
+    "p": {
+     "labels": 8,
+     "confident": 3
+    },
+    "a": {
+     "labels": 5,
+     "confident": 1
+    },
+    "b": {
+     "labels": 3,
+     "confident": 0
+    }
+   }
+  },
+  "peasant7": {
+   "spines": 1,
+   "labels": 16,
+   "inQ": 14,
+   "confident": 2,
+   "confidentQ": 2,
+   "confidentForge": 1,
+   "byKind": {
+    "p": {
+     "labels": 13,
+     "confident": 2
+    },
+    "a": {
+     "labels": 3,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   }
+  }
+ },
+ "a_confidentShare": {
+  "n": 32,
+  "point": 0.1875,
+  "interval": [
+   0.0312,
+   0.3438
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 16,
+    "point": 0.25,
+    "interval": [
+     0.0625,
+     0.5
+    ]
+   },
+   "peasant7": {
+    "n": 16,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.3125
+    ]
+   }
+  }
+ },
+ "a_confidentShareByKind": {
+  "p": {
+   "n": 21,
+   "point": 0.2381,
+   "interval": [
+    0.0476,
+    0.5
+   ],
+   "byPair": {
+    "ff5": {
+     "n": 8,
+     "point": 0.375,
+     "interval": [
+      0.125,
+      0.75
+     ]
+    },
+    "peasant7": {
+     "n": 13,
+     "point": 0.1538,
+     "interval": [
+      0.0,
+      0.3846
+     ]
+    }
+   }
+  },
+  "a": {
+   "n": 8,
+   "point": 0.125,
+   "interval": [
+    0.0,
+    0.4
+   ],
+   "byPair": {
+    "ff5": {
+     "n": 5,
+     "point": 0.2,
+     "interval": [
+      0.0,
+      0.6
+     ]
+    },
+    "peasant7": {
+     "n": 3,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "b": {
+   "n": 3,
+   "point": 0.0,
+   "interval": [
+    0.0,
+    0.0
+   ],
+   "byPair": {
+    "ff5": {
+     "n": 3,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "peasant7": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareQ": {
+  "n": 30,
+  "point": 0.2,
+  "interval": [
+   0.0357,
+   0.3667
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 16,
+    "point": 0.25,
+    "interval": [
+     0.0625,
+     0.5
+    ]
+   },
+   "peasant7": {
+    "n": 14,
+    "point": 0.1429,
+    "interval": [
+     0.0,
+     0.3571
+    ]
+   }
+  }
+ },
+ "b_gapMedian": {
+  "ff5": 0.0475,
+  "peasant7": 0.0825
+ },
+ "b_gapMean": {
+  "n": 32,
+  "point": 0.0716,
+  "interval": [
+   0.0489,
+   0.0958
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 16,
+    "point": 0.0619,
+    "interval": [
+     0.0356,
+     0.0916
+    ]
+   },
+   "peasant7": {
+    "n": 16,
+    "point": 0.0813,
+    "interval": [
+     0.0534,
+     0.11
+    ]
+   }
+  }
+ },
+ "b_regretMean": {
+  "n": 32,
+  "point": 0.0219,
+  "interval": [
+   0.0122,
+   0.0333
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 16,
+    "point": 0.0241,
+    "interval": [
+     0.0094,
+     0.0419
+    ]
+   },
+   "peasant7": {
+    "n": 16,
+    "point": 0.0197,
+    "interval": [
+     0.0084,
+     0.0334
+    ]
+   }
+  }
+ },
+ "b_settledShare": {
+  "n": 32,
+  "point": 0.1562,
+  "interval": [
+   0.0312,
+   0.3125
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 16,
+    "point": 0.1875,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "peasant7": {
+    "n": 16,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.3125
+    ]
+   }
+  }
+ },
+ "c_sizing": {
+  "byPair": {
+   "ff5": {
+    "wallSec": 5175,
+    "spinesTimed": 1,
+    "labels": 16,
+    "confident": 4,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 11.13,
+    "labelsPer10hNight": 111,
+    "confidentPer10hNight": 28
+   },
+   "peasant7": {
+    "wallSec": 6353,
+    "spinesTimed": 1,
+    "labels": 16,
+    "confident": 2,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 9.07,
+    "labelsPer10hNight": 91,
+    "confidentPer10hNight": 11
+   }
+  },
+  "asRun": {
+   "wallSec": 11528,
+   "labels": 32,
+   "confident": 6,
+   "labelsPer10hNight": 100,
+   "confidentPer10hNight": 19
+  }
+ }
+}

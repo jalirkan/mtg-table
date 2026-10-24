@@ -1,0 +1,2295 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "tools/ai-bench/decks/sets/peasant-900000007-A.dck",
+    "deckB": "tools/ai-bench/decks/sets/peasant-900000007-B.dck",
+    "seed": 463,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 40,
+    "decisions": 16,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 20,
+      "first": "B",
+      "decisionsListed": 23
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 115,
+              "draws": 0,
+              "losses": 85,
+              "mean": 0.575,
+              "lo": 0.5057,
+              "hi": 0.6415
+            },
+            "forge": {
+              "n": 40,
+              "wins": 16,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.4,
+              "lo": 0.2635,
+              "hi": 0.554
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 119,
+              "draws": 0,
+              "losses": 81,
+              "mean": 0.595,
+              "lo": 0.5258,
+              "hi": 0.6606
+            },
+            "forge": {
+              "n": 40,
+              "wins": 14,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.35,
+              "lo": 0.2213,
+              "hi": 0.5049
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.095,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 127,
+              "draws": 0,
+              "losses": 73,
+              "mean": 0.635,
+              "lo": 0.5663,
+              "hi": 0.6986
+            },
+            "forge": {
+              "n": 40,
+              "wins": 11,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.275,
+              "lo": 0.1611,
+              "hi": 0.4283
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 130,
+              "draws": 0,
+              "losses": 70,
+              "mean": 0.65,
+              "lo": 0.5816,
+              "hi": 0.7127
+            },
+            "forge": {
+              "n": 40,
+              "wins": 15,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.375,
+              "lo": 0.2422,
+              "hi": 0.5297
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.015,
+          "regretLo": 0,
+          "regretHi": 0.085,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.1,
+          "regretLo": 0,
+          "regretHi": 0.225,
+          "best": 1
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 112,
+              "draws": 0,
+              "losses": 88,
+              "mean": 0.56,
+              "lo": 0.4907,
+              "hi": 0.627
+            },
+            "forge": {
+              "n": 40,
+              "wins": 13,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.325,
+              "lo": 0.2008,
+              "hi": 0.4798
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 113,
+              "draws": 0,
+              "losses": 87,
+              "mean": 0.565,
+              "lo": 0.4957,
+              "hi": 0.6318
+            },
+            "forge": {
+              "n": 40,
+              "wins": 18,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.45,
+              "lo": 0.3071,
+              "hi": 0.6017
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.005,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.125,
+          "regretLo": 0,
+          "regretHi": 0.3006,
+          "best": 1
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:6",
+            "label": "Animate Dead",
+            "random": {
+              "n": 200,
+              "wins": 125,
+              "draws": 0,
+              "losses": 75,
+              "mean": 0.625,
+              "lo": 0.5561,
+              "hi": 0.6891
+            },
+            "forge": {
+              "n": 40,
+              "wins": 15,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.375,
+              "lo": 0.2422,
+              "hi": 0.5297
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 126,
+              "draws": 0,
+              "losses": 74,
+              "mean": 0.63,
+              "lo": 0.5612,
+              "hi": 0.6939
+            },
+            "forge": {
+              "n": 40,
+              "wins": 22,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.55,
+              "lo": 0.3983,
+              "hi": 0.6929
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 136,
+              "draws": 0,
+              "losses": 64,
+              "mean": 0.68,
+              "lo": 0.6125,
+              "hi": 0.7407
+            },
+            "forge": {
+              "n": 40,
+              "wins": 19,
+              "draws": 0,
+              "losses": 21,
+              "mean": 0.475,
+              "lo": 0.3294,
+              "hi": 0.625
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:17",
+            "label": "Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 142,
+              "draws": 0,
+              "losses": 58,
+              "mean": 0.71,
+              "lo": 0.6436,
+              "hi": 0.7685
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 133,
+              "draws": 0,
+              "losses": 67,
+              "mean": 0.665,
+              "lo": 0.597,
+              "hi": 0.7268
+            },
+            "forge": {
+              "n": 40,
+              "wins": 17,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.425,
+              "lo": 0.2851,
+              "hi": 0.578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.085,
+          "regretLo": 0.03,
+          "regretHi": 0.1601,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.175,
+          "regretLo": 0.05,
+          "regretHi": 0.35,
+          "best": 1
+        },
+        "rho": 0.4,
+        "rhoLo": -0.5643,
+        "rhoHi": 0.9,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 91,
+              "draws": 0,
+              "losses": 109,
+              "mean": 0.455,
+              "lo": 0.3875,
+              "hi": 0.5242
+            },
+            "forge": {
+              "n": 40,
+              "wins": 28,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.7,
+              "lo": 0.5457,
+              "hi": 0.8193
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 106,
+              "draws": 0,
+              "losses": 94,
+              "mean": 0.53,
+              "lo": 0.4609,
+              "hi": 0.598
+            },
+            "forge": {
+              "n": 40,
+              "wins": 18,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.45,
+              "lo": 0.3071,
+              "hi": 0.6017
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:37",
+            "label": "Khenra Spellspear",
+            "random": {
+              "n": 200,
+              "wins": 97,
+              "draws": 0,
+              "losses": 103,
+              "mean": 0.485,
+              "lo": 0.4167,
+              "hi": 0.5539
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.6,
+              "lo": 0.446,
+              "hi": 0.7365
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:17",
+            "label": "Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 98,
+              "draws": 0,
+              "losses": 102,
+              "mean": 0.49,
+              "lo": 0.4216,
+              "hi": 0.5588
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.6,
+              "lo": 0.446,
+              "hi": 0.7365
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 94,
+              "draws": 0,
+              "losses": 106,
+              "mean": 0.47,
+              "lo": 0.402,
+              "hi": 0.5391
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:39",
+            "label": "Marauding Sphinx",
+            "random": {
+              "n": 200,
+              "wins": 106,
+              "draws": 0,
+              "losses": 94,
+              "mean": 0.53,
+              "lo": 0.4609,
+              "hi": 0.598
+            },
+            "forge": {
+              "n": 40,
+              "wins": 27,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.675,
+              "lo": 0.5202,
+              "hi": 0.7992
+            }
+          },
+          {
+            "o": 6,
+            "token": "cast:26",
+            "label": "Bonesplitter",
+            "random": {
+              "n": 200,
+              "wins": 94,
+              "draws": 0,
+              "losses": 106,
+              "mean": 0.47,
+              "lo": 0.402,
+              "hi": 0.5391
+            },
+            "forge": {
+              "n": 40,
+              "wins": 29,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.725,
+              "lo": 0.5717,
+              "hi": 0.8389
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.075,
+          "regretLo": 0.02,
+          "regretHi": 0.1651,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.125,
+          "best": 6
+        },
+        "rho": -0.4771,
+        "rhoLo": -0.7891,
+        "rhoHi": 0.3183,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:39",
+            "label": "Marauding Sphinx",
+            "random": {
+              "n": 200,
+              "wins": 118,
+              "draws": 0,
+              "losses": 82,
+              "mean": 0.59,
+              "lo": 0.5208,
+              "hi": 0.6558
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 91,
+              "draws": 0,
+              "losses": 109,
+              "mean": 0.455,
+              "lo": 0.3875,
+              "hi": 0.5242
+            },
+            "forge": {
+              "n": 40,
+              "wins": 22,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.55,
+              "lo": 0.3983,
+              "hi": 0.6929
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 103,
+              "draws": 0,
+              "losses": 97,
+              "mean": 0.515,
+              "lo": 0.4461,
+              "hi": 0.5833
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:37",
+            "label": "Khenra Spellspear",
+            "random": {
+              "n": 200,
+              "wins": 112,
+              "draws": 0,
+              "losses": 88,
+              "mean": 0.56,
+              "lo": 0.4907,
+              "hi": 0.627
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.6,
+              "lo": 0.446,
+              "hi": 0.7365
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:17",
+            "label": "Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 105,
+              "draws": 0,
+              "losses": 95,
+              "mean": 0.525,
+              "lo": 0.456,
+              "hi": 0.5931
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.6,
+              "lo": 0.446,
+              "hi": 0.7365
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 107,
+              "draws": 0,
+              "losses": 93,
+              "mean": 0.535,
+              "lo": 0.4659,
+              "hi": 0.6028
+            },
+            "forge": {
+              "n": 40,
+              "wins": 22,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.55,
+              "lo": 0.3983,
+              "hi": 0.6929
+            }
+          },
+          {
+            "o": 6,
+            "token": "cast:26",
+            "label": "Bonesplitter",
+            "random": {
+              "n": 200,
+              "wins": 97,
+              "draws": 0,
+              "losses": 103,
+              "mean": 0.485,
+              "lo": 0.4167,
+              "hi": 0.5539
+            },
+            "forge": {
+              "n": 40,
+              "wins": 34,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.85,
+              "lo": 0.7093,
+              "hi": 0.9294
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.065,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": 0.291,
+        "rhoLo": -0.3091,
+        "rhoHi": 0.673,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:26",
+            "label": "Bonesplitter: Equip {1} ({1}: Attach to target creature you ",
+            "random": {
+              "n": 200,
+              "wins": 152,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.76,
+              "lo": 0.6963,
+              "hi": 0.8139
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 139,
+              "draws": 0,
+              "losses": 61,
+              "mean": 0.695,
+              "lo": 0.628,
+              "hi": 0.7546
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 141,
+              "draws": 0,
+              "losses": 59,
+              "mean": 0.705,
+              "lo": 0.6384,
+              "hi": 0.7639
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:37",
+            "label": "Khenra Spellspear",
+            "random": {
+              "n": 200,
+              "wins": 149,
+              "draws": 0,
+              "losses": 51,
+              "mean": 0.745,
+              "lo": 0.6804,
+              "hi": 0.8004
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:17",
+            "label": "Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 156,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.78,
+              "lo": 0.7176,
+              "hi": 0.8318
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 144,
+              "draws": 0,
+              "losses": 56,
+              "mean": 0.72,
+              "lo": 0.6541,
+              "hi": 0.7776
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.105,
+          "best": 4
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": 0.3703,
+        "rhoLo": -0.3928,
+        "rhoHi": 0.7092,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 154,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.77,
+              "lo": 0.7069,
+              "hi": 0.8229
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 146,
+              "draws": 0,
+              "losses": 54,
+              "mean": 0.73,
+              "lo": 0.6646,
+              "hi": 0.7868
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:37",
+            "label": "Khenra Spellspear",
+            "random": {
+              "n": 200,
+              "wins": 138,
+              "draws": 0,
+              "losses": 62,
+              "mean": 0.69,
+              "lo": 0.6228,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 138,
+              "draws": 0,
+              "losses": 62,
+              "mean": 0.69,
+              "lo": 0.6228,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.04,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 3
+        },
+        "rho": -0.5443,
+        "rhoLo": -0.9259,
+        "rhoHi": 0.7746,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:37",
+            "label": "Khenra Spellspear",
+            "random": {
+              "n": 200,
+              "wins": 160,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.8,
+              "lo": 0.7391,
+              "hi": 0.8495
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 154,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.77,
+              "lo": 0.7069,
+              "hi": 0.8229
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 161,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.805,
+              "lo": 0.7446,
+              "hi": 0.8539
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 160,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.8,
+              "lo": 0.7391,
+              "hi": 0.8495
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.005,
+          "regretLo": 0,
+          "regretHi": 0.085,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 3
+        },
+        "rho": 0,
+        "rhoLo": -0.8165,
+        "rhoHi": 0.8165,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:7",
+            "label": "Reanimate",
+            "random": {
+              "n": 200,
+              "wins": 181,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.905,
+              "lo": 0.8564,
+              "hi": 0.9383
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 144,
+              "draws": 0,
+              "losses": 56,
+              "mean": 0.72,
+              "lo": 0.6541,
+              "hi": 0.7776
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 141,
+              "draws": 0,
+              "losses": 59,
+              "mean": 0.705,
+              "lo": 0.6384,
+              "hi": 0.7639
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:17",
+            "label": "Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 155,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.775,
+              "lo": 0.7123,
+              "hi": 0.8274
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 152,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.76,
+              "lo": 0.6963,
+              "hi": 0.8139
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:39",
+            "label": "attack Marauding Sphinx",
+            "random": {
+              "n": 200,
+              "wins": 172,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.86,
+              "lo": 0.8051,
+              "hi": 0.9013
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 145,
+              "draws": 0,
+              "losses": 55,
+              "mean": 0.725,
+              "lo": 0.6593,
+              "hi": 0.7822
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 16,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:17",
+            "label": "Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 167,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.835,
+              "lo": 0.7773,
+              "hi": 0.88
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 156,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.78,
+              "lo": 0.7176,
+              "hi": 0.8318
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 172,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.86,
+              "lo": 0.8051,
+              "hi": 0.9013
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:24",
+            "label": "Stock Up",
+            "random": {
+              "n": 200,
+              "wins": 175,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.875,
+              "lo": 0.822,
+              "hi": 0.9139
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.11,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": 0.7746,
+        "rhoLo": 0.2582,
+        "rhoHi": 0.8165,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 185,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.925,
+              "lo": 0.88,
+              "hi": 0.954
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 182,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.91,
+              "lo": 0.8622,
+              "hi": 0.9423
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:36",
+            "label": "Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 168,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.84,
+              "lo": 0.7829,
+              "hi": 0.8843
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:8",
+            "label": "Whirler Rogue",
+            "random": {
+              "n": 200,
+              "wins": 192,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.96,
+              "lo": 0.9231,
+              "hi": 0.9796
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.035,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 19,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:39,71",
+            "label": "attack Primordial Pachyderm+Marauding Sphinx",
+            "random": {
+              "n": 200,
+              "wins": 197,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.985,
+              "lo": 0.9568,
+              "hi": 0.9949
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 166,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.83,
+              "lo": 0.7718,
+              "hi": 0.8757
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:17,39,71,158",
+            "label": "attack Primordial Pachyderm+Marauding Sphinx+Marionette Apprentice+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 199,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.995,
+              "lo": 0.9722,
+              "hi": 0.9991
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:39",
+            "label": "attack Marauding Sphinx",
+            "random": {
+              "n": 200,
+              "wins": 184,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.92,
+              "lo": 0.874,
+              "hi": 0.9502
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:71",
+            "label": "attack Primordial Pachyderm",
+            "random": {
+              "n": 200,
+              "wins": 180,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.9,
+              "lo": 0.8506,
+              "hi": 0.9343
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:17,39,71",
+            "label": "attack Primordial Pachyderm+Marauding Sphinx+Marionette Apprentice",
+            "random": {
+              "n": 200,
+              "wins": 197,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.985,
+              "lo": 0.9568,
+              "hi": 0.9949
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:39,71,158",
+            "label": "attack Primordial Pachyderm+Marauding Sphinx+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 199,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.995,
+              "lo": 0.9722,
+              "hi": 0.9991
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.03,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 21,
+        "kind": "p",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 198,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.99,
+              "lo": 0.9643,
+              "hi": 0.9973
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Chart a Course",
+            "random": {
+              "n": 200,
+              "wins": 199,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.995,
+              "lo": 0.9722,
+              "hi": 0.9991
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:36",
+            "label": "Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 198,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.99,
+              "lo": 0.9643,
+              "hi": 0.9973
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.005,
+          "regretLo": 0,
+          "regretHi": 0.02,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 22,
+        "kind": "a",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:8,17,39,71,158,164,165",
+            "label": "attack Marionette Apprentice+Thopter Token+Thopter Token+Marauding Sphinx+Primordial Pachyderm+Whirler Rogue+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 191,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.955,
+              "lo": 0.9167,
+              "hi": 0.9761
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:8,39,71,158,164,165",
+            "label": "attack Thopter Token+Thopter Token+Marauding Sphinx+Primordial Pachyderm+Whirler Rogue+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:8,17,39,71,158,165",
+            "label": "attack Marionette Apprentice+Thopter Token+Marauding Sphinx+Primordial Pachyderm+Whirler Rogue+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:8,17,39,71,158,164",
+            "label": "attack Marionette Apprentice+Thopter Token+Marauding Sphinx+Primordial Pachyderm+Whirler Rogue+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:8,17,71,158,164,165",
+            "label": "attack Marionette Apprentice+Thopter Token+Thopter Token+Primordial Pachyderm+Whirler Rogue+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:8,17,39,158,164,165",
+            "label": "attack Marionette Apprentice+Thopter Token+Thopter Token+Marauding Sphinx+Whirler Rogue+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:17,39,71,158,164,165",
+            "label": "attack Marionette Apprentice+Thopter Token+Thopter Token+Marauding Sphinx+Primordial Pachyderm+Servo Token",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true
+      }
+    ],
+    "agreement": {
+      "decisions": 16,
+      "meanRho": 0.1814,
+      "meanRhoInterval": [
+        -0.2319,
+        0.577
+      ],
+      "sameBest": 6,
+      "sameBestInterval": [
+        0.1848,
+        0.6136
+      ]
+    },
+    "disagreeMost": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 4,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 14,
+        "rho": -0.5443,
+        "rhoInterval": [
+          -0.9259,
+          0.7746
+        ],
+        "sameBest": false,
+        "bestRandom": 0,
+        "bestForge": 3
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 12,
+        "rho": -0.4771,
+        "rhoInterval": [
+          -0.7891,
+          0.3183
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 6
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 14,
+        "rho": 0,
+        "rhoInterval": [
+          -0.8165,
+          0.8165
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 3
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 12,
+        "rho": 0.291,
+        "rhoInterval": [
+          -0.3091,
+          0.673
+        ],
+        "sameBest": true,
+        "bestRandom": 0,
+        "bestForge": 0
+      }
+    ],
+    "branchGames": 17280,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "cappedRandom": 2,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 1817,
+      "forge": 1221
+    },
+    "standInsMax": 2
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 490588,
+    "gamesIdChecked": 17281,
+    "frameLogs": 34562,
+    "frameLogsFailed": 0,
+    "redactionMs": 775570,
+    "forks": 17280,
+    "forkProblems": 0,
+    "leakChecks": 32,
+    "leaks": 0,
+    "leakControlsMoved": 32,
+    "guardrails": {
+      "logs": 28800,
+      "priorityDecisions": 827244,
+      "landOffered": 75191,
+      "landTaken": 75191,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0
+      },
+      "noRepeatNoOp": 0,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 17280,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 94485
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5074,
+      "units": 160,
+      "branchGames": 17280,
+      "ms": 5027798,
+      "workers": 6
+    },
+    "wallMs": 5032872,
+    "jobs": 6
+  }
+}

@@ -1,0 +1,461 @@
+{
+ "spines": {
+  "ff5": [
+   "461"
+  ],
+  "peasant7": [
+   "463"
+  ]
+ },
+ "definitions": "see the header of this script",
+ "decisions": 32,
+ "complete": 32,
+ "decided": 2,
+ "Q": 30,
+ "i_sameBest": {
+  "n": 30,
+  "point": 0.4,
+  "interval": [
+   0.2143,
+   0.5714
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 16,
+    "point": 0.4375,
+    "interval": [
+     0.1875,
+     0.6875
+    ]
+   },
+   "peasant7": {
+    "n": 14,
+    "point": 0.3571,
+    "interval": [
+     0.1429,
+     0.6429
+    ]
+   }
+  }
+ },
+ "ii_rho": {
+  "n": 21,
+  "point": 0.06,
+  "interval": [
+   -0.2801,
+   0.3941
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": -0.0504,
+    "interval": [
+     -0.4926,
+     0.3866
+    ]
+   },
+   "peasant7": {
+    "n": 10,
+    "point": 0.1814,
+    "interval": [
+     -0.2261,
+     0.5726
+    ]
+   }
+  },
+  "twoOption": 8
+ },
+ "ii_rho_Q": {
+  "n": 21,
+  "point": 0.06,
+  "interval": [
+   -0.2801,
+   0.3941
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": -0.0504,
+    "interval": [
+     -0.4926,
+     0.3866
+    ]
+   },
+   "peasant7": {
+    "n": 10,
+    "point": 0.1814,
+    "interval": [
+     -0.2261,
+     0.5726
+    ]
+   }
+  }
+ },
+ "iii_regret": {
+  "p": {
+   "random": {
+    "n": 20,
+    "point": 0.03,
+    "interval": [
+     0.0163,
+     0.05
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 8,
+      "point": 0.0375,
+      "interval": [
+       0.0138,
+       0.065
+      ]
+     },
+     "peasant7": {
+      "n": 12,
+      "point": 0.025,
+      "interval": [
+       0.0108,
+       0.0417
+      ]
+     }
+    },
+    "clearOfZero": 5
+   },
+   "forge": {
+    "n": 20,
+    "point": 0.0375,
+    "interval": [
+     0.0109,
+     0.0672
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 8,
+      "point": 0.0344,
+      "interval": [
+       0.0031,
+       0.0844
+      ]
+     },
+     "peasant7": {
+      "n": 12,
+      "point": 0.0396,
+      "interval": [
+       0.0104,
+       0.075
+      ]
+     }
+    },
+    "clearOfZero": 2
+   }
+  },
+  "a": {
+   "random": {
+    "n": 7,
+    "point": 0.0136,
+    "interval": [
+     0.0014,
+     0.03
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 5,
+      "point": 0.017,
+      "interval": [
+       0.0,
+       0.041
+      ]
+     },
+     "peasant7": {
+      "n": 2,
+      "point": 0.005,
+      "interval": [
+       0.0,
+       0.01
+      ]
+     }
+    },
+    "clearOfZero": 1
+   },
+   "forge": {
+    "n": 7,
+    "point": 0.0143,
+    "interval": [
+     0.0,
+     0.0429
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 5,
+      "point": 0.02,
+      "interval": [
+       0.0,
+       0.06
+      ]
+     },
+     "peasant7": {
+      "n": 2,
+      "point": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  },
+  "b": {
+   "random": {
+    "n": 3,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 3,
+      "point": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     },
+     "peasant7": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   },
+   "forge": {
+    "n": 3,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 3,
+      "point": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     },
+     "peasant7": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  }
+ },
+ "iv_repeat": {
+  "C1_castNow": {
+   "random": {
+    "n": 8,
+    "point": 0.0425,
+    "interval": [
+     0.0097,
+     0.0764
+    ]
+   },
+   "verdict": "HOLDS",
+   "forgeMap": {
+    "n": 8,
+    "point": 0.061,
+    "interval": [
+     0.0019,
+     0.1402
+    ]
+   }
+  },
+  "C2_dontAttack": {
+   "random": {
+    "n": 1,
+    "point": -0.07,
+    "interval": [
+     -0.07,
+     -0.07
+    ]
+   },
+   "verdict": "NOT SHOWN",
+   "forgeMap": {
+    "n": 1,
+    "point": -0.075,
+    "interval": [
+     -0.075,
+     -0.075
+    ]
+   }
+  }
+ },
+ "v_guardrails": {
+  "byPair": {
+   "ff5": {
+    "logs": 23600,
+    "priorityDecisions": 875736,
+    "landOffered": 55692,
+    "landTaken": 55692,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 20281,
+    "refusedCast": 172,
+    "noRepeatRefused": 158,
+    "forgePayCap": 0
+   },
+   "peasant7": {
+    "logs": 28800,
+    "priorityDecisions": 827244,
+    "landOffered": 75191,
+    "landTaken": 75191,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 0,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "forgePayCap": 0
+   }
+  },
+  "total": {
+   "logs": 52400,
+   "priorityDecisions": 1702980,
+   "landOffered": 130883,
+   "landTaken": 130883,
+   "mulligans": 0,
+   "kept": 0,
+   "violations": 0,
+   "noRepeatNoOp": 20281,
+   "refusedCast": 172,
+   "noRepeatRefused": 158,
+   "forgePayCap": 0
+  }
+ },
+ "vi_rung3": {
+  "optionsPerDecision": 4.09,
+  "branchGamesPerDecision": 982,
+  "secRandomBranch": 1.82,
+  "secForgeBranch": 1.36,
+  "workerSecPerDecision": 1717,
+  "decisionsPer7WorkerHour": 14.7,
+  "decisionsPer10hNight": 147,
+  "undecidedShare": 0.938
+ },
+ "vi_rung3_byPair": {
+  "ff5": {
+   "optionsPerDecision": 3.69,
+   "branchGamesPerDecision": 885,
+   "secRandomBranch": 1.83,
+   "secForgeBranch": 1.54,
+   "workerSecPerDecision": 1579,
+   "decisionsPer7WorkerHour": 16.0,
+   "decisionsPer10hNight": 160,
+   "undecidedShare": 1.0
+  },
+  "peasant7": {
+   "optionsPerDecision": 4.5,
+   "branchGamesPerDecision": 1080,
+   "secRandomBranch": 1.82,
+   "secForgeBranch": 1.22,
+   "workerSecPerDecision": 1855,
+   "decisionsPer7WorkerHour": 13.6,
+   "decisionsPer10hNight": 136,
+   "undecidedShare": 0.875
+  }
+ },
+ "iv_byPair": {
+  "ff5": {
+   "C1_castNow": {
+    "random": {
+     "n": 8,
+     "point": 0.0425,
+     "interval": [
+      0.0097,
+      0.0764
+     ]
+    },
+    "verdict": "HOLDS",
+    "forgeMap": {
+     "n": 8,
+     "point": 0.061,
+     "interval": [
+      0.0019,
+      0.1402
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 1,
+     "point": -0.07,
+     "interval": [
+      -0.07,
+      -0.07
+     ]
+    },
+    "forgeMap": {
+     "n": 1,
+     "point": -0.075,
+     "interval": [
+      -0.075,
+      -0.075
+     ]
+    },
+    "verdict": null
+   }
+  },
+  "peasant7": {
+   "C1_castNow": {
+    "random": {
+     "n": 12,
+     "point": 0.0278,
+     "interval": [
+      0.0033,
+      0.0496
+     ]
+    },
+    "verdict": "HOLDS",
+    "forgeMap": {
+     "n": 12,
+     "point": 0.0133,
+     "interval": [
+      -0.0281,
+      0.0547
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 2,
+     "point": -0.145,
+     "interval": [
+      -0.155,
+      -0.135
+     ]
+    },
+    "forgeMap": {
+     "n": 2,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "verdict": null
+   }
+  }
+ }
+}

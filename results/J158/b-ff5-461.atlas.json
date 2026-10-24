@@ -1,0 +1,2057 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "tools/ai-bench/decks/sets/fair-fight-900000005-A.dck",
+    "deckB": "tools/ai-bench/decks/sets/fair-fight-900000005-B.dck",
+    "seed": 461,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 40,
+    "decisions": 16,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 21,
+      "first": "B",
+      "decisionsListed": 31
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 131,
+              "draws": 0,
+              "losses": 69,
+              "mean": 0.655,
+              "lo": 0.5868,
+              "hi": 0.7174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 12,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.3,
+              "lo": 0.1807,
+              "hi": 0.4543
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Llanowar Visionary",
+            "random": {
+              "n": 200,
+              "wins": 137,
+              "draws": 0,
+              "losses": 63,
+              "mean": 0.685,
+              "lo": 0.6177,
+              "hi": 0.7454
+            },
+            "forge": {
+              "n": 40,
+              "wins": 10,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.25,
+              "lo": 0.1419,
+              "hi": 0.4019
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.03,
+          "regretLo": 0,
+          "regretHi": 0.115,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:13",
+            "label": "Shadowspear",
+            "random": {
+              "n": 200,
+              "wins": 22,
+              "draws": 0,
+              "losses": 178,
+              "mean": 0.11,
+              "lo": 0.0738,
+              "hi": 0.1609
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 29,
+              "draws": 0,
+              "losses": 171,
+              "mean": 0.145,
+              "lo": 0.1029,
+              "hi": 0.2005
+            },
+            "forge": {
+              "n": 40,
+              "wins": 17,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.425,
+              "lo": 0.2851,
+              "hi": 0.578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.035,
+          "regretLo": 0,
+          "regretHi": 0.0951,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 4,
+        "kind": "a",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:18",
+            "label": "attack Llanowar Visionary",
+            "random": {
+              "n": 200,
+              "wins": 33,
+              "draws": 0,
+              "losses": 167,
+              "mean": 0.165,
+              "lo": 0.12,
+              "hi": 0.2227
+            },
+            "forge": {
+              "n": 40,
+              "wins": 23,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.575,
+              "lo": 0.422,
+              "hi": 0.7149
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 19,
+              "draws": 0,
+              "losses": 181,
+              "mean": 0.095,
+              "lo": 0.0617,
+              "hi": 0.1436
+            },
+            "forge": {
+              "n": 40,
+              "wins": 20,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.5,
+              "lo": 0.352,
+              "hi": 0.648
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:35",
+            "label": "Kitesail Freebooter",
+            "random": {
+              "n": 200,
+              "wins": 12,
+              "draws": 0,
+              "losses": 188,
+              "mean": 0.06,
+              "lo": 0.0347,
+              "hi": 0.1019
+            },
+            "forge": {
+              "n": 40,
+              "wins": 12,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.3,
+              "lo": 0.1807,
+              "hi": 0.4543
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 7,
+              "draws": 0,
+              "losses": 193,
+              "mean": 0.035,
+              "lo": 0.0171,
+              "hi": 0.0705
+            },
+            "forge": {
+              "n": 40,
+              "wins": 1,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.025,
+              "lo": 0.0044,
+              "hi": 0.1288
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:19",
+            "label": "The Mightstone and Weakstone",
+            "random": {
+              "n": 200,
+              "wins": 25,
+              "draws": 0,
+              "losses": 175,
+              "mean": 0.125,
+              "lo": 0.0861,
+              "hi": 0.178
+            },
+            "forge": {
+              "n": 40,
+              "wins": 20,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.5,
+              "lo": 0.352,
+              "hi": 0.648
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Gray Merchant of Asphodel",
+            "random": {
+              "n": 200,
+              "wins": 16,
+              "draws": 0,
+              "losses": 184,
+              "mean": 0.08,
+              "lo": 0.0498,
+              "hi": 0.126
+            },
+            "forge": {
+              "n": 40,
+              "wins": 15,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.375,
+              "lo": 0.2422,
+              "hi": 0.5297
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:16",
+            "label": "Falkenrath Noble",
+            "random": {
+              "n": 200,
+              "wins": 14,
+              "draws": 0,
+              "losses": 186,
+              "mean": 0.07,
+              "lo": 0.0422,
+              "hi": 0.1141
+            },
+            "forge": {
+              "n": 40,
+              "wins": 14,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.35,
+              "lo": 0.2213,
+              "hi": 0.5049
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 16,
+              "draws": 0,
+              "losses": 184,
+              "mean": 0.08,
+              "lo": 0.0498,
+              "hi": 0.126
+            },
+            "forge": {
+              "n": 40,
+              "wins": 10,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.25,
+              "lo": 0.1419,
+              "hi": 0.4019
+            }
+          },
+          {
+            "o": 6,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 16,
+              "draws": 0,
+              "losses": 184,
+              "mean": 0.08,
+              "lo": 0.0498,
+              "hi": 0.126
+            },
+            "forge": {
+              "n": 40,
+              "wins": 10,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.25,
+              "lo": 0.1419,
+              "hi": 0.4019
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.065,
+          "regretLo": 0.0199,
+          "regretHi": 0.115,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.2,
+          "regretLo": 0.05,
+          "regretHi": 0.375,
+          "best": 2
+        },
+        "rho": 0.5984,
+        "rhoLo": 0.0546,
+        "rhoHi": 0.9723,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 8,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 10,
+              "draws": 0,
+              "losses": 190,
+              "mean": 0.05,
+              "lo": 0.0274,
+              "hi": 0.0896
+            },
+            "forge": {
+              "n": 40,
+              "wins": 14,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.35,
+              "lo": 0.2213,
+              "hi": 0.5049
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:18",
+            "label": "attack Llanowar Visionary",
+            "random": {
+              "n": 200,
+              "wins": 22,
+              "draws": 0,
+              "losses": 178,
+              "mean": 0.11,
+              "lo": 0.0738,
+              "hi": 0.1609
+            },
+            "forge": {
+              "n": 40,
+              "wins": 12,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.3,
+              "lo": 0.1807,
+              "hi": 0.4543
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.06,
+          "regretLo": 0.01,
+          "regretHi": 0.115,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 10,
+        "kind": "b",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:35>78",
+            "label": "block Kitesail Freebooter>Ledger Shredder",
+            "random": {
+              "n": 156,
+              "wins": 4,
+              "draws": 0,
+              "losses": 152,
+              "mean": 0.0256,
+              "lo": 0.01,
+              "hi": 0.0641
+            },
+            "forge": {
+              "n": 37,
+              "wins": 1,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.027,
+              "lo": 0.0048,
+              "hi": 0.1382
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 156,
+              "wins": 4,
+              "draws": 0,
+              "losses": 152,
+              "mean": 0.0256,
+              "lo": 0.01,
+              "hi": 0.0641
+            },
+            "forge": {
+              "n": 37,
+              "wins": 1,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.027,
+              "lo": 0.0048,
+              "hi": 0.1382
+            }
+          }
+        ],
+        "random": {
+          "branches": 156,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 37,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Gray Merchant of Asphodel",
+            "random": {
+              "n": 200,
+              "wins": 3,
+              "draws": 0,
+              "losses": 197,
+              "mean": 0.015,
+              "lo": 0.0051,
+              "hi": 0.0432
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 4,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.1,
+              "lo": 0.0396,
+              "hi": 0.2305
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:16",
+            "label": "Falkenrath Noble",
+            "random": {
+              "n": 200,
+              "wins": 9,
+              "draws": 0,
+              "losses": 191,
+              "mean": 0.045,
+              "lo": 0.0239,
+              "hi": 0.0833
+            },
+            "forge": {
+              "n": 40,
+              "wins": 4,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.1,
+              "lo": 0.0396,
+              "hi": 0.2305
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:40",
+            "label": "Grim Flayer",
+            "random": {
+              "n": 200,
+              "wins": 5,
+              "draws": 0,
+              "losses": 195,
+              "mean": 0.025,
+              "lo": 0.0107,
+              "hi": 0.0572
+            },
+            "forge": {
+              "n": 40,
+              "wins": 8,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.2,
+              "lo": 0.105,
+              "hi": 0.3476
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:38",
+            "label": "Gravedigger",
+            "random": {
+              "n": 200,
+              "wins": 3,
+              "draws": 0,
+              "losses": 197,
+              "mean": 0.015,
+              "lo": 0.0051,
+              "hi": 0.0432
+            },
+            "forge": {
+              "n": 40,
+              "wins": 8,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.2,
+              "lo": 0.105,
+              "hi": 0.3476
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 13,
+              "draws": 0,
+              "losses": 187,
+              "mean": 0.065,
+              "lo": 0.0384,
+              "hi": 0.108
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 6,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 13,
+              "draws": 0,
+              "losses": 187,
+              "mean": 0.065,
+              "lo": 0.0384,
+              "hi": 0.108
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.05,
+          "regretLo": 0.02,
+          "regretHi": 0.085,
+          "best": 5
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.225,
+          "best": 3
+        },
+        "rho": 0.0481,
+        "rhoLo": -0.8119,
+        "rhoHi": 0.7336,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 14,
+        "kind": "b",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:21>71",
+            "label": "block Gray Merchant of Asphodel>Skyclave Apparition",
+            "random": {
+              "n": 74,
+              "wins": 0,
+              "draws": 0,
+              "losses": 74,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0493
+            },
+            "forge": {
+              "n": 2,
+              "wins": 0,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.6576
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 74,
+              "wins": 0,
+              "draws": 0,
+              "losses": 74,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0493
+            },
+            "forge": {
+              "n": 2,
+              "wins": 0,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.6576
+            }
+          }
+        ],
+        "random": {
+          "branches": 74,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 2,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 15,
+              "draws": 0,
+              "losses": 185,
+              "mean": 0.075,
+              "lo": 0.046,
+              "hi": 0.12
+            },
+            "forge": {
+              "n": 40,
+              "wins": 2,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.05,
+              "lo": 0.0138,
+              "hi": 0.165
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:21,141",
+            "label": "attack Gray Merchant of Asphodel+Illusion Token",
+            "random": {
+              "n": 200,
+              "wins": 8,
+              "draws": 0,
+              "losses": 192,
+              "mean": 0.04,
+              "lo": 0.0204,
+              "hi": 0.0769
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:21",
+            "label": "attack Gray Merchant of Asphodel",
+            "random": {
+              "n": 200,
+              "wins": 15,
+              "draws": 0,
+              "losses": 185,
+              "mean": 0.075,
+              "lo": 0.046,
+              "hi": 0.12
+            },
+            "forge": {
+              "n": 40,
+              "wins": 3,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.075,
+              "lo": 0.0258,
+              "hi": 0.1986
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:141",
+            "label": "attack Illusion Token",
+            "random": {
+              "n": 200,
+              "wins": 10,
+              "draws": 0,
+              "losses": 190,
+              "mean": 0.05,
+              "lo": 0.0274,
+              "hi": 0.0896
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.1,
+          "regretLo": 0,
+          "regretHi": 0.25,
+          "best": 1
+        },
+        "rho": -0.3162,
+        "rhoLo": -0.8,
+        "rhoHi": 0.8,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:37",
+            "label": "Tireless Tracker",
+            "random": {
+              "n": 200,
+              "wins": 63,
+              "draws": 0,
+              "losses": 137,
+              "mean": 0.315,
+              "lo": 0.2546,
+              "hi": 0.3823
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 44,
+              "draws": 0,
+              "losses": 156,
+              "mean": 0.22,
+              "lo": 0.1682,
+              "hi": 0.2824
+            },
+            "forge": {
+              "n": 40,
+              "wins": 2,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.05,
+              "lo": 0.0138,
+              "hi": 0.165
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Grim Flayer",
+            "random": {
+              "n": 200,
+              "wins": 55,
+              "draws": 0,
+              "losses": 145,
+              "mean": 0.275,
+              "lo": 0.2178,
+              "hi": 0.3407
+            },
+            "forge": {
+              "n": 40,
+              "wins": 1,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.025,
+              "lo": 0.0044,
+              "hi": 0.1288
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Gravedigger",
+            "random": {
+              "n": 200,
+              "wins": 46,
+              "draws": 0,
+              "losses": 154,
+              "mean": 0.23,
+              "lo": 0.1771,
+              "hi": 0.2931
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 86,
+              "draws": 0,
+              "losses": 114,
+              "mean": 0.43,
+              "lo": 0.3633,
+              "hi": 0.4993
+            },
+            "forge": {
+              "n": 40,
+              "wins": 1,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.025,
+              "lo": 0.0044,
+              "hi": 0.1288
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 86,
+              "draws": 0,
+              "losses": 114,
+              "mean": 0.43,
+              "lo": 0.3633,
+              "hi": 0.4993
+            },
+            "forge": {
+              "n": 40,
+              "wins": 1,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.025,
+              "lo": 0.0044,
+              "hi": 0.1288
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.115,
+          "regretLo": 0.035,
+          "regretHi": 0.185,
+          "best": 4
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.125,
+          "best": 0
+        },
+        "rho": -0.5323,
+        "rhoLo": -0.8956,
+        "rhoHi": 0.4478,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 20,
+        "kind": "p",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:13#1",
+            "label": "Shadowspear: Equip {2} ({2}: Attach to target creature you c",
+            "random": {
+              "n": 200,
+              "wins": 33,
+              "draws": 0,
+              "losses": 167,
+              "mean": 0.165,
+              "lo": 0.12,
+              "hi": 0.2227
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 4,
+              "draws": 0,
+              "losses": 196,
+              "mean": 0.02,
+              "lo": 0.0078,
+              "hi": 0.0503
+            },
+            "forge": {
+              "n": 40,
+              "wins": 3,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.075,
+              "lo": 0.0258,
+              "hi": 0.1986
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Grim Flayer",
+            "random": {
+              "n": 200,
+              "wins": 3,
+              "draws": 0,
+              "losses": 197,
+              "mean": 0.015,
+              "lo": 0.0051,
+              "hi": 0.0432
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Gravedigger",
+            "random": {
+              "n": 200,
+              "wins": 6,
+              "draws": 0,
+              "losses": 194,
+              "mean": 0.03,
+              "lo": 0.0138,
+              "hi": 0.0639
+            },
+            "forge": {
+              "n": 40,
+              "wins": 7,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.175,
+              "lo": 0.0875,
+              "hi": 0.3195
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 8,
+              "draws": 0,
+              "losses": 192,
+              "mean": 0.04,
+              "lo": 0.0204,
+              "hi": 0.0769
+            },
+            "forge": {
+              "n": 40,
+              "wins": 4,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.1,
+              "lo": 0.0396,
+              "hi": 0.2305
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:25",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 8,
+              "draws": 0,
+              "losses": 192,
+              "mean": 0.04,
+              "lo": 0.0204,
+              "hi": 0.0769
+            },
+            "forge": {
+              "n": 40,
+              "wins": 4,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.1,
+              "lo": 0.0396,
+              "hi": 0.2305
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 3
+        },
+        "rho": 0.6471,
+        "rhoLo": -0.0308,
+        "rhoHi": 0.9412,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 22,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 42,
+              "draws": 0,
+              "losses": 158,
+              "mean": 0.21,
+              "lo": 0.1593,
+              "hi": 0.2716
+            },
+            "forge": {
+              "n": 40,
+              "wins": 8,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.2,
+              "lo": 0.105,
+              "hi": 0.3476
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:37",
+            "label": "attack Tireless Tracker",
+            "random": {
+              "n": 200,
+              "wins": 22,
+              "draws": 0,
+              "losses": 178,
+              "mean": 0.11,
+              "lo": 0.0738,
+              "hi": 0.1609
+            },
+            "forge": {
+              "n": 40,
+              "wins": 7,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.175,
+              "lo": 0.0875,
+              "hi": 0.3195
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 24,
+        "kind": "p",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:38",
+            "label": "Gravedigger",
+            "random": {
+              "n": 200,
+              "wins": 63,
+              "draws": 0,
+              "losses": 137,
+              "mean": 0.315,
+              "lo": 0.2546,
+              "hi": 0.3823
+            },
+            "forge": {
+              "n": 40,
+              "wins": 3,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.075,
+              "lo": 0.0258,
+              "hi": 0.1986
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 41,
+              "draws": 0,
+              "losses": 159,
+              "mean": 0.205,
+              "lo": 0.1549,
+              "hi": 0.2663
+            },
+            "forge": {
+              "n": 40,
+              "wins": 1,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.025,
+              "lo": 0.0044,
+              "hi": 0.1288
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Grim Flayer",
+            "random": {
+              "n": 200,
+              "wins": 63,
+              "draws": 0,
+              "losses": 137,
+              "mean": 0.315,
+              "lo": 0.2546,
+              "hi": 0.3823
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "rho": 0,
+        "rhoLo": -1,
+        "rhoHi": 0.866,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 26,
+        "kind": "a",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 10,
+              "draws": 0,
+              "losses": 190,
+              "mean": 0.05,
+              "lo": 0.0274,
+              "hi": 0.0896
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:25,37",
+            "label": "attack Tireless Tracker+Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 14,
+              "draws": 0,
+              "losses": 186,
+              "mean": 0.07,
+              "lo": 0.0422,
+              "hi": 0.1141
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:37",
+            "label": "attack Tireless Tracker",
+            "random": {
+              "n": 200,
+              "wins": 15,
+              "draws": 0,
+              "losses": 185,
+              "mean": 0.075,
+              "lo": 0.046,
+              "hi": 0.12
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:25",
+            "label": "attack Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 9,
+              "draws": 0,
+              "losses": 191,
+              "mean": 0.045,
+              "lo": 0.0239,
+              "hi": 0.0833
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 28,
+        "kind": "p",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:40",
+            "label": "Grim Flayer",
+            "random": {
+              "n": 200,
+              "wins": 20,
+              "draws": 0,
+              "losses": 180,
+              "mean": 0.1,
+              "lo": 0.0657,
+              "hi": 0.1494
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 21,
+              "draws": 0,
+              "losses": 179,
+              "mean": 0.105,
+              "lo": 0.0697,
+              "hi": 0.1552
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.005,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 30,
+        "kind": "b",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:25>80,40>81",
+            "label": "block Murderous Rider>Perilous Myr, Grim Flayer>Llanowar Visionary",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:40>81",
+            "label": "block Grim Flayer>Llanowar Visionary",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:25>80",
+            "label": "block Murderous Rider>Perilous Myr",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:20>80,25>80,40>81",
+            "label": "block Murderous Rider>Perilous Myr, Grim Flayer>Llanowar Visionary, Gurmag Angler>Perilous Myr",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:25>80,20>81,40>81",
+            "label": "block Murderous Rider>Perilous Myr, Grim Flayer>Llanowar Visionary, Gurmag Angler>Llanowar Visionary",
+            "random": {
+              "n": 200,
+              "wins": 0,
+              "draws": 0,
+              "losses": 200,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0188
+            },
+            "forge": {
+              "n": 40,
+              "wins": 0,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0876
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true
+      }
+    ],
+    "agreement": {
+      "decisions": 16,
+      "meanRho": -0.0504,
+      "meanRhoInterval": [
+        -0.4807,
+        0.384
+      ],
+      "sameBest": 7,
+      "sameBestInterval": [
+        0.231,
+        0.6682
+      ]
+    },
+    "disagreeMost": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 6,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 8,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 8,
+        "kind": "a",
+        "turn": 12,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 16,
+        "rho": -0.5323,
+        "rhoInterval": [
+          -0.8956,
+          0.4478
+        ],
+        "sameBest": false,
+        "bestRandom": 4,
+        "bestForge": 0
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 16,
+        "rho": -0.3162,
+        "rhoInterval": [
+          -0.8,
+          0.8
+        ],
+        "sameBest": false,
+        "bestRandom": 0,
+        "bestForge": 1
+      }
+    ],
+    "branchGames": 14160,
+    "branchErrors": 211,
+    "branchEngineErrors": 0,
+    "cappedRandom": 35,
+    "cappedForge": 8,
+    "meanBranchMs": {
+      "random": 1834,
+      "forge": 1538
+    },
+    "standInsMax": 1
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 241363,
+    "gamesIdChecked": 14161,
+    "frameLogs": 28322,
+    "frameLogsFailed": 0,
+    "redactionMs": 559078,
+    "forks": 14160,
+    "forkProblems": 0,
+    "leakChecks": 32,
+    "leaks": 0,
+    "leakControlsMoved": 32,
+    "guardrails": {
+      "logs": 23600,
+      "priorityDecisions": 875736,
+      "landOffered": 55692,
+      "landTaken": 55692,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0
+      },
+      "noRepeatNoOp": 20281,
+      "refusedCast": 172,
+      "noRepeatRefused": 158,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 14160,
+      "errored": 211,
+      "threshold": 0.1,
+      "byError": [
+        {
+          "error": "NullPointerException: No band for attacker Skyclave Apparition (#)",
+          "n": 164
+        },
+        {
+          "error": "NullPointerException: No band for attacker Ledger Shredder (#)",
+          "n": 47
+        }
+      ],
+      "options": [
+        {
+          "d": 10,
+          "o": 0,
+          "token": "block:35>78",
+          "label": "block Kitesail Freebooter>Ledger Shredder",
+          "branches": 240,
+          "errored": 47,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 44
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 3
+            }
+          },
+          "errors": [
+            {
+              "error": "NullPointerException: No band for attacker Ledger Shredder (#)",
+              "n": 47
+            }
+          ]
+        },
+        {
+          "d": 14,
+          "o": 0,
+          "token": "block:21>71",
+          "label": "block Gray Merchant of Asphodel>Skyclave Apparition",
+          "branches": 240,
+          "errored": 164,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 126
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 38
+            }
+          },
+          "errors": [
+            {
+              "error": "NullPointerException: No band for attacker Skyclave Apparition (#)",
+              "n": 164
+            }
+          ]
+        }
+      ]
+    },
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 2,
+    "problems": [
+      "d10 option 0 `block:35>78` (block Kitesail Freebooter>Ledger Shredder): 47 of 240 branch game(s) errored (random 44 of 200, forge 3 of 40): 47 x NullPointerException: No band for attacker Ledger Shredder (#)",
+      "d14 option 0 `block:21>71` (block Gray Merchant of Asphodel>Skyclave Apparition): 164 of 240 branch game(s) errored (random 126 of 200, forge 38 of 40): 164 x NullPointerException: No band for attacker Skyclave Apparition (#)"
+    ]
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 81656
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5903,
+      "units": 160,
+      "branchGames": 14160,
+      "ms": 4278110,
+      "workers": 6
+    },
+    "wallMs": 4284013,
+    "jobs": 6
+  }
+}

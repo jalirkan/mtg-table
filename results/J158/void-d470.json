@@ -1,0 +1,56 @@
+{
+ "void": [
+  {
+   "label": "ff5 461 d10",
+   "token": "block:35>78",
+   "random": "156 of 156 played indices identical across the 2 options (44 of 200 indices had an errored or timed-out option)",
+   "forge": "37 of 37 played indices identical across the 2 options (3 of 40 indices had an errored or timed-out option)"
+  },
+  {
+   "label": "ff5 461 d14",
+   "token": "block:21>71",
+   "random": "74 of 74 played indices identical across the 2 options (126 of 200 indices had an errored or timed-out option)",
+   "forge": "2 of 2 played indices identical across the 2 options (38 of 40 indices had an errored or timed-out option)"
+  },
+  {
+   "label": "ff5 461 d30",
+   "token": "block:25>80,40>81",
+   "random": "200 of 200 played indices identical across the 6 options (0 of 200 indices had an errored or timed-out option)",
+   "forge": "40 of 40 played indices identical across the 6 options (0 of 40 indices had an errored or timed-out option)"
+  }
+ ],
+ "sameGameNotBlock": [],
+ "blocksNotVoid": [],
+ "counts": {
+  "ff5": {
+   "labels": 16,
+   "confident": 4,
+   "void": 3,
+   "confidentVoid": 0,
+   "inQ": 16,
+   "inQNotVoid": 13,
+   "labelsNotVoid": 13,
+   "confidentNotVoid": 4
+  },
+  "all": {
+   "labels": 32,
+   "confident": 6,
+   "void": 3,
+   "confidentVoid": 0,
+   "inQ": 30,
+   "inQNotVoid": 27,
+   "labelsNotVoid": 29,
+   "confidentNotVoid": 6
+  },
+  "peasant7": {
+   "labels": 16,
+   "confident": 2,
+   "void": 0,
+   "confidentVoid": 0,
+   "inQ": 14,
+   "inQNotVoid": 14,
+   "labelsNotVoid": 16,
+   "confidentNotVoid": 2
+  }
+ }
+}
