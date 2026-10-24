@@ -1,0 +1,52 @@
+# mtg-table cubes/library/powered-exclude.txt: the census's powered band, as an exclusion list for tools/cubelab.sh balance-model --exclude (D473).
+# The list is POWERED in tools/cubelab/census.ts (D445), copied group by group; web/test/cubelab-balance-model.test.ts fails when the two differ.
+# One card name a line; # starts a comment.
+
+# the Power Nine (9)
+Black Lotus
+Ancestral Recall
+Time Walk
+Timetwister
+Mox Pearl
+Mox Sapphire
+Mox Jet
+Mox Ruby
+Mox Emerald
+
+# the original dual lands (10)
+Tundra
+Underground Sea
+Badlands
+Taiga
+Savannah
+Scrubland
+Volcanic Island
+Bayou
+Plateau
+Tropical Island
+
+# named by the programme (10)
+Library of Alexandria
+Bazaar of Baghdad
+Mishra's Workshop
+Candelabra of Tawnos
+Sol Ring
+Mana Crypt
+Mana Vault
+Time Vault
+Tolarian Academy
+Strip Mine
+
+# the Vintage cubes' restricted-style cards (12)
+Balance
+Demonic Tutor
+Imperial Seal
+Lion's Eye Diamond
+Memory Jar
+Mystic Forge
+Mystical Tutor
+Narset, Parter of Veils
+Tinker
+Vampiric Tutor
+Wheel of Fortune
+Yawgmoth's Will
