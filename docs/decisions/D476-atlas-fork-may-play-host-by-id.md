@@ -142,3 +142,5 @@ planted case before anyone relies on such an effect in a rollout.
 - **`bridge/build.sh`: OK** (the lint and its self-test, javac, the self-tests; `DecisionSelfTest` 175 checks).
 - **`tools/cubelab.sh atlas-selftest --jobs 1`: OK** (16 forks, 8 no-leak checks, 38 frame logs, 538 rows), in
   2 min 27 s.
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `7561d5f8` (this branch's
+  code; only this line differs): **OK, 59 of 59 jobs**, 517.6 s wall (load average up to 15.0).
