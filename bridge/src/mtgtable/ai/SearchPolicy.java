@@ -143,6 +143,16 @@ public final class SearchPolicy {
         leafProbeForTest = probe;
     }
 
+    /**
+     * D472's engine check (the ai-bench selftest): {@code sa} mapped onto a fresh
+     * copy of its game, exactly as a priority candidate is installed on a fork.
+     */
+    public static SpellAbility mapForTest(final Player ai, final SpellAbility sa) {
+        final LenientGameCopier cp = new LenientGameCopier(ai.getGame());
+        cp.makeCopy(null, ai);
+        return mapSa(cp, sa, (Player) cp.find(ai));
+    }
+
     /** For the self-test only: the mulligan search's candidate (keep, or one more London mulligan), D417. */
     public static Cand mulliganCandForTest(final boolean keep, final Player first, final int tucked) {
         return new MullCand(keep, first, tucked);
@@ -695,48 +705,54 @@ public final class SearchPolicy {
         return d.length() > 60 ? d.substring(0, 60) : d;
     }
 
-    /** The candidate's spell or ability on the copy, with its choices and targets copied. */
+    /**
+     * The candidate's spell or ability on the copy, with its choices and targets copied.
+     *
+     * <p>D472 (amending D466 point 1): found by the play's identity, not by its
+     * description alone.  A play by an alternative cost is a copy of the base
+     * spell with the cost replaced, and several keep the base's description
+     * (flashback, foretell, plot, mayhem, harmonize: {@code GameActionUtil.getAlternativeCosts});
+     * a play by a card's own AlternativeCost static (Snuff Out) carries
+     * {@code OptionalCost.AltCost}, which Forge adds where it builds the copy
+     * ({@code StaticAbilityAlternativeCost.alternativeCosts}) and never offers as an
+     * optional cost.  So the copy's candidates are its base abilities and every
+     * alternative Forge builds for them, enumerated through the same calls that built
+     * the original ({@link #copyCandidates}), and a candidate must match the original's
+     * {@link #sameKind kind} as well as its description.  Only then are D466's optional
+     * costs added back, AltCost left out ({@link #addedOptionalCosts}): a kicked
+     * flashback is both.
+     */
     static SpellAbility mapSa(final LenientGameCopier cp, final SpellAbility orig, final Player aiCopy) {
         final Card hostCopy = (Card) cp.find(orig.getHostCard());
         final String desc = orig.getDescription();
         SpellAbility found = null;
-        final List<SpellAbility> pool = new ArrayList<>(hostCopy.getAllPossibleAbilities(aiCopy, true));
-        for (final SpellAbility s : hostCopy.getSpellAbilities()) {
-            if (!pool.contains(s)) {
-                pool.add(s);
-            }
-        }
-        final List<SpellAbility> withAlt = new ArrayList<>(pool);
-        try {
-            withAlt.addAll(ComputerUtilAbility.getOriginalAndAltCostAbilities(pool, aiCopy));
-        } catch (final RuntimeException e) {
-            // alternative costs are a nicety
-        }
+        final List<SpellAbility> withAlt = copyCandidates(hostCopy, aiCopy);
         for (final SpellAbility s : withAlt) {
-            if (desc.equals(s.getDescription()) && s.isSpell() == orig.isSpell()) {
+            if (desc.equals(s.getDescription()) && sameKind(orig, s)) {
                 found = s;
                 break;
             }
         }
         if (found == null) {
             for (final SpellAbility s : withAlt) {
-                if (desc.startsWith(s.getDescription()) && s.isSpell() == orig.isSpell()) {
+                if (desc.startsWith(s.getDescription()) && sameKind(orig, s)) {
                     found = s;
                     break;
                 }
             }
         }
         if (found == null) {
-            throw new IllegalStateException("no " + desc + " on the copy's " + hostCopy);
+            throw new IllegalStateException("no " + desc + kindOf(orig) + " on the copy's " + hostCopy);
         }
         found.setActivatingPlayer(aiCopy);
-        if (orig.getOptionalCosts().iterator().hasNext()) {
+        final List<OptionalCost> added = addedOptionalCosts(orig);
+        if (!added.isEmpty()) {
             // D466: a play with an optional cost (retrace, kicker, buyback, jump-start, ...) is a copy of its base
-            // spell with the cost added (Forge's GameActionUtil.addOptionalCosts), and its description is the
-            // base's, so the description found the copy's base: add the same costs to it, as Forge's own
-            // simulation copier does (SpellAbilityChoiceCopier.copyCastChoices)
+            // (or of its alternative, D472) with the cost added (Forge's GameActionUtil.addOptionalCosts), and its
+            // description is the base's, so the match found the copy's base: add the same costs to it, as Forge's
+            // own simulation copier does (SpellAbilityChoiceCopier.copyCastChoices)
             found = GameActionUtil.addOptionalCosts(found,
-                    chosenOptionalCosts(orig.getOptionalCosts(), GameActionUtil.getOptionalCostValues(found)));
+                    chosenOptionalCosts(added, GameActionUtil.getOptionalCostValues(found)));
             found.setActivatingPlayer(aiCopy);
         }
         found.setXManaCostPaid(orig.getXManaCostPaid());
@@ -775,6 +791,101 @@ public final class SearchPolicy {
             dst = dst.getSubAbility();
         }
         return found;
+    }
+
+    /**
+     * D472: every ability the copy's card may be played by, as Forge lists them:
+     * its possible abilities (the alternatives {@code Card.getAllPossibleAbilities}
+     * keeps among them) and its every spell ability, then for each the
+     * alternative-additional-cost variants ({@code GameActionUtil.getAdditionalCostSpell})
+     * and every alternative cost Forge builds for those
+     * ({@code GameActionUtil.getAlternativeCosts}, altCostOnly false), playable or
+     * not -- the calls {@code ComputerUtilAbility.getOriginalAndAltCostAbilities}
+     * built the original from, without the AI's own optional-cost choice, which
+     * {@link #mapSa} adds back itself.
+     */
+    static List<SpellAbility> copyCandidates(final Card hostCopy, final Player aiCopy) {
+        final List<SpellAbility> pool = new ArrayList<>(hostCopy.getAllPossibleAbilities(aiCopy, true));
+        for (final SpellAbility s : hostCopy.getSpellAbilities()) {
+            if (!pool.contains(s)) {
+                pool.add(s);
+            }
+        }
+        final List<SpellAbility> out = new ArrayList<>(pool);
+        for (final SpellAbility s : pool) {
+            try {
+                s.setActivatingPlayer(aiCopy);
+                for (final SpellAbility a : GameActionUtil.getAdditionalCostSpell(s)) {
+                    if (!out.contains(a)) {
+                        out.add(a);
+                    }
+                    for (final SpellAbility alt : GameActionUtil.getAlternativeCosts(a, aiCopy, false)) {
+                        if (!out.contains(alt)) {
+                            out.add(alt);
+                        }
+                    }
+                }
+            } catch (final RuntimeException e) {
+                // a card whose alternatives Forge cannot build here: its base abilities are still candidates
+            }
+        }
+        return out;
+    }
+
+    /**
+     * D472: whether candidate {@code s} on the copy is the same KIND of play as
+     * {@code orig}: a spell or not; the same alternative cost
+     * ({@code getAlternativeCost()}: flashback, evoke, foretold, ... or none); a
+     * card's own AlternativeCost static paid or not ({@code OptionalCost.AltCost});
+     * by a may-play permission or not; without its mana cost or not.  And
+     * {@code s} carries no optional cost but AltCost, so an optional cost is
+     * never added twice.  The description tells the rest apart.
+     */
+    static boolean sameKind(final SpellAbility orig, final SpellAbility s) {
+        if (s.isSpell() != orig.isSpell() || s.getAlternativeCost() != orig.getAlternativeCost()
+                || s.isOptionalCostPaid(OptionalCost.AltCost) != orig.isOptionalCostPaid(OptionalCost.AltCost)
+                || (s.getMayPlay() == null) != (orig.getMayPlay() == null)
+                || s.hasParam("WithoutManaCost") != orig.hasParam("WithoutManaCost")) {
+            return false;
+        }
+        for (final OptionalCost t : s.getOptionalCosts()) {
+            if (t != OptionalCost.AltCost) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** D472: the original's kind, for the failure's text ("" for a plain play). */
+    private static String kindOf(final SpellAbility orig) {
+        final StringBuilder k = new StringBuilder();
+        if (orig.getAlternativeCost() != null) {
+            k.append(" [").append(orig.getAlternativeCost().name()).append(']');
+        }
+        if (orig.isOptionalCostPaid(OptionalCost.AltCost)) {
+            k.append(" [AltCost]");
+        }
+        if (orig.getMayPlay() != null) {
+            k.append(" [may play]");
+        }
+        return k.toString();
+    }
+
+    /**
+     * D472: the optional costs the original play was built with that
+     * {@code GameActionUtil.getOptionalCostValues} can offer -- every one but
+     * {@code OptionalCost.AltCost}, which marks the alternative itself (Forge adds
+     * it in {@code StaticAbilityAlternativeCost}, never in {@code addOptionalCosts})
+     * and which the matched alternative already carries.
+     */
+    static List<OptionalCost> addedOptionalCosts(final SpellAbility orig) {
+        final List<OptionalCost> out = new ArrayList<>();
+        for (final OptionalCost t : orig.getOptionalCosts()) {
+            if (t != OptionalCost.AltCost) {
+                out.add(t);
+            }
+        }
+        return out;
     }
 
     /**
