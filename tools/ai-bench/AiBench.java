@@ -1798,6 +1798,120 @@ public final class AiBench {
                     "the copied monarch effect has its " + real + " triggers (Forge's own copy: " + forge + "; this copy: "
                             + (mc.isEmpty() ? "none" : mc.get(0).getTriggers().size()) + ")");
         });
+        copierFollowUpScenarios();
+    }
+
+    /**
+     * D479's follow-ups (#205's review).  6. The carry pass sets every copied
+     * card's timestamps to its original's, where Forge set them on the
+     * battlefield only: on a plain fork (no effect card, no exile link) the
+     * branches play the same, seed for seed, with the plain cards' timestamps
+     * carried and left as Forge gave them.  7. A mirror names the zone the
+     * original's old object names, not the live card's.
+     */
+    static void copierFollowUpScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a plain fork's timestamps and a mirror's zone (D479's follow-ups, engine)");
+        // 6. search-evalleaf-only's board, in the lab's game stage, after a draw and a discard each
+        scenario("copy-plain-timestamps", List.of(
+                "humanlife=12", "ailife=14", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest;Wall of Wood", "humanhand=Grizzly Bears;Forest",
+                "humanlibrary=Forest;Hill Giant;Forest;Forest", "aihand=Typhoid Rats;Swamp",
+                "ailibrary=Swamp;Swamp;Hill Giant;Swamp",
+                "aibattlefield=Grizzly Bears;Hill Giant;Swamp;Swamp;Swamp;Mountain"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);
+            g.getTriggerHandler().resetActiveTriggers();
+            // a planted card has no move behind it, and its copy's timestamps are its own already: give the hands and
+            // graveyards the moves a real game's have -- each player draws a card and discards a land
+            for (final Player p : g.getPlayers()) {
+                p.drawCards(1);
+                Card land = null;
+                for (final Card c : p.getCardsIn(ZoneType.Hand)) {
+                    land = land == null && c.isLand() ? c : land;
+                }
+                g.getAction().moveToGraveyard(land, null);
+            }
+            int effects = 0;
+            for (final Player p : g.getPlayers()) {
+                effects += p.getCardsIn(ZoneType.Command).size();
+            }
+            final LenientGameCopier probe = new LenientGameCopier(g);
+            probe.makeCopy(null, ai);
+            check(effects == 0 && probe.plainTimestampsMoved() > 0 && probe.traitsCarried() == 0 && probe.linksCarried() == 0,
+                    "setup: a plain fork -- no effect card, nothing linked -- whose carry pass moves "
+                            + probe.plainTimestampsMoved() + " plain cards' timestamps (" + effects + " command-zone cards, "
+                            + probe.traitsCarried() + " traits, " + probe.linksCarried() + " links carried)");
+            final int seeds = 6;
+            int same = 0;
+            int played = 0;
+            final StringBuilder diff = new StringBuilder();
+            final StringBuilder ends = new StringBuilder();
+            for (final String cont : new String[] {"forge", "random"}) {
+                for (long seed = 1; seed <= seeds; seed++) {
+                    final mtgtable.ai.Atlas.Branch[] b = new mtgtable.ai.Atlas.Branch[2];
+                    for (int k = 0; k < 2; k++) {
+                        final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+                        u.continuation = cont;
+                        u.branchTimeoutMs = 60_000;
+                        u.observe = null;
+                        LenientGameCopier.carryPlainTimestampsForTest(k == 0);
+                        try {
+                            b[k] = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.forgeCand(), 0, 0, seed, u,
+                                    "d479fu", new LinkedHashMap<>(), null, "d479fu", false);
+                        } finally {
+                            LenientGameCopier.carryPlainTimestampsForTest(true);
+                        }
+                    }
+                    final String on = b[0].result + "/" + b[0].turns + "t/" + b[0].steps + "s" + (b[0].capped ? "/cap" : "")
+                            + (b[0].error == null ? "" : "/" + b[0].error);
+                    final String off = b[1].result + "/" + b[1].turns + "t/" + b[1].steps + "s" + (b[1].capped ? "/cap" : "")
+                            + (b[1].error == null ? "" : "/" + b[1].error);
+                    ends.append(' ').append(cont.charAt(0)).append(seed).append('=').append(on);
+                    if (on.equals(off)) {
+                        same++;
+                    } else {
+                        diff.append(' ').append(cont).append(" seed ").append(seed).append(": carried ").append(on)
+                                .append(", Forge's ").append(off);
+                    }
+                    played += b[0].error == null && b[0].unavailable == null && !b[0].engineError && b[0].steps > 0 ? 1 : 0;
+                }
+            }
+            check(played == 2 * seeds, "every branch played (" + played + " of " + (2 * seeds) + "):" + ends);
+            check(same == 2 * seeds, "a plain fork's branches end the same with the plain timestamps carried and not: "
+                    + same + " of " + (2 * seeds) + " (result, turns, steps, cap)" + diff);
+        });
+        // 7. Reckless Impulse resolved (its effect's source: the spell's object, which then names the graveyard), then
+        //    the card moved on to exile: the original's source still names the graveyard, and so does the mirror
+        scenario("copy-mirror-zone", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Lightning Bolt;Lightning Bolt;Lightning Bolt;Lightning Bolt", "aihand=Reckless Impulse",
+                "aibattlefield=Mountain;Mountain"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, playOf(ai, "Reckless Impulse", (sa) -> true), null),
+                    "setup: the real game casts Reckless Impulse");
+            g.getStack().resolveStack();
+            final Card eff = effectOf(ai, "Reckless Impulse");
+            final Card src = eff == null ? null : eff.getEffectSource();
+            final String atResolve = src == null || src.getZone() == null ? null : String.valueOf(src.getZone().getZoneType());
+            g.getAction().exile(named(ai.getCardsIn(ZoneType.Graveyard), "Reckless Impulse"), null, null);
+            final Card live = named(ai.getCardsIn(ZoneType.Exile), "Reckless Impulse");
+            check(src != null && src != live && "Graveyard".equals(atResolve) && src.isInZone(ZoneType.Graveyard)
+                            && live.isInZone(ZoneType.Exile),
+                    "setup: the effect's source names the graveyard (at resolution " + atResolve + "), the card is in exile ("
+                            + (src == null ? null : src.getZone()) + "; live " + live.getZone() + ")");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            cp.makeCopy(null, ai);
+            final Player aiC = (Player) cp.find(ai);
+            final Card effC = effectOf(aiC, "Reckless Impulse");
+            final Card m = effC == null ? null : effC.getEffectSource();
+            final Card liveC = named(aiC.getCardsIn(ZoneType.Exile), "Reckless Impulse");
+            check(m != null && m != liveC && m.getId() == live.getId() && m.getZone() == aiC.getZone(ZoneType.Graveyard)
+                            && !aiC.getZone(ZoneType.Graveyard).contains(m) && m.isInZone(ZoneType.Graveyard)
+                            && !m.isInZone(ZoneType.Exile) && liveC.isInZone(ZoneType.Exile),
+                    "the mirror names the copy's graveyard, as the original's source does, and is in none ("
+                            + (m == null ? null : m + " @ " + m.getZone()) + "; the copy's card @ " + liveC.getZone() + ")");
+        });
     }
 
     /** D479: the command-zone effect whose name starts with {@code host}'s, or null. */
