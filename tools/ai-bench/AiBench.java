@@ -1588,13 +1588,17 @@ public final class AiBench {
      * the life payment is the only way to cast it; Think Twice's flashback (the
      * base's description, its kind the only difference) and Mulldrifter's evoke
      * (an alternative the card itself carries) beside it, and the plain casts as
-     * controls.
+     * controls.  Bone Shards ({@code K:AlternateAdditionalCost}: sacrifice a
+     * creature or discard a card) is the alternate-additional-cost case: Forge
+     * lists one play per cost ({@code GameActionUtil.getAdditionalCostSpell}), all of
+     * one kind and told apart by the description's "(Additional cost: ...)", and
+     * each maps to the copy's play with the same additional cost.
      */
     static void altCostScenarios() throws Exception {
         System.out.println("== ai-bench selftest: alternative costs on a fork (D472, engine)");
         final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
                 "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
-                "ailibrary=Island;Island;Island;Island", "aihand=Snuff Out;Mulldrifter", "aigraveyard=Think Twice",
+                "ailibrary=Island;Island;Island;Island", "aihand=Snuff Out;Mulldrifter;Bone Shards", "aigraveyard=Think Twice",
                 "aibattlefield=Swamp;Island;Island;Island;Island");
         scenario("altcost-map", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
             final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
@@ -1632,6 +1636,32 @@ public final class AiBench {
                             && mmd != null && mmd.getAlternativeCost() == null,
                     "Mulldrifter's evoke maps to the copy's evoke, its plain cast to the plain cast (got "
                             + (mev == null ? null : mev.getAlternativeCost()) + ", " + (mmd == null ? null : mmd.getAlternativeCost()) + ")");
+            // the alternate additional cost: every Bone Shards play Forge lists (discard a card; sacrifice a
+            // creature, if listed with no creature to sacrifice) maps to the copy's play with that same cost
+            final Card shards = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+            final List<forge.game.spellability.SpellAbility> shardsPlays = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(shards.getAllPossibleAbilities(ai, false)), ai)) {
+                if (sa.isSpell() && sa.getDescription().contains("(Additional cost: ")) {
+                    sa.setActivatingPlayer(ai);
+                    sa.resetTargets();
+                    sa.getTargets().add(bears);
+                    shardsPlays.add(sa);
+                }
+            }
+            boolean discardSeen = false;
+            for (final forge.game.spellability.SpellAbility sa : shardsPlays) {
+                final forge.game.spellability.SpellAbility ms = mtgtable.ai.SearchPolicy.mapForTest(ai, sa);
+                discardSeen |= sa.getDescription().contains("Discard");
+                check(ms != null && ms != sa && ms.getHostCard().getGame() != ai.getGame()
+                                && ms.getDescription().equals(sa.getDescription())
+                                && ms.getPayCosts().toSimpleString().equals(sa.getPayCosts().toSimpleString())
+                                && ms.getTargets().size() == 1 && ms.getTargets().getFirstTargetedCard() != bears,
+                        "Bone Shards by its alternate additional cost (" + sa.getPayCosts().toSimpleString()
+                                + ") maps to the copy's play with the same cost (got "
+                                + (ms == null ? null : ms.getPayCosts().toSimpleString() + ": " + ms.getDescription()) + ")");
+            }
+            check(discardSeen, "Bone Shards' discard-a-card play is among Forge's candidates (" + shardsPlays.size() + " listed)");
             // the production path that failed 240 of 240: one atlas branch forcing the AltCost Snuff Out
             final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
             u.continuation = "forge";

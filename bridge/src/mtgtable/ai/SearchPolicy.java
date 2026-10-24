@@ -819,7 +819,11 @@ public final class SearchPolicy {
                     if (!out.contains(a)) {
                         out.add(a);
                     }
-                    out.addAll(GameActionUtil.getAlternativeCosts(a, aiCopy, false));
+                    for (final SpellAbility alt : GameActionUtil.getAlternativeCosts(a, aiCopy, false)) {
+                        if (!out.contains(alt)) {
+                            out.add(alt);
+                        }
+                    }
                 }
             } catch (final RuntimeException e) {
                 // a card whose alternatives Forge cannot build here: its base abilities are still candidates

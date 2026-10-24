@@ -59,6 +59,8 @@ through that `install`.
    - and for each of those, every alternative cost Forge builds (`GameActionUtil.getAlternativeCosts`,
      `altCostOnly` false), playable or not.
 
+   Each list is added without duplicates (`!out.contains`), as the first two are (#194's review).
+
    This replaces `ComputerUtilAbility.getOriginalAndAltCostAbilities`, which makes the same two calls and
    also asks the AI controller to choose optional costs. Those AI-chosen copies could match by description
    and then get the costs added a second time. `mapSa` adds the optional costs itself.
@@ -87,7 +89,11 @@ through that `install`.
     overload, prowl, sneak, spectacle, surge, warp and web-slinging. These were already found by their
     distinct descriptions, and now also by their kind.
   - **The alternate-additional-cost variants** (`AlternateAdditionalCost`, and an activated ability's
-    `AlternateCost`).
+    `AlternateCost`). `getAdditionalCostSpell` (`GameActionUtil.java`) lists one play per cost, all of one
+    kind, and appends `(Additional cost: ...)` to each description, so the description tells them apart.
+    Bone Shards (sacrifice a creature or discard a card, one of 42 `K:AlternateAdditionalCost` cards in the
+    cardsfolder) is planted in `altcost-map` (*Measured*). An activated ability's `AlternateCost` is
+    enumerated by the same call and was not planted.
   - **Every optional cost `getOptionalCostValues` offers** (D466), on any of the above.
 - **Not reachable by this path:**
   - **Madness.** `PlayEffect` sets it (`PlayEffect.java:412`) while the madness trigger resolves, so it is
@@ -126,14 +132,18 @@ are unchanged, except that an option that errored on every branch now plays.
   - The fork's frame log shows the life payment: a `life` event, the caster from 15 to 11, and no mana
     tapped at the cast. Option 2, the mana cast, shows taps and 15 life.
   - All other options of both branches played, with no error.
-- **`tools/ai-bench.sh --selftest`:** 109 checks, 0 failed. A new engine case,
-  `altcost-map` (`AiBench.altCostScenarios`), plants a seat with one Swamp, four Islands, Snuff Out and
-  Mulldrifter in hand and Think Twice in the graveyard, against Grizzly Bears. It checks:
+- **`tools/ai-bench.sh --selftest`:** 109 checks, 0 failed; 111 after #194's review, which planted Bone
+  Shards (below). A new engine case,
+  `altcost-map` (`AiBench.altCostScenarios`), plants a seat with one Swamp, four Islands, Snuff Out,
+  Mulldrifter and Bone Shards in hand and Think Twice in the graveyard, against Grizzly Bears. It checks:
   - the AltCost Snuff Out maps to the copy's AltCost play, with cost `{0}, Pay 4 life` and its target the
     copy's Bears;
   - the mana-cost Snuff Out maps to the `{3}{B}` play (control);
   - Think Twice's flashback, whose description is the base's, maps to the copy's flashback;
   - Mulldrifter's evoke maps to evoke, and its plain cast to the plain cast;
+  - Bone Shards' alternate additional cost: Forge lists its discard-a-card play (`{B}, Discard a card`;
+    the sacrifice play is not listed, the seat having no creature), and it maps to the copy's play with
+    the same cost, description and the copy's Bears as its target;
   - one atlas branch forcing the AltCost Snuff Out plays with no error;
   - a search playout of it leaves the copy at 16 life with the Bears destroyed, and the real game
     untouched.
