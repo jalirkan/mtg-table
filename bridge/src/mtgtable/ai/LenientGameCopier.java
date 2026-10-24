@@ -36,6 +36,7 @@ import forge.game.player.Player;
 import forge.game.replacement.ReplacementEffect;
 import forge.game.spellability.SpellAbility;
 import forge.game.trigger.Trigger;
+import forge.game.zone.Zone;
 import forge.game.zone.ZoneType;
 
 /**
@@ -105,9 +106,19 @@ import forge.game.zone.ZoneType;
  * copy.  One that is an older object of the same card (a spell's object on the
  * stack, which an adventure's link and an effect's source both name after it
  * resolved) maps to a <i>mirror</i>: a copy, in no zone, of the copied card with
- * that id, turned to the old object's face and given its timestamps -- what the
- * original game holds too.  A card the copy holds under no such id maps to
- * nothing and is counted.
+ * that id, turned to the old object's face and given its timestamps and its
+ * zone -- what the original game holds too.  A card the copy holds under no
+ * such id maps to nothing and is counted.
+ *
+ * <p><b>The mirror's zone</b> (D479's follow-up).  {@code CardCopyService.copyCard}
+ * gives the mirror the live copied card's zone.  The old object names a zone
+ * of its own: {@code GameAction.changeZone} sets the moved object's zone to
+ * its destination ({@code c.setZone(zoneTo)}) and nothing clears it, so after
+ * a spell resolves its stack object names the zone the card went to, and
+ * keeps naming it after the card moves on.  The mirror names the copy's zone
+ * of that kind (the same player's, or the stack), so an effect source's
+ * {@code isInZone}/{@code isInPlay} reads what the original's does -- never
+ * null, which the original's object is not.
  */
 public final class LenientGameCopier extends GameCopier {
 
@@ -126,6 +137,9 @@ public final class LenientGameCopier extends GameCopier {
     private final List<String> traitsLeft = new ArrayList<>();
     private int traitsCarried;
     private int linksCarried;
+    private int plainTimestampsMoved;
+    /** D479's follow-up, for the self-test only: false leaves a plain card with the timestamps Forge gave it. */
+    private static volatile boolean carryPlainTimestamps = true;
 
     public LenientGameCopier(final Game origGame) {
         super(origGame);
@@ -172,6 +186,27 @@ public final class LenientGameCopier extends GameCopier {
     }
 
     /**
+     * D479's follow-up: how many plain cards (not built from their traits:
+     * every card with a paper card, and every token) had timestamps other than
+     * their original's before the carry pass -- Forge sets them on the
+     * battlefield only, so these are the cards in the other zones.  Counted
+     * whether or not {@link #carryPlainTimestampsForTest} carries them.
+     */
+    public int plainTimestampsMoved() {
+        return plainTimestampsMoved;
+    }
+
+    /**
+     * For the self-test only (D479's follow-up): false makes every copy leave
+     * a plain card with the timestamps Forge gave it, as before D479, so a
+     * plain fork can be played both ways.  An effect card's are carried
+     * either way.  Production never calls it.
+     */
+    public static void carryPlainTimestampsForTest(final boolean on) {
+        carryPlainTimestamps = on;
+    }
+
+    /**
      * The copy, then (D479) {@link #carry}.  No caller advances the copy to a
      * phase, and the carry pass must run before anything is played on it, so
      * {@code advanceToPhase} must be null.
@@ -212,9 +247,17 @@ public final class LenientGameCopier extends GameCopier {
         for (final Map.Entry<Card, Card> e : live.entrySet()) {
             final Card o = e.getKey();
             final Card c = e.getValue();
-            c.setGameTimestamp(o.getGameTimestamp());
-            c.setLayerTimestamp(o.getLayerTimestamp());
-            if (builtFromTraits(o)) {
+            final boolean traits = builtFromTraits(o);
+            if (c.getGameTimestamp() != o.getGameTimestamp() || c.getLayerTimestamp() != o.getLayerTimestamp()) {
+                if (!traits) {
+                    plainTimestampsMoved++;
+                }
+                if (traits || carryPlainTimestamps) {
+                    c.setGameTimestamp(o.getGameTimestamp());
+                    c.setLayerTimestamp(o.getLayerTimestamp());
+                }
+            }
+            if (traits) {
                 carryTraits(o, c);
             }
             final Card src = o.getEffectSource();
@@ -319,8 +362,21 @@ public final class LenientGameCopier extends GameCopier {
         }
         mirror.setGameTimestamp(o.getGameTimestamp());
         mirror.setLayerTimestamp(o.getLayerTimestamp());
+        mirror.setZone(zoneOnCopy(base.getGame(), o.getZone()));   // copyCard gave it the live card's
         mirrors.put(o, mirror);
         return mirror;
+    }
+
+    /** The copy's zone of {@code z}'s kind: the same player's, or the stack; null for null (or a zone it has no such). */
+    private Zone zoneOnCopy(final Game copy, final Zone z) {
+        if (z == null) {
+            return null;
+        }
+        if (z.getPlayer() == null) {
+            return z.is(ZoneType.Stack) ? copy.getStackZone() : null;
+        }
+        final GameObject p = find(z.getPlayer());
+        return p instanceof Player ? ((Player) p).getZone(z.getZoneType()) : null;
     }
 
     @Override

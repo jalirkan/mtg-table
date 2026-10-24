@@ -147,6 +147,13 @@ a permanent that exiled something). Only its face and timestamps are taken from 
   each of which the copied monarch drew nothing before. **Atlas maps and labels from before and after D479 are not
   pooled** at those decisions. Elsewhere they are the same maps. No unit was replayed to size the value shifts. That
   would be a lab job, and the brief keeps engine runs here to self-tests.
+- **Forks with no effect card may move too (the addendum below).** The timestamps are carried on every copied card,
+  and Forge set them on the battlefield only, so a card in a hand, graveyard, library or exile at the fork now has its
+  original's timestamps on every fork. On a plain fork that changes nothing the self-test could see (12 of 12 branches
+  identical), but an LKI-sensitive effect (`equalsWithGameTimestamp`: `ExiledWithSource`, a remembered card checked
+  against its current state) can read a pre-fork card in another zone differently from before. That is the real
+  game's reading, not a new error. It is one more reason **search-v2 results and atlas maps are not pooled across
+  D479**, at every decision and not only at the ones the table above names.
 
 **Rejected.**
 - **Map the source and the link by id to the live copied card, no mirror.** It is simpler, and right for every card
@@ -203,3 +210,39 @@ a permanent that exiled something). Only its face and timestamps are taken from 
 - **`npm --prefix web test`: OK** (the node suites, then vitest 161 of 161).
 - **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `9c530a3a` (this branch's code;
   only this line differs): **OK, 59 of 59 jobs**, 517.4 s wall (load average up to 15.0).
+
+**Addendum, 2026-10-24 (#205's review; branch `pc/d479-followups`).** Two of the review's findings.
+
+- **The timestamps on a plain fork (MEDIUM).** Point 1 sets every copied card's timestamps, where Forge set the
+  battlefield's only. Untested until now on a fork with no effect card in play. `copy-plain-timestamps` (the
+  ai-bench self-test) takes `search-evalleaf-only`'s board in the lab's game stage. Each player first draws a card and
+  discards a land: a planted card has no move behind it, and its copy's timestamps already equal the original's (the
+  first run of the check found 0 to carry). The copy's carry pass then moves **4 plain cards' timestamps**, with no
+  effect card, no trait and no link carried. Twelve atlas branches are played, seeds 1–6 under Forge's continuation
+  and under the random one, each twice: once with the plain cards' timestamps carried, once left as Forge gave them
+  (`LenientGameCopier.carryPlainTimestampsForTest(false)`, a static switch only the self-test calls; an effect card's
+  are carried either way). **All 12 pairs are identical in result, turns, steps and cap** (the seat won every one; 9 to
+  12 turns, 171 to 187 steps). **No plain fork's outcome changed.** `LenientGameCopier.plainTimestampsMoved()` counts
+  the moved cards whether or not the switch carries them.
+- **The mirror's zone (LOW).** `CardCopyService.copyCard` gives a mirror the live copied card's zone (`:58`,
+  `out.setZone(copyFrom.getZone())`). Null, the review's candidate, is not what the original holds either. The old
+  object is in no zone's list, but it names one: `GameAction.changeZone` sets the moved object's zone to its
+  destination (`c.setZone(zoneTo)`, `:526`), and nothing clears it. So after Reckless Impulse resolves, its stack
+  object (the effect's source) names the graveyard, and it keeps naming the graveyard after the card moves on to exile.
+  A null zone would make `isInZone` false where the original's is true. That includes `handleExiledWith`'s
+  `ExiledWithEffectSource` path, which records the exiled card on the source only if the source `isInPlay()` or is on
+  the stack or in the command zone (`SpellAbilityEffect.java:1065-1077`). **The mirror now names the copy's zone of
+  the kind the old object names**: the same player's zone, or the stack (`zoneOnCopy`). This is still in no zone's
+  list, as the original is. Where the card has not moved since, that is the live card's zone, the same as before.
+  In 2.0.14's `forge-game` and `forge-ai`, the `getEffectSource()` reads are descriptions, equality
+  (`Card.EffectSource`, `ExiledWithEffectSource`), copies, `handleExiledWith`'s zone test, and two that hand the object
+  on: `SpellAbility`'s target check (`host.isValid(ValidTgts)`, `:2091`) and `Defined$ EffectSource`
+  (`AbilityUtils:89`, `findEffectRoot`). The last is how D476's 147 scripts reach it. Whatever an effect then asks the
+  object, its zone answer is now the original object's. `copy-mirror-zone` resolves
+  Reckless Impulse, exiles the card from the graveyard and forks. The original's source names Ai's graveyard, and the
+  mirror names the copy's graveyard and is not in it. The copy's card is in exile. Without the one line, the mirror
+  names exile, and the check fails.
+- **Measured.** `tools/ai-bench.sh --selftest`: **172 checks, 0 failures**, 6 of them new (`copierFollowUpScenarios`).
+  The mirror-zone ablation fails exactly 1. `bridge/build.sh`: OK.
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `6d884c98` (the addendum's
+  code; only this line differs): **OK, 59 of 59 jobs**, 513.8 s wall (load average up to 13.8).
