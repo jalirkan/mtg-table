@@ -1500,6 +1500,112 @@ public final class AiBench {
         evalLeafScenarios();
         d416Scenarios(castBoard);
         stepClockScenario();
+        forcedBlockScenarios();
+    }
+
+    /**
+     * D470: a forced block on the copy of a decision taken while the copied
+     * combat already held Forge's block.  The seat's one creature, Hill Giant,
+     * blocks Grizzly Bears (Forge's block, left on the combat as chooseBlock
+     * leaves it); a Wall of Wood stays home.  Before D470 the copied block made
+     * {@code CombatUtil.canBlock(Player, Combat)} false, the seat was never
+     * asked, "block none" played Forge's block, and the forced answer waited
+     * for a later combat, where an attacker no longer attacking threw Forge's
+     * {@code No band for attacker} (J158 spine 461's d10 and d14).
+     */
+    static void forcedBlockScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: forced blocks on a copy (D470, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=human",
+                "activephase=COMBAT_DECLARE_BLOCKERS", "humanbattlefield=Grizzly Bears;Wall of Wood;Forest",
+                "humanlibrary=Forest;Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp;Swamp", "aibattlefield=Hill Giant;Swamp");
+        final List<String> tapped = new ArrayList<>(board);
+        tapped.set(tapped.size() - 1, "aibattlefield=Hill Giant|Tapped;Swamp");
+        // 1. The search's playout (the same BlockCand.install): "block none" plays no block, the block plays the block.
+        scenario("forced-block-none", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card[] gb = forgeBlock(ai);
+            for (final boolean none : new boolean[] {true, false}) {
+                final Map<Card, Card> m = new LinkedHashMap<>();
+                if (!none) {
+                    m.put(gb[1], gb[0]);
+                }
+                final int[] life = {-1};
+                final boolean[] bearsAlive = {false};
+                mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                    life[0] = aiC.getLife();
+                    for (final Card c : copy.getCardsIn(ZoneType.Battlefield)) {
+                        bearsAlive[0] |= "Grizzly Bears".equals(c.getName());
+                    }
+                });
+                final CountSink sink = new CountSink();
+                try {
+                    mtgtable.ai.SearchPolicy.playout(ai.getGame(), ai, mtgtable.ai.SearchPolicy.blockCand(m), 7,
+                            new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+                } finally {
+                    mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+                }
+                check(none ? life[0] == 18 && bearsAlive[0] : life[0] == 20 && !bearsAlive[0],
+                        (none ? "block none, with Forge's block on the copied combat: the Bears hit (life 18, Bears alive)"
+                                : "the block: the Giant kills the Bears (life 20)")
+                                + " -- got life " + life[0] + ", Bears " + (bearsAlive[0] ? "alive" : "dead") + " (" + sink.counts + ")");
+            }
+            check(ai.getGame().getPhaseHandler().getCombat().isBlocking(gb[1], gb[0]),
+                    "the real game's combat still holds Forge's block");
+        });
+        // 2. The atlas: a forced block on a creature that is not attacking is an unavailable option, not Forge's NPE.
+        scenario("forced-block-not-attacking", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card[] gb = forgeBlock(ai);
+            final Card wall = ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield).stream()
+                    .filter((c) -> "Wall of Wood".equals(c.getName())).findFirst().orElseThrow();
+            final mtgtable.ai.Atlas.Branch ok = atlasBranch(ai, Map.of(gb[1], gb[0]));
+            check(ok.unavailable == null && ok.error == null && !ok.engineError && ok.steps > 0,
+                    "control: the forced block on the attacker plays (" + ok.steps + " steps, unavailable " + ok.unavailable
+                            + ", error " + ok.error + ")");
+            final mtgtable.ai.Atlas.Branch b = atlasBranch(ai, Map.of(gb[1], wall));
+            check(b.unavailable != null && b.unavailable.contains("Wall of Wood") && b.unavailable.contains("is not attacking")
+                            && b.error == null && !b.engineError,
+                    "a forced block on Wall of Wood, which is not attacking, is unavailable, not an error (unavailable "
+                            + b.unavailable + ", error " + b.error + ")");
+        });
+        // 3. The atlas: a seat the copy never asks (its one creature tapped) -- the answer expires, never given later.
+        scenario("forced-block-never-asked", tapped, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card[] gb = forgeBlock(ai);
+            final mtgtable.ai.Atlas.Branch b = atlasBranch(ai, Map.of(gb[1], gb[0]));
+            check(b.unavailable != null && b.unavailable.contains("never asked to declare blockers") && b.error == null
+                            && !b.engineError && b.turns == 5,
+                    "a seat never asked at the fork's combat: unavailable at turn 5, not a stale block later (unavailable "
+                            + b.unavailable + ", turn " + b.turns + ", error " + b.error + ")");
+        });
+    }
+
+    /** D470: the Bears attack the seat; Forge's block (the Giant on the Bears) is on the combat, untapped or not. {Bears, Giant}. */
+    private static Card[] forgeBlock(final Player ai) {
+        final Player human = ai.getWeakestOpponent();
+        Card bears = null;
+        for (final Card c : human.getCardsIn(ZoneType.Battlefield)) {
+            bears = "Grizzly Bears".equals(c.getName()) ? c : bears;
+        }
+        Card giant = null;
+        for (final Card c : ai.getCardsIn(ZoneType.Battlefield)) {
+            giant = "Hill Giant".equals(c.getName()) ? c : giant;
+        }
+        final forge.game.combat.Combat combat = new forge.game.combat.Combat(human);
+        ai.getGame().getPhaseHandler().setCombat(combat);
+        combat.addAttacker(bears, ai);
+        if (!giant.isTapped()) {
+            combat.addBlocker(bears, giant);
+        }
+        return new Card[] {bears, giant};
+    }
+
+    /** D470: one atlas branch of a forced block on a copy, Forge both seats, to the end of this turn. */
+    private static mtgtable.ai.Atlas.Branch atlasBranch(final Player ai, final Map<Card, Card> block) {
+        final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+        u.continuation = "forge";
+        u.turnCap = ai.getGame().getPhaseHandler().getTurn();
+        u.branchTimeoutMs = 60_000;
+        u.observe = null;
+        return mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.blockCand(block), 0, 0, 7, u, "d470",
+                new LinkedHashMap<>(), null, "d470", false);
     }
 
     /** D468's engine half: a subscriber on a rollout's copy that counts its events and the longest gap between two. */

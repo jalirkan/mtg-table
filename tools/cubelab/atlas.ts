@@ -48,6 +48,9 @@
 // `checks` and exits 3.  D466: so is an option whose branch games errored more than --branch-error-max of the time (a fraction,
 // 0.1 by default; each such option named with its error texts, every error counted by text in `checks.branchErrors`), and a
 // frame log gunzip cannot read (a worker killed mid-branch leaves its logs truncated): it is left out of the checks and named.
+// D470: a branch whose option could not be given in its copy (a forced combat answer the seat was never asked for, a block on
+// an attacker that is not attacking) is `unavailable`: no error and no result, left out of the option's value like an error,
+// counted by option in `checks.optionUnavailable`, and an option unavailable past the same share is a problem.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -98,6 +101,8 @@ export interface BranchRow {
   standIns: number; error: string | null; forkProblems: string[]; leakSame?: boolean; controlMoved?: boolean; key: string;
   /** D465: the branch threw a Java Error (an OutOfMemoryError above all): an engine error, never a result. */
   engineError?: boolean;
+  /** D470: the option could not be given in this branch's copy, and why: no error, no result, left out of the option's value. */
+  unavailable?: string;
 }
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
@@ -474,6 +479,7 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     i: b.i, seed: b.seed, result: b.result, score: scoreOf(b.result), capped: b.capped, timedOut: b.timedOut, turns: b.turns, steps: b.steps, ms: b.ms,
     bytes: b.bytes, standIns: b.standIns, error: b.error, forkProblems: b.forkProblems, key: b.key,
     ...(b.engineError ? { engineError: true } : {}),
+    ...(b.unavailable ? { unavailable: b.unavailable } : {}),
     ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
   st.done.add(key);
   st.fresh++;
@@ -622,7 +628,7 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
   const matrix = (c: Continuation): number[][] => {
     const byI = new Map<number, number[]>();
     for (const r of rows) {
-      if (r.c !== c || r.error) continue;
+      if (r.c !== c || r.error || r.unavailable) continue;   // D470: an unavailable option is no score either
       const row = byI.get(r.i) ?? new Array<number>(k).fill(Number.NaN);
       row[r.o] = r.score;
       byI.set(r.i, row);
@@ -667,6 +673,19 @@ export interface BranchErrors { branches: number; errored: number; threshold: nu
  * The atlas makes each listed option a problem: its value rests on the branches that did not error, or on none.
  */
 export function branchErrors(rows: BranchRow[], threshold: number): BranchErrors {
+  return tallyBranches(rows, threshold, (r) => r.error);
+}
+
+/**
+ * D470: the branch games whose option could not be given in their copy, the same tally as branchErrors (`errored` counts
+ * them): by reason (ids taken out) and by option, an option listed when more than `threshold` of its branch games were
+ * unavailable -- its value then rests on the branches where it could be played.  Never an error.
+ */
+export function unavailableBranches(rows: BranchRow[], threshold: number): BranchErrors {
+  return tallyBranches(rows, threshold, (r) => r.unavailable ?? null);
+}
+
+function tallyBranches(rows: BranchRow[], threshold: number, why: (r: BranchRow) => string | null): BranchErrors {
   const tally = (m: Map<string, number>, k: string): void => { m.set(k, (m.get(k) ?? 0) + 1); };
   const sorted = (m: Map<string, number>): Array<{ error: string; n: number }> => [...m].map(([error, n]) => ({ error, n })).sort((a, b) => b.n - a.n || (a.error < b.error ? -1 : 1));
   const all = new Map<string, number>();
@@ -677,24 +696,25 @@ export function branchErrors(rows: BranchRow[], threshold: number): BranchErrors
     const c = (x.byContinuation[r.c] ??= { branches: 0, errored: 0 });
     x.branches++;
     c.branches++;
-    if (r.error) {
+    const w = why(r);
+    if (w) {
       x.errored++;
       c.errored++;
-      tally(x.errors, errorText(r.error));
-      tally(all, errorText(r.error));
+      tally(x.errors, errorText(w));
+      tally(all, errorText(w));
     }
     byOpt.set(k, x);
   }
   const options = [...byOpt.values()].filter((x) => x.errored > threshold * x.branches)
     .sort((a, b) => a.d - b.d || a.o - b.o).map((x) => ({ ...x, errors: sorted(x.errors) }));
-  return { branches: rows.length, errored: rows.filter((r) => r.error).length, threshold, byError: sorted(all), options };
+  return { branches: rows.length, errored: rows.filter((r) => why(r)).length, threshold, byError: sorted(all), options };
 }
 
-/** D466: an errored option as a problem line. */
-export function erroredOptionProblem(x: ErroredOption): string {
+/** D466: an errored option as a problem line (D470: `verb` 'were unavailable' for an unavailable one). */
+export function erroredOptionProblem(x: ErroredOption, verb = 'errored'): string {
   const cont = Object.entries(x.byContinuation).map(([c, v]) => `${c} ${v.errored} of ${v.branches}`).join(', ');
   const top = x.errors.slice(0, 3).map((e) => `${e.n} x ${e.error}`).join('; ');
-  return `d${x.d} option ${x.o} \`${x.token}\` (${x.label}): ${x.errored} of ${x.branches} branch game(s) errored (${cont}): ${top}${x.errors.length > 3 ? `; and ${x.errors.length - 3} other error text(s)` : ''}`;
+  return `d${x.d} option ${x.o} \`${x.token}\` (${x.label}): ${x.errored} of ${x.branches} branch game(s) ${verb} (${cont}): ${top}${x.errors.length > 3 ? `; and ${x.errors.length - 3} other ${verb === 'errored' ? 'error text' : 'reason'}(s)` : ''}`;
 }
 
 /** The decisions where the two maps disagree most: lowest rank correlation first (null last), then a different best. */
@@ -775,6 +795,9 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   // D466: an option whose branch games errored past the threshold is a problem, named with its error texts
   const be = branchErrors(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
   for (const x of be.options) problems.push(erroredOptionProblem(x));
+  // D470: an option that could not be given in its copy past the same share is a problem too (never an error)
+  const ua = unavailableBranches(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
+  for (const x of ua.options) problems.push(erroredOptionProblem(x, 'were unavailable'));
   const retained = units.map((u) => u.copiesRetained).filter((x): x is number => typeof x === 'number');
   // the maps
   const byD = new Map<number, BranchRow[]>();
@@ -783,7 +806,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   const complete = ds.filter((d) => d.complete);
   const rhoAll = meanInterval(complete.map((d) => d.rho).filter((x): x is number => x !== null), o.boot, o.seed);
   const same = complete.filter((d) => d.sameBest).length;
-  const msOf = (c: Continuation): number[] => bRows.filter((r) => r.c === c && !r.error).map((r) => r.ms);
+  const msOf = (c: Continuation): number[] => bRows.filter((r) => r.c === c && !r.error && !r.unavailable).map((r) => r.ms);
   const meanMs = (xs: number[]): number | null => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
   const sizes = {
     phaseAFramesPerGame: aRows.length ? Math.round(aRows.reduce((a, r) => a + (r.bytes ?? 0), 0) / aRows.length) : null,
@@ -797,7 +820,7 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       decisions: ds,
       agreement: { decisions: complete.length, meanRho: rhoAll.mean, meanRhoInterval: [rhoAll.lo, rhoAll.hi], sameBest: same, sameBestInterval: Object.values(wilson(same, complete.length)) },
       disagreeMost: disagreements(ds).map((d) => ({ d: d.d, kind: d.kind, turn: d.turn, rho: d.rho, rhoInterval: [d.rhoLo, d.rhoHi], sameBest: d.sameBest, bestRandom: d.random.best, bestForge: d.forge.best })),
-      branchGames: bRows.length, branchErrors: errored.length, branchEngineErrors, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
+      branchGames: bRows.length, branchErrors: errored.length, branchEngineErrors, branchUnavailable: ua.errored, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
       meanBranchMs: { random: meanMs(msOf('random')), forge: meanMs(msOf('forge')) },
       standInsMax: bRows.reduce((a, r) => Math.max(a, r.standIns), 0),
     } : null,
@@ -809,6 +832,8 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
         violationsBy: { G1: gc.violationCount?.G1 ?? 0, G4: gc.violationCount?.G4 ?? 0 }, ...countedGuardrails(gc), forgePayCap },
       // D466: the branch games that errored, by error text and by option past the threshold
       branchErrors: be,
+      // D470: the branch games whose option could not be given in their copy (`errored` counts them), by reason and by option
+      optionUnavailable: ua,
       // D466: the frame logs gunzip could not read, left out of the checks
       unreadableFrameLogs: truncated,
       // D466 (#184's review): the games whose rows went without the id check because of one of those logs
@@ -828,11 +853,11 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
 interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
-  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; cappedRandom: number; cappedForge: number };
+  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; cappedRandom: number; cappedForge: number };
   checks: { problems: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; forgePayCap?: number };
-    branchErrors?: BranchErrors; unreadableFrameLogs?: Array<{ log: string; why: string }> };
+    branchErrors?: BranchErrors; optionUnavailable?: BranchErrors; unreadableFrameLogs?: Array<{ log: string; why: string }> };
 }
 
 /**
@@ -905,7 +930,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       for (const op of d.options) L.push(`| ${op.o}${op.o === 0 ? ' (played)' : ''} | \`${op.token}\` | ${op.label.replace(/\|/g, '/')} | ${pct(op.random.mean)}${iv(op.random.lo, op.random.hi)} (n ${op.random.n}) | ${pct(op.forge.mean)}${iv(op.forge.lo, op.forge.hi)} (n ${op.forge.n}) |`);
       L.push('');
     }
-    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}); ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.`, '');
+    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}${b.branchUnavailable ? `; ${b.branchUnavailable} more where the option could not be given in the copy, left out too (D470)` : ''}); ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.`, '');
   }
   const c = doc.checks;
   L.push('## Checks', '');
@@ -929,6 +954,17 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       }
       L.push('');
     } else L.push(`No option had more than ${pct(be.threshold)}% of its branch games errored.`, '');
+  }
+  const ua = c.optionUnavailable;
+  if (ua && ua.errored) {
+    // D470: the options that could not be given in some branches' copies
+    L.push(`### Branch games where the option could not be given`, '');
+    L.push(`${ua.errored} of ${ua.branches} branch game(s) could not give their option in the copy (D470) and are left out of its value. By reason (ids as #):`, '');
+    L.push('| branch games | reason |', '|---|---|');
+    for (const e of ua.byError.slice(0, 20)) L.push(`| ${e.n} | ${e.error.replace(/\|/g, '/')} |`);
+    L.push('');
+    for (const x of ua.options) L.push(`- a problem: ${erroredOptionProblem(x, 'were unavailable').replace(/\|/g, '/')}`);
+    if (ua.options.length) L.push('');
   }
   if (c.unreadableFrameLogs?.length) {
     L.push(`${c.unreadableFrameLogs.length} frame log(s) could not be read and were left out of the checks: ${c.unreadableFrameLogs.map((t) => `\`${t.log}\` (${t.why})`).join(', ')}.`, '');
