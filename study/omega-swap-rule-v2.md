@@ -2,7 +2,7 @@
 
 This replaces `omega-swap-rule.md` (one gold-for-gold swap in Omega a generation, a full re-measure per swap). It is
 written for Justin's yes or no before any night runs it. Numbers and method: `omega-balance-model.md` and
-`omega-balance-model/` beside it; code: mtg-table branch `pc/balance-model` (D472).
+`omega-balance-model/` beside it; code: mtg-table branch `pc/balance-model` (D473).
 
 ## In plain language
 

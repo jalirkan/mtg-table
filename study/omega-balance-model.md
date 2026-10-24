@@ -1,6 +1,6 @@
 # The library card model and the balanced-cube generator (2026-10-24)
 
-*Written by the PC lab-analysis lane, 2026-10-24, from the recorded data only (no engine run; J159 was running). Code: mtg-table branch `pc/balance-model` (D472), `tools/cubelab.sh balance-model`. Every number below is in `omega-balance-model/model.json`; the full tables (top and bottom 20 per source, every cube's class table, every programme scenario) are `omega-balance-model/summary.md`, and every card's value is in `omega-balance-model/cards-<source>.tsv`.*
+*Written by the PC lab-analysis lane, 2026-10-24, from the recorded data only (no engine run; J159 was running). Code: mtg-table branch `pc/balance-model` (D473), `tools/cubelab.sh balance-model`. Every number below is in `omega-balance-model/model.json`; the full tables (top and bottom 20 per source, every cube's class table, every programme scenario) are `omega-balance-model/summary.md`, and every card's value is in `omega-balance-model/cards-<source>.tsv`.*
 
 **Justin's question** (2026-10-24 01:25): out of the 1,000+ cards in the library, what makes the most balanced cube — every colour and every colour pair winning evenly when drafted (the lab drafter as the proxy) and played. How evenly each colour is drafted is reported beside it, not optimised. Every payoff here is Forge's AI playing both seats.
 
@@ -318,6 +318,6 @@ The census model on Omega's list (the analytic deck mix and the play weights), a
 
 ## Files
 
-- mtg-table branch `pc/balance-model`: `tools/cubelab/balance-model.ts` (the model, the generator, the simulation), `balance-model-cmd.ts` (the command), `web/test/cubelab-balance-model.test.ts` (8 tests), `docs/decisions/D472-library-card-model-and-balanced-cube-generator.md`, the guide section, and the three cubes under `cubes/library/balanced/`.
+- mtg-table branch `pc/balance-model`: `tools/cubelab/balance-model.ts` (the model, the generator, the simulation), `balance-model-cmd.ts` (the command), `web/test/cubelab-balance-model.test.ts` (8 tests), `docs/decisions/D473-library-card-model-and-balanced-cube-generator.md`, the guide section, and the three cubes under `cubes/library/balanced/`.
 - Reproduce: `tools/cubelab.sh balance-model --census /home/justin-a/code/lab/data/lab-j144 --omega /home/justin-a/code/lab/data/lab-j145 --facts <the library facts cache> --out <dir> --reps 200` (deterministic; the inputs' sha256 are in `model.json`).
 
