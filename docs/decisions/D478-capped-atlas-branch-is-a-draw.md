@@ -101,4 +101,8 @@ question with no measured case, and it is left as it is.
 - `web/test/cubelab-atlas.test.ts`, *a capped branch is a draw*. Capped branches are counted by option and over the bar.
   A capped branch stays in the map at a half. Rows as J162 wrote them (`result 1`) are a problem. A played loop timeout
   is held to the same rule.
-- The full gate is in the merge commit's message.
+- `./bridge/build.sh` (the lint, its self-test and the eight self-tests), `node --test test/cubelab-atlas.test.ts` (24
+  pass) and `tsc --noEmit`: clean. `tools/cubelab.sh atlas-selftest --jobs 1`: **OK** (16 forks, 8 no-leak checks, 38
+  frame logs, 538 rows), in 2 min 23 s.
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `13ac20d1` (this branch's code;
+  only this line differs): **OK, 59 of 59 jobs**, 517.8 s wall (load average up to 15.1).
