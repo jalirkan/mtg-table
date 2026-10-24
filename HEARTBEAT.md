@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-24T05:32:15-04:00
+- time: 2026-10-24T05:32:40-04:00
 - runner: 8a33ea78, up since 2026-10-24T02:30:52-04:00
-- running: J161 prepare, 0/55000 lines, 1 worker(s), 7 core(s)
+- running: J161 pilot 1/1, 0/55000 lines, 3 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.7; memory 5.1/30.5 GB, swap 4391 MB, pressure 0% (lab budget 23.4 GB)
+- load: 5.37; memory 5.2/30.5 GB, swap 4391 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J160 failed at 2026-10-24T05:32:14-04:00: played 20040 · engine_errors 2 · st.cubes 5 · st.expected 5 · mt.code 1 · mt.nTested 5 · mt.pooled.rmseColour 0.03 · mt.pooled.rmsePair 0.047 · mt.pooled.transferSdColour 0.021 · mt.pooled.transferSdPair 0.039 · mt.nCandidates 1
