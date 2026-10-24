@@ -98,7 +98,7 @@ The cost is one more game in about 1 branch in 200 of a Karn deck's random conti
   still without an outcome `PlayerOutcome.win()`, so `SearchPolicy.resultOf` returns +1. In J162's modern7 spine all 4
   capped branches have `result: 1`. Phase A has a check for this (`cappedNotDrawn`) and phase B does not. A restarted
   branch plays longer, so it reaches the cap a little more often, and when it does it is scored as every capped branch
-  is. This is a pre-existing scoring error with its own comparability note, so it is left as a follow-up.
+  is. This is a pre-existing scoring error with its own comparability note, so it is left as a follow-up. *(2026-10-24: fixed by **D478**: such a branch is `result 0`, `score .5`, and the atlas checks it.)*
 
 **What it rests on.** No new thread, and no hop onto the game thread (hard rule 3): the new game is started on the
 game thread, inside the fork's loop, between two steps. No reflection (lint rule 8). Every Forge call is in the pinned
