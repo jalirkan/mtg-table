@@ -1,5 +1,5 @@
-id: J161
-title: The move atlas, rung 3b -- the four spines J158 did not finish (pauper-900000005, synergy-900000009, modern-era-900000007 and fair-fight-900000005's second spine) at their original fresh seeds 464, 465, 466 and 462, on the fixed tool (D470 forced blocks at the fork's own combat, D471 G6 the random seat's own X with #195's restore, D472 alternative costs in the fork); J158's shape unchanged (16 decisions a spine, every option 200 times random and 40 times Forge, no phase A, labels.jsonl the rung-3 contract), with the tool's new counters read and checked; a new data folder lab-j161; on 8a33ea78. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new random policy and tool, and are never pooled with J156's, J157's or J158's
+id: J162
+title: The move atlas, rung 3b -- the four spines J158 did not finish (pauper-900000005, synergy-900000009, modern-era-900000007 and fair-fight-900000005's second spine) at their original fresh seeds 464, 465, 466 and 462, on the fixed tool (D470 forced blocks at the fork's own combat, D471 G6 the random seat's own X with #195's restore, D472 alternative costs in the fork); J158's shape unchanged (16 decisions a spine, every option 200 times random and 40 times Forge, no phase A, labels.jsonl the rung-3 contract), with the tool's new counters read and checked; a new data folder lab-j162; on f6dba5e4. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new random policy and tool, and are never pooled with J156's, J157's or J158's
 public_title: Move atlas 3b: the four spines J158 did not finish
 public_est: ~8 to 9 h
 public_decides: None by itself; labels a night for three new pairs and a second ff5 seed
@@ -7,25 +7,25 @@ cpu: heavy
 cores: 7
 max_workers: 7
 mem_per_worker_gb: 2.7
-repos: mtg-table@8a33ea78 (origin/main: D470 #191 with #193's addendum, D471 #192 and #195's restore of X and targets, D472 #194, on D466 and D467; merged == 1, checked by the pilot)
+repos: mtg-table@f6dba5e4 (origin/main: D470 #191 with #193's addendum, D471 #192 and #195's restore of X and targets, D472 #194, on D466 and D467; merged == 1, checked by the pilot)
 decides: nothing by itself. Rung 3 of the atlas ladder, finished: J158 was stopped after two of its six spines (pauper5's random branches looped on a free Crypt Rats activation, D471, and its block decisions were hollow, D470). This job plays the other four on the fixed tool, so that labels a night, and confident labels a night, are measured on five pairs before the 7-8 nights a 1,000-label set would take are committed, and so that the fixes are seen working at scale (pauper5's branch timeouts, D470's unavailable options, G6's counts, D472's errors by kind)
 hypothesis: none to confirm about the maps. The sizing has priors: J158 measured, at 6 workers scaled to 7, ff5 130 labels a 10-h night (32 confident) and peasant7 106 (13); J156's spines gave ff5 80 / 30 and peasant7 158 / 36 at 7. pauper5's spine is expected at ~2.5 h on the fixed tool (J158's d0 cost 10.8 s a branch with 42% of its branch time in timeouts). One candidate is read for repetition (iv): C1 "cast now where Forge passes", which HELD on ff5 461 (+4.3 points [1.0, 7.6]) and peasant7 463 (+2.8 [0.3, 5.0]) in J158 and on ff5 452-454 in J156 (+8.3 [4.2, 13.3]), each on its own random policy
-rule: D451 (method; no outcome rule) with D458/D462/D466 (G5), D459 (unit watchdog), D465, D466, D467, D470, D471 (G6) and D472. Pre-registered here, before any J161 data: the label contract (J158's, plus the `void` field) and the reads (a)-(c) computed by var/lab-j161-local/bin/labels.py, J156's reads (i)-(vi) plus (iv) by pair computed by var/lab-j161-local/bin/reads.py (J158's file, unchanged), and the tool's counters computed by var/lab-j161-local/bin/metrics.py, all exactly as written in the pilot. A candidate of (iv) HOLDS on a pair only if its point is > 0 and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. Every other difference is a candidate (D447 point 9). No read carries any other verdict
+rule: D451 (method; no outcome rule) with D458/D462/D466 (G5), D459 (unit watchdog), D465, D466, D467, D470, D471 (G6) and D472. Pre-registered here, before any J162 data: the label contract (J158's, plus the `void` field) and the reads (a)-(c) computed by var/lab-j162-local/bin/labels.py, J156's reads (i)-(vi) plus (iv) by pair computed by var/lab-j162-local/bin/reads.py (J158's file, unchanged), and the tool's counters computed by var/lab-j162-local/bin/metrics.py, all exactly as written in the pilot. A candidate of (iv) HOLDS on a pair only if its point is > 0 and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. Every other difference is a candidate (D447 point 9). No read carries any other verdict
 followup: morning-read
 est: ~8.5 h at 6 workers (the memory rule gave J158 and J160 6 of the 7 asked), ~7.5 h at 7 (sizing below): pilot ~15 min; four spines ~6.95 h at 7 workers with their checks (pauper5 ~2.5 h, synergy9 ~1.55 h, modern7 ~1.3 h, ff5 462 ~1.6 h), ~8.1 h at 6; report ~2 min. Disk ~12 GB on the lab data folder /home/justin-a/code/lab/data (J158: ff5 461 1.5 GB, peasant7 463 2.4 GB; pauper5's partial 8.2 GB for 42% of a spine, inflated by the looping branches' logs), ~20 GB if pauper5's logs stay that long
 resumable: yes
 timeout: 5h
-progress: lines /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/branches.jsonl of 55000
-metrics: branches = lines /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/branches.jsonl
-metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/branches.jsonl "\"engineError\":true"
-metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/branches.jsonl "\"timedOut\":true"
-metrics: unavailable = count /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/branches.jsonl "\"unavailable\":\""
-metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/units.jsonl "\"ok\":false"
-metrics: payfail = count /home/justin-a/code/lab/data/lab-j161/b-*/phaseB/logs/*.log "Didn't find what to pay for"
-metrics: armed = sh: cat var/lab-j161-local/armed.txt 2>/dev/null || echo 0
-metrics: atlas = sh: python3 -I var/lab-j161-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
+progress: lines /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/branches.jsonl of 55000
+metrics: branches = lines /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/branches.jsonl
+metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/branches.jsonl "\"engineError\":true"
+metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/branches.jsonl "\"timedOut\":true"
+metrics: unavailable = count /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/branches.jsonl "\"unavailable\":\""
+metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/units.jsonl "\"ok\":false"
+metrics: payfail = count /home/justin-a/code/lab/data/lab-j162/b-*/phaseB/logs/*.log "Didn't find what to pay for"
+metrics: armed = sh: cat var/lab-j162-local/armed.txt 2>/dev/null || echo 0
+metrics: atlas = sh: python3 -I var/lab-j162-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
 metrics: data_free_gb = sh: python3 -c "import shutil; print(round(shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9, 1))" 2>/dev/null || echo 0
-metrics: data_used_gb = sh: python3 -c "import os; print(round(sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk('/home/justin-a/code/lab/data/lab-j161') for f in fs) / 1e9, 2))" 2>/dev/null || echo 0
+metrics: data_used_gb = sh: python3 -c "import os; print(round(sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk('/home/justin-a/code/lab/data/lab-j162') for f in fs) / 1e9, 2))" 2>/dev/null || echo 0
 headline: branches, atlas.spinesDone, atlas.decisions, atlas.labels, atlas.confident, atlas.voidLabels, atlas.meanRho, atlas.branchTimeouts, atlas.timeoutSharePauper5, atlas.branchUnavailable, atlas.zeroXLeftOut, atlas.zeroX, atlas.problems
 
 **Why.** The atlas ladder (the cloud, 2026-10-21; HEARTBEAT *What's our strategy*): rung 3 turns the map into
@@ -58,11 +58,11 @@ finish, on the tool the three fixes made.**
 
 **These labels are a policy of their own, and are never pooled.** D466 point 4 and D471 point 6: an atlas after
 D471 is a new random policy, even on the same pair, seed and baseline, and D470 changes every block decision
-of the hollow kind. J161's labels are on the D470 + D471 (with #195) + D472 tool and random policy; they are
+of the hollow kind. J162's labels are on the D470 + D471 (with #195) + D472 tool and random policy; they are
 **never pooled with J156's, J157's or J158's** labels or reads. J158's two spines are read **beside** them only:
 the Report block copies J158's `reads.json` and `labels.json` into this job's report as `j158-reads.json` and
 `j158-labels.json`, and the summary prints them in their own column. The split key, for rung 4 and anyone
-after, is each label's `sha` (8a33ea78 here, db496097 in J158).
+after, is each label's `sha` (f6dba5e4 here, db496097 in J158).
 
 **The spines: J158's four, at their original seeds.** J158 registered six fresh seeds, 461-466. 461 (ff5) and
 463 (peasant7) are done and kept under `lab-j158`. **The other four are used here and nowhere else:**
@@ -77,7 +77,7 @@ after, is each label's `sha` (8a33ea78 here, db496097 in J158).
 - **pauper5 first**, the spine that failed, so its fix is seen working before the night is spent. Then the two
   unmeasured pairs, then ff5's second seed (the high-information pair, already measured once in J158).
 - **pauper5 464's partial under `lab-j158/b-pauper5-464` is NOT reused**: it is pre-fix data on another policy.
-  This job writes a new folder, `lab-j161`, and plays 464 from its baseline.
+  This job writes a new folder, `lab-j162`, and plays 464 from its baseline.
 - **One overlap, harmless:** D471's `atlas-selftest` G6 leg plays **phase A** of the pauper pair at seed 464
   (`SELFTEST_G6`, 6 random-vs-random rollouts from the opening). Phase A labels nothing, and nothing of it is
   read here; the spine's phase B baseline and branches are its own. The pilot's smoke uses seed 4640.
@@ -88,7 +88,7 @@ after, is each label's `sha` (8a33ea78 here, db496097 in J158).
 |---|---|
 | spines | four Forge-vs-Forge baseline games at the seeds above, one block each, in that order |
 | phase A | **none** (it labels nothing) |
-| phase B | each spine `--phase b`, its own folder `var/lab-j161/b-<pair>-<seed>` (re-rooted to the data folder); **16 of seat A's decisions** evenly spaced by D451's `spread`; every option **200 times random, 40 times Forge**, units of 25 branches; `--unit-timeout 30` (minutes, monotonic); the branch timeout at its 120-s default, read inside a step (D467); `--branch-error-max` at its 0.1 default (D466's errors and, since D470, unavailable options, each against the bar) |
+| phase B | each spine `--phase b`, its own folder `var/lab-j162/b-<pair>-<seed>` (re-rooted to the data folder); **16 of seat A's decisions** evenly spaced by D451's `spread`; every option **200 times random, 40 times Forge**, units of 25 branches; `--unit-timeout 30` (minutes, monotonic); the branch timeout at its 120-s default, read inside a step (D467); `--branch-error-max` at its 0.1 default (D466's errors and, since D470, unavailable options, each against the bar) |
 | checks | D451 point 6 on every folder, as D466, D470 and D471 amend it |
 
 **Sizing** (wall time from `plan.json` to `atlas.json`, the checks included):
@@ -111,26 +111,26 @@ after, is each label's `sha` (8a33ea78 here, db496097 in J158).
   50 GB free (~650 GB free on 2026-10-24), and `abort:` fires under 50 GB.
 
 **Where it writes: the lab data folder,** as J156-J158: every atlas command runs under
-`LAB_DATA_DIR=/home/justin-a/code/lab/data`, and `atlasCommand` re-roots `--out var/lab-j161/...` there.
-**A new folder, `lab-j161`**, created empty by the PC session before posting; the pilot creates it again if
+`LAB_DATA_DIR=/home/justin-a/code/lab/data`, and `atlasCommand` re-roots `--out var/lab-j162/...` there.
+**A new folder, `lab-j162`**, created empty by the PC session before posting; the pilot creates it again if
 absent. `lab-j158` is read (its report and its two spine folders, for the pins and the side-by-side), never
-written. The Forge homes (`CUBELAB_HOME_ROOT=var/cubelab/homes-J161`), `atlas-selftest`'s own folder and the
-job's scripts (`var/lab-j161-local/`) stay in the clone. As J158:
+written. The Forge homes (`CUBELAB_HOME_ROOT=var/cubelab/homes-J162`), `atlas-selftest`'s own folder and the
+job's scripts (`var/lab-j162-local/`) stay in the clone. As J158:
 - the pilot's first lines assert that `LAB_DATA_DIR` is unset or exactly that path, and so is `config.json`'s
   `labDataDir`; they `mkdir -p` the data folder before anything reads it, and stop under 50 GB free;
-- the pilot records whether `lab-j161` held no spine folder when it first ran (`fresh`, checked);
+- the pilot records whether `lab-j162` held no spine folder when it first ran (`fresh`, checked);
 - every run block asserts the path and the 50 GB again before it plays; `abort:` fires under 50 GB;
 - the metrics, `progress:` and `collect:` read the data folder by its absolute path;
 - **no `clean:`, and nothing is deleted there: rung 4 reads these folders.** A restart from scratch needs
-  `/home/justin-a/code/lab/data/lab-j161` moved aside by hand and `var/lab-j161-local/armed.txt` and
-  `var/lab-j161-local/fresh.txt` removed (the J152 lesson, below).
+  `/home/justin-a/code/lab/data/lab-j162` moved aside by hand and `var/lab-j162-local/armed.txt` and
+  `var/lab-j162-local/fresh.txt` removed (the J152 lesson, below).
 
 **Nothing beside it.** `cores: 7` of 8 reserves the box: post nothing heavy beside it and hold the GPU lane.
 No `pilot_cores:` (the J146 lesson). No `after:` line: J160 is lower-numbered and runs first, and the core
 budget serialises the two.
 
 **The abort lines read only this run's artefacts (the J152 lesson).** Every abort that reads the atlas's own
-files is gated on `armed == 1`; `var/lab-j161-local/armed.txt` is written by this job's pilot (after the
+files is gated on `armed == 1`; `var/lab-j162-local/armed.txt` is written by this job's pilot (after the
 data-folder guard) and removed by the Report block's last line. J158's own marker
 (`var/lab-j158-local/armed.txt`, left in place when it was withdrawn) is a different file and is never read.
 
@@ -142,7 +142,7 @@ its table), with the two fields J158's hand post-processing added, now computed 
 
 | field | what it is |
 |---|---|
-| everything in J158's table | `v`, `contract`, `pair`, `deckA`, `deckB`, `spineSeed`, `sha` (8a33ea78), `d`, `kind`, `turn`, `forgeOption`, `forgeToken`, `options[]`, `bestRandom`, `bestForge`, `regret`/`regretLo`/`regretHi` (**the label**), `regretForge*`, `confident`, `confidentForge`, `complete`, `decided`, `inQ`, `settled`, `gap`, `rho`, `sameBest`, `branches`, `view`, `frameLog`, `rows`, `branchFrames`, `branchesFile`, `atlas`, `notForTraining` |
+| everything in J158's table | `v`, `contract`, `pair`, `deckA`, `deckB`, `spineSeed`, `sha` (f6dba5e4), `d`, `kind`, `turn`, `forgeOption`, `forgeToken`, `options[]`, `bestRandom`, `bestForge`, `regret`/`regretLo`/`regretHi` (**the label**), `regretForge*`, `confident`, `confidentForge`, `complete`, `decided`, `inQ`, `settled`, `gap`, `rho`, `sameBest`, `branches`, `view`, `frameLog`, `rows`, `branchFrames`, `branchesFile`, `atlas`, `notForTraining` |
 | **`void`** | `"D470"` or `null`: a **block** decision where, in **both** continuations, every branch index at which every option played (no error, no timeout, no engine error, **not unavailable**) has identical `turns`, `steps` and `result` across the options, with at least one such index in each; every option played the same game, so the regret measures nothing. J158's rule (labels-readme.md), with D470's unavailable rows added to "not played". Detected from `branches.jsonl`, never a list |
 | **`voidEvidence`** | on a void row: for `random` and `forge`, how many played indices were identical, of how many, and how many indices had an errored, timed-out or unavailable option |
 
@@ -152,7 +152,7 @@ its table), with the two fields J158's hand post-processing added, now computed 
 - Void rows, if any, stay in the file and in every count; a reader filters `void == null`.
 - **What rung 4 reads, and why nothing is cleaned**, and **the confirm set is held out**: as J158 wrote them.
   These are confirm-set decks (D451 point 3, D318/D340), every row carries `notForTraining`, and training on
-  them needs a decision of its own. J161 measures; it changes no marker.
+  them needs a decision of its own. J162 measures; it changes no marker.
 
 ## Pre-registered reads (numbers only)
 - **(a) Labels produced and confident** (labels.py, J158's definitions): labels and confident labels per pair
@@ -195,7 +195,7 @@ its table), with the two fields J158's hand post-processing added, now computed 
   - Engine errors **other than** step-clock timeouts are bounded at 50 (a check, J158's bound).
 - Everything else is a candidate (D447 point 9).
 
-**Outputs** (on the data folder, `/home/justin-a/code/lab/data/lab-j161/`).
+**Outputs** (on the data folder, `/home/justin-a/code/lab/data/lab-j162/`).
 - `b-<pair>-<seed>/`: `plan.json`, `atlas.json`, `atlas.md`, `phaseB/` (the baseline, its rows and frames,
   branches.jsonl, units.jsonl, every branch's frames and rows, the worker logs). `pilot-pauper5/`, the smoke.
 - `exits.txt` (each atlas command's exit) and `spine-times.txt`.
@@ -213,7 +213,7 @@ smoke on pauper5 in which G6 must fire and no branch may time out.
 
 **The proofs, by sha256.** `proj.py` prints the sha256 of the canonical JSON of a file's registered keys:
 `reads` (every key J158's reads.py printed), `labels` (every key J158's labels.py printed) and `rows` (a
-labels.jsonl with J161's two added row fields taken out). Over J158's report (lab-j158, db496097):
+labels.jsonl with J162's two added row fields taken out). Over J158's report (lab-j158, db496097):
 - `reads.json` is **`37310cc3d9eb14b11a826918daae9a432806090ce2850b63fde012f7a93c44ad`**;
 - `labels.json` is **`23d1a593792f97ef490b67fa15bc0b9aaa71ffb56265244a6406953fb81b6f10`**;
 - `labels-raw.jsonl` (labels.py's own rows, before J158's hand marking) is
@@ -237,30 +237,30 @@ Fireball in B make an X = 0-only offer likely in every game) and `zeroX` 0, **no
 problem, no violation, the 120-s branch timeout in its plan, and two labels whose rows match, none void.
 ```bash
 # the lab data folder: exactly /home/justin-a/code/lab/data (README safety rules), created before anything reads it, 50 GB free or stop
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J161: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import json, sys; v = json.load(open('config.json')).get('labDataDir'); sys.exit(0 if v in (None, '', '/home/justin-a/code/lab/data') else 'J161: config.json labDataDir is %r, not /home/justin-a/code/lab/data' % v)"
-mkdir -p /home/justin-a/code/lab/data/lab-j161 var/lab-j161-local/bin
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; print('J161: data folder free GB', round(f, 1)); sys.exit(0 if f >= 50 else 'J161: under 50 GB free on the data folder')"
-echo 1 > var/lab-j161-local/datadir.txt
-# fresh: lab-j161 held no spine folder when this pilot first ran (written once; a later pilot run keeps the first answer)
-test -f var/lab-j161-local/fresh.txt || { if ls -d /home/justin-a/code/lab/data/lab-j161/b-* >/dev/null 2>&1; then echo 0; else echo 1; fi; } > var/lab-j161-local/fresh.txt
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J162: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import json, sys; v = json.load(open('config.json')).get('labDataDir'); sys.exit(0 if v in (None, '', '/home/justin-a/code/lab/data') else 'J162: config.json labDataDir is %r, not /home/justin-a/code/lab/data' % v)"
+mkdir -p /home/justin-a/code/lab/data/lab-j162 var/lab-j162-local/bin
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; print('J162: data folder free GB', round(f, 1)); sys.exit(0 if f >= 50 else 'J162: under 50 GB free on the data folder')"
+echo 1 > var/lab-j162-local/datadir.txt
+# fresh: lab-j162 held no spine folder when this pilot first ran (written once; a later pilot run keeps the first answer)
+test -f var/lab-j162-local/fresh.txt || { if ls -d /home/justin-a/code/lab/data/lab-j162/b-* >/dev/null 2>&1; then echo 0; else echo 1; fi; } > var/lab-j162-local/fresh.txt
 # the abort gate (the J152 lesson): this job's own run is armed from here; the Report block disarms it
-echo 1 > var/lab-j161-local/armed.txt
-git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j161-local/merged.txt || echo 0 > var/lab-j161-local/merged.txt
-git rev-parse --short=8 HEAD > var/lab-j161-local/sha.txt
-grep -q 'chosenOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'landPlays' bridge/src/mtgtable/ai/Decisions.java && grep -q 'putBack' bridge/src/mtgtable/ai/PolicyControllerAi.java && grep -q 'unreadableFrameLogs' tools/cubelab/atlas.ts && grep -q 'branch-error-max' tools/cubelab/atlas.ts && grep -q 'idChecksSkipped' tools/cubelab/atlas.ts && echo 1 > var/lab-j161-local/has-d466.txt || echo 0 > var/lab-j161-local/has-d466.txt
-grep -q 'class StepClock' bridge/src/mtgtable/ai/Atlas.java && grep -q 'class BranchTimeout' bridge/src/mtgtable/ai/Atlas.java && grep -q 'stepClock' bridge/src/mtgtable/ai/DecisionSelfTest.java && echo 1 > var/lab-j161-local/has-d467.txt || echo 0 > var/lab-j161-local/has-d467.txt
-grep -q 'class OptionUnavailable' bridge/src/mtgtable/ai/RolloutController.java && grep -q 'undoBlockingAssignment' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'countUnavailable' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'unavailableBranches' tools/cubelab/atlas.ts && grep -q 'optionUnavailable' tools/cubelab/atlas.ts && echo 1 > var/lab-j161-local/has-d470.txt || echo 0 > var/lab-j161-local/has-d470.txt
-grep -q 'zeroXLeftOut' bridge/src/mtgtable/ai/Explorer.java && grep -q 'drawX' bridge/src/mtgtable/ai/Explorer.java && grep -q 'restoreChoices' bridge/src/mtgtable/ai/Explorer.java && grep -q 'SELFTEST_G6' tools/cubelab/atlas.ts && grep -q 'zeroX' tools/check-redaction.mjs && echo 1 > var/lab-j161-local/has-d471.txt || echo 0 > var/lab-j161-local/has-d471.txt
-grep -q 'sameKind' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'copyCandidates' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'addedOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && echo 1 > var/lab-j161-local/has-d472.txt || echo 0 > var/lab-j161-local/has-d472.txt
-grep -q 'COUNTED_GUARDRAILS' tools/cubelab/atlas.ts && grep -q 'noRepeatRefused' bridge/src/mtgtable/ai/Explorer.java && grep -q 'fair-fight-900000005' tools/cubelab/atlas.ts && echo 1 > var/lab-j161-local/has-g5.txt || echo 0 > var/lab-j161-local/has-g5.txt
-grep -q 'unit-timeout' tools/cubelab/atlas.ts && grep -q 'monotonicMs' tools/cubelab/engine.ts && echo 1 > var/lab-j161-local/has-watchdog.txt || echo 0 > var/lab-j161-local/has-watchdog.txt
-grep -rq 'CUBELAB_WORKER_XMX' tools/cubelab && echo 1 > var/lab-j161-local/has-heap.txt || echo 0 > var/lab-j161-local/has-heap.txt
-grep -q 'empty-hand-ok' tools/check-redaction.mjs && grep -q 'empty-hand-ok' tools/cubelab/atlas.ts && echo 1 > var/lab-j161-local/has-checker.txt || echo 0 > var/lab-j161-local/has-checker.txt
-test -z "${CUBELAB_WORKER_XMX:-}" && echo 1 > var/lab-j161-local/xmx-unset.txt || echo 0 > var/lab-j161-local/xmx-unset.txt
+echo 1 > var/lab-j162-local/armed.txt
+git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j162-local/merged.txt || echo 0 > var/lab-j162-local/merged.txt
+git rev-parse --short=8 HEAD > var/lab-j162-local/sha.txt
+grep -q 'chosenOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'landPlays' bridge/src/mtgtable/ai/Decisions.java && grep -q 'putBack' bridge/src/mtgtable/ai/PolicyControllerAi.java && grep -q 'unreadableFrameLogs' tools/cubelab/atlas.ts && grep -q 'branch-error-max' tools/cubelab/atlas.ts && grep -q 'idChecksSkipped' tools/cubelab/atlas.ts && echo 1 > var/lab-j162-local/has-d466.txt || echo 0 > var/lab-j162-local/has-d466.txt
+grep -q 'class StepClock' bridge/src/mtgtable/ai/Atlas.java && grep -q 'class BranchTimeout' bridge/src/mtgtable/ai/Atlas.java && grep -q 'stepClock' bridge/src/mtgtable/ai/DecisionSelfTest.java && echo 1 > var/lab-j162-local/has-d467.txt || echo 0 > var/lab-j162-local/has-d467.txt
+grep -q 'class OptionUnavailable' bridge/src/mtgtable/ai/RolloutController.java && grep -q 'undoBlockingAssignment' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'countUnavailable' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'unavailableBranches' tools/cubelab/atlas.ts && grep -q 'optionUnavailable' tools/cubelab/atlas.ts && echo 1 > var/lab-j162-local/has-d470.txt || echo 0 > var/lab-j162-local/has-d470.txt
+grep -q 'zeroXLeftOut' bridge/src/mtgtable/ai/Explorer.java && grep -q 'drawX' bridge/src/mtgtable/ai/Explorer.java && grep -q 'restoreChoices' bridge/src/mtgtable/ai/Explorer.java && grep -q 'SELFTEST_G6' tools/cubelab/atlas.ts && grep -q 'zeroX' tools/check-redaction.mjs && echo 1 > var/lab-j162-local/has-d471.txt || echo 0 > var/lab-j162-local/has-d471.txt
+grep -q 'sameKind' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'copyCandidates' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'addedOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && echo 1 > var/lab-j162-local/has-d472.txt || echo 0 > var/lab-j162-local/has-d472.txt
+grep -q 'COUNTED_GUARDRAILS' tools/cubelab/atlas.ts && grep -q 'noRepeatRefused' bridge/src/mtgtable/ai/Explorer.java && grep -q 'fair-fight-900000005' tools/cubelab/atlas.ts && echo 1 > var/lab-j162-local/has-g5.txt || echo 0 > var/lab-j162-local/has-g5.txt
+grep -q 'unit-timeout' tools/cubelab/atlas.ts && grep -q 'monotonicMs' tools/cubelab/engine.ts && echo 1 > var/lab-j162-local/has-watchdog.txt || echo 0 > var/lab-j162-local/has-watchdog.txt
+grep -rq 'CUBELAB_WORKER_XMX' tools/cubelab && echo 1 > var/lab-j162-local/has-heap.txt || echo 0 > var/lab-j162-local/has-heap.txt
+grep -q 'empty-hand-ok' tools/check-redaction.mjs && grep -q 'empty-hand-ok' tools/cubelab/atlas.ts && echo 1 > var/lab-j162-local/has-checker.txt || echo 0 > var/lab-j162-local/has-checker.txt
+test -z "${CUBELAB_WORKER_XMX:-}" && echo 1 > var/lab-j162-local/xmx-unset.txt || echo 0 > var/lab-j162-local/xmx-unset.txt
 env -u LAB_DATA_DIR node --test web/test/cubelab-atlas.test.ts web/test/cubelab-record.test.ts web/test/cubelab-watchdog.test.ts
-cat > var/lab-j161-local/bin/reads.py <<'PY'
-# J161 runs this file unchanged from J158 (pc-results drafts/J161-move-atlas-3b.md): every definition below is J158's,
+cat > var/lab-j162-local/bin/reads.py <<'PY'
+# J162 runs this file unchanged from J158 (pc-results drafts/J162-move-atlas-3b.md): every definition below is J158's,
 # and the pilot pins J158's reads.json by sha256 over every key it printed.
 # J158's pre-registered reads (pc-results drafts/J158-move-atlas-3.md): J156's reads.py unchanged in every
 # definition (J157 kept them too), with J157's side-by-side dropped and one read added, (iv) by pair. From the
@@ -487,9 +487,9 @@ for p in sorted(spines):
                            'C2_dontAttack': {'random': r2['byPair'][p], 'forgeMap': f2['byPair'][p], 'verdict': None}}
 print(json.dumps(out, indent=1))
 PY
-cat > var/lab-j161-local/bin/labels.py <<'PY'
-# J161's label set (pc-results drafts/J161-move-atlas-3b.md): J158's labels.py, the rung-3 contract unchanged, with two
-# additions, both registered before any J161 data: every row carries `void` (D470's signature, read from the rows) and
+cat > var/lab-j162-local/bin/labels.py <<'PY'
+# J162's label set (pc-results drafts/J162-move-atlas-3b.md): J158's labels.py, the rung-3 contract unchanged, with two
+# additions, both registered before any J162 data: every row carries `void` (D470's signature, read from the rows) and
 # `voidEvidence`; and the sizing gains a 7-worker line (`c_sizing7`). Every key J158's labels.py printed is printed
 # exactly as it printed it (the pilot pins J158's labels.json by sha256 over those keys).
 # From spine folders named on the command line as PAIR:SEED:DIR (DIR holds plan.json, atlas.json and phaseB/).
@@ -512,13 +512,13 @@ cat > var/lab-j161-local/bin/labels.py <<'PY'
 #   rows       the d-th row of seat A in the spine's baseline rows (phaseB/baseline/rows/*.jsonl) IS decision d:
 #              its tokens must equal baseline.json's for d (`rows.match`); that row is seat A's own view encoded
 #              (D361's encoder, the state `s` and the candidates `c`, Forge's answer first)
-#   void       (J161; J158's hand rule, results/J158/labels-readme.md, with D470's `unavailable` rows added to "not played")
+#   void       (J162; J158's hand rule, results/J158/labels-readme.md, with D470's `unavailable` rows added to "not played")
 #              "D470" when the decision is a block and, in BOTH continuations, every branch index at which every option
 #              has a played row (no error, no timeout, no engine error, not unavailable) has identical (turns, steps,
 #              result) across the options, with at least one such index in each continuation: every option played the
 #              same game, so the regret measures nothing. Else null. `voidEvidence` on a void row. A non-block decision
 #              passing the same test is listed in `sameGameNotBlock`, never voided
-#   c_sizing7  (J161) c_sizing's labels and confident labels per 10-h night scaled to 7 workers: the measured wall
+#   c_sizing7  (J162) c_sizing's labels and confident labels per 10-h night scaled to 7 workers: the measured wall
 #              times its workers / 7 (the whole wall, checks included, as J158's summary scaled it)
 import collections, glob, json, os, random, statistics, sys
 
@@ -571,7 +571,7 @@ SAME = {}
 
 
 def same_game(branches_file):
-    """Per decision: whether every option played the same game at every index where all of them played (J161's void test)."""
+    """Per decision: whether every option played the same game at every index where all of them played (J162's void test)."""
     if branches_file in SAME:
         return SAME[branches_file]
     rows, nopt = collections.defaultdict(dict), collections.defaultdict(set)
@@ -758,7 +758,7 @@ th = tot['wallSec'] / 3600
 tot['labelsPer10hNight'] = round(10 * tot['labels'] / th) if th else None
 tot['confidentPer10hNight'] = round(10 * tot['confident'] / th) if th else None
 out['c_sizing'] = {'byPair': size, 'asRun': tot}
-# (J161) the void count (0 expected since D470), any non-block decision that played one game under every option,
+# (J162) the void count (0 expected since D470), any non-block decision that played one game under every option,
 # the counts without the void, and the sizing scaled to 7 workers
 out['voidLabels'] = sum(1 for x in labels if x['void'])
 out['voidList'] = ['%s %s d%d %s' % (x['pair'], x['spineSeed'], x['d'], x['forgeToken']) for x in labels if x['void']]
@@ -779,12 +779,12 @@ s7['asRun'] = {'labelsPer7Worker10hNight': round(10 * lt / (ws / 3600)) if ws el
 out['c_sizing7'] = s7
 print(json.dumps(out, indent=1))
 PY
-cat > var/lab-j161-local/bin/metrics.py <<'PY'
-# J161's metrics (pc-results drafts/J161-move-atlas-3b.md): one JSON object over every spine folder b-* under the data
-# folder's lab-j161 (no phase A in this job), the branch rows (timeouts, D470's unavailable, errors by kind), the atlases'
+cat > var/lab-j162-local/bin/metrics.py <<'PY'
+# J162's metrics (pc-results drafts/J162-move-atlas-3b.md): one JSON object over every spine folder b-* under the data
+# folder's lab-j162 (no phase A in this job), the branch rows (timeouts, D470's unavailable, errors by kind), the atlases'
 # G5 and G6 counts, and the report's labels.json and reads.json. Standard library only; no engine.
 import glob, json, math, os, re, sys
-D = sys.argv[1] if len(sys.argv) > 1 else '/home/justin-a/code/lab/data/lab-j161'
+D = sys.argv[1] if len(sys.argv) > 1 else '/home/justin-a/code/lab/data/lab-j162'
 PAIRS = ('pauper5', 'synergy9', 'modern7', 'ff5')
 out = {'atlases': 0, 'spinesDone': 0, 'problems': 0, 'guardViolations': 0, 'violationsG1': 0, 'violationsG4': 0, 'violationsG6': 0,
        'g5keys': 0, 'g6keys': 0, 'refusedCast': 0, 'noRepeatRefused': 0, 'noRepeatNoOp': 0, 'refusedCastFf5': 0, 'noRepeatRefusedFf5': 0,
@@ -803,7 +803,7 @@ def pair_of(name):
 
 
 def kind_of(err):
-    """A branch error's kind (J161): D472's unrebuildable play and D466's optional cost by their texts, else the class."""
+    """A branch error's kind (J162): D472's unrebuildable play and D466's optional cost by their texts, else the class."""
     if err.startswith('BranchTimeout'):
         return 'timeout (D467)'
     if re.match(r"IllegalStateException: no .* on the copy's ", err):
@@ -929,9 +929,9 @@ except (OSError, ValueError, KeyError):
     pass
 print(json.dumps(out))
 PY
-cat > var/lab-j161-local/bin/proj.py <<'PY'
-# J161 pilot: the projections J158's reads.json and labels.json are pinned by (sha256 of canonical JSON over the keys
-# J158's reads.py and labels.py printed). Usage: proj.py reads|labels|rows FILE. `rows` hashes a labels.jsonl with J161's
+cat > var/lab-j162-local/bin/proj.py <<'PY'
+# J162 pilot: the projections J158's reads.json and labels.json are pinned by (sha256 of canonical JSON over the keys
+# J158's reads.py and labels.py printed). Usage: proj.py reads|labels|rows FILE. `rows` hashes a labels.jsonl with J162's
 # two added row fields (void, voidEvidence) taken out, so it compares with J158's labels.py rows (labels-raw.jsonl).
 import hashlib, json, sys
 READS = ('spines', 'decisions', 'complete', 'decided', 'Q', 'i_sameBest', 'ii_rho', 'ii_rho_Q', 'iii_regret', 'iv_repeat',
@@ -954,17 +954,17 @@ else:
     p['spines'] = {k: sorted(v, key=str) for k, v in p['spines'].items()}
 print(hashlib.sha256(json.dumps(p, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
 PY
-cat > var/lab-j161-local/bin/pilot.py <<'PY'
-# J161 pilot: the smoke on pauper5 (seed 4640) and the atlas-selftest's G5 and G6 legs, as one JSON object.
+cat > var/lab-j162-local/bin/pilot.py <<'PY'
+# J162 pilot: the smoke on pauper5 (seed 4640) and the atlas-selftest's G5 and G6 legs, as one JSON object.
 # Standard library only; no engine. Run from the clone (the self-test's folder is the repo's var/cubelab/atlas-selftest).
 import json
-S = '/home/justin-a/code/lab/data/lab-j161/pilot-pauper5'
+S = '/home/justin-a/code/lab/data/lab-j162/pilot-pauper5'
 out = {'smoke': {'problems': -1}, 'g5': {'refusedCast': -1}, 'g6': {'zeroXLeftOut': -1}}
 try:
     d = json.load(open(S + '/atlas.json'))
     c, g = d['checks'], d['checks']['guardrails']
     rows = [json.loads(l) for l in open(S + '/phaseB/branches.jsonl') if l.strip()]
-    lb = json.load(open('var/lab-j161-local/pilot-labels.json'))
+    lb = json.load(open('var/lab-j162-local/pilot-labels.json'))
     out['smoke'] = {'problems': len(c['problems']), 'decisions': len(d['phaseB']['decisions']),
                     'g6': 1 if all(k in g for k in ('xDrawn', 'zeroXLeftOut', 'zeroX')) else 0,
                     'xDrawn': g.get('xDrawn', 0), 'zeroXLeftOut': g.get('zeroXLeftOut', 0), 'zeroX': g.get('zeroX', -1),
@@ -985,44 +985,44 @@ for leg in ('g5', 'g6'):
 print(json.dumps(out))
 PY
 # reads.py on J148's own atlas (one pair, one spine): it must give J148's published numbers
-python3 -I var/lab-j161-local/bin/reads.py ff5:451:var/lab-j142/atlas/atlas.json > var/lab-j161-local/reads-j148.json
-python3 -I -c "import json; d = json.load(open('var/lab-j161-local/reads-j148.json')); ok = (d['decided'], d['Q'], d['i_sameBest']['point'], d['ii_rho']['n'], d['ii_rho']['point'], d['iv_repeat']['C1_castNow']['random']['point'], d['iv_repeat']['C2_dontAttack']['random']['point']) == (27, 22, 0.3182, 18, -0.3416, 0.0129, 0.0588); print(1 if ok else 0)" > var/lab-j161-local/reads-self.txt
+python3 -I var/lab-j162-local/bin/reads.py ff5:451:var/lab-j142/atlas/atlas.json > var/lab-j162-local/reads-j148.json
+python3 -I -c "import json; d = json.load(open('var/lab-j162-local/reads-j148.json')); ok = (d['decided'], d['Q'], d['i_sameBest']['point'], d['ii_rho']['n'], d['ii_rho']['point'], d['iv_repeat']['C1_castNow']['random']['point'], d['iv_repeat']['C2_dontAttack']['random']['point']) == (27, 22, 0.3182, 18, -0.3416, 0.0129, 0.0588); print(1 if ok else 0)" > var/lab-j162-local/reads-self.txt
 # reads.py and labels.py on J158's two spines (read, never written): each must give J158's report, by sha256
 R8=/home/justin-a/code/lab/data/lab-j158
-python3 -I var/lab-j161-local/bin/reads.py ff5:461:$R8/report/b-ff5-461.atlas.json peasant7:463:$R8/report/b-peasant7-463.atlas.json > var/lab-j161-local/reads-j158.json || true
-test "$(python3 -I var/lab-j161-local/bin/proj.py reads $R8/report/reads.json)" = 37310cc3d9eb14b11a826918daae9a432806090ce2850b63fde012f7a93c44ad && test "$(python3 -I var/lab-j161-local/bin/proj.py reads var/lab-j161-local/reads-j158.json)" = 37310cc3d9eb14b11a826918daae9a432806090ce2850b63fde012f7a93c44ad && echo 1 > var/lab-j161-local/reads-j158.txt || echo 0 > var/lab-j161-local/reads-j158.txt
-python3 -I var/lab-j161-local/bin/labels.py ff5:461:$R8/b-ff5-461 peasant7:463:$R8/b-peasant7-463 --out=var/lab-j161-local/labels-j158.jsonl --times=$R8/spine-times.txt --sha=db496097 > var/lab-j161-local/labels-j158.json || true
-test "$(python3 -I var/lab-j161-local/bin/proj.py labels $R8/report/labels.json)" = 23d1a593792f97ef490b67fa15bc0b9aaa71ffb56265244a6406953fb81b6f10 && test "$(python3 -I var/lab-j161-local/bin/proj.py labels var/lab-j161-local/labels-j158.json)" = 23d1a593792f97ef490b67fa15bc0b9aaa71ffb56265244a6406953fb81b6f10 && test "$(python3 -I var/lab-j161-local/bin/proj.py rows $R8/report/labels-raw.jsonl)" = 96f1c174b9137ec364012ba5abfab02f185bc1afacad63f3875a264920cf2e74 && test "$(python3 -I var/lab-j161-local/bin/proj.py rows var/lab-j161-local/labels-j158.jsonl)" = 96f1c174b9137ec364012ba5abfab02f185bc1afacad63f3875a264920cf2e74 && echo 1 > var/lab-j161-local/labels-j158.txt || echo 0 > var/lab-j161-local/labels-j158.txt
+python3 -I var/lab-j162-local/bin/reads.py ff5:461:$R8/report/b-ff5-461.atlas.json peasant7:463:$R8/report/b-peasant7-463.atlas.json > var/lab-j162-local/reads-j158.json || true
+test "$(python3 -I var/lab-j162-local/bin/proj.py reads $R8/report/reads.json)" = 37310cc3d9eb14b11a826918daae9a432806090ce2850b63fde012f7a93c44ad && test "$(python3 -I var/lab-j162-local/bin/proj.py reads var/lab-j162-local/reads-j158.json)" = 37310cc3d9eb14b11a826918daae9a432806090ce2850b63fde012f7a93c44ad && echo 1 > var/lab-j162-local/reads-j158.txt || echo 0 > var/lab-j162-local/reads-j158.txt
+python3 -I var/lab-j162-local/bin/labels.py ff5:461:$R8/b-ff5-461 peasant7:463:$R8/b-peasant7-463 --out=var/lab-j162-local/labels-j158.jsonl --times=$R8/spine-times.txt --sha=db496097 > var/lab-j162-local/labels-j158.json || true
+test "$(python3 -I var/lab-j162-local/bin/proj.py labels $R8/report/labels.json)" = 23d1a593792f97ef490b67fa15bc0b9aaa71ffb56265244a6406953fb81b6f10 && test "$(python3 -I var/lab-j162-local/bin/proj.py labels var/lab-j162-local/labels-j158.json)" = 23d1a593792f97ef490b67fa15bc0b9aaa71ffb56265244a6406953fb81b6f10 && test "$(python3 -I var/lab-j162-local/bin/proj.py rows $R8/report/labels-raw.jsonl)" = 96f1c174b9137ec364012ba5abfab02f185bc1afacad63f3875a264920cf2e74 && test "$(python3 -I var/lab-j162-local/bin/proj.py rows var/lab-j162-local/labels-j158.jsonl)" = 96f1c174b9137ec364012ba5abfab02f185bc1afacad63f3875a264920cf2e74 && echo 1 > var/lab-j162-local/labels-j158.txt || echo 0 > var/lab-j162-local/labels-j158.txt
 # the void rule's positive control: on J158's spines exactly ff5 461 d10, d14 and d30, and no non-block decision
-python3 -I -c "import json; d = json.load(open('var/lab-j161-local/labels-j158.json')); print(1 if (d['voidLabels'], d['voidList'], d['sameGameNotBlock']) == (3, ['ff5 461 d10 block:35>78', 'ff5 461 d14 block:21>71', 'ff5 461 d30 block:25>80,40>81'], []) else 0)" > var/lab-j161-local/void-j158.txt 2>/dev/null || echo 0 > var/lab-j161-local/void-j158.txt
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J161
+python3 -I -c "import json; d = json.load(open('var/lab-j162-local/labels-j158.json')); print(1 if (d['voidLabels'], d['voidList'], d['sameGameNotBlock']) == (3, ['ff5 461 d10 block:35>78', 'ff5 461 d14 block:21>71', 'ff5 461 d30 block:25>80,40>81'], []) else 0)" > var/lab-j162-local/void-j158.txt 2>/dev/null || echo 0 > var/lab-j162-local/void-j158.txt
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J162
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-tools/cubelab.sh atlas-selftest --jobs 1 && echo 1 > var/lab-j161-local/selftest.txt || echo 0 > var/lab-j161-local/selftest.txt
-tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j161-local/identity.txt || echo 0 > var/lab-j161-local/identity.txt
+tools/cubelab.sh atlas-selftest --jobs 1 && echo 1 > var/lab-j162-local/selftest.txt || echo 0 > var/lab-j162-local/selftest.txt
+tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j162-local/identity.txt || echo 0 > var/lab-j162-local/identity.txt
 S=tools/ai-bench/decks/sets
-tools/cubelab.sh atlas --deck-a $S/pauper-900000005-A.dck --deck-b $S/pauper-900000005-B.dck --seed 4640 --rollouts 6 --decisions 2 --branch-random 8 --branch-forge 4 --chunk 4 --unit-timeout 30 --jobs {workers} --out var/lab-j161/pilot-pauper5 || true
-python3 -I var/lab-j161-local/bin/labels.py pauper5:4640:/home/justin-a/code/lab/data/lab-j161/pilot-pauper5 --out=var/lab-j161-local/pilot-labels.jsonl --sha=$(cat var/lab-j161-local/sha.txt) > var/lab-j161-local/pilot-labels.json || true
+tools/cubelab.sh atlas --deck-a $S/pauper-900000005-A.dck --deck-b $S/pauper-900000005-B.dck --seed 4640 --rollouts 6 --decisions 2 --branch-random 8 --branch-forge 4 --chunk 4 --unit-timeout 30 --jobs {workers} --out var/lab-j162/pilot-pauper5 || true
+python3 -I var/lab-j162-local/bin/labels.py pauper5:4640:/home/justin-a/code/lab/data/lab-j162/pilot-pauper5 --out=var/lab-j162-local/pilot-labels.jsonl --sha=$(cat var/lab-j162-local/sha.txt) > var/lab-j162-local/pilot-labels.json || true
 ```
-metrics: datadir = sh: cat var/lab-j161-local/datadir.txt 2>/dev/null || echo 0
-metrics: fresh = sh: cat var/lab-j161-local/fresh.txt 2>/dev/null || echo 0
-metrics: merged = sh: cat var/lab-j161-local/merged.txt 2>/dev/null || echo 0
-metrics: has_d466 = sh: cat var/lab-j161-local/has-d466.txt 2>/dev/null || echo 0
-metrics: has_d467 = sh: cat var/lab-j161-local/has-d467.txt 2>/dev/null || echo 0
-metrics: has_d470 = sh: cat var/lab-j161-local/has-d470.txt 2>/dev/null || echo 0
-metrics: has_d471 = sh: cat var/lab-j161-local/has-d471.txt 2>/dev/null || echo 0
-metrics: has_d472 = sh: cat var/lab-j161-local/has-d472.txt 2>/dev/null || echo 0
-metrics: has_g5 = sh: cat var/lab-j161-local/has-g5.txt 2>/dev/null || echo 0
-metrics: has_watchdog = sh: cat var/lab-j161-local/has-watchdog.txt 2>/dev/null || echo 0
-metrics: has_heap = sh: cat var/lab-j161-local/has-heap.txt 2>/dev/null || echo 0
-metrics: has_checker = sh: cat var/lab-j161-local/has-checker.txt 2>/dev/null || echo 0
-metrics: xmx_unset = sh: cat var/lab-j161-local/xmx-unset.txt 2>/dev/null || echo 0
-metrics: reads_self = sh: cat var/lab-j161-local/reads-self.txt 2>/dev/null || echo 0
-metrics: reads_j158 = sh: cat var/lab-j161-local/reads-j158.txt 2>/dev/null || echo 0
-metrics: labels_j158 = sh: cat var/lab-j161-local/labels-j158.txt 2>/dev/null || echo 0
-metrics: void_j158 = sh: cat var/lab-j161-local/void-j158.txt 2>/dev/null || echo 0
-metrics: selftest = sh: cat var/lab-j161-local/selftest.txt 2>/dev/null || echo 0
-metrics: identity = sh: cat var/lab-j161-local/identity.txt 2>/dev/null || echo 0
-metrics: pilot = sh: python3 -I var/lab-j161-local/bin/pilot.py 2>/dev/null || echo '{"smoke":{"problems":-1}}'
+metrics: datadir = sh: cat var/lab-j162-local/datadir.txt 2>/dev/null || echo 0
+metrics: fresh = sh: cat var/lab-j162-local/fresh.txt 2>/dev/null || echo 0
+metrics: merged = sh: cat var/lab-j162-local/merged.txt 2>/dev/null || echo 0
+metrics: has_d466 = sh: cat var/lab-j162-local/has-d466.txt 2>/dev/null || echo 0
+metrics: has_d467 = sh: cat var/lab-j162-local/has-d467.txt 2>/dev/null || echo 0
+metrics: has_d470 = sh: cat var/lab-j162-local/has-d470.txt 2>/dev/null || echo 0
+metrics: has_d471 = sh: cat var/lab-j162-local/has-d471.txt 2>/dev/null || echo 0
+metrics: has_d472 = sh: cat var/lab-j162-local/has-d472.txt 2>/dev/null || echo 0
+metrics: has_g5 = sh: cat var/lab-j162-local/has-g5.txt 2>/dev/null || echo 0
+metrics: has_watchdog = sh: cat var/lab-j162-local/has-watchdog.txt 2>/dev/null || echo 0
+metrics: has_heap = sh: cat var/lab-j162-local/has-heap.txt 2>/dev/null || echo 0
+metrics: has_checker = sh: cat var/lab-j162-local/has-checker.txt 2>/dev/null || echo 0
+metrics: xmx_unset = sh: cat var/lab-j162-local/xmx-unset.txt 2>/dev/null || echo 0
+metrics: reads_self = sh: cat var/lab-j162-local/reads-self.txt 2>/dev/null || echo 0
+metrics: reads_j158 = sh: cat var/lab-j162-local/reads-j158.txt 2>/dev/null || echo 0
+metrics: labels_j158 = sh: cat var/lab-j162-local/labels-j158.txt 2>/dev/null || echo 0
+metrics: void_j158 = sh: cat var/lab-j162-local/void-j158.txt 2>/dev/null || echo 0
+metrics: selftest = sh: cat var/lab-j162-local/selftest.txt 2>/dev/null || echo 0
+metrics: identity = sh: cat var/lab-j162-local/identity.txt 2>/dev/null || echo 0
+metrics: pilot = sh: python3 -I var/lab-j162-local/bin/pilot.py 2>/dev/null || echo '{"smoke":{"problems":-1}}'
 check: datadir == 1
 check: data_free_gb >= 50
 check: fresh == 1
@@ -1066,61 +1066,61 @@ check: pilot.smoke.voidLabels == 0
 ## Commands
 One block a spine, in the order pauper5 464, synergy9 465, modern7 466, ff5 462. Every atlas command resumes
 what is done. An atlas that finds a problem exits 3 and the job goes on to the next spine (the exit is kept in
-`/home/justin-a/code/lab/data/lab-j161/exits.txt`); each block appends its spine's wall time to
-`/home/justin-a/code/lab/data/lab-j161/spine-times.txt`; the final checks read every folder's `atlas.json`. Each
+`/home/justin-a/code/lab/data/lab-j162/exits.txt`); each block appends its spine's wall time to
+`/home/justin-a/code/lab/data/lab-j162/spine-times.txt`; the final checks read every folder's `atlas.json`. Each
 block asserts the data folder and its 50 GB again before it plays. **pauper5's expected wall is ~2.5 h** on the
 fixed tool; the 5-h block timeout is J158's, unchanged.
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J161: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-mkdir -p /home/justin-a/code/lab/data/lab-j161
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J161: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J162: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j162
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J162: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J161
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J162
 S=tools/ai-bench/decks/sets
 n=b-pauper5-464; t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $S/pauper-900000005-A.dck --deck-b $S/pauper-900000005-B.dck --seed 464 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j161/$n || rc=$?
-echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j161/exits.txt
-echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j161/spine-times.txt
+rc=0; tools/cubelab.sh atlas --deck-a $S/pauper-900000005-A.dck --deck-b $S/pauper-900000005-B.dck --seed 464 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j162/$n || rc=$?
+echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j162/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j162/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J161: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-mkdir -p /home/justin-a/code/lab/data/lab-j161
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J161: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J162: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j162
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J162: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J161
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J162
 S=tools/ai-bench/decks/sets
 n=b-synergy9-465; t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $S/synergy-900000009-A.dck --deck-b $S/synergy-900000009-B.dck --seed 465 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j161/$n || rc=$?
-echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j161/exits.txt
-echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j161/spine-times.txt
+rc=0; tools/cubelab.sh atlas --deck-a $S/synergy-900000009-A.dck --deck-b $S/synergy-900000009-B.dck --seed 465 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j162/$n || rc=$?
+echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j162/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j162/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J161: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-mkdir -p /home/justin-a/code/lab/data/lab-j161
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J161: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J162: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j162
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J162: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J161
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J162
 S=tools/ai-bench/decks/sets
 n=b-modern7-466; t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $S/modern-era-900000007-A.dck --deck-b $S/modern-era-900000007-B.dck --seed 466 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j161/$n || rc=$?
-echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j161/exits.txt
-echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j161/spine-times.txt
+rc=0; tools/cubelab.sh atlas --deck-a $S/modern-era-900000007-A.dck --deck-b $S/modern-era-900000007-B.dck --seed 466 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j162/$n || rc=$?
+echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j162/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j162/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J161: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-mkdir -p /home/justin-a/code/lab/data/lab-j161
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J161: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J162: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+mkdir -p /home/justin-a/code/lab/data/lab-j162
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J162: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J161
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J162
 S=tools/ai-bench/decks/sets
 n=b-ff5-462; t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $S/fair-fight-900000005-A.dck --deck-b $S/fair-fight-900000005-B.dck --seed 462 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j161/$n || rc=$?
-echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j161/exits.txt
-echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j161/spine-times.txt
+rc=0; tools/cubelab.sh atlas --deck-a $S/fair-fight-900000005-A.dck --deck-b $S/fair-fight-900000005-B.dck --seed 462 --phase b --decisions 16 --branch-random 200 --branch-forge 40 --unit-timeout 30 --jobs {workers} --out var/lab-j162/$n || rc=$?
+echo "$n $rc" >> /home/justin-a/code/lab/data/lab-j162/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> /home/justin-a/code/lab/data/lab-j162/spine-times.txt
 ```
 cores: 1
 ```bash
-D=/home/justin-a/code/lab/data/lab-j161
+D=/home/justin-a/code/lab/data/lab-j162
 R8=/home/justin-a/code/lab/data/lab-j158/report
 mkdir -p $D/report
 : > $D/report/missing.txt
@@ -1135,17 +1135,17 @@ for d in $D/b-*; do
     echo "$n: no atlas.json" >> $D/report/missing.txt
   fi
 done
-python3 -I var/lab-j161-local/bin/reads.py $args > $D/report/reads.json || echo "reads.py exited $?" >> $D/report/missing.txt
-python3 -I var/lab-j161-local/bin/labels.py $largs --out=$D/report/labels.jsonl --times=$D/spine-times.txt --sha=$(cat var/lab-j161-local/sha.txt) > $D/report/labels.json || echo "labels.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j162-local/bin/reads.py $args > $D/report/reads.json || echo "reads.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j162-local/bin/labels.py $largs --out=$D/report/labels.jsonl --times=$D/spine-times.txt --sha=$(cat var/lab-j162-local/sha.txt) > $D/report/labels.json || echo "labels.py exited $?" >> $D/report/missing.txt
 head -n 20 $D/report/labels.jsonl > $D/report/labels-head.jsonl || echo "labels.jsonl: none" >> $D/report/missing.txt
-python3 -I var/lab-j161-local/bin/metrics.py > $D/report/tool.json || echo "metrics.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j162-local/bin/metrics.py > $D/report/tool.json || echo "metrics.py exited $?" >> $D/report/missing.txt
 # J158's reads and labels, beside these and never pooled with them
 cp $R8/reads.json $D/report/j158-reads.json || echo "J158 reads.json: none" >> $D/report/missing.txt
 cp $R8/labels.json $D/report/j158-labels.json || echo "J158 labels.json: none" >> $D/report/missing.txt
 cp $D/exits.txt $D/report/exits.txt || echo "exits.txt: none" >> $D/report/missing.txt
 cp $D/spine-times.txt $D/report/spine-times.txt || echo "spine-times.txt: none" >> $D/report/missing.txt
 # disarm the abort gate: a re-post of this file starts disarmed until its own pilot
-rm -f var/lab-j161-local/armed.txt
+rm -f var/lab-j162-local/armed.txt
 ```
 check: atlas.atlases == 4
 check: atlas.spinesDone == 4
@@ -1188,20 +1188,20 @@ pauper5 that fails its 1% check still leaves the other three spines' labels wort
 so the summary can say which fired. `unavailable` and `atlas.branchUnavailable` below the bar are reported.
 
 ## Report
-collect: /home/justin-a/code/lab/data/lab-j161/report/*.atlas.md
-collect: /home/justin-a/code/lab/data/lab-j161/report/*.atlas.json
-collect: /home/justin-a/code/lab/data/lab-j161/report/reads.json
-collect: /home/justin-a/code/lab/data/lab-j161/report/labels.json
-collect: /home/justin-a/code/lab/data/lab-j161/report/labels-head.jsonl
-collect: /home/justin-a/code/lab/data/lab-j161/report/tool.json
-collect: /home/justin-a/code/lab/data/lab-j161/report/j158-reads.json
-collect: /home/justin-a/code/lab/data/lab-j161/report/j158-labels.json
-collect: /home/justin-a/code/lab/data/lab-j161/report/exits.txt
-collect: /home/justin-a/code/lab/data/lab-j161/report/spine-times.txt
-collect: /home/justin-a/code/lab/data/lab-j161/report/missing.txt
+collect: /home/justin-a/code/lab/data/lab-j162/report/*.atlas.md
+collect: /home/justin-a/code/lab/data/lab-j162/report/*.atlas.json
+collect: /home/justin-a/code/lab/data/lab-j162/report/reads.json
+collect: /home/justin-a/code/lab/data/lab-j162/report/labels.json
+collect: /home/justin-a/code/lab/data/lab-j162/report/labels-head.jsonl
+collect: /home/justin-a/code/lab/data/lab-j162/report/tool.json
+collect: /home/justin-a/code/lab/data/lab-j162/report/j158-reads.json
+collect: /home/justin-a/code/lab/data/lab-j162/report/j158-labels.json
+collect: /home/justin-a/code/lab/data/lab-j162/report/exits.txt
+collect: /home/justin-a/code/lab/data/lab-j162/report/spine-times.txt
+collect: /home/justin-a/code/lab/data/lab-j162/report/missing.txt
 The summary says, for Justin, in plain words and numbers only:
 - **The policy, first line:** these labels are on the D470 + D471 (with #195) + D472 tool and random policy
-  (8a33ea78), never pooled with J156's, J157's or J158's; J158's numbers appear in their own column.
+  (f6dba5e4), never pooled with J156's, J157's or J158's; J158's numbers appear in their own column.
 - **Labels per night** (`labels.json` (c), `c_sizing7`): labels and confident labels per spine, per 10-h night
   at the measured workers and per 7-worker 10-h night, by pair and as run, beside J158's measured ff5 130 / 32
   and peasant7 106 / 13 and the J156 prior (ff5 80 / 30, peasant7 158 / 36 at 7); what 1,000 labels and 1,000
