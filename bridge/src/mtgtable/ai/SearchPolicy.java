@@ -2768,15 +2768,25 @@ public final class SearchPolicy {
             final int startTurn = ph.getTurn();
             final int limit = lim.horizonTurns < 0 ? Integer.MAX_VALUE : startTurn + lim.horizonTurns;
             int steps = 0;
-            while (!copy.isGameOver() && ph.getTurn() <= limit && steps < lim.maxSteps) {
+            int turnsBefore = 0;   // D477: the turns of the games a Karn restart ended, before the copy's current one
+            while (!copy.isGameOver() && turnsBefore + ph.getTurn() <= limit && steps < lim.maxSteps) {
                 if ((steps & 7) == 0 && System.nanoTime() > lim.deadline) {
                     return null;
                 }
                 if (lim.untilApplied && rc.applied(copy)) {
                     break;
                 }
+                final int turn = ph.getTurn();
                 ph.mainLoopStep();
                 steps++;
+                if (ForkRestart.pending(copy)) {
+                    // D477: Karn Liberated restarted the copy's game -- start the new one as Forge's startGame loop
+                    // would and play on to the horizon, its turns counted on from the old game's
+                    turnsBefore += turn;
+                    sink.add(lim.untilApplied ? "search.prior.restarts" : "search.restarts", 1);
+                    ForkRestart.begin(copy, rc);
+                    continue;
+                }
                 if (lim.line != null) {
                     lim.line.afterStep(copy, rc);   // D454: the hint's line ends where its recording does
                     if (lim.line.done()) {
@@ -2809,7 +2819,7 @@ public final class SearchPolicy {
             } else {
                 leaf = leaf(copy, aiCopy, lim.untapped);
             }
-            return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
+            return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, turnsBefore + ph.getTurn() - startTurn);
         } catch (final Atlas.BranchTimeout | RuntimeException e) {
             // D468: an Error, so a caller's catch (RuntimeException) would never see it; and a Forge
             // wrapper (AbilityFactory's, or our CandidateUnmappable) may carry it as a cause

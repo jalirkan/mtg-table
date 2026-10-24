@@ -38,7 +38,7 @@ import {
 } from '../../tools/cubelab/atlasmath.ts';
 import {
   ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, BRANCH_ERROR_MAX_DEFAULT, baselineJob, branchErrors, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, erroredOptionProblem,
-  errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, phaseAReport, rolloutJob, unavailableBranches, unitJob, unitsOf, writeAtlas,
+  errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, newUnitState, phaseAReport, rolloutJob, unavailableBranches, unitJob, unitProgress, unitsOf, writeAtlas,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
@@ -452,6 +452,41 @@ test('an option the copy cannot give is unavailable: left out of the map, counte
     assert.equal(doc1.checks.optionUnavailable.errored, 3);
     assert.equal(doc1.checks.optionUnavailable.options.length, 0);
     assert.ok(!doc1.checks.problems.some((p) => /were unavailable/.test(p)));
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('a branch whose game Karn restarted is played on: its row carries the restarts, it counts in the map, phase B counts it (D477, J162 modern7)', () => {
+  // the worker's streamed branch keeps its restarts on the row
+  const listing: DecisionListing = { d: 0, kind: 'p', turn: 3, tokens: ['pass', 'cast:31'], labels: ['pass', 'Card 1'] };
+  const got: BranchRow[] = [];
+  const st = newUnitState({ d: 0, c: 'random', i0: 0, i1: 2 } as Parameters<typeof newUnitState>[0], new Set());
+  const sink = { branch: (r: BranchRow) => { got.push(r); }, unit: () => {}, resume: () => { throw new Error('not resumed here'); } } as Parameters<typeof unitProgress>[3];
+  const { v: _v, d: _d, kind: _k, turn: _t, c: _c, token: _tok, label: _l, score: _s, ...worker } = { ...brow(0, 0, 'random', 0, null, 'pass'), result: -1, turns: 31, restarts: 1 };
+  unitProgress(st, [listing], { type: 'progress', id: 'd0-random-0', branch: worker } as Parameters<typeof unitProgress>[2], sink);
+  unitProgress(st, [listing], { type: 'progress', id: 'd0-random-0', branch: { ...worker, o: 1, key: 'atlas:d0:random:o1:b0', restarts: undefined } } as Parameters<typeof unitProgress>[2], sink);
+  assert.deepEqual(got.map((r) => r.restarts), [1, undefined], 'restarts only on the restarted branch');
+  assert.equal(got[0]?.error, null);
+  // the map: a restarted branch is a played one, with its result
+  const rows: BranchRow[] = [];
+  for (let i = 0; i < 8; i++) {
+    for (const o of [0, 1]) rows.push({ ...brow(0, o, i < 6 ? 'random' : 'forge', i, null, o ? 'cast:31' : 'pass'), ...(o === 0 && i < 2 ? { restarts: 1, turns: 31 } : {}) });
+  }
+  const d = decisionAtlas(listing, rows, 200, 7);
+  assert.equal(d.options[0]?.random.n, 6, 'every random branch of option 0 counts, the two restarted ones included');
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-restart-'));
+  try {
+    const B = path.join(out, 'phaseB');
+    fs.mkdirSync(B, { recursive: true });
+    fs.writeFileSync(path.join(B, 'baseline.json'), JSON.stringify({ v: 1, seed: 466, winner: 'B', first: 'A', turns: 17, decisions: [listing] }));
+    fs.writeFileSync(path.join(B, 'branches.jsonl'), `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`);
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { phaseB: { branchErrors: number; branchRestarted: number }; checks: { problems: string[] } };
+    assert.equal(doc.phaseB.branchRestarted, 2);
+    assert.equal(doc.phaseB.branchErrors, 0);
+    assert.ok(!doc.checks.problems.some((p) => /restart/i.test(p)), doc.checks.problems.join('\n'));
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /2 played on through a restart of the game by Karn Liberated \(D477\), counted as played/);
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }

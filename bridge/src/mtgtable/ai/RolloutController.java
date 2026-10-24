@@ -188,6 +188,11 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
             return true;
         }
 
+        /** D477: something was forced and not yet given. */
+        boolean unanswered() {
+            return kind != 0 && !used;
+        }
+
         boolean applied(final Game g) {
             if (!used) {
                 return false;
@@ -233,6 +238,11 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
     @Override
     public boolean applied(final Game copy) {
         return forced.applied(copy);
+    }
+
+    @Override
+    public boolean unanswered() {
+        return forced.unanswered();
     }
 
     /** The forced answer has been taken (D454: {@link RecordingController} starts its line there). */
@@ -294,6 +304,11 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
         @Override
         public boolean applied(final Game copy) {
             return forced.applied(copy);
+        }
+
+        @Override
+        public boolean unanswered() {
+            return forced.unanswered();
         }
 
         @Override

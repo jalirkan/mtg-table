@@ -67,6 +67,11 @@ final class AtlasController extends PolicyControllerAi implements RolloutForcing
         return forced.applied(copy);
     }
 
+    @Override
+    public boolean unanswered() {
+        return forced.unanswered();
+    }
+
     /** D470: why the forced combat answer can no longer be given in {@code copy}, or null. */
     String expired(final Game copy) {
         return forced.expired(copy);
