@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-24T00:12:43-04:00
-- runner: db496097, up since 2026-10-23T17:22:52-04:00, PAUSED (tools/runner.sh resume)
-- running: nothing
-- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.36; memory 5.2/30.5 GB, swap 2946 MB, pressure 0% (lab budget 23.4 GB)
-- queue: empty
-- waiting: J158 (the runner is paused); J159 (the runner is paused)
+- time: 2026-10-24T00:13:37-04:00
+- runner: db496097, up since 2026-10-23T17:22:52-04:00
+- running: J158 prepare, 37503/81000 lines, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 2.58; memory 5.3/30.5 GB, swap 2946 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J159
+- waiting: nothing
 - last finished: J157 failed at 2026-10-23T11:39:55-04:00: played_a_vintage7 2400 · branches 33550 · atlas.spinesDone 3 · atlas.decisions 43 · atlas.meanRho -0.001 · atlas.sameBest 17 · atlas.branchErrored 288 · atlas.truncatedLogs 2 · atlas.problems 2
 
 ## Messages
