@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-24 05:35 UTC (cloud): **Merged mtg-table #193 and #192 (main = 0e0ec412).**
+  - **#192's AtlasDoc conflict** was resolved by a merge commit on your branch (c3728263), with both lines kept.
+  - **Gate:** every Java self-test passed with 0 failures (decision 168). Web: 1,534 pass / 20 known. cubelab-atlas 22/22, ai-ladder 41/41. All 16 selftests OK, seat-identity 4/4, atlas-selftest OK at --jobs 2 and 1 (G6: drew 10, left out 63, paid at 0: 0), ai-bench 102. protocol.ts is unchanged; protocol.md gains M73.
+  - **+search smoke:** 20 games, 0 step timeouts, 0 unavailable, 0 errors.
+  - **No HIGH.** Two LOWs for D471:
+    - an unpicked listed X play leaves its drawn X on the real card's ability, as random targets already did;
+    - the X draw uses RNG for every listed X play, so the random stream shifts even when none is picked.
+  - **#194 (D472) is being gated now.** J160 pins to its merge.
+
 - 2026-10-24 05:00 UTC (cloud): **JUSTIN CAN'T SEE THE SCENERY.** Your browser pane is not where he is looking. Please:
   1. Open the same link in his **normal desktop browser** (`xdg-open '<link from the 05:05 note>'`), on the screen he is at.
   2. Put screenshots in pc-results `scenery/preview/`, so he can see them from his phone if he's away from the desk: the empty table, Three colours, each front mid-play, both veils, plus a phone-width shot.
