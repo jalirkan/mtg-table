@@ -1503,6 +1503,126 @@ public final class AiBench {
         forcedBlockScenarios();
         altCostScenarios();
         staleEffectScenarios();
+        adventureScenarios();
+    }
+
+    /**
+     * D476 (amending D472): an Adventure card's two plays, and a play an effect
+     * card permits, map onto the fork's copy.  J162's spine ff5-462 had Murderous
+     * Rider on an adventure in exile at d11, d16, d19, d22 and d24, and both of
+     * Forge's plays of it (the creature cast "by Swift End (25)", and the same with
+     * the suffix twice) failed in 240 of 240 branches each: the copy's effect card
+     * has no effect source, so the copy's description read "by Swift End (25)'s
+     * Adventure (136)".  Planted here by casting Swift End and Reckless Impulse in
+     * the real game and resolving them: the creature from exile, both of Forge's
+     * listings of it, and a Lightning Bolt exiled by the impulse; the creature and
+     * the adventure cast from hand first, as controls.
+     */
+    static void adventureScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: an adventure and an effect's may-play on a fork (D476, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Hill Giant;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Lightning Bolt;Lightning Bolt;Lightning Bolt;Lightning Bolt", "aihand=Murderous Rider;Reckless Impulse",
+                "aibattlefield=Swamp;Swamp;Swamp;Swamp;Swamp;Swamp;Swamp;Swamp;Mountain;Mountain;Mountain");
+        scenario("adventure-map", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            // from the hand: the creature (its Original face) and the adventure (its Secondary face)
+            final forge.game.spellability.SpellAbility creature = playOf(ai, "Murderous Rider",
+                    (sa) -> !sa.isAdventure() && sa.getMayPlay() == null);
+            final forge.game.spellability.SpellAbility swift = playOf(ai, "Murderous Rider", (sa) -> sa.isAdventure());
+            swift.resetTargets();
+            swift.getTargets().add(bears);
+            final forge.game.spellability.SpellAbility mc = mtgtable.ai.SearchPolicy.mapForTest(ai, creature);
+            final forge.game.spellability.SpellAbility ms = mtgtable.ai.SearchPolicy.mapForTest(ai, swift);
+            check(mc != null && !mc.isAdventure() && mc.getCardStateName() == creature.getCardStateName()
+                            && mc.getHostCard().getGame() != g && mc.getDescription().equals(creature.getDescription()),
+                    "Murderous Rider cast as the creature from the hand maps to the copy's creature cast (got "
+                            + (mc == null ? null : mc.getCardStateName() + ": " + mc.getDescription()) + ")");
+            check(ms != null && ms.isAdventure() && ms.getHostCard().getGame() != g && ms.getTargets().size() == 1
+                            && ms.getTargets().getFirstTargetedCard() != bears
+                            && "Grizzly Bears".equals(ms.getTargets().getFirstTargetedCard().getName()),
+                    "Murderous Rider cast as Swift End from the hand maps to the copy's adventure, its target the copy's Bears (got "
+                            + (ms == null ? null : ms.getCardStateName() + ", " + ms.getTargets()) + ")");
+            // play the impulse, then the adventure, in the real game: the Bolts and the Rider go to exile, each
+            // castable by an effect card's may-play permission
+            final forge.game.spellability.SpellAbility impulse = playOf(ai, "Reckless Impulse", (sa) -> true);
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, impulse, null), "the real game casts Reckless Impulse");
+            g.getStack().resolveStack();
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, swift, null), "the real game casts Swift End on the Bears");
+            g.getStack().resolveStack();
+            final Card rider = named(ai.getCardsIn(ZoneType.Exile), "Murderous Rider");
+            check(rider.isOnAdventure() && !ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield).contains(bears),
+                    "Swift End resolved: the Bears destroyed, the Rider on an adventure in exile");
+            final List<forge.game.spellability.SpellAbility> fromExile = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(rider.getAllPossibleAbilities(ai, false)), ai)) {
+                if (sa.isSpell() && sa.getMayPlay() != null && !sa.isAdventure()) {
+                    sa.setActivatingPlayer(ai);
+                    fromExile.add(sa);
+                }
+            }
+            boolean nested = false;
+            for (final forge.game.spellability.SpellAbility sa : fromExile) {
+                nested |= sa.getDescription().indexOf(" by ") != sa.getDescription().lastIndexOf(" by ");
+            }
+            check(fromExile.size() >= 2 && nested,
+                    "Forge lists the creature from exile by the adventure's permission, once with the suffix twice (J162's pair): "
+                            + fromExile.size() + " plays");
+            for (final forge.game.spellability.SpellAbility sa : fromExile) {
+                final forge.game.spellability.SpellAbility m = mtgtable.ai.SearchPolicy.mapForTest(ai, sa);
+                check(m != null && m != sa && m.getHostCard().getGame() != g && m.getMayPlay() != null && !m.isAdventure()
+                                && m.getCardStateName() == sa.getCardStateName()
+                                && mtgtable.ai.SearchPolicy.matchKey(m).equals(mtgtable.ai.SearchPolicy.matchKey(sa)),
+                        "the creature from exile [" + sa.getDescription() + "] maps to the copy's may-play cast (got "
+                                + (m == null ? null : m.getDescription()) + ")");
+            }
+            Card bolt = null;
+            for (final Card c : ai.getCardsIn(ZoneType.Exile)) {
+                bolt = "Lightning Bolt".equals(c.getName()) ? c : bolt;
+            }
+            check(bolt != null, "Reckless Impulse exiled a Lightning Bolt");
+            forge.game.spellability.SpellAbility boltPlay = null;
+            for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(bolt.getAllPossibleAbilities(ai, false)), ai)) {
+                boltPlay = boltPlay == null && sa.isSpell() && sa.getMayPlay() != null ? sa : boltPlay;
+            }
+            check(boltPlay != null, "Forge lists the exiled Bolt by the impulse's permission");
+            boltPlay.setActivatingPlayer(ai);
+            boltPlay.resetTargets();
+            boltPlay.getTargets().add(ai.getWeakestOpponent());
+            final forge.game.spellability.SpellAbility mb = mtgtable.ai.SearchPolicy.mapForTest(ai, boltPlay);
+            check(mb != null && mb.getMayPlay() != null && mb.getHostCard().getGame() != g
+                            && mtgtable.ai.SearchPolicy.matchKey(mb).equals(mtgtable.ai.SearchPolicy.matchKey(boltPlay)),
+                    "the exiled Bolt [" + boltPlay.getDescription() + "] maps to the copy's may-play cast (got "
+                            + (mb == null ? null : mb.getDescription()) + ")");
+            // the production path that failed 240 of 240: one atlas branch forcing the creature from exile
+            final forge.game.spellability.SpellAbility cast = fromExile.get(0);
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = g.getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(cast), 0, 0, 7, u,
+                    "d476", new LinkedHashMap<>(), null, "d476", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && b.steps > 0,
+                    "an atlas branch forcing the Rider from exile plays (" + b.steps + " steps, error " + b.error + ")");
+            final boolean[] onField = {false};
+            mtgtable.ai.SearchPolicy.leafProbeForTest((copy, aiC) -> {
+                for (final Card c : aiC.getCardsIn(ZoneType.Battlefield)) {
+                    onField[0] |= "Murderous Rider".equals(c.getName());
+                }
+            });
+            final CountSink sink = new CountSink();
+            try {
+                mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(cast), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+            } finally {
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            check(onField[0], "the fork cast the Rider from exile onto its battlefield (" + sink.counts + ")");
+            check(rider.isInZone(ZoneType.Exile), "the real game is untouched: the Rider still in exile");
+        });
     }
 
     /**
