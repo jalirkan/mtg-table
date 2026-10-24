@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-24T00:14:02-04:00
+- time: 2026-10-24T00:14:37-04:00
 - runner: db496097, up since 2026-10-23T17:22:52-04:00
-- running: J158 commands 3/7, 37503/81000 lines, 6 worker(s), 7 core(s)
+- running: J159 prepare, 0 games, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.55; memory 5.5/30.5 GB, swap 2945 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J159
+- load: 9.06; memory 6.5/30.5 GB, swap 2945 MB, pressure 0.08% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J157 failed at 2026-10-23T11:39:55-04:00: played_a_vintage7 2400 · branches 33550 · atlas.spinesDone 3 · atlas.decisions 43 · atlas.meanRho -0.001 · atlas.sameBest 17 · atlas.branchErrored 288 · atlas.truncatedLogs 2 · atlas.problems 2
+- last finished: J158 skipped at 2026-10-24T00:14:37-04:00
 
 ## Messages
 

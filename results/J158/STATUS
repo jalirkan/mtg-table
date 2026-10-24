@@ -1,7 +1,8 @@
-running
+skipped
+reason: the job file was removed from pc-jobs
 runner: forgecoach-runner db496097
 started: 2026-10-24T00:13:37-04:00
-phase: commands 3/7
+finished: 2026-10-24T00:14:37-04:00
 mtg-table: db49609
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.14), budget 21.4 GB)
 peak_worker_rss_gb: 1.14
