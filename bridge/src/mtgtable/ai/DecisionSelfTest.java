@@ -681,40 +681,71 @@ public final class DecisionSelfTest {
         check(!Explorer.zeroXViolation(false, true, 0),
                 "G6 positive control: Forge's own answer at X = 0 is Forge's X, never a violation");
         // #192's review: the seat draws X onto the real abilities it lists (Crypt Rats, never sized; an
-        // ability Forge had sized at 2; a Fireball), so after the pick the two it did not pick carry
-        // their own X again and only the pick keeps its draw -- until the engine refuses it
+        // ability Forge had sized at 2; a Fireball), and random targets onto their targeting parts (the
+        // sized ability's, which Forge had aimed at c7; Fireball's; a Shock with no X, aimed at p1), so
+        // after the pick the plays it did not pick carry their own X and targets again and only the pick
+        // keeps what the seat wrote -- until the engine refuses it
         final ExploreMath mx = new ExploreMath(r, 17);
         final Object rats = new Object();
         final Object sized = new Object();
         final Object fireball = new Object();
+        final Object shock = new Object();
+        final Object sizedPart = new Object();
+        final Object fireballPart = new Object();
+        final Object shockPart = new Object();
         final java.util.Map<Object, Integer> realX = new java.util.HashMap<>();
-        final java.util.Map<Object, Integer> drawn = new java.util.IdentityHashMap<>();
+        final java.util.Map<Object, List<String>> realT = new java.util.HashMap<>();
+        final java.util.Map<Object, Explorer.Before> drawn = new java.util.IdentityHashMap<>();
+        final java.util.Map<Object, Object> partOf = java.util.Map.of(sized, sizedPart, fireball, fireballPart, shock, shockPart);
         final Runnable list = () -> {
             realX.put(rats, null);
             realX.put(sized, 2);
             realX.put(fireball, null);
-            for (final Object ab : List.of(rats, sized, fireball)) {
-                drawn.putIfAbsent(ab, realX.get(ab));
-                realX.put(ab, Explorer.drawX(3, mx));
+            realT.put(sizedPart, List.of("c7"));
+            realT.put(fireballPart, List.of());
+            realT.put(shockPart, List.of("p1"));
+            for (final Object ab : List.of(rats, sized, fireball, shock)) {
+                final Explorer.Before b = drawn.computeIfAbsent(ab, k -> new Explorer.Before());
+                if (ab != shock) {
+                    final Integer x0 = realX.get(ab);
+                    b.note(Explorer.X, () -> realX.put(ab, x0));
+                    realX.put(ab, Explorer.drawX(3, mx));
+                    b.note(Explorer.X, () -> realX.put(ab, -1));   // a second note never replaces the original
+                }
+                final Object part = partOf.get(ab);
+                if (part != null) {
+                    final List<String> t0 = List.copyOf(realT.get(part));
+                    b.note(part, () -> realT.put(part, t0));
+                    realT.put(part, List.of("rnd" + mx.pick(9)));
+                }
             }
         };
         list.run();
-        final int back = Explorer.restoreX(drawn, fireball, realX::put, true);
-        check(back == 2 && realX.get(rats) == null && realX.get(sized) == 2 && realX.get(fireball) >= 1
+        final int back = Explorer.restoreChoices(drawn, fireball, true);
+        check(back == 3 && realX.get(rats) == null && realX.get(sized) == 2 && realX.get(fireball) >= 1
                 && drawn.keySet().equals(java.util.Set.of(fireball)),
                 "G6: after the pick, each unpicked X ability carries its original X (null, 2) and the pick its draw: " + realX);
-        Explorer.restoreX(drawn, null, realX::put, true);
+        check(realT.get(sizedPart).equals(List.of("c7")) && realT.get(shockPart).equals(List.of("p1")),
+                "G6: after the pick, each unpicked play carries its original targets (c7, p1), not the seat's random ones: " + realT);
+        check(realT.get(fireballPart).size() == 1 && realT.get(fireballPart).get(0).startsWith("rnd"),
+                "G6: the pick keeps the random targets the seat drew for it: " + realT.get(fireballPart));
+        Explorer.restoreChoices(drawn, null, true);
         check(realX.get(fireball) == null && drawn.isEmpty(), "G6: a pick the engine refused gets its original X back");
+        check(realT.get(fireballPart).isEmpty(), "G6: a pick the engine refused gets its original (no) targets back");
         list.run();
-        Explorer.restoreX(drawn, sized, realX::put, true);
+        Explorer.restoreChoices(drawn, sized, true);
         final int drew = realX.get(sized);
-        check(Explorer.restoreX(drawn, null, realX::put, false) == 0 && realX.get(sized) == drew && drew >= 1
-                && realX.get(rats) == null && drawn.isEmpty(),
-                "G6: a pick the engine played keeps its drawn X (a spell's X is read at resolution), nothing else does");
+        final List<String> aimed = realT.get(sizedPart);
+        check(Explorer.restoreChoices(drawn, null, false) == 0 && realX.get(sized) == drew && drew >= 1
+                && realT.get(sizedPart) == aimed && aimed.get(0).startsWith("rnd")
+                && realX.get(rats) == null && realT.get(shockPart).equals(List.of("p1")) && drawn.isEmpty(),
+                "G6: a pick the engine played keeps its drawn X and its targets (read at resolution), nothing else does");
         list.run();
-        Explorer.restoreX(drawn, null, realX::put, true);
-        check(realX.get(rats) == null && realX.get(sized) == 2 && realX.get(fireball) == null,
-                "G6: a pass (or Forge's own answer) leaves every listed X ability as it was");
+        Explorer.restoreChoices(drawn, null, true);
+        check(realX.get(rats) == null && realX.get(sized) == 2 && realX.get(fireball) == null
+                && realT.get(sizedPart).equals(List.of("c7")) && realT.get(fireballPart).isEmpty()
+                && realT.get(shockPart).equals(List.of("p1")),
+                "G6: a pass (or Forge's own answer) leaves every listed play's X and targets as they were");
     }
 
     /**

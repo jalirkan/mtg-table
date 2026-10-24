@@ -64,7 +64,7 @@ Why X was 0:
      stream) and set on the play. Like the play's random targets, it is set before the "can pay" check.
    - The X each listed play carried is noted before the draw (`setMaxXValue` writes one too), and **no
      play the seat listed and did not pick keeps a drawn X**. A play left out, or listed and not picked,
-     gets its old X back when the pick is made (`Explorer.restoreX`, at the end of `randomPriority`). The
+     gets its old X back when the pick is made (`Explorer.restoreChoices`, at the end of `randomPriority`). The
      pick keeps its draw until the engine has played it, and gets its old X back if the engine refuses
      it (`Explorer.played`). This was added after #192's review: the draw is written on the real
      `SpellAbility`, so an unpicked play kept a random X into the next priority window.
@@ -77,6 +77,21 @@ Why X was 0:
      and `predictSpellToCastInMain2` makes one (`canPayCost(sa, player, false)` on a permanent spell,
      `AiController.java:752`). So a stale random X on a Walking Ballista or Hangarback Walker could change
      that prediction. The restore takes the question away rather than leaving it to Forge's paths.
+   - **The random targets were the same leftover** (the same review). `Explorer.randomTargets` writes
+     the targets it draws onto each targeting part of the real `SpellAbility` (after `resetTargets()`),
+     so a listed play the seat did not pick kept them into the next priority window. Forge's AI does not
+     always choose targets afresh: neither `canPlaySa` (`AiController.java:877`) nor the template it
+     calls, `SpellAbilityAi.canPlayWithSubs` -> `canPlayWithoutRestrict` -> `checkApiLogic`
+     (`SpellAbilityAi.java:54`, `:79`, `:167`), resets a play's targets, and `canPlaySa` itself reads
+     them as they stand (`isTargetNumberValid()`, `AiController.java:956-957`). Resetting is left to each
+     effect's AI. Most targeting AIs do it (`PumpAi.java:370`), but some only add: `GoadAi.checkApiLogic`
+     puts its pick next to whatever is there (`sa.getTargets().add(...)`, `GoadAi.java:62`), and
+     `CountersRemoveAi`, `MustBlockAi` and `ProtectAllAi`, among others, never call `resetTargets`. The
+     only reset on the play path is for splice (`ComputerUtil.java:92`). So each part's targets are now
+     noted, as a copy (`TargetChoices.clone()`), before the seat resets them, and put back with the X,
+     by the same helper and at the same two moments: on every listed play the seat did not pick, at the
+     end of the pick, and on a pick the engine refused. A played pick keeps its targets, which its
+     resolution reads. `Explorer.Before` holds one put-back per thing the seat wrote on a play.
    - When the seat picks such a play, the pick is counted (`xDrawn`).
    - **Forge's own answer keeps Forge's X**, 0 included. It is always among the options, so a Chalice at 0
      chosen by Forge's logic is still played.

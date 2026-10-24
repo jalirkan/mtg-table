@@ -25,7 +25,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 import forge.ai.AiController;
 import forge.ai.ComputerUtilAbility;
@@ -175,13 +174,45 @@ public final class Explorer {
     /** G6 (D471): the play just returned is the seat's own pick (not Forge's answer) with {X} in its mana cost. */
     private boolean pendingOwnX;
     /**
-     * G6 (#192's review): every play whose X the seat drew at this decision's
-     * listing, with the X it carried before the draw ({@link #restoreX}).  The
-     * draw is written on the real {@code SpellAbility}, so a listed play the seat
-     * did not pick gets its X back when the pick is made, and the pick keeps
-     * its drawn X only until the engine has played it (back if refused).
+     * G6 (#192's review): every play the seat wrote on at this decision's
+     * listing -- a drawn X, random targets -- with what it carried before
+     * ({@link #restoreChoices}).  Both are written on the real {@code SpellAbility},
+     * so a listed play the seat did not pick gets its X and its targets back
+     * when the pick is made, and the pick keeps its own only until the engine
+     * has played it (back if refused).
      */
-    private final Map<SpellAbility, Integer> drawnX = new IdentityHashMap<>();
+    private final Map<SpellAbility, Before> before = new IdentityHashMap<>();
+
+    /**
+     * What one listed play carried before the random seat wrote on it: one
+     * put-back per thing written (its X, each targeting part's targets), noted
+     * once, before the first write, and run in the order noted.  Engine-free --
+     * the put-backs are closures -- so the self-test drives it.
+     */
+    static final class Before {
+        private final Set<Object> noted = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+        private final List<Runnable> putBacks = new ArrayList<>();
+
+        /** Note {@code putBack} for {@code what} unless {@code what} is already noted (the first value is the original). */
+        void note(final Object what, final Runnable putBack) {
+            if (noted.add(what)) {
+                putBacks.add(putBack);
+            }
+        }
+
+        void putBack() {
+            for (final Runnable r : putBacks) {
+                r.run();
+            }
+        }
+    }
+
+    /** The key {@link Before} notes a play's X under (a targeting part is noted under itself). */
+    static final Object X = new Object();
+
+    private Before before(final SpellAbility sa) {
+        return before.computeIfAbsent(sa, k -> new Before());
+    }
     /** G5: the plays the engine refused to pay for in {@link #refusedWindow}, the priority window they were refused in. */
     private final Set<String> refused = new LinkedHashSet<>();
     private String refusedWindow;
@@ -222,8 +253,8 @@ public final class Explorer {
         pendingPick = null;
         final boolean ownX = pendingOwnX;
         pendingOwnX = false;
-        // G6: a refused pick gets its X back too; a played one keeps it (a spell's X is read at resolution)
-        restoreX(drawnX, null, SpellAbility::setXManaCostPaid, refusedNow);
+        // G6: a refused pick gets its X and targets back too; a played one keeps them (read at resolution)
+        restoreChoices(before, null, refusedNow);
         if (math.config().random && ownX && !refusedNow) {
             // G6's violation, read back from the play the engine put on the stack: an activated ability
             // goes there as a fresh copy and the original's X is cleared (Forge's MagicStack.add), so the
@@ -325,19 +356,19 @@ public final class Explorer {
     }
 
     /**
-     * G6 (#192's review): put back the X each play in {@code drawn} carried
-     * before the seat drew one, except {@code picked}'s (null: every one), and
-     * forget the restored entries -- {@code drawn} is left holding {@code picked}
-     * alone, if it was drawn.  {@code apply} false forgets every entry and puts
-     * nothing back (a pick the engine played keeps its X).  Generic so the
-     * self-test runs it engine-free; returns how many were put back.
+     * G6 (#192's review): put back what each play in {@code drawn} carried
+     * before the seat wrote on it (its X, its targets), except {@code picked}'s
+     * (null: every one), and forget the restored entries -- {@code drawn} is left
+     * holding {@code picked} alone, if it was written on.  {@code apply} false
+     * forgets every entry and puts nothing back (a pick the engine played keeps
+     * its X and targets).  Generic so the self-test runs it engine-free; returns
+     * how many plays were put back.
      */
-    static <T> int restoreX(final Map<T, Integer> drawn, final T picked, final BiConsumer<T, Integer> set,
-                            final boolean apply) {
+    static <T> int restoreChoices(final Map<T, Before> drawn, final T picked, final boolean apply) {
         int n = 0;
-        for (final Map.Entry<T, Integer> e : drawn.entrySet()) {
+        for (final Map.Entry<T, Before> e : drawn.entrySet()) {
             if (apply && e.getKey() != picked) {
-                set.accept(e.getKey(), e.getValue());
+                e.getValue().putBack();
                 n++;
             }
         }
@@ -349,15 +380,15 @@ public final class Explorer {
         return n;
     }
 
-    /** The random seat's priority answer, under the guardrails; no play it listed and did not pick keeps a drawn X. */
+    /** The random seat's priority answer, under the guardrails; no play it listed and did not pick keeps a drawn X or random targets. */
     private List<SpellAbility> randomPriority(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
-        drawnX.clear();
+        before.clear();
         List<SpellAbility> out = null;
         try {
             out = randomPick(ai, aic, chosen);
             return out;
         } finally {
-            restoreX(drawnX, out == null || out.isEmpty() ? null : out.get(0), SpellAbility::setXManaCostPaid, true);
+            restoreChoices(before, out == null || out.isEmpty() ? null : out.get(0), true);
         }
     }
 
@@ -476,8 +507,9 @@ public final class Explorer {
                     // G6 (D471): the seat sizes X itself, from 1 to Forge's own maximum; a play
                     // payable only at X = 0 is left out (it would be a free no-op, Crypt Rats' loop).
                     // The X it carried is noted first (setMaxXValue writes one too) and put back
-                    // when the pick is made, unless this play is the pick (restoreX).
-                    drawnX.putIfAbsent(sa, sa.getXManaCostPaid());
+                    // when the pick is made, unless this play is the pick (restoreChoices).
+                    final Integer x0 = sa.getXManaCostPaid();
+                    before(sa).note(X, () -> sa.setXManaCostPaid(x0));
                     final int x = drawX(ComputerUtilCost.setMaxXValue(sa, ai, false), math);
                     if (x < 1) {
                         continue;
@@ -501,7 +533,9 @@ public final class Explorer {
      * Give every targeting part of {@code sa} targets drawn uniformly from the
      * legal ones the seat can see; false when a part cannot be targeted that way
      * (no visible legal target, divided damage, a cross-target constraint) --
-     * the play is then left out.
+     * the play is then left out.  Each part's targets are noted before they are
+     * reset, and put back unless this play is the pick ({@link #restoreChoices}):
+     * Forge's AI does not always choose a play's targets afresh (D471).
      */
     private boolean randomTargets(final SpellAbility sa, final Player ai) {
         for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
@@ -517,6 +551,9 @@ public final class Explorer {
             final Card host = s.getHostCard();
             final int min = tr.getMinTargets(host, s);
             final int max = tr.getMaxTargets(host, s);
+            final SpellAbility part = s;
+            final TargetChoices was = s.getTargets() == null ? new TargetChoices() : s.getTargets().clone();
+            before(sa).note(part, () -> part.setTargets(was));
             s.resetTargets();
             final List<GameEntity> legal = new ArrayList<>();
             for (final GameEntity e : tr.getAllCandidates(s, true)) {
