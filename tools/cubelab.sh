@@ -22,6 +22,7 @@
 #   tools/cubelab.sh census-read --games var/cubelab/deck-census/legacy/games --decks var/cubelab/deck-census/legacy/decks --out var/cubelab/deck-census/read
 #   tools/cubelab.sh sample --band pauper --structure two-colour --seed 1 --count 40 --out var/cubelab/census/pauper   # D445
 #   tools/cubelab.sh shapes var/lab-j140/runs/*/* --out var/lab-j140/out              # D446: shape measures by band, no engine
+#   tools/cubelab.sh balance-model --census <lab-j144> --omega <lab-j145> --facts <facts.json> --out var/balance-model/x   # D473, no engine
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):

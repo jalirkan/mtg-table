@@ -191,7 +191,7 @@ const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k
  */
 const POSITIONALS: Record<string, number> = {
   check: 1, 'library-candidates': 0, census: 1, sample: 0, decks: 0, 'census-play': 0, 'census-read': 0, 'census-replay': 1, atlas: 0, 'atlas-selftest': 0, 'seat-identity': 0,
-  ratings: 2, run: 1, queue: 1, report: 1, selfplay: 1, meta: 1, evolve: 1, watch: 1,
+  ratings: 2, run: 1, queue: 1, report: 1, selfplay: 1, meta: 1, evolve: 1, watch: 1, 'balance-model': 0,
 };
 
 /** The refusal for positionals `cmd` does not read, or null when it reads them all. */
@@ -455,6 +455,7 @@ async function main(): Promise<number> {
     case 'census-play': return (await import('./censusplay.ts')).censusPlayCommand(REPO, f, say);   // the deck census's games (D447)
     case 'census-read': return (await import('./censusread.ts')).censusReadCommand(REPO, f, say);   // the deck census's spectrum and cards (D447)
     case 'census-replay': return (await import('./censusreplay.ts')).censusReplayCommand(REPO, pos, f, say);   // a census game again from its recipe (D450)
+    case 'balance-model': return (await import('./balance-model-cmd.ts')).balanceModelCommand(REPO, f, say);   // the library card model and the balanced-cube generator (D473)
     case 'atlas': return (await import('./atlas.ts')).atlasCommand(REPO, f, say);   // the move atlas (D451)
     case 'atlas-selftest': return (await import('./atlas.ts')).atlasSelftest(REPO, f, say);   // D451: the fork, the no-leak check, the guardrails
     case 'seat-identity': return (await import('./seatidentity.ts')).seatIdentityCommand(REPO, f, say);   // D451: the Forge and search seats untouched
