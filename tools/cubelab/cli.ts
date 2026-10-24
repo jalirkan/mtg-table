@@ -153,6 +153,7 @@ function usage(msg?: string): never {
                         [--turn-cap 40] [--rollouts 10000] [--branch-random 200] [--branch-forge 40] [--decisions all|N]
                         [--options 8] [--chunk 25] [--leak-checks 1] [--branch-timeout 120] [--unit-timeout 30] [--boot 1000] [--phase a|b|both|report]   (D451; --unit-timeout minutes, D459)
                         [--branch-error-max 0.1]   (D466: an option whose branch games errored past this share is a problem)
+                        [--branch-capped-warn 0.25]   (D478: an option whose branch games the turn cap ended past this share is a warning)
        tools/cubelab.sh atlas-selftest [--jobs 2]   (D451: a tiny atlas, its forks, no-leak checks and guardrails asserted)
        tools/cubelab.sh seat-identity [--write]     (D451: the Forge, search and explore seats play origin/main's games)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)

@@ -106,3 +106,106 @@ question with no measured case, and it is left as it is.
   frame logs, 538 rows), in 2 min 23 s.
 - **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `13ac20d1` (this branch's code;
   only this line differs): **OK, 59 of 59 jobs**, 517.8 s wall (load average up to 15.1).
+
+## Addendum, 2026-10-24 — a capped option is a warning, and an engine-ended draw is a draw (#203's review)
+
+*Branch `pc/atlas-capped-warn-engine-draw`, on origin/main `fbca6235` (#203, this decision, merged). Two follow-ups from
+#203's review. Amends point 3 above and closes the "Not changed, noted" paragraph.*
+
+**1. An option capped past the bar is a warning, never a problem.** Point 3 made an option whose branch games were capped
+more than `--branch-error-max` of the time a problem: exit 3, and `atlas.problems == 0` fails. But a capped branch is a
+long position, scored ½ and kept in the value, not a fault in the tool. A pauper or ff5 night at the 40-turn cap could
+fail on it for nothing wrong: J150's ff5-452 reached 7.1% on one option, under the bar only by luck of the cube.
+- `cappedBranches` keeps its tally and `checks.branchCapped` keeps its counts by option and continuation.
+- Its bar is now a flag of its own, **`--branch-capped-warn`** (default **0.25**, `BRANCH_CAPPED_WARN_DEFAULT`; in the
+  plan as `branchCappedWarn`). `--branch-error-max` no longer moves it.
+- An option over that bar is a line in **`checks.warnings`**, printed as `atlas warning:` and listed in atlas.md's
+  *Branch games the turn cap ended* as "a warning". It never adds a problem and never makes the atlas exit 3.
+- **`notDrawn` stays a problem**: a capped or loop-timed-out branch written with a result other than 0 is a fault in
+  the tool, and still exits 3.
+- One in four says the option's value is mostly long games. No lab folder through J162 comes near it (7.1% at most).
+
+**2. `resultOf` reads an engine-declared draw as a draw.** `SearchPolicy.resultOf` tested `ai.hasLost()` first, then
+`hasWon()`. Forge ends a game drawn in two ways, and javap and the `forge-2.0.14` source agree on both:
+- **Every player loses at once.** An example is one effect putting both seats to 0 life, or one seat at 0 life while
+  the other draws from an empty library. `checkGameOverCondition` gives each a loss outcome, finds no player left, and
+  sets `GameEndReason.Draw`.
+- **An effect makes the game a draw.** Examples are `GameDrawEffect` (Divine Intervention, Celestial Convergence) and
+  `MagicStack.add` past 999 items. Both call `Player.intentionalDraw()` on every player. That outcome's `lossState` is
+  `IntentionalDraw`, so `hasLost()` is true of both seats as well.
+
+Both read **−1** for seat A. One correction to the review's note: Forge's own `Draw` reason does not give every player
+`win()`. Only `setGameOver(Draw)` on a game with no outcome yet does that, through `Player.onGameOver`. That is our
+call: the atlas's cap, which point 1 already bypasses, and the watchdogs. It read **+1**.
+
+**The fix.** `resultOf` is now **0 whenever every player carries an outcome of the same kind**: all lost, or all
+"won". Otherwise it is unchanged: −1 if the seat lost, +1 if it won or an opponent lost, 0 while the game goes on. It is
+public and the one place a fork's result is read:
+- the atlas's branches (`Atlas.play`, a game the engine ended);
+- the search's rollouts (`Playout.result`, so `winOf` gives .5);
+- `SearchPolicy.leaf`'s decided cases. The leaf had its own copy of the same tests, and an engine-drawn rollout's leaf
+  was −`WIN` + 100 × turn. It now calls `resultOf`, so that leaf is 0, the draw's value that was already there.
+`LeafRows` and `CoachGrade` call the same leaf on replayed positions. They differ only on a position where the game
+has already ended drawn.
+
+**Tests.** `./tools/ai-bench.sh --selftest`, *a game the engine ends drawn is a draw (D478 addendum, engine)*:
+- **Both seats lose at once.** A Flame Rift is forced with both seats on 2 life. The atlas branch is not capped, ends
+  at turn 5 and has `result 0`. The search playout is over with `result 0`, win .5 and leaf 0.
+- **Without an outcome.** On the same scenario's own game, `setGameOver(Draw)` gives both seats `win()`, and
+  `resultOf` reads 0.
+- **Control.** The same Flame Rift with only the seat on 2 life is still `result −1`.
+- **An effect makes it a draw.** Divine Intervention with its last intervention counter, removed at the seat's upkeep
+  on turn 7. The atlas branch is not capped, ends at turn 7 and has `result 0`. The playout gives `result 0`, win .5 and
+  leaf 0.
+  - The scenario sets its game's age to `Play` and resets the active triggers. A scenario's game never leaves
+    `BeforeMulligan`, and `checkStateEffects` activates triggers only in `Play`, so without that no upkeep trigger
+    fires. Real and lab games are in `Play`.
+
+With `resultOf` as it was, five of these checks fail: −1, −1 with leaf −99,500, +1, −1, and −1 with leaf −99,300. The
+control passes.
+
+The rest:
+- `web/test/cubelab-atlas.test.ts`: a capped option is a warning and exits 0, at the default bar and at
+  `--branch-error-max 0.01`, and with every branch of the option capped. Under `--branch-capped-warn 0.5` there is no
+  warning. Rows written `result 1` and a played loop timeout are still problems, exit 3.
+- `./bridge/build.sh` (the lint, its self-test and the eight self-tests); `./tools/ai-bench.sh --selftest`, 145 checks,
+  0 failures; `node --test test/cubelab-atlas.test.ts` (24 pass) and `tsc --noEmit`: clean.
+- `tools/cubelab.sh atlas-selftest --jobs 1`: **OK** (16 forks, 8 no-leak checks, 38 frame logs, 538 rows).
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `d6212c40` (this branch's
+  code; only this line differs): **OK, 59 of 59 jobs**, 519.0 s wall (load average up to 15.1).
+
+**Engine draws in the lab data** (read-only). I read the `over` frame of every branch's seat-0 log in every atlas folder
+under `lab/data`: 237,025 logs for 245,566 branch rows. Every played branch has one. A `reason` of `Draw` on a branch that the loop did not end (not capped,
+not timed out, no error) is an engine-ended draw:
+- **2 distinct branches, in 3 rows**, all on the vintage7-458 spine, all random continuations, all written `result −1`,
+  `score 0`.
+  - `d9-random-o0-b130` is in J150 and J157. It ended at turn 33.
+  - `d10-random-o3-b116` is in J157 only. It ended at turn 25. J150's copy of it errored before D472.
+- In both, the ledger's last turn has seat A at 0 cards in library and seat B at −1 life. Both lost at the same check.
+- **Every other folder has none.** That is J150's ff5 and peasant7 spines, J158, J162 and the pilots. The `Draw`
+  reasons there are exactly the capped and loop-timed-out branches, for example 408 of 408 on ff5-452 and 31 = 29 + 2
+  on J158 pauper5-464.
+- Phase A: none in 14,772 games (`TurnCap` 287). `CubeLab` read `isDraw()` there anyway.
+
+**What the maps do.** I recomputed with `decisionAtlas` and the atlas's bootstrap seed.
+- **J150/J157 d9.** Option 0's random mean goes back to .9492 from D478's .9463. D478 had moved one capped win to ½;
+  this moves one engine draw from 0 to ½. The best option (2) stays, and regret is .0056 [0, .0452], as written.
+- **J157 d10.** Option 3 was tied with option 0 at .9476. It goes to .9503 and becomes the random map's best, so
+  regret goes from 0 to .0026 [0, .0445]. Inside the interval, it is a tie broken by half a game.
+- J150's d10 has no played random branch.
+- **No label is touched.** The labels are J158's and J162's, and neither has an engine draw.
+- **Atlas maps from before and after this addendum differ only on engine-drawn branches.** Recompute those as `result 0`,
+  `score .5` before pooling.
+
+**Not pooled: the search.** Search-v2's rollouts score through the same `resultOf`, and its leaf through the same tests.
+A rollout the engine ended drawn was a loss before this change (win 0, leaf −`WIN`) and is a draw after it (.5, leaf 0).
+**Search-v2 results from before and after this addendum are not pooled.** Split them by the experiment log's git sha,
+as D466, D470 and D476 ask. Engine draws are rare (3 rows of 245,566 branch rows here), but the rule does not
+depend on the rate.
+
+**Rejected.**
+- **Reading `GameOutcome.isDraw()`.** It is true when no player `hasWon()`, so it calls a both-`win()` game *not* a draw.
+  That is the wrong answer for exactly the case our own `setGameOver(Draw)` makes. Reading the players' outcomes is the
+  one definition that is right both ways.
+- **Testing `GameEndReason.Draw`.** It would also be right in these cases. But `resultOf` reads a game that is still
+  going, too, and the outcomes are what the players carry in every state. One test serves both.

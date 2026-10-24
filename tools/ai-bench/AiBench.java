@@ -1500,6 +1500,7 @@ public final class AiBench {
         evalLeafScenarios();
         karnRestartScenarios();
         cappedDrawScenarios();
+        engineDrawScenarios();
         d416Scenarios(castBoard);
         stepClockScenario();
         forcedBlockScenarios();
@@ -1814,6 +1815,98 @@ public final class AiBench {
                     "control: a branch that ends the game before the cap keeps its result (capped " + b.capped + ", turns "
                             + b.turns + ", result " + b.result + ", error " + b.error + ")");
         });
+    }
+
+    /**
+     * D478's addendum: a game the ENGINE ends drawn is a draw, {@code result 0}, in the atlas and in the search
+     * alike ({@code SearchPolicy.resultOf}, the one place).  Forge draws a game two ways and planted here are both:
+     * every player loses at once (a Flame Rift forced with both seats on 2 life: both at -2, {@code
+     * checkGameOverCondition} finds no player left, {@code GameEndReason.Draw}, both outcomes losses), and an effect
+     * makes it a draw (Divine Intervention's last intervention counter removed at the seat's upkeep: {@code
+     * GameDrawEffect}, {@code intentionalDraw()} on both, a {@code lossState} of {@code IntentionalDraw}).  Before
+     * the fix both read -1, {@code hasLost} first.  A third, {@code setGameOver(Draw)} on a game with no outcome
+     * yet (both {@code win()}, which read +1), is asserted on the scenario's own game at the end.  The control: the
+     * same Flame Rift with only the seat on 2 life is still a loss, -1.
+     */
+    static void engineDrawScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a game the engine ends drawn is a draw (D478 addendum, engine)");
+        final String lib = "Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest";
+        final java.util.function.BiFunction<Integer, Integer, List<String>> rift = (aiLife, otherLife) -> List.of(
+                "humanlife=" + otherLife, "ailife=" + aiLife, "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest", "humanlibrary=" + lib, "aibattlefield=Mountain;Mountain",
+                "aihand=Flame Rift", "ailibrary=" + lib);
+        final java.util.function.Function<Player, forge.game.spellability.SpellAbility> riftSa = (ai) -> {
+            final forge.game.spellability.SpellAbility sa = named(ai.getCardsIn(ZoneType.Hand), "Flame Rift").getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            return sa;
+        };
+        // 1. both seats lose at once: a draw, from the atlas's branch and from the search's playout
+        scenario("engine-draw-both-lose", rift.apply(2, 2), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final forge.game.spellability.SpellAbility sa = riftSa.apply(ai);
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(sa), 0, 0, 7,
+                    drawUnit(g, 1), "d478e", new LinkedHashMap<>(), null, "d478e", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && !b.timedOut && !b.capped && b.turns == 5
+                            && b.result == 0,
+                    "an atlas branch both seats lose at once (Flame Rift, both on 2) is a draw, not the seat's loss (capped "
+                            + b.capped + ", turns " + b.turns + ", result " + b.result + ", error " + b.error + ")");
+            final mtgtable.ai.SearchPolicy.Playout po = mtgtable.ai.SearchPolicy.playout(g, ai,
+                    mtgtable.ai.SearchPolicy.priorityCand(sa), 7,
+                    new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 60_000_000_000L, 1, 20_000), new CountSink(), false, null);
+            check(po != null && po.over && po.result == 0 && mtgtable.ai.SearchPolicy.winOf(po) == 0.5 && po.leaf == 0,
+                    "a search playout both seats lose at once is a draw: result 0, win .5, leaf 0 ("
+                            + (po == null ? "no playout" : "over " + po.over + ", result " + po.result + ", win "
+                            + mtgtable.ai.SearchPolicy.winOf(po) + ", leaf " + po.leaf) + ")");
+            check(!g.isGameOver() && ai.getLife() == 2, "the real game is untouched: not over, the seat on 2");
+            // 3. setGameOver(Draw) on a game with no outcome yet: Player.onGameOver gives both a win -- still a draw
+            g.setGameOver(GameEndReason.Draw);
+            check(ai.hasWon() && ai.getWeakestOpponent().hasWon() && mtgtable.ai.SearchPolicy.resultOf(g, ai) == 0,
+                    "a game set over as a draw with no outcome (both seats win()) reads 0, not the seat's win (resultOf "
+                            + mtgtable.ai.SearchPolicy.resultOf(g, ai) + ")");
+        });
+        // the control: only the seat on 2 -- the same spell is still the seat's loss
+        scenario("engine-draw-control", rift.apply(2, 20), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(riftSa.apply(ai)),
+                    0, 0, 7, drawUnit(ai.getGame(), 1), "d478e", new LinkedHashMap<>(), null, "d478e", false);
+            check(b.error == null && b.unavailable == null && !b.capped && b.turns == 5 && b.result == -1,
+                    "control: a Flame Rift only the seat dies to is its loss, -1 (capped " + b.capped + ", turns " + b.turns
+                            + ", result " + b.result + ", error " + b.error + ")");
+        });
+        // 2. an effect makes it a draw: Divine Intervention's last counter, removed at the seat's next upkeep (turn 7)
+        final List<String> quiet = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest", "humanlibrary=" + lib,
+                "aibattlefield=Divine Intervention|Counters:INTERVENTION=1;Forest;Forest", "ailibrary=" + lib);
+        scenario("engine-draw-intentional", quiet, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            // a scenario's game never left BeforeMulligan, and checkStateEffects activates triggers only in Play: an
+            // upkeep trigger would never fire (the lab's games are in Play)
+            g.setAge(forge.game.GameStage.Play);
+            g.getTriggerHandler().resetActiveTriggers();
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(null), 0, 0, 7,
+                    drawUnit(g, 4), "d478e", new LinkedHashMap<>(), null, "d478e", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && !b.timedOut && !b.capped && b.turns == 7
+                            && b.result == 0,
+                    "an atlas branch Divine Intervention draws at turn 7 is a draw, not the seat's loss (capped " + b.capped
+                            + ", turns " + b.turns + ", result " + b.result + ", error " + b.error + ")");
+            final mtgtable.ai.SearchPolicy.Playout po = mtgtable.ai.SearchPolicy.playout(g, ai,
+                    mtgtable.ai.SearchPolicy.priorityCand(null), 7,
+                    new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 60_000_000_000L, 3, 20_000), new CountSink(), false, null);
+            check(po != null && po.over && po.result == 0 && mtgtable.ai.SearchPolicy.winOf(po) == 0.5 && po.leaf == 0,
+                    "a search playout Divine Intervention draws is a draw: result 0, win .5, leaf 0 ("
+                            + (po == null ? "no playout" : "over " + po.over + ", result " + po.result + ", turns " + po.turns
+                            + ", leaf " + po.leaf) + ")");
+            check(!g.isGameOver(), "the real game is untouched: not over");
+        });
+    }
+
+    /** An atlas unit for {@link #engineDrawScenarios}: Forge on both seats, the cap {@code turns} past the fork's turn. */
+    private static mtgtable.ai.Atlas.Unit drawUnit(final Game g, final int turns) {
+        final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+        u.continuation = "forge";
+        u.turnCap = g.getPhaseHandler().getTurn() + turns;
+        u.branchTimeoutMs = 60_000;
+        u.observe = null;
+        return u;
     }
 
     /**

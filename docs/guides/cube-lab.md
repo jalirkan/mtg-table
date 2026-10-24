@@ -1321,6 +1321,7 @@ tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 10000 --branch-random 2
 tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke
 tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
 tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
+tools/cubelab.sh atlas ... --branch-capped-warn 0.5  # D478: an option past half its branch games capped is a warning (default 0.25)
 tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair and G6 on a Crypt Rats pair (~4.5 min at --jobs 1, engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
@@ -1364,6 +1365,15 @@ like this one, not a fault in the atlas.
   *Branch games that errored*). A frame log gunzip cannot read -- a worker the watchdog killed leaves its
   branch's two logs truncated -- is left out of the checks and named (`checks.unreadableFrameLogs`), and
   `atlas.json` is still written.
+- **Capped branches** ([D478](../decisions/D478-capped-atlas-branch-is-a-draw.md)): a branch the turn cap
+  (or the step cap, or the deadline between steps) ended is a draw, `result` 0 and `score` .5, kept in its
+  option's value at a half. One written otherwise is a problem (`checks.branchCapped.notDrawn`, exit 3).
+  Capped branches are counted by option in `checks.branchCapped`, and an option with more than
+  `--branch-capped-warn` (0.25) of its branch games capped is a **warning** (`checks.warnings`, atlas.md's
+  *Branch games the turn cap ended*), never a problem: a capped branch is a long position, not a fault, and
+  a pauper or ff5 night at the 40-turn cap can run long without anything being wrong. A game the engine
+  itself ends drawn (both seats losing at once, or an effect that makes the game a draw) is a draw too
+  (D478's addendum).
 - **`--pair auto`** takes the line of `tools/ai-bench/pairs-confirm.txt` with the most ladder games and
   the most even record: the smallest |p − ½| + 1.96·√(p(1−p)/n) over the line's decisive ladder games
   (`--ladder`, default `var/ai-ladder`). The plan keeps the choice for a resumed atlas.
