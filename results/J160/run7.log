@@ -1,0 +1,42 @@
+==== J160 run7 started 2026-10-24T05:32:00-04:00 in unit lab-J160-run7, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"code": 1, "tested": 5, "pooled": {"rmseColour": 0.0303, "maxAbsColour": 0.0678, "transferSdColour": 0.021, "nColour": 25, "missBeyondIntervalsColour": 4, "rmsePair": 0.047, "maxAbsPair": 0.1017, "transferSdPair": 0.0385, "nPair": 23, "missBeyondIntervalsPair": 8}, "candidates": ["balanced-legacy-even-high-nopower"]}
+**Forge-pilot caveat:** Every game is piloted by Forge's Default AI on both seats, and every deck is the lab drafter's and builder's; the model predicts exactly that and nothing about people.
+
+# J160: the library model tested -- predicted against measured, per generated cube
+
+The registered reads (written before any game): (i) the transfer error, RMSE(pred, measured) over the five colours and the pairs with 400+ arm-B deck-games, per cube and pooled; (ii) the selection bias, the measured max pair gap minus the predicted searched gap; (iii) the power effect, the max colour gap with power minus without; (iv) a candidate (D447 point 9), a cube with no colour OFF and no qualifying pair OFF on this night alone. No cube is promoted, swapped or regenerated.
+
+**(i) Transfer error, pooled over 5 cube(s):** colours RMSE 0.030 (max 0.068, transfer SD 0.021, n 25); qualifying pairs RMSE 0.047 (max 0.102, transfer SD 0.038, n 23); cells missed beyond both intervals: 4 colour(s), 8 pair(s). The programme was simulated at transfer SD 0, .015 and .03.
+
+**(iv) Candidates (no colour OFF, no qualifying pair OFF, this night alone):** balanced-legacy-even-high-nopower. The v2 draft rule's stricter PASS (every colour EVEN, no qualifying pair OFF): none. Confirmed only on fresh seeds later; nothing is promoted.
+
+## Per cube
+
+| cube | games | colour level | (i) RMSE colours / pairs (n pairs) | transfer SD colours / pairs | (ii) measured max pair gap | predicted searched gap | selection bias | noise-only expected gap (share >= measured) | objective: measured / flow-only / searched | (iv) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| balanced-legacy-even-high | 4000 | NOT BALANCED ON PAYOFF | 0.044 / 0.063 (6) | 0.039 / 0.058 | 0.100 | 0.004 | +0.096 | 0.033 (0.000) | 0.165 / 0.114 / 0.007 | no |
+| balanced-legacy-even-high-nopower | 4000 | BALANCED ON PAYOFF | 0.028 / 0.025 (5) | 0.020 / 0.002 | 0.043 | 0.011 | +0.032 | 0.030 (0.119) | 0.092 / 0.148 / 0.024 | CANDIDATE |
+| balanced-legacy-even-mid | 3988 | BALANCED ON PAYOFF | 0.025 / 0.039 (4) | 0.013 / 0.031 | 0.075 | 0.003 | +0.073 | 0.026 (0.001) | 0.114 / 0.030 / 0.006 | no |
+| balanced-legacy-even-mid-nopower | 3989 | BALANCED ON PAYOFF | 0.027 / 0.040 (5) | 0.018 / 0.030 | 0.060 | 0.003 | +0.058 | 0.031 (0.031) | 0.105 / 0.032 / 0.007 | no |
+| balanced-pauper-even | 4000 | BALANCED ON PAYOFF | 0.023 / 0.056 (3) | 0.000 / 0.044 | 0.079 | 0.008 | +0.071 | 0.029 (0.001) | 0.116 / 0.163 / 0.008 | no |
+| omega-j159 (reference) | 4000 | BALANCED ON PAYOFF | 0.017 / 0.021 (7) | 0.000 / 0.000 | 0.047 | 0.060 | -0.013 | 0.067 (0.891) | 0.077 / - / - | CANDIDATE |
+
+## (iii) The power effect: max colour gap with power minus without
+
+| family | with | without | measured diff (95%) | predicted diff | pair-gap diff |
+|---|---|---|---|---|---|
+| balanced-legacy-even-high | 0.066 | 0.049 | +0.017 (-0.015 to +0.047) | -0.009 | +0.056 |
+| balanced-legacy-even-mid | 0.038 | 0.045 | -0.006 (-0.027 to +0.023) | -0.000 | +0.015 |
+| balanced-pauper-even | - | - | n/a: no -nopower cube measured | - | - |
+
+### balanced-legacy-even-high
+
+| cell | predicted | measured (95%) | n | label | measured - predicted | qualifies |
+|---|---|---|---|---|---|---|
+| W | 0.501 | 0.478 (0.459-0.498) | 2734 | EVEN | -0.022 | yes |
+| U | 0.498 | 0.566 (0.546-0.583) | 2830 | OFF | +0.068 | yes |
+| B | 0.499 | 0.470 (0.445-0.495) | 1482 | UNCLEAR | -0.029 | yes |
+| R | 0.499 | 0.446 (0.426-0.468) | 2338 | OFF | -0.053 | yes |
+| G | 0.503 | 0.474 (0.451-0.497) | 1906 | EVEN | -0.029 | yes |
+| WU | 0.498 | 0.600 (0.567-0.634) | 852 | OFF | +0.102 | yes |
+| WB | 0.497 | 0.471 (0.396-0.548) | 174 | UNCLEAR | -0.026 | no |
