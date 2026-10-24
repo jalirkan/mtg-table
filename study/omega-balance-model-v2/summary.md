@@ -110,7 +110,7 @@ RMSE over the five colours and the pairs with 400+ deck-games. v1 = census value
 | lab-j160:none:censusOracle | 0.028 | 0.046 | 25 + 23 |
 | lab-j160:none:censusConc | 0.030 | 0.046 | 25 + 23 |
 
-Transfer error left in v2 (night held out): colours 0.021, pairs 0.030 (sqrt(max(0, mean squared night-held-out residual - mean read variance)); the prediction's own bootstrap variance is not subtracted (it is carried separately in the intervals), so this is the transfer error plus the values' noise); the generated cubes' intervals carry 0.021 / 0.030.
+Transfer error left in v2, night held out (sqrt(max(0, mean squared night-held-out residual - mean read variance)); the prediction's own bootstrap variance is not subtracted (it is carried separately in the intervals), so this is the transfer error plus the values' noise. newCube: cubes no other night drafted (what a generated cube is); remeasured: cubes another night in the fit drafted.): on NEW cubes (lab-j160/balanced-legacy-even-high-nopower, lab-j160/balanced-legacy-even-high, lab-j160/balanced-legacy-even-mid-nopower, lab-j160/balanced-legacy-even-mid, lab-j160/balanced-pauper-even) colours 0.026, pairs 0.038; on RE-MEASURED cubes (lab-j145/omega-cube-180, lab-j159/omega-cube-180) 0.000 / 0.000; pooled 0.021 / 0.030. The generated cubes are new cubes: their intervals carry 0.026 / 0.038 (newCube; hand-set floors 0.015 / 0.025). Each cell gets independent noise, while the real residuals are correlated across a colour's pairs: a known narrowing of the gap-with-transfer interval.
 
 ## The drafter's mix, by scale
 
@@ -189,66 +189,66 @@ Cells from the lab drafter's own decks for each cube (2,000 simulated drafts); i
 
 | cube | level | search | gap, point | gap, robust (95%) | gap with transfer (95%) | flow alone: robust / with transfer | three-colour decks |
 |---|---|---|---|---|---|---|---|
-| balanced-v2-legacy-even-high | +2.0 | 7 swaps kept | 0.040 | 0.047 (0.025–0.073) | 0.093 (0.051–0.146) | 0.071 / 0.105 | 0.154 |
-| balanced-v2-legacy-even-mid | +0.0 | flow kept (1 tried) | 0.041 | 0.051 (0.025–0.074) | 0.096 (0.053–0.148) | 0.051 / 0.096 | 0.179 |
-| balanced-v2-pauper-even | +0.0 | 11 swaps kept | 0.052 | 0.054 (0.031–0.081) | 0.091 (0.045–0.151) | 0.119 / 0.135 | 0.648 |
+| balanced-v2-legacy-even-high | +2.0 | 7 swaps kept | 0.040 | 0.047 (0.025–0.073) | 0.110 (0.061–0.171) | 0.071 / 0.121 | 0.154 |
+| balanced-v2-legacy-even-mid | +0.0 | flow kept (1 tried) | 0.041 | 0.051 (0.025–0.074) | 0.114 (0.061–0.175) | 0.051 / 0.113 | 0.179 |
+| balanced-v2-pauper-even | +0.0 | 11 swaps kept | 0.052 | 0.054 (0.031–0.081) | 0.106 (0.052–0.174) | 0.119 / 0.145 | 0.648 |
 
 ### balanced-v2-legacy-even-high
 
 | cell | predicted | 95% with transfer | deck-games at a 2,000-draft night |
 |---|---|---|---|
-| W | 0.498 | 0.451–0.544 | 2756 |
-| U | 0.488 | 0.443–0.533 | 2606 |
-| B | 0.483 | 0.436–0.531 | 594 |
-| R | 0.500 | 0.455–0.546 | 2230 |
-| G | 0.501 | 0.455–0.548 | 2384 |
-| WU | 0.503 | 0.441–0.566 | 868 |
-| WB | 0.500 | 0.437–0.562 | 72 |
-| WR | 0.523 | 0.461–0.585 | 1156 |
-| WG | 0.520 | 0.457–0.583 | 276 |
-| UB | 0.495 | 0.432–0.559 | 228 |
-| UR | 0.512 | 0.451–0.574 | 2110 |
-| UG | 0.509 | 0.447–0.570 | 816 |
-| BR | 0.503 | 0.440–0.566 | 128 |
-| BG | 0.511 | 0.448–0.573 | 52 |
-| RG | 0.516 | 0.454–0.579 | 876 |
+| W | 0.498 | 0.443–0.552 | 2756 |
+| U | 0.488 | 0.435–0.541 | 2606 |
+| B | 0.483 | 0.429–0.538 | 594 |
+| R | 0.500 | 0.447–0.554 | 2230 |
+| G | 0.501 | 0.447–0.555 | 2384 |
+| WU | 0.503 | 0.426–0.581 | 868 |
+| WB | 0.500 | 0.422–0.577 | 72 |
+| WR | 0.523 | 0.445–0.601 | 1156 |
+| WG | 0.520 | 0.442–0.598 | 276 |
+| UB | 0.495 | 0.417–0.574 | 228 |
+| UR | 0.512 | 0.435–0.589 | 2110 |
+| UG | 0.509 | 0.432–0.586 | 816 |
+| BR | 0.503 | 0.425–0.581 | 128 |
+| BG | 0.511 | 0.433–0.589 | 52 |
+| RG | 0.516 | 0.439–0.594 | 876 |
 
 ### balanced-v2-legacy-even-mid
 
 | cell | predicted | 95% with transfer | deck-games at a 2,000-draft night |
 |---|---|---|---|
-| W | 0.503 | 0.456–0.550 | 2736 |
-| U | 0.481 | 0.436–0.527 | 1680 |
-| B | 0.481 | 0.435–0.527 | 2906 |
-| R | 0.487 | 0.440–0.534 | 62 |
-| G | 0.518 | 0.472–0.564 | 2342 |
-| WU | 0.506 | 0.444–0.568 | 2310 |
-| WB | 0.507 | 0.444–0.570 | 816 |
-| WR | 0.512 | 0.449–0.575 | 0 |
-| WG | 0.541 | 0.478–0.604 | 282 |
-| UB | 0.487 | 0.425–0.549 | 1438 |
-| UR | 0.489 | 0.426–0.552 | 42 |
-| UG | 0.522 | 0.459–0.584 | 938 |
-| BR | 0.492 | 0.430–0.554 | 0 |
-| BG | 0.517 | 0.455–0.580 | 492 |
-| RG | 0.527 | 0.465–0.590 | 0 |
+| W | 0.503 | 0.448–0.558 | 2736 |
+| U | 0.481 | 0.428–0.535 | 1680 |
+| B | 0.481 | 0.427–0.535 | 2906 |
+| R | 0.487 | 0.432–0.541 | 62 |
+| G | 0.518 | 0.464–0.572 | 2342 |
+| WU | 0.506 | 0.429–0.584 | 2310 |
+| WB | 0.507 | 0.429–0.585 | 816 |
+| WR | 0.512 | 0.433–0.590 | 0 |
+| WG | 0.541 | 0.463–0.619 | 282 |
+| UB | 0.487 | 0.409–0.564 | 1438 |
+| UR | 0.489 | 0.411–0.567 | 42 |
+| UG | 0.522 | 0.444–0.600 | 938 |
+| BR | 0.492 | 0.414–0.570 | 0 |
+| BG | 0.517 | 0.440–0.595 | 492 |
+| RG | 0.527 | 0.450–0.605 | 0 |
 
 ### balanced-v2-pauper-even
 
 | cell | predicted | 95% with transfer | deck-games at a 2,000-draft night |
 |---|---|---|---|
-| W | 0.496 | 0.449–0.544 | 2872 |
-| U | 0.467 | 0.421–0.513 | 1366 |
-| B | 0.499 | 0.452–0.545 | 2654 |
-| R | 0.495 | 0.448–0.543 | 2804 |
-| G | 0.518 | 0.464–0.571 | 1088 |
-| WU | 0.494 | 0.428–0.560 | 630 |
-| WB | 0.522 | 0.454–0.590 | 142 |
-| WR | 0.523 | 0.455–0.591 | 74 |
-| WG | 0.538 | 0.470–0.607 | 4 |
-| UB | 0.501 | 0.435–0.567 | 752 |
-| UR | 0.481 | 0.416–0.546 | 908 |
-| UG | 0.511 | 0.442–0.579 | 46 |
-| BR | 0.519 | 0.450–0.587 | 226 |
-| BG | 0.542 | 0.473–0.612 | 10 |
-| RG | 0.551 | 0.484–0.619 | 12 |
+| W | 0.496 | 0.441–0.552 | 2872 |
+| U | 0.467 | 0.413–0.521 | 1366 |
+| B | 0.499 | 0.444–0.553 | 2654 |
+| R | 0.495 | 0.440–0.550 | 2804 |
+| G | 0.518 | 0.457–0.578 | 1088 |
+| WU | 0.494 | 0.413–0.575 | 630 |
+| WB | 0.522 | 0.439–0.604 | 142 |
+| WR | 0.523 | 0.441–0.605 | 74 |
+| WG | 0.538 | 0.456–0.621 | 4 |
+| UB | 0.501 | 0.421–0.582 | 752 |
+| UR | 0.481 | 0.401–0.561 | 908 |
+| UG | 0.511 | 0.428–0.593 | 46 |
+| BR | 0.519 | 0.436–0.601 | 226 |
+| BG | 0.542 | 0.459–0.626 | 10 |
+| RG | 0.551 | 0.470–0.633 | 12 |
