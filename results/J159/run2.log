@@ -1,0 +1,77 @@
+==== J159 run2 started 2026-10-24T00:26:23-04:00 in unit lab-J159-run2, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+{"v":1,"run":"lab","cube":"omega-cube-180","drafter":null,"seedBase":1661,"drafts":2000,"decks":4000,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,2,3836,162,0,0],"pairs":4000}
+census-play: 4000 game(s) planned over 4000 deck(s) (a replay of var/lab-j159/prof/lab/pairs.jsonl); 0 already played, 4000 to play on 6 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j159/games/B-lab)
+[100/4000] 5460 games/h
+[200/4000] 6925 games/h
+[300/4000] 7707 games/h
+[400/4000] 8197 games/h
+[500/4000] 8368 games/h
+[600/4000] 8743 games/h
+[700/4000] 9067 games/h
+[800/4000] 9114 games/h
+[900/4000] 9156 games/h
+[1000/4000] 9062 games/h
+[1100/4000] 8845 games/h
+[1200/4000] 8744 games/h
+[1300/4000] 8793 games/h
+[1400/4000] 8773 games/h
+[1500/4000] 8747 games/h
+[1600/4000] 8757 games/h
+[1700/4000] 8769 games/h
+[1800/4000] 8801 games/h
+[1900/4000] 8714 games/h
+[2000/4000] 8750 games/h
+[2100/4000] 8659 games/h
+[2200/4000] 8687 games/h
+[2300/4000] 8720 games/h
+[2400/4000] 8722 games/h
+[2500/4000] 8674 games/h
+[2600/4000] 8721 games/h
+[2700/4000] 8758 games/h
+[2800/4000] 8752 games/h
+[2900/4000] 8718 games/h
+[3000/4000] 8732 games/h
+[3100/4000] 8782 games/h
+[3200/4000] 8753 games/h
+[3300/4000] 8788 games/h
+[3400/4000] 8833 games/h
+[3500/4000] 8897 games/h
+[3600/4000] 8962 games/h
+[3700/4000] 9014 games/h
+[3800/4000] 9097 games/h
+[3900/4000] 9130 games/h
+[4000/4000] 9130 games/h
+census-play: 4000 game(s) in B-lab/games.jsonl: 4000 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 4000 in 1577 s on 6 worker(s) = 9130 games/h
+census-play: record rows: per game rows 60.9 KB (median 55.5 KB), ledger 1.7 KB; rows checked 186529 in 6 file(s), leak check 0/1550 (candidates compared in 1550; controls moved 1330/1348)
+{"v":1,"run":"hp","cube":"omega-cube-180","drafter":{"kind":"human-picks","seat":"A","file":"../ForgeCoach/public/cubes/omega-cube-180.picks.json","sha":"9ee28421c115570839e46ab270288ec6b982db18cc467bb5899b436ae6901b23","cards":180,"covered":105,"fallback":{"intercept":-2.8729974909306146,"slope":0.0423417318659016,"n":105,"r":0.6056723899899558}},"seedBase":1662,"drafts":600,"decks":1200,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,1,1104,95,0,0],"pairs":1200}
+census-play: 1200 game(s) planned over 1200 deck(s) (a replay of var/lab-j159/prof/hp/pairs.jsonl); 0 already played, 1200 to play on 6 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j159/games/B-hp)
+[100/1200] 5511 games/h
+[200/1200] 7001 games/h
+[300/1200] 7496 games/h
+[400/1200] 8308 games/h
+[500/1200] 8935 games/h
+[600/1200] 9400 games/h
+[700/1200] 9554 games/h
+[800/1200] 9995 games/h
+[900/1200] 10284 games/h
+[1000/1200] 10383 games/h
+[1100/1200] 10445 games/h
+[1200/1200] 10625 games/h
+census-play: 1200 game(s) in B-hp/games.jsonl: 1200 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 1200 in 407 s on 6 worker(s) = 10625 games/h
+census-play: record rows: per game rows 58.3 KB (median 52.6 KB), ledger 1.7 KB; rows checked 53726 in 6 file(s), leak check 0/418 (candidates compared in 418; controls moved 361/367)
+{"v":1,"run":"fr","cube":"omega-cube-180","drafter":{"kind":"forge-ranks","seat":"A","weights":{"synergy":0,"lean":0,"commitAt":0.04},"cards":180,"ranked":180,"differ":0},"seedBase":1663,"drafts":600,"decks":1200,"skippedDrafts":0,"forgeBuilt":0,"notInCube":0,"unknown":0,"byK":[0,0,1167,33,0,0],"pairs":1200}
+census-play: 1200 game(s) planned over 1200 deck(s) (a replay of var/lab-j159/prof/fr/pairs.jsonl); 0 already played, 1200 to play on 6 worker(s); pilots a plain, b plain; record rows (under LAB_DATA_DIR: /home/justin-a/code/lab/data/lab-j159/games/B-fr)
+[100/1200] 5942 games/h
+[200/1200] 7187 games/h
+[300/1200] 8176 games/h
+[400/1200] 8700 games/h
+[500/1200] 9044 games/h
+[600/1200] 9202 games/h
+[700/1200] 9173 games/h
+[800/1200] 9172 games/h
+[900/1200] 9325 games/h
+[1000/1200] 9614 games/h
+[1100/1200] 9629 games/h
+[1200/1200] 9663 games/h
+census-play: 1200 game(s) in B-fr/games.jsonl: 1200 decisive, 0 drawn (0 timeouts), 0 engine error(s); this session 1200 in 447 s on 6 worker(s) = 9663 games/h
+census-play: record rows: per game rows 60.5 KB (median 55.0 KB), ledger 1.7 KB; rows checked 55742 in 6 file(s), leak check 0/448 (candidates compared in 448; controls moved 387/389)
