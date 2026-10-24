@@ -36,6 +36,7 @@ import forge.game.GameRules;
 import forge.game.GameState;
 import forge.game.GameType;
 import forge.game.Match;
+import forge.game.StaticEffect;
 import forge.game.card.Card;
 import forge.game.event.EventValueChangeType;
 import forge.game.event.GameEvent;
@@ -88,13 +89,26 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *   <li><b>D399, the other window -- a reveal briefly missing:</b> seat 1 is
  *       now the viewer, the Oracle stays in play, and Forge re-runs its
  *       statics ({@code GameAction.checkStaticAbilities}); a subscriber
- *       flushes the forwarder on the first event fired while the view tracker
- *       is frozen (the Oracle's own {@code AdjustLandPlays} static, through
- *       {@code Player.addMaxLandPlays}).  Control: a bare {@link Snap#state}
+ *       flushes the forwarder at D399's cut: an event fired while the view
+ *       tracker is frozen AND no {@code MayLookAt} static effect is registered
+ *       -- the reveal cleared and not yet re-applied, which is the Oracle's own
+ *       {@code AdjustLandPlays} static firing through
+ *       {@code Player.addMaxLandPlays}.  Control: a bare {@link Snap#state}
  *       at that cut has the Oracle on the battlefield and seat 1's own top
  *       card NOT in {@code library.cards} (night 3's game 354, the checker's
- *       M55).  The fix: the flush was held ({@link MidMove#heldFrozen}) and
- *       every frame of that log lists exactly the top card.</li>
+ *       M55).  The fix: every flush made inside the freeze was held
+ *       ({@link MidMove#heldFrozen}) and every frame of that log lists exactly
+ *       the top card.
+ *       <p>The cut is pinned by that predicate, not by "the first frozen
+ *       event" (D399's addendum of 2026-10-24): the first frozen event is
+ *       {@code removeMaxLandPlays} inside {@code clearStaticEffects}, which
+ *       walks a {@code HashMap} keyed by {@code StaticAbility}, whose
+ *       {@code hashCode} is {@code Objects.hash(StaticAbility.class, id)} --
+ *       the class's identity hash, different from JVM to JVM.  Whether the
+ *       Oracle's reveal is already cleared at that event is a coin the JVM
+ *       tosses at boot, so a bare frame there is wrong in some runs and right
+ *       in others.  The self-test still flushes there (that hold is checked)
+ *       and prints what a bare frame showed, as a note, never a check.</li>
  * </ol>
  *
  * <p>Usage: {@code ./bridge/run.sh mtgtable.MidMoveSelfTest <scratch dir>} --
@@ -179,11 +193,19 @@ public final class MidMoveSelfTest {
 
         // 5. D399: the reveal missing inside a tracker freeze.
         final File frozenLog = new File(dir, "midupdate.jsonl");
-        final int[] fz = new int[4];                // oracle, top card, cuts while frozen, frozen holds after
-        final String[] fzCut = new String[1];
+        // oracle, top card, events while frozen, frozen holds after, cuts in the window, flushes while frozen,
+        // the first frozen event's bare frame showed the top card (1) or not (0)
+        final int[] fz = {0, 0, 0, 0, 0, 0, -1};
+        final String[] fzCut = new String[2];       // the frame at the cut; the effects' order at the first frozen event
         final int frozenBefore = MidMove.heldFrozen();
         onGameThread(() -> runFrozen(frozenLog, fz, fzCut));
-        expect("D399: a flush was cut inside the tracker freeze (" + fz[2] + ")", fz[2] >= 1);
+        expect("D399: events fired inside the tracker freeze (" + fz[2] + ")", fz[2] >= 1);
+        expect("D399: the cut landed once in the window -- tracker frozen, the Oracle's MayLookAt effect cleared "
+                + "and not yet re-applied (" + fz[4] + ")", fz[4] == 1);
+        System.out.println("  note D399: the first frozen event (clearStaticEffects, effects in HashMap order ["
+                + fzCut[1] + "]): a bare Snap.state there "
+                + (fz[6] == 1 ? "SHOWS" : fz[6] == 0 ? "hides" : "was not taken for")
+                + " seat 1's top card -- StaticAbility.class's identity hash decides; not a check");
         if (fzCut[0] != null) {
             final Map<?, ?> s = (Map<?, ?>) Json.parse(fzCut[0]);
             expect("D399 control: at the cut the Oracle is still on seat 1's battlefield", onBattlefield(s, 1, fz[0]));
@@ -210,7 +232,8 @@ public final class MidMoveSelfTest {
         }
         expect("D399: every frame has the Oracle in play and exactly its top card in seat 1's library.cards ("
                 + missing + " without)", missing == 0);
-        expect("D399: the flush inside the freeze was held (" + (fz[3] - frozenBefore) + ")", fz[3] > frozenBefore);
+        expect("D399: every flush made inside the freeze was held (" + (fz[3] - frozenBefore) + " of " + fz[5] + ")",
+                fz[5] >= 2 && fz[3] - frozenBefore == fz[5]);
 
         // 4. The valve, on a game left stale on purpose.
         expect("valve: the stale game counted as stale", valve[0] > 0);
@@ -309,7 +332,9 @@ public final class MidMoveSelfTest {
     /**
      * D399, on the game thread: seat 1 (the Oracle's controller) is the viewer;
      * Forge re-runs its statics with the Oracle in play, and the forwarder is
-     * flushed on the first event that arrives while the view tracker is frozen.
+     * flushed on the first event that arrives while the view tracker is frozen
+     * and again at D399's cut, the first frozen event with no {@code MayLookAt}
+     * effect registered (see the class comment, part 5).
      */
     private static void runFrozen(final File logFile, final int[] ids, final String[] atCut) {
         final Game game = position();
@@ -341,12 +366,31 @@ public final class MidMoveSelfTest {
         gui.openView(new TrackableCollection<>(viewer));
         final GameEventForwarder forwarder = new GameEventForwarder(gui);
         game.subscribeToEvents(forwarder);
+        final long topId = ids[1];
         // After the forwarder: the event is in the batch it flushes (the 50-event or 500 ms flush, landed on it).
+        // Called on the game thread, synchronously from Game.fireEvent: no hop.
         game.subscribeToEvents(new Object() {
             @Subscribe
             public void receive(final GameEvent ev) {
-                if (MidMove.midUpdate(game) && ids[2]++ == 0) {
+                if (!MidMove.midUpdate(game)) {
+                    return;
+                }
+                boolean flush = false;
+                if (ids[2]++ == 0) {
+                    // The old cut: which effect clearStaticEffects removes first is HashMap order. Observed, not checked.
+                    atCut[1] = effectOrder(game);
+                    final String bare = Snap.state("midupdate-selftest", game.getView(), viewer, List.of());
+                    ids[6] = libraryIds((Map<?, ?>) Json.parse(bare), 1).contains(topId) ? 1 : 0;
+                    flush = true;
+                }
+                if (ids[4] == 0 && !revealRegistered(game)) {
+                    // D399's window: the reveal is cleared and not yet re-applied, in every JVM.
+                    ids[4]++;
                     atCut[0] = Snap.state("midupdate-selftest", game.getView(), viewer, List.of());
+                    flush = true;
+                }
+                if (flush) {
+                    ids[5]++;
                     forwarder.flush();
                 }
             }
@@ -361,6 +405,28 @@ public final class MidMoveSelfTest {
         } catch (final java.io.IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /** Game thread: is any {@code MayLookAt} static effect registered (cleared by clearStaticEffects, back once re-applied)? */
+    private static boolean revealRegistered(final Game game) {
+        for (final StaticEffect se : game.getStaticEffects().getEffects()) {
+            if (se != null && se.hasParam("MayLookAt")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Game thread: the registered static effects, in the registry's (HashMap) iteration order. */
+    private static String effectOrder(final Game game) {
+        final StringBuilder out = new StringBuilder();
+        for (final StaticEffect se : game.getStaticEffects().getEffects()) {
+            if (se != null) {
+                out.append(out.length() == 0 ? "" : " ").append(se.hasParam("MayLookAt") ? "MayLookAt"
+                        : se.hasParam("AdjustLandPlays") ? "AdjustLandPlays" : "other");
+            }
+        }
+        return out.toString();
     }
 
     /** Seat 1 controls Oracle of Mul Daya; three cards in its library; seat 0's main phase. */
