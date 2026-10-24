@@ -2719,6 +2719,12 @@ public final class SearchPolicy {
                 sink.add("search.standInDecisions", 1);
                 sink.add("search.standInCards", cp.unmapped());
             }
+            if (first && !cp.effectSourceNull().isEmpty()) {   // D479: effects the copy plays with no source
+                sink.add("search.effectSourceNull", cp.effectSourceNull().size());
+            }
+            if (first && !cp.exileLinksLost().isEmpty()) {     // D479: exile links the copy could not map
+                sink.add("search.exileLinksLost", cp.exileLinksLost().size());
+            }
             final Player aiCopy = (Player) cp.find(ai);
             RolloutForcing rc = null;
             for (final Player p : copy.getPlayers()) {

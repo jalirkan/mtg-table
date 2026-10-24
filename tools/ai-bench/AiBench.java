@@ -1507,6 +1507,7 @@ public final class AiBench {
         altCostScenarios();
         staleEffectScenarios();
         adventureScenarios();
+        copierCarryScenarios();
     }
 
     /**
@@ -1626,6 +1627,258 @@ public final class AiBench {
             check(onField[0], "the fork cast the Rider from exile onto its battlefield (" + sink.counts + ")");
             check(rider.isInZone(ZoneType.Exile), "the real game is untouched: the Rider still in exile");
         });
+    }
+
+    /**
+     * D479 (amending D313): what the fork's copy now carries that Forge's
+     * {@code GameCopier} leaves off -- an effect card's triggers, replacement
+     * effects and source, and every "exiled with" link -- each planted in the
+     * real game, then played the same way on the copy and in the real game.
+     * Forge's own copier is the control in each: it drops what is checked.
+     */
+    static void copierCarryScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: effect sources, effect traits and exile links on a copy (D479, engine)");
+        // 1. Gideon, Ally of Zendikar's +1 (the modern-era cube): an effect whose replacement prevents all damage
+        //    dealt to Card.EffectSource.  With no replacement, or a null source, the Bolt takes 3 loyalty.
+        scenario("copy-effect-source", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Mountain", "humanhand=Lightning Bolt", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Plains;Plains;Plains;Plains", "aibattlefield=Gideon, Ally of Zendikar|Counters:LOYALTY=4;Plains"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Player human = ai.getWeakestOpponent();
+            final Card gid = named(ai.getCardsIn(ZoneType.Battlefield), "Gideon, Ally of Zendikar");
+            forge.game.spellability.SpellAbility plus = null;
+            for (final forge.game.spellability.SpellAbility sa : gid.getSpellAbilities()) {
+                plus = plus == null && sa.isPwAbility() && sa.getDescription().contains("+1") ? sa : plus;
+            }
+            plus.setActivatingPlayer(ai);
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, plus, null), "setup: the real game activates Gideon's +1");
+            g.getStack().resolveStack();
+            final Card eff = effectOf(ai, "Gideon, Ally of Zendikar");
+            check(eff != null && eff.getReplacementEffects().size() == 1 && eff.getEffectSource() == gid && gid.getCurrentLoyalty() == 5,
+                    "setup: Gideon at 5 loyalty, his effect a replacement whose source is Gideon (" + eff + ")");
+            final Game plain = new forge.ai.simulation.GameCopier(g).makeCopy();
+            final Card pe = effectOf(plain.getPlayer(ai.getId()), "Gideon, Ally of Zendikar");
+            check(pe != null && pe.getReplacementEffects().isEmpty() && pe.getEffectSource() == null,
+                    "control: Forge's own copy gives the effect no replacement and no source (" + (pe == null ? null
+                            : pe.getReplacementEffects().size() + " replacement(s), source " + pe.getEffectSource()) + ")");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            final Player aiC = (Player) cp.find(ai);
+            final Player humanC = (Player) cp.find(human);
+            final Card gidC = named(aiC.getCardsIn(ZoneType.Battlefield), "Gideon, Ally of Zendikar");
+            final Card effC = effectOf(aiC, "Gideon, Ally of Zendikar");
+            check(effC != null && effC.getReplacementEffects().size() == 1 && effC.getEffectSource() == gidC
+                            && cp.effectSourceNull().isEmpty(),
+                    "the copy's effect has its replacement and its source, the copy's Gideon (" + (effC == null ? null
+                            : effC.getReplacementEffects().size() + " replacement(s), source " + effC.getEffectSource()
+                            + (effC.getEffectSource() == gidC ? " (the copy's)" : "")) + ", null sources " + cp.effectSourceNull() + ")");
+            final int inCopy = boltAt(humanC, gidC);
+            final int inReal = boltAt(human, gid);
+            check(inReal == 5, "the real game: a Bolt at Gideon is prevented, 5 loyalty (" + inReal + ")");
+            check(inCopy == inReal, "the copy as the real game: a Bolt at the copy's Gideon leaves " + inCopy + " loyalty (real " + inReal + ")");
+        });
+        // 1b. the counter: an effect whose source is in no copied zone (Reckless Impulse put in the sideboard after it
+        //     resolved) cannot be named on a copy; it is counted, not guessed
+        scenario("copy-effect-source-null", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Lightning Bolt;Lightning Bolt;Lightning Bolt;Lightning Bolt", "aihand=Reckless Impulse",
+                "aibattlefield=Mountain;Mountain"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, playOf(ai, "Reckless Impulse", (sa) -> true), null),
+                    "setup: the real game casts Reckless Impulse");
+            g.getStack().resolveStack();
+            final Card eff = effectOf(ai, "Reckless Impulse");
+            g.getAction().moveTo(ZoneType.Sideboard, named(ai.getCardsIn(ZoneType.Graveyard), "Reckless Impulse"), null, null);
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            cp.makeCopy(null, ai);
+            check(eff != null && eff.getEffectSource() != null
+                            && cp.effectSourceNull().equals(List.of(eff.getName() + " <- Reckless Impulse"))
+                            && cp.exileLinksLost().size() == 2,
+                    "a source in no copied zone is counted, not guessed (" + cp.effectSourceNull() + "; lost links "
+                            + cp.exileLinksLost() + ")");
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = g.getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(null), 0, 0, 7, u,
+                    "d479", new LinkedHashMap<>(), null, "d479", false);
+            check(b.error == null && b.effectSourceNull == 1 && b.exileLinksLost == 2,
+                    "an atlas branch's row counts it, and the two Bolts exiled with the same card: effectSourceNull "
+                            + b.effectSourceNull + ", exileLinksLost "
+                            + b.exileLinksLost + " (error " + b.error + ")");
+        });
+        // 2. Oblivion Ring exiled the Bears before the fork (its "exiled with" link, planted as Forge's GameState plants it);
+        //    the Ring leaves the battlefield and its trigger returns ExiledWith: the host's exiled cards.
+        scenario("copy-exiled-with", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanexile=Grizzly Bears|ExiledWith:7001", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Plains;Plains;Plains;Plains", "aibattlefield=Oblivion Ring|Id:7001;Plains"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Player human = ai.getWeakestOpponent();
+            // a scenario's game never left BeforeMulligan, where no trigger is active (D478's note); the lab's are in Play
+            g.setAge(forge.game.GameStage.Play);
+            g.getTriggerHandler().resetActiveTriggers();
+            final Card ring = named(ai.getCardsIn(ZoneType.Battlefield), "Oblivion Ring");
+            final Card bears = named(human.getCardsIn(ZoneType.Exile), "Grizzly Bears");
+            check(bears.getExiledWith() == ring && ring.hasExiledCard(bears), "setup: the Bears exiled with Oblivion Ring");
+            final Game plain = new forge.ai.simulation.GameCopier(g).makeCopy();
+            final Card pb = named(plain.getPlayer(human.getId()).getCardsIn(ZoneType.Exile), "Grizzly Bears");
+            final Card pr = named(plain.getPlayer(ai.getId()).getCardsIn(ZoneType.Battlefield), "Oblivion Ring");
+            check(pb.getExiledWith() == null && !pr.hasExiledCard(), "control: Forge's own copy drops the link (TODO ExiledWith)");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            final Player aiC = (Player) cp.find(ai);
+            final Player humanC = (Player) cp.find(human);
+            final Card ringC = named(aiC.getCardsIn(ZoneType.Battlefield), "Oblivion Ring");
+            final Card bearsC = named(humanC.getCardsIn(ZoneType.Exile), "Grizzly Bears");
+            check(bearsC.getExiledWith() == ringC && bearsC.getExiledBy() == aiC && ringC.hasExiledCard(bearsC)
+                            && cp.exileLinksLost().isEmpty(),
+                    "the copy keeps the link both ways (exiled with " + bearsC.getExiledWith() + ", by " + bearsC.getExiledBy()
+                            + ", the Ring's " + ringC.getExiledCards() + ", lost " + cp.exileLinksLost() + ")");
+            final String inCopy = ringLeaves(copy, ringC, humanC);
+            final String inReal = ringLeaves(g, ring, human);
+            check(inReal.equals("Grizzly Bears on the battlefield"), "the real game: the Ring leaves and the Bears return (" + inReal + ")");
+            check(inCopy.equals(inReal), "the copy as the real game: " + inCopy);
+        });
+        // 3. Karn Liberated exiled the Hill Giant before the fork; -14 on the copy puts it onto Karn's controller's
+        //    battlefield (D477's follow-up: it went to its owner's library).
+        final String lib = "Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest";
+        scenario("copy-karn-exiled", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanexile=Hill Giant|ExiledWith:7002", "humanlibrary=" + lib, "ailibrary=" + lib,
+                "aibattlefield=Karn Liberated|Id:7002|Counters:LOYALTY=14;Mountain"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            final String inCopy = karnRestarts((Player) cp.find(ai));
+            final String inReal = karnRestarts(ai);
+            check(inReal.equals("Hill Giant on Ai's battlefield"), "the real game: -14 returns the Hill Giant under Karn's controller (" + inReal + ")");
+            check(inCopy.equals(inReal) && cp.exileLinksLost().isEmpty(), "the copy as the real game: " + inCopy + " (lost " + cp.exileLinksLost() + ")");
+            check(copy.getAge() == forge.game.GameStage.RestartedByKarn, "the copy's game restarted (" + copy.getAge() + ")");
+        });
+        // 4. An adventure's link and source are an older object of the card (Swift End on the stack): a mirror.
+        scenario("copy-adventure-link", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Forest", "humanlibrary=Forest;Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp;Swamp",
+                "aihand=Murderous Rider", "aibattlefield=Swamp;Swamp;Swamp;Swamp;Swamp;Swamp"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final forge.game.spellability.SpellAbility swift = playOf(ai, "Murderous Rider", (sa) -> sa.isAdventure());
+            swift.resetTargets();
+            swift.getTargets().add(named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears"));
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, swift, null), "setup: the real game casts Swift End");
+            g.getStack().resolveStack();
+            final Card rider = named(ai.getCardsIn(ZoneType.Exile), "Murderous Rider");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            cp.makeCopy(null, ai);
+            final Player aiC = (Player) cp.find(ai);
+            final Card riderC = named(aiC.getCardsIn(ZoneType.Exile), "Murderous Rider");
+            final Card adv = effectOf(aiC, "Swift End");
+            check(rider.isOnAdventure() && riderC.isOnAdventure(), "the copy's Rider is on an adventure, as the real one is ("
+                    + riderC.isOnAdventure() + ", exiled with " + riderC.getExiledWith() + ")");
+            check(adv != null && adv.getEffectSource() != null && adv.getEffectSource().getId() == rider.getId()
+                            && "Swift End".equals(adv.getEffectSource().getName()) && adv.getEffectSource() != riderC,
+                    "the adventure's effect names Swift End as its source, a mirror of the copy's card (" + (adv == null ? null
+                            : adv.getEffectSource()) + ")");
+        });
+        // 5. The Monarch, copied: its two triggers (draw at the end step, taken by combat damage).
+        scenario("copy-monarch-triggers", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp;Swamp",
+                "aibattlefield=Swamp"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.getAction().becomeMonarch(ai, "CN2");
+            final int real = monarchCards(ai).get(0).getTriggers().size();
+            final Game plain = new forge.ai.simulation.GameCopier(g).makeCopy();
+            final int forge = monarchCards(plain.getPlayer(ai.getId())).get(0).getTriggers().size();
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            cp.makeCopy(null, ai);
+            final List<Card> mc = monarchCards((Player) cp.find(ai));
+            check(real == 2 && forge == 0 && mc.size() == 1 && mc.get(0).getTriggers().size() == real && cp.traitsLeft().isEmpty(),
+                    "the copied monarch effect has its " + real + " triggers (Forge's own copy: " + forge + "; this copy: "
+                            + (mc.isEmpty() ? "none" : mc.get(0).getTriggers().size()) + ")");
+        });
+    }
+
+    /** D479: the command-zone effect whose name starts with {@code host}'s, or null. */
+    private static Card effectOf(final Player p, final String host) {
+        for (final Card c : p.getCardsIn(ZoneType.Command)) {
+            if (c.getName().startsWith(host) && c.getGamePieceType() == forge.card.GamePieceType.EFFECT) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    /** D479: {@code caster} Bolts {@code at} (a planeswalker); its loyalty after. */
+    private static int boltAt(final Player caster, final Card at) {
+        final Card bolt = named(caster.getCardsIn(ZoneType.Hand), "Lightning Bolt");
+        final forge.game.spellability.SpellAbility sa = bolt.getFirstSpellAbility();
+        sa.setActivatingPlayer(caster);
+        sa.resetTargets();
+        sa.getTargets().add(at);
+        if (!forge.ai.ComputerUtil.handlePlayingSpellAbility(caster, sa, null)) {
+            return -1;
+        }
+        caster.getGame().getStack().resolveStack();
+        return at.getCurrentLoyalty();
+    }
+
+    /** D479: Oblivion Ring leaves the battlefield; its trigger resolves; where the Bears are. */
+    private static String ringLeaves(final Game game, final Card ring, final Player owner) {
+        // as DestroyEffect moves it: a zone table over the last state, whose triggerChangesZoneAll registers the
+        // leaves-the-battlefield triggers of the last state's cards; then the waiting triggers are collected and run
+        final forge.game.card.CardZoneTable table = new forge.game.card.CardZoneTable(game.copyLastStateBattlefield(),
+                game.copyLastStateGraveyard());
+        final Map<forge.game.ability.AbilityKey, Object> params = forge.game.ability.AbilityKey.newMap();
+        params.put(forge.game.ability.AbilityKey.LastStateBattlefield, table.getLastStateBattlefield());
+        params.put(forge.game.ability.AbilityKey.LastStateGraveyard, table.getLastStateGraveyard());
+        final Card moved = game.getAction().moveToGraveyard(ring, null, params);
+        table.put(ZoneType.Battlefield, ZoneType.Graveyard, moved);
+        table.triggerChangesZoneAll(game, null);
+        game.getTriggerHandler().collectTriggerForWaiting();
+        game.getTriggerHandler().runWaitingTriggers();
+        game.getStack().unfreezeStack();
+        for (int i = 0; i < 4; i++) {
+            game.getStack().addAllTriggeredAbilitiesToStack();
+            if (game.getStack().isEmpty()) {
+                break;
+            }
+            game.getStack().resolveStack();
+        }
+        for (final ZoneType z : new ZoneType[] {ZoneType.Battlefield, ZoneType.Exile, ZoneType.Graveyard, ZoneType.Library}) {
+            for (final Card c : owner.getCardsIn(z)) {
+                if ("Grizzly Bears".equals(c.getName())) {
+                    return "Grizzly Bears on the " + z.name().toLowerCase(Locale.ROOT);
+                }
+            }
+        }
+        return "no Grizzly Bears";
+    }
+
+    /** D479: {@code p}'s Karn Liberated plays -14; whose zone holds the Hill Giant after. */
+    private static String karnRestarts(final Player p) {
+        final Game game = p.getGame();
+        final Card karn = named(p.getCardsIn(ZoneType.Battlefield), "Karn Liberated");
+        forge.game.spellability.SpellAbility restart = null;
+        for (final forge.game.spellability.SpellAbility sa : karn.getSpellAbilities()) {
+            restart = sa.getApi() == forge.game.ability.ApiType.RestartGame ? sa : restart;
+        }
+        restart.setActivatingPlayer(p);
+        if (!forge.ai.ComputerUtil.handlePlayingSpellAbility(p, restart, null)) {
+            return "-14 not played";
+        }
+        game.getStack().resolveStack();
+        for (final Player q : game.getPlayers()) {
+            for (final ZoneType z : new ZoneType[] {ZoneType.Battlefield, ZoneType.Exile, ZoneType.Library, ZoneType.Hand}) {
+                for (final Card c : q.getCardsIn(z)) {
+                    if ("Hill Giant".equals(c.getName())) {
+                        return "Hill Giant on " + q.getName() + "'s " + z.name().toLowerCase(Locale.ROOT);
+                    }
+                }
+            }
+        }
+        return "no Hill Giant";
     }
 
     /**
