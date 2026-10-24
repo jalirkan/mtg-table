@@ -97,3 +97,8 @@ before merge:
   budget-fallback rate is a tracked number that it would have inflated without saying why.
 - **Catching it in each caller.** There are five callers in three packages, and the `Error` would cross
   any one that forgot. `playout` is the one place that made the copy.
+
+**Addendum, 2026-10-23 (the cloud's review of #187, LOW).** The clock covers rollouts only. A cascade of
+the same kind in the REAL game, not a rollout copy, still hangs a live game: it runs inside Forge's own
+rules loop on the match's game thread, which is out of the search's reach, and nothing in this decision
+ends it. That is a Forge behaviour (D467 names the cards), not a search blind spot, and it stays open.
