@@ -109,7 +109,7 @@ lands 20/22); the other 75 are valued by D416's fallback. So pull stays context,
 judged; `balance.md` prints the coverage beside its reading.
 
 **Real drafts.** The draft-deck ledger (#169, D455) lives in Justin's checkout, which the runner never lets a
-job read; the coach helper serves it as colour counts only (`GET /draft-decks?cube=omega-cube-180` on
+job read; the coach helper serves it as colour counts only (`GET /draft-decks?cube=omega` on
 127.0.0.1:8643). The read step fetches that once. Shown, labelled as context only at 30+ decks, never in a
 verdict; a failed fetch is a gap in the report, not a failure.
 
@@ -779,7 +779,7 @@ done
 tools/cubelab.sh decks --cube cubes/omega-cube-180.md --count 60 --seed 1675 --out var/lab-j159/pilot/census/decks
 tools/cubelab.sh census-play --decks var/lab-j159/pilot/census/decks --pairs 40 --seed 1675 --jobs {workers} --record rows --out var/lab-j159/pilot/census/games
 mkdir -p "$D/pilot/out"
-curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega-cube-180' > "$D/pilot/out/real-drafts.json" || echo '{"ok":false}' > "$D/pilot/out/real-drafts.json"
+curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega' > "$D/pilot/out/real-drafts.json" || echo '{"ok":false}' > "$D/pilot/out/real-drafts.json"
 python3 var/lab-j159-local/bin/balance.py --pull "lab=lab,$D/pilot/prof/lab" --pull "hp=human-picks,$D/pilot/prof/hp" --pull "fr=forge-ranks,$D/pilot/prof/fr" \
     --payoff "Blab=$D/pilot/prof/lab,$D/pilot/games/B-lab" --payoff "Bhp=$D/pilot/prof/hp,$D/pilot/games/B-hp" --payoff "Bfr=$D/pilot/prof/fr,$D/pilot/games/B-fr" \
     --census "C=$D/pilot/census/decks,$D/pilot/census/games" --real "$D/pilot/out/real-drafts.json" --coverage hp=var/lab-j159-local/coverage.json --boot 200 --out "$D/pilot/out"
@@ -888,7 +888,7 @@ test "$(wc -l < "$D/census/games/games.jsonl")" -eq 8000
 test -s var/lab-j159-local/bin/balance.py
 mkdir -p "$D/out"
 # the real drafts: one fetch from the coach helper; a failure is a reported gap (balance.json real.gap), never a failed step
-curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega-cube-180' > "$D/out/real-drafts.json" || echo '{"ok":false}' > "$D/out/real-drafts.json"
+curl -s --max-time 10 'http://127.0.0.1:8643/draft-decks?cube=omega' > "$D/out/real-drafts.json" || echo '{"ok":false}' > "$D/out/real-drafts.json"
 python3 var/lab-j159-local/bin/balance.py --pull "lab=lab,$D/prof/lab" --pull "hp=human-picks,$D/prof/hp" --pull "fr=forge-ranks,$D/prof/fr" \
     --payoff "Blab=$D/prof/lab,$D/games/B-lab" --payoff "Bhp=$D/prof/hp,$D/games/B-hp" --payoff "Bfr=$D/prof/fr,$D/games/B-fr" \
     --census "C=$D/census/decks,$D/census/games" --real "$D/out/real-drafts.json" --coverage hp=var/lab-j159-local/coverage.json --judged-payoff Blab --boot 1000 --seed 145 --out "$D/out"
