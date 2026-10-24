@@ -1452,7 +1452,47 @@ tools/cubelab.sh balance-model ... --out var/balance-model/j144-j145-nopower --c
   `-pauper-even.md`, `-legacy-even-high-nopower.md` and `-legacy-even-mid-nopower.md` (the pauper cube is
   the same without the list, so it has no `-nopower` file), are predictions to measure head to head on
   fresh seeds, never a verdict. `web/test/cubelab-balance-model.test.ts` loads each as `run` and `draft`
-  do and drafts it.
+  do and drafts it. J160 measured them: transfer error .030 / .047, nearly all of it in the census values rather than in
+  the mix (the night's own decks with census values score .028 / .046) — model v2 (below, D475).
+
+### Model v2: drafted context, the drafter's own decks, a robust search (D475)
+
+Give `balance-model` measured nights and it runs v2 (without one it is v1, byte for byte):
+
+```bash
+D=/home/justin-a/code/lab/data
+tools/cubelab.sh balance-model --census $D/lab-j144 --omega $D/lab-j145 --night $D/lab-j159 --night $D/lab-j160/report \
+    --facts var/cubelab/facts/<library facts>.json --out var/balance-model/v2 --cubes-out cubes/library/balanced/v2
+# and the same with --exclude cubes/library/powered-exclude.txt --suffix -nopower
+```
+
+- **Nights** (`--night <dir>`, repeated, or `--sources a,b`): a J145-shaped folder (`out/drafted-decks.jsonl.gz`,
+  `out/games.jsonl.gz`, `out/balance.json`) or a report folder of per-cube files (`<cube>.drafted-decks.jsonl.gz`,
+  `.games.jsonl.gz`, `.balance.json`). Each deck's `band: cube:<id>` names its cube, found under `cubes/` as
+  `<id>.md` (so a cube id must be unique there). `--omega` is read as a night too, and is where v1's mix comes
+  from for the comparison.
+- **The values** are fitted on every arm-B game, decks clustered by draft, each deck's census strength a
+  covariate with a free alpha per band and each card's own term shrunk toward alpha × its census value. CV by
+  draft chooses between census, drafted and this blend (`summary.md`'s first table; the blend won).
+  `cards-drafted.tsv` puts the three side by side.
+- **The mix** is the lab drafter's own: `balance-model` drafts the candidate cube 2,000 times with the
+  TypeScript drafter at fresh seeds (it reproduces a night's decks exactly from their seeds) and reads the
+  three-colour share, cards per class, the play curve and each card's **concentration** (its play share over
+  the curve's) off those decks. `--drafts` sets the count.
+- **The validation** refits without each night (the headline), without each cube, and with nothing held out,
+  and prints v1 beside v2 with the decomposition (v2's values on the night's own decks, census values on v2's
+  mix, …), pooled per night. The transfer error it leaves goes into every generated cube's intervals.
+  `--no-validate` skips it (the intervals then carry the .015 / .025 floor).
+- **The search** scores a swap by the mean gap over the even bootstrap replicates, takes it only for
+  `--min-gain` (.002), lets a card replace one within `--rating-window` (25) Forge rating points, at most
+  `--max-swaps` (40); the result is re-drafted and kept only if it beats the flow on the odd replicates.
+  Each cube document prints the point gap, the robust gap and the gap with the transfer error — read the
+  last as what a night should expect to measure.
+- **What it says** (D475): v2 is a little better than v1 on a cube no night has drafted (J160 held out: .028 /
+  .042 against .030 / .047) and much better on one that has (J159 held out, J145 in: .007 / .017 against .017 /
+  .021). The blue misses are in card values, not in the mix: once a night has drafted a card, its drafted value
+  carries what the census missed. `web/test/cubelab-balance-model-v2.test.ts` holds the pieces, and a trimmed
+  slice of J160 under `fixtures/cubelab/balance-model-v2/`.
 
 ## Learning the drafters' values from the games (D301–D302)
 

@@ -173,7 +173,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged' || a === '--mixed-pilots' || a === '--write') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged' || a === '--mixed-pilots' || a === '--write' || a === '--no-validate' || a === '--no-cubes') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);

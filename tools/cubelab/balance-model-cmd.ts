@@ -35,22 +35,23 @@ import { joinCensus, structurePlan, type SampleCard } from './sample.ts';
 import { cubeDocument, MONO, PAIRS, planErrors, shapeOf } from './skeleton.ts';
 import { parseCube } from './cube.ts';
 import { parseNotes } from './evolve.ts';
+import { balanceModelV2Command } from './balance-model-v2-cmd.ts';
 
 type Flags = Map<string, string[]>;
 const one = (f: Flags, k: string): string | undefined => f.get(k)?.at(-1);
 
-const gzLines = <T>(file: string): T[] => {
+export const gzLines = <T>(file: string): T[] => {
   const buf = fs.readFileSync(file);
   const text = file.endsWith('.gz') ? zlib.gunzipSync(buf).toString('utf8') : buf.toString('utf8');
   return text.split('\n').filter(Boolean).map((l) => JSON.parse(l) as T);
 };
 
-interface RawDeck { id: string; band?: string; draft?: number; run?: string; spells: string[]; profile: { spellsByColour: Record<string, number>; mainShare: number } }
-interface RawGame { a: string; b: string; winner: string | null; first: string; engineError?: unknown }
+export interface RawDeck { id: string; band?: string; draft?: number; run?: string; spells: string[]; profile: { spellsByColour: Record<string, number>; mainShare: number } }
+export interface RawGame { a: string; b: string; winner: string | null; first: string; engineError?: unknown }
 
-const colours3 = (d: RawDeck): string => 'WUBRG'.split('').filter((c) => (d.profile.spellsByColour[c] ?? 0) >= 3).join('');
-const toDeck = (d: RawDeck, cluster: string, stratum?: string): MDeck => ({ id: d.id, spells: d.spells, colours: colours3(d), mainShare: d.profile.mainShare, cluster, ...(stratum ? { stratum } : {}) });
-const decisive = (gs: RawGame[]): MGame[] => gs.filter((g) => (g.winner === 'a' || g.winner === 'b') && !g.engineError).map((g) => ({ a: g.a, b: g.b, winner: g.winner as 'a' | 'b', first: g.first === 'b' ? 'b' : 'a' }));
+export const colours3 = (d: RawDeck): string => 'WUBRG'.split('').filter((c) => (d.profile.spellsByColour[c] ?? 0) >= 3).join('');
+export const toDeck = (d: RawDeck, cluster: string, stratum?: string): MDeck => ({ id: d.id, spells: d.spells, colours: colours3(d), mainShare: d.profile.mainShare, cluster, ...(stratum ? { stratum } : {}) });
+export const decisive = (gs: RawGame[]): MGame[] => gs.filter((g) => (g.winner === 'a' || g.winner === 'b') && !g.engineError).map((g) => ({ a: g.a, b: g.b, winner: g.winner as 'a' | 'b', first: g.first === 'b' ? 'b' : 'a' }));
 
 export const LAMBDAS = [100, 200, 400, 800, 1600, 3200];
 
@@ -59,9 +60,9 @@ export const LAMBDAS = [100, 200, 400, 800, 1600, 3200];
  * `repeat` are by deck (no deck on both sides), and `repeat.full` is the headline repeatability: the one the
  * true spreads and the disattenuated agreements use.
  */
-interface Source { name: string; label: string; grouping: Grouping; fit: Fit; effects: CardEffect[]; cv: CvResult; cvDeck: CvResult; decks: number; games: number; reliability: SplitHalf; repeat: SplitHalf }
+export interface Source { name: string; label: string; grouping: Grouping; fit: Fit; effects: CardEffect[]; cv: CvResult; cvDeck: CvResult; decks: number; games: number; reliability: SplitHalf; repeat: SplitHalf }
 
-function fitSource(name: string, label: string, decks: MDeck[], games: MGame[], grouping: Grouping, reps: number, seed: number, say: (s: string) => void): Source {
+export function fitSource(name: string, label: string, decks: MDeck[], games: MGame[], grouping: Grouping, reps: number, seed: number, say: (s: string) => void): Source {
   const t0 = Date.now();
   const ds = buildDesign(decks, games, grouping);
   const cv = crossValidate(ds, LAMBDAS, 5, seed);
@@ -76,7 +77,7 @@ function fitSource(name: string, label: string, decks: MDeck[], games: MGame[], 
 }
 
 /** A card's value in a source, point (rep -1) or replicate; 0 for a card the source never saw. */
-function valueFn(s: Source): (name: string, rep: number) => number {
+export function valueFn(s: Source): (name: string, rep: number) => number {
   const ix = new Map(s.fit.design.cards.map((c, i) => [c, i]));
   return (name, rep) => {
     const i = ix.get(name);
@@ -85,7 +86,7 @@ function valueFn(s: Source): (name: string, rep: number) => number {
   };
 }
 
-function groupValueFn(s: Source): (key: string, rep: number) => number {
+export function groupValueFn(s: Source): (key: string, rep: number) => number {
   const nc = s.fit.design.cards.length;
   const ix = new Map(s.fit.design.groups.map((g, j) => [g, nc + j]));
   return (key, rep) => {
@@ -151,6 +152,8 @@ export function effectsTsv(src: Source, info: Map<string, { band: string; colors
 }
 
 export function balanceModelCommand(repo: string, f: Flags, say: (s: string) => void): number {
+  // D475: measured nights as drafted-context sources make it model v2 (balance-model-v2-cmd.ts); without them it is v1, byte for byte.
+  if (f.has('night') || f.has('sources')) return balanceModelV2Command(repo, f, say);
   const censusDir = one(f, 'census');
   const factsFile = one(f, 'facts');
   const out = one(f, 'out');
