@@ -1,0 +1,793 @@
+# balance-model: census pauper band (J144/J149); grouping makeup; lambda 400; 200 deck-bootstrap replicates. Values are win-rate points per game (a deck holding the card instead of the band's average card).
+card	band	colors	rating	value	sd	lo	hi	decks	deck_games
+Aerie Auxiliary	pauper	W	44.5	0.0660	0.0091	0.0489	0.0808	155	2477
+Llanowar Visionary	pauper	G	53.6	0.0544	0.0088	0.0391	0.0718	134	2141
+Primordial Pachyderm	pauper	G	30.0	0.0480	0.0091	0.0262	0.0627	149	2377
+Owlbear	pauper	G	35.6	0.0456	0.0085	0.0280	0.0621	144	2301
+Cloudkin Seer	pauper	U	43.9	0.0448	0.0091	0.0269	0.0613	148	2367
+Amethyst Dragon	peasant	R	66.6	0.0437	0.0136	0.0174	0.0704	18	287
+Bloodwater Entity	pauper	UR	37.2	0.0429	0.0095	0.0232	0.0603	132	2111
+Murmuring Mystic	pauper	U	50.4	0.0416	0.0094	0.0253	0.0599	119	1903
+Attended Knight	pauper	W	32.5	0.0404	0.0102	0.0214	0.0601	139	2220
+Spinewoods Paladin	pauper	G	39.1	0.0380	0.0096	0.0176	0.0546	130	2075
+Crude Bent Blade	pauper	B	10.9	0.0372	0.0080	0.0208	0.0528	147	2352
+Inspiring Overseer	pauper	W	52.3	0.0366	0.0083	0.0221	0.0535	169	2701
+Flametongue Kavu	peasant	R	55.8	0.0347	0.0089	0.0175	0.0523	13	207
+Savage Land Dinosaur	pauper	G	16.3	0.0338	0.0101	0.0140	0.0536	129	2062
+Scurry Oak	peasant	G	79.0	0.0338	0.0107	0.0111	0.0527	20	319
+Sprout Swarm	pauper	G	45.0	0.0331	0.0087	0.0159	0.0507	137	2190
+Dragon Whelp	peasant	R	40.8	0.0326	0.0106	0.0096	0.0525	20	320
+Ka-Zar of the Savage Land	peasant	G	34.6	0.0318	0.0091	0.0128	0.0461	12	192
+Mischievous Mystic	peasant	U	95.9	0.0318	0.0093	0.0112	0.0484	15	240
+Gollum, Silent Slinker	pauper	B	7.0	0.0316	0.0099	0.0126	0.0512	134	2144
+Battle Screech	pauper	W	73.4	0.0310	0.0085	0.0136	0.0491	186	2969
+Bloodbraid Elf	peasant	RG	81.3	0.0309	0.0109	0.0064	0.0496	16	255
+Beetleback Chief	pauper	R	39.7	0.0304	0.0090	0.0134	0.0484	139	2223
+Dance of the Dead	peasant	B	95.2	0.0301	0.0102	0.0105	0.0493	18	288
+Gray Merchant of Asphodel	pauper	B	60.4	0.0294	0.0099	0.0086	0.0476	123	1967
+Ragamuffin Raptor	pauper	G	28.8	0.0293	0.0092	0.0119	0.0447	129	2059
+Mahamoti Djinn	peasant	U	78.4	0.0292	0.0100	0.0100	0.0483	13	208
+Metalhead	peasant	U	46.0	0.0288	0.0113	0.0061	0.0485	18	288
+Watcher for Tomorrow	peasant	U	31.3	0.0277	0.0097	0.0079	0.0445	22	351
+Stampeding Scurryfoot	pauper	G	73.9	0.0272	0.0092	0.0112	0.0476	136	2172
+Tough Cookie	peasant	G	47.2	0.0269	0.0097	0.0083	0.0426	18	288
+Spinewoods Armadillo	peasant	G	93.7	0.0269	0.0100	0.0066	0.0463	15	238
+Spectral Sailor	peasant	U	43.7	0.0268	0.0115	0.0018	0.0471	21	336
+Generous Ent	pauper	G	86.0	0.0266	0.0087	0.0067	0.0401	135	2157
+Hivespine Wolverine	peasant	G	35.6	0.0265	0.0101	0.0058	0.0477	12	192
+Lunarch Veteran	pauper	W	63.2	0.0255	0.0090	0.0086	0.0455	162	2584
+Sun-Blessed Healer	peasant	W	45.6	0.0253	0.0101	0.0054	0.0430	15	239
+Thorn of the Black Rose	pauper	B	72.0	0.0248	0.0093	0.0064	0.0409	142	2272
+Falkenrath Noble	pauper	B	78.7	0.0248	0.0093	0.0082	0.0433	123	1967
+Mirkwood Pathmaker	peasant	G	29.5	0.0248	0.0095	0.0083	0.0423	17	272
+Stock Up	peasant	U	98.5	0.0247	0.0135	-0.0009	0.0485	17	272
+Frost Trickster	pauper	U	36.2	0.0247	0.0103	0.0054	0.0432	146	2336
+Salt Road Packbeast	pauper	W	38.3	0.0246	0.0082	0.0092	0.0420	163	2601
+Grizzly Fate	peasant	G	41.6	0.0245	0.0089	0.0093	0.0418	11	175
+Juggernaut	pauper		46.7	0.0245	0.0084	0.0081	0.0413	131	2093
+Reclamation Sage	peasant	G	46.8	0.0245	0.0098	0.0059	0.0425	17	272
+Mighty Mutanimals	peasant	W	49.1	0.0243	0.0096	0.0048	0.0421	14	223
+Rolling Thunder	pauper	R	49.0	0.0240	0.0101	0.0072	0.0454	122	1952
+Doom Blade	pauper	B	54.9	0.0238	0.0087	0.0079	0.0426	115	1840
+Knockout Maneuver	peasant	G	56.9	0.0236	0.0100	0.0043	0.0430	12	192
+Large Bear	peasant	BG	43.8	0.0233	0.0099	0.0039	0.0410	9	144
+Wildheart Invoker	pauper	G	30.7	0.0233	0.0089	0.0046	0.0385	133	2124
+Azure Drake	pauper	U	49.1	0.0233	0.0085	0.0071	0.0394	148	2366
+Delver of Secrets	pauper	U	19.7	0.0232	0.0099	0.0040	0.0395	133	2127
+Rukh Egg	pauper	R	42.0	0.0230	0.0096	0.0035	0.0404	127	2032
+Strixhaven Skycoach	peasant		43.8	0.0229	0.0105	0.0033	0.0418	12	192
+Cloudgoat Ranger	peasant	W	92.8	0.0228	0.0115	0.0002	0.0467	15	240
+Mogg War Marshal	pauper	R	30.1	0.0228	0.0091	0.0041	0.0378	130	2079
+Raise the Alarm	pauper	W	28.5	0.0227	0.0090	0.0038	0.0380	168	2685
+Annoyed Altisaur	pauper	G	35.1	0.0226	0.0100	0.0046	0.0400	128	2044
+Stress Dream	peasant	UR	46.4	0.0226	0.0102	-0.0004	0.0393	19	304
+Triplicate Spirits	pauper	W	31.2	0.0225	0.0092	0.0041	0.0390	151	2410
+Spellscorn Coven	peasant	B	40.9	0.0224	0.0118	-0.0031	0.0411	21	336
+Khabál Ghoul	peasant	B	42.9	0.0223	0.0095	0.0036	0.0398	16	256
+Veteran Beastrider	peasant	WG	41.1	0.0222	0.0094	0.0026	0.0401	14	224
+Phantom Monster	pauper	U	43.7	0.0221	0.0098	0.0059	0.0441	140	2240
+Jewel Thief	pauper	G	40.7	0.0221	0.0093	0.0068	0.0403	128	2044
+The Last Ronin's Technique	peasant	W	40.2	0.0220	0.0106	0.0028	0.0406	17	269
+Ulamog's Crusher	pauper		30.3	0.0220	0.0083	0.0066	0.0385	144	2301
+Mouser Foundry	pauper	R	37.9	0.0219	0.0108	-0.0023	0.0419	115	1838
+Artisan of Kozilek	peasant		41.2	0.0219	0.0088	0.0036	0.0379	9	144
+Writhing Chrysalis	pauper	RG	94.0	0.0214	0.0096	0.0013	0.0424	119	1901
+Icatian Town	peasant	W	34.8	0.0213	0.0101	-0.0007	0.0385	16	255
+Hypnotic Specter	peasant	B	88.2	0.0213	0.0096	0.0038	0.0380	12	192
+Mist Raven	pauper	U	82.8	0.0213	0.0106	0.0015	0.0425	133	2127
+Empyrean Eagle	peasant	WU	44.9	0.0210	0.0103	-0.0002	0.0391	16	256
+Fire Elemental	pauper	R	46.2	0.0207	0.0097	0.0036	0.0399	137	2191
+Search Party Captain	pauper	W	29.3	0.0207	0.0089	0.0050	0.0365	164	2620
+Rise from the Tides	peasant	U	29.7	0.0205	0.0120	-0.0034	0.0422	16	255
+Recruitment Officer	peasant	W	63.2	0.0205	0.0103	0.0018	0.0406	14	224
+Flickerwisp	peasant	W	43.4	0.0203	0.0113	-0.0030	0.0413	21	336
+Emrakul's Messenger	peasant	U	82.7	0.0203	0.0101	0.0020	0.0385	17	272
+Faith's Fetters	pauper	W	46.0	0.0203	0.0086	0.0029	0.0351	163	2606
+Serrated Arrows	pauper		48.7	0.0202	0.0079	0.0041	0.0348	128	2046
+Militia Bugler	pauper	W	61.6	0.0202	0.0089	0.0038	0.0391	175	2799
+Okoye, Dora Milaje Leader	peasant	W	39.8	0.0202	0.0110	-0.0020	0.0401	20	320
+Fallen Angel	peasant	B	48.2	0.0202	0.0098	0.0001	0.0349	12	192
+Hunter's Talent	peasant	G	84.4	0.0201	0.0102	-0.0013	0.0375	17	272
+Syr Konrad, the Grim	peasant	B	54.2	0.0200	0.0108	0.0032	0.0424	12	192
+Carrier Thrall	pauper	B	27.9	0.0199	0.0092	0.0016	0.0369	124	1984
+Honest Rutstein	peasant	BG	83.6	0.0199	0.0095	0.0032	0.0380	13	208
+Lightning Helix	peasant	WR	80.7	0.0198	0.0097	0.0011	0.0382	13	208
+Palace Jailer	peasant	W	98.2	0.0197	0.0116	-0.0044	0.0420	20	320
+Ashes to Ashes	pauper	B	75.8	0.0196	0.0091	0.0024	0.0382	147	2350
+Nessian Hornbeetle	peasant	G	35.7	0.0194	0.0095	0.0017	0.0382	17	272
+Prodigal Sorcerer	pauper	U	44.8	0.0194	0.0095	0.0009	0.0383	143	2287
+Spyglass Siren	peasant	U	71.0	0.0194	0.0111	-0.0011	0.0407	21	336
+Icy Manipulator	peasant		90.8	0.0194	0.0089	0.0014	0.0333	11	176
+Dinrova Horror	pauper	UB	43.0	0.0194	0.0095	0.0028	0.0368	107	1710
+Unwelcome Sprite	peasant	U	32.1	0.0191	0.0108	-0.0009	0.0385	19	304
+Impractical Joke	peasant	R	44.8	0.0190	0.0105	0.0011	0.0420	14	224
+Anchovy & Banana Pizza	pauper	B	28.1	0.0189	0.0096	0.0027	0.0410	110	1760
+Glóin the Mighty	peasant	R	10.6	0.0187	0.0119	-0.0054	0.0392	16	256
+Life of Toshiro Umezawa	peasant	B	95.1	0.0186	0.0104	-0.0032	0.0379	14	224
+Mine Collapse	pauper	R	34.3	0.0181	0.0095	0.0008	0.0352	117	1872
+Momo, Playful Pet	peasant	W	41.9	0.0180	0.0111	-0.0054	0.0397	21	336
+Dusk Legion Zealot	pauper	B	68.2	0.0180	0.0099	-0.0007	0.0357	128	2047
+Rubble Rouser	pauper	R	40.5	0.0179	0.0103	-0.0013	0.0356	135	2157
+Battlesong Berserker	peasant	R	39.5	0.0179	0.0108	-0.0044	0.0394	16	256
+Shivan Dragon	peasant	R	49.9	0.0178	0.0097	-0.0004	0.0359	15	240
+Soul Warden	pauper	W	62.2	0.0178	0.0082	-0.0008	0.0309	170	2714
+Marauding Sphinx	peasant	U	40.0	0.0174	0.0116	-0.0008	0.0435	23	368
+Stormfront Pegasus	pauper	W	33.0	0.0173	0.0087	0.0017	0.0351	164	2620
+Grumgully, the Generous	peasant	RG	40.7	0.0173	0.0111	-0.0018	0.0401	28	448
+The Mountain-king's Return	peasant	W	28.8	0.0173	0.0100	-0.0013	0.0357	12	192
+Man-o'-War	pauper	U	86.9	0.0172	0.0089	-0.0018	0.0331	147	2350
+Krosan Tusker	pauper	G	38.0	0.0172	0.0094	-0.0053	0.0324	137	2190
+Brothers of Fire	pauper	R	46.6	0.0169	0.0091	-0.0006	0.0350	124	1984
+Glamer Gifter	peasant	U	35.2	0.0168	0.0119	-0.0063	0.0387	19	304
+Augur of Bolas	pauper	U	33.8	0.0168	0.0095	-0.0043	0.0323	130	2079
+Picklock Prankster	peasant	U	88.9	0.0168	0.0092	-0.0008	0.0351	16	256
+Eldrazi Repurposer	pauper	G	61.5	0.0167	0.0092	-0.0017	0.0325	137	2188
+Go for the Throat	pauper	B	84.9	0.0167	0.0084	0.0021	0.0331	110	1760
+Cast Out	peasant	W	46.0	0.0165	0.0096	-0.0029	0.0330	14	224
+Vault Skirge	pauper	B	27.9	0.0165	0.0096	-0.0033	0.0311	147	2351
+Trumpeting Herd	pauper	G	15.9	0.0164	0.0086	0.0003	0.0323	132	2106
+Bog Wraith	peasant	B	43.9	0.0163	0.0107	-0.0053	0.0332	14	224
+Charging Monstrosaur	peasant	R	47.3	0.0160	0.0102	-0.0024	0.0364	16	255
+Lakeshore Apothecary	pauper	U	5.7	0.0159	0.0091	-0.0005	0.0363	144	2304
+Cornered by Black Mages	pauper	B	40.5	0.0158	0.0099	-0.0020	0.0346	123	1968
+Portable Hole	peasant	W	77.5	0.0157	0.0111	-0.0056	0.0368	20	320
+Whirler Rogue	peasant	U	43.1	0.0157	0.0108	-0.0017	0.0391	15	240
+Seeker of the Way	pauper	W	41.0	0.0157	0.0081	-0.0006	0.0281	174	2780
+Serra Angel	peasant	W	49.4	0.0156	0.0096	-0.0052	0.0350	11	176
+Disruptive Stormbrood	peasant	G	95.0	0.0156	0.0103	-0.0015	0.0378	14	224
+Galvanic Blast	pauper	R	86.8	0.0155	0.0099	-0.0030	0.0354	132	2111
+Arbiter of Woe	peasant	B	44.4	0.0155	0.0090	-0.0012	0.0356	18	288
+Air Elemental	peasant	U	48.6	0.0153	0.0123	-0.0083	0.0396	21	336
+Tracker	peasant	G	27.0	0.0152	0.0111	-0.0087	0.0313	18	286
+Circuit Mender	peasant		40.7	0.0152	0.0091	-0.0027	0.0321	8	128
+Doomed Traveler	pauper	W	28.0	0.0151	0.0092	-0.0022	0.0318	176	2809
+Branching Bolt	pauper	RG	43.0	0.0151	0.0086	-0.0036	0.0316	154	2461
+Shuri, Vibranium Technologist	peasant	WU	40.0	0.0150	0.0102	-0.0042	0.0325	18	288
+Political Triumph	peasant	W	13.5	0.0149	0.0100	-0.0049	0.0331	17	271
+Sourbread Auntie	peasant	R	26.3	0.0148	0.0104	-0.0037	0.0343	22	352
+Grafted Wargear	peasant		50.3	0.0147	0.0086	-0.0020	0.0293	10	158
+Qasali Pridemage	pauper	WG	33.4	0.0147	0.0091	-0.0033	0.0320	131	2093
+Chain Lightning	pauper	R	85.2	0.0147	0.0097	-0.0047	0.0338	131	2095
+Shriekmaw	peasant	B	58.5	0.0146	0.0084	-0.0025	0.0287	6	96
+Obsianus Golem	pauper		42.1	0.0145	0.0088	-0.0019	0.0321	157	2508
+Fatal Push	peasant	B	51.0	0.0140	0.0076	0.0007	0.0296	6	96
+Order of the Ebon Hand	pauper	B	43.1	0.0138	0.0090	-0.0020	0.0325	117	1871
+Sundering Archaic	peasant		42.1	0.0138	0.0096	-0.0055	0.0301	16	256
+Derelor	peasant	B	46.6	0.0138	0.0089	-0.0035	0.0305	11	176
+Necromancy	peasant	B	85.1	0.0138	0.0102	-0.0029	0.0337	17	272
+Control Magic	peasant	U	71.7	0.0137	0.0094	-0.0079	0.0316	14	224
+Unholy Strength	pauper	B	28.9	0.0137	0.0086	-0.0068	0.0269	122	1952
+Basking Broodscale	pauper	G	88.7	0.0136	0.0089	-0.0059	0.0310	134	2140
+Auriok Salvagers	peasant	W	68.1	0.0136	0.0105	-0.0061	0.0341	18	288
+Tolarian Terror	pauper	U	57.9	0.0135	0.0094	-0.0072	0.0302	130	2079
+Giant Spider	pauper	G	43.5	0.0132	0.0087	-0.0047	0.0271	128	2040
+Cost of Brilliance	pauper	B	31.4	0.0132	0.0094	-0.0061	0.0312	126	2014
+Eusocial Engineering	peasant	G	37.9	0.0132	0.0098	-0.0039	0.0306	13	208
+Dog Walker	pauper	WR	42.0	0.0131	0.0091	-0.0055	0.0299	150	2397
+Kor Skyfisher	pauper	W	90.4	0.0129	0.0078	-0.0034	0.0267	176	2815
+Mountain Yeti	pauper	R	36.5	0.0129	0.0094	-0.0052	0.0295	143	2287
+Skittering Precursor	peasant	R	29.0	0.0128	0.0099	-0.0055	0.0327	15	240
+Combat Thresher	peasant		42.3	0.0127	0.0099	-0.0050	0.0332	15	239
+Lone Missionary	pauper	W	16.9	0.0126	0.0085	-0.0068	0.0295	177	2827
+Voldaren Epicure	pauper	R	59.9	0.0125	0.0083	-0.0035	0.0292	129	2063
+Shi'ar Soldier	peasant	U	40.0	0.0125	0.0101	-0.0104	0.0287	15	240
+Guttersnipe	pauper	R	37.5	0.0124	0.0095	-0.0065	0.0294	145	2319
+Bloodchief's Thirst	peasant	B	95.8	0.0124	0.0102	-0.0054	0.0323	10	160
+Sorceress Queen	peasant	B	48.3	0.0123	0.0096	-0.0083	0.0300	14	224
+Sengir Vampire	peasant	B	62.4	0.0123	0.0090	-0.0056	0.0293	10	160
+Lingering Souls	peasant	W	80.7	0.0122	0.0093	-0.0078	0.0308	15	240
+Pelakka Wurm	peasant	G	45.6	0.0121	0.0102	-0.0087	0.0293	17	272
+Gurmag Angler	pauper	B	79.6	0.0121	0.0098	-0.0076	0.0307	130	2078
+Night Nurse, Healer of Heroes	peasant	W	33.5	0.0121	0.0106	-0.0080	0.0319	13	208
+Faerie Seer	pauper	U	8.7	0.0120	0.0089	-0.0055	0.0287	128	2048
+Savor	pauper	B	66.9	0.0118	0.0105	-0.0070	0.0327	136	2175
+Anax, Hardened in the Forge	peasant	R	39.6	0.0118	0.0116	-0.0113	0.0336	18	288
+All-Fates Stalker	peasant	W	47.0	0.0118	0.0104	-0.0095	0.0316	19	304
+Potioner's Trove	pauper		36.7	0.0117	0.0091	-0.0061	0.0283	148	2365
+Mother of Runes	peasant	W	84.9	0.0116	0.0101	-0.0080	0.0300	23	368
+Terror	pauper	B	53.0	0.0116	0.0098	-0.0046	0.0293	130	2079
+Tainted Treats	peasant	BG	45.3	0.0115	0.0094	-0.0060	0.0329	13	207
+Wild Nacatl	pauper	G	33.0	0.0115	0.0099	-0.0096	0.0269	127	2026
+Firebolt	pauper	R	43.1	0.0114	0.0099	-0.0083	0.0292	140	2239
+Summon: Fenrir	peasant	G	53.5	0.0113	0.0134	-0.0145	0.0345	15	239
+Nyxborn Hydra	pauper	G	64.6	0.0113	0.0097	-0.0068	0.0307	130	2079
+Nest Invader	pauper	G	32.7	0.0113	0.0103	-0.0104	0.0307	126	2013
+Zulaport Cutthroat	peasant	B	36.9	0.0113	0.0097	-0.0098	0.0283	13	208
+Pyrokinesis	peasant	R	48.3	0.0112	0.0099	-0.0060	0.0329	18	288
+Galvanic Discharge	pauper	R	55.9	0.0112	0.0098	-0.0050	0.0326	136	2174
+Stone Giant	peasant	R	33.8	0.0111	0.0120	-0.0131	0.0352	21	336
+Clockwork Beast	peasant		46.2	0.0111	0.0113	-0.0097	0.0304	14	224
+Coruscation Mage	peasant	R	12.9	0.0111	0.0103	-0.0088	0.0302	17	272
+Breeding Pit	peasant	B	48.0	0.0109	0.0112	-0.0122	0.0309	11	176
+Elite Interceptor	pauper	W	43.7	0.0109	0.0083	-0.0044	0.0252	169	2701
+Brightblade Stoat	peasant	W	38.8	0.0108	0.0095	-0.0097	0.0251	14	224
+Mana Drain	peasant	U	99.7	0.0107	0.0111	-0.0096	0.0316	12	192
+Troll of Khazad-dûm	pauper	B	97.6	0.0107	0.0101	-0.0139	0.0290	119	1903
+Kumano Faces Kakkazan	peasant	R	34.6	0.0106	0.0109	-0.0148	0.0294	22	352
+Dragon's Rage Channeler	peasant	R	74.9	0.0105	0.0097	-0.0084	0.0295	22	352
+Reckless Fireweaver	pauper	R	10.4	0.0104	0.0100	-0.0057	0.0312	126	2014
+Splitskin Doll	peasant	W	42.8	0.0103	0.0115	-0.0114	0.0324	20	320
+Erhnam Djinn	peasant	G	48.3	0.0102	0.0098	-0.0093	0.0278	12	192
+Slickshot Lockpicker	peasant	U	64.5	0.0102	0.0098	-0.0075	0.0318	16	256
+Burn, Burn, Tree and Fern	peasant	R	33.4	0.0102	0.0121	-0.0133	0.0342	30	479
+Reflector Mage	peasant	WU	32.5	0.0101	0.0096	-0.0060	0.0288	11	175
+Orcish Artillery	peasant	R	44.5	0.0101	0.0118	-0.0121	0.0319	23	368
+Okiba Reckoner Raid	pauper	B	32.5	0.0100	0.0096	-0.0107	0.0288	134	2144
+Talisman of Progress	peasant		55.0	0.0100	0.0107	-0.0092	0.0323	12	192
+Pyrotechnics	pauper	R	86.8	0.0099	0.0095	-0.0096	0.0277	143	2287
+Monastery Swiftspear	pauper	R	87.2	0.0098	0.0091	-0.0066	0.0263	148	2367
+Lifeforce	peasant	G	17.4	0.0097	0.0094	-0.0082	0.0304	10	160
+Heartless Act	peasant	B	53.4	0.0097	0.0085	-0.0058	0.0264	6	96
+Sneaky Snacker	pauper	UB	43.9	0.0097	0.0091	-0.0085	0.0261	123	1967
+The Underworld Cookbook	peasant		14.4	0.0097	0.0104	-0.0081	0.0300	16	256
+Balmor, Battlemage Captain	peasant	UR	40.6	0.0096	0.0109	-0.0121	0.0308	17	272
+Mother Bear	pauper	G	28.9	0.0096	0.0093	-0.0067	0.0280	119	1900
+Durkwood Boars	pauper	G	33.0	0.0096	0.0103	-0.0091	0.0300	119	1902
+Thieving Sprite	pauper	B	18.9	0.0093	0.0089	-0.0100	0.0239	135	2159
+Remand	peasant	U	98.8	0.0093	0.0092	-0.0090	0.0255	17	272
+Down, Down to Goblin-town	peasant	B	25.1	0.0093	0.0101	-0.0124	0.0293	15	239
+Karma	peasant	W	40.4	0.0093	0.0111	-0.0131	0.0292	13	208
+Rancor	pauper	G	46.8	0.0093	0.0092	-0.0083	0.0286	139	2222
+Monstrous Rage	peasant	R	43.8	0.0092	0.0097	-0.0106	0.0274	12	192
+Elvish Visionary	pauper	G	74.8	0.0092	0.0092	-0.0074	0.0287	139	2217
+Lessons from Life	peasant	UG	43.3	0.0091	0.0122	-0.0156	0.0306	14	224
+Hordeling Outburst	pauper	R	38.2	0.0090	0.0093	-0.0080	0.0265	111	1774
+Galewind Moose	peasant	G	62.1	0.0090	0.0112	-0.0118	0.0269	15	240
+Forsaken Miner	peasant	B	81.4	0.0090	0.0091	-0.0071	0.0265	11	176
+Mintstrosity	pauper	B	35.4	0.0090	0.0105	-0.0105	0.0286	118	1888
+Sunastian Falconer	peasant	RG	47.4	0.0089	0.0126	-0.0131	0.0338	18	287
+Cut Down	peasant	B	55.0	0.0089	0.0095	-0.0098	0.0246	12	192
+Deep Spawn	peasant	U	43.9	0.0089	0.0094	-0.0101	0.0268	16	256
+Order of Leitbur	pauper	W	42.6	0.0089	0.0082	-0.0078	0.0237	165	2633
+Morbid Opportunist	peasant	B	92.9	0.0087	0.0112	-0.0134	0.0298	18	288
+Uthden Troll	peasant	R	47.1	0.0087	0.0091	-0.0095	0.0241	6	96
+Flying Men	pauper	U	32.5	0.0086	0.0090	-0.0089	0.0249	145	2320
+Saheeli, Sublime Artificer	peasant	UR	55.1	0.0085	0.0113	-0.0132	0.0301	16	256
+Faerie Vandal	peasant	U	41.6	0.0083	0.0096	-0.0107	0.0265	12	192
+Wall of Swords	peasant	W	47.5	0.0082	0.0095	-0.0103	0.0257	14	224
+Pursue the Past	pauper	WR	45.4	0.0080	0.0095	-0.0113	0.0248	133	2126
+Three Tree Rootweaver	pauper	G	22.2	0.0080	0.0092	-0.0089	0.0246	124	1980
+Dragon Fodder	pauper	R	66.6	0.0080	0.0084	-0.0089	0.0229	123	1968
+Mentor of the Meek	peasant	W	66.3	0.0079	0.0119	-0.0163	0.0323	22	352
+Colossal Skyturtle	peasant	UG	40.4	0.0078	0.0092	-0.0100	0.0242	9	144
+Tendrils of Agony	peasant	B	67.2	0.0078	0.0153	-0.0226	0.0348	15	240
+Faerie Guidemother	pauper	W	9.3	0.0078	0.0091	-0.0077	0.0270	162	2585
+Dismember	peasant	B	98.5	0.0076	0.0064	-0.0054	0.0193	6	96
+Floodpits Drowner	peasant	U	68.0	0.0076	0.0100	-0.0157	0.0253	13	208
+Serendib Efreet	peasant	U	96.4	0.0076	0.0109	-0.0109	0.0292	20	320
+Loxodon Smiter	peasant	WG	44.2	0.0075	0.0097	-0.0124	0.0228	10	159
+Whirling Dervish	peasant	G	46.4	0.0074	0.0104	-0.0142	0.0258	14	224
+Iron Hills Blacksmith	peasant	W	37.3	0.0073	0.0093	-0.0103	0.0254	16	256
+Su-Chi	peasant		76.0	0.0073	0.0106	-0.0133	0.0279	14	224
+Sword of the Meek	peasant		71.9	0.0073	0.0130	-0.0198	0.0300	14	224
+Kitchen Finks	peasant	WG	60.1	0.0072	0.0073	-0.0058	0.0213	5	80
+Wormwood Treefolk	peasant	G	36.1	0.0072	0.0114	-0.0179	0.0265	8	128
+Mana Leak	pauper	U	98.6	0.0071	0.0090	-0.0081	0.0263	167	2672
+Reanimate	peasant	B	99.0	0.0070	0.0095	-0.0148	0.0239	12	192
+Staunch Crewmate	peasant	U	44.5	0.0070	0.0106	-0.0145	0.0310	16	255
+Dreadwing Scavenger	peasant	UB	48.3	0.0070	0.0094	-0.0130	0.0226	17	272
+Vraska, Swarm's Eminence	peasant	BG	39.9	0.0069	0.0108	-0.0147	0.0271	10	160
+Malevolent Rumble	pauper	G	71.7	0.0069	0.0100	-0.0109	0.0253	127	2029
+Weakness	pauper	B	37.8	0.0069	0.0096	-0.0091	0.0245	144	2304
+Stern Scolding	peasant	U	95.9	0.0067	0.0103	-0.0132	0.0248	19	304
+Soul Exchange	peasant	B	33.3	0.0066	0.0094	-0.0099	0.0243	13	208
+Dori, Bearer of Friends	pauper	R	25.4	0.0064	0.0099	-0.0106	0.0258	141	2256
+Bitter Triumph	peasant	B	71.2	0.0062	0.0103	-0.0127	0.0253	12	192
+Atog	pauper	R	30.8	0.0061	0.0098	-0.0131	0.0250	131	2094
+Thunder Spirit	peasant	W	30.3	0.0061	0.0097	-0.0128	0.0251	19	304
+Murderous Redcap	peasant	BR	85.8	0.0061	0.0117	-0.0175	0.0289	18	288
+Vinereap Mentor	peasant	BG	47.4	0.0061	0.0098	-0.0140	0.0239	10	159
+Path to Exile	peasant	W	85.5	0.0060	0.0113	-0.0181	0.0255	17	272
+Shepherd of the Flock	peasant	W	32.1	0.0059	0.0113	-0.0165	0.0264	19	303
+Mire Triton	pauper	B	39.0	0.0059	0.0082	-0.0122	0.0221	118	1888
+Farrel's Zealot	pauper	W	30.8	0.0058	0.0083	-0.0111	0.0225	182	2907
+Judge's Familiar	pauper	WU	31.7	0.0057	0.0090	-0.0123	0.0225	138	2206
+Saproling Migration	pauper	G	62.8	0.0057	0.0090	-0.0118	0.0227	142	2270
+Ajani's Pridemate	peasant	W	35.1	0.0057	0.0107	-0.0159	0.0266	17	271
+Crypt Rats	pauper	B	73.1	0.0056	0.0085	-0.0143	0.0222	140	2239
+Savannah Lions	pauper	W	41.5	0.0056	0.0090	-0.0134	0.0219	167	2666
+Bothersome Noisemaker	peasant	R	42.0	0.0056	0.0113	-0.0127	0.0312	18	288
+Relic Barrier	peasant		43.3	0.0053	0.0101	-0.0136	0.0257	14	224
+Disintegrate	pauper	R	58.5	0.0053	0.0096	-0.0107	0.0236	122	1952
+Exclude	pauper	U	71.9	0.0053	0.0097	-0.0125	0.0234	149	2382
+Lightning Bolt	pauper	R	98.9	0.0052	0.0094	-0.0153	0.0207	137	2190
+Leonardo, Leader in Blue	peasant	W	38.6	0.0052	0.0120	-0.0204	0.0286	22	351
+Werebear	pauper	G	39.7	0.0051	0.0078	-0.0089	0.0205	167	2667
+Virus Beetle	pauper	B	92.2	0.0050	0.0088	-0.0123	0.0206	137	2191
+Giant Tortoise	pauper	U	25.2	0.0050	0.0091	-0.0105	0.0212	142	2271
+Reprieve	peasant	W	72.3	0.0050	0.0094	-0.0127	0.0227	12	192
+Bilbo, Luckwearer	peasant	U	42.2	0.0050	0.0118	-0.0168	0.0270	25	400
+Scryb Sprites	pauper	G	26.4	0.0050	0.0095	-0.0132	0.0213	134	2141
+Oliphaunt	pauper	R	92.3	0.0049	0.0098	-0.0123	0.0259	133	2125
+Repentant Blacksmith	pauper	W	27.2	0.0048	0.0095	-0.0138	0.0218	160	2554
+Gut, True Soul Zealot	peasant	R	72.4	0.0048	0.0110	-0.0131	0.0287	16	255
+Fissure	pauper	R	48.3	0.0047	0.0100	-0.0148	0.0235	119	1903
+Coiling Oracle	pauper	UG	39.6	0.0047	0.0090	-0.0147	0.0203	127	2029
+Unwilling Ingredient	pauper	B	8.3	0.0047	0.0093	-0.0162	0.0205	141	2256
+Myr Sire	pauper		22.8	0.0047	0.0091	-0.0147	0.0208	144	2304
+Clockwork Avian	peasant		43.3	0.0047	0.0097	-0.0121	0.0250	11	176
+Dubious Delicacy	peasant	B	47.7	0.0047	0.0086	-0.0152	0.0194	11	176
+Essence Scatter	pauper	U	95.3	0.0046	0.0094	-0.0118	0.0221	142	2271
+Icatian Javelineers	pauper	W	44.1	0.0046	0.0087	-0.0090	0.0240	165	2639
+Feral Thallid	pauper	G	42.0	0.0045	0.0105	-0.0183	0.0241	131	2094
+Sear	peasant	R	34.5	0.0044	0.0123	-0.0203	0.0271	12	192
+Marionette Apprentice	peasant	B	97.3	0.0044	0.0100	-0.0164	0.0248	16	256
+Icatian Scout	pauper	W	25.0	0.0043	0.0092	-0.0110	0.0238	137	2188
+Water Elemental	peasant	U	48.5	0.0041	0.0122	-0.0203	0.0264	19	304
+Arc Trail	peasant	R	79.7	0.0040	0.0113	-0.0162	0.0259	19	304
+Vengeful Rebel	peasant	B	45.7	0.0040	0.0089	-0.0135	0.0208	10	160
+Khenra Spellspear	peasant	R	79.9	0.0040	0.0117	-0.0187	0.0271	19	304
+Baleful Strix	peasant	UB	54.0	0.0040	0.0117	-0.0209	0.0231	15	239
+Palace Sentinels	pauper	W	97.2	0.0040	0.0094	-0.0161	0.0205	160	2556
+Swords to Plowshares	peasant	W	99.4	0.0040	0.0087	-0.0111	0.0217	9	144
+Nezumi Prowler	peasant	B	33.4	0.0039	0.0095	-0.0154	0.0237	9	144
+Pestermite	pauper	U	52.0	0.0038	0.0094	-0.0136	0.0227	126	2016
+Regrowth	peasant	G	64.0	0.0037	0.0116	-0.0201	0.0245	21	336
+Choco-Comet	peasant	R	90.2	0.0037	0.0109	-0.0169	0.0260	22	352
+Master's Councillors	peasant	U	27.5	0.0037	0.0108	-0.0177	0.0268	24	384
+Boseiju Reaches Skyward	peasant	G	42.7	0.0037	0.0100	-0.0157	0.0214	21	336
+Thraben Inspector	pauper	W	97.0	0.0036	0.0092	-0.0154	0.0237	156	2490
+Preordain	pauper	U	85.3	0.0036	0.0098	-0.0145	0.0228	135	2160
+Sheltered by Ghosts	peasant	W	55.3	0.0036	0.0096	-0.0142	0.0199	15	240
+Loam Lion	peasant	W	19.7	0.0036	0.0102	-0.0146	0.0224	15	240
+Skewer the Critics	pauper	R	91.9	0.0036	0.0099	-0.0183	0.0195	121	1936
+Ivora, Insatiable Heir	peasant	R	82.0	0.0035	0.0106	-0.0154	0.0251	17	271
+Ice Storm	peasant	G	34.0	0.0035	0.0103	-0.0167	0.0215	20	319
+Biomechan Engineer	peasant	UG	48.0	0.0035	0.0096	-0.0173	0.0214	10	160
+Dancing Scimitar	peasant		49.7	0.0034	0.0094	-0.0167	0.0234	12	192
+Giant Turtle	pauper	G	27.3	0.0034	0.0082	-0.0109	0.0202	157	2505
+Nested Shambler	pauper	B	6.6	0.0034	0.0087	-0.0151	0.0189	148	2368
+Descendant of Storms	peasant	W	81.9	0.0032	0.0096	-0.0139	0.0194	16	254
+Ecstatic Awakener	pauper	B	34.2	0.0032	0.0094	-0.0134	0.0228	140	2239
+Samurai's Katana	peasant	R	94.2	0.0031	0.0083	-0.0100	0.0208	7	112
+Gravedigger	pauper	B	45.8	0.0031	0.0090	-0.0149	0.0178	139	2223
+Hymn to Tourach	pauper	B	72.4	0.0030	0.0085	-0.0112	0.0202	140	2238
+Desecrator Hag	pauper	BG	28.6	0.0030	0.0085	-0.0134	0.0194	134	2140
+White Knight	peasant	W	45.2	0.0030	0.0103	-0.0164	0.0203	13	208
+Starfield Shepherd	peasant	W	45.0	0.0029	0.0112	-0.0171	0.0261	17	272
+Light Up the Stage	peasant	R	74.0	0.0029	0.0106	-0.0160	0.0214	18	288
+Mayhem Devil	peasant	BR	33.9	0.0028	0.0099	-0.0188	0.0219	8	128
+Novice Inspector	pauper	W	53.1	0.0028	0.0095	-0.0171	0.0206	150	2398
+Pulse of Murasa	pauper	G	26.9	0.0028	0.0086	-0.0105	0.0216	169	2700
+Tablet of Discovery	peasant	R	33.3	0.0028	0.0108	-0.0198	0.0213	21	336
+Argothian Pixies	pauper	G	23.5	0.0027	0.0095	-0.0158	0.0174	123	1964
+Sheoldred's Edict	peasant	B	51.1	0.0026	0.0100	-0.0179	0.0212	15	240
+Plagued Rusalka	pauper	B	34.8	0.0025	0.0087	-0.0151	0.0179	135	2159
+Heroic Reinforcements	peasant	WR	41.2	0.0025	0.0105	-0.0184	0.0203	18	288
+Fact or Fiction	peasant	U	54.7	0.0025	0.0105	-0.0198	0.0208	18	288
+Porcelain Legionnaire	pauper	W	89.7	0.0024	0.0082	-0.0142	0.0162	162	2589
+Killian, Ink Duelist	peasant	WB	38.5	0.0023	0.0096	-0.0155	0.0211	12	192
+Ironclaw Orcs	pauper	R	31.6	0.0023	0.0092	-0.0180	0.0152	123	1968
+Surgical Skullbomb	pauper		8.0	0.0022	0.0092	-0.0139	0.0218	150	2397
+Thrashing Brontodon	peasant	G	41.1	0.0022	0.0099	-0.0174	0.0200	17	272
+Argothian Treefolk	pauper	G	29.4	0.0022	0.0093	-0.0144	0.0216	145	2315
+Quirion Dryad	peasant	G	40.9	0.0022	0.0093	-0.0179	0.0195	16	255
+Vulshok Morningstar	pauper		45.0	0.0021	0.0085	-0.0132	0.0194	141	2254
+Soulherder	peasant	WU	39.6	0.0021	0.0111	-0.0215	0.0219	19	304
+Nishoba Brawler	peasant	G	43.2	0.0019	0.0131	-0.0193	0.0288	23	367
+Witherbloom Apprentice	peasant	BG	28.0	0.0019	0.0082	-0.0148	0.0185	7	112
+Ram Through	pauper	G	27.3	0.0019	0.0096	-0.0161	0.0210	146	2333
+Underworld Dreams	peasant	B	26.7	0.0019	0.0106	-0.0194	0.0212	15	240
+Pizza Face, Gastromancer	peasant	BG	27.2	0.0019	0.0125	-0.0245	0.0277	12	192
+Rishkar, Peema Renegade	peasant	G	89.2	0.0017	0.0100	-0.0187	0.0208	15	240
+Gonti, Lord of Luxury	peasant	B	74.3	0.0017	0.0111	-0.0159	0.0268	13	207
+Cast Down	pauper	B	54.8	0.0017	0.0095	-0.0157	0.0184	145	2319
+Ghost Ship	pauper	U	48.7	0.0013	0.0089	-0.0158	0.0186	150	2399
+Boomerang Basics	peasant	U	35.6	0.0013	0.0105	-0.0209	0.0166	16	256
+Okiba-Gang Shinobi	pauper	B	39.1	0.0011	0.0092	-0.0162	0.0181	141	2256
+Greed	peasant	B	49.3	0.0011	0.0088	-0.0172	0.0187	10	160
+Umbral Collar Zealot	peasant	B	40.7	0.0011	0.0091	-0.0190	0.0170	9	144
+Erg Raiders	pauper	B	41.2	0.0010	0.0092	-0.0185	0.0180	127	2031
+Clone	peasant	U	47.0	0.0010	0.0102	-0.0191	0.0216	14	224
+Millstone	peasant		42.9	0.0010	0.0085	-0.0141	0.0183	11	176
+Bespoke Bō	peasant	U	20.7	0.0009	0.0106	-0.0189	0.0206	16	256
+Mana Tithe	pauper	W	63.3	0.0009	0.0088	-0.0155	0.0173	170	2717
+Plaguecrafter	peasant	B	33.9	0.0008	0.0107	-0.0170	0.0195	17	272
+Unburial Rites	peasant	B	46.1	0.0007	0.0085	-0.0155	0.0183	9	144
+Tear Asunder	peasant	G	43.1	0.0007	0.0083	-0.0163	0.0169	17	272
+Silver Drake	pauper	WU	35.7	0.0007	0.0094	-0.0165	0.0175	123	1964
+Thranduil, Sindarin Liege	peasant	UG	43.0	0.0005	0.0097	-0.0172	0.0208	11	176
+Winter Eladrin	pauper	U	87.9	0.0004	0.0097	-0.0175	0.0216	120	1920
+Halo Forager	peasant	UB	41.9	0.0004	0.0097	-0.0173	0.0172	12	192
+Wrenn's Resolve	pauper	R	92.9	0.0003	0.0092	-0.0170	0.0197	121	1936
+Springbloom Druid	pauper	G	63.4	0.0002	0.0099	-0.0184	0.0183	119	1899
+Firebrand Archer	pauper	R	72.7	0.0002	0.0094	-0.0214	0.0186	113	1808
+Journey to Nowhere	pauper	W	50.6	0.0002	0.0090	-0.0165	0.0177	171	2731
+Vampire Gourmand	peasant	B	44.1	0.0002	0.0091	-0.0162	0.0182	10	160
+Nezumi Linkbreaker	pauper	B	26.9	0.0001	0.0095	-0.0197	0.0161	130	2080
+Conclave Naturalists	pauper	G	34.7	0.0000	0.0091	-0.0157	0.0181	133	2124
+Mulldrifter	pauper	U	71.5	-0.0000	0.0084	-0.0182	0.0152	134	2144
+Basalt Monolith	peasant		85.1	-0.0000	0.0073	-0.0127	0.0138	6	96
+Captain Storm, Cosmium Raider	peasant	UR	43.5	-0.0001	0.0106	-0.0223	0.0214	22	352
+Seasoned Hallowblade	peasant	W	33.3	-0.0002	0.0126	-0.0271	0.0236	19	304
+Terminate	pauper	BR	69.4	-0.0002	0.0091	-0.0192	0.0166	125	2000
+Aeolipile	pauper		69.2	-0.0003	0.0091	-0.0187	0.0152	131	2095
+Snuff Out	pauper	B	97.9	-0.0004	0.0089	-0.0160	0.0163	146	2335
+Red Room Recruit	pauper	B	33.2	-0.0004	0.0094	-0.0177	0.0191	135	2158
+Infestation Sage	pauper	B	36.2	-0.0004	0.0102	-0.0210	0.0194	141	2254
+Loxodon Warhammer	peasant		87.3	-0.0004	0.0110	-0.0229	0.0208	16	256
+Lita, Little Orphan Amphibian	peasant	W	44.2	-0.0005	0.0116	-0.0215	0.0213	21	336
+Thermo-Alchemist	pauper	R	38.9	-0.0005	0.0096	-0.0212	0.0195	149	2382
+Stab	pauper	B	42.0	-0.0005	0.0094	-0.0181	0.0177	135	2160
+Earth Elemental	pauper	R	41.3	-0.0006	0.0091	-0.0187	0.0154	126	2015
+Everything Pizza	peasant		47.4	-0.0007	0.0086	-0.0155	0.0164	11	176
+Quandrix Charm	peasant	UG	34.1	-0.0007	0.0098	-0.0196	0.0171	14	224
+Tundra Wolves	pauper	W	27.1	-0.0007	0.0090	-0.0165	0.0162	173	2762
+Acidic Slime	peasant	G	48.4	-0.0008	0.0100	-0.0186	0.0182	19	302
+Talisman of Creativity	peasant		92.0	-0.0009	0.0096	-0.0183	0.0173	14	224
+Angelic Voices	peasant	W	18.9	-0.0009	0.0108	-0.0192	0.0195	22	352
+Selesnya Evangel	pauper	WG	41.2	-0.0009	0.0085	-0.0153	0.0142	126	2011
+Strategic Betrayal	peasant	B	20.1	-0.0009	0.0105	-0.0206	0.0184	12	192
+Traveling Botanist	peasant	G	91.6	-0.0010	0.0085	-0.0171	0.0185	11	176
+Ravenous Chupacabra	peasant	B	53.0	-0.0010	0.0093	-0.0189	0.0168	13	208
+Lively Dirge	peasant	B	67.6	-0.0010	0.0099	-0.0208	0.0183	12	192
+Blood Artist	peasant	B	65.2	-0.0011	0.0094	-0.0187	0.0180	14	224
+Counterspell	pauper	U	98.6	-0.0012	0.0100	-0.0181	0.0199	135	2159
+Tibalt, Rakish Instigator	peasant	R	30.6	-0.0012	0.0113	-0.0232	0.0195	14	224
+Environmental Scientist	peasant	G	48.0	-0.0013	0.0108	-0.0255	0.0238	19	304
+Path to the World Tree	peasant	G	34.7	-0.0015	0.0071	-0.0130	0.0135	7	111
+Conclave Mentor	peasant	WG	41.8	-0.0015	0.0103	-0.0214	0.0187	12	192
+Kitesail Freebooter	peasant	B	50.0	-0.0016	0.0088	-0.0186	0.0140	6	96
+Fireblast	pauper	R	45.2	-0.0016	0.0090	-0.0191	0.0164	124	1982
+Mesa Pegasus	pauper	W	24.7	-0.0016	0.0094	-0.0215	0.0155	151	2413
+Ice Cream Kitty	pauper	BG	12.3	-0.0018	0.0097	-0.0233	0.0146	105	1679
+Talisman of Curiosity	peasant		61.4	-0.0018	0.0076	-0.0166	0.0113	11	176
+Stitcher's Supplier	peasant	B	65.6	-0.0018	0.0095	-0.0226	0.0164	12	192
+Satyr Wayfinder	pauper	G	31.3	-0.0018	0.0092	-0.0196	0.0179	120	1917
+Scolding Administrator	peasant	WB	43.9	-0.0018	0.0085	-0.0189	0.0144	7	112
+Land Tax	peasant	W	89.7	-0.0021	0.0112	-0.0252	0.0203	15	240
+Yotian Soldier	pauper		33.5	-0.0021	0.0084	-0.0187	0.0144	142	2271
+Intangible Virtue	peasant	W	26.2	-0.0022	0.0089	-0.0203	0.0168	15	240
+Hero of the Dunes	peasant	WB	41.3	-0.0022	0.0112	-0.0216	0.0201	12	191
+Pyrite Spellbomb	pauper		62.2	-0.0022	0.0098	-0.0220	0.0167	124	1982
+Drain Life	pauper	B	45.3	-0.0024	0.0095	-0.0199	0.0168	133	2127
+Life // Death	peasant	BG	27.9	-0.0024	0.0073	-0.0166	0.0099	5	80
+Jayemdae Tome	peasant		93.1	-0.0025	0.0073	-0.0157	0.0093	7	112
+Dream Beavers	peasant	B	48.1	-0.0025	0.0083	-0.0164	0.0154	9	144
+Nasty Little Rabbit	peasant	G	40.7	-0.0025	0.0107	-0.0240	0.0165	11	176
+Moon-Circuit Hacker	pauper	U	34.3	-0.0025	0.0095	-0.0195	0.0167	140	2240
+Atlantis Attacks	pauper	U	36.7	-0.0027	0.0097	-0.0206	0.0159	133	2126
+Deduce	pauper	U	93.8	-0.0027	0.0097	-0.0239	0.0158	144	2303
+Hero's Downfall	peasant	B	90.6	-0.0029	0.0096	-0.0206	0.0146	14	224
+Craw Wurm	pauper	G	38.6	-0.0030	0.0086	-0.0206	0.0138	135	2152
+Brilliance Unleashed	peasant	UR	44.4	-0.0030	0.0109	-0.0226	0.0192	13	208
+Glowspore Shaman	pauper	BG	37.4	-0.0031	0.0095	-0.0192	0.0144	126	2014
+Dauntless Scrapbot	peasant		37.1	-0.0031	0.0107	-0.0214	0.0206	14	224
+Frog Butler	pauper	G	44.9	-0.0033	0.0094	-0.0214	0.0159	133	2120
+Kird Ape	pauper	R	41.6	-0.0033	0.0095	-0.0223	0.0124	127	2031
+Lotus Petal	pauper		98.7	-0.0034	0.0091	-0.0209	0.0154	130	2078
+Throat Slitter	peasant	B	47.0	-0.0034	0.0095	-0.0211	0.0154	18	288
+Rabbit Battery	peasant	R	65.9	-0.0034	0.0113	-0.0257	0.0179	13	208
+Al Bhed Salvagers	peasant	B	32.1	-0.0035	0.0074	-0.0156	0.0121	7	112
+Eternal Witness	peasant	G	83.8	-0.0035	0.0111	-0.0275	0.0177	15	240
+Faebloom Trick	peasant	U	87.8	-0.0036	0.0096	-0.0214	0.0151	17	272
+Up the Beanstalk	peasant	G	38.5	-0.0037	0.0104	-0.0231	0.0166	17	271
+Play with Fire	peasant	R	84.0	-0.0037	0.0110	-0.0263	0.0169	19	304
+Oroku Saki, Shredder Rising	pauper	B	32.1	-0.0037	0.0098	-0.0223	0.0155	143	2284
+Deep-Cavern Bat	peasant	B	97.7	-0.0037	0.0098	-0.0215	0.0154	13	208
+Unable to Scream	pauper	U	71.0	-0.0037	0.0087	-0.0211	0.0152	163	2608
+Elas il-Kor, Sadistic Pilgrim	peasant	WB	38.8	-0.0037	0.0106	-0.0256	0.0155	14	224
+Signal Pest	peasant		27.2	-0.0038	0.0110	-0.0280	0.0161	20	320
+Ancestral Blade	pauper	W	33.2	-0.0038	0.0090	-0.0219	0.0138	144	2298
+Greta, Sweettooth Scourge	peasant	BG	41.3	-0.0039	0.0109	-0.0256	0.0175	12	191
+Cauldron Familiar	pauper	B	96.2	-0.0040	0.0088	-0.0226	0.0112	148	2367
+Sokenzan Smelter	peasant	R	12.3	-0.0041	0.0107	-0.0277	0.0161	23	367
+Pestilence	pauper	B	46.2	-0.0042	0.0101	-0.0246	0.0126	132	2111
+Power Sink	pauper	U	56.4	-0.0043	0.0087	-0.0215	0.0108	155	2479
+Fading Hope	peasant	U	18.0	-0.0044	0.0108	-0.0207	0.0194	22	352
+Ninja of the Deep Hours	pauper	U	37.9	-0.0045	0.0096	-0.0222	0.0130	122	1951
+Clockwork Percussionist	pauper	R	82.2	-0.0045	0.0104	-0.0217	0.0185	144	2302
+Eagles of the North	pauper	W	77.9	-0.0046	0.0102	-0.0245	0.0173	166	2651
+Stone-Throwing Devils	pauper	B	16.9	-0.0047	0.0092	-0.0229	0.0121	129	2063
+Hasran Ogress	pauper	B	25.9	-0.0047	0.0093	-0.0236	0.0110	139	2224
+Ossification	peasant	W	92.0	-0.0048	0.0084	-0.0200	0.0114	13	208
+Experimental Confectioner	peasant	B	40.0	-0.0048	0.0092	-0.0213	0.0138	9	144
+Troll Negotiations	peasant	G	36.8	-0.0048	0.0082	-0.0192	0.0106	13	208
+Steal Artifact	peasant	U	35.4	-0.0048	0.0113	-0.0269	0.0146	24	384
+Dragonbroods' Relic	peasant	G	39.9	-0.0049	0.0114	-0.0252	0.0155	17	271
+Fire // Ice	pauper	UR	43.1	-0.0049	0.0101	-0.0226	0.0152	113	1808
+Voltage Surge	pauper	R	61.6	-0.0049	0.0095	-0.0213	0.0139	132	2112
+Abrade	pauper	R	55.8	-0.0051	0.0089	-0.0245	0.0094	123	1966
+Berserk	peasant	G	45.5	-0.0051	0.0103	-0.0261	0.0131	13	205
+Spirited Companion	pauper	W	87.3	-0.0051	0.0088	-0.0227	0.0114	150	2399
+Vampire Nighthawk	peasant	B	94.3	-0.0052	0.0085	-0.0200	0.0120	8	128
+Psychic Purge	pauper	U	22.6	-0.0052	0.0085	-0.0196	0.0140	128	2046
+Blessing	peasant	W	24.5	-0.0052	0.0078	-0.0186	0.0111	11	176
+Spinal Villain	peasant	R	49.5	-0.0052	0.0100	-0.0251	0.0119	21	336
+Perilous Myr	pauper		57.3	-0.0052	0.0087	-0.0199	0.0120	141	2253
+Skullclamp	peasant		99.1	-0.0053	0.0113	-0.0276	0.0174	15	240
+Craw Giant	peasant	G	46.9	-0.0053	0.0120	-0.0279	0.0173	15	240
+Mindstab Thrull	pauper	B	43.6	-0.0053	0.0090	-0.0226	0.0128	133	2127
+Two-Headed Giant of Foriys	peasant	R	46.2	-0.0053	0.0090	-0.0213	0.0139	17	272
+Bane of Bala Ged	peasant		37.8	-0.0054	0.0123	-0.0273	0.0217	10	160
+Carrion Ants	peasant	B	30.0	-0.0055	0.0104	-0.0264	0.0122	10	160
+Elves of Deep Shadow	pauper	G	35.7	-0.0055	0.0091	-0.0206	0.0111	115	1836
+Mechanized Ninja Cavalry	pauper	WR	32.8	-0.0055	0.0097	-0.0251	0.0118	122	1951
+Thicket Basilisk	peasant	G	44.2	-0.0055	0.0101	-0.0256	0.0158	17	271
+Psionic Blast	peasant	U	73.8	-0.0056	0.0124	-0.0269	0.0178	20	320
+Sakura-Tribe Elder	pauper	G	48.9	-0.0056	0.0096	-0.0212	0.0134	126	2015
+Gleeful Demolition	peasant	R	65.4	-0.0056	0.0095	-0.0249	0.0115	15	240
+Talisman of Dominance	peasant		83.6	-0.0056	0.0097	-0.0220	0.0141	15	240
+Goblin Bushwhacker	pauper	R	24.9	-0.0056	0.0095	-0.0232	0.0147	130	2078
+Spiteful Prankster	peasant	R	57.1	-0.0057	0.0117	-0.0274	0.0176	15	240
+Paradox Surveyor	peasant	UG	41.8	-0.0058	0.0102	-0.0209	0.0155	18	286
+Cogwork Wrestler	pauper	U	39.3	-0.0058	0.0098	-0.0267	0.0130	136	2176
+Circle of Protection: Blue	pauper	W	31.9	-0.0059	0.0099	-0.0217	0.0167	156	2491
+Squee, Goblin Nabob	peasant	R	69.7	-0.0059	0.0109	-0.0256	0.0167	19	304
+Night's Whisper	pauper	B	81.1	-0.0060	0.0089	-0.0212	0.0128	124	1984
+Treasure Cruise	pauper	U	50.1	-0.0060	0.0092	-0.0259	0.0109	131	2096
+Rimrock Knight	pauper	R	40.6	-0.0060	0.0093	-0.0244	0.0116	133	2127
+Remove Soul	pauper	U	92.3	-0.0060	0.0092	-0.0239	0.0106	120	1918
+Pentad Prism	pauper		53.4	-0.0061	0.0094	-0.0223	0.0143	155	2478
+Flow State	peasant	U	34.6	-0.0062	0.0115	-0.0282	0.0104	25	400
+Flame Slash	pauper	R	72.2	-0.0063	0.0098	-0.0240	0.0140	128	2048
+Sensei's Divining Top	peasant		85.1	-0.0065	0.0101	-0.0265	0.0136	11	176
+Disfigure	pauper	B	91.2	-0.0065	0.0076	-0.0231	0.0080	148	2368
+Prosperous Innkeeper	peasant	G	97.3	-0.0065	0.0094	-0.0249	0.0127	14	224
+Power Word Kill	peasant	B	54.2	-0.0066	0.0085	-0.0212	0.0100	8	128
+Davriel, Rogue Shadowmage	peasant	B	30.4	-0.0066	0.0109	-0.0309	0.0117	12	192
+Threadbind Clique	peasant	U	39.2	-0.0067	0.0112	-0.0269	0.0177	17	272
+Ponder	pauper	U	98.1	-0.0067	0.0099	-0.0249	0.0130	149	2384
+Animate Dead	peasant	B	98.8	-0.0067	0.0097	-0.0274	0.0111	8	128
+Grapple with the Past	pauper	G	13.7	-0.0067	0.0095	-0.0256	0.0127	120	1919
+Skateboard	peasant		4.7	-0.0069	0.0085	-0.0235	0.0093	7	112
+Ambrosia Whiteheart	peasant	W	32.8	-0.0071	0.0101	-0.0273	0.0128	15	240
+Cult Conscript	peasant	B	34.0	-0.0072	0.0111	-0.0290	0.0130	18	288
+Roc of Kher Ridges	peasant	R	47.5	-0.0073	0.0096	-0.0239	0.0124	14	224
+Bonesplitter	pauper		93.4	-0.0074	0.0090	-0.0241	0.0099	127	2031
+Storm Seeker	peasant	G	23.3	-0.0074	0.0116	-0.0319	0.0113	19	303
+Gloom	peasant	B	24.8	-0.0074	0.0098	-0.0271	0.0098	11	176
+Granite Gargoyle	peasant	R	47.9	-0.0075	0.0095	-0.0234	0.0125	13	208
+Elvish Mystic	pauper	G	53.8	-0.0076	0.0094	-0.0245	0.0114	130	2078
+Brainstorm	pauper	U	85.0	-0.0076	0.0099	-0.0259	0.0103	149	2384
+Ichor Wellspring	pauper		73.7	-0.0077	0.0092	-0.0246	0.0111	142	2268
+Moorish Cavalry	pauper	W	29.9	-0.0077	0.0092	-0.0269	0.0106	166	2651
+Risen Reef	peasant	UG	88.4	-0.0078	0.0106	-0.0329	0.0115	27	432
+Juri, Master of the Revue	peasant	BR	13.6	-0.0078	0.0089	-0.0240	0.0108	14	224
+Vitu-Ghazi Guildmage	peasant	WG	42.8	-0.0078	0.0102	-0.0290	0.0107	11	176
+The Witch's Vanity	peasant	B	95.8	-0.0079	0.0108	-0.0289	0.0112	15	239
+Force of Will	peasant	U	99.6	-0.0080	0.0093	-0.0244	0.0122	12	192
+Opt	pauper	U	82.3	-0.0080	0.0087	-0.0250	0.0088	151	2415
+Wall of Air	peasant	U	45.2	-0.0081	0.0097	-0.0281	0.0087	17	272
+Tamiyo's Safekeeping	pauper	G	14.2	-0.0084	0.0087	-0.0275	0.0056	132	2108
+Scavenger Folk	pauper	G	18.5	-0.0085	0.0101	-0.0288	0.0072	132	2111
+Unholy Heat	pauper	R	95.5	-0.0085	0.0091	-0.0290	0.0075	135	2158
+Candy Grapple	pauper	B	88.3	-0.0086	0.0095	-0.0254	0.0111	144	2302
+Goblin Balloon Brigade	pauper	R	23.1	-0.0087	0.0099	-0.0286	0.0064	119	1902
+Oblivion Ring	pauper	W	83.0	-0.0088	0.0079	-0.0238	0.0086	181	2890
+Zealous Persecution	peasant	WB	29.0	-0.0088	0.0099	-0.0290	0.0102	15	239
+Red Elemental Blast	pauper	R	91.6	-0.0088	0.0101	-0.0295	0.0111	118	1887
+Yavimaya Elder	pauper	G	39.9	-0.0091	0.0100	-0.0267	0.0103	157	2506
+Chart a Course	peasant	U	92.1	-0.0091	0.0097	-0.0283	0.0106	10	160
+Eddymurk Crab	peasant	U	17.5	-0.0092	0.0101	-0.0254	0.0125	18	288
+The Rack	peasant		38.8	-0.0093	0.0083	-0.0244	0.0087	11	176
+Dragon Engine	pauper		48.6	-0.0096	0.0080	-0.0250	0.0063	131	2090
+Bushwhack	pauper	G	63.7	-0.0097	0.0079	-0.0261	0.0064	151	2411
+Mischievous Pup	peasant	W	14.8	-0.0097	0.0108	-0.0319	0.0091	19	303
+Wood Elves	pauper	G	81.8	-0.0098	0.0089	-0.0283	0.0065	134	2141
+No More Lies	peasant	WU	94.0	-0.0098	0.0096	-0.0281	0.0071	9	144
+Dance of Many	peasant	U	33.6	-0.0098	0.0110	-0.0284	0.0142	22	352
+Brain Freeze	peasant	U	98.6	-0.0099	0.0119	-0.0311	0.0148	18	288
+Daze	pauper	U	58.3	-0.0099	0.0088	-0.0267	0.0065	122	1952
+Renegade Rallier	peasant	WG	37.0	-0.0101	0.0106	-0.0316	0.0089	17	272
+Lórien Revealed	pauper	U	98.0	-0.0103	0.0088	-0.0294	0.0033	143	2286
+Stone Rain	pauper	R	32.7	-0.0104	0.0092	-0.0281	0.0081	131	2095
+Hidden Stockpile	peasant	WB	39.1	-0.0104	0.0093	-0.0281	0.0073	11	176
+Renegade Freighter	pauper		22.3	-0.0105	0.0089	-0.0278	0.0060	149	2381
+Experimental Synthesizer	pauper	R	57.1	-0.0106	0.0084	-0.0276	0.0048	138	2208
+Arbor Elf	pauper	G	54.1	-0.0106	0.0092	-0.0285	0.0064	146	2331
+Third Path Iconoclast	peasant	UR	69.1	-0.0107	0.0093	-0.0284	0.0095	13	208
+Sinister Starfish	pauper	B	10.1	-0.0109	0.0098	-0.0305	0.0070	122	1952
+Jade Statue	peasant		38.2	-0.0110	0.0111	-0.0295	0.0146	15	239
+Divine Offering	pauper	W	31.0	-0.0112	0.0093	-0.0257	0.0087	167	2668
+Settle Beyond Reality	pauper	W	28.1	-0.0112	0.0091	-0.0267	0.0050	161	2576
+Memory Lapse	pauper	U	98.4	-0.0112	0.0096	-0.0287	0.0075	143	2287
+Miscalculation	pauper	U	98.0	-0.0112	0.0093	-0.0321	0.0049	131	2096
+Dandân	pauper	U	12.2	-0.0113	0.0096	-0.0285	0.0083	117	1872
+Kismet	peasant	W	27.4	-0.0113	0.0111	-0.0323	0.0102	25	399
+Wyluli Wolf	pauper	G	47.7	-0.0115	0.0088	-0.0287	0.0056	120	1919
+Unexpected Windfall	pauper	R	80.5	-0.0115	0.0086	-0.0262	0.0075	114	1823
+Haywire Mite	peasant		16.4	-0.0115	0.0096	-0.0317	0.0043	10	160
+Arabella, Abandoned Doll	peasant	WR	43.7	-0.0116	0.0096	-0.0261	0.0098	11	176
+Oketra's Monument	peasant		24.1	-0.0117	0.0096	-0.0295	0.0064	14	224
+Incinerate	pauper	R	54.0	-0.0117	0.0096	-0.0275	0.0053	129	2063
+Hard Evidence	pauper	U	89.3	-0.0118	0.0095	-0.0295	0.0057	128	2048
+Hedron Crab	peasant	U	90.9	-0.0120	0.0106	-0.0319	0.0088	16	256
+Tenth District Legionnaire	pauper	WR	43.7	-0.0121	0.0082	-0.0287	0.0016	150	2399
+Micromancer	peasant	U	93.3	-0.0123	0.0103	-0.0331	0.0073	13	208
+Desert Twister	peasant	G	47.7	-0.0124	0.0098	-0.0316	0.0039	17	272
+Thought Scour	pauper	U	80.4	-0.0125	0.0090	-0.0295	0.0066	150	2399
+Dwarven Soldier	pauper	R	21.9	-0.0125	0.0096	-0.0295	0.0074	132	2111
+Flashfires	peasant	R	35.2	-0.0126	0.0087	-0.0292	0.0042	11	176
+Casey Jones, Jury-Rig Justiciar	peasant	R	43.7	-0.0126	0.0113	-0.0328	0.0087	23	368
+Wall of Roots	pauper	G	42.1	-0.0127	0.0084	-0.0282	0.0042	146	2332
+Ephemerate	pauper	W	22.9	-0.0129	0.0087	-0.0271	0.0074	160	2556
+Eye for an Eye	peasant	W	26.9	-0.0129	0.0112	-0.0348	0.0075	16	256
+Frozen Shade	pauper	B	30.7	-0.0130	0.0098	-0.0315	0.0066	129	2063
+Giant Growth	pauper	G	38.7	-0.0131	0.0086	-0.0307	0.0030	124	1981
+Junún Efreet	peasant	B	36.5	-0.0131	0.0073	-0.0262	0.0009	7	112
+Hurricane	peasant	G	47.3	-0.0131	0.0081	-0.0267	0.0051	8	128
+Sunlance	pauper	W	43.9	-0.0131	0.0086	-0.0274	0.0036	153	2440
+Witch Enchanter	peasant	W	68.0	-0.0131	0.0088	-0.0314	0.0034	10	160
+Paralyze	pauper	B	40.5	-0.0134	0.0094	-0.0330	0.0028	117	1872
+Burst Lightning	pauper	R	89.8	-0.0134	0.0097	-0.0326	0.0042	117	1871
+Goblin Surprise	pauper	R	88.1	-0.0134	0.0098	-0.0328	0.0065	119	1903
+Chain of Smog	peasant	B	85.6	-0.0135	0.0092	-0.0301	0.0027	11	175
+Cryogen Relic	pauper	U	45.5	-0.0136	0.0090	-0.0290	0.0041	144	2304
+Tidehollow Sculler	peasant	WB	32.1	-0.0136	0.0104	-0.0335	0.0050	13	207
+Iron-Shield Elf	peasant	B	37.7	-0.0136	0.0093	-0.0327	0.0064	12	192
+Repulse	pauper	U	86.3	-0.0137	0.0098	-0.0300	0.0057	130	2080
+Izzet Charm	pauper	UR	36.3	-0.0138	0.0093	-0.0297	0.0027	125	1999
+Young Pyromancer	peasant	R	42.4	-0.0138	0.0113	-0.0379	0.0072	22	351
+Drudge Skeletons	pauper	B	42.7	-0.0139	0.0097	-0.0315	0.0053	132	2110
+Hexgold Halberd	peasant	R	31.3	-0.0139	0.0112	-0.0322	0.0135	15	240
+Lampad of Death's Vigil	pauper	B	16.3	-0.0139	0.0091	-0.0320	0.0030	125	2000
+Detonate	peasant	R	43.9	-0.0139	0.0122	-0.0379	0.0081	24	384
+Energy Flux	peasant	U	15.9	-0.0140	0.0102	-0.0344	0.0058	17	272
+Bone Shards	pauper	B	86.4	-0.0140	0.0103	-0.0356	0.0044	127	2031
+Ghazbán Ogre	pauper	G	29.3	-0.0141	0.0100	-0.0323	0.0078	134	2140
+Farrel's Mantle	peasant	W	43.1	-0.0142	0.0109	-0.0335	0.0094	13	208
+Futurist Forge	pauper	U	14.1	-0.0143	0.0092	-0.0305	0.0072	139	2224
+Cathar Commando	pauper	W	29.9	-0.0143	0.0080	-0.0315	-0.0020	165	2635
+Chittering Rats	pauper	B	32.4	-0.0145	0.0103	-0.0372	0.0039	139	2223
+Circle of Protection: Black	pauper	W	35.3	-0.0145	0.0089	-0.0309	0.0016	184	2939
+Sindbad	peasant	U	28.5	-0.0147	0.0093	-0.0319	0.0041	13	208
+Dust to Dust	pauper	W	8.8	-0.0147	0.0096	-0.0331	0.0024	162	2590
+Exorcist	peasant	W	43.7	-0.0147	0.0112	-0.0335	0.0072	18	288
+Snarl Song	peasant	G	47.8	-0.0147	0.0106	-0.0347	0.0075	16	254
+Ornithopter	pauper		49.5	-0.0148	0.0105	-0.0327	0.0055	129	2064
+Silverquill Charm	peasant	WB	44.4	-0.0149	0.0107	-0.0343	0.0075	14	224
+Borough Backup	pauper	W	18.6	-0.0149	0.0093	-0.0308	0.0049	156	2490
+Yahenni, Undying Partisan	peasant	B	41.3	-0.0150	0.0091	-0.0298	0.0050	15	240
+Ulvenwald Mysteries	peasant	G	39.0	-0.0150	0.0092	-0.0322	0.0049	12	192
+Blood Fountain	pauper	B	96.3	-0.0150	0.0093	-0.0349	0.0025	143	2286
+Welcome to Sweettooth	peasant	G	46.2	-0.0154	0.0086	-0.0312	0.0005	22	350
+Burning-Tree Emissary	pauper	RG	38.8	-0.0155	0.0098	-0.0339	0.0011	111	1775
+Twinshot Sniper	peasant	R	91.9	-0.0156	0.0106	-0.0361	0.0043	24	384
+Village Rites	pauper	B	14.7	-0.0156	0.0085	-0.0329	-0.0005	152	2432
+Spider Spawning	peasant	G	42.7	-0.0156	0.0111	-0.0378	0.0032	16	254
+Sink into Stupor	peasant	U	91.3	-0.0158	0.0114	-0.0379	0.0069	22	352
+Amnesia	peasant	U	12.6	-0.0159	0.0113	-0.0388	0.0042	18	288
+Body Dropper	pauper	BR	29.2	-0.0159	0.0099	-0.0325	0.0035	115	1838
+Kuldotha Rebirth	pauper	R	8.3	-0.0160	0.0098	-0.0348	0.0049	130	2079
+Plunder the Trollshaws	pauper	U	23.8	-0.0161	0.0093	-0.0322	0.0046	138	2208
+Evolution Sage	peasant	G	71.2	-0.0166	0.0108	-0.0357	0.0070	17	272
+Spicy Oatmeal Pizza	peasant	R	33.3	-0.0167	0.0111	-0.0367	0.0031	16	256
+Wall of Earth	pauper	R	21.6	-0.0168	0.0100	-0.0357	0.0017	118	1887
+Nurturing Pixie	peasant	W	74.4	-0.0168	0.0106	-0.0353	0.0033	14	224
+Spirit Link	pauper	W	37.8	-0.0168	0.0095	-0.0351	-0.0000	175	2795
+Flayer Husk	pauper		63.5	-0.0169	0.0089	-0.0366	-0.0019	126	2014
+Servo Schematic	peasant		76.0	-0.0170	0.0078	-0.0306	-0.0008	10	159
+Fanatical Firebrand	pauper	R	14.2	-0.0171	0.0100	-0.0346	0.0025	149	2384
+Duress	pauper	B	71.4	-0.0171	0.0098	-0.0339	0.0018	113	1807
+Deep Analysis	pauper	U	94.5	-0.0171	0.0090	-0.0345	-0.0004	142	2272
+Mind Stone	pauper		60.4	-0.0173	0.0089	-0.0352	0.0003	138	2208
+Power Artifact	peasant	U	71.6	-0.0173	0.0101	-0.0353	0.0037	21	336
+Eriette's Tempting Apple	peasant		42.5	-0.0174	0.0103	-0.0364	0.0012	18	288
+Ruby, Daring Tracker	peasant	RG	39.5	-0.0175	0.0106	-0.0358	0.0029	15	240
+Disenchant	pauper	W	64.5	-0.0175	0.0090	-0.0317	0.0028	165	2636
+Bloodtithe Harvester	peasant	BR	46.4	-0.0176	0.0131	-0.0436	0.0041	21	336
+Suplex	pauper	R	61.1	-0.0177	0.0093	-0.0342	0.0014	121	1934
+Oust	peasant	W	97.2	-0.0177	0.0097	-0.0319	0.0055	18	288
+Zuran Orb	peasant		75.2	-0.0178	0.0100	-0.0382	0.0009	16	256
+Courier of Comestibles	peasant	G	47.2	-0.0179	0.0111	-0.0419	0.0007	10	159
+Vicious Offering	pauper	B	51.2	-0.0181	0.0090	-0.0357	-0.0008	148	2367
+Tsunami	peasant	G	39.3	-0.0182	0.0099	-0.0363	0.0010	18	287
+Lava Dart	pauper	R	29.4	-0.0182	0.0094	-0.0369	-0.0003	142	2271
+Llanowar Elves	pauper	G	72.2	-0.0182	0.0082	-0.0354	-0.0029	120	1915
+Black Vise	peasant		49.5	-0.0184	0.0108	-0.0391	0.0037	10	160
+Lightning Greaves	peasant		92.7	-0.0185	0.0107	-0.0391	0.0038	17	271
+Ardent Elementalist	pauper	R	14.5	-0.0187	0.0089	-0.0344	-0.0015	120	1920
+Daring Waverider	peasant	U	69.0	-0.0187	0.0104	-0.0402	0.0015	14	224
+Take Up the Shield	pauper	W	41.2	-0.0189	0.0085	-0.0337	-0.0008	160	2556
+Tragic Slip	pauper	B	66.3	-0.0189	0.0090	-0.0367	-0.0000	128	2047
+Harrow	pauper	G	41.6	-0.0190	0.0095	-0.0376	-0.0003	133	2125
+Grizzly Bears	pauper	G	34.2	-0.0190	0.0089	-0.0367	-0.0005	128	2041
+Thought-Stalker Warlock	peasant	B	45.9	-0.0192	0.0111	-0.0414	0.0004	12	192
+Candy Trail	pauper		57.9	-0.0193	0.0090	-0.0376	-0.0011	164	2624
+Studious First-Year	pauper	G	32.1	-0.0196	0.0098	-0.0367	0.0009	122	1946
+Circle of Protection: Red	pauper	W	41.7	-0.0198	0.0086	-0.0366	-0.0027	161	2576
+Ley Druid	pauper	G	27.4	-0.0199	0.0084	-0.0362	-0.0038	136	2174
+Orcish Oriflamme	pauper	R	35.0	-0.0200	0.0089	-0.0386	-0.0033	140	2240
+Embereth Shieldbreaker	peasant	R	13.7	-0.0201	0.0106	-0.0377	0.0035	18	288
+Concordant Crossroads	peasant	G	81.3	-0.0202	0.0112	-0.0399	0.0030	18	288
+Infernal Grasp	peasant	B	55.6	-0.0202	0.0109	-0.0404	0.0002	15	240
+Winding Constrictor	peasant	BG	42.7	-0.0204	0.0096	-0.0388	-0.0022	17	272
+Telekinesis	pauper	U	26.6	-0.0205	0.0093	-0.0398	-0.0025	125	2000
+Deathgrip	peasant	B	21.8	-0.0205	0.0090	-0.0340	-0.0026	14	224
+Drown in the Loch	peasant	UB	31.7	-0.0208	0.0091	-0.0361	-0.0013	12	192
+Rise of the Witch-king	peasant	BG	21.7	-0.0209	0.0100	-0.0391	0.0004	12	191
+Holy Light	pauper	W	9.2	-0.0209	0.0086	-0.0363	-0.0001	183	2926
+Fog	pauper	G	31.3	-0.0210	0.0100	-0.0391	0.0002	113	1806
+Fallaji Archaeologist	pauper	U	38.2	-0.0211	0.0097	-0.0401	-0.0025	143	2287
+Killer Bees	peasant	G	41.7	-0.0213	0.0101	-0.0415	-0.0035	16	256
+Expressive Iteration	peasant	UR	39.6	-0.0215	0.0085	-0.0363	-0.0063	15	239
+Unearth	pauper	B	26.2	-0.0216	0.0092	-0.0395	-0.0048	137	2192
+Soul-Guide Lantern	peasant		92.2	-0.0216	0.0110	-0.0409	-0.0006	15	240
+Rally the Peasants	pauper	W	25.6	-0.0217	0.0083	-0.0350	-0.0037	160	2554
+Lose Focus	pauper	U	58.6	-0.0217	0.0105	-0.0405	0.0006	111	1776
+Spell Blast	pauper	U	30.8	-0.0218	0.0092	-0.0391	-0.0046	143	2288
+Thopter Foundry	peasant	WUB	85.0	-0.0219	0.0113	-0.0438	-0.0016	12	192
+Nahiri, Storm of Stone	peasant	WR	38.7	-0.0219	0.0098	-0.0393	-0.0028	14	224
+Dead // Gone	pauper	R	40.0	-0.0220	0.0099	-0.0408	-0.0038	137	2191
+Dark Ritual	pauper	B	85.6	-0.0220	0.0092	-0.0375	-0.0025	136	2175
+Black Knight	peasant	B	43.8	-0.0222	0.0091	-0.0393	-0.0039	11	176
+Think Twice	pauper	U	66.8	-0.0223	0.0091	-0.0382	-0.0018	143	2286
+Untamed Wilds	peasant	G	39.9	-0.0223	0.0107	-0.0423	-0.0040	17	272
+Dockside Chef	peasant	B	38.7	-0.0225	0.0106	-0.0415	0.0009	21	336
+Fireball	pauper	R	66.9	-0.0228	0.0096	-0.0404	-0.0044	124	1983
+Flash Counter	pauper	U	3.5	-0.0229	0.0086	-0.0381	-0.0059	157	2511
+Abu Ja'far	peasant	W	28.0	-0.0229	0.0119	-0.0453	0.0010	24	384
+Blue Elemental Blast	pauper	U	70.7	-0.0230	0.0093	-0.0392	-0.0041	123	1967
+Circle of Protection: Green	pauper	W	35.2	-0.0233	0.0086	-0.0379	-0.0074	170	2717
+Ivory Tower	peasant		47.8	-0.0237	0.0092	-0.0422	-0.0055	11	176
+Goblin Plate Mail	pauper	BR	24.6	-0.0237	0.0103	-0.0419	-0.0045	112	1790
+Tranquility	pauper	G	16.9	-0.0238	0.0086	-0.0399	-0.0070	154	2461
+Cabal Ritual	pauper	B	69.7	-0.0238	0.0094	-0.0415	-0.0042	122	1952
+Cranial Plating	pauper		54.9	-0.0238	0.0089	-0.0416	-0.0065	136	2175
+Guardian Idol	pauper		43.6	-0.0240	0.0089	-0.0419	-0.0065	163	2604
+Archaeomender	pauper	U	40.0	-0.0240	0.0090	-0.0412	-0.0069	138	2208
+Instill Energy	peasant	G	24.9	-0.0243	0.0115	-0.0497	-0.0041	22	352
+Practiced Scrollsmith	peasant	WR	45.8	-0.0243	0.0103	-0.0441	-0.0023	15	240
+Witch's Oven	peasant		66.8	-0.0247	0.0113	-0.0416	0.0020	16	256
+Fellwar Stone	pauper		71.7	-0.0247	0.0089	-0.0399	-0.0058	159	2544
+Oni-Cult Anvil	peasant	BR	76.3	-0.0248	0.0101	-0.0422	-0.0033	17	272
+Expedition Map	pauper		89.3	-0.0248	0.0093	-0.0408	-0.0046	129	2063
+Conversion	peasant	W	23.4	-0.0250	0.0098	-0.0457	-0.0058	16	255
+Snap	pauper	U	80.7	-0.0252	0.0083	-0.0413	-0.0083	141	2255
+Archaeomancer	pauper	U	52.6	-0.0253	0.0097	-0.0448	-0.0070	141	2256
+Inquisition of Kozilek	peasant	B	85.6	-0.0253	0.0096	-0.0408	-0.0055	11	176
+Witch Hunter	peasant	W	48.7	-0.0254	0.0115	-0.0436	-0.0015	16	256
+Transmute Artifact	peasant	U	72.8	-0.0256	0.0112	-0.0499	-0.0043	28	447
+Benalish Hero	pauper	W	26.0	-0.0257	0.0080	-0.0418	-0.0099	167	2666
+Tarfire	pauper	R	37.5	-0.0264	0.0100	-0.0453	-0.0055	145	2318
+Deadly Dispute	pauper	B	66.1	-0.0264	0.0091	-0.0452	-0.0112	116	1855
+Momentary Blink	pauper	W	38.2	-0.0265	0.0091	-0.0446	-0.0089	173	2764
+Will-o'-the-Wisp	peasant	B	41.4	-0.0266	0.0107	-0.0462	-0.0047	15	239
+Active Volcano	pauper	R	18.4	-0.0267	0.0085	-0.0415	-0.0092	131	2096
+Farseek	pauper	G	96.5	-0.0268	0.0086	-0.0453	-0.0121	157	2508
+Boomerang	pauper	U	35.2	-0.0274	0.0090	-0.0457	-0.0083	138	2208
+Crop Rotation	pauper	G	8.7	-0.0274	0.0085	-0.0448	-0.0111	149	2381
+Library of Leng	pauper		11.7	-0.0276	0.0089	-0.0457	-0.0111	134	2143
+Sinkhole	pauper	B	40.4	-0.0277	0.0102	-0.0472	-0.0069	124	1984
+Enlightened Tutor	peasant	W	54.3	-0.0279	0.0108	-0.0458	-0.0076	13	208
+Rampant Growth	pauper	G	81.0	-0.0279	0.0090	-0.0453	-0.0095	133	2124
+Feldon's Cane	pauper		21.8	-0.0284	0.0091	-0.0425	-0.0106	147	2351
+Consider	pauper	U	94.9	-0.0286	0.0091	-0.0444	-0.0096	156	2496
+Army of Allah	pauper	W	9.7	-0.0287	0.0088	-0.0445	-0.0125	163	2606
+Vapor Snag	pauper	U	19.5	-0.0291	0.0096	-0.0477	-0.0107	133	2128
+Howl from Beyond	pauper	B	34.5	-0.0293	0.0086	-0.0455	-0.0114	145	2319
+Cavern Harpy	pauper	UB	38.1	-0.0302	0.0094	-0.0467	-0.0097	111	1775
+Blood Lust	pauper	R	33.2	-0.0303	0.0098	-0.0463	-0.0086	134	2143
+Curse of Predation	peasant	G	53.4	-0.0303	0.0089	-0.0455	-0.0114	12	191
+Aladdin	peasant	R	37.5	-0.0308	0.0120	-0.0550	-0.0049	28	448
+Floral Spuzzem	peasant	G	20.2	-0.0309	0.0116	-0.0520	-0.0061	22	352
+Mirkwood Nurturer	pauper	UG	27.2	-0.0312	0.0097	-0.0521	-0.0101	121	1936
+Arcane Omens	peasant	B	47.4	-0.0314	0.0101	-0.0512	-0.0117	13	208
+Carrion Feeder	pauper	B	30.1	-0.0316	0.0096	-0.0462	-0.0121	124	1984
+Mutagenic Growth	pauper	G	27.0	-0.0319	0.0095	-0.0514	-0.0157	128	2048
+Force Spike	pauper	U	59.5	-0.0322	0.0093	-0.0517	-0.0169	132	2111
+Crumble	pauper	G	15.5	-0.0333	0.0095	-0.0530	-0.0148	140	2235
+Gush	pauper	U	83.3	-0.0341	0.0096	-0.0501	-0.0127	127	2032
+Githzerai Monk	peasant	W	38.5	-0.0347	0.0126	-0.0519	-0.0079	18	288
+Exhume	pauper	B	88.7	-0.0355	0.0091	-0.0502	-0.0165	135	2160
+Stickytongue Sentinel	pauper	G	27.1	-0.0357	0.0090	-0.0555	-0.0205	131	2094
+Tormod's Crypt	pauper		32.5	-0.0361	0.0089	-0.0525	-0.0206	151	2413
+Everflowing Chalice	pauper		46.3	-0.0365	0.0088	-0.0526	-0.0196	142	2272
+Shatterstorm	peasant	R	47.1	-0.0365	0.0106	-0.0558	-0.0168	14	224
+Cathartic Reunion	pauper	R	61.9	-0.0368	0.0092	-0.0528	-0.0173	139	2224
+Contagious Vorrac	pauper	G	34.8	-0.0369	0.0091	-0.0538	-0.0193	128	2045
+Trickster's Stratagem	pauper	U	31.9	-0.0374	0.0088	-0.0560	-0.0201	133	2127
+Spellstutter Sprite	pauper	U	70.3	-0.0377	0.0086	-0.0533	-0.0216	149	2384
+Immolation	pauper	R	36.6	-0.0377	0.0092	-0.0546	-0.0186	142	2271
+Aether Spellbomb	pauper		50.2	-0.0377	0.0092	-0.0559	-0.0180	127	2031
+Fling	pauper	R	31.3	-0.0385	0.0097	-0.0582	-0.0191	134	2143
+Spell Pierce	pauper	U	84.8	-0.0400	0.0099	-0.0596	-0.0192	142	2272
+Raid Bombardment	pauper	R	12.8	-0.0418	0.0105	-0.0618	-0.0203	117	1872
+Unsummon	pauper	U	39.8	-0.0422	0.0095	-0.0597	-0.0206	128	2048
+Sewer-veillance Cam	pauper	U	38.4	-0.0442	0.0089	-0.0597	-0.0254	145	2319
+Shatter	pauper	R	39.5	-0.0456	0.0087	-0.0608	-0.0279	137	2192
+Frantic Search	pauper	U	58.2	-0.0459	0.0093	-0.0641	-0.0306	138	2207
+Artifact Blast	pauper	R	7.1	-0.0462	0.0091	-0.0630	-0.0286	124	1984
+Jalum Tome	pauper		36.7	-0.0463	0.0090	-0.0622	-0.0287	136	2173
+Ashnod's Altar	pauper		17.6	-0.0533	0.0095	-0.0712	-0.0350	133	2126

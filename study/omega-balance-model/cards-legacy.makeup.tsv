@@ -1,0 +1,950 @@
+# balance-model: census legacy band (J144/J149); grouping makeup; lambda 800; 200 deck-bootstrap replicates. Values are win-rate points per game (a deck holding the card instead of the band's average card).
+card	band	colors	rating	value	sd	lo	hi	decks	deck_games
+Sheoldred, the Apocalypse	legacy	B	99.3	0.0545	0.0076	0.0377	0.0650	85	1359
+Wan Shi Tong, All-Knowing	legacy	U	40.0	0.0412	0.0078	0.0250	0.0551	99	1581
+Ursine Monstrosity	legacy	G	40.0	0.0397	0.0078	0.0230	0.0521	89	1423
+Ajani, Nacatl Pariah	legacy	W	97.8	0.0384	0.0078	0.0244	0.0536	100	1600
+Garruk Relentless	legacy	G	49.8	0.0334	0.0081	0.0174	0.0511	98	1564
+Orcish Bowmasters	legacy	B	99.7	0.0331	0.0071	0.0173	0.0459	116	1854
+Laelia, the Blade Reforged	legacy	R	97.9	0.0305	0.0078	0.0142	0.0451	92	1470
+Exalted Angel	legacy	W	95.3	0.0299	0.0071	0.0156	0.0438	94	1500
+The Wondrous Wasp	legacy	U	38.5	0.0295	0.0082	0.0140	0.0445	104	1662
+Questing Beast	legacy	G	47.4	0.0290	0.0078	0.0156	0.0438	86	1375
+Surrak, Elusive Hunter	legacy	G	64.0	0.0290	0.0072	0.0170	0.0420	92	1470
+Seasoned Pyromancer	legacy	R	55.6	0.0282	0.0073	0.0124	0.0412	108	1721
+Barrowgoyf	legacy	B	85.1	0.0280	0.0071	0.0127	0.0395	123	1965
+Ignoble Hierarch	legacy	G	59.1	0.0262	0.0067	0.0129	0.0385	87	1390
+Bloodbraid Challenger	legacy	RG	40.0	0.0249	0.0065	0.0118	0.0350	75	1199
+Baneslayer Angel	legacy	W	49.8	0.0248	0.0070	0.0099	0.0357	85	1357
+Otharri, Suns' Glory	legacy	WR	96.6	0.0245	0.0076	0.0106	0.0387	82	1311
+Screaming Nemesis	legacy	R	51.4	0.0245	0.0083	0.0082	0.0409	93	1487
+Scythecat Cub	legacy	G	55.1	0.0244	0.0075	0.0106	0.0407	95	1520
+Wan Shi Tong, Librarian	legacy	U	49.0	0.0242	0.0078	0.0111	0.0389	93	1486
+Sower of Temptation	legacy	U	95.7	0.0239	0.0083	0.0067	0.0366	85	1360
+Soul-Scar Mage	legacy	R	9.4	0.0238	0.0074	0.0084	0.0384	102	1628
+Six	legacy	G	87.8	0.0237	0.0076	0.0082	0.0394	103	1647
+Tarmogoyf	legacy	G	86.0	0.0236	0.0076	0.0083	0.0380	85	1359
+Emperor of Bones	legacy	B	58.7	0.0232	0.0075	0.0067	0.0384	104	1663
+Spider-Woman, Stunning Savior	legacy	WU	46.8	0.0229	0.0081	0.0082	0.0385	78	1247
+Ocelot Pride	legacy	W	98.8	0.0228	0.0072	0.0085	0.0351	100	1596
+Elite Spellbinder	legacy	W	75.6	0.0228	0.0071	0.0090	0.0354	94	1503
+Descendant of Storms	peasant	W	81.9	0.0226	0.0060	0.0094	0.0321	17	272
+Luminarch Aspirant	legacy	W	96.1	0.0224	0.0074	0.0074	0.0344	101	1615
+Lovestruck Beast	legacy	G	43.8	0.0223	0.0074	0.0066	0.0352	92	1470
+Elvish Archers	legacy	G	46.3	0.0222	0.0076	0.0058	0.0363	97	1550
+Hero of Bladehold	legacy	W	47.9	0.0220	0.0073	0.0076	0.0362	93	1487
+Wurmcoil Engine	legacy		84.8	0.0219	0.0074	0.0086	0.0349	91	1454
+Searslicer Goblin	legacy	R	76.6	0.0214	0.0074	0.0054	0.0338	92	1469
+Oko, Thief of Crowns	legacy	UG	99.3	0.0214	0.0078	0.0058	0.0366	81	1295
+Archangel Avacyn	legacy	W	49.9	0.0213	0.0078	0.0056	0.0363	90	1437
+Elspeth, Storm Slayer	legacy	W	84.9	0.0212	0.0069	0.0086	0.0342	83	1323
+Fanatic of Rhonas	legacy	G	63.2	0.0209	0.0073	0.0068	0.0335	92	1469
+Blade Splicer	legacy	W	63.0	0.0205	0.0080	0.0057	0.0352	103	1648
+Bristlebud Farmer	legacy	G	83.4	0.0205	0.0078	0.0062	0.0336	88	1407
+Hornet Queen	legacy	G	47.9	0.0204	0.0074	0.0061	0.0344	100	1599
+Nadu, Winged Wisdom	legacy	UG	85.5	0.0203	0.0076	0.0072	0.0345	91	1455
+Power Word Kill	peasant	B	54.2	0.0201	0.0064	0.0095	0.0343	14	224
+Shadowspear	legacy		83.0	0.0200	0.0074	0.0041	0.0337	106	1693
+Casey Jones, Jury-Rig Justiciar	peasant	R	43.7	0.0197	0.0066	0.0067	0.0346	19	301
+Trostani Discordant	legacy	WG	48.2	0.0197	0.0083	0.0041	0.0339	77	1232
+Belladonna Took	legacy	W	42.5	0.0195	0.0073	0.0052	0.0344	101	1615
+Junji, the Midnight Sky	legacy	B	72.6	0.0193	0.0076	0.0037	0.0345	116	1855
+Grist, the Hunger Tide	legacy	BG	51.5	0.0192	0.0077	0.0027	0.0336	83	1327
+Malcolm, Alluring Scoundrel	legacy	U	71.8	0.0189	0.0077	0.0014	0.0323	113	1805
+Forth Eorlingas!	legacy	WR	99.3	0.0188	0.0076	0.0044	0.0329	82	1310
+Spinner of Souls	legacy	G	50.8	0.0187	0.0073	0.0069	0.0359	85	1360
+Dauthi Voidwalker	legacy	B	53.7	0.0187	0.0075	0.0047	0.0334	103	1647
+Sentinel of the Nameless City	legacy	G	86.8	0.0186	0.0077	0.0029	0.0337	82	1311
+Loxodon Smiter	peasant	WG	44.2	0.0184	0.0062	0.0056	0.0307	14	224
+Recruitment Officer	peasant	W	63.2	0.0184	0.0054	0.0069	0.0276	16	255
+Mox Pearl	powered		99.9	0.0183	0.0050	0.0079	0.0269	10	160
+Badgermole Cub	legacy	G	48.0	0.0182	0.0076	0.0049	0.0324	90	1440
+Royal Assassin	legacy	B	49.8	0.0180	0.0084	0.0021	0.0341	95	1519
+Ajani's Pridemate	peasant	W	35.1	0.0179	0.0058	0.0046	0.0276	16	256
+Ragavan, Nimble Pilferer	legacy	R	99.6	0.0178	0.0072	0.0025	0.0320	107	1709
+Retrofitter Foundry	legacy		97.7	0.0177	0.0073	0.0026	0.0310	97	1548
+Figure of Fable	legacy	WG	48.8	0.0177	0.0078	0.0028	0.0331	70	1119
+Tetravus	legacy		77.8	0.0176	0.0079	0.0008	0.0295	104	1663
+Pest Infestation	legacy	G	71.9	0.0175	0.0076	0.0035	0.0320	78	1246
+Pyrogoyf	legacy	R	98.6	0.0175	0.0078	-0.0015	0.0308	90	1438
+Springheart Nantuko	legacy	G	58.0	0.0175	0.0083	-0.0008	0.0317	84	1343
+Thundermaw Hellkite	legacy	R	49.1	0.0174	0.0069	0.0056	0.0319	95	1519
+Lurrus of the Dream-Den	legacy	WB	84.6	0.0174	0.0074	0.0042	0.0309	99	1582
+Elder Gargaroth	legacy	G	79.4	0.0173	0.0079	0.0019	0.0324	91	1455
+Wedding Announcement	legacy	W	86.6	0.0173	0.0083	0.0018	0.0355	79	1262
+Ivora, Insatiable Heir	peasant	R	82.0	0.0171	0.0064	0.0050	0.0286	21	336
+Crabomination	legacy	B	49.2	0.0170	0.0078	0.0018	0.0307	106	1695
+Up the Beanstalk	peasant	G	38.5	0.0170	0.0067	0.0034	0.0294	19	303
+Gideon, Ally of Zendikar	legacy	W	65.8	0.0169	0.0084	0.0027	0.0324	101	1612
+Ophiomancer	legacy	B	91.2	0.0167	0.0076	0.0023	0.0299	114	1822
+Bonecrusher Giant	legacy	R	85.1	0.0167	0.0080	0.0006	0.0327	94	1503
+Isamaru, Hound of Konda	legacy	W	41.4	0.0165	0.0077	0.0020	0.0307	86	1375
+Pia and Kiran Nalaar	legacy	R	49.2	0.0163	0.0074	0.0005	0.0286	111	1773
+Lonis, Cryptozoologist	legacy	UG	38.8	0.0163	0.0077	0.0028	0.0317	100	1599
+Wrath of God	legacy	W	68.3	0.0163	0.0081	0.0002	0.0333	76	1214
+Rampaging Ferocidon	legacy	R	42.9	0.0160	0.0073	0.0033	0.0306	96	1535
+Relic of Sauron	legacy		53.3	0.0159	0.0076	0.0021	0.0295	105	1678
+Rankle, Master of Pranks	legacy	B	46.4	0.0159	0.0078	0.0022	0.0306	128	2045
+Bespoke Bō	peasant	U	20.7	0.0158	0.0061	0.0038	0.0275	15	239
+Saheeli, Sublime Artificer	peasant	UR	55.1	0.0158	0.0060	0.0041	0.0278	16	256
+Hanweir Garrison	legacy	R	44.8	0.0157	0.0068	0.0011	0.0271	108	1727
+Icefall Regent	legacy	U	56.1	0.0157	0.0077	0.0002	0.0297	98	1567
+Mind Twist	legacy	B	98.9	0.0157	0.0080	-0.0020	0.0299	114	1823
+Slickshot Show-Off	legacy	R	80.8	0.0156	0.0070	0.0007	0.0291	101	1613
+Time Walk	powered	U	100.0	0.0153	0.0062	0.0038	0.0264	16	255
+Subtlety	legacy	U	71.4	0.0151	0.0070	0.0013	0.0253	93	1488
+Generous Plunderer	legacy	R	75.3	0.0151	0.0081	-0.0025	0.0293	84	1342
+Sedgemoor Witch	legacy	B	47.3	0.0150	0.0073	-0.0002	0.0294	130	2078
+Super Shredder	legacy	B	39.5	0.0149	0.0076	0.0025	0.0297	110	1759
+Voice of Resurgence	legacy	WG	49.4	0.0149	0.0075	-0.0014	0.0281	91	1456
+Birds of Paradise	legacy	G	49.6	0.0148	0.0076	-0.0004	0.0272	84	1342
+Forensic Gadgeteer	legacy	U	59.1	0.0148	0.0075	-0.0019	0.0275	120	1915
+Gau, Feral Youth	legacy	R	88.9	0.0145	0.0074	0.0006	0.0280	97	1549
+Mole Man, Moloid Master	legacy	G	33.8	0.0143	0.0080	-0.0016	0.0286	77	1230
+Sanguine Evangelist	legacy	W	49.3	0.0142	0.0081	-0.0032	0.0302	106	1691
+Evolved Sleeper	legacy	B	45.6	0.0141	0.0080	0.0007	0.0310	106	1695
+Anger of the Gods	legacy	R	43.2	0.0138	0.0074	-0.0006	0.0281	99	1582
+Angel of Invention	legacy	W	61.5	0.0138	0.0076	0.0008	0.0284	81	1295
+Regal Caracal	legacy	W	91.7	0.0135	0.0074	-0.0013	0.0272	91	1454
+Krenko, Tin Street Kingpin	legacy	R	81.5	0.0134	0.0074	-0.0027	0.0253	93	1487
+Brimaz, King of Oreskos	legacy	W	76.1	0.0133	0.0074	0.0008	0.0284	89	1421
+Momo, Friendly Flier	legacy	W	40.5	0.0133	0.0079	-0.0020	0.0274	104	1660
+Down, Down to Goblin-town	peasant	B	25.1	0.0131	0.0068	-0.0001	0.0285	13	208
+Overlord of the Mistmoors	legacy	W	73.6	0.0130	0.0070	-0.0020	0.0241	105	1678
+Sun Titan	legacy	W	64.8	0.0130	0.0077	-0.0030	0.0260	98	1564
+Witch Enchanter	peasant	W	68.0	0.0129	0.0058	0.0011	0.0240	20	320
+Deep Forest Hermit	legacy	G	47.0	0.0128	0.0083	-0.0050	0.0275	88	1407
+Control Magic	peasant	U	71.7	0.0127	0.0053	-0.0001	0.0217	12	192
+Sol Ring	powered		99.9	0.0127	0.0054	0.0016	0.0231	12	192
+Fury	legacy	R	98.5	0.0126	0.0075	-0.0002	0.0273	88	1405
+Midnight Reaper	legacy	B	47.4	0.0125	0.0077	-0.0032	0.0263	114	1824
+Tainted Treats	peasant	BG	45.3	0.0122	0.0056	0.0013	0.0225	15	240
+Spiteful Prankster	peasant	R	57.1	0.0122	0.0063	-0.0011	0.0230	16	256
+Play with Fire	peasant	R	84.0	0.0121	0.0056	0.0009	0.0221	15	240
+Monstrous Rage	peasant	R	43.8	0.0121	0.0059	0.0013	0.0230	19	304
+Alesha, Who Laughs at Fate	legacy	BR	74.1	0.0119	0.0072	-0.0017	0.0264	86	1371
+Collected Company	legacy	G	97.5	0.0119	0.0078	-0.0037	0.0253	96	1535
+Noble Hierarch	legacy	G	97.9	0.0119	0.0082	-0.0076	0.0264	92	1469
+Preacher	legacy	W	83.4	0.0118	0.0072	-0.0033	0.0250	96	1534
+Mox Sapphire	powered		100.0	0.0117	0.0051	0.0001	0.0208	13	208
+Thragtusk	legacy	G	81.1	0.0116	0.0072	-0.0021	0.0255	90	1438
+Unexpectedly Absent	legacy	W	38.0	0.0112	0.0075	-0.0039	0.0257	111	1775
+Hidden Stockpile	peasant	WB	39.1	0.0112	0.0048	0.0015	0.0205	10	160
+Kappa Cannoneer	legacy	U	84.7	0.0111	0.0079	-0.0052	0.0251	98	1565
+Hexdrinker	legacy	G	71.3	0.0108	0.0077	-0.0043	0.0248	97	1550
+Selfless Spirit	legacy	W	42.0	0.0107	0.0073	-0.0008	0.0257	92	1471
+Inferno Titan	legacy	R	80.2	0.0106	0.0081	-0.0061	0.0257	90	1437
+Loran of the Third Path	legacy	W	72.7	0.0105	0.0070	-0.0029	0.0240	102	1627
+Ossification	peasant	W	92.0	0.0105	0.0049	-0.0001	0.0193	13	207
+Delayed Blast Fireball	legacy	R	40.0	0.0105	0.0079	-0.0025	0.0264	102	1625
+Evolution Sage	peasant	G	71.2	0.0105	0.0065	-0.0025	0.0233	12	192
+Goblin Rabblemaster	legacy	R	63.5	0.0104	0.0072	-0.0029	0.0248	111	1774
+Sorceress Queen	peasant	B	48.3	0.0104	0.0062	-0.0018	0.0219	14	223
+Restoration Angel	legacy	W	48.5	0.0104	0.0075	-0.0066	0.0229	91	1455
+Yahenni, Undying Partisan	peasant	B	41.3	0.0103	0.0047	0.0003	0.0181	9	144
+Jace, the Mind Sculptor	legacy	U	98.8	0.0103	0.0082	-0.0058	0.0241	109	1741
+Charming Prince	legacy	W	33.5	0.0102	0.0073	-0.0042	0.0251	95	1520
+Knight of Autumn	legacy	WG	42.9	0.0102	0.0081	-0.0054	0.0271	74	1184
+Jennifer Walters	legacy	W	40.9	0.0101	0.0071	-0.0038	0.0228	102	1631
+Sunastian Falconer	peasant	RG	47.4	0.0100	0.0059	-0.0009	0.0221	13	207
+Keen-Eyed Curator	legacy	G	41.0	0.0100	0.0074	-0.0044	0.0255	100	1599
+Oracle of Mul Daya	legacy	G	93.7	0.0099	0.0080	-0.0045	0.0258	71	1135
+Samurai's Katana	peasant	R	94.2	0.0098	0.0057	-0.0011	0.0212	15	240
+Solitude	legacy	W	98.6	0.0098	0.0074	-0.0034	0.0259	84	1340
+Flickerwisp	peasant	W	43.4	0.0098	0.0065	-0.0037	0.0226	18	288
+Choco-Comet	peasant	R	90.2	0.0097	0.0079	-0.0064	0.0229	25	396
+Grave Titan	legacy	B	49.6	0.0096	0.0071	-0.0040	0.0228	126	2015
+Sink into Stupor	peasant	U	91.3	0.0096	0.0058	-0.0030	0.0195	11	176
+Guardian Scalelord	legacy	W	40.0	0.0096	0.0082	-0.0080	0.0267	111	1772
+Tear Asunder	peasant	G	43.1	0.0095	0.0061	-0.0016	0.0201	19	303
+Kokusho, the Evening Star	legacy	B	73.6	0.0095	0.0071	-0.0041	0.0229	109	1744
+Embereth Shieldbreaker	peasant	R	13.7	0.0095	0.0068	-0.0027	0.0238	18	288
+Tablet of Discovery	peasant	R	33.3	0.0093	0.0063	-0.0017	0.0214	12	192
+Traveling Botanist	peasant	G	91.6	0.0093	0.0056	-0.0015	0.0191	12	192
+Kellan, Planar Trailblazer	legacy	R	43.9	0.0093	0.0070	-0.0071	0.0194	95	1518
+Talisman of Creativity	peasant		92.0	0.0093	0.0066	-0.0024	0.0217	16	256
+Spinal Villain	peasant	R	49.5	0.0092	0.0070	-0.0056	0.0214	19	304
+Etali, Primal Conqueror	legacy	R	71.5	0.0091	0.0067	-0.0038	0.0230	85	1356
+Shivan Dragon	peasant	R	49.9	0.0091	0.0050	-0.0005	0.0176	10	160
+Prismari Command	legacy	UR	91.7	0.0091	0.0071	-0.0036	0.0241	96	1533
+Staff of the Storyteller	legacy	W	80.5	0.0090	0.0072	-0.0053	0.0218	102	1630
+Mischievous Pup	peasant	W	14.8	0.0090	0.0060	-0.0050	0.0188	13	208
+Dragonwing Glider	legacy	R	48.7	0.0090	0.0067	-0.0032	0.0208	110	1753
+Ouroboroid	legacy	G	49.5	0.0089	0.0074	-0.0054	0.0230	65	1038
+Lightning Helix	peasant	WR	80.7	0.0087	0.0053	-0.0025	0.0176	17	272
+Seasoned Hallowblade	peasant	W	33.3	0.0087	0.0060	-0.0042	0.0199	15	240
+Esper Sentinel	legacy	W	85.3	0.0087	0.0073	-0.0032	0.0240	97	1551
+Practiced Offense	legacy	W	49.3	0.0086	0.0078	-0.0058	0.0203	82	1309
+Ifh-Bíff Efreet	legacy	G	46.1	0.0086	0.0074	-0.0045	0.0237	87	1388
+Captain Storm, Cosmium Raider	peasant	UR	43.5	0.0086	0.0059	-0.0027	0.0196	12	192
+Ramunap Excavator	legacy	G	96.3	0.0085	0.0067	-0.0037	0.0209	102	1632
+Dancing Scimitar	peasant		49.7	0.0085	0.0064	-0.0030	0.0201	16	255
+Welcoming Vampire	legacy	W	80.5	0.0085	0.0080	-0.0064	0.0234	105	1679
+Pia Nalaar	legacy	R	44.4	0.0084	0.0074	-0.0059	0.0220	109	1743
+Mischievous Mystic	peasant	U	95.9	0.0084	0.0056	-0.0037	0.0190	13	208
+Figure of Destiny	legacy	WR	49.4	0.0083	0.0071	-0.0060	0.0214	95	1519
+Rise from the Tides	peasant	U	29.7	0.0082	0.0064	-0.0053	0.0190	12	192
+Deathrite Shaman	legacy	BG	72.2	0.0082	0.0081	-0.0082	0.0237	78	1248
+Granite Gargoyle	peasant	R	47.9	0.0082	0.0053	-0.0024	0.0183	19	304
+Fear of Missing Out	legacy	R	55.3	0.0082	0.0083	-0.0084	0.0238	106	1692
+Winding Constrictor	peasant	BG	42.7	0.0082	0.0055	-0.0018	0.0175	11	176
+Spicy Oatmeal Pizza	peasant	R	33.3	0.0082	0.0060	-0.0047	0.0193	17	272
+Blood Artist	peasant	B	65.2	0.0081	0.0056	-0.0036	0.0177	13	208
+Stock Up	peasant	U	98.5	0.0081	0.0062	-0.0061	0.0177	14	224
+Kitesail Freebooter	peasant	B	50.0	0.0080	0.0049	-0.0023	0.0169	10	160
+Skyclave Apparition	legacy	W	96.7	0.0080	0.0088	-0.0097	0.0242	113	1806
+Conclave Mentor	peasant	WG	41.8	0.0080	0.0053	-0.0023	0.0173	9	144
+Steal Artifact	peasant	U	35.4	0.0080	0.0063	-0.0046	0.0180	14	224
+Hero's Downfall	peasant	B	90.6	0.0079	0.0053	-0.0013	0.0190	13	208
+Goldspan Dragon	legacy	R	68.3	0.0079	0.0075	-0.0063	0.0223	93	1487
+Sword of Light and Shadow	legacy		49.7	0.0078	0.0074	-0.0068	0.0217	88	1407
+Bane of Bala Ged	peasant		37.8	0.0078	0.0065	-0.0048	0.0174	10	160
+Superior Spider-Man	legacy	UB	26.0	0.0078	0.0080	-0.0088	0.0221	95	1519
+Mentor of the Meek	peasant	W	66.3	0.0078	0.0058	-0.0027	0.0190	14	224
+Political Triumph	peasant	W	13.5	0.0078	0.0052	-0.0025	0.0164	13	208
+Nahiri, Storm of Stone	peasant	WR	38.7	0.0077	0.0045	-0.0006	0.0166	8	128
+Uthden Troll	peasant	R	47.1	0.0077	0.0062	-0.0059	0.0176	23	365
+Fractured Identity	legacy	WU	97.7	0.0077	0.0070	-0.0034	0.0215	67	1070
+Phantasmal Image	legacy	U	68.2	0.0076	0.0068	-0.0064	0.0211	102	1628
+Agate Instigator	legacy	R	60.9	0.0076	0.0074	-0.0062	0.0235	101	1613
+Thundertrap Trainer	legacy	U	72.1	0.0076	0.0077	-0.0054	0.0214	95	1518
+Elektra, Daughter of the Hand	legacy	B	44.8	0.0075	0.0077	-0.0074	0.0217	107	1710
+Jacked Rabbit	legacy	W	81.0	0.0075	0.0079	-0.0054	0.0229	99	1581
+Ertai Resurrected	legacy	UB	42.9	0.0075	0.0072	-0.0086	0.0194	111	1774
+Karma	peasant	W	40.4	0.0075	0.0060	-0.0044	0.0193	12	192
+Sindbad	peasant	U	28.5	0.0074	0.0067	-0.0062	0.0196	18	288
+Vaultborn Tyrant	legacy	G	55.1	0.0074	0.0078	-0.0089	0.0220	73	1166
+Amethyst Dragon	peasant	R	66.6	0.0074	0.0057	-0.0043	0.0175	15	239
+Mijae Djinn	legacy	R	40.3	0.0073	0.0068	-0.0052	0.0204	90	1437
+Sol'kanar the Swamp King	legacy	UBR	47.0	0.0073	0.0079	-0.0085	0.0213	87	1389
+Hexgold Halberd	peasant	R	31.3	0.0073	0.0048	-0.0018	0.0167	12	192
+Grim Monolith	legacy		98.9	0.0072	0.0077	-0.0092	0.0208	95	1517
+Zealous Persecution	peasant	WB	29.0	0.0072	0.0060	-0.0043	0.0196	11	176
+Traumatic Critique	legacy	UR	45.7	0.0072	0.0075	-0.0090	0.0216	89	1423
+Regrowth	peasant	G	64.0	0.0071	0.0055	-0.0033	0.0178	11	175
+Sword of Fire and Ice	legacy		54.3	0.0071	0.0080	-0.0072	0.0243	121	1935
+Pelakka Wurm	peasant	G	45.6	0.0070	0.0059	-0.0034	0.0195	14	224
+The Mighty Thor, Jane Foster	legacy	WU	38.9	0.0070	0.0073	-0.0060	0.0205	81	1294
+Bristly Bill, Spine Sower	legacy	G	71.7	0.0069	0.0069	-0.0065	0.0178	82	1309
+No More Lies	peasant	WU	94.0	0.0069	0.0056	-0.0043	0.0167	9	144
+Ajani Vengeant	legacy	WR	46.7	0.0068	0.0075	-0.0079	0.0188	81	1295
+Veteran Beastrider	peasant	WG	41.1	0.0067	0.0044	-0.0024	0.0149	10	160
+Urza, Lord High Artificer	legacy	U	99.0	0.0067	0.0079	-0.0112	0.0210	108	1727
+Rampaging Baloths	legacy	G	83.0	0.0067	0.0072	-0.0063	0.0236	91	1452
+Mox Diamond	legacy		99.7	0.0066	0.0075	-0.0072	0.0209	103	1646
+All-Fates Stalker	peasant	W	47.0	0.0066	0.0067	-0.0071	0.0200	14	224
+Dream Beavers	peasant	B	48.1	0.0066	0.0056	-0.0062	0.0176	13	207
+Vampire Nighthawk	peasant	B	94.3	0.0065	0.0058	-0.0043	0.0168	12	192
+Scute Swarm	legacy	G	58.6	0.0064	0.0074	-0.0063	0.0221	96	1534
+Barrin, Tolarian Archmage	legacy	U	67.6	0.0064	0.0082	-0.0111	0.0222	98	1568
+Reflector Mage	peasant	WU	32.5	0.0064	0.0053	-0.0036	0.0160	13	207
+Heroic Reinforcements	peasant	WR	41.2	0.0064	0.0049	-0.0035	0.0143	10	160
+Giver of Runes	legacy	W	55.1	0.0064	0.0073	-0.0063	0.0210	78	1247
+Glorybringer	legacy	R	55.4	0.0064	0.0067	-0.0071	0.0174	100	1598
+Sensei's Divining Top	peasant		85.1	0.0062	0.0067	-0.0062	0.0185	19	304
+Old Man of the Sea	legacy	U	42.2	0.0062	0.0075	-0.0084	0.0216	106	1692
+Smuggler's Copter	legacy		49.3	0.0062	0.0074	-0.0088	0.0208	92	1470
+Blessing	peasant	W	24.5	0.0061	0.0053	-0.0037	0.0160	13	208
+Ob Nixilis, the Adversary	legacy	BR	48.9	0.0061	0.0078	-0.0110	0.0198	108	1728
+Heartless Act	peasant	B	53.4	0.0061	0.0065	-0.0075	0.0173	16	256
+Eriette's Tempting Apple	peasant		42.5	0.0061	0.0052	-0.0031	0.0165	9	144
+Serra Angel	peasant	W	49.4	0.0060	0.0058	-0.0037	0.0187	10	160
+Nessian Hornbeetle	peasant	G	35.7	0.0060	0.0069	-0.0083	0.0186	21	336
+Atraxa, Grand Unifier	legacy	WUBG	99.0	0.0060	0.0078	-0.0099	0.0220	78	1247
+Quantum Riddler	legacy	U	49.8	0.0060	0.0080	-0.0112	0.0202	92	1470
+Stampede Surfer	legacy	RG	40.0	0.0060	0.0074	-0.0077	0.0188	76	1214
+Murderous Redcap	peasant	BR	85.8	0.0060	0.0062	-0.0049	0.0181	10	160
+Aang, Swift Savior	legacy	WU	48.7	0.0060	0.0072	-0.0075	0.0206	106	1694
+Knockout Maneuver	peasant	G	56.9	0.0060	0.0063	-0.0076	0.0169	18	288
+Sear	peasant	R	34.5	0.0058	0.0057	-0.0051	0.0176	19	302
+Damnation	legacy	B	75.0	0.0058	0.0079	-0.0089	0.0223	97	1550
+Phlage, Titan of Fire's Fury	legacy	WR	84.5	0.0057	0.0075	-0.0078	0.0201	107	1705
+Overlord of the Balemurk	legacy	B	84.8	0.0057	0.0080	-0.0103	0.0206	112	1792
+Ledger Shredder	legacy	U	72.4	0.0057	0.0081	-0.0103	0.0229	86	1374
+Whirling Dervish	peasant	G	46.4	0.0057	0.0056	-0.0045	0.0164	11	176
+Bloodbraid Elf	peasant	RG	81.3	0.0057	0.0057	-0.0064	0.0161	16	256
+Swords to Plowshares	peasant	W	99.4	0.0056	0.0062	-0.0074	0.0156	13	208
+Cori-Steel Cutter	legacy	R	97.9	0.0055	0.0078	-0.0105	0.0201	102	1629
+Glamer Gifter	peasant	U	35.2	0.0055	0.0070	-0.0073	0.0202	14	224
+Emeritus of Ideation	legacy	U	48.8	0.0054	0.0078	-0.0089	0.0194	111	1774
+Palantír of Orthanc	legacy		84.5	0.0054	0.0074	-0.0101	0.0198	99	1582
+Iron Man Armor	legacy		49.0	0.0054	0.0072	-0.0077	0.0208	117	1871
+Exorcist	peasant	W	43.7	0.0053	0.0046	-0.0026	0.0146	9	144
+Fable of the Mirror-Breaker	legacy	R	99.5	0.0053	0.0074	-0.0100	0.0192	96	1531
+Enduring Innocence	legacy	W	71.1	0.0053	0.0070	-0.0078	0.0185	107	1708
+Death-Greeter's Champion	legacy	R	40.0	0.0052	0.0079	-0.0118	0.0190	101	1616
+Spinewoods Armadillo	peasant	G	93.7	0.0052	0.0058	-0.0063	0.0160	11	176
+Sword of Feast and Famine	legacy		51.8	0.0052	0.0082	-0.0135	0.0197	99	1584
+Teferi, Time Raveler	legacy	WU	98.4	0.0052	0.0078	-0.0089	0.0209	92	1470
+Guide of Souls	legacy	W	84.8	0.0051	0.0076	-0.0096	0.0199	100	1598
+Honest Rutstein	peasant	BG	83.6	0.0051	0.0055	-0.0049	0.0163	12	192
+Dark Confidant	legacy	B	56.0	0.0051	0.0077	-0.0104	0.0200	101	1616
+Myr Battlesphere	legacy		93.2	0.0051	0.0076	-0.0085	0.0220	94	1502
+Giant Killer	legacy	W	42.1	0.0050	0.0072	-0.0088	0.0177	87	1389
+Vraska, Swarm's Eminence	peasant	BG	39.9	0.0050	0.0051	-0.0048	0.0137	12	192
+Fatal Push	peasant	B	51.0	0.0049	0.0060	-0.0061	0.0162	13	208
+Escape to the Wilds	legacy	RG	29.7	0.0049	0.0078	-0.0099	0.0192	78	1247
+Cast Out	peasant	W	46.0	0.0049	0.0057	-0.0079	0.0151	20	320
+Chain of Smog	peasant	B	85.6	0.0048	0.0050	-0.0052	0.0140	8	128
+Kaldra Compleat	legacy		83.9	0.0048	0.0080	-0.0095	0.0194	82	1311
+Venser, Shaper Savant	legacy	U	83.9	0.0048	0.0078	-0.0083	0.0207	107	1708
+Batterskull	legacy		49.7	0.0048	0.0085	-0.0110	0.0210	91	1456
+Black Widow, Super Spy	legacy	B	45.7	0.0047	0.0075	-0.0085	0.0190	112	1789
+Emmara, Soul of the Accord	legacy	WG	43.5	0.0047	0.0075	-0.0094	0.0189	94	1503
+Icetill Explorer	legacy	G	14.0	0.0047	0.0076	-0.0123	0.0177	81	1296
+Vengevine	legacy	G	92.4	0.0047	0.0075	-0.0103	0.0182	89	1422
+Delighted Halfling	legacy	G	71.6	0.0047	0.0074	-0.0075	0.0208	90	1439
+Forsaken Miner	peasant	B	81.4	0.0047	0.0065	-0.0084	0.0158	13	208
+Hedron Crab	peasant	U	90.9	0.0047	0.0059	-0.0078	0.0152	14	223
+Colossus of Sardia	legacy		42.1	0.0046	0.0080	-0.0119	0.0199	107	1709
+Liliana, the Last Hope	legacy	B	86.4	0.0046	0.0077	-0.0105	0.0188	103	1648
+Dack Fayden	legacy	UR	72.2	0.0046	0.0080	-0.0122	0.0200	89	1424
+Containment Priest	legacy	W	85.7	0.0046	0.0073	-0.0104	0.0192	87	1391
+Eidolon of the Great Revel	legacy	R	41.0	0.0046	0.0073	-0.0097	0.0178	90	1438
+Skullclamp	peasant		99.1	0.0045	0.0064	-0.0073	0.0167	16	256
+Okoye, Dora Milaje Leader	peasant	W	39.8	0.0045	0.0054	-0.0050	0.0149	12	192
+Berserk	peasant	G	45.5	0.0045	0.0057	-0.0068	0.0138	16	256
+Platinum Angel	legacy		49.8	0.0044	0.0078	-0.0116	0.0188	101	1611
+The Wandering Emperor	legacy	W	53.1	0.0044	0.0073	-0.0082	0.0186	90	1439
+Clockwork Beast	peasant		46.2	0.0044	0.0053	-0.0058	0.0138	14	224
+Sun-Blessed Healer	peasant	W	45.6	0.0044	0.0068	-0.0085	0.0174	19	302
+Galewind Moose	peasant	G	62.1	0.0043	0.0072	-0.0109	0.0168	17	272
+Sheltered by Ghosts	peasant	W	55.3	0.0043	0.0050	-0.0065	0.0131	9	143
+Portal to Phyrexia	legacy		94.9	0.0042	0.0074	-0.0090	0.0167	105	1677
+Moonshadow	legacy	B	36.5	0.0042	0.0080	-0.0092	0.0214	112	1791
+Loam Lion	peasant	W	19.7	0.0042	0.0059	-0.0062	0.0145	15	239
+Jace, Wielder of Mysteries	legacy	U	87.7	0.0042	0.0073	-0.0099	0.0174	97	1549
+Courier of Comestibles	peasant	G	47.2	0.0042	0.0051	-0.0041	0.0151	9	144
+Renegade Rallier	peasant	WG	37.0	0.0042	0.0050	-0.0053	0.0128	10	160
+Power Artifact	peasant	U	71.6	0.0042	0.0055	-0.0089	0.0129	7	111
+Carrion Ants	peasant	B	30.0	0.0041	0.0056	-0.0074	0.0143	13	207
+Syr Vondam, Sunstar Exemplar	legacy	WB	47.5	0.0040	0.0070	-0.0074	0.0179	97	1549
+Okoye, Mighty and Adored	legacy	WG	40.0	0.0040	0.0070	-0.0090	0.0171	81	1294
+Murderous Rider	legacy	B	70.2	0.0040	0.0074	-0.0114	0.0161	104	1660
+Picklock Prankster	peasant	U	88.9	0.0040	0.0062	-0.0082	0.0163	16	256
+Witherbloom Apprentice	peasant	BG	28.0	0.0040	0.0075	-0.0091	0.0179	14	224
+Voice of Victory	legacy	W	55.2	0.0039	0.0079	-0.0164	0.0180	77	1230
+Palace Jailer	peasant	W	98.2	0.0039	0.0058	-0.0060	0.0166	19	304
+Auriok Salvagers	peasant	W	68.1	0.0039	0.0078	-0.0098	0.0192	16	256
+Tidehollow Sculler	peasant	WB	32.1	0.0038	0.0061	-0.0097	0.0145	13	207
+Brilliance Unleashed	peasant	UR	44.4	0.0038	0.0051	-0.0069	0.0132	12	192
+Tamiyo, Inquisitive Student	legacy	U	99.3	0.0038	0.0071	-0.0086	0.0184	95	1519
+Elspeth, Knight-Errant	legacy	W	79.4	0.0038	0.0075	-0.0088	0.0190	113	1808
+Life of Toshiro Umezawa	peasant	B	95.1	0.0038	0.0063	-0.0082	0.0161	15	240
+Legion Extruder	legacy	R	19.0	0.0037	0.0076	-0.0086	0.0195	98	1566
+Whirler Rogue	peasant	U	43.1	0.0037	0.0059	-0.0059	0.0165	15	240
+Detective's Phoenix	legacy	R	62.6	0.0037	0.0075	-0.0114	0.0189	98	1565
+Consecrated Sphinx	legacy	U	85.4	0.0037	0.0081	-0.0110	0.0192	83	1327
+Cryptic Command	legacy	U	54.3	0.0036	0.0073	-0.0099	0.0174	104	1660
+Sage of the Skies	legacy	W	77.5	0.0036	0.0071	-0.0084	0.0164	97	1551
+Phyrexian Dragon Engine	legacy		78.6	0.0036	0.0077	-0.0126	0.0171	88	1405
+Faerie Vandal	peasant	U	41.6	0.0036	0.0066	-0.0084	0.0178	16	256
+Uro, Titan of Nature's Wrath	legacy	UG	54.2	0.0036	0.0079	-0.0108	0.0203	85	1358
+Angelic Voices	peasant	W	18.9	0.0035	0.0055	-0.0067	0.0132	12	191
+Shi'ar Soldier	peasant	U	40.0	0.0035	0.0061	-0.0091	0.0148	14	223
+Roc of Kher Ridges	peasant	R	47.5	0.0035	0.0068	-0.0082	0.0160	25	399
+Glóin the Mighty	peasant	R	10.6	0.0035	0.0070	-0.0110	0.0155	16	256
+Unburial Rites	peasant	B	46.1	0.0035	0.0055	-0.0063	0.0142	11	176
+Brazen Borrower	legacy	U	71.4	0.0033	0.0077	-0.0157	0.0142	82	1310
+Gonti, Lord of Luxury	peasant	B	74.3	0.0033	0.0052	-0.0059	0.0142	7	112
+Flametongue Kavu	peasant	R	55.8	0.0032	0.0050	-0.0058	0.0137	12	191
+Memory Deluge	legacy	U	95.5	0.0032	0.0070	-0.0096	0.0187	107	1710
+Infernal Grasp	peasant	B	55.6	0.0032	0.0045	-0.0056	0.0114	6	96
+Archon of Cruelty	legacy	B	98.5	0.0032	0.0075	-0.0112	0.0184	111	1775
+Broadside Bombardiers	legacy	R	99.0	0.0032	0.0077	-0.0136	0.0150	71	1136
+Teferi, Hero of Dominaria	legacy	WU	71.9	0.0031	0.0080	-0.0126	0.0174	85	1359
+Dance of Many	peasant	U	33.6	0.0031	0.0068	-0.0103	0.0149	20	319
+Wall of Swords	peasant	W	47.5	0.0031	0.0050	-0.0066	0.0135	12	191
+Adeline, Resplendent Cathar	legacy	W	92.7	0.0030	0.0072	-0.0132	0.0157	94	1502
+Shriekmaw	peasant	B	58.5	0.0030	0.0042	-0.0058	0.0093	6	95
+Dreadhorde Arcanist	legacy	R	17.5	0.0029	0.0069	-0.0095	0.0172	99	1582
+Tracker	peasant	G	27.0	0.0029	0.0057	-0.0081	0.0138	15	240
+Greed	peasant	B	49.3	0.0029	0.0058	-0.0094	0.0136	17	272
+Khenra Spellspear	peasant	R	79.9	0.0029	0.0068	-0.0117	0.0162	20	319
+Tibalt, Rakish Instigator	peasant	R	30.6	0.0029	0.0051	-0.0056	0.0156	15	240
+Absorbing Man	legacy	UG	46.1	0.0029	0.0078	-0.0122	0.0181	87	1391
+Ball Lightning	legacy	R	47.9	0.0029	0.0076	-0.0116	0.0161	95	1519
+Occult Epiphany	legacy	U	59.0	0.0028	0.0085	-0.0133	0.0197	101	1613
+Fallen Angel	peasant	B	48.2	0.0028	0.0040	-0.0050	0.0105	7	112
+Dance of the Dead	peasant	B	95.2	0.0028	0.0049	-0.0082	0.0111	10	160
+Witch Hunter	peasant	W	48.7	0.0027	0.0057	-0.0074	0.0129	13	208
+Ali from Cairo	legacy	R	49.0	0.0027	0.0078	-0.0115	0.0178	88	1405
+Damn	legacy	B	49.0	0.0027	0.0076	-0.0115	0.0178	116	1854
+Disruptive Stormbrood	peasant	G	95.0	0.0027	0.0054	-0.0075	0.0133	11	176
+Soulherder	peasant	WU	39.6	0.0026	0.0059	-0.0080	0.0135	15	239
+Empyrean Eagle	peasant	WU	44.9	0.0025	0.0069	-0.0107	0.0142	14	224
+Reanimate	peasant	B	99.0	0.0025	0.0072	-0.0084	0.0170	19	304
+Dreadwing Scavenger	peasant	UB	48.3	0.0025	0.0062	-0.0092	0.0137	11	175
+Glimmer Lens	legacy	W	89.3	0.0025	0.0074	-0.0115	0.0158	91	1452
+Boseiju Reaches Skyward	peasant	G	42.7	0.0024	0.0068	-0.0103	0.0155	16	256
+Metalhead	peasant	U	46.0	0.0024	0.0054	-0.0083	0.0130	11	175
+Talisman of Progress	peasant		55.0	0.0024	0.0062	-0.0105	0.0145	11	175
+Mana Drain	peasant	U	99.7	0.0023	0.0072	-0.0122	0.0168	24	383
+Batroc the Leaper	legacy	R	40.0	0.0023	0.0072	-0.0122	0.0146	97	1548
+Wrenn and Six	legacy	RG	84.7	0.0023	0.0076	-0.0133	0.0155	76	1214
+Nissa, Who Shakes the World	legacy	G	79.2	0.0023	0.0074	-0.0132	0.0168	102	1627
+Grim Haruspex	legacy	B	72.5	0.0022	0.0083	-0.0145	0.0150	103	1648
+Umbral Collar Zealot	peasant	B	40.7	0.0022	0.0053	-0.0068	0.0130	12	192
+Proft's Eidetic Memory	legacy	U	62.6	0.0022	0.0082	-0.0123	0.0181	101	1614
+The Rack	peasant		38.8	0.0022	0.0051	-0.0083	0.0115	11	175
+Cult Conscript	peasant	B	34.0	0.0021	0.0061	-0.0092	0.0137	13	207
+Combat Thresher	peasant		42.3	0.0021	0.0067	-0.0110	0.0148	15	239
+Thrun, the Last Troll	legacy	G	73.0	0.0021	0.0078	-0.0101	0.0191	79	1261
+Thrashing Brontodon	peasant	G	41.1	0.0021	0.0063	-0.0097	0.0138	15	240
+Environmental Scientist	peasant	G	48.0	0.0020	0.0058	-0.0083	0.0141	14	224
+Falkenrath Aristocrat	legacy	BR	48.1	0.0020	0.0072	-0.0131	0.0133	107	1707
+Oust	peasant	W	97.2	0.0020	0.0062	-0.0110	0.0142	21	336
+Water Elemental	peasant	U	48.5	0.0020	0.0066	-0.0118	0.0140	12	191
+Stoneforge Mystic	legacy	W	71.6	0.0019	0.0071	-0.0110	0.0148	104	1662
+Starfield Shepherd	peasant	W	45.0	0.0019	0.0045	-0.0058	0.0114	8	128
+Slickshot Lockpicker	peasant	U	64.5	0.0019	0.0067	-0.0097	0.0145	19	303
+Iron-Shield Elf	peasant	B	37.7	0.0019	0.0064	-0.0105	0.0141	10	160
+Troll Negotiations	peasant	G	36.8	0.0018	0.0056	-0.0098	0.0127	15	239
+Burn Down the House	legacy	R	49.0	0.0018	0.0084	-0.0132	0.0171	109	1737
+Esika's Chariot	legacy	G	64.4	0.0017	0.0081	-0.0151	0.0168	76	1214
+The Legend of Yangchen	legacy	W	49.4	0.0017	0.0078	-0.0124	0.0166	109	1740
+Asmoranomardicadaistinaculdacar	legacy	BR	70.8	0.0016	0.0074	-0.0122	0.0152	101	1615
+Pelt Collector	legacy	G	45.1	0.0016	0.0076	-0.0126	0.0155	89	1422
+Northern Paladin	legacy	W	43.8	0.0015	0.0077	-0.0135	0.0152	104	1663
+Minsc & Boo, Timeless Heroes	legacy	RG	99.5	0.0015	0.0081	-0.0134	0.0175	83	1325
+Silverquill Charm	peasant	WB	44.4	0.0015	0.0051	-0.0079	0.0118	14	223
+Chandra, Torch of Defiance	legacy	R	52.1	0.0015	0.0078	-0.0133	0.0152	98	1566
+Sowing Mycospawn	legacy	G	44.8	0.0015	0.0073	-0.0121	0.0162	91	1453
+Yasharn, Implacable Earth	legacy	WG	45.0	0.0014	0.0072	-0.0112	0.0158	91	1455
+Ulvenwald Mysteries	peasant	G	39.0	0.0014	0.0047	-0.0082	0.0100	9	144
+Ulvenwald Oddity	legacy	G	46.8	0.0014	0.0084	-0.0174	0.0162	90	1436
+Vampire Gourmand	peasant	B	44.1	0.0014	0.0029	-0.0046	0.0066	4	64
+Serra Paragon	legacy	W	49.5	0.0012	0.0079	-0.0142	0.0140	95	1517
+Mighty Mutanimals	peasant	W	49.1	0.0012	0.0067	-0.0136	0.0132	14	223
+Lively Dirge	peasant	B	67.6	0.0011	0.0053	-0.0078	0.0132	8	128
+Thought-Stalker Warlock	peasant	B	45.9	0.0011	0.0062	-0.0129	0.0116	16	256
+Hullbreaker Horror	legacy	U	77.6	0.0011	0.0078	-0.0126	0.0147	100	1598
+Greta, Sweettooth Scourge	peasant	BG	41.3	0.0010	0.0062	-0.0105	0.0118	13	208
+Leatherhead, Swamp Stalker	legacy	G	36.3	0.0010	0.0072	-0.0117	0.0146	87	1391
+Lita, Little Orphan Amphibian	peasant	W	44.2	0.0010	0.0058	-0.0120	0.0117	18	288
+Carnage Tyrant	legacy	G	50.8	0.0010	0.0076	-0.0151	0.0159	71	1136
+The Witch's Vanity	peasant	B	95.8	0.0010	0.0060	-0.0112	0.0120	15	240
+Boomerang Basics	peasant	U	35.6	0.0009	0.0045	-0.0077	0.0093	8	128
+Reveillark	legacy	W	49.0	0.0008	0.0071	-0.0147	0.0153	98	1567
+Swift Reconfiguration	legacy	W	40.0	0.0007	0.0081	-0.0143	0.0148	94	1503
+Scavenging Ooze	legacy	G	66.6	0.0007	0.0071	-0.0142	0.0152	82	1311
+Energy Flux	peasant	U	15.9	0.0007	0.0042	-0.0075	0.0079	7	112
+Quirion Dryad	peasant	G	40.9	0.0007	0.0057	-0.0108	0.0110	15	240
+Hellrider	legacy	R	46.6	0.0007	0.0074	-0.0128	0.0146	89	1420
+Questing Druid	legacy	G	57.5	0.0007	0.0080	-0.0139	0.0158	101	1616
+Concealing Curtains	legacy	B	42.5	0.0006	0.0077	-0.0121	0.0142	122	1948
+Sengir Vampire	peasant	B	62.4	0.0006	0.0057	-0.0117	0.0116	10	160
+Githzerai Monk	peasant	W	38.5	0.0005	0.0054	-0.0107	0.0108	8	128
+Morbid Opportunist	peasant	B	92.9	0.0005	0.0051	-0.0094	0.0110	15	239
+Large Bear	peasant	BG	43.8	0.0005	0.0058	-0.0096	0.0125	13	208
+Syr Konrad, the Grim	peasant	B	54.2	0.0005	0.0051	-0.0090	0.0119	14	224
+Stone Giant	peasant	R	33.8	0.0005	0.0053	-0.0084	0.0109	14	224
+Spider Spawning	peasant	G	42.7	0.0004	0.0062	-0.0126	0.0102	22	352
+Kitchen Finks	peasant	WG	60.1	0.0004	0.0044	-0.0079	0.0087	9	144
+Threadbind Clique	peasant	U	39.2	0.0004	0.0054	-0.0086	0.0111	11	175
+Land Tax	peasant	W	89.7	0.0004	0.0049	-0.0101	0.0088	10	160
+Vinereap Mentor	peasant	BG	47.4	0.0004	0.0057	-0.0105	0.0104	12	192
+Floral Spuzzem	peasant	G	20.2	0.0004	0.0056	-0.0111	0.0110	11	173
+Gyruda, Doom of Depths	legacy	UB	67.9	0.0004	0.0072	-0.0132	0.0142	104	1664
+Currency Converter	legacy		84.9	0.0004	0.0071	-0.0137	0.0139	110	1758
+Polukranos, World Eater	legacy	G	49.1	0.0003	0.0077	-0.0153	0.0175	82	1311
+Hangarback Walker	legacy		52.0	0.0003	0.0074	-0.0117	0.0149	107	1710
+Iron Hills Blacksmith	peasant	W	37.3	0.0003	0.0065	-0.0135	0.0127	21	336
+Bilbo, Luckwearer	peasant	U	42.2	0.0003	0.0057	-0.0099	0.0115	15	239
+Squee, Goblin Nabob	peasant	R	69.7	0.0003	0.0069	-0.0132	0.0131	18	288
+Rubinia Soulsinger	legacy	WUG	46.6	0.0002	0.0082	-0.0138	0.0148	63	1008
+Necromancy	peasant	B	85.1	0.0002	0.0063	-0.0117	0.0124	13	207
+Thieving Skydiver	legacy	U	52.8	0.0002	0.0073	-0.0141	0.0138	96	1534
+Relic Barrier	peasant		43.3	0.0002	0.0058	-0.0108	0.0122	12	191
+Paradox Surveyor	peasant	UG	41.8	0.0002	0.0068	-0.0125	0.0134	18	288
+Bloodsoaked Champion	legacy	B	41.6	0.0001	0.0075	-0.0132	0.0141	109	1742
+Quandrix Charm	peasant	UG	34.1	0.0001	0.0056	-0.0100	0.0109	13	208
+Dauntless Scrapbot	peasant		37.1	0.0001	0.0060	-0.0116	0.0128	8	128
+Triskelion	legacy		53.1	0.0001	0.0078	-0.0164	0.0146	108	1727
+Balance	powered	W	58.4	0.0001	0.0061	-0.0107	0.0117	20	319
+Mox Jet	powered		99.9	0.0001	0.0064	-0.0139	0.0111	15	239
+Coalition Relic	legacy		53.5	0.0001	0.0079	-0.0157	0.0160	106	1695
+Ugin, the Spirit Dragon	legacy		73.3	0.0001	0.0073	-0.0127	0.0136	96	1530
+High Fae Trickster	legacy	U	82.3	0.0001	0.0080	-0.0144	0.0146	104	1662
+Talrand, Sky Summoner	legacy	U	90.5	0.0000	0.0079	-0.0150	0.0125	89	1421
+Hurricane	peasant	G	47.3	0.0000	0.0045	-0.0076	0.0086	9	144
+Clockwork Avian	peasant		43.3	0.0000	0.0045	-0.0084	0.0093	7	112
+Scolding Administrator	peasant	WB	43.9	-0.0000	0.0053	-0.0119	0.0102	14	224
+Huntmaster of the Fells	legacy	RG	47.2	-0.0000	0.0071	-0.0132	0.0143	63	1007
+Transmute Artifact	peasant	U	72.8	-0.0001	0.0062	-0.0113	0.0107	20	320
+Millstone	peasant		42.9	-0.0001	0.0053	-0.0107	0.0099	11	176
+Titania, Protector of Argoth	legacy	G	58.1	-0.0001	0.0078	-0.0177	0.0152	93	1485
+Black Lotus	powered		100.0	-0.0001	0.0060	-0.0124	0.0104	10	159
+Thranduil, Sindarin Liege	peasant	UG	43.0	-0.0001	0.0066	-0.0107	0.0126	20	320
+Hivespine Wolverine	peasant	G	35.6	-0.0001	0.0063	-0.0115	0.0132	11	176
+Omnath, Locus of Rage	legacy	RG	47.4	-0.0001	0.0076	-0.0159	0.0132	84	1344
+Ydwen Efreet	legacy	R	36.4	-0.0002	0.0075	-0.0130	0.0161	99	1583
+Watcher for Tomorrow	peasant	U	31.3	-0.0002	0.0058	-0.0103	0.0116	12	192
+Portable Hole	peasant	W	77.5	-0.0003	0.0058	-0.0112	0.0118	16	256
+Arcane Omens	peasant	B	47.4	-0.0003	0.0058	-0.0116	0.0114	11	176
+Dockside Chef	peasant	B	38.7	-0.0003	0.0040	-0.0078	0.0066	5	80
+Grim Flayer	legacy	BG	48.3	-0.0004	0.0079	-0.0128	0.0162	97	1551
+Murktide Regent	legacy	U	93.5	-0.0004	0.0079	-0.0161	0.0138	108	1726
+Stress Dream	peasant	UR	46.4	-0.0004	0.0037	-0.0083	0.0069	7	112
+Will-o'-the-Wisp	peasant	B	41.4	-0.0004	0.0051	-0.0109	0.0090	10	160
+Painter's Servant	legacy		85.4	-0.0004	0.0073	-0.0141	0.0134	121	1933
+Enlightened Tutor	peasant	W	54.3	-0.0004	0.0060	-0.0115	0.0109	15	240
+Oketra's Monument	peasant		24.1	-0.0004	0.0053	-0.0117	0.0096	11	176
+Ugin, Eye of the Storms	legacy		97.7	-0.0005	0.0077	-0.0168	0.0138	100	1600
+Lifeforce	peasant	G	17.4	-0.0005	0.0067	-0.0161	0.0118	21	335
+Air Elemental	peasant	U	48.6	-0.0006	0.0054	-0.0102	0.0091	10	160
+Splitskin Doll	peasant	W	42.8	-0.0006	0.0042	-0.0089	0.0084	10	160
+Dismember	peasant	B	98.5	-0.0006	0.0057	-0.0109	0.0109	12	192
+Phelia, Exuberant Shepherd	legacy	W	71.5	-0.0006	0.0074	-0.0151	0.0145	87	1392
+Loxodon Warhammer	peasant		87.3	-0.0007	0.0049	-0.0094	0.0086	13	208
+Force of Will	peasant	U	99.6	-0.0007	0.0073	-0.0150	0.0128	18	288
+Clone	peasant	U	47.0	-0.0007	0.0056	-0.0118	0.0091	13	208
+Circuit Mender	peasant		40.7	-0.0007	0.0047	-0.0104	0.0081	10	160
+Juri, Master of the Revue	peasant	BR	13.6	-0.0008	0.0044	-0.0091	0.0072	8	128
+Sheoldred's Edict	peasant	B	51.1	-0.0009	0.0059	-0.0124	0.0097	11	175
+Shepherd of the Flock	peasant	W	32.1	-0.0009	0.0065	-0.0148	0.0104	18	288
+Together as One	legacy		49.0	-0.0009	0.0078	-0.0148	0.0140	88	1406
+Strategic Betrayal	peasant	B	20.1	-0.0009	0.0047	-0.0102	0.0072	9	144
+Icy Manipulator	peasant		90.8	-0.0009	0.0046	-0.0100	0.0076	6	96
+Everything Pizza	peasant		47.4	-0.0009	0.0059	-0.0123	0.0099	15	240
+Remand	peasant	U	98.8	-0.0009	0.0067	-0.0139	0.0124	14	223
+Steel Leaf Champion	legacy	G	47.2	-0.0009	0.0080	-0.0171	0.0148	94	1503
+Icatian Town	peasant	W	34.8	-0.0009	0.0054	-0.0103	0.0091	15	240
+Rise of the Witch-king	peasant	BG	21.7	-0.0010	0.0045	-0.0090	0.0079	12	192
+Mayhem Devil	peasant	BR	33.9	-0.0010	0.0064	-0.0130	0.0102	18	287
+Curse of Predation	peasant	G	53.4	-0.0010	0.0064	-0.0137	0.0105	23	368
+Inquisition of Kozilek	peasant	B	85.6	-0.0010	0.0051	-0.0102	0.0094	10	160
+Al Bhed Salvagers	peasant	B	32.1	-0.0011	0.0045	-0.0092	0.0085	9	144
+Vibrance	legacy	RG	46.1	-0.0011	0.0080	-0.0153	0.0127	84	1343
+Halo Forager	peasant	UB	41.9	-0.0011	0.0063	-0.0117	0.0122	13	207
+Zulaport Cutthroat	peasant	B	36.9	-0.0011	0.0055	-0.0118	0.0080	14	224
+Artisan of Kozilek	peasant		41.2	-0.0011	0.0050	-0.0087	0.0086	11	176
+Fading Hope	peasant	U	18.0	-0.0011	0.0057	-0.0123	0.0106	16	256
+Spell Queller	legacy	WU	47.5	-0.0012	0.0077	-0.0151	0.0138	80	1279
+Ka-Zar of the Savage Land	peasant	G	34.6	-0.0012	0.0068	-0.0153	0.0108	21	335
+Dubious Delicacy	peasant	B	47.7	-0.0012	0.0049	-0.0118	0.0071	10	160
+Brightblade Stoat	peasant	W	38.8	-0.0013	0.0054	-0.0131	0.0074	14	224
+Thicket Basilisk	peasant	G	44.2	-0.0013	0.0063	-0.0119	0.0117	18	288
+Ice Storm	peasant	G	34.0	-0.0013	0.0058	-0.0122	0.0089	11	176
+The Underworld Cookbook	peasant		14.4	-0.0013	0.0055	-0.0106	0.0099	12	191
+Mirkwood Pathmaker	peasant	G	29.5	-0.0013	0.0036	-0.0084	0.0057	7	112
+Bitter Triumph	peasant	B	71.2	-0.0013	0.0056	-0.0118	0.0095	13	208
+Hand of Justice	legacy	W	42.2	-0.0014	0.0071	-0.0155	0.0117	88	1407
+Alpha Deathclaw	legacy	BG	40.0	-0.0014	0.0071	-0.0139	0.0113	91	1455
+Abu Ja'far	peasant	W	28.0	-0.0015	0.0046	-0.0103	0.0078	7	112
+Bloodchief's Thirst	peasant	B	95.8	-0.0015	0.0060	-0.0124	0.0097	11	176
+Nevinyrral's Disk	legacy		49.7	-0.0015	0.0072	-0.0165	0.0112	115	1834
+The Abyss	legacy	B	75.1	-0.0015	0.0081	-0.0164	0.0129	116	1853
+Hunter's Talent	peasant	G	84.4	-0.0015	0.0064	-0.0142	0.0106	23	368
+Experimental Confectioner	peasant	B	40.0	-0.0015	0.0075	-0.0147	0.0154	20	320
+Flashfires	peasant	R	35.2	-0.0016	0.0069	-0.0153	0.0111	18	287
+Hypnotic Specter	peasant	B	88.2	-0.0016	0.0073	-0.0170	0.0129	17	272
+Phyrexian Metamorph	legacy	U	55.0	-0.0016	0.0075	-0.0148	0.0122	89	1423
+Battlesong Berserker	peasant	R	39.5	-0.0016	0.0060	-0.0152	0.0085	10	160
+Thunder Spirit	peasant	W	30.3	-0.0016	0.0043	-0.0116	0.0073	12	192
+Unwelcome Sprite	peasant	U	32.1	-0.0016	0.0051	-0.0121	0.0072	11	176
+Thranduil's Company	legacy	UG	39.6	-0.0016	0.0076	-0.0148	0.0130	86	1375
+Kari Zev, Skyship Raider	legacy	R	34.8	-0.0017	0.0076	-0.0154	0.0134	96	1533
+Drown in the Loch	peasant	UB	31.7	-0.0017	0.0050	-0.0114	0.0073	11	176
+Elas il-Kor, Sadistic Pilgrim	peasant	WB	38.8	-0.0018	0.0042	-0.0097	0.0060	6	95
+Cloudgoat Ranger	peasant	W	92.8	-0.0018	0.0054	-0.0112	0.0081	16	255
+Bog Wraith	peasant	B	43.9	-0.0018	0.0053	-0.0118	0.0070	10	160
+Steel Overseer	legacy		49.5	-0.0019	0.0071	-0.0154	0.0125	94	1504
+Fallen Shinobi	legacy	UB	68.5	-0.0019	0.0081	-0.0176	0.0122	95	1518
+Night Nurse, Healer of Heroes	peasant	W	33.5	-0.0019	0.0044	-0.0104	0.0064	5	79
+Intangible Virtue	peasant	W	26.2	-0.0021	0.0059	-0.0141	0.0073	20	320
+The Last Ronin's Technique	peasant	W	40.2	-0.0021	0.0063	-0.0139	0.0111	16	256
+Get Lost	legacy	W	89.2	-0.0021	0.0074	-0.0159	0.0124	90	1440
+Garruk Wildspeaker	legacy	G	49.8	-0.0021	0.0078	-0.0181	0.0135	80	1278
+Emrakul's Messenger	peasant	U	82.7	-0.0022	0.0065	-0.0179	0.0085	14	224
+Stitcher's Supplier	peasant	B	65.6	-0.0022	0.0053	-0.0123	0.0075	9	144
+Colossal Skyturtle	peasant	UG	40.4	-0.0023	0.0044	-0.0109	0.0066	6	95
+Priest of Forgotten Gods	legacy	B	44.2	-0.0023	0.0078	-0.0156	0.0135	104	1662
+Mana Crypt	powered		99.9	-0.0023	0.0037	-0.0082	0.0056	8	128
+Knight of the Reliquary	legacy	WG	43.4	-0.0023	0.0070	-0.0165	0.0110	85	1360
+Chart a Course	peasant	U	92.1	-0.0023	0.0055	-0.0131	0.0064	12	191
+Marauding Sphinx	peasant	U	40.0	-0.0024	0.0057	-0.0150	0.0071	17	272
+Mox Emerald	powered		99.9	-0.0024	0.0050	-0.0124	0.0072	11	176
+Thief of Sanity	legacy	UB	42.3	-0.0024	0.0081	-0.0188	0.0116	78	1245
+Vivi Ornitier	legacy	UR	85.3	-0.0024	0.0076	-0.0176	0.0126	91	1452
+Impractical Joke	peasant	R	44.8	-0.0024	0.0057	-0.0127	0.0081	16	256
+Lotus Cobra	legacy	G	82.7	-0.0024	0.0079	-0.0162	0.0158	93	1488
+Tough Cookie	peasant	G	47.2	-0.0024	0.0040	-0.0097	0.0046	7	111
+Erhnam Djinn	peasant	G	48.3	-0.0024	0.0069	-0.0148	0.0110	24	383
+Torsten, Founder of Benalia	legacy	WG	63.1	-0.0025	0.0074	-0.0175	0.0099	82	1312
+Reprieve	peasant	W	72.3	-0.0025	0.0051	-0.0117	0.0072	16	256
+Inti, Seneschal of the Sun	legacy	R	84.7	-0.0026	0.0078	-0.0181	0.0123	98	1562
+Grizzly Fate	peasant	G	41.6	-0.0026	0.0058	-0.0143	0.0077	11	176
+Arabella, Abandoned Doll	peasant	WR	43.7	-0.0026	0.0066	-0.0149	0.0130	16	255
+Grumgully, the Generous	peasant	RG	40.7	-0.0026	0.0053	-0.0122	0.0070	10	160
+Crusade	legacy	W	40.7	-0.0026	0.0079	-0.0185	0.0139	93	1487
+Cut Down	peasant	B	55.0	-0.0026	0.0053	-0.0140	0.0074	12	192
+Flow State	peasant	U	34.6	-0.0027	0.0049	-0.0118	0.0060	11	176
+Lightning Greaves	peasant		92.7	-0.0027	0.0059	-0.0128	0.0089	15	239
+Elspeth, Sun's Champion	legacy	W	91.3	-0.0027	0.0074	-0.0170	0.0123	105	1676
+Vengeful Rebel	peasant	B	45.7	-0.0028	0.0052	-0.0125	0.0062	9	144
+Dakkon Blackblade	legacy	WUB	49.6	-0.0028	0.0085	-0.0184	0.0150	86	1375
+Kumano Faces Kakkazan	peasant	R	34.6	-0.0028	0.0060	-0.0146	0.0084	14	222
+Deep-Cavern Bat	peasant	B	97.7	-0.0029	0.0035	-0.0099	0.0042	6	95
+Pizza Face, Gastromancer	peasant	BG	27.2	-0.0030	0.0057	-0.0129	0.0076	13	208
+Wheel of Fortune	powered	R	99.1	-0.0030	0.0066	-0.0163	0.0089	20	319
+Metamorphosis Fanatic	legacy	B	53.7	-0.0030	0.0079	-0.0185	0.0117	106	1695
+Servo Schematic	peasant		76.0	-0.0030	0.0058	-0.0138	0.0074	17	271
+Jace, Vryn's Prodigy	legacy	U	98.0	-0.0031	0.0073	-0.0157	0.0115	108	1725
+Nishoba Brawler	peasant	G	43.2	-0.0031	0.0055	-0.0131	0.0071	16	256
+Spectral Sailor	peasant	U	43.7	-0.0031	0.0063	-0.0142	0.0099	14	224
+Aladdin	peasant	R	37.5	-0.0032	0.0056	-0.0125	0.0085	15	240
+Eusocial Engineering	peasant	G	37.9	-0.0032	0.0063	-0.0158	0.0085	17	272
+Demonic Tutor	powered	B	99.6	-0.0032	0.0060	-0.0134	0.0078	13	208
+Mox Ruby	powered		99.9	-0.0032	0.0055	-0.0145	0.0063	12	192
+Karn Liberated	legacy		65.1	-0.0033	0.0077	-0.0161	0.0127	93	1485
+Charging Monstrosaur	peasant	R	47.3	-0.0033	0.0067	-0.0141	0.0106	18	287
+Master's Councillors	peasant	U	27.5	-0.0034	0.0057	-0.0160	0.0070	11	176
+Siege-Gang Commander	legacy	R	49.3	-0.0034	0.0073	-0.0162	0.0118	101	1612
+Junún Efreet	peasant	B	36.5	-0.0035	0.0058	-0.0141	0.0095	17	272
+March of Otherworldly Light	legacy	W	30.6	-0.0035	0.0073	-0.0176	0.0100	91	1455
+Persist	legacy	B	51.3	-0.0035	0.0076	-0.0188	0.0104	107	1709
+Arc Trail	peasant	R	79.7	-0.0036	0.0060	-0.0146	0.0075	13	208
+Goblin Guide	legacy	R	56.8	-0.0036	0.0073	-0.0183	0.0088	89	1420
+Erode	legacy	W	32.3	-0.0036	0.0078	-0.0194	0.0101	91	1454
+Tezzeret, Cruel Captain	legacy		13.1	-0.0036	0.0074	-0.0178	0.0102	87	1390
+Arbiter of Woe	peasant	B	44.4	-0.0036	0.0064	-0.0154	0.0090	13	208
+Craw Giant	peasant	G	46.9	-0.0037	0.0050	-0.0126	0.0063	8	128
+Stern Scolding	peasant	U	95.9	-0.0037	0.0067	-0.0154	0.0101	15	240
+Garruk, Curse Breaker	legacy	G	40.0	-0.0037	0.0082	-0.0187	0.0103	87	1391
+Sweltering Suns	legacy	R	42.6	-0.0037	0.0077	-0.0163	0.0109	101	1615
+Brain Freeze	peasant	U	98.6	-0.0038	0.0058	-0.0135	0.0077	15	240
+Craterhoof Behemoth	legacy	G	75.7	-0.0038	0.0076	-0.0197	0.0113	87	1391
+Amnesia	peasant	U	12.6	-0.0038	0.0062	-0.0154	0.0074	13	208
+Headliner Scarlett	legacy	R	51.9	-0.0039	0.0075	-0.0171	0.0123	94	1500
+Sokenzan Smelter	peasant	R	12.3	-0.0039	0.0055	-0.0141	0.0070	11	176
+Woe Strider	legacy	B	43.4	-0.0040	0.0076	-0.0191	0.0087	113	1806
+Winds of Abandon	legacy	W	49.8	-0.0040	0.0073	-0.0162	0.0108	80	1279
+Storm Seeker	peasant	G	23.3	-0.0040	0.0060	-0.0162	0.0056	15	240
+Shuri, Vibranium Technologist	peasant	WU	40.0	-0.0040	0.0067	-0.0182	0.0057	11	176
+Eye for an Eye	peasant	W	26.9	-0.0040	0.0066	-0.0168	0.0084	14	223
+Risen Reef	peasant	UG	88.4	-0.0041	0.0060	-0.0147	0.0077	13	208
+Kismet	peasant	W	27.4	-0.0041	0.0053	-0.0148	0.0050	9	144
+Anax, Hardened in the Forge	peasant	R	39.6	-0.0041	0.0054	-0.0160	0.0049	14	224
+Killer Bees	peasant	G	41.7	-0.0041	0.0054	-0.0140	0.0054	18	288
+Derelor	peasant	B	46.6	-0.0041	0.0070	-0.0168	0.0115	13	208
+Stadium Headliner	legacy	R	38.8	-0.0042	0.0071	-0.0179	0.0093	93	1486
+Basalt Monolith	peasant		85.1	-0.0042	0.0063	-0.0159	0.0085	12	192
+Moat	legacy	W	68.5	-0.0042	0.0070	-0.0162	0.0103	93	1487
+White Knight	peasant	W	45.2	-0.0042	0.0056	-0.0153	0.0059	16	256
+King Suleiman	legacy	W	26.0	-0.0042	0.0074	-0.0176	0.0109	102	1630
+Primeval Titan	legacy	G	55.7	-0.0042	0.0075	-0.0181	0.0099	81	1294
+Twinshot Sniper	peasant	R	91.9	-0.0042	0.0073	-0.0172	0.0090	16	256
+Rabbit Battery	peasant	R	65.9	-0.0043	0.0056	-0.0157	0.0051	13	208
+Wistfulness	legacy	UG	44.9	-0.0043	0.0080	-0.0197	0.0132	86	1375
+Grief	legacy	B	85.4	-0.0043	0.0071	-0.0167	0.0111	98	1566
+Young Pyromancer	peasant	R	42.4	-0.0043	0.0061	-0.0138	0.0077	12	192
+Tishana's Tidebinder	legacy	U	96.0	-0.0044	0.0078	-0.0205	0.0090	85	1359
+Faebloom Trick	peasant	U	87.8	-0.0044	0.0065	-0.0168	0.0072	15	239
+Witch's Oven	peasant		66.8	-0.0045	0.0043	-0.0127	0.0042	8	128
+Burn, Burn, Tree and Fern	peasant	R	33.4	-0.0045	0.0063	-0.0163	0.0062	15	239
+Abhorrent Oculus	legacy	U	58.3	-0.0045	0.0078	-0.0180	0.0128	110	1756
+Copy Artifact	legacy	U	87.7	-0.0045	0.0076	-0.0193	0.0091	103	1643
+Green Sun's Zenith	legacy	G	53.8	-0.0045	0.0082	-0.0201	0.0119	87	1392
+Don & Leo, Problem Solvers	legacy	WU	48.4	-0.0045	0.0072	-0.0177	0.0101	86	1375
+Solemn Simulacrum	legacy		54.7	-0.0046	0.0087	-0.0208	0.0121	92	1471
+Black Vise	peasant		49.5	-0.0046	0.0054	-0.0165	0.0053	10	160
+Sundering Archaic	peasant		42.1	-0.0046	0.0057	-0.0157	0.0057	10	160
+Cockatrice	legacy	G	48.6	-0.0046	0.0072	-0.0181	0.0087	67	1071
+Lingering Souls	peasant	W	80.7	-0.0046	0.0050	-0.0143	0.0053	8	128
+Bomat Courier	legacy		7.4	-0.0047	0.0071	-0.0180	0.0099	94	1501
+Zirda, the Dawnwaker	legacy	WR	42.2	-0.0047	0.0073	-0.0201	0.0087	86	1373
+Dragon's Rage Channeler	peasant	R	74.9	-0.0047	0.0066	-0.0180	0.0061	18	287
+Davriel, Rogue Shadowmage	peasant	B	30.4	-0.0047	0.0066	-0.0167	0.0082	10	160
+Marionette Apprentice	peasant	B	97.3	-0.0047	0.0051	-0.0141	0.0055	10	160
+Hullbreacher	legacy	U	99.5	-0.0047	0.0089	-0.0221	0.0123	91	1455
+Orgg	legacy	R	42.4	-0.0047	0.0076	-0.0202	0.0072	94	1501
+Acidic Slime	peasant	G	48.4	-0.0047	0.0065	-0.0170	0.0085	15	240
+Killian, Ink Duelist	peasant	WB	38.5	-0.0047	0.0063	-0.0150	0.0081	14	224
+Bothersome Noisemaker	peasant	R	42.0	-0.0048	0.0055	-0.0159	0.0060	13	208
+Xira Arien	legacy	BRG	40.2	-0.0048	0.0078	-0.0201	0.0098	77	1228
+Force of Nature	legacy	G	47.3	-0.0048	0.0070	-0.0178	0.0071	82	1310
+March of the Multitudes	legacy	WG	47.4	-0.0049	0.0080	-0.0188	0.0111	93	1484
+Balmor, Battlemage Captain	peasant	UR	40.6	-0.0050	0.0057	-0.0157	0.0060	12	192
+Mother of Runes	peasant	W	84.9	-0.0050	0.0065	-0.0179	0.0074	20	319
+Emeritus of Abundance	legacy	G	41.1	-0.0050	0.0073	-0.0170	0.0107	75	1199
+Veteran Bodyguard	legacy	W	49.0	-0.0050	0.0075	-0.0192	0.0095	104	1662
+Eternal Witness	peasant	G	83.8	-0.0050	0.0057	-0.0158	0.0064	13	208
+Path to the World Tree	peasant	G	34.7	-0.0051	0.0053	-0.0139	0.0049	12	192
+Spellscorn Coven	peasant	B	40.9	-0.0051	0.0049	-0.0140	0.0045	5	80
+Nightmare	legacy	B	47.2	-0.0051	0.0080	-0.0176	0.0103	110	1759
+Staunch Crewmate	peasant	U	44.5	-0.0052	0.0074	-0.0201	0.0082	19	304
+Willow Satyr	legacy	G	21.9	-0.0053	0.0068	-0.0203	0.0081	101	1616
+Sword of the Meek	peasant		71.9	-0.0053	0.0065	-0.0185	0.0054	18	288
+Biomechan Engineer	peasant	UG	48.0	-0.0053	0.0058	-0.0178	0.0064	12	191
+Stingcaster Mage	legacy	R	40.0	-0.0054	0.0072	-0.0169	0.0108	102	1629
+Animate Dead	peasant	B	98.8	-0.0054	0.0057	-0.0149	0.0073	17	272
+Psychic Frog	legacy	UB	98.7	-0.0054	0.0083	-0.0234	0.0091	87	1390
+Scurry Oak	peasant	G	79.0	-0.0054	0.0054	-0.0169	0.0055	11	176
+Disrupting Scepter	legacy		48.6	-0.0054	0.0074	-0.0175	0.0114	98	1567
+Prosperous Innkeeper	peasant	G	97.3	-0.0055	0.0050	-0.0140	0.0055	11	176
+Sourbread Auntie	peasant	R	26.3	-0.0056	0.0060	-0.0160	0.0056	13	208
+Talisman of Dominance	peasant		83.6	-0.0056	0.0040	-0.0116	0.0034	9	144
+Strixhaven Skycoach	peasant		43.8	-0.0057	0.0050	-0.0143	0.0042	7	112
+Secure the Wastes	legacy	W	45.2	-0.0057	0.0083	-0.0213	0.0095	96	1534
+Mystic Snake	legacy	UG	44.0	-0.0057	0.0073	-0.0183	0.0080	78	1247
+Mana Vault	powered		99.7	-0.0058	0.0053	-0.0146	0.0051	9	144
+Black Knight	peasant	B	43.8	-0.0060	0.0053	-0.0154	0.0028	10	160
+Collective Brutality	legacy	B	90.7	-0.0060	0.0081	-0.0205	0.0097	99	1582
+Thopter Foundry	peasant	WUB	85.0	-0.0061	0.0048	-0.0153	0.0027	6	96
+Ranger-Captain of Eos	legacy	W	63.0	-0.0061	0.0079	-0.0212	0.0079	91	1454
+Tsunami	peasant	G	39.3	-0.0061	0.0053	-0.0176	0.0044	10	160
+Leyline Binding	legacy	W	45.9	-0.0062	0.0080	-0.0224	0.0100	101	1614
+Signal Pest	peasant		27.2	-0.0062	0.0065	-0.0211	0.0061	13	208
+Su-Chi	peasant		76.0	-0.0062	0.0050	-0.0160	0.0040	9	144
+Ancestral Recall	powered	U	100.0	-0.0063	0.0069	-0.0198	0.0082	14	224
+Breeding Pit	peasant	B	48.0	-0.0063	0.0036	-0.0122	0.0007	4	64
+Morphling	legacy	U	93.8	-0.0063	0.0078	-0.0216	0.0075	101	1613
+Formidable Speaker	legacy	G	36.0	-0.0063	0.0076	-0.0202	0.0095	82	1311
+Psionic Blast	peasant	U	73.8	-0.0063	0.0049	-0.0152	0.0033	9	144
+Brightglass Gearhulk	legacy	WG	44.2	-0.0063	0.0077	-0.0217	0.0092	73	1167
+Timetwister	powered	U	99.5	-0.0063	0.0043	-0.0130	0.0017	10	160
+Liliana of the Veil	legacy	B	59.2	-0.0063	0.0070	-0.0228	0.0067	112	1791
+Council's Judgment	legacy	W	46.2	-0.0064	0.0075	-0.0220	0.0077	84	1341
+Karn, Scion of Urza	legacy		58.3	-0.0064	0.0071	-0.0196	0.0089	85	1360
+Imperial Seal	powered	B	98.3	-0.0065	0.0048	-0.0147	0.0028	7	112
+Soul Exchange	peasant	B	33.3	-0.0065	0.0067	-0.0203	0.0054	11	176
+Dragon Whelp	peasant	R	40.8	-0.0065	0.0051	-0.0157	0.0038	9	142
+Gut, True Soul Zealot	peasant	R	72.4	-0.0066	0.0060	-0.0174	0.0052	17	271
+Omnath, Locus of Creation	legacy	WURG	78.8	-0.0066	0.0078	-0.0224	0.0063	73	1168
+Wicked Wolf	legacy	G	84.2	-0.0066	0.0078	-0.0227	0.0066	73	1167
+Floodpits Drowner	peasant	U	68.0	-0.0067	0.0062	-0.0194	0.0045	19	304
+Shorikai, Genesis Engine	legacy	WU	40.0	-0.0067	0.0076	-0.0219	0.0075	69	1104
+Master of the Hunt	legacy	G	44.2	-0.0067	0.0073	-0.0192	0.0068	93	1486
+Arcbound Ravager	legacy		55.7	-0.0068	0.0074	-0.0205	0.0087	94	1497
+Vitu-Ghazi Guildmage	peasant	WG	42.8	-0.0068	0.0057	-0.0162	0.0046	14	224
+Thassa's Oracle	legacy	U	58.6	-0.0068	0.0069	-0.0172	0.0090	114	1822
+Coruscation Mage	peasant	R	12.9	-0.0070	0.0060	-0.0176	0.0049	14	223
+Shark Typhoon	legacy	U	95.4	-0.0071	0.0091	-0.0251	0.0097	93	1486
+Hero of the Dunes	peasant	WB	41.3	-0.0072	0.0058	-0.0183	0.0034	9	144
+Reclamation Sage	peasant	G	46.8	-0.0072	0.0068	-0.0188	0.0076	17	272
+Welcome to Sweettooth	peasant	G	46.2	-0.0072	0.0062	-0.0182	0.0072	17	272
+Pyrokinesis	peasant	R	48.3	-0.0073	0.0073	-0.0203	0.0077	24	383
+Earthquake	legacy	R	49.7	-0.0073	0.0077	-0.0211	0.0075	101	1613
+Thalia, Guardian of Thraben	legacy	W	91.1	-0.0074	0.0079	-0.0252	0.0085	95	1519
+Lessons from Life	peasant	UG	43.3	-0.0074	0.0045	-0.0144	0.0022	7	112
+Sedge Troll	legacy	R	44.9	-0.0074	0.0078	-0.0215	0.0082	88	1407
+Serendib Efreet	peasant	U	96.4	-0.0075	0.0053	-0.0178	0.0027	13	208
+Chrome Mox	legacy		99.4	-0.0075	0.0071	-0.0203	0.0053	103	1645
+Down in the Valley	legacy	G	41.2	-0.0075	0.0066	-0.0179	0.0065	86	1376
+Haywire Mite	peasant		16.4	-0.0075	0.0067	-0.0197	0.0057	23	368
+Momo, Playful Pet	peasant	W	41.9	-0.0075	0.0067	-0.0205	0.0065	14	221
+Tendrils of Agony	peasant	B	67.2	-0.0076	0.0063	-0.0200	0.0058	12	192
+Rasputin Dreamweaver	legacy	WU	47.2	-0.0076	0.0083	-0.0247	0.0097	72	1151
+Jade Statue	peasant		38.2	-0.0076	0.0069	-0.0221	0.0042	15	240
+Archmage's Charm	legacy	U	28.0	-0.0077	0.0082	-0.0230	0.0061	108	1723
+Fateful Absence	legacy	W	54.9	-0.0078	0.0075	-0.0225	0.0059	95	1519
+Astrologian's Planisphere	legacy	U	58.4	-0.0078	0.0075	-0.0208	0.0077	112	1792
+Desert Twister	peasant	G	47.7	-0.0079	0.0058	-0.0187	0.0025	17	272
+Spellseeker	legacy	U	71.8	-0.0079	0.0083	-0.0245	0.0063	111	1776
+Oath of Druids	legacy	G	68.4	-0.0079	0.0076	-0.0227	0.0066	70	1120
+Ivory Tower	peasant		47.8	-0.0079	0.0074	-0.0221	0.0059	18	288
+Ashroot Animist	legacy	RG	42.7	-0.0080	0.0075	-0.0214	0.0071	77	1232
+Harvester of Misery	legacy	B	79.3	-0.0080	0.0080	-0.0231	0.0089	105	1679
+Conversion	peasant	W	23.4	-0.0081	0.0064	-0.0203	0.0039	8	127
+Nasty Little Rabbit	peasant	G	40.7	-0.0081	0.0060	-0.0190	0.0043	18	288
+Talisman of Curiosity	peasant		61.4	-0.0082	0.0053	-0.0172	0.0036	11	176
+Cleanse	legacy	W	31.8	-0.0082	0.0076	-0.0214	0.0084	81	1295
+Expressive Iteration	peasant	UR	39.6	-0.0083	0.0069	-0.0197	0.0052	16	256
+Wormwood Treefolk	peasant	G	36.1	-0.0084	0.0056	-0.0180	0.0049	8	128
+Detonate	peasant	R	43.9	-0.0084	0.0063	-0.0200	0.0030	13	208
+Ravenous Chupacabra	peasant	B	53.0	-0.0084	0.0059	-0.0187	0.0031	14	224
+Instill Energy	peasant	G	24.9	-0.0084	0.0070	-0.0237	0.0057	13	208
+Endurance	legacy	G	45.4	-0.0085	0.0072	-0.0230	0.0039	86	1374
+Yawgmoth's Will	powered	B	96.4	-0.0085	0.0056	-0.0191	0.0033	9	143
+Fiery Confluence	legacy	R	50.9	-0.0085	0.0063	-0.0203	0.0027	98	1566
+Time Vault	powered		99.9	-0.0086	0.0045	-0.0186	-0.0004	6	96
+Jihad	legacy	W	31.2	-0.0086	0.0071	-0.0230	0.0059	100	1597
+Mahamoti Djinn	peasant	U	78.4	-0.0086	0.0065	-0.0206	0.0032	17	272
+Lumbering Worldwagon	legacy	G	37.4	-0.0087	0.0080	-0.0220	0.0055	82	1310
+Shatterstorm	peasant	R	47.1	-0.0087	0.0050	-0.0182	0.0019	8	128
+Courser of Kruphix	legacy	G	92.6	-0.0087	0.0074	-0.0239	0.0053	88	1408
+Bitterblossom	legacy	B	84.8	-0.0088	0.0080	-0.0235	0.0073	102	1632
+Gandalf, Goblins' Bane	legacy	R	45.1	-0.0088	0.0074	-0.0227	0.0052	104	1659
+Flame of Anor	legacy	UR	78.6	-0.0089	0.0077	-0.0254	0.0047	90	1438
+Fork	legacy	R	45.6	-0.0089	0.0078	-0.0250	0.0068	99	1584
+Thing in the Ice	legacy	U	78.5	-0.0089	0.0076	-0.0237	0.0076	105	1678
+Cauldron of Essence	legacy	BG	29.1	-0.0089	0.0079	-0.0229	0.0073	109	1741
+Two-Headed Giant of Foriys	peasant	R	46.2	-0.0089	0.0069	-0.0208	0.0060	17	272
+Oni-Cult Anvil	peasant	BR	76.3	-0.0092	0.0044	-0.0177	-0.0007	7	111
+Spyglass Siren	peasant	U	71.0	-0.0093	0.0061	-0.0209	0.0022	14	224
+Snarl Song	peasant	G	47.8	-0.0093	0.0065	-0.0228	0.0018	13	207
+Grafted Wargear	peasant		50.3	-0.0093	0.0067	-0.0230	0.0046	17	271
+Bloodtithe Harvester	peasant	BR	46.4	-0.0093	0.0068	-0.0217	0.0029	16	256
+Baleful Strix	peasant	UB	54.0	-0.0093	0.0039	-0.0168	-0.0015	8	128
+Stormchaser's Talent	legacy	U	64.8	-0.0094	0.0071	-0.0224	0.0051	116	1854
+Glen Elendra Archmage	legacy	U	51.8	-0.0094	0.0084	-0.0261	0.0055	104	1664
+Caustic Bronco	legacy	B	75.7	-0.0095	0.0077	-0.0236	0.0045	120	1919
+Narset, Parter of Veils	powered	U	98.1	-0.0095	0.0057	-0.0193	0.0015	11	174
+Showdown of the Skalds	legacy	WR	45.1	-0.0096	0.0075	-0.0224	0.0063	90	1439
+Deep Spawn	peasant	U	43.9	-0.0097	0.0058	-0.0202	0.0019	17	272
+Underworld Dreams	peasant	B	26.7	-0.0097	0.0058	-0.0197	0.0031	10	159
+Nettlecyst	legacy		76.7	-0.0097	0.0074	-0.0241	0.0051	91	1453
+Inferno	legacy	R	49.6	-0.0097	0.0079	-0.0228	0.0070	106	1680
+Argivian Archaeologist	legacy	W	12.4	-0.0098	0.0077	-0.0249	0.0029	87	1389
+Kaito, Bane of Nightmares	legacy	UB	96.5	-0.0098	0.0074	-0.0251	0.0027	98	1567
+Practiced Scrollsmith	peasant	WR	45.8	-0.0098	0.0057	-0.0206	0.0016	17	272
+Echo of Eons	legacy	U	98.0	-0.0100	0.0079	-0.0257	0.0053	96	1536
+Wall of Air	peasant	U	45.2	-0.0100	0.0048	-0.0187	-0.0014	9	143
+Bilbo, Thief in the Night	legacy	U	39.4	-0.0102	0.0078	-0.0257	0.0049	97	1549
+Sai, Master Thopterist	legacy	U	50.3	-0.0103	0.0077	-0.0247	0.0035	99	1581
+Manabarbs	legacy	R	47.7	-0.0103	0.0075	-0.0253	0.0027	107	1708
+Tinker	powered	U	99.0	-0.0104	0.0052	-0.0202	0.0010	14	224
+Leonardo, Leader in Blue	peasant	W	38.6	-0.0104	0.0059	-0.0199	0.0015	17	272
+Territorial Kavu	legacy	RG	34.8	-0.0104	0.0075	-0.0230	0.0043	62	991
+Micromancer	peasant	U	93.3	-0.0105	0.0062	-0.0227	0.0025	18	288
+Vendilion Clique	legacy	U	88.2	-0.0105	0.0070	-0.0223	0.0051	87	1387
+Avenger of Zendikar	legacy	G	67.5	-0.0106	0.0078	-0.0246	0.0055	91	1456
+Natural Order	legacy	G	72.2	-0.0106	0.0084	-0.0266	0.0042	80	1280
+Nezumi Prowler	peasant	B	33.4	-0.0107	0.0058	-0.0217	0.0007	16	255
+Faerie Mastermind	legacy	U	87.5	-0.0108	0.0074	-0.0254	0.0036	117	1871
+Snapcaster Mage	legacy	U	98.3	-0.0108	0.0080	-0.0260	0.0042	108	1725
+Thoughtseize	legacy	B	99.4	-0.0109	0.0078	-0.0268	0.0046	95	1520
+Legion Warboss	legacy	R	45.7	-0.0109	0.0083	-0.0268	0.0052	78	1247
+Rishkar, Peema Renegade	peasant	G	89.2	-0.0110	0.0060	-0.0213	0.0026	18	288
+Gleeful Demolition	peasant	R	65.4	-0.0110	0.0057	-0.0192	0.0011	19	304
+Show and Tell	legacy	U	59.2	-0.0110	0.0078	-0.0256	0.0023	92	1471
+Wight of the Reliquary	legacy	BG	26.4	-0.0110	0.0080	-0.0278	0.0036	77	1232
+Plaguecrafter	peasant	B	33.9	-0.0111	0.0057	-0.0210	0.0006	13	208
+Guardian Beast	legacy	B	31.0	-0.0111	0.0081	-0.0260	0.0028	106	1694
+Corpse Dance	legacy	B	56.4	-0.0112	0.0077	-0.0254	0.0045	94	1502
+Eddymurk Crab	peasant	U	17.5	-0.0112	0.0051	-0.0190	-0.0003	13	207
+Goblin Engineer	legacy	R	1.2	-0.0112	0.0070	-0.0264	0.0018	85	1360
+Zuran Orb	peasant		75.2	-0.0113	0.0047	-0.0201	-0.0023	9	144
+Cloak and Dagger, Entwined	legacy	WB	45.4	-0.0113	0.0079	-0.0273	0.0035	82	1310
+Sunfall	legacy	W	49.9	-0.0114	0.0072	-0.0272	0.0013	103	1647
+Untamed Wilds	peasant	G	39.9	-0.0117	0.0050	-0.0209	-0.0013	12	192
+Skittering Precursor	peasant	R	29.0	-0.0117	0.0071	-0.0255	0.0025	23	367
+Armageddon	legacy	W	49.3	-0.0119	0.0079	-0.0247	0.0018	90	1439
+Bad Moon	legacy	B	46.3	-0.0121	0.0073	-0.0269	0.0015	116	1855
+The Mightstone and Weakstone	legacy		83.7	-0.0121	0.0071	-0.0262	0.0017	118	1887
+Fastbond	legacy	G	98.5	-0.0122	0.0084	-0.0269	0.0063	89	1421
+Fact or Fiction	peasant	U	54.7	-0.0122	0.0066	-0.0248	-0.0008	14	224
+Mirror Universe	legacy		45.2	-0.0122	0.0085	-0.0305	0.0024	98	1567
+Dragonbroods' Relic	peasant	G	39.9	-0.0122	0.0073	-0.0267	0.0010	18	288
+Ambrosia Whiteheart	peasant	W	32.8	-0.0123	0.0068	-0.0232	0.0021	14	224
+Hurkyl's Recall	legacy	U	53.3	-0.0123	0.0084	-0.0311	0.0035	114	1821
+Chaos Orb	legacy		99.1	-0.0123	0.0077	-0.0257	0.0035	101	1614
+Aladdin's Ring	legacy		43.5	-0.0123	0.0081	-0.0277	0.0046	74	1181
+Ruby, Daring Tracker	peasant	RG	39.5	-0.0124	0.0053	-0.0222	-0.0022	12	192
+Winter Orb	legacy		70.9	-0.0125	0.0073	-0.0246	0.0039	108	1727
+Tireless Tracker	legacy	G	83.0	-0.0126	0.0072	-0.0256	0.0013	73	1167
+Path to Exile	peasant	W	85.5	-0.0128	0.0052	-0.0218	-0.0022	13	207
+Entomb	legacy	B	98.4	-0.0128	0.0080	-0.0272	0.0020	93	1487
+Concordant Crossroads	peasant	G	81.3	-0.0128	0.0064	-0.0237	0.0006	19	304
+Biotech Specialist	legacy	RG	46.6	-0.0128	0.0076	-0.0262	0.0028	78	1243
+Pillage the Bog	legacy	BG	30.2	-0.0129	0.0076	-0.0266	0.0024	94	1501
+Purphoros, God of the Forge	legacy	R	78.1	-0.0129	0.0074	-0.0265	0.0016	115	1839
+Yawgmoth Demon	legacy	B	49.4	-0.0129	0.0080	-0.0275	0.0033	106	1696
+Summon: Fenrir	peasant	G	53.5	-0.0131	0.0067	-0.0263	0.0010	14	224
+Vesuvan Doppelganger	legacy	U	47.8	-0.0133	0.0073	-0.0293	-0.0007	91	1453
+Mox Opal	legacy		98.5	-0.0133	0.0073	-0.0283	-0.0002	94	1500
+Skateboard	peasant		4.7	-0.0134	0.0052	-0.0224	-0.0030	11	176
+Fervent Champion	legacy	R	27.0	-0.0135	0.0072	-0.0259	0.0005	95	1515
+Third Path Iconoclast	peasant	UR	69.1	-0.0135	0.0048	-0.0216	-0.0036	11	176
+Primal Might	legacy	G	42.9	-0.0136	0.0082	-0.0274	0.0062	86	1373
+Emry, Lurker of the Loch	legacy	U	55.6	-0.0136	0.0077	-0.0265	0.0030	111	1773
+Coveted Jewel	legacy		55.7	-0.0136	0.0077	-0.0290	-0.0002	107	1711
+Soul-Guide Lantern	peasant		92.2	-0.0137	0.0062	-0.0224	-0.0001	18	288
+Deathgrip	peasant	B	21.8	-0.0137	0.0057	-0.0241	-0.0030	12	192
+Khabál Ghoul	peasant	B	42.9	-0.0137	0.0057	-0.0239	-0.0027	12	192
+Flashback	legacy	R	27.8	-0.0137	0.0076	-0.0286	0.0000	93	1488
+The Mountain-king's Return	peasant	W	28.8	-0.0137	0.0063	-0.0259	-0.0021	16	256
+Throat Slitter	peasant	B	47.0	-0.0137	0.0064	-0.0271	-0.0006	7	111
+Agatha's Soul Cauldron	legacy		69.1	-0.0138	0.0075	-0.0269	0.0014	91	1453
+Survival of the Fittest	legacy	G	93.6	-0.0138	0.0073	-0.0275	0.0010	90	1438
+Bloodghast	legacy	B	40.0	-0.0140	0.0074	-0.0280	0.0016	104	1663
+Juzám Djinn	legacy	B	85.5	-0.0141	0.0083	-0.0281	0.0055	110	1759
+Walking Ballista	legacy		84.5	-0.0142	0.0081	-0.0304	0.0006	104	1662
+Life // Death	peasant	BG	27.9	-0.0144	0.0049	-0.0215	-0.0050	9	144
+Flitterwing Nuisance	legacy	U	43.2	-0.0145	0.0079	-0.0306	0.0002	96	1534
+Braingeyser	legacy	U	85.1	-0.0145	0.0075	-0.0275	0.0023	104	1664
+Nurturing Pixie	peasant	W	74.4	-0.0146	0.0058	-0.0244	-0.0026	14	224
+Light Up the Stage	peasant	R	74.0	-0.0149	0.0071	-0.0256	0.0008	18	288
+Gloom	peasant	B	24.8	-0.0149	0.0058	-0.0263	-0.0042	14	224
+Time Spiral	legacy	U	98.3	-0.0150	0.0078	-0.0276	0.0023	109	1740
+Marionette Master	legacy	B	44.8	-0.0150	0.0081	-0.0297	0.0012	93	1485
+Hellfire	legacy	B	48.2	-0.0151	0.0079	-0.0311	0.0002	112	1791
+Kolaghan's Command	legacy	BR	67.4	-0.0152	0.0081	-0.0308	0.0007	94	1503
+Jayemdae Tome	peasant		93.1	-0.0153	0.0059	-0.0263	-0.0030	14	224
+Blightsteel Colossus	legacy		52.1	-0.0156	0.0075	-0.0305	-0.0028	86	1374
+Gravecrawler	legacy	B	63.8	-0.0156	0.0079	-0.0292	-0.0004	109	1742
+Sorin, Lord of Innistrad	legacy	WB	49.7	-0.0161	0.0082	-0.0313	0.0005	86	1376
+Once Upon a Time	legacy	G	58.5	-0.0161	0.0074	-0.0319	-0.0027	97	1551
+Ankh of Mishra	legacy		39.1	-0.0162	0.0074	-0.0314	-0.0026	99	1581
+Worldspine Wurm	legacy	G	71.7	-0.0163	0.0072	-0.0305	-0.0011	103	1646
+Lutri, the Spellchaser	legacy	UR	97.9	-0.0166	0.0071	-0.0292	-0.0043	102	1631
+Volcanic Eruption	legacy	U	33.0	-0.0166	0.0077	-0.0319	-0.0014	107	1710
+Force of Vigor	legacy	G	6.7	-0.0166	0.0082	-0.0335	-0.0008	94	1503
+Sylvan Scavenging	legacy	G	81.2	-0.0167	0.0079	-0.0306	-0.0010	86	1374
+Shallow Grave	legacy	B	90.9	-0.0169	0.0074	-0.0305	-0.0019	107	1712
+Woodfall Primus	legacy	G	81.8	-0.0169	0.0073	-0.0317	-0.0035	78	1245
+Howling Mine	legacy		44.3	-0.0171	0.0080	-0.0320	-0.0024	92	1471
+Nether Void	legacy	B	45.0	-0.0171	0.0077	-0.0325	-0.0005	101	1616
+Kormus Bell	legacy		31.1	-0.0172	0.0073	-0.0314	-0.0038	97	1549
+Daring Waverider	peasant	U	69.0	-0.0172	0.0065	-0.0282	-0.0028	19	303
+Farrel's Mantle	peasant	W	43.1	-0.0172	0.0070	-0.0298	-0.0020	17	271
+Nicol Bolas	legacy	UBR	44.8	-0.0172	0.0076	-0.0322	-0.0016	90	1438
+Hell's Caretaker	legacy	B	77.4	-0.0175	0.0076	-0.0327	-0.0019	86	1375
+Baloth Prime	legacy	G	40.0	-0.0176	0.0076	-0.0313	-0.0035	87	1392
+Blood Moon	legacy	R	45.8	-0.0179	0.0066	-0.0325	-0.0064	106	1694
+Gwendlyn Di Corci	legacy	UBR	49.7	-0.0181	0.0083	-0.0326	-0.0003	105	1679
+Eureka	legacy	G	27.9	-0.0181	0.0079	-0.0322	-0.0035	76	1216
+Vicious Rivalry	legacy	BG	40.6	-0.0182	0.0076	-0.0342	-0.0044	97	1549
+Falling Star	legacy	R	35.0	-0.0184	0.0070	-0.0302	-0.0047	100	1599
+Prized Amalgam	legacy	UB	35.6	-0.0185	0.0075	-0.0313	-0.0022	98	1566
+Lord of the Pit	legacy	B	45.0	-0.0187	0.0078	-0.0358	-0.0050	113	1805
+Elvish Reclaimer	legacy	G	63.7	-0.0188	0.0080	-0.0321	-0.0023	83	1328
+Mystical Tutor	powered	U	97.7	-0.0188	0.0064	-0.0286	-0.0053	13	208
+Umezawa's Jitte	legacy		97.8	-0.0189	0.0079	-0.0356	-0.0026	92	1471
+Upheaval	legacy	U	52.9	-0.0190	0.0073	-0.0325	-0.0037	96	1535
+Orcish Artillery	peasant	R	44.5	-0.0191	0.0065	-0.0288	-0.0046	18	288
+Abrupt Decay	legacy	BG	42.4	-0.0191	0.0079	-0.0323	-0.0023	86	1376
+Adun Oakenshield	legacy	BRG	49.0	-0.0192	0.0077	-0.0324	-0.0024	76	1215
+Pink Horror	legacy	UR	40.0	-0.0194	0.0081	-0.0328	-0.0033	73	1165
+Maelstrom Pulse	legacy	BG	48.3	-0.0195	0.0069	-0.0326	-0.0064	100	1599
+Hardened Scales	legacy	G	72.6	-0.0195	0.0077	-0.0327	-0.0026	74	1184
+Force of Negation	legacy	U	98.9	-0.0196	0.0078	-0.0332	-0.0039	103	1645
+Carnage Interpreter	legacy	BR	40.0	-0.0200	0.0073	-0.0339	-0.0055	99	1580
+Acid Rain	legacy	U	48.9	-0.0201	0.0072	-0.0342	-0.0061	107	1709
+Mystic Forge	powered		70.0	-0.0201	0.0063	-0.0313	-0.0070	12	192
+Exhibition Tidecaller	legacy	U	47.3	-0.0203	0.0079	-0.0362	-0.0055	84	1341
+Mana Flare	legacy	R	47.4	-0.0207	0.0077	-0.0354	-0.0043	91	1455
+Tetsuo Umezawa	legacy	UBR	49.1	-0.0207	0.0083	-0.0367	-0.0033	85	1359
+Ark of Hunger	legacy	WR	49.9	-0.0209	0.0071	-0.0332	-0.0063	100	1598
+Gauntlet of Might	legacy		49.1	-0.0216	0.0076	-0.0379	-0.0077	95	1518
+Griselbrand	legacy	B	85.4	-0.0221	0.0078	-0.0367	-0.0076	96	1536
+Emrakul, the Aeons Torn	legacy		85.2	-0.0222	0.0076	-0.0348	-0.0065	100	1600
+Living Plane	legacy	G	37.1	-0.0222	0.0084	-0.0358	-0.0056	88	1408
+Champion of Wits	legacy	U	68.4	-0.0223	0.0080	-0.0382	-0.0067	93	1488
+Wishclaw Talisman	legacy	B	15.3	-0.0223	0.0080	-0.0360	-0.0050	110	1760
+The One Ring	legacy		99.8	-0.0225	0.0074	-0.0351	-0.0065	90	1438
+Unbreakable Formation	legacy	W	39.7	-0.0225	0.0075	-0.0335	-0.0066	99	1583
+Akron Legionnaire	legacy	W	32.3	-0.0225	0.0079	-0.0371	-0.0064	103	1646
+Bolas's Citadel	legacy	B	33.3	-0.0230	0.0076	-0.0383	-0.0094	121	1934
+Paradoxical Outcome	legacy	U	51.9	-0.0235	0.0078	-0.0377	-0.0093	115	1838
+Underworld Breach	legacy	R	98.6	-0.0235	0.0078	-0.0388	-0.0090	89	1423
+The Fantasticar	legacy		40.0	-0.0237	0.0080	-0.0375	-0.0065	100	1599
+Yawgmoth, Thran Physician	legacy	B	55.9	-0.0240	0.0087	-0.0388	-0.0076	111	1770
+Displacer Kitten	legacy	U	52.9	-0.0243	0.0076	-0.0399	-0.0094	95	1518
+Torrential Gearhulk	legacy	U	70.9	-0.0245	0.0077	-0.0366	-0.0068	107	1710
+Lion Sash	legacy	W	47.7	-0.0247	0.0072	-0.0384	-0.0101	107	1710
+Deceit	legacy	UB	40.6	-0.0248	0.0082	-0.0399	-0.0076	93	1487
+Meekstone	legacy		49.5	-0.0250	0.0070	-0.0375	-0.0093	90	1438
+Recurring Nightmare	legacy	B	84.6	-0.0250	0.0077	-0.0426	-0.0110	119	1903
+Obsessive Pursuit	legacy	B	42.9	-0.0252	0.0079	-0.0432	-0.0119	117	1867
+Phyrexian Arena	legacy	B	61.2	-0.0254	0.0073	-0.0389	-0.0107	119	1902
+All Hallow's Eve	legacy	B	24.7	-0.0298	0.0073	-0.0454	-0.0169	124	1983
+Demonic Hordes	legacy	B	45.2	-0.0305	0.0075	-0.0455	-0.0170	113	1806
+Sneak Attack	legacy	R	97.8	-0.0310	0.0080	-0.0452	-0.0138	111	1774
+Stasis	legacy	U	31.4	-0.0313	0.0077	-0.0443	-0.0144	107	1712
+Forcefield	legacy		42.7	-0.0316	0.0083	-0.0469	-0.0149	99	1583
+Pirate Ship	legacy	U	47.4	-0.0327	0.0080	-0.0480	-0.0177	122	1952
+Cosmic Horror	legacy	B	39.8	-0.0341	0.0067	-0.0451	-0.0214	113	1806
+Aang's Iceberg	legacy	W	36.3	-0.0342	0.0074	-0.0459	-0.0186	88	1405
+Grindstone	legacy		51.7	-0.0660	0.0075	-0.0818	-0.0513	108	1727
