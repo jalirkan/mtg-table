@@ -164,6 +164,16 @@ has already ended drawn.
 With `resultOf` as it was, five of these checks fail: −1, −1 with leaf −99,500, +1, −1, and −1 with leaf −99,300. The
 control passes.
 
+The rest:
+- `web/test/cubelab-atlas.test.ts`: a capped option is a warning and exits 0, at the default bar and at
+  `--branch-error-max 0.01`, and with every branch of the option capped. Under `--branch-capped-warn 0.5` there is no
+  warning. Rows written `result 1` and a played loop timeout are still problems, exit 3.
+- `./bridge/build.sh` (the lint, its self-test and the eight self-tests); `./tools/ai-bench.sh --selftest`, 145 checks,
+  0 failures; `node --test test/cubelab-atlas.test.ts` (24 pass) and `tsc --noEmit`: clean.
+- `tools/cubelab.sh atlas-selftest --jobs 1`: **OK** (16 forks, 8 no-leak checks, 38 frame logs, 538 rows).
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on `d6212c40` (this branch's
+  code; only this line differs): **OK, 59 of 59 jobs**, 519.0 s wall (load average up to 15.1).
+
 **Engine draws in the lab data** (read-only). I read the `over` frame of every branch's seat-0 log in every atlas folder
 under `lab/data`: 237,025 logs for 245,566 branch rows. Every played branch has one. A `reason` of `Draw` on a branch that the loop did not end (not capped,
 not timed out, no error) is an engine-ended draw:
