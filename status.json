@@ -1,120 +1,48 @@
 {
  "schema": 1,
- "updated": "2026-10-24T02:01:45-04:00",
- "heartbeat": "2026-10-24T02:01:45-04:00",
+ "updated": "2026-10-24T02:01:59-04:00",
+ "heartbeat": "2026-10-24T02:01:59-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-24T02:01:59-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 6.34,
+  "load1": 5.16,
   "memUsedGb": 5.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3851,
+  "swapUsedMb": 3850,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Omega balance, night 0: J145 again on fresh seeds",
    "publicEst": "~2 to 3 h",
    "id": "J159",
    "title": "Omega balance, night 0 of the registered swap rule -- J145 again on fresh seeds, the cube unchanged: the same three arms on the Omega 180 with Forge Default piloting every game ((A) 2,000 lab-vs-lab grid drafts plus 600 each for the human-pick model and Forge's ranks, drafts 816,500,001 and up; (B) each draft's two decks played twice, game seeds 1,661 / 1,662 / 1,663 x 1,000,000 + g; (C) 2,000 decks from Omega's list by decks --cube in 8,000 games, seed 1665), none coinciding with J145's (D447 point 9); J145's read unchanged, plus the swap rule's night-0 reading: UG CONFIRMED if UG's arm-B (lab-vs-lab) payoff interval sits below .5 on this night's data alone, else UG NOT CONFIRMED and the swap programme stops; colour verdicts and qualifying pairs (400+ arm-B deck-games) reported as the gates' baseline; pull reported, not judged; no swap registered or made",
-   "cpu": "heavy",
-   "phase": "commands 5/5",
-   "started": "2026-10-24T00:14:37-04:00",
-   "elapsed": 6428,
-   "done": 14400,
-   "total": null,
-   "unit": "games",
-   "ratePerHour": 9313.5,
-   "eta": null,
-   "workers": 5,
-   "workersMax": 6,
-   "cores": 1,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-10-24T02:01:30-04:00",
-   "memGb": 0,
-   "live": {
+   "status": "done",
+   "finished": "2026-10-24T02:01:58-04:00",
+   "headline": "played 14400 · engine_errors 0 · g0.code 0 · g0.ug.est 0.453 · g0.ug.lo 0.406 · g0.ug.hi 0.5 · g0.ug.n 470 · g0.nColoursOff 0 · g0.nQualifying 7 · g0.nPairsOff 0 · bal.verdict.code 1",
+   "numbers": {
     "played": 14400,
     "engine_errors": 0,
-    "g0.code": -9,
-    "bal.verdict.code": -9,
-    "armed": 1,
-    "balstrict": 0,
-    "cd.cardShares.all.max": 0.1835,
-    "cd.cardShares.all.median": 0.1495,
-    "cd.cardShares.cards": 180,
-    "cd.cardShares.k1.ofAdmitting.max": 0.9015,
-    "cd.cardShares.k1.ofAdmitting.median": 0.8099,
-    "cd.cardShares.k1.ofDecks.max": 0.2028,
-    "cd.cardShares.k1.ofDecks.median": 0.1538,
-    "cd.cardShares.k2.ofAdmitting.max": 1,
-    "cd.cardShares.k2.ofAdmitting.median": 0.3902,
-    "cd.cardShares.k2.ofDecks.max": 0.1814,
-    "cd.cardShares.k2.ofDecks.median": 0.1479,
-    "cd.cardShares.k3.ofAdmitting.max": 0.9277,
-    "cd.cardShares.k3.ofAdmitting.median": 0.2486,
-    "cd.cardShares.k3.ofDecks.max": 0.2925,
-    "cd.cardShares.k3.ofDecks.median": 0.1431,
-    "cd.colourlessShare": 0.1139,
-    "cd.coloursWith3.c0": 0,
-    "cd.coloursWith3.c1": 841,
-    "cd.coloursWith3.c2": 799,
-    "cd.coloursWith3.c3": 360,
-    "cd.coloursWith3.c4": 0,
-    "cd.coloursWith3.c5": 0,
-    "cd.count": 2000,
-    "cd.decksAllCastable": 2000,
-    "cd.decksOf40": 2000,
-    "cd.decksRedrawn": 28,
-    "cd.mainShare.eq100": 719,
-    "cd.mainShare.lt40": 27,
-    "cd.mainShare.s40_50": 140,
-    "cd.mainShare.s50_60": 301,
-    "cd.mainShare.s60_70": 294,
-    "cd.mainShare.s70_80": 203,
-    "cd.mainShare.s80_90": 199,
-    "cd.mainShare.s90_100": 117
-   },
-   "liveHeadline": [
-    "played",
-    "engine_errors",
-    "g0.code",
-    "bal.verdict.code"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-24T01:50:53-04:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 23.3
-    },
-    {
-     "at": "2026-10-24T01:52:05-04:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-24T01:57:15-04:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J159-run5"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+    "g0.code": 0,
+    "g0.ug.est": 0.4532,
+    "g0.ug.lo": 0.4057,
+    "g0.ug.hi": 0.5,
+    "g0.ug.n": 470,
+    "g0.nColoursOff": 0,
+    "g0.nQualifying": 7,
+    "g0.nPairsOff": 0,
+    "bal.verdict.code": 1
+   }
+  },
   {
    "publicTitle": null,
    "publicEst": null,
@@ -901,25 +829,6 @@
    "headline": "",
    "numbers": {},
    "detail": "the job file was removed from pc-jobs"
-  },
-  {
-   "publicTitle": "Archive nights 1 and 2",
-   "publicEst": "~2 h",
-   "id": "J108",
-   "title": "Move queue nights 1 and 2 to the cold drive (succeeds J070): one verified tar.zst a key folder plus each night's quarantine folder on /mnt/e/forgecoach-archive, an independent SHA-256 pass over every archive, and only then the hot copies deleted (D378); night 1's hold lifted",
-   "status": "done",
-   "finished": "2026-10-07T16:57:18-04:00",
-   "headline": "n1.members 40003 · n2.members 40003 · n1.hot 3302358295 · n1.archive 563555595 · n2.hot 3362639807 · n2.archive 564817166 · before.rootFreeGb 42.4 · after.rootFreeGb 49.34",
-   "numbers": {
-    "n1.members": 40003,
-    "n2.members": 40003,
-    "n1.hot": 3302358295,
-    "n1.archive": 563555595,
-    "n2.hot": 3362639807,
-    "n2.archive": 564817166,
-    "before.rootFreeGb": 42.4,
-    "after.rootFreeGb": 49.34
-   }
   }
  ],
  "runner": {

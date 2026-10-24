@@ -1,0 +1,762 @@
+{
+  "profiles": {
+    "lab": {
+      "v": 1,
+      "run": "lab",
+      "cube": "omega-cube-180",
+      "drafter": null,
+      "seedBase": 1661,
+      "drafts": 2000,
+      "decks": 4000,
+      "skippedDrafts": 0,
+      "forgeBuilt": 0,
+      "notInCube": 0,
+      "unknown": 0,
+      "byK": [
+        0,
+        2,
+        3836,
+        162,
+        0,
+        0
+      ],
+      "pairs": 4000
+    },
+    "hp": {
+      "v": 1,
+      "run": "hp",
+      "cube": "omega-cube-180",
+      "drafter": {
+        "kind": "human-picks",
+        "seat": "A",
+        "file": "../ForgeCoach/public/cubes/omega-cube-180.picks.json",
+        "sha": "9ee28421c115570839e46ab270288ec6b982db18cc467bb5899b436ae6901b23",
+        "cards": 180,
+        "covered": 105,
+        "fallback": {
+          "intercept": -2.8729974909306146,
+          "slope": 0.0423417318659016,
+          "n": 105,
+          "r": 0.6056723899899558
+        }
+      },
+      "seedBase": 1662,
+      "drafts": 600,
+      "decks": 1200,
+      "skippedDrafts": 0,
+      "forgeBuilt": 0,
+      "notInCube": 0,
+      "unknown": 0,
+      "byK": [
+        0,
+        1,
+        1104,
+        95,
+        0,
+        0
+      ],
+      "pairs": 1200
+    },
+    "fr": {
+      "v": 1,
+      "run": "fr",
+      "cube": "omega-cube-180",
+      "drafter": {
+        "kind": "forge-ranks",
+        "seat": "A",
+        "weights": {
+          "synergy": 0,
+          "lean": 0,
+          "commitAt": 0.04
+        },
+        "cards": 180,
+        "ranked": 180,
+        "differ": 0
+      },
+      "seedBase": 1663,
+      "drafts": 600,
+      "decks": 1200,
+      "skippedDrafts": 0,
+      "forgeBuilt": 0,
+      "notInCube": 0,
+      "unknown": 0,
+      "byK": [
+        0,
+        0,
+        1167,
+        33,
+        0,
+        0
+      ],
+      "pairs": 1200
+    }
+  },
+  "censusDecks": {
+    "v": 2,
+    "decision": "D456",
+    "cube": "cubes/omega-cube-180.md",
+    "cubeName": "omega-cube-180",
+    "cubeSha": "f6432a75975e",
+    "group": "cube:omega-cube-180",
+    "seed": 1665,
+    "count": 2000,
+    "ks": [
+      1,
+      2,
+      3
+    ],
+    "pool": {
+      "listed": 180,
+      "drawable": 180,
+      "nonland": 158,
+      "lands": 22,
+      "notInLibrary": [],
+      "unsupported": [],
+      "aiRemoved": [],
+      "basicsListed": []
+    },
+    "colourlessShare": 0.1139,
+    "rejections": 28,
+    "makeupRedraws": 0,
+    "decksRedrawn": 28,
+    "makeupK": {
+      "k1": 715,
+      "k2": 656,
+      "k3": 629
+    },
+    "decksOf40": 2000,
+    "decksAllCastable": 2000,
+    "coloursWith3": {
+      "c0": 0,
+      "c1": 841,
+      "c2": 799,
+      "c3": 360,
+      "c4": 0,
+      "c5": 0
+    },
+    "mainShare": {
+      "lt40": 27,
+      "s40_50": 140,
+      "s50_60": 301,
+      "s60_70": 294,
+      "s70_80": 203,
+      "s80_90": 199,
+      "s90_100": 117,
+      "eq100": 719
+    },
+    "means": {
+      "lands": 17.4485,
+      "fixers": 2.285,
+      "fixersReal": 2.285,
+      "nColours": 1.944,
+      "creatures": 13.4135,
+      "xSpells": 0.3025,
+      "cardFlow": 0.8565,
+      "avgMv": 3.2628
+    },
+    "mvHist": [
+      910,
+      7241,
+      8911,
+      9367,
+      8271,
+      4948,
+      5455
+    ],
+    "repeatCap": {
+      "k": 1,
+      "maxShare": 0.25,
+      "floor": 10,
+      "rounds": 1,
+      "k1Decks": 715,
+      "perCard": 178,
+      "cardsAtCap": [],
+      "decksDrawnUnderCap": 0,
+      "maxK1Uses": 145,
+      "maxShareOfK1": 0.2028
+    },
+    "cardShares": {
+      "file": "card-shares.tsv",
+      "cards": 180,
+      "neverDrawn": [
+        "Mishra's Factory",
+        "Mutavault"
+      ],
+      "all": {
+        "max": 0.1835,
+        "median": 0.1495,
+        "top": [
+          [
+            "Brazen Borrower",
+            0.1835
+          ],
+          [
+            "Ponder",
+            0.1795
+          ],
+          [
+            "Sower of Temptation",
+            0.1775
+          ],
+          [
+            "Snapcaster Mage",
+            0.1765
+          ],
+          [
+            "Fact or Fiction",
+            0.176
+          ],
+          [
+            "Preordain",
+            0.176
+          ],
+          [
+            "Murktide Regent",
+            0.174
+          ],
+          [
+            "Brainstorm",
+            0.1725
+          ],
+          [
+            "Control Magic",
+            0.172
+          ],
+          [
+            "Jace, the Mind Sculptor",
+            0.172
+          ]
+        ]
+      },
+      "k1": {
+        "ofDecks": {
+          "max": 0.2028,
+          "median": 0.1538,
+          "top": [
+            [
+              "Preordain",
+              0.2028
+            ],
+            [
+              "Vendilion Clique",
+              0.2
+            ],
+            [
+              "Counterspell",
+              0.1972
+            ],
+            [
+              "Snapcaster Mage",
+              0.1972
+            ],
+            [
+              "Brainstorm",
+              0.1958
+            ],
+            [
+              "Brazen Borrower",
+              0.1958
+            ],
+            [
+              "Man-o'-War",
+              0.1958
+            ],
+            [
+              "Ponder",
+              0.1958
+            ],
+            [
+              "Venser, Shaper Savant",
+              0.1958
+            ],
+            [
+              "Sword of Light and Shadow",
+              0.1944
+            ]
+          ]
+        },
+        "ofAdmitting": {
+          "max": 0.9015,
+          "median": 0.8099,
+          "top": [
+            [
+              "Bitterblossom",
+              0.9015
+            ],
+            [
+              "Dragon's Rage Channeler",
+              0.9008
+            ],
+            [
+              "Shriekmaw",
+              0.8939
+            ],
+            [
+              "Arc Trail",
+              0.8926
+            ],
+            [
+              "Bloodghast",
+              0.8788
+            ],
+            [
+              "Sheoldred, the Apocalypse",
+              0.8788
+            ],
+            [
+              "Glorybringer",
+              0.876
+            ],
+            [
+              "Garruk Wildspeaker",
+              0.8732
+            ],
+            [
+              "Tarmogoyf",
+              0.8732
+            ],
+            [
+              "Kokusho, the Evening Star",
+              0.8712
+            ]
+          ]
+        }
+      },
+      "k2": {
+        "ofDecks": {
+          "max": 0.1814,
+          "median": 0.1479,
+          "top": [
+            [
+              "Bonecrusher Giant",
+              0.1814
+            ],
+            [
+              "Brazen Borrower",
+              0.1799
+            ],
+            [
+              "Dark Confidant",
+              0.1799
+            ],
+            [
+              "Fact or Fiction",
+              0.1799
+            ],
+            [
+              "Bitterblossom",
+              0.1784
+            ],
+            [
+              "Hellrider",
+              0.1784
+            ],
+            [
+              "Ponder",
+              0.1784
+            ],
+            [
+              "Cryptic Command",
+              0.1768
+            ],
+            [
+              "Doom Blade",
+              0.1768
+            ],
+            [
+              "Seasoned Pyromancer",
+              0.1768
+            ]
+          ]
+        },
+        "ofAdmitting": {
+          "max": 1,
+          "median": 0.3902,
+          "top": [
+            [
+              "Savannah",
+              1
+            ],
+            [
+              "Arid Mesa",
+              0.9844
+            ],
+            [
+              "Bloodstained Mire",
+              0.975
+            ],
+            [
+              "Bayou",
+              0.9636
+            ],
+            [
+              "Taiga",
+              0.9615
+            ],
+            [
+              "Marsh Flats",
+              0.9595
+            ],
+            [
+              "Plateau",
+              0.9531
+            ],
+            [
+              "Badlands",
+              0.95
+            ],
+            [
+              "Misty Rainforest",
+              0.9459
+            ],
+            [
+              "Tropical Island",
+              0.9459
+            ]
+          ]
+        }
+      },
+      "k3": {
+        "ofDecks": {
+          "max": 0.2925,
+          "median": 0.1431,
+          "top": [
+            [
+              "Flooded Strand",
+              0.2925
+            ],
+            [
+              "Tundra",
+              0.2909
+            ],
+            [
+              "Scalding Tarn",
+              0.2814
+            ],
+            [
+              "Plateau",
+              0.2798
+            ],
+            [
+              "Windswept Heath",
+              0.2798
+            ],
+            [
+              "Volcanic Island",
+              0.2782
+            ],
+            [
+              "Misty Rainforest",
+              0.2766
+            ],
+            [
+              "Savannah",
+              0.2766
+            ],
+            [
+              "Arid Mesa",
+              0.275
+            ],
+            [
+              "Tropical Island",
+              0.2734
+            ]
+          ]
+        },
+        "ofAdmitting": {
+          "max": 0.9277,
+          "median": 0.2486,
+          "top": [
+            [
+              "Bayou",
+              0.9277
+            ],
+            [
+              "Underground Sea",
+              0.9227
+            ],
+            [
+              "Wooded Foothills",
+              0.9011
+            ],
+            [
+              "Misty Rainforest",
+              0.8969
+            ],
+            [
+              "Scalding Tarn",
+              0.8939
+            ],
+            [
+              "Verdant Catacombs",
+              0.8916
+            ],
+            [
+              "Windswept Heath",
+              0.8889
+            ],
+            [
+              "Tropical Island",
+              0.8866
+            ],
+            [
+              "Marsh Flats",
+              0.8865
+            ],
+            [
+              "Polluted Delta",
+              0.884
+            ]
+          ]
+        }
+      }
+    },
+    "censusSha": "260724cbc9f8",
+    "poolSha": "ccd1123660dd",
+    "scripts": "/home/justin-a/forge/res/cardsfolder/cardsfolder.zip",
+    "noScript": [],
+    "decksSha": "8ccc0dc151e0"
+  },
+  "games": {
+    "games/B-lab": {
+      "v": 1,
+      "games": 4000,
+      "decisive": 4000,
+      "draws": 0,
+      "timeouts": 0,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5238,
+      "meanTurns": 18.57,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 4000,
+          "ms": 1577251,
+          "workers": 6,
+          "gamesPerHour": 9130,
+          "at": "2026-10-24T04:52:42.157Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 4000,
+        "sizes": {
+          "rows": {
+            "games": 4000,
+            "total": 249463001,
+            "mean": 62366,
+            "median": 56788,
+            "p90": 103252,
+            "max": 258772
+          },
+          "ledger": {
+            "games": 4000,
+            "total": 6841311,
+            "mean": 1710,
+            "median": 1661,
+            "p90": 2221,
+            "max": 4645
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 186529,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 1550,
+          "leaks": 0,
+          "controls": 1348,
+          "controlMoved": 1330,
+          "candidates": 1550
+        },
+        "redaction": null,
+        "problems": []
+      }
+    },
+    "games/B-hp": {
+      "v": 1,
+      "games": 1200,
+      "decisive": 1200,
+      "draws": 0,
+      "timeouts": 0,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5608,
+      "meanTurns": 18.39,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 1200,
+          "ms": 406606,
+          "workers": 6,
+          "gamesPerHour": 10625,
+          "at": "2026-10-24T04:59:31.317Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 1200,
+        "sizes": {
+          "rows": {
+            "games": 1200,
+            "total": 71618898,
+            "mean": 59682,
+            "median": 53814,
+            "p90": 97193,
+            "max": 200297
+          },
+          "ledger": {
+            "games": 1200,
+            "total": 2031289,
+            "mean": 1693,
+            "median": 1657,
+            "p90": 2212,
+            "max": 3373
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 53726,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 418,
+          "leaks": 0,
+          "controls": 367,
+          "controlMoved": 361,
+          "candidates": 418
+        },
+        "redaction": null,
+        "problems": []
+      }
+    },
+    "games/B-fr": {
+      "v": 1,
+      "games": 1200,
+      "decisive": 1200,
+      "draws": 0,
+      "timeouts": 0,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.5175,
+      "meanTurns": 18.63,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 1200,
+          "ms": 447073,
+          "workers": 6,
+          "gamesPerHour": 9663,
+          "at": "2026-10-24T05:06:59.603Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 1200,
+        "sizes": {
+          "rows": {
+            "games": 1200,
+            "total": 74397751,
+            "mean": 61998,
+            "median": 56309,
+            "p90": 98187,
+            "max": 265108
+          },
+          "ledger": {
+            "games": 1200,
+            "total": 2054887,
+            "mean": 1712,
+            "median": 1661,
+            "p90": 2213,
+            "max": 5165
+          }
+        },
+        "rowsCheck": {
+          "files": 6,
+          "rows": 55742,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 448,
+          "leaks": 0,
+          "controls": 389,
+          "controlMoved": 387,
+          "candidates": 448
+        },
+        "redaction": null,
+        "problems": []
+      }
+    },
+    "census/games": {
+      "v": 1,
+      "games": 8000,
+      "decisive": 7992,
+      "draws": 8,
+      "timeouts": 6,
+      "engineErrors": 0,
+      "retried": 0,
+      "gameErrors": 0,
+      "engineErrorRate": 0,
+      "firstPlayerWinRate": 0.548,
+      "meanTurns": 17.62,
+      "searchSeats": 0,
+      "sessions": [
+        {
+          "games": 8000,
+          "ms": 3259025,
+          "workers": 6,
+          "gamesPerHour": 8837,
+          "at": "2026-10-24T06:01:21.584Z"
+        }
+      ],
+      "record": {
+        "mode": "rows",
+        "games": 8000,
+        "sizes": {
+          "rows": {
+            "games": 8000,
+            "total": 442337625,
+            "mean": 55292,
+            "median": 49775,
+            "p90": 89408,
+            "max": 273888
+          },
+          "ledger": {
+            "games": 8000,
+            "total": 13244195,
+            "mean": 1656,
+            "median": 1605,
+            "p90": 2160,
+            "max": 4752
+          }
+        },
+        "rowsCheck": {
+          "files": 7,
+          "rows": 339076,
+          "gamesIdChecked": 0,
+          "problems": 0
+        },
+        "leakCheck": {
+          "checks": 2386,
+          "leaks": 0,
+          "controls": 2014,
+          "controlMoved": 1974,
+          "candidates": 2386
+        },
+        "redaction": null,
+        "problems": []
+      }
+    }
+  }
+}

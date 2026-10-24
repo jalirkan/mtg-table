@@ -1,0 +1,38 @@
+==== J159 run5 started 2026-10-24T02:01:44-04:00 in unit lab-J159-run5, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+UG NOT CONFIRMED: UG's arm-B (Blab) payoff 0.453 (0.406-0.500), 470 deck-games does not sit below .5; the swap programme stops ("If not, stop. There is nothing to swap.").
+**UG NOT CONFIRMED: UG's arm-B (Blab) payoff 0.453 (0.406-0.500), 470 deck-games does not sit below .5; the swap programme stops ("If not, stop. There is nothing to swap.").**
+
+J145, for reference only (never pooled): UG 0.423 (0.382-0.465), 544 deck-games.
+
+## The three gates on this night (the swap rule's confirmation gates; only the first decides tonight)
+
+| gate | this night |
+|---|---|
+| 1. UG's arm-B interval vs .5 (decides) | 0.453 (0.406-0.500), 470 deck-games: not below .5 (UG qualifies at 400+ deck-games; label UNCLEAR) |
+| 2. any colour OFF (Blab, band [.45, .55]) | none |
+| 3. any qualifying pair (400+ arm-B deck-games) OFF | none of WU, WB, WR, WG, UB, UR, UG |
+
+| colour | rate (interval) | n | label | J145 |
+|---|---|---|---|---|
+| W | 0.505 (0.485-0.524) | 2898 | EVEN | EVEN |
+| U | 0.477 (0.458-0.496) | 2804 | EVEN | EVEN |
+| B | 0.501 (0.481-0.520) | 2604 | EVEN | EVEN |
+| R | 0.530 (0.509-0.552) | 2220 | UNCLEAR | EVEN |
+| G | 0.481 (0.458-0.503) | 1930 | EVEN | UNCLEAR |
+
+| pair | rate (interval) | deck-games | qualifies (400+) | label |
+|---|---|---|---|---|
+| WU | 0.492 (0.466-0.519) | 1568 | yes | EVEN |
+| WB | 0.544 (0.502-0.585) | 616 | yes | UNCLEAR |
+| WR | 0.530 (0.496-0.565) | 826 | yes | UNCLEAR |
+| WG | 0.473 (0.433-0.511) | 662 | yes | UNCLEAR |
+| UB | 0.483 (0.456-0.508) | 1578 | yes | EVEN |
+| UR | 0.511 (0.475-0.545) | 788 | yes | EVEN |
+| UG | 0.453 (0.406-0.500) | 470 | yes | UNCLEAR |
+| BR | 0.582 (0.522-0.647) | 280 | no | OFF |
+| BG | 0.487 (0.434-0.540) | 388 | no | UNCLEAR |
+| RG | 0.542 (0.493-0.589) | 380 | no | UNCLEAR |
+
+Real drafts (pull is reported, not judged): 3 Omega deck(s)
+
+No swap is registered or made by this job.

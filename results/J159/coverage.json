@@ -1,0 +1,39 @@
+{
+  "file": "omega-cube-180.picks.json",
+  "covered": 105,
+  "cards": 180,
+  "bySection": {
+    "White": {
+      "covered": 15,
+      "cards": 24
+    },
+    "Blue": {
+      "covered": 13,
+      "cards": 24
+    },
+    "Black": {
+      "covered": 11,
+      "cards": 24
+    },
+    "Red": {
+      "covered": 14,
+      "cards": 24
+    },
+    "Green": {
+      "covered": 13,
+      "cards": 24
+    },
+    "Gold": {
+      "covered": 12,
+      "cards": 20
+    },
+    "Colorless": {
+      "covered": 7,
+      "cards": 18
+    },
+    "Lands": {
+      "covered": 20,
+      "cards": 22
+    }
+  }
+}

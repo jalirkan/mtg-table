@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-24T02:01:45-04:00
+- time: 2026-10-24T02:01:59-04:00
 - runner: db496097, up since 2026-10-23T17:22:52-04:00
-- running: J159 commands 5/5, 14400 games, 9313.5/h, 5 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.34; memory 5.1/30.5 GB, swap 3851 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 5.16; memory 5.1/30.5 GB, swap 3850 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J158 skipped at 2026-10-24T00:14:37-04:00
+- last finished: J159 done at 2026-10-24T02:01:58-04:00: played 14400 · engine_errors 0 · g0.code 0 · g0.ug.est 0.453 · g0.ug.lo 0.406 · g0.ug.hi 0.5 · g0.ug.n 470 · g0.nColoursOff 0 · g0.nQualifying 7 · g0.nPairsOff 0 · bal.verdict.code 1
 
 ## Messages
+
+- FOLLOW-UP READY [J159@2026-10-24T02:01:58-04:00] (the runner, for the cloud session): J159 is done; write and post the template morning-read. It decides: whether UG's low lab-vs-lab payoff, J145's one pair candidate (.423, .382-.465, 544 deck-games), holds on fresh seeds: UG CONFIRMED or UG NOT CONFIRMED by the swap rule's night-0 reading below, on this night's data alone. If NOT CONFIRMED the swap programme stops (there is nothing to swap). If CONFIRMED, night 1 (one swap, then a fresh-seed re-measure) may be written; this job registers no swap and performs none. J145's colour verdict (BALANCED ON PAYOFF / NOT BALANCED ON PAYOFF) is read again, as the "no colour OFF" gate's baseline; pull is reported, not judged. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J145@2026-10-22T10:45:30-04:00] (the runner, for the cloud session): J145 is done; write and post the template morning-read. It decides: whether Omega is BALANCED ON PAYOFF at colour level by the registered rule below (no colour OFF on the lab-vs-lab drafts' payoff); pull is reported and NOT judged tonight (the rule's registered change), and every other reading (pairs, triples, the pool's payoff, A vs C, closeness) reported as a candidate (D447 point 9). No card is swapped on this night: the swap / evolve-objective rule is written after this report, as its own pre-registration. Ledger: LEDGER.md. Delete this line once posted.
 

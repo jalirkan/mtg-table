@@ -1,0 +1,173 @@
+{
+  "v": 1,
+  "job": "J159",
+  "rule": "study/omega-swap-rule.md, night 0",
+  "arm": "Blab",
+  "pair": "UG",
+  "minPairDeckGames": 400,
+  "band": [
+    0.45,
+    0.55
+  ],
+  "j145": {
+    "pair": "UG",
+    "est": 0.423,
+    "lo": 0.382,
+    "hi": 0.465,
+    "n": 544,
+    "colours": {
+      "W": "EVEN",
+      "U": "EVEN",
+      "B": "EVEN",
+      "R": "EVEN",
+      "G": "UNCLEAR"
+    }
+  },
+  "ug": {
+    "n": 470,
+    "est": 0.4532,
+    "lo": 0.4057,
+    "hi": 0.5,
+    "label": "UNCLEAR"
+  },
+  "colours": {
+    "W": {
+      "n": 2898,
+      "est": 0.5052,
+      "lo": 0.4855,
+      "hi": 0.5242,
+      "label": "EVEN"
+    },
+    "U": {
+      "n": 2804,
+      "est": 0.4768,
+      "lo": 0.4577,
+      "hi": 0.4957,
+      "label": "EVEN"
+    },
+    "B": {
+      "n": 2604,
+      "est": 0.5015,
+      "lo": 0.481,
+      "hi": 0.5204,
+      "label": "EVEN"
+    },
+    "R": {
+      "n": 2220,
+      "est": 0.5302,
+      "lo": 0.5086,
+      "hi": 0.5517,
+      "label": "UNCLEAR"
+    },
+    "G": {
+      "n": 1930,
+      "est": 0.4808,
+      "lo": 0.4584,
+      "hi": 0.5032,
+      "label": "EVEN"
+    }
+  },
+  "coloursOff": [],
+  "pairs": {
+    "WU": {
+      "n": 1568,
+      "est": 0.4923,
+      "lo": 0.4656,
+      "hi": 0.5195,
+      "label": "EVEN",
+      "qualifies": true
+    },
+    "WB": {
+      "n": 616,
+      "est": 0.5438,
+      "lo": 0.5016,
+      "hi": 0.5849,
+      "label": "UNCLEAR",
+      "qualifies": true
+    },
+    "WR": {
+      "n": 826,
+      "est": 0.5303,
+      "lo": 0.4962,
+      "hi": 0.5646,
+      "label": "UNCLEAR",
+      "qualifies": true
+    },
+    "WG": {
+      "n": 662,
+      "est": 0.4728,
+      "lo": 0.4328,
+      "hi": 0.5106,
+      "label": "UNCLEAR",
+      "qualifies": true
+    },
+    "UB": {
+      "n": 1578,
+      "est": 0.4829,
+      "lo": 0.4562,
+      "hi": 0.5076,
+      "label": "EVEN",
+      "qualifies": true
+    },
+    "UR": {
+      "n": 788,
+      "est": 0.5114,
+      "lo": 0.4749,
+      "hi": 0.5453,
+      "label": "EVEN",
+      "qualifies": true
+    },
+    "UG": {
+      "n": 470,
+      "est": 0.4532,
+      "lo": 0.4057,
+      "hi": 0.5,
+      "label": "UNCLEAR",
+      "qualifies": true
+    },
+    "BR": {
+      "n": 280,
+      "est": 0.5821,
+      "lo": 0.5224,
+      "hi": 0.6466,
+      "label": "OFF",
+      "qualifies": false
+    },
+    "BG": {
+      "n": 388,
+      "est": 0.4871,
+      "lo": 0.4343,
+      "hi": 0.5402,
+      "label": "UNCLEAR",
+      "qualifies": false
+    },
+    "RG": {
+      "n": 380,
+      "est": 0.5421,
+      "lo": 0.4929,
+      "hi": 0.5886,
+      "label": "UNCLEAR",
+      "qualifies": false
+    }
+  },
+  "qualifyingPairs": [
+    "WU",
+    "WB",
+    "WR",
+    "WG",
+    "UB",
+    "UR",
+    "UG"
+  ],
+  "pairsOff": [],
+  "verdict": "UG NOT CONFIRMED",
+  "code": 0,
+  "nColoursOff": 0,
+  "nQualifying": 7,
+  "nPairsOff": 0,
+  "real": {
+    "decks": 3,
+    "gap": false,
+    "note": null
+  }
+}
