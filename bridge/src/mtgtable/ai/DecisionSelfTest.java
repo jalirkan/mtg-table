@@ -680,6 +680,41 @@ public final class DecisionSelfTest {
                 "G6 violation: an own pick at X = 1, or a play with no {X}, is not one");
         check(!Explorer.zeroXViolation(false, true, 0),
                 "G6 positive control: Forge's own answer at X = 0 is Forge's X, never a violation");
+        // #192's review: the seat draws X onto the real abilities it lists (Crypt Rats, never sized; an
+        // ability Forge had sized at 2; a Fireball), so after the pick the two it did not pick carry
+        // their own X again and only the pick keeps its draw -- until the engine refuses it
+        final ExploreMath mx = new ExploreMath(r, 17);
+        final Object rats = new Object();
+        final Object sized = new Object();
+        final Object fireball = new Object();
+        final java.util.Map<Object, Integer> realX = new java.util.HashMap<>();
+        final java.util.Map<Object, Integer> drawn = new java.util.IdentityHashMap<>();
+        final Runnable list = () -> {
+            realX.put(rats, null);
+            realX.put(sized, 2);
+            realX.put(fireball, null);
+            for (final Object ab : List.of(rats, sized, fireball)) {
+                drawn.putIfAbsent(ab, realX.get(ab));
+                realX.put(ab, Explorer.drawX(3, mx));
+            }
+        };
+        list.run();
+        final int back = Explorer.restoreX(drawn, fireball, realX::put, true);
+        check(back == 2 && realX.get(rats) == null && realX.get(sized) == 2 && realX.get(fireball) >= 1
+                && drawn.keySet().equals(java.util.Set.of(fireball)),
+                "G6: after the pick, each unpicked X ability carries its original X (null, 2) and the pick its draw: " + realX);
+        Explorer.restoreX(drawn, null, realX::put, true);
+        check(realX.get(fireball) == null && drawn.isEmpty(), "G6: a pick the engine refused gets its original X back");
+        list.run();
+        Explorer.restoreX(drawn, sized, realX::put, true);
+        final int drew = realX.get(sized);
+        check(Explorer.restoreX(drawn, null, realX::put, false) == 0 && realX.get(sized) == drew && drew >= 1
+                && realX.get(rats) == null && drawn.isEmpty(),
+                "G6: a pick the engine played keeps its drawn X (a spell's X is read at resolution), nothing else does");
+        list.run();
+        Explorer.restoreX(drawn, null, realX::put, true);
+        check(realX.get(rats) == null && realX.get(sized) == 2 && realX.get(fireball) == null,
+                "G6: a pass (or Forge's own answer) leaves every listed X ability as it was");
     }
 
     /**

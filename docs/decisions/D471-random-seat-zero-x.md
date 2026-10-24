@@ -47,11 +47,36 @@ Why X was 0:
    Forge's answer) whose mana cost has an {X} (`SpellAbility.costHasManaX`).
    - The listing reads the most X the seat can pay now from Forge's own function,
      `ComputerUtilCost.setMaxXValue`. That is its payable mana under any `XColor` (Crypt Rats: black
-     only), `XMax`, the script's `AIXMax`, and the non-mana X limits.
+     only), `XMax`, the script's `AIXMax`, and the non-mana X limits. Its signature is
+     `setMaxXValue(SpellAbility sa, Player ai, boolean effect)` (`ComputerUtilCost.java:671` at the
+     `forge-2.0.14` tag). The third argument, `effect`, says whether the cost is paid as part of an effect
+     (Forge's callers pass `sa.isTrigger()`) rather than to cast or activate: it goes down to
+     `determineLeftoverMana`, the cost checks under it and the non-mana X limit, and with it true Forge
+     applies no cost increase or reduction (`CostAdjustment.java:37-41` and `:173-179`). It is not a
+     choice between the cost's X and an effect's own X: both are the play's one `xManaCostPaid`. The seat passes `false`, as Forge's
+     `canPlaySa` does for a play that is not a trigger (`sa.isTrigger()`, `AiController.java:924`).
+   - **X in a non-mana cost is outside G6 by design.** A play whose X is only in a non-mana cost part
+     (`costHasManaX()` false: sacrifice X, remove X counters, pay X life) is listed as before, with no X
+     drawn and no `zeroX` verdict. Such an X costs something real even when the seat does not size it, so
+     it cannot make the free loop G6 exists to end.
    - If that is 0, the play is **left out** of the listing and the removal is counted (`zeroXLeftOut`).
    - Otherwise X is drawn **uniformly from 1 to that maximum** (`Explorer.drawX`, the seat's own seeded
      stream) and set on the play. Like the play's random targets, it is set before the "can pay" check.
-   - The X on a play left out is put back as it was.
+   - The X each listed play carried is noted before the draw (`setMaxXValue` writes one too), and **no
+     play the seat listed and did not pick keeps a drawn X**. A play left out, or listed and not picked,
+     gets its old X back when the pick is made (`Explorer.restoreX`, at the end of `randomPriority`). The
+     pick keeps its draw until the engine has played it, and gets its old X back if the engine refuses
+     it (`Explorer.played`). This was added after #192's review: the draw is written on the real
+     `SpellAbility`, so an unpicked play kept a random X into the next priority window.
+   - **Does Forge's AI trust an X already on a play?** Mostly not. Its decision path sizes X again before
+     it plays: `canPlaySa`'s generic path (`AiController.java:924`) and the API AIs (`DamageAllAi.java:35`)
+     call `setMaxXValue`, which writes X unconditionally (`ComputerUtilCost.java:736`), and
+     `canPlayAndPayForFace` runs `canPayCost` only after `canPlaySa` (`AiController.java:855-861`). But a
+     cost check made without that sizing prices X from the play's own value
+     (`ComputerUtilMana.calculateManaCost`, `ComputerUtilMana.java:1238`, when testing with no extra mana),
+     and `predictSpellToCastInMain2` makes one (`canPayCost(sa, player, false)` on a permanent spell,
+     `AiController.java:752`). So a stale random X on a Walking Ballista or Hangarback Walker could change
+     that prediction. The restore takes the question away rather than leaving it to Forge's paths.
    - When the seat picks such a play, the pick is counted (`xDrawn`).
    - **Forge's own answer keeps Forge's X**, 0 included. It is always among the options, so a Chalice at 0
      chosen by Forge's logic is still played.
@@ -89,6 +114,11 @@ Why X was 0:
      The first replay of this branch showed exactly that: a `zeroX` of 1 for a Crypt Rats item at X = 1.
    - Each violation is counted as `zeroX` (`Explorer.played`, `zeroXViolation`). A play that is not on the
      stack after the engine accepted it gives no verdict.
+   - **So `zeroX` can under-count.** The seat's own X play that the engine accepted but that never
+     reached the stack, or left it before the read (countered as it was cast, a special action), is not
+     judged, and a violation there would not be counted. A 0 is "no violation among the plays that
+     reached the stack", not "none at all". The listing never offers X = 0 (`zeroXLeftOut`), which is the
+     check that does not depend on the read.
    - The three counts are in the seat's `decisions` summary (`explore.guardrails`, protocol **M73**), as
      G3's and G5's are (M71). `tools/check-redaction.mjs` accepts the three names.
    - `guardrailCheck` sums them over phase A's logs and the random branches' logs.
@@ -161,3 +191,9 @@ Why X was 0:
   - The first run, with the G5 leg still at 6 rollouts, failed on exactly that leg (refused 0). Its G6
     counts there were 7 drawn, 16 left out and 0 paid at 0.
 - No full gate (the lane's instructions), and J158 was not re-run.
+- **After #192's review** (the X restore, on main `0e0ec412`): `DecisionSelfTest` 172 checks, 0 failures
+  (four new: after a pick the unpicked X abilities carry their original X, null and 2, and the pick its
+  draw; a refused pick gets its X back; a played pick keeps its draw; a pass leaves every listed X as it
+  was). `tools/cubelab.sh atlas-selftest --jobs 1`: OK in 3 min 56 s, with the same counts as above (the
+  tax pair's G5 refused 2 and left out 2; the G6 leg drew X 10 times, left out 63 and paid 0 at X = 0):
+  the restore moves no pick and no draw.

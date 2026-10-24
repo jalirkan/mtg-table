@@ -19,11 +19,13 @@
 package mtgtable.ai;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import forge.ai.AiController;
 import forge.ai.ComputerUtilAbility;
@@ -172,6 +174,14 @@ public final class Explorer {
     private String pendingPick;
     /** G6 (D471): the play just returned is the seat's own pick (not Forge's answer) with {X} in its mana cost. */
     private boolean pendingOwnX;
+    /**
+     * G6 (#192's review): every play whose X the seat drew at this decision's
+     * listing, with the X it carried before the draw ({@link #restoreX}).  The
+     * draw is written on the real {@code SpellAbility}, so a listed play the seat
+     * did not pick gets its X back when the pick is made, and the pick keeps
+     * its drawn X only until the engine has played it (back if refused).
+     */
+    private final Map<SpellAbility, Integer> drawnX = new IdentityHashMap<>();
     /** G5: the plays the engine refused to pay for in {@link #refusedWindow}, the priority window they were refused in. */
     private final Set<String> refused = new LinkedHashSet<>();
     private String refusedWindow;
@@ -212,10 +222,13 @@ public final class Explorer {
         pendingPick = null;
         final boolean ownX = pendingOwnX;
         pendingOwnX = false;
+        // G6: a refused pick gets its X back too; a played one keeps it (a spell's X is read at resolution)
+        restoreX(drawnX, null, SpellAbility::setXManaCostPaid, refusedNow);
         if (math.config().random && ownX && !refusedNow) {
             // G6's violation, read back from the play the engine put on the stack: an activated ability
             // goes there as a fresh copy and the original's X is cleared (Forge's MagicStack.add), so the
-            // X is the stack item's.  Not on the stack (nothing to read): no verdict.
+            // X is the stack item's.  Not on the stack (countered on cast, a special action): not judged,
+            // so a miss here under-counts violations (D471).
             final SpellAbility onStack = stackItemOf(seat.getGame(), sa);
             if (onStack != null && zeroXViolation(true, sa.costHasManaX(), onStack.getXManaCostPaid())) {
                 math.guardrail("zeroX");
@@ -311,8 +324,44 @@ public final class Explorer {
         }
     }
 
-    /** The random seat's priority answer, under the guardrails. */
+    /**
+     * G6 (#192's review): put back the X each play in {@code drawn} carried
+     * before the seat drew one, except {@code picked}'s (null: every one), and
+     * forget the restored entries -- {@code drawn} is left holding {@code picked}
+     * alone, if it was drawn.  {@code apply} false forgets every entry and puts
+     * nothing back (a pick the engine played keeps its X).  Generic so the
+     * self-test runs it engine-free; returns how many were put back.
+     */
+    static <T> int restoreX(final Map<T, Integer> drawn, final T picked, final BiConsumer<T, Integer> set,
+                            final boolean apply) {
+        int n = 0;
+        for (final Map.Entry<T, Integer> e : drawn.entrySet()) {
+            if (apply && e.getKey() != picked) {
+                set.accept(e.getKey(), e.getValue());
+                n++;
+            }
+        }
+        if (apply) {
+            drawn.keySet().removeIf(k -> k != picked);
+        } else {
+            drawn.clear();
+        }
+        return n;
+    }
+
+    /** The random seat's priority answer, under the guardrails; no play it listed and did not pick keeps a drawn X. */
     private List<SpellAbility> randomPriority(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
+        drawnX.clear();
+        List<SpellAbility> out = null;
+        try {
+            out = randomPick(ai, aic, chosen);
+            return out;
+        } finally {
+            restoreX(drawnX, out == null || out.isEmpty() ? null : out.get(0), SpellAbility::setXManaCostPaid, true);
+        }
+    }
+
+    private List<SpellAbility> randomPick(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
         pendingPick = null;
         pendingOwnX = false;
         try {
@@ -418,8 +467,6 @@ public final class Explorer {
             if (out.containsKey(tok)) {
                 continue;
             }
-            Integer xBefore = null;
-            boolean xSet = false;
             try {
                 sa.setActivatingPlayer(ai);
                 if (!sa.canPlay()) {
@@ -427,20 +474,17 @@ public final class Explorer {
                 }
                 if (sa.costHasManaX()) {
                     // G6 (D471): the seat sizes X itself, from 1 to Forge's own maximum; a play
-                    // payable only at X = 0 is left out (it would be a free no-op, Crypt Rats' loop)
-                    xBefore = sa.getXManaCostPaid();
-                    xSet = true;
+                    // payable only at X = 0 is left out (it would be a free no-op, Crypt Rats' loop).
+                    // The X it carried is noted first (setMaxXValue writes one too) and put back
+                    // when the pick is made, unless this play is the pick (restoreX).
+                    drawnX.putIfAbsent(sa, sa.getXManaCostPaid());
                     final int x = drawX(ComputerUtilCost.setMaxXValue(sa, ai, false), math);
                     if (x < 1) {
-                        sa.setXManaCostPaid(xBefore);
                         continue;
                     }
                     sa.setXManaCostPaid(x);
                 }
                 if (!ComputerUtilCost.canPayCost(sa, ai, false) || !randomTargets(sa, ai)) {
-                    if (xSet) {
-                        sa.setXManaCostPaid(xBefore);
-                    }
                     continue;
                 }
                 final List<SpellAbility> one = new ArrayList<>(1);
