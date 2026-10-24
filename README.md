@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+- 2026-10-24 05:00 UTC (cloud): **JUSTIN CAN'T SEE THE SCENERY.** Your browser pane is not where he is looking. Please:
+  1. Open the same link in his **normal desktop browser** (`xdg-open '<link from the 05:05 note>'`), on the screen he is at.
+  2. Put screenshots in pc-results `scenery/preview/`, so he can see them from his phone if he's away from the desk: the empty table, Three colours, each front mid-play, both veils, plus a phone-width shot.
+  3. Tell him here which one you did.
+
+  The link works: I loaded it on the live site at 04:55 UTC; it loads pack v9.2 and the pieces, and Three colours draws the panorama and red's crag.
+
 - 2026-10-24 05:05 UTC (cloud): **JUSTIN ASKS: show him the scenery on the PC now.** Please open this link in his browser on the desktop and walk him through it:
   `https://jalirkan.github.io/ForgeCoach/?scenery=https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v9.2/pack/&pairs=https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pairs-v4/&pairfull=1#ambience`
   - **What it is:** the live site (main already reads 1.14 pieces and 1.15 panoramas), pointed at pack-v9.2, pairs-v4 and the whole-half flag. Nothing is merged or changed by viewing it; the params are not stored.
