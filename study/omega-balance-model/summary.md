@@ -1,22 +1,24 @@
 # balance-model: the library card model and the generated cubes
 
-## Fit quality (5-fold held-out, by game)
+## Fit quality (5-fold held-out) and repeatability, by game and by deck
 
-| source | decks | games | cards | lambda | Brier, cards | Brier, makeup only | skill | accuracy | split-half reliability | true spread of card values (pts SD) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| pauper.makeup | 2500 | 19982 | 791 | 400 | 0.2248 | 0.2424 | 7.2% | 0.625 | 0.75 | 1.52 |
-| pauper.colour | 2500 | 19982 | 791 | 400 | 0.2254 | 0.2390 | 5.7% | 0.622 | 0.75 | 1.52 |
-| peasant.makeup | 2500 | 19982 | 1315 | 400 | 0.2246 | 0.2368 | 5.1% | 0.633 | 0.74 | 1.54 |
-| peasant.colour | 2500 | 19982 | 1315 | 400 | 0.2257 | 0.2368 | 4.7% | 0.629 | 0.74 | 1.54 |
-| legacy.makeup | 2500 | 19975 | 948 | 800 | 0.2231 | 0.2358 | 5.4% | 0.639 | 0.65 | 1.00 |
-| legacy.colour | 2500 | 19975 | 948 | 800 | 0.2240 | 0.2335 | 4.0% | 0.635 | 0.65 | 0.99 |
-| powered.makeup | 2500 | 19974 | 948 | 800 | 0.2276 | 0.2406 | 5.4% | 0.622 | 0.63 | 0.96 |
-| powered.colour | 2500 | 19974 | 948 | 800 | 0.2279 | 0.2372 | 3.9% | 0.622 | 0.61 | 0.94 |
-| legacy+powered.makeup | 5000 | 39949 | 948 | 800 | 0.2246 | 0.2382 | 5.7% | 0.633 | 0.73 | 1.13 |
-| omega-B.makeup | 6400 | 6400 | 158 | 1600 | 0.2437 | 0.2494 | 2.3% | 0.562 | 0.61 | 0.73 |
-| omega-C.makeup | 2000 | 7996 | 158 | 800 | 0.2432 | 0.2470 | 1.6% | 0.574 | 0.55 | 0.88 |
-| omega-B.colour | 6400 | 6400 | 158 | 1600 | 0.2442 | 0.2489 | 1.9% | 0.563 | 0.59 | 0.71 |
-| omega-C.colour | 2000 | 7996 | 158 | 800 | 0.2432 | 0.2459 | 1.1% | 0.572 | 0.58 | 0.91 |
+By game, a deck's games fall on both sides of every split, so what a deck does that its cards absorb counts as signal. By deck (decks, or J145-B's drafts, split at random; a held-out game is one whose two decks were both held out), no deck is on both sides: the **repeatability by deck** is the headline, the share of the card values' spread that holds on new decks. It is stepped up from its halves by Spearman–Brown at k = full games / a half's games (the census halves keep only the games inside a half). The fit keeps the by-game lambda.
+
+| source | decks | games | cards | lambda (by game / by deck) | Brier, cards | Brier, makeup only | skill by game | skill by deck (games scored) | accuracy | reliability by game | **repeatability by deck** (half r, k) | true spread of card values (pts SD, by deck / by game) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pauper.makeup | 2500 | 19982 | 791 | 400 / 800 | 0.2248 | 0.2424 | 7.2% | 4.5% (4064) | 0.625 | 0.75 | **0.70** (0.36, 4.0) | 1.46 / 1.52 |
+| pauper.colour | 2500 | 19982 | 791 | 400 / 800 | 0.2254 | 0.2390 | 5.7% | 3.4% (4064) | 0.622 | 0.75 | **0.68** (0.35, 4.0) | 1.45 / 1.52 |
+| peasant.makeup | 2500 | 19982 | 1315 | 400 / 800 | 0.2246 | 0.2368 | 5.1% | 3.6% (4045) | 0.633 | 0.74 | **0.65** (0.32, 4.0) | 1.45 / 1.54 |
+| peasant.colour | 2500 | 19982 | 1315 | 400 / 800 | 0.2257 | 0.2368 | 4.7% | 3.1% (4045) | 0.629 | 0.74 | **0.65** (0.32, 4.0) | 1.44 / 1.54 |
+| legacy.makeup | 2500 | 19975 | 948 | 800 / 800 | 0.2231 | 0.2358 | 5.4% | 3.6% (3989) | 0.639 | 0.65 | **0.65** (0.32, 4.0) | 1.00 / 1.00 |
+| legacy.colour | 2500 | 19975 | 948 | 800 / 800 | 0.2240 | 0.2335 | 4.0% | 2.7% (3989) | 0.635 | 0.65 | **0.61** (0.29, 4.0) | 0.97 / 0.99 |
+| powered.makeup | 2500 | 19974 | 948 | 800 / 800 | 0.2276 | 0.2406 | 5.4% | 4.6% (4000) | 0.622 | 0.63 | **0.62** (0.29, 4.0) | 0.95 / 0.96 |
+| powered.colour | 2500 | 19974 | 948 | 800 / 400 | 0.2279 | 0.2372 | 3.9% | 3.5% (4000) | 0.622 | 0.61 | **0.59** (0.27, 4.0) | 0.93 / 0.94 |
+| legacy+powered.makeup | 5000 | 39949 | 948 | 800 / 800 | 0.2246 | 0.2382 | 5.7% | 4.6% (7893) | 0.633 | 0.73 | **0.75** (0.43, 4.0) | 1.15 / 1.13 |
+| omega-B.makeup | 6400 | 6400 | 158 | 1600 / 800 | 0.2437 | 0.2494 | 2.3% | 2.4% (6400) | 0.562 | 0.61 | **0.63** (0.46, 2.0) | 0.74 / 0.73 |
+| omega-C.makeup | 2000 | 7996 | 158 | 800 / 800 | 0.2432 | 0.2470 | 1.6% | 1.8% (1566) | 0.574 | 0.55 | **0.50** (0.21, 3.9) | 0.84 / 0.88 |
+| omega-B.colour | 6400 | 6400 | 158 | 1600 / 800 | 0.2442 | 0.2489 | 1.9% | 2.1% (6400) | 0.563 | 0.59 | **0.60** (0.43, 2.0) | 0.71 / 0.71 |
+| omega-C.colour | 2000 | 7996 | 158 | 800 / 800 | 0.2432 | 0.2459 | 1.1% | 1.7% (1566) | 0.572 | 0.58 | **0.53** (0.22, 3.9) | 0.87 / 0.91 |
 
 ## Coverage by band (census pool: in-band, supported, nonland, not AI:RemoveDeck:All)
 
@@ -29,22 +31,22 @@
 
 ## Agreement between sources (cards with 200+ deck-games in both)
 
-| A | B | n | Pearson | Spearman | slope B on A | true-value r (disattenuated by split-half) |
-|---|---|---|---|---|---|---|
-| legacy.makeup | powered.makeup | 702 | 0.552 | 0.495 | 0.536 | 0.862 |
-| pauper.makeup | peasant.makeup | 291 | 0.507 | 0.481 | 0.607 | 0.680 |
-| peasant.makeup | legacy.makeup | 240 | 0.194 | 0.197 | 0.090 | 0.280 |
-| legacy.makeup | legacy.colour (same games) | 771 | 0.987 | 0.984 | 0.983 | — |
-| omega-C.makeup | omega-B.makeup | 133 | 0.602 | 0.535 | 0.462 | 1.038 |
-| omega-C.colour | omega-B.colour | 133 | 0.583 | 0.523 | 0.441 | 0.996 |
-| legacy+powered.makeup | omega-C.makeup | 134 | 0.417 | 0.322 | 0.383 | 0.659 |
-| legacy+powered.makeup | omega-B.makeup | 114 | 0.622 | 0.553 | 0.472 | 0.933 |
-| legacy.makeup | omega-C.makeup | 126 | 0.319 | 0.207 | 0.300 | 0.534 |
-| powered.makeup | omega-C.makeup | 122 | 0.412 | 0.341 | 0.427 | 0.700 |
+| A | B | n | Pearson | Spearman | slope B on A | true-value r (disattenuated by the by-deck repeatability) | the same by the by-game split |
+|---|---|---|---|---|---|---|---|
+| legacy.makeup | powered.makeup | 702 | 0.552 | 0.495 | 0.536 | 0.865 | 0.862 |
+| pauper.makeup | peasant.makeup | 291 | 0.507 | 0.481 | 0.607 | 0.752 | 0.680 |
+| peasant.makeup | legacy.makeup | 240 | 0.194 | 0.197 | 0.090 | 0.297 | 0.280 |
+| legacy.makeup | legacy.colour (same games) | 771 | 0.987 | 0.984 | 0.983 | — | — |
+| omega-C.makeup | omega-B.makeup | 133 | 0.602 | 0.535 | 0.462 | 1.071 | 1.038 |
+| omega-C.colour | omega-B.colour | 133 | 0.583 | 0.523 | 0.441 | 1.037 | 0.996 |
+| legacy+powered.makeup | omega-C.makeup | 134 | 0.417 | 0.322 | 0.383 | 0.681 | 0.659 |
+| legacy+powered.makeup | omega-B.makeup | 114 | 0.622 | 0.553 | 0.472 | 0.906 | 0.933 |
+| legacy.makeup | omega-C.makeup | 126 | 0.319 | 0.207 | 0.300 | 0.557 | 0.534 |
+| powered.makeup | omega-C.makeup | 122 | 0.412 | 0.341 | 0.427 | 0.738 | 0.700 |
 
 ## Validation: Omega's measured payoffs (J145) predicted from the census alone
 
-RMSE census-predicted: Blab 0.027, C 0.023; correlation Blab 0.841, C 0.781; transfer SD beyond both noises: Blab 0.000, C 0.000. In-sample (J145's own card fit): RMSE Blab 0.012, C 0.013.
+RMSE census-predicted: Blab 0.027, C 0.023; correlation Blab 0.841, C 0.781; residual beyond both noises (sqrt(max(0, RMSE² − read variance − prediction variance))): Blab 0.000, C 0.000 — 0 here means 15 cells cannot tell the transfer error from 0, a lower bound and not an estimate; the programme below uses .015 as its base case. In-sample (J145's own card fit): RMSE Blab 0.012, C 0.013.
 
 | arm | cell | observed | census-predicted | J145-fit (in-sample) |
 |---|---|---|---|---|
@@ -287,24 +289,24 @@ Deck mix (J145 lab two-colour decks): 9.13 cards of each colour, 0.45 gold, 4.18
 
 every class's cards near +2.0 points (the highest level each colour can hold), valued by the legacy + powered census
 
-max |colour − .5| 0.001, max |pair − .5| 0.003 (after the flow alone, colour + pair gap 0.114; 16 balancing swaps); unmeasured nonland cards 0; 180 cards.
+max |colour − .5| 0.003, max |pair − .5| 0.004; colour + pair gap 0.114 after the flow alone, 0.007 after 12 balancing swaps (the search stops at 0.008, about one card's SD: even to within the model's own uncertainty); unmeasured nonland cards 0; 180 cards.
 
 | | W | U | B | R | G |
 |---|---|---|---|---|---|
-| payoff | 0.500 (0.472–0.530) | 0.500 (0.469–0.533) | 0.501 (0.468–0.534) | 0.499 (0.469–0.534) | 0.501 (0.469–0.536) |
-| mean rating, top 24 (pull proxy) | 75.0 | 75.1 | 63.8 | 75.4 | 64.8 |
+| payoff | 0.501 (0.472–0.530) | 0.498 (0.466–0.530) | 0.499 (0.464–0.533) | 0.499 (0.470–0.534) | 0.503 (0.471–0.536) |
+| mean rating, top 24 (pull proxy) | 75.0 | 76.8 | 65.7 | 75.4 | 66.8 |
 
 | WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
 |---|---|---|---|---|---|---|---|---|---|
-| 0.499 (0.460–0.534) | 0.498 (0.460–0.531) | 0.503 (0.472–0.537) | 0.500 (0.469–0.539) | 0.502 (0.468–0.537) | 0.498 (0.461–0.538) | 0.501 (0.464–0.535) | 0.499 (0.461–0.532) | 0.503 (0.470–0.538) | 0.498 (0.461–0.537) |
+| 0.498 (0.463–0.533) | 0.497 (0.460–0.532) | 0.504 (0.472–0.538) | 0.503 (0.472–0.538) | 0.498 (0.466–0.529) | 0.496 (0.461–0.534) | 0.502 (0.461–0.541) | 0.497 (0.460–0.534) | 0.504 (0.473–0.536) | 0.501 (0.464–0.538) |
 
 | class | cards | measured | mean value (pts) | mean rating | creatures |
 |---|---|---|---|---|---|
-| W | 24 | 24 | +1.4 | 65.4 | 18 |
-| U | 24 | 24 | +1.4 | 69.5 | 20 |
-| B | 24 | 24 | +1.3 | 60.7 | 20 |
+| W | 24 | 24 | +1.4 | 65.1 | 18 |
+| U | 24 | 24 | +1.5 | 71.2 | 19 |
+| B | 24 | 24 | +1.3 | 62.7 | 20 |
 | R | 24 | 24 | +1.4 | 67.7 | 21 |
-| G | 24 | 24 | +1.2 | 60.5 | 20 |
+| G | 24 | 24 | +1.3 | 63.7 | 20 |
 | WU | 2 | 2 | +1.1 | 73.2 | 1 |
 | WB | 2 | 2 | +1.0 | 66.0 | 2 |
 | WR | 2 | 2 | +2.5 | 97.9 | 1 |
@@ -321,32 +323,32 @@ max |colour − .5| 0.001, max |pair − .5| 0.003 (after the flow alone, colour
 
 every class's cards near 0 points (the band's average card), valued by the legacy + powered census
 
-max |colour − .5| 0.000, max |pair − .5| 0.002 (after the flow alone, colour + pair gap 0.030; 10 balancing swaps); unmeasured nonland cards 0; 180 cards.
+max |colour − .5| 0.003, max |pair − .5| 0.003; colour + pair gap 0.030 after the flow alone, 0.006 after 4 balancing swaps (the search stops at 0.008, about one card's SD: even to within the model's own uncertainty); unmeasured nonland cards 0; 180 cards.
 
 | | W | U | B | R | G |
 |---|---|---|---|---|---|
-| payoff | 0.500 (0.465–0.529) | 0.500 (0.465–0.531) | 0.500 (0.469–0.534) | 0.500 (0.464–0.540) | 0.500 (0.471–0.534) |
-| mean rating, top 24 (pull proxy) | 64.6 | 82.5 | 76.3 | 61.1 | 61.3 |
+| payoff | 0.502 (0.467–0.530) | 0.501 (0.466–0.532) | 0.500 (0.469–0.533) | 0.497 (0.461–0.537) | 0.500 (0.471–0.535) |
+| mean rating, top 24 (pull proxy) | 64.7 | 80.7 | 75.3 | 61.7 | 61.2 |
 
 | WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
 |---|---|---|---|---|---|---|---|---|---|
-| 0.501 (0.467–0.535) | 0.501 (0.471–0.538) | 0.499 (0.465–0.537) | 0.499 (0.470–0.544) | 0.499 (0.458–0.534) | 0.499 (0.464–0.530) | 0.501 (0.470–0.532) | 0.501 (0.461–0.533) | 0.498 (0.463–0.532) | 0.501 (0.462–0.540) |
+| 0.502 (0.467–0.537) | 0.503 (0.472–0.540) | 0.498 (0.462–0.536) | 0.502 (0.473–0.544) | 0.502 (0.458–0.537) | 0.497 (0.461–0.529) | 0.501 (0.471–0.532) | 0.497 (0.458–0.530) | 0.499 (0.462–0.533) | 0.499 (0.460–0.538) |
 
 | class | cards | measured | mean value (pts) | mean rating | creatures |
 |---|---|---|---|---|---|
-| W | 24 | 24 | -0.1 | 59.1 | 12 |
+| W | 24 | 24 | -0.0 | 59.9 | 13 |
 | U | 24 | 24 | -0.1 | 73.0 | 16 |
 | B | 24 | 24 | -0.0 | 66.6 | 18 |
-| R | 24 | 24 | +0.0 | 49.5 | 17 |
+| R | 24 | 24 | -0.0 | 49.0 | 17 |
 | G | 24 | 24 | +0.0 | 56.9 | 19 |
 | WU | 2 | 2 | +0.0 | 60.2 | 1 |
 | WB | 2 | 2 | -0.4 | 67.2 | 1 |
 | WR | 2 | 2 | -0.1 | 43.7 | 1 |
-| WG | 2 | 2 | -0.4 | 45.8 | 1 |
-| UB | 2 | 2 | -0.2 | 97.6 | 1 |
+| WG | 2 | 2 | -0.2 | 43.8 | 2 |
+| UB | 2 | 2 | +0.3 | 70.8 | 2 |
 | UR | 2 | 2 | +0.2 | 85.2 | 0 |
 | UG | 2 | 2 | -0.0 | 49.1 | 2 |
-| BR | 2 | 2 | +0.4 | 59.8 | 1 |
+| BR | 2 | 2 | -0.2 | 72.4 | 2 |
 | BG | 2 | 2 | -0.5 | 60.3 | 2 |
 | RG | 2 | 2 | +0.2 | 38.5 | 1 |
 | C | 18 | 18 | +0.0 | 63.4 | 7 |
@@ -355,7 +357,7 @@ max |colour − .5| 0.000, max |pair − .5| 0.002 (after the flow alone, colour
 
 every class's cards near +0.0 points (the highest level each colour can hold), valued by the pauper census, pauper cards only where they fill the plan
 
-max |colour − .5| 0.001, max |pair − .5| 0.008 (after the flow alone, colour + pair gap 0.163; 13 balancing swaps); unmeasured nonland cards 0; 180 cards.
+max |colour − .5| 0.001, max |pair − .5| 0.008; colour + pair gap 0.163 after the flow alone, 0.008 after 13 balancing swaps (the search stops at 0.008, about one card's SD, and ran out of improving swaps above it here: even to within the model's own uncertainty); unmeasured nonland cards 0; 180 cards.
 
 | | W | U | B | R | G |
 |---|---|---|---|---|---|
@@ -387,64 +389,64 @@ max |colour − .5| 0.001, max |pair − .5| 0.008 (after the flow alone, colour
 
 ## The measurement programme, simulated
 
-Model error per cell = sqrt(prediction SD² + transfer SD²): prediction SD colour 0.017, pair 0.019 (the generated cubes' bootstrap, median); transfer SD measured on Omega 0.000, and .015 and .03 as what-ifs. A measurement is J145's arm B: 2672 deck-games per colour cell; pairs at the bots' J145 pull (1564/680/850/576/1616/806/544/238/382/350) or even pull (761 each). Each night's refit divides the error variance by 1 + 0.5 x nights. A pass needs a second fresh-seed measurement (the next night's first slot). 2,000 simulated programmes, 30 nights at most.
+Model error per cell = sqrt(prediction SD² + transfer SD²): prediction SD colour 0.017, pair 0.019 (the generated cubes' bootstrap, median); transfer SD (census values carried to drafted decks) 0.015 as the base case and 0.030 as the pessimistic one; Omega's residuals (0.000) only bound it from below, so that row is a lower bound, not a case. A measurement is J145's arm B: 2672 deck-games per colour cell; pairs at the bots' J145 pull (1564/680/850/576/1616/806/544/238/382/350) or even pull (761 each). Each night's refit divides the error variance by 1 + 0.5 x nights. A pass needs a second fresh-seed measurement (the next night's first slot). 2,000 simulated programmes, 30 nights at most.
 
-| transfer SD | pull | rule | measurement size (x J145 arm B) | cubes a night | median nights | 80th pct | confirmed by night 5 | by night 10 | within 30 | confirmed cube truly in band |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 0.000 | bot pull (J145) | no-off | 1 | 1 | 4 | 6 | 72% | 99% | 100% | 99% |
-| 0.000 | bot pull (J145) | no-off | 1 | 4 | 3 | 4 | 96% | 100% | 100% | 99% |
-| 0.000 | bot pull (J145) | no-off | 1 | 8 | 3 | 4 | 98% | 100% | 100% | 98% |
-| 0.000 | bot pull (J145) | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.000 | bot pull (J145) | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.000 | bot pull (J145) | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.000 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 2% | 10% | 50% | 100% |
-| 0.000 | bot pull (J145) | all-even | 3 | 4 | 15 | 24 | 8% | 30% | 90% | 100% |
-| 0.000 | bot pull (J145) | all-even | 3 | 8 | 11 | 18 | 13% | 46% | 98% | 100% |
-| 0.000 | even pull | no-off | 1 | 1 | 5 | 7 | 63% | 97% | 100% | 100% |
-| 0.000 | even pull | no-off | 1 | 4 | 3 | 4 | 94% | 100% | 100% | 99% |
-| 0.000 | even pull | no-off | 1 | 8 | 3 | 4 | 96% | 100% | 100% | 99% |
-| 0.000 | even pull | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.000 | even pull | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.000 | even pull | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.000 | even pull | all-even | 3 | 1 | 6 | 9 | 38% | 89% | 100% | 100% |
-| 0.000 | even pull | all-even | 3 | 4 | 4 | 6 | 75% | 100% | 100% | 100% |
-| 0.000 | even pull | all-even | 3 | 8 | 4 | 5 | 85% | 100% | 100% | 100% |
-| 0.015 | bot pull (J145) | no-off | 1 | 1 | 6 | 8 | 44% | 93% | 100% | 99% |
-| 0.015 | bot pull (J145) | no-off | 1 | 4 | 4 | 5 | 83% | 100% | 100% | 97% |
-| 0.015 | bot pull (J145) | no-off | 1 | 8 | 3 | 5 | 90% | 100% | 100% | 95% |
-| 0.015 | bot pull (J145) | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.015 | bot pull (J145) | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.015 | bot pull (J145) | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.015 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 1% | 5% | 40% | 100% |
-| 0.015 | bot pull (J145) | all-even | 3 | 4 | 19 | 29 | 3% | 18% | 83% | 100% |
-| 0.015 | bot pull (J145) | all-even | 3 | 8 | 14 | 22 | 6% | 28% | 93% | 100% |
-| 0.015 | even pull | no-off | 1 | 1 | 7 | 9 | 33% | 89% | 100% | 100% |
-| 0.015 | even pull | no-off | 1 | 4 | 4 | 6 | 73% | 100% | 100% | 99% |
-| 0.015 | even pull | no-off | 1 | 8 | 4 | 5 | 82% | 100% | 100% | 99% |
-| 0.015 | even pull | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.015 | even pull | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.015 | even pull | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.015 | even pull | all-even | 3 | 1 | 9 | 12 | 14% | 67% | 100% | 100% |
-| 0.015 | even pull | all-even | 3 | 4 | 6 | 8 | 40% | 97% | 100% | 100% |
-| 0.015 | even pull | all-even | 3 | 8 | 5 | 7 | 55% | 99% | 100% | 100% |
-| 0.030 | bot pull (J145) | no-off | 1 | 1 | 10 | 14 | 10% | 56% | 100% | 98% |
-| 0.030 | bot pull (J145) | no-off | 1 | 4 | 7 | 9 | 28% | 92% | 100% | 93% |
-| 0.030 | bot pull (J145) | no-off | 1 | 8 | 6 | 8 | 43% | 97% | 100% | 90% |
-| 0.030 | bot pull (J145) | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.030 | bot pull (J145) | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.030 | bot pull (J145) | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | 100% |
-| 0.030 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 0% | 1% | 20% | 100% |
-| 0.030 | bot pull (J145) | all-even | 3 | 4 | 28 | >30 | 0% | 3% | 57% | 100% |
-| 0.030 | bot pull (J145) | all-even | 3 | 8 | 22 | >30 | 0% | 7% | 77% | 100% |
-| 0.030 | even pull | no-off | 1 | 1 | 11 | 15 | 4% | 45% | 100% | 99% |
-| 0.030 | even pull | no-off | 1 | 4 | 8 | 10 | 17% | 83% | 100% | 98% |
-| 0.030 | even pull | no-off | 1 | 8 | 7 | 9 | 30% | 92% | 100% | 97% |
-| 0.030 | even pull | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.030 | even pull | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.030 | even pull | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | — |
-| 0.030 | even pull | all-even | 3 | 1 | 15 | 20 | 1% | 18% | 99% | 100% |
-| 0.030 | even pull | all-even | 3 | 4 | 11 | 14 | 3% | 48% | 100% | 100% |
-| 0.030 | even pull | all-even | 3 | 8 | 9 | 12 | 7% | 67% | 100% | 100% |
+| transfer SD | case | pull | rule | measurement size (x J145 arm B) | cubes a night | median nights | 80th pct | confirmed by night 5 | by night 10 | within 30 | confirmed cube truly in band |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0.015 | base | bot pull (J145) | no-off | 1 | 1 | 6 | 8 | 45% | 93% | 100% | 99% |
+| 0.015 | base | bot pull (J145) | no-off | 1 | 4 | 4 | 5 | 83% | 100% | 100% | 98% |
+| 0.015 | base | bot pull (J145) | no-off | 1 | 8 | 3 | 5 | 89% | 100% | 100% | 96% |
+| 0.015 | base | bot pull (J145) | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.015 | base | bot pull (J145) | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | 100% |
+| 0.015 | base | bot pull (J145) | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | 100% |
+| 0.015 | base | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 1% | 5% | 41% | 100% |
+| 0.015 | base | bot pull (J145) | all-even | 3 | 4 | 19 | 29 | 3% | 17% | 83% | 100% |
+| 0.015 | base | bot pull (J145) | all-even | 3 | 8 | 14 | 22 | 5% | 28% | 93% | 100% |
+| 0.015 | base | even pull | no-off | 1 | 1 | 7 | 9 | 34% | 89% | 100% | 100% |
+| 0.015 | base | even pull | no-off | 1 | 4 | 4 | 6 | 73% | 100% | 100% | 99% |
+| 0.015 | base | even pull | no-off | 1 | 8 | 4 | 5 | 82% | 100% | 100% | 99% |
+| 0.015 | base | even pull | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.015 | base | even pull | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.015 | base | even pull | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.015 | base | even pull | all-even | 3 | 1 | 9 | 12 | 14% | 67% | 100% | 100% |
+| 0.015 | base | even pull | all-even | 3 | 4 | 6 | 8 | 40% | 97% | 100% | 100% |
+| 0.015 | base | even pull | all-even | 3 | 8 | 5 | 7 | 55% | 99% | 100% | 100% |
+| 0.030 | pessimistic | bot pull (J145) | no-off | 1 | 1 | 10 | 14 | 10% | 56% | 100% | 97% |
+| 0.030 | pessimistic | bot pull (J145) | no-off | 1 | 4 | 7 | 9 | 28% | 93% | 100% | 93% |
+| 0.030 | pessimistic | bot pull (J145) | no-off | 1 | 8 | 6 | 8 | 43% | 97% | 100% | 91% |
+| 0.030 | pessimistic | bot pull (J145) | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.030 | pessimistic | bot pull (J145) | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | 100% |
+| 0.030 | pessimistic | bot pull (J145) | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | 100% |
+| 0.030 | pessimistic | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 0% | 1% | 21% | 100% |
+| 0.030 | pessimistic | bot pull (J145) | all-even | 3 | 4 | 28 | >30 | 0% | 3% | 57% | 100% |
+| 0.030 | pessimistic | bot pull (J145) | all-even | 3 | 8 | 22 | >30 | 0% | 7% | 77% | 100% |
+| 0.030 | pessimistic | even pull | no-off | 1 | 1 | 11 | 15 | 5% | 46% | 100% | 99% |
+| 0.030 | pessimistic | even pull | no-off | 1 | 4 | 8 | 10 | 17% | 83% | 100% | 98% |
+| 0.030 | pessimistic | even pull | no-off | 1 | 8 | 7 | 9 | 30% | 92% | 100% | 97% |
+| 0.030 | pessimistic | even pull | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.030 | pessimistic | even pull | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.030 | pessimistic | even pull | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.030 | pessimistic | even pull | all-even | 3 | 1 | 15 | 20 | 1% | 18% | 99% | 100% |
+| 0.030 | pessimistic | even pull | all-even | 3 | 4 | 11 | 14 | 3% | 49% | 100% | 100% |
+| 0.030 | pessimistic | even pull | all-even | 3 | 8 | 9 | 12 | 7% | 67% | 100% | 100% |
+| 0.000 | lower bound | bot pull (J145) | no-off | 1 | 1 | 4 | 6 | 72% | 98% | 100% | 99% |
+| 0.000 | lower bound | bot pull (J145) | no-off | 1 | 4 | 3 | 4 | 96% | 100% | 100% | 99% |
+| 0.000 | lower bound | bot pull (J145) | no-off | 1 | 8 | 3 | 4 | 98% | 100% | 100% | 98% |
+| 0.000 | lower bound | bot pull (J145) | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.000 | lower bound | bot pull (J145) | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | 100% |
+| 0.000 | lower bound | bot pull (J145) | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | 100% |
+| 0.000 | lower bound | bot pull (J145) | all-even | 3 | 1 | 30 | >30 | 2% | 10% | 50% | 100% |
+| 0.000 | lower bound | bot pull (J145) | all-even | 3 | 4 | 14 | 24 | 8% | 31% | 90% | 100% |
+| 0.000 | lower bound | bot pull (J145) | all-even | 3 | 8 | 11 | 18 | 13% | 46% | 98% | 100% |
+| 0.000 | lower bound | even pull | no-off | 1 | 1 | 5 | 7 | 64% | 98% | 100% | 100% |
+| 0.000 | lower bound | even pull | no-off | 1 | 4 | 3 | 4 | 95% | 100% | 100% | 99% |
+| 0.000 | lower bound | even pull | no-off | 1 | 8 | 3 | 4 | 96% | 100% | 100% | 99% |
+| 0.000 | lower bound | even pull | all-even | 1 | 1 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.000 | lower bound | even pull | all-even | 1 | 4 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.000 | lower bound | even pull | all-even | 1 | 8 | >30 | >30 | 0% | 0% | 0% | — |
+| 0.000 | lower bound | even pull | all-even | 3 | 1 | 6 | 9 | 38% | 89% | 100% | 100% |
+| 0.000 | lower bound | even pull | all-even | 3 | 4 | 4 | 6 | 75% | 100% | 100% | 100% |
+| 0.000 | lower bound | even pull | all-even | 3 | 8 | 4 | 5 | 85% | 100% | 100% | 100% |
 
 ## Omega (appendix)
 

@@ -1,16 +1,16 @@
 # The library card model and the balanced-cube generator (2026-10-24)
 
-*Written by the PC lab-analysis lane, 2026-10-24, from the recorded data only (no engine run; J159 was running). Code: mtg-table branch `pc/balance-model` (D473), `tools/cubelab.sh balance-model`. Every number below is in `omega-balance-model/model.json`; the full tables (top and bottom 20 per source, every cube's class table, every programme scenario) are `omega-balance-model/summary.md`, and every card's value is in `omega-balance-model/cards-<source>.tsv`.*
+*Written by the PC lab-analysis lane, 2026-10-24, from the recorded data only (no engine run; J159 was running). Code: mtg-table branch `pc/balance-model` (D473), `tools/cubelab.sh balance-model`. **Revised 2026-10-24 after an independent review (branch head `4932d002`):** CV and repeatability by deck beside by game, the balance search stopped at the cards' SD, the transfer error's base case .015 (not 0), what r .84 does and does not validate, and two no-power cubes for the first night. The no-power run's numbers are in `omega-balance-model/nopower/`. Every number below is in `omega-balance-model/model.json`; the full tables (top and bottom 20 per source, every cube's class table, every programme scenario) are `omega-balance-model/summary.md`, and every card's value is in `omega-balance-model/cards-<source>.tsv`.*
 
 **Justin's question** (2026-10-24 01:25): out of the 1,000+ cards in the library, what makes the most balanced cube — every colour and every colour pair winning evenly when drafted (the lab drafter as the proxy) and played. How evenly each colour is drafted is reported beside it, not optimised. Every payoff here is Forge's AI playing both seats.
 
 ## The answer in five lines
 
-1. **Every card the census drew has a value.** 1,341 nonland library cards (pauper 393, peasant 398, legacy 528, powered 22 — all supported, none AI:RemoveDeck:All) have a median of 1,500–2,200 deck-games each (at least 992) and a median SD of 0.8–0.9 win-rate points. Coverage is complete; precision is the limit: the cards' true values spread only 1.0–1.5 points (SD), so one census night measures them with reliability .65–.75.
-2. **The census model predicts what a drafted cube does.** Fitted on random library decks only, applied to the 4,000 games of lab-drafted Omega decks in J145, it predicts the measured colour and pair payoffs with r 0.84 (RMSE 0.027); on J145's random Omega decks r 0.78 (RMSE 0.023). It gets blue (.444 predicted, .480 measured) and UG (.403 against .423) low without ever having seen an Omega draft.
-3. **Three generated cubes** (no archetypes, no hand choices) are predicted even in every colour and every pair to within .01, with model intervals of about ±.035 (legacy) and ±.05 (pauper): `cubes/library/balanced/balanced-legacy-even-high.md`, `-legacy-even-mid.md`, `-pauper-even.md`.
+1. **Every card the census drew has a value.** 1,341 nonland library cards (pauper 393, peasant 398, legacy 528, powered 22 — all supported, none AI:RemoveDeck:All) have a median of 1,500–2,200 deck-games each (at least 992) and a median SD of 0.8–0.9 win-rate points. Coverage is complete; precision is the limit: the cards' true values spread only 1.0–1.5 points (SD), and one census night measures them with a **repeatability on new decks of .65–.75** (split by deck: legacy + powered .75, pauper .70, peasant .65, legacy .65).
+2. **The census model's card values predict what a drafted cube does.** Fitted on random library decks only and summed over the 4,000 games of lab-drafted Omega decks J145 actually played, they predict the measured colour and pair payoffs with r 0.84 (RMSE 0.027); on J145's random Omega decks r 0.78 (RMSE 0.023). It gets blue (.444 predicted, .480 measured) and UG (.403 against .423) low without ever having seen an Omega draft. **What that does not validate:** the generated cubes' tables are a different calculation — class means × an assumed deck mix × a rating play curve — and no measurement has tested it yet. The first night on a generated cube is that test.
+3. **Five generated cubes** (no archetypes, no hand choices), each predicted even in every colour and pair **to within about the model's own uncertainty** — the balancing search stops once the colour + pair gap is at most .008, about one card's SD, so nothing is claimed to the third decimal; model intervals are about ±.035 (legacy) and ±.05 (pauper): `cubes/library/balanced/balanced-legacy-even-high.md`, `-legacy-even-mid.md`, `-pauper-even.md`, and without the census's powered band `-legacy-even-high-nopower.md` and `-legacy-even-mid-nopower.md` (the pauper cube is the same without it).
 4. **One 10-hour night at 6 workers measures about 19 candidate cubes** on J145's judged arm (2,000 lab drafts, 4,000 games, ~0.5 h each), or 6 at three times that size, or 6 full J145 shapes.
-5. **Nights to a confirmed balanced cube**, simulated with the model's own error: 3–4 nights at 4–8 candidates a night for "every colour EVEN, no pair OFF" (J145's registered rule, plus pairs). "Every pair EVEN with its interval" needs measurements three times J145's arm B and even pull: 4–6 nights; with the bots' current pull (BR, BG, RG drafted rarely), 11–19 nights or more.
+5. **Nights to a confirmed balanced cube**, simulated: at the **base-case transfer error of .015**, a median of 4 nights (3–4) and an 80th percentile of 5–6 at 4–8 candidates a night for "every colour EVEN, no pair OFF" (J145's registered rule, plus pairs); at the **pessimistic .03**, a median of 6–8 and an 80th percentile of 8–10. "Every pair EVEN with its interval" needs measurements three times J145's arm B and even pull: 5–6 nights (base), 9–11 (pessimistic); with the bots' current pull (BR, BG, RG drafted rarely), 14–19 nights or more. The measured transfer error came out 0, which 15 cells cannot tell from a real one: it is a lower bound (3 nights), not the case to plan on.
 
 ## The method
 
@@ -19,34 +19,35 @@
 | model | ridge linear-probability model of a decisive game: P(a wins) − ½ = Σ β_c (x_ac − x_bc) + Σ γ_m (z_am − z_bm) + π·play, nonland cards only | a deck's predicted payoff is then the sum of its cards' values, which is what a generator adds up; every census rate sits in .35–.65, where linear and logistic agree |
 | makeup control | groups = colour count (colours with 3+ spells) × main-colour pip share (<.5, .5–.7, .7–.9, .9–<1, mono), per band | D447/J149's structure (mono > .5, four and five colours < .5, the main-share slope); no colour identity, so a card's value is absolute within its band and a colour's strength is the sum of its cards |
 | D377-style null | the opponent enters antisymmetrically (minus its cards and its group); the colour-identity grouping (D377's own) is fitted too | the two groupings agree on card values to r .987 (legacy) |
-| penalties | cards: 5-fold held-out Brier (λ 400 pauper/peasant, 800 legacy/powered, 1,600 J145-B); groups: 20 pseudo-games (D377's shrinkage) | the held-out choice, not a guess |
+| penalties | cards: 5-fold held-out Brier, folds by game (λ 400 pauper/peasant, 800 legacy/powered, 1,600 J145-B); the same CV by deck reported beside it (it prefers 800 for pauper, peasant and J145-B); groups: 20 pseudo-games (D377's shrinkage) | the held-out choice, not a guess; the by-deck CV scores only games whose two decks were both held out, so its skill is the one for new decks |
 | weights | every decisive game once | as D377 counts games |
 | intervals | deck bootstrap, 200 replicates, each game carried by one of its decks' clusters (drafts for J145 arm B) | the product-weight bootstrap inflated the game-noise part 1.6x (median SD .0109 against .0069 for both a game bootstrap and this one): deck clustering is small beside game noise |
-| reliability | split halves (even against odd games), Spearman–Brown | a shrunk estimator's bootstrap SD understates its noise relative to its spread |
+| repeatability | split halves **by deck** (decks, or J145-B's drafts, split at random; each half fitted on the games inside it; Spearman–Brown at k = full games / a half's games, 4.0 in the census, 2.0 in J145-B), with the by-game split (even against odd games) beside it | by game, a deck's games sit in both halves, so whatever a deck does that its cards absorb counts as signal; by deck, no deck is on both sides. A shrunk estimator's bootstrap SD understates its noise relative to its spread |
 | sources | the four census bands, legacy + powered together (makeup groups kept apart by band), J145 arm B (drafted Omega decks) and arm C (random Omega decks) | the census is the library-wide source; J145 is the drafted-context check |
 
 **Not used: the decision rows for cast rates.** The rows name cards by in-game id (`cast:18`), not by name, so a cast and stranded rate per card needs an id-to-name map per game (a `census-replay --record full` slice, or a small bridge change that writes the map into the `begin` row). Not cheap tonight; listed as a follow-up.
 
 ## Fit quality
 
-| source | decks | games | cards | lambda | Brier, cards | Brier, makeup only | skill | accuracy | split-half reliability | true spread of card values (pts SD) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| pauper.makeup | 2500 | 19982 | 791 | 400 | 0.2248 | 0.2424 | 7.2% | 0.625 | 0.75 | 1.52 |
-| pauper.colour | 2500 | 19982 | 791 | 400 | 0.2254 | 0.2390 | 5.7% | 0.622 | 0.75 | 1.52 |
-| peasant.makeup | 2500 | 19982 | 1315 | 400 | 0.2246 | 0.2368 | 5.1% | 0.633 | 0.74 | 1.54 |
-| peasant.colour | 2500 | 19982 | 1315 | 400 | 0.2257 | 0.2368 | 4.7% | 0.629 | 0.74 | 1.54 |
-| legacy.makeup | 2500 | 19975 | 948 | 800 | 0.2231 | 0.2358 | 5.4% | 0.639 | 0.65 | 1.00 |
-| legacy.colour | 2500 | 19975 | 948 | 800 | 0.2240 | 0.2335 | 4.0% | 0.635 | 0.65 | 0.99 |
-| powered.makeup | 2500 | 19974 | 948 | 800 | 0.2276 | 0.2406 | 5.4% | 0.622 | 0.63 | 0.96 |
-| powered.colour | 2500 | 19974 | 948 | 800 | 0.2279 | 0.2372 | 3.9% | 0.622 | 0.61 | 0.94 |
-| legacy+powered.makeup | 5000 | 39949 | 948 | 800 | 0.2246 | 0.2382 | 5.7% | 0.633 | 0.73 | 1.13 |
-| omega-B.makeup | 6400 | 6400 | 158 | 1600 | 0.2437 | 0.2494 | 2.3% | 0.562 | 0.61 | 0.73 |
-| omega-C.makeup | 2000 | 7996 | 158 | 800 | 0.2432 | 0.2470 | 1.6% | 0.574 | 0.55 | 0.88 |
-| omega-B.colour | 6400 | 6400 | 158 | 1600 | 0.2442 | 0.2489 | 1.9% | 0.563 | 0.59 | 0.71 |
-| omega-C.colour | 2000 | 7996 | 158 | 800 | 0.2432 | 0.2459 | 1.1% | 0.572 | 0.58 | 0.91 |
+| source | decks | games | cards | lambda (by game / by deck) | Brier, cards | Brier, makeup only | skill by game | skill by deck | reliability by game | **repeatability by deck** | true spread of card values (pts SD, by deck) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| pauper.makeup | 2500 | 19982 | 791 | 400 / 800 | 0.2248 | 0.2424 | 7.2% | 4.5% | 0.75 | **0.70** | 1.46 |
+| pauper.colour | 2500 | 19982 | 791 | 400 / 800 | 0.2254 | 0.2390 | 5.7% | 3.4% | 0.75 | **0.68** | 1.45 |
+| peasant.makeup | 2500 | 19982 | 1315 | 400 / 800 | 0.2246 | 0.2368 | 5.1% | 3.6% | 0.74 | **0.65** | 1.45 |
+| peasant.colour | 2500 | 19982 | 1315 | 400 / 800 | 0.2257 | 0.2368 | 4.7% | 3.1% | 0.74 | **0.65** | 1.44 |
+| legacy.makeup | 2500 | 19975 | 948 | 800 / 800 | 0.2231 | 0.2358 | 5.4% | 3.6% | 0.65 | **0.65** | 1.00 |
+| legacy.colour | 2500 | 19975 | 948 | 800 / 800 | 0.2240 | 0.2335 | 4.0% | 2.7% | 0.65 | **0.61** | 0.97 |
+| powered.makeup | 2500 | 19974 | 948 | 800 / 800 | 0.2276 | 0.2406 | 5.4% | 4.6% | 0.63 | **0.62** | 0.95 |
+| powered.colour | 2500 | 19974 | 948 | 800 / 400 | 0.2279 | 0.2372 | 3.9% | 3.5% | 0.61 | **0.59** | 0.93 |
+| legacy+powered.makeup | 5000 | 39949 | 948 | 800 / 800 | 0.2246 | 0.2382 | 5.7% | 4.6% | 0.73 | **0.75** | 1.15 |
+| omega-B.makeup | 6400 | 6400 | 158 | 1600 / 800 | 0.2437 | 0.2494 | 2.3% | 2.4% | 0.61 | **0.63** | 0.74 |
+| omega-C.makeup | 2000 | 7996 | 158 | 800 / 800 | 0.2432 | 0.2470 | 1.6% | 1.8% | 0.55 | **0.50** | 0.84 |
+| omega-B.colour | 6400 | 6400 | 158 | 1600 / 800 | 0.2442 | 0.2489 | 1.9% | 2.1% | 0.59 | **0.60** | 0.71 |
+| omega-C.colour | 2000 | 7996 | 158 | 800 / 800 | 0.2432 | 0.2459 | 1.1% | 1.7% | 0.58 | **0.53** | 0.87 |
 
-- **Skill** is the cut in held-out Brier score from adding cards to the makeup-only model: 5–7% in the census, 2% on J145 (whose decks are all two-colour, so the makeup groups carry less).
-- **True spread** is SD(values) × √reliability: a card in a random legacy deck moves its win rate about ±1 point (one SD); pauper and peasant cards ±1.5.
+- **Skill** is the cut in held-out Brier score from adding cards to the makeup-only model: 5–7% in the census by game, **3.6–4.6% by deck** (makeup groups) — the honest number for decks the fit never saw; 2% on J145 either way (whose decks are all two-colour, so the makeup groups carry less, and whose arm-B games stay inside a draft, so a draft fold is a game fold).
+- **Repeatability by deck** is the headline. It is lower than by game where the by-game split let a deck's own games sit on both sides (pauper .70 against .75, peasant .65 against .74) and the same elsewhere: deck-level effects are a small part of the card values.
+- **True spread** is SD(values) × √(repeatability by deck): a card in a random legacy deck moves its win rate about ±1 point (one SD); pauper and peasant cards ±1.5.
 
 ## Coverage by band, and what a next census night buys
 
@@ -58,27 +59,28 @@
 | powered | 22 | 22 | 0 | 22 | 22 | 22 | 22 | 0.77 | 1510 | 12 | 0.0 |
 
 - **Every card in every band's pool was drawn**, each in 1,000+ deck-games (one legacy card at 992). There is nothing left to cover; the remaining limit is precision.
-- **A second census night** (another 80,000 games, ~10.7 h at 6 workers) doubles every card's games: the legacy+powered reliability would go from .73 to about .84, pauper's from .75 to .86 (Spearman–Brown). Median SD would fall from ~0.8 to ~0.55 points.
+- **A second census night** (another 80,000 games, ~10.7 h at 6 workers) doubles every card's games: the legacy+powered repeatability by deck would go from .75 to about .86, pauper's from .70 to .82 (Spearman–Brown). Median SD would fall from ~0.8 to ~0.55 points.
 - **Not measurable:** the 24 library cards Forge 2.0.14 lacks, and every land (lands are not features: the census and the builder pick them by the deck's colours, so a land's record is its colours').
 
 ## Agreement between sources
 
-| A | B | n | Pearson | Spearman | slope B on A | true-value r (disattenuated by split-half) |
-|---|---|---|---|---|---|---|
-| legacy.makeup | powered.makeup | 702 | 0.552 | 0.495 | 0.536 | 0.862 |
-| pauper.makeup | peasant.makeup | 291 | 0.507 | 0.481 | 0.607 | 0.680 |
-| peasant.makeup | legacy.makeup | 240 | 0.194 | 0.197 | 0.090 | 0.280 |
-| legacy.makeup | legacy.colour (same games) | 771 | 0.987 | 0.984 | 0.983 | — |
-| omega-C.makeup | omega-B.makeup | 133 | 0.602 | 0.535 | 0.462 | 1.038 |
-| omega-C.colour | omega-B.colour | 133 | 0.583 | 0.523 | 0.441 | 0.996 |
-| legacy+powered.makeup | omega-C.makeup | 134 | 0.417 | 0.322 | 0.383 | 0.659 |
-| legacy+powered.makeup | omega-B.makeup | 114 | 0.622 | 0.553 | 0.472 | 0.933 |
-| legacy.makeup | omega-C.makeup | 126 | 0.319 | 0.207 | 0.300 | 0.534 |
-| powered.makeup | omega-C.makeup | 122 | 0.412 | 0.341 | 0.427 | 0.700 |
+| A | B | n | Pearson | Spearman | slope B on A | true-value r (by-deck repeatability) | the same, by-game split |
+|---|---|---|---|---|---|---|---|
+| legacy.makeup | powered.makeup | 702 | 0.552 | 0.495 | 0.536 | 0.865 | 0.862 |
+| pauper.makeup | peasant.makeup | 291 | 0.507 | 0.481 | 0.607 | 0.752 | 0.680 |
+| peasant.makeup | legacy.makeup | 240 | 0.194 | 0.197 | 0.090 | 0.297 | 0.280 |
+| legacy.makeup | legacy.colour (same games) | 771 | 0.987 | 0.984 | 0.983 | — | — |
+| omega-C.makeup | omega-B.makeup | 133 | 0.602 | 0.535 | 0.462 | 1.071 | 1.038 |
+| omega-C.colour | omega-B.colour | 133 | 0.583 | 0.523 | 0.441 | 1.037 | 0.996 |
+| legacy+powered.makeup | omega-C.makeup | 134 | 0.417 | 0.322 | 0.383 | 0.681 | 0.659 |
+| legacy+powered.makeup | omega-B.makeup | 114 | 0.622 | 0.553 | 0.472 | 0.906 | 0.933 |
+| legacy.makeup | omega-C.makeup | 126 | 0.319 | 0.207 | 0.300 | 0.557 | 0.534 |
+| powered.makeup | omega-C.makeup | 122 | 0.412 | 0.341 | 0.427 | 0.738 | 0.700 |
 
-- **legacy against powered** is the cleanest reliability check: the same cards in two independent sets of games (powered decks are mostly legacy fill). r .55 for one band each, .86 between their true values: a card's value hardly depends on whether a few power cards are around.
+- **legacy against powered** is the cleanest reliability check: the same cards in two independent sets of games (powered decks are mostly legacy fill). r .55 for one band each, .87 between their true values: a card's value hardly depends on whether a few power cards are around.
 - **peasant against legacy** is low (.19 on 240 cross-band cards): a card's value is relative to its band, so a cube must be valued on one band's scale (or legacy + powered together, which share a scale).
-- **The census against J145's drafted decks** (114 Omega cards): r .62, true-value r .93. The census ranks Omega's cards nearly as J145's own drafted games do. Against J145's random decks (arm C) it is lower (.42), because arm C's 8,000 games are a thinner source (reliability .55).
+- **The census against J145's drafted decks** (114 Omega cards): r .62, true-value r .91 (.93 by the by-game split). The census ranks Omega's cards nearly as J145's own drafted games do. Against J145's random decks (arm C) it is lower (.42), because arm C's 8,000 games are a thinner source (repeatability by deck .50).
+- **J145's two arms against each other disattenuate above 1** (1.071 by deck, 1.038 by game). The review read that as deck-level leakage in the by-game split; the by-deck split makes it larger, not smaller, so it is not leakage. It is a ratio of three noisy correlations on 133 cards (the Pearson alone carries about ±.05): "the arms agree as well as their noise allows", not a number to quote.
 
 ## Validation: J145 predicted from the census alone
 
@@ -121,7 +123,8 @@ The census model's card and makeup values summed over the decks J145 actually pl
 | C | RG | 0.522 (0.480–0.565) | 0.498 (0.468–0.528) | 0.489 (0.467–0.510) |
 
 - **RMSE** census-predicted 0.027 (lab-drafted) and 0.023 (random), against 0.012 and 0.013 in-sample.
-- **Transfer error.** The residuals are no larger than the read's own noise plus the prediction's, so the extra error from moving from random decks to drafted ones is not distinguishable from 0 on 15 cells. The programme below is simulated at 0, .015 and .03 anyway.
+- **Transfer error.** The residuals are no larger than the read's own noise plus the prediction's: sqrt(max(0, RMSE² − read variance − prediction variance)) is 0 on both arms. With 15 cells that is non-identifiability, not validation — a lower bound on the error of carrying census values to drafted decks, not an estimate of it. The programme below plans on **.015 (base case)** and **.03 (pessimistic)**, and keeps 0 as the lower bound only.
+- **What this validates is the card values**, summed over decks that really played (`predictNight`). The generated cubes' tables below come from `predictPayoffs` — class means × the assumed deck mix × the rating play curve — a step this check does not reach. The first night on a generated cube tests it.
 
 ## The cards: top and bottom 10 (legacy + powered together, makeup groups)
 
@@ -185,37 +188,41 @@ Values are win-rate points per game for a deck that holds the card instead of th
 
 ## The generated cubes
 
-**How they are made.** sample.ts's `two-colour` plan — Omega's skeleton without its list: 24 cards a colour, 2 gold a pair, 18 colourless, 22 lands (2 a pair + 2 others), Omega's curve, every count exact — filled by a min-cost flow toward one value level per colour class (cost |value − level| + SD; an unmeasured card counts as 6 points off; a card outside the cube's band 4 points more; a land from outside only where no band land fits; at least 10 creatures a colour), then like-for-like swaps (same colour class and mana value, within 3 points of the level) that minimise max |colour − .5| + max |pair − .5| of the predicted payoff.
+**How they are made.** sample.ts's `two-colour` plan, which is `OMEGA_SKELETON` — Omega's own counts and curve without its list: 24 cards a colour, 2 gold a pair, 18 colourless, 22 lands (2 a pair + 2 others), every count exact. That structure is a designed prior, kept on purpose: the question is which cards balance a cube of a fixed, playable shape, and Omega's is the shape J145 measured. It is filled by a min-cost flow toward one value level per colour class (cost |value − level| + SD; an unmeasured card counts as 6 points off; a card outside the cube's band 4 points more; a land from outside only where no band land fits; at least 10 creatures a colour), then like-for-like swaps (same colour class and mana value, within 3 points of the level) that minimise max |colour − .5| + max |pair − .5| of the predicted payoff, **stopping once that gap is at most .008** (about one card's SD; below it the swaps would choose between cards on their noise). The no-power cubes are the same run with `--exclude cubes/library/powered-exclude.txt` (the census's `POWERED` list, `tools/cubelab/census.ts`, D445: 41 cards — the Power Nine, the ten original duals, the ten the programme named, twelve restricted-style Vintage-cube cards).
 
 **How the payoff is predicted.** A lab-drafted two-colour deck plays 9.1 cards of each colour, 0.45 gold and 4.2 colourless (J145's lab decks). Within a class, a card counts by how often the builder plays a card of its rating (J145: rate = −.332 + .0095 × rating, clipped to [.05, 1]). Pair P's payoff = ½ + S_P − mean S_Q over the other nine pairs; a colour's = ½ + mean S of its pairs − mean S of the others. Intervals: the census bootstrap.
 
-| cube | level (pts) | bands | Omega cards | balancing swaps | max colour gap | max pair gap |
-|---|---|---|---|---|---|---|
-| `balanced-legacy-even-high` | +2.0 | legacy 164, powered 16 | 56 | 16 | 0.001 | 0.003 |
-| `balanced-legacy-even-mid` | +0.0 | legacy 168, powered 12 | 57 | 10 | 0.000 | 0.002 |
-| `balanced-pauper-even` | +0.0 | pauper 177, peasant 3 | 9 | 13 | 0.001 | 0.008 |
+| cube | level (pts) | bands | Omega cards | balancing swaps | colour + pair gap, flow alone | after the search | max colour gap | max pair gap |
+|---|---|---|---|---|---|---|---|---|
+| `balanced-legacy-even-high` | +2.0 | legacy 164, powered 16 | 57 | 12 | 0.114 | 0.007 | 0.003 | 0.004 |
+| `balanced-legacy-even-mid` | +0.0 | legacy 168, powered 12 | 57 | 4 | 0.030 | 0.006 | 0.003 | 0.003 |
+| `balanced-pauper-even` | +0.0 | pauper 177, peasant 3 | 9 | 13 | 0.163 | 0.008 | 0.001 | 0.008 |
+| `balanced-legacy-even-high-nopower` | +2.0 | legacy 180 | 50 | 19 | 0.148 | 0.024 | 0.012 | 0.011 |
+| `balanced-legacy-even-mid-nopower` | +0.0 | legacy 180 | 50 | 3 | 0.032 | 0.007 | 0.003 | 0.004 |
+
+The first version searched on until no swap gained .0001 and reported gaps of .001–.008; stopping at .008 changed 4 cards of *legacy-even-high* (Selfless Spirit, Phyrexian Metamorph, Woe Strider, Icetill Explorer out; Charming Prince, Memory Deluge, Ophiomancer, Vengevine in) and 5 of *legacy-even-mid*, and none of *pauper-even*. *legacy-even-high-nopower* stops at .024 because no like-for-like swap narrows it further (blue .488): without Ancestral Recall, Time Walk, the Moxen, Tolarian Academy and the duals, blue cannot reach the +2 level as evenly.
 
 ### balanced-legacy-even-high
 
 | | W | U | B | R | G |
 |---|---|---|---|---|---|
-| payoff | 0.500 (0.472–0.530) | 0.500 (0.469–0.533) | 0.501 (0.468–0.534) | 0.499 (0.469–0.534) | 0.501 (0.469–0.536) |
-| pull proxy: mean Forge rating of the top 24 | 75.0 | 75.1 | 63.8 | 75.4 | 64.8 |
+| payoff | 0.501 (0.472–0.530) | 0.498 (0.466–0.530) | 0.499 (0.464–0.533) | 0.499 (0.470–0.534) | 0.503 (0.471–0.536) |
+| pull proxy: mean Forge rating of the top 24 | 75.0 | 76.8 | 65.7 | 75.4 | 66.8 |
 
 | WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
 |---|---|---|---|---|---|---|---|---|---|
-| 0.499 (±0.037) | 0.498 (±0.035) | 0.503 (±0.032) | 0.500 (±0.035) | 0.502 (±0.035) | 0.498 (±0.038) | 0.501 (±0.035) | 0.499 (±0.036) | 0.503 (±0.034) | 0.498 (±0.038) |
+| 0.498 (±0.035) | 0.497 (±0.036) | 0.504 (±0.033) | 0.503 (±0.033) | 0.498 (±0.031) | 0.496 (±0.036) | 0.502 (±0.040) | 0.497 (±0.037) | 0.504 (±0.032) | 0.501 (±0.037) |
 
 ### balanced-legacy-even-mid
 
 | | W | U | B | R | G |
 |---|---|---|---|---|---|
-| payoff | 0.500 (0.465–0.529) | 0.500 (0.465–0.531) | 0.500 (0.469–0.534) | 0.500 (0.464–0.540) | 0.500 (0.471–0.534) |
-| pull proxy: mean Forge rating of the top 24 | 64.6 | 82.5 | 76.2 | 61.1 | 61.3 |
+| payoff | 0.502 (0.467–0.530) | 0.501 (0.466–0.532) | 0.500 (0.469–0.533) | 0.497 (0.461–0.537) | 0.500 (0.471–0.535) |
+| pull proxy: mean Forge rating of the top 24 | 64.7 | 80.7 | 75.3 | 61.7 | 61.2 |
 
 | WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
 |---|---|---|---|---|---|---|---|---|---|
-| 0.501 (±0.034) | 0.501 (±0.034) | 0.499 (±0.036) | 0.499 (±0.037) | 0.499 (±0.038) | 0.499 (±0.033) | 0.501 (±0.031) | 0.501 (±0.036) | 0.498 (±0.034) | 0.501 (±0.039) |
+| 0.502 (±0.035) | 0.503 (±0.034) | 0.498 (±0.037) | 0.502 (±0.035) | 0.502 (±0.039) | 0.497 (±0.034) | 0.501 (±0.031) | 0.497 (±0.036) | 0.499 (±0.035) | 0.499 (±0.039) |
 
 ### balanced-pauper-even
 
@@ -228,9 +235,31 @@ Values are win-rate points per game for a deck that holds the card instead of th
 |---|---|---|---|---|---|---|---|---|---|
 | 0.503 (±0.055) | 0.497 (±0.054) | 0.500 (±0.060) | 0.502 (±0.060) | 0.508 (±0.054) | 0.495 (±0.054) | 0.493 (±0.047) | 0.497 (±0.055) | 0.499 (±0.052) | 0.508 (±0.051) |
 
-- **What the three are for.** *legacy-even-high*: the strongest level every colour can hold (+2 points a card). *legacy-even-mid*: every card near the band average. *pauper-even*: the same idea at common, where card values spread wider (a balancing search had more to do: 13 swaps from a flow gap of .163).
-- **Pull is not even, and it is reported, not fixed.** The bots pick by Forge rating, and in *legacy-even-mid* blue's top 24 average 82.5 against red's 61.1: expect the bots to over-draft blue and black there; in *legacy-even-high* black and green are the low-rated colours (64–65 against 75). An uneven pull also thins the pair cells the measurement can judge.
-- **The power cards are in *legacy-even-high*.** Black Lotus, Mox Jet, Mox Sapphire, Sol Ring, Time Walk, Ancestral Recall, Library of Alexandria, Tolarian Academy and Oko. The census measured them inside the level (Forge's AI does not break them in a random deck), so the generator took them. With people they decide drafts. A one-line filter (exclude the census's powered list) makes a no-power variant; whether to apply it is Justin's call, not the model's.
+### balanced-legacy-even-high-nopower
+
+| | W | U | B | R | G |
+|---|---|---|---|---|---|
+| payoff | 0.503 (0.470–0.530) | 0.488 (0.456–0.521) | 0.503 (0.467–0.533) | 0.501 (0.472–0.539) | 0.505 (0.473–0.540) |
+| pull proxy: mean Forge rating of the top 24 | 71.2 | 69.0 | 65.6 | 76.7 | 68.7 |
+
+| WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.490 (±0.036) | 0.503 (±0.036) | 0.511 (±0.032) | 0.504 (±0.034) | 0.490 (±0.032) | 0.489 (±0.038) | 0.498 (±0.034) | 0.503 (±0.036) | 0.511 (±0.037) | 0.500 (±0.037) |
+
+### balanced-legacy-even-mid-nopower
+
+| | W | U | B | R | G |
+|---|---|---|---|---|---|
+| payoff | 0.500 (0.467–0.529) | 0.502 (0.467–0.531) | 0.500 (0.468–0.529) | 0.497 (0.466–0.532) | 0.501 (0.471–0.537) |
+| pull proxy: mean Forge rating of the top 24 | 66.8 | 80.0 | 75.5 | 61.2 | 62.1 |
+
+| WU | WB | WR | WG | UB | UR | UG | BR | BG | RG |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.502 (±0.034) | 0.501 (±0.035) | 0.496 (±0.030) | 0.502 (±0.035) | 0.502 (±0.034) | 0.498 (±0.036) | 0.503 (±0.031) | 0.497 (±0.033) | 0.499 (±0.033) | 0.499 (±0.033) |
+
+- **What the five are for.** *legacy-even-high*: the strongest level every colour can hold (+2 points a card). *legacy-even-mid*: every card near the band average. *pauper-even*: the same idea at common, where card values spread wider (a balancing search had more to do: 13 swaps from a flow gap of .163). The two *-nopower* cubes are the legacy pair without the census's powered band, so the first night can measure each with and without power.
+- **Pull is not even, and it is reported, not fixed.** The bots pick by Forge rating, and in *legacy-even-mid* blue's top 24 average 80.7 against green's 61.2 (no power: 80.0 against 61.2): expect the bots to over-draft blue and black there; in *legacy-even-high* black and green are the low-rated colours (66–67 against 75–77); without power the spread narrows (65.6–76.7). An uneven pull also thins the pair cells the measurement can judge.
+- **The power cards are in *legacy-even-high*** (16 powered-band cards: Ancestral Recall, Time Walk, Black Lotus, Mox Emerald, Mox Jet, Sol Ring, Demonic Tutor, Wheel of Fortune, Library of Alexandria, Tolarian Academy and six original duals) and in *legacy-even-mid* (12: Tinker, Demonic Tutor, Wheel of Fortune, Mana Crypt, Library of Alexandria, Tolarian Academy and the same six duals). The census measured them inside the level (Forge's AI does not break them in a random deck), so the generator took them. With people they decide drafts, so the two *-nopower* cubes exclude the census's powered list. *(Correction: the first version listed Oko among them; that was Okoye, Mighty and Adored. Oko, Thief of Crowns is not on the powered list — the census bands it legacy — and it is in* legacy-even-high-nopower*.)*
 - **Lands are not modelled.** Each cube's lands are the plan's two a pair and two others, chosen by band and Forge rating (legacy: the duals, fetches and shocks, plus Library of Alexandria and Tolarian Academy as the two "others"; pauper: the bouncelands, gainlands and Evolving Wilds).
 
 ## The measurement programme
@@ -248,38 +277,38 @@ At 7 workers, about 15% more. The pool census (arm C) is not needed per candidat
 
 ### Nights to a confirmed balanced cube (simulated)
 
-Each candidate's true colour and pair payoffs are its predicted ones plus the model's error (prediction SD colour .019, pair .021 — the generated cubes' bootstrap — and a transfer SD of 0, .015 or .03); a measurement adds binomial noise at J145's cell sizes (2,672 deck-games a colour; pairs at the bots' J145 pull 1,564/680/850/576/1,616/806/544/238/382/350, or even pull 761 each); each night's refit divides the error variance by 1 + 0.5 × nights (an assumption: how fast drafted-cube games sharpen the model is not yet measured); a pass needs a second fresh-seed measurement in the next night. 2,000 simulated programmes; the full grid (transfer .03 too) is in `summary.md`.
+Each candidate's true colour and pair payoffs are its predicted ones plus the model's error (prediction SD colour .017, pair .019 — the generated cubes' bootstrap — and a transfer SD of **.015, the base case**, or **.03, the pessimistic one**; Omega's residual of 0 only bounds it from below); a measurement adds binomial noise at J145's cell sizes (2,672 deck-games a colour; pairs at the bots' J145 pull 1,564/680/850/576/1,616/806/544/238/382/350, or even pull 761 each); each night's refit divides the error variance by 1 + 0.5 × nights (an assumption: how fast drafted-cube games sharpen the model is not yet measured); a pass needs a second fresh-seed measurement in the next night. 2,000 simulated programmes; the full grid (the lower-bound rows and the all-even rule at J145's size, which never confirms) is in `summary.md`.
 
 | transfer SD | pull | rule | measurement size (x J145 arm B) | cubes a night | median nights | 80th pct | confirmed by night 5 | by night 10 | within 30 | confirmed cube truly in band |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0.000 | bot pull (J145) | no-off | 1 | 1 | 4 | 6 | 72% | 99% | 100% | 99% |
-| 0.000 | bot pull (J145) | no-off | 1 | 4 | 3 | 4 | 96% | 100% | 100% | 99% |
-| 0.000 | bot pull (J145) | no-off | 1 | 8 | 3 | 4 | 98% | 100% | 100% | 98% |
-| 0.000 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 2% | 10% | 50% | 100% |
-| 0.000 | bot pull (J145) | all-even | 3 | 4 | 15 | 24 | 8% | 30% | 90% | 100% |
-| 0.000 | bot pull (J145) | all-even | 3 | 8 | 11 | 18 | 13% | 46% | 98% | 100% |
-| 0.000 | even pull | no-off | 1 | 1 | 5 | 7 | 63% | 97% | 100% | 100% |
-| 0.000 | even pull | no-off | 1 | 4 | 3 | 4 | 94% | 100% | 100% | 99% |
-| 0.000 | even pull | no-off | 1 | 8 | 3 | 4 | 96% | 100% | 100% | 99% |
-| 0.000 | even pull | all-even | 3 | 1 | 6 | 9 | 38% | 89% | 100% | 100% |
-| 0.000 | even pull | all-even | 3 | 4 | 4 | 6 | 75% | 100% | 100% | 100% |
-| 0.000 | even pull | all-even | 3 | 8 | 4 | 5 | 85% | 100% | 100% | 100% |
-| 0.015 | bot pull (J145) | no-off | 1 | 1 | 6 | 8 | 44% | 93% | 100% | 99% |
-| 0.015 | bot pull (J145) | no-off | 1 | 4 | 4 | 5 | 83% | 100% | 100% | 97% |
-| 0.015 | bot pull (J145) | no-off | 1 | 8 | 3 | 5 | 90% | 100% | 100% | 95% |
-| 0.015 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 1% | 5% | 40% | 100% |
-| 0.015 | bot pull (J145) | all-even | 3 | 4 | 19 | 29 | 3% | 18% | 83% | 100% |
-| 0.015 | bot pull (J145) | all-even | 3 | 8 | 14 | 22 | 6% | 28% | 93% | 100% |
-| 0.015 | even pull | no-off | 1 | 1 | 7 | 9 | 33% | 89% | 100% | 100% |
+| 0.015 | bot pull (J145) | no-off | 1 | 1 | 6 | 8 | 45% | 93% | 100% | 99% |
+| 0.015 | bot pull (J145) | no-off | 1 | 4 | 4 | 5 | 83% | 100% | 100% | 98% |
+| 0.015 | bot pull (J145) | no-off | 1 | 8 | 3 | 5 | 89% | 100% | 100% | 96% |
+| 0.015 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 1% | 5% | 41% | 100% |
+| 0.015 | bot pull (J145) | all-even | 3 | 4 | 19 | 29 | 3% | 17% | 83% | 100% |
+| 0.015 | bot pull (J145) | all-even | 3 | 8 | 14 | 22 | 5% | 28% | 93% | 100% |
+| 0.015 | even pull | no-off | 1 | 1 | 7 | 9 | 34% | 89% | 100% | 100% |
 | 0.015 | even pull | no-off | 1 | 4 | 4 | 6 | 73% | 100% | 100% | 99% |
 | 0.015 | even pull | no-off | 1 | 8 | 4 | 5 | 82% | 100% | 100% | 99% |
 | 0.015 | even pull | all-even | 3 | 1 | 9 | 12 | 14% | 67% | 100% | 100% |
 | 0.015 | even pull | all-even | 3 | 4 | 6 | 8 | 40% | 97% | 100% | 100% |
 | 0.015 | even pull | all-even | 3 | 8 | 5 | 7 | 55% | 99% | 100% | 100% |
+| 0.030 | bot pull (J145) | no-off | 1 | 1 | 10 | 14 | 10% | 56% | 100% | 97% |
+| 0.030 | bot pull (J145) | no-off | 1 | 4 | 7 | 9 | 28% | 93% | 100% | 93% |
+| 0.030 | bot pull (J145) | no-off | 1 | 8 | 6 | 8 | 43% | 97% | 100% | 91% |
+| 0.030 | bot pull (J145) | all-even | 3 | 1 | >30 | >30 | 0% | 1% | 21% | 100% |
+| 0.030 | bot pull (J145) | all-even | 3 | 4 | 28 | >30 | 0% | 3% | 57% | 100% |
+| 0.030 | bot pull (J145) | all-even | 3 | 8 | 22 | >30 | 0% | 7% | 77% | 100% |
+| 0.030 | even pull | no-off | 1 | 1 | 11 | 15 | 5% | 46% | 100% | 99% |
+| 0.030 | even pull | no-off | 1 | 4 | 8 | 10 | 17% | 83% | 100% | 98% |
+| 0.030 | even pull | no-off | 1 | 8 | 7 | 9 | 30% | 92% | 100% | 97% |
+| 0.030 | even pull | all-even | 3 | 1 | 15 | 20 | 1% | 18% | 99% | 100% |
+| 0.030 | even pull | all-even | 3 | 4 | 11 | 14 | 3% | 49% | 100% | 100% |
+| 0.030 | even pull | all-even | 3 | 8 | 9 | 12 | 7% | 67% | 100% | 100% |
 
-- **"no-off"** = every colour EVEN and no pair with 400+ deck-games OFF (J145's registered classifier, extended to pairs). It confirms in a median 3–4 nights at 4–8 candidates a night, and the confirmed cube is truly inside the band in every cell 95–99% of the time.
-- **"all-even"** = every colour and every judged pair EVEN. At J145's size it never confirms within 30 nights (a pair of 544 deck-games has an interval ±.042, so its point must land within .008 of .5). At three times the size and even pull: 4–6 nights. With the bots' pull, the thin pairs hold it at 11–19 nights.
-- **More candidates a night helps less than a better model.** Going from 4 to 8 candidates saves about one night; a transfer error of .03 instead of 0 costs 3–4 nights.
+- **"no-off"** = every colour EVEN and no pair with 400+ deck-games OFF (J145's registered classifier, extended to pairs). At the base case it confirms in a median of 4 nights (3–4), 80th percentile 5–6, at 4–8 candidates a night, and the confirmed cube is truly inside the band in every cell 96–99% of the time; at the pessimistic .03, a median of 6–8 nights (80th percentile 8–10) and 91–98%. At the lower bound (transfer 0) it would be 3 nights — not the case to plan on.
+- **"all-even"** = every colour and every judged pair EVEN. At J145's size it never confirms within 30 nights (a pair of 544 deck-games has an interval ±.042, so its point must land within .008 of .5). At three times the size and even pull: 5–6 nights at the base case, 9–11 pessimistic. With the bots' pull, the thin pairs hold it at 14–19 nights (base) and 22–28 (pessimistic).
+- **More candidates a night helps less than a better model.** Going from 4 to 8 candidates saves about one night; a transfer error of .03 instead of .015 costs 3–4 nights.
 
 ### What the model cannot see
 
@@ -318,6 +347,6 @@ The census model on Omega's list (the analytic deck mix and the play weights), a
 
 ## Files
 
-- mtg-table branch `pc/balance-model`: `tools/cubelab/balance-model.ts` (the model, the generator, the simulation), `balance-model-cmd.ts` (the command), `web/test/cubelab-balance-model.test.ts` (8 tests), `docs/decisions/D473-library-card-model-and-balanced-cube-generator.md`, the guide section, and the three cubes under `cubes/library/balanced/`.
-- Reproduce: `tools/cubelab.sh balance-model --census /home/justin-a/code/lab/data/lab-j144 --omega /home/justin-a/code/lab/data/lab-j145 --facts <the library facts cache> --out <dir> --reps 200` (deterministic; the inputs' sha256 are in `model.json`).
+- mtg-table branch `pc/balance-model` (head `4932d002`): `tools/cubelab/balance-model.ts` (the model, the generator, the simulation), `balance-model-cmd.ts` (the command), `web/test/cubelab-balance-model.test.ts` (12 tests, one of which loads and drafts every committed balanced cube as `run` does), `docs/decisions/D473-library-card-model-and-balanced-cube-generator.md`, the guide section, the five cubes under `cubes/library/balanced/` and `cubes/library/powered-exclude.txt`.
+- Reproduce: `tools/cubelab.sh balance-model --census /home/justin-a/code/lab/data/lab-j144 --omega /home/justin-a/code/lab/data/lab-j145 --facts /home/justin-a/code/lab/mtg-table/var/cubelab/facts/32653ed2fcd7d8d2.json --out <dir> --cubes-out cubes/library/balanced` (and the same with `--exclude cubes/library/powered-exclude.txt --suffix -nopower`; seed 1, 200 replicates; deterministic). The facts file's sha256 is `9b0b65014b87a9f8a62b303bc9513771497f43f641c35ac34acff901a4eaea38`; every input's full sha256 is in `model.json` and in D473.
 
