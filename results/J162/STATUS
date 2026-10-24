@@ -1,8 +1,9 @@
-running
+failed
+reason: check: atlas.problems == 0 (atlas.problems = 10)
 runner: forgecoach-runner f6dba5e4
 started: 2026-10-24T06:04:00-04:00
-phase: commands 5/5
+finished: 2026-10-24T13:41:43-04:00
 mtg-table: f6dba5e
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.15), budget 21.4 GB)
 peak_worker_rss_gb: 1.15
-blocks_done: run1 exit 0 at 2026-10-24T08:10:24-04:00, run2 exit 0 at 2026-10-24T09:22:49-04:00, run3 exit 0 at 2026-10-24T11:07:34-04:00, run4 exit 0 at 2026-10-24T13:41:29-04:00
+blocks_done: run1 exit 0 at 2026-10-24T08:10:24-04:00, run2 exit 0 at 2026-10-24T09:22:49-04:00, run3 exit 0 at 2026-10-24T11:07:34-04:00, run4 exit 0 at 2026-10-24T13:41:29-04:00, run5 exit 0 at 2026-10-24T13:41:43-04:00
