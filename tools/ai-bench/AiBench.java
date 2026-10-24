@@ -1502,6 +1502,71 @@ public final class AiBench {
         stepClockScenario();
         forcedBlockScenarios();
         altCostScenarios();
+        staleEffectScenarios();
+    }
+
+    /**
+     * D474: a player who lost the monarch keeps its effect card in a field,
+     * out of the command zone but still naming it.  The fork's copy mapped that
+     * card to a stand-in with no owner, made it the copied player's monarch
+     * effect, and when that player became the monarch again in the copy
+     * {@code createMonarchEffect} put the stand-in in the command zone, where
+     * the view's flashback scan threw {@code Cannot invoke Player.getView()
+     * because player is null} (J161's pilot, d41, two Forge continuations).
+     */
+    static void staleEffectScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a stale monarch effect on a copy (D474, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp;Swamp",
+                "aibattlefield=Swamp");
+        scenario("copy-stale-monarch", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final forge.game.Game g = ai.getGame();
+            final Player human = ai.getWeakestOpponent();
+            g.getAction().becomeMonarch(human, "CN2");
+            g.getAction().becomeMonarch(ai, "CN2");   // the human's effect leaves the command zone, its field kept
+            check(g.getMonarch() == ai && monarchCards(human).isEmpty() && monarchCards(ai).size() == 1,
+                    "setup: the AI took the monarch from the human");
+            String plain = "copied";
+            try {
+                new forge.ai.simulation.GameCopier(g).makeCopy();
+            } catch (final RuntimeException e) {
+                plain = String.valueOf(e.getMessage());
+            }
+            check(plain.startsWith("Couldn't map The Monarch"),
+                    "control: Forge's own GameCopier cannot map the stale effect card (" + plain + ")");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final forge.game.Game copy = cp.makeCopy(null, ai);
+            final Player humanC = (Player) cp.find(human);
+            final Player aiC = (Player) cp.find(ai);
+            check(cp.unmapped() == 0 && cp.staleEffects().equals(List.of("The Monarch@Command")),
+                    "the copy maps the stale effect to nothing, not to a stand-in (stand-ins " + cp.unmappedNames()
+                            + ", stale " + cp.staleEffects() + ")");
+            String err = null;
+            try {
+                copy.getAction().becomeMonarch(humanC, "CN2");
+            } catch (final RuntimeException e) {
+                err = e.toString();
+            }
+            final List<Card> hm = monarchCards(humanC);
+            check(err == null && copy.getMonarch() == humanC && hm.size() == 1 && hm.get(0).getOwner() == humanC
+                            && hm.get(0).getTriggers().size() == 2 && monarchCards(aiC).isEmpty(),
+                    "in the copy the human becomes the monarch again: a fresh effect card it owns, with both triggers (error "
+                            + err + ", monarch " + copy.getMonarch() + ", effect " + hm
+                            + (hm.isEmpty() ? "" : ", owner " + hm.get(0).getOwner() + ", " + hm.get(0).getTriggers().size()
+                            + " trigger(s)") + ")");
+            check(g.getMonarch() == ai && monarchCards(human).isEmpty() && monarchCards(ai).size() == 1,
+                    "the real game is untouched: the AI is still the monarch");
+        });
+    }
+
+    private static List<Card> monarchCards(final Player p) {
+        final List<Card> out = new ArrayList<>();
+        for (final Card c : p.getCardsIn(ZoneType.Command)) {
+            if ("The Monarch".equals(c.getName())) {
+                out.add(c);
+            }
+        }
+        return out;
     }
 
     /**

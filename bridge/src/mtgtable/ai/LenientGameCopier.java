@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import forge.ai.simulation.GameCopier;
+import forge.card.GamePieceType;
 import forge.game.Game;
 import forge.game.GameObject;
 import forge.game.card.Card;
@@ -60,6 +61,20 @@ import forge.game.zone.ZoneType;
  * {@code ?} in {@link #unmappedNames}), and after the copy is made every lookup
  * is strict again.  Every stand-in is counted ({@link #unmapped}),
  * and the bench reports the rate.
+ *
+ * <p><b>A stale effect card maps to nothing</b> (D474).  A player who loses
+ * the monarch (or the initiative, ...) keeps its effect card in a field after
+ * {@code Zone.remove} has taken it out of the command zone -- and the card
+ * still names that zone ({@code Zone.remove} never clears it).
+ * {@code Player.copyEffectCardsToSnapshot} maps the field unless the card is
+ * in no zone; the strict lookup fails on it, and a stand-in -- a card with no
+ * owner and no triggers -- became the copied player's effect card.  When that
+ * player became the monarch again in the copy, {@code createMonarchEffect}
+ * put the stand-in into the command zone and the view's flashback scan threw
+ * {@code NullPointerException} on its null controller (J161's d41).  Such a
+ * card maps to null: the field stays unset and the copy makes a fresh effect
+ * when it needs one, which is what {@code mapEffectCard} does for an effect
+ * in no zone.
  */
 public final class LenientGameCopier extends GameCopier {
 
@@ -70,6 +85,7 @@ public final class LenientGameCopier extends GameCopier {
     private boolean copying;
     private final Map<Card, Card> standIns = new HashMap<>();
     private final List<String> unmappedNames = new ArrayList<>();
+    private final List<String> staleEffects = new ArrayList<>();
 
     public LenientGameCopier(final Game origGame) {
         super(origGame);
@@ -83,6 +99,11 @@ public final class LenientGameCopier extends GameCopier {
     /** Their names and zones, for the bench's log (the AI's own knowledge: its sideboard, or a public card). */
     public List<String> unmappedNames() {
         return unmappedNames;
+    }
+
+    /** D474: the effect cards a player still held out of their zone, mapped to nothing (name@zone). */
+    public List<String> staleEffects() {
+        return staleEffects;
     }
 
     @Override
@@ -102,6 +123,11 @@ public final class LenientGameCopier extends GameCopier {
             final ZoneType z = c.getZone() == null ? null : c.getZone().getZoneType();
             if (z == null || !COPIED.contains(z)) {
                 return standIn(c, String.valueOf(z));
+            }
+            if (z == ZoneType.Command && c.getGamePieceType() == GamePieceType.EFFECT && !c.getZone().contains(c)) {
+                // D474: an effect card its zone no longer holds is in no zone -- not part of the copy
+                staleEffects.add(c.getName() + "@" + z);
+                return null;
             }
             try {
                 return super.find(o);
