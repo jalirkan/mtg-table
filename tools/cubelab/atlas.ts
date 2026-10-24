@@ -51,6 +51,10 @@
 // D470: a branch whose option could not be given in its copy (a forced combat answer the seat was never asked for, a block on
 // an attacker that is not attacking) is `unavailable`: no error and no result, left out of the option's value like an error,
 // counted by option in `checks.optionUnavailable`, and an option unavailable past the same share is a problem.
+// D478: a branch the turn cap ended is a draw (`result` 0, `score` .5); one scored otherwise is a problem (Forge's
+// setGameOver(Draw) makes both seats winners, and every capped branch through J162 was written `result` 1). Capped branches
+// are counted by option in `checks.branchCapped`, and an option capped past the same share is a problem: a capped branch
+// says nothing about the option, only that the game ran long.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -717,6 +721,15 @@ function tallyBranches(rows: BranchRow[], threshold: number, why: (r: BranchRow)
   return { branches: rows.length, errored: rows.filter((r) => why(r)).length, threshold, byError: sorted(all), options };
 }
 
+/**
+ * D478: the branch games the turn cap ended, the same tally (`errored` counts them): by option, an option listed when more
+ * than `threshold` of its branch games were capped.  A capped branch is scored a draw and stays in the option's value, but
+ * it says nothing about the option, so past the bar the value rests on the branches that ended.
+ */
+export function cappedBranches(rows: BranchRow[], threshold: number): BranchErrors {
+  return tallyBranches(rows, threshold, (r) => (r.capped && !r.error && !r.unavailable ? 'ended at the turn cap' : null));
+}
+
 /** D466: an errored option as a problem line (D470: `verb` 'were unavailable' for an unavailable one). */
 export function erroredOptionProblem(x: ErroredOption, verb = 'errored'): string {
   const cont = Object.entries(x.byContinuation).map(([c, v]) => `${c} ${v.errored} of ${v.branches}`).join(', ');
@@ -809,6 +822,12 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
   // D470: an option that could not be given in its copy past the same share is a problem too (never an error)
   const ua = unavailableBranches(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
   for (const x of ua.options) problems.push(erroredOptionProblem(x, 'were unavailable'));
+  // D478: a branch the loop ended -- the cap, or the deadline between steps (a played `timedOut`; one inside a step is an engine
+  // error) -- is a draw: phase A's check, now phase B's too.  And an option capped past the same share is a problem.
+  const bCappedNotDrawn = bRows.filter((r) => (r.capped || r.timedOut) && !r.error && !r.unavailable && (r.result !== 0 || r.score !== 0.5));
+  if (bCappedNotDrawn.length) problems.push(`${bCappedNotDrawn.length} capped or timed-out branch game(s) not scored a draw (D478): ${bCappedNotDrawn[0]?.key} result ${bCappedNotDrawn[0]?.result}`);
+  const bc = cappedBranches(bRows, o.branchErrorMax ?? BRANCH_ERROR_MAX_DEFAULT);
+  for (const x of bc.options) problems.push(erroredOptionProblem(x, 'were capped'));
   const retained = units.map((u) => u.copiesRetained).filter((x): x is number => typeof x === 'number');
   // the maps
   const byD = new Map<number, BranchRow[]>();
@@ -845,6 +864,8 @@ export function writeAtlas(repo: string, o: AtlasOptions, out: string, plan: Rec
       branchErrors: be,
       // D470: the branch games whose option could not be given in their copy (`errored` counts them), by reason and by option
       optionUnavailable: ua,
+      // D478: the branch games the turn cap ended (`errored` counts them), by option past the threshold, and those not scored a draw
+      branchCapped: { ...bc, notDrawn: bCappedNotDrawn.length },
       // D466: the frame logs gunzip could not read, left out of the checks
       unreadableFrameLogs: truncated,
       // D466 (#184's review): the games whose rows went without the id check because of one of those logs
@@ -869,7 +890,7 @@ interface AtlasDoc {
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
       xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number };
-    branchErrors?: BranchErrors; optionUnavailable?: BranchErrors; unreadableFrameLogs?: Array<{ log: string; why: string }> };
+    branchErrors?: BranchErrors; optionUnavailable?: BranchErrors; branchCapped?: BranchErrors & { notDrawn: number }; unreadableFrameLogs?: Array<{ log: string; why: string }> };
 }
 
 /**
@@ -977,6 +998,14 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
     L.push('');
     for (const x of ua.options) L.push(`- a problem: ${erroredOptionProblem(x, 'were unavailable').replace(/\|/g, '/')}`);
     if (ua.options.length) L.push('');
+  }
+  const bc = c.branchCapped;
+  if (bc && bc.errored) {
+    // D478: the branches the turn cap ended, and the options capped past the threshold
+    L.push(`### Branch games the turn cap ended`, '');
+    L.push(`${bc.errored} of ${bc.branches} branch game(s) ended at the turn cap; each is scored a draw (D478)${bc.notDrawn ? `, but ${bc.notDrawn} of them were written otherwise (a problem)` : ''}.`, '');
+    for (const x of bc.options) L.push(`- a problem: ${erroredOptionProblem(x, 'were capped').replace(/\|/g, '/')}`);
+    if (bc.options.length) L.push('');
   }
   if (c.unreadableFrameLogs?.length) {
     L.push(`${c.unreadableFrameLogs.length} frame log(s) could not be read and were left out of the checks: ${c.unreadableFrameLogs.map((t) => `\`${t.log}\` (${t.why})`).join(', ')}.`, '');

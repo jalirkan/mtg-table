@@ -145,3 +145,11 @@ peasant-900000007 A vs B: 736 ladder games, deck A 357 of 736, score 0.051, ahea
 - *G2 has no code of its own* (point 2 above): the check sat after G1's `return` and could never fire.
 - *`atlas-selftest`'s folder is absolute* (`atlasSelftestDir`), so `LAB_DATA_DIR` never moves it: it
   clears the folder it writes. The atlas's begin lines spell deck files as D450's recipes do.
+
+**Addendum, 2026-10-24 (D478).** Point 7's "a branch scores 1 / ½ / 0" did not hold for a branch the turn cap ended.
+Forge's `setGameOver(Draw)` makes both seats winners, so every capped branch through J162 was written `result: 1`, which
+counted as seat A's win. That is 0.3–0.5% of the long-game pairs' branches, 2.5% on J150's ff5-452, and moved an option's
+mean by up to 2.5 points in J158 and J162 (6.25 on J150's ff5). D478 scores such a branch a draw. It also makes a capped
+branch scored otherwise a problem in phase B, as it already was in phase A, and makes an option capped past
+`--branch-error-max` a problem. No J158 or J162 label changes its `confident` flag. The values move, so labels from before
+and after D478 are not pooled unless they are recomputed. D478 has the numbers.

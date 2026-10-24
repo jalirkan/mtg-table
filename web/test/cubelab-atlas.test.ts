@@ -23,6 +23,8 @@
  *    atlas.md); every guardrail violation counted though only the first 50 are named; G1's planted controls (a land the
  *    seat's listing does not hold is no flag, a land in hand with the drop unused and not played is one); a truncated
  *    frame log skipped and named while atlas.json is still written.
+ *  - D478: a capped (or loop-timed-out) branch scored other than a draw is a problem, as phase A's capped game is; capped
+ *    branches are counted by option and an option capped past --branch-error-max is a problem.
  */
 
 import assert from 'node:assert/strict';
@@ -38,7 +40,7 @@ import {
 } from '../../tools/cubelab/atlasmath.ts';
 import {
   ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, BRANCH_ERROR_MAX_DEFAULT, baselineJob, branchErrors, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, erroredOptionProblem,
-  errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, newUnitState, phaseAReport, rolloutJob, unavailableBranches, unitJob, unitProgress, unitsOf, writeAtlas,
+  cappedBranches, errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, newUnitState, phaseAReport, rolloutJob, unavailableBranches, unitJob, unitProgress, unitsOf, writeAtlas,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
@@ -487,6 +489,67 @@ test('a branch whose game Karn restarted is played on: its row carries the resta
     assert.equal(doc.phaseB.branchErrors, 0);
     assert.ok(!doc.checks.problems.some((p) => /restart/i.test(p)), doc.checks.problems.join('\n'));
     assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /2 played on through a restart of the game by Karn Liberated \(D477\), counted as played/);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('a capped branch is a draw: one written as seat A\'s win is a problem, and an option capped past the bar is one (D478, J162 modern7)', () => {
+  const listing: DecisionListing = { d: 0, kind: 'p', turn: 3, tokens: ['pass', 'cast:31'], labels: ['pass', 'Card 1'] };
+  // 10 branches an option, 8 random and 2 Forge; option 0's branches 0-2 capped (3 of 10: over one in ten), option 1's branch 0
+  const rows = (asWritten: boolean): BranchRow[] => {
+    const rs: BranchRow[] = [];
+    for (let i = 0; i < 10; i++) {
+      for (const o of [0, 1]) {
+        const capped = o === 0 ? i < 3 : i === 0;
+        const draw = asWritten ? { result: 1, score: 1 } : { result: 0, score: 0.5 };   // J162's rows: result 1
+        rs.push({ ...brow(0, o, i < 8 ? 'random' : 'forge', i, null, o ? 'cast:31' : 'pass'), ...(capped ? { capped: true, turns: 41, ...draw } : {}) });
+      }
+    }
+    return rs;
+  };
+  const bc = cappedBranches(rows(false), BRANCH_ERROR_MAX_DEFAULT);
+  assert.equal(bc.errored, 4);
+  assert.deepEqual(bc.options.map((x) => [x.d, x.o, x.errored, x.branches]), [[0, 0, 3, 10]], 'option 1, 1 of 10, is under the bar');
+  assert.match(erroredOptionProblem(bc.options[0] as NonNullable<typeof bc.options[0]>, 'were capped'), /^d0 option 0 `pass` \(pass\): 3 of 10 branch game\(s\) were capped \(random 3 of 8, forge 0 of 2\): 3 x ended at the turn cap/);
+  assert.equal(branchErrors(rows(false), BRANCH_ERROR_MAX_DEFAULT).errored, 0, 'never a branch error');
+  // the map: a capped branch stays in, at a half
+  const d = decisionAtlas(listing, rows(false), 200, 7);
+  assert.equal(d.options[0]?.random.n, 8);
+  assert.equal(d.options[0]?.random.draws, 3);
+  assert.equal(decisionAtlas(listing, rows(true), 200, 7).options[0]?.random.draws, 0, 'as J162 wrote them: no draw, three wins');
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-capped-'));
+  type Doc = { phaseB: { cappedRandom: number; cappedForge: number }; checks: { problems: string[]; branchCapped: { errored: number; notDrawn: number; options: unknown[] } } };
+  const run = (rs: BranchRow[], o: AtlasOptions): { rc: number; doc: Doc; md: string } => {
+    fs.writeFileSync(path.join(out, 'phaseB', 'branches.jsonl'), `${rs.map((r) => JSON.stringify(r)).join('\n')}\n`);
+    const rc = writeAtlas(REPO, o, out, {}, {}, () => {});
+    return { rc, doc: JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc, md: fs.readFileSync(path.join(out, 'atlas.md'), 'utf8') };
+  };
+  try {
+    fs.mkdirSync(path.join(out, 'phaseB'), { recursive: true });
+    fs.writeFileSync(path.join(out, 'phaseB', 'baseline.json'), JSON.stringify({ v: 1, seed: 466, winner: 'B', first: 'A', turns: 17, decisions: [listing] }));
+    // as the fixed worker writes them: counted, the option over the bar a problem, no not-drawn problem
+    const a = run(rows(false), OPTS);
+    assert.equal(a.rc, 3);
+    assert.equal(a.doc.phaseB.cappedRandom, 4);
+    assert.equal(a.doc.checks.branchCapped.errored, 4);
+    assert.equal(a.doc.checks.branchCapped.notDrawn, 0);
+    assert.ok(a.doc.checks.problems.some((p) => /^d0 option 0 `pass`.* 3 of 10 branch game\(s\) were capped/.test(p)), a.doc.checks.problems.join('\n'));
+    assert.ok(!a.doc.checks.problems.some((p) => /not scored a draw/.test(p)));
+    assert.match(a.md, /### Branch games the turn cap ended/);
+    // under a bar of one half: counted, no problem at all
+    const b = run(rows(false), { ...OPTS, branchErrorMax: 0.5 });
+    assert.equal(b.doc.checks.branchCapped.options.length, 0);
+    assert.ok(!b.doc.checks.problems.some((p) => /capped/.test(p)), b.doc.checks.problems.join('\n'));
+    // as J162's worker wrote them (result 1): a problem, with the count
+    const c = run(rows(true), { ...OPTS, branchErrorMax: 0.5 });
+    assert.equal(c.rc, 3);
+    assert.equal(c.doc.checks.branchCapped.notDrawn, 4);
+    assert.ok(c.doc.checks.problems.some((p) => /^4 capped or timed-out branch game\(s\) not scored a draw \(D478\)/.test(p)), c.doc.checks.problems.join('\n'));
+    // a loop timeout (played, no engine error) is a draw too: brow's branch 5 is a win, so timed out it is a problem until it is 0
+    const t = (draw: boolean): BranchRow[] => rows(false).map((r) => (r.o === 1 && r.i === 5 ? { ...r, timedOut: true, ...(draw ? { result: 0, score: 0.5 } : {}) } : r));
+    assert.ok(run(t(false), { ...OPTS, branchErrorMax: 0.5 }).doc.checks.problems.some((p) => /^1 capped or timed-out branch game\(s\) not scored a draw/.test(p)));
+    assert.ok(!run(t(true), { ...OPTS, branchErrorMax: 0.5 }).doc.checks.problems.some((p) => /not scored a draw/.test(p)));
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }

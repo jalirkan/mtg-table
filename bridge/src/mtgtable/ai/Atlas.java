@@ -747,11 +747,15 @@ public final class Atlas {
             clock.disarm();
             b.steps = steps;
             b.turns = turnsBefore + ph.getTurn();
-            if (!copy.isGameOver()) {
+            // D478: a game this loop ended (the turn cap, the step cap, the deadline between steps) is a draw, 0. Not
+            // resultOf: Forge's setGameOver(Draw) gives every player without an outcome a WIN (Player.onGameOver), so
+            // resultOf read the atlas seat's hasWon() and scored every capped lab branch through J162 as seat A's win
+            final boolean ended = copy.isGameOver();
+            if (!ended) {
                 b.capped = b.turns > unit.turnCap;
                 copy.setGameOver(GameEndReason.Draw);
             }
-            b.result = SearchPolicy.resultOf(copy, aiCopy);
+            b.result = ended ? SearchPolicy.resultOf(copy, aiCopy) : 0;
             if (b.ledger != null) {
                 b.ledger.snapshot();
             }

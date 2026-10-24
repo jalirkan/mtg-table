@@ -1499,6 +1499,7 @@ public final class AiBench {
                 });
         evalLeafScenarios();
         karnRestartScenarios();
+        cappedDrawScenarios();
         d416Scenarios(castBoard);
         stepClockScenario();
         forcedBlockScenarios();
@@ -1761,6 +1762,57 @@ public final class AiBench {
                             && !b.engineError && b.turns == 5,
                     "a seat never asked at the fork's combat: unavailable at turn 5, not a stale block later (unavailable "
                             + b.unavailable + ", turn " + b.turns + ", error " + b.error + ")");
+        });
+    }
+
+    /**
+     * D478: an atlas branch the turn cap ends is a draw, {@code result 0}.
+     * {@code Game.setGameOver(GameEndReason.Draw)} gives every player without
+     * an outcome a win ({@code Player.onGameOver}), and the branch read the
+     * atlas seat's {@code hasWon()} back: every capped lab branch through J162
+     * was scored seat A's win.  A quiet board (lands only, both at 20, nothing
+     * to cast) played to a cap one turn on must come back capped and 0; the
+     * control, a Lightning Bolt forced at a seat on 2 life, ends the game
+     * before the cap and must still read as the seat's win.
+     */
+    static void cappedDrawScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a capped atlas branch is a draw (D478, engine)");
+        final String lib = "Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest";
+        final List<String> quiet = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest", "humanlibrary=" + lib, "aibattlefield=Forest;Forest", "ailibrary=" + lib);
+        scenario("capped-branch-draw", quiet, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = ai.getGame().getPhaseHandler().getTurn() + 1;
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(null), 0, 0, 7,
+                    u, "d478", new LinkedHashMap<>(), null, "d478", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && !b.timedOut && b.capped
+                            && b.turns == u.turnCap + 1 && b.result == 0,
+                    "a branch the turn cap ends (cap " + u.turnCap + ") is capped and scored a draw (capped " + b.capped
+                            + ", turns " + b.turns + ", result " + b.result + ", error " + b.error + ")");
+            check(!ai.getGame().isGameOver(), "the real game is untouched: not over");
+        });
+        final List<String> lethal = List.of("humanlife=2", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest", "humanlibrary=" + lib, "aibattlefield=Mountain;Forest", "aihand=Lightning Bolt",
+                "ailibrary=" + lib);
+        scenario("capped-branch-control", lethal, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card bolt = named(ai.getCardsIn(ZoneType.Hand), "Lightning Bolt");
+            final forge.game.spellability.SpellAbility sa = bolt.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            sa.resetTargets();
+            sa.getTargets().add(ai.getWeakestOpponent());
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = ai.getGame().getPhaseHandler().getTurn() + 1;
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(sa), 0, 0, 7,
+                    u, "d478", new LinkedHashMap<>(), null, "d478", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && !b.capped && b.turns == 5 && b.result == 1,
+                    "control: a branch that ends the game before the cap keeps its result (capped " + b.capped + ", turns "
+                            + b.turns + ", result " + b.result + ", error " + b.error + ")");
         });
     }
 
