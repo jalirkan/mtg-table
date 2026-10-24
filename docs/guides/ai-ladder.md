@@ -57,7 +57,19 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
   D472 (`pc/atlas-fork-altcost`) lets it map plays by an alternative cost
   (Snuff Out's life payment, flashback, foretell, ...), which threw or mapped
   to the base spell, so results from before and after D472 are not pooled
-  either.
+  either. The same holds, each for its own reason, for D476 (#201,
+  0f9275b4), which maps a play by an effect's may-play permission (an
+  adventure's creature from exile, impulse draw) that threw; D477 (#202,
+  fb3f21f5), which plays a rollout on through Karn Liberated's restart where
+  it errored; D478's addendum (#204, edd374c6), which scores a rollout the
+  engine ended drawn as a draw, not a loss (D478 itself, #203, fbca6235,
+  rescored the atlas's capped branches and left the search's rollouts as they
+  were, so it alone does not split them); and D479
+  (`pc/copier-effect-source-exiled-with`), which gives every fork's copied
+  effect card its triggers, replacement effects and source and keeps every
+  "exiled with" link, so a copied monarch draws and a copied adventure is on
+  its adventure. Search results from before and after each of D476, D477,
+  D478's addendum and D479 are not pooled.
 - **Anchors** (`"anchor": true`) are stock Forge: `forge-default`,
   `forge-reckless`, `forge-cautious`, `forge-experimental`. They are always in
   the pool, the scheduler always gives them a share, and `forge-default` is the

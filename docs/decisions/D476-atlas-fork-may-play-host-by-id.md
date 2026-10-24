@@ -114,7 +114,7 @@ before and after D476 are not pooled.** Split them by the experiment log's git s
 `setEffectSource` for battlefield cards only. In the 2.0.14 cardsfolder, 147 scripts read `EffectSource`:
 `ValidCard$`, `ValidTarget$`, `Defined$`, `DamageSource$` and so on, mostly on effects. On a fork they resolve
 against null. That is a quiet fidelity gap in D313's copier, not this fault. It needs a decision of its own and a
-planted case before anyone relies on such an effect in a rollout.
+planted case before anyone relies on such an effect in a rollout. *(2026-10-24: done by **D479**. The copy now carries a copied effect card's source, its triggers and its replacement effects, with a planted Gideon, Ally of Zendikar case.)*
 
 **Measured.**
 - **Replay** (one worker, one branch at a time), on this branch. J162's own rows are the control.

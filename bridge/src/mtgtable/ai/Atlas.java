@@ -314,6 +314,14 @@ public final class Atlas {
         WeakReference<Game> copyRef;
         public long bytes;
         public int standIns;
+        /**
+         * D479: the copy's effect cards whose original names a source the copy
+         * could not map (the source left every copied zone), and the exile links
+         * it could not map.  Each such card plays its effect on a fork as if it
+         * had no source, or its exiled card as if nothing exiled it.
+         */
+        public int effectSourceNull;
+        public int exileLinksLost;
         public final List<String> forkProblems = new ArrayList<>();
         /** The no-leak check: null not run; true the branch did not move when the opponent's hidden cards did. */
         public Boolean leakSame;
@@ -596,6 +604,12 @@ public final class Atlas {
         if (b.restarts > 0) {
             j.n("restarts", (long) b.restarts);
         }
+        if (b.effectSourceNull > 0) {
+            j.n("effectSourceNull", (long) b.effectSourceNull);
+        }
+        if (b.exileLinksLost > 0) {
+            j.n("exileLinksLost", (long) b.exileLinksLost);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -692,6 +706,8 @@ public final class Atlas {
             Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
             cand.afterDeterminize(cp, copy, aiCopy);
             b.standIns = cp.unmapped();
+            b.effectSourceNull = cp.effectSourceNull().size();
+            b.exileLinksLost = cp.exileLinksLost().size();
             b.forkProblems.addAll(forkProblems(game, ai, copy, aiCopy));
             if (probe != null) {
                 probe.append(java.util.Arrays.toString(DistillFeatures.state(aiCopy)));

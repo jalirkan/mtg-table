@@ -92,7 +92,8 @@ The cost is one more game in about 1 branch in 200 of a Karn deck's random conti
   battlefield under the activator's control. Cards Karn exiles inside the copy keep the link, as the three J162
   branches show (Elder Gargaroth and Polukranos came back under seat B). Copying `ExiledWith` is a general copier-fidelity
   change: it also decides `Card.isOnAdventure`, which is D476's ground. So it is left as its own follow-up, beside
-  D476's open effect-source item.
+  D476's open effect-source item. *(2026-10-24: fixed by **D479**: the copy keeps every "exiled with" link, and a −14 on a copy
+  returns a card Karn exiled before the fork, as the real game does.)*
 - **A capped branch is scored as seat A's win, not a draw.** `Atlas.play` ends a game that reaches the cap, the step
   cap or the deadline between steps with `setGameOver(GameEndReason.Draw)`. `Player.onGameOver` gives every player
   still without an outcome `PlayerOutcome.win()`, so `SearchPolicy.resultOf` returns +1. In J162's modern7 spine all 4

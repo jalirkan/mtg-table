@@ -20,6 +20,7 @@ package mtgtable.ai;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +30,12 @@ import forge.card.GamePieceType;
 import forge.game.Game;
 import forge.game.GameObject;
 import forge.game.card.Card;
+import forge.game.card.CardCopyService;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
+import forge.game.replacement.ReplacementEffect;
+import forge.game.spellability.SpellAbility;
+import forge.game.trigger.Trigger;
 import forge.game.zone.ZoneType;
 
 /**
@@ -75,6 +80,34 @@ import forge.game.zone.ZoneType;
  * card maps to null: the field stays unset and the copy makes a fresh effect
  * when it needs one, which is what {@code mapEffectCard} does for an effect
  * in no zone.
+ *
+ * <p><b>What the copy carries after it is made</b> (D479, amending D313).
+ * {@code GameCopier} builds an effect card (and any other card it cannot
+ * rebuild from a paper card) from its name, type, static and spell abilities
+ * only, sets an effect source only on the battlefield, and drops every
+ * "exiled with" link ({@code // TODO ExiledWith}).  On a fork that left a
+ * copied effect with no triggers (The Monarch drew nothing), no replacement
+ * effects (Gideon's "prevent all damage dealt to him" prevented nothing) and a
+ * null source, and a card on an adventure was not on one.  After Forge's copy
+ * is made, {@link #carry} gives each copied card what its original has, with
+ * every object it names mapped onto the copy:
+ * <ul>
+ *   <li>its game and layer timestamps (Forge sets them on the battlefield only);</li>
+ *   <li>for a card built from its traits: its SVars, triggers and replacement
+ *       effects ({@code copy(host, true)}, as Forge copies its statics), except a
+ *       trigger that holds game objects of its own, which is left out and counted;</li>
+ *   <li>its effect source ({@link #effectSourceNull} counts an effect card whose
+ *       source the copy cannot name);</li>
+ *   <li>its exile link: the card it was exiled with and the player who exiled it,
+ *       and, for a host, the cards exiled with it ({@link #exileLinksLost}).</li>
+ * </ul>
+ * A linked object that is the card a copied zone holds maps to that card's
+ * copy.  One that is an older object of the same card (a spell's object on the
+ * stack, which an adventure's link and an effect's source both name after it
+ * resolved) maps to a <i>mirror</i>: a copy, in no zone, of the copied card with
+ * that id, turned to the old object's face and given its timestamps -- what the
+ * original game holds too.  A card the copy holds under no such id maps to
+ * nothing and is counted.
  */
 public final class LenientGameCopier extends GameCopier {
 
@@ -86,6 +119,13 @@ public final class LenientGameCopier extends GameCopier {
     private final Map<Card, Card> standIns = new HashMap<>();
     private final List<String> unmappedNames = new ArrayList<>();
     private final List<String> staleEffects = new ArrayList<>();
+    /** D479: older objects of a copied card, by the original object, each mirrored once per copy. */
+    private final Map<Card, Card> mirrors = new IdentityHashMap<>();
+    private final List<String> effectSourceNull = new ArrayList<>();
+    private final List<String> exileLinksLost = new ArrayList<>();
+    private final List<String> traitsLeft = new ArrayList<>();
+    private int traitsCarried;
+    private int linksCarried;
 
     public LenientGameCopier(final Game origGame) {
         super(origGame);
@@ -106,14 +146,181 @@ public final class LenientGameCopier extends GameCopier {
         return staleEffects;
     }
 
+    /** D479: the effect cards whose original names a source the copy could not map (name &lt;- source). */
+    public List<String> effectSourceNull() {
+        return effectSourceNull;
+    }
+
+    /** D479: the exile links the copy could not map: a card's "exiled with", or a host's exiled card. */
+    public List<String> exileLinksLost() {
+        return exileLinksLost;
+    }
+
+    /** D479: the triggers left off a copied card because they hold game objects of their own. */
+    public List<String> traitsLeft() {
+        return traitsLeft;
+    }
+
+    /** D479: how many triggers and replacement effects the carry pass copied onto cards built from their traits. */
+    public int traitsCarried() {
+        return traitsCarried;
+    }
+
+    /** D479: how many effect sources and exile links the carry pass set on the copy. */
+    public int linksCarried() {
+        return linksCarried;
+    }
+
+    /**
+     * The copy, then (D479) {@link #carry}.  No caller advances the copy to a
+     * phase, and the carry pass must run before anything is played on it, so
+     * {@code advanceToPhase} must be null.
+     */
     @Override
     public Game makeCopy(final PhaseType advanceToPhase, final Player aiPlayer) {
+        if (advanceToPhase != null) {
+            throw new IllegalArgumentException("LenientGameCopier copies the game as it stands (D479): advanceToPhase must be null");
+        }
+        final Game copy;
         copying = true;
         try {
-            return super.makeCopy(advanceToPhase, aiPlayer);
+            copy = super.makeCopy(null, aiPlayer);
         } finally {
             copying = false;
         }
+        carry(copy);
+        return copy;
+    }
+
+    /**
+     * D479: what {@code GameCopier} leaves off a copied card, set after every
+     * card of the copy exists (a link may name any of them).  Then the copy's
+     * statics are applied again (a static may read an effect's source) and its
+     * active triggers collected again (the carried ones among them).
+     */
+    private void carry(final Game copy) {
+        final Map<Card, Card> live = new IdentityHashMap<>();   // an original card object -> its copy
+        final Map<Integer, Card> byId = new HashMap<>();
+        for (final Card c : copy.getCardsInGame()) {
+            final GameObject o = reverseFind(c);
+            if (o instanceof Card) {
+                live.put((Card) o, c);
+            }
+            byId.put(c.getId(), c);
+        }
+        final int carriedBefore = traitsCarried + linksCarried;
+        for (final Map.Entry<Card, Card> e : live.entrySet()) {
+            final Card o = e.getKey();
+            final Card c = e.getValue();
+            c.setGameTimestamp(o.getGameTimestamp());
+            c.setLayerTimestamp(o.getLayerTimestamp());
+            if (builtFromTraits(o)) {
+                carryTraits(o, c);
+            }
+            final Card src = o.getEffectSource();
+            if (src != null && c.getEffectSource() == null) {
+                final Card m = link(src, live, byId);
+                if (m != null) {
+                    c.setEffectSource(m);
+                    linksCarried++;
+                } else if (o.getGamePieceType() == GamePieceType.EFFECT) {
+                    effectSourceNull.add(o.getName() + " <- " + src.getName());
+                }
+            }
+            final Card with = o.getExiledWith();
+            if (with != null) {
+                final Card m = link(with, live, byId);
+                if (m != null) {
+                    c.setExiledWith(m);
+                    c.setExiledBy(o.getExiledBy() == null ? null : (Player) find(o.getExiledBy()));
+                    linksCarried++;
+                } else {
+                    exileLinksLost.add(o.getName() + " exiled with " + with.getName());
+                }
+            }
+            for (final Card x : o.getExiledCards()) {
+                Card m = live.get(x);
+                if (m == null) {
+                    m = byId.get(x.getId());   // the host's list compares by id, as Forge's equals does
+                }
+                if (m != null) {
+                    c.addExiledCard(m);
+                    linksCarried++;
+                } else {
+                    exileLinksLost.add(x.getName() + " exiled with host " + o.getName());
+                }
+            }
+        }
+        if (traitsCarried + linksCarried > carriedBefore) {
+            copy.getAction().checkStaticAbilities();
+            copy.getTriggerHandler().resetActiveTriggers();
+        }
+    }
+
+    /** The cards {@code GameCopier.createCardCopy} builds from name, type, statics and spells (2.0.14). */
+    private static boolean builtFromTraits(final Card o) {
+        return o.isImmutable() || (!o.isToken() && o.getPaperCard() == null);
+    }
+
+    private void carryTraits(final Card o, final Card c) {
+        if (c.getSVars().isEmpty() && !o.getSVars().isEmpty()) {
+            c.setSVars(o.getSVars());
+        }
+        if (c.getTriggers().isEmpty()) {
+            for (final Trigger t : o.getTriggers()) {
+                if (!t.getTriggerRemembered().isEmpty() || t.getSpawningAbility() != null) {
+                    traitsLeft.add(o.getName() + ": " + t);   // its own objects are the original game's
+                    continue;
+                }
+                final Trigger tc = t.copy(c, true);
+                ownActivator(tc.getOverridingAbility());
+                c.addTrigger(tc);
+                traitsCarried++;
+            }
+        }
+        if (c.getReplacementEffects().isEmpty()) {
+            for (final ReplacementEffect r : o.getReplacementEffects()) {
+                final ReplacementEffect rc = r.copy(c, true);
+                ownActivator(rc.getOverridingAbility());
+                c.addReplacementEffect(rc);
+                traitsCarried++;
+            }
+        }
+    }
+
+    /** A copied ability keeps its activating player; the copy's own player replaces the original's. */
+    private void ownActivator(final SpellAbility sa) {
+        if (sa != null && sa.getActivatingPlayer() != null && sa.getActivatingPlayer().getGame() != getCopiedGame()) {
+            sa.setActivatingPlayer((Player) find(sa.getActivatingPlayer()));
+        }
+    }
+
+    /**
+     * The copy's object for {@code o}, a card named by another card's link: the
+     * copy of the card a copied zone holds as {@code o}, else a mirror of the
+     * copied card with {@code o}'s id (null when there is none).
+     */
+    private Card link(final Card o, final Map<Card, Card> live, final Map<Integer, Card> byId) {
+        final Card same = live.get(o);
+        if (same != null) {
+            return same;
+        }
+        final Card done = mirrors.get(o);
+        if (done != null) {
+            return done;
+        }
+        final Card base = byId.get(o.getId());
+        if (base == null) {
+            return null;
+        }
+        final Card mirror = new CardCopyService(base).copyCard(false);
+        if (mirror.hasState(o.getCurrentStateName())) {
+            mirror.setState(o.getCurrentStateName(), true);
+        }
+        mirror.setGameTimestamp(o.getGameTimestamp());
+        mirror.setLayerTimestamp(o.getLayerTimestamp());
+        mirrors.put(o, mirror);
+        return mirror;
     }
 
     @Override

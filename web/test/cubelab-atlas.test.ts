@@ -495,6 +495,40 @@ test('a branch whose game Karn restarted is played on: its row carries the resta
   }
 });
 
+test('a copy that could not name an effect\'s source, or lost an exile link, is counted: on the row, in phase B and atlas.md, never a problem (D479)', () => {
+  const listing: DecisionListing = { d: 0, kind: 'p', turn: 3, tokens: ['pass', 'cast:31'], labels: ['pass', 'Card 1'] };
+  const got: BranchRow[] = [];
+  const st = newUnitState({ d: 0, c: 'random', i0: 0, i1: 2 } as Parameters<typeof newUnitState>[0], new Set());
+  const sink = { branch: (r: BranchRow) => { got.push(r); }, unit: () => {}, resume: () => { throw new Error('not resumed here'); } } as Parameters<typeof unitProgress>[3];
+  const { v: _v, d: _d, kind: _k, turn: _t, c: _c, token: _tok, label: _l, score: _s, ...worker } = { ...brow(0, 0, 'random', 0, null, 'pass'), effectSourceNull: 2, exileLinksLost: 1 };
+  unitProgress(st, [listing], { type: 'progress', id: 'd0-random-0', branch: worker } as Parameters<typeof unitProgress>[2], sink);
+  unitProgress(st, [listing], { type: 'progress', id: 'd0-random-0', branch: { ...worker, o: 1, key: 'atlas:d0:random:o1:b0', effectSourceNull: undefined, exileLinksLost: undefined } } as Parameters<typeof unitProgress>[2], sink);
+  assert.deepEqual(got.map((r) => [r.effectSourceNull, r.exileLinksLost]), [[2, 1], [undefined, undefined]], 'the counters only on the branch that had them');
+  const rows: BranchRow[] = [];
+  for (let i = 0; i < 8; i++) {
+    for (const o of [0, 1]) rows.push({ ...brow(0, o, i < 6 ? 'random' : 'forge', i, null, o ? 'cast:31' : 'pass'), ...(o === 1 && i < 3 ? { effectSourceNull: 1 } : {}), ...(i === 7 ? { exileLinksLost: 2 } : {}) });
+  }
+  const d = decisionAtlas(listing, rows, 200, 7);
+  assert.equal(d.options[1]?.random.n, 6, 'a branch with a null source still counts in its option\'s value');
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-copier-'));
+  try {
+    const B = path.join(out, 'phaseB');
+    fs.mkdirSync(B, { recursive: true });
+    fs.writeFileSync(path.join(B, 'baseline.json'), JSON.stringify({ v: 1, seed: 466, winner: 'B', first: 'A', turns: 17, decisions: [listing] }));
+    fs.writeFileSync(path.join(B, 'branches.jsonl'), `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`);
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { phaseB: { effectSourceNull: { branches: number; cards: number }; exileLinksLost: { branches: number; links: number } }; checks: { problems: string[] } };
+    assert.deepEqual(doc.phaseB.effectSourceNull, { branches: 3, cards: 3 });
+    assert.deepEqual(doc.phaseB.exileLinksLost, { branches: 2, links: 4 });
+    assert.equal(doc.checks.problems.length, 0, doc.checks.problems.join('\n'));
+    const md = fs.readFileSync(path.join(out, 'atlas.md'), 'utf8');
+    assert.match(md, /In 3 branch game\(s\) the fork's copy held 3 effect\(s\) whose source it could not name, each played as if it had none \(D479\)\./);
+    assert.match(md, /In 2 the copy lost 4 "exiled with" link\(s\) \(D479\)\./);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
 test('a capped branch is a draw: one written as seat A\'s win is a problem; an option capped past --branch-capped-warn is a warning, never a problem (D478 and its addendum)', () => {
   const listing: DecisionListing = { d: 0, kind: 'p', turn: 3, tokens: ['pass', 'cast:31'], labels: ['pass', 'Card 1'] };
   // 10 branches an option, 8 random and 2 Forge; option 0's branches 0-2 capped (3 of 10: over the default warning's one in four),
