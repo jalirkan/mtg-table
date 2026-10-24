@@ -73,6 +73,8 @@ export interface NightCube {
   decks: Array<MDeck & { run: string }>; games: MGame[];
   blab: { colour: Record<string, { est: number; lo: number; hi: number; n: number }>; pairs: Record<string, { est: number; lo: number; hi: number; n: number }> } | null;
   files: string[];
+  /** The lab arm's run.json, when the night folder keeps it: the ratings file the drafter picked by (null = Forge's ranks) and whether its weights are the defaults the simulation uses. */
+  labRun: { file: string; ratingsFile: string | null; ratingsSha256: string | null; weightsDefault: boolean } | null;
 }
 
 function findCube(repo: string, id: string): string {
@@ -105,7 +107,12 @@ export function loadNight(repo: string, dir: string, scaleOf: (cubeFile: string)
     const own = new Set(raw.map((d) => d.id));
     const games = decisive(gzLines<RawGame>(s.games).filter((g) => own.has(g.a) && own.has(g.b))).map((g) => ({ ...g, a: `${night}/${cube}/${g.a}`, b: `${night}/${cube}/${g.b}` }));
     const bal = fs.existsSync(s.balance) ? (JSON.parse(fs.readFileSync(s.balance, 'utf8')) as { payoff: Record<string, NightCube['blab']> }).payoff.Blab ?? null : null;
-    return { night, cube, cubeFile, scale, decks, games, blab: bal, files: [s.decks, s.games, ...(fs.existsSync(s.balance) ? [s.balance] : [])] };
+    const runJson = [path.join(dir, 'runs/lab/run.json'), path.join(path.dirname(dir), cube, 'runs/lab/run.json')].find((p) => fs.existsSync(p));
+    const labRun = runJson ? (() => {
+      const rj = JSON.parse(fs.readFileSync(runJson, 'utf8')) as { ratingsFile?: string | null; weights?: Record<string, unknown>; versions?: Array<{ ratingsSha256?: string | null }> };
+      return { file: runJson, ratingsFile: rj.ratingsFile ?? null, ratingsSha256: rj.versions?.at(-1)?.ratingsSha256 ?? null, weightsDefault: JSON.stringify(rj.weights ?? {}) === JSON.stringify(DEFAULT_WEIGHTS) };
+    })() : null;
+    return { night, cube, cubeFile, scale, decks, games, blab: bal, files: [s.decks, s.games, ...(fs.existsSync(s.balance) ? [s.balance] : [])], labRun };
   });
 }
 
@@ -247,7 +254,7 @@ export function balanceModelV2Command(repo: string, f: Flags, say: (s: string) =
 
   // ---- the nights
   const nights = nightDirs.flatMap((d) => loadNight(repo, d, scaleOf));
-  for (const n of nights) say(`night ${n.night} / ${n.cube} (${n.scale}): ${n.decks.length} decks (${n.decks.filter((d) => d.run === 'lab').length} lab), ${n.games.length} decisive games${n.blab ? '' : ', no balance read'}`);
+  for (const n of nights) say(`night ${n.night} / ${n.cube} (${n.scale}): ${n.decks.length} decks (${n.decks.filter((d) => d.run === 'lab').length} lab), ${n.games.length} decisive games${n.blab ? '' : ', no balance read'}; lab drafter ${n.labRun ? `${n.labRun.ratingsFile ? `on ratings ${n.labRun.ratingsFile} (NOT Forge's ranks, which the simulation assumes)` : 'on Forge\'s ranks'}${n.labRun.weightsDefault ? '' : ', weights NOT the defaults the simulation uses'}` : 'ratings unknown (no run.json beside the night)'}`);
   const labPairs = (n: NightCube): Array<[MDeck, MDeck]> => {
     const by = new Map(n.decks.map((d) => [d.id, d]));
     return n.games.filter((g) => by.get(g.a)?.run === 'lab' && by.get(g.b)?.run === 'lab').map((g) => [by.get(g.a) as MDeck, by.get(g.b) as MDeck]);
@@ -389,20 +396,34 @@ export function balanceModelV2Command(repo: string, f: Flags, say: (s: string) =
     }
   }
   const pooledOut = Object.fromEntries(Object.entries(pooled).map(([k, t]) => [k, { rmseColour: Math.sqrt(t.sc / t.n), rmsePair: t.np ? Math.sqrt(t.sp / t.np) : NaN, nColour: t.n, nPair: t.np }]));
-  // the transfer error v2 still carries: night-held-out residuals beyond the reads' own noise and the prediction's
-  const transfer = (() => {
+  // The transfer error v2 still carries: night-held-out residuals beyond the reads' own noise, per source.  A NEW cube
+  // (no other night drafted it: J160's five) and a RE-MEASURED one (Omega, whose other night stays in the fit) are very
+  // different problems, so they are computed apart, and the generated cubes — new cubes — carry the new-cube figure.
+  const isNewCube = (r: Record<string, unknown>): boolean => !nights.some((n) => n.cube === r.cube && n.night !== r.night);
+  const transferOf = (rows: Array<Record<string, unknown>>) => {
     const res: { c: number[]; p: number[]; vc: number[]; vp: number[] } = { c: [], p: [], vc: [], vp: [] };
-    for (const r of valRows.filter((x) => x.mode === 'night')) {
+    for (const r of rows) {
       const m = r.measured as Record<string, { est: number; lo: number; hi: number; n: number }>;
       const v2 = r.v2 as { residual: Record<string, number> };
       for (const [k, d] of Object.entries(v2.residual)) { const cell = m[k] as { lo: number; hi: number }; const vr = ((cell.hi - cell.lo) / 3.92) ** 2; if (k.length === 1) { res.c.push(d); res.vc.push(vr); } else { res.p.push(d); res.vp.push(vr); } }
     }
     const ms = (xs: number[]): number => xs.reduce((a, b) => a + b * b, 0) / Math.max(1, xs.length);
     const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
-    return { colour: Math.sqrt(Math.max(0, ms(res.c) - mean(res.vc))), pair: Math.sqrt(Math.max(0, ms(res.p) - mean(res.vp))), nColour: res.c.length, nPair: res.p.length,
-      note: 'sqrt(max(0, mean squared night-held-out residual - mean read variance)); the prediction\'s own bootstrap variance is not subtracted (it is carried separately in the intervals), so this is the transfer error plus the values\' noise' };
-  })();
-  const TRANSFER = { colour: Math.max(transfer.colour, 0.015), pair: Math.max(transfer.pair, 0.025) };
+    return { colour: Math.sqrt(Math.max(0, ms(res.c) - mean(res.vc))), pair: Math.sqrt(Math.max(0, ms(res.p) - mean(res.vp))), nColour: res.c.length, nPair: res.p.length, cubes: [...new Set(rows.map((r) => `${r.night}/${r.cube}`))] };
+  };
+  const nightRows = valRows.filter((x) => x.mode === 'night');
+  const transfer = {
+    newCube: transferOf(nightRows.filter(isNewCube)),
+    remeasured: transferOf(nightRows.filter((r) => !isNewCube(r))),
+    pooled: transferOf(nightRows),
+    byNight: Object.fromEntries([...new Set(nightRows.map((r) => r.night as string))].map((n) => [n, transferOf(nightRows.filter((r) => r.night === n))])),
+    note: 'sqrt(max(0, mean squared night-held-out residual - mean read variance)); the prediction\'s own bootstrap variance is not subtracted (it is carried separately in the intervals), so this is the transfer error plus the values\' noise. newCube: cubes no other night drafted (what a generated cube is); remeasured: cubes another night in the fit drafted.',
+  };
+  // The floors (.015 a colour, .025 a pair) are hand-set, D473's base case and its pair analogue: a validation with no
+  // new cube (or --no-validate) must not print intervals as if the model had no transfer error at all.
+  const TRANSFER_FLOOR = { colour: 0.015, pair: 0.025 };
+  const tSource = transfer.newCube.nColour ? transfer.newCube : transfer.pooled;
+  const TRANSFER = { colour: Math.max(tSource.colour, TRANSFER_FLOOR.colour), pair: Math.max(tSource.pair, TRANSFER_FLOOR.pair), source: transfer.newCube.nColour ? 'newCube' : transfer.pooled.nColour ? 'pooled' : 'floor', floor: TRANSFER_FLOOR };
 
   // ---- 5. the generator
   const cubes: Array<Record<string, unknown>> = [];
@@ -496,7 +517,7 @@ export function balanceModelV2Command(repo: string, f: Flags, say: (s: string) =
         `Made by tools/cubelab.sh balance-model, model v2 (D475; tools/cubelab/balance-model.ts, balance-model-v2-cmd.ts) from the recorded deck census J144/J149 and the drafted games of ${[...new Set(nights.map((n) => n.night))].join(', ')}: no designed archetypes, no hand choices. Idea: ${idea}.`,
         `The values: drafted context (D475) — each card's census value (${census[s].label}) times alpha ${f3(fit.alpha[s] ?? NaN)}, plus its own term from ${allGames.length} drafted games (decks clustered by draft), ridge-shrunk toward the census value at lambda ${lambda} (chosen by CV by draft); ${reps} draft-bootstrap replicates with the census's replicates as the prior. A card is "measured" with 200+ deck-games in the census or the drafted games.`,
         `The selection: sample.ts's two-colour structure (Omega's skeleton without its list: 24 a colour, 2 gold a pair, 18 colourless, 2 lands a pair + 2 others, Omega's curve, every count exact) filled by v1's min-cost flow at cost 1000 x |value - ${target}| + 300 x sd (an unmeasured card costs as if ${opts.unmeasuredGap} off, a card outside the ${core.join(' + ')} band${core.length > 1 ? 's' : ''} ${opts.offBand} more), at least ${opts.minCreaturesPerColour} creatures a colour, lands by Forge's rating; then D475's robust search: like-for-like swaps (same colour class and mana value, within 3 points of the level and ${ratingWindow} Forge rating points of the card replaced) judged by the mean gap over ${reps / 2} bootstrap replicates on the mix and concentration the lab drafter shows on the flow's cube, each kept only if it buys ${minGain} of that mean, the result re-drafted and kept only if it beats the flow by as much on ${reps / 2} replicates the search never saw: ${keep ? `${searched.swaps.length} swap(s) kept` : `${searched.swaps.length} swap(s) tried, none kept: this is the flow's cube`}.`,
-        `Predicted payoff when drafted by the lab drafter and played by Forge (the drafter's own decks: ${drafts} simulated grid drafts at seeds from ${SIM_SEED}; ${(100 * record.mix.k3).toFixed(0)}% three-colour decks), with 95% intervals that hold the values' bootstrap and the model's transfer error (${f3(TRANSFER.colour)} a colour, ${f3(TRANSFER.pair)} a pair, from the leave-one-night-out validation): ${MONO.map(cellTxt).join(', ')}; pairs ${PAIRS.map(cellTxt).join(', ')}.`,
+        `Predicted payoff when drafted by the lab drafter and played by Forge (the drafter's own decks: ${drafts} simulated grid drafts at seeds from ${SIM_SEED}; ${(100 * record.mix.k3).toFixed(0)}% three-colour decks), with 95% intervals that hold the values' bootstrap and the model's transfer error on a new cube (${f3(TRANSFER.colour)} a colour, ${f3(TRANSFER.pair)} a pair, from the leave-one-night-out validation's new cubes, added to each cell independently): ${MONO.map(cellTxt).join(', ')}; pairs ${PAIRS.map(cellTxt).join(', ')}.`,
         `The gap (max |colour − .5| + max |pair − .5| over the pairs a night would judge, 400+ deck-games): point ${f3(record.pointGap)}; over held-out bootstrap replicates ${f3(record.robust.mean)} (${f3(record.robust.lo)}–${f3(record.robust.hi)}); with the transfer error as well ${f3(record.honest.mean)} (${f3(record.honest.lo)}–${f3(record.honest.hi)}) — that last is what a night should expect to measure before its own noise.`,
         ...(exclusion ? [`Excluded before the flow: the ${exclusion.names} cards of ${exclusion.file} (sha256 ${exclusion.sha256.slice(0, 12)}), so none can be chosen; everything else as in the cube without the list.`] : []),
         'A prediction, not a measurement. Model v2 was validated by leaving each measured night out (D475); its error on a new cube is the transfer error above, not the third decimal.',
@@ -530,7 +551,9 @@ export function balanceModelV2Command(repo: string, f: Flags, say: (s: string) =
   for (const n of nights) inputs[`cube:${n.cube}`] = { file: path.relative(repo, n.cubeFile), sha256: sha(n.cubeFile) };
   const json = {
     v: 3, model: 'v2 (D475)', made: 'tools/cubelab.sh balance-model', reps, seed, drafts, simSeed: SIM_SEED, suffix, exclude: exclusion ? { ...exclusion, list: [...excluded] } : null, inputs,
-    nights: nights.map((n) => ({ night: n.night, cube: n.cube, scale: n.scale, decks: n.decks.length, labDecks: lab(n).length, games: n.games.length, read: !!n.blab })),
+    nights: nights.map((n) => ({ night: n.night, cube: n.cube, scale: n.scale, decks: n.decks.length, labDecks: lab(n).length, games: n.games.length, read: !!n.blab, labRun: n.labRun })),
+    // what the drafter simulation (the mix, the play curve, the concentration) assumes: Forge's ranks from the facts file, DEFAULT_WEIGHTS
+    drafterAssumes: { ratings: 'Forge\'s ranks from the facts file (no --ratings file)', facts: { file: factsFile, sha256: sha(factsFile) }, weights: 'DEFAULT_WEIGHTS (tools/cubelab/weights.ts)', nightsAgree: nights.every((n) => n.labRun && !n.labRun.ratingsFile && n.labRun.weightsDefault) },
     census: Object.fromEntries((['legacy', 'pauper'] as Scale[]).map((s) => [s, { source: census[s].name, lambda: census[s].fit.pen.card, cards: census[s].fit.design.cards.length }])),
     drafted: { lambda, alpha: fit.alpha, cards: fit.cards.length, games: allGames.length, cvChoice, choice },
     mixes, perCube, v1: { mix: v1mix, curve: { a: v1curve.a, b: v1curve.b, cards: v1pts.length } },
@@ -563,7 +586,8 @@ function summaryV2(j: any, values: Array<{ card: string; colors: string; rating:
   for (const r of j.validation.rows) L.push(`| ${r.mode === 'none' ? 'nothing (in-sample)' : r.mode} | ${r.night} / ${r.cube} | ${rc(r.v1)} | **${rc(r.v2)}** | ${rc(r.v2noConc)} | ${rc(r.v2decks)} | ${rc(r.v2oracle)} | ${rc(r.censusConc)} | ${rc(r.censusSimDecks)} | ${rc(r.censusOracle)} | ${f3(r.measured.U.est)} / ${f3(r.v1.U)} / ${f3(r.v2.U)} |`);
   L.push('', '| pooled | colours | pairs | cells |', '|---|---|---|---|');
   for (const [k, p] of Object.entries(j.validation.pooled) as Array<[string, { rmseColour: number; rmsePair: number; nColour: number; nPair: number }]>) L.push(`| ${k} | ${f3(p.rmseColour)} | ${f3(p.rmsePair)} | ${p.nColour} + ${p.nPair} |`);
-  L.push('', `Transfer error left in v2 (night held out): colours ${f3(j.validation.transfer.colour)}, pairs ${f3(j.validation.transfer.pair)} (${j.validation.transfer.note}); the generated cubes' intervals carry ${f3(j.validation.transferUsed.colour)} / ${f3(j.validation.transferUsed.pair)}.`, '');
+  const tr = j.validation.transfer;
+  L.push('', `Transfer error left in v2, night held out (${tr.note}): on NEW cubes (${tr.newCube.cubes.join(', ') || 'none'}) colours ${f3(tr.newCube.colour)}, pairs ${f3(tr.newCube.pair)}; on RE-MEASURED cubes (${tr.remeasured.cubes.join(', ') || 'none'}) ${f3(tr.remeasured.colour)} / ${f3(tr.remeasured.pair)}; pooled ${f3(tr.pooled.colour)} / ${f3(tr.pooled.pair)}. The generated cubes are new cubes: their intervals carry ${f3(j.validation.transferUsed.colour)} / ${f3(j.validation.transferUsed.pair)} (${j.validation.transferUsed.source}; hand-set floors ${j.validation.transferUsed.floor.colour} / ${j.validation.transferUsed.floor.pair}). Each cell gets independent noise, while the real residuals are correlated across a colour's pairs: a known narrowing of the gap-with-transfer interval.`, '');
   L.push('## The drafter\'s mix, by scale', '', '| scale | lab decks | three-colour share | two-colour: a colour / gold / colourless / splash | three-colour: a colour / gold / colourless | play curve |', '|---|---|---|---|---|---|');
   for (const [s, m] of Object.entries(j.mixes) as Array<[string, { mix: DeckMixV2; curve: { a: number; b: number } }]>) L.push(`| ${s} | ${m.mix.decks} | ${f3(m.mix.k3)} | ${m.mix.two.perColour.toFixed(2)} / ${m.mix.two.gold.toFixed(2)} / ${m.mix.two.colourless.toFixed(2)} / ${m.mix.two.splash.toFixed(2)} | ${m.mix.three.perColour.toFixed(2)} / ${m.mix.three.gold.toFixed(2)} / ${m.mix.three.colourless.toFixed(2)} | ${m.curve.a.toFixed(3)} + ${m.curve.b.toFixed(4)} x rating |`);
   L.push('', `v1's mix (J145): ${j.v1.mix.perColour.toFixed(2)} a colour, ${j.v1.mix.gold.toFixed(2)} gold, ${j.v1.mix.colourless.toFixed(2)} colourless, no three-colour deck.`, '', '| night / cube | k = 1 / 2 / 3 | three-colour share |', '|---|---|---|');

@@ -52,7 +52,9 @@ every claim by leaving the night out.
    cube's miss out of sample: no other night drafted Ancestral or Time Walk, and with J160 held out v2 says
    .501 (with only the high cube held out .517; in-sample .546). Concentration stays in the predictor because
    it helped where it could be judged (Omega pairs, J159 held out: .020 → .017; cube held out .023 → .020) and
-   cost nothing on J160 (.028 / .042 either way).
+   cost nothing on J160 (.028 / .042 either way). **That choice was made on the validation table itself**, as
+   was the choice of the analytic mix over summing values on the drafter's decks (Rejected): the held-out
+   numbers below are therefore mildly optimistic for those two features — the next night is their clean test.
 4. **A robust generator.** The flow is v1's, on v2's values and SDs. The search (`balanceSearchRobust`) scores a
    swap by the **mean gap over bootstrap replicates** (max |colour − .5| + max |pair − .5|, pairs a night would
    judge: 400+ deck-games at 2,000 drafts) on the mix and concentration the drafter shows on the flow's cube,
@@ -60,9 +62,11 @@ every claim by leaving the night out.
    25 Forge rating points of the one it replaces (`--rating-window`) and 3 points of the level; then the result
    is re-drafted and kept only if its mean gap on the **odd replicates**, which the search never saw, beats the
    flow's by the same .002. Each cube prints three gaps: the point gap, the robust gap (95%), and the gap with
-   the validation's transfer error (.021 a colour, .030 a pair) added to every cell — what a night should expect
-   to measure before its own noise. #196's .003–.008 were point gaps of a search choosing between cards on their
-   noise; v2's point gaps are .040–.055, robust .047–.058, with transfer .09–.10.
+   the validation's NEW-CUBE transfer error (.026 a colour, .038 a pair, point 5) added to every cell — what a
+   night should expect to measure before its own noise. That last adds independent noise to each cell, while
+   the real residuals are correlated across a colour's pairs (J160: WU and UG high together, blue's pairs moving
+   with blue), a known narrowing of its interval. #196's .003–.008 were point gaps of a search choosing
+   between cards on their noise; v2's point gaps are .040–.055, robust .047–.058, with transfer .10–.12.
 5. **Validation before any night: leave one night out.** Every measured cube is re-predicted with the drafted
    fit refitted without its night (J160's five cubes: without all of J160 — only Omega's drafted games and the
    census remain; J159: without J159, J145 in), v1's prediction of record beside it (reproduced exactly: J159
@@ -83,10 +87,17 @@ every claim by leaving the night out.
    the drafted games, the one choice a held-out night shares with the fit (lambda 800 and 3200 give J160
    held out .025 / .041 and .026 / .042 on the night's own decks, against 1600's .025 / .042).
 
-   **Out of sample on a new cube, v2 is only a little better than v1** (.030 → .028, .047 → .042). Its large
-   gains on Omega come from the other Omega night: a cube re-measured is predicted well once it has been
-   drafted once, a new cube is not. Leaving the cube out instead of the night (the other J160 cubes in) gives
-   .022 / .036 on J160 and .018 / .024, .014 / .020 on Omega. The decomposition says why: on the night's own
+   **Out of sample on a new cube, v2 is only a little better than v1** (.030 → .028, .047 → .042): **the J160
+   night-held-out line is the honest new-cube number.** Its large gains on Omega come from the other Omega
+   night: a cube re-measured is predicted well once it has been drafted once, a new cube is not. Leaving the
+   cube out instead of the night (the other J160 cubes in) gives .022 / .036 on J160 — but that is a cube whose
+   SIBLINGS were drafted (the same skeleton, band and generator, most of the same cards), not a cube nobody
+   drafted, so it is no new-cube figure; Omega with both its nights held out gives .018 / .024 and .014 / .020.
+   The transfer error left beyond the reads' noise is computed per source: on the five new cubes (J160, night
+   held out) **.026 a colour and .038 a pair**; on the re-measured cube (Omega) 0 and 0 (indistinguishable from
+   the reads' noise); pooled .021 / .030. The generated cubes are new cubes, so their intervals carry the
+   new-cube figure; the floors (.015 a colour, .025 a pair: D473's base case and its pair analogue) are
+   hand-set, used only when a run has no new cube to validate on. The decomposition says why: on the night's own
    decks (the oracle mix) v2's values score .025 / .042 on J160, so the drafter's mix accounts for almost none of
    the remaining error; the values do. Pair-identity and colour-identity terms in the drafted fit (WU's and UG's
    excess as a deck property) were tried and did not transfer (J160 pooled .025 / .042 with or without them, on
@@ -101,21 +112,23 @@ every claim by leaving the night out.
 
    | cube | search | point | robust (95%) | with transfer (95%) | flow alone: robust |
    |---|---|---|---|---|---|
-   | balanced-v2-legacy-even-high | 7 swaps kept | .040 | .047 (.025–.073) | .093 (.051–.146) | .071 |
-   | balanced-v2-legacy-even-high-nopower | 6 swaps kept | .055 | .058 (.034–.095) | .100 (.058–.159) | .079 |
-   | balanced-v2-legacy-even-mid | flow kept (1 tried) | .041 | .051 (.025–.074) | .096 (.053–.148) | .051 |
-   | balanced-v2-legacy-even-mid-nopower | flow kept (1 tried) | .040 | .049 (.026–.071) | .091 (.049–.145) | .048 |
-   | balanced-v2-pauper-even | 11 swaps kept | .052 | .054 (.031–.081) | .091 (.045–.151) | .119 |
+   | balanced-v2-legacy-even-high | 7 swaps kept | .040 | .047 (.025–.073) | .110 (.061–.171) | .071 |
+   | balanced-v2-legacy-even-high-nopower | 6 swaps kept | .055 | .058 (.034–.095) | .117 (.067–.181) | .079 |
+   | balanced-v2-legacy-even-mid | flow kept (1 tried) | .041 | .051 (.025–.074) | .114 (.061–.175) | .051 |
+   | balanced-v2-legacy-even-mid-nopower | flow kept (1 tried) | .040 | .049 (.026–.071) | .107 (.059–.172) | .048 |
+   | balanced-v2-pauper-even | 11 swaps kept | .052 | .054 (.031–.081) | .106 (.052–.174) | .119 |
 
-   Every colour cell's 95% interval with the transfer error is about ±.05 and every pair's ±.06–.07: each cube is
-   predicted even to within what the model can tell, and a night measuring .05–.10 on one is consistent with
-   it. The per-cell tables are in each document's header and in `model.json`. They are candidates to measure;
+   Every colour cell's 95% interval with the transfer error is about ±.055 (pauper ±.06) and every pair's ±.08:
+   each cube is predicted even to within what the model can tell, and a night measuring .06–.17 on one is
+   consistent with it. The per-cell tables are in each document's header and in `model.json`. They are candidates to measure;
    nothing in the game, the bridge or evolve reads them.
 
    **Inputs** (each sha256 in `model.json`): J144's census (D473's two files), J145's and J159's
    `out/drafted-decks.jsonl.gz`, `out/games.jsonl.gz`, `out/balance.json`, J160's `report/<cube>.drafted-decks.jsonl.gz`,
    `.games.jsonl.gz` and `.balance.json` for its five cubes, the five cube documents and Omega's, and D473's facts
-   file (`9b0b6501…`). Command: `tools/cubelab.sh balance-model --census <lab-j144> --omega <lab-j145> --night
+   file (`9b0b6501…`). The drafter simulation assumes Forge's ranks from that facts file and DEFAULT_WEIGHTS;
+   `model.json` records each night's lab arm (its `run.json`: ratings file and sha, weights) and whether all of
+   them agree (`drafterAssumes.nightsAgree`; all three nights did: no `--ratings`, default weights). Command: `tools/cubelab.sh balance-model --census <lab-j144> --omega <lab-j145> --night
    <lab-j159> --night <lab-j160/report> --facts <facts> --out <dir> --cubes-out cubes/library/balanced/v2`
    (and again with `--exclude … --suffix -nopower`), seed 1, 200 replicates, about three minutes on one core.
 

@@ -14,12 +14,16 @@
  *  - real data, trimmed (fixtures/cubelab/balance-model-v2: ten J160 drafts of balanced-legacy-even-high, their games and the
  *    night's read, and the facts for that cube's cards): a night folder loads, the deck profile from the facts is the
  *    recorded one, and the TypeScript drafter re-drafts the recorded decks exactly from their seeds;
+ *  - v1 is untouched: with the recorded census, J145 and the facts on this PC (CUBELAB_LAB_DATA, default the lab's
+ *    data folder; skipped where they are absent, as on CI), `balance-model` without a night regenerates the three
+ *    committed v1 cubes byte for byte;
  *  - every committed v2 cube (cubes/library/balanced/v2/) is a clean 180 on the plan, its -nopower twin holds no
  *    powered card, and its header carries D475's gap line.
  */
 
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +33,7 @@ import {
   analyticCells, analyticMap, balanceSearchRobust, buildDesign, CELL_KEYS, cellGap, concentration, DEFAULT_PENALTY, estimateMix, mixV1, playShares, predictDecks,
   predictPayoffs, predictPayoffsV2, robustGap, solveRidge, type DeckLite, type GenCard, type MDeck, type MGame,
 } from '../../tools/cubelab/balance-model.ts';
+import { balanceModelCommand } from '../../tools/cubelab/balance-model-cmd.ts';
 import { loadNight, profileFromFacts, simulateDrafts } from '../../tools/cubelab/balance-model-v2-cmd.ts';
 import type { Fact } from '../../tools/cubelab/cards.ts';
 import { parseCube } from '../../tools/cubelab/cube.ts';
@@ -232,4 +237,19 @@ test('every committed v2 cube is a clean 180 on the plan, -nopower holds no powe
     assert.match(text, /model v2 \(D475/, f);
     assert.match(text, /with the transfer error as well 0\.\d{3}/, f);
   }
+});
+
+const LAB_DATA = process.env.CUBELAB_LAB_DATA ?? '/home/justin-a/code/lab/data';
+const LAB_FACTS = process.env.CUBELAB_LAB_FACTS ?? '/home/justin-a/code/lab/mtg-table/var/cubelab/facts/32653ed2fcd7d8d2.json';
+const haveLab = existsSync(join(LAB_DATA, 'lab-j144', 'out', 'census-games.jsonl.gz')) && existsSync(join(LAB_DATA, 'lab-j145', 'out', 'balance.json')) && existsSync(LAB_FACTS);
+
+test('v1 regenerates its committed cubes byte for byte (no --night: D473\'s path, untouched by v2)', { skip: haveLab ? false : 'the recorded census, J145 and the facts are not on this machine' }, () => {
+  const out = mkdtempSync(join(tmpdir(), 'bm-v1-'));
+  try {
+    const f = new Map<string, string[]>([['census', [join(LAB_DATA, 'lab-j144')]], ['omega', [join(LAB_DATA, 'lab-j145')]], ['facts', [LAB_FACTS]], ['out', [out]], ['cubes-out', [join(out, 'cubes')]]]);
+    assert.equal(balanceModelCommand(REPO, f, () => {}), 0);
+    for (const id of ['balanced-legacy-even-high', 'balanced-legacy-even-mid', 'balanced-pauper-even']) {
+      assert.equal(readFileSync(join(out, 'cubes', `${id}.md`), 'utf8'), readFileSync(join(REPO, 'cubes', 'library', 'balanced', `${id}.md`), 'utf8'), `${id}: v1's bytes`);
+    }
+  } finally { rmSync(out, { recursive: true, force: true }); }
 });

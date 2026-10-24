@@ -1481,7 +1481,10 @@ tools/cubelab.sh balance-model --census $D/lab-j144 --omega $D/lab-j145 --night 
   the curve's) off those decks. `--drafts` sets the count.
 - **The validation** refits without each night (the headline), without each cube, and with nothing held out,
   and prints v1 beside v2 with the decomposition (v2's values on the night's own decks, census values on v2's
-  mix, …), pooled per night. The transfer error it leaves goes into every generated cube's intervals.
+  mix, …), pooled per night. The transfer error it leaves is computed per source — on new cubes (no other
+  night drafted them) and on re-measured ones — and the new-cube figure goes into every generated cube's
+  intervals. `model.json` also records each night's lab-arm ratings and weights against what the simulation
+  assumes (Forge's ranks, the default weights).
   `--no-validate` skips it (the intervals then carry the .015 / .025 floor).
 - **The search** scores a swap by the mean gap over the even bootstrap replicates, takes it only for
   `--min-gain` (.002), lets a card replace one within `--rating-window` (25) Forge rating points, at most
