@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-24T07:54:17-04:00",
- "heartbeat": "2026-10-24T07:54:17-04:00",
+ "updated": "2026-10-24T07:58:50-04:00",
+ "heartbeat": "2026-10-24T07:58:50-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.35,
-  "memUsedGb": 7.9,
+  "load1": 2.42,
+  "memUsedGb": 7.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3738,
+  "swapUsedMb": 3737,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/5",
    "started": "2026-10-24T06:04:00-04:00",
-   "elapsed": 6617,
+   "elapsed": 6890,
    "done": 14400,
    "total": 55000,
    "unit": "lines",
-   "ratePerHour": 10679.2,
-   "eta": "2026-10-24T11:42:23-04:00",
+   "ratePerHour": 8863.8,
+   "eta": "2026-10-24T12:33:40-04:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 0,
    "paused": false,
    "dataUpdated": "2026-10-24T07:44:02-04:00",
-   "memGb": 2.98,
+   "memGb": 3.34,
    "live": {
     "branches": 14400,
     "atlas.spinesDone": 0,
@@ -101,7 +101,16 @@
    "detail": "lab-J162-run1"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "Library loop night 2: a candidate confirmed or not, and model v2 tested",
+   "publicEst": "~5 h",
+   "id": "J163",
+   "title": "The library loop, night 2 -- (a) the confirmation of J160's one candidate, balanced-legacy-even-high-nopower (v1's file, byte-identical to J160's), at 3x on fresh seeds (6,000 lab-vs-lab grid drafts, 12,000 games), registered CONFIRMED CANDIDATE / NOT CONFIRMED on this night alone; (b) model v2's five cubes (D475: balanced-v2-legacy-even-high, -high-nopower, -mid, -mid-nopower, balanced-v2-pauper-even) at 1x (2,000 drafts, 4,000 games each), each with J145's balance read; (c) v2's first out-of-sample test against its predictions of record, regenerated at the pin in the pilot: (i) is v2's per-cell error smaller than v1's was on J160, (ii) coverage of v2's with-transfer intervals, (iii) the selection bias, (iv) candidates among the v2 cubes. J145's judged arm only, Forge Default both seats, recorded rows; drafts 819,k00,001 and up, game seeds (1,900 + k) x 1,000,000 + g; no cube promoted, swapped or regenerated",
+   "cpu": "heavy",
+   "est": "~5 h (4.5-6 h) on 6 workers (the memory rule gave J159, J160 and J162 6 of the 7 asked). J160 measured the same pipeline at 6 workers: 2,000 drafts in 65-92 s and 4,000 games in 21-49 min a cube, 7,083 games an hour overall (20,000 games in 3 h 0 min), and the candidate itself at 7,583 an hour (high-nopower, 33 min a 1x cube). (a) is then ~1.65 h (6,000 drafts ~4 min, 12,000 games ~95 min); (b) ~3 h if each v2 cube plays like its v1 namesake (high 28 min, high-nopower 33, mid 43, mid-nopower 50, pauper 23; the mid cubes keep J160's stall suspects); the pilot ~20 min (three balance-model runs, ~1 + 3 + 3 min unloaded, then the 20-draft smoke); the reads ~3 min. The longest step is (a): ~1.65 h at 6 workers, ~2.5 h at 4 under memory pressure, so `timeout: 4h`. Storage on the data folder: ~2.5-3 GB (J160: 1.8 GB for 20,000 games, 53-81 KB of rows a game; J163 plays 32,000); 677.9 GB free at J160's end"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
