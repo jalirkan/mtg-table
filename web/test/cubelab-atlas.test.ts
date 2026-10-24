@@ -276,9 +276,9 @@ test('G3 and G5 (D458) are counted from each random seat\'s decisions summary, a
   guardrailCheck([dec, summary({ land: 3, keep: 1, refusedCast: 1, noRepeatRefused: 0 })].join('\n'), 'b2', gc);
   guardrailCheck([dec, summary(undefined)].join('\n'), 'old', gc);   // a log from before M71: nothing to add
   assert.equal(gc.priority, 3, 'the summary line is not read as a decision');
-  assert.deepEqual(countedGuardrails(gc), { noRepeatNoOp: 1, refusedCast: 3, noRepeatRefused: 2 });
-  assert.deepEqual([...COUNTED_GUARDRAILS], ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused']);
-  assert.deepEqual(countedGuardrails({ ...gc, counted: undefined }), { noRepeatNoOp: 0, refusedCast: 0, noRepeatRefused: 0 }, 'zero, never absent');
+  assert.deepEqual(countedGuardrails(gc), { noRepeatNoOp: 1, refusedCast: 3, noRepeatRefused: 2, xDrawn: 0, zeroXLeftOut: 0, zeroX: 0 });
+  assert.deepEqual([...COUNTED_GUARDRAILS], ['noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX']);
+  assert.deepEqual(countedGuardrails({ ...gc, counted: undefined }), { noRepeatNoOp: 0, refusedCast: 0, noRepeatRefused: 0, xDrawn: 0, zeroXLeftOut: 0, zeroX: 0 }, 'zero, never absent');
 });
 
 test('writeAtlas puts G5\'s counts in atlas.json\'s checks, from phase A\'s and the random branches\' logs only (D458)', () => {
@@ -300,6 +300,39 @@ test('writeAtlas puts G5\'s counts in atlas.json\'s checks, from phase A\'s and 
     assert.equal(doc.checks.guardrails.noRepeatRefused, 4);
     assert.equal(doc.checks.guardrails.noRepeatNoOp, 1);
     assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /G5 \(D458\): the engine refused 5 pick\(s\)/);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('G6 (D471): X drawn, X = 0-only offers left out and own plays paid at X = 0 are counted; a play paid at 0 is a violation and a problem', () => {
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-g6-'));
+  try {
+    const log = (g: Record<string, number>): Buffer => zlib.gzipSync([
+      JSON.stringify({ v: 1, seq: 1, dir: 'ai', type: 'decision', body: { seat: 0, n: 0, kind: 'priority', options: ['pass', 'activate:40'], chosen: 'activate:40', by: 'forge' } }),
+      JSON.stringify({ v: 1, seq: 2, dir: 'ai', type: 'decisions', body: { seat: 0, explore: { guardrails: g } } }),
+    ].join('\n'));
+    const put = (dir: string, name: string, g: Record<string, number>): void => { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, name), log(g)); };
+    // J158's pauper spine after G6: Crypt Rats offered only when black mana pays X >= 1
+    put(path.join(out, 'phaseA', 'frames'), 'g1-seat0.jsonl.gz', { land: 5, xDrawn: 1, zeroXLeftOut: 22 });
+    put(path.join(out, 'phaseB', 'frames'), 'd0-random-o0-b27-seat0.jsonl.gz', { land: 8, xDrawn: 2, zeroXLeftOut: 19 });
+    put(path.join(out, 'phaseB', 'frames'), 'd0-forge-o0-b0-seat0.jsonl.gz', { zeroX: 9 });   // not a random seat's log: not read
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    let doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; guardrails: Record<string, unknown> } };
+    assert.equal(doc.checks.guardrails.xDrawn, 3);
+    assert.equal(doc.checks.guardrails.zeroXLeftOut, 41);
+    assert.equal(doc.checks.guardrails.zeroX, 0);
+    assert.deepEqual(doc.checks.guardrails.violationsBy, { G1: 0, G4: 0, G6: 0 });
+    assert.ok(!doc.checks.problems.some((p) => /G6/.test(p)), doc.checks.problems.join('\n'));
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /G6 \(D471\): 3 pick\(s\) of the seats' own X plays had X drawn from 1 up, 41 offer\(s\) payable only at X = 0 were left out, and 0 own play\(s\) were paid at X = 0/);
+    // a violation: an own X play the engine paid at X = 0 (what J158's seat did 3,600-20,700 times a branch)
+    put(path.join(out, 'phaseB', 'frames'), 'd0-random-o1-b27-seat0.jsonl.gz', { xDrawn: 2, zeroX: 2 });
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as typeof doc;
+    assert.equal(doc.checks.guardrails.zeroX, 2);
+    assert.equal(doc.checks.guardrails.violations, 2);
+    assert.deepEqual(doc.checks.guardrails.violationsBy, { G1: 0, G4: 0, G6: 2 });
+    assert.ok(doc.checks.problems.some((p) => /^2 play\(s\) the random seats picked themselves went on the stack with X = 0 \(G6, D471/.test(p)), doc.checks.problems.join('\n'));
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }
@@ -452,10 +485,10 @@ test('every guardrail violation is counted, though only the first 50 are named (
     writeAtlas(REPO, OPTS, out, {}, {}, () => {});
     const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; guardrails: { violations: number; violationsBy: Record<string, number> } } };
     assert.equal(doc.checks.guardrails.violations, 70, 'the true count, not the list\'s length');
-    assert.deepEqual(doc.checks.guardrails.violationsBy, { G1: 70, G4: 0 });
+    assert.deepEqual(doc.checks.guardrails.violationsBy, { G1: 70, G4: 0, G6: 0 });
     assert.equal(doc.checks.problems.filter((p) => /\(G1\)$/.test(p)).length, 10, 'ten named in the problems');
     assert.ok(doc.checks.problems.includes('70 guardrail violation(s) in all (G1 70, G4 0); the first 10 named above'), doc.checks.problems.join('\n'));
-    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /70 guardrail violation\(s\) \(G1 70, G4 0\)/);
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /70 guardrail violation\(s\) \(G1 70, G4 0, G6 0\)/);
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }
