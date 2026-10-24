@@ -62,6 +62,14 @@ export interface MDeck {
   cluster: string;
   /** A stratum its makeup group is kept apart by (a band, in a fit over two bands); none by default. */
   stratum?: string;
+  /**
+   * D475: a prior strength for the deck (the sum of its cards' census values), entered as one real covariate whose
+   * coefficient (alpha, one per `priorKey`) the fit estimates — so the card terms become deviations from alpha x the
+   * census value, ridge-shrunk toward it (a card with little drafted data keeps alpha x its census value).
+   */
+  prior?: number;
+  /** Which alpha the prior loads on (a band); a deck with a prior and no key loads on '' . */
+  priorKey?: string;
 }
 
 export interface MGame { a: string; b: string; winner: 'a' | 'b'; first: 'a' | 'b' }
@@ -87,8 +95,13 @@ export function groupOf(d: Pick<MDeck, 'colours' | 'mainShare' | 'stratum'>, g: 
 export interface Design {
   cards: string[];
   groups: string[];
+  /** D475: the prior covariates' keys (feature nCards + nGroups + j); empty when no deck has a prior. */
+  covs: string[];
   /** Feature indices of each deck: its cards, then nCards + its group. */
   deckFeat: Int32Array[];
+  /** Each deck's prior (0 without one) and the feature it loads on (-1: none). */
+  deckCov: Float64Array;
+  deckCovFeat: Int32Array;
   deckIds: string[];
   deckCluster: Int32Array;
   clusters: number;
@@ -125,6 +138,11 @@ export function buildDesign(decks: MDeck[], games: MGame[], grouping: Grouping):
     f.push(nCards + (groupIx.get(groupOf(d, grouping)) as number));
     return Int32Array.from(f);
   });
+  const covIx = new Map<string, number>();
+  for (const d of decks) if (d.prior !== undefined && !covIx.has(d.priorKey ?? '')) covIx.set(d.priorKey ?? '', covIx.size);
+  const nGroups = groupIx.size;
+  const deckCov = new Float64Array(decks.length), deckCovFeat = new Int32Array(decks.length).fill(-1);
+  decks.forEach((d, i) => { if (d.prior !== undefined) { deckCov[i] = d.prior; deckCovFeat[i] = nCards + nGroups + (covIx.get(d.priorKey ?? '') as number); } });
   const ga = new Int32Array(used.length), gb = new Int32Array(used.length);
   const y = new Float64Array(used.length), play = new Float64Array(used.length);
   const cardDecks = new Int32Array(nCards), cardGames = new Int32Array(nCards);
@@ -139,21 +157,26 @@ export function buildDesign(decks: MDeck[], games: MGame[], grouping: Grouping):
     for (let k = 0; k < f.length - 1; k++) { bump(cardDecks, f[k] as number); bump(cardGames, f[k] as number, deckGames[i] as number); }
   });
   return {
-    cards: [...cardIx.keys()], groups: [...groupIx.keys()], deckFeat, deckIds: decks.map((d) => d.id), deckCluster, clusters: clusterIx.size,
-    ga, gb, y, play, nFeat: nCards + groupIx.size + 1, cardDecks, cardGames,
+    cards: [...cardIx.keys()], groups: [...groupIx.keys()], covs: [...covIx.keys()], deckFeat, deckCov, deckCovFeat, deckIds: decks.map((d) => d.id), deckCluster, clusters: clusterIx.size,
+    ga, gb, y, play, nFeat: nCards + nGroups + covIx.size + 1, cardDecks, cardGames,
   };
 }
 
 // ------------------------------------------------------------------ the solver
 
-export interface Penalty { card: number; group: number; play: number }
+export interface Penalty { card: number; group: number; play: number; /** D475: the prior's alpha (default 1, essentially free). */ cov?: number }
 export const DEFAULT_PENALTY: Omit<Penalty, 'card'> = { group: 20, play: 1 };
 
 /** X v for every game (the model's prediction minus 1/2). */
 export function predictRows(ds: Design, beta: Float64Array, out = new Float64Array(ds.y.length)): Float64Array {
   const P = ds.nFeat - 1;
   const dv = new Float64Array(ds.deckFeat.length);
-  for (let d = 0; d < ds.deckFeat.length; d++) { const f = ds.deckFeat[d] as Int32Array; let s = 0; for (let k = 0; k < f.length; k++) s += beta[f[k] as number] as number; dv[d] = s; }
+  for (let d = 0; d < ds.deckFeat.length; d++) {
+    const f = ds.deckFeat[d] as Int32Array; let s = 0; for (let k = 0; k < f.length; k++) s += beta[f[k] as number] as number;
+    const cf = ds.deckCovFeat[d] as number;
+    if (cf >= 0) s += (beta[cf] as number) * (ds.deckCov[d] as number);
+    dv[d] = s;
+  }
   for (let g = 0; g < ds.y.length; g++) out[g] = (dv[ds.ga[g] as number] as number) - (dv[ds.gb[g] as number] as number) + (beta[P] as number) * (ds.play[g] as number);
   return out;
 }
@@ -165,14 +188,18 @@ function xtv(ds: Design, u: Float64Array, out: Float64Array): void {
   const du = new Float64Array(ds.deckFeat.length);
   let pl = 0;
   for (let g = 0; g < u.length; g++) { const v = u[g] as number; bump(du, ds.ga[g] as number, v); bump(du, ds.gb[g] as number, -v); pl += v * (ds.play[g] as number); }
-  for (let d = 0; d < ds.deckFeat.length; d++) { const v = du[d] as number; if (v === 0) continue; const f = ds.deckFeat[d] as Int32Array; for (let k = 0; k < f.length; k++) bump(out, f[k] as number, v); }
+  for (let d = 0; d < ds.deckFeat.length; d++) {
+    const v = du[d] as number; if (v === 0) continue; const f = ds.deckFeat[d] as Int32Array; for (let k = 0; k < f.length; k++) bump(out, f[k] as number, v);
+    const cf = ds.deckCovFeat[d] as number;
+    if (cf >= 0) bump(out, cf, v * (ds.deckCov[d] as number));
+  }
   out[P] = pl;
 }
 
 function penaltyVector(ds: Design, pen: Penalty): Float64Array {
   const p = new Float64Array(ds.nFeat);
-  const nc = ds.cards.length;
-  for (let i = 0; i < ds.nFeat; i++) p[i] = i < nc ? pen.card : i < ds.nFeat - 1 ? pen.group : pen.play;
+  const nc = ds.cards.length, ng = nc + ds.groups.length;
+  for (let i = 0; i < ds.nFeat; i++) p[i] = i < nc ? pen.card : i < ng ? pen.group : i < ds.nFeat - 1 ? pen.cov ?? 1 : pen.play;
   return p;
 }
 
@@ -188,6 +215,10 @@ function diagXtWX(ds: Design, w: Float64Array): Float64Array {
     for (let k = 0; k < fa.length; k++) if (stamp[fa[k] as number] !== g) bump(dg, fa[k] as number, wg);
     for (let k = 0; k < fa.length; k++) stamp[fa[k] as number] = -2 - g;
     for (let k = 0; k < fb.length; k++) if (stamp[fb[k] as number] !== -2 - g) bump(dg, fb[k] as number, wg);
+    const ca = ds.deckCovFeat[ds.ga[g] as number] as number, cb = ds.deckCovFeat[ds.gb[g] as number] as number;
+    const xa = ds.deckCov[ds.ga[g] as number] as number, xb = ds.deckCov[ds.gb[g] as number] as number;
+    if (ca >= 0 && ca === cb) bump(dg, ca, wg * (xa - xb) ** 2);
+    else { if (ca >= 0) bump(dg, ca, wg * xa * xa); if (cb >= 0) bump(dg, cb, wg * xb * xb); }
     bump(dg, ds.nFeat - 1, wg);
   }
   return dg;
@@ -342,10 +373,14 @@ export interface Fit {
  * band to the fourth decimal (median card SD .0069 each, against .0109 for the product), so deck clustering
  * is small beside game noise and this scheme keeps what there is of it on one side of each game.
  */
-export function bootstrapFit(ds: Design, pen: Penalty, beta: Float64Array, reps: number, seed: number): Float64Array[] {
+export function bootstrapFit(ds: Design, pen: Penalty, beta: Float64Array, reps: number, seed: number, priorOf?: (b: number) => Float64Array): Float64Array[] {
   const out: Float64Array[] = [];
   const r = rng(seed, 'balance-model/boot');
+  const own = Float64Array.from(ds.deckCov);
   for (let b = 0; b < reps; b++) {
+    // D475: replicate b of a prior-centred fit carries the prior's own replicate b (its census values' bootstrap), so
+    // the drafted values' intervals hold the census's uncertainty as well as the drafted games'.
+    if (priorOf) ds.deckCov.set(priorOf(b));
     const wc = multinomialWeights(ds.clusters, r);
     const w = new Float64Array(ds.y.length);
     for (let g = 0; g < w.length; g++) {
@@ -354,6 +389,7 @@ export function bootstrapFit(ds: Design, pen: Penalty, beta: Float64Array, reps:
     }
     out.push(solveRidge(ds, pen, w, beta, { maxIter: 150, tol: 1e-5 }));
   }
+  if (priorOf) ds.deckCov.set(own);
   return out;
 }
 
@@ -529,6 +565,312 @@ export function predictPayoffs(cards: Array<{ name: string; colors: string; land
     pair: Object.fromEntries(PAIRS.map((p) => [p, cell('pair', p)])),
     strength: strengthOf(-1),
   };
+}
+
+// ------------------------------------------------------------------ D475: the drafter's own mix, and the cells from deck lists
+
+/** The ten three-colour types, WUBRG order. */
+export const TRIPLES: readonly string[] = (() => { const t: string[] = []; for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) for (let k = j + 1; k < 5; k++) t.push(`${MONO[i]}${MONO[j]}${MONO[k]}`); return t; })();
+
+/** A deck as the mix and the cell rule read it: its nonland cards and its colours with 3+ spells (D377's `colours`). */
+export interface DeckLite { spells: string[]; colours: string; mainShare?: number }
+
+/**
+ * D475: what the lab drafter actually builds, measured on its decks (per band): the share of three-colour decks
+ * (colours with 3+ spells) among two- and three-colour ones, and each kind's nonland cards — a two-colour deck's
+ * cards of each of its colours, its pair's gold, colourless, and its splash (mono cards of another colour and gold of
+ * another pair); a three-colour deck's cards of each colour, gold of its three pairs, colourless.  J145's 9.1 / 0.45 /
+ * 4.2 with no three-colour deck is the v1 mix (`DeckMix`), the special case k3 0, splash 0.
+ */
+export interface DeckMixV2 {
+  decks: number;
+  k3: number;
+  two: { perColour: number; gold: number; colourless: number; splash: number };
+  three: { perColour: number; gold: number; colourless: number };
+}
+
+export function estimateMix(decks: DeckLite[], colorsOf: (name: string) => string | undefined): DeckMixV2 {
+  const two = decks.filter((d) => d.colours.length === 2), three = decks.filter((d) => d.colours.length === 3);
+  const t = { mono: 0, gold: 0, cl: 0, splash: 0 }, h = { mono: 0, gold: 0, cl: 0 };
+  for (const d of two) for (const c of d.spells) {
+    const k = colorsOf(c); if (k === undefined) continue;
+    if (k === '') t.cl++; else if (k === d.colours) t.gold++; else if (k.length === 1 && d.colours.includes(k)) t.mono++; else t.splash++;
+  }
+  for (const d of three) for (const c of d.spells) {
+    const k = colorsOf(c); if (k === undefined) continue;
+    if (k === '') h.cl++; else if (k.length === 1 && d.colours.includes(k)) h.mono++; else if ([...k].every((x) => d.colours.includes(x))) h.gold++;
+  }
+  const n2 = Math.max(1, two.length), n3 = Math.max(1, three.length);
+  return {
+    decks: two.length + three.length, k3: two.length + three.length ? three.length / (two.length + three.length) : 0,
+    two: { perColour: t.mono / n2 / 2, gold: t.gold / n2, colourless: t.cl / n2, splash: t.splash / n2 },
+    three: { perColour: h.mono / n3 / 3, gold: h.gold / n3, colourless: h.cl / n3 },
+  };
+}
+
+/** The v1 mix as a DeckMixV2 (two-colour decks only, no splash). */
+export const mixV1 = (m: DeckMix): DeckMixV2 => ({ decks: 0, k3: 0, two: { perColour: m.perColour, gold: m.gold, colourless: m.colourless, splash: 0 }, three: { perColour: 0, gold: 0, colourless: 0 } });
+
+/**
+ * Each card's PLAY SHARE in the decks the drafter built: of the two- and three-colour decks whose colours hold all of
+ * the card's colours, the share that play it.  The rating play curve is fitted to these (`playCurve`), and D475's
+ * draft concentration is a card's share over the share the mix and the curve give it (`concentration`).
+ */
+export function playShares(decks: DeckLite[], cards: Array<{ name: string; colors: string }>): Map<string, { decks: number; held: number; share: number }> {
+  const out = new Map<string, { decks: number; held: number; share: number }>();
+  const kk = decks.filter((d) => d.colours.length === 2 || d.colours.length === 3).map((d) => ({ colours: d.colours, has: new Set(d.spells) }));
+  for (const c of cards) {
+    let n = 0, h = 0;
+    for (const d of kk) if ([...c.colors].every((x) => d.colours.includes(x))) { n++; if (d.has.has(c.name)) h++; }
+    out.set(c.name, { decks: n, held: h, share: n ? h / n : NaN });
+  }
+  return out;
+}
+
+/** The expected copies of each nonland class in a deck of type T (a pair or a triple) under a mix. */
+function classCounts(mix: DeckMixV2, T: string): Array<[string, number]> {
+  const out: Array<[string, number]> = [['', T.length === 2 ? mix.two.colourless : mix.three.colourless]];
+  if (T.length === 2) {
+    for (const x of T) out.push([x, mix.two.perColour]);
+    out.push([T, mix.two.gold]);
+    const others = MONO.filter((x) => !T.includes(x));
+    for (const x of others) out.push([x, mix.two.splash / others.length]);
+  } else {
+    for (const x of T) out.push([x, mix.three.perColour]);
+    const prs = PAIRS.filter((p) => [...p].every((x) => T.includes(x)));
+    for (const p of prs) out.push([p, mix.three.gold / prs.length]);
+  }
+  return out;
+}
+
+/**
+ * D475's concentration factor: a card's measured play share over the share the mix and the play curve assign it
+ * (its class's expected copies in a deck of its colours x its weight / the class's summed weight).  1 when it is
+ * played exactly as the curve says; Ancestral Recall at .51 of blue decks against a curve share of .9 is .57, and a
+ * card the curve under-plays is above 1.  Cards with fewer than `minDecks` decks of their colours keep 1.
+ */
+export function concentration(cards: Array<{ name: string; colors: string; land: boolean }>, shares: Map<string, { decks: number; share: number }>, mix: DeckMixV2, weightOf: (name: string) => number, minDecks = 50): Map<string, number> {
+  const nonland = cards.filter((c) => !c.land && c.colors.length <= 2);
+  const sumW = new Map<string, number>();
+  for (const c of nonland) sumW.set(c.colors, (sumW.get(c.colors) ?? 0) + weightOf(c.name));
+  // a class's expected copies in a deck of the card's colours, averaged over the deck types that hold them
+  const types = [...PAIRS, ...TRIPLES];
+  const pT = (T: string): number => (T.length === 2 ? (1 - mix.k3) / PAIRS.length : mix.k3 / TRIPLES.length);
+  const expectCopies = (cls: string): number => {
+    let s = 0, w = 0;
+    for (const T of types) { if (![...cls].every((x) => T.includes(x))) continue; const n = classCounts(mix, T).filter(([k]) => k === cls).reduce((a, [, v]) => a + v, 0); s += pT(T) * n; w += pT(T); }
+    return w ? s / w : 0;
+  };
+  const copies = new Map<string, number>();
+  const out = new Map<string, number>();
+  for (const c of nonland) {
+    if (!copies.has(c.colors)) copies.set(c.colors, expectCopies(c.colors));
+    const sh = shares.get(c.name);
+    const curveShare = ((copies.get(c.colors) as number) * weightOf(c.name)) / (sumW.get(c.colors) as number);
+    out.set(c.name, sh && sh.decks >= minDecks && curveShare > 0 ? sh.share / curveShare : 1);
+  }
+  return out;
+}
+
+/** The nonland classes a cube's cards are averaged in: colourless, the five colours, the ten pairs. */
+export const CLASSES: readonly string[] = ['', ...MONO, ...PAIRS];
+
+/**
+ * D475: the analytic cells as a linear map of the classes' mean values.  Deck types: the ten pairs at (1 - k3)/10 each
+ * and the ten triples at k3/10; a type's strength S_T = sum over classes K of its expected copies n_{T,K} x m_K + the
+ * makeup term of a k-colour deck g_k.  Colour c = 1/2 + E[S | type holds c] - E[S | type lacks c]; pair P = 1/2 + S_P
+ * - E[S | type is not P], the expectations over the type shares — balance.py's cells with the two decks of a draft
+ * taken as independent.  So each cell is 1/2 + sum_K B[cell][K] m_K + G2[cell] g2 + G3[cell] g3.
+ */
+export interface AnalyticMap { B: Float64Array[]; G2: Float64Array; G3: Float64Array }
+
+export function analyticMap(mix: DeckMixV2): AnalyticMap {
+  const types = [...PAIRS, ...TRIPLES];
+  const pT = (T: string): number => (T.length === 2 ? (1 - mix.k3) / PAIRS.length : mix.k3 / TRIPLES.length);
+  const nK = types.map((T) => { const v = new Float64Array(CLASSES.length); for (const [k, n] of classCounts(mix, T)) bump(v, CLASSES.indexOf(k), n); return v; });
+  // a cell's weight on each type's strength
+  const weights = (sel: (T: string) => boolean): number[] => { const w = types.map((T) => (sel(T) ? pT(T) : 0)); const t = w.reduce((a, b) => a + b, 0); return w.map((x) => (t > 0 ? x / t : 0)); };
+  const cellW: number[][] = [
+    ...MONO.map((c) => { const a = weights((T) => T.includes(c)), b = weights((T) => !T.includes(c)); return a.map((x, i) => x - (b[i] as number)); }),
+    ...PAIRS.map((p) => { const b = weights((T) => T !== p); return types.map((T, i) => (T === p ? 1 : 0) - (b[i] as number)); }),
+  ];
+  const B = cellW.map((w) => { const v = new Float64Array(CLASSES.length); w.forEach((x, i) => { if (x) for (let k = 0; k < CLASSES.length; k++) bump(v, k, x * ((nK[i] as Float64Array)[k] as number)); }); return v; });
+  const G2 = Float64Array.from(cellW, (w) => w.reduce((s, x, i) => s + ((types[i] as string).length === 2 ? x : 0), 0));
+  const G3 = Float64Array.from(cellW, (w) => w.reduce((s, x, i) => s + ((types[i] as string).length === 3 ? x : 0), 0));
+  return { B, G2, G3 };
+}
+
+/** The cells (CELL_KEYS order) from the classes' means (CLASSES order) and the makeup terms. */
+export function analyticCells(map: AnalyticMap, means: ArrayLike<number>, g2 = 0, g3 = 0): Float64Array {
+  return Float64Array.from(map.B, (row, k) => { let s = 0.5 + (map.G2[k] as number) * g2 + (map.G3[k] as number) * g3; for (let j = 0; j < row.length; j++) s += (row[j] as number) * (means[j] as number); return s; });
+}
+
+/** Each class's weighted sums (weight x value, weight) over a cube's nonland cards of one or two colours. */
+export function classSums(cards: Array<{ name: string; colors: string; land: boolean }>, value: (name: string) => number, weightOf: (name: string) => number): { sv: Float64Array; sw: Float64Array } {
+  const sv = new Float64Array(CLASSES.length), sw = new Float64Array(CLASSES.length);
+  for (const c of cards) {
+    if (c.land || c.colors.length > 2) continue;
+    const k = CLASSES.indexOf(c.colors), w = weightOf(c.name);
+    bump(sw, k, w); bump(sv, k, w * value(c.name));
+  }
+  return { sv, sw };
+}
+const meansOf = (x: { sv: Float64Array; sw: Float64Array }): Float64Array => Float64Array.from(x.sv, (v, k) => ((x.sw[k] as number) > 0 ? v / (x.sw[k] as number) : 0));
+
+/**
+ * D475: predicted payoffs under a DeckMixV2 (`analyticMap`), each class's mean weighted by `weightOf` (the drafter's
+ * play curve, times each card's draft concentration when given) and the makeup term `groupValue(k)` of a k-colour deck
+ * from the value source's fit.  With k3 0, splash 0 and no group term it is `predictPayoffs` exactly.  `rows`, when
+ * given, receives each replicate's cells (CELL_KEYS order) for the robust gap.
+ */
+export function predictPayoffsV2(cards: Array<{ name: string; colors: string; land: boolean }>, value: (name: string, rep: number) => number, reps: number, mix: DeckMixV2,
+  weightOf: (name: string) => number = () => 1, groupValue: (k: number, rep: number) => number = () => 0, rows?: Float64Array[]): PayoffPrediction {
+  const map = analyticMap(mix);
+  const W = new Map(cards.map((c) => [c.name, weightOf(c.name)]));
+  const at = (rep: number): Float64Array => analyticCells(map, meansOf(classSums(cards, (n) => value(n, rep), (n) => W.get(n) as number)), groupValue(2, rep), groupValue(3, rep));
+  const point = at(-1);
+  const rs = Array.from({ length: reps }, (_, b) => at(b));
+  if (rows) rows.push(...rs);
+  const cell = (i: number): { est: number; lo: number; hi: number; sd: number } => {
+    const xs = rs.map((r) => r[i] as number).sort((a, b) => a - b);
+    return { est: point[i] as number, lo: quantile(xs, 0.025), hi: quantile(xs, 0.975), sd: sdOf(xs) };
+  };
+  const means = meansOf(classSums(cards, (n) => value(n, -1), (n) => W.get(n) as number));
+  const strength = Object.fromEntries(PAIRS.map((p) => [p, classCounts(mix, p).reduce((s, [k, n]) => s + n * (means[CLASSES.indexOf(k)] as number), 0) + groupValue(2, -1)]));
+  return { colour: Object.fromEntries(MONO.map((c, i) => [c, cell(i)])), pair: Object.fromEntries(PAIRS.map((p, j) => [p, cell(MONO.length + j)])), strength };
+}
+
+/**
+ * D475: the cells balance.py reads, from deck lists — each pairing's two decks (a draft's, which play each other
+ * twice, once each on the play, so the play term cancels) give two deck-games, own against opponent, decks with one to
+ * three colours only; colour c over the deck-games where own holds c and the opponent does not, pair P where own is
+ * exactly P and the opponent is not.  A deck-game's predicted payoff is 1/2 + strength(own) - strength(opponent).
+ * Intervals from `reps` replicates of the strength.  Used on the decks a night actually drafted (the oracle mix) and
+ * on decks the lab drafter drafts from a candidate cube at fresh seeds (the drafter's own mix, `predictDrafted`).
+ */
+export function predictDecks<D extends DeckLite>(pairs: Array<[D, D]>, strength: (d: D, rep: number) => number, reps: number): PayoffPrediction & { n: Record<string, number> } {
+  const ok = (d: D): boolean => d.colours.length >= 1 && d.colours.length <= 3;
+  const use = pairs.filter(([a, b]) => ok(a) && ok(b));
+  const keys = [...MONO, ...PAIRS] as string[];
+  const n: Record<string, number> = Object.fromEntries(keys.map((k) => [k, 0]));
+  // per cell: the deck-games as (own, opp) index pairs, so a replicate is one pass over the decks' strengths
+  const decks: D[] = [], ix = new Map<D, number>();
+  const id = (d: D): number => { let i = ix.get(d); if (i === undefined) { i = decks.length; decks.push(d); ix.set(d, i); } return i; };
+  const rows = new Map<string, number[]>(keys.map((k) => [k, []]));
+  for (const [a, b] of use) for (const [own, opp] of [[a, b], [b, a]] as const) {
+    const o = id(own), p = id(opp);
+    for (const c of MONO) if (own.colours.includes(c) && !opp.colours.includes(c)) { (rows.get(c) as number[]).push(o, p); n[c] = (n[c] as number) + 1; }
+    if (own.colours.length === 2 && own.colours !== opp.colours) { (rows.get(own.colours) as number[]).push(o, p); n[own.colours] = (n[own.colours] as number) + 1; }
+  }
+  const cellsOf = (rep: number): Record<string, number> => {
+    const S = decks.map((d) => strength(d, rep));
+    return Object.fromEntries(keys.map((k) => { const r = rows.get(k) as number[]; let s = 0; for (let i = 0; i < r.length; i += 2) s += (S[r[i] as number] as number) - (S[r[i + 1] as number] as number); return [k, r.length ? 0.5 + s / (r.length / 2) : NaN]; }));
+  };
+  const point = cellsOf(-1);
+  const rs = Array.from({ length: reps }, (_, b) => cellsOf(b));
+  const cell = (k: string): { est: number; lo: number; hi: number; sd: number } => {
+    const xs = rs.map((r) => r[k] as number).filter(Number.isFinite).sort((a, b) => a - b);
+    return { est: point[k] as number, lo: quantile(xs, 0.025), hi: quantile(xs, 0.975), sd: sdOf(xs) };
+  };
+  return { colour: Object.fromEntries(MONO.map((c) => [c, cell(c)])), pair: Object.fromEntries(PAIRS.map((p) => [p, cell(p)])), strength: {}, n };
+}
+
+// ------------------------------------------------------------------ D475: the robust search
+
+/** The fifteen cells in one order: the five colours, then the ten pairs. */
+export const CELL_KEYS: readonly string[] = [...MONO, ...PAIRS];
+
+/**
+ * The gap a cell table is judged on: max |colour - .5| + max |pair - .5| over the pairs that count (`pairCounts`,
+ * CELL_KEYS' pair order: the pairs a night would judge, 400+ deck-games; every pair when none is given).
+ */
+export function cellGap(cells: ArrayLike<number>, pairCounts?: boolean[]): number {
+  let mc = 0, mp = 0;
+  for (let k = 0; k < MONO.length; k++) mc = Math.max(mc, Math.abs((cells[k] as number) - 0.5));
+  for (let j = 0; j < PAIRS.length; j++) if (!pairCounts || pairCounts[j]) mp = Math.max(mp, Math.abs((cells[MONO.length + j] as number) - 0.5));
+  return mc + mp;
+}
+
+/**
+ * D475's ROBUST objective: the mean, over the card values' bootstrap replicates, of the gap each replicate's cells
+ * would show.  A cube whose point cells are flat only because its cards' noise lines up (#196's .003) scores what its
+ * replicates scatter to, not .003; minimising it prefers cells that stay near .5 whichever replicate is true.
+ */
+export function robustGap(rows: ArrayLike<number>[], pairCounts?: boolean[]): { mean: number; lo: number; hi: number } {
+  const g = rows.map((r) => cellGap(r, pairCounts)).sort((a, b) => a - b);
+  return { mean: g.reduce((a, b) => a + b, 0) / Math.max(1, g.length), lo: quantile(g, 0.025), hi: quantile(g, 0.975) };
+}
+
+/**
+ * D475's search: like-for-like swaps (same colour class and mana-value bucket, the added card within `band` of the
+ * level and within `ratingWindow` Forge rating points of the card it replaces, the creature floor kept), each judged
+ * by the robust objective of `predictPayoffsV2` on the SEARCH replicates (`searchReps`), taken only when it lowers that
+ * objective by `minGain` or more, at most `maxSwaps`.  So the search leaves the flow's cube only where a swap buys more
+ * than the replicates' own scatter can fake (#196's search, stopping at a point gap of .008, chose between cards on
+ * their noise).  `weightOf` is the drafter's play weight (an added card's from the curve alone, until a re-draft
+ * measures its concentration); the caller re-drafts the result and judges it on replicates the search never saw.
+ */
+export function balanceSearchRobust<T extends GenCard>(start: T[], pool: T[], mix: DeckMixV2, weightOf: (name: string) => number, value: (name: string, rep: number) => number,
+  groupValue: (k: number, rep: number) => number,
+  o: { target: number; band: number; minCreaturesPerColour: number; maxSwaps: number; ratingWindow: number; minGain: number; searchReps: number[]; pairCounts?: boolean[] }): { cards: T[]; swaps: Array<{ out: string; in: string; gain: number }>; startGap: number; gap: number } {
+  const R = o.searchReps;
+  const map = analyticMap(mix);
+  const K = CELL_KEYS.length;
+  let cards = [...start];
+  const sums = R.map((b) => classSums(cards, (n) => value(n, b), weightOf));
+  const g = R.map((b) => [groupValue(2, b), groupValue(3, b)] as const);
+  const rows = R.map((_, r) => analyticCells(map, meansOf(sums[r] as { sv: Float64Array; sw: Float64Array }), (g[r] as readonly number[])[0], (g[r] as readonly number[])[1]));
+  const valCache = new Map<string, Float64Array>();
+  const V = (name: string): Float64Array => { let v = valCache.get(name); if (!v) { v = Float64Array.from(R, (b) => value(name, b)); valCache.set(name, v); } return v; };
+  let base = rows.reduce((s, r) => s + cellGap(r, o.pairCounts), 0) / R.length;
+  const startGap = base;
+  const swaps: Array<{ out: string; in: string; gain: number }> = [];
+  const candidates = pool.filter((c) => !c.land && c.value !== null && Math.abs(c.value - o.target) <= o.band);
+  const tmp = new Float64Array(K);
+  const moved = (r: number, k: number, wx: number, vx: number, wy: number, vy: number): number => {
+    const s = sums[r] as { sv: Float64Array; sw: Float64Array };
+    const sw = s.sw[k] as number, sv = s.sv[k] as number;
+    const m0 = sw > 0 ? sv / sw : 0, sw1 = sw - wx + wy;
+    return (sw1 > 0 ? (sv - wx * vx + wy * vy) / sw1 : 0) - m0;
+  };
+  for (let it = 0; it < o.maxSwaps; it++) {
+    const inCube = new Set(cards.map((c) => c.name));
+    let best: { i: number; p: T; v: number } | null = null;
+    for (let i = 0; i < cards.length; i++) {
+      const c = cards[i] as T;
+      if (c.land || c.colors.length > 2) continue;
+      const k = CLASSES.indexOf(c.colors);
+      const creatures = c.colors.length === 1 ? cards.filter((x) => !x.land && x.colors === c.colors && x.creature).length : Infinity;
+      const vx = V(c.name), wx = weightOf(c.name);
+      for (const p of candidates) {
+        if (p.colors !== c.colors || bucketOf(p.mv) !== bucketOf(c.mv) || inCube.has(p.name) || Math.abs(p.rating - c.rating) > o.ratingWindow) continue;
+        if (c.creature && !p.creature && creatures - 1 < o.minCreaturesPerColour) continue;
+        const vy = V(p.name), wy = weightOf(p.name);
+        let s = 0;
+        for (let r = 0; r < R.length; r++) {
+          const dm = moved(r, k, wx, vx[r] as number, wy, vy[r] as number), row = rows[r] as Float64Array;
+          for (let q = 0; q < K; q++) tmp[q] = (row[q] as number) + ((map.B[q] as Float64Array)[k] as number) * dm;
+          s += cellGap(tmp, o.pairCounts);
+        }
+        const v = s / R.length;
+        if (!best || v < best.v) best = { i, p, v };
+      }
+    }
+    if (!best || base - best.v < o.minGain) break;
+    const out = cards[best.i] as T, k = CLASSES.indexOf(out.colors);
+    const vx = V(out.name), vy = V(best.p.name), wx = weightOf(out.name), wy = weightOf(best.p.name);
+    rows.forEach((row, r) => {
+      const dm = moved(r, k, wx, vx[r] as number, wy, vy[r] as number);
+      for (let q = 0; q < K; q++) bump(row, q, ((map.B[q] as Float64Array)[k] as number) * dm);
+      const s = sums[r] as { sv: Float64Array; sw: Float64Array };
+      bump(s.sw, k, wy - wx); bump(s.sv, k, wy * (vy[r] as number) - wx * (vx[r] as number));
+    });
+    swaps.push({ out: out.name, in: best.p.name, gain: base - best.v });
+    cards = cards.slice();
+    cards[best.i] = best.p;
+    base = best.v;
+  }
+  return { cards, swaps, startGap, gap: base };
 }
 
 /** max |payoff - .5| over a table's cells. */
