@@ -1,0 +1,86 @@
+==== J160 pilot1 started 2026-10-24T02:32:21-04:00 in unit lab-J160-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J160: data folder free GB 680.2
+J160: cubes/library/balanced/balanced-pauper-even-nopower.md is not at the pin
+balanced-legacy-even-high
+balanced-legacy-even-high-nopower
+balanced-legacy-even-mid
+balanced-legacy-even-mid-nopower
+balanced-pauper-even
+{"present":5,"legacy":4,"pauper":1,"ok":5,"per":{"balanced-legacy-even-high":{"cards":180,"warnings":0,"notInPool":0,"ok":true},"balanced-legacy-even-high-nopower":{"cards":180,"warnings":0,"notInPool":0,"ok":true},"balanced-legacy-even-mid":{"cards":180,"warnings":0,"notInPool":0,"ok":true},"balanced-legacy-even-mid-nopower":{"cards":180,"warnings":0,"notInPool":0,"ok":true},"balanced-pauper-even":{"cards":180,"warnings":0,"notInPool":0,"ok":true}}}
+✔ groups: colour and makeup keys, the share bins, the stratum (0.788151ms)
+✔ the fit recovers planted card values and is antisymmetric (26.540677ms)
+✔ the bootstrap covers planted values; split-half reliability tracks the signal (127.54827ms)
+✔ cross-validation prefers a finite penalty when cards matter and reports skill (41.98383ms)
+✔ agreement: a source against itself (0.376162ms)
+✔ predicted payoffs: even classes are .5; a stronger colour wins more; weights move a class mean (1.14748ms)
+✔ the generator fills the plan exactly, near its target, with the creature floor; the search narrows the gaps (1715.395765ms)
+✔ the programme: a perfect model confirms on night 2; an impossible rule never does (2.685107ms)
+✔ by deck: the CV scores only games whose two decks were both held out; the split-half keeps every deck on one side (83.455903ms)
+✔ the balance search stops at its tolerance (2854.300582ms)
+✔ the exclusion list: its parser, and powered-exclude.txt is the census's POWERED list (0.405516ms)
+✔ every committed balanced cube loads as `cubelab.sh run` and `draft` load it, and drafts two decks (50.026309ms)
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.588784ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (879.14611ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (769.980161ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.370651ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2359.543444ms)
+✔ the prior covers the spectrum over 1,000 decks (1276.852988ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (53.116182ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.128774ms)
+✔ the land formula on fixture decks (0.482753ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.304716ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.177005ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (526.747723ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (2.09915ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.416838ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.094749ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (22.148783ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (9.374297ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.707359ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (226.022024ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (184.272647ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (583.522275ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1855.841575ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.940778ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9165.904823
+{"var/cubelab/facts/32653ed2fcd7d8d2.json": true, "/home/justin-a/code/lab/data/lab-j144/out/census-decks.jsonl.gz": true, "/home/justin-a/code/lab/data/lab-j144/out/census-games.jsonl.gz": true, "/home/justin-a/code/lab/data/lab-j145/out/drafted-decks.jsonl.gz": true, "/home/justin-a/code/lab/data/lab-j145/out/games.jsonl.gz": true, "/home/justin-a/code/lab/data/lab-j145/out/balance.json": true, "/home/justin-a/code/lab/data/lab-j145/census/decks/decks.jsonl": true}
+pauper.makeup: 791 cards, 15 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2248 vs 0.2424 makeup-only (7.2%; by deck 4.5%); repeatability by deck 0.70 (by game 0.75); 2.1 s
+pauper.colour: 791 cards, 31 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2254 vs 0.2390 makeup-only (5.7%; by deck 3.4%); repeatability by deck 0.68 (by game 0.75); 2.4 s
+peasant.makeup: 1315 cards, 14 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2246 vs 0.2368 makeup-only (5.1%; by deck 3.6%); repeatability by deck 0.65 (by game 0.74); 2.1 s
+peasant.colour: 1315 cards, 31 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2257 vs 0.2368 makeup-only (4.7%; by deck 3.1%); repeatability by deck 0.65 (by game 0.74); 2.3 s
+legacy.makeup: 948 cards, 15 groups, 19975 games; lambda 800 (by deck 800), held-out Brier 0.2231 vs 0.2358 makeup-only (5.4%; by deck 3.6%); repeatability by deck 0.65 (by game 0.65); 1.8 s
+legacy.colour: 948 cards, 31 groups, 19975 games; lambda 800 (by deck 800), held-out Brier 0.2240 vs 0.2335 makeup-only (4.0%; by deck 2.7%); repeatability by deck 0.61 (by game 0.65); 2.1 s
+powered.makeup: 948 cards, 15 groups, 19974 games; lambda 800 (by deck 800), held-out Brier 0.2276 vs 0.2406 makeup-only (5.4%; by deck 4.6%); repeatability by deck 0.62 (by game 0.63); 1.8 s
+powered.colour: 948 cards, 31 groups, 19974 games; lambda 800 (by deck 400), held-out Brier 0.2279 vs 0.2372 makeup-only (3.9%; by deck 3.5%); repeatability by deck 0.59 (by game 0.61); 2.1 s
+legacy+powered.makeup: 948 cards, 30 groups, 39949 games; lambda 800 (by deck 800), held-out Brier 0.2246 vs 0.2382 makeup-only (5.7%; by deck 4.6%); repeatability by deck 0.75 (by game 0.73); 3.9 s
+omega-B.makeup: 158 cards, 7 groups, 6400 games; lambda 1600 (by deck 800), held-out Brier 0.2437 vs 0.2494 makeup-only (2.3%; by deck 2.4%); repeatability by deck 0.63 (by game 0.61); 1.4 s
+omega-C.makeup: 158 cards, 10 groups, 7996 games; lambda 800 (by deck 800), held-out Brier 0.2432 vs 0.2470 makeup-only (1.6%; by deck 1.8%); repeatability by deck 0.50 (by game 0.55); 1.0 s
+omega-B.colour: 158 cards, 21 groups, 6400 games; lambda 1600 (by deck 800), held-out Brier 0.2442 vs 0.2489 makeup-only (1.9%; by deck 2.1%); repeatability by deck 0.60 (by game 0.59); 2.1 s
+omega-C.colour: 158 cards, 25 groups, 7996 games; lambda 800 (by deck 800), held-out Brier 0.2432 vs 0.2459 makeup-only (1.1%; by deck 1.7%); repeatability by deck 0.53 (by game 0.58); 1.9 s
+balance-model: wrote var/lab-j160-local/model/model.json, summary.md, 13 card tables and 3 cubes under var/lab-j160-local/model/cubes
+pauper.makeup: 791 cards, 15 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2248 vs 0.2424 makeup-only (7.2%; by deck 4.5%); repeatability by deck 0.70 (by game 0.75); 2.5 s
+pauper.colour: 791 cards, 31 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2254 vs 0.2390 makeup-only (5.7%; by deck 3.4%); repeatability by deck 0.68 (by game 0.75); 2.8 s
+peasant.makeup: 1315 cards, 14 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2246 vs 0.2368 makeup-only (5.1%; by deck 3.6%); repeatability by deck 0.65 (by game 0.74); 2.6 s
+peasant.colour: 1315 cards, 31 groups, 19982 games; lambda 400 (by deck 800), held-out Brier 0.2257 vs 0.2368 makeup-only (4.7%; by deck 3.1%); repeatability by deck 0.65 (by game 0.74); 2.9 s
+legacy.makeup: 948 cards, 15 groups, 19975 games; lambda 800 (by deck 800), held-out Brier 0.2231 vs 0.2358 makeup-only (5.4%; by deck 3.6%); repeatability by deck 0.65 (by game 0.65); 2.1 s
+legacy.colour: 948 cards, 31 groups, 19975 games; lambda 800 (by deck 800), held-out Brier 0.2240 vs 0.2335 makeup-only (4.0%; by deck 2.7%); repeatability by deck 0.61 (by game 0.65); 2.8 s
+powered.makeup: 948 cards, 15 groups, 19974 games; lambda 800 (by deck 800), held-out Brier 0.2276 vs 0.2406 makeup-only (5.4%; by deck 4.6%); repeatability by deck 0.62 (by game 0.63); 2.4 s
+powered.colour: 948 cards, 31 groups, 19974 games; lambda 800 (by deck 400), held-out Brier 0.2279 vs 0.2372 makeup-only (3.9%; by deck 3.5%); repeatability by deck 0.59 (by game 0.61); 3.1 s
+legacy+powered.makeup: 948 cards, 30 groups, 39949 games; lambda 800 (by deck 800), held-out Brier 0.2246 vs 0.2382 makeup-only (5.7%; by deck 4.6%); repeatability by deck 0.75 (by game 0.73); 5.1 s
+omega-B.makeup: 158 cards, 7 groups, 6400 games; lambda 1600 (by deck 800), held-out Brier 0.2437 vs 0.2494 makeup-only (2.3%; by deck 2.4%); repeatability by deck 0.63 (by game 0.61); 1.8 s
+omega-C.makeup: 158 cards, 10 groups, 7996 games; lambda 800 (by deck 800), held-out Brier 0.2432 vs 0.2470 makeup-only (1.6%; by deck 1.8%); repeatability by deck 0.50 (by game 0.55); 1.1 s
+omega-B.colour: 158 cards, 21 groups, 6400 games; lambda 1600 (by deck 800), held-out Brier 0.2442 vs 0.2489 makeup-only (1.9%; by deck 2.1%); repeatability by deck 0.60 (by game 0.59); 2.2 s
+omega-C.colour: 158 cards, 25 groups, 7996 games; lambda 800 (by deck 800), held-out Brier 0.2432 vs 0.2459 makeup-only (1.1%; by deck 1.7%); repeatability by deck 0.53 (by game 0.58); 1.4 s
+balance-model: wrote var/lab-j160-local/model-nopower/model.json, summary.md, 13 card tables and 3 cubes under var/lab-j160-local/model-nopower/cubes
+{"present": 5, "predicted": 5, "identical": 5, "mismatch": 0, "unpredicted": [], "mismatched": [], "generatedNotAtPin": ["balanced-pauper-even-nopower"]}
+decks: 2000 deck(s) from balanced-legacy-even-mid (180 of its 180 cards drawable), seed 1808, into /home/justin-a/code/lab/data/lab-j160/selftest/decks: k = 1 / 2 / 3 658 / 668 / 674; 36 rejected draw(s), 0 new makeup(s); repeat cap 164 of 658 k=1 decks, 0 card(s) reached it; a card's share of k=1 decks at most 0.1976
+{"verdict": "NOT BALANCED ON PAYOFF", "offPayoff": ["B"], "pull": {}, "payoff": {"Blab": 8000}}
+{"W": "EVEN", "U": "EVEN", "B": "OFF", "R": "EVEN", "G": "EVEN"}
+{"code": true, "A rmse": true, "A gaps": true, "A candidate": true, "B not": true, "pooled": true, "power": true, "lists": true, "none": true}
