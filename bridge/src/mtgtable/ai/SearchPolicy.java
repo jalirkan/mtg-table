@@ -721,21 +721,26 @@ public final class SearchPolicy {
      * {@link #sameKind kind} as well as its description.  Only then are D466's optional
      * costs added back, AltCost left out ({@link #addedOptionalCosts}): a kicked
      * flashback is both.
+     *
+     * <p>D476 (amending D472): the description is compared as {@link #matchKey},
+     * where a may-play permission's host is named by its id, because the copy
+     * renders that host differently (an effect card's source is not copied).
      */
     static SpellAbility mapSa(final LenientGameCopier cp, final SpellAbility orig, final Player aiCopy) {
         final Card hostCopy = (Card) cp.find(orig.getHostCard());
         final String desc = orig.getDescription();
+        final String key = matchKey(orig);
         SpellAbility found = null;
         final List<SpellAbility> withAlt = copyCandidates(hostCopy, aiCopy);
         for (final SpellAbility s : withAlt) {
-            if (desc.equals(s.getDescription()) && sameKind(orig, s)) {
+            if (key.equals(matchKey(s)) && sameKind(orig, s)) {
                 found = s;
                 break;
             }
         }
         if (found == null) {
             for (final SpellAbility s : withAlt) {
-                if (desc.startsWith(s.getDescription()) && sameKind(orig, s)) {
+                if (key.startsWith(matchKey(s)) && sameKind(orig, s)) {
                     found = s;
                     break;
                 }
@@ -833,16 +838,44 @@ public final class SearchPolicy {
     }
 
     /**
+     * D476: the description a play is matched by, with each may-play suffix's host
+     * named by its card id.  {@code GameActionUtil.getMayPlaySpellOptions} appends
+     * {@code " by " + host} to the description of a play by a may-play permission
+     * whose host is another card -- the effect's source when the host is an effect
+     * card that has one.  Forge's {@code GameCopier} sets no copied effect card's
+     * source (it maps {@code setEffectSource} for battlefield cards only), so on
+     * the copy the same permission reads {@code " by Swift End (25)'s Adventure (136)"}
+     * where the original read {@code " by Swift End (25)"}: an Adventure card's
+     * creature cast from exile, and every play an effect card lets a player make
+     * (impulse draw), never matched.  The card id survives the copy; its rendering
+     * does not.  A play whose may-play options were enumerated twice carries the
+     * suffix twice (Forge lists both), and both are replaced.
+     */
+    public static String matchKey(final SpellAbility sa) {
+        final String d = sa.getDescription();
+        final forge.game.staticability.StaticAbility mp = sa.getMayPlay();
+        if (mp == null || d == null) {
+            return d == null ? "" : d;
+        }
+        final Card host = mp.getHostCard();
+        final Card shown = host.isImmutable() && host.getEffectSource() != null ? host.getEffectSource() : host;
+        return d.replace(" by " + shown, " by #" + host.getId());
+    }
+
+    /**
      * D472: whether candidate {@code s} on the copy is the same KIND of play as
      * {@code orig}: a spell or not; the same alternative cost
      * ({@code getAlternativeCost()}: flashback, evoke, foretold, ... or none); a
      * card's own AlternativeCost static paid or not ({@code OptionalCost.AltCost});
-     * by a may-play permission or not; without its mana cost or not.  And
+     * by a may-play permission or not; without its mana cost or not; and (D476)
+     * the same face of the card ({@code getCardStateName}: an Adventure card's
+     * creature or its adventure, a split card's half, a modal card's back).  And
      * {@code s} carries no optional cost but AltCost, so an optional cost is
      * never added twice.  The description tells the rest apart.
      */
     static boolean sameKind(final SpellAbility orig, final SpellAbility s) {
-        if (s.isSpell() != orig.isSpell() || s.getAlternativeCost() != orig.getAlternativeCost()
+        if (s.isSpell() != orig.isSpell() || s.getCardStateName() != orig.getCardStateName()
+                || s.getAlternativeCost() != orig.getAlternativeCost()
                 || s.isOptionalCostPaid(OptionalCost.AltCost) != orig.isOptionalCostPaid(OptionalCost.AltCost)
                 || (s.getMayPlay() == null) != (orig.getMayPlay() == null)
                 || s.hasParam("WithoutManaCost") != orig.hasParam("WithoutManaCost")) {
@@ -859,6 +892,9 @@ public final class SearchPolicy {
     /** D472: the original's kind, for the failure's text ("" for a plain play). */
     private static String kindOf(final SpellAbility orig) {
         final StringBuilder k = new StringBuilder();
+        if (orig.getCardStateName() != null && orig.getCardStateName() != forge.card.CardStateName.Original) {
+            k.append(" [").append(orig.getCardStateName().name()).append(']');
+        }
         if (orig.getAlternativeCost() != null) {
             k.append(" [").append(orig.getAlternativeCost().name()).append(']');
         }
