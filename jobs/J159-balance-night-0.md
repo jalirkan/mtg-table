@@ -7,7 +7,6 @@ cpu: heavy
 cores: 7
 max_workers: 7
 mem_per_worker_gb: 3
-after: J158
 repos: mtg-table@db496097 (origin/main: the merge of #185 and #186; `cubes/omega-cube-180.md` byte-identical to J145's pin 60252b32, sha256 f6432a75975e...; the cube-lab changes since are the atlas's, D459's monotonic watchdog and a configurable worker heap that stays 4096m for run and census-play), ForgeCoach@866c256 (J145's pin: public/cubes/omega-cube-180.picks.json, sha256 9ee28421c115..., the same bytes on ForgeCoach main; checked by the pilot)
 decides: whether UG's low lab-vs-lab payoff, J145's one pair candidate (.423, .382-.465, 544 deck-games), holds on fresh seeds: UG CONFIRMED or UG NOT CONFIRMED by the swap rule's night-0 reading below, on this night's data alone. If NOT CONFIRMED the swap programme stops (there is nothing to swap). If CONFIRMED, night 1 (one swap, then a fresh-seed re-measure) may be written; this job registers no swap and performs none. J145's colour verdict (BALANCED ON PAYOFF / NOT BALANCED ON PAYOFF) is read again, as the "no colour OFF" gate's baseline; pull is reported, not judged
 hypothesis: UG's arm-B interval sits below .5 again. J145: UG .423 (.382-.465) on 544 lab-vs-lab deck-games and .424 (.388-.465) as random pool decks, the only drafted pair whose interval excluded .5; at the same n the interval's half-width is about .04, so a true UG rate near .42 confirms with high probability, and a J145 seed artefact reads an interval that includes .5
