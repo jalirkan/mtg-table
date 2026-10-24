@@ -15,7 +15,10 @@
 // wait would start the next one on a busy port.  A deck NAMED "Crash ..." makes
 // it exit before /health; "Drop One ..." makes it load one card fewer.
 // Everything goes under var/match-launcher-selftest/ (MTGTABLE_TEST_VAR), never
-// var/play/ or var/match/.  No Forge, no claude (a PATH with node alone), no network.
+// var/play/ or var/match/.  No Forge, no claude, no tailscale, no network: the PATH is
+// node and a shadow of /usr/bin and /bin without those two (below), so a machine that
+// has them installed -- Claude Code's global npm package puts claude in /usr/bin -- runs
+// the same cases as a CI runner that does not.
 //
 // What it holds: /health's "match"; GET /match; a POST that writes the two .dck
 // files exactly, restarts the engine with the request's decks, profile and games
@@ -47,7 +50,7 @@
 // Run from the repo root (hard rule 9).  Gate step 12f (beside the coach
 // helper's own self-test); CI's redaction job.
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer, request } from 'node:http';
@@ -60,16 +63,34 @@ import { checkWake, createMatchLauncher, realInside } from './match-launcher.mjs
 
 const REL = 'var/match-launcher-selftest';
 const DIR = resolve(REL);
-const NODE_ONLY = join(DIR, 'node-only');      // a PATH with node and no claude
+const NODE_ONLY = join(DIR, 'node-only');      // node, whichever one runs this
+const SHADOW = join(DIR, 'bin-shadow');        // /usr/bin and /bin, less ABSENT
+const ABSENT = ['claude', 'tailscale'];        // what the cases need missing from PATH
 const EVENTS = join(DIR, 'engine-events.jsonl');
 const ALIVE = join(DIR, 'alive');
 // A fake engine an interrupted earlier run left behind is stopped before its record goes.
 for (const f of existsSync(ALIVE) ? readdirSync(ALIVE) : []) { try { process.kill(Number(f), 'SIGKILL'); } catch { /* gone */ } }
 rmSync(DIR, { recursive: true, force: true });
-for (const d of [NODE_ONLY, ALIVE, join(DIR, 'site')]) mkdirSync(d, { recursive: true });
+for (const d of [NODE_ONLY, SHADOW, ALIVE, join(DIR, 'site')]) mkdirSync(d, { recursive: true });
 symlinkSync(process.execPath, join(NODE_ONLY, 'node'));
 writeFileSync(join(DIR, 'site', 'index.html'), '<!doctype html><title>t</title>\n');
-const PATH = [NODE_ONLY, '/usr/bin', '/bin'].join(delimiter);
+// A real shadow, not an assumption about the machine: every name in /usr/bin and /bin is linked
+// here except ABSENT, so play.sh and the helper find the same tools they always did (curl,
+// python3, unzip, timeout -- each of which picks a branch of play.sh) and never claude or tailscale,
+// wherever those are installed.  The cases that want a tailscale put the fake one in front.
+const linked = new Set();
+for (const d of ['/usr/bin', '/bin']) {
+  for (const f of existsSync(d) ? readdirSync(d) : []) {
+    if (ABSENT.includes(f) || linked.has(f)) continue;
+    linked.add(f);
+    symlinkSync(join(d, f), join(SHADOW, f));
+  }
+}
+const PATH = [NODE_ONLY, SHADOW].join(delimiter);
+for (const f of ABSENT) {
+  const r = spawnSync('sh', ['-c', `command -v ${f}`], { env: { ...process.env, PATH }, encoding: 'utf8' });
+  if (r.status === 0 || r.stdout || r.error) { console.error(`match-launcher-selftest: ${f} is still on the shadow PATH (${r.stdout.trim() || r.error?.message || `exit ${r.status}`})`); process.exit(1); }
+}
 
 // --- the fake engine ---------------------------------------------------------
 const FAKE = String.raw`// A fake bridge for tools/match-launcher-selftest.mjs.  Not the engine.
