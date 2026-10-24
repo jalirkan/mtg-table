@@ -333,3 +333,16 @@ game costs several times that, so budget search jobs in games, not hours.
 - **Search's budget is wall clock**: rate search players on the machine that
   will play them, and never compare a game time from this shared container with
   the owner's PC.
+
+## Known issues
+
+- **synergy-1003, pair 0 of `tools/ai-bench/pairs-cube.txt`: one deal hit the
+  game cap once (noted 2026-10-24, not investigated).** In the cloud's `+search`
+  smoke for #191 (D470), one game on this pair ran 35 turns to the 300 s game cap
+  and was scored a draw. It had 2 search step timeouts (`stepTimeouts`, D468)
+  and 9 Forge AI evaluation timeouts. On the previous run, the same deal went 23
+  turns in 85 s. D470 changed only block search, and nothing ties this game to
+  it. If a pairs-cube run shows game timeouts, look at this pair first. Replay the
+  deal (the bench line's `seed`) with and without `+search`, and set its
+  `aiEvalTimeouts` and `cpuMs` against `ms`, so a busy machine is not mistaken
+  for a hang.

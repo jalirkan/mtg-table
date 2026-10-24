@@ -652,6 +652,20 @@ test('D468: the match tally counts rollouts the step clock ended (search.stepTim
   assert.equal(tallyLine({ ...emptyTally(), stepTimeouts: undefined }).stepTimeouts, 0, 'a tally from before the counter reads 0');
 });
 
+test('D470: the match tally counts rollouts whose forced answer was unavailable (search.unavailable and the prior\'s), 0 when none', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-unavailable-tally-'));
+  const f = join(dir, 'b0.jsonl');
+  const a1 = { 'search.b.considered': 3, 'search.rolloutErrors': 2, 'search.unavailable': 2 };
+  const a2 = { 'search.b.considered': 2, 'search.prior.errors': 1, 'search.prior.unavailable': 1 };
+  const b1 = { 'search.b.considered': 4, 'search.rolloutErrors': 1 };
+  writeFileSync(f, [JSON.stringify({ aStats: { counts: a1 }, bStats: { counts: b1 } }), JSON.stringify({ aStats: { counts: a2 } })].join('\n'));
+  const a = emptyTally(), b = emptyTally();
+  tallyBatch(f, a, b);
+  assert.equal(tallyLine(a).unavailable, 3);
+  assert.equal(tallyLine(b).unavailable, 0, 'an error that was not this one counts none');
+  assert.equal(tallyLine({ ...emptyTally(), unavailable: undefined }).unavailable, 0, 'a tally from before the counter reads 0');
+});
+
 // ------------------------------------------------------------ match (D398)
 
 test('match (D398): the pair-score interval, in Elo too; no interval under 2 pairs', () => {

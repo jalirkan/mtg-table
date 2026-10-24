@@ -2669,6 +2669,7 @@ public final class SearchPolicy {
             if (stepTimedOut(e, sink, lim.untilApplied)) {
                 return null;
             }
+            countUnavailable(e, sink, lim.untilApplied);   // D470: still rethrown, so still a rollout error too
             throw e;
         } finally {
             if (clock != null) {
@@ -2701,6 +2702,23 @@ public final class SearchPolicy {
             return false;
         }
         sink.add(prior ? "search.prior.stepTimeouts" : "search.stepTimeouts", 1);
+        return true;
+    }
+
+    /**
+     * D470 (the cloud's LOW on #191): whether {@code t} is, or wraps, a forced
+     * combat answer the copy could not give ({@link RolloutController.OptionUnavailable}).
+     * Counted once, as {@code search.unavailable} ({@code search.prior.unavailable}
+     * for the ranking's playouts), and nothing else: the caller still gets the
+     * throw, so the search still counts it as {@code search.rolloutErrors} (and
+     * the ranking as {@code search.prior.errors}) and treats it as it treats any
+     * error.  The counter only says how many of those errors were this one.
+     */
+    static boolean countUnavailable(final Throwable t, final Sink sink, final boolean prior) {
+        if (Atlas.unavailableIn(t) == null) {
+            return false;
+        }
+        sink.add(prior ? "search.prior.unavailable" : "search.unavailable", 1);
         return true;
     }
 
