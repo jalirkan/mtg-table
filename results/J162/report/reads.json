@@ -1,0 +1,752 @@
+{
+ "spines": {
+  "ff5": [
+   "462"
+  ],
+  "modern7": [
+   "466"
+  ],
+  "pauper5": [
+   "464"
+  ],
+  "synergy9": [
+   "465"
+  ]
+ },
+ "definitions": "see the header of this script",
+ "decisions": 64,
+ "complete": 59,
+ "decided": 2,
+ "Q": 57,
+ "i_sameBest": {
+  "n": 57,
+  "point": 0.5088,
+  "interval": [
+   0.322,
+   0.7
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": 0.4545,
+    "interval": [
+     0.1818,
+     0.7273
+    ]
+   },
+   "modern7": {
+    "n": 14,
+    "point": 0.7143,
+    "interval": [
+     0.5,
+     0.9286
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": 0.3125,
+    "interval": [
+     0.125,
+     0.5625
+    ]
+   },
+   "synergy9": {
+    "n": 16,
+    "point": 0.5625,
+    "interval": [
+     0.3125,
+     0.8125
+    ]
+   }
+  }
+ },
+ "ii_rho": {
+  "n": 51,
+  "point": 0.2181,
+  "interval": [
+   -0.1188,
+   0.5799
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 10,
+    "point": 0.1432,
+    "interval": [
+     -0.4103,
+     0.68
+    ]
+   },
+   "modern7": {
+    "n": 12,
+    "point": 0.6666,
+    "interval": [
+     0.3195,
+     0.8873
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": -0.1008,
+    "interval": [
+     -0.4545,
+     0.2679
+    ]
+   },
+   "synergy9": {
+    "n": 13,
+    "point": 0.2541,
+    "interval": [
+     -0.1933,
+     0.6762
+    ]
+   }
+  },
+  "twoOption": 19
+ },
+ "ii_rho_Q": {
+  "n": 51,
+  "point": 0.2181,
+  "interval": [
+   -0.1188,
+   0.5799
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 10,
+    "point": 0.1432,
+    "interval": [
+     -0.4103,
+     0.68
+    ]
+   },
+   "modern7": {
+    "n": 12,
+    "point": 0.6666,
+    "interval": [
+     0.3195,
+     0.8873
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": -0.1008,
+    "interval": [
+     -0.4545,
+     0.2679
+    ]
+   },
+   "synergy9": {
+    "n": 13,
+    "point": 0.2541,
+    "interval": [
+     -0.1933,
+     0.6762
+    ]
+   }
+  }
+ },
+ "iii_regret": {
+  "p": {
+   "random": {
+    "n": 40,
+    "point": 0.0291,
+    "interval": [
+     0.0127,
+     0.051
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 8,
+      "point": 0.015,
+      "interval": [
+       0.0,
+       0.0387
+      ]
+     },
+     "modern7": {
+      "n": 11,
+      "point": 0.0393,
+      "interval": [
+       0.0061,
+       0.0928
+      ]
+     },
+     "pauper5": {
+      "n": 10,
+      "point": 0.0345,
+      "interval": [
+       0.005,
+       0.078
+      ]
+     },
+     "synergy9": {
+      "n": 11,
+      "point": 0.0241,
+      "interval": [
+       0.0109,
+       0.0405
+      ]
+     }
+    },
+    "clearOfZero": 5
+   },
+   "forge": {
+    "n": 40,
+    "point": 0.0481,
+    "interval": [
+     0.0221,
+     0.0858
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 8,
+      "point": 0.0813,
+      "interval": [
+       0.0094,
+       0.1875
+      ]
+     },
+     "modern7": {
+      "n": 11,
+      "point": 0.0545,
+      "interval": [
+       0.0159,
+       0.1045
+      ]
+     },
+     "pauper5": {
+      "n": 10,
+      "point": 0.02,
+      "interval": [
+       0.0075,
+       0.035
+      ]
+     },
+     "synergy9": {
+      "n": 11,
+      "point": 0.0432,
+      "interval": [
+       0.0091,
+       0.0864
+      ]
+     }
+    },
+    "clearOfZero": 5
+   }
+  },
+  "a": {
+   "random": {
+    "n": 15,
+    "point": 0.0273,
+    "interval": [
+     0.005,
+     0.06
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 3,
+      "point": 0.005,
+      "interval": [
+       0.005,
+       0.005
+      ]
+     },
+     "modern7": {
+      "n": 3,
+      "point": 0.0067,
+      "interval": [
+       0.0,
+       0.0151
+      ]
+     },
+     "pauper5": {
+      "n": 6,
+      "point": 0.0558,
+      "interval": [
+       0.0067,
+       0.1092
+      ]
+     },
+     "synergy9": {
+      "n": 3,
+      "point": 0.0133,
+      "interval": [
+       0.0,
+       0.025
+      ]
+     }
+    },
+    "clearOfZero": 2
+   },
+   "forge": {
+    "n": 15,
+    "point": 0.015,
+    "interval": [
+     0.0017,
+     0.0438
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 3,
+      "point": 0.0083,
+      "interval": [
+       0.0,
+       0.025
+      ]
+     },
+     "modern7": {
+      "n": 3,
+      "point": 0.0167,
+      "interval": [
+       0.0,
+       0.05
+      ]
+     },
+     "pauper5": {
+      "n": 6,
+      "point": 0.0042,
+      "interval": [
+       0.0,
+       0.0125
+      ]
+     },
+     "synergy9": {
+      "n": 3,
+      "point": 0.0417,
+      "interval": [
+       0.0,
+       0.125
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  },
+  "b": {
+   "random": {
+    "n": 2,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "modern7": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "pauper5": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "synergy9": {
+      "n": 2,
+      "point": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "clearOfZero": 0
+   },
+   "forge": {
+    "n": 2,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ],
+    "byPair": {
+     "ff5": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "modern7": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "pauper5": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "synergy9": {
+      "n": 2,
+      "point": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  }
+ },
+ "iv_repeat": {
+  "C1_castNow": {
+   "random": {
+    "n": 8,
+    "point": 0.0523,
+    "interval": [
+     -0.0047,
+     0.1313
+    ]
+   },
+   "verdict": "NOT SHOWN",
+   "forgeMap": {
+    "n": 8,
+    "point": 0.0422,
+    "interval": [
+     -0.0266,
+     0.1109
+    ]
+   }
+  },
+  "C2_dontAttack": {
+   "random": {
+    "n": 3,
+    "point": -0.095,
+    "interval": [
+     -0.145,
+     -0.07
+    ]
+   },
+   "verdict": "NOT SHOWN",
+   "forgeMap": {
+    "n": 3,
+    "point": -0.05,
+    "interval": [
+     -0.1,
+     0.0
+    ]
+   }
+  }
+ },
+ "v_guardrails": {
+  "byPair": {
+   "ff5": {
+    "logs": 20800,
+    "priorityDecisions": 1573655,
+    "landOffered": 91560,
+    "landTaken": 91560,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 38242,
+    "refusedCast": 502,
+    "noRepeatRefused": 450,
+    "xDrawn": 5447,
+    "zeroXLeftOut": 27921,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "modern7": {
+    "logs": 22400,
+    "priorityDecisions": 1330908,
+    "landOffered": 78239,
+    "landTaken": 78239,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 12817,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 12160,
+    "zeroXLeftOut": 147740,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "pauper5": {
+    "logs": 24000,
+    "priorityDecisions": 1526331,
+    "landOffered": 104363,
+    "landTaken": 104363,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 312,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 14086,
+    "zeroXLeftOut": 116104,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "synergy9": {
+    "logs": 21600,
+    "priorityDecisions": 513483,
+    "landOffered": 47338,
+    "landTaken": 47338,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 2349,
+    "refusedCast": 2,
+    "noRepeatRefused": 0,
+    "xDrawn": 933,
+    "zeroXLeftOut": 1622,
+    "zeroX": 0,
+    "forgePayCap": 0
+   }
+  },
+  "total": {
+   "logs": 88800,
+   "priorityDecisions": 4944377,
+   "landOffered": 321500,
+   "landTaken": 321500,
+   "mulligans": 0,
+   "kept": 0,
+   "violations": 0,
+   "noRepeatNoOp": 53720,
+   "refusedCast": 504,
+   "noRepeatRefused": 450,
+   "xDrawn": 32626,
+   "zeroXLeftOut": 293387,
+   "zeroX": 0,
+   "forgePayCap": 0
+  }
+ },
+ "vi_rung3": {
+  "optionsPerDecision": 3.62,
+  "branchGamesPerDecision": 870,
+  "secRandomBranch": 2.41,
+  "secForgeBranch": 1.87,
+  "workerSecPerDecision": 2017,
+  "decisionsPer7WorkerHour": 12.5,
+  "decisionsPer10hNight": 125,
+  "undecidedShare": 0.966
+ },
+ "vi_rung3_byPair": {
+  "ff5": {
+   "optionsPerDecision": 3.88,
+   "branchGamesPerDecision": 930,
+   "secRandomBranch": 3.89,
+   "secForgeBranch": 2.23,
+   "workerSecPerDecision": 3359,
+   "decisionsPer7WorkerHour": 7.5,
+   "decisionsPer10hNight": 75,
+   "undecidedShare": 1.0
+  },
+  "modern7": {
+   "optionsPerDecision": 3.5,
+   "branchGamesPerDecision": 840,
+   "secRandomBranch": 2.38,
+   "secForgeBranch": 1.54,
+   "workerSecPerDecision": 1878,
+   "decisionsPer7WorkerHour": 13.4,
+   "decisionsPer10hNight": 134,
+   "undecidedShare": 0.875
+  },
+  "pauper5": {
+   "optionsPerDecision": 3.75,
+   "branchGamesPerDecision": 900,
+   "secRandomBranch": 2.47,
+   "secForgeBranch": 1.57,
+   "workerSecPerDecision": 2087,
+   "decisionsPer7WorkerHour": 12.1,
+   "decisionsPer10hNight": 121,
+   "undecidedShare": 1.0
+  },
+  "synergy9": {
+   "optionsPerDecision": 3.38,
+   "branchGamesPerDecision": 810,
+   "secRandomBranch": 1.44,
+   "secForgeBranch": 2.32,
+   "workerSecPerDecision": 1286,
+   "decisionsPer7WorkerHour": 19.6,
+   "decisionsPer10hNight": 196,
+   "undecidedShare": 1.0
+  }
+ },
+ "iv_byPair": {
+  "ff5": {
+   "C1_castNow": {
+    "random": {
+     "n": 8,
+     "point": 0.0523,
+     "interval": [
+      -0.0047,
+      0.1313
+     ]
+    },
+    "verdict": "NOT SHOWN",
+    "forgeMap": {
+     "n": 8,
+     "point": 0.0422,
+     "interval": [
+      -0.0266,
+      0.1109
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 3,
+     "point": -0.095,
+     "interval": [
+      -0.145,
+      -0.07
+     ]
+    },
+    "forgeMap": {
+     "n": 3,
+     "point": -0.05,
+     "interval": [
+      -0.1,
+      0.0
+     ]
+    },
+    "verdict": null
+   }
+  },
+  "modern7": {
+   "C1_castNow": {
+    "random": {
+     "n": 11,
+     "point": 0.063,
+     "interval": [
+      0.017,
+      0.1231
+     ]
+    },
+    "verdict": "HOLDS",
+    "forgeMap": {
+     "n": 11,
+     "point": 0.0985,
+     "interval": [
+      0.0136,
+      0.1905
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 3,
+     "point": -0.0171,
+     "interval": [
+      -0.051,
+      0.015
+     ]
+    },
+    "forgeMap": {
+     "n": 3,
+     "point": -0.0333,
+     "interval": [
+      -0.1,
+      0.0
+     ]
+    },
+    "verdict": null
+   }
+  },
+  "pauper5": {
+   "C1_castNow": {
+    "random": {
+     "n": 10,
+     "point": 0.0411,
+     "interval": [
+      0.0126,
+      0.069
+     ]
+    },
+    "verdict": "HOLDS",
+    "forgeMap": {
+     "n": 10,
+     "point": 0.0313,
+     "interval": [
+      -0.0087,
+      0.0754
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 5,
+     "point": -0.065,
+     "interval": [
+      -0.117,
+      -0.008
+     ]
+    },
+    "forgeMap": {
+     "n": 5,
+     "point": -0.05,
+     "interval": [
+      -0.075,
+      -0.02
+     ]
+    },
+    "verdict": null
+   }
+  },
+  "synergy9": {
+   "C1_castNow": {
+    "random": {
+     "n": 11,
+     "point": 0.0002,
+     "interval": [
+      -0.0133,
+      0.0136
+     ]
+    },
+    "verdict": "NOT SHOWN",
+    "forgeMap": {
+     "n": 11,
+     "point": -0.004,
+     "interval": [
+      -0.0394,
+      0.0311
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 2,
+     "point": -0.005,
+     "interval": [
+      -0.035,
+      0.025
+     ]
+    },
+    "forgeMap": {
+     "n": 2,
+     "point": 0.05,
+     "interval": [
+      -0.025,
+      0.125
+     ]
+    },
+    "verdict": null
+   }
+  }
+ }
+}

@@ -1,0 +1,571 @@
+{
+ "contract": "mtg-table rung-3 label v1 (J158)",
+ "spines": {
+  "ff5": [
+   "462"
+  ],
+  "modern7": [
+   "466"
+  ],
+  "pauper5": [
+   "464"
+  ],
+  "synergy9": [
+   "465"
+  ]
+ },
+ "branched": 64,
+ "labels": 59,
+ "rowsUnmatched": 0,
+ "confident": 7,
+ "confidentQ": 7,
+ "confidentForge": 5,
+ "byPair": {
+  "ff5": {
+   "spines": 1,
+   "labels": 11,
+   "inQ": 11,
+   "confident": 1,
+   "confidentQ": 1,
+   "confidentForge": 1,
+   "byKind": {
+    "p": {
+     "labels": 8,
+     "confident": 1
+    },
+    "a": {
+     "labels": 3,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   }
+  },
+  "modern7": {
+   "spines": 1,
+   "labels": 16,
+   "inQ": 14,
+   "confident": 2,
+   "confidentQ": 2,
+   "confidentForge": 2,
+   "byKind": {
+    "p": {
+     "labels": 12,
+     "confident": 2
+    },
+    "a": {
+     "labels": 4,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   }
+  },
+  "pauper5": {
+   "spines": 1,
+   "labels": 16,
+   "inQ": 16,
+   "confident": 3,
+   "confidentQ": 3,
+   "confidentForge": 0,
+   "byKind": {
+    "p": {
+     "labels": 10,
+     "confident": 1
+    },
+    "a": {
+     "labels": 6,
+     "confident": 2
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   }
+  },
+  "synergy9": {
+   "spines": 1,
+   "labels": 16,
+   "inQ": 16,
+   "confident": 1,
+   "confidentQ": 1,
+   "confidentForge": 2,
+   "byKind": {
+    "p": {
+     "labels": 11,
+     "confident": 1
+    },
+    "a": {
+     "labels": 3,
+     "confident": 0
+    },
+    "b": {
+     "labels": 2,
+     "confident": 0
+    }
+   }
+  }
+ },
+ "a_confidentShare": {
+  "n": 59,
+  "point": 0.1186,
+  "interval": [
+   0.0339,
+   0.2203
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": 0.0909,
+    "interval": [
+     0.0,
+     0.2727
+    ]
+   },
+   "modern7": {
+    "n": 16,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.3125
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": 0.1875,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "synergy9": {
+    "n": 16,
+    "point": 0.0625,
+    "interval": [
+     0.0,
+     0.1875
+    ]
+   }
+  }
+ },
+ "a_confidentShareByKind": {
+  "p": {
+   "n": 41,
+   "point": 0.122,
+   "interval": [
+    0.025,
+    0.2326
+   ],
+   "byPair": {
+    "ff5": {
+     "n": 8,
+     "point": 0.125,
+     "interval": [
+      0.0,
+      0.375
+     ]
+    },
+    "modern7": {
+     "n": 12,
+     "point": 0.1667,
+     "interval": [
+      0.0,
+      0.4167
+     ]
+    },
+    "pauper5": {
+     "n": 10,
+     "point": 0.1,
+     "interval": [
+      0.0,
+      0.3
+     ]
+    },
+    "synergy9": {
+     "n": 11,
+     "point": 0.0909,
+     "interval": [
+      0.0,
+      0.2727
+     ]
+    }
+   }
+  },
+  "a": {
+   "n": 16,
+   "point": 0.125,
+   "interval": [
+    0.0,
+    0.3684
+   ],
+   "byPair": {
+    "ff5": {
+     "n": 3,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "modern7": {
+     "n": 4,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "pauper5": {
+     "n": 6,
+     "point": 0.3333,
+     "interval": [
+      0.0,
+      0.6667
+     ]
+    },
+    "synergy9": {
+     "n": 3,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "b": {
+   "n": 2,
+   "point": 0.0,
+   "interval": [
+    0.0,
+    0.0
+   ],
+   "byPair": {
+    "ff5": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "modern7": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "pauper5": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "synergy9": {
+     "n": 2,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareQ": {
+  "n": 57,
+  "point": 0.1228,
+  "interval": [
+   0.0351,
+   0.2281
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": 0.0909,
+    "interval": [
+     0.0,
+     0.2727
+    ]
+   },
+   "modern7": {
+    "n": 14,
+    "point": 0.1429,
+    "interval": [
+     0.0,
+     0.3571
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": 0.1875,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "synergy9": {
+    "n": 16,
+    "point": 0.0625,
+    "interval": [
+     0.0,
+     0.1875
+    ]
+   }
+  }
+ },
+ "b_gapMedian": {
+  "ff5": 0.075,
+  "modern7": 0.049,
+  "pauper5": 0.085,
+  "synergy9": 0.0275
+ },
+ "b_gapMean": {
+  "n": 59,
+  "point": 0.0774,
+  "interval": [
+   0.0477,
+   0.1084
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": 0.0959,
+    "interval": [
+     0.0532,
+     0.1486
+    ]
+   },
+   "modern7": {
+    "n": 16,
+    "point": 0.0762,
+    "interval": [
+     0.0411,
+     0.1192
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": 0.1031,
+    "interval": [
+     0.0713,
+     0.1375
+    ]
+   },
+   "synergy9": {
+    "n": 16,
+    "point": 0.0403,
+    "interval": [
+     0.0216,
+     0.0666
+    ]
+   }
+  }
+ },
+ "b_regretMean": {
+  "n": 59,
+  "point": 0.0267,
+  "interval": [
+   0.012,
+   0.0454
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": 0.0123,
+    "interval": [
+     0.0014,
+     0.0305
+    ]
+   },
+   "modern7": {
+    "n": 16,
+    "point": 0.0283,
+    "interval": [
+     0.0051,
+     0.0667
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": 0.0425,
+    "interval": [
+     0.0141,
+     0.0762
+    ]
+   },
+   "synergy9": {
+    "n": 16,
+    "point": 0.0191,
+    "interval": [
+     0.0091,
+     0.0312
+    ]
+   }
+  }
+ },
+ "b_settledShare": {
+  "n": 59,
+  "point": 0.1017,
+  "interval": [
+   0.0,
+   0.2373
+  ],
+  "byPair": {
+   "ff5": {
+    "n": 11,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "modern7": {
+    "n": 16,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.3125
+    ]
+   },
+   "pauper5": {
+    "n": 16,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "synergy9": {
+    "n": 16,
+    "point": 0.25,
+    "interval": [
+     0.0625,
+     0.5
+    ]
+   }
+  }
+ },
+ "c_sizing": {
+  "byPair": {
+   "ff5": {
+    "wallSec": 9232,
+    "spinesTimed": 1,
+    "labels": 11,
+    "confident": 1,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 4.29,
+    "labelsPer10hNight": 43,
+    "confidentPer10hNight": 4
+   },
+   "modern7": {
+    "wallSec": 6282,
+    "spinesTimed": 1,
+    "labels": 16,
+    "confident": 2,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 9.17,
+    "labelsPer10hNight": 92,
+    "confidentPer10hNight": 11
+   },
+   "pauper5": {
+    "wallSec": 7300,
+    "spinesTimed": 1,
+    "labels": 16,
+    "confident": 3,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 7.89,
+    "labelsPer10hNight": 79,
+    "confidentPer10hNight": 15
+   },
+   "synergy9": {
+    "wallSec": 4340,
+    "spinesTimed": 1,
+    "labels": 16,
+    "confident": 1,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 13.27,
+    "labelsPer10hNight": 133,
+    "confidentPer10hNight": 8
+   }
+  },
+  "asRun": {
+   "wallSec": 27154,
+   "labels": 59,
+   "confident": 7,
+   "labelsPer10hNight": 78,
+   "confidentPer10hNight": 9
+  }
+ },
+ "voidLabels": 0,
+ "voidList": [],
+ "sameGameNotBlock": [],
+ "withoutVoid": {
+  "ff5": {
+   "labels": 11,
+   "confident": 1
+  },
+  "modern7": {
+   "labels": 16,
+   "confident": 2
+  },
+  "pauper5": {
+   "labels": 16,
+   "confident": 3
+  },
+  "synergy9": {
+   "labels": 16,
+   "confident": 1
+  }
+ },
+ "c_sizing7": {
+  "ff5": {
+   "workers": [
+    6
+   ],
+   "labelsPer7Worker10hNight": 50,
+   "confidentPer7Worker10hNight": 5
+  },
+  "modern7": {
+   "workers": [
+    6
+   ],
+   "labelsPer7Worker10hNight": 107,
+   "confidentPer7Worker10hNight": 13
+  },
+  "pauper5": {
+   "workers": [
+    6
+   ],
+   "labelsPer7Worker10hNight": 92,
+   "confidentPer7Worker10hNight": 17
+  },
+  "synergy9": {
+   "workers": [
+    6
+   ],
+   "labelsPer7Worker10hNight": 155,
+   "confidentPer7Worker10hNight": 10
+  },
+  "asRun": {
+   "labelsPer7Worker10hNight": 91,
+   "confidentPer7Worker10hNight": 11
+  }
+ }
+}
