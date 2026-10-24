@@ -1,23 +1,69 @@
 {
  "schema": 1,
- "updated": "2026-10-24T05:59:52-04:00",
- "heartbeat": "2026-10-24T05:59:52-04:00",
+ "updated": "2026-10-24T06:04:00-04:00",
+ "heartbeat": "2026-10-24T06:04:00-04:00",
  "paused": false,
- "state": "idle",
- "idleSince": "2026-10-24T05:36:53-04:00",
- "idleReason": "queue empty",
+ "state": "running",
+ "idleSince": null,
+ "idleReason": null,
  "host": {
-  "load1": 2.89,
-  "memUsedGb": 6.5,
+  "load1": 2.67,
+  "memUsedGb": 5.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4376,
+  "swapUsedMb": 3747,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 0,
+  "coresUsed": 7,
   "coresTotal": 8
  },
- "running": [],
+ "running": [
+  {
+   "publicTitle": "Move atlas 3b: the four spines J158 did not finish",
+   "publicEst": "~8 to 9 h",
+   "id": "J162",
+   "title": "The move atlas, rung 3b -- the four spines J158 did not finish (pauper-900000005, synergy-900000009, modern-era-900000007 and fair-fight-900000005's second spine) at their original fresh seeds 464, 465, 466 and 462, on the fixed tool (D470 forced blocks at the fork's own combat, D471 G6 the random seat's own X with #195's restore, D472 alternative costs in the fork); J158's shape unchanged (16 decisions a spine, every option 200 times random and 40 times Forge, no phase A, labels.jsonl the rung-3 contract), with the tool's new counters read and checked; a new data folder lab-j162; on f6dba5e4. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new random policy and tool, and are never pooled with J156's, J157's or J158's",
+   "cpu": "heavy",
+   "phase": "prepare",
+   "started": "2026-10-24T06:04:00-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": 55000,
+   "unit": "lines",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": 0,
+   "paused": false,
+   "dataUpdated": "2026-10-24T06:04:00-04:00",
+   "memGb": null,
+   "live": {
+    "branches": 0,
+    "atlas.problems": -1,
+    "armed": 0,
+    "branch_timeouts": 0,
+    "data_free_gb": 677.1,
+    "data_used_gb": 0,
+    "elapsed_s": 0,
+    "engine_errors": 0,
+    "payfail": 0,
+    "pressure_events": 0,
+    "unavailable": 0,
+    "unit_errors": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "branches",
+    "atlas.problems"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J162-prepare"
+  }
+ ],
  "queue": [],
  "waiting": [],
  "finished": [
@@ -25,7 +71,7 @@
    "publicTitle": "Move atlas 3b: the four spines J158 did not finish",
    "publicEst": "~8 to 9 h",
    "id": "J161",
-   "title": "The move atlas, rung 3b -- the four spines J158 did not finish (pauper-900000005, synergy-900000009, modern-era-900000007 and fair-fight-900000005's second spine) at their original fresh seeds 464, 465, 466 and 462, on the fixed tool (D470 forced blocks at the fork's own combat, D471 G6 the random seat's own X with #195's restore, D472 alternative costs in the fork); J158's shape unchanged (16 decisions a spine, every option 200 times random and 40 times Forge, no phase A, labels.jsonl the rung-3 contract), with the tool's new counters read and checked; a new data folder lab-j161; on 8a33ea78. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new random policy and tool, and are never pooled with J156's, J157's or J158's",
+   "title": "J161",
    "status": "failed",
    "finished": "2026-10-24T05:36:53-04:00",
    "headline": "",
@@ -836,8 +882,8 @@
   }
  ],
  "runner": {
-  "commit": "8a33ea78",
-  "started": "2026-10-24T02:30:52-04:00",
+  "commit": "f6dba5e4",
+  "started": "2026-10-24T06:02:55-04:00",
   "dryRun": false
  }
 }
