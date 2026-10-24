@@ -38,7 +38,7 @@ import {
 } from '../../tools/cubelab/atlasmath.ts';
 import {
   ATLAS_NOT_FOR_TRAINING, atlasMd, atlasSelftestDir, BRANCH_ERROR_MAX_DEFAULT, baselineJob, branchErrors, COUNTED_GUARDRAILS, countedGuardrails, decisionAtlas, disagreements, erroredOptionProblem,
-  errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, phaseAReport, rolloutJob, unitJob, unitsOf, writeAtlas,
+  errorText, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, phaseAReport, rolloutJob, unavailableBranches, unitJob, unitsOf, writeAtlas,
   type AtlasOptions, type BranchRow, type DecisionListing, type GuardrailCheck, type RolloutRow,
 } from '../../tools/cubelab/atlas.ts';
 import { decisionLines } from '../../tools/cubelab/seatidentity.ts';
@@ -370,6 +370,55 @@ test('writeAtlas makes an errored option a problem and shows the errors in atlas
     assert.equal(doc1.checks.branchErrors.errored, 8);
     assert.equal(doc1.checks.branchErrors.options.length, 0);
     assert.ok(!doc1.checks.problems.some((p) => /branch game\(s\) errored/.test(p)));
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('an option the copy cannot give is unavailable: left out of the map, counted apart from errors, a problem past the bar (D470, J158 spine 461)', () => {
+  const NO_BAND = 'option unavailable: the forced block\'s attacker Ledger Shredder (78) is not attacking';
+  const NEVER = 'option unavailable: the seat was never asked to declare blockers at the fork\'s combat (turn 13; the copy is at turn 13 COMBAT_FIRST_STRIKE_DAMAGE)';
+  const rows: BranchRow[] = [];
+  for (let i = 0; i < 10; i++) {
+    const c = i < 8 ? 'random' : 'forge';
+    const gone = i < 2 ? NO_BAND : i === 2 ? NEVER : undefined;   // 3 of 10: over one in ten
+    rows.push({ ...brow(10, 0, c, i, null, 'block:35>78'), kind: 'b', ...(gone ? { unavailable: gone, result: 0, score: 0.5 } : {}) });
+    rows.push({ ...brow(10, 1, c, i, null, 'block:none'), kind: 'b' });
+  }
+  const ua = unavailableBranches(rows, BRANCH_ERROR_MAX_DEFAULT);
+  assert.equal(ua.errored, 3);
+  assert.deepEqual(ua.byError.map((e) => e.n), [2, 1], 'by reason, ids as #');
+  assert.match(ua.byError[0]?.error ?? '', /attacker Ledger Shredder \(#\) is not attacking/);
+  assert.deepEqual(ua.options.map((x) => [x.d, x.o, x.errored, x.branches]), [[10, 0, 3, 10]]);
+  assert.match(erroredOptionProblem(ua.options[0] as NonNullable<typeof ua.options[0]>, 'were unavailable'), /^d10 option 0 `block:35>78` \(pass\): 3 of 10 branch game\(s\) were unavailable \(random 3 of 8, forge 0 of 2\): 2 x option unavailable/);
+  assert.equal(branchErrors(rows, BRANCH_ERROR_MAX_DEFAULT).errored, 0, 'never a branch error');
+  // the map: a branch whose option was unavailable drops out of the paired matrix, as an errored one does
+  const listing: DecisionListing = { d: 10, kind: 'b', turn: 13, tokens: ['block:35>78', 'block:none'], labels: ['block Kitesail Freebooter>Ledger Shredder', 'block none'] };
+  const d = decisionAtlas(listing, rows, 200, 7);
+  assert.equal(d.random.branches, 5, 'random: 8 branches less the 3 unavailable');
+  assert.equal(d.forge.branches, 2);
+  assert.equal(d.options[0]?.random.n, 5);
+  // writeAtlas: counted in checks.optionUnavailable, a problem, shown in atlas.md
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-unavail-'));
+  try {
+    const B = path.join(out, 'phaseB');
+    fs.mkdirSync(B, { recursive: true });
+    fs.writeFileSync(path.join(B, 'baseline.json'), JSON.stringify({ v: 1, seed: 461, winner: 'B', first: 'A', turns: 17, decisions: Array.from({ length: 11 }, (_, k) => ({ ...listing, d: k })) }));
+    fs.writeFileSync(path.join(B, 'branches.jsonl'), `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`);
+    assert.equal(writeAtlas(REPO, OPTS, out, {}, {}, () => {}), 3);
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { phaseB: { branchErrors: number; branchUnavailable: number }; checks: { problems: string[]; branchErrors: { errored: number }; optionUnavailable: { errored: number; options: unknown[] } } };
+    assert.equal(doc.phaseB.branchErrors, 0);
+    assert.equal(doc.phaseB.branchUnavailable, 3);
+    assert.equal(doc.checks.branchErrors.errored, 0);
+    assert.equal(doc.checks.optionUnavailable.errored, 3);
+    assert.ok(doc.checks.problems.some((p) => /^d10 option 0 `block:35>78`.* 3 of 10 branch game\(s\) were unavailable/.test(p)), doc.checks.problems.join('\n'));
+    assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /### Branch games where the option could not be given/);
+    // under the bar: counted, no problem
+    writeAtlas(REPO, { ...OPTS, branchErrorMax: 0.5 }, out, {}, {}, () => {});
+    const doc1 = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; optionUnavailable: { errored: number; options: unknown[] } } };
+    assert.equal(doc1.checks.optionUnavailable.errored, 3);
+    assert.equal(doc1.checks.optionUnavailable.options.length, 0);
+    assert.ok(!doc1.checks.problems.some((p) => /were unavailable/.test(p)));
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }
