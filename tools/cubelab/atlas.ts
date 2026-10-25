@@ -144,6 +144,8 @@ export interface BranchRow {
   effectSourceNull?: number;
   /** D479: the "exiled with" links the copier could not map (written when > 0). */
   exileLinksLost?: number;
+  /** D484: the ChooseSource answers the branch's seats made where Forge 2.0.14 answered null or a divider card (written when > 0). */
+  chooseSourceGuard?: number;
 }
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
@@ -669,6 +671,7 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     ...(b.restarts ? { restarts: b.restarts } : {}),
     ...(b.effectSourceNull ? { effectSourceNull: b.effectSourceNull } : {}),
     ...(b.exileLinksLost ? { exileLinksLost: b.exileLinksLost } : {}),
+    ...(b.chooseSourceGuard ? { chooseSourceGuard: b.chooseSourceGuard } : {}),
     ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
   st.done.add(key);
   st.fresh++;

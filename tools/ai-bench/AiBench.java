@@ -1510,6 +1510,80 @@ public final class AiBench {
         adventureScenarios();
         mayPlayShapeScenarios();
         copierCarryScenarios();
+        chooseSourceScenarios();
+    }
+
+    /**
+     * D484: a Circle of Protection's source, chosen by our seat when Forge
+     * 2.0.14's {@code ChooseSourceAi} would answer forever with null or a divider
+     * card.  J167's spine s05 hung every unit on it.  The AI seat (B) controls
+     * Circle of Protection: Green and activates it with nothing to prevent;
+     * the stack then resolves through {@code PhaseHandler.mainLoopStep}, on the
+     * scenario's game thread, which the self-test waits for {@value #D484_WAIT_S}
+     * seconds at most: a regression fails here instead of hanging the build.
+     * (a) the only green source is the opponent's Lifeforce (Forge: null); (b)
+     * the only green sources are B's own creatures (Forge: the divider, the one
+     * element left); (c) control, an opposing green creature: Forge's own answer,
+     * and the guard never acts.
+     */
+    static final int D484_WAIT_S = 10;
+
+    static void chooseSourceScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a Circle of Protection's source, never null or a divider (D484, engine)");
+        chooseSource("choose-source-null", "humanbattlefield=Lifeforce;Forest", "aibattlefield=Circle of Protection: Green;Plains;Plains",
+                "Lifeforce", 1);
+        chooseSource("choose-source-divider", "humanbattlefield=Plains",
+                "aibattlefield=Circle of Protection: Green;Grizzly Bears;Plains;Plains", "Grizzly Bears", 1);
+        chooseSource("choose-source-forge", "humanbattlefield=Grizzly Bears;Forest",
+                "aibattlefield=Circle of Protection: Green;Plains;Plains", "Grizzly Bears", 0);
+    }
+
+    private static void chooseSource(final String name, final String human, final String aiBoard, final String want,
+                                      final int guarded) throws Exception {
+        scenario(name, List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1", human,
+                        aiBoard),
+                PolicyLobbyPlayerAi.Outlets.OFF, null, D484_WAIT_S, (ai, pol) -> {
+                    final Game g = ai.getGame();
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final Card cop = named(ai.getCardsIn(ZoneType.Battlefield), "Circle of Protection: Green");
+                    forge.game.spellability.SpellAbility ab = null;
+                    for (final forge.game.spellability.SpellAbility sa : cop.getSpellAbilities()) {
+                        if (sa.getApi() == forge.game.ability.ApiType.ChooseSource) {
+                            ab = sa;
+                        }
+                    }
+                    check(ab != null, name + ": Circle of Protection: Green has its ChooseSource ability");
+                    if (ab == null) {
+                        return;
+                    }
+                    ab.setActivatingPlayer(ai);
+                    check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, ab, null) && !g.getStack().isEmpty(),
+                            name + ": the seat activates the Circle (on the stack)");
+                    final forge.game.phase.PhaseHandler ph = g.getPhaseHandler();
+                    int steps = 0;
+                    while (!g.getStack().isEmpty() && steps < 20) {
+                        ph.mainLoopStep();   // both seats pass, the Circle's ability resolves: J167's frame
+                        steps++;
+                    }
+                    check(g.getStack().isEmpty(), name + ": the stack resolved through mainLoopStep (" + steps + " steps)");
+                    final int count = ctl.counts().getOrDefault(PolicyControllerAi.CHOOSE_SOURCE_GUARD, 0);
+                    String chose = null;
+                    for (final String e : ctl.events()) {
+                        if (e.contains("ChooseSource:")) {
+                            chose = e;
+                        }
+                    }
+                    final Card wanted = named(g.getCardsIn(ZoneType.Battlefield), want);
+                    check(count == guarded && (guarded == 0 ? chose == null : chose != null && chose.endsWith("#" + wanted.getId())),
+                            name + ": the guard answered " + count + " time(s) (want " + guarded + "), " + want + " #"
+                                    + wanted.getId() + " (" + chose + ")");
+                    // the Circle's effect exists only when a real source was chosen (ConditionDefined$ ChosenCard)
+                    boolean effect = false;
+                    for (final Card c : ai.getCardsIn(ZoneType.Command)) {
+                        effect |= c.getName().contains("Circle of Protection");
+                    }
+                    check(effect, name + ": the Circle's prevention effect is in its controller's command zone");
+                });
     }
 
     /**
@@ -3276,6 +3350,12 @@ public final class AiBench {
 
     static void scenario(final String name, final List<String> state, final PolicyLobbyPlayerAi.Outlets mode,
                          final SearchConfig search, final Body body) throws Exception {
+        scenario(name, state, mode, search, 60, body);
+    }
+
+    /** {@code waitS}: how long the self-test waits for the body (D484: a few seconds, so a loop fails instead of hanging). */
+    static void scenario(final String name, final List<String> state, final PolicyLobbyPlayerAi.Outlets mode,
+                         final SearchConfig search, final int waitS, final Body body) throws Exception {
         final Deck lands = new Deck("lands");
         final PaperCard swamp = FModel.getMagicDb().getCommonCards().getCard("Swamp");
         final CardPool main = lands.getMain();
@@ -3306,8 +3386,8 @@ public final class AiBench {
                 done.countDown();
             }
         });
-        if (!done.await(60, TimeUnit.SECONDS)) {
-            check(false, name + ": timed out");
+        if (!done.await(waitS, TimeUnit.SECONDS)) {
+            check(false, name + ": timed out after " + waitS + " s");
         } else if (fail[0] != null) {
             fail[0].printStackTrace();
             check(false, name + ": threw " + fail[0]);

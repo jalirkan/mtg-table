@@ -168,8 +168,9 @@ public final class Atlas {
      * where an {@code Exception} would be logged and swallowed.  Disarmed once
      * the branch's loop has ended, so the copy's own ending (its
      * {@code setGameOver}, the recorders' last frames) fires events freely.
-     * A step that fires no event at all still reaches the unit's watchdog; none
-     * has been seen.
+     * A step that fires no event at all (D484: J167's s05, Forge re-asking a
+     * Circle of Protection's source forever) is the {@link DecisionClock}'s,
+     * read at every decision instead.
      */
     public static final class StepClock {
         private final long deadline;
@@ -207,8 +208,12 @@ public final class Atlas {
         private static final long serialVersionUID = 1L;
 
         BranchTimeout(final long events) {
-            super("the branch's deadline passed inside one engine step (" + events + " events into its play)", null, false,
-                    false);
+            this("the branch's deadline passed inside one engine step (" + events + " events into its play)");
+        }
+
+        /** D484: thrown at a decision ({@link DecisionClock}): the deadline, or one record repeated to the cap. */
+        BranchTimeout(final String message) {
+            super(message, null, false, false);
         }
     }
 
@@ -334,6 +339,11 @@ public final class Atlas {
          */
         public int effectSourceNull;
         public int exileLinksLost;
+        /**
+         * D484: the ChooseSource answers the branch's seats made in place of
+         * Forge's null or divider card ({@link PolicyControllerAi#CHOOSE_SOURCE_GUARD}).
+         */
+        public int chooseSourceGuard;
         public final List<String> forkProblems = new ArrayList<>();
         /** The no-leak check: null not run; true the branch did not move when the opponent's hidden cards did. */
         public Boolean leakSame;
@@ -636,6 +646,9 @@ public final class Atlas {
         if (b.exileLinksLost > 0) {
             j.n("exileLinksLost", (long) b.exileLinksLost);
         }
+        if (b.chooseSourceGuard > 0) {
+            j.n("chooseSourceGuard", (long) b.chooseSourceGuard);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -706,6 +719,7 @@ public final class Atlas {
         Game copy = null;
         Player aiCopy = null;
         StepClock clock = null;
+        final List<AtlasController> seats = new ArrayList<>();   // D484: their decision clocks, armed with the step clock
         PhaseHandler ph = null;
         int steps = 0;
         int turnsBefore = 0;   // D477: the turns of the games a Karn restart ended, before the copy's current one
@@ -724,6 +738,7 @@ public final class Atlas {
                             ExploreMath.seedFor(seed, 1, k))));
                 }
                 p.dangerouslySetController(c);
+                seats.add(c);
                 if (p == aiCopy) {
                     forcing = c;
                 }
@@ -761,6 +776,9 @@ public final class Atlas {
             final long deadline = t0 + unit.branchTimeoutMs * 1_000_000L;
             clock = new StepClock(deadline);
             copy.subscribeToEvents(clock);   // D467: the deadline inside a step, too
+            for (final AtlasController c : seats) {
+                c.arm(deadline);   // D484: ... and at every decision, which a step that loops on a question never fires
+            }
             while (!copy.isGameOver() && turnsBefore + ph.getTurn() <= unit.turnCap && steps < MAX_STEPS) {
                 if ((steps & 15) == 0 && System.nanoTime() > deadline) {
                     b.timedOut = true;
@@ -787,6 +805,7 @@ public final class Atlas {
                 }
             }
             clock.disarm();
+            disarm(seats, b);
             b.steps = steps;
             b.turns = turnsBefore + ph.getTurn();
             // D478: a game this loop ended (the turn cap, the step cap, the deadline between steps) is a draw, 0. Not
@@ -809,6 +828,7 @@ public final class Atlas {
             if (clock != null) {
                 clock.disarm();
             }
+            disarm(seats, b);
             final BranchTimeout bt = timeoutIn(e);
             final RolloutController.OptionUnavailable gone = unavailableIn(e);
             if (bt != null) {
@@ -829,6 +849,7 @@ public final class Atlas {
             if (clock != null) {
                 clock.disarm();
             }
+            disarm(seats, b);
             if (e instanceof BranchTimeout) {
                 // D467: the deadline passed inside one engine step -- the copy is mid-resolution, let go like an Error's
                 timedOutInStep(b, (BranchTimeout) e, ph, steps, turnsBefore);
@@ -881,6 +902,16 @@ public final class Atlas {
             b.ms = (System.nanoTime() - t0) / 1_000_000L;
         }
         return b;
+    }
+
+    /** D484: the seats' decision clocks off (the copy ends without them), and the ChooseSource answers they made counted. */
+    static void disarm(final List<AtlasController> seats, final Branch b) {
+        int guarded = 0;
+        for (final AtlasController c : seats) {
+            c.disarm();
+            guarded += c.counts().getOrDefault(PolicyControllerAi.CHOOSE_SOURCE_GUARD, 0);
+        }
+        b.chooseSourceGuard = guarded;
     }
 
     /**

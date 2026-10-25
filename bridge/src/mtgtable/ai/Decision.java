@@ -79,7 +79,7 @@ public final class Decision {
     public final List<String> chosenAll = new ArrayList<>();
     /** forge | outlets | search: whose answer was played. */
     public String by = "forge";
-    /** The outlet policy's reason (LETHAL, THREATENED, ...), when it chose. */
+    /** The outlet policy's reason (LETHAL, THREATENED, ...), when it chose; PAY_CAP (D465); CHOOSE_SOURCE (D484). */
     public String why;
     /** For a target or choice taken while playing a priority answer: that decision's {@code n}. */
     public int parent = -1;

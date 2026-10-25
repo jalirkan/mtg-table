@@ -389,6 +389,7 @@ public final class DecisionSelfTest {
         optionalCosts();
         payCap();
         stepClock();
+        decisionClock();
         searchStepClock();
         searchUnavailable();
         forcedUnanswered();
@@ -469,6 +470,138 @@ public final class DecisionSelfTest {
         check(caught != null && Atlas.timeoutIn(new RuntimeException("AbilityFactory:getAbility: crash", caught)) == caught
                 && Atlas.timeoutIn(new RuntimeException("an engine bug")) == null,
                 "D467: the clock's throw is found inside a Forge wrapper, and only there");
+    }
+
+    /**
+     * D484: the branch's deadline read at a decision, and the repeated-record
+     * cap, planted without the engine in the shape that hung J167's spine s05 --
+     * Forge 2.0.14's {@code ChooseSourceEffect.resolve} loop, {@code do { o =
+     * chooser.choose() } while (o == null || o.getName().startsWith("--"))},
+     * around a chooser that always answers null and fires no event, so D467's
+     * step clock never reads.  The chooser enters the callback as
+     * {@link AtlasController}'s overrides do ({@link DecisionClock#due}) and
+     * writes its record through the capping sink, as
+     * {@code PolicyControllerAi.chooseSingleEntityForEffect} does.  The engine
+     * half -- a real Circle of Protection: Green resolving through the guard --
+     * is {@code tools/ai-bench.sh --selftest}'s "choose source" cases.
+     */
+    private static void decisionClock() {
+        // 1. the deadline: no recorder, so only the clock can end the loop
+        final DecisionClock dl = new DecisionClock();
+        final long t0 = System.nanoTime();
+        dl.arm(t0 + 100_000_000L);   // 100 ms
+        Atlas.BranchTimeout caught = null;
+        long asked = 0;
+        try {
+            String o;
+            do {
+                dl.due("chooseSingleEntityForEffect");
+                asked++;
+                o = null;   // the planted chooser: always null, never an event
+                if (System.nanoTime() - t0 > 10_000_000_000L) {
+                    break;   // the self-test's own bound: a regression fails here instead of hanging the build
+                }
+            } while (o == null || o.startsWith("--"));
+        } catch (final Atlas.BranchTimeout e) {
+            caught = e;
+        }
+        final long ms = (System.nanoTime() - t0) / 1_000_000L;
+        check(caught != null && ms < 2_000 && asked > 0 && dl.asks() == asked + 1,
+                "D484: a question re-asked forever with no event ends at the deadline, at a decision (" + ms + " ms, "
+                        + asked + " asks)");
+        check(caught != null && caught.getStackTrace().length == 0 && caught.getMessage().contains("at a decision")
+                && caught.getMessage().contains("chooseSingleEntityForEffect")
+                && Atlas.timeoutIn(new RuntimeException("wrapped", caught)) == caught,
+                "D484: the deadline's throw names the callback, without a stack trace, and is found as D467's is");
+        dl.disarm();
+        boolean threw = false;
+        try {
+            dl.due("confirmAction");
+        } catch (final Atlas.BranchTimeout e) {
+            threw = true;
+        }
+        check(!threw, "D484: a disarmed decision clock lets the copy end past its deadline");
+
+        // 2. the cap: the same record at the same stateSeq, a deadline an hour away
+        final int[] written = new int[1];
+        final DecisionSink inner = new DecisionSink() {
+            @Override
+            public int[] mark() {
+                return new int[] {17, 12};
+            }
+
+            @Override
+            public int write(final Decision d, final int[] mark) {
+                return written[0]++;
+            }
+
+            @Override
+            public void forced(final String kind) { }
+
+            @Override
+            public void cost(final long nanos) { }
+
+            @Override
+            public void error(final String where, final RuntimeException e) { }
+        };
+        final DecisionClock cc = new DecisionClock();
+        cc.arm(System.nanoTime() + 3_600_000_000_000L);
+        final DecisionSink capped = cc.capping(inner);
+        check(cc.capping(null) == null, "D484: no recorder, no capping sink");
+        Atlas.BranchTimeout capThrow = null;
+        int loops = 0;
+        try {
+            String o;
+            do {
+                cc.due("chooseSingleEntityForEffect");
+                loops++;
+                o = "--PERMANENTS:--";   // the planted chooser's answer: the divider, as ChooseSourceAi gives it
+                capped.write(divider(), capped.mark());
+                if (loops > 100_000) {
+                    break;
+                }
+            } while (o == null || o.startsWith("--"));
+        } catch (final Atlas.BranchTimeout e) {
+            capThrow = e;
+        }
+        check(capThrow != null && loops == DecisionClock.REPEAT_CAP && written[0] == DecisionClock.REPEAT_CAP - 1,
+                "D484: the " + DecisionClock.REPEAT_CAP + "th identical record at one stateSeq ends the loop (" + loops
+                        + " asks, " + written[0] + " written)");
+        check(capThrow != null && capThrow.getMessage().contains("choice") && capThrow.getMessage().contains("option:hidden")
+                && capThrow.getMessage().contains("stateSeq 12") && capThrow.getMessage().contains(DecisionClock.REPEAT_CAP + " times"),
+                "D484: the cap's throw names the repeated ask: " + (capThrow == null ? null : capThrow.getMessage()));
+        // controls: a new stateSeq, another record, or a disarmed clock starts the count again
+        final DecisionClock ok = new DecisionClock();
+        ok.arm(System.nanoTime() + 3_600_000_000_000L);
+        boolean fired = false;
+        try {
+            for (int k = 0; k < 5 * DecisionClock.REPEAT_CAP; k++) {
+                ok.repeated(divider(), new int[] {17, 12 + k / (DecisionClock.REPEAT_CAP - 1)});
+            }
+            for (int k = 0; k < 5 * DecisionClock.REPEAT_CAP; k++) {
+                final Decision d = divider();
+                if (k % 2 == 0) {
+                    d.chosen = "option:52";
+                }
+                ok.repeated(d, new int[] {17, 99});
+            }
+            ok.disarm();
+            for (int k = 0; k < 5 * DecisionClock.REPEAT_CAP; k++) {
+                ok.repeated(divider(), new int[] {17, 100});
+            }
+        } catch (final Atlas.BranchTimeout e) {
+            fired = true;
+        }
+        check(!fired, "D484's controls: a new stateSeq, a different record or a disarmed clock never reaches the cap");
+    }
+
+    /** D484: the record J167's s05 wrote 20,000 times a second: the divider chosen among two cards. */
+    private static Decision divider() {
+        final Decision d = new Decision("choice", 4, "MAIN2");
+        d.options.addAll(List.of("option:52", "option:74", "option:hidden"));
+        d.chosen = "option:hidden";
+        d.source = "entity";
+        return d;
     }
 
     /**

@@ -26,11 +26,15 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import forge.LobbyPlayer;
+import forge.ai.ComputerUtilCard;
 import forge.ai.PlayerControllerAi;
 import forge.game.Game;
 import forge.game.GameEntity;
+import forge.game.ability.ApiType;
 import forge.game.card.Card;
 import forge.game.card.CardCollectionView;
+import forge.game.card.CardLists;
+import forge.game.card.CardPredicates;
 import forge.game.combat.Combat;
 import forge.game.player.DelayedReveal;
 import forge.game.player.Player;
@@ -39,6 +43,7 @@ import forge.game.spellability.SpellAbility;
 import forge.game.trigger.WrappedAbility;
 import forge.game.zone.Zone;
 import forge.game.zone.ZoneType;
+import forge.util.Aggregates;
 import forge.util.collect.FCollectionView;
 
 /**
@@ -83,8 +88,19 @@ import forge.util.collect.FCollectionView;
  * {@link #mulliganKeepHand} and {@link #tuckCardsViaMulligan} reconsider Forge's
  * keep and London bottom; with {@code targets=1}, the targets of the priority
  * answer are reconsidered after it is chosen.  Both off: Forge's answers.
+ *
+ * <p><b>A Circle's source (D484).</b>  Forge 2.0.14's {@code ChooseSourceAi}
+ * can answer a {@code ChooseSource} question with null or with one of the
+ * divider cards {@code ChooseSourceEffect} puts in the list, and the effect
+ * re-asks until it gets a real card -- forever.  {@link #chooseSingleEntityForEffect}
+ * answers those with what Forge's own later fix answers ({@link #chooseSourceFallback}).
+ * Every seat built on this class has it; Forge's plain AI seat
+ * ({@code Bootstrap.createAiPlayer}, a {@code PlayerControllerAi}) does not.
  */
 public class PolicyControllerAi extends PlayerControllerAi {
+
+    /** D484: the {@link #counts} key of the ChooseSource answers made in place of Forge's. */
+    public static final String CHOOSE_SOURCE_GUARD = "chooseSourceGuard";
 
     /** Card names whose casting and activation the benchmark reports. */
     public static final Set<String> WATCH = Set.of(
@@ -630,8 +646,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
     public <T extends GameEntity> T chooseSingleEntityForEffect(final FCollectionView<T> optionList,
             final DelayedReveal delayedReveal, final SpellAbility sa, final String title, final boolean isOptional,
             final Player targetedPlayer, final java.util.Map<String, Object> params) {
-        final T forge = super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional,
+        final T asked = super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional,
                 targetedPlayer, params);
+        final T forge = chooseSourceGuard(optionList, sa, asked);   // D484
         final T r = explorer == null || optionList == null ? forge : explorer.entity(player, optionList, forge);
         final Decision.Explore em = explorer == null ? null : explorer.takeMark();
         if (decisions == null) {
@@ -642,11 +659,90 @@ public class PolicyControllerAi extends PlayerControllerAi {
             final Decision d = Decisions.entities(player, optionList, isOptional, r == null ? List.of() : List.of(r),
                     "entity");
             d.explore = em;
+            if (forge != asked) {
+                d.why = "CHOOSE_SOURCE";   // D484: Forge answered null or a divider; the guard's answer was played
+            }
             writeOrCount(d, null);
         } catch (final RuntimeException e) {
             decisions.error("entity", e);
         }
         return r;
+    }
+
+    /**
+     * D484: Forge's answer to a {@code ChooseSource} question, unless it is
+     * null or a divider card: then {@link #chooseSourceFallback}'s, counted.
+     *
+     * <p>{@code ChooseSourceEffect.resolve} (forge-game, the pinned 2.0.14
+     * jar) lists the sources under divider cards -- {@code new Card(-1..-4)}
+     * named {@code "--PERMANENTS:--"} and so on, in no zone -- and loops
+     * {@code do { o = chooseSingleEntityForEffect(...) } while (o == null ||
+     * o.getName().startsWith("--"))}.  {@code ChooseSourceAi.chooseSingleCard}'s
+     * {@code NeedsPrevention} branch (Circle of Protection and its kin, 62
+     * scripts in the pinned res/) never leaves the dividers out: when nothing on
+     * the stack or in combat threatens the seat it keeps the options that are
+     * not its own creatures and asks {@code ComputerUtilCard.getBestCreatureAI}
+     * -- which returns a one-element list's element (the divider), or else the
+     * best creature among them (null when there is none).  J167's spine s05
+     * hung every unit on it.  Forge fixed it upstream in 746455d75
+     * (2026-09-15), after the pinned build (D109).  Re-asking Forge without the
+     * dividers is not enough: its no-creature case is still null.
+     */
+    private <T extends GameEntity> T chooseSourceGuard(final FCollectionView<T> options, final SpellAbility sa,
+                                                        final T forge) {
+        if (sa == null || sa.getApi() != ApiType.ChooseSource || options == null
+                || (forge != null && !isDivider(forge))) {
+            return forge;
+        }
+        final T r = chooseSourceFallback(options, player);
+        if (r == null) {
+            return forge;
+        }
+        count(CHOOSE_SOURCE_GUARD);
+        event("ChooseSource: Forge answered " + (forge == null ? "nothing" : "a divider") + "; chose #" + r.getId());
+        return r;
+    }
+
+    /** D484: one of {@code ChooseSourceEffect}'s divider cards (a negative id and a name starting "--"). */
+    static boolean isDivider(final Object e) {
+        if (!(e instanceof Card)) {
+            return false;
+        }
+        final Card c = (Card) e;
+        return c.getId() < 0 && c.getName() != null && c.getName().startsWith("--");
+    }
+
+    /**
+     * D484: the answer of Forge's own fix (upstream 746455d75's
+     * {@code fallbackSources}), over the options that are not dividers: the
+     * best creature {@code ai} does not own, else a random noncreature
+     * permanent it owns, else a random one -- drawn through
+     * {@code Aggregates.random}, i.e. {@code MyRandom}, the stream the move
+     * atlas seeds per branch.  Null only when every option is a divider.
+     */
+    static <T extends GameEntity> T chooseSourceFallback(final Iterable<T> options, final Player ai) {
+        final List<Card> sources = new ArrayList<>();
+        final Map<Card, T> back = new java.util.IdentityHashMap<>();
+        for (final T o : options) {
+            if (o instanceof Card && !isDivider(o)) {
+                sources.add((Card) o);
+                back.put((Card) o, o);
+            }
+        }
+        if (sources.isEmpty()) {
+            return null;
+        }
+        final List<Card> oppCreatures = CardLists.filter(sources,
+                CardPredicates.CREATURES.and(java.util.function.Predicate.not(CardPredicates.isOwner(ai))));
+        if (!oppCreatures.isEmpty()) {
+            return back.get(ComputerUtilCard.getBestCreatureAI(oppCreatures));
+        }
+        final List<Card> ownNonCreatures = CardLists.filter(sources,
+                CardPredicates.NON_CREATURES.and(CardPredicates.PERMANENTS).and(CardPredicates.isOwner(ai)));
+        if (!ownNonCreatures.isEmpty()) {
+            return back.get(Aggregates.random(ownNonCreatures));
+        }
+        return back.get(Aggregates.random(sources));
     }
 
     @Override
