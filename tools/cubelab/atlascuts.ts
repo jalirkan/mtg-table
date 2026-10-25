@@ -158,6 +158,26 @@ export type ScheduleEvent =
   | { v: 1; type: 'screen'; d: number; at: number; mean: number | null; settled: boolean }
   | { v: 1; type: 'stop'; d: number; at: number; leader: number | null; dropped: number[]; alive: number[]; low: Record<number, number | null> };
 
+/**
+ * D480's follow-up: the FIRST line of a schedule.jsonl the cuts write -- the plan its verdicts were made under.  A pick is
+ * matched on replay by its `d` and `k` alone, so a resume against another plan (another --branch-random, --boot or
+ * --decisions, or a deck file edited in place) would size `alive` wrong or fail late on a unit's `expect` tokens; atlas.ts
+ * `openSchedule` refuses it instead.  `plan` is SCHEDULE_PLAN_KEYS' values, `planSha256` the sha256 of its JSON, and
+ * `deckSha256` each deck file's bytes.
+ */
+export interface ScheduleHeader {
+  v: 1; type: 'plan'; decision: 'D480';
+  planSha256: string;
+  deckSha256: { deckA: string; deckB: string };
+  plan: Record<string, unknown>;
+}
+
+/** A line of schedule.jsonl: its header, then the events. */
+export type ScheduleLine = ScheduleEvent | ScheduleHeader;
+
+/** The events of a schedule.jsonl's lines, its header left out (a schedule written before the header has none). */
+export const scheduleEvents = (lines: ScheduleLine[]): ScheduleEvent[] => lines.filter((l): l is ScheduleEvent => l.type !== 'plan');
+
 /** A branch row as the schedule reads it. */
 export type ScheduleRow = Pick<BranchRow, 'd' | 'c' | 'o' | 'i' | 'score' | 'error'> & { unavailable?: string };
 

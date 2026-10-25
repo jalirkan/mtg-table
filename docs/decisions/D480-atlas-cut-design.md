@@ -51,7 +51,9 @@ atlas.json values. atlas.json gains two keys on every decision, `decided` and `s
    - The units after a checkpoint carry the options still running: the job's `atlas.options`, which becomes
      `Atlas.Unit.options` in the bridge, and the hook skips the rest. The Forge map's 40 branches go out after the last
      checkpoint, on those options only.
-   - **An option's n changes; its estimator does not.** A stopped option's mean is over its own branches. A branch index
+   - **An option's n changes: the estimator is unchanged; the SAMPLE is adaptively sized** — a stopped option's 50-row
+     mean is conditioned on having looked bad, which can only make the regret conservative, by at most a tie's gap, since
+     o0 never stops and the best must beat a full-n survivor. A stopped option's mean is over its own branches. A branch index
      is a paired row when every option still running there has a score, so a stopped option's empty cell does not unpair
      the row. The regret's bootstrap resamples the same rows as an uncut run and takes each option's mean over the rows it
      has. With no stop this is D451's arithmetic, bit for bit. The Forge map's regret, and the agreement (rank correlation,
@@ -61,6 +63,9 @@ atlas.json values. atlas.json gains two keys on every decision, `decided` and `s
    `n` branches as a cheap label (`screened: true`, `settled: true`, never `complete`) and gets no Forge map. The next
    listed decision not yet branched takes its place: forward from it, then back, among those with `--min-options` or more
    options first. That holds the spine's count of decisions branched in full at `--decisions`.
+   - **The bound.** The screen can hide a regret of at most k × .04, and only at decisions already lost or won: at a mean
+     value <= .04 every option's mean is <= k × .04 (and symmetrically at >= .96), so the best option beats option 0 by no
+     more than that.
    - The rule is the review's validated one: the mean over the options. "Every option <= .05 or >= .95" was the review's
      stricter row, with 14 skipped instead of 17.
 4. **`--min-options k`** (default 1). `--decisions` are spread (D451's `spread`) over the listed decisions with `k` or
@@ -91,11 +96,13 @@ units go out stage by stage (`atlascuts.ts` `AtlasSchedule`; `atlas.ts` `runUnit
 - **The summary.** `phaseB.schedule` in atlas.json (and a section of atlas.md) says what the cuts did on the spine.
 
 **What this changes in the maps and the labels.**
-- **Early stopping** changes an option's n, not its estimator. A stopped option's interval is wider, and the regret's
+- **Early stopping** changes an option's n: the estimator is unchanged; the sample is adaptively sized (point 2's
+  bound). A stopped option's interval is wider, and the regret's
   bootstrap sees its shorter mean. On the review's data no confident flag moves (below). The Forge map's regret and the
   agreement are over the options still running, so (i) and (ii) on a cut spine are about the options that were not
   clearly worse.
-- **The screen** changes which decisions are branched in full. A screened decision is a label of its own kind (cheap,
+- **The screen** changes which decisions are branched in full, and can hide a regret of at most k × .04, only at
+  decisions already lost or won (point 3). A screened decision is a label of its own kind (cheap,
   not complete), and the decision that replaced it is a later one in the listing.
 - **`--min-options`** changes the label population: most 2-option attack-or-not and cast-or-pass decisions leave. The
   review counts two of the 13 current confident labels among them (modern7 d13 and ff5 461 d8).
@@ -183,3 +190,17 @@ repo's, and it keeps every flag.
   `units.jsonl` and pool log will show it.
 - **The gate:** `./tools/check-all.sh` at `GATE_JOBS=4` from a deleted `bridge/out`, on this branch's code (only this line
   differs): **OK, 59 of 59 jobs**, 780.5 s wall (load average up to 33.4).
+
+**Follow-ups (2026-10-24, #207's review; branch `pc/d480-followups`).** Three LOWs, fixed:
+- **The schedule's plan guard.** `phaseB/schedule.jsonl`'s replay matched picks by `d` and `k` alone, so a resume under
+  another plan could size `alive` wrong or fail only late, on a unit's `expect` tokens. The file's first line is now a
+  header (`type: 'plan'`): the schedule's plan (`SCHEDULE_PLAN_KEYS` in `atlas.ts`: the decks as shown, seed, turn cap,
+  options, chunk, branch timeout, `branchRandom`, `branchForge`, `decisions`, `boot`, the cuts), its sha256, and each deck
+  file's sha256. `openSchedule` writes it into a new file and refuses a resume whose plan or deck bytes differ, with an
+  error naming both hashes and the keys or deck that changed. plan.json's own check held seven of those keys; `branchRandom`,
+  `branchForge`, `decisions`, `boot` and the deck files' bytes were held by nothing. A schedule written before the header
+  (#207's) is replayed as it is, and said. The readers (`writeAtlas`, the self-test's cuts leg) skip the header
+  (`scheduleEvents`). Tested in `web/test/cubelab-atlas-cuts.test.ts`: a clean resume (the header written once, the events
+  replayed, nothing decided again) and the refusals (another `--boot`, `--branch-random` or `--decisions`, a deck edited in
+  place); the file has 11 tests now.
+- **The wordings** of point 2 (the estimator and the adaptively sized sample) and point 3 (the screen's bound), above.

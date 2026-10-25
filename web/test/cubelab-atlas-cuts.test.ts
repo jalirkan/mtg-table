@@ -12,6 +12,9 @@
  *  - the schedule: with every cut off, D451's units in D451's order and no event; with the cuts, stage by stage behind the
  *    checkpoint barrier, the later units carrying the options still running, the Forge map on the survivors only, a screened
  *    decision replaced; resumed from its events, it decides nothing again;
+ *  - the schedule's plan guard (#207's review): schedule.jsonl starts with the plan it was made under and each deck file's
+ *    sha256; a clean resume replays it and decides nothing again; another plan, or a deck edited in place, is refused with
+ *    both hashes named; a schedule written before the header is replayed as it is;
  *  - the label's arithmetic: a stopped option's mean on its own branches, the paired bootstrap over the rows each option has;
  *    a spine with no Forge map (--branch-forge 0) reads complete / decided / settled on the random map and makes no agreement read;
  *  - THE REVIEW'S NUMBERS on its own data: fixtures/cubelab/atlas-cuts/primary-six.json.gz is the branch scores of J158's and
@@ -34,11 +37,11 @@ import zlib from 'node:zlib';
 
 import {
   AtlasSchedule, checkCuts, CUTS_OFF, decisionCuts, dropAt, nextDecision, parseEarlyStop, pickDecisions, rowsUnderCut, screenMean, settledAt, stageEnds,
-  type Cuts, type ScheduleEvent,
+  type Cuts, type ScheduleEvent, type ScheduleLine,
 } from '../../tools/cubelab/atlascuts.ts';
 import { mergeGuardrails, slices, type GuardrailCheck } from '../../tools/cubelab/atlaschecks.ts';
 import {
-  decisionAtlas, guardrailCheck, runUnits, unitsOf, writeAtlas, writeAtlasChecked,
+  decisionAtlas, guardrailCheck, openSchedule, runUnits, scheduleHeader, unitsOf, writeAtlas, writeAtlasChecked,
   type AtlasOptions, type BranchRow, type DecisionListing, type Unit, type UnitLine,
 } from '../../tools/cubelab/atlas.ts';
 import { spread } from '../../tools/cubelab/atlasmath.ts';
@@ -163,6 +166,73 @@ test('the cut schedule: stage by stage behind the barrier, the options still run
   const s2 = new AtlasSchedule(all, O, cuts, written.slice(0, written.findIndex((e) => e.type === 'stop' && e.d === 1)), rowsSoFar, doneIds, (e) => again.push(e));
   assert.deepEqual(ids(s2.initial), ['d0-random-4:02', 'd0-random-6:02', 'd0-forge-0:02', 'd1-random-4', 'd1-random-6', 'd1-forge-0'].filter((x) => !doneIds.has(x.split(':')[0]!)));
   assert.deepEqual(again.map((e) => e.type), ['stop'], 'the one checkpoint whose units were all done but not yet written is decided now; nothing else');
+});
+
+test('the schedule\'s plan guard: the header written once; a clean resume replays the events and decides nothing again; another plan or an edited deck is refused, naming both hashes', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cubelab-atlas-guard-'));
+  try {
+    const deckA = path.join(tmp, 'a.dck'), deckB = path.join(tmp, 'b.dck');
+    fs.writeFileSync(deckA, '[metadata]\nName=A\n[Main]\n20 Mountain\n');
+    fs.writeFileSync(deckB, '[metadata]\nName=B\n[Main]\n20 Island\n');
+    const cuts: Cuts = { earlyStop: [4], screen: 2, minOptions: 1 };
+    const o = { deckA, deckB, seed: 451, turnCap: 40, rollouts: 0, branchRandom: 8, branchForge: 2, decisions: 2, options: 8, chunk: 2, leakChecks: 0,
+      branchTimeoutSec: 60, boot: 300, pair: null, unitTimeoutMin: 5, cuts } as AtlasOptions;
+    const file = path.join(tmp, 'schedule.jsonl');
+    const said: string[] = [];
+    const say = (x: string): void => { said.push(x); };
+    const lines = (): ScheduleLine[] => fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as ScheduleLine);
+    const h = scheduleHeader(REPO, o);
+    assert.match(h.planSha256, /^[0-9a-f]{64}$/);
+    assert.deepEqual(openSchedule(file, h, say), [], 'a new schedule: nothing to replay');
+    assert.deepEqual(lines(), [h], 'the header is its first line');
+    // a first run, stopped after five units -- every verdict written as phase B writes it, after the header
+    const all = listingOf([3, 2, 2]);
+    const so = { branchRandom: 8, branchForge: 2, chunk: 2, decisions: 2, boot: 300, seed: 451 };
+    const score = (d: number, op: number, i: number): number => (d === 2 ? 1 : d === 0 ? (op === 0 ? 1 : op === 1 ? 0 : i % 2) : (op + i) % 2);
+    const s = new AtlasSchedule(all, so, cuts, [], [], new Set(), (e) => fs.appendFileSync(file, `${JSON.stringify(e)}\n`));
+    const queue = [...s.initial];
+    const rows: BranchRow[] = [];
+    const done = new Set<string>();
+    for (let n = 0; n < 5; n++) {
+      const u = queue.shift() as Unit;
+      for (const r of play(u, all[u.d]!.tokens.length, (op, i) => score(u.d, op, i))) { s.addRow(r); rows.push(r); }
+      done.add(`d${u.d}-${u.c}-${u.i0}`);
+      queue.push(...s.unitDone(u));
+    }
+    const written = lines();
+    assert.ok(written.slice(1).some((e) => e.type === 'stop'), 'the run got past a stop');
+    // the clean resume: the same plan, the same decks -- the events replayed, no second header, nothing decided again
+    const ev = openSchedule(file, scheduleHeader(REPO, o), say);
+    assert.deepEqual(ev, written.slice(1));
+    assert.equal(lines().length, written.length, 'the header is not written again');
+    const again: ScheduleEvent[] = [];
+    const s2 = new AtlasSchedule(all, so, cuts, ev, rows, done, (e) => again.push(e));
+    assert.deepEqual(again, [], 'nothing decided again');
+    const id = (u: Unit): string => `d${u.d}-${u.c}-${u.i0}:${u.options?.join('') ?? '*'}`;
+    assert.deepEqual(s2.initial.map(id).sort(), queue.map(id).sort(), 'the units left are the first run\'s, with the options their stages had');
+    // another plan: refused, both hashes named, and what differs
+    const refused = (x: AtlasOptions, ...want: RegExp[]): void => assert.throws(() => openSchedule(file, scheduleHeader(REPO, x), say), (e: Error) => {
+      for (const w of want) assert.match(e.message, w);
+      return true;
+    });
+    const boot = scheduleHeader(REPO, { ...o, boot: 999 });
+    refused({ ...o, boot: 999 }, new RegExp(`plan sha256 ${h.planSha256} on file, ${boot.planSha256} now`), /boot 300 -> 999/, /another --out/);
+    refused({ ...o, branchRandom: 12 }, new RegExp(h.planSha256), /branchRandom 8 -> 12/);
+    refused({ ...o, decisions: 'all' }, /decisions 2 -> "all"/);
+    // a deck edited in place: the plan is the same, its bytes are not
+    fs.appendFileSync(deckA, '1 Shock\n');
+    const edited = scheduleHeader(REPO, o);
+    assert.equal(edited.planSha256, h.planSha256);
+    refused(o, new RegExp(`deck A's file sha256 ${h.deckSha256.deckA} on file, ${edited.deckSha256.deckA} now`));
+    assert.equal(lines().length, written.length, 'a refusal writes nothing');
+    // a schedule written before the header (#207's): replayed as it is, and said
+    const legacy = path.join(tmp, 'legacy.jsonl');
+    fs.writeFileSync(legacy, written.slice(1).map((e) => `${JSON.stringify(e)}\n`).join(''));
+    assert.deepEqual(openSchedule(legacy, edited, say), written.slice(1));
+    assert.ok(said.some((x) => /before its plan header/.test(x)), said.join('\n'));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('a spine with no Forge map: complete, decided and settled on the random map, and no agreement read', () => {
