@@ -1,0 +1,65 @@
+==== J167 run3 started 2026-10-25T08:00:53-04:00 in unit lab-J167-run3, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (14 turns, winner A) lists 14 decision(s) of seat A; branching at 8: d0 (p, turn 4, 3 options), d2 (p, turn 6, 3 options), d3 (p, turn 6, 3 options), d5 (p, turn 8, 6 options), d8 (p, turn 12, 5 options), d10 (a, turn 12, 4 options), d11 (p, turn 12, 4 options), d13 (a, turn 14, 5 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 8 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+worker 0: no answer in 1800 s (hung) during d8-random-0; recorded as an engine error, starting a fresh worker
+  [B] d8-random-0: 7/125 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 118 it lacks
+worker 1: no answer in 1800 s (hung) during d10-random-0; recorded as an engine error, starting a fresh worker
+  [B] d10-random-0: 20/100 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 80 it lacks
+worker 2: no answer in 1800 s (hung) during d2-random-0; recorded as an engine error, starting a fresh worker
+  [B] d2-random-0: 4/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 71 it lacks
+worker 3: no answer in 1800 s (hung) during d5-random-0; recorded as an engine error, starting a fresh worker
+  [B] d5-random-0: 8/150 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 142 it lacks
+worker 4: no answer in 1800 s (hung) during d3-random-0; recorded as an engine error, starting a fresh worker
+  [B] d3-random-0: 7/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 68 it lacks
+worker 5: no answer in 1800 s (hung) during d0-random-0; recorded as an engine error, starting a fresh worker
+  [B] d0-random-0: 10/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 65 it lacks
+worker 0: no answer in 1800 s (hung) during d10-random-0; recorded as an engine error, starting a fresh worker
+  [B 1/8] d10-random-0: 20/100 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 56 branch games/h
+worker 1: no answer in 1800 s (hung) during d0-random-0; recorded as an engine error, starting a fresh worker
+  [B 2/9] d0-random-0: 10/75 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 56 branch games/h
+worker 2: no answer in 1800 s (hung) during d3-random-0; recorded as an engine error, starting a fresh worker
+  [B 3/10] d3-random-0: 7/75 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 56 branch games/h
+worker 3: no answer in 1800 s (hung) during d8-random-0; recorded as an engine error, starting a fresh worker
+  [B 4/11] d8-random-0: 7/125 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 56 branch games/h
+worker 4: no answer in 1800 s (hung) during d5-random-0; recorded as an engine error, starting a fresh worker
+  [B 5/12] d5-random-0: 8/150 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 56 branch games/h
+worker 5: no answer in 1800 s (hung) during d2-random-0; recorded as an engine error, starting a fresh worker
+  [B 6/13] d2-random-0: 4/75 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 56 branch games/h
+worker 0: no answer in 1800 s (hung) during d3-random-25; recorded as an engine error, starting a fresh worker
+  [B] d3-random-25: 23/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 52 it lacks
+worker 1: no answer in 1800 s (hung) during d0-random-25; recorded as an engine error, starting a fresh worker
+  [B] d0-random-25: 9/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 66 it lacks
+worker 2: no answer in 1800 s (hung) during d2-random-25; recorded as an engine error, starting a fresh worker
+  [B] d2-random-25: 12/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 63 it lacks
+worker 3: no answer in 1800 s (hung) during d9-random-0; recorded as an engine error, starting a fresh worker
+  [B] d9-random-0: 6/100 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 94 it lacks
+worker 4: no answer in 1800 s (hung) during d5-random-25; recorded as an engine error, starting a fresh worker
+  [B] d5-random-25: 3/150 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 147 it lacks
+worker 5: no answer in 1800 s (hung) during d12-random-0; recorded as an engine error, starting a fresh worker
+  [B] d12-random-0: 2/100 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 98 it lacks
+worker 0: no answer in 1800 s (hung) during d12-random-0; recorded as an engine error, starting a fresh worker
+  [B 7/14] d12-random-0: 2/100 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 55 branch games/h
+worker 1: no answer in 1800 s (hung) during d9-random-0; recorded as an engine error, starting a fresh worker
+  [B 8/15] d9-random-0: 6/100 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 55 branch games/h
+worker 2: no answer in 1800 s (hung) during d5-random-25; recorded as an engine error, starting a fresh worker
+  [B 9/16] d5-random-25: 3/150 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 55 branch games/h
+worker 3: no answer in 1800 s (hung) during d0-random-25; recorded as an engine error, starting a fresh worker
+  [B 10/18] d0-random-25: 9/75 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 55 branch games/h
+worker 4: no answer in 1800 s (hung) during d2-random-25; recorded as an engine error, starting a fresh worker
+  [B 11/20] d2-random-25: 12/75 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 55 branch games/h
+worker 5: no answer in 1800 s (hung) during d3-random-25; recorded as an engine error, starting a fresh worker
+  [B 12/22] d3-random-25: 23/75 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 55 branch games/h
+worker 0: no answer in 1800 s (hung) during d3-random-50; recorded as an engine error, starting a fresh worker
+  [B] d3-random-50: 1/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 74 it lacks
+worker 1: no answer in 1800 s (hung) during d0-random-75; recorded as an engine error, starting a fresh worker
+  [B] d0-random-75: 5/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 70 it lacks
+worker 2: no answer in 1800 s (hung) during d3-random-75; recorded as an engine error, starting a fresh worker
+  [B] d3-random-75: 3/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 72 it lacks
+worker 3: no answer in 1800 s (hung) during d2-random-75; recorded as an engine error, starting a fresh worker
+  [B] d2-random-75: 4/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 71 it lacks
+worker 4: no answer in 1800 s (hung) during d2-random-50; recorded as an engine error, starting a fresh worker
+  [B] d2-random-50: 0/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 75 it lacks
+worker 5: no answer in 1800 s (hung) during d0-random-50; recorded as an engine error, starting a fresh worker
+  [B] d0-random-50: 0/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 75 it lacks
