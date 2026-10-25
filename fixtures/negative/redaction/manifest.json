@@ -288,6 +288,96 @@
     "why": "amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log"
   },
   {
+    "file": "m55-option-entered-between-frames.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D481: an option naming the viewer's own token made and gone between two state frames -- the next state frame's zone events put it on the viewer's battlefield and in its graveyard; counted, not a problem"
+  },
+  {
+    "file": "m55-option-never-shown.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: an option naming an id no state frame shows and no zone event moves into the viewer's public zones is still a failure"
+  },
+  {
+    "file": "m55-option-entered-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: an id the next state frame's events deal into the OPPONENT's hand is hidden -- a decision naming it is a leak"
+  },
+  {
+    "file": "m55-option-cast-between-frames.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D481: an option naming the viewer's own spell that no zone lists -- its latest zone event moved it from the viewer's hand to the stack; counted, not a problem"
+  },
+  {
+    "file": "m55-option-cast-from-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: a card moved to the stack from ANOTHER seat's hand is not vouched for -- it can be cast face down"
+  },
+  {
+    "file": "m55-option-entered-then-went-to-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: only the LATEST zone event counts -- a token on the viewer's battlefield that then went to the opponent's hand is hidden"
+  },
+  {
+    "file": "m55-option-cast-a-frame-before-the-decision.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D481: the viewer's own spell moved hand -> stack in the state frame BEFORE the decision's own (s02: event at seq 323, decision at 324) -- the window walks back; counted, not a problem"
+  },
+  {
+    "file": "m55-option-entered-then-ceased-to-exist.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D481: a token born onto the viewer's battlefield, put in its graveyard, then gone (to: null) -- judged by its last zone, counted, not a problem"
+  },
+  {
+    "file": "m55-option-born-on-the-opponent-battlefield.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: a token born onto the OPPONENT's battlefield and gone to their graveyard is not the viewer's own -- not vouched for"
+  },
+  {
+    "file": "m55-option-born-then-taken-by-the-opponent.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: a token born onto the viewer's battlefield whose latest move is onto the OPPONENT's battlefield is not vouched for"
+  },
+  {
+    "file": "m55-option-born-on-the-opponent-then-taken.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: the birth must be onto the VIEWER's battlefield -- a token born onto the opponent's and then taken by the viewer is not vouched for"
+  },
+  {
+    "file": "m55-option-entered-the-viewer-exile.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: exile is never accepted (a card can go there face down) -- a token born onto the viewer's battlefield and exiled is not vouched for"
+  },
+  {
+    "file": "m55-option-cast-from-the-viewer-library.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: a card moved to the stack from the viewer's own LIBRARY is not vouched for -- the viewer could not see it when the option was offered"
+  },
+  {
+    "file": "m55-option-not-born-in-the-graveyard.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: the token branch needs a birth (from: null onto the viewer's battlefield) -- a card merely moved into the viewer's graveyard from its library is not vouched for"
+  },
+  {
+    "file": "m55-option-entered-a-state-too-late.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not"
+  },
+  {
     "file": "m57-explore-present.jsonl",
     "level": "pass",
     "expect": "PASS",
