@@ -155,3 +155,23 @@ unit of phase B. Deck B holds Circle of Protection: Green and deck A holds Lifef
   returns, D482's own case, still does, so (a), (b) and (c) stay open as D482 wrote them.
 - The guard's `why: "CHOOSE_SOURCE"` is a new value in the decision record's `why`. `tools/ml/policy_data.py` keeps
   `why` as data and drops no row for it (atlas games are `NOT_FOR_TRAINING` anyway, D451).
+
+## Follow-ups from the skeptic review (2026-10-25, before the merge)
+
+- **The search's rollouts have no guard.** `RolloutController` (which `RecordingController` extends) is a
+  plain `PlayerControllerAi`, and `SearchPolicy.playout` reads its deadline only between steps, so a rollout
+  that reaches the Circle loop would hang a live, ladder or lab search seat for good — as rare as for the plain
+  seat, since the search only tries a Circle activation Forge's AI would make itself (WillPlay needs a threat).
+  "Every seat built on `PolicyControllerAi`" above does not include it. Not fixed here.
+- **Callbacks not wrapped by the decision clock:** the `Boolean` overload of `chooseBinary` (Forge's
+  3-argument `chooseBinary`, six call sites), `chooseNumber(sa, title, min, max)`, `chooseNumber(values)`,
+  `chooseCardsForEffectMultiple`, `notifyOfValue`, `chooseCounterType`, `chooseColors`, `chooseCardName`,
+  `payManaCost`. None is known to be re-asked in a loop (`DigMultipleEffect`'s `while(true)` cannot loop with
+  the AI); a coverage gap, not a wrong claim.
+- **Fewer slow branches score as draws.** Under D478 a branch whose deadline passes between steps scores as a
+  draw; with the clock a slow branch usually stops at its next decision instead, an engine error with no
+  result. D467 already did most of this (J158: 2 timeouts between steps against 241 inside a step).
+- The baseline game of a spine runs `PolicyLobbyPlayerAi` seats too (`CubeLab.java:531`), so it is guarded as
+  well; a baseline that reached the loop before this fix hung and left no listing.
+- When the cap fires, its message carries up to eight option tokens (ids or `option:hidden`, never a name)
+  into the branch row's `error`; `SeatRecorder.crashed()` writes no message, so nothing reaches a frame log.
