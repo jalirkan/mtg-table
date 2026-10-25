@@ -37,11 +37,22 @@ permission: the Rider on its adventure, the Thrull under Wrenn's Resolve's impul
    - the face (`getCardStateName`: `Original`, `Secondary`, ...);
    - the alternative cost (`getAlternativeCost`, or `-`);
    - a card's own AlternativeCost static paid or not (`OptionalCost.AltCost`);
-   - the may-play permission's host by card id (`mayPlay#<id>`), or `-`;
+   - the may-play permission's host by card id (`mayPlay#<id>`), `mayPlay#self` when the host is the card itself
+     (a card's own may-play static: two Squees in the graveyard are one play), or `-`;
    - without its mana cost or not (`WithoutManaCost`);
    - the optional costs, sorted;
-   - `matchKey(sa)` (D476: each may-play suffix's host as `#<id>`), with a repeated run of the same `" by #<id>"`
-     collapsed to one (`collapseBy`; the id is matched whole, so `" by #13 by #136"` stays two).
+   - `matchKey(sa)` (D476: each may-play suffix's host as `#<id>`), with a doubled may-play suffix cut to one, twice
+     over:
+     - `collapseBy` drops each WHOLE suffix that repeats the one before it verbatim. A suffix runs from a `" by #<id>"`
+       to the next one or the end, because `getMayPlaySpellOptions` (`GameActionUtil.java` ~376-389) appends
+       `" by " + host`, then the permission's `MayPlayText`, then `CardPlayOption.toString(false)`. That last part is
+       not empty for an alternative mana cost, "spend mana as though", RaiseCost and "without paying its mana cost". So
+       Bolas's Citadel's twin reads `base + S + S`, with text between the two hosts. The id is matched whole, so
+       `" by #13 by #136"` and `" by #136 by #1360"` stay two. *(The first commit of this lane collapsed only adjacent
+       `" by #<id>"` runs, so a Citadel twin stayed two identities. The branch's review found it.)*
+     - `collapseSuffix` cuts a trailing run of the play's own suffix, rebuilt from `getMayPlay()` and
+       `getMayPlayOption()` (`mayPlaySuffixKey`). It catches a twin whose suffix names no host: a card's own may-play
+       static with an alternative cost.
 
    Forge's own pick goes into the seen set under its identity first. The first play of an identity is kept, in Forge's
    order, and that is the single-suffix play: `getAllPossibleAbilities` lists it before
@@ -78,9 +89,15 @@ permission: the Rider on its adventure, the Thrull under Wrenn's Resolve's impul
 
 - **Search-v2's candidate lists change.** A twin used one of `genLimit`'s slots and a share of the rollout budget. With
   a may-play card in exile, the search now ranks one more distinct play, or spends that budget on the plays it has.
-  The identity is also finer than the old key in one place: a flashback, foretell, plot, mayhem or harmonize copy that
-  keeps the base's description is no longer merged with a same-named card in hand. Under D458 point 3, results before
-  and after are not pooled. There is no contract key to bump:
+  The identity is also finer than the old key in three places:
+  - a flashback, foretell, plot, mayhem or harmonize copy that keeps the base's description is no longer merged with a
+    same-named card in hand;
+  - Promise Gift's base and gift versions, which Forge lists with one description, are kept apart by the optional-cost
+    field;
+  - a card's own may-play static would have made each copy's permission host differ (`mayPlay#<own id>`), so two
+    copies in the graveyard would have been two candidates where the old key had one. `mayPlay#self` keeps them one.
+
+  Under D458 point 3, results before and after are not pooled. There is no contract key to bump:
   - the ladder splits by the experiment log's git sha, and `docs/guides/ai-ladder.md`'s *A code change is not a config
     change* now names D483;
   - the cube lab's version id (D341) hashes `bridge/src` and `tools/cubelab`, so it changes with this commit by
@@ -92,10 +109,20 @@ permission: the Rider on its adventure, the Thrull under Wrenn's Resolve's impul
 - **A resumed atlas made before D483 fails.** `Unit.expect` carries the baseline's old tokens, twins included, and the
   replay now lists fewer, so the unit stops with "the replay diverged". Run fresh. D480's schedule header guards the
   plan and the decks, not the code.
-- **Open, not fixed here.** `Explorer.priorityOptions` deduplicates by token. It merges genuinely different plays that
-  share one: the Rider's creature and Swift End from the hand, or Snuff Out by its alternative cost and by its mana
-  cost. The random seat then never draws the second play. Fixing that changes the random policy's support (D458
-  point 3), so it needs a decision of its own.
+- **Open, not fixed here (follow-ups):**
+  - `Explorer.priorityOptions` deduplicates by token. It merges genuinely different plays that share one: the Rider's
+    creature and Swift End from the hand, or Snuff Out by its alternative cost and by its mana cost. The random seat
+    then never draws the second play. Fixing that changes the random policy's support (D458 point 3), so it needs a
+    decision of its own.
+  - `alternatives` adds an identity to `seen` before `canPlay` and `canPayCost`, so an unplayable first play of an
+    identity hides a playable twin. That order is older than this lane (it was the old key's too).
+  - The atlas self-test's no-repeat check sees no may-play play: its baselines (pacho-shield, doom-legion and the cut
+    leg's decks) have none. The real coverage is ai-bench's `adventure-map` and `own-mayplay-identity` /
+    `citadel-identity`.
+  - A resumed pre-D483 atlas fails at a twin decision with "the replay diverged", without naming the cause. Putting
+    D341's lab version id in D480's schedule header would name it.
+  - The gate runs none of `tools/cubelab.sh seat-identity`, `atlas-selftest` or `tools/ai-bench.sh --selftest`. A
+    listing drift is caught only by `seat-identity` when someone runs it.
 
 **Rejected.**
 
@@ -108,7 +135,8 @@ permission: the Rider on its adventure, the Thrull under Wrenn's Resolve's impul
 
 **Measured.**
 
-- **`tools/ai-bench.sh --selftest`: 185 checks, 0 failures**, three runs. D476's `adventure-map` case gains these checks
+- **`tools/ai-bench.sh --selftest`: 185 checks, 0 failures**, three runs on the first commit. After the review fix:
+  **190 checks, 0 failures**, with two new cases (below the list). D476's `adventure-map` case gains these checks
   through `SearchPolicy.alternativesForTest`:
   - from the hand, Forge's two plays of the Rider are two identities (`Original`, `Secondary`). The search lists the
     creature, and each Rider play once. Swift End is listed only when Forge's own per-card judgment (`canPlaySa`) says
@@ -118,12 +146,23 @@ permission: the Rider on its adventure, the Thrull under Wrenn's Resolve's impul
     `Murderous Rider|spell|Original|-|-|mayPlay#26|-||Murderous Rider - Creature 2 / 3 by #26`. The search lists the
     Rider from exile once, labelled `Murderous Rider (may play)`, and it is the single-suffix play;
   - with either of Forge's two plays as Forge's pick, the other is not listed;
-  - two Bolts exiled by Reckless Impulse are one Bolt play.
+  - two Bolts exiled by Reckless Impulse (the check requires two exiled) are one Bolt play.
+
+  Two cases added after the review (`mayPlayShapeScenarios`):
+  - `own-mayplay-identity`: two Squee, the Immortal in the graveyard. Forge's four plays of them are one identity,
+    `...|mayPlay#self|...`, and the search lists Squee at most once (once in the run).
+  - `citadel-identity`: Bolas's Citadel with a Bolt on top. Forge's two plays of it,
+    `... by Bolas's Citadel (10) (by paying 1 life instead of paying its mana cost)` and the same with the suffix
+    twice, are one identity, and the search lists the Bolt at most once (once in the run).
 
   **Negative control:** with the old key (name and description) in `alternatives`, 5 of those checks fail, with the
   twin listed beside the play in each.
-- **`DecisionSelfTest`** (in `bridge/build.sh`): five engine-free `collapseBy` checks (doubled, tripled, `#13` and
-  `#136`, two hosts, no suffix); 181 checks.
+- **`DecisionSelfTest`** (in `bridge/build.sh`): engine-free `collapseBy` and `collapseSuffix` checks, 187 checks in
+  all:
+  - doubled, tripled, `#13 by #136`, `#136 by #1360`, two hosts, no suffix;
+  - the Citadel shape (`" by #12 (by paying 1 life instead of paying its mana cost)"` twice → once);
+  - one host with two different texts, which stays two;
+  - an own-static suffix doubled → once.
 - **`web/test/cubelab-atlas-cuts.test.ts`:**
   - `playCount` over J166's shapes, `pickDecisions` and `nextDecision` under `--min-options 3`;
   - a pick's `k` is still the listed count;
@@ -138,7 +177,8 @@ permission: the Rider on its adventure, the Thrull under Wrenn's Resolve's impul
     among its eight.
   - **pauper-2101:** 23 decisions, 32 turns, A wins. d6 and d7 lose their second `cast:1` (Mindstab Thrull), and no
     other listing changes.
-- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=2` from a deleted `bridge/out`, this tree, `WSPORT=9800`:
+- **The gate** (on the first commit; the review fix ran `bridge/build.sh` and the ai-bench self-test, and the gate runs
+  on the merged tree): `./tools/check-all.sh` at `GATE_JOBS=2` from a deleted `bridge/out`, this tree, `WSPORT=9800`:
   **OK, 59 of 59 jobs**, 947.0 s wall (load average up to 17.9, other lanes' gates running). A first run on
   `WSPORT=9650` failed at 10f-probe alone. Its ws server never printed `WS LISTENING`, because another process held
   port 9655, inside that run's range. That was a port collision with a concurrent gate, not this change.

@@ -728,8 +728,10 @@ public final class SearchPolicy {
      * alternative cost ({@code getAlternativeCost}, or none); a card's own
      * AlternativeCost static paid or not ({@code OptionalCost.AltCost}); the may-play
      * permission's host by its card id, or none; without its mana cost or not; the
-     * optional costs, sorted; and {@link #matchKey}, with a repeated run of the same
-     * {@code " by #<id>"} collapsed to one.
+     * optional costs, sorted; and {@link #matchKey}, with a doubled may-play suffix cut to one
+     * ({@link #collapseBy}: a whole suffix repeated verbatim; {@link #collapseSuffix}: the play's
+     * own suffix, rebuilt).  A card's own may-play static is {@code mayPlay#self}, so two copies of
+     * it are one play.
      *
      * <p>Why: an Adventure card on its adventure, or a card an impulse draw exiled, is
      * listed by Forge twice.  {@code Card.getAllPossibleAbilities} lists the may-play
@@ -750,7 +752,8 @@ public final class SearchPolicy {
                 .append('|').append(sa.getCardStateName())
                 .append('|').append(sa.getAlternativeCost() == null ? "-" : sa.getAlternativeCost().name())
                 .append('|').append(sa.isOptionalCostPaid(OptionalCost.AltCost) ? "altCost" : "-")
-                .append('|').append(sa.getMayPlay() == null ? "-" : "mayPlay#" + sa.getMayPlay().getHostCard().getId())
+                .append('|').append(sa.getMayPlay() == null ? "-" : sa.getMayPlay().getHostCard() == sa.getHostCard()
+                        ? "mayPlay#self" : "mayPlay#" + sa.getMayPlay().getHostCard().getId())
                 .append('|').append(sa.hasParam("WithoutManaCost") ? "free" : "-")
                 .append('|');
         final List<String> opt = new ArrayList<>();
@@ -758,15 +761,87 @@ public final class SearchPolicy {
             opt.add(t.name());
         }
         java.util.Collections.sort(opt);
-        b.append(String.join(",", opt)).append('|').append(collapseBy(matchKey(sa)));
+        b.append(String.join(",", opt)).append('|').append(collapseSuffix(collapseBy(matchKey(sa)), mayPlaySuffixKey(sa)));
         return b.toString();
     }
 
-    private static final java.util.regex.Pattern REPEATED_BY = java.util.regex.Pattern.compile("( by #\\d+)(?:\\1(?!\\d))+");
+    /** D483: where a may-play suffix's host id starts, in a {@link #matchKey}: {@code " by #<id>"}, the id whole. */
+    private static final java.util.regex.Pattern BY_ID = java.util.regex.Pattern.compile(" by #\\d+(?!\\d)");
 
-    /** D483: {@code " by #136 by #136"} as {@code " by #136"}: the doubled may-play suffix is one permission. */
+    /**
+     * D483: a {@link #matchKey} with each whole may-play suffix that repeats the one before it verbatim dropped.
+     * A suffix runs from a {@code " by #<id>"} to the next one or the end: Forge's
+     * {@code getMayPlaySpellOptions} appends {@code " by " + host}, then the permission's
+     * {@code MayPlayText} and {@code CardPlayOption.toString(false)} (an alternative mana cost, "spend
+     * mana as though", RaiseCost, "without paying its mana cost"), so Bolas's Citadel's twin reads
+     * {@code base + S + S} with text between the two hosts.  {@code " by #13 by #136"} and
+     * {@code " by #136 by #1360"} are two permissions and stay.
+     */
     static String collapseBy(final String key) {
-        return REPEATED_BY.matcher(key).replaceAll("$1");
+        final java.util.regex.Matcher m = BY_ID.matcher(key);
+        final List<Integer> at = new ArrayList<>();
+        while (m.find()) {
+            at.add(m.start());
+        }
+        if (at.size() < 2) {
+            return key;
+        }
+        final StringBuilder out = new StringBuilder(key.substring(0, at.get(0)));
+        String prev = null;
+        for (int i = 0; i < at.size(); i++) {
+            final String seg = key.substring(at.get(i), i + 1 < at.size() ? at.get(i + 1) : key.length());
+            if (!seg.equals(prev)) {
+                out.append(seg);
+            }
+            prev = seg;
+        }
+        return out.toString();
+    }
+
+    /**
+     * D483: {@code key} with a trailing run of {@code suffix} cut to one copy ({@code key} itself when
+     * {@code suffix} is empty).  The suffix is the play's own, rebuilt by {@link #mayPlaySuffixKey}: it
+     * catches a twin whose suffix carries no {@code " by #<id>"} at all -- a card's own may-play static
+     * with an alternative cost, where Forge appends no host.
+     */
+    static String collapseSuffix(final String key, final String suffix) {
+        if (suffix == null || suffix.isEmpty()) {
+            return key;
+        }
+        String k = key;
+        while (k.endsWith(suffix + suffix)) {
+            k = k.substring(0, k.length() - suffix.length());
+        }
+        return k;
+    }
+
+    /**
+     * D483: the suffix Forge's {@code GameActionUtil.getMayPlaySpellOptions} appended to this play's
+     * description, as {@link #matchKey} spells it: {@code " by #<host id>"} when the permission's host is
+     * another card shown in the UI, then {@code " (" + MayPlayText + ")"}, then
+     * {@code CardPlayOption.toString(false)}.  Empty for a play with no may-play permission, or when the
+     * option cannot render here.
+     */
+    static String mayPlaySuffixKey(final SpellAbility sa) {
+        final forge.game.staticability.StaticAbility mp = sa.getMayPlay();
+        final forge.game.card.CardPlayOption o = sa.getMayPlayOption();
+        if (mp == null || o == null) {
+            return "";
+        }
+        try {
+            final Card host = mp.getHostCard();
+            final StringBuilder b = new StringBuilder();
+            if (host != sa.getHostCard() && host.getRenderForUI()) {
+                b.append(" by #").append(host.getId());
+            }
+            if (mp.hasParam("MayPlayText")) {
+                b.append(" (").append(mp.getParam("MayPlayText")).append(')');
+            }
+            b.append(o.toString(false));
+            return b.toString();
+        } catch (final RuntimeException e) {
+            return "";
+        }
     }
 
     /**

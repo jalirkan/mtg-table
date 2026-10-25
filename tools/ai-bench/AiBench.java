@@ -1508,6 +1508,7 @@ public final class AiBench {
         altCostScenarios();
         staleEffectScenarios();
         adventureScenarios();
+        mayPlayShapeScenarios();
         copierCarryScenarios();
     }
 
@@ -1656,7 +1657,7 @@ public final class AiBench {
             for (final Card c : ai.getCardsIn(ZoneType.Exile)) {
                 boltsExiled += "Lightning Bolt".equals(c.getName()) ? 1 : 0;
             }
-            check(boltAlts.size() == 1 && boltAlts.get(0).getMayPlay() != null,
+            check(boltsExiled == 2 && boltAlts.size() == 1 && boltAlts.get(0).getMayPlay() != null,
                     "D483: the search lists one Bolt play by Reckless Impulse (" + boltsExiled + " Bolts exiled): " + labelsOf(boltAlts));
             final forge.game.spellability.SpellAbility mb = mtgtable.ai.SearchPolicy.mapForTest(ai, boltPlay);
             check(mb != null && mb.getMayPlay() != null && mb.getHostCard().getGame() != g
@@ -1689,6 +1690,76 @@ public final class AiBench {
             }
             check(onField[0], "the fork cast the Rider from exile onto its battlefield (" + sink.counts + ")");
             check(rider.isInZone(ZoneType.Exile), "the real game is untouched: the Rider still in exile");
+        });
+    }
+
+    /**
+     * D483: two more may-play shapes the play identity must hold to one play each.  A card's own
+     * may-play static (Squee, the Immortal from the graveyard): its permission's host is the card,
+     * so two copies are one play ({@code mayPlay#self}, not each copy's id).  And Bolas's Citadel's
+     * top card: Forge's suffix is {@code " by <Citadel>"} plus the option's "(by paying ... life
+     * instead of paying its mana cost)", and its doubled twin has text between the two hosts.
+     */
+    static void mayPlayShapeScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a card's own may-play static and Bolas's Citadel, listed once (D483, engine)");
+        scenario("own-mayplay-identity", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest;Forest", "ailibrary=Mountain;Mountain;Mountain;Mountain",
+                "aigraveyard=Squee, the Immortal;Squee, the Immortal", "aibattlefield=Mountain;Mountain;Mountain;Mountain"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final List<forge.game.spellability.SpellAbility> raw = new ArrayList<>();
+            for (final Card c : ai.getCardsIn(ZoneType.Graveyard)) {
+                for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                        new ArrayList<>(c.getAllPossibleAbilities(ai, false)), ai)) {
+                    if (sa.isSpell() && sa.getMayPlay() != null) {
+                        sa.setActivatingPlayer(ai);
+                        raw.add(sa);
+                    }
+                }
+            }
+            final java.util.Set<Card> hosts = new java.util.HashSet<>();
+            for (final forge.game.spellability.SpellAbility sa : raw) {
+                hosts.add(sa.getHostCard());
+            }
+            check(hosts.size() == 2 && distinctIdentities(raw) == 1
+                            && mtgtable.ai.SearchPolicy.playIdentity(raw.get(0)).contains("|mayPlay#self|"),
+                    "D483: Forge's " + raw.size() + " plays of the two Squees in the graveyard are one identity, mayPlay#self ("
+                            + (raw.isEmpty() ? "none" : mtgtable.ai.SearchPolicy.playIdentity(raw.get(0))) + ")");
+            final List<forge.game.spellability.SpellAbility> squees = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : mtgtable.ai.SearchPolicy.alternativesForTest(ai, null)) {
+                if ("Squee, the Immortal".equals(sa.getHostCard().getName())) {
+                    squees.add(sa);
+                }
+            }
+            check(squees.size() <= 1, "D483: the search lists Squee from the graveyard at most once: " + labelsOf(squees));
+        });
+        scenario("citadel-identity", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Lightning Bolt;Mountain;Mountain;Mountain", "aibattlefield=Bolas's Citadel;Mountain"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Card top = ai.getCardsIn(ZoneType.Library).get(0);
+            check("Lightning Bolt".equals(top.getName()), "setup: a Lightning Bolt on top of the seat's library (" + top + ")");
+            final List<forge.game.spellability.SpellAbility> raw = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(top.getAllPossibleAbilities(ai, false)), ai)) {
+                if (sa.isSpell() && sa.getMayPlay() != null) {
+                    sa.setActivatingPlayer(ai);
+                    raw.add(sa);
+                }
+            }
+            final List<String> descs = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : raw) {
+                descs.add(sa.getDescription());
+            }
+            check(!raw.isEmpty() && distinctIdentities(raw) == 1,
+                    "D483: Forge's " + raw.size() + " Citadel plays of the top Bolt are one identity: " + descs
+                            + (raw.isEmpty() ? "" : " -> " + mtgtable.ai.SearchPolicy.playIdentity(raw.get(0))));
+            final List<forge.game.spellability.SpellAbility> bolts = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : mtgtable.ai.SearchPolicy.alternativesForTest(ai, null)) {
+                if (sa.getHostCard() == top) {
+                    bolts.add(sa);
+                }
+            }
+            check(bolts.size() <= 1, "D483: the search lists the Citadel's Bolt at most once: " + labelsOf(bolts));
         });
     }
 
@@ -2608,7 +2679,6 @@ public final class AiBench {
         throw new IllegalStateException("no " + name);
     }
 
-    /** D472: the seat's play of {@code name} that {@code which} picks, from Forge's own candidate list (originals and alternatives). */
     /** D483: the plays in {@code alts} whose host is {@code card}. */
     private static List<forge.game.spellability.SpellAbility> riderPlays(final List<forge.game.spellability.SpellAbility> alts,
                                                                          final Card card) {
@@ -2639,6 +2709,7 @@ public final class AiBench {
         return out;
     }
 
+    /** D472: the seat's play of {@code name} that {@code which} picks, from Forge's own candidate list (originals and alternatives). */
     private static forge.game.spellability.SpellAbility playOf(final Player ai, final String name,
             final java.util.function.Predicate<forge.game.spellability.SpellAbility> which) {
         final Card c = named(ai.getGame().getCardsInGame(), name);
