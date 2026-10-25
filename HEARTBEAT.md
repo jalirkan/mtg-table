@@ -1111,3 +1111,26 @@ a light conceptual test stage he reviews on the live ForgeCoach link before anyt
   — desktop width (a phone-shaped panel draws the stage panorama, not the cell). Verified live: 4 Islands + 3 Swamps
   draws the island|swamp 4x3 cell, captioned "island s4 | swamp s3".
 - Nothing else painted until Justin judges. J166 (atlas 4a) still running.
+
+## 2026-10-25 07:15 EDT — J166's two faults fixed and merged; the Rider duplicates were a third (the PC session)
+
+J166 (atlas 4a, random library decks) failed at 03:05: s01–s03 finished (s02/s03 exit 3 on the redaction check
+alone), s04 powered ran past the 3-h step cap, s05–s13 never ran. The morning read is `results/J166/summary.md`
+(22 labels, 4 confident; 22.3 confident per 7-worker 10-h night on 4 confident labels, so an interval of 6–57; the
+cuts saved 7.7% of branch time, not 18–20%: nothing screened, early stopping only; C1 holds on s01 +4.1 [0.9, 7.5]).
+Three decisions, each its own lane with a skeptic review and a gate, merged on main bf978690 (the merged tree's
+gate: check-all OK, 59 jobs, 514.6 s at GATE_JOBS=4):
+- **D481** (#209): the checker's M55/D347 audit accepts a decision id that entered between frames — a token born on
+  the viewer's own battlefield (Boo, Zirda's copy; 1,891 ids in 1,396 legacy logs) or a spell cast onto the stack
+  from the viewer's own hand (s02's Tear Asunder) — proven by the zone events; exile, the library and every opponent
+  zone stay refusals; 15 selftest controls, ten mutants caught; all 17,004 J166 logs pass; fixtures byte-identical.
+- **D482** (#210): the census draw's engine-unplayable list — Scute Swarm (134 of s04's 135 timeouts had it on the
+  board, 50–608 copies; Forge's AI stalls inside one event-free step for 20 min) is never dealt into a band's deck;
+  every skip counted; 13 of J166's 14 deck folders regenerate byte-identical, only s04's deck 1 changes. An engine
+  limitation, no bias; follow-ups: skip a stalled branch on resume, a thread dump before the kill, an in-step deadline.
+- **D483** (#211): the eight duplicate options (Murderous Rider, Mindstab Thrull; 12.5% of branch time, three
+  2-way decisions counted as k ≥ 3) were Forge listing one may-play cast twice (the suffix doubled), not a mapping
+  fault; `SearchPolicy.alternatives` now dedupes by a play identity, listings carry `identities`, `--min-options`
+  counts distinct plays; search-v2 results across D483 are never pooled.
+Lessons: a status waiter must parse the JSON (J166's failure sat unseen 2.5 h); two gates at once need WSPORT 20
+apart. J167 (night two: s04 fresh without Scute Swarm, s05–s13, s02/s03 re-checked) is being posted.
