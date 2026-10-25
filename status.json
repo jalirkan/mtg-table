@@ -1,23 +1,70 @@
 {
  "schema": 1,
- "updated": "2026-10-25T12:09:47-04:00",
- "heartbeat": "2026-10-25T12:09:47-04:00",
+ "updated": "2026-10-25T12:14:30-04:00",
+ "heartbeat": "2026-10-25T12:14:30-04:00",
  "paused": false,
- "state": "idle",
- "idleSince": "2026-10-25T11:01:16-04:00",
- "idleReason": "queue empty",
+ "state": "running",
+ "idleSince": null,
+ "idleReason": null,
  "host": {
-  "load1": 8.3,
-  "memUsedGb": 9.5,
+  "load1": 2.51,
+  "memUsedGb": 7.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3738,
+  "swapUsedMb": 3608,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 0,
+  "coresUsed": 7,
   "coresTotal": 8
  },
- "running": [],
+ "running": [
+  {
+   "publicTitle": "Move atlas 4a night three: random library decks",
+   "publicEst": "~6 to 10 h",
+   "id": "J168",
+   "title": "The move atlas, rung 4a, night three -- J167's night resumed at s05 on the merged tree of D484 (the random seat answers a ChooseSource as upstream Forge's fix does; every decision callback throws BranchTimeout past the branch deadline; identical consecutive decision records capped): J167's hung s05 moved aside, never deleted; s05 FRESH on its unchanged decks at the same seeds; s06-s13 as J167 planned them (same seeds, the Forge map at 40 on s07 and s13, every cut on, chunk 25); s01-s04 kept as J166 and J167 left them (nothing replayed, nothing re-checked); the data folder lab-j166 resumed; the Report over all 13 spines, with D483's identities and D484's counter. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). Never pooled with J156's, J157's, J158's or J162's labels",
+   "cpu": "heavy",
+   "phase": "prepare",
+   "started": "2026-10-25T12:14:30-04:00",
+   "elapsed": 0,
+   "done": 17304,
+   "total": 63000,
+   "unit": "lines",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": 0,
+   "paused": false,
+   "dataUpdated": "2026-10-25T12:14:30-04:00",
+   "memGb": null,
+   "live": {
+    "branches": 17304,
+    "atlas.problems": -1,
+    "armed": 0,
+    "big_frames": 0,
+    "branch_timeouts": 0,
+    "data_free_gb": 627.4,
+    "data_used_gb": 22.15,
+    "elapsed_s": 0,
+    "engine_errors": 0,
+    "payfail": 146,
+    "pressure_events": 0,
+    "unavailable": 0,
+    "unit_errors": 12,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "branches",
+    "atlas.problems"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J168-prepare"
+  }
+ ],
  "queue": [],
  "waiting": [],
  "finished": [
@@ -827,8 +874,8 @@
   }
  ],
  "runner": {
-  "commit": "bf978690",
-  "started": "2026-10-25T07:08:52-04:00",
+  "commit": "26a8db00",
+  "started": "2026-10-25T12:13:25-04:00",
   "dryRun": false
  }
 }
