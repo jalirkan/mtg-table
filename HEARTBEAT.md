@@ -1175,3 +1175,8 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   the card (`retargeted` on the row); the checker accepts the viewer's own token that ceased to exist (the 18);
   D481's s02 explanation corrected (a stranded cast, not mid-cast). J168's labels on s05–s07 and s10 carry the
   lost-spell bias; the morning read says how much.
+- 19:51 EDT: **J168 finished — the first full 13-spine atlas night on random library decks.** Every spine exit 0
+  (s05–s13 under D484; s01–s04 kept): 71,525 branch rows, 0 engine errors, 0 timeouts, 0 unavailable, 0 guard
+  violations; the job's one failed check is `atlas.problems == 0` (3: the stale-target redaction flags on s06,
+  s10 and s13 — not a leak; D485). The morning read is being written (results/J168/summary.md), with the
+  lost-spell bias quantified per label.
