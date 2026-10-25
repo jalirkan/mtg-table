@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-24T21:21:09-04:00
+- time: 2026-10-24T21:23:06-04:00
 - runner: 325c2dd8, up since 2026-10-24T20:42:21-04:00
-- running: J164 commands 2/2, 8640/8640 lines, 9754.3/h, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.49; memory 8.4/30.5 GB, swap 3863 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J165
+- running: J165 prepare, 0/92000 lines, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 3.41; memory 7.2/30.5 GB, swap 3863 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J162 failed at 2026-10-24T13:41:43-04:00: branches 55680 · atlas.spinesDone 4 · atlas.decisions 64 · atlas.labels 59 · atlas.confident 7 · atlas.voidLabels 0 · atlas.meanRho 0.218 · atlas.branchTimeouts 0 · atlas.timeoutSharePauper5 0 · atlas.branchUnavailable 0 · atlas.zeroXLeftOut 293387 · atlas.zeroX 0 · atlas.problems 10
+- last finished: J164 done at 2026-10-24T21:23:06-04:00: branches 8640 · atlas.decisionsComplete 8 · atlas.problems 0 · atlas.timeoutShare 0 · atlas.seedsMatch 8640 · atlas.forkDrawBranches 7457 · atlas.forkStealBranches 5048 · atlas.labels 8 · atlas.skipLines 80
 
 ## Messages
+
+- FOLLOW-UP READY [J164@2026-10-24T21:23:06-04:00] (the runner, for the cloud session): J164 is done; write and post the template morning-read. It decides: nothing by itself. D479 found that every copy the atlas forked held a Monarch with no triggers (Forge's copier drops an effect card's triggers), so at J162 pauper5 464's d17-d31 the monarch at the fork never drew and could never lose the crown by combat damage; D479 says those maps and labels are not pooled across the fix "unless recomputed". This job recomputes them: the same plan, baseline, decisions, seeds and branch counts on the fixed copier, and reads how far the bias had moved the values, the labels, the best options and the one confident label in the range (d29). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J159@2026-10-24T02:01:58-04:00] (the runner, for the cloud session): J159 is done; write and post the template morning-read. It decides: whether UG's low lab-vs-lab payoff, J145's one pair candidate (.423, .382-.465, 544 deck-games), holds on fresh seeds: UG CONFIRMED or UG NOT CONFIRMED by the swap rule's night-0 reading below, on this night's data alone. If NOT CONFIRMED the swap programme stops (there is nothing to swap). If CONFIRMED, night 1 (one swap, then a fresh-seed re-measure) may be written; this job registers no swap and performs none. J145's colour verdict (BALANCED ON PAYOFF / NOT BALANCED ON PAYOFF) is read again, as the "no colour OFF" gate's baseline; pull is reported, not judged. Ledger: LEDGER.md. Delete this line once posted.
 

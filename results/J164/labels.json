@@ -1,0 +1,232 @@
+{
+ "contract": "mtg-table rung-3 label v1 (J158)",
+ "spines": {
+  "pauper5": [
+   "464"
+  ]
+ },
+ "branched": 8,
+ "labels": 8,
+ "rowsUnmatched": 0,
+ "confident": 2,
+ "confidentQ": 2,
+ "confidentForge": 0,
+ "byPair": {
+  "pauper5": {
+   "spines": 1,
+   "labels": 8,
+   "inQ": 8,
+   "confident": 2,
+   "confidentQ": 2,
+   "confidentForge": 0,
+   "byKind": {
+    "p": {
+     "labels": 4,
+     "confident": 0
+    },
+    "a": {
+     "labels": 4,
+     "confident": 2
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   }
+  }
+ },
+ "a_confidentShare": {
+  "n": 8,
+  "point": 0.25,
+  "interval": [
+   0.0,
+   0.625
+  ],
+  "byPair": {
+   "pauper5": {
+    "n": 8,
+    "point": 0.25,
+    "interval": [
+     0.0,
+     0.625
+    ]
+   }
+  }
+ },
+ "a_confidentShareByKind": {
+  "p": {
+   "n": 4,
+   "point": 0.0,
+   "interval": [
+    0.0,
+    0.0
+   ],
+   "byPair": {
+    "pauper5": {
+     "n": 4,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "a": {
+   "n": 4,
+   "point": 0.5,
+   "interval": [
+    0.0,
+    1.0
+   ],
+   "byPair": {
+    "pauper5": {
+     "n": 4,
+     "point": 0.5,
+     "interval": [
+      0.0,
+      1.0
+     ]
+    }
+   }
+  },
+  "b": {
+   "n": 0,
+   "point": null,
+   "interval": [
+    null,
+    null
+   ],
+   "byPair": {
+    "pauper5": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareQ": {
+  "n": 8,
+  "point": 0.25,
+  "interval": [
+   0.0,
+   0.625
+  ],
+  "byPair": {
+   "pauper5": {
+    "n": 8,
+    "point": 0.25,
+    "interval": [
+     0.0,
+     0.625
+    ]
+   }
+  }
+ },
+ "b_gapMedian": {
+  "pauper5": 0.1325
+ },
+ "b_gapMean": {
+  "n": 8,
+  "point": 0.1216,
+  "interval": [
+   0.0788,
+   0.1634
+  ],
+  "byPair": {
+   "pauper5": {
+    "n": 8,
+    "point": 0.1216,
+    "interval": [
+     0.0788,
+     0.1634
+    ]
+   }
+  }
+ },
+ "b_regretMean": {
+  "n": 8,
+  "point": 0.0378,
+  "interval": [
+   0.0109,
+   0.075
+  ],
+  "byPair": {
+   "pauper5": {
+    "n": 8,
+    "point": 0.0378,
+    "interval": [
+     0.0109,
+     0.075
+    ]
+   }
+  }
+ },
+ "b_settledShare": {
+  "n": 8,
+  "point": 0.0,
+  "interval": [
+   0.0,
+   0.0
+  ],
+  "byPair": {
+   "pauper5": {
+    "n": 8,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "c_sizing": {
+  "byPair": {
+   "pauper5": {
+    "wallSec": 3914,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 2,
+    "workers": [
+     "6"
+    ],
+    "labelsPerHour": 7.36,
+    "labelsPer10hNight": 74,
+    "confidentPer10hNight": 18
+   }
+  },
+  "asRun": {
+   "wallSec": 3914,
+   "labels": 8,
+   "confident": 2,
+   "labelsPer10hNight": 74,
+   "confidentPer10hNight": 18
+  }
+ },
+ "voidLabels": 0,
+ "voidList": [],
+ "sameGameNotBlock": [],
+ "withoutVoid": {
+  "pauper5": {
+   "labels": 8,
+   "confident": 2
+  }
+ },
+ "c_sizing7": {
+  "pauper5": {
+   "workers": [
+    6
+   ],
+   "labelsPer7Worker10hNight": 86,
+   "confidentPer7Worker10hNight": 21
+  },
+  "asRun": {
+   "labelsPer7Worker10hNight": 86,
+   "confidentPer7Worker10hNight": 21
+  }
+ }
+}

@@ -1076,3 +1076,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J162/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table f6dba5e
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J164 DONE: The Monarch replay -- J162's pauper5 464 spine re-branched at exactly its eight Monarch decisions (d17, d19, d21, d23, d25, d27, d29, d31; 36 options, 8,640 branch games, J162's seeds) on the fixed copier (D479: a copied Monarch now draws and can change hands; with D476-D478) and re-labelled, so the shift the copier's bias caused is measured, side by side with J162's labels and never pooled with them; on ce42306a, a new data folder lab-j164
+
+- finished: 2026-10-24T21:23:06-04:00
+- decides: nothing by itself. D479 found that every copy the atlas forked held a Monarch with no triggers (Forge's copier drops an effect card's triggers), so at J162 pauper5 464's d17-d31 the monarch at the fork never drew and could never lose the crown by combat damage; D479 says those maps and labels are not pooled across the fix "unless recomputed". This job recomputes them: the same plan, baseline, decisions, seeds and branch counts on the fixed copier, and reads how far the bias had moved the values, the labels, the best options and the one confident label in the range (d29)
+- hypothesis: none to confirm. Direction expected from the mechanism, not registered as a rule: where seat B held the Monarch at the fork (d17, d19, d21, d25) seat A's values fall, where seat A held it (d23, d27, d29, d31) they rise; J162's rows show the copied Monarch drew 0 times in 8,640 branches (a Monarch made later in a branch drew in 2,375), and at d27-d31 almost no branch made a new one, so the bias is largest there
+- rule: D451 (method; no outcome rule), D479 (comparability: not pooled), D478 (capped branches are draws). Pre-registered here, before any J164 game: the reads (i)-(v) as computed by var/lab-j164-local/bin/shift.py, the Monarch counter var/lab-j164-local/bin/monarch.py, and the labels by J162's labels.py byte for byte (sha256 0020dbbf...), all proved on J162's own rows by sha256 in the pilot. No read carries a verdict
+- outcome: done
+- headline: branches 8640, atlas.decisionsComplete 8, atlas.problems 0, atlas.timeoutShare 0, atlas.seedsMatch 8640, atlas.forkDrawBranches 7457, atlas.forkStealBranches 5048, atlas.labels 8, atlas.skipLines 80
+- summary: results/J164/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table ce42306
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
