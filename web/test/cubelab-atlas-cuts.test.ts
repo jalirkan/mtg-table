@@ -6,6 +6,8 @@
  *
  *  - --min-options: the spread over the decisions with k or more options, filled from the rest when too few, each pick's k
  *    and why recorded; with k = 1 exactly D451's spread;
+ *  - D483: --min-options counts a decision's PLAYS (its options' distinct play identities, the token count for a listing
+ *    written before D483), while the options branched stay every listed one by index; a listing with one play twice is named;
  *  - the screen's rule (a decision's mean value <= .04 or >= .96 at the screen) and the replacement: the next listed decision
  *    not yet branched, forward then back, those with k or more options first;
  *  - early stopping's rule: the paired bootstrap against the leader, option 0 and the leader never stopped;
@@ -36,7 +38,7 @@ import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 
 import {
-  AtlasSchedule, checkCuts, CUTS_OFF, decisionCuts, dropAt, nextDecision, parseEarlyStop, pickDecisions, rowsUnderCut, screenMean, settledAt, stageEnds,
+  AtlasSchedule, checkCuts, CUTS_OFF, decisionCuts, dropAt, nextDecision, parseEarlyStop, pickDecisions, playCount, repeatedPlays, rowsUnderCut, screenMean, settledAt, stageEnds,
   type Cuts, type ScheduleEvent, type ScheduleLine,
 } from '../../tools/cubelab/atlascuts.ts';
 import { mergeGuardrails, slices, type GuardrailCheck } from '../../tools/cubelab/atlaschecks.ts';
@@ -62,6 +64,27 @@ test('--min-options: the spread over decisions with k or more options, filled fr
   assert.deepEqual(fill.filter((p) => p.why === 'spread').map((p) => p.d), [1, 3, 6, 8], 'every one with 3+ options');
   assert.deepEqual(fill.filter((p) => p.why === 'fill').map((p) => p.d), [0, 9], 'and two of the rest, spread over them');
   assert.deepEqual(pickDecisions(all, 'all', 3).map((p) => p.d), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'all is all');
+});
+
+test('D483: --min-options counts plays, not tokens or listed options; the options branched are still every listed one', () => {
+  const ids = (xs: string[]): string[] => xs;
+  // J166's shape: the Rider from exile listed twice (one play), a 2-way decision in the k >= 3 pool; and the Rider from the
+  // hand, whose creature and Swift End share a token (cast:19) and are two plays
+  const all: DecisionListing[] = [
+    { d: 0, kind: 'p', turn: 3, tokens: ['cast:19', 'pass', 'cast:19'], labels: [], identities: ids(['Rider|Original|-', 'pass', 'Rider|Original|-']) },
+    { d: 1, kind: 'p', turn: 4, tokens: ['cast:19', 'pass', 'cast:19'], labels: [], identities: ids(['Rider|Original|mp#7', 'pass', 'Rider|Original|mp#7']) },
+    { d: 2, kind: 'p', turn: 5, tokens: ['cast:19', 'pass', 'cast:19'], labels: [], identities: ids(['Rider|Original|-', 'pass', 'Rider|Secondary|-']) },
+    { d: 3, kind: 'p', turn: 6, tokens: ['pass', 'cast:4', 'cast:5'], labels: [] },   // before D483: no identities, the token count
+  ];
+  assert.deepEqual(all.map(playCount), [2, 2, 3, 3], 'two twins are one play; one token, two faces, two plays; an old listing counts tokens');
+  const picks = pickDecisions(all, 2, 3);
+  assert.deepEqual(picks.map((p) => p.d), [2, 3], 'the k >= 3 pool is the decisions with three plays');
+  assert.ok(picks.every((p) => p.k === all[p.d]!.tokens.length), 'a pick\'s k is still its listed options, the indices branched');
+  assert.deepEqual(pickDecisions(all, 3, 3).filter((p) => p.why === 'fill').map((p) => [p.d, p.k]), [[0, 3]], 'a 2-play fill keeps its 3 listed options');
+  assert.equal(nextDecision(all, new Set([2]), 2, 3), 3, 'the replacement looks for 3+ plays first');
+  assert.equal(nextDecision(all, new Set([2, 3]), 2, 3), 1, 'then the rest, back from it');
+  assert.deepEqual(repeatedPlays(all), ['d0: Rider|Original|- at options 0, 2', 'd1: Rider|Original|mp#7 at options 0, 2'], 'each play listed twice is named');
+  assert.deepEqual(repeatedPlays(listingOf([3, 2])), [], 'a listing before D483 names none');
 });
 
 test('the screen settles a near-decided decision; its replacement is the next listed one not yet branched, k or more options first', () => {

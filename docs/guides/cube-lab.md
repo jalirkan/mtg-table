@@ -1425,7 +1425,7 @@ Five flags, each off by default, so a J158- or J162-shaped job runs as it did
 | `--checks-parallel n` | the post-spine checks (the rows' id checks and the guardrail reads on `n` worker threads, `n` redaction batches at once); `atlas.json`'s checks are the serial run's but for `redactionMs` | 1 (serial) |
 | `--early-stop on` (or `a,b,c`) | after 50, 100 and 150 random branches, an option whose paired-bootstrap interval against the leader lies entirely below zero stops; option 0 never stops; the Forge map plays the options still running | off |
 | `--screen n` | after `n` random branches of every option, a decision whose mean value is <= .04 or >= .96 is settled (`screened: true`, a cheap label) and the next listed decision not yet branched takes its place | 0 (off) |
-| `--min-options k` | `--decisions` are spread over the decisions with `k` or more options, filled from the rest when too few | 1 |
+| `--min-options k` | `--decisions` are spread over the decisions with `k` or more plays (D483: distinct play identities, so one token can be two plays and Forge's doubled may-play twin is none), filled from the rest when too few | 1 |
 | `--branch-forge 0` | already a flag: a spine with no Forge map; its decisions are `complete`, `decided` and `settled` on the random map, and it makes no agreement read | 40 |
 
 - **The barrier.** A checkpoint is a chunk boundary (`--chunk` must divide it). A decision's next units wait until every

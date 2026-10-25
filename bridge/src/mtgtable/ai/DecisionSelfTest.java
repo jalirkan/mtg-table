@@ -795,6 +795,15 @@ public final class DecisionSelfTest {
             why = e.getMessage();
         }
         check(why != null && why.contains("Retrace"), "a cost the copy does not offer fails, naming it: " + why);
+        // D483: the doubled may-play suffix (Forge's twin of one play) collapses to one permission; two
+        // permissions, or two ids where one is the other's prefix, stay as they are
+        final String rider = "Murderous Rider - Creature 2 / 3";
+        check(SearchPolicy.collapseBy(rider + " by #136 by #136").equals(rider + " by #136"), "a doubled \" by #<id>\" is one");
+        check(SearchPolicy.collapseBy(rider + " by #136 by #136 by #136").equals(rider + " by #136"), "a tripled one too");
+        check(SearchPolicy.collapseBy(rider + " by #13 by #136").equals(rider + " by #13 by #136"),
+                "\" by #13 by #136\" is two permissions, not a run (the id is matched whole)");
+        check(SearchPolicy.collapseBy(rider + " by #136 by #25").equals(rider + " by #136 by #25"), "two hosts stay two");
+        check(SearchPolicy.collapseBy(rider).equals(rider), "no suffix, unchanged");
     }
 
     /**

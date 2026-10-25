@@ -284,6 +284,12 @@ public final class Atlas {
         public int turn;
         public final List<String> tokens = new ArrayList<>();
         public final List<String> labels = new ArrayList<>();
+        /**
+         * D483: each option's play identity ({@link SearchPolicy#identity}), beside its token: two options
+         * with one token can be two plays (an Adventure card's creature and its adventure from the hand),
+         * and the atlas counts a decision's options by identity.
+         */
+        public final List<String> identities = new ArrayList<>();
     }
 
     /** One branch's outcome, from the atlas seat's side. */
@@ -377,8 +383,15 @@ public final class Atlas {
                 } catch (final RuntimeException e) {
                     t = "?";
                 }
+                String id;
+                try {
+                    id = SearchPolicy.identity(c);
+                } catch (final RuntimeException e) {
+                    id = t;
+                }
                 d.tokens.add(t);
                 d.labels.add(c.label());
+                d.identities.add(id);
             }
             decisions.add(d);
             if (d.index != unit.decision) {
@@ -577,6 +590,10 @@ public final class Atlas {
                 }
                 j.end().key("labels").arr();
                 for (final String t : d.labels) {
+                    j.v(t);
+                }
+                j.end().key("identities").arr();
+                for (final String t : d.identities) {
                     j.v(t);
                 }
                 j.end().end();

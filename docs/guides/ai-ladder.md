@@ -68,8 +68,13 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
   (`pc/copier-effect-source-exiled-with`), which gives every fork's copied
   effect card its triggers, replacement effects and source and keeps every
   "exiled with" link, so a copied monarch draws and a copied adventure is on
-  its adventure. Search results from before and after each of D476, D477,
-  D478's addendum and D479 are not pooled.
+  its adventure; and D483 (`pc/d483-play-identity`), which lists a play once
+  by its play identity, where Forge's doubled may-play twin (an adventure's
+  creature from exile, an impulse-drawn card) took a second candidate slot and
+  a second share of the rollout budget, and where a flashback copy that keeps
+  the base's description is no longer merged with the same-named card in hand.
+  Search results from before and after each of D476, D477, D478's addendum,
+  D479 and D483 are not pooled.
 - **Anchors** (`"anchor": true`) are stock Forge: `forge-default`,
   `forge-reckless`, `forge-cautious`, `forge-experimental`. They are always in
   the pool, the scheduler always gives them a share, and `forge-default` is the

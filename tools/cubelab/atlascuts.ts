@@ -5,7 +5,8 @@
 // Three of D480's five flags change which branches phase B plays, and all three are decided here, from the branch rows
 // alone, so a test can replay them on a finished spine's rows:
 //
-//   --min-options k    the decisions are spread over those the baseline listed with k or more options; when fewer than the
+//   --min-options k    the decisions are spread over those the baseline listed with k or more plays (D483: distinct play
+//                      identities, `playCount`); when fewer than the
 //                      spine's count have k, the rest are filled from the others, spread the same way (`pickDecisions`).
 //   --screen n         after n random branches of every option, a decision whose mean value -- the mean of its options'
 //                      means -- is <= .04 or >= .96 is SETTLED: it keeps those n branches as a cheap label (`screened`), is
@@ -75,6 +76,32 @@ export function stageEnds(c: Cuts, branchRandom: number): number[] {
   return [...new Set([...(c.screen ? [c.screen] : []), ...c.earlyStop, branchRandom])].filter((x) => x <= branchRandom).sort((a, b) => a - b);
 }
 
+/**
+ * D483: how many different plays a listed decision offers -- its options' distinct play identities (the bridge's
+ * `SearchPolicy.identity`), or its token count for a listing written before D483, which has none.  `--min-options` counts
+ * this, not the tokens: two options with one token can be two plays (an Adventure card's creature and its adventure cast
+ * from the hand are both `cast:<id>`), and before D483 one play could be listed twice (Forge's doubled may-play twin).
+ * The options a decision is BRANCHED over are still every listed one, by index (`DecisionPick.k` is the token count).
+ */
+export function playCount(listing: DecisionListing): number {
+  return listing.identities?.length ? new Set(listing.identities).size : listing.tokens.length;
+}
+
+/**
+ * D483: the listed decisions that offer one play twice -- two options with the same play identity -- each as
+ * `d<n>: <identity> at options <i>, <j>`.  Empty for a listing written before D483 (no identities).  The atlas self-test
+ * fails on any: the bridge's `SearchPolicy.alternatives` lists each play once, and a twin costs a whole option's branches.
+ */
+export function repeatedPlays(all: DecisionListing[]): string[] {
+  const out: string[] = [];
+  for (const x of all) {
+    const at = new Map<string, number[]>();
+    (x.identities ?? []).forEach((id, o) => at.set(id, [...(at.get(id) ?? []), o]));
+    for (const [id, os] of at) if (os.length > 1) out.push(`d${x.d}: ${id} at options ${os.join(', ')}`);
+  }
+  return out;
+}
+
 /** Why a decision is branched: D451's spread, a fill from decisions under --min-options, or the replacement of a screened one. */
 export type PickWhy = 'spread' | 'fill' | 'replaces';
 export interface DecisionPick { d: number; k: number; why: PickWhy; replaces?: number }
@@ -87,9 +114,10 @@ export interface DecisionPick { d: number; k: number; why: PickWhy; replaces?: n
 export function pickDecisions(all: DecisionListing[], n: number | 'all', minOptions: number): DecisionPick[] {
   const want = n === 'all' ? all.length : Math.min(n, all.length);
   const k = (d: number): number => (all[d] as DecisionListing).tokens.length;
+  const plays = (d: number): number => playCount(all[d] as DecisionListing);   // D483: the --min-options count
   if (minOptions <= 1) return spread(all.length, want).map((d) => ({ d, k: k(d), why: 'spread' as const }));
-  const eligible = all.map((_, d) => d).filter((d) => k(d) >= minOptions);
-  const rest = all.map((_, d) => d).filter((d) => k(d) < minOptions);
+  const eligible = all.map((_, d) => d).filter((d) => plays(d) >= minOptions);
+  const rest = all.map((_, d) => d).filter((d) => plays(d) < minOptions);
   if (eligible.length >= want) return spread(eligible.length, want).map((j) => eligible[j] as number).map((d) => ({ d, k: k(d), why: 'spread' as const }));
   const fill = spread(rest.length, want - eligible.length).map((j) => rest[j] as number);
   return [...eligible.map((d) => ({ d, k: k(d), why: 'spread' as const })), ...fill.map((d) => ({ d, k: k(d), why: 'fill' as const }))].sort((a, b) => a.d - b.d);
@@ -102,9 +130,9 @@ export function pickDecisions(all: DecisionListing[], n: number | 'all', minOpti
  */
 export function nextDecision(all: DecisionListing[], taken: Set<number>, after: number, minOptions: number): number | null {
   const order = [...Array.from({ length: all.length - after - 1 }, (_, j) => after + 1 + j), ...Array.from({ length: after }, (_, j) => after - 1 - j)];
-  const k = (d: number): number => (all[d] as DecisionListing).tokens.length;
+  const plays = (d: number): number => playCount(all[d] as DecisionListing);   // D483: the --min-options count
   for (const pass of [true, false]) {
-    for (const d of order) if (!taken.has(d) && (k(d) >= minOptions) === pass) return d;
+    for (const d of order) if (!taken.has(d) && (plays(d) >= minOptions) === pass) return d;
   }
   return null;
 }

@@ -1536,6 +1536,38 @@ public final class AiBench {
             final forge.game.spellability.SpellAbility creature = playOf(ai, "Murderous Rider",
                     (sa) -> !sa.isAdventure() && sa.getMayPlay() == null);
             final forge.game.spellability.SpellAbility swift = playOf(ai, "Murderous Rider", (sa) -> sa.isAdventure());
+            // D483: from the hand the creature and Swift End are two plays (one token, cast:<id>, two identities):
+            // every play Forge lists of the Rider in the hand is one of the two, and the search's alternatives,
+            // listed before the targets are set (canPlaySa sets its own on the card's own Swift End), keep them apart
+            check(!mtgtable.ai.SearchPolicy.playIdentity(creature).equals(mtgtable.ai.SearchPolicy.playIdentity(swift)),
+                    "D483: the creature and Swift End from the hand are two play identities ("
+                            + mtgtable.ai.SearchPolicy.playIdentity(creature) + " / " + mtgtable.ai.SearchPolicy.playIdentity(swift) + ")");
+            final Card riderCard = creature.getHostCard();
+            final List<forge.game.spellability.SpellAbility> handRaw = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(riderCard.getAllPossibleAbilities(ai, false)), ai)) {
+                if (sa.isSpell()) {
+                    handRaw.add(sa);
+                }
+            }
+            final java.util.Set<forge.card.CardStateName> handFaces = new java.util.HashSet<>();
+            for (final forge.game.spellability.SpellAbility sa : handRaw) {
+                handFaces.add(sa.getCardStateName());
+            }
+            check(distinctIdentities(handRaw) == 2 && handFaces.size() == 2,
+                    "D483: Forge's " + handRaw.size() + " plays of the Rider in the hand are two identities, Original and Secondary: "
+                            + labelsOf(handRaw));
+            final List<forge.game.spellability.SpellAbility> handAlts = riderPlays(
+                    mtgtable.ai.SearchPolicy.alternativesForTest(ai, null), riderCard);
+            boolean creatureListed = false;
+            for (final forge.game.spellability.SpellAbility sa : handAlts) {
+                creatureListed |= mtgtable.ai.SearchPolicy.playIdentity(sa).equals(mtgtable.ai.SearchPolicy.playIdentity(creature));
+            }
+            // Swift End is listed only when Forge's per-card judgment (canPlaySa) says
+            // WillPlay, which varies from run to run; the identities above are the deterministic half
+            check(creatureListed && distinctIdentities(handAlts) == handAlts.size(),
+                    "D483: the search lists the creature from the hand, each Rider play once (" + handAlts.size()
+                            + " listed): " + labelsOf(handAlts));
             swift.resetTargets();
             swift.getTargets().add(bears);
             final forge.game.spellability.SpellAbility mc = mtgtable.ai.SearchPolicy.mapForTest(ai, creature);
@@ -1582,6 +1614,23 @@ public final class AiBench {
                         "the creature from exile [" + sa.getDescription() + "] maps to the copy's may-play cast (got "
                                 + (m == null ? null : m.getDescription()) + ")");
             }
+            // D483: Forge's two creature plays from exile are one play identity, and the search lists the Rider once
+            check(distinctIdentities(fromExile) == 1,
+                    "D483: Forge's " + fromExile.size() + " creature plays from exile are one play identity ("
+                            + mtgtable.ai.SearchPolicy.playIdentity(fromExile.get(0)) + ")");
+            final List<forge.game.spellability.SpellAbility> exileAlts = riderPlays(
+                    mtgtable.ai.SearchPolicy.alternativesForTest(ai, null), rider);
+            check(exileAlts.size() == 1 && exileAlts.get(0).getMayPlay() != null,
+                    "D483: the search lists the Rider from exile once, though Forge lists it " + fromExile.size()
+                            + " times: " + labelsOf(exileAlts));
+            for (final forge.game.spellability.SpellAbility f : fromExile) {
+                final List<forge.game.spellability.SpellAbility> again = riderPlays(
+                        mtgtable.ai.SearchPolicy.alternativesForTest(ai, f), rider);
+                check(again.isEmpty(), "D483: with Forge's pick the Rider from exile [" + f.getDescription()
+                        + "], its twin is not listed again: " + labelsOf(again));
+            }
+            check(exileAlts.size() == 1 && exileAlts.get(0).getDescription().equals(fromExile.get(0).getDescription()),
+                    "D483: the play kept is the first in Forge's order, the single suffix (" + labelsOf(exileAlts) + ")");
             Card bolt = null;
             for (final Card c : ai.getCardsIn(ZoneType.Exile)) {
                 bolt = "Lightning Bolt".equals(c.getName()) ? c : bolt;
@@ -1596,6 +1645,19 @@ public final class AiBench {
             boltPlay.setActivatingPlayer(ai);
             boltPlay.resetTargets();
             boltPlay.getTargets().add(ai.getWeakestOpponent());
+            // D483: one Bolt play by the impulse's permission (two Bolts exiled by one effect are one play)
+            final List<forge.game.spellability.SpellAbility> boltAlts = new ArrayList<>();
+            for (final forge.game.spellability.SpellAbility sa : mtgtable.ai.SearchPolicy.alternativesForTest(ai, null)) {
+                if ("Lightning Bolt".equals(sa.getHostCard().getName())) {
+                    boltAlts.add(sa);
+                }
+            }
+            int boltsExiled = 0;
+            for (final Card c : ai.getCardsIn(ZoneType.Exile)) {
+                boltsExiled += "Lightning Bolt".equals(c.getName()) ? 1 : 0;
+            }
+            check(boltAlts.size() == 1 && boltAlts.get(0).getMayPlay() != null,
+                    "D483: the search lists one Bolt play by Reckless Impulse (" + boltsExiled + " Bolts exiled): " + labelsOf(boltAlts));
             final forge.game.spellability.SpellAbility mb = mtgtable.ai.SearchPolicy.mapForTest(ai, boltPlay);
             check(mb != null && mb.getMayPlay() != null && mb.getHostCard().getGame() != g
                             && mtgtable.ai.SearchPolicy.matchKey(mb).equals(mtgtable.ai.SearchPolicy.matchKey(boltPlay)),
@@ -2547,6 +2609,36 @@ public final class AiBench {
     }
 
     /** D472: the seat's play of {@code name} that {@code which} picks, from Forge's own candidate list (originals and alternatives). */
+    /** D483: the plays in {@code alts} whose host is {@code card}. */
+    private static List<forge.game.spellability.SpellAbility> riderPlays(final List<forge.game.spellability.SpellAbility> alts,
+                                                                         final Card card) {
+        final List<forge.game.spellability.SpellAbility> out = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbility sa : alts) {
+            if (sa.getHostCard() == card) {
+                out.add(sa);
+            }
+        }
+        return out;
+    }
+
+    /** D483: how many play identities {@code l} holds. */
+    private static int distinctIdentities(final List<forge.game.spellability.SpellAbility> l) {
+        final java.util.Set<String> ids = new java.util.HashSet<>();
+        for (final forge.game.spellability.SpellAbility sa : l) {
+            ids.add(mtgtable.ai.SearchPolicy.playIdentity(sa));
+        }
+        return ids.size();
+    }
+
+    /** D483: each play as its search label and description, for a failure's text. */
+    private static List<String> labelsOf(final List<forge.game.spellability.SpellAbility> l) {
+        final List<String> out = new ArrayList<>();
+        for (final forge.game.spellability.SpellAbility sa : l) {
+            out.add(mtgtable.ai.SearchPolicy.labelForTest(sa) + " [" + sa.getDescription() + "]");
+        }
+        return out;
+    }
+
     private static forge.game.spellability.SpellAbility playOf(final Player ai, final String name,
             final java.util.function.Predicate<forge.game.spellability.SpellAbility> which) {
         final Card c = named(ai.getGame().getCardsInGame(), name);
