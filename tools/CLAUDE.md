@@ -320,6 +320,8 @@ library they own listed in any frame. A full opponent card, or a non-zero
 count with no stub, still fails under it, and every leak rule is unchanged;
 `check-redaction-selftest.mjs` holds both.
 
+An M55 decision may name an id no state frame lists when that id's latest zone event, as of the first state frame after the decision, put it on the viewer's own battlefield, in its own graveyard, or on the stack from its own zone — a token made and gone inside one resolution, a spell with no stack instance — counted as *entered between frames*, never a problem; anything else stays a failure (D481).
+
 ## The coach helper — the conventions D292 added
 
 `tools/coach-helper.mjs` lets ForgeCoach coach through the Claude Code CLI the

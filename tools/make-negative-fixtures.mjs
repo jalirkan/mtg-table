@@ -838,6 +838,99 @@ probe('m55-frame-is-not-a-state.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
+// D481: ENTERED BETWEEN FRAMES.  A permanent made and gone inside one resolution
+// (the legend rule's Boo token, J166) is in no state frame; the first state frame
+// after the decision carries its zone events onto the viewer's own battlefield and
+// into its own graveyard, and the audit counts it rather than failing it; so is
+// the viewer's own spell its latest zone event put on the stack.  The controls:
+// the same id with no events at all, an id the events deal into the opponent's
+// hand, a spell from the opponent's hand, a token whose latest move is into the
+// opponent's hand, and the viewer's own token whose events sit one state too late.
+
+/** The decision with an option naming a fresh id, and the state frames after it (in order). */
+function withFreshOption(fs) {
+  const b = withDecision(fs);
+  const ids = statesOf(fs).flatMap((f) => [...cardsOf(f.body)].map((h) => h.card.id));
+  const fresh = Math.max(...ids) + 1;
+  b.options.push(`option:${fresh}`);
+  const at = fs.findIndex((f) => f.dir === 'ai' && f.type === 'decision');
+  return { fresh, after: fs.slice(at + 1).filter((f) => f.type === 'state') };
+}
+const bornAndGone = (id, seat) => [
+  { kind: 'zone', cardId: id, from: null, to: { zone: 'battlefield', player: seat } },
+  { kind: 'zone', cardId: id, from: { zone: 'battlefield', player: seat }, to: { zone: 'graveyard', player: seat } },
+];
+
+{
+  const name = 'm55-option-entered-between-frames.jsonl';
+  const fs = slice();
+  const { fresh, after } = withFreshOption(fs);
+  after[0].body.events.push(...bornAndGone(fresh, header.seat));
+  write(name, fs);
+  manifest.push({
+    file: name, level: 'pass', expect: 'PASS',
+    why: 'D481: an option naming the viewer\'s own token made and gone between two state frames -- the next state frame\'s zone events put it on the viewer\'s battlefield and in its graveyard; counted, not a problem',
+  });
+  console.log(`  PASS  ${name}  (a token entered between frames, no defect)`);
+}
+
+probe('m55-option-never-shown.jsonl',
+  'D481: an option naming an id no state frame shows and no zone event moves into the viewer\'s public zones is still a failure',
+  'which its state frame does not show',
+  (fs) => { withFreshOption(fs); });
+
+probe('m55-option-entered-the-opponent-hand.jsonl',
+  'D481: an id the next state frame\'s events deal into the OPPONENT\'s hand is hidden -- a decision naming it is a leak',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, after } = withFreshOption(fs);
+    const them = header.decks.find((d) => d.player !== header.seat).player;
+    after[0].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'library', player: them }, to: { zone: 'hand', player: them } });
+  });
+
+// The spell half (s02's Tear Asunder): the viewer's own card moved from its own hand
+// to the stack, in the decision's OWN state frame, with no stack instance -- the
+// latest zone event, looked up backwards from the first state after the decision.
+{
+  const name = 'm55-option-cast-between-frames.jsonl';
+  const fs = slice();
+  const { fresh } = withFreshOption(fs);
+  statesOf(fs)[0].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'hand', player: header.seat }, to: { zone: 'stack', player: null } });
+  write(name, fs);
+  manifest.push({
+    file: name, level: 'pass', expect: 'PASS',
+    why: 'D481: an option naming the viewer\'s own spell that no zone lists -- its latest zone event moved it from the viewer\'s hand to the stack; counted, not a problem',
+  });
+  console.log(`  PASS  ${name}  (the viewer's own spell on the stack between frames, no defect)`);
+}
+
+probe('m55-option-cast-from-the-opponent-hand.jsonl',
+  'D481: a card moved to the stack from ANOTHER seat\'s hand is not vouched for -- it can be cast face down',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh } = withFreshOption(fs);
+    const them = header.decks.find((d) => d.player !== header.seat).player;
+    statesOf(fs)[0].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'hand', player: them }, to: { zone: 'stack', player: null } });
+  });
+
+probe('m55-option-entered-then-went-to-the-opponent-hand.jsonl',
+  'D481: only the LATEST zone event counts -- a token on the viewer\'s battlefield that then went to the opponent\'s hand is hidden',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, after } = withFreshOption(fs);
+    const them = header.decks.find((d) => d.player !== header.seat).player;
+    after[0].body.events.push(bornAndGone(fresh, header.seat)[0],
+      { kind: 'zone', cardId: fresh, from: { zone: 'battlefield', player: header.seat }, to: { zone: 'hand', player: them } });
+  });
+
+probe('m55-option-entered-a-state-too-late.jsonl',
+  'D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, after } = withFreshOption(fs);
+    after[1].body.events.push(...bornAndGone(fresh, header.seat));
+  });
+
 // ---------------------------------------------------------------------------
 // Amendment M57 (D358): play exploration.  An exploring recording's header
 // carries `playExplore` (epsilon, closeCall, opening); a decision the explorer

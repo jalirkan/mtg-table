@@ -2589,7 +2589,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       illegalDamage = null;
     }
     if (Array.isArray(f.body?.players)) {
-      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat) });
+      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat), moves: zoneMoves(f.body) });
       stateOrder.push(i - 1);
     }
     if (typeof f.body?.turn === 'number' && f.body.turn > stats.maxTurn) stats.maxTurn = f.body.turn;
@@ -2938,7 +2938,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 
   // --- M55 / D347: an AI seat's decision records, its OWN recording only ---
   if (aiLines.length > 0) {
-    for (const complaint of auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog)) {
+    for (const complaint of auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats)) {
       if (partial && complaint.curable && !logEnded) {
         // D3 allows the NEXT state frame's cards too, and a prefix may not hold it yet.
         const l = undecided.get(complaint.lineNo) ?? [];
@@ -3102,7 +3102,11 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //   D3  the record points at a `state` frame earlier in the file (`frame`, its
 //       index in frames[], and `stateSeq`, its seq), and every card id it names
 //       is a card that frame -- or the next state frame -- shows the viewer
-//       face up or as its own; never a stub's id, never a library card;
+//       face up or as its own; never a stub's id, never a library card
+//       (D481: or the viewer's own object no frame lists, whose latest zone
+//       event, as of the first state frame after the decision, put it on its
+//       own battlefield, in its own graveyard, or on the stack from its own
+//       zone -- counted);
 //   D4  the answer is one of the options.
 
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
@@ -3143,6 +3147,27 @@ function visibleIds(body, seat) {
   return ids;
 }
 
+/** D481: a state's zone events, {cardId, from, to}, in order (the decision audit reads them back). */
+function zoneMoves(body) {
+  return (Array.isArray(body.events) ? body.events : [])
+    .filter((e) => e?.kind === 'zone' && typeof e.cardId === 'number');
+}
+
+/**
+ * D481: does a card's latest zone event put it where the viewer sees it as its
+ * own?  Onto the viewer's OWN battlefield or into its OWN graveyard (`to.player`
+ * the viewer's seat), both public whatever the card is; or onto the stack FROM a
+ * zone of the viewer's own (`from.player` the viewer's seat: its own spell -- a
+ * stack zone event names no player, so the from side is what says whose it is).
+ * Exile is left out (a card can go there face down), and so is a spell from
+ * another seat's zone (it can be cast face down).
+ */
+function movedToViewersOwnPublicZone(e, seat) {
+  if (!e?.to) return false;
+  if (e.to.player === seat && (e.to.zone === 'battlefield' || e.to.zone === 'graveyard')) return true;
+  return e.to.zone === 'stack' && e.from?.player === seat;
+}
+
 /** The card ids (not player ids) a token names. */
 function tokenCardIds(t) {
   const m = /^[a-z]+:(.*)$/.exec(t);
@@ -3150,7 +3175,7 @@ function tokenCardIds(t) {
   return m[1].split(/[,>]/).filter((x) => !x.startsWith('p')).map((x) => Number(x.split('#')[0]));
 }
 
-function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
+function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats = {}) {
   const out = [];
   const bad = (lineNo, msg, curable = false) => out.push({ lineNo, msg: `${msg} (M55, D347)`, curable });
   const seat = header.seat;
@@ -3265,9 +3290,41 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
     if (st.seq !== b.stateSeq) bad(lineNo, `decision ${b.n} stateSeq ${b.stateSeq} but frame ${b.frame} is state seq ${st.seq}`);
     const nx = nextState(b.frame);
     const allowed = new Set([...st.ids, ...(nx !== undefined ? stateAt.get(nx).ids : [])]);
+    /*
+     * D481: ENTERED BETWEEN FRAMES.  The forwarder's clock snapshots state at its
+     * boundaries, not inside a resolution, so an object can be where no state
+     * frame lists it.  Minsc & Boo's upkeep trigger makes a new legendary Boo
+     * token (or Springheart Nantuko a token copy of Zirda), the legend rule asks
+     * which to keep (this decision), and the one let go is in the graveyard --
+     * where a token ceases to exist -- before the next snapshot.  And a spell the
+     * viewer cast while another was being cast (Tear Asunder, then Take It Back
+     * targeting it) sits in the stack zone with no stack instance, so neither
+     * `stackCards` nor a zone lists it.  The zone events record both: the id's
+     * LATEST zone event, in the state frames up to and including the first one
+     * after the decision (the first with a greater seq), moves it onto the
+     * viewer's own battlefield or into its own graveyard, or onto the stack from
+     * a zone of the viewer's own.  Such an id is the viewer's own object in a
+     * public zone, so it is counted and named, never a problem.  An id that never
+     * appears, whose latest move is into another seat's zone, a hand or a library,
+     * or whose only move comes in a later state frame, still fails as below.
+     * (J166, 2026-10-25: 1,891 ids in 1,395 legacy-spine logs, and one peasant
+     * log's spell.)
+     */
+    const after = stateOrder.find((k) => k > index);
+    /** The id's latest zone event in the state frames up to and including `after`. */
+    const latestMove = (id) => {
+      if (after === undefined) return undefined;
+      for (let k = stateOrder.indexOf(after); k >= 0; k--) {
+        const ms = stateAt.get(stateOrder[k]).moves;
+        for (let m = ms.length - 1; m >= 0; m--) if (ms[m].cardId === id) return ms[m];
+      }
+      return undefined;
+    };
     for (const t of tokens) {
       for (const id of tokenCardIds(t)) {
-        if (!allowed.has(id)) {
+        if (!allowed.has(id) && movedToViewersOwnPublicZone(latestMove(id), seat)) {
+          stats.enteredBetweenFrames = (stats.enteredBetweenFrames ?? 0) + 1;
+        } else if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
             'a stub\'s id, a library card or another seat\'s hidden card is never an option', nx === undefined);
         }
@@ -3466,6 +3523,10 @@ function main() {
     }
     if (stats.tables > 0) {
       console.log(`      table frames=${stats.tables} (exact key sets, amendment M59: presence, the decision clock, claimWin)`);
+    }
+    if (stats.enteredBetweenFrames > 0) {
+      console.log(`      M55 decision ids entered between frames=${stats.enteredBetweenFrames} (D481: the viewer's own `
+        + 'object in no state frame, whose latest zone event put it on its own battlefield, in its own graveyard, or on the stack from its own zone)');
     }
     // M49.  Whether this file carries the status layer's keywords -- on every
     // full card, or (a recording older than M49) on none.

@@ -107,6 +107,18 @@ const REQUIRED = [
   ['m55-chosen-is-not-an-option.jsonl', 'fail'],
   ['m55-frame-is-not-a-state.jsonl', 'fail'],
   ['m55-decision-in-a-seat-recording.jsonl', 'fail'],
+  // D481: a token made and gone between two state frames, and the viewer's own
+  // spell on the stack with no stack instance, each vouched for by its latest
+  // zone event; the controls are no events, the opponent's hand, a spell from the
+  // opponent's hand, a latest move into the opponent's hand, and events one state
+  // too late.
+  ['m55-option-entered-between-frames.jsonl', 'pass'],
+  ['m55-option-never-shown.jsonl', 'fail'],
+  ['m55-option-entered-the-opponent-hand.jsonl', 'fail'],
+  ['m55-option-entered-a-state-too-late.jsonl', 'fail'],
+  ['m55-option-cast-between-frames.jsonl', 'pass'],
+  ['m55-option-cast-from-the-opponent-hand.jsonl', 'fail'],
+  ['m55-option-entered-then-went-to-the-opponent-hand.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
   ['m57-explore-present.jsonl', 'pass'],

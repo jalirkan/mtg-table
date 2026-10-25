@@ -288,6 +288,48 @@
     "why": "amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log"
   },
   {
+    "file": "m55-option-entered-between-frames.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D481: an option naming the viewer's own token made and gone between two state frames -- the next state frame's zone events put it on the viewer's battlefield and in its graveyard; counted, not a problem"
+  },
+  {
+    "file": "m55-option-never-shown.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: an option naming an id no state frame shows and no zone event moves into the viewer's public zones is still a failure"
+  },
+  {
+    "file": "m55-option-entered-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: an id the next state frame's events deal into the OPPONENT's hand is hidden -- a decision naming it is a leak"
+  },
+  {
+    "file": "m55-option-cast-between-frames.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D481: an option naming the viewer's own spell that no zone lists -- its latest zone event moved it from the viewer's hand to the stack; counted, not a problem"
+  },
+  {
+    "file": "m55-option-cast-from-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: a card moved to the stack from ANOTHER seat's hand is not vouched for -- it can be cast face down"
+  },
+  {
+    "file": "m55-option-entered-then-went-to-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: only the LATEST zone event counts -- a token on the viewer's battlefield that then went to the opponent's hand is hidden"
+  },
+  {
+    "file": "m55-option-entered-a-state-too-late.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not"
+  },
+  {
     "file": "m57-explore-present.jsonl",
     "level": "pass",
     "expect": "PASS",
