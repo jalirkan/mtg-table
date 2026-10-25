@@ -1,0 +1,1282 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "tools/ai-bench/decks/sets/pauper-900000005-A.dck",
+    "deckB": "tools/ai-bench/decks/sets/pauper-900000005-B.dck",
+    "seed": 464,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 40,
+    "decisions": 16,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 25,
+      "first": "A",
+      "decisionsListed": 32
+    },
+    "decisions": [
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:24",
+            "label": "Generous Ent",
+            "random": {
+              "n": 200,
+              "wins": 58,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.29,
+              "lo": 0.2315,
+              "hi": 0.3564
+            },
+            "forge": {
+              "n": 40,
+              "wins": 33,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.825,
+              "lo": 0.6805,
+              "hi": 0.9125
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 17,
+              "draws": 0,
+              "losses": 183,
+              "mean": 0.085,
+              "lo": 0.0537,
+              "hi": 0.1319
+            },
+            "forge": {
+              "n": 40,
+              "wins": 19,
+              "draws": 0,
+              "losses": 21,
+              "mean": 0.475,
+              "lo": 0.3294,
+              "hi": 0.625
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 31,
+              "draws": 0,
+              "losses": 169,
+              "mean": 0.155,
+              "lo": 0.1114,
+              "hi": 0.2116
+            },
+            "forge": {
+              "n": 40,
+              "wins": 34,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.85,
+              "lo": 0.7093,
+              "hi": 0.9294
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Gurmag Angler",
+            "random": {
+              "n": 200,
+              "wins": 58,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.29,
+              "lo": 0.2315,
+              "hi": 0.3564
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.775,
+              "lo": 0.625,
+              "hi": 0.8768
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:1",
+            "label": "Night's Whisper",
+            "random": {
+              "n": 200,
+              "wins": 27,
+              "draws": 0,
+              "losses": 173,
+              "mean": 0.135,
+              "lo": 0.0945,
+              "hi": 0.1893
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.09,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.175,
+          "best": 2
+        },
+        "rho": 0.6669,
+        "rhoLo": 0.3,
+        "rhoHi": 0.9747,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:19",
+            "label": "Mist Raven",
+            "random": {
+              "n": 200,
+              "wins": 52,
+              "draws": 0,
+              "losses": 148,
+              "mean": 0.26,
+              "lo": 0.2041,
+              "hi": 0.3249
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 54,
+              "draws": 1,
+              "losses": 145,
+              "mean": 0.2725,
+              "lo": 0.2155,
+              "hi": 0.3381
+            },
+            "forge": {
+              "n": 40,
+              "wins": 28,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.7,
+              "lo": 0.5457,
+              "hi": 0.8193
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 38,
+              "draws": 0,
+              "losses": 162,
+              "mean": 0.19,
+              "lo": 0.1417,
+              "hi": 0.25
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Night's Whisper",
+            "random": {
+              "n": 200,
+              "wins": 44,
+              "draws": 0,
+              "losses": 156,
+              "mean": 0.22,
+              "lo": 0.1682,
+              "hi": 0.2824
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0125,
+          "regretLo": 0,
+          "regretHi": 0.0851,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.175,
+          "best": 1
+        },
+        "rho": 0.6325,
+        "rhoLo": -0.8,
+        "rhoHi": 0.9487,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:21",
+            "label": "attack Gurmag Angler",
+            "random": {
+              "n": 200,
+              "wins": 74,
+              "draws": 0,
+              "losses": 126,
+              "mean": 0.37,
+              "lo": 0.3061,
+              "hi": 0.4388
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 45,
+              "draws": 0,
+              "losses": 155,
+              "mean": 0.225,
+              "lo": 0.1726,
+              "hi": 0.2877
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:13,21",
+            "label": "attack Gurmag Angler+Archaeomancer",
+            "random": {
+              "n": 200,
+              "wins": 76,
+              "draws": 0,
+              "losses": 124,
+              "mean": 0.38,
+              "lo": 0.3156,
+              "hi": 0.4489
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.09,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "rho": 0.5,
+        "rhoLo": -0.5,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 23,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Night's Whisper",
+            "random": {
+              "n": 200,
+              "wins": 110,
+              "draws": 0,
+              "losses": 90,
+              "mean": 0.55,
+              "lo": 0.4808,
+              "hi": 0.6174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 27,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.675,
+              "lo": 0.5202,
+              "hi": 0.7992
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 106,
+              "draws": 0,
+              "losses": 94,
+              "mean": 0.53,
+              "lo": 0.4609,
+              "hi": 0.598
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0601,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:19,21",
+            "label": "attack Mist Raven+Gurmag Angler",
+            "random": {
+              "n": 200,
+              "wins": 106,
+              "draws": 0,
+              "losses": 94,
+              "mean": 0.53,
+              "lo": 0.4609,
+              "hi": 0.598
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 81,
+              "draws": 0,
+              "losses": 119,
+              "mean": 0.405,
+              "lo": 0.3394,
+              "hi": 0.4742
+            },
+            "forge": {
+              "n": 40,
+              "wins": 33,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.825,
+              "lo": 0.6805,
+              "hi": 0.9125
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:13,19,21,40",
+            "label": "attack Mist Raven+Gurmag Angler+Archaeomancer+Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 116,
+              "draws": 0,
+              "losses": 84,
+              "mean": 0.58,
+              "lo": 0.5107,
+              "hi": 0.6463
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:21",
+            "label": "attack Gurmag Angler",
+            "random": {
+              "n": 200,
+              "wins": 91,
+              "draws": 0,
+              "losses": 109,
+              "mean": 0.455,
+              "lo": 0.3875,
+              "hi": 0.5242
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:19",
+            "label": "attack Mist Raven",
+            "random": {
+              "n": 200,
+              "wins": 92,
+              "draws": 0,
+              "losses": 108,
+              "mean": 0.46,
+              "lo": 0.3923,
+              "hi": 0.5292
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:13,19,21",
+            "label": "attack Mist Raven+Gurmag Angler+Archaeomancer",
+            "random": {
+              "n": 200,
+              "wins": 119,
+              "draws": 0,
+              "losses": 81,
+              "mean": 0.595,
+              "lo": 0.5258,
+              "hi": 0.6606
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:19,21,40",
+            "label": "attack Mist Raven+Gurmag Angler+Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 109,
+              "draws": 0,
+              "losses": 91,
+              "mean": 0.545,
+              "lo": 0.4758,
+              "hi": 0.6125
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.065,
+          "regretLo": 0.005,
+          "regretHi": 0.1451,
+          "best": 5
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "rho": -0.2546,
+        "rhoLo": -0.7274,
+        "rhoHi": 0.2164,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 27,
+        "kind": "p",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:28",
+            "label": "Thorn of the Black Rose",
+            "random": {
+              "n": 200,
+              "wins": 160,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.8,
+              "lo": 0.7391,
+              "hi": 0.8495
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 157,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.785,
+              "lo": 0.723,
+              "hi": 0.8363
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:14",
+            "label": "Flayer Husk",
+            "random": {
+              "n": 200,
+              "wins": 168,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.84,
+              "lo": 0.7829,
+              "hi": 0.8843
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.105,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.125,
+          "best": 1
+        },
+        "rho": -0.5,
+        "rhoLo": -1,
+        "rhoHi": 0.866,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 29,
+        "kind": "a",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:21",
+            "label": "attack Gurmag Angler",
+            "random": {
+              "n": 200,
+              "wins": 110,
+              "draws": 0,
+              "losses": 90,
+              "mean": 0.55,
+              "lo": 0.4808,
+              "hi": 0.6174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 117,
+              "draws": 0,
+              "losses": 83,
+              "mean": 0.585,
+              "lo": 0.5157,
+              "hi": 0.6511
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:13,19,21,40",
+            "label": "attack Gurmag Angler+Archaeomancer+Mist Raven+Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 140,
+              "draws": 0,
+              "losses": 60,
+              "mean": 0.7,
+              "lo": 0.6332,
+              "hi": 0.7593
+            },
+            "forge": {
+              "n": 40,
+              "wins": 2,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.05,
+              "lo": 0.0138,
+              "hi": 0.165
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:13,21",
+            "label": "attack Gurmag Angler+Archaeomancer",
+            "random": {
+              "n": 200,
+              "wins": 131,
+              "draws": 0,
+              "losses": 69,
+              "mean": 0.655,
+              "lo": 0.5868,
+              "hi": 0.7174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 15,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.375,
+              "lo": 0.2422,
+              "hi": 0.5297
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:19,21",
+            "label": "attack Gurmag Angler+Mist Raven",
+            "random": {
+              "n": 200,
+              "wins": 121,
+              "draws": 0,
+              "losses": 79,
+              "mean": 0.605,
+              "lo": 0.5359,
+              "hi": 0.6702
+            },
+            "forge": {
+              "n": 40,
+              "wins": 22,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.55,
+              "lo": 0.3983,
+              "hi": 0.6929
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:21,40",
+            "label": "attack Gurmag Angler+Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 124,
+              "draws": 0,
+              "losses": 76,
+              "mean": 0.62,
+              "lo": 0.5511,
+              "hi": 0.6844
+            },
+            "forge": {
+              "n": 40,
+              "wins": 13,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.325,
+              "lo": 0.2008,
+              "hi": 0.4798
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.15,
+          "regretLo": 0.095,
+          "regretHi": 0.21,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.125,
+          "regretLo": 0,
+          "regretHi": 0.3,
+          "best": 1
+        },
+        "rho": -0.7714,
+        "rhoLo": -0.9562,
+        "rhoHi": -0.2571,
+        "sameBest": false,
+        "complete": true
+      },
+      {
+        "d": 31,
+        "kind": "a",
+        "turn": 25,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:19",
+            "label": "attack Mist Raven",
+            "random": {
+              "n": 200,
+              "wins": 135,
+              "draws": 0,
+              "losses": 65,
+              "mean": 0.675,
+              "lo": 0.6073,
+              "hi": 0.7361
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 117,
+              "draws": 0,
+              "losses": 83,
+              "mean": 0.585,
+              "lo": 0.5157,
+              "hi": 0.6511
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:13,19,40,170",
+            "label": "attack Mist Raven+Archaeomancer+Crypt Rats+Phyrexian Germ Token",
+            "random": {
+              "n": 200,
+              "wins": 140,
+              "draws": 0,
+              "losses": 60,
+              "mean": 0.7,
+              "lo": 0.6332,
+              "hi": 0.7593
+            },
+            "forge": {
+              "n": 40,
+              "wins": 29,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.725,
+              "lo": 0.5717,
+              "hi": 0.8389
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:13,19",
+            "label": "attack Mist Raven+Archaeomancer",
+            "random": {
+              "n": 200,
+              "wins": 138,
+              "draws": 0,
+              "losses": 62,
+              "mean": 0.69,
+              "lo": 0.6228,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:19,40",
+            "label": "attack Mist Raven+Crypt Rats",
+            "random": {
+              "n": 200,
+              "wins": 135,
+              "draws": 0,
+              "losses": 65,
+              "mean": 0.675,
+              "lo": 0.6073,
+              "hi": 0.7361
+            },
+            "forge": {
+              "n": 40,
+              "wins": 28,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.7,
+              "lo": 0.5457,
+              "hi": 0.8193
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:19,170",
+            "label": "attack Mist Raven+Phyrexian Germ Token",
+            "random": {
+              "n": 200,
+              "wins": 138,
+              "draws": 0,
+              "losses": 62,
+              "mean": 0.69,
+              "lo": 0.6228,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.065,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "rho": -0.0758,
+        "rhoLo": -0.6172,
+        "rhoHi": 0.493,
+        "sameBest": false,
+        "complete": true
+      }
+    ],
+    "agreement": {
+      "decisions": 8,
+      "meanRho": 0.1497,
+      "meanRhoInterval": [
+        -0.2628,
+        0.5337
+      ],
+      "sameBest": 2,
+      "sameBestInterval": [
+        0.0715,
+        0.5907
+      ]
+    },
+    "disagreeMost": [
+      {
+        "d": 29,
+        "kind": "a",
+        "turn": 23,
+        "rho": -0.7714,
+        "rhoInterval": [
+          -0.9562,
+          -0.2571
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 1
+      },
+      {
+        "d": 27,
+        "kind": "p",
+        "turn": 21,
+        "rho": -0.5,
+        "rhoInterval": [
+          -1,
+          0.866
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 1
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 21,
+        "rho": -0.2546,
+        "rhoInterval": [
+          -0.7274,
+          0.2164
+        ],
+        "sameBest": false,
+        "bestRandom": 5,
+        "bestForge": 0
+      },
+      {
+        "d": 31,
+        "kind": "a",
+        "turn": 25,
+        "rho": -0.0758,
+        "rhoInterval": [
+          -0.6172,
+          0.493
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 19,
+        "rho": 0.5,
+        "rhoInterval": [
+          -0.5,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      }
+    ],
+    "branchGames": 8640,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 0,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2172,
+      "forge": 1529
+    },
+    "standInsMax": 1,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 8,
+    "rows": 193478,
+    "gamesIdChecked": 8641,
+    "frameLogs": 17282,
+    "frameLogsFailed": 0,
+    "redactionMs": 479524,
+    "forks": 8640,
+    "forkProblems": 0,
+    "leakChecks": 16,
+    "leaks": 0,
+    "leakControlsMoved": 16,
+    "guardrails": {
+      "logs": 14400,
+      "priorityDecisions": 632792,
+      "landOffered": 40393,
+      "landTaken": 40393,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 0,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 9002,
+      "zeroXLeftOut": 50126,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 8640,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 8640,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 8640,
+      "errored": 0,
+      "threshold": 0.25,
+      "byError": [],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 101953
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 1,
+      "units": 80,
+      "branchGames": 8640,
+      "ms": 3197773,
+      "workers": 6
+    },
+    "wallMs": 3197774,
+    "jobs": 6
+  }
+}

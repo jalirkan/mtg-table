@@ -1,0 +1,72 @@
+{
+ "oldRows": 8640,
+ "newRows": 8640,
+ "reproducesOld": 1,
+ "oldCappedOrTimedOut": 37,
+ "i_shift": {
+  "random": {
+   "options": 36,
+   "meanAbsShift": 0.0602,
+   "noiseFloor": 0.0261,
+   "meanSignedShift": -0.0491,
+   "maxAbsShift": -0.13,
+   "maxAt": "d21 o0 attack:21 (attack Gurmag Angler)",
+   "maxInterval": [
+    -0.21,
+    -0.05
+   ],
+   "clear": 17,
+   "clearList": [
+    "d17 o0 Generous Ent -0.1150 [-0.19, -0.04]",
+    "d17 o1 pass -0.1050 [-0.16, -0.05]",
+    "d17 o4 Night's Whisper -0.0900 [-0.155, -0.025]",
+    "d19 o0 Mist Raven -0.1250 [-0.195, -0.055]",
+    "d19 o1 pass -0.0875 [-0.155, -0.02]",
+    "d19 o2 Crypt Rats -0.1100 [-0.18, -0.04]",
+    "d19 o3 Night's Whisper -0.0800 [-0.15, -0.01]",
+    "d21 o0 attack Gurmag Angler -0.1300 [-0.21, -0.05]",
+    "d21 o1 attack none -0.1250 [-0.19, -0.06]",
+    "d25 o1 attack none -0.0850 [-0.155, -0.015]",
+    "d25 o4 attack Mist Raven -0.0850 [-0.155, -0.015]",
+    "d31 o0 attack Mist Raven -0.0650 [-0.115, -0.015]",
+    "d31 o1 attack none -0.0900 [-0.145, -0.035]",
+    "d31 o2 attack Mist Raven+Archaeomancer+Crypt Rats+Phyrexian Germ Token -0.0600 [-0.115, -0.005]",
+    "d31 o3 attack Mist Raven+Archaeomancer -0.0700 [-0.125, -0.015]",
+    "d31 o4 attack Mist Raven+Crypt Rats -0.0700 [-0.125, -0.015]",
+    "d31 o5 attack Mist Raven+Phyrexian Germ Token -0.0700 [-0.125, -0.015]"
+   ]
+  },
+  "forge": {
+   "options": 36,
+   "meanAbsShift": 0.059,
+   "noiseFloor": 0.0391,
+   "meanSignedShift": 0.0118,
+   "maxAbsShift": -0.225,
+   "maxAt": "d17 o1 pass (pass)",
+   "maxInterval": [
+    -0.4,
+    -0.05
+   ],
+   "clear": 3,
+   "clearList": [
+    "d17 o1 pass -0.2250 [-0.4, -0.05]",
+    "d21 o2 attack Gurmag Angler+Archaeomancer +0.2000 [0.075, 0.35]",
+    "d25 o4 attack Mist Raven +0.1000 [0.025, 0.2]"
+   ]
+  }
+ },
+ "ii_confidentChanged": [
+  "d25 False -> True"
+ ],
+ "iii_bestRandomFlips": [
+  "d19 o0 -> o1",
+  "d21 o0 -> o2",
+  "d23 o1 -> o0",
+  "d25 o6 -> o5"
+ ],
+ "iv_j162Confident": {
+  "d10": "not replayed (forked before the Monarch existed in the game; J162 label stands)",
+  "d12": "not replayed (forked before the Monarch existed in the game; J162 label stands)",
+  "d29": "survives (regret 0.16 [0.105, 0.215] -> 0.15 [0.095, 0.21])"
+ }
+}
