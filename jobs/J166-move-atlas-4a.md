@@ -1,5 +1,5 @@
-id: J165
-title: The move atlas, rung 4a -- the cut design (D480) in the wide shape, on decks nobody designed: 13 spines, each a pair of random library decks of one band drawn as the census draws them (D447; deck seeds 2001-2013, bands cycled pauper, peasant, legacy, powered), the baseline game Forge vs Forge at a fresh game seed (2101-2113), 8 decisions a spine from those with 3+ options, every option 200 times random with the 25-branch screen and early stopping at 50/100/150, the Forge map at 40 on spines 1, 7 and 13 only, the checks on the workers; the labels marked `training: true` with `pool: "random-<band>"`, and a held-out VALIDATION draw (13 more pairs, deck seeds 2201-2213) written as deck files only and never branched; a new data folder lab-j165; on 325c2dd8. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new deck population, tool and design, and are never pooled with J156's, J157's, J158's or J162's
+id: J166
+title: The move atlas, rung 4a -- the cut design (D480) in the wide shape, on decks nobody designed: 13 spines, each a pair of random library decks of one band drawn as the census draws them (D447; deck seeds 2001-2013, bands cycled pauper, peasant, legacy, powered), the baseline game Forge vs Forge at a fresh game seed (2101-2113), 8 decisions a spine from those with 3+ options, every option 200 times random with the 25-branch screen and early stopping at 50/100/150, the Forge map at 40 on spines 1, 7 and 13 only, the checks on the workers; the labels marked `training: true` with `pool: "random-<band>"`, and a held-out VALIDATION draw (13 more pairs, deck seeds 2201-2213) written as deck files only and never branched; a new data folder lab-j166; on 325c2dd8. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new deck population, tool and design, and are never pooled with J156's, J157's, J158's or J162's
 public_title: Move atlas 4a: the cut design on random library decks
 public_est: ~9 to 11 h
 public_decides: None by itself; first trainable labels on random library decks, cut savings
@@ -10,22 +10,22 @@ mem_per_worker_gb: 2.7
 repos: mtg-table@325c2dd8 (origin/main: the merge of #207, D480 the atlas's cut design, on D476 the may-play fork, D477 Karn's restart, D478 the capped branch, D479 the copier's carry pass; merged == 1, checked by the pilot)
 decides: nothing by itself. Rung 4a of the atlas ladder: the first night whose labels a future model MAY train on (Justin, 2026-10-24 19:35-19:50 EDT), so the decks are nobody's -- random library decks by band, as the census draws them -- and a validation set drawn the same way is set aside, never branched. It measures, on the cut design D480 built from the atlas review, labels and confident labels per spine and per night, what the cuts actually save (branch time against a projection without them; the checks on the workers; the barriers' idle tail D480 did not measure), and the tool's counters on 26 decks no job has played
 hypothesis: none to confirm about the maps. The sizing has a registered expectation: the atlas review (2026-10-24, section 5) put design B's cuts in C's wide shape with k >= 3 at ~25-27 confident labels a 7-worker 10-h night with the Forge map on every spine (~30-32 with it on 1 spine in 6), from six cube-pair spines; random library decks are a new population, so this is the sizing read, not a prediction. The cuts are expected to save 18-20% of branch time (the review's replay; D480's 20.3%) and the parallel checks to take the checks from ~19% of a spine's wall toward ~6%. One candidate is read on every spine with a Forge map, (iv) C1 "cast now where Forge passes", which HELD on four of the six current-tool cube spines (J158, J162)
-rule: D451 (method; no outcome rule) with D458/D462/D466 (G5), D459, D465, D466, D467, D470, D471 (G6), D472, D476, D477, D478, D479 and D480 (the cuts; amends D451 points 5-7); D447 (the deck draw, unchanged). Pre-registered here, before any J165 data: the label contract and reads (a)-(c) computed by var/lab-j165-local/bin/labels.py, the agreement reads (i)-(vi) by var/lab-j165-local/bin/reads.py, the savings by var/lab-j165-local/bin/cuts.py and the tool's counters by var/lab-j165-local/bin/metrics.py, all exactly as written in the pilot. A candidate of (iv) HOLDS on a spine only if its point is > 0 and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. Every other difference is a candidate (D447 point 9). No read carries any other verdict
+rule: D451 (method; no outcome rule) with D458/D462/D466 (G5), D459, D465, D466, D467, D470, D471 (G6), D472, D476, D477, D478, D479 and D480 (the cuts; amends D451 points 5-7); D447 (the deck draw, unchanged). Pre-registered here, before any J166 data: the label contract and reads (a)-(c) computed by var/lab-j166-local/bin/labels.py, the agreement reads (i)-(vi) by var/lab-j166-local/bin/reads.py, the savings by var/lab-j166-local/bin/cuts.py and the tool's counters by var/lab-j166-local/bin/metrics.py, all exactly as written in the pilot. A candidate of (iv) HOLDS on a spine only if its point is > 0 and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. Every other difference is a candidate (D447 point 9). No read carries any other verdict
 followup: morning-read
 est: ~9 h at 7 workers, ~10.5 h at 6 (range 8-12 h; sizing below): pilot ~20 min; 13 spines ~40 min each at 7 workers (the three with a Forge map ~45), the checks on the workers included; report ~2 min. Disk ~15 GB on the lab data folder /home/justin-a/code/lab/data (~1.1 GB a spine: J162's 16-decision spines were 1.5-2.5 GB)
 resumable: yes
 timeout: 3h
-progress: lines /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/branches.jsonl of 92000
-metrics: branches = lines /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/branches.jsonl
-metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/branches.jsonl "\"engineError\":true"
-metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/branches.jsonl "\"timedOut\":true"
-metrics: unavailable = count /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/branches.jsonl "\"unavailable\":\""
-metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/units.jsonl "\"ok\":false"
-metrics: payfail = count /home/justin-a/code/lab/data/lab-j165/b-*/phaseB/logs/*.log "Didn't find what to pay for"
-metrics: armed = sh: cat var/lab-j165-local/armed.txt 2>/dev/null || echo 0
-metrics: atlas = sh: python3 -I var/lab-j165-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
+progress: lines /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/branches.jsonl of 92000
+metrics: branches = lines /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/branches.jsonl
+metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/branches.jsonl "\"engineError\":true"
+metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/branches.jsonl "\"timedOut\":true"
+metrics: unavailable = count /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/branches.jsonl "\"unavailable\":\""
+metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/units.jsonl "\"ok\":false"
+metrics: payfail = count /home/justin-a/code/lab/data/lab-j166/b-*/phaseB/logs/*.log "Didn't find what to pay for"
+metrics: armed = sh: cat var/lab-j166-local/armed.txt 2>/dev/null || echo 0
+metrics: atlas = sh: python3 -I var/lab-j166-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
 metrics: data_free_gb = sh: python3 -c "import shutil; print(round(shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9, 1))" 2>/dev/null || echo 0
-metrics: data_used_gb = sh: python3 -c "import os; print(round(sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk('/home/justin-a/code/lab/data/lab-j165') for f in fs) / 1e9, 2))" 2>/dev/null || echo 0
+metrics: data_used_gb = sh: python3 -c "import os; print(round(sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk('/home/justin-a/code/lab/data/lab-j166') for f in fs) / 1e9, 2))" 2>/dev/null || echo 0
 headline: branches, atlas.spinesDone, atlas.branchedInFull, atlas.screened, atlas.stoppedOptions, atlas.labels, atlas.confident, atlas.confidentPer7Worker10hNight, atlas.timeoutShare, atlas.effectSourceNullBranches, atlas.exileLinksLostBranches, atlas.branchRestarted, atlas.branchCapped, atlas.problems
 
 **Why.** Justin's rules for the atlas's next rung (2026-10-24, 19:35-19:50 EDT, binding): a future model MAY train
@@ -57,7 +57,7 @@ row carries its `sha`, `contract` and `pool`, the split keys for rung 4 and anyo
 
 **The draw is D447's, unchanged** (`docs/decisions/D447-deck-census.md`; `docs/guides/cube-lab.md`, *The deck
 census*; J149's night drew 2,500 decks a band at seeds 1501-1504 the same way): `tools/cubelab.sh decks --band <b>
---count 2 --seed <s> --cross-band 0.10 --out var/lab-j165/decks/<spine>`. The prior (k colours uniform on 1-5, flat
+--count 2 --seed <s> --cross-band 0.10 --out var/lab-j166/decks/<spine>`. The prior (k colours uniform on 1-5, flat
 Dirichlet shares), 25 spells with the band pool's colourless share and the 10% cross-band slice, the one land
 formula, castability (a deck that fails it is redrawn, every rejection counted), and the bands from census.tsv,
 **powered drawn as one pool with legacy** (its cross slice from peasant). `decks` writes `decks/<band>-<seed>-<i>.dck`,
@@ -96,12 +96,12 @@ deck B. No engine: the costs are Forge's own scripts, read from the zip beside t
 - **The makeups above are the draw's own** (computed on 2026-10-24 at the pin's deck code, unchanged by #207); the
   pilot draws them again and must reproduce them byte for byte (below). Five-colour decks are in it on purpose: the
   draw makes them a fifth of the time, and nobody designed any of these.
-- Folders: decks under `/home/justin-a/code/lab/data/lab-j165/decks/<spine>-<band>-<deckseed>/`, spines under
-  `.../lab-j165/b-<spine>-<band>-<gameseed>/` (`b-s01-pauper-2101` ...). The atlas resolves `--deck-a` against the
+- Folders: decks under `/home/justin-a/code/lab/data/lab-j166/decks/<spine>-<band>-<deckseed>/`, spines under
+  `.../lab-j166/b-<spine>-<band>-<gameseed>/` (`b-s01-pauper-2101` ...). The atlas resolves `--deck-a` against the
   clone, so every block passes the decks by their absolute data-folder path.
 
 **The validation draw: drawn, written, never branched.** Thirteen more pairs, the same bands in the same order, deck
-seeds **2201-2213**, written by the same `decks` command to `.../lab-j165/validation/v<nn>-<band>-<seed>/` and
+seeds **2201-2213**, written by the same `decks` command to `.../lab-j166/validation/v<nn>-<band>-<seed>/` and
 nothing else. Their game seeds are reserved now as **2301-2313** (v01 2301 ... v13 2313) for the validation job that
 will one day branch them on the tool that is current then; no job before it may use these decks or seeds, for
 training or anything else. The report records them in `validation.json` (ids, bands, deck seeds, reserved game
@@ -147,31 +147,31 @@ The per-spine flags are D480's lane's, exactly: `--phase b --decisions 8 --min-o
 - **Disk** ~15 GB; the pilot and every block require 50 GB free, and `abort:` fires under 50 GB.
 
 **Where it writes: the lab data folder,** as J156-J162: every atlas and decks command runs under
-`LAB_DATA_DIR=/home/justin-a/code/lab/data`, which re-roots `--out var/lab-j165/...` there. **A new folder,
-`lab-j165`**, created empty by the PC session before posting; the pilot creates it again if absent. Nothing else
+`LAB_DATA_DIR=/home/justin-a/code/lab/data`, which re-roots `--out var/lab-j166/...` there. **A new folder,
+`lab-j166`**, created empty by the PC session before posting; the pilot creates it again if absent. Nothing else
 there is read except J158's and J162's folders, by the readers' self-tests (read, never written). The Forge homes
-(`CUBELAB_HOME_ROOT=var/cubelab/homes-J165`), `atlas-selftest`'s own folder and the job's scripts
-(`var/lab-j165-local/`) stay in the clone. As J162:
+(`CUBELAB_HOME_ROOT=var/cubelab/homes-J166`), `atlas-selftest`'s own folder and the job's scripts
+(`var/lab-j166-local/`) stay in the clone. As J162:
 - the pilot's first lines assert that `LAB_DATA_DIR` is unset or exactly that path, and so is `config.json`'s
   `labDataDir`; they `mkdir -p` the data folder before anything reads it, and stop under 50 GB free;
-- the pilot records whether `lab-j165` held no spine folder when it first ran (`fresh`, checked);
+- the pilot records whether `lab-j166` held no spine folder when it first ran (`fresh`, checked);
 - every run block asserts the path, the 50 GB and its two deck files again before it plays;
 - the metrics, `progress:` and `collect:` read the data folder by its absolute path;
 - **no `clean:`, and nothing is deleted there: rung 4 reads these folders.** A restart from scratch needs
-  `/home/justin-a/code/lab/data/lab-j165` moved aside by hand and `var/lab-j165-local/armed.txt` and
-  `var/lab-j165-local/fresh.txt` removed (the J152 lesson).
+  `/home/justin-a/code/lab/data/lab-j166` moved aside by hand and `var/lab-j166-local/armed.txt` and
+  `var/lab-j166-local/fresh.txt` removed (the J152 lesson).
 
 **Nothing beside it.** `cores: 7` of 8 reserves the box: post nothing heavy beside it. No `pilot_cores:` (the J146
 lesson). **No `after:` line**: J164 is lower-numbered and short, and the core budget serialises the two.
 
 **The abort lines read only this run's artefacts (the J152 lesson).** Every abort that reads the atlas's own files is
-gated on `armed == 1`; `var/lab-j165-local/armed.txt` is written by this job's pilot (after the data-folder guard) and
+gated on `armed == 1`; `var/lab-j166-local/armed.txt` is written by this job's pilot (after the data-folder guard) and
 removed by the Report block's last line.
 
 ## The label set: the rung-4a contract
 
 `report/labels.jsonl`, one JSON row a branched decision of seat A (complete, screened or neither), written by
-labels.py. `contract` reads **`mtg-table rung-4a label v1 (J165)`**. J162's fields, with these changes:
+labels.py. `contract` reads **`mtg-table rung-4a label v1 (J166)`**. J162's fields, with these changes:
 
 | field | what it is |
 |---|---|
@@ -228,7 +228,7 @@ labels.py. `contract` reads **`mtg-table rung-4a label v1 (J165)`**. J162's fiel
 - **(viii) The validation draw**: its 26 decks, their bands and seeds, the reserved game seeds, its sha256.
 - Everything else is a candidate (D447 point 9).
 
-**Outputs** (on the data folder, `/home/justin-a/code/lab/data/lab-j165/`).
+**Outputs** (on the data folder, `/home/justin-a/code/lab/data/lab-j166/`).
 - `decks/<spine>-<band>-<seed>/` and `validation/v<nn>-<band>-<seed>/`: `decks/*.dck`, `decks.jsonl`, `decks.json`.
 - `b-<spine>-<band>-<gameseed>/`: `plan.json`, `atlas.json`, `atlas.md`, `phaseB/` (the baseline, branches.jsonl,
   units.jsonl, schedule.jsonl, every branch's frames and rows, the worker logs). `pilot-smoke/`, the smoke.
@@ -270,32 +270,32 @@ schedule planned done, no branch timed out, the 120-s branch timeout in its plan
 none void, every row `training: true`. Then the readers run on it.
 
 **The draw's determinism.** The pilot draws the 13 spine pairs, the 13 validation pairs and the smoke's pair onto the
-data folder, then draws s01 and v01 again into the clone (`var/lab-j165-local/redraw/`, absolute paths so nothing is
+data folder, then draws s01 and v01 again into the clone (`var/lab-j166-local/redraw/`, absolute paths so nothing is
 re-rooted). The three sets must give the registered sha256s above, and each redraw its data-folder twin's.
 ```bash
 # the lab data folder: exactly /home/justin-a/code/lab/data (README safety rules), created before anything reads it, 50 GB free or stop
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import json, sys; v = json.load(open('config.json')).get('labDataDir'); sys.exit(0 if v in (None, '', '/home/justin-a/code/lab/data') else 'J165: config.json labDataDir is %r, not /home/justin-a/code/lab/data' % v)"
-mkdir -p /home/justin-a/code/lab/data/lab-j165 var/lab-j165-local/bin var/lab-j165-local/redraw
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; print('J165: data folder free GB', round(f, 1)); sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
-echo 1 > var/lab-j165-local/datadir.txt
-# fresh: lab-j165 held no spine folder when this pilot first ran (written once; a later pilot run keeps the first answer)
-test -f var/lab-j165-local/fresh.txt || { if ls -d /home/justin-a/code/lab/data/lab-j165/b-* >/dev/null 2>&1; then echo 0; else echo 1; fi; } > var/lab-j165-local/fresh.txt
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import json, sys; v = json.load(open('config.json')).get('labDataDir'); sys.exit(0 if v in (None, '', '/home/justin-a/code/lab/data') else 'J166: config.json labDataDir is %r, not /home/justin-a/code/lab/data' % v)"
+mkdir -p /home/justin-a/code/lab/data/lab-j166 var/lab-j166-local/bin var/lab-j166-local/redraw
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; print('J166: data folder free GB', round(f, 1)); sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
+echo 1 > var/lab-j166-local/datadir.txt
+# fresh: lab-j166 held no spine folder when this pilot first ran (written once; a later pilot run keeps the first answer)
+test -f var/lab-j166-local/fresh.txt || { if ls -d /home/justin-a/code/lab/data/lab-j166/b-* >/dev/null 2>&1; then echo 0; else echo 1; fi; } > var/lab-j166-local/fresh.txt
 # the abort gate (the J152 lesson): this job's own run is armed from here; the Report block disarms it
-echo 1 > var/lab-j165-local/armed.txt
-git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j165-local/merged.txt || echo 0 > var/lab-j165-local/merged.txt
-git rev-parse --short=8 HEAD > var/lab-j165-local/sha.txt
-grep -q 'chosenOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'class StepClock' bridge/src/mtgtable/ai/Atlas.java && grep -q 'class OptionUnavailable' bridge/src/mtgtable/ai/RolloutController.java && grep -q 'zeroXLeftOut' bridge/src/mtgtable/ai/Explorer.java && grep -q 'restoreChoices' bridge/src/mtgtable/ai/Explorer.java && grep -q 'copyCandidates' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'COUNTED_GUARDRAILS' tools/cubelab/atlas.ts && grep -q 'unit-timeout' tools/cubelab/atlas.ts && grep -q 'empty-hand-ok' tools/check-redaction.mjs && echo 1 > var/lab-j165-local/has-d466-d472.txt || echo 0 > var/lab-j165-local/has-d466-d472.txt
-grep -q 'D476' bridge/src/mtgtable/ai/SearchPolicy.java && echo 1 > var/lab-j165-local/has-d476.txt || echo 0 > var/lab-j165-local/has-d476.txt
-grep -q 'final class ForkRestart' bridge/src/mtgtable/ai/ForkRestart.java && grep -q 'branchRestarted' tools/cubelab/atlas.ts && echo 1 > var/lab-j165-local/has-d477.txt || echo 0 > var/lab-j165-local/has-d477.txt
-grep -q 'BRANCH_CAPPED_WARN_DEFAULT' tools/cubelab/atlas.ts && grep -q 'export function cappedBranches' tools/cubelab/atlas.ts && echo 1 > var/lab-j165-local/has-d478.txt || echo 0 > var/lab-j165-local/has-d478.txt
-grep -q 'effectSourceNull' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'exileLinksLost' bridge/src/mtgtable/ai/Atlas.java && grep -q 'exileLinksLost' tools/cubelab/atlas.ts && echo 1 > var/lab-j165-local/has-d479.txt || echo 0 > var/lab-j165-local/has-d479.txt
-grep -q 'export class AtlasSchedule' tools/cubelab/atlascuts.ts && grep -q "export const EARLY_STOP_ON = \[50, 100, 150\]" tools/cubelab/atlascuts.ts && grep -q 'export const SCREEN_LOW = 0.04' tools/cubelab/atlascuts.ts && grep -q 'export async function redactionCheckParallel' tools/cubelab/censusplay.ts && grep -q 'holdIdle' tools/cubelab/engine.ts && grep -q 'SELFTEST_CUTS' tools/cubelab/atlas.ts && test -f web/test/cubelab-atlas-cuts.test.ts && echo 1 > var/lab-j165-local/has-d480.txt || echo 0 > var/lab-j165-local/has-d480.txt
-grep -q 'export function decksCommand' tools/cubelab/deckcensus.ts && grep -q 'export const MIN_BAND_POOL = 200' tools/cubelab/deckcensus.ts && echo 1 > var/lab-j165-local/has-d447.txt || echo 0 > var/lab-j165-local/has-d447.txt
-test -z "${CUBELAB_WORKER_XMX:-}" && echo 1 > var/lab-j165-local/xmx-unset.txt || echo 0 > var/lab-j165-local/xmx-unset.txt
-env -u LAB_DATA_DIR node --test web/test/cubelab-atlas.test.ts web/test/cubelab-atlas-cuts.test.ts web/test/cubelab-atlas-resume.test.ts web/test/cubelab-atlas-redaction.test.ts web/test/cubelab-record.test.ts web/test/cubelab-watchdog.test.ts web/test/cubelab-deck-census.test.ts && echo 1 > var/lab-j165-local/nodetests.txt || echo 0 > var/lab-j165-local/nodetests.txt
-cat > var/lab-j165-local/bin/drawsha.py <<'PY'
-# J165: the sha256 of a set of deck draws, in the order named: each folder's decks.jsonl, then its decks/*.dck by name.
+echo 1 > var/lab-j166-local/armed.txt
+git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j166-local/merged.txt || echo 0 > var/lab-j166-local/merged.txt
+git rev-parse --short=8 HEAD > var/lab-j166-local/sha.txt
+grep -q 'chosenOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'class StepClock' bridge/src/mtgtable/ai/Atlas.java && grep -q 'class OptionUnavailable' bridge/src/mtgtable/ai/RolloutController.java && grep -q 'zeroXLeftOut' bridge/src/mtgtable/ai/Explorer.java && grep -q 'restoreChoices' bridge/src/mtgtable/ai/Explorer.java && grep -q 'copyCandidates' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'COUNTED_GUARDRAILS' tools/cubelab/atlas.ts && grep -q 'unit-timeout' tools/cubelab/atlas.ts && grep -q 'empty-hand-ok' tools/check-redaction.mjs && echo 1 > var/lab-j166-local/has-d466-d472.txt || echo 0 > var/lab-j166-local/has-d466-d472.txt
+grep -q 'D476' bridge/src/mtgtable/ai/SearchPolicy.java && echo 1 > var/lab-j166-local/has-d476.txt || echo 0 > var/lab-j166-local/has-d476.txt
+grep -q 'final class ForkRestart' bridge/src/mtgtable/ai/ForkRestart.java && grep -q 'branchRestarted' tools/cubelab/atlas.ts && echo 1 > var/lab-j166-local/has-d477.txt || echo 0 > var/lab-j166-local/has-d477.txt
+grep -q 'BRANCH_CAPPED_WARN_DEFAULT' tools/cubelab/atlas.ts && grep -q 'export function cappedBranches' tools/cubelab/atlas.ts && echo 1 > var/lab-j166-local/has-d478.txt || echo 0 > var/lab-j166-local/has-d478.txt
+grep -q 'effectSourceNull' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'exileLinksLost' bridge/src/mtgtable/ai/Atlas.java && grep -q 'exileLinksLost' tools/cubelab/atlas.ts && echo 1 > var/lab-j166-local/has-d479.txt || echo 0 > var/lab-j166-local/has-d479.txt
+grep -q 'export class AtlasSchedule' tools/cubelab/atlascuts.ts && grep -q "export const EARLY_STOP_ON = \[50, 100, 150\]" tools/cubelab/atlascuts.ts && grep -q 'export const SCREEN_LOW = 0.04' tools/cubelab/atlascuts.ts && grep -q 'export async function redactionCheckParallel' tools/cubelab/censusplay.ts && grep -q 'holdIdle' tools/cubelab/engine.ts && grep -q 'SELFTEST_CUTS' tools/cubelab/atlas.ts && test -f web/test/cubelab-atlas-cuts.test.ts && echo 1 > var/lab-j166-local/has-d480.txt || echo 0 > var/lab-j166-local/has-d480.txt
+grep -q 'export function decksCommand' tools/cubelab/deckcensus.ts && grep -q 'export const MIN_BAND_POOL = 200' tools/cubelab/deckcensus.ts && echo 1 > var/lab-j166-local/has-d447.txt || echo 0 > var/lab-j166-local/has-d447.txt
+test -z "${CUBELAB_WORKER_XMX:-}" && echo 1 > var/lab-j166-local/xmx-unset.txt || echo 0 > var/lab-j166-local/xmx-unset.txt
+env -u LAB_DATA_DIR node --test web/test/cubelab-atlas.test.ts web/test/cubelab-atlas-cuts.test.ts web/test/cubelab-atlas-resume.test.ts web/test/cubelab-atlas-redaction.test.ts web/test/cubelab-record.test.ts web/test/cubelab-watchdog.test.ts web/test/cubelab-deck-census.test.ts && echo 1 > var/lab-j166-local/nodetests.txt || echo 0 > var/lab-j166-local/nodetests.txt
+cat > var/lab-j166-local/bin/drawsha.py <<'PY'
+# J166: the sha256 of a set of deck draws, in the order named: each folder's decks.jsonl, then its decks/*.dck by name.
 # Usage: drawsha.py DIR... ; prints the hex digest and the deck count. Standard library only.
 import glob, hashlib, os, sys
 h, n = hashlib.sha256(), 0
@@ -306,9 +306,9 @@ for d in sys.argv[1:]:
         n += 1
 print(h.hexdigest(), n)
 PY
-cat > var/lab-j165-local/bin/labels.py <<'PY'
-# J165's label set (pc-results drafts/J165-move-atlas-4a.md): J162's labels.py made the rung-4a contract, registered before
-# any J165 data. What changed from J162's: (1) a label is atlas.json's own `complete`, and `decided` / `settled` are atlas.json's
+cat > var/lab-j166-local/bin/labels.py <<'PY'
+# J166's label set (pc-results drafts/J166-move-atlas-4a.md): J162's labels.py made the rung-4a contract, registered before
+# any J166 data. What changed from J162's: (1) a label is atlas.json's own `complete`, and `decided` / `settled` are atlas.json's
 # (D480: the random map alone on a spine with no Forge map; the Forge map's options only where early stopping dropped some),
 # with J158's reader definitions as the fallback for an atlas written before D480 (the pilot's self-test on J162 and J158);
 # (2) a screened decision (D480's 25-branch screen) is a row of its own, `screened: true`, never complete, never a label;
@@ -320,9 +320,9 @@ cat > var/lab-j165-local/bin/labels.py <<'PY'
 #   --out=FILE       write labels.jsonl there (one row per branched decision: complete, screened or neither)
 #   --times=FILE     spine-times.txt ("<folder> <start epoch s> <end epoch s> <workers>", one line a run of a spine's block)
 #   --sha=SHA        the mtg-table commit the labels were made on
-#   --training=1     mark every row `training: true` (the J165 night); anything else writes `training: false`
+#   --training=1     mark every row `training: true` (the J166 night); anything else writes `training: false`
 # Standard library only; no engine. Prints one JSON object (the label reads) to stdout.
-# Definitions (fixed before any J165 data):
+# Definitions (fixed before any J166 data):
 #   label      a branched decision of seat A that atlas.json calls complete (D480), not screened
 #   regret     atlas.json's random-map regret: the best option's mean minus option 0's (Forge's answer, the one the spine
 #              played), with atlas.json's paired-bootstrap interval; an option early stopping dropped keeps its own n (D480)
@@ -341,7 +341,7 @@ cat > var/lab-j165-local/bin/labels.py <<'PY'
 import collections, glob, json, os, random, statistics, sys
 
 B, SEED = 10000, 150
-CONTRACT = 'mtg-table rung-4a label v1 (J165)'
+CONTRACT = 'mtg-table rung-4a label v1 (J166)'
 args, opt = [], {}
 for a in sys.argv[1:]:
     if a.startswith('--'):
@@ -622,9 +622,9 @@ out['voidList'] = ['%s d%d %s' % (x['spine'], x['d'], x['forgeToken']) for x in 
 out['sameGameNotBlock'] = ['%s d%d' % (x['spine'], x['d']) for x, same in same_any if same and x['kind'] != 'b' and x['complete']]
 print(json.dumps(out, indent=1))
 PY
-cat > var/lab-j165-local/bin/reads.py <<'PY'
-# J165's reads (pc-results drafts/J165-move-atlas-4a.md): J162's reads.py (J156's definitions) made per spine, registered
-# before any J165 data. From atlas.json files named on the command line as NAME:POOL:PATH. Standard library only; no engine.
+cat > var/lab-j166-local/bin/reads.py <<'PY'
+# J166's reads (pc-results drafts/J166-move-atlas-4a.md): J162's reads.py (J156's definitions) made per spine, registered
+# before any J166 data. From atlas.json files named on the command line as NAME:POOL:PATH. Standard library only; no engine.
 # What changed from J162's: a spine is a pair of its own (random decks of one band; the pool is the band, `random-<band>`);
 # `complete` and `decided` are atlas.json's (D480), with J158's definitions as the fallback for an atlas written before it;
 # the agreement reads (i)-(iii) and the registered (iv) are made on the spines WITH a Forge map only (D480 point 5: a spine
@@ -830,12 +830,12 @@ def sizing(n):
 out['vi_bySpine'] = {n: sizing(n) for n in sorted(spines)}
 print(json.dumps(out, indent=1))
 PY
-cat > var/lab-j165-local/bin/cuts.py <<'PY'
-# J165: what the cut design (D480) saved, per spine and for the night, from each spine's own files: phaseB/branches.jsonl (every
+cat > var/lab-j166-local/bin/cuts.py <<'PY'
+# J166: what the cut design (D480) saved, per spine and for the night, from each spine's own files: phaseB/branches.jsonl (every
 # branch's `ms`), phaseB/schedule.jsonl via atlas.json's phaseB.schedule (the screened decisions, the options stopped and where),
 # phaseB/units.jsonl (each unit's `ms`), atlas.json's timing and the run blocks' spine-times.txt (--times=FILE). Spine folders named
 # on the command line. Standard library only.
-# Definitions (registered before any J165 data):
+# Definitions (registered before any J166 data):
 #   branchMs         the sum of every branch row's ms (both continuations, errors included): the branch time as run
 #   earlyStopAvoided for each option early stopping stopped at `at` random branches: (branchRandom - at) x the decision's mean
 #                    random-branch ms, plus, on a spine with a Forge map, branchForge x the decision's mean Forge-branch ms
@@ -930,14 +930,14 @@ out['night'] = {'spines': night['spines'], 'branchGames': night['branchGames'], 
                 'reviewExpectation': 'cuts save 18-20% of branch time (atlas review 3b+3d; D480 replay 20.3%); checks 1.26 -> ~1.06 x branch time'}
 print(json.dumps(out, indent=1))
 PY
-cat > var/lab-j165-local/bin/metrics.py <<'PY'
-# J165's metrics (pc-results drafts/J165-move-atlas-4a.md): one JSON object over the 13 spine folders b-* under the data folder's
-# lab-j165: each plan against the registered spine table (decks, seeds, cuts, the Forge map), the atlases' problems, warnings,
+cat > var/lab-j166-local/bin/metrics.py <<'PY'
+# J166's metrics (pc-results drafts/J166-move-atlas-4a.md): one JSON object over the 13 spine folders b-* under the data folder's
+# lab-j166: each plan against the registered spine table (decks, seeds, cuts, the Forge map), the atlases' problems, warnings,
 # guardrails (G1, G4, G5, G6), the cut design's schedule (units planned against units done), the branch rows (timeouts, D470's
 # unavailable, errors by kind, D477's restarts, D478's capped, D479's effectSourceNull / exileLinksLost), the validation draw
 # (written, matching its registered sha256, never branched), and the report's labels.json and reads.json. Standard library only.
 import glob, hashlib, json, math, os, re, sys
-D = sys.argv[1] if len(sys.argv) > 1 else '/home/justin-a/code/lab/data/lab-j165'
+D = sys.argv[1] if len(sys.argv) > 1 else '/home/justin-a/code/lab/data/lab-j166'
 # name: (band, deck seed, game seed, branchForge) -- the registered spine table
 SPINES = {'s01': ('pauper', 2001, 2101, 40), 's02': ('peasant', 2002, 2102, 0), 's03': ('legacy', 2003, 2103, 0), 's04': ('powered', 2004, 2104, 0),
           's05': ('pauper', 2005, 2105, 0), 's06': ('peasant', 2006, 2106, 0), 's07': ('legacy', 2007, 2107, 40), 's08': ('powered', 2008, 2108, 0),
@@ -1142,11 +1142,11 @@ except (OSError, ValueError, KeyError, TypeError):
     pass
 print(json.dumps(out))
 PY
-cat > var/lab-j165-local/bin/pilot.py <<'PY'
-# J165 pilot: the smoke (powered, deck seed 2099, game seed 2199, every cut on) and the atlas-selftest's G5, G6 and cuts legs,
+cat > var/lab-j166-local/bin/pilot.py <<'PY'
+# J166 pilot: the smoke (powered, deck seed 2099, game seed 2199, every cut on) and the atlas-selftest's G5, G6 and cuts legs,
 # as one JSON object. Standard library only; no engine. Run from the clone (the self-test's folder is var/cubelab/atlas-selftest).
 import json, math, os
-S = '/home/justin-a/code/lab/data/lab-j165/pilot-smoke'
+S = '/home/justin-a/code/lab/data/lab-j166/pilot-smoke'
 out = {'smoke': {'problems': -1}, 'g5': {'refusedCast': -1}, 'g6': {'zeroXLeftOut': -1}, 'cuts': {'problems': -1}, 'cutsNoforge': {'problems': -1}}
 
 
@@ -1167,7 +1167,7 @@ try:
     c, g, b = d['checks'], d['checks']['guardrails'], d['phaseB']
     s, p = b['schedule'], d['plan']
     rows = [json.loads(l) for l in open(S + '/phaseB/branches.jsonl') if l.strip()]
-    lb = json.load(open('var/lab-j165-local/pilot-labels.json'))
+    lb = json.load(open('var/lab-j166-local/pilot-labels.json'))
     per = math.ceil(p['branchRandom'] / p['chunk']) + math.ceil(p['branchForge'] / p['chunk'])
     out['smoke'] = {'problems': len(c['problems']), 'warnings': len(c.get('warnings') or []), 'decisions': len(b['decisions']),
                     'branchedInFull': s['branchedInFull'], 'screened': len(s['screened']), 'stoppedOptions': s['stoppedOptions'],
@@ -1202,74 +1202,74 @@ PY
 # the readers' self-tests on J158's and J162's files (read, never written): each must give the registered numbers
 L2=/home/justin-a/code/lab/data/lab-j162
 L8=/home/justin-a/code/lab/data/lab-j158
-python3 -I var/lab-j165-local/bin/labels.py pauper5:confirm-j162:0:464:$L2/b-pauper5-464 synergy9:confirm-j162:0:465:$L2/b-synergy9-465 modern7:confirm-j162:0:466:$L2/b-modern7-466 ff5:confirm-j162:0:462:$L2/b-ff5-462 --out=var/lab-j165-local/labels-j162.jsonl --times=$L2/spine-times.txt --sha=f6dba5e4 > var/lab-j165-local/labels-j162.json || true
-python3 -I -c "import json; d = json.load(open('var/lab-j165-local/labels-j162.json')); a = d['a_confidentShare']; print(1 if (d['labels'], d['confident'], d['confidentForge'], d['rowsUnmatched'], d['voidLabels'], d['trainingRows'], a['point'], a['interval'], d['c_sizing7']['asRun']['labelsPer7Worker10hNight']) == (59, 7, 5, 0, 0, 0, 0.1186, [0.0339, 0.2203], 91) else 0)" > var/lab-j165-local/labels-self.txt 2>/dev/null || echo 0 > var/lab-j165-local/labels-self.txt
-python3 -I var/lab-j165-local/bin/labels.py ff5:confirm-j158:0:461:$L8/b-ff5-461 peasant7:confirm-j158:0:463:$L8/b-peasant7-463 --times=$L8/spine-times.txt > var/lab-j165-local/labels-j158.json || true
-python3 -I -c "import json; d = json.load(open('var/lab-j165-local/labels-j158.json')); print(1 if (d['labels'], d['confident'], d['voidLabels'], d['voidList'], d['sameGameNotBlock']) == (32, 6, 3, ['ff5 d10 block:35>78', 'ff5 d14 block:21>71', 'ff5 d30 block:25>80,40>81'], []) else 0)" > var/lab-j165-local/void-self.txt 2>/dev/null || echo 0 > var/lab-j165-local/void-self.txt
-python3 -I var/lab-j165-local/bin/reads.py pauper5:pauper5:$L2/b-pauper5-464/atlas.json synergy9:synergy9:$L2/b-synergy9-465/atlas.json modern7:modern7:$L2/b-modern7-466/atlas.json ff5:ff5:$L2/b-ff5-462/atlas.json > var/lab-j165-local/reads-j162.json || true
-python3 -I -c "import json; d = json.load(open('var/lab-j165-local/reads-j162.json')); iv = {n: (v['C1_castNow']['random']['point'], v['C1_castNow']['random']['interval'], v['C1_castNow']['verdict']) for n, v in d['iv_bySpine'].items()}; ok = iv == {'pauper5': (0.0411, [0.0126, 0.069], 'HOLDS'), 'synergy9': (0.0002, [-0.0133, 0.0136], 'NOT SHOWN'), 'modern7': (0.063, [0.017, 0.1231], 'HOLDS'), 'ff5': (0.0523, [-0.0047, 0.1313], 'NOT SHOWN')} and (d['i_sameBest']['point'], d['i_sameBest']['interval'], d['ii_rho']['point'], d['ii_rho']['interval']) == (0.5088, [0.322, 0.7], 0.2181, [-0.1188, 0.5799]); print(1 if ok else 0)" > var/lab-j165-local/reads-self.txt 2>/dev/null || echo 0 > var/lab-j165-local/reads-self.txt
-python3 -I var/lab-j165-local/bin/cuts.py $L2/b-pauper5-464 $L2/b-synergy9-465 $L2/b-modern7-466 $L2/b-ff5-462 --times=$L2/spine-times.txt > var/lab-j165-local/cuts-j162.json || true
-python3 -I -c "import json; n = json.load(open('var/lab-j165-local/cuts-j162.json'))['night']; print(1 if (n['spines'], n['branchGames'], n['savedShare'], n['checksSecPerKGames']) == (4, 55680, 0.0, 92.3) else 0)" > var/lab-j165-local/cuts-self.txt 2>/dev/null || echo 0 > var/lab-j165-local/cuts-self.txt
-python3 -I var/lab-j165-local/bin/metrics.py $L2 > var/lab-j165-local/metrics-j162.json || true
-python3 -I -c "import json; d = json.load(open('var/lab-j165-local/metrics-j162.json')); print(1 if (d['atlases'], d['problems'], d['branchRows'], d['errorsByKind'].get('play not rebuilt on the copy (D472, D476)'), d['xDrawn'], d['planOk']) == (4, 10, 55680, 2400, 32626, 0) else 0)" > var/lab-j165-local/metrics-self.txt 2>/dev/null || echo 0 > var/lab-j165-local/metrics-self.txt
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
+python3 -I var/lab-j166-local/bin/labels.py pauper5:confirm-j162:0:464:$L2/b-pauper5-464 synergy9:confirm-j162:0:465:$L2/b-synergy9-465 modern7:confirm-j162:0:466:$L2/b-modern7-466 ff5:confirm-j162:0:462:$L2/b-ff5-462 --out=var/lab-j166-local/labels-j162.jsonl --times=$L2/spine-times.txt --sha=f6dba5e4 > var/lab-j166-local/labels-j162.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j166-local/labels-j162.json')); a = d['a_confidentShare']; print(1 if (d['labels'], d['confident'], d['confidentForge'], d['rowsUnmatched'], d['voidLabels'], d['trainingRows'], a['point'], a['interval'], d['c_sizing7']['asRun']['labelsPer7Worker10hNight']) == (59, 7, 5, 0, 0, 0, 0.1186, [0.0339, 0.2203], 91) else 0)" > var/lab-j166-local/labels-self.txt 2>/dev/null || echo 0 > var/lab-j166-local/labels-self.txt
+python3 -I var/lab-j166-local/bin/labels.py ff5:confirm-j158:0:461:$L8/b-ff5-461 peasant7:confirm-j158:0:463:$L8/b-peasant7-463 --times=$L8/spine-times.txt > var/lab-j166-local/labels-j158.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j166-local/labels-j158.json')); print(1 if (d['labels'], d['confident'], d['voidLabels'], d['voidList'], d['sameGameNotBlock']) == (32, 6, 3, ['ff5 d10 block:35>78', 'ff5 d14 block:21>71', 'ff5 d30 block:25>80,40>81'], []) else 0)" > var/lab-j166-local/void-self.txt 2>/dev/null || echo 0 > var/lab-j166-local/void-self.txt
+python3 -I var/lab-j166-local/bin/reads.py pauper5:pauper5:$L2/b-pauper5-464/atlas.json synergy9:synergy9:$L2/b-synergy9-465/atlas.json modern7:modern7:$L2/b-modern7-466/atlas.json ff5:ff5:$L2/b-ff5-462/atlas.json > var/lab-j166-local/reads-j162.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j166-local/reads-j162.json')); iv = {n: (v['C1_castNow']['random']['point'], v['C1_castNow']['random']['interval'], v['C1_castNow']['verdict']) for n, v in d['iv_bySpine'].items()}; ok = iv == {'pauper5': (0.0411, [0.0126, 0.069], 'HOLDS'), 'synergy9': (0.0002, [-0.0133, 0.0136], 'NOT SHOWN'), 'modern7': (0.063, [0.017, 0.1231], 'HOLDS'), 'ff5': (0.0523, [-0.0047, 0.1313], 'NOT SHOWN')} and (d['i_sameBest']['point'], d['i_sameBest']['interval'], d['ii_rho']['point'], d['ii_rho']['interval']) == (0.5088, [0.322, 0.7], 0.2181, [-0.1188, 0.5799]); print(1 if ok else 0)" > var/lab-j166-local/reads-self.txt 2>/dev/null || echo 0 > var/lab-j166-local/reads-self.txt
+python3 -I var/lab-j166-local/bin/cuts.py $L2/b-pauper5-464 $L2/b-synergy9-465 $L2/b-modern7-466 $L2/b-ff5-462 --times=$L2/spine-times.txt > var/lab-j166-local/cuts-j162.json || true
+python3 -I -c "import json; n = json.load(open('var/lab-j166-local/cuts-j162.json'))['night']; print(1 if (n['spines'], n['branchGames'], n['savedShare'], n['checksSecPerKGames']) == (4, 55680, 0.0, 92.3) else 0)" > var/lab-j166-local/cuts-self.txt 2>/dev/null || echo 0 > var/lab-j166-local/cuts-self.txt
+python3 -I var/lab-j166-local/bin/metrics.py $L2 > var/lab-j166-local/metrics-j162.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j166-local/metrics-j162.json')); print(1 if (d['atlases'], d['problems'], d['branchRows'], d['errorsByKind'].get('play not rebuilt on the copy (D472, D476)'), d['xDrawn'], d['planOk']) == (4, 10, 55680, 2400, 32626, 0) else 0)" > var/lab-j166-local/metrics-self.txt 2>/dev/null || echo 0 > var/lab-j166-local/metrics-self.txt
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
 # the deck draw (D447, no engine): 13 spine pairs, 13 validation pairs, the smoke's pair; then s01 and v01 again into the clone
 K=0
 for B in pauper peasant legacy powered pauper peasant legacy powered pauper peasant legacy powered pauper; do
   K=$((K + 1)); N=$(printf '%02d' $K)
-  tools/cubelab.sh decks --band $B --count 2 --seed $((2000 + K)) --cross-band 0.10 --out var/lab-j165/decks/s$N-$B-$((2000 + K))
-  tools/cubelab.sh decks --band $B --count 2 --seed $((2200 + K)) --cross-band 0.10 --out var/lab-j165/validation/v$N-$B-$((2200 + K))
+  tools/cubelab.sh decks --band $B --count 2 --seed $((2000 + K)) --cross-band 0.10 --out var/lab-j166/decks/s$N-$B-$((2000 + K))
+  tools/cubelab.sh decks --band $B --count 2 --seed $((2200 + K)) --cross-band 0.10 --out var/lab-j166/validation/v$N-$B-$((2200 + K))
 done
-tools/cubelab.sh decks --band powered --count 2 --seed 2099 --cross-band 0.10 --out var/lab-j165/decks/p-powered-2099
-tools/cubelab.sh decks --band pauper --count 2 --seed 2001 --cross-band 0.10 --out "$PWD/var/lab-j165-local/redraw/s01-pauper-2001"
-tools/cubelab.sh decks --band pauper --count 2 --seed 2201 --cross-band 0.10 --out "$PWD/var/lab-j165-local/redraw/v01-pauper-2201"
-DK=/home/justin-a/code/lab/data/lab-j165/decks
-VK=/home/justin-a/code/lab/data/lab-j165/validation
-python3 -I var/lab-j165-local/bin/drawsha.py $(ls -d $DK/s* | sort) > var/lab-j165-local/draw-spines.txt || true
-python3 -I var/lab-j165-local/bin/drawsha.py $(ls -d $VK/v* | sort) > var/lab-j165-local/draw-validation.txt || true
-python3 -I var/lab-j165-local/bin/drawsha.py $DK/p-powered-2099 > var/lab-j165-local/draw-smoke.txt || true
-test "$(cat var/lab-j165-local/draw-spines.txt)" = "e998ad3c246d7cf5a6ab92e45a133918e2a42ff63440c2dd35507cc19b08df3c 26" && test "$(cat var/lab-j165-local/draw-validation.txt)" = "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26" && test "$(cat var/lab-j165-local/draw-smoke.txt)" = "edfdc861736fb049bc1080d525269064c6776ecabd47de496463fa3dc684c931 2" && test "$(python3 -I var/lab-j165-local/bin/drawsha.py var/lab-j165-local/redraw/s01-pauper-2001)" = "$(python3 -I var/lab-j165-local/bin/drawsha.py $DK/s01-pauper-2001)" && test "$(python3 -I var/lab-j165-local/bin/drawsha.py var/lab-j165-local/redraw/v01-pauper-2201)" = "$(python3 -I var/lab-j165-local/bin/drawsha.py $VK/v01-pauper-2201)" && test "$(python3 -I var/lab-j165-local/bin/drawsha.py $DK/s01-pauper-2001)" = "a40fb5addec594bd6e97b0e7b16d78af1f08280dcc555366b3a2301feda4ff34 2" && echo 1 > var/lab-j165-local/draw.txt || echo 0 > var/lab-j165-local/draw.txt
+tools/cubelab.sh decks --band powered --count 2 --seed 2099 --cross-band 0.10 --out var/lab-j166/decks/p-powered-2099
+tools/cubelab.sh decks --band pauper --count 2 --seed 2001 --cross-band 0.10 --out "$PWD/var/lab-j166-local/redraw/s01-pauper-2001"
+tools/cubelab.sh decks --band pauper --count 2 --seed 2201 --cross-band 0.10 --out "$PWD/var/lab-j166-local/redraw/v01-pauper-2201"
+DK=/home/justin-a/code/lab/data/lab-j166/decks
+VK=/home/justin-a/code/lab/data/lab-j166/validation
+python3 -I var/lab-j166-local/bin/drawsha.py $(ls -d $DK/s* | sort) > var/lab-j166-local/draw-spines.txt || true
+python3 -I var/lab-j166-local/bin/drawsha.py $(ls -d $VK/v* | sort) > var/lab-j166-local/draw-validation.txt || true
+python3 -I var/lab-j166-local/bin/drawsha.py $DK/p-powered-2099 > var/lab-j166-local/draw-smoke.txt || true
+test "$(cat var/lab-j166-local/draw-spines.txt)" = "e998ad3c246d7cf5a6ab92e45a133918e2a42ff63440c2dd35507cc19b08df3c 26" && test "$(cat var/lab-j166-local/draw-validation.txt)" = "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26" && test "$(cat var/lab-j166-local/draw-smoke.txt)" = "edfdc861736fb049bc1080d525269064c6776ecabd47de496463fa3dc684c931 2" && test "$(python3 -I var/lab-j166-local/bin/drawsha.py var/lab-j166-local/redraw/s01-pauper-2001)" = "$(python3 -I var/lab-j166-local/bin/drawsha.py $DK/s01-pauper-2001)" && test "$(python3 -I var/lab-j166-local/bin/drawsha.py var/lab-j166-local/redraw/v01-pauper-2201)" = "$(python3 -I var/lab-j166-local/bin/drawsha.py $VK/v01-pauper-2201)" && test "$(python3 -I var/lab-j166-local/bin/drawsha.py $DK/s01-pauper-2001)" = "a40fb5addec594bd6e97b0e7b16d78af1f08280dcc555366b3a2301feda4ff34 2" && echo 1 > var/lab-j166-local/draw.txt || echo 0 > var/lab-j166-local/draw.txt
 # the engine self-tests: atlas-selftest with its G5, G6 and cuts legs (D480), then seat-identity
-tools/cubelab.sh atlas-selftest --jobs 2 && echo 1 > var/lab-j165-local/selftest.txt || echo 0 > var/lab-j165-local/selftest.txt
-tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j165-local/identity.txt || echo 0 > var/lab-j165-local/identity.txt
+tools/cubelab.sh atlas-selftest --jobs 2 && echo 1 > var/lab-j166-local/selftest.txt || echo 0 > var/lab-j166-local/selftest.txt
+tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j166-local/identity.txt || echo 0 > var/lab-j166-local/identity.txt
 # the readers on the self-test's own cuts legs
 C=var/cubelab/atlas-selftest
-python3 -I var/lab-j165-local/bin/labels.py cuts:selftest:0:464:$C/cuts nf:selftest:0:464:$C/cuts-noforge --out=var/lab-j165-local/labels-cuts.jsonl --training=1 > var/lab-j165-local/labels-cuts.json || true
-python3 -I var/lab-j165-local/bin/reads.py cuts:selftest:$C/cuts/atlas.json nf:selftest:$C/cuts-noforge/atlas.json > var/lab-j165-local/reads-cuts.json || true
-python3 -I var/lab-j165-local/bin/cuts.py $C/cuts $C/cuts-noforge > var/lab-j165-local/cuts-cuts.json || true
-python3 -I -c "import json; l = json.load(open('var/lab-j165-local/labels-cuts.json')); r = json.load(open('var/lab-j165-local/reads-cuts.json')); c = json.load(open('var/lab-j165-local/cuts-cuts.json')); s = [json.load(open('var/cubelab/atlas-selftest/%s/atlas.json' % x))['phaseB']['schedule']['labels'] for x in ('cuts', 'cuts-noforge')]; ok = l['rowsUnmatched'] == 0 and l['labels'] == sum(s) and l['trainingRows'] == l['branched'] and l['branched'] >= 2 and r['forgeSpines'] == ['cuts'] and list(r['iv_bySpine']) == ['cuts'] and c['night']['spines'] == 2; print(1 if ok else 0)" > var/lab-j165-local/readers-cuts.txt 2>/dev/null || echo 0 > var/lab-j165-local/readers-cuts.txt
+python3 -I var/lab-j166-local/bin/labels.py cuts:selftest:0:464:$C/cuts nf:selftest:0:464:$C/cuts-noforge --out=var/lab-j166-local/labels-cuts.jsonl --training=1 > var/lab-j166-local/labels-cuts.json || true
+python3 -I var/lab-j166-local/bin/reads.py cuts:selftest:$C/cuts/atlas.json nf:selftest:$C/cuts-noforge/atlas.json > var/lab-j166-local/reads-cuts.json || true
+python3 -I var/lab-j166-local/bin/cuts.py $C/cuts $C/cuts-noforge > var/lab-j166-local/cuts-cuts.json || true
+python3 -I -c "import json; l = json.load(open('var/lab-j166-local/labels-cuts.json')); r = json.load(open('var/lab-j166-local/reads-cuts.json')); c = json.load(open('var/lab-j166-local/cuts-cuts.json')); s = [json.load(open('var/cubelab/atlas-selftest/%s/atlas.json' % x))['phaseB']['schedule']['labels'] for x in ('cuts', 'cuts-noforge')]; ok = l['rowsUnmatched'] == 0 and l['labels'] == sum(s) and l['trainingRows'] == l['branched'] and l['branched'] >= 2 and r['forgeSpines'] == ['cuts'] and list(r['iv_bySpine']) == ['cuts'] and c['night']['spines'] == 2; print(1 if ok else 0)" > var/lab-j166-local/readers-cuts.txt 2>/dev/null || echo 0 > var/lab-j166-local/readers-cuts.txt
 # the smoke: the powered pair at game seed 2199, 2 decisions, 25 random and 5 Forge branches an option, every cut on at that scale
-P=/home/justin-a/code/lab/data/lab-j165/decks/p-powered-2099/decks
-tools/cubelab.sh atlas --deck-a $P/powered-2099-00001.dck --deck-b $P/powered-2099-00002.dck --seed 2199 --phase b --decisions 2 --min-options 3 --screen 5 --early-stop 10,15,20 --branch-random 25 --branch-forge 5 --chunk 5 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/pilot-smoke || true
-python3 -I var/lab-j165-local/bin/labels.py smoke:random-powered:2099:2199:/home/justin-a/code/lab/data/lab-j165/pilot-smoke --out=var/lab-j165-local/pilot-labels.jsonl --sha=$(cat var/lab-j165-local/sha.txt) --training=1 > var/lab-j165-local/pilot-labels.json || true
-python3 -I var/lab-j165-local/bin/reads.py smoke:random-powered:/home/justin-a/code/lab/data/lab-j165/pilot-smoke/atlas.json > var/lab-j165-local/pilot-reads.json || true
-python3 -I var/lab-j165-local/bin/cuts.py /home/justin-a/code/lab/data/lab-j165/pilot-smoke > var/lab-j165-local/pilot-cuts.json || true
-python3 -I -c "import json; r = json.load(open('var/lab-j165-local/pilot-reads.json')); c = json.load(open('var/lab-j165-local/pilot-cuts.json')); print(1 if r['forgeSpines'] == ['smoke'] and 'smoke' in r['iv_bySpine'] and c['night']['spines'] == 1 and c['night']['branchGames'] >= 1 else 0)" > var/lab-j165-local/pilot-readers.txt 2>/dev/null || echo 0 > var/lab-j165-local/pilot-readers.txt
+P=/home/justin-a/code/lab/data/lab-j166/decks/p-powered-2099/decks
+tools/cubelab.sh atlas --deck-a $P/powered-2099-00001.dck --deck-b $P/powered-2099-00002.dck --seed 2199 --phase b --decisions 2 --min-options 3 --screen 5 --early-stop 10,15,20 --branch-random 25 --branch-forge 5 --chunk 5 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/pilot-smoke || true
+python3 -I var/lab-j166-local/bin/labels.py smoke:random-powered:2099:2199:/home/justin-a/code/lab/data/lab-j166/pilot-smoke --out=var/lab-j166-local/pilot-labels.jsonl --sha=$(cat var/lab-j166-local/sha.txt) --training=1 > var/lab-j166-local/pilot-labels.json || true
+python3 -I var/lab-j166-local/bin/reads.py smoke:random-powered:/home/justin-a/code/lab/data/lab-j166/pilot-smoke/atlas.json > var/lab-j166-local/pilot-reads.json || true
+python3 -I var/lab-j166-local/bin/cuts.py /home/justin-a/code/lab/data/lab-j166/pilot-smoke > var/lab-j166-local/pilot-cuts.json || true
+python3 -I -c "import json; r = json.load(open('var/lab-j166-local/pilot-reads.json')); c = json.load(open('var/lab-j166-local/pilot-cuts.json')); print(1 if r['forgeSpines'] == ['smoke'] and 'smoke' in r['iv_bySpine'] and c['night']['spines'] == 1 and c['night']['branchGames'] >= 1 else 0)" > var/lab-j166-local/pilot-readers.txt 2>/dev/null || echo 0 > var/lab-j166-local/pilot-readers.txt
 ```
-metrics: datadir = sh: cat var/lab-j165-local/datadir.txt 2>/dev/null || echo 0
-metrics: fresh = sh: cat var/lab-j165-local/fresh.txt 2>/dev/null || echo 0
-metrics: merged = sh: cat var/lab-j165-local/merged.txt 2>/dev/null || echo 0
-metrics: has_d466_d472 = sh: cat var/lab-j165-local/has-d466-d472.txt 2>/dev/null || echo 0
-metrics: has_d476 = sh: cat var/lab-j165-local/has-d476.txt 2>/dev/null || echo 0
-metrics: has_d477 = sh: cat var/lab-j165-local/has-d477.txt 2>/dev/null || echo 0
-metrics: has_d478 = sh: cat var/lab-j165-local/has-d478.txt 2>/dev/null || echo 0
-metrics: has_d479 = sh: cat var/lab-j165-local/has-d479.txt 2>/dev/null || echo 0
-metrics: has_d480 = sh: cat var/lab-j165-local/has-d480.txt 2>/dev/null || echo 0
-metrics: has_d447 = sh: cat var/lab-j165-local/has-d447.txt 2>/dev/null || echo 0
-metrics: xmx_unset = sh: cat var/lab-j165-local/xmx-unset.txt 2>/dev/null || echo 0
-metrics: nodetests = sh: cat var/lab-j165-local/nodetests.txt 2>/dev/null || echo 0
-metrics: labels_self = sh: cat var/lab-j165-local/labels-self.txt 2>/dev/null || echo 0
-metrics: void_self = sh: cat var/lab-j165-local/void-self.txt 2>/dev/null || echo 0
-metrics: reads_self = sh: cat var/lab-j165-local/reads-self.txt 2>/dev/null || echo 0
-metrics: cuts_self = sh: cat var/lab-j165-local/cuts-self.txt 2>/dev/null || echo 0
-metrics: metrics_self = sh: cat var/lab-j165-local/metrics-self.txt 2>/dev/null || echo 0
-metrics: draw = sh: cat var/lab-j165-local/draw.txt 2>/dev/null || echo 0
-metrics: selftest = sh: cat var/lab-j165-local/selftest.txt 2>/dev/null || echo 0
-metrics: identity = sh: cat var/lab-j165-local/identity.txt 2>/dev/null || echo 0
-metrics: readers_cuts = sh: cat var/lab-j165-local/readers-cuts.txt 2>/dev/null || echo 0
-metrics: pilot_readers = sh: cat var/lab-j165-local/pilot-readers.txt 2>/dev/null || echo 0
-metrics: pilot = sh: python3 -I var/lab-j165-local/bin/pilot.py 2>/dev/null || echo '{"smoke":{"problems":-1}}'
+metrics: datadir = sh: cat var/lab-j166-local/datadir.txt 2>/dev/null || echo 0
+metrics: fresh = sh: cat var/lab-j166-local/fresh.txt 2>/dev/null || echo 0
+metrics: merged = sh: cat var/lab-j166-local/merged.txt 2>/dev/null || echo 0
+metrics: has_d466_d472 = sh: cat var/lab-j166-local/has-d466-d472.txt 2>/dev/null || echo 0
+metrics: has_d476 = sh: cat var/lab-j166-local/has-d476.txt 2>/dev/null || echo 0
+metrics: has_d477 = sh: cat var/lab-j166-local/has-d477.txt 2>/dev/null || echo 0
+metrics: has_d478 = sh: cat var/lab-j166-local/has-d478.txt 2>/dev/null || echo 0
+metrics: has_d479 = sh: cat var/lab-j166-local/has-d479.txt 2>/dev/null || echo 0
+metrics: has_d480 = sh: cat var/lab-j166-local/has-d480.txt 2>/dev/null || echo 0
+metrics: has_d447 = sh: cat var/lab-j166-local/has-d447.txt 2>/dev/null || echo 0
+metrics: xmx_unset = sh: cat var/lab-j166-local/xmx-unset.txt 2>/dev/null || echo 0
+metrics: nodetests = sh: cat var/lab-j166-local/nodetests.txt 2>/dev/null || echo 0
+metrics: labels_self = sh: cat var/lab-j166-local/labels-self.txt 2>/dev/null || echo 0
+metrics: void_self = sh: cat var/lab-j166-local/void-self.txt 2>/dev/null || echo 0
+metrics: reads_self = sh: cat var/lab-j166-local/reads-self.txt 2>/dev/null || echo 0
+metrics: cuts_self = sh: cat var/lab-j166-local/cuts-self.txt 2>/dev/null || echo 0
+metrics: metrics_self = sh: cat var/lab-j166-local/metrics-self.txt 2>/dev/null || echo 0
+metrics: draw = sh: cat var/lab-j166-local/draw.txt 2>/dev/null || echo 0
+metrics: selftest = sh: cat var/lab-j166-local/selftest.txt 2>/dev/null || echo 0
+metrics: identity = sh: cat var/lab-j166-local/identity.txt 2>/dev/null || echo 0
+metrics: readers_cuts = sh: cat var/lab-j166-local/readers-cuts.txt 2>/dev/null || echo 0
+metrics: pilot_readers = sh: cat var/lab-j166-local/pilot-readers.txt 2>/dev/null || echo 0
+metrics: pilot = sh: python3 -I var/lab-j166-local/bin/pilot.py 2>/dev/null || echo '{"smoke":{"problems":-1}}'
 check: datadir == 1
 check: data_free_gb >= 50
 check: fresh == 1
@@ -1324,182 +1324,182 @@ check: pilot.smoke.trainingRows == pilot.smoke.branchedRows
 ## Commands
 One block a spine, in the table's order s01-s13. Every atlas command resumes what is done (the plan's cuts must match;
 `schedule.jsonl` is replayed). An atlas that finds a problem exits 3 and the job goes on to the next spine (the exit
-is kept in `/home/justin-a/code/lab/data/lab-j165/exits.txt`); each block appends its spine's wall time to
-`/home/justin-a/code/lab/data/lab-j165/spine-times.txt`; the final checks read every folder's `atlas.json`. Each block
+is kept in `/home/justin-a/code/lab/data/lab-j166/exits.txt`); each block appends its spine's wall time to
+`/home/justin-a/code/lab/data/lab-j166/spine-times.txt`; the final checks read every folder's `atlas.json`. Each block
 asserts the data folder, its 50 GB and its two deck files before it plays. **Expected wall ~40 min a spine at 7
 workers (s01, s07, s13 ~45)**; the 3-h block timeout is ~4x that.
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s01-pauper-2101; K=$D/decks/s01-pauper-2001/decks; A=$K/pauper-2001-00001.dck; B=$K/pauper-2001-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2101 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2101 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s02-peasant-2102; K=$D/decks/s02-peasant-2002/decks; A=$K/peasant-2002-00001.dck; B=$K/peasant-2002-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2102 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2102 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s03-legacy-2103; K=$D/decks/s03-legacy-2003/decks; A=$K/legacy-2003-00001.dck; B=$K/legacy-2003-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2103 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2103 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s04-powered-2104; K=$D/decks/s04-powered-2004/decks; A=$K/powered-2004-00001.dck; B=$K/powered-2004-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2104 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2104 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s05-pauper-2105; K=$D/decks/s05-pauper-2005/decks; A=$K/pauper-2005-00001.dck; B=$K/pauper-2005-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2105 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2105 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s06-peasant-2106; K=$D/decks/s06-peasant-2006/decks; A=$K/peasant-2006-00001.dck; B=$K/peasant-2006-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2106 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2106 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s07-legacy-2107; K=$D/decks/s07-legacy-2007/decks; A=$K/legacy-2007-00001.dck; B=$K/legacy-2007-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2107 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2107 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s08-powered-2108; K=$D/decks/s08-powered-2008/decks; A=$K/powered-2008-00001.dck; B=$K/powered-2008-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2108 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2108 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s09-pauper-2109; K=$D/decks/s09-pauper-2009/decks; A=$K/pauper-2009-00001.dck; B=$K/pauper-2009-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2109 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2109 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s10-peasant-2110; K=$D/decks/s10-peasant-2010/decks; A=$K/peasant-2010-00001.dck; B=$K/peasant-2010-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2110 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2110 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s11-legacy-2111; K=$D/decks/s11-legacy-2011/decks; A=$K/legacy-2011-00001.dck; B=$K/legacy-2011-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2111 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2111 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s12-powered-2112; K=$D/decks/s12-powered-2012/decks; A=$K/powered-2012-00001.dck; B=$K/powered-2012-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2112 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2112 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 0 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 ```bash
-if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J165: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
-python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J165: under 50 GB free on the data folder')"
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J166: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J166: under 50 GB free on the data folder')"
 export LAB_DATA_DIR=/home/justin-a/code/lab/data
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J165
-D=/home/justin-a/code/lab/data/lab-j165
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J166
+D=/home/justin-a/code/lab/data/lab-j166
 n=b-s13-pauper-2113; K=$D/decks/s13-pauper-2013/decks; A=$K/pauper-2013-00001.dck; B=$K/pauper-2013-00002.dck
-test -s $A && test -s $B || { echo "J165: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
+test -s $A && test -s $B || { echo "J166: $n: no decks under $K (the pilot draws them)" >&2; exit 1; }
 t0=$(date +%s)
-rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2113 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j165/$n || rc=$?
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2113 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j166/$n || rc=$?
 echo "$n $rc" >> $D/exits.txt
 echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 ```
 cores: 1
 ```bash
-D=/home/justin-a/code/lab/data/lab-j165
+D=/home/justin-a/code/lab/data/lab-j166
 mkdir -p $D/report
 : > $D/report/missing.txt
 args=""; largs=""; dirs=""
@@ -1513,18 +1513,18 @@ for d in $D/b-*; do
     echo "$n: no atlas.json" >> $D/report/missing.txt
   fi
 done
-python3 -I var/lab-j165-local/bin/labels.py $largs --out=$D/report/labels.jsonl --times=$D/spine-times.txt --sha=$(cat var/lab-j165-local/sha.txt) --training=1 > $D/report/labels.json || echo "labels.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j166-local/bin/labels.py $largs --out=$D/report/labels.jsonl --times=$D/spine-times.txt --sha=$(cat var/lab-j166-local/sha.txt) --training=1 > $D/report/labels.json || echo "labels.py exited $?" >> $D/report/missing.txt
 head -n 20 $D/report/labels.jsonl > $D/report/labels-head.jsonl || echo "labels.jsonl: none" >> $D/report/missing.txt
-python3 -I var/lab-j165-local/bin/reads.py $args > $D/report/reads.json || echo "reads.py exited $?" >> $D/report/missing.txt
-python3 -I var/lab-j165-local/bin/cuts.py $dirs --times=$D/spine-times.txt > $D/report/cuts.json || echo "cuts.py exited $?" >> $D/report/missing.txt
-python3 -I var/lab-j165-local/bin/metrics.py > $D/report/tool.json || echo "metrics.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j166-local/bin/reads.py $args > $D/report/reads.json || echo "reads.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j166-local/bin/cuts.py $dirs --times=$D/spine-times.txt > $D/report/cuts.json || echo "cuts.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j166-local/bin/metrics.py > $D/report/tool.json || echo "metrics.py exited $?" >> $D/report/missing.txt
 # the validation draw, recorded for the job that will branch it: decks, bands, seeds, the reserved game seeds, the sha256
-python3 -I -c "import glob, json, os; D = '$D'; vs = sorted(glob.glob(D + '/validation/v*')); rows = [{'set': os.path.basename(v).split('-')[0], 'band': os.path.basename(v).split('-')[1], 'pool': 'random-' + os.path.basename(v).split('-')[1], 'deckSeed': int(os.path.basename(v).split('-')[2]), 'reservedGameSeed': int(os.path.basename(v).split('-')[2]) + 100, 'decks': sorted(glob.glob(v + '/decks/*.dck')), 'split': 'validation', 'training': False} for v in vs]; print(json.dumps({'note': 'J165 validation draw: drawn as the spines were (D447, --cross-band 0.10), written as deck files only, never branched; no job may train on these decks or use these seeds before the validation job that branches them', 'drawSha256': open('var/lab-j165-local/draw-validation.txt').read().split()[0], 'sets': rows}, indent=1))" > $D/report/validation.json || echo "validation.json: failed" >> $D/report/missing.txt
-python3 -I -c "import glob, json, os; D = '$D'; out = {}; [out.__setitem__(os.path.basename(d), {k: json.load(open(d + '/plan.json')).get(k) for k in ('deckA', 'deckB', 'seed', 'branchRandom', 'branchForge', 'decisions', 'chunk', 'cuts')}) for d in sorted(glob.glob(D + '/b-*'))]; print(json.dumps({'drawSha256': open('var/lab-j165-local/draw-spines.txt').read().split()[0], 'spines': out}, indent=1))" > $D/report/spines.json || echo "spines.json: failed" >> $D/report/missing.txt
+python3 -I -c "import glob, json, os; D = '$D'; vs = sorted(glob.glob(D + '/validation/v*')); rows = [{'set': os.path.basename(v).split('-')[0], 'band': os.path.basename(v).split('-')[1], 'pool': 'random-' + os.path.basename(v).split('-')[1], 'deckSeed': int(os.path.basename(v).split('-')[2]), 'reservedGameSeed': int(os.path.basename(v).split('-')[2]) + 100, 'decks': sorted(glob.glob(v + '/decks/*.dck')), 'split': 'validation', 'training': False} for v in vs]; print(json.dumps({'note': 'J166 validation draw: drawn as the spines were (D447, --cross-band 0.10), written as deck files only, never branched; no job may train on these decks or use these seeds before the validation job that branches them', 'drawSha256': open('var/lab-j166-local/draw-validation.txt').read().split()[0], 'sets': rows}, indent=1))" > $D/report/validation.json || echo "validation.json: failed" >> $D/report/missing.txt
+python3 -I -c "import glob, json, os; D = '$D'; out = {}; [out.__setitem__(os.path.basename(d), {k: json.load(open(d + '/plan.json')).get(k) for k in ('deckA', 'deckB', 'seed', 'branchRandom', 'branchForge', 'decisions', 'chunk', 'cuts')}) for d in sorted(glob.glob(D + '/b-*'))]; print(json.dumps({'drawSha256': open('var/lab-j166-local/draw-spines.txt').read().split()[0], 'spines': out}, indent=1))" > $D/report/spines.json || echo "spines.json: failed" >> $D/report/missing.txt
 cp $D/exits.txt $D/report/exits.txt || echo "exits.txt: none" >> $D/report/missing.txt
 cp $D/spine-times.txt $D/report/spine-times.txt || echo "spine-times.txt: none" >> $D/report/missing.txt
 # disarm the abort gate: a re-post of this file starts disarmed until its own pilot
-rm -f var/lab-j165-local/armed.txt
+rm -f var/lab-j166-local/armed.txt
 ```
 check: atlas.atlases == 13
 check: atlas.spinesDone == 13
@@ -1579,18 +1579,18 @@ the other spines play on; the summary names it with its error text and what it c
 a warning (D478's addendum), reported, never a failed check.
 
 ## Report
-collect: /home/justin-a/code/lab/data/lab-j165/report/*.atlas.md
-collect: /home/justin-a/code/lab/data/lab-j165/report/*.atlas.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/labels.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/labels-head.jsonl
-collect: /home/justin-a/code/lab/data/lab-j165/report/reads.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/cuts.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/tool.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/validation.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/spines.json
-collect: /home/justin-a/code/lab/data/lab-j165/report/exits.txt
-collect: /home/justin-a/code/lab/data/lab-j165/report/spine-times.txt
-collect: /home/justin-a/code/lab/data/lab-j165/report/missing.txt
+collect: /home/justin-a/code/lab/data/lab-j166/report/*.atlas.md
+collect: /home/justin-a/code/lab/data/lab-j166/report/*.atlas.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/labels.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/labels-head.jsonl
+collect: /home/justin-a/code/lab/data/lab-j166/report/reads.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/cuts.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/tool.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/validation.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/spines.json
+collect: /home/justin-a/code/lab/data/lab-j166/report/exits.txt
+collect: /home/justin-a/code/lab/data/lab-j166/report/spine-times.txt
+collect: /home/justin-a/code/lab/data/lab-j166/report/missing.txt
 The summary says, for Justin, in plain words and numbers only:
 - **The population, first line:** random library decks by band, drawn as the census draws them, on the D476-D480
   tool and the cut design (the pin); `training: true`, `pool: random-<band>`; never pooled with any earlier atlas.
