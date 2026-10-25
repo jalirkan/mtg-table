@@ -1139,3 +1139,8 @@ apart. J167 (night two: s04 fresh without Scute Swarm, s05–s13, s02/s03 re-che
   kept beside as `atlas.j166.*`), s04 fresh (J166's s04 and its deck folder moved aside as `.j166-scute`, never
   deleted; the decks redrawn with D482's list, same seeds, chunk 25), s05–s13 as J166 planned them, the labels
   contract v2 (each row its spine's sha and `pre-D483` / `D483`, each option's play identity). ~7–10 h at 6 workers.
+- 07:30 EDT, **Justin's verdict on the seam draft (pause scenery until Monday 2026-10-27):** the stepper page and
+  the three-pair draft are not what we set out to do — static, hand-fed scenarios; he prefers the previous preview
+  (`?pairfull=1#ambience`, pairs-v5: select any land, the scenery evolves by itself). Nothing he liked was removed;
+  the draft sits behind its own `?pairs=` link only. Monday's work: the one-world seams as an evolution of THAT
+  board, reviewed on it with free land play, covering all ten pairs. No scenery spend before then.
