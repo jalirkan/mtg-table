@@ -1144,3 +1144,19 @@ apart. J167 (night two: s04 fresh without Scute Swarm, s05–s13, s02/s03 re-che
   (`?pairfull=1#ambience`, pairs-v5: select any land, the scenery evolves by itself). Nothing he liked was removed;
   the draft sits behind its own `?pairs=` link only. Monday's work: the one-world seams as an evolution of THAT
   board, reviewed on it with free land play, covering all ten pairs. No scenery spend before then.
+
+## 2026-10-25 11:40 EDT — J167 failed at 11:01: not s04, a Forge 2.0.14 AI loop on s05 (the PC session)
+
+J167's run1 (pilot, the s02/s03 re-checks under D481: both pass) and run2 (**s04 fresh, without Scute Swarm:
+exit 0, 2,900 rows, 0 timeouts**, in 34 min) were fine. run3 = **s05 pauper** hung every unit from its first
+games (30 unit kills at 1,800 s, 56 branch games/h) until the 3-h step cap. Diagnosed with thread dumps on a
+one-worker reproduction (var/j167-s04-diag/): **a Forge 2.0.14 bug** — `ChooseSourceEffect.resolve` loops
+`do { chooseSingleEntityForEffect } while (null || a "--" divider)`, and 2.0.14's `ChooseSourceAi` never filters
+the divider cards, so when the random seat activates **Circle of Protection: Green** (deck B) with no threat on
+the board, Forge answers the divider (or null) ~20,000 times a second, each re-ask a decision record (seat-1 frame
+logs of 0.25–1.45 GB, 18 of them) and no game event, so D467's StepClock never reads the 120-s deadline. Upstream
+fixed it in 746455d75 (2026-09-15), after 2.0.14; 62 pinned scripts use the same ChooseSource logic. **D484**
+(lane running): the random seat answers a ChooseSource as upstream's fix does; every decision callback throws
+`BranchTimeout` past the branch deadline (the general backstop D467 lacked); a cap on identical consecutive
+records; self-tests that fail rather than hang. I misread run3 as s04 for an hour this morning — the record
+above is the corrected one. No job is posted until D484 is merged and the s05 reproduction finishes.
