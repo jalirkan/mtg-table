@@ -187,3 +187,33 @@ Every step runs under `logs/gpu.lock` with the 6 GB gate, as panoramas-v1 did.
 
 Publishing panoramas-v1 (B3) costs no GPU and waits on Justin's word. When batch 4 is done, all 121 slots are full.
 Coding steps A1–A9 is a ForgeCoach lane (1.13's `pairfull.ts` grown into steps 5–9), separate from these batches.
+
+## C. One world: canonical halves and seams (2026-10-24, Justin's rule)
+
+Justin, 2026-10-24: "Going from one island to island and swamp is a huge, jarring transformation … adding a single mana
+should not completely redraw the entire landscape. It should evolve it. I like the landscapes we developed. We need to
+work on the conceptual aspect, making sure things work logically." Agreed principle, now the rule:
+
+1. **Each colour has one canonical landscape per stage, and it never changes.** The mono pictures (pack-v8's ladder,
+   stages 1–6) ARE the canonical landscapes. Six Islands is the island picture at stage 6, whatever else is on the half.
+2. **A second colour slides in beside the first; nothing is redrawn.** The pair picture is the first colour's canonical
+   half, the second colour's canonical half, and a painted SEAM between them (the transition: a bog creeping into the
+   shore, a treeline climbing onto scree). The halves are the mono pictures; only the seam is new paint.
+3. **A third colour grows INTO one half** (the heavier colour's ground), as the painted-in elements do today (1.16.1).
+4. **One geography, so every seam has one direction.** The land rises from the sea to the mountains, left to right:
+   **Island (coast) → Swamp (marsh behind the coast) → Plains (lowland) → Forest (upland) → Mountain (highland).**
+   In any pair the colour earlier in this order is the LEFT half. The board mirrors the whole picture for a reversed
+   order, as today, so the logic inside a half never changes.
+5. **Stages evolve one half at a time.** A half shows its colour's canonical picture at the stage of that colour's own
+   land count (mono thresholds); the seam is painted at three pair stages (the mono stages 2 / 4 / 6 on both edges) and
+   is chosen by the total, as today's pair stage is. Adding one land changes one half's stage, never the other half.
+6. **Light stays inside the pictures.** The halves carry their own hour (light.json); the seam is painted at the later
+   of the two hours and the shared horizon (LIGHT.md).
+7. **What is kept:** the mono ladder and its 1.7 transition frames unchanged; the pieces (the empty table, the veils,
+   the fronts); the painted-in third colours, redone onto the new pair bases once the seams are approved.
+8. **What is replaced:** the pairs-v5 whole-place panoramas, by seam compositions. Nothing is unpublished until the
+   replacement is judged live.
+
+**The work, in order:** the ten seams sketched between the canonical halves at pair stage 2 (mono stage 4 edges) and
+one at pair stage 3, sketch quality, one sheet for Justin → the full seam set (10 pairs × 3 stages, desktop and
+phone) → the third colours painted into the new bases → live at two, three and four colours → judged.
