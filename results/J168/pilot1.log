@@ -1,0 +1,293 @@
+==== J168 pilot1 started 2026-10-25T12:14:54-04:00 in unit lab-J168-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J168: data folder free GB 627.4
+J168: D481: docs/decisions/D481-decision-names-an-object-entered-between-frames.md added by 51564f1bef07a8be10b52ceca2c22e141923756a
+J168: D482: docs/decisions/D482-census-engine-unplayable-list.md added by b9f62f07cf76fcb1e4de56b7ce6970c2d1aa7a99
+J168: D483: docs/decisions/D483-play-identity.md added by ea1f56bd9cc0f92607365cc642cc0cae5feb6e20
+J168: D484: docs/decisions/D484-choose-source-loop.md added by 28acf721d4579e402c0f7099324cdc5962a3a627
+✔ --min-options: the spread over decisions with k or more options, filled from the rest; k = 1 is D451's spread (1.062906ms)
+✔ D483: --min-options counts plays, not tokens or listed options; the options branched are still every listed one (0.305128ms)
+✔ the screen settles a near-decided decision; its replacement is the next listed one not yet branched, k or more options first (0.165213ms)
+✔ early stopping: an option clearly below the leader stops; option 0 and the leader never do; a close one runs on (7.268013ms)
+✔ with every cut off the schedule is D451's: the same units in the same order, and no event written (1.435914ms)
+✔ the cut schedule: stage by stage behind the barrier, the options still running, the Forge map on the survivors, a screened decision replaced; a resume decides nothing again (5.775753ms)
+✔ the schedule's plan guard: the header written once; a clean resume replays the events and decides nothing again; another plan or an edited deck is refused, naming both hashes (7.406125ms)
+✔ a spine with no Forge map: complete, decided and settled on the random map, and no agreement read (0.822901ms)
+✔ the review's numbers on its own data: the atlas reproduced at 96 of 96; the screen and early stopping keep 13 of 13 confident labels, no flip (8911.813505ms)
+✔ the guardrails of slices put back together are one pass's: counts summed, the first 50 violations named in order (1.290948ms)
+✔ --checks-parallel: atlas.json's checks are the serial run's, byte for byte, but the redaction's wall time (7331.753574ms)
+✔ the pool behind the barrier: the next stage waits, a worker the first stage did not need starts for the later ones, the jobs carry the options (1230.123608ms)
+✔ the atlas's redaction check: --empty-hand-ok reaches the checker, and proves before it excuses (D460) (128.899436ms)
+✔ a worker that dies mid-unit: the fresh one resumes at the branches it has no row for, each played once (45.566473ms)
+✔ a worker that retires after two OutOfMemoryErrors: the pool starts a fresh one, which resumes; the OOM branches stay as engine errors (37.868765ms)
+✔ a unit that dies at the same place every time is given up after two attempts, recorded unfinished (35.647512ms)
+✔ the resume policy, and the branches a unit already holds (0.341097ms)
+✔ the arithmetic: Wilson with draws, ranks, Spearman (1.59819ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (27.940206ms)
+✔ the agreement of two maps (15.215445ms)
+✔ how many rollouts, and the even spread of decisions (0.264993ms)
+✔ the deck pair rule: the most even record with the most games (0.85433ms)
+✔ a decision's two maps from its branch rows (19.148804ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.546176ms)
+✔ the guardrails read back from the decision records (0.359291ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.591441ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.370683ms)
+✔ atlas.md renders the two maps side by side (1.719371ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.301191ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.15819ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.356356ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (114.762507ms)
+✔ G6 (D471): X drawn, X = 0-only offers left out and own plays paid at X = 0 are counted; a play paid at 0 is a violation and a problem (243.177494ms)
+✔ branch errors are counted by text, and an option past --branch-error-max is named with its error (D466, J156 spine 458) (0.526148ms)
+✔ writeAtlas makes an errored option a problem and shows the errors in atlas.md's checks (D466) (3.007634ms)
+✔ an option the copy cannot give is unavailable: left out of the map, counted apart from errors, a problem past the bar (D470, J158 spine 461) (3.072036ms)
+✔ a branch whose game Karn restarted is played on: its row carries the restarts, it counts in the map, phase B counts it (D477, J162 modern7) (1.593392ms)
+✔ a copy that could not name an effect's source, or lost an exile link, is counted: on the row, in phase B and atlas.md, never a problem (D479) (3.787422ms)
+✔ a capped branch is a draw: one written as seat A's win is a problem; an option capped past --branch-capped-warn is a warning, never a problem (D478 and its addendum) (12.93015ms)
+✔ G1, planted (D466): a land the seat's own listing does not hold is no flag; a land in hand, drop unused, not played, is one (0.283277ms)
+✔ every guardrail violation is counted, though only the first 50 are named (D466: J156 vintage, 200 shown of 3,071) (47.010812ms)
+✔ a truncated frame log is skipped and named, and atlas.json is still written (D466: J156 spine 458's hung branch) (2.891444ms)
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.567573ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (897.988965ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (731.320192ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.488847ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2295.0873ms)
+✔ the prior covers the spectrum over 1,000 decks (1241.113835ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (54.944898ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.13704ms)
+✔ the land formula on fixture decks (0.781732ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.348942ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.207343ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (544.209321ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (2.133155ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.551486ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.139855ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (25.478508ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (9.332598ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.934495ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (223.053019ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (191.154806ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (588.691167ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1795.179954ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.794366ms)
+✔ the engine-unplayable list (D482): the committed file, its shape, every card in the library (0.277857ms)
+✔ the engine-unplayable list (D482): a listed card is never dealt, every skip counted, every other deck unchanged (1948.414464ms)
+✔ decks writes the list it applied and its skips; --unplayable none is D447's draw; --cube refuses it (465.658835ms)
+✔ both chairs of a lab recording pass the redaction checker (226.264731ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (37.669937ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (119.460587ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (160.397429ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (160.022348ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (134.977082ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (157.448927ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (144.8477ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (135.43458ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 and, M73, G6 included) (131.034605ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (273.000611ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (407.098184ms)
+✔ M72: a Forge-piloted atlas branch seat's summary may carry its pay-cap count (270.771834ms)
+✔ negative control: forgePayCap outside an atlas Forge branch, in a random seat's log, or malformed FAILS the checker (M72) (806.16123ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.553159ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2641.316527ms)
+✔ a worker that never answers is still killed as hung at its deadline (2004.558679ms)
+ℹ tests 85
+ℹ suites 0
+ℹ pass 85
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17658.420452
+check-redaction self-test: 100 controls in fixtures/negative/redaction/
+  ok    baseline.jsonl passes clean (the control)
+  ok    p1-stub-without-owner.jsonl is rejected (amendment P1: the redacted stub is five keys, and `owner` is the fifth)
+  ok    p15-card-without-token.jsonl is rejected (amendment P15: every full card carries `token` (CardView.isToken))
+  ok    p3-card-without-alt.jsonl is rejected (amendment P3: every full card carries `alt`, `null` unless the seat may flip it)
+  ok    p2-library-without-cards.jsonl is rejected (amendment P2: a library is {count, cards}, not a bare count)
+  ok    p3-facedownhidden-revived.jsonl is rejected (amendment P3 retired the eleven-key faceDownHidden object; no emitter writes one)
+  ok    a1-stub-with-a-name.jsonl is rejected (A1: a sixth key on a stub is a leak, and a name is the worst one)
+  ok    a6-opponent-hand-named.jsonl is rejected (A4/A6: a full named card in the opponent hand, for an id nothing ever revealed)
+  ok    a3-opponent-library-revealed.jsonl is rejected (A3: an opponent library dumped as full cards -- reachable, but it must be declared)
+  ok    a3-revealed-top-under-courser.jsonl passes clean (the control)
+  ok    a3-revealed-top-two-cards.jsonl is rejected (A3, D315: Courser reveals ONE card; a second card of the opponent's library is a leak)
+  ok    a3-revealed-top-look-is-private.jsonl is rejected (A3, D315: Experimental Frenzy says "you may look" -- private, even though Forge scripts it MayLookAt$ Player)
+  ok    a9-look-permission-under-gonti.jsonl passes clean (the control)
+  ok    a9-exiled-face-down-named-without-a-dig.jsonl is rejected (A9, D371: an opponent's face-down card in exile with an alt, and no dig from a library behind it)
+  ok    a9-dig-by-the-opponent.jsonl is rejected (A9, D371: the dig was the OPPONENT's effect -- their look permission is not the viewer's)
+  ok    a9-alt-appears-after-the-dig.jsonl is rejected (A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source)
+  ok    a9-opponent-morph-named.jsonl is rejected (A9: the opponent's face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for)
+  ok    a9-stolen-morph-named-for-its-owner.jsonl is rejected (A9, D371: in play a face-down card's face is its CONTROLLER's -- the owner of a stolen morph does not see it)
+  ok    own-hand-card-redacted.jsonl is rejected (the viewer's own hand card served as a redacted stub: over-redaction, and the checker names the stub's controller)
+  ok    a6-library-reveal-is-not-a-whitelist.jsonl is rejected (A6: an opponent-library reveal must not excuse the same id later in their HAND)
+  ok    notice-names-a-concealed-card.jsonl is rejected (section 6: both notice strings go through Snap.sweepText, so an id here is OUR gate failing)
+  ok    ask-text-initial-null.jsonl is rejected (section 5.2: `text.initial` is a string, "" when Forge has none -- never null)
+  ok    ask-ability-menu-cardid-null.jsonl is rejected (section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send)
+  ok    a6-reveal-ask-one-frame-too-late.jsonl is rejected (the lookahead is ONE frame: a reveal ask two frames after the state does not justify it)
+  ok    p12-choose-list-reveals-without-the-flag.jsonl is rejected (P12: only `reveal: true` (or a delayedReveal) lets a list-shaped ask carry an opponent hand card)
+  ok    a7-reveal-flag-on-the-wrong-ask-kind.jsonl is rejected (amendment A7: `reveal: true` is Forge's getChoices(min < 0) channel and is a `choose_list` only)
+  ok    m44-match-present.jsonl passes clean (the control)
+  ok    m44-aideck-carries-path.jsonl is rejected (amendment M44: the AI's deck is its NAME and card COUNT; a path identifies the opponent's decklist)
+  ok    m44-aideck-cards-is-a-list.jsonl is rejected (amendment M44: aiDeck.cards is a COUNT; a list of names there is the opponent's decklist on the wire)
+  ok    m44-yourdeck-path-mismatch.jsonl is rejected (amendment M44: hello_ok.match and the session header are written from the same Deck objects; a different yourDeck.path means one of them describes a different match)
+  ok    m47-spectated-present.jsonl passes clean (the control)
+  ok    m47-yourprofile-on-a-human-seat.jsonl is rejected (amendment M47: yourProfile is a fact about an AI seat; on a viewer players[] marks human it describes a different match)
+  ok    m47-yourprofile-is-a-path.jsonl is rejected (amendment M47: yourProfile is the base name of a .ai file, never a path)
+  ok    m56-aipolicy-present.jsonl passes clean (the control)
+  ok    m56-aipolicy-not-a-policy.jsonl is rejected (amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path)
+  ok    m47-pace-not-a-number.jsonl is rejected (amendment M47: the session header's paceMs is a positive integer of milliseconds)
+  ok    m49-keywords-present.jsonl passes clean (the control)
+  ok    m49-stub-carries-keywords.jsonl is rejected (amendment M49: a redacted stub is five keys -- a keyword on it is a sixth key, and a fact about a hidden card)
+  ok    m49-keyword-is-a-display-string.jsonl is rejected (amendment M49: a keyword is a Keyword constant's name() -- a display string (or a card name) is not one)
+  ok    m49-face-down-carries-keywords.jsonl is rejected (amendment M49: a face-down card's keywords are [] in both branches of gate 2, like its name)
+  ok    m49-keywords-half-present.jsonl is rejected (amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it)
+  ok    m55-decisions-present.jsonl passes clean (the control)
+  ok    m55-decision-of-the-other-seat.jsonl is rejected (amendment M55 / D347: a seat's legal options name its hand -- the OTHER seat's record in this log is a leak)
+  ok    m55-option-names-the-opponent-hand.jsonl is rejected (amendment M55 / D347: an option naming a card the viewer cannot see (the opponent's concealed hand) is a leak)
+  ok    m55-decision-carries-a-label.jsonl is rejected (amendment M55 / D347: a decision record is tokens and numbers -- a label is an engine string that can name a card)
+  ok    m55-chosen-is-not-an-option.jsonl is rejected (amendment M55 / D347: the answer is one of the legal options)
+  ok    m55-frame-is-not-a-state.jsonl is rejected (amendment M55 / D347: a decision points at the state frame it was taken in)
+  ok    m55-decision-in-a-seat-recording.jsonl is rejected (amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log)
+  ok    m55-option-entered-between-frames.jsonl passes clean (the control)
+  ok    m55-option-never-shown.jsonl is rejected (D481: an option naming an id no state frame shows and no zone event moves into the viewer's public zones is still a failure)
+  ok    m55-option-entered-the-opponent-hand.jsonl is rejected (D481: an id the next state frame's events deal into the OPPONENT's hand is hidden -- a decision naming it is a leak)
+  ok    m55-option-cast-between-frames.jsonl passes clean (the control)
+  ok    m55-option-cast-from-the-opponent-hand.jsonl is rejected (D481: a card moved to the stack from ANOTHER seat's hand is not vouched for -- it can be cast face down)
+  ok    m55-option-entered-then-went-to-the-opponent-hand.jsonl is rejected (D481: only the LATEST zone event counts -- a token on the viewer's battlefield that then went to the opponent's hand is hidden)
+  ok    m55-option-cast-a-frame-before-the-decision.jsonl passes clean (the control)
+  ok    m55-option-entered-then-ceased-to-exist.jsonl passes clean (the control)
+  ok    m55-option-born-on-the-opponent-battlefield.jsonl is rejected (D481: a token born onto the OPPONENT's battlefield and gone to their graveyard is not the viewer's own -- not vouched for)
+  ok    m55-option-born-then-taken-by-the-opponent.jsonl is rejected (D481: a token born onto the viewer's battlefield whose latest move is onto the OPPONENT's battlefield is not vouched for)
+  ok    m55-option-born-on-the-opponent-then-taken.jsonl is rejected (D481: the birth must be onto the VIEWER's battlefield -- a token born onto the opponent's and then taken by the viewer is not vouched for)
+  ok    m55-option-entered-the-viewer-exile.jsonl is rejected (D481: exile is never accepted (a card can go there face down) -- a token born onto the viewer's battlefield and exiled is not vouched for)
+  ok    m55-option-cast-from-the-viewer-library.jsonl is rejected (D481: a card moved to the stack from the viewer's own LIBRARY is not vouched for -- the viewer could not see it when the option was offered)
+  ok    m55-option-not-born-in-the-graveyard.jsonl is rejected (D481: the token branch needs a birth (from: null onto the viewer's battlefield) -- a card merely moved into the viewer's graveyard from its library is not vouched for)
+  ok    m55-option-entered-a-state-too-late.jsonl is rejected (D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not)
+  ok    m57-explore-present.jsonl passes clean (the control)
+  ok    m57-explore-without-header.jsonl is rejected (amendment M57 / D358: an explore mark only in a recording whose header says it explored)
+  ok    m57-explore-forge-names-the-opponent-hand.jsonl is rejected (amendment M57 / D358: the mark's Forge answer is a token like any other -- naming a card the viewer cannot see is a leak)
+  ok    m57-explore-carries-a-label.jsonl is rejected (amendment M57 / D358: an explore mark is a rule and a token -- nothing else)
+  ok    m57-playexplore-in-a-seat-recording.jsonl is rejected (amendment M57 / D358: a seat a person plays never explores)
+  ok    m58-search-prior-present.jsonl passes clean (the control)
+  ok    m58-generated-is-not-a-count.jsonl is rejected (amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string)
+  ok    m60-best-of-three-present.jsonl passes clean (the control)
+  ok    m60-score-in-a-one-game-match.jsonl is rejected (amendment M60: score belongs to a best of three; a one-game table carries exactly M59's four keys)
+  ok    m60-score-not-a-count.jsonl is rejected (amendment M60: score is the games each side won before this one, 0 or 1 each -- never a list or a name)
+  ok    m60-score-ahead-of-the-game.jsonl is rejected (amendment M60: game 2 follows exactly one game, so the score cannot add up to two)
+  ok    m60-record-not-a-boolean.jsonl is rejected (amendment M60 / D407: record is a seat's consent, true or false)
+  ok    m60-record-against-the-ai.jsonl is rejected (amendment M60 / D407: only a seat at a table of two says whether it may be recorded)
+  ok    m62-ai-unexpected-key.jsonl is rejected (amendment M62 / D414: the header's ai is the search's own knobs, never a deck or anything else)
+  ok    m62-ai-without-transport.jsonl is rejected (amendment M62 / D414: only a seat a person plays names its AI opponent in the header)
+  ok    m61-playable-present.jsonl passes clean (the control)
+  ok    m61-playable-names-the-opponent-hand.jsonl is rejected (amendment M61 / D413: the list is the seat's own cards -- naming a card in the opponent's hidden hand is a leak)
+  ok    m61-playable-on-the-battlefield.jsonl is rejected (amendment M61: the list names cards outside the battlefield only)
+  ok    m61-playable-off-priority.jsonl is rejected (amendment M61: the list is written only at the seat's own priority, null otherwise)
+  ok    m61-playable-half-present.jsonl is rejected (amendment M61: a seat writes the key on every state -- some with and some without is a broken emitter)
+  ok    m63-activatable-present.jsonl passes clean (the control)
+  ok    m63-activatable-names-the-opponent-permanent.jsonl is rejected (amendment M63 / D420: the list is the permanents the seat controls -- naming the opponent's is a lie about control)
+  ok    m63-activatable-off-the-battlefield.jsonl is rejected (amendment M63: the list names battlefield permanents only (a card elsewhere is M61's playable))
+  ok    m63-activatable-off-priority.jsonl is rejected (amendment M63: the list is written only at the seat's own priority, null otherwise)
+  ok    m63-activatable-half-present.jsonl is rejected (amendment M63: a seat writes the key on every state -- some with and some without is a broken emitter)
+  ok    m65-m66-selection-present.jsonl passes clean (the control)
+  ok    m66-playerids-names-no-seat.jsonl is rejected (amendment M66 / D423: playerIds names seats -- an id that is no seat is a card id in the wrong list)
+  ok    m65-chosen-was-never-offered.jsonl is rejected (amendment M65 / D422: a target or list entry chosen is one the engine offered this seat in the same input)
+  ok    m65-block-by-the-opponent.jsonl is rejected (amendment M65 / D422: a block declaration is the viewing seat's own -- a blocker it does not control is a lie about control)
+  ok    m65-chosen-shape.jsonl is rejected (amendment M65: chosen is exactly {cardIds, playerIds, blocks, attacks})
+  ok    m65-chosen-half-present.jsonl is rejected (amendment M65: a seat writes chosen on every input -- some with and some without is a broken emitter)
+  ok    m67-assign-damage-refused.jsonl passes clean (the control)
+  ok    m67-illegal-damage-applied.jsonl is rejected (amendment M67 / D424: damage on the defender while defenderAllowed is false must be refused -- the next ask is the same question with a reason)
+  ok    m67-defender-allowed-half-present.jsonl is rejected (amendment M67: a bridge since M67 writes defenderAllowed on every assign_damage ask -- some with and some without is a broken emitter)
+  ok    m68-answer-refused.jsonl passes clean (the control)
+  ok    m68-illegal-answer-applied.jsonl is rejected (amendment M68 / D426: a choose_list answer outside [min, max] must be refused -- the next ask is the same question with a reason)
+  ok    m68-reason-half-present.jsonl is rejected (amendment M68: a bridge since M68 writes reason on every ask of a kind -- some with and some without is a broken emitter)
+  ok    p1-stub-without-owner.jsonl is a WARN under --pre-amendment
+  ok    p15-card-without-token.jsonl is a WARN under --pre-amendment
+  ok    p3-card-without-alt.jsonl is a WARN under --pre-amendment
+  ok    p2-library-without-cards.jsonl is a WARN under --pre-amendment
+  ok    p3-facedownhidden-revived.jsonl is a WARN under --pre-amendment
+  ok    a1-stub-with-a-name.jsonl is still rejected under --pre-amendment
+  ok    a6-opponent-hand-named.jsonl is still rejected under --pre-amendment
+  ok    a3-opponent-library-revealed.jsonl is a WARN under --opponent-library-ok
+  ok    a6-library-reveal-is-not-a-whitelist.jsonl is still rejected under --opponent-library-ok
+  ok    a6-opponent-hand-named.jsonl is still rejected under --opponent-library-ok
+  ok    --partial: every one of the 100 controls has the same verdict, for the same reason
+  ok    a two-line prefix: --partial exit 3 (coverage skipped, nothing leaked); without the flag still exit 1
+  ok    a prefix ending in a leaking state: --partial exit 1, A1
+  ok    A6's slack cut inside it: --partial holds the state back (decided=10618 bytes), one frame later it fails
+  ok    M55 D3 cut before the next state: undecided; with it: a failure
+  ok    482 prefixes of the committed recordings pass --partial (1.7 s)
+  ok    --empty-hand-ok: every one of the 100 controls has the same verdict, for the same reason
+  ok    an opponent hand empty in every state: a failure by default, a WARN under --empty-hand-ok
+  ok    a viewer hand empty in every state: a failure by default, a WARN under --empty-hand-ok
+  ok    opp-full-card-count-1.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-count-1-no-stub.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-library-listed.jsonl: still a failure under --empty-hand-ok (a card of another seat's hand or library is listed)
+  ok    opp-seat-never-listed.jsonl: still a failure under --empty-hand-ok (no state lists any seat but the viewer's)
+  ok    opp-seat-missing-once.jsonl: still a failure under --empty-hand-ok (the state at line 3 lists 1 of the 2 seats)
+  ok    viewer-count-1-stub.jsonl: still a failure under --empty-hand-ok (the viewer's hand is not empty)
+
+check-redaction self-test OK
+{"data12": 1, "s04Data": 1, "s04Deck1": 1, "j166S04Aside": 1, "s05Draw": 1, "s05DeckA": 1, "s05DeckB": 1, "s05CircleInB": 1, "smokeData": 1, "validationData": 1}
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 989 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/4] d0-forge-0: 4/4 branch game(s); 761 branch games/h
+  [B 2/4] d17-random-0: 4/4 branch game(s); 1048 branch games/h
+  [B 3/4] d17-forge-0: 4/4 branch game(s); 1417 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1462 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas phase A: 16 rollout(s) from the opening, both seats random; 0 done, 16 to play on 2 worker(s)
+  [A 16/16] 1841 games/h
+atlas: var/cubelab/atlas-selftest/g5/atlas.json and atlas.md; phase A 16 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (1071 rows, 32 frame logs, 0 leak check(s))
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 2 worker(s)
+  [A 6/6] 1721 games/h
+atlas: var/cubelab/atlas-selftest/g6/atlas.json and atlas.md; phase A 6 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (319 rows, 12 frame logs, 0 leak check(s))
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 2269 branch games/h
+  [B 2/3] d31-random-2: 12/12 branch game(s); 3698 branch games/h
+  [B 3/5] d2-random-0: 6/6 branch game(s); 3529 branch games/h
+  [B 4/6] d31-random-4: 12/12 branch game(s); 4138 branch games/h
+  [B 5/6] d31-forge-0: 12/12 branch game(s); 4869 branch games/h
+  [B 6/6] d2-random-2: 6/6 branch game(s); 4591 branch games/h
+  [B 7/8] d2-forge-0: 6/6 branch game(s); 4356 branch games/h
+  [B 8/8] d2-random-4: 6/6 branch game(s); 4151 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts/atlas.json and atlas.md; phase A 0 game(s), phase B 72 branch game(s) at 2 decision(s); checks: clean (1739 rows, 146 frame logs, 4 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 1: d18 (p, turn 17, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 2 (option 0 never stops; the Forge map on the options still running); checkpoints 2/4
+atlas phase B: 1 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/1] d18-random-0: 6/6 branch game(s); 1042 branch games/h
+  [B 2/2] d18-random-2: 6/6 branch game(s); 1182 branch games/h
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/cuts-noforge/atlas.json and atlas.md; phase A 0 game(s), phase B 12 branch game(s) at 1 decision(s); checks: clean (565 rows, 26 frame logs, 1 leak check(s))
+atlas-selftest: OK (cuts cuts: 2 in full, 0 screened, 0 option(s) stopped; cuts-noforge: 1 in full, 0 screened, 0 option(s) stopped; 16 forks, 8 no-leak checks, 38 frame logs, 538 rows; G3 0, G5 refused 0 / left out 0; pay cap 0; copies held 1; the tax pair's G5 refused 2 / left out 2; the Crypt Rats pair's G6 drew X 10 / left out 63 / paid at 0 0)
+seat-identity: forge: the same game (B in 15 turns, 59 lines, digest 70b36c8575ab6574; golden B in 15, 59 lines, 70b36c8575ab6574)
+seat-identity: search: the same game (A in 13 turns, 93 lines, digest 19995346a6342137; golden A in 13, 93 lines, 19995346a6342137)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 20e2d8a32e35f445; golden A in 18, 193 lines, 20e2d8a32e35f445)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 16 decision(s) of seat A; branching at 2: d2 (p, turn 6, 3 options), d14 (p, turn 16, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 5 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 10/15/20 (option 0 never stops; the Forge map on the options still running); checkpoints 5/10/15/20/25
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 5 branches, on 3 worker(s)
+worker 2: unparked (maxWorkers 3)
+  [B 1/2] d14-random-0: 15/15 branch game(s); 2828 branch games/h
+  [B 2/3] d14-random-5: 15/15 branch game(s); 3664 branch games/h
+  [B 3/4] d14-random-10: 15/15 branch game(s); 4508 branch games/h
+  [B 4/5] d14-random-15: 15/15 branch game(s); 4973 branch games/h
+  [B 5/7] d14-forge-0: 15/15 branch game(s); 5822 branch games/h
+  [B 6/7] d2-random-0: 15/15 branch game(s); 5721 branch games/h
+  [B 7/8] d14-random-20: 15/15 branch game(s); 5758 branch games/h
+  [B 8/8] d2-random-5: 15/15 branch game(s); 4490 branch games/h
+  [B 9/9] d2-random-10: 15/15 branch game(s); 3840 branch games/h
+  [B 10/10] d2-random-15: 15/15 branch game(s); 3189 branch games/h
+  [B 11/12] d2-random-20: 15/15 branch game(s); 3192 branch games/h
+  [B 12/12] d2-forge-0: 15/15 branch game(s); 3166 branch games/h
+atlas: the checks on 3 workers took 6 s
+atlas: /home/justin-a/code/lab/data/lab-j166/pilot-smoke-j168/atlas.json and atlas.md; phase A 0 game(s), phase B 180 branch game(s) at 2 decision(s); checks: clean (4734 rows, 362 frame logs, 4 leak check(s))
