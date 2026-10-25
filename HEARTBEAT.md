@@ -1084,3 +1084,30 @@ The PC is rewriting the bible's open questions into a SYSTEM.md (inputs → pict
 - **Rule written into memory:** no lane pushes or fetches through the runner's clones (`lab/pc-results`, `lab/mtg-table-lane*`); the ref was repaired (`update-ref -d` + fetch).
 
 ### 2026-10-25 01:59 UTC — J166 (rung 4a, the cut design on random census decks) pilot passed 50/50; 13 spines running at 6 workers, ~9–10 h
+
+## 2026-10-25 06:30 EDT — Seams, Option A: the draft is live for Justin's review (the PC session)
+
+Justin's decision (00:10 EDT): Option A — each half at its own colour's stage (SYSTEM.md §C rule 5 as written), with
+a light conceptual test stage he reviews on the live ForgeCoach link before anything is painted in full.
+
+- **Painted** (02:57–05:24, GTX 1080, ~2 h 15 min GPU): three pairs — island|swamp, plains|mountain, swamp|forest —
+  at every stage combination within one step, 16 cells a pair, 48 cells, sketch quality (14 steps), desktop only,
+  `tools/seamA.py` (the seam core narrowed to u 0.43–0.57, zoom capped 1.06, the sky cross-faded and the ground's
+  light ramped across the core, one seed per pair so every cell's seam is the same place). 74 pictures for 48 cells;
+  the second candidates fixed a vertical wall at the core's edge, two painted-over moons and an invented sun. Outside
+  the ring every cell is pixel-identical to the two monos. All 48 read as a place; six one-step hour bridges read as
+  weather rather than a change of hour (island|swamp 2x1, 2x3, 4x3; plains|mountain 3x2; swamp|forest 3x2, 6x5).
+  Sheets: `panoramas-v1/sheets/seamsA-<pair>.jpg`; verdicts `work/seamA/verdicts.json`.
+- **Published**: scenery tag `pairs-v6-draft` (branch pairs-v1-work 5bf4f47; 202 files, 31.5 MB; pairs-v5's desktop
+  pictures and manifest plus the 48 cells under `seams/`; spec 1.17 draft), CDN warmed (620 files, 0 failed).
+- **Reader**: ForgeCoach PR #201 merged to main as 90aa55f (spec 1.17 draft: a pair's `grid` of `<i>x<j>` cells
+  beside `stages`; the pick from each colour's own land count; a half more than one stage behind is raised to one
+  below the heavier, captioned "(clamped)"; mirror by the land order; cross-fade to the neighbouring cell; a cold cell
+  held up to 8 s; fallback to `stages`; nothing painted in for a third colour). Gated here: tsc, build, vitest 198
+  files / 2985 tests, the ambience e2e against the live tag; skeptic review — one blocking finding (the cold-cell
+  fall-through to the whole-place panorama) fixed before the merge; follow-ups in the PR. Default board unchanged
+  (the grid only reaches a page with `?pairfull=1` and `?pairs=<draft>`).
+- **The review link**: `https://jalirkan.github.io/ForgeCoach/?pairfull=1&pairs=https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pairs-v6-draft/#ambience`
+  — desktop width (a phone-shaped panel draws the stage panorama, not the cell). Verified live: 4 Islands + 3 Swamps
+  draws the island|swamp 4x3 cell, captioned "island s4 | swamp s3".
+- Nothing else painted until Justin judges. J166 (atlas 4a) still running.
