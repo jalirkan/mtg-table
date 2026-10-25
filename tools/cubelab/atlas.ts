@@ -77,7 +77,7 @@ import { labPath, recipePath, shownPath } from './labdata.ts';
 import type { Ledger } from './censusplay.ts';
 import { checksParallel, checksSerial, type CheckInputs, type CheckParts, type GuardrailCheck, COUNTED_GUARDRAILS } from './atlaschecks.ts';
 export { COUNTED_GUARDRAILS, emptyGuardrails, forgePayCapOf, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, guardrailPass, mergeGuardrails, type GuardrailCheck } from './atlaschecks.ts';
-import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, hasBarriers, parseEarlyStop, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
+import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, hasBarriers, parseEarlyStop, playCount, repeatedPlays, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
 import {
   agreement, gamesFor, meanInterval, pairLines, rankPairs, regretInterval, scoreOf, scoreStat, variance,
   wilson, type LadderGame, type PairRow,
@@ -125,7 +125,11 @@ export const BRANCH_CAPPED_WARN_DEFAULT = 0.25;
  */
 export const UNIT_TIMEOUT_MIN_DEFAULT = 30;
 
-export interface DecisionListing { d: number; kind: string; turn: number; tokens: string[]; labels: string[] }
+/**
+ * One decision the baseline listed.  D483: `identities` is each option's play identity (the bridge's
+ * `SearchPolicy.identity`), beside its token; a listing written before D483 has none.
+ */
+export interface DecisionListing { d: number; kind: string; turn: number; tokens: string[]; labels: string[]; identities?: string[] }
 export interface BranchRow {
   v: 1; d: number; kind: string; turn: number; c: Continuation; o: number; token: string; label: string; i: number; seed: number;
   result: number; score: number; capped: boolean; timedOut: boolean; turns: number; steps: number; ms: number; bytes: number;
@@ -1268,6 +1272,15 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   // D480: the cut design, all five on -- two short spines, the second with no Forge map
   const cuts = await atlasSelftestCuts(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
   for (const x of cuts.fails) fails.push(`the cuts leg: ${x}`);
+  // D483: no baseline of any leg lists one play twice (every listing carries its options' play identities)
+  const baselines = (fs.readdirSync(out, { recursive: true }) as string[]).filter((p) => path.basename(p) === 'baseline.json').map((p) => path.join(out, p));
+  for (const b of baselines) {
+    const listed = (JSON.parse(fs.readFileSync(b, 'utf8')) as { decisions: DecisionListing[] }).decisions;
+    want(listed.every((x) => x.identities?.length === x.tokens.length), `D483: ${path.relative(out, b)} carries a play identity beside every token`);
+    const twice = repeatedPlays(listed);
+    want(twice.length === 0, `D483: ${path.relative(out, b)} lists a play twice: ${twice.slice(0, 3).join('; ')}`);
+  }
+  want(baselines.length > 0, 'D483: the legs\' baseline listings were found');
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
   say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
   return fails.length ? 1 : 0;
@@ -1312,10 +1325,10 @@ async function atlasSelftestCuts(repo: string, out: string, jobs: string, say: (
     const cut = decisionCuts(events);
     const rows = readJsonl<BranchRow>(path.join(B, 'branches.jsonl'));
     const units = readJsonl<UnitLine>(path.join(B, 'units.jsonl'));
-    const wide = listed.filter((x) => x.tokens.length >= 3).length;
+    const wide = listed.filter((x) => playCount(x) >= 3).length;
     const first = events.filter((e) => e.type === 'pick' && e.why !== 'replaces') as Array<Extract<ScheduleEvent, { type: 'pick' }>>;
     want(first.length === Math.min(leg.decisions, listed.length), `${tag}: ${first.length} decision(s) picked at the start, for ${leg.decisions}`);
-    want(first.every((e) => e.k === listed[e.d]?.tokens.length && (e.why === 'fill' ? e.k < 3 : e.k >= 3)) && first.filter((e) => e.why === 'fill').length === Math.max(0, first.length - wide),
+    want(first.every((e) => e.k === listed[e.d]?.tokens.length && (e.why === 'fill' ? playCount(listed[e.d] as DecisionListing) < 3 : playCount(listed[e.d] as DecisionListing) >= 3)) && first.filter((e) => e.why === 'fill').length === Math.max(0, first.length - wide),
       `${tag}: --min-options 3 picks the decisions with 3+ options first (${wide} listed), and names a fill`);
     for (const [d, c] of cut) {
       const mine = rows.filter((r) => r.d === d);

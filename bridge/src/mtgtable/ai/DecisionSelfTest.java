@@ -795,6 +795,30 @@ public final class DecisionSelfTest {
             why = e.getMessage();
         }
         check(why != null && why.contains("Retrace"), "a cost the copy does not offer fails, naming it: " + why);
+        // D483: the doubled may-play suffix (Forge's twin of one play) collapses to one permission; two
+        // permissions, or two ids where one is the other's prefix, stay as they are
+        final String rider = "Murderous Rider - Creature 2 / 3";
+        check(SearchPolicy.collapseBy(rider + " by #136 by #136").equals(rider + " by #136"), "a doubled \" by #<id>\" is one");
+        check(SearchPolicy.collapseBy(rider + " by #136 by #136 by #136").equals(rider + " by #136"), "a tripled one too");
+        check(SearchPolicy.collapseBy(rider + " by #13 by #136").equals(rider + " by #13 by #136"),
+                "\" by #13 by #136\" is two permissions, not a run (the id is matched whole)");
+        check(SearchPolicy.collapseBy(rider + " by #136 by #25").equals(rider + " by #136 by #25"), "two hosts stay two");
+        check(SearchPolicy.collapseBy(rider).equals(rider), "no suffix, unchanged");
+        check(SearchPolicy.collapseBy(rider + " by #136 by #1360").equals(rider + " by #136 by #1360"),
+                "\" by #136 by #1360\" is two permissions too");
+        // Bolas's Citadel's twin: Forge appends " by " + host, then CardPlayOption.toString(false), twice
+        final String bolt = "CARDNAME deals 3 damage to any target.";
+        final String citadel = " by #12 (by paying 1 life instead of paying its mana cost)";
+        check(SearchPolicy.collapseBy(bolt + citadel + citadel).equals(bolt + citadel),
+                "a doubled whole suffix with text between the hosts (Bolas's Citadel) is one");
+        check(SearchPolicy.collapseBy(bolt + citadel + " by #12 (by paying 2 life instead of paying its mana cost)")
+                        .equals(bolt + citadel + " by #12 (by paying 2 life instead of paying its mana cost)"),
+                "two suffixes from one host with different text stay two");
+        // a card's own may-play static with an alternative cost: no host in the suffix, so only the play's own suffix finds it
+        final String own = " (without paying its mana cost)";
+        check(SearchPolicy.collapseSuffix(rider + own + own, own).equals(rider + own), "a doubled own-static suffix is one");
+        check(SearchPolicy.collapseSuffix(rider + own, own).equals(rider + own), "a single one is unchanged");
+        check(SearchPolicy.collapseSuffix(rider + own + own, "").equals(rider + own + own), "no suffix to cut, unchanged");
     }
 
     /**

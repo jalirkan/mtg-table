@@ -153,6 +153,28 @@ public final class SearchPolicy {
         return mapSa(cp, sa, (Player) cp.find(ai));
     }
 
+    /**
+     * For the self-test only (D483): {@link #alternatives} at this position, Forge's own pick
+     * {@code forgeSa} (or null) left out as the search leaves it out.
+     */
+    public static List<SpellAbility> alternativesForTest(final Player ai, final SpellAbility forgeSa) {
+        final AiController aic = ((forge.ai.PlayerControllerAi) ai.getController()).getAi();
+        return alternatives(ai, aic, forgeSa, new Sink() {
+            @Override
+            public void add(final String key, final int n) {
+            }
+
+            @Override
+            public void event(final String text) {
+            }
+        });
+    }
+
+    /** For the self-test only (D483): the label a priority candidate of {@code sa} carries. */
+    public static String labelForTest(final SpellAbility sa) {
+        return describe(sa);
+    }
+
     /** For the self-test only: the mulligan search's candidate (keep, or one more London mulligan), D417. */
     public static Cand mulliganCandForTest(final boolean keep, final Player first, final int tucked) {
         return new MullCand(keep, first, tucked);
@@ -631,9 +653,10 @@ public final class SearchPolicy {
      * Other plays than Forge's: every spell or non-mana ability the AI could
      * play now, that Forge's own per-card judgment accepts (WillPlay, which also
      * chooses its targets) -- the RemAIDeck cards Forge hides included -- then
-     * untargeted ones it declines, if affordable.  Distinct by card and text.
-     * Static, with its counters' sink passed in: play exploration (D358,
-     * {@link Explorer}) draws from the same list.
+     * untargeted ones it declines, if affordable.  Distinct by {@link #playIdentity}
+     * (D483), Forge's own pick counted as listed: the first of a set of plays with one
+     * identity is kept, in Forge's order.  Static, with its counters' sink passed in:
+     * play exploration (D358, {@link Explorer}) draws from the same list.
      */
     static List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa,
                                            final Sink sink) {
@@ -641,7 +664,7 @@ public final class SearchPolicy {
         final List<SpellAbility> declined = new ArrayList<>();
         final Set<String> seen = new HashSet<>();
         if (forgeSa != null) {
-            seen.add(key(forgeSa));
+            seen.add(playIdentity(forgeSa));
         }
         final Game g = ai.getGame();
         final CardCollection cards = ComputerUtilAbility.getAvailableCards(g, ai);
@@ -661,8 +684,8 @@ public final class SearchPolicy {
             if (host == null || host.getController() != ai && host.getOwner() != ai) {
                 continue;
             }
-            if (!seen.add(key(sa))) {
-                continue;
+            if (!seen.add(playIdentity(sa))) {
+                continue;   // D483: the same play as one listed already (Forge's doubled may-play twin among them)
             }
             try {
                 sa.setActivatingPlayer(ai);
@@ -696,13 +719,159 @@ public final class SearchPolicy {
         return false;
     }
 
-    private static String key(final SpellAbility sa) {
-        return sa.getHostCard().getName() + "|" + sa.getDescription();
+    /**
+     * D483 (amending D476's listing): what makes two priority plays the same play, so
+     * {@link #alternatives} lists it once.  The fields, joined by {@code |}: the host
+     * card's NAME (two copies of a card in one zone are one play, as the old
+     * name-and-description key had it); spell or ability; the face
+     * ({@code getCardStateName}: an Adventure card's creature or its adventure); the
+     * alternative cost ({@code getAlternativeCost}, or none); a card's own
+     * AlternativeCost static paid or not ({@code OptionalCost.AltCost}); the may-play
+     * permission's host by its card id, or none; without its mana cost or not; the
+     * optional costs, sorted; and {@link #matchKey}, with a doubled may-play suffix cut to one
+     * ({@link #collapseBy}: a whole suffix repeated verbatim; {@link #collapseSuffix}: the play's
+     * own suffix, rebuilt).  A card's own may-play static is {@code mayPlay#self}, so two copies of
+     * it are one play.
+     *
+     * <p>Why: an Adventure card on its adventure, or a card an impulse draw exiled, is
+     * listed by Forge twice.  {@code Card.getAllPossibleAbilities} lists the may-play
+     * play ({@code getAlternativeCosts}, Card.java:7428), and
+     * {@code ComputerUtilAbility.getOriginalAndAltCostAbilities} asks
+     * {@code getAlternativeCosts} again about that play (ComputerUtilAbility.java:109),
+     * whose {@code getMayPlaySpellOptions} never checks for a permission already used
+     * and appends {@code " by <host>"} a second time.  The twin is the same play under a
+     * longer description: the old key (name and description) kept both, and the atlas
+     * branched both (J166: eight options played identically in 200 of 200 paired
+     * branches).  The description stays in the identity for what it does tell apart:
+     * an AltCost play's appended text, an alternate additional cost, an activated
+     * ability's text.
+     */
+    public static String playIdentity(final SpellAbility sa) {
+        final StringBuilder b = new StringBuilder();
+        b.append(sa.getHostCard().getName()).append('|').append(sa.isSpell() ? "spell" : "ability")
+                .append('|').append(sa.getCardStateName())
+                .append('|').append(sa.getAlternativeCost() == null ? "-" : sa.getAlternativeCost().name())
+                .append('|').append(sa.isOptionalCostPaid(OptionalCost.AltCost) ? "altCost" : "-")
+                .append('|').append(sa.getMayPlay() == null ? "-" : sa.getMayPlay().getHostCard() == sa.getHostCard()
+                        ? "mayPlay#self" : "mayPlay#" + sa.getMayPlay().getHostCard().getId())
+                .append('|').append(sa.hasParam("WithoutManaCost") ? "free" : "-")
+                .append('|');
+        final List<String> opt = new ArrayList<>();
+        for (final OptionalCost t : sa.getOptionalCosts()) {
+            opt.add(t.name());
+        }
+        java.util.Collections.sort(opt);
+        b.append(String.join(",", opt)).append('|').append(collapseSuffix(collapseBy(matchKey(sa)), mayPlaySuffixKey(sa)));
+        return b.toString();
     }
 
+    /** D483: where a may-play suffix's host id starts, in a {@link #matchKey}: {@code " by #<id>"}, the id whole. */
+    private static final java.util.regex.Pattern BY_ID = java.util.regex.Pattern.compile(" by #\\d+(?!\\d)");
+
+    /**
+     * D483: a {@link #matchKey} with each whole may-play suffix that repeats the one before it verbatim dropped.
+     * A suffix runs from a {@code " by #<id>"} to the next one or the end: Forge's
+     * {@code getMayPlaySpellOptions} appends {@code " by " + host}, then the permission's
+     * {@code MayPlayText} and {@code CardPlayOption.toString(false)} (an alternative mana cost, "spend
+     * mana as though", RaiseCost, "without paying its mana cost"), so Bolas's Citadel's twin reads
+     * {@code base + S + S} with text between the two hosts.  {@code " by #13 by #136"} and
+     * {@code " by #136 by #1360"} are two permissions and stay.
+     */
+    static String collapseBy(final String key) {
+        final java.util.regex.Matcher m = BY_ID.matcher(key);
+        final List<Integer> at = new ArrayList<>();
+        while (m.find()) {
+            at.add(m.start());
+        }
+        if (at.size() < 2) {
+            return key;
+        }
+        final StringBuilder out = new StringBuilder(key.substring(0, at.get(0)));
+        String prev = null;
+        for (int i = 0; i < at.size(); i++) {
+            final String seg = key.substring(at.get(i), i + 1 < at.size() ? at.get(i + 1) : key.length());
+            if (!seg.equals(prev)) {
+                out.append(seg);
+            }
+            prev = seg;
+        }
+        return out.toString();
+    }
+
+    /**
+     * D483: {@code key} with a trailing run of {@code suffix} cut to one copy ({@code key} itself when
+     * {@code suffix} is empty).  The suffix is the play's own, rebuilt by {@link #mayPlaySuffixKey}: it
+     * catches a twin whose suffix carries no {@code " by #<id>"} at all -- a card's own may-play static
+     * with an alternative cost, where Forge appends no host.
+     */
+    static String collapseSuffix(final String key, final String suffix) {
+        if (suffix == null || suffix.isEmpty()) {
+            return key;
+        }
+        String k = key;
+        while (k.endsWith(suffix + suffix)) {
+            k = k.substring(0, k.length() - suffix.length());
+        }
+        return k;
+    }
+
+    /**
+     * D483: the suffix Forge's {@code GameActionUtil.getMayPlaySpellOptions} appended to this play's
+     * description, as {@link #matchKey} spells it: {@code " by #<host id>"} when the permission's host is
+     * another card shown in the UI, then {@code " (" + MayPlayText + ")"}, then
+     * {@code CardPlayOption.toString(false)}.  Empty for a play with no may-play permission, or when the
+     * option cannot render here.
+     */
+    static String mayPlaySuffixKey(final SpellAbility sa) {
+        final forge.game.staticability.StaticAbility mp = sa.getMayPlay();
+        final forge.game.card.CardPlayOption o = sa.getMayPlayOption();
+        if (mp == null || o == null) {
+            return "";
+        }
+        try {
+            final Card host = mp.getHostCard();
+            final StringBuilder b = new StringBuilder();
+            if (host != sa.getHostCard() && host.getRenderForUI()) {
+                b.append(" by #").append(host.getId());
+            }
+            if (mp.hasParam("MayPlayText")) {
+                b.append(" (").append(mp.getParam("MayPlayText")).append(')');
+            }
+            b.append(o.toString(false));
+            return b.toString();
+        } catch (final RuntimeException e) {
+            return "";
+        }
+    }
+
+    /**
+     * A candidate's label: the host card, then (D483) the face it is cast as when that
+     * is not the card's name ("Murderous Rider \u2014 Swift End"), a may-play play marked
+     * as such, and an ability's text.  At most 60 characters.
+     */
     static String describe(final SpellAbility sa) {
-        final String d = sa.getHostCard().getName() + (sa.isSpell() ? "" : ": " + sa.getDescription());
+        final Card host = sa.getHostCard();
+        final StringBuilder b = new StringBuilder(host.getName());
+        final forge.game.card.CardState face = sa.getCardState();
+        if (face != null && face.getName() != null && !face.getName().isEmpty() && !face.getName().equals(host.getName())) {
+            b.append(" \u2014 ").append(face.getName());
+        }
+        if (sa.getMayPlay() != null) {
+            b.append(" (may play)");
+        }
+        if (!sa.isSpell()) {
+            b.append(": ").append(sa.getDescription());
+        }
+        final String d = b.toString();
         return d.length() > 60 ? d.substring(0, 60) : d;
+    }
+
+    /** D483: a candidate's play identity ({@link #playIdentity}), or its token when it is not a play (pass, an attack, ...). */
+    public static String identity(final Cand c) {
+        if (c instanceof PriorityCand && ((PriorityCand) c).sa != null) {
+            return playIdentity(((PriorityCand) c).sa);
+        }
+        return token(c);
     }
 
     /**
