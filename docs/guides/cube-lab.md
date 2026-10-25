@@ -1184,6 +1184,19 @@ k, by colours with 3+ spells and by main-share bin, the rejections and the decks
 the variables and the summed mana-value histogram, the census's and the pool's sha256). Deck i depends
 only on the census, the flags, the seed and i.
 
+**The engine-unplayable list** ([D482](../decisions/D482-census-engine-unplayable-list.md)). `decks --band`
+never deals a card listed in `tools/cubelab/engine-unplayable.json`. A card is listed when Forge's AI cannot
+finish its games inside the atlas's branch budget. Today that is one card, Scute Swarm: in J166 its token
+boards stalled the AI's combat prediction for 1,000–1,300 s inside one event-free engine step. This is an
+engine limitation, not a judgement about the card or anyone's decks, and a card goes on the list only with
+a measured stall and its evidence (`since`, `why`, `evidence` per card). A pick that lands on a listed card
+is made again from the same list. So a deck none of whose picks landed on a listed card is byte for byte the deck it was (its `.dck`
+and its `decks.jsonl` row, which `census-play`'s `plan.json` hashes), and a deck with such a pick changes from
+that pick on — a pick the draw would have dropped anyway still counts and still shifts the fixer shuffle after it. Every skip is counted: a row's `engineSkips` (only when there was one), `decks.json`'s
+`engineUnplayable` (the file, its sha, the cards, the skips by card, the decks with a skip), and the summary
+line `decks` prints. `--unplayable none` draws without the list, and `--unplayable <file>` reads another.
+`decks --cube`, the drafts, `evolve` and the board never read it.
+
 **`census-play`** plays `--pairs` games on `--jobs` cube-lab workers (`CubeLab.java play`, one game a
 match line, no pool so no Forge build), appending one row a game to `games.jsonl` as games finish:
 

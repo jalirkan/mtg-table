@@ -1,0 +1,11 @@
+{
+  "decision": "D482",
+  "about": "Cards the deck census's band draw (tools/cubelab/deckcensus.ts, `decks --band`) never deals into a deck, because Forge's AI cannot finish their games inside the atlas's branch budget: an ENGINE limitation, measured, not a design judgement. A card goes here only with a measured stall (branches timed out inside one engine step with the card on the board). Read by the band census draw alone; never by `decks --cube`, the cube lab's drafts, the evolve loop or the board.",
+  "cards": {
+    "Scute Swarm": {
+      "since": "J166",
+      "why": "copies itself on every land drop, so boards reach 50-127 tokens and Forge's AI attack/block prediction iterates them for 1,000-1,300 s inside one event-free engine step that the branch deadline (D467) cannot see; 134 of spine s04's 135 timed-out branches had it on the battlefield (124 with 40+ copies), 14 unit kills, 0 on the other three spines",
+      "evidence": "/home/justin-a/code/lab/data/lab-j166/b-s04-powered-2104/phaseB/ (branches.jsonl, units.jsonl, logs/worker-*.log, frames/d0-random-o4-b29-seat0.jsonl.gz, frames/d6-random-o0-b84-seat0.jsonl.gz); /home/justin-a/code/pc-results/results/J166/run4.log; deck /home/justin-a/code/lab/data/lab-j166/decks/s04-powered-2004/decks/powered-2004-00001.dck"
+    }
+  }
+}

@@ -12,7 +12,8 @@
 // Justin's amendment of 2026-10-17 (pc-results/HEARTBEAT.md): the census plays decks drawn at random
 // colour makeups over the whole spectrum, and "mono", "two-colour", "mostly red with a little white"
 // are READ off the realised profiles afterwards.  Nothing here knows a shape.  The only rules are
-// the four below, written in D447 before the first game, and the same for every deck.
+// the four below, written in D447 before the first game, and the same for every deck; rule 5, D482's
+// engine-unplayable list, is not a choice about decks but what the engine can finish.
 //
 // 1. THE PRIOR (makeupOf).  k, the number of colours, is uniform over 1..5; the k colours are a
 //    uniformly random k-subset of WUBRG; their shares are a flat Dirichlet(1, ..., 1) (k unit
@@ -58,6 +59,16 @@
 // THE BANDS are census.tsv's (D445), exclusive, as `sample` draws them.  The powered band has 41
 // cards (37 eligible), too few for a deck, so its pool is powered united with legacy, its FILL band,
 // drawn as one uniform pool (MIN_BAND_POOL); its cross-band neighbour is then peasant.
+//
+// 5. THE ENGINE-UNPLAYABLE LIST (D482; tools/cubelab/engine-unplayable.json, `--unplayable <file|none>`).
+//    A band's draw never deals a listed card: a card Forge's AI cannot finish a game with inside the
+//    atlas's branch budget (J166: Scute Swarm).  An engine limitation, measured, not a design judgement.
+//    The listed card stays in every list, so the lists' sizes and q are unchanged; a pick that lands on
+//    it is REDRAWN from the same list (a uniform pick among the rest), a list of listed cards only counts
+//    as empty, and a listed fixer is passed over in its shuffled order.  So a deck none of whose
+//    attempts would have picked a listed card is byte for byte the deck it was; one that would have
+//    changes from that pick on.  Every skip is counted (a deck row's `engineSkips`, decks.json's
+//    `engineUnplayable`).  `decks --cube` (D456) does not read it.
 //
 // Deterministic: deck i is rng(S, 'deck-census/<band>/<i>/makeup/<m>') and '.../cards/<a>', so a
 // larger --count extends a run without changing its first decks.  No engine: the mana costs are
@@ -267,7 +278,15 @@ export function coloursOf(c: Pick<CensusCard, 'colors' | 'cost'>): string {
 export type Role = 'in' | 'cross' | 'fill';
 export interface Drawn { card: CensusCard; role: Role }
 
-export interface DrawCtx { lib: CensusCard[]; pool: Band[]; cross: Band[]; fill: Band[]; colourlessShare: number; crossBand: number }
+export interface DrawCtx {
+  lib: CensusCard[]; pool: Band[]; cross: Band[]; fill: Band[]; colourlessShare: number; crossBand: number;
+  /** D482: cards never dealt (the engine-unplayable list); they stay in `lib`, so no list's size and no q changes. */
+  unplayable?: ReadonlySet<string>;
+}
+
+/** Each listed card's skips in one deck's draw (D482). */
+export type SkipCount = Map<string, number>;
+const bump = (m: SkipCount | undefined, n: string): void => { if (m) m.set(n, (m.get(n) ?? 0) + 1); };
 
 /** The band pool's colourless share among its eligible nonland cards (q in rule 2). */
 export function colourlessShareOf(lib: CensusCard[], pool: Band[]): number {
@@ -284,8 +303,13 @@ function pickColour(shares: Partial<Record<Colour, number>>, r: Rng, skip: Set<s
   return cols[cols.length - 1] as Colour;
 }
 
-/** SPELLS_DRAWN spells for a makeup (rule 2), or null when every list ran dry. */
-export function drawSpells(ctx: DrawCtx, m: Makeup, r: Rng): Drawn[] | null {
+/**
+ * SPELLS_DRAWN spells for a makeup (rule 2), or null when every list ran dry.  D482: a pick that lands on
+ * an engine-unplayable card is counted in `skips` and redrawn from the same list, and a list holding only
+ * such cards counts as empty; with no listed card picked, the stream and the deck are unchanged.
+ */
+export function drawSpells(ctx: DrawCtx, m: Makeup, r: Rng, skips?: SkipCount): Drawn[] | null {
+  const un = ctx.unplayable?.size ? ctx.unplayable : null;
   const taken = new Set<string>();
   const elig = ctx.lib.filter((c) => !c.land && eligibleIn(c, m.colours));
   const listOf = (bands: Band[], colour: Colour | ''): CensusCard[] => elig.filter((c) => bands.includes(c.band) && !taken.has(c.name)
@@ -302,7 +326,12 @@ export function drawSpells(ctx: DrawCtx, m: Makeup, r: Rng): Drawn[] | null {
       const tiers: Array<[Band[], Role]> = [...(isCross ? [[ctx.cross, 'cross'] as [Band[], Role]] : []), [ctx.pool, 'in'], ...ctx.fill.map((b) => [[b], 'fill'] as [Band[], Role])];
       for (const [bands, role] of tiers) {
         const list = listOf(bands, col);
-        if (list.length) { const c = list[r.int(list.length)] as CensusCard; got = { card: c, role }; break; }
+        if (!list.length) continue;
+        if (un && list.every((c) => un.has(c.name))) { for (const c of list) bump(skips, c.name); continue; }
+        let c = list[r.int(list.length)] as CensusCard;
+        while (un?.has(c.name)) { bump(skips, c.name); c = list[r.int(list.length)] as CensusCard; }
+        got = { card: c, role };
+        break;
       }
       if (col !== '') skip.add(col);
     }
@@ -331,7 +360,7 @@ export function pipTotals(spells: Array<Pick<CensusCard, 'cost'>>): Record<Colou
 export interface LandPlan { lands: number; fixers: Drawn[]; basics: Record<Colour, number>; fixerTarget: number; sMax: number | null; pipColours: string }
 
 /** Rule 3: L, the fixers and the basics for these kept spells, or null when the basics cannot give every colour its minimum. */
-export function landPlan(ctx: Pick<DrawCtx, 'lib' | 'pool' | 'fill'>, spells: CensusCard[], lands: number, makeup: Makeup, r: Rng): LandPlan | null {
+export function landPlan(ctx: Pick<DrawCtx, 'lib' | 'pool' | 'fill' | 'unplayable'>, spells: CensusCard[], lands: number, makeup: Makeup, r: Rng, skips?: SkipCount): LandPlan | null {
   const pips = pipTotals(spells);
   const totalPips = COLOURS.reduce((a, c) => a + pips[c], 0);
   const pipColours = COLOURS.filter((c) => pips[c] > 0).join('');
@@ -348,7 +377,11 @@ export function landPlan(ctx: Pick<DrawCtx, 'lib' | 'pool' | 'fill'>, spells: Ce
     for (const [bands, role] of [[ctx.pool, 'in'] as [Band[], Role], ...ctx.fill.map((b) => [[b], 'fill'] as [Band[], Role])]) {
       if (fixers.length >= fixerTarget) break;
       const list = shuffle(ctx.lib.filter((c) => makes2(c) && bands.includes(c.band)), r);
-      for (const c of list) { if (fixers.length >= fixerTarget) break; fixers.push({ card: c, role }); }
+      for (const c of list) {
+        if (fixers.length >= fixerTarget) break;
+        if (ctx.unplayable?.has(c.name)) { bump(skips, c.name); continue; }   // D482: passed over in the shuffled order, no new randomness
+        fixers.push({ card: c, role });
+      }
     }
   }
   const nBasics = lands - fixers.length;
@@ -461,6 +494,8 @@ export interface DeckRecord {
   /** Rejected card draws before this deck, and new makeups drawn after MAX_CARD_ATTEMPTS. */
   rejections: number;
   makeupRedraws: number;
+  /** D482: picks that landed on an engine-unplayable card and were redrawn, per card, over every attempt; present only when there was one, so a deck with none is the row it was. */
+  engineSkips?: Record<string, number>;
   /** The 40 cards, as [count, name] (basics counted), the .dck's order: spells, fixers, basics. */
   main: Array<[number, string]>;
   spells: string[];
@@ -492,7 +527,7 @@ export interface DeckRecord {
   file: string;
 }
 
-export interface DeckOptions { band: Band; seed: number; crossBand: number }
+export interface DeckOptions { band: Band; seed: number; crossBand: number; /** D482's list; none when absent. */ unplayable?: ReadonlySet<string> }
 
 /** A cube's census group (D456): `cube:<the cube file's name>`, in a deck's `band` field and its streams. */
 export type CubeBand = `cube:${string}`;
@@ -507,7 +542,7 @@ export function generateDeck(lib: CensusCard[], o: DeckOptions, i: number): Deck
   const pool = poolBands(lib, o.band);
   const ctx: DrawCtx = {
     lib: lib.filter(eligibleFor(false)) as CensusCard[], pool, cross: crossBands(pool), fill: FILL_ORDER[o.band].filter((b) => !pool.includes(b)),
-    colourlessShare: 0, crossBand: o.crossBand,
+    colourlessShare: 0, crossBand: o.crossBand, unplayable: o.unplayable,
   };
   ctx.colourlessShare = colourlessShareOf(ctx.lib, pool);
   return drawDeck(ctx, o.band, o.seed, i, BAND_KS);
@@ -520,6 +555,7 @@ export function generateDeck(lib: CensusCard[], o: DeckOptions, i: number): Deck
  */
 export function drawDeck(ctx0: DrawCtx, group: DeckGroup, seed: number, i: number, ks: readonly number[], blocked?: (k: number) => ReadonlySet<string>): DeckRecord {
   let rejections = 0;
+  const skips: SkipCount = new Map();
   for (let mk = 0; mk < 1000; mk++) {
     const makeup = makeupOf(rng(seed, `deck-census/${group}/${i}/makeup/${mk}`), ks);
     // D456's repeat cap: the cards that reached it are out of this makeup's pool (q stays the pool's own)
@@ -527,12 +563,12 @@ export function drawDeck(ctx0: DrawCtx, group: DeckGroup, seed: number, i: numbe
     const ctx = out && out.size ? { ...ctx0, lib: ctx0.lib.filter((c) => !out.has(c.name)) } : ctx0;
     for (let a = 0; a < MAX_CARD_ATTEMPTS; a++) {
       const r = rng(seed, `deck-census/${group}/${i}/cards/${mk}/${a}`);
-      const drawn = drawSpells(ctx, makeup, r);
+      const drawn = drawSpells(ctx, makeup, r, skips);
       if (!drawn) { rejections++; continue; }
       const avgMvDrawn = mean(drawn.slice(0, LAND_FROM_FIRST).map((d) => d.card.mv));
       const lands = landCount(avgMvDrawn);
       const kept = drawn.slice(0, DECK_SIZE - lands);
-      const plan = landPlan(ctx, kept.map((d) => d.card), lands, makeup, r);
+      const plan = landPlan(ctx, kept.map((d) => d.card), lands, makeup, r, skips);
       if (!plan) { rejections++; continue; }
       const src = sourcesOf(plan);
       const ok = kept.filter((d) => castable(d.card, src)).length;
@@ -543,6 +579,7 @@ export function drawDeck(ctx0: DrawCtx, group: DeckGroup, seed: number, i: numbe
       const id = deckId(group, seed, i);
       return {
         v: DECK_CENSUS_VERSION, id, band: group, seed, index: i, makeup: { ...makeup, shares: roundShares(makeup.shares) }, rejections, makeupRedraws: mk,
+        ...(skips.size ? { engineSkips: Object.fromEntries([...skips].sort(([a], [b]) => (a < b ? -1 : 1))) } : {}),
         main, spells: spells.map((c) => c.name), fixers: plan.fixers.map((f) => f.card.name), basics: plan.basics,
         lands, fixerTarget: plan.fixerTarget, avgMv: r4(mean(spells.map((c) => c.mv))), avgMvDrawn: r4(avgMvDrawn),
         profile: profileOf(spells), ...deckVars(spells, plan),
@@ -670,6 +707,35 @@ function costFromColours(colors: string): Cost {
   return { plain, hybrid: [], share: { ...plain }, x: 0 };
 }
 
+// ---------------------------------------------------------------- the engine-unplayable list (D482)
+
+/** The committed list a band's draw reads by default. */
+export const ENGINE_UNPLAYABLE_FILE = 'tools/cubelab/engine-unplayable.json';
+
+export interface UnplayableEntry { since: string; why: string; evidence: string }
+export interface EngineUnplayable { file: string; sha: string; cards: Map<string, UnplayableEntry> }
+
+/** The list's JSON: `{ cards: { <name>: { since, why, evidence } } }`, each field a non-empty string (a card goes on it only with a measured stall). */
+export function parseEngineUnplayable(text: string, file: string): EngineUnplayable {
+  const j = JSON.parse(text) as { cards?: Record<string, Partial<UnplayableEntry>> };
+  if (!j || typeof j.cards !== 'object' || j.cards === null || Array.isArray(j.cards)) throw new Error(`decks: ${file} wants { "cards": { <name>: { since, why, evidence } } } (D482)`);
+  const cards = new Map<string, UnplayableEntry>();
+  for (const [name, e] of Object.entries(j.cards)) {
+    for (const k of ['since', 'why', 'evidence'] as const) {
+      if (typeof e?.[k] !== 'string' || !(e[k] as string).trim()) throw new Error(`decks: ${file}: ${name} has no ${k} (D482: a card is listed only with a measured stall, its job, its reason and its evidence)`);
+    }
+    cards.set(name, { since: e.since as string, why: e.why as string, evidence: e.evidence as string });
+  }
+  return { file, sha: sha12(text), cards };
+}
+
+/** `--unplayable <file|none>`: the committed list by default, `none` for the draw without one (J166's decks as they were). */
+export function loadEngineUnplayable(repo: string, arg: string | undefined): EngineUnplayable | null {
+  if (arg === 'none') return null;
+  const file = path.resolve(repo, arg ?? ENGINE_UNPLAYABLE_FILE);
+  return parseEngineUnplayable(fs.readFileSync(file, 'utf8'), shownPath(repo, file) || file);
+}
+
 // ---------------------------------------------------------------- the command
 
 export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: string) => void): number {
@@ -694,8 +760,11 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
   const scripts = openForgeScripts(zip);
   if (!scripts) throw new Error(`decks: no Forge card scripts at ${zip} (pass --scripts)`);
   const { lib, noScript } = censusPopulation(poolText, censusText, scriptLookup(scripts));
+  const unplayable = loadEngineUnplayable(repo, one('unplayable'));
   fs.mkdirSync(path.join(out, 'decks'), { recursive: true });
-  const o: DeckOptions = { band, seed, crossBand };
+  const o: DeckOptions = { band, seed, crossBand, ...(unplayable ? { unplayable: new Set(unplayable.cards.keys()) } : {}) };
+  const skipsByCard = new Map<string, number>();
+  let decksWithSkip = 0;
   const lines: string[] = [];
   let rej = 0, redraws = 0, forty = 0, allCastable = 0, redrawn = 0;
   const sums = Object.fromEntries(MEAN_KEYS.map((k) => [k, 0])) as Record<(typeof MEAN_KEYS)[number], number>;
@@ -713,6 +782,7 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
     fs.writeFileSync(path.join(out, d.file), dckText(`census ${d.id}`, d.main, []));
     lines.push(JSON.stringify(d));
     rej += d.rejections; redraws += d.makeupRedraws;
+    if (d.engineSkips) { decksWithSkip++; for (const [n, k] of Object.entries(d.engineSkips)) skipsByCard.set(n, (skipsByCard.get(n) ?? 0) + k); }
     if (d.rejections > 0 || d.makeupRedraws > 0) redrawn++;
     for (const k of MEAN_KEYS) sums[k] += k === 'fixers' ? d.fixers.length : d[k];
     d.mvHist.forEach((n, b) => { mvHist[b] = (mvHist[b] as number) + n; });
@@ -728,11 +798,16 @@ export function decksCommand(repo: string, f: Map<string, string[]>, say: (s: st
     decksOf40: forty, decksAllCastable: allCastable, coloursWith3: { c0: cc3[0], c1: cc3[1], c2: cc3[2], c3: cc3[3], c4: cc3[4], c5: cc3[5] }, mainShare: bins,
     meanCross: r4(lines.reduce((a, l) => a + (JSON.parse(l) as DeckRecord).cross.length, 0) / Math.max(1, count)),
     means: Object.fromEntries(MEAN_KEYS.map((k) => [k, r4(sums[k] / count)])), mvHist,
+    engineUnplayable: unplayable ? {
+      decision: 'D482', file: unplayable.file, sha: unplayable.sha, cards: [...unplayable.cards.keys()],
+      notInLibrary: [...unplayable.cards.keys()].filter((n) => !lib.some((c) => c.name === n)),
+      skips: [...skipsByCard.values()].reduce((a, b) => a + b, 0), skipsByCard: Object.fromEntries([...unplayable.cards.keys()].map((n) => [n, skipsByCard.get(n) ?? 0])), decksWithSkip,
+    } : null,
     censusSha: sha12(censusText), poolSha: sha12(poolText), scripts: scripts.path, noScript, decksSha: sha12(jsonl),
-    rules: RULES_TEXT,
+    rules: { ...RULES_TEXT, engineUnplayable: ENGINE_UNPLAYABLE_RULE },
   };
   fs.writeFileSync(path.join(out, 'decks.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  say(`decks: ${count} ${band} deck(s), seed ${seed}, into ${shownPath(repo, out) || '.'}: k = 1..5 ${byK.slice(1).join(' / ')}; ${rej} rejected draw(s), ${redraws} new makeup(s); pool ${pool.join('+')}, cross ${crossBands(pool).join('+') || '-'}${noScript.length ? `; ${noScript.length} card(s) with no script, costed by colour: ${noScript.slice(0, 5).join(', ')}` : ''}`);
+  say(`decks: ${count} ${band} deck(s), seed ${seed}, into ${shownPath(repo, out) || '.'}: k = 1..5 ${byK.slice(1).join(' / ')}; ${rej} rejected draw(s), ${redraws} new makeup(s); pool ${pool.join('+')}, cross ${crossBands(pool).join('+') || '-'}; engine-unplayable (D482) ${unplayable ? `${unplayable.file}: ${[...unplayable.cards.keys()].map((n) => `${n} (${skipsByCard.get(n) ?? 0} skip(s))`).join(', ') || 'empty'}, ${decksWithSkip} deck(s) with a skip` : 'none'}${noScript.length ? `; ${noScript.length} card(s) with no script, costed by colour: ${noScript.slice(0, 5).join(', ')}` : ''}`);
   return 0;
 }
 
@@ -831,6 +906,7 @@ export function cardSharesTsv(rows: CardShare[], ks: readonly number[]): string 
 export function cubeDecksCommand(repo: string, f: Map<string, string[]>, say: (s: string) => void): number {
   const one = (k: string): string | undefined => f.get(k)?.at(-1);
   for (const k of ['band', 'cross-band']) if (f.has(k)) throw new Error(`decks: --${k} is a band's (D447); a cube's census draws from the cube alone (D456)`);
+  if (f.has('unplayable')) throw new Error('decks: --unplayable is a band\'s (D482): a cube\'s census draws the cube\'s own list as it is');
   const cubeFile = path.resolve(repo, one('cube') as string);
   const seed = Number(one('seed'));
   const count = Number(one('count'));
@@ -920,6 +996,8 @@ export function mainShareKey(s: number | null): string | null {
   if (s < 0.4) return 'lt40';
   return MAIN_SHARE_KEYS[Math.min(9, Math.floor(s * 10 + 1e-9)) - 3] as string;
 }
+
+export const ENGINE_UNPLAYABLE_RULE = 'D482: a card on the engine-unplayable list is never dealt: a pick that lands on it is redrawn from the same list, a list of listed cards only is empty, a listed fixer is passed over; every skip counted; an engine limitation, not a design judgement';
 
 export const RULES_TEXT = {
   prior: 'k uniform on 1..5; the colours a uniform k-subset of WUBRG; shares Dirichlet(1,...,1)',
