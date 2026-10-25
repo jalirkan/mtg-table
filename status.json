@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-24T21:19:11-04:00",
- "heartbeat": "2026-10-24T21:19:11-04:00",
+ "updated": "2026-10-24T21:21:09-04:00",
+ "heartbeat": "2026-10-24T21:21:09-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.67,
-  "memUsedGb": 11.1,
+  "load1": 10.49,
+  "memUsedGb": 8.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3877,
+  "swapUsedMb": 3863,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 6,
+  "coresUsed": 1,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J164",
    "title": "The Monarch replay -- J162's pauper5 464 spine re-branched at exactly its eight Monarch decisions (d17, d19, d21, d23, d25, d27, d29, d31; 36 options, 8,640 branch games, J162's seeds) on the fixed copier (D479: a copied Monarch now draws and can change hands; with D476-D478) and re-labelled, so the shift the copier's bias caused is measured, side by side with J162's labels and never pooled with them; on ce42306a, a new data folder lab-j164",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-10-24T20:02:34-04:00",
-   "elapsed": 4597,
+   "elapsed": 4715,
    "done": 8640,
    "total": 8640,
    "unit": "lines",
-   "ratePerHour": 10340.5,
+   "ratePerHour": 9754.3,
    "eta": null,
    "workers": 6,
    "workersMax": 6,
-   "cores": 6,
+   "cores": 1,
    "errors": 0,
    "paused": false,
    "dataUpdated": "2026-10-24T21:09:59-04:00",
-   "memGb": 1.63,
+   "memGb": 0,
    "live": {
     "branches": 8640,
     "atlas.decisionsComplete": 0,
@@ -108,7 +108,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J164-run1"
+   "detail": "lab-J164-run2"
   }
  ],
  "queue": [
