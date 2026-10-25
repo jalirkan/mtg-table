@@ -1,0 +1,15 @@
+==== J167 run1 started 2026-10-25T07:23:45-04:00 in unit lab-J167-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J167: J166's s04 spine set aside: /home/justin-a/code/lab/data/lab-j166/b-s04-powered-2104.j166-scute
+J167: J166's s04 decks set aside: /home/justin-a/code/lab/data/lab-j166/decks/s04-powered-2004.j166-scute
+atlas phase B: schedule.jsonl was written before its plan header (D480 as merged in #207): replayed unchecked against plan dd3fea7c6460
+atlas phase B: the baseline (12 turns, winner B) lists 6 decision(s) of seat A; branching at 6: d0 (p, turn 5, 2 options), d1 (p, turn 5, 2 options), d2 (p, turn 7, 2 options), d3 (a, turn 7, 2 options), d4 (p, turn 7, 2 options), d5 (p, turn 11, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (48 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 80 s
+atlas: /home/justin-a/code/lab/data/lab-j166/b-s02-peasant-2102/atlas.json and atlas.md; phase A 0 game(s), phase B 2500 branch game(s) at 6 decision(s); checks: clean (117174 rows, 5002 frame logs, 6 leak check(s))
+atlas phase B: schedule.jsonl was written before its plan header (D480 as merged in #207): replayed unchecked against plan 00256e84cd62
+atlas phase B: the baseline (28 turns, winner A) lists 22 decision(s) of seat A; branching at 8: d0 (p, turn 6, 3 options), d7 (p, turn 18, 3 options), d9 (p, turn 20, 3 options), d11 (p, turn 22, 3 options), d15 (p, turn 26, 5 options), d18 (p, turn 28, 4 options), d19 (p, turn 28, 4 options), d21 (a, turn 28, 8 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (64 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 92 s
+atlas: /home/justin-a/code/lab/data/lab-j166/b-s03-legacy-2103/atlas.json and atlas.md; phase A 0 game(s), phase B 6000 branch game(s) at 8 decision(s); checks: clean (101337 rows, 12002 frame logs, 8 leak check(s))
