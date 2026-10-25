@@ -1,0 +1,96 @@
+==== J166 run1 started 2026-10-24T21:59:24-04:00 in unit lab-J166-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (32 turns, winner A) lists 23 decision(s) of seat A; branching at 8: d3 (p, turn 8, 3 options), d6 (p, turn 10, 4 options), d7 (p, turn 10, 5 options), d9 (p, turn 14, 4 options), d11 (p, turn 16, 3 options), d14 (p, turn 28, 3 options), d15 (p, turn 28, 3 options), d16 (p, turn 28, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 8 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/8] d14-random-0: 75/75 branch game(s); 5934 branch games/h
+  [B 2/9] d11-random-0: 75/75 branch game(s); 6324 branch games/h
+  [B 3/10] d9-random-0: 100/100 branch game(s); 6413 branch games/h
+  [B 4/11] d3-random-0: 75/75 branch game(s); 6447 branch games/h
+  [B 5/12] d14-random-25: 75/75 branch game(s); 6459 branch games/h
+  [B 6/14] d6-random-0: 100/100 branch game(s); 6625 branch games/h
+  [B 7/15] d7-random-0: 125/125 branch game(s); 6623 branch games/h
+  [B 8/16] d11-random-25: 75/75 branch game(s); 6701 branch games/h
+  [B 9/18] d14-random-50: 75/75 branch game(s); 6714 branch games/h
+  [B 10/18] d3-random-25: 75/75 branch game(s); 6727 branch games/h
+  [B 11/20] d9-random-25: 100/100 branch game(s); 6717 branch games/h
+  [B 12/22] d11-random-50: 75/75 branch game(s); 6683 branch games/h
+  [B 13/22] d11-random-75: 75/75 branch game(s); 6666 branch games/h
+  [B 14/24] d6-random-25: 100/100 branch game(s); 6682 branch games/h
+  [B 15/26] d3-random-50: 50/50 branch game(s); 6666 branch games/h
+  [B 16/26] d11-random-100: 50/50 branch game(s); 6713 branch games/h
+  [B 17/26] d7-random-25: 125/125 branch game(s); 6720 branch games/h
+  [B 18/28] d9-random-50: 100/100 branch game(s); 6725 branch games/h
+  [B 19/28] d9-random-75: 100/100 branch game(s); 6745 branch games/h
+  [B 20/30] d11-random-125: 50/50 branch game(s); 6736 branch games/h
+  [B 21/34] d6-random-50: 100/100 branch game(s); 6736 branch games/h
+  [B 22/34] d6-random-75: 100/100 branch game(s); 6744 branch games/h
+  [B 23/36] d11-random-150: 50/50 branch game(s); 6742 branch games/h
+  [B 24/36] d11-random-175: 50/50 branch game(s); 6736 branch games/h
+  [B 25/36] d7-random-50: 125/125 branch game(s); 6791 branch games/h
+  [B 26/36] d9-random-100: 100/100 branch game(s); 6816 branch games/h
+  [B 27/36] d11-forge-0: 50/50 branch game(s); 6821 branch games/h
+  [B 28/36] d7-random-75: 125/125 branch game(s); 6831 branch games/h
+  [B 29/38] d11-forge-25: 30/30 branch game(s); 6848 branch games/h
+  [B 30/38] d6-random-100: 100/100 branch game(s); 6825 branch games/h
+  [B 31/38] d3-random-75: 50/50 branch game(s); 6821 branch games/h
+  [B 32/40] d6-random-125: 100/100 branch game(s); 6818 branch games/h
+  [B 33/44] d9-random-125: 100/100 branch game(s); 6866 branch games/h
+  [B 34/48] d14-random-75: 75/75 branch game(s); 6882 branch games/h
+  [B 35/50] d3-random-100: 50/50 branch game(s); 6893 branch games/h
+  [B 36/50] d7-random-125: 125/125 branch game(s); 6946 branch games/h
+  [B 37/50] d7-random-100: 125/125 branch game(s); 6972 branch games/h
+  [B 38/54] d14-random-100: 75/75 branch game(s); 7015 branch games/h
+  [B 39/54] d14-random-125: 75/75 branch game(s); 7012 branch games/h
+  [B 40/58] d6-random-150: 100/100 branch game(s); 7026 branch games/h
+  [B 41/58] d9-random-150: 100/100 branch game(s); 7095 branch games/h
+  [B 42/58] d14-random-150: 75/75 branch game(s); 7148 branch games/h
+  [B 43/58] d14-random-175: 75/75 branch game(s); 7224 branch games/h
+  [B 44/58] d14-forge-25: 45/45 branch game(s); 7292 branch games/h
+  [B 45/58] d14-forge-0: 75/75 branch game(s); 7294 branch games/h
+  [B 46/58] d9-random-175: 100/100 branch game(s); 7346 branch games/h
+  [B 47/58] d7-random-150: 100/100 branch game(s); 7359 branch games/h
+  [B 48/58] d7-forge-25: 60/60 branch game(s); 7478 branch games/h
+  [B 49/58] d7-random-175: 100/100 branch game(s); 7494 branch games/h
+  [B 50/58] d9-forge-25: 60/60 branch game(s); 7514 branch games/h
+  [B 51/58] d9-forge-0: 100/100 branch game(s); 7515 branch games/h
+  [B 52/58] d7-forge-0: 100/100 branch game(s); 7517 branch games/h
+  [B 53/58] d6-forge-25: 60/60 branch game(s); 7597 branch games/h
+  [B 54/58] d15-random-0: 75/75 branch game(s); 7620 branch games/h
+  [B 55/59] d16-random-0: 75/75 branch game(s); 7623 branch games/h
+  [B 56/60] d3-random-125: 50/50 branch game(s); 7623 branch games/h
+  [B 57/64] d6-forge-0: 100/100 branch game(s); 7626 branch games/h
+  [B 58/64] d6-random-175: 100/100 branch game(s); 7630 branch games/h
+  [B 59/64] d3-forge-25: 30/30 branch game(s); 7673 branch games/h
+  [B 60/64] d3-forge-0: 50/50 branch game(s); 7677 branch games/h
+  [B 61/64] d16-random-25: 75/75 branch game(s); 7677 branch games/h
+  [B 62/66] d15-random-25: 75/75 branch game(s); 7675 branch games/h
+  [B 63/68] d16-random-75: 25/25 branch game(s); 7702 branch games/h
+  [B 64/68] d16-random-50: 25/25 branch game(s); 7706 branch games/h
+  [B 65/70] d3-random-150: 50/50 branch game(s); 7731 branch games/h
+  [B 66/70] d16-random-125: 25/25 branch game(s); 7735 branch games/h
+  [B 67/70] d3-random-175: 50/50 branch game(s); 7737 branch games/h
+  [B 68/70] d16-random-100: 25/25 branch game(s); 7737 branch games/h
+  [B 69/74] d16-forge-25: 15/15 branch game(s); 7778 branch games/h
+  [B 70/74] d16-forge-0: 25/25 branch game(s); 7807 branch games/h
+  [B 71/74] d16-random-175: 25/25 branch game(s); 7823 branch games/h
+  [B 72/74] d16-random-150: 25/25 branch game(s); 7820 branch games/h
+  [B 73/74] d15-random-75: 75/75 branch game(s); 7807 branch games/h
+  [B 74/74] d15-random-50: 75/75 branch game(s); 7791 branch games/h
+  [B 75/76] d15-random-125: 50/50 branch game(s); 7745 branch games/h
+  [B 76/76] d15-random-100: 50/50 branch game(s); 7723 branch games/h
+  [B 77/80] d15-forge-25: 30/30 branch game(s); 7782 branch games/h
+  [B 78/80] d15-forge-0: 50/50 branch game(s); 7798 branch games/h
+  [B 79/80] d15-random-175: 50/50 branch game(s); 7762 branch games/h
+  [B 80/80] d15-random-150: 50/50 branch game(s); 7749 branch games/h
+atlas: the checks on 6 workers took 174 s
+atlas: /home/justin-a/code/lab/data/lab-j166/b-s01-pauper-2101/atlas.json and atlas.md; phase A 0 game(s), phase B 5780 branch game(s) at 8 decision(s); checks: clean (213428 rows, 11562 frame logs, 16 leak check(s))
+  atlas warning: d3 option 1 `pass` (pass): 64 of 240 branch game(s) were capped (random 62 of 200, forge 2 of 40): 64 x ended at the turn cap
+  atlas warning: d14 option 0 `cast:16` (Faerie Guidemother): 84 of 240 branch game(s) were capped (random 84 of 200, forge 0 of 40): 84 x ended at the turn cap
+  atlas warning: d14 option 1 `pass` (pass): 89 of 240 branch game(s) were capped (random 88 of 200, forge 1 of 40): 89 x ended at the turn cap
+  atlas warning: d14 option 2 `cast:21` (Regrowth): 71 of 240 branch game(s) were capped (random 71 of 200, forge 0 of 40): 71 x ended at the turn cap
+  atlas warning: d15 option 0 `cast:21` (Regrowth): 71 of 240 branch game(s) were capped (random 71 of 200, forge 0 of 40): 71 x ended at the turn cap
+  atlas warning: d15 option 1 `pass` (pass): 48 of 100 branch game(s) were capped (random 48 of 100): 48 x ended at the turn cap
+  atlas warning: d15 option 2 `activate:18` (Flayer Husk: Equip {2} ({2}: Attach to target creature you c): 76 of 240 branch game(s) were capped (random 76 of 200, forge 0 of 40): 76 x ended at the turn cap
+  atlas warning: d16 option 1 `pass` (pass): 26 of 50 branch game(s) were capped (random 26 of 50): 26 x ended at the turn cap
+  atlas warning: d16 option 2 `activate:18` (Flayer Husk: Equip {2} ({2}: Attach to target creature you c): 22 of 50 branch game(s) were capped (random 22 of 50): 22 x ended at the turn cap
