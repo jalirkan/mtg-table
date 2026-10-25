@@ -3103,10 +3103,10 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //       index in frames[], and `stateSeq`, its seq), and every card id it names
 //       is a card that frame -- or the next state frame -- shows the viewer
 //       face up or as its own; never a stub's id, never a library card
-//       (D481: or the viewer's own object no frame lists, whose latest zone
-//       event, as of the first state frame after the decision, put it on its
-//       own battlefield, in its own graveyard, or on the stack from its own
-//       zone -- counted);
+//       (D481: or the viewer's own object no frame lists -- a token born onto
+//       its battlefield whose latest zone event, as of the first state frame
+//       after the decision, left it there or in its graveyard, or a card that
+//       event moved from its own hand onto the stack -- counted);
 //   D4  the answer is one of the options.
 
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
@@ -3154,18 +3154,23 @@ function zoneMoves(body) {
 }
 
 /**
- * D481: does a card's latest zone event put it where the viewer sees it as its
- * own?  Onto the viewer's OWN battlefield or into its OWN graveyard (`to.player`
- * the viewer's seat), both public whatever the card is; or onto the stack FROM a
- * zone of the viewer's own (`from.player` the viewer's seat: its own spell -- a
- * stack zone event names no player, so the from side is what says whose it is).
- * Exile is left out (a card can go there face down), and so is a spell from
- * another seat's zone (it can be cast face down).
+ * D481: does a card's latest zone event put it where the viewer saw it as its
+ * own?  Two shapes, and only these:
+ *   - a TOKEN the viewer's own battlefield gave birth to (`born`: a zone event
+ *     `from: null` onto the viewer's battlefield in the window), whose latest
+ *     move left it on the viewer's own battlefield or in its own graveyard --
+ *     both public, both the viewer's (`to.player` its seat);
+ *   - a card moved onto the stack from the viewer's own HAND (`from` is the zone
+ *     it left, so `from.player` says whose hand, i.e. who owns it; a stack zone
+ *     event names no player).  Not from its own library or a face-down exile: the
+ *     viewer could not see the card there when the option was offered.
+ * Exile is never accepted (a card can go there face down), nor a card from or
+ * into another seat's zones.
  */
-function movedToViewersOwnPublicZone(e, seat) {
+function movedToViewersOwnPublicZone(e, seat, born) {
   if (!e?.to) return false;
-  if (e.to.player === seat && (e.to.zone === 'battlefield' || e.to.zone === 'graveyard')) return true;
-  return e.to.zone === 'stack' && e.from?.player === seat;
+  if (born && e.to.player === seat && (e.to.zone === 'battlefield' || e.to.zone === 'graveyard')) return true;
+  return e.to.zone === 'stack' && e.from?.zone === 'hand' && e.from.player === seat;
 }
 
 /** The card ids (not player ids) a token names. */
@@ -3299,30 +3304,51 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
      * where a token ceases to exist -- before the next snapshot.  And a spell the
      * viewer cast while another was being cast (Tear Asunder, then Take It Back
      * targeting it) sits in the stack zone with no stack instance, so neither
-     * `stackCards` nor a zone lists it.  The zone events record both: the id's
-     * LATEST zone event, in the state frames up to and including the first one
-     * after the decision (the first with a greater seq), moves it onto the
-     * viewer's own battlefield or into its own graveyard, or onto the stack from
-     * a zone of the viewer's own.  Such an id is the viewer's own object in a
-     * public zone, so it is counted and named, never a problem.  An id that never
-     * appears, whose latest move is into another seat's zone, a hand or a library,
-     * or whose only move comes in a later state frame, still fails as below.
+     * `stackCards` nor a zone lists it.  The zone events record both: in the
+     * state frames up to and including the first one after the decision (the
+     * first with a greater seq), the id is a token born onto the viewer's own
+     * battlefield whose latest move left it there or in the viewer's graveyard,
+     * or a card whose latest move took it from the viewer's own hand onto the
+     * stack.  Such an id is the viewer's own object in a public zone, so it is
+     * counted and named, never a problem.  This LOOSENS D3's mechanical rule; the
+     * bridge's own gate at decision time is Decisions.visible.  An id that never
+     * appears, whose latest move is into another seat's zone, exile, a hand or a
+     * library, or whose only move comes in a later state frame, still fails.
      * (J166, 2026-10-25: 1,891 ids in 1,395 legacy-spine logs, and one peasant
      * log's spell.)
      */
+    /*
+     * Two different "next" states, on purpose.  `allowed` (D3) is the state
+     * after `b.frame`, the frame the decision names; the D481 window ends at
+     * `after`, the first state after the decision's own LINE.  They are the same
+     * frame whenever the decision names the latest state before it, which the
+     * recorder always does; where they differ, the window is the later one.
+     *
+     * The window walks back to the FIRST state frame, not from `b.frame`: s02's
+     * vouching event (Tear Asunder, hand -> stack) is at seq 323 and the
+     * decision's state is 324.  Walking back is sound because every real zone
+     * change fires GameEventCardChangeZone, which Snap writes as a zone event; the
+     * changes that fire none leave the card public or end it (a token ceasing to
+     * exist), so the latest move is where the card is.
+     */
     const after = stateOrder.find((k) => k > index);
-    /** The id's latest zone event in the state frames up to and including `after`. */
-    const latestMove = (id) => {
-      if (after === undefined) return undefined;
-      for (let k = stateOrder.indexOf(after); k >= 0; k--) {
-        const ms = stateAt.get(stateOrder[k]).moves;
-        for (let m = ms.length - 1; m >= 0; m--) if (ms[m].cardId === id) return ms[m];
+    const windowMoves = (id) => {
+      const out = [];
+      if (after === undefined) return out;
+      for (let k = 0; k < stateOrder.length && stateOrder[k] <= after; k++) {
+        for (const m of stateAt.get(stateOrder[k]).moves) if (m.cardId === id) out.push(m);
       }
-      return undefined;
+      return out;
     };
     for (const t of tokens) {
       for (const id of tokenCardIds(t)) {
-        if (!allowed.has(id) && movedToViewersOwnPublicZone(latestMove(id), seat)) {
+        const moves = allowed.has(id) ? [] : windowMoves(id);
+        // The latest move with somewhere to go: a `to: null` event (a token ceasing to
+        // exist, which Snap may write) falls back to the move before it, so the token
+        // it ends is judged by the zone it was last in rather than failing.
+        const latest = moves.filter((m) => m.to != null).at(-1);
+        const born = moves.some((m) => m.from == null && m.to?.zone === 'battlefield' && m.to.player === seat);
+        if (!allowed.has(id) && movedToViewersOwnPublicZone(latest, seat, born)) {
           stats.enteredBetweenFrames = (stats.enteredBetweenFrames ?? 0) + 1;
         } else if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
@@ -3526,7 +3552,7 @@ function main() {
     }
     if (stats.enteredBetweenFrames > 0) {
       console.log(`      M55 decision ids entered between frames=${stats.enteredBetweenFrames} (D481: the viewer's own `
-        + 'object in no state frame, whose latest zone event put it on its own battlefield, in its own graveyard, or on the stack from its own zone)');
+        + 'object in no state frame -- a token born onto its battlefield, last on its battlefield or in its graveyard, or a card moved from its own hand onto the stack)');
     }
     // M49.  Whether this file carries the status layer's keywords -- on every
     // full card, or (a recording older than M49) on none.

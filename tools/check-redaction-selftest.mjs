@@ -107,11 +107,14 @@ const REQUIRED = [
   ['m55-chosen-is-not-an-option.jsonl', 'fail'],
   ['m55-frame-is-not-a-state.jsonl', 'fail'],
   ['m55-decision-in-a-seat-recording.jsonl', 'fail'],
-  // D481: a token made and gone between two state frames, and the viewer's own
-  // spell on the stack with no stack instance, each vouched for by its latest
-  // zone event; the controls are no events, the opponent's hand, a spell from the
-  // opponent's hand, a latest move into the opponent's hand, and events one state
-  // too late.
+  // D481: a token made and gone between two state frames (also one that then
+  // ceased to exist), and the viewer's own spell on the stack with no stack
+  // instance (its event in, or a frame before, the decision's state frame), each
+  // vouched for by its latest zone event.  The controls: no events, the
+  // opponent's hand, a spell from the opponent's hand or the viewer's library, a
+  // token born onto the opponent's battlefield (or born there and then taken),
+  // one taken by the opponent or exiled, a card never born, a latest move into
+  // the opponent's hand, and events one state too late.
   ['m55-option-entered-between-frames.jsonl', 'pass'],
   ['m55-option-never-shown.jsonl', 'fail'],
   ['m55-option-entered-the-opponent-hand.jsonl', 'fail'],
@@ -119,6 +122,14 @@ const REQUIRED = [
   ['m55-option-cast-between-frames.jsonl', 'pass'],
   ['m55-option-cast-from-the-opponent-hand.jsonl', 'fail'],
   ['m55-option-entered-then-went-to-the-opponent-hand.jsonl', 'fail'],
+  ['m55-option-cast-a-frame-before-the-decision.jsonl', 'pass'],
+  ['m55-option-entered-then-ceased-to-exist.jsonl', 'pass'],
+  ['m55-option-born-on-the-opponent-battlefield.jsonl', 'fail'],
+  ['m55-option-born-then-taken-by-the-opponent.jsonl', 'fail'],
+  ['m55-option-born-on-the-opponent-then-taken.jsonl', 'fail'],
+  ['m55-option-entered-the-viewer-exile.jsonl', 'fail'],
+  ['m55-option-cast-from-the-viewer-library.jsonl', 'fail'],
+  ['m55-option-not-born-in-the-graveyard.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
   ['m57-explore-present.jsonl', 'pass'],
