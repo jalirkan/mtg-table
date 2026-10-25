@@ -1433,11 +1433,14 @@ Five flags, each off by default, so a J158- or J162-shaped job runs as it did
   carrying the options still running (the job's `atlas.options`, `Atlas.Unit.options`). The pool keeps idle workers alive
   for those units (`holdIdle`). Every verdict is a line of `phaseB/schedule.jsonl`, written when it is made: a pick with its
   `k` and why (`spread`, `fill`, `replaces`), a screen with its mean value, a stop with the leader, the options dropped and
-  each option's bootstrap low end. A resumed atlas replays the file and never decides a checkpoint twice.
+  each option's bootstrap low end. A resumed atlas replays the file and never decides a checkpoint twice. The file's first
+  line is the plan it was made under (its sha256 and each deck file's); a resume under another plan is refused, naming
+  both hashes.
 - **What the label reads.** A stopped option's mean and its paired bootstrap use the option's own branches. A row is
   paired when every option still running at that branch index has a score, so a stopped option's empty cell does not unpair
-  the row. Its option entry says `stoppedAt`. Early stopping changes an option's n, not the estimator. The bootstrap
-  resamples the same rows as an uncut run, so a label moves only by the stopped options' shorter means.
+  the row. Its option entry says `stoppedAt`. Early stopping changes an option's n, not the estimator; the sample is
+  adaptively sized (D480 point 2's bound). The bootstrap resamples the same rows as an uncut run, so a label moves only by
+  the stopped options' shorter means.
 - **`atlas.json`** gains, on every decision, `decided` and `settled`, and, when the schedule speaks, `k`, `why`,
   `replaces`, `screened`, `screenMean` and `forgeOptions`. It also gains `phaseB.schedule` (what the cuts did on the
   spine) and `phaseB.forgeMap: false` on a spine with no Forge map. The plan records `cuts`, and a resume with other cuts

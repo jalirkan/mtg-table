@@ -66,6 +66,7 @@
 // settled on its random map.  Phase B's units then go out behind each checkpoint (runUnits, the pool's holdIdle), and every
 // verdict is a line of phaseB/schedule.jsonl, replayed when the atlas resumes.
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -76,7 +77,7 @@ import { labPath, recipePath, shownPath } from './labdata.ts';
 import type { Ledger } from './censusplay.ts';
 import { checksParallel, checksSerial, type CheckInputs, type CheckParts, type GuardrailCheck, COUNTED_GUARDRAILS } from './atlaschecks.ts';
 export { COUNTED_GUARDRAILS, emptyGuardrails, forgePayCapOf, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, guardrailPass, mergeGuardrails, type GuardrailCheck } from './atlaschecks.ts';
-import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, hasBarriers, parseEarlyStop, SCREEN_HIGH, SCREEN_LOW, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent } from './atlascuts.ts';
+import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, hasBarriers, parseEarlyStop, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
 import {
   agreement, gamesFor, meanInterval, pairLines, rankPairs, regretInterval, scoreOf, scoreStat, variance,
   wilson, type LadderGame, type PairRow,
@@ -416,6 +417,56 @@ async function phaseA(repo: string, o: AtlasOptions, out: string, jobs: number, 
   return { games: n, ms: Date.now() - t0, workers: homes.length, cpuMs: cpu };
 }
 
+/**
+ * D480's follow-up: what phase B's schedule is made under -- every option the schedule, the units or a branch's outcome reads.
+ * plan.json's own resume check holds seven of these; branchRandom, branchForge, decisions and boot it never held, and the deck
+ * files' bytes nothing did.
+ */
+export const SCHEDULE_PLAN_KEYS = ['deckA', 'deckB', 'seed', 'turnCap', 'options', 'chunk', 'branchTimeoutSec', 'branchRandom', 'branchForge', 'decisions', 'boot', 'cuts'] as const;
+
+const sha256 = (x: string | Buffer): string => createHash('sha256').update(x).digest('hex');
+
+/** D480's follow-up: the header schedule.jsonl starts with: the schedule's plan (deck paths as shown), its sha256, and each deck file's. */
+export function scheduleHeader(repo: string, o: AtlasOptions): ScheduleHeader {
+  const c = o.cuts ?? CUTS_OFF;
+  const v: Record<string, unknown> = { deckA: shownPath(repo, o.deckA), deckB: shownPath(repo, o.deckB), seed: o.seed, turnCap: o.turnCap, options: o.options, chunk: o.chunk,
+    branchTimeoutSec: o.branchTimeoutSec, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, boot: o.boot,
+    cuts: { earlyStop: c.earlyStop, screen: c.screen, minOptions: c.minOptions } };
+  const plan = Object.fromEntries(SCHEDULE_PLAN_KEYS.map((k) => [k, v[k]]));
+  return { v: 1, type: 'plan', decision: 'D480', planSha256: sha256(JSON.stringify(plan)), deckSha256: { deckA: sha256(fs.readFileSync(o.deckA)), deckB: sha256(fs.readFileSync(o.deckB)) }, plan };
+}
+
+/**
+ * D480's follow-up: phase B's schedule.jsonl on a (re)start, under the cuts.  A new or empty file gets `want` as its first
+ * line.  A file whose header names another plan or other deck bytes is REFUSED, naming both hashes and what differs: its
+ * picks are matched by `d` and `k` alone, so replayed under another plan they would size a decision's options wrong or fail
+ * late on a unit's `expect` tokens.  A file written before the header (#207's) is replayed as it is, said once.  Returns the
+ * events to replay.
+ */
+export function openSchedule(file: string, want: ScheduleHeader, say: (s: string) => void): ScheduleEvent[] {
+  const lines = readJsonl<ScheduleLine>(file);
+  const head = lines[0];
+  if (!head) {
+    fs.writeFileSync(file, `${JSON.stringify(want)}\n`);
+    return [];
+  }
+  if (lines.slice(1).some((l) => l.type === 'plan')) throw new Error(`atlas: ${file} has a plan line past its first; it is not a schedule this atlas wrote`);
+  if (head.type !== 'plan') {
+    say(`atlas phase B: ${path.basename(file)} was written before its plan header (D480 as merged in #207): replayed unchecked against plan ${want.planSha256.slice(0, 12)}`);
+    return scheduleEvents(lines);
+  }
+  const deckDiff = (['deckA', 'deckB'] as const).filter((k) => head.deckSha256?.[k] !== want.deckSha256[k]);
+  if (head.planSha256 !== want.planSha256 || deckDiff.length) {
+    const keys = SCHEDULE_PLAN_KEYS.filter((k) => JSON.stringify(head.plan?.[k]) !== JSON.stringify(want.plan[k]));
+    const why = [
+      ...(head.planSha256 !== want.planSha256 ? [`plan sha256 ${head.planSha256} on file, ${want.planSha256} now${keys.length ? ` (${keys.map((k) => `${k} ${JSON.stringify(head.plan?.[k])} -> ${JSON.stringify(want.plan[k])}`).join(', ')})` : ''}`] : []),
+      ...deckDiff.map((k) => `${k === 'deckA' ? 'deck A' : 'deck B'}'s file sha256 ${head.deckSha256?.[k]} on file, ${want.deckSha256[k]} now`),
+    ];
+    throw new Error(`atlas: ${file} was made under another plan: ${why.join('; ')}. Its verdicts cannot be replayed under this one; resume with the plan it was made under, or use another --out`);
+  }
+  return scheduleEvents(lines);
+}
+
 async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, say: (s: string) => void): Promise<Record<string, unknown>> {
   const B = path.join(out, 'phaseB');
   fs.mkdirSync(B, { recursive: true });
@@ -443,9 +494,11 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
   const priorRows = readJsonl<BranchRow>(branchesFile);
   // D480: the schedule -- which decisions, and under the cuts each checkpoint's verdict -- replayed from schedule.jsonl when the
   // atlas resumes, and written as it is decided.  With every cut off it is D451's spread and unitsOf, and writes nothing.
+  // A resume under another plan is refused before anything is decided (openSchedule: the header's plan and deck hashes).
+  const priorEvents = cutsOn(cuts) ? openSchedule(scheduleFile, scheduleHeader(repo, o), say) : [];
   const sfd = cutsOn(cuts) ? fs.openSync(scheduleFile, 'a') : null;
   const sched = new AtlasSchedule(all, { branchRandom: o.branchRandom, branchForge: o.branchForge, chunk: o.chunk, decisions: o.decisions, boot: o.boot, seed: o.seed }, cuts,
-    readJsonl<ScheduleEvent>(scheduleFile), priorRows, doneUnits, (e) => { if (sfd !== null) fs.writeSync(sfd, `${JSON.stringify(e)}\n`); });
+    priorEvents, priorRows, doneUnits, (e) => { if (sfd !== null) fs.writeSync(sfd, `${JSON.stringify(e)}\n`); });
   const picked = sched.picks.map((p) => p.d);
   say(`atlas phase B: the baseline (${baseline.turns} turns, winner ${baseline.winner}) lists ${all.length} decision(s) of seat A; branching at ${picked.length}: ${picked.map((d) => `d${d} (${all[d]?.kind}, turn ${all[d]?.turn}, ${all[d]?.tokens.length} options)`).join(', ')}`);
   if (cutsOn(cuts)) say(`atlas phase B: the cut design (D480):${cuts.minOptions > 1 ? ` decisions with ${cuts.minOptions}+ options first;` : ''}${cuts.screen ? ` the screen at ${cuts.screen} branches (settled at <= ${SCREEN_LOW} or >= ${SCREEN_HIGH}, replaced);` : ''}${cuts.earlyStop.length ? ` early stopping at ${cuts.earlyStop.join('/')} (option 0 never stops; the Forge map on the options still running);` : ''} checkpoints ${sched.ends.join('/')}`);
@@ -957,7 +1010,7 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   for (const r of bRows) byD.set(r.d, [...(byD.get(r.d) ?? []), r]);
   // D480: the schedule's word on each decision (early stopping, the screen, why it was branched), when the cuts wrote one; and a
   // spine with no Forge map (--branch-forge 0) reads `complete`, `decided` and `settled` on the random map, and makes no agreement read
-  const schedule = readJsonl<ScheduleEvent>(path.join(B, 'schedule.jsonl'));
+  const schedule = scheduleEvents(readJsonl<ScheduleLine>(path.join(B, 'schedule.jsonl')));
   const cutOf = decisionCuts(schedule);
   const forgeMap = o.branchForge > 0;
   const ds = baseline ? [...byD.keys()].sort((a, b) => a - b).map((d) => decisionAtlas(baseline.decisions[d] as DecisionListing, byD.get(d) as BranchRow[], o.boot, o.seed + d * 7919, cutOf.get(d), forgeMap)) : [];
@@ -1255,7 +1308,7 @@ async function atlasSelftestCuts(repo: string, out: string, jobs: string, say: (
     const tag = path.basename(leg.dir);
     want(rc === 0 && doc.checks.problems.length === 0, `${tag}: the atlas's own checks: ${doc.checks.problems.join('; ') || `exit ${rc}`}`);
     const listed = (JSON.parse(fs.readFileSync(path.join(B, 'baseline.json'), 'utf8')) as { decisions: DecisionListing[] }).decisions;
-    const events = readJsonl<ScheduleEvent>(path.join(B, 'schedule.jsonl'));
+    const events = scheduleEvents(readJsonl<ScheduleLine>(path.join(B, 'schedule.jsonl')));
     const cut = decisionCuts(events);
     const rows = readJsonl<BranchRow>(path.join(B, 'branches.jsonl'));
     const units = readJsonl<UnitLine>(path.join(B, 'units.jsonl'));
