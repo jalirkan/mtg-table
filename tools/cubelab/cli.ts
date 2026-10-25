@@ -6,7 +6,8 @@
 //   library-candidates --fc <ForgeCoach> [--out cubes/library] [--seed 180] [--min-games 80]   the library pool and its candidate 180s (library-candidates.ts)
 //   census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   the census's population (census.ts, D445)
 //   decks   --band <pauper|peasant|legacy|powered> --count N --seed S --out <dir> [--cross-band 0.10] [--scripts <zip>]
-//           40-card decks at random colour makeups straight from a band's pool, no drafter (deckcensus.ts, D447)
+//           [--unplayable <file>|none]   40-card decks at random colour makeups straight from a band's pool, no drafter
+//           (deckcensus.ts, D447); the engine-unplayable list never dealt (cubelab/engine-unplayable.json, D482)
 //   decks   --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
 //           the same rules on one cube's own list: k on 1-3, no cross-band slice, a repeat cap at k = 1, card-shares.tsv (D456)
 //   census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search] [--policy-b plain|search]
@@ -143,6 +144,7 @@ function usage(msg?: string): never {
                         --seed S --count N --out <dir> [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   (D445, no engine)
        tools/cubelab.sh decks --band <pauper|peasant|legacy|powered> --count N --seed S --out <dir> [--cross-band 0.10]
                         [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D447, no engine)
+                        [--unplayable <file>|none]   (D482: the engine-unplayable list, never dealt; default cubelab/engine-unplayable.json)
        tools/cubelab.sh decks --cube <cube.md> --count N --seed S --out <dir> [--k 1,2,3] [--max-share-k1 0.25]
                         [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D456: one cube's pool, no engine)
        tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search]

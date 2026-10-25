@@ -19,7 +19,11 @@
  *  - a cube's census (`decks --cube`, D456): Omega's 180 cards yield 40-card decks of 1, 2 and 3
  *    colours, every one castable by the independent checker and drawn from the cube alone; band decks
  *    are unchanged by it; the repeat cap holds where it binds (a mono-heavy cube) and changes nothing
- *    where it does not (Omega); census-read reads the cube's group.
+ *    where it does not (Omega); census-read reads the cube's group;
+ *  - the engine-unplayable list (D482): a listed card (J166's Scute Swarm, and a planted fixer and
+ *    colourless spell) is never dealt and every skip is counted; a deck none of whose picks landed on
+ *    one is byte for byte the deck drawn without the list; J166's s04 deck 1 loses its Scute Swarm and
+ *    deck 2 is unchanged; the command reports the list and its skips, `--unplayable none` is D447's draw.
  *
  * The real library's mana costs and lands come from Forge's card scripts (the zip beside $FORGE_JAR or
  * config.json's jar, else forge-home/res).  WITHOUT THEM THE SUITE FAILS (#154 review): costed by
@@ -45,12 +49,13 @@ import {
   castable, censusPopulation, CARD_FLOW_STUDY, landSources, decksCommand, defaultScriptsZip, generateDeck, landCount, landPlan, parseManaCost, poolBands, crossBands,
   scriptCost, scriptLookup, scriptManaCost, sourcesOf, type CensusCard, type DeckRecord, type Makeup,
   coloursOf, cubeCtx, cubeNameOf, cubePool, drawCubeRun, drawDeck, makeupOf, repeatCapCount, CUBE_KS, DEFAULT_MAX_SHARE_K1, REPEAT_CAP_FLOOR,
+  ENGINE_UNPLAYABLE_FILE, loadEngineUnplayable, parseEngineUnplayable,
 } from '../../tools/cubelab/deckcensus.ts';
 import { pairingOf, planExtension, replayPlan, rowOf, searchSummary, type GameRowOut, type PlannedGame } from '../../tools/cubelab/censusplay.ts';
 import { cardsTsv, censusReadCommand, dedupe, readCensus, shareBin, spectrumMd, strictJson, SHARE_BINS } from '../../tools/cubelab/censusread.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { openForgeScripts } from '../../tools/forge-scripts.ts';
-import { BANDS } from '../../tools/cubelab/census.ts';
+import { BANDS, type Band } from '../../tools/cubelab/census.ts';
 import { unusedPositionals } from '../../tools/cubelab/cli.ts';
 
 const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
@@ -660,4 +665,79 @@ test('census-read reads a cube\'s group beside the bands, and its cards are keye
   assert.ok(cards.length === 4 && cards.every((c) => c.band === 'cube:omega-cube-180'));
   assert.doesNotThrow(() => strictJson(doc));
   assert.match(spectrumMd(doc), /## cube:omega-cube-180/);
+});
+
+test('the engine-unplayable list (D482): the committed file, its shape, every card in the library', () => {
+  const u = loadEngineUnplayable(REPO, undefined);
+  assert.ok(u, 'the committed list loads');
+  assert.equal(u.file, ENGINE_UNPLAYABLE_FILE);
+  assert.deepEqual([...u.cards.keys()], ['Scute Swarm'], 'the list starts with exactly one card');
+  assert.equal(u.cards.get('Scute Swarm')?.since, 'J166');
+  for (const n of u.cards.keys()) assert.ok(byName.has(n), `${n} is a library card`);
+  assert.equal(loadEngineUnplayable(REPO, 'none'), null);
+  assert.throws(() => parseEngineUnplayable('{"cards":{"X":{"since":"J1","why":"w"}}}', 't.json'), /X has no evidence/);
+  assert.throws(() => parseEngineUnplayable('{"cards":{"X":{"since":"","why":"w","evidence":"e"}}}', 't.json'), /X has no since/);
+  assert.throws(() => parseEngineUnplayable('{"X":{}}', 't.json'), /wants \{ "cards"/);
+});
+
+test('the engine-unplayable list (D482): a listed card is never dealt, every skip counted, every other deck unchanged', () => {
+  // J166's spine s04: deck 1 drew Scute Swarm third; with the list it is redrawn from there on, and deck 2 never met it
+  const scute = new Set(['Scute Swarm']);
+  const j166 = (i: number, unplayable?: ReadonlySet<string>): DeckRecord => generateDeck(lib, { band: 'powered', seed: 2004, crossBand: 0.1, ...(unplayable ? { unplayable } : {}) }, i);
+  assert.equal(j166(1).spells[2], 'Scute Swarm', "J166's deck: Scute Swarm the third spell");
+  assert.deepEqual(j166(1, scute).engineSkips, { 'Scute Swarm': 1 });
+  assert.ok(!j166(1, scute).spells.includes('Scute Swarm'));
+  assert.deepEqual(j166(1, scute).spells.slice(0, 2), j166(1).spells.slice(0, 2), 'the picks before the skip are the same');
+  assert.deepEqual(j166(2, scute), j166(2), 'deck 2 is the same row');
+  // 300 decks of the two bands that hold it, and the same with a planted fixer and colourless spell listed
+  const plain = (band: Band, i: number): DeckRecord => generateDeck(lib, { band, seed: 482, crossBand: 0.1 }, i);
+  const freq = (pick: (d: DeckRecord) => string[]): string => {
+    const n = new Map<string, number>();
+    for (let i = 1; i <= 150; i++) for (const c of pick(plain('legacy', i))) n.set(c, (n.get(c) ?? 0) + 1);
+    return [...n].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] as string;
+  };
+  const fixer = freq((d) => d.fixers);
+  const colourless = freq((d) => d.spells.filter((n) => coloursOf(byName.get(n) as CensusCard) === ''));
+  for (const listed of [scute, new Set(['Scute Swarm', fixer, colourless])]) {
+    let skipped = 0, same = 0, hadListed = 0;
+    for (const band of ['legacy', 'powered'] as Band[]) {
+      for (let i = 1; i <= 150; i++) {
+        const before = plain(band, i);
+        const d = generateDeck(lib, { band, seed: 482, crossBand: 0.1, unplayable: listed }, i);
+        for (const n of listed) assert.ok(!d.spells.includes(n) && !d.fixers.includes(n), `${d.id}: ${n} is never dealt`);
+        assert.ok(d.main.every(([, n]) => !listed.has(n)));
+        if ([...before.spells, ...before.fixers].some((n) => listed.has(n))) { hadListed++; assert.ok(d.engineSkips, `${d.id}: the deck that held a listed card counts its skip`); }
+        if (d.engineSkips) {
+          skipped++;
+          assert.ok(Object.keys(d.engineSkips).every((n) => listed.has(n)) && Object.values(d.engineSkips).every((k) => k >= 1));
+        } else { same++; assert.deepEqual(d, before, `${d.id}: no pick landed on a listed card, so it is the deck drawn without the list`); }
+      }
+    }
+    assert.ok(hadListed >= 1 && skipped >= hadListed, `${[...listed].join(', ')}: ${hadListed} deck(s) held one without the list, ${skipped} skipped`);
+    assert.ok(same >= 200, `most decks never meet the list: ${same} of 300`);
+  }
+});
+
+test('decks writes the list it applied and its skips; --unplayable none is D447\'s draw; --cube refuses it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'deck-census-'));
+  try {
+    const run = (out: string, extra: Array<[string, string[]]> = []): string[] => {
+      const said: string[] = [];
+      decksCommand(REPO, new Map<string, string[]>([['band', ['powered']], ['count', ['2']], ['seed', ['2004']], ['cross-band', ['0.10']], ['out', [join(dir, out)]], ['scripts', [scripts.path]], ...extra]), (x) => said.push(x));
+      return said;
+    };
+    const said = run('d');
+    assert.match(said.join('\n'), /engine-unplayable \(D482\) tools\/cubelab\/engine-unplayable\.json: Scute Swarm \(1 skip\(s\)\), 1 deck\(s\) with a skip/);
+    const m = JSON.parse(readFileSync(join(dir, 'd', 'decks.json'), 'utf8')) as { engineUnplayable: { decision: string; cards: string[]; skips: number; skipsByCard: Record<string, number>; decksWithSkip: number; notInLibrary: string[] }; rules: Record<string, string> };
+    assert.deepEqual(m.engineUnplayable, { ...m.engineUnplayable, decision: 'D482', cards: ['Scute Swarm'], skips: 1, skipsByCard: { 'Scute Swarm': 1 }, decksWithSkip: 1, notInLibrary: [] });
+    assert.match(m.rules.engineUnplayable as string, /never dealt/);
+    const rows = readFileSync(join(dir, 'd', 'decks.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l) as DeckRecord);
+    assert.deepEqual(rows.map((r) => r.engineSkips ?? null), [{ 'Scute Swarm': 1 }, null]);
+    assert.ok(!readFileSync(join(dir, 'd', 'decks', 'powered-2004-00001.dck'), 'utf8').includes('Scute Swarm'));
+    run('none', [['unplayable', ['none']]]);
+    assert.match(readFileSync(join(dir, 'none', 'decks', 'powered-2004-00001.dck'), 'utf8'), /^1 Scute Swarm$/m, 'without the list, J166\'s deck');
+    assert.equal(JSON.parse(readFileSync(join(dir, 'none', 'decks.json'), 'utf8')).engineUnplayable, null);
+    assert.equal(readFileSync(join(dir, 'none', 'decks', 'powered-2004-00002.dck'), 'utf8'), readFileSync(join(dir, 'd', 'decks', 'powered-2004-00002.dck'), 'utf8'));
+    assert.throws(() => decksCommand(REPO, new Map([['cube', ['cubes/omega-cube-180.md']], ['count', ['1']], ['seed', ['1']], ['out', [join(dir, 'c')]], ['unplayable', ['none']]]), quiet), /--unplayable is a band's \(D482\)/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
