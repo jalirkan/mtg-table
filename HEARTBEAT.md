@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-24T21:23:06-04:00
+- time: 2026-10-24T21:23:20-04:00
 - runner: 325c2dd8, up since 2026-10-24T20:42:21-04:00
-- running: J165 prepare, 0/92000 lines, 1 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 3.41; memory 7.2/30.5 GB, swap 3863 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 3.04; memory 7.2/30.5 GB, swap 3863 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J164 done at 2026-10-24T21:23:06-04:00: branches 8640 · atlas.decisionsComplete 8 · atlas.problems 0 · atlas.timeoutShare 0 · atlas.seedsMatch 8640 · atlas.forkDrawBranches 7457 · atlas.forkStealBranches 5048 · atlas.labels 8 · atlas.skipLines 80
+- last finished: J165 failed at 2026-10-24T21:23:20-04:00
 
 ## Messages
 

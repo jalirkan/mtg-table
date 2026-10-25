@@ -1,72 +1,37 @@
 {
  "schema": 1,
- "updated": "2026-10-24T21:23:06-04:00",
- "heartbeat": "2026-10-24T21:23:06-04:00",
+ "updated": "2026-10-24T21:23:20-04:00",
+ "heartbeat": "2026-10-24T21:23:20-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-24T21:23:20-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 3.41,
+  "load1": 3.04,
   "memUsedGb": 7.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 3863,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Move atlas 4a: the cut design on random library decks",
    "publicEst": "~9 to 11 h",
    "id": "J165",
    "title": "The move atlas, rung 4a -- the cut design (D480) in the wide shape, on decks nobody designed: 13 spines, each a pair of random library decks of one band drawn as the census draws them (D447; deck seeds 2001-2013, bands cycled pauper, peasant, legacy, powered), the baseline game Forge vs Forge at a fresh game seed (2101-2113), 8 decisions a spine from those with 3+ options, every option 200 times random with the 25-branch screen and early stopping at 50/100/150, the Forge map at 40 on spines 1, 7 and 13 only, the checks on the workers; the labels marked `training: true` with `pool: \"random-<band>\"`, and a held-out VALIDATION draw (13 more pairs, deck seeds 2201-2213) written as deck files only and never branched; a new data folder lab-j165; on 325c2dd8. Pre-registered reads, numbers only; no outcome rule beyond D451's and J156's (iv). These labels are a new deck population, tool and design, and are never pooled with J156's, J157's, J158's or J162's",
-   "cpu": "heavy",
-   "phase": "prepare",
-   "started": "2026-10-24T21:23:06-04:00",
-   "elapsed": 0,
-   "done": 0,
-   "total": 92000,
-   "unit": "lines",
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-10-24T21:23:06-04:00",
-   "memGb": null,
-   "live": {
-    "branches": 0,
-    "atlas.problems": -1,
-    "armed": 0,
-    "branch_timeouts": 0,
-    "data_free_gb": 655.4,
-    "data_used_gb": 0,
-    "elapsed_s": 0,
-    "engine_errors": 0,
-    "payfail": 0,
-    "pressure_events": 0,
-    "unavailable": 0,
-    "unit_errors": 0,
-    "workers": 1
-   },
-   "liveHeadline": [
-    "branches",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J165-prepare"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "status": "failed",
+   "finished": "2026-10-24T21:23:20-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "prepare: step prepare exited 1"
+  },
   {
    "publicTitle": "Move atlas: the Monarch replay",
    "publicEst": "~85 min",
@@ -870,25 +835,6 @@
     "calib.summary_slope": 0.8478302121434688,
     "calib.summary_relSlope": 0.8890713509629008,
     "calib.summary_coachUse": 0
-   }
-  },
-  {
-   "publicTitle": "Search AI pilots for cube stats",
-   "publicEst": "one night (~7 to 10 h)",
-   "id": "J112",
-   "title": "Search-v2 pilots for cube stats: do cube-lab games played by search-v2 instead of Forge Default give card win rates that rank like 17Lands humans (Vintage, Synergy), and does blue's Forge deficit shrink",
-   "status": "done",
-   "finished": "2026-10-08T13:33:00-04:00",
-   "headline": "jr.verdict_code 0 · jr.v_diff -0.074 · jr.v_lo -0.154 · jr.v_hi 0.006 · jr.s_diff 0.105 · jr.v_rho_a 0.535 · jr.v_rho_b 0.461 · jr.v_blue_paired_diff -0.014",
-   "numbers": {
-    "jr.verdict_code": 0,
-    "jr.v_diff": -0.0738,
-    "jr.v_lo": -0.1539,
-    "jr.v_hi": 0.0061,
-    "jr.s_diff": 0.1052,
-    "jr.v_rho_a": 0.535,
-    "jr.v_rho_b": 0.4611,
-    "jr.v_blue_paired_diff": -0.0136
    }
   }
  ],

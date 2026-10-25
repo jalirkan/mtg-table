@@ -1,5 +1,7 @@
-running
+failed
+reason: prepare: step prepare exited 1
 runner: forgecoach-runner 325c2dd8
 started: 2026-10-24T21:23:06-04:00
-phase: prepare
+finished: 2026-10-24T21:23:20-04:00
 workers: 1
+exit: 1
