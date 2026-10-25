@@ -1190,9 +1190,9 @@ finish its games inside the atlas's branch budget. Today that is one card, Scute
 boards stalled the AI's combat prediction for 1,000–1,300 s inside one event-free engine step. This is an
 engine limitation, not a judgement about the card or anyone's decks, and a card goes on the list only with
 a measured stall and its evidence (`since`, `why`, `evidence` per card). A pick that lands on a listed card
-is made again from the same list. So a deck that never met one is byte for byte the deck it was (its `.dck`
-and its `decks.jsonl` row, which `census-play`'s `plan.json` hashes), and a deck that did changes from that
-pick on. Every skip is counted: a row's `engineSkips` (only when there was one), `decks.json`'s
+is made again from the same list. So a deck none of whose picks landed on a listed card is byte for byte the deck it was (its `.dck`
+and its `decks.jsonl` row, which `census-play`'s `plan.json` hashes), and a deck with such a pick changes from
+that pick on — a pick the draw would have dropped anyway still counts and still shifts the fixer shuffle after it. Every skip is counted: a row's `engineSkips` (only when there was one), `decks.json`'s
 `engineUnplayable` (the file, its sha, the cards, the skips by card, the decks with a skip), and the summary
 line `decks` prints. `--unplayable none` draws without the list, and `--unplayable <file>` reads another.
 `decks --cube`, the drafts, `evolve` and the board never read it.

@@ -94,3 +94,17 @@ Every deck that held one without the list counts a skip, and every deck with no 
 without the list. J166's s04 deck 1 loses Scute Swarm with one skip and keeps its first two spells, and deck 2 is the same
 row. The command prints and records the list and its skips, `--unplayable none` writes J166's deck, and `--cube` refuses
 the flag.
+
+## Follow-ups from the skeptic review (2026-10-25, before the merge)
+
+- The guide and the README said a deck that never "met" a listed card is unchanged; the exact rule is a deck
+  none of whose PICKS landed on one — a skip on a pick the draw would have dropped anyway still counts in
+  `engineSkips` and still shifts that deck's fixer shuffle (a 300-deck probe at seed 482: `legacy-482-00140`'s
+  deck unchanged but its row gains a skip; `powered-482-00022`'s fixers changed after a skip on a dropped pick).
+  Reworded in both before the merge; `engineSkips` and `decksWithSkip` count picks, not cards removed.
+- The tests compare with `deepEqual`, which ignores key order, and byte-compare deck 2's `.dck` but not its
+  `decks.jsonl` line; a `JSON.stringify` comparison would pin what `plan.json` hashes. Not done yet.
+- `hadListed >= 1` is asserted over the whole planted list, so nothing pins that a listed fixer goes through
+  `landPlan`'s skip path on its own (the probe shows all three planted cards are exercised). Not done yet.
+- `census-read` never shows the skips (D447 makes every rejection visible downstream); negligible with one card,
+  short of D447 once the list grows. Not done yet.
