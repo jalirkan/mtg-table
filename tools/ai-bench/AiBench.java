@@ -1500,6 +1500,7 @@ public final class AiBench {
         evalLeafScenarios();
         karnRestartScenarios();
         cappedDrawScenarios();
+        unitOptionsScenarios();
         engineDrawScenarios();
         d416Scenarios(castBoard);
         stepClockScenario();
@@ -2182,6 +2183,52 @@ public final class AiBench {
                     "control: a branch that ends the game before the cap keeps its result (capped " + b.capped + ", turns "
                             + b.turns + ", result " + b.result + ", error " + b.error + ")");
         });
+    }
+
+    /**
+     * D480: an atlas unit with an option subset ({@code Atlas.Unit.options}, early stopping's options still running)
+     * plays those options only, every branch of each, through the hook itself; the control with no subset plays every
+     * option.  The decision: pass, a Lightning Bolt at the opponent, Forge's own answer -- three candidates, two
+     * branches each, the subset options 0 and 2.
+     */
+    static void unitOptionsScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: an atlas unit plays its option subset (D480, engine)");
+        final String lib = "Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest";
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest", "humanlibrary=" + lib, "aibattlefield=Mountain;Forest", "aihand=Lightning Bolt",
+                "ailibrary=" + lib);
+        for (final boolean subset : new boolean[] {true, false}) {
+            scenario(subset ? "atlas-unit-options" : "atlas-unit-options-control", board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                final Card bolt = named(ai.getCardsIn(ZoneType.Hand), "Lightning Bolt");
+                final forge.game.spellability.SpellAbility sa = bolt.getFirstSpellAbility();
+                sa.setActivatingPlayer(ai);
+                sa.resetTargets();
+                sa.getTargets().add(ai.getWeakestOpponent());
+                final List<mtgtable.ai.SearchPolicy.Cand> cands = List.of(mtgtable.ai.SearchPolicy.priorityCand(null),
+                        mtgtable.ai.SearchPolicy.priorityCand(sa), mtgtable.ai.SearchPolicy.forgeCand());
+                final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+                u.seat = ai.getName();
+                u.decision = 0;
+                u.continuation = "forge";
+                u.i0 = 0;
+                u.i1 = 2;
+                u.seed = 480;
+                u.turnCap = ai.getGame().getPhaseHandler().getTurn() + 1;
+                u.branchTimeoutMs = 60_000;
+                u.observe = null;
+                u.options = subset ? new java.util.TreeSet<>(List.of(0, 2)) : null;
+                final mtgtable.ai.Atlas.Hook h = new mtgtable.ai.Atlas.Hook(u);
+                h.decision(ai, cands, "p");
+                final java.util.Set<Integer> played = new java.util.TreeSet<>();
+                for (final mtgtable.ai.Atlas.Branch b : h.branches) {
+                    played.add(b.option);
+                }
+                check(h.error == null && h.branches.size() == (subset ? 4 : 6) && played.equals(subset ? java.util.Set.of(0, 2) : java.util.Set.of(0, 1, 2)),
+                        (subset ? "the subset {0, 2}" : "control, no subset") + ": " + h.branches.size() + " branch(es) over options " + played
+                                + (h.error == null ? "" : " -- " + h.error));
+                check(!ai.getGame().isGameOver(), "the real game is untouched: not over");
+            });
+        }
     }
 
     /**

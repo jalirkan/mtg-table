@@ -71,7 +71,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 import { engineEnv, runPool, type MatchJob, type MatchResult, type RecordSpec } from './engine.ts';
 import { fileLines } from './lines.ts';
@@ -413,6 +413,35 @@ export function redactionCheck(repo: string, files: string[], batch = 100, flags
     }
   }
   return { checked: files.length, failed, ms: Date.now() - t0 };
+}
+
+/**
+ * D480: redactionCheck with `n` batches at a time.  The same batches, the same calls and the same one-by-one pass over a
+ * failed batch; the failed files come back in the serial order, so only `ms` (wall time) differs from redactionCheck's.
+ */
+export async function redactionCheckParallel(repo: string, files: string[], batch = 100, flags: string[] = [], n = 1): Promise<{ checked: number; failed: string[]; ms: number }> {
+  const t0 = Date.now();
+  const script = path.join(repo, 'tools/check-redaction.mjs');
+  const run = (args: string[]): Promise<number> => new Promise((resolve, reject) => {
+    const p = spawn('node', [script, ...flags, ...args], { cwd: repo, stdio: ['ignore', 'ignore', 'ignore'] });
+    p.once('error', reject);
+    p.once('close', (code) => resolve(code ?? 1));
+  });
+  const parts: string[][] = [];
+  for (let i = 0; i < files.length; i += batch) parts.push(files.slice(i, i + batch));
+  const failed: string[][] = parts.map(() => []);
+  let next = 0;
+  const one = async (): Promise<void> => {
+    while (next < parts.length) {
+      const j = next++;
+      const part = parts[j] as string[];
+      if ((await run(part)) === 0) continue;
+      // which ones: check them one by one, as redactionCheck does
+      for (const f of part) if ((await run([f])) !== 0) (failed[j] as string[]).push(f);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(n, parts.length)) }, one));
+  return { checked: files.length, failed: failed.flat(), ms: Date.now() - t0 };
 }
 
 /**

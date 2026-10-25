@@ -149,38 +149,69 @@ export function frameLogReader(): { read: (file: string) => string | null; unrea
  */
 export function checkRowsDir(rowsDir: string, logOf?: (begin: Record<string, unknown>, seat: number) => string | null,
   read: (file: string) => string | null = readMaybeGz): RowsCheck {
+  const { out, games } = collectRows(rowsDir, logOf);
+  for (const g of games) applyGameIds(out, g.key, checkGameIds(g, read));
+  return out;
+}
+
+/** D480: one game's rows for the id check, with its two seats' frame logs named (`logOf`, resolved up front: it reads nothing). */
+export interface GameIds { key: string; seats: unknown[]; rows: Array<{ seat: string; tokens: string[] }>; logs: Array<string | null> }
+
+/** D480: what one game's id check found: its problems in order (`capped` ones count against the 200), and the log it skipped. */
+export interface GameIdsResult { entries: Array<{ capped: boolean; text: string }>; skipped: Array<{ game: string; log: string }> }
+
+/**
+ * The shape check of every rows file under `rowsDir` (into `out`), and the games for the id check, in the order checkRowsDir
+ * has always walked them (D480: split out so the post-spine checks can hand the games to several workers).
+ */
+export function collectRows(rowsDir: string, logOf?: (begin: Record<string, unknown>, seat: number) => string | null): { out: RowsCheck; games: GameIds[] } {
   const out: RowsCheck = { files: 0, rows: 0, games: 0, problems: [] };
-  if (!fs.existsSync(rowsDir)) return out;
+  if (!fs.existsSync(rowsDir)) return { out, games: [] };
   const byGame = logOf ? new Map<string, { begin: Record<string, unknown> | null; rows: Array<{ seat: string; tokens: string[] }> }>() : undefined;
   for (const f of fs.readdirSync(rowsDir).filter((x) => /^rows-.*\.jsonl$/.test(x)).sort()) {
     checkRowsText(fs.readFileSync(path.join(rowsDir, f), 'utf8'), f, out, byGame);
   }
+  const games: GameIds[] = [];
   if (byGame && logOf) {
     for (const [key, g] of byGame) {
       if (!g.begin) continue;
       out.games++;
-      const seats = [g.begin.seat0, g.begin.seat1];
-      const vis = new Map<number, Set<number> | null>();
-      for (const r of g.rows) {
-        const k = seats.indexOf(r.seat);
-        if (k < 0) { out.problems.push(`${key}: a row from seat ${r.seat}, which the begin line does not name`); continue; }
-        if (!vis.has(k)) {
-          const log = logOf(g.begin, k);
-          const text = log && fs.existsSync(log) ? read(log) : null;   // D466: null for a log the reader cannot inflate
-          if (log && text === null && fs.existsSync(log)) (out.skipped ??= []).push({ game: key, log });
-          vis.set(k, text === null ? null : visibleIds(text));
-        }
-        const v = vis.get(k);
-        if (!v) continue;
-        for (const tok of r.tokens) {
-          for (const id of tokenIds(tok)) {
-            if (!v.has(id) && out.problems.length < 200) out.problems.push(`${key}: seat ${r.seat}'s row names id ${id} (${tok}), which its own log never shows it`);
-          }
-        }
+      games.push({ key, seats: [g.begin.seat0, g.begin.seat1], rows: g.rows, logs: [logOf(g.begin, 0), logOf(g.begin, 1)] });
+    }
+  }
+  return { out, games };
+}
+
+/** One game's id check: every id its rows name must be one the deciding seat's own log shows (`read` null: a log it skips). */
+export function checkGameIds(g: GameIds, read: (file: string) => string | null): GameIdsResult {
+  const res: GameIdsResult = { entries: [], skipped: [] };
+  let capped = 0;
+  const vis = new Map<number, Set<number> | null>();
+  for (const r of g.rows) {
+    const k = g.seats.indexOf(r.seat);
+    if (k < 0) { res.entries.push({ capped: false, text: `${g.key}: a row from seat ${r.seat}, which the begin line does not name` }); continue; }
+    if (!vis.has(k)) {
+      const log = g.logs[k] ?? null;
+      const text = log && fs.existsSync(log) ? read(log) : null;   // D466: null for a log the reader cannot inflate
+      if (log && text === null && fs.existsSync(log)) res.skipped.push({ game: g.key, log });
+      vis.set(k, text === null ? null : visibleIds(text));
+    }
+    const v = vis.get(k);
+    if (!v) continue;
+    for (const tok of r.tokens) {
+      for (const id of tokenIds(tok)) {
+        // at most 200 a game: the whole check keeps 200
+        if (!v.has(id) && capped < 200) { res.entries.push({ capped: true, text: `${g.key}: seat ${r.seat}'s row names id ${id} (${tok}), which its own log never shows it` }); capped++; }
       }
     }
   }
-  return out;
+  return res;
+}
+
+/** One game's id check into `out`, as checkRowsDir has always written it: the capped problems only while the check holds fewer than 200. */
+export function applyGameIds(out: RowsCheck, _key: string, r: GameIdsResult): void {
+  for (const e of r.entries) if (!e.capped || out.problems.length < 200) out.problems.push(e.text);
+  if (r.skipped.length) (out.skipped ??= []).push(...r.skipped);
 }
 
 /** Bytes each game's lines take in the rows files of `rowsDir` (begin, rows and end), by game key. */

@@ -267,6 +267,12 @@ public final class Atlas {
         public int leakChecks;
         /** D465: branches an earlier attempt of this unit recorded ({@link #skipKey}): not played again. */
         public Set<String> skip = Collections.emptySet();
+        /**
+         * D480: the options this unit plays (their indices in the listing), or null for every one.  Early
+         * stopping drops an option at a checkpoint, and the units after it carry the options still running;
+         * option 0, Forge's own answer, is never dropped, so the leak check on it still runs.
+         */
+        public Set<Integer> options;
         /** D465: each branch as it ends (the worker streams it to the pool), or null. */
         public Consumer<Branch> onBranch;
     }
@@ -390,6 +396,9 @@ public final class Atlas {
                 for (int i = unit.i0; i < unit.i1; i++) {
                     final long seed = branchSeed(unit.seed, d.index, i);
                     for (int o = 0; o < cands.size(); o++) {
+                        if (unit.options != null && !unit.options.contains(o)) {
+                            continue;   // D480: an option early stopping dropped at an earlier checkpoint
+                        }
                         if (unit.skip.contains(skipKey(o, i))) {
                             continue;   // D465: an earlier attempt of this unit recorded it
                         }

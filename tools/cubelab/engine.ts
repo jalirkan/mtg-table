@@ -226,7 +226,16 @@ export interface MatchResult {
 export interface ProgressMsg { type: 'progress'; id: string; [k: string]: unknown }
 
 /** D465: what else the pool reports: a match's streamed progress, as it arrives. */
-export interface PoolHooks { onProgress?: (job: MatchJob, msg: ProgressMsg, worker: number) => void }
+export interface PoolHooks {
+  onProgress?: (job: MatchJob, msg: ProgressMsg, worker: number) => void;
+  /**
+   * D480: keep an idle worker alive while the queue is empty but matches are still out, because an answer may queue more
+   * work (the atlas's checkpoint barriers: a decision's next units wait for all of its current ones).  Without it an idle
+   * worker with nothing queued quits at once, as it always has; with it, the queued follow-ups wake every idle worker, and a
+   * slot whose worker died while nothing was queued waits parked and starts again when work arrives.
+   */
+  holdIdle?: boolean;
+}
 
 interface Slot {
   k: number;
@@ -276,8 +285,20 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
       const more = onResult(j, r, k, load) ?? [];
       queue.unshift(...more);
       pending += more.length - 1;
-      // no other slot is woken: this one goes on (giveWork), or retired, died or hung -- and each of those starts a fresh worker here
+      // no other slot is woken: this one goes on (giveWork), or retired, died or hung -- and each of those starts a fresh worker here.
+      // D480: under holdIdle the other idle workers are woken too (a barrier's follow-ups are several units, not one resume)
+      if (hooks.holdIdle && more.length) {
+        for (const s of slots) if (s.k !== k) giveWork(s);
+        // ...and a slot left parked (the first stage needed fewer workers, or its worker died while nothing was queued) starts now
+        for (const s of slots) {
+          if (s.k === k || !s.parked || s.proc || queue.length === 0 || control().paused || alive() >= cap()) continue;
+          s.parked = false;
+          start(s);
+        }
+      }
     };
+    /** D480: under holdIdle, nothing queued yet but matches still out -- an answer may queue more. */
+    const holding = (): boolean => !!hooks.holdIdle && queue.length === 0 && pending > 0;
     const finish = (): void => {
       clearInterval(timer);
       for (const s of slots) if (s.proc) { s.proc.stdin.end(`${JSON.stringify({ type: 'quit' })}\n`); }
@@ -295,6 +316,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
           return;
         }
       }
+      if (holding()) return;                                // D480: idle, alive, until an answer queues more
       const j = queue.shift();
       if (!j) {
         s.proc.stdin.end(`${JSON.stringify({ type: 'quit' })}\n`);
@@ -316,6 +338,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
       }
       if (pending === 0) { finish(); return; }
       if (queue.length > 0) restart(s);
+      else if (holding()) s.parked = true;                  // D480: the timer starts it when work is queued
     };
 
     /** A fresh worker after one died or hung: parked instead while paused or at the cap (the timer starts it later). */
@@ -374,6 +397,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
         if (retired) {
           s.retiring = false;
           if (!s.job && queue.length > 0) restart(s);
+          else if (!s.job && holding()) s.parked = true;   // D480
           return;
         }
         const wasReady = s.ready;
@@ -387,6 +411,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
             s.last = null;
             if (pending === 0) { finish(); return; }
             if (queue.length > 0) restart(s);
+            else if (holding()) s.parked = true;            // D480
             return;
           }
           fail(s, `worker exited (${code ?? signal})`);
@@ -425,5 +450,8 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
     for (const s of slots.slice(0, first)) {
       if (alive() < cap() && !control().paused) start(s); else s.parked = true;      // paused: no JVM starts at all
     }
+    // D480: under holdIdle the first jobs may be fewer than the workers (a barrier's later units are not queued yet): the rest
+    // wait parked, and the timer starts each when work is queued
+    if (hooks.holdIdle) for (const s of slots.slice(first)) s.parked = true;
   });
 }

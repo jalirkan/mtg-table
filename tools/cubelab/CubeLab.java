@@ -756,6 +756,14 @@ public final class CubeLab {
             }
             u.skip = skip;
         }
+        if (a.get("options") instanceof Object[]) {
+            // D480: the options this unit plays (early stopping dropped the others at a checkpoint)
+            final java.util.Set<Integer> opts = new java.util.TreeSet<>();
+            for (final Object o : (Object[]) a.get("options")) {
+                opts.add(((Number) o).intValue());
+            }
+            u.options = opts;
+        }
         if (u.decision >= 0) {
             // D465: each branch reaches the pool as it ends, so a worker that dies keeps what it finished
             u.onBranch = b -> {

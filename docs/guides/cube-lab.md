@@ -1322,7 +1322,8 @@ tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --rollouts 50 --de
 tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again from the folder, no engine games
 tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
 tools/cubelab.sh atlas ... --branch-capped-warn 0.5  # D478: an option past half its branch games capped is a warning (default 0.25)
-tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, then G5 on a tax pair and G6 on a Crypt Rats pair (~4.5 min at --jobs 1, engine)
+tools/cubelab.sh atlas ... --decisions 8 --min-options 3 --screen 25 --early-stop on --checks-parallel 7   # D480: the cut design (below)
+tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, G5 on a tax pair, G6 on a Crypt Rats pair, the checks on two workers, and the cut design on two short spines (engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
 
@@ -1413,6 +1414,44 @@ like this one, not a fault in the atlas.
   branch game 3.0 s (random 3.0, Forge 2.0); a phase A game keeps 234 KB, a branch 136 KB. A random game
   is slower than a Forge game: every random priority lists every play the seat could make, and the
   observing seat lists the search's candidates for its row.
+
+### The cut design (D480)
+
+Five flags, each off by default, so a J158- or J162-shaped job runs as it did
+([D480](../decisions/D480-atlas-cut-design.md), from the atlas review of 2026-10-24, design B):
+
+| flag | what it changes | default |
+|---|---|---|
+| `--checks-parallel n` | the post-spine checks (the rows' id checks and the guardrail reads on `n` worker threads, `n` redaction batches at once); `atlas.json`'s checks are the serial run's but for `redactionMs` | 1 (serial) |
+| `--early-stop on` (or `a,b,c`) | after 50, 100 and 150 random branches, an option whose paired-bootstrap interval against the leader lies entirely below zero stops; option 0 never stops; the Forge map plays the options still running | off |
+| `--screen n` | after `n` random branches of every option, a decision whose mean value is <= .04 or >= .96 is settled (`screened: true`, a cheap label) and the next listed decision not yet branched takes its place | 0 (off) |
+| `--min-options k` | `--decisions` are spread over the decisions with `k` or more options, filled from the rest when too few | 1 |
+| `--branch-forge 0` | already a flag: a spine with no Forge map; its decisions are `complete`, `decided` and `settled` on the random map, and it makes no agreement read | 40 |
+
+- **The barrier.** A checkpoint is a chunk boundary (`--chunk` must divide it). A decision's next units wait until every
+  unit of its current stage has finished. Then the checkpoint is decided from the paired rows, and the next units go out
+  carrying the options still running (the job's `atlas.options`, `Atlas.Unit.options`). The pool keeps idle workers alive
+  for those units (`holdIdle`). Every verdict is a line of `phaseB/schedule.jsonl`, written when it is made: a pick with its
+  `k` and why (`spread`, `fill`, `replaces`), a screen with its mean value, a stop with the leader, the options dropped and
+  each option's bootstrap low end. A resumed atlas replays the file and never decides a checkpoint twice.
+- **What the label reads.** A stopped option's mean and its paired bootstrap use the option's own branches. A row is
+  paired when every option still running at that branch index has a score, so a stopped option's empty cell does not unpair
+  the row. Its option entry says `stoppedAt`. Early stopping changes an option's n, not the estimator. The bootstrap
+  resamples the same rows as an uncut run, so a label moves only by the stopped options' shorter means.
+- **`atlas.json`** gains, on every decision, `decided` and `settled`, and, when the schedule speaks, `k`, `why`,
+  `replaces`, `screened`, `screenMean` and `forgeOptions`. It also gains `phaseB.schedule` (what the cuts did on the
+  spine) and `phaseB.forgeMap: false` on a spine with no Forge map. The plan records `cuts`, and a resume with other cuts
+  is refused.
+- **Completeness.** Under the cuts a job reads `phaseB.schedule` (`branchedInFull`, `screened`) and `units.jsonl`. It
+  cannot use `min(--decisions, listed) x (ceil(R / chunk) + ceil(F / chunk))`, because a screened decision has one unit
+  and its replacement adds more.
+- **Pooling.** Labels made under `--min-options` are a different population: most 2-option attack-or-not and cast-or-pass
+  decisions leave. Screened decisions are not complete. Neither is pooled with earlier nights except through the unchanged
+  (i)–(iii) definitions.
+- **Design B in the wide shape**, one spine (a pair and a seed) a command, about 13 a night:
+  `--phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --branch-random 200 --branch-forge 40 --chunk 25
+  --checks-parallel <workers> --unit-timeout 30`, with `--branch-forge 0` on all but one spine in six if the night is for
+  labels rather than agreement.
 
 ## The library card model and the balanced-cube generator (D473)
 
