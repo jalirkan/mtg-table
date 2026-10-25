@@ -1,0 +1,423 @@
+{
+ "spines": {
+  "s01": {
+   "pool": "random-pauper",
+   "forgeMap": true
+  },
+  "s02": {
+   "pool": "random-peasant",
+   "forgeMap": false
+  },
+  "s03": {
+   "pool": "random-legacy",
+   "forgeMap": false
+  }
+ },
+ "forgeSpines": [
+  "s01"
+ ],
+ "definitions": "see the header of this script",
+ "decisions": 22,
+ "complete": 22,
+ "decided": 0,
+ "Q": 22,
+ "screened": 0,
+ "i_sameBest": {
+  "n": 8,
+  "point": 0.5,
+  "interval": [
+   0.125,
+   0.875
+  ],
+  "bySpine": {
+   "s01": {
+    "n": 8,
+    "point": 0.5,
+    "interval": [
+     0.125,
+     0.875
+    ]
+   }
+  }
+ },
+ "ii_rho": {
+  "n": 5,
+  "point": 0.1933,
+  "interval": [
+   -0.4667,
+   0.82
+  ],
+  "bySpine": {
+   "s01": {
+    "n": 5,
+    "point": 0.1933,
+    "interval": [
+     -0.4667,
+     0.82
+    ]
+   }
+  },
+  "twoOption": 1
+ },
+ "iii_regret": {
+  "p": {
+   "random": {
+    "n": 8,
+    "point": 0.0231,
+    "interval": [
+     0.0094,
+     0.0372
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 8,
+      "point": 0.0231,
+      "interval": [
+       0.0094,
+       0.0372
+      ]
+     }
+    },
+    "clearOfZero": 1
+   },
+   "forge": {
+    "n": 8,
+    "point": 0.0531,
+    "interval": [
+     0.0031,
+     0.1375
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 8,
+      "point": 0.0531,
+      "interval": [
+       0.0031,
+       0.1375
+      ]
+     }
+    },
+    "clearOfZero": 1
+   }
+  },
+  "a": {
+   "random": {
+    "n": 0,
+    "point": null,
+    "interval": [
+     null,
+     null
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   },
+   "forge": {
+    "n": 0,
+    "point": null,
+    "interval": [
+     null,
+     null
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  },
+  "b": {
+   "random": {
+    "n": 0,
+    "point": null,
+    "interval": [
+     null,
+     null
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   },
+   "forge": {
+    "n": 0,
+    "point": null,
+    "interval": [
+     null,
+     null
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  }
+ },
+ "iv_bySpine": {
+  "s01": {
+   "C1_castNow": {
+    "random": {
+     "n": 8,
+     "point": 0.0409,
+     "interval": [
+      0.0087,
+      0.0752
+     ]
+    },
+    "verdict": "HOLDS",
+    "forgeMap": {
+     "n": 4,
+     "point": 0.0552,
+     "interval": [
+      -0.0521,
+      0.1625
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "forgeMap": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "verdict": null
+   }
+  }
+ },
+ "iv_pooledForgeSpines": {
+  "C1_castNow": {
+   "random": {
+    "n": 8,
+    "point": 0.0409,
+    "interval": [
+     0.0087,
+     0.0752
+    ]
+   },
+   "forgeMap": {
+    "n": 4,
+    "point": 0.0552,
+    "interval": [
+     -0.0521,
+     0.1625
+    ]
+   },
+   "verdict": null
+  }
+ },
+ "iv_information_noForgeSpines": {
+  "C1_castNow_random": {
+   "n": 12,
+   "point": 0.0434,
+   "interval": [
+    0.0083,
+    0.0776
+   ],
+   "bySpine": {
+    "s02": {
+     "n": 5,
+     "point": 0.036,
+     "interval": [
+      -0.0005,
+      0.089
+     ]
+    },
+    "s03": {
+     "n": 7,
+     "point": 0.0487,
+     "interval": [
+      -0.0014,
+      0.0935
+     ]
+    }
+   }
+  },
+  "verdict": null
+ },
+ "v_guardrails": {
+  "bySpine": {
+   "s01": {
+    "logs": 9800,
+    "priorityDecisions": 565964,
+    "landOffered": 44710,
+    "landTaken": 44710,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 0,
+    "refusedCast": 82,
+    "noRepeatRefused": 36,
+    "xDrawn": 2891,
+    "zeroXLeftOut": 16336,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s02": {
+    "logs": 5000,
+    "priorityDecisions": 447257,
+    "landOffered": 27708,
+    "landTaken": 27708,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 0,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 4155,
+    "zeroXLeftOut": 13077,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s03": {
+    "logs": 12000,
+    "priorityDecisions": 371206,
+    "landOffered": 27037,
+    "landTaken": 27037,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 215,
+    "refusedCast": 47,
+    "noRepeatRefused": 48,
+    "xDrawn": 1491,
+    "zeroXLeftOut": 118213,
+    "zeroX": 0,
+    "forgePayCap": 0
+   }
+  },
+  "byPool": {
+   "random-pauper": {
+    "logs": 9800,
+    "priorityDecisions": 565964,
+    "landOffered": 44710,
+    "landTaken": 44710,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 0,
+    "refusedCast": 82,
+    "noRepeatRefused": 36,
+    "xDrawn": 2891,
+    "zeroXLeftOut": 16336,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "random-peasant": {
+    "logs": 5000,
+    "priorityDecisions": 447257,
+    "landOffered": 27708,
+    "landTaken": 27708,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 0,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 4155,
+    "zeroXLeftOut": 13077,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "random-legacy": {
+    "logs": 12000,
+    "priorityDecisions": 371206,
+    "landOffered": 27037,
+    "landTaken": 27037,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 215,
+    "refusedCast": 47,
+    "noRepeatRefused": 48,
+    "xDrawn": 1491,
+    "zeroXLeftOut": 118213,
+    "zeroX": 0,
+    "forgePayCap": 0
+   }
+  },
+  "total": {
+   "logs": 26800,
+   "priorityDecisions": 1384427,
+   "landOffered": 99455,
+   "landTaken": 99455,
+   "mulligans": 0,
+   "kept": 0,
+   "violations": 0,
+   "noRepeatNoOp": 215,
+   "refusedCast": 129,
+   "noRepeatRefused": 84,
+   "xDrawn": 8537,
+   "zeroXLeftOut": 147626,
+   "zeroX": 0,
+   "forgePayCap": 0
+  }
+ },
+ "vi_bySpine": {
+  "s01": {
+   "optionsPerDecision": 3.5,
+   "branchGamesPerLabel": 722,
+   "secRandomBranch": 2.81,
+   "secForgeBranch": 1.43,
+   "workerSecPerLabel": 1877,
+   "labelsPer7WorkerHour": 13.4,
+   "labelsPer10hNightAt7": 134
+  },
+  "s02": {
+   "optionsPerDecision": 2.17,
+   "branchGamesPerLabel": 417,
+   "secRandomBranch": 3.47,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1446,
+   "labelsPer7WorkerHour": 17.4,
+   "labelsPer10hNightAt7": 174
+  },
+  "s03": {
+   "optionsPerDecision": 4.12,
+   "branchGamesPerLabel": 750,
+   "secRandomBranch": 2.31,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1734,
+   "labelsPer7WorkerHour": 14.5,
+   "labelsPer10hNightAt7": 145
+  }
+ }
+}

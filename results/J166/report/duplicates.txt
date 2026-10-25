@@ -1,0 +1,13 @@
+J166: branched options whose token repeats another option's in the same decision (baseline.json), and whether their
+random branches are identical (score, turns, steps) at every paired index. Rows and branch time from branches.jsonl.
+b-s01-pauper-2101 d6 o2/o3 cast:1 Mindstab Thrull: identical 200 of 200; k listed 4, distinct 3
+b-s01-pauper-2101 d7 o0/o3 cast:1 Mindstab Thrull: identical 200 of 200; k listed 5, distinct 4
+b-s01-pauper-2101: duplicate options' branch time 0.41 wh of 4.17 (9.9%)
+b-s02-peasant-2102: duplicate options' branch time 0.00 wh of 2.41 (0.0%)
+b-s03-legacy-2103 d7 o1/o2 cast:19 Murderous Rider: identical 200 of 200; k listed 3, distinct 2
+b-s03-legacy-2103 d9 o1/o2 cast:19 Murderous Rider: identical 200 of 200; k listed 3, distinct 2
+b-s03-legacy-2103 d11 o1/o2 cast:19 Murderous Rider: identical 200 of 200; k listed 3, distinct 2
+b-s03-legacy-2103 d15 o3/o4 cast:19 Murderous Rider: identical 200 of 200; k listed 5, distinct 4
+b-s03-legacy-2103 d18 o2/o3 cast:19 Murderous Rider: identical 200 of 200; k listed 4, distinct 3
+b-s03-legacy-2103 d19 o2/o3 cast:19 Murderous Rider: identical 200 of 200; k listed 4, distinct 3
+b-s03-legacy-2103: duplicate options' branch time 0.90 wh of 3.85 (23.3%)

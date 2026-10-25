@@ -1,0 +1,14 @@
+J166: tools/check-redaction.mjs --empty-hand-ok re-run (pin 325c2dd8, in /home/justin-a/code/lab/mtg-table) over every frame log of s02 and s03,
+2026-10-25 ~05:56-06:05 EDT, 100 logs a call, 4 calls at a time. Raw "!" lines: redact/b-s02-peasant-2102.fails.txt, redact/b-s03-legacy-2103.fails.txt.
+
+s02 (5,002 logs): 1 log fails, as atlas.json says: d2-random-o1-b21-seat0.jsonl.gz line 414, decision 88
+  kind target, options ["target:17"], chosen by forge, parent 87 (cast:67 = Take It Back).
+  card 17 = seat 0's own Tear Asunder: in hand at state seq 322, cast at decision 84 (targets 72, 73),
+  absent from state seqs 323 and 324 (stack [] in both), on the stack at 325 as Take It Back's target, back in hand at 326.
+  NOT a token and NOT a legend-rule choice. (The line prints twice.)
+s03 (12,002 logs): 1,395 logs fail (atlas.json: 1,395), 1,891 decision lines, 1,389 seat-0 logs and 6 seat-1 logs,
+  every one kind "choice", source "entity", two options, one of them an id no frame of that log ever names:
+    1,701 lines: the other option is Boo (Minsc & Boo's token) -> the legend-rule choice between two Boo
+      190 lines (71 logs): the other option is Zirda, the Dawnwaker -> a second Zirda, a token copy (Springheart
+          Nantuko's landfall copies the creature it is attached to)
+  by decision: d0 113, d7 27, d9 14, d11 25, d15 265, d18 298, d19 468, d21 185 logs.

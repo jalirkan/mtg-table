@@ -1,0 +1,714 @@
+{
+ "contract": "mtg-table rung-4a label v1 (J166)",
+ "training": true,
+ "pools": {
+  "random-pauper": [
+   "s01"
+  ],
+  "random-peasant": [
+   "s02"
+  ],
+  "random-legacy": [
+   "s03"
+  ]
+ },
+ "branched": 22,
+ "labels": 22,
+ "screenedRows": 0,
+ "rowsUnmatched": 0,
+ "confident": 4,
+ "confidentQ": 4,
+ "confidentForge": 1,
+ "trainingRows": 22,
+ "bySpine": {
+  "s01": {
+   "pool": "random-pauper",
+   "deckSeed": 2001,
+   "gameSeed": 2101,
+   "folder": "b-s01-pauper-2101",
+   "forgeMap": true,
+   "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s01-pauper-2001/decks/pauper-2001-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s01-pauper-2001/decks/pauper-2001-00002.dck",
+   "baseline": {
+    "turns": 32,
+    "winner": "A",
+    "listed": 23
+   },
+   "branchedInFull": 8,
+   "screened": 0,
+   "fill": 0,
+   "stoppedOptions": 6,
+   "meanOptions": 3.5,
+   "rows": 8,
+   "labels": 8,
+   "screenedRows": 0,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": 1,
+   "byKind": {
+    "p": {
+     "labels": 8,
+     "confident": 1
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.055,
+   "regretMean": 0.0231,
+   "confidentList": [
+    "d7 p t10 k5 cast:1 -> o2, 5.2 [0.2, 13.2]"
+   ]
+  },
+  "s02": {
+   "pool": "random-peasant",
+   "deckSeed": 2002,
+   "gameSeed": 2102,
+   "folder": "b-s02-peasant-2102",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s02-peasant-2002/decks/peasant-2002-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s02-peasant-2002/decks/peasant-2002-00002.dck",
+   "baseline": {
+    "turns": 12,
+    "winner": "B",
+    "listed": 6
+   },
+   "branchedInFull": 6,
+   "screened": 0,
+   "fill": 5,
+   "stoppedOptions": 1,
+   "meanOptions": 2.17,
+   "rows": 6,
+   "labels": 6,
+   "screenedRows": 0,
+   "inQ": 6,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 0
+    },
+    "a": {
+     "labels": 1,
+     "confident": 1
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.03,
+   "regretMean": 0.0308,
+   "confidentList": [
+    "d3 a t7 k2 attack:25 -> o1, 13.2 [5.2, 21.2]"
+   ]
+  },
+  "s03": {
+   "pool": "random-legacy",
+   "deckSeed": 2003,
+   "gameSeed": 2103,
+   "folder": "b-s03-legacy-2103",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s03-legacy-2003/decks/legacy-2003-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s03-legacy-2003/decks/legacy-2003-00002.dck",
+   "baseline": {
+    "turns": 28,
+    "winner": "A",
+    "listed": 22
+   },
+   "branchedInFull": 8,
+   "screened": 0,
+   "fill": 0,
+   "stoppedOptions": 4,
+   "meanOptions": 4.13,
+   "rows": 8,
+   "labels": 8,
+   "screenedRows": 0,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 2,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 7,
+     "confident": 2
+    },
+    "a": {
+     "labels": 1,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.0912,
+   "regretMean": 0.0509,
+   "confidentList": [
+    "d0 p t6 k3 pass -> o1, 13.0 [4.2, 22.3]",
+    "d15 p t26 k5 pass -> o1, 21.8 [13.8, 28.8]"
+   ]
+  }
+ },
+ "byPool": {
+  "random-pauper": {
+   "spines": 1,
+   "labels": 8,
+   "confident": 1
+  },
+  "random-peasant": {
+   "spines": 1,
+   "labels": 6,
+   "confident": 1
+  },
+  "random-legacy": {
+   "spines": 1,
+   "labels": 8,
+   "confident": 2
+  }
+ },
+ "a_confidentShare": {
+  "n": 22,
+  "point": 0.1818,
+  "interval": [
+   0.0417,
+   0.3636
+  ],
+  "byPool": {
+   "random-legacy": {
+    "n": 8,
+    "point": 0.25,
+    "interval": [
+     0.0,
+     0.625
+    ]
+   },
+   "random-pauper": {
+    "n": 8,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "random-peasant": {
+    "n": 6,
+    "point": 0.1667,
+    "interval": [
+     0.0,
+     0.5
+    ]
+   }
+  },
+  "bySpine": {
+   "s03": {
+    "n": 8,
+    "point": 0.25,
+    "interval": [
+     0.0,
+     0.625
+    ]
+   },
+   "s01": {
+    "n": 8,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "s02": {
+    "n": 6,
+    "point": 0.1667,
+    "interval": [
+     0.0,
+     0.5
+    ]
+   }
+  }
+ },
+ "a_confidentShareByKind": {
+  "p": {
+   "n": 20,
+   "point": 0.15,
+   "interval": [
+    0.0,
+    0.3636
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 7,
+     "point": 0.2857,
+     "interval": [
+      0.0,
+      0.5714
+     ]
+    },
+    "random-pauper": {
+     "n": 8,
+     "point": 0.125,
+     "interval": [
+      0.0,
+      0.375
+     ]
+    },
+    "random-peasant": {
+     "n": 5,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "a": {
+   "n": 2,
+   "point": 0.5,
+   "interval": [
+    0.0,
+    1.0
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 1,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-pauper": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-peasant": {
+     "n": 1,
+     "point": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    }
+   }
+  },
+  "b": {
+   "n": 0,
+   "point": null,
+   "interval": [
+    null,
+    null
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-pauper": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-peasant": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareByK": {
+  "2": {
+   "n": 5,
+   "point": 0.2,
+   "interval": [
+    0.0,
+    0.6
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-pauper": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-peasant": {
+     "n": 5,
+     "point": 0.2,
+     "interval": [
+      0.0,
+      0.6
+     ]
+    }
+   }
+  },
+  "3-4": {
+   "n": 14,
+   "point": 0.0714,
+   "interval": [
+    0.0,
+    0.3077
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 6,
+     "point": 0.1667,
+     "interval": [
+      0.0,
+      0.5
+     ]
+    },
+    "random-pauper": {
+     "n": 7,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-peasant": {
+     "n": 1,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "5-6": {
+   "n": 2,
+   "point": 1.0,
+   "interval": [
+    1.0,
+    1.0
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 1,
+     "point": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "random-pauper": {
+     "n": 1,
+     "point": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "random-peasant": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  },
+  "7-8": {
+   "n": 1,
+   "point": 0.0,
+   "interval": [
+    0.0,
+    0.0
+   ],
+   "byPool": {
+    "random-legacy": {
+     "n": 1,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-pauper": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-peasant": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareQ": {
+  "n": 22,
+  "point": 0.1818,
+  "interval": [
+   0.0417,
+   0.3636
+  ],
+  "byPool": {
+   "random-legacy": {
+    "n": 8,
+    "point": 0.25,
+    "interval": [
+     0.0,
+     0.625
+    ]
+   },
+   "random-pauper": {
+    "n": 8,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "random-peasant": {
+    "n": 6,
+    "point": 0.1667,
+    "interval": [
+     0.0,
+     0.5
+    ]
+   }
+  }
+ },
+ "b_gapMedian": {
+  "random-pauper": 0.055,
+  "random-peasant": 0.03,
+  "random-legacy": 0.0912
+ },
+ "b_gapMean": {
+  "n": 22,
+  "point": 0.0839,
+  "interval": [
+   0.0504,
+   0.1197
+  ],
+  "byPool": {
+   "random-legacy": {
+    "n": 8,
+    "point": 0.1081,
+    "interval": [
+     0.0581,
+     0.1616
+    ]
+   },
+   "random-pauper": {
+    "n": 8,
+    "point": 0.0774,
+    "interval": [
+     0.0469,
+     0.1249
+    ]
+   },
+   "random-peasant": {
+    "n": 6,
+    "point": 0.0604,
+    "interval": [
+     0.02,
+     0.1008
+    ]
+   }
+  }
+ },
+ "b_regretMean": {
+  "n": 22,
+  "point": 0.0353,
+  "interval": [
+   0.0147,
+   0.0664
+  ],
+  "byPool": {
+   "random-legacy": {
+    "n": 8,
+    "point": 0.0509,
+    "interval": [
+     0.0069,
+     0.1072
+    ]
+   },
+   "random-pauper": {
+    "n": 8,
+    "point": 0.0231,
+    "interval": [
+     0.0094,
+     0.0372
+    ]
+   },
+   "random-peasant": {
+    "n": 6,
+    "point": 0.0308,
+    "interval": [
+     0.0037,
+     0.0737
+    ]
+   }
+  }
+ },
+ "b_settledShare": {
+  "n": 22,
+  "point": 0.0,
+  "interval": [
+   0.0,
+   0.0
+  ],
+  "byPool": {
+   "random-legacy": {
+    "n": 8,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "random-pauper": {
+    "n": 8,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "random-peasant": {
+    "n": 6,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "c_sizing7": {
+  "bySpine": {
+   "s01": {
+    "wallSec": 2866,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 1,
+    "wallSecAt7": 2457,
+    "labelsPer10hNight": 100,
+    "confidentPer10hNight": 13,
+    "labelsPer7Worker10hNight": 117,
+    "confidentPer7Worker10hNight": 14.7
+   },
+   "s02": {
+    "wallSec": 1763,
+    "spinesTimed": 1,
+    "labels": 6,
+    "confident": 1,
+    "wallSecAt7": 1511,
+    "labelsPer10hNight": 123,
+    "confidentPer10hNight": 20,
+    "labelsPer7Worker10hNight": 143,
+    "confidentPer7Worker10hNight": 23.8
+   },
+   "s03": {
+    "wallSec": 2916,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 2,
+    "wallSecAt7": 2499,
+    "labelsPer10hNight": 99,
+    "confidentPer10hNight": 25,
+    "labelsPer7Worker10hNight": 115,
+    "confidentPer7Worker10hNight": 28.8
+   }
+  },
+  "byPool": {
+   "random-pauper": {
+    "wallSec": 2866,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 1,
+    "wallSecAt7": 2457,
+    "labelsPer10hNight": 100,
+    "confidentPer10hNight": 13,
+    "labelsPer7Worker10hNight": 117,
+    "confidentPer7Worker10hNight": 14.7
+   },
+   "random-peasant": {
+    "wallSec": 1763,
+    "spinesTimed": 1,
+    "labels": 6,
+    "confident": 1,
+    "wallSecAt7": 1511,
+    "labelsPer10hNight": 123,
+    "confidentPer10hNight": 20,
+    "labelsPer7Worker10hNight": 143,
+    "confidentPer7Worker10hNight": 23.8
+   },
+   "random-legacy": {
+    "wallSec": 2916,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 2,
+    "wallSecAt7": 2499,
+    "labelsPer10hNight": 99,
+    "confidentPer10hNight": 25,
+    "labelsPer7Worker10hNight": 115,
+    "confidentPer7Worker10hNight": 28.8
+   }
+  },
+  "asRun": {
+   "wallSec": 7545,
+   "spinesTimed": 3,
+   "labels": 22,
+   "confident": 4,
+   "wallSecAt7": 6467,
+   "labelsPer10hNight": 105,
+   "confidentPer10hNight": 19,
+   "labelsPer7Worker10hNight": 122,
+   "confidentPer7Worker10hNight": 22.3
+  }
+ },
+ "c_sizingRead": {
+  "confidentPer7Worker10hNight": 22.3,
+  "expectation": "~25-27 (atlas review 2026-10-24, section 5: design B in C's shape, k >= 3, cube pairs; registered as the sizing read, no verdict)"
+ },
+ "voidLabels": 0,
+ "voidList": [],
+ "sameGameNotBlock": []
+}
