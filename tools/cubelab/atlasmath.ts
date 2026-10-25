@@ -82,7 +82,8 @@ export function spearman(x: number[], y: number[]): number | null {
   return sxy / Math.sqrt(sxx * syy);
 }
 
-function quantile(sorted: number[], q: number): number | null {
+/** The `q` quantile of an ascending list, linear between neighbours; null when empty. */
+export function quantile(sorted: number[], q: number): number | null {
   if (!sorted.length) return null;
   const pos = q * (sorted.length - 1);
   const lo = Math.floor(pos), hi = Math.ceil(pos);

@@ -155,3 +155,11 @@ branch scored otherwise a problem in phase B, as it already was in phase A, and 
 and after D478 are not pooled unless they are recomputed. D478 has the numbers. *(Later the same day, D478's addendum: an
 option capped past the bar is a warning, `--branch-capped-warn` 0.25, never a problem; and a game the engine ends drawn
 scores ½ too.)*
+
+**Addendum, 2026-10-24 (D480).** Point 5's phase B and point 7's arithmetic gain the cut design, five flags each off by
+default: `--checks-parallel` (the checks of point 6 on several workers, the same output), `--early-stop` (an option clearly
+below the leader stops at 50, 100 or 150 random branches; option 0 never does; an option's n changes, not its estimator),
+`--screen` (a decision near-decided at 25 branches is a cheap label and is replaced by the next listed one), `--min-options`
+(decisions with k or more options first) and the Forge map per spine (`--branch-forge 0` reads `complete`, `decided` and
+`settled` on the random map). D480 has the rules and the review's numbers replayed: 13 of 13 confident labels kept, none
+flipped.
