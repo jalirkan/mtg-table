@@ -1165,3 +1165,13 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   unwrapped). **J168 posted** (`drafts/J168-atlas-4a-night-three.md`, pin 26a8db00): s01–s04 kept and verified,
   s05 fresh (J167's folder moved aside as `.j167-cop`), s06–s13; a `big_frames` abort stops the job within
   minutes if a loop returns; ~6.5 h at 6 workers.
+- 19:45 EDT: J168 at 8 of 9 spines, clean (s05 under D484: 5,500 rows, 537 guard answers, 0 timeouts). The 18
+  redaction failures on s06/s10 are diagnosed: **not a leak** — a stale target. Forge's `FightAi` appends the
+  "your creature" target on every evaluation of a spell in hand and never resets it; the random seat hands
+  Forge's own pick to the engine as is; `MagicStack.add` refuses the illegal targeting after the card has left
+  the hand and the mana is paid, so the spell is **lost** (~1,346 "failed to target" casts across the atlas:
+  Troll Negotiations, Suplex, Knockout Maneuver, Headliner Scarlett, Tear Asunder), biasing those options'
+  values. **D485** (lane running): the random seat re-targets or refuses an illegal play rather than stranding
+  the card (`retargeted` on the row); the checker accepts the viewer's own token that ceased to exist (the 18);
+  D481's s02 explanation corrected (a stranded cast, not mid-cast). J168's labels on s05–s07 and s10 carry the
+  lost-spell bias; the morning read says how much.
