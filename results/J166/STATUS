@@ -1,7 +1,8 @@
-running
+failed
+reason: timeout: step run4 ran past 10800 s
 runner: forgecoach-runner 325c2dd8
 started: 2026-10-24T21:50:53-04:00
-phase: stopping
+finished: 2026-10-25T03:05:48-04:00
 mtg-table: 325c2dd
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.11), budget 21.4 GB)
 peak_worker_rss_gb: 1.11
