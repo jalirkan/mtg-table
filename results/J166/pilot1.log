@@ -1,0 +1,185 @@
+==== J166 pilot1 started 2026-10-24T21:51:17-04:00 in unit lab-J166-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J166: data folder free GB 655.3
+✔ --min-options: the spread over decisions with k or more options, filled from the rest; k = 1 is D451's spread (0.973897ms)
+✔ the screen settles a near-decided decision; its replacement is the next listed one not yet branched, k or more options first (0.2481ms)
+✔ early stopping: an option clearly below the leader stops; option 0 and the leader never do; a close one runs on (5.482073ms)
+✔ with every cut off the schedule is D451's: the same units in the same order, and no event written (1.058868ms)
+✔ the cut schedule: stage by stage behind the barrier, the options still running, the Forge map on the survivors, a screened decision replaced; a resume decides nothing again (5.529313ms)
+✔ a spine with no Forge map: complete, decided and settled on the random map, and no agreement read (0.773997ms)
+✔ the review's numbers on its own data: the atlas reproduced at 96 of 96; the screen and early stopping keep 13 of 13 confident labels, no flip (8933.281348ms)
+✔ the guardrails of slices put back together are one pass's: counts summed, the first 50 violations named in order (1.231925ms)
+✔ --checks-parallel: atlas.json's checks are the serial run's, byte for byte, but the redaction's wall time (7012.520287ms)
+✔ the pool behind the barrier: the next stage waits, a worker the first stage did not need starts for the later ones, the jobs carry the options (1229.369507ms)
+✔ the atlas's redaction check: --empty-hand-ok reaches the checker, and proves before it excuses (D460) (140.296346ms)
+✔ a worker that dies mid-unit: the fresh one resumes at the branches it has no row for, each played once (53.135088ms)
+✔ a worker that retires after two OutOfMemoryErrors: the pool starts a fresh one, which resumes; the OOM branches stay as engine errors (43.385354ms)
+✔ a unit that dies at the same place every time is given up after two attempts, recorded unfinished (35.17061ms)
+✔ the resume policy, and the branches a unit already holds (0.350916ms)
+✔ the arithmetic: Wilson with draws, ranks, Spearman (1.099755ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (21.063193ms)
+✔ the agreement of two maps (13.589845ms)
+✔ how many rollouts, and the even spread of decisions (0.260935ms)
+✔ the deck pair rule: the most even record with the most games (0.653169ms)
+✔ a decision's two maps from its branch rows (21.359114ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.383697ms)
+✔ the guardrails read back from the decision records (0.452067ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.596782ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.354632ms)
+✔ atlas.md renders the two maps side by side (1.298621ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.293446ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.181674ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.261877ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (114.842739ms)
+✔ G6 (D471): X drawn, X = 0-only offers left out and own plays paid at X = 0 are counted; a play paid at 0 is a violation and a problem (237.36638ms)
+✔ branch errors are counted by text, and an option past --branch-error-max is named with its error (D466, J156 spine 458) (0.582214ms)
+✔ writeAtlas makes an errored option a problem and shows the errors in atlas.md's checks (D466) (2.630487ms)
+✔ an option the copy cannot give is unavailable: left out of the map, counted apart from errors, a problem past the bar (D470, J158 spine 461) (3.476341ms)
+✔ a branch whose game Karn restarted is played on: its row carries the restarts, it counts in the map, phase B counts it (D477, J162 modern7) (1.411466ms)
+✔ a copy that could not name an effect's source, or lost an exile link, is counted: on the row, in phase B and atlas.md, never a problem (D479) (1.5773ms)
+✔ a capped branch is a draw: one written as seat A's win is a problem; an option capped past --branch-capped-warn is a warning, never a problem (D478 and its addendum) (10.827538ms)
+✔ G1, planted (D466): a land the seat's own listing does not hold is no flag; a land in hand, drop unused, not played, is one (0.212624ms)
+✔ every guardrail violation is counted, though only the first 50 are named (D466: J156 vintage, 200 shown of 3,071) (46.227132ms)
+✔ a truncated frame log is skipped and named, and atlas.json is still written (D466: J156 spine 458's hung branch) (2.548282ms)
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.485867ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (879.522092ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (717.264359ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.444784ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2184.086576ms)
+✔ the prior covers the spectrum over 1,000 decks (1167.055172ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (50.990993ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.131359ms)
+✔ the land formula on fixture decks (0.555664ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.311501ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.194058ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (504.838931ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (2.758029ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.536577ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.130558ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (26.508427ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.653817ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.677115ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (222.673371ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (197.114223ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (571.783408ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1781.884ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.987011ms)
+✔ both chairs of a lab recording pass the redaction checker (205.391158ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (30.206889ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (125.728737ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (154.494083ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (145.155969ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (129.323583ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (149.0596ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (145.787156ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (101.798638ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 and, M73, G6 included) (127.828207ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (263.785627ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (403.873276ms)
+✔ M72: a Forge-piloted atlas branch seat's summary may carry its pay-cap count (271.928885ms)
+✔ negative control: forgePayCap outside an atlas Forge branch, in a random seat's log, or malformed FAILS the checker (M72) (787.653798ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.614425ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2639.983621ms)
+✔ a worker that never answers is still killed as hung at its deadline (2004.081205ms)
+ℹ tests 80
+ℹ suites 0
+ℹ pass 80
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17353.596305
+decks: 2 pauper deck(s), seed 2001, into /home/justin-a/code/lab/data/lab-j166/decks/s01-pauper-2001: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 pauper deck(s), seed 2201, into /home/justin-a/code/lab/data/lab-j166/validation/v01-pauper-2201: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 peasant deck(s), seed 2002, into /home/justin-a/code/lab/data/lab-j166/decks/s02-peasant-2002: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2 peasant deck(s), seed 2202, into /home/justin-a/code/lab/data/lab-j166/validation/v02-peasant-2202: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2 legacy deck(s), seed 2003, into /home/justin-a/code/lab/data/lab-j166/decks/s03-legacy-2003: k = 1..5 0 / 0 / 0 / 0 / 2; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2 legacy deck(s), seed 2203, into /home/justin-a/code/lab/data/lab-j166/validation/v03-legacy-2203: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2 powered deck(s), seed 2004, into /home/justin-a/code/lab/data/lab-j166/decks/s04-powered-2004: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 powered deck(s), seed 2204, into /home/justin-a/code/lab/data/lab-j166/validation/v04-powered-2204: k = 1..5 0 / 0 / 0 / 2 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 pauper deck(s), seed 2005, into /home/justin-a/code/lab/data/lab-j166/decks/s05-pauper-2005: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 pauper deck(s), seed 2205, into /home/justin-a/code/lab/data/lab-j166/validation/v05-pauper-2205: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 peasant deck(s), seed 2006, into /home/justin-a/code/lab/data/lab-j166/decks/s06-peasant-2006: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2 peasant deck(s), seed 2206, into /home/justin-a/code/lab/data/lab-j166/validation/v06-peasant-2206: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2 legacy deck(s), seed 2007, into /home/justin-a/code/lab/data/lab-j166/decks/s07-legacy-2007: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2 legacy deck(s), seed 2207, into /home/justin-a/code/lab/data/lab-j166/validation/v07-legacy-2207: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2 powered deck(s), seed 2008, into /home/justin-a/code/lab/data/lab-j166/decks/s08-powered-2008: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 powered deck(s), seed 2208, into /home/justin-a/code/lab/data/lab-j166/validation/v08-powered-2208: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 pauper deck(s), seed 2009, into /home/justin-a/code/lab/data/lab-j166/decks/s09-pauper-2009: k = 1..5 0 / 0 / 0 / 2 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 pauper deck(s), seed 2209, into /home/justin-a/code/lab/data/lab-j166/validation/v09-pauper-2209: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 peasant deck(s), seed 2010, into /home/justin-a/code/lab/data/lab-j166/decks/s10-peasant-2010: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2 peasant deck(s), seed 2210, into /home/justin-a/code/lab/data/lab-j166/validation/v10-peasant-2210: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy
+decks: 2 legacy deck(s), seed 2011, into /home/justin-a/code/lab/data/lab-j166/decks/s11-legacy-2011: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2 legacy deck(s), seed 2211, into /home/justin-a/code/lab/data/lab-j166/validation/v11-legacy-2211: k = 1..5 0 / 0 / 0 / 2 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered
+decks: 2 powered deck(s), seed 2012, into /home/justin-a/code/lab/data/lab-j166/decks/s12-powered-2012: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 powered deck(s), seed 2212, into /home/justin-a/code/lab/data/lab-j166/validation/v12-powered-2212: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 pauper deck(s), seed 2013, into /home/justin-a/code/lab/data/lab-j166/decks/s13-pauper-2013: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 pauper deck(s), seed 2213, into /home/justin-a/code/lab/data/lab-j166/validation/v13-pauper-2213: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 powered deck(s), seed 2099, into /home/justin-a/code/lab/data/lab-j166/decks/p-powered-2099: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant
+decks: 2 pauper deck(s), seed 2001, into var/lab-j166-local/redraw/s01-pauper-2001: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+decks: 2 pauper deck(s), seed 2201, into var/lab-j166-local/redraw/v01-pauper-2201: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 990 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/4] d0-forge-0: 4/4 branch game(s); 771 branch games/h
+  [B 2/4] d17-random-0: 4/4 branch game(s); 1059 branch games/h
+  [B 3/4] d17-forge-0: 4/4 branch game(s); 1432 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1443 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas phase A: 16 rollout(s) from the opening, both seats random; 0 done, 16 to play on 2 worker(s)
+  [A 16/16] 1840 games/h
+atlas: var/cubelab/atlas-selftest/g5/atlas.json and atlas.md; phase A 16 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (1071 rows, 32 frame logs, 0 leak check(s))
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 2 worker(s)
+  [A 6/6] 1735 games/h
+atlas: var/cubelab/atlas-selftest/g6/atlas.json and atlas.md; phase A 6 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (319 rows, 12 frame logs, 0 leak check(s))
+atlas: the checks on 2 workers took 1 s
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (538 rows, 38 frame logs, 8 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 2362 branch games/h
+  [B 2/3] d31-random-2: 12/12 branch game(s); 3653 branch games/h
+  [B 3/5] d2-random-0: 6/6 branch game(s); 3685 branch games/h
+  [B 4/6] d31-random-4: 12/12 branch game(s); 4224 branch games/h
+  [B 5/6] d31-forge-0: 12/12 branch game(s); 4963 branch games/h
+  [B 6/6] d2-random-2: 6/6 branch game(s); 4628 branch games/h
+  [B 7/8] d2-forge-0: 6/6 branch game(s); 4402 branch games/h
+  [B 8/8] d2-random-4: 6/6 branch game(s); 4196 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts/atlas.json and atlas.md; phase A 0 game(s), phase B 72 branch game(s) at 2 decision(s); checks: clean (1739 rows, 146 frame logs, 4 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 1: d18 (p, turn 17, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 2 (option 0 never stops; the Forge map on the options still running); checkpoints 2/4
+atlas phase B: 1 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+worker 1: unparked (maxWorkers 2)
+  [B 1/1] d18-random-0: 6/6 branch game(s); 1013 branch games/h
+  [B 2/2] d18-random-2: 6/6 branch game(s); 1134 branch games/h
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/cuts-noforge/atlas.json and atlas.md; phase A 0 game(s), phase B 12 branch game(s) at 1 decision(s); checks: clean (565 rows, 26 frame logs, 1 leak check(s))
+atlas-selftest: OK (cuts cuts: 2 in full, 0 screened, 0 option(s) stopped; cuts-noforge: 1 in full, 0 screened, 0 option(s) stopped; 16 forks, 8 no-leak checks, 38 frame logs, 538 rows; G3 0, G5 refused 0 / left out 0; pay cap 0; copies held 1; the tax pair's G5 refused 2 / left out 2; the Crypt Rats pair's G6 drew X 10 / left out 63 / paid at 0 0)
+seat-identity: forge: the same game (B in 15 turns, 59 lines, digest 70b36c8575ab6574; golden B in 15, 59 lines, 70b36c8575ab6574)
+seat-identity: search: the same game (A in 13 turns, 93 lines, digest 19995346a6342137; golden A in 13, 93 lines, 19995346a6342137)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 20e2d8a32e35f445; golden A in 18, 193 lines, 20e2d8a32e35f445)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 16 decision(s) of seat A; branching at 2: d2 (p, turn 6, 3 options), d14 (p, turn 16, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 5 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 10/15/20 (option 0 never stops; the Forge map on the options still running); checkpoints 5/10/15/20/25
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 5 branches, on 3 worker(s)
+worker 2: unparked (maxWorkers 3)
+  [B 1/2] d14-random-0: 15/15 branch game(s); 2877 branch games/h
+  [B 2/3] d14-random-5: 15/15 branch game(s); 3727 branch games/h
+  [B 3/4] d14-random-10: 15/15 branch game(s); 4582 branch games/h
+  [B 4/5] d14-random-15: 15/15 branch game(s); 5032 branch games/h
+  [B 5/7] d14-forge-0: 15/15 branch game(s); 5805 branch games/h
+  [B 6/7] d2-random-0: 15/15 branch game(s); 5741 branch games/h
+  [B 7/8] d14-random-20: 15/15 branch game(s); 5832 branch games/h
+  [B 8/8] d2-random-5: 15/15 branch game(s); 4460 branch games/h
+  [B 9/9] d2-random-10: 15/15 branch game(s); 3799 branch games/h
+  [B 10/10] d2-random-15: 15/15 branch game(s); 3186 branch games/h
+  [B 11/12] d2-random-20: 15/15 branch game(s); 3177 branch games/h
+  [B 12/12] d2-forge-0: 15/15 branch game(s); 3165 branch games/h
+atlas: the checks on 3 workers took 6 s
+atlas: /home/justin-a/code/lab/data/lab-j166/pilot-smoke/atlas.json and atlas.md; phase A 0 game(s), phase B 180 branch game(s) at 2 decision(s); checks: clean (4734 rows, 362 frame logs, 4 leak check(s))
