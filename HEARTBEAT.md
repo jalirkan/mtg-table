@@ -1160,3 +1160,8 @@ fixed it in 746455d75 (2026-09-15), after 2.0.14; 62 pinned scripts use the same
 `BranchTimeout` past the branch deadline (the general backstop D467 lacked); a cap on identical consecutive
 records; self-tests that fail rather than hang. I misread run3 as s04 for an hour this morning — the record
 above is the corrected one. No job is posted until D484 is merged and the s05 reproduction finishes.
+- 12:13 EDT: **D484 merged** (#212, main 26a8db00; the merged tree's gate check-all OK, 59 jobs, 508.5 s;
+  skeptic review: no blocker, follow-ups in the decision — the search's rollouts have no guard, some callbacks
+  unwrapped). **J168 posted** (`drafts/J168-atlas-4a-night-three.md`, pin 26a8db00): s01–s04 kept and verified,
+  s05 fresh (J167's folder moved aside as `.j167-cop`), s06–s13; a `big_frames` abort stops the job within
+  minutes if a loop returns; ~6.5 h at 6 workers.
