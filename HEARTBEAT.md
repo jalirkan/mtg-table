@@ -1134,3 +1134,8 @@ gate: check-all OK, 59 jobs, 514.6 s at GATE_JOBS=4):
   counts distinct plays; search-v2 results across D483 are never pooled.
 Lessons: a status waiter must parse the JSON (J166's failure sat unseen 2.5 h); two gates at once need WSPORT 20
 apart. J167 (night two: s04 fresh without Scute Swarm, s05–s13, s02/s03 re-checked) is being posted.
+- 07:16 EDT: **J167 posted and running** (pin bf978690; `drafts/J167-atlas-4a-night-two.md`): the pilot, then s02
+  and s03 re-checked under D481 by resuming the atlas (it plays nothing, only redoes the checks; J166's atlas.json
+  kept beside as `atlas.j166.*`), s04 fresh (J166's s04 and its deck folder moved aside as `.j166-scute`, never
+  deleted; the decks redrawn with D482's list, same seeds, chunk 25), s05–s13 as J166 planned them, the labels
+  contract v2 (each row its spine's sha and `pre-D483` / `D483`, each option's play identity). ~7–10 h at 6 workers.
