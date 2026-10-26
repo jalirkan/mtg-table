@@ -1,0 +1,2 @@
+==== J172 run6 started 2026-10-26T13:18:56-04:00 in unit lab-J172-run6, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+{"scanned": 54350, "pass": 54350, "partial": 0, "fail": 0, "unreported": 0, "records": 4717, "logsWithRecords": 4501, "noTarget": 0, "spines": 5, "registeredOk": 5, "failList": []}
