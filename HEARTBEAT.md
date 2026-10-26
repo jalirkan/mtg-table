@@ -1190,3 +1190,12 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   re-check s06/s10/s13 under D485's checker; quarantine and re-branch s05, s10 and s06 at the same seeds on D485's
   tree (~3 h); a `lostCastOptions == 0` check from the frames. Follow-up: 2 errored rows on s12
   (IndexOutOfBoundsException), unexplained.
+- 21:40 EDT: **D485 built and gated** (lane commit f6c950b0; review running): the random seat re-targets a stale
+  part or refuses the play (s10 reproduction: "failed to target" 22 → 0, 215 rows, 20 re-targeted); the checker
+  accepts the viewer's own dead token (s06+s10+s13 sweeps: 40,300 logs, 0 failures). **Found by the lane, not
+  fixed — D486 lane started:** Forge's `getAllCandidates(sa, true)` returns PLAYERS only, and the seat's three
+  call sites pass `true`, so on every random-seat night so far the seat never picked a card-targeting play by
+  itself (only when it drew Forge's answer) and every target record lists players only; fixing it changes the
+  random policy = the label population (never pooled across it). Also not fixed by D485: a modal spell's stale
+  targets (s05's Suplex, 991 lost casts) — Forge picks the modes during the cast, after the check; D486 too.
+  **J169 tonight on D485:** re-check s06/s10/s13; re-branch s06 and s10 only; s05 waits for D486.
