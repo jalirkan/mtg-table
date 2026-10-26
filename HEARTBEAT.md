@@ -1282,3 +1282,6 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   rung 4b night two, 13 NEW spines (deck seeds 2014–2026, game seeds 2114–2126, validation 2214–2226, all
   checked free), the first D488 population (J171 stays D486's: D488 changes which plays are offered), the
   refused-cast metric from the frames replacing the lost-cast reading, `refusedCastOptions == 0`; ~10.5 h.
+- 16:05 EDT: **Justin is switching the PC to Windows.** The runner stopped cleanly with J173 at its start (resume
+  later: withdraw J173's job file first, then re-post or `resume`; its folder lab-j173 holds whatever the pilot drew).
+  Nothing else is running. Scenery parked. Pick up here when the Linux side is back.
