@@ -1267,3 +1267,12 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   fixes in: an unseen answer can no longer match the legacy shape, and the legacy acceptance is bounded to atlas
   logs started before 2026-10-26T18:00Z). **J172 posted** (`drafts/J172-atlas-4b-recheck.md`): the five spines
   re-checked in place, the legacy records counted (4,717 expected), J171's report re-run; ~45 min.
+- 13:34 EDT: **J172 finished clean** (13:05–13:33): the five spines re-checked in place, `atlas.problems` 0, all
+  62 final checks pass; the legacy sweep 54,350 logs, all pass, exactly 4,717 legacy records in 4,501 logs;
+  J171's report re-run: 101 labels / 28 confident. **J171 is a clean night on record** — the first D486
+  population. **D488 built and gated** (lane: `fitCosts` after the seat's draw and after D485's repair — the
+  cost's own cards never targeted, the target count trimmed to what is payable, no payable set → not offered;
+  the D358 redraw refitted; s09 refused payments 37 → 0, s13 19 → 0; the "lost casts" of J171's read were
+  refused payments put back to hand by a zone move that fires no event — the metric must count `refusedCast`
+  instead; s12's ten errors reproduced: Forge's `PumpEffect.resolve` on Practiced Offense with its creature
+  target exiled, an engine fault, recorded not fixed). Rebasing onto main, then review, then merge.
