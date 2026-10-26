@@ -150,6 +150,17 @@ const REQUIRED = [
   ['m57-explore-forge-names-the-opponent-hand.jsonl', 'fail'],
   ['m57-explore-carries-a-label.jsonl', 'fail'],
   ['m57-playexplore-in-a-seat-recording.jsonl', 'fail'],
+  // Amendment M76 (D487): a targeting part left empty answers target:none, listed beside the part's min (0; or 1+
+  // only marked complete:false and NO_TARGET); J171's legacy null answer passes in its one shape, counted.
+  ['m76-target-none-listed.jsonl', 'pass'],
+  ['m76-target-none-mandatory-part.jsonl', 'pass'],
+  ['m76-legacy-null-target.jsonl', 'pass'],
+  ['m76-chosen-null-beside-target-none.jsonl', 'fail'],
+  ['m76-chosen-null-trigger.jsonl', 'fail'],
+  ['m76-target-none-not-listed.jsonl', 'fail'],
+  ['m76-target-none-on-a-min-1-part.jsonl', 'fail'],
+  ['m76-target-none-without-min.jsonl', 'fail'],
+  ['m76-target-none-on-a-priority-record.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

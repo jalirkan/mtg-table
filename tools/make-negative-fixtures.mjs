@@ -1192,6 +1192,66 @@ exploreProbe('m57-playexplore-in-a-seat-recording.jsonl',
   'both "playExplore" and "transport"',
   () => {}, { ...exploreHeader, transport: 'ws' });
 
+// Amendment M76 (D487): a targeting part left empty answers `target:none`, listed
+// beside the part's minimum (`min`): 0 for a part that may take no target, 1 or
+// more only on an empty mandatory part marked complete:false and NO_TARGET.  The
+// LEGACY shape -- J171's `chosen: null` on a target/forge/targets record with no
+// `min` -- passes, counted; a null answer in any other shape fails.
+/** The decision of withDecision as a target record over two of the viewer's own visible cards. */
+function withTargetRecord(fs, patch) {
+  const b = withDecision(fs);
+  const ids = b.options.filter((t) => t.startsWith('cast:')).map((t) => Number(t.slice(5)));
+  delete b.search;
+  Object.assign(b, { kind: 'target', options: ['target:none', ...ids.map((id) => `target:${id}`)], min: 0,
+    chosen: 'target:none', by: 'forge', source: 'targets' }, patch);
+  for (const k of Object.keys(b)) if (b[k] === undefined) delete b[k];
+  return b;
+}
+const m76Pass = (name, why, patch) => {
+  const fs = slice();
+  withTargetRecord(fs, patch);
+  write(name, fs);
+  manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
+  console.log(`  PASS  ${name}  (${why.split(':')[0]}, no defect)`);
+};
+m76Pass('m76-target-none-listed.jsonl',
+  'amendment M76 / D487: a part that may take no target (min 0), left empty -- target:none listed and chosen; the control for the m76 probes', {});
+m76Pass('m76-target-none-mandatory-part.jsonl',
+  'amendment M76 / D487: an empty mandatory part (min 1) -- target:none listed and chosen, complete:false, why NO_TARGET; counted, not a problem',
+  { min: 1, complete: false, why: 'NO_TARGET' });
+{
+  // the legacy control: the viewer's own two cards as the options, no target:none, no min, chosen null
+  const name = 'm76-legacy-null-target.jsonl';
+  const why = 'amendment M76 / D487: J171\'s legacy shape -- chosen null on a target/forge/targets record listing card candidates, no min, no target:none; counted, not a problem';
+  const fs = slice();
+  const b = withTargetRecord(fs, { min: undefined, chosen: null });
+  b.options = b.options.filter((t) => t !== 'target:none');
+  write(name, fs);
+  manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
+  console.log(`  PASS  ${name}  (the legacy null answer, no defect)`);
+}
+const m76Probe = (name, why, expect, patch, after = () => {}) => probe(name, why, expect, (fs) => { after(withTargetRecord(fs, patch)); });
+m76Probe('m76-chosen-null-beside-target-none.jsonl',
+  'amendment M76 / D487: a record written after D487 (it lists target:none and carries min) never answers null',
+  'chosen null is not a token', { chosen: null });
+m76Probe('m76-chosen-null-trigger.jsonl',
+  'amendment M76 / D487: the legacy null answer is accepted in J171\'s one shape only -- a trigger\'s target record is not it',
+  'chosen null is not a token', { min: undefined, chosen: null, source: 'trigger' },
+  (b) => { b.options = b.options.filter((t) => t !== 'target:none'); });
+m76Probe('m76-target-none-not-listed.jsonl',
+  'amendment M76 / D487: target:none is an answer only where it is listed',
+  'chose "target:none", which is not among its options', { min: undefined },
+  (b) => { b.options = b.options.filter((t) => t !== 'target:none'); });
+m76Probe('m76-target-none-on-a-min-1-part.jsonl',
+  'amendment M76 / D487: a part whose minimum is 1 lists target:none only as an empty mandatory part, marked complete:false and NO_TARGET',
+  'on a part whose minimum is 1', { min: 1 });
+m76Probe('m76-target-none-without-min.jsonl',
+  'amendment M76 / D487: a record listing target:none says the part\'s minimum',
+  'without the part\'s min', { min: undefined });
+m76Probe('m76-target-none-on-a-priority-record.jsonl',
+  'amendment M76 / D487: target:none answers a target record, never another kind',
+  'which only a target record answers', { kind: 'priority', min: undefined });
+
 // Amendment M58 (D389): the search's prior in M55's search block -- `prior` per
 // option and `generated` -- a control that passes and one malformed probe.
 {

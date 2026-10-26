@@ -450,6 +450,60 @@
     "why": "amendment M57 / D358: a seat a person plays never explores"
   },
   {
+    "file": "m76-target-none-listed.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M76 / D487: a part that may take no target (min 0), left empty -- target:none listed and chosen; the control for the m76 probes"
+  },
+  {
+    "file": "m76-target-none-mandatory-part.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M76 / D487: an empty mandatory part (min 1) -- target:none listed and chosen, complete:false, why NO_TARGET; counted, not a problem"
+  },
+  {
+    "file": "m76-legacy-null-target.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M76 / D487: J171's legacy shape -- chosen null on a target/forge/targets record listing card candidates, no min, no target:none; counted, not a problem"
+  },
+  {
+    "file": "m76-chosen-null-beside-target-none.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: a record written after D487 (it lists target:none and carries min) never answers null"
+  },
+  {
+    "file": "m76-chosen-null-trigger.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: the legacy null answer is accepted in J171's one shape only -- a trigger's target record is not it"
+  },
+  {
+    "file": "m76-target-none-not-listed.jsonl",
+    "level": "fail",
+    "expect": "chose \"target:none\", which is not among its options",
+    "why": "amendment M76 / D487: target:none is an answer only where it is listed"
+  },
+  {
+    "file": "m76-target-none-on-a-min-1-part.jsonl",
+    "level": "fail",
+    "expect": "on a part whose minimum is 1",
+    "why": "amendment M76 / D487: a part whose minimum is 1 lists target:none only as an empty mandatory part, marked complete:false and NO_TARGET"
+  },
+  {
+    "file": "m76-target-none-without-min.jsonl",
+    "level": "fail",
+    "expect": "without the part's min",
+    "why": "amendment M76 / D487: a record listing target:none says the part's minimum"
+  },
+  {
+    "file": "m76-target-none-on-a-priority-record.jsonl",
+    "level": "fail",
+    "expect": "which only a target record answers",
+    "why": "amendment M76 / D487: target:none answers a target record, never another kind"
+  },
+  {
     "file": "m58-search-prior-present.jsonl",
     "level": "pass",
     "expect": "PASS",

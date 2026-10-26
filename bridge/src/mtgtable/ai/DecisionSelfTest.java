@@ -52,12 +52,12 @@ public final class DecisionSelfTest {
 
     public static void main(final String[] args) {
         for (final String t : List.of("pass", "keep", "mulligan", "yes", "no", "cast:41", "land:7", "activate:12",
-                "activate:12#1", "target:5", "target:p1", "option:9", "option:p0", "option:hidden", "attack:none",
+                "activate:12#1", "target:5", "target:p1", "target:none", "option:9", "option:p0", "option:hidden", "attack:none",
                 "attack:3,9,21", "block:none", "block:11>40,12>40")) {
             check(Decision.TOKEN.matcher(t).matches(), "token " + t);
         }
         for (final String t : List.of("cast:Lightning Bolt", "cast:p1", "land:p0", "target:", "attack:", "block:11",
-                "pass ", "option:hidden:1", "activate:12#", "cast:41 (Shock)")) {
+                "pass ", "option:hidden:1", "activate:12#", "cast:41 (Shock)", "option:none", "target:nothing")) {
             check(!Decision.TOKEN.matcher(t).matches(), "not a token: " + t);
         }
         // the grader's spellings (D334) and the record's are one
@@ -137,6 +137,7 @@ public final class DecisionSelfTest {
         }
         check(badKind, "an unknown kind is refused");
 
+        targetNone();
         searchWeek3();
         mullAndTargets();
         evalLeafOnly();
@@ -147,6 +148,63 @@ public final class DecisionSelfTest {
         if (failures > 0) {
             System.exit(1);
         }
+    }
+
+    /**
+     * D487 (M76): a targeting part left empty answers {@code target:none}, never
+     * null.  Minimum 0: listed first, {@code min: 0}, the record complete; Tear
+     * Asunder's other half (maximum 0, no candidate) is the one-option record,
+     * counted and not written.  Minimum 1 left empty: listed, {@code min: 1},
+     * incomplete, {@code NO_TARGET}.  A part whose only target the seat cannot
+     * see keeps its null answer.  J171's shape -- {@code chosen: null} beside
+     * card candidates -- is what the old builder wrote for the first case.
+     */
+    private static void targetNone() {
+        final java.util.function.Function<Object[], Decision> part = (a) -> {
+            final Decision d = new Decision("target", 17, "DRAW");
+            @SuppressWarnings("unchecked")
+            final List<String> cands = (List<String>) a[0];
+            @SuppressWarnings("unchecked")
+            final List<String> chosen = (List<String>) a[1];
+            final java.util.Set<String> opts = new java.util.LinkedHashSet<>(cands);
+            for (final String c : chosen) {
+                if (opts.add(c)) {
+                    d.complete = false;
+                }
+            }
+            Decisions.targetAnswer(d, opts, chosen, (Integer) a[2], (Integer) a[3]);
+            return d;
+        };
+        // "up to one target creature" (The Wandering Emperor's +1), Forge chose none
+        final Decision upTo = part.apply(new Object[] {List.of("target:67", "target:5"), List.of(), 0, 0});
+        final Map<?, ?> u = (Map<?, ?>) Json.parse(upTo.toJson(1, 20, 141, 123));
+        check("target:none".equals(u.get("chosen")) && java.util.Arrays.equals((Object[]) u.get("options"),
+                new Object[] {"target:none", "target:5", "target:67"}) && Long.valueOf(0).equals(u.get("min"))
+                && !u.containsKey("complete") && !u.containsKey("why") && !upTo.forced(),
+                "min 0, left empty: target:none listed first and chosen, min 0, complete (D487)");
+        // the same part with a target chosen: none still listed (it was an answer), the target chosen
+        final Decision took = part.apply(new Object[] {List.of("target:67", "target:5"), List.of("target:5"), 0, 0});
+        check("target:5".equals(took.chosen) && took.options.get(0).equals("target:none") && took.min == 0
+                && took.complete, "min 0, a target taken: none listed, the target chosen");
+        // Tear Asunder kicked: the artifact-or-enchantment half has X = 0 -- no candidate, one answer, not written
+        final Decision zero = part.apply(new Object[] {List.of(), List.of(), 0, 0});
+        check(zero.forced() && zero.options.equals(List.of("target:none")) && "target:none".equals(zero.chosen),
+                "max 0: [target:none] alone, a one-option record (counted, not written)");
+        // a mandatory part left empty: listed, incomplete, NO_TARGET, min 1
+        final Decision must = part.apply(new Object[] {List.of("target:5"), List.of(), 0, 1});
+        final Map<?, ?> mu = (Map<?, ?>) Json.parse(must.toJson(1, 21, 141, 123));
+        check("target:none".equals(mu.get("chosen")) && Long.valueOf(1).equals(mu.get("min"))
+                && Boolean.FALSE.equals(mu.get("complete")) && "NO_TARGET".equals(mu.get("why")) && !must.forced(),
+                "min 1, left empty: target:none listed and chosen, min 1, complete false, why NO_TARGET");
+        // a mandatory part with its target: no none, no min
+        final Decision plain = part.apply(new Object[] {List.of("target:5", "target:67"), List.of("target:67"), 0, 1});
+        final Map<?, ?> pm = (Map<?, ?>) Json.parse(plain.toJson(1, 22, 141, 123));
+        check("target:67".equals(pm.get("chosen")) && !pm.containsKey("min") && !plain.options.contains("target:none"),
+                "min 1, a target taken: as before D487 (no none, no min)");
+        // an answer the seat cannot see is not "none"
+        final Decision unseen = part.apply(new Object[] {List.of("target:5", "target:67"), List.of(), 1, 1});
+        check(unseen.chosen == null && unseen.chosenAll.isEmpty() && !unseen.options.contains("target:none"),
+                "a target the seat cannot see keeps the null answer (the checker fails it)");
     }
 
     /** D388–D390: the config switches, the NaN-aware statistics and the anytime schedule, on numbers. */

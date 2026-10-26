@@ -30,6 +30,17 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-26 — a targeting part left empty answers `target:none`
+
+A target record whose part the answer left empty said `chosen: null` -- not a token and not an option, so the M55
+audit failed it; D486's card candidates made such records written ones (J171: 4,501 frame logs on five spines).
+It now answers `target:none`, listed beside the part's minimum. Decision **D487** (M76). Held by
+`tools/check-redaction-selftest.mjs` (the `m76-*` controls) and `web/test/cubelab-record.test.ts`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M76 | §8.2, M55, M75 | **A targeting part left empty answers `target:none`; a record that lists it carries the part's `min`.** M55's token grammar gains **`target:none`**, a `target` record's answer only. A part whose minimum is 0 (`TargetMin$ 0`, "up to one", or an SVar that comes to 0) lists `target:none` **first** among its `options` -- as `attack:none` and `block:none` are listed -- and the record carries **`min: 0`**; left empty, it answers `target:none`. A part whose maximum is 0 (Tear Asunder's half its kicker shut) lists `target:none` alone: a one-option record, counted in the summary's `forced.target` and not written. A part whose minimum is 1 or more and that was left empty -- an engine fault the play will meet as "failed to target" -- also answers `target:none`, listed, with its **`min`** (1 or more), **`complete: false`** and **`why: "NO_TARGET"`**. `min` is a non-negative integer, present exactly when `target:none` is listed; `target:none` is never one of several answers in a list. **A part left empty never answers null after this amendment.** The one exception the checker keeps is the **legacy** shape J171 wrote before it -- `kind: "target"`, `by: "forge"`, `source: "targets"`, `chosen: null`, no `min`, no `why`, two or more `target:<id>` / `target:p<id>` options and no `target:none` -- accepted and counted (`M55 legacy null target records=<n>`); a null answer in any other shape fails. A target the seat cannot see is not "none": such a part keeps a null answer and fails, as before. **Optional**: absent from every log before this amendment. | D487 |
+
 ### 2026-10-25 — a random seat's guardrail counts include D486's one; target records list cards
 
 The move atlas's random seat now draws its own targets from every legal candidate, cards included

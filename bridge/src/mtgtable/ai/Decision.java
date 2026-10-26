@@ -44,7 +44,7 @@ import mtgtable.Json.JsonOut;
  *   priority  pass | cast:&lt;id&gt; | land:&lt;id&gt; | activate:&lt;id&gt;[#&lt;k&gt;]
  *   attack    attack:none | attack:&lt;ids ascending&gt;
  *   block     block:none | block:&lt;b&gt;&gt;&lt;a&gt;,...   (sorted by attacker, then blocker)
- *   target    target:&lt;id&gt; | target:p&lt;playerId&gt;
+ *   target    target:&lt;id&gt; | target:p&lt;playerId&gt; | target:none   (none: a part left empty, D487)
  *   choice    option:&lt;id&gt; | option:p&lt;playerId&gt; | option:hidden | yes | no
  *   mulligan  keep | mulligan
  * </pre>
@@ -57,7 +57,7 @@ public final class Decision {
 
     /** The token grammar, as {@code tools/check-redaction.mjs} holds it too. */
     public static final Pattern TOKEN = Pattern.compile(
-            "pass|keep|mulligan|yes|no|option:hidden|(cast|land):\\d+|(target|option):p?\\d+|activate:\\d+(#\\d+)?"
+            "pass|keep|mulligan|yes|no|option:hidden|target:none|(cast|land):\\d+|(target|option):p?\\d+|activate:\\d+(#\\d+)?"
             + "|attack:(none|\\d+(,\\d+)*)|block:(none|\\d+>\\d+(,\\d+>\\d+)*)");
 
     public static final List<String> KINDS = List.of("priority", "attack", "block", "target", "choice", "mulligan");
@@ -74,6 +74,12 @@ public final class Decision {
     public final List<String> atoms = new ArrayList<>();
     /** Options in a zone the seat cannot see, counted and never named (choice only). */
     public int hidden;
+    /**
+     * D487 (M76): a target record that lists {@code target:none} carries its part's minimum number of targets --
+     * 0 for a part that may be left empty; 1 or more only beside {@code complete: false} and {@code why: NO_TARGET}.
+     * -1: not written (the record lists no {@code target:none}).
+     */
+    public int min = -1;
     /** The answer: one token, or several for a multi-card choice ({@link #chosenAll}). */
     public String chosen;
     public final List<String> chosenAll = new ArrayList<>();
@@ -187,6 +193,9 @@ public final class Decision {
         }
         if (hidden > 0) {
             o.n("hidden", hidden);
+        }
+        if (min >= 0) {
+            o.n("min", min);
         }
         if (chosenAll.isEmpty()) {
             if (chosen == null) {

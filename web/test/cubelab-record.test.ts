@@ -156,6 +156,40 @@ test('M75: a target record with source "modes" passes; an unknown source FAILS t
   assert.match(odd.out, /decision source "castModes"/);
 });
 
+// M76 / D487: a targeting part left empty answers "target:none", listed beside the part's `min`; J171's legacy shape
+// (chosen null on a target/forge/targets record, no min, no target:none) passes, counted; a null answer in any other
+// shape, an unlisted target:none and target:none on a min-1 part not marked NO_TARGET all FAIL the checker.
+test('M76: target:none listed with min 0 passes; the legacy null passes counted; the other shapes FAIL', () => {
+  const targeted = (edit: (b: Record<string, any>) => void) => rewrite(DEC_LOGS[0] as string, (frames) => {
+    const rec = frames.find((f) => f.dir === 'ai' && f.type === 'decision' && f.body.kind === 'target')!;
+    rec.body.by = 'forge';
+    rec.body.source = 'targets';
+    delete rec.body.search;
+    delete rec.body.explore;
+    delete rec.body.why;
+    edit(rec.body);
+  });
+  const none = targeted((b) => { b.options = ['target:none', ...b.options]; b.min = 0; b.chosen = 'target:none'; });
+  assert.equal(none.status, 0, none.out);
+  const legacy = targeted((b) => { b.chosen = null; });
+  assert.equal(legacy.status, 0, legacy.out);
+  assert.match(legacy.out, /M55 legacy null target records=1 /);
+  const nullNew = targeted((b) => { b.options = ['target:none', ...b.options]; b.min = 0; b.chosen = null; });
+  assert.equal(nullNew.status, 1, nullNew.out);
+  assert.match(nullNew.out, /chosen null is not a token/);
+  const unlisted = targeted((b) => { b.chosen = 'target:none'; });
+  assert.equal(unlisted.status, 1, unlisted.out);
+  assert.match(unlisted.out, /chose "target:none", which is not among its options/);
+  const min1 = targeted((b) => { b.options = ['target:none', ...b.options]; b.min = 1; b.chosen = 'target:none'; });
+  assert.equal(min1.status, 1, min1.out);
+  assert.match(min1.out, /on a part whose minimum is 1/);
+  const marked = targeted((b) => {
+    b.options = ['target:none', ...b.options]; b.min = 1; b.chosen = 'target:none'; b.complete = false; b.why = 'NO_TARGET';
+  });
+  assert.equal(marked.status, 0, marked.out);
+  assert.match(marked.out, /M76 empty mandatory target parts=1 /);
+});
+
 // D358: fixtures/cubelab/explore/ is one lab game played with play exploration
 // (`--play-explore share=1,epsilon=0.2,closecall=0.05,opening=on`), both chairs.
 // Both pass the checker with their marks; the planted leak is a mark whose
