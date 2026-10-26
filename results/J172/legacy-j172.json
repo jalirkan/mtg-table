@@ -1,0 +1,90 @@
+{
+ "scanned": 54350,
+ "pass": 54350,
+ "partial": 0,
+ "fail": 0,
+ "unreported": 0,
+ "records": 4717,
+ "logsWithRecords": 4501,
+ "noTarget": 0,
+ "spines": 5,
+ "registeredOk": 5,
+ "failList": [],
+ "bySpine": {
+  "b-s02-peasant-2102": {
+   "scanned": 4150,
+   "pass": 4150,
+   "partial": 0,
+   "fail": 0,
+   "unreported": 0,
+   "records": 1426,
+   "logsWithRecords": 1212,
+   "noTarget": 0,
+   "registered": [
+    4150,
+    1426,
+    1212
+   ]
+  },
+  "b-s04-powered-2104": {
+   "scanned": 11550,
+   "pass": 11550,
+   "partial": 0,
+   "fail": 0,
+   "unreported": 0,
+   "records": 62,
+   "logsWithRecords": 61,
+   "noTarget": 0,
+   "registered": [
+    11550,
+    62,
+    61
+   ]
+  },
+  "b-s08-powered-2108": {
+   "scanned": 13500,
+   "pass": 13500,
+   "partial": 0,
+   "fail": 0,
+   "unreported": 0,
+   "records": 39,
+   "logsWithRecords": 38,
+   "noTarget": 0,
+   "registered": [
+    13500,
+    39,
+    38
+   ]
+  },
+  "b-s09-pauper-2109": {
+   "scanned": 12150,
+   "pass": 12150,
+   "partial": 0,
+   "fail": 0,
+   "unreported": 0,
+   "records": 2361,
+   "logsWithRecords": 2361,
+   "noTarget": 0,
+   "registered": [
+    12150,
+    2361,
+    2361
+   ]
+  },
+  "b-s10-peasant-2110": {
+   "scanned": 13000,
+   "pass": 13000,
+   "partial": 0,
+   "fail": 0,
+   "unreported": 0,
+   "records": 829,
+   "logsWithRecords": 829,
+   "noTarget": 0,
+   "registered": [
+    13000,
+    829,
+    829
+   ]
+  }
+ }
+}

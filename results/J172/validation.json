@@ -1,0 +1,175 @@
+{
+ "note": "the 4a validation draw (J166), made again by the J170 pilot into lab-j170 at deck seeds 2201-2213 (D447, --cross-band 0.10; D482 changes none of it) and kept by the J171 pilot: deck files only, never branched; no job may train on these decks or use these seeds before the validation job that branches them",
+ "drawSha256": "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de",
+ "sets": [
+  {
+   "set": "v01",
+   "band": "pauper",
+   "pool": "random-pauper",
+   "deckSeed": 2201,
+   "reservedGameSeed": 2301,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v01-pauper-2201/decks/pauper-2201-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v01-pauper-2201/decks/pauper-2201-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v02",
+   "band": "peasant",
+   "pool": "random-peasant",
+   "deckSeed": 2202,
+   "reservedGameSeed": 2302,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v02-peasant-2202/decks/peasant-2202-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v02-peasant-2202/decks/peasant-2202-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v03",
+   "band": "legacy",
+   "pool": "random-legacy",
+   "deckSeed": 2203,
+   "reservedGameSeed": 2303,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v03-legacy-2203/decks/legacy-2203-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v03-legacy-2203/decks/legacy-2203-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v04",
+   "band": "powered",
+   "pool": "random-powered",
+   "deckSeed": 2204,
+   "reservedGameSeed": 2304,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v04-powered-2204/decks/powered-2204-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v04-powered-2204/decks/powered-2204-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v05",
+   "band": "pauper",
+   "pool": "random-pauper",
+   "deckSeed": 2205,
+   "reservedGameSeed": 2305,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v05-pauper-2205/decks/pauper-2205-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v05-pauper-2205/decks/pauper-2205-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v06",
+   "band": "peasant",
+   "pool": "random-peasant",
+   "deckSeed": 2206,
+   "reservedGameSeed": 2306,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v06-peasant-2206/decks/peasant-2206-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v06-peasant-2206/decks/peasant-2206-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v07",
+   "band": "legacy",
+   "pool": "random-legacy",
+   "deckSeed": 2207,
+   "reservedGameSeed": 2307,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v07-legacy-2207/decks/legacy-2207-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v07-legacy-2207/decks/legacy-2207-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v08",
+   "band": "powered",
+   "pool": "random-powered",
+   "deckSeed": 2208,
+   "reservedGameSeed": 2308,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v08-powered-2208/decks/powered-2208-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v08-powered-2208/decks/powered-2208-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v09",
+   "band": "pauper",
+   "pool": "random-pauper",
+   "deckSeed": 2209,
+   "reservedGameSeed": 2309,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v09-pauper-2209/decks/pauper-2209-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v09-pauper-2209/decks/pauper-2209-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v10",
+   "band": "peasant",
+   "pool": "random-peasant",
+   "deckSeed": 2210,
+   "reservedGameSeed": 2310,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v10-peasant-2210/decks/peasant-2210-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v10-peasant-2210/decks/peasant-2210-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v11",
+   "band": "legacy",
+   "pool": "random-legacy",
+   "deckSeed": 2211,
+   "reservedGameSeed": 2311,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v11-legacy-2211/decks/legacy-2211-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v11-legacy-2211/decks/legacy-2211-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v12",
+   "band": "powered",
+   "pool": "random-powered",
+   "deckSeed": 2212,
+   "reservedGameSeed": 2312,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v12-powered-2212/decks/powered-2212-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v12-powered-2212/decks/powered-2212-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  },
+  {
+   "set": "v13",
+   "band": "pauper",
+   "pool": "random-pauper",
+   "deckSeed": 2213,
+   "reservedGameSeed": 2313,
+   "decks": [
+    "/home/justin-a/code/lab/data/lab-j170/validation/v13-pauper-2213/decks/pauper-2213-00001.dck",
+    "/home/justin-a/code/lab/data/lab-j170/validation/v13-pauper-2213/decks/pauper-2213-00002.dck"
+   ],
+   "split": "validation",
+   "training": false
+  }
+ ]
+}

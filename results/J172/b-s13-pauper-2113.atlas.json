@@ -1,0 +1,1568 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s13-pauper-2013/decks/pauper-2013-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s13-pauper-2013/decks/pauper-2013-00002.dck",
+    "seed": 2113,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 40,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 29,
+      "first": "B",
+      "decisionsListed": 32
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 2,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 11,
+              "draws": 8,
+              "losses": 181,
+              "mean": 0.075,
+              "lo": 0.046,
+              "hi": 0.12
+            },
+            "forge": {
+              "n": 40,
+              "wins": 11,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.275,
+              "lo": 0.1611,
+              "hi": 0.4283
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:28",
+            "label": "Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 11,
+              "draws": 7,
+              "losses": 182,
+              "mean": 0.0725,
+              "lo": 0.0441,
+              "hi": 0.1171
+            },
+            "forge": {
+              "n": 40,
+              "wins": 11,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.275,
+              "lo": 0.1611,
+              "hi": 0.4283
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:27",
+            "label": "Stone-Throwing Devils",
+            "random": {
+              "n": 200,
+              "wins": 19,
+              "draws": 10,
+              "losses": 171,
+              "mean": 0.12,
+              "lo": 0.082,
+              "hi": 0.1723
+            },
+            "forge": {
+              "n": 40,
+              "wins": 13,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.325,
+              "lo": 0.2008,
+              "hi": 0.4798
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.045,
+          "regretLo": 0,
+          "regretHi": 0.0926,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.1756,
+          "best": 2
+        },
+        "rho": 0.866,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.0733
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Savor",
+            "random": {
+              "n": 200,
+              "wins": 29,
+              "draws": 7,
+              "losses": 164,
+              "mean": 0.1625,
+              "lo": 0.1178,
+              "hi": 0.2199
+            },
+            "forge": {
+              "n": 40,
+              "wins": 6,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.15,
+              "lo": 0.0706,
+              "hi": 0.2907
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 19,
+              "draws": 8,
+              "losses": 173,
+              "mean": 0.115,
+              "lo": 0.0779,
+              "hi": 0.1666
+            },
+            "forge": {
+              "n": 40,
+              "wins": 4,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.1,
+              "lo": 0.0396,
+              "hi": 0.2305
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:23",
+            "label": "Go for the Throat",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 3,
+              "losses": 44,
+              "mean": 0.09,
+              "lo": 0.0374,
+              "hi": 0.2011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:27",
+            "label": "Stone-Throwing Devils",
+            "random": {
+              "n": 100,
+              "wins": 6,
+              "draws": 4,
+              "losses": 90,
+              "mean": 0.08,
+              "lo": 0.0411,
+              "hi": 0.15
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.03,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.13,
+        "forgeOptions": [
+          0,
+          1
+        ]
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:27,28",
+            "label": "attack Stone-Throwing Devils+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 128,
+              "draws": 2,
+              "losses": 70,
+              "mean": 0.645,
+              "lo": 0.5765,
+              "hi": 0.708
+            },
+            "forge": {
+              "n": 40,
+              "wins": 22,
+              "draws": 1,
+              "losses": 17,
+              "mean": 0.5625,
+              "lo": 0.4101,
+              "hi": 0.704
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 121,
+              "draws": 2,
+              "losses": 77,
+              "mean": 0.61,
+              "lo": 0.5409,
+              "hi": 0.6749
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.5375,
+              "lo": 0.3866,
+              "hi": 0.6818
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:28",
+            "label": "attack Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 129,
+              "draws": 4,
+              "losses": 67,
+              "mean": 0.655,
+              "lo": 0.5868,
+              "hi": 0.7174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 18,
+              "draws": 1,
+              "losses": 21,
+              "mean": 0.4625,
+              "lo": 0.3182,
+              "hi": 0.6134
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:27",
+            "label": "attack Stone-Throwing Devils",
+            "random": {
+              "n": 200,
+              "wins": 124,
+              "draws": 6,
+              "losses": 70,
+              "mean": 0.635,
+              "lo": 0.5663,
+              "hi": 0.6986
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.5375,
+              "lo": 0.3866,
+              "hi": 0.6818
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.0825,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "rho": -0.3162,
+        "rhoLo": -1,
+        "rhoHi": 0.8333,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.745
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 128,
+              "draws": 1,
+              "losses": 71,
+              "mean": 0.6425,
+              "lo": 0.574,
+              "hi": 0.7057
+            },
+            "forge": {
+              "n": 40,
+              "wins": 23,
+              "draws": 5,
+              "losses": 12,
+              "mean": 0.6375,
+              "lo": 0.4826,
+              "hi": 0.7683
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:37",
+            "label": "Three Tree Rootweaver",
+            "random": {
+              "n": 200,
+              "wins": 123,
+              "draws": 7,
+              "losses": 70,
+              "mean": 0.6325,
+              "lo": 0.5638,
+              "hi": 0.6962
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 3,
+              "losses": 12,
+              "mean": 0.6625,
+              "lo": 0.5076,
+              "hi": 0.789
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:26",
+            "label": "Okiba Reckoner Raid",
+            "random": {
+              "n": 200,
+              "wins": 139,
+              "draws": 3,
+              "losses": 58,
+              "mean": 0.7025,
+              "lo": 0.6358,
+              "hi": 0.7616
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 3,
+              "losses": 13,
+              "mean": 0.6375,
+              "lo": 0.4826,
+              "hi": 0.7683
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.06,
+          "regretLo": 0,
+          "regretHi": 0.1475,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.1625,
+          "best": 1
+        },
+        "rho": -0.866,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6533
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:38",
+            "label": "attack Syr Konrad, the Grim",
+            "random": {
+              "n": 200,
+              "wins": 140,
+              "draws": 7,
+              "losses": 53,
+              "mean": 0.7175,
+              "lo": 0.6515,
+              "hi": 0.7753
+            },
+            "forge": {
+              "n": 40,
+              "wins": 8,
+              "draws": 3,
+              "losses": 29,
+              "mean": 0.2375,
+              "lo": 0.1325,
+              "hi": 0.3886
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.63,
+              "lo": 0.4914,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:27,28,37,38",
+            "label": "attack Syr Konrad, the Grim+Unwilling Ingredient+Stone-Throwing Devils+Three Tree Rootweaver",
+            "random": {
+              "n": 200,
+              "wins": 171,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.855,
+              "lo": 0.7995,
+              "hi": 0.8971
+            },
+            "forge": {
+              "n": 40,
+              "wins": 14,
+              "draws": 1,
+              "losses": 25,
+              "mean": 0.3625,
+              "lo": 0.2317,
+              "hi": 0.5174
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:28,38",
+            "label": "attack Syr Konrad, the Grim+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 155,
+              "draws": 2,
+              "losses": 43,
+              "mean": 0.78,
+              "lo": 0.7176,
+              "hi": 0.8318
+            },
+            "forge": {
+              "n": 40,
+              "wins": 7,
+              "draws": 3,
+              "losses": 30,
+              "mean": 0.2125,
+              "lo": 0.114,
+              "hi": 0.3614
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:27,38",
+            "label": "attack Syr Konrad, the Grim+Stone-Throwing Devils",
+            "random": {
+              "n": 200,
+              "wins": 150,
+              "draws": 3,
+              "losses": 47,
+              "mean": 0.7575,
+              "lo": 0.6936,
+              "hi": 0.8117
+            },
+            "forge": {
+              "n": 40,
+              "wins": 9,
+              "draws": 3,
+              "losses": 28,
+              "mean": 0.2625,
+              "lo": 0.1514,
+              "hi": 0.4152
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:37,38",
+            "label": "attack Syr Konrad, the Grim+Three Tree Rootweaver",
+            "random": {
+              "n": 50,
+              "wins": 37,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.74,
+              "lo": 0.6045,
+              "hi": 0.8413
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.1375,
+          "regretLo": 0.065,
+          "regretHi": 0.215,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.125,
+          "regretLo": 0,
+          "regretHi": 0.3,
+          "best": 2
+        },
+        "rho": 0.4,
+        "rhoLo": -0.4012,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7667,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "d": 18,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:28,37",
+            "label": "attack Three Tree Rootweaver+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 76,
+              "draws": 10,
+              "losses": 114,
+              "mean": 0.405,
+              "lo": 0.3394,
+              "hi": 0.4742
+            },
+            "forge": {
+              "n": 40,
+              "wins": 17,
+              "draws": 2,
+              "losses": 21,
+              "mean": 0.45,
+              "lo": 0.3071,
+              "hi": 0.6017
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 61,
+              "draws": 19,
+              "losses": 120,
+              "mean": 0.3525,
+              "lo": 0.2896,
+              "hi": 0.4209
+            },
+            "forge": {
+              "n": 40,
+              "wins": 17,
+              "draws": 2,
+              "losses": 21,
+              "mean": 0.45,
+              "lo": 0.3071,
+              "hi": 0.6017
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:28",
+            "label": "attack Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 70,
+              "draws": 20,
+              "losses": 110,
+              "mean": 0.4,
+              "lo": 0.3346,
+              "hi": 0.4692
+            },
+            "forge": {
+              "n": 40,
+              "wins": 20,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.5,
+              "lo": 0.352,
+              "hi": 0.648
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:37",
+            "label": "attack Three Tree Rootweaver",
+            "random": {
+              "n": 200,
+              "wins": 75,
+              "draws": 13,
+              "losses": 112,
+              "mean": 0.4075,
+              "lo": 0.3418,
+              "hi": 0.4767
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.525,
+              "lo": 0.375,
+              "hi": 0.6706
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0025,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.075,
+          "regretLo": 0,
+          "regretHi": 0.2,
+          "best": 3
+        },
+        "rho": 0.6325,
+        "rhoLo": -0.8,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.43
+      },
+      {
+        "d": 24,
+        "kind": "a",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:28,32,35",
+            "label": "attack Thieving Sprite+Hasran Ogress+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 172,
+              "draws": 8,
+              "losses": 20,
+              "mean": 0.88,
+              "lo": 0.8277,
+              "hi": 0.918
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 2,
+              "losses": 7,
+              "mean": 0.8,
+              "lo": 0.6524,
+              "hi": 0.895
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 4,
+              "losses": 17,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:28,35",
+            "label": "attack Hasran Ogress+Unwilling Ingredient",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 3,
+              "losses": 9,
+              "mean": 0.79,
+              "lo": 0.6586,
+              "hi": 0.8801
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:28,32",
+            "label": "attack Thieving Sprite+Unwilling Ingredient",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 3,
+              "losses": 11,
+              "mean": 0.75,
+              "lo": 0.6151,
+              "hi": 0.8492
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:32,35",
+            "label": "attack Thieving Sprite+Hasran Ogress",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 3,
+              "losses": 9,
+              "mean": 0.79,
+              "lo": 0.6586,
+              "hi": 0.8801
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0164,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.76,
+        "forgeOptions": [
+          0
+        ]
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:28,32,35",
+            "label": "attack Thieving Sprite+Hasran Ogress+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 175,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.8775,
+              "lo": 0.8248,
+              "hi": 0.916
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 6,
+              "losses": 15,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:28,35",
+            "label": "attack Hasran Ogress+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 169,
+              "draws": 1,
+              "losses": 30,
+              "mean": 0.8475,
+              "lo": 0.7912,
+              "hi": 0.8907
+            },
+            "forge": {
+              "n": 40,
+              "wins": 32,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.8,
+              "lo": 0.6524,
+              "hi": 0.895
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:28,32",
+            "label": "attack Thieving Sprite+Unwilling Ingredient",
+            "random": {
+              "n": 200,
+              "wins": 176,
+              "draws": 4,
+              "losses": 20,
+              "mean": 0.89,
+              "lo": 0.8391,
+              "hi": 0.9262
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:32,35",
+            "label": "attack Thieving Sprite+Hasran Ogress",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0125,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "rho": 0.866,
+        "rhoLo": -0.5,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 31,
+        "screened": false,
+        "screenMean": 0.772,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 31,
+        "kind": "b",
+        "turn": 27,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:28>50,38>50,39>53",
+            "label": "block Unwilling Ingredient>Generous Ent, Syr Konrad, the Grim>Generous Ent, Gravedigger>Galewind Moose",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:38>50,39>53",
+            "label": "block Syr Konrad, the Grim>Generous Ent, Gravedigger>Galewind Moose",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:28>50,39>53",
+            "label": "block Unwilling Ingredient>Generous Ent, Gravedigger>Galewind Moose",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:28>50,38>50",
+            "label": "block Unwilling Ingredient>Generous Ent, Syr Konrad, the Grim>Generous Ent",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 8,
+      "meanRho": 0.3689,
+      "meanRhoInterval": [
+        -0.1786,
+        0.7996
+      ],
+      "sameBest": 5,
+      "sameBestInterval": [
+        0.3057,
+        0.8632
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 9,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d2": 4,
+        "d9": 4,
+        "d11": 3,
+        "d15": 6,
+        "d18": 4,
+        "d24": 5,
+        "d31": 5,
+        "d25": 5
+      },
+      "meanOptions": 4.33,
+      "screened": [
+        {
+          "d": 31,
+          "mean": 0,
+          "replacedBy": 25
+        }
+      ],
+      "stopped": [
+        {
+          "d": 2,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 15,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 24,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 24,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 24,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 24,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 25,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 25,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 10,
+      "labels": 8
+    },
+    "disagreeMost": [
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 12,
+        "rho": -0.866,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 1
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 10,
+        "rho": -0.3162,
+        "rhoInterval": [
+          -1,
+          0.8333
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 14,
+        "rho": 0.4,
+        "rhoInterval": [
+          -0.4012,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 2,
+        "bestForge": 2
+      },
+      {
+        "d": 18,
+        "kind": "a",
+        "turn": 16,
+        "rho": 0.6325,
+        "rhoInterval": [
+          -0.8,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 3,
+        "bestForge": 3
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 24,
+        "rho": 0.866,
+        "rhoInterval": [
+          -0.5,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 3,
+        "bestForge": 0
+      }
+    ],
+    "branchGames": 6435,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 180,
+    "cappedForge": 31,
+    "meanBranchMs": {
+      "random": 1511,
+      "forge": 1540
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 209153,
+    "gamesIdChecked": 6436,
+    "frameLogs": 12872,
+    "frameLogsFailed": 0,
+    "redactionMs": 85626,
+    "forks": 6435,
+    "forkProblems": 0,
+    "leakChecks": 17,
+    "leaks": 0,
+    "leakControlsMoved": 14,
+    "guardrails": {
+      "logs": 10950,
+      "priorityDecisions": 340482,
+      "landOffered": 39043,
+      "landTaken": 39043,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 8333,
+      "refusedCast": 844,
+      "noRepeatRefused": 795,
+      "xDrawn": 802,
+      "zeroXLeftOut": 5519,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6435,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6435,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6435,
+      "errored": 211,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 211
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 117874
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4970,
+      "units": 81,
+      "branchGames": 6435,
+      "ms": 1855113,
+      "workers": 6
+    },
+    "wallMs": 1860083,
+    "jobs": 6
+  }
+}

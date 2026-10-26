@@ -1,0 +1,1117 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s12-powered-2012/decks/powered-2012-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s12-powered-2012/decks/powered-2012-00002.dck",
+    "seed": 2112,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 12,
+      "first": "A",
+      "decisionsListed": 14
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 1,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 198,
+              "wins": 118,
+              "draws": 0,
+              "losses": 80,
+              "mean": 0.596,
+              "lo": 0.5264,
+              "hi": 0.6619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Delighted Halfling",
+            "random": {
+              "n": 198,
+              "wins": 126,
+              "draws": 0,
+              "losses": 72,
+              "mean": 0.6364,
+              "lo": 0.5674,
+              "hi": 0.7002
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 198,
+          "regret": 0.0404,
+          "regretLo": 0,
+          "regretHi": 0.1112,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "fill",
+        "screened": false,
+        "screenMean": 0.7
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:29",
+            "label": "Laelia, the Blade Reforged",
+            "random": {
+              "n": 199,
+              "wins": 109,
+              "draws": 0,
+              "losses": 90,
+              "mean": 0.5477,
+              "lo": 0.4783,
+              "hi": 0.6153
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.32,
+              "lo": 0.2076,
+              "hi": 0.4581
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 199,
+              "wins": 84,
+              "draws": 0,
+              "losses": 115,
+              "mean": 0.4221,
+              "lo": 0.3556,
+              "hi": 0.4916
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 199,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4133,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 5,
+        "kind": "a",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:29",
+            "label": "attack Laelia, the Blade Reforged",
+            "random": {
+              "n": 198,
+              "wins": 130,
+              "draws": 1,
+              "losses": 67,
+              "mean": 0.6591,
+              "lo": 0.5906,
+              "hi": 0.7215
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 99,
+              "wins": 48,
+              "draws": 0,
+              "losses": 51,
+              "mean": 0.4848,
+              "lo": 0.3888,
+              "hi": 0.582
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 198,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "fill",
+        "screened": false,
+        "screenMean": 0.58,
+        "forgeOptions": [
+          0
+        ]
+      },
+      {
+        "d": 7,
+        "kind": "a",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:29",
+            "label": "attack Laelia, the Blade Reforged",
+            "random": {
+              "n": 199,
+              "wins": 122,
+              "draws": 0,
+              "losses": 77,
+              "mean": 0.6131,
+              "lo": 0.5439,
+              "hi": 0.678
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 2,
+              "losses": 37,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:22,29",
+            "label": "attack Laelia, the Blade Reforged+Delighted Halfling",
+            "random": {
+              "n": 199,
+              "wins": 110,
+              "draws": 0,
+              "losses": 89,
+              "mean": 0.5528,
+              "lo": 0.4833,
+              "hi": 0.6202
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 199,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0251,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5733,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:22,29,37",
+            "label": "attack Restless Ridgeline+Delighted Halfling+Laelia, the Blade Reforged",
+            "random": {
+              "n": 198,
+              "wins": 137,
+              "draws": 0,
+              "losses": 61,
+              "mean": 0.6919,
+              "lo": 0.6245,
+              "hi": 0.7521
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 48,
+              "wins": 22,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.4583,
+              "lo": 0.3258,
+              "hi": 0.5971
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:22,29",
+            "label": "attack Delighted Halfling+Laelia, the Blade Reforged",
+            "random": {
+              "n": 48,
+              "wins": 24,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.5,
+              "lo": 0.3639,
+              "hi": 0.6361
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:29,37",
+            "label": "attack Restless Ridgeline+Laelia, the Blade Reforged",
+            "random": {
+              "n": 198,
+              "wins": 133,
+              "draws": 0,
+              "losses": 65,
+              "mean": 0.6717,
+              "lo": 0.6036,
+              "hi": 0.7333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:22,37",
+            "label": "attack Restless Ridgeline+Delighted Halfling",
+            "random": {
+              "n": 48,
+              "wins": 23,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.4896,
+              "lo": 0.3543,
+              "hi": 0.6264
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 198,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0253,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4667,
+        "forgeOptions": [
+          0,
+          3
+        ]
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:29",
+            "label": "Laelia, the Blade Reforged (may play)",
+            "random": {
+              "n": 200,
+              "wins": 85,
+              "draws": 0,
+              "losses": 115,
+              "mean": 0.425,
+              "lo": 0.3585,
+              "hi": 0.4943
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.22,
+              "lo": 0.1275,
+              "hi": 0.3524
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:20",
+            "label": "Grist, the Hunger Tide",
+            "random": {
+              "n": 200,
+              "wins": 96,
+              "draws": 0,
+              "losses": 104,
+              "mean": 0.48,
+              "lo": 0.4118,
+              "hi": 0.549
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:24",
+            "label": "Omnath, Locus of Rage",
+            "random": {
+              "n": 200,
+              "wins": 83,
+              "draws": 0,
+              "losses": 117,
+              "mean": 0.415,
+              "lo": 0.3489,
+              "hi": 0.4843
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.055,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.36,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 77,
+              "draws": 0,
+              "losses": 123,
+              "mean": 0.385,
+              "lo": 0.3203,
+              "hi": 0.454
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:20",
+            "label": "Grist, the Hunger Tide",
+            "random": {
+              "n": 200,
+              "wins": 116,
+              "draws": 0,
+              "losses": 84,
+              "mean": 0.58,
+              "lo": 0.5107,
+              "hi": 0.6463
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.195,
+          "regretLo": 0.11,
+          "regretHi": 0.285,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "fill",
+        "screened": false,
+        "screenMean": 0.36
+      },
+      {
+        "d": 13,
+        "kind": "a",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:37",
+            "label": "attack Restless Ridgeline",
+            "random": {
+              "n": 199,
+              "wins": 54,
+              "draws": 0,
+              "losses": 145,
+              "mean": 0.2714,
+              "lo": 0.2143,
+              "hi": 0.337
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:29,37",
+            "label": "attack Restless Ridgeline+Laelia, the Blade Reforged",
+            "random": {
+              "n": 199,
+              "wins": 100,
+              "draws": 0,
+              "losses": 99,
+              "mean": 0.5025,
+              "lo": 0.4337,
+              "hi": 0.5713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 199,
+          "regret": 0.2312,
+          "regretLo": 0.1357,
+          "regretHi": 0.3166,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3733,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 8,
+      "branchedInFull": 8,
+      "fill": 3,
+      "optionsByDecision": {
+        "d0": 2,
+        "d4": 3,
+        "d5": 2,
+        "d7": 3,
+        "d10": 5,
+        "d11": 4,
+        "d12": 2,
+        "d13": 3
+      },
+      "meanOptions": 3,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 4,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 7,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 10,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 10,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 10,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 11,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 13,
+          "o": 1,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 8,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 3650,
+    "branchErrors": 10,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 4,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 3399,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 104433,
+    "gamesIdChecked": 3651,
+    "frameLogs": 7302,
+    "frameLogsFailed": 0,
+    "redactionMs": 40322,
+    "forks": 3650,
+    "forkProblems": 0,
+    "leakChecks": 8,
+    "leaks": 0,
+    "leakControlsMoved": 8,
+    "guardrails": {
+      "logs": 7300,
+      "priorityDecisions": 263874,
+      "landOffered": 28153,
+      "landTaken": 28153,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 211,
+      "refusedCast": 6,
+      "noRepeatRefused": 5,
+      "xDrawn": 735,
+      "zeroXLeftOut": 2140,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3650,
+      "errored": 10,
+      "threshold": 0.1,
+      "byError": [
+        {
+          "error": "IndexOutOfBoundsException: Index # out of bounds for length #",
+          "n": 10
+        }
+      ],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3650,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3650,
+      "errored": 4,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 4
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 101727
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4546,
+      "units": 64,
+      "branchGames": 3650,
+      "ms": 2251940,
+      "workers": 6
+    },
+    "wallMs": 2256486,
+    "jobs": 6
+  }
+}

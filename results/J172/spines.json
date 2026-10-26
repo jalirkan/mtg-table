@@ -1,0 +1,313 @@
+{
+ "note": "all 13 spines branched fresh by J171 at f2b4e9c2, by D486s random seat (a new population: never pooled with J166-J169); s02, s04, s08, s09 and s10 re-checked in place by J172 at its pin under D487s checker, nothing played (J171s atlases kept beside as atlas.j171.*)",
+ "sha": "f2b4e9c2",
+ "recheckPin": "7476e706",
+ "recheckedSpines": [
+  "b-s02-peasant-2102",
+  "b-s04-powered-2104",
+  "b-s08-powered-2108",
+  "b-s09-pauper-2109",
+  "b-s10-peasant-2110"
+ ],
+ "spines": {
+  "b-s01-pauper-2101": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s01-pauper-2001/decks/pauper-2001-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s01-pauper-2001/decks/pauper-2001-00002.dck",
+   "seed": 2101,
+   "branchRandom": 200,
+   "branchForge": 40,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s02-peasant-2102": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s02-peasant-2002/decks/peasant-2002-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s02-peasant-2002/decks/peasant-2002-00002.dck",
+   "seed": 2102,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s03-legacy-2103": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s03-legacy-2003/decks/legacy-2003-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s03-legacy-2003/decks/legacy-2003-00002.dck",
+   "seed": 2103,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s04-powered-2104": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s04-powered-2004/decks/powered-2004-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s04-powered-2004/decks/powered-2004-00002.dck",
+   "seed": 2104,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s05-pauper-2105": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s05-pauper-2005/decks/pauper-2005-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s05-pauper-2005/decks/pauper-2005-00002.dck",
+   "seed": 2105,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s06-peasant-2106": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s06-peasant-2006/decks/peasant-2006-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s06-peasant-2006/decks/peasant-2006-00002.dck",
+   "seed": 2106,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s07-legacy-2107": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s07-legacy-2007/decks/legacy-2007-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s07-legacy-2007/decks/legacy-2007-00002.dck",
+   "seed": 2107,
+   "branchRandom": 200,
+   "branchForge": 40,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s08-powered-2108": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s08-powered-2008/decks/powered-2008-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s08-powered-2008/decks/powered-2008-00002.dck",
+   "seed": 2108,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s09-pauper-2109": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s09-pauper-2009/decks/pauper-2009-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s09-pauper-2009/decks/pauper-2009-00002.dck",
+   "seed": 2109,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s10-peasant-2110": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s10-peasant-2010/decks/peasant-2010-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s10-peasant-2010/decks/peasant-2010-00002.dck",
+   "seed": 2110,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s11-legacy-2111": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s11-legacy-2011/decks/legacy-2011-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s11-legacy-2011/decks/legacy-2011-00002.dck",
+   "seed": 2111,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s12-powered-2112": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s12-powered-2012/decks/powered-2012-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s12-powered-2012/decks/powered-2012-00002.dck",
+   "seed": 2112,
+   "branchRandom": 200,
+   "branchForge": 0,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s13-pauper-2113": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s13-pauper-2013/decks/pauper-2013-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s13-pauper-2013/decks/pauper-2013-00002.dck",
+   "seed": 2113,
+   "branchRandom": 200,
+   "branchForge": 40,
+   "decisions": 8,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100,
+     150
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  }
+ }
+}

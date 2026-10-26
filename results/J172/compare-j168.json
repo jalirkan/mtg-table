@@ -1,0 +1,356 @@
+{
+ "note": "ACROSS POPULATIONS: J168 (before D486) against J171 (D486), same decks and seeds; a difference is a candidate, not a verdict",
+ "bySpine": {
+  "s01": {
+   "j168": {
+    "by": "J166 325c2dd8",
+    "listedPerTurn": 0.72,
+    "optionsPerFull": 3.5,
+    "labels": 8,
+    "confident": 1,
+    "regretMean": 0.0231,
+    "cappedShare": 0.2106,
+    "wallSec": 2866,
+    "branchGames": 5780,
+    "confidentShare": 0.125
+   },
+   "j171": {
+    "listedPerTurn": 0.72,
+    "optionsPerFull": 3.25,
+    "labels": 8,
+    "confident": 2,
+    "confidentShare": 0.25,
+    "regretMean": 0.0275,
+    "cappedShare": 0.2837,
+    "wallSec": 2808,
+    "branchGames": 5720
+   }
+  },
+  "s02": {
+   "j168": {
+    "by": "J166 325c2dd8",
+    "listedPerTurn": 0.5,
+    "optionsPerFull": 2.17,
+    "labels": 6,
+    "confident": 1,
+    "regretMean": 0.0308,
+    "cappedShare": 0.0496,
+    "wallSec": 1763,
+    "branchGames": 2500,
+    "confidentShare": 0.1667
+   },
+   "j171": {
+    "listedPerTurn": 0.5,
+    "optionsPerFull": 2.0,
+    "labels": 5,
+    "confident": 1,
+    "confidentShare": 0.2,
+    "regretMean": 0.043,
+    "cappedShare": 0.1017,
+    "wallSec": 1946,
+    "branchGames": 2075
+   }
+  },
+  "s03": {
+   "j168": {
+    "by": "J166 325c2dd8",
+    "listedPerTurn": 0.79,
+    "optionsPerFull": 4.12,
+    "labels": 8,
+    "confident": 2,
+    "regretMean": 0.0509,
+    "cappedShare": 0.0472,
+    "wallSec": 2916,
+    "branchGames": 6000,
+    "confidentShare": 0.25
+   },
+   "j171": {
+    "listedPerTurn": 0.79,
+    "optionsPerFull": 3.12,
+    "labels": 8,
+    "confident": 2,
+    "confidentShare": 0.25,
+    "regretMean": 0.0481,
+    "cappedShare": 0.0389,
+    "wallSec": 2282,
+    "branchGames": 4550
+   }
+  },
+  "s04": {
+   "j168": {
+    "by": "J167 bf978690",
+    "listedPerTurn": 1.06,
+    "optionsPerFull": 2.67,
+    "labels": 3,
+    "confident": 0,
+    "regretMean": 0.0075,
+    "cappedShare": 0.0014,
+    "wallSec": 2053,
+    "branchGames": 2900,
+    "confidentShare": 0.0
+   },
+   "j171": {
+    "listedPerTurn": 1.06,
+    "optionsPerFull": 3.38,
+    "labels": 8,
+    "confident": 1,
+    "confidentShare": 0.125,
+    "regretMean": 0.025,
+    "cappedShare": 0.0005,
+    "wallSec": 4782,
+    "branchGames": 5775
+   }
+  },
+  "s05": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.0,
+    "optionsPerFull": 4.12,
+    "labels": 8,
+    "confident": 1,
+    "regretMean": 0.0181,
+    "cappedShare": 0.0549,
+    "wallSec": 2772,
+    "branchGames": 5500,
+    "confidentShare": 0.125
+   },
+   "j171": {
+    "listedPerTurn": 0.86,
+    "optionsPerFull": 4.62,
+    "labels": 8,
+    "confident": 2,
+    "confidentShare": 0.25,
+    "regretMean": 0.0225,
+    "cappedShare": 0.0563,
+    "wallSec": 3684,
+    "branchGames": 6325
+   }
+  },
+  "s06": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.05,
+    "optionsPerFull": 6.25,
+    "labels": 8,
+    "confident": 5,
+    "regretMean": 0.0959,
+    "cappedShare": 0.0004,
+    "wallSec": 4520,
+    "branchGames": 7350,
+    "confidentShare": 0.625
+   },
+   "j171": {
+    "listedPerTurn": 1.05,
+    "optionsPerFull": 5.88,
+    "labels": 8,
+    "confident": 4,
+    "confidentShare": 0.5,
+    "regretMean": 0.0819,
+    "cappedShare": 0.0,
+    "wallSec": 4367,
+    "branchGames": 6525
+   }
+  },
+  "s07": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.14,
+    "optionsPerFull": 4.5,
+    "labels": 8,
+    "confident": 1,
+    "regretMean": 0.0138,
+    "cappedShare": 0.0,
+    "wallSec": 1341,
+    "branchGames": 5970,
+    "confidentShare": 0.125
+   },
+   "j171": {
+    "listedPerTurn": 1.14,
+    "optionsPerFull": 3.75,
+    "labels": 8,
+    "confident": 1,
+    "confidentShare": 0.125,
+    "regretMean": 0.015,
+    "cappedShare": 0.0008,
+    "wallSec": 1269,
+    "branchGames": 5110
+   }
+  },
+  "s08": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.85,
+    "optionsPerFull": 5.0,
+    "labels": 8,
+    "confident": 3,
+    "regretMean": 0.0725,
+    "cappedShare": 0.0,
+    "wallSec": 3944,
+    "branchGames": 7200,
+    "confidentShare": 0.375
+   },
+   "j171": {
+    "listedPerTurn": 1.85,
+    "optionsPerFull": 5.0,
+    "labels": 8,
+    "confident": 4,
+    "confidentShare": 0.5,
+    "regretMean": 0.0713,
+    "cappedShare": 0.0,
+    "wallSec": 3984,
+    "branchGames": 6750
+   }
+  },
+  "s09": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.17,
+    "optionsPerFull": 4.38,
+    "labels": 8,
+    "confident": 4,
+    "regretMean": 0.0678,
+    "cappedShare": 0.0264,
+    "wallSec": 2991,
+    "branchGames": 5950,
+    "confidentShare": 0.5
+   },
+   "j171": {
+    "listedPerTurn": 1.17,
+    "optionsPerFull": 4.25,
+    "labels": 8,
+    "confident": 1,
+    "confidentShare": 0.125,
+    "regretMean": 0.0381,
+    "cappedShare": 0.0533,
+    "wallSec": 3242,
+    "branchGames": 6075
+   }
+  },
+  "s10": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.7,
+    "optionsPerFull": 4.25,
+    "labels": 8,
+    "confident": 4,
+    "regretMean": 0.0472,
+    "cappedShare": 0.0124,
+    "wallSec": 3136,
+    "branchGames": 5875,
+    "confidentShare": 0.5
+   },
+   "j171": {
+    "listedPerTurn": 1.7,
+    "optionsPerFull": 4.75,
+    "labels": 8,
+    "confident": 3,
+    "confidentShare": 0.375,
+    "regretMean": 0.0503,
+    "cappedShare": 0.0122,
+    "wallSec": 3495,
+    "branchGames": 6500
+   }
+  },
+  "s11": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.22,
+    "optionsPerFull": 4.12,
+    "labels": 8,
+    "confident": 1,
+    "regretMean": 0.0453,
+    "cappedShare": 0.0028,
+    "wallSec": 3658,
+    "branchGames": 5975,
+    "confidentShare": 0.125
+   },
+   "j171": {
+    "listedPerTurn": 1.22,
+    "optionsPerFull": 4.38,
+    "labels": 8,
+    "confident": 4,
+    "confidentShare": 0.5,
+    "regretMean": 0.0528,
+    "cappedShare": 0.0056,
+    "wallSec": 4484,
+    "branchGames": 6450
+   }
+  },
+  "s12": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.17,
+    "optionsPerFull": 3.0,
+    "labels": 8,
+    "confident": 3,
+    "regretMean": 0.0822,
+    "cappedShare": 0.0003,
+    "wallSec": 2159,
+    "branchGames": 3600,
+    "confidentShare": 0.375
+   },
+   "j171": {
+    "listedPerTurn": 1.17,
+    "optionsPerFull": 3.0,
+    "labels": 8,
+    "confident": 2,
+    "confidentShare": 0.25,
+    "regretMean": 0.0652,
+    "cappedShare": 0.0011,
+    "wallSec": 2317,
+    "branchGames": 3650
+   }
+  },
+  "s13": {
+   "j168": {
+    "by": "J168 26a8db00",
+    "listedPerTurn": 1.1,
+    "optionsPerFull": 4.25,
+    "labels": 8,
+    "confident": 1,
+    "regretMean": 0.0241,
+    "cappedShare": 0.0296,
+    "wallSec": 2349,
+    "branchGames": 6925,
+    "confidentShare": 0.125
+   },
+   "j171": {
+    "listedPerTurn": 1.1,
+    "optionsPerFull": 4.25,
+    "labels": 8,
+    "confident": 1,
+    "confidentShare": 0.125,
+    "regretMean": 0.0334,
+    "cappedShare": 0.0328,
+    "wallSec": 1993,
+    "branchGames": 6435
+   }
+  }
+ },
+ "night": {
+  "j168": {
+   "listedPerTurn": 1.1,
+   "optionsPerFull": 4.13,
+   "labels": 97,
+   "confident": 27,
+   "confidentShare": 0.2784,
+   "regretMean": 0.047,
+   "cappedShare": 0.0334,
+   "wallSec": 36468,
+   "branchGames": 71525
+  },
+  "j171": {
+   "spines": 13,
+   "listedPerTurn": 1.09,
+   "optionsPerFull": 4.03,
+   "labels": 101,
+   "confident": 28,
+   "confidentShare": 0.2772,
+   "regretMean": 0.0442,
+   "cappedShare": 0.0421,
+   "wallSec": 40653,
+   "branchGames": 71940
+  }
+ },
+ "selfMatch": 0
+}

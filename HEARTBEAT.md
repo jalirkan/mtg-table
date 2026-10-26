@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-26T13:33:12-04:00
+- time: 2026-10-26T13:33:28-04:00
 - runner: 7476e706, up since 2026-10-26T13:04:08-04:00
-- running: J172 commands 8/8, 5/5 lines, 10.9/h, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.38; memory 7.4/30.5 GB, swap 3571 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 6.59; memory 7.4/30.5 GB, swap 3571 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J171 failed at 2026-10-26T11:55:42-04:00: branches 71940 · atlas.spinesDone 13 · atlas.labels 101 · atlas.confident 28 · atlas.confidentPer7Worker10hNight 28.9 · atlas.cardTargetOffered 653579 · atlas.cardTargetShare 0.164 · atlas.modesDrawn 1125 · atlas.modesDrawnRows 1125 · atlas.lostCasts 645 · atlas.lostCastOptions 0 · atlas.timeoutShare 0 · atlas.problems 5
+- last finished: J172 done at 2026-10-26T13:33:27-04:00: atlas.problems 0 · recheck.ok 5 · legacy.records 4717 · legacy.logsWithRecords 4501 · legacy.scanned 54350 · atlas.labels 101 · atlas.confident 28 · atlas.confidentPer7Worker10hNight 28.9 · atlas.lostCastOptions 0 · recheck.recheckSec 728
 
 ## Messages
+
+- FOLLOW-UP READY [J172@2026-10-26T13:33:27-04:00] (the runner, for the cloud session): J172 is done; write and post the template morning-read. It decides: nothing by itself. It puts J171's night on record clean: J171 (2026-10-26, 00:22-11:55, STATUS `failed`) passed 41 of its 42 final checks and failed `atlas.problems == 0` with 5 -- the redaction checker's M55 audit on s02 (1,212 logs), s04 (61), s08 (38), s09 (2,361) and s10 (829), every one the same record shape (`results/J171/summary.md` section 1; D487's Context): a `target` record of Forge's own answer whose part was left empty, `chosen: null`, beside options that list cards since D486. D487 read all 4,717 records against their casts (no target outside the options; nothing leaked), decided to accept that legacy shape, dated and counted, rather than re-run the five spines (about four hours), and writes `target:none` in records from now on. J172 re-checks the five under D487's checker, counts the legacy records, and re-runs J171's Report, so that `atlas.problems == 0` stands on the night's record beside J171's labels, unchanged. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J169@2026-10-25T23:35:41-04:00] (the runner, for the cloud session): J169 is done; write and post the template morning-read. It decides: nothing by itself. Rung 4a's night, mended: J168 (2026-10-25) finished the 13 spines but failed `atlas.problems == 0` on s06, s10 and s13 (the redaction checker flagged the viewer's own dead token in Forge's stale target lists), and its read found the random seat losing spells it had paid for -- s10 8.7% of its branches, s06 2.7%, s05 18% (Suplex; J169's frame scan adds Abrade) -- with 6 of the night's 27 confident labels doubtful. D485 mends the stale-target loss (s06, s10) and the checker; it does not mend s05's modal spells (D486, a later night). J169 re-checks s06, s10 and s13 under D485's checker, re-branches s06 and s10 on D485's tree, and measures the night again on 13 spines with s05 marked: labels and confident labels per spine and night, the lost casts per spine from the frames, and D485's counter. Ledger: LEDGER.md. Delete this line once posted.
 

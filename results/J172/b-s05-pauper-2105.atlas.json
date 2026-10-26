@@ -1,0 +1,1851 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s05-pauper-2005/decks/pauper-2005-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s05-pauper-2005/decks/pauper-2005-00002.dck",
+    "seed": 2105,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 14,
+      "first": "B",
+      "decisionsListed": 12
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 129,
+              "draws": 20,
+              "losses": 51,
+              "mean": 0.695,
+              "lo": 0.628,
+              "hi": 0.7546
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:1",
+            "label": "Suplex",
+            "random": {
+              "n": 200,
+              "wins": 140,
+              "draws": 23,
+              "losses": 37,
+              "mean": 0.7575,
+              "lo": 0.6936,
+              "hi": 0.8117
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Potioner's Trove",
+            "random": {
+              "n": 200,
+              "wins": 141,
+              "draws": 19,
+              "losses": 40,
+              "mean": 0.7525,
+              "lo": 0.6883,
+              "hi": 0.8072
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0625,
+          "regretLo": 0.015,
+          "regretHi": 0.1401,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6933
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:10",
+            "label": "Potioner's Trove",
+            "random": {
+              "n": 200,
+              "wins": 134,
+              "draws": 15,
+              "losses": 51,
+              "mean": 0.7075,
+              "lo": 0.641,
+              "hi": 0.7662
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 129,
+              "draws": 15,
+              "losses": 56,
+              "mean": 0.6825,
+              "lo": 0.6151,
+              "hi": 0.7431
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Suplex",
+            "random": {
+              "n": 200,
+              "wins": 137,
+              "draws": 11,
+              "losses": 52,
+              "mean": 0.7125,
+              "lo": 0.6462,
+              "hi": 0.7708
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.005,
+          "regretLo": 0,
+          "regretHi": 0.085,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7667
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 153,
+              "draws": 8,
+              "losses": 39,
+              "mean": 0.785,
+              "lo": 0.723,
+              "hi": 0.8363
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:39",
+            "label": "Sunastian Falconer",
+            "random": {
+              "n": 200,
+              "wins": 157,
+              "draws": 9,
+              "losses": 34,
+              "mean": 0.8075,
+              "lo": 0.7473,
+              "hi": 0.8561
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Primordial Pachyderm",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 6,
+              "losses": 11,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 200,
+              "wins": 149,
+              "draws": 14,
+              "losses": 37,
+              "mean": 0.78,
+              "lo": 0.7176,
+              "hi": 0.8318
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:1",
+            "label": "Suplex",
+            "random": {
+              "n": 50,
+              "wins": 35,
+              "draws": 3,
+              "losses": 12,
+              "mean": 0.73,
+              "lo": 0.5939,
+              "hi": 0.8333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "cast:6",
+            "label": "Acidic Slime",
+            "random": {
+              "n": 200,
+              "wins": 156,
+              "draws": 13,
+              "losses": 31,
+              "mean": 0.8125,
+              "lo": 0.7527,
+              "hi": 0.8605
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0275,
+          "regretLo": 0,
+          "regretHi": 0.1075,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "replaces",
+        "replaces": 11,
+        "screened": false,
+        "screenMean": 0.7567,
+        "forgeOptions": [
+          0,
+          1,
+          3,
+          5
+        ]
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:39",
+            "label": "Sunastian Falconer",
+            "random": {
+              "n": 200,
+              "wins": 148,
+              "draws": 15,
+              "losses": 37,
+              "mean": 0.7775,
+              "lo": 0.7149,
+              "hi": 0.8296
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 5,
+              "losses": 15,
+              "mean": 0.65,
+              "lo": 0.5114,
+              "hi": 0.7671
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Primordial Pachyderm",
+            "random": {
+              "n": 200,
+              "wins": 147,
+              "draws": 20,
+              "losses": 33,
+              "mean": 0.785,
+              "lo": 0.723,
+              "hi": 0.8363
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 8,
+              "losses": 12,
+              "mean": 0.68,
+              "lo": 0.5419,
+              "hi": 0.7924
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:1",
+            "label": "Suplex",
+            "random": {
+              "n": 200,
+              "wins": 142,
+              "draws": 24,
+              "losses": 34,
+              "mean": 0.77,
+              "lo": 0.7069,
+              "hi": 0.8229
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:6",
+            "label": "Acidic Slime",
+            "random": {
+              "n": 200,
+              "wins": 151,
+              "draws": 7,
+              "losses": 42,
+              "mean": 0.7725,
+              "lo": 0.7096,
+              "hi": 0.8251
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0075,
+          "regretLo": 0,
+          "regretHi": 0.0825,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7433,
+        "forgeOptions": [
+          0,
+          2,
+          4,
+          5
+        ]
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:6",
+            "label": "Acidic Slime",
+            "random": {
+              "n": 200,
+              "wins": 178,
+              "draws": 8,
+              "losses": 14,
+              "mean": 0.91,
+              "lo": 0.8622,
+              "hi": 0.9423
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 163,
+              "draws": 12,
+              "losses": 25,
+              "mean": 0.845,
+              "lo": 0.7884,
+              "hi": 0.8886
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Suplex",
+            "random": {
+              "n": 100,
+              "wins": 80,
+              "draws": 7,
+              "losses": 13,
+              "mean": 0.835,
+              "lo": 0.7501,
+              "hi": 0.8951
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:8",
+            "label": "Primordial Pachyderm",
+            "random": {
+              "n": 200,
+              "wins": 166,
+              "draws": 9,
+              "losses": 25,
+              "mean": 0.8525,
+              "lo": 0.7967,
+              "hi": 0.895
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 100,
+              "wins": 82,
+              "draws": 3,
+              "losses": 15,
+              "mean": 0.835,
+              "lo": 0.7501,
+              "hi": 0.8951
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "cast:38",
+            "label": "Voldaren Epicure",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 7,
+              "losses": 19,
+              "mean": 0.85,
+              "lo": 0.7842,
+              "hi": 0.8984
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0204,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8433,
+        "forgeOptions": [
+          0,
+          1,
+          3
+        ]
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Suplex",
+            "random": {
+              "n": 200,
+              "wins": 175,
+              "draws": 7,
+              "losses": 18,
+              "mean": 0.8925,
+              "lo": 0.8419,
+              "hi": 0.9283
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 1,
+              "losses": 5,
+              "mean": 0.89,
+              "lo": 0.7741,
+              "hi": 0.9503
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Primordial Pachyderm",
+            "random": {
+              "n": 200,
+              "wins": 188,
+              "draws": 6,
+              "losses": 6,
+              "mean": 0.955,
+              "lo": 0.9167,
+              "hi": 0.9761
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 2,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:38",
+            "label": "Voldaren Epicure",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 2,
+              "losses": 7,
+              "mean": 0.84,
+              "lo": 0.7149,
+              "hi": 0.9166
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0625,
+          "regretLo": 0.0199,
+          "regretHi": 0.11,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 9,
+        "screened": false,
+        "screenMean": 0.92,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 181,
+              "draws": 3,
+              "losses": 16,
+              "mean": 0.9125,
+              "lo": 0.8652,
+              "hi": 0.9443
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:8",
+            "label": "Primordial Pachyderm",
+            "random": {
+              "n": 200,
+              "wins": 183,
+              "draws": 5,
+              "losses": 12,
+              "mean": 0.9275,
+              "lo": 0.8829,
+              "hi": 0.9559
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 100,
+              "wins": 82,
+              "draws": 7,
+              "losses": 11,
+              "mean": 0.855,
+              "lo": 0.7729,
+              "hi": 0.9109
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Voldaren Epicure",
+            "random": {
+              "n": 200,
+              "wins": 177,
+              "draws": 6,
+              "losses": 17,
+              "mean": 0.9,
+              "lo": 0.8506,
+              "hi": 0.9343
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.015,
+          "regretLo": 0,
+          "regretHi": 0.0675,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.915,
+        "forgeOptions": [
+          0,
+          1,
+          3
+        ]
+      },
+      {
+        "d": 8,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,39",
+            "label": "attack Acidic Slime+Sunastian Falconer",
+            "random": {
+              "n": 200,
+              "wins": 185,
+              "draws": 3,
+              "losses": 12,
+              "mean": 0.9325,
+              "lo": 0.889,
+              "hi": 0.9597
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 171,
+              "draws": 10,
+              "losses": 19,
+              "mean": 0.88,
+              "lo": 0.8277,
+              "hi": 0.918
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:39",
+            "label": "attack Sunastian Falconer",
+            "random": {
+              "n": 200,
+              "wins": 176,
+              "draws": 8,
+              "losses": 16,
+              "mean": 0.9,
+              "lo": 0.8506,
+              "hi": 0.9343
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:6",
+            "label": "attack Acidic Slime",
+            "random": {
+              "n": 200,
+              "wins": 178,
+              "draws": 7,
+              "losses": 15,
+              "mean": 0.9075,
+              "lo": 0.8593,
+              "hi": 0.9403
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0225,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.915
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:8",
+            "label": "Primordial Pachyderm",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 23,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.92,
+              "lo": 0.7503,
+              "hi": 0.9778
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Voldaren Epicure",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 10,
+        "screened": true,
+        "screenMean": 0.965
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:40",
+            "label": "Lifeforce",
+            "random": {
+              "n": 25,
+              "wins": 21,
+              "draws": 2,
+              "losses": 2,
+              "mean": 0.88,
+              "lo": 0.7004,
+              "hi": 0.9583
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Voldaren Epicure",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:3",
+            "label": "Goblin Surprise",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.96
+      },
+      {
+        "d": 11,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,8,39",
+            "label": "attack Acidic Slime+Sunastian Falconer+Primordial Pachyderm",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:8,39",
+            "label": "attack Sunastian Falconer+Primordial Pachyderm",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:6,8",
+            "label": "attack Acidic Slime+Primordial Pachyderm",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:6,39",
+            "label": "attack Acidic Slime+Sunastian Falconer",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.972
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 11,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d1": 3,
+        "d3": 6,
+        "d4": 6,
+        "d7": 4,
+        "d8": 4,
+        "d10": 4,
+        "d11": 5,
+        "d9": 4,
+        "d6": 5,
+        "d2": 6
+      },
+      "meanOptions": 4.55,
+      "screened": [
+        {
+          "d": 10,
+          "mean": 0.96,
+          "replacedBy": 9
+        },
+        {
+          "d": 11,
+          "mean": 0.972,
+          "replacedBy": 2
+        },
+        {
+          "d": 9,
+          "mean": 0.965,
+          "replacedBy": 6
+        }
+      ],
+      "stopped": [
+        {
+          "d": 3,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 3,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 4,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 4,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 4,
+          "o": 5,
+          "at": 150
+        },
+        {
+          "d": 7,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 6,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 6,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 6,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 11,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 6325,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 356,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2399,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 1825,
+      "links": 1825
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 290783,
+    "gamesIdChecked": 6326,
+    "frameLogs": 12652,
+    "frameLogsFailed": 0,
+    "redactionMs": 116884,
+    "forks": 6325,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 11,
+    "guardrails": {
+      "logs": 12650,
+      "priorityDecisions": 857580,
+      "landOffered": 59536,
+      "landTaken": 59536,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 6746,
+      "refusedCast": 29,
+      "noRepeatRefused": 21,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6325,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6325,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6325,
+      "errored": 356,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 356
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 168524
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 3536,
+      "units": 67,
+      "branchGames": 6325,
+      "ms": 3501274,
+      "workers": 6
+    },
+    "wallMs": 3504810,
+    "jobs": 6
+  }
+}

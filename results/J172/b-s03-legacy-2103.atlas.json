@@ -1,0 +1,1344 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s03-legacy-2003/decks/legacy-2003-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s03-legacy-2003/decks/legacy-2003-00002.dck",
+    "seed": 2103,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 28,
+      "first": "B",
+      "decisionsListed": 22
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 74,
+              "draws": 5,
+              "losses": 121,
+              "mean": 0.3825,
+              "lo": 0.318,
+              "hi": 0.4515
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:38",
+            "label": "Springheart Nantuko",
+            "random": {
+              "n": 50,
+              "wins": 8,
+              "draws": 4,
+              "losses": 38,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Zirda, the Dawnwaker",
+            "random": {
+              "n": 200,
+              "wins": 71,
+              "draws": 3,
+              "losses": 126,
+              "mean": 0.3625,
+              "lo": 0.299,
+              "hi": 0.4311
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0675,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.28,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:11",
+            "label": "Zirda, the Dawnwaker",
+            "random": {
+              "n": 200,
+              "wins": 53,
+              "draws": 7,
+              "losses": 140,
+              "mean": 0.2825,
+              "lo": 0.2247,
+              "hi": 0.3485
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 64,
+              "draws": 2,
+              "losses": 134,
+              "mean": 0.325,
+              "lo": 0.2639,
+              "hi": 0.3927
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Springheart Nantuko",
+            "random": {
+              "n": 200,
+              "wins": 51,
+              "draws": 4,
+              "losses": 145,
+              "mean": 0.265,
+              "lo": 0.2087,
+              "hi": 0.3302
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0425,
+          "regretLo": 0,
+          "regretHi": 0.1226,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2867
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20,31",
+            "label": "attack Goblin Engineer+Restless Vents",
+            "random": {
+              "n": 200,
+              "wins": 58,
+              "draws": 23,
+              "losses": 119,
+              "mean": 0.3475,
+              "lo": 0.2849,
+              "hi": 0.4158
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 58,
+              "draws": 24,
+              "losses": 118,
+              "mean": 0.35,
+              "lo": 0.2873,
+              "hi": 0.4184
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:31",
+            "label": "attack Restless Vents",
+            "random": {
+              "n": 200,
+              "wins": 62,
+              "draws": 22,
+              "losses": 116,
+              "mean": 0.365,
+              "lo": 0.3014,
+              "hi": 0.4337
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:20",
+            "label": "attack Goblin Engineer",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 9,
+              "losses": 34,
+              "mean": 0.23,
+              "lo": 0.1352,
+              "hi": 0.3633
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0175,
+          "regretLo": 0,
+          "regretHi": 0.0851,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.285,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 26,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 103,
+              "draws": 15,
+              "losses": 82,
+              "mean": 0.5525,
+              "lo": 0.4832,
+              "hi": 0.6198
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:29",
+            "label": "Hornet Queen",
+            "random": {
+              "n": 200,
+              "wins": 148,
+              "draws": 9,
+              "losses": 43,
+              "mean": 0.7625,
+              "lo": 0.6989,
+              "hi": 0.8162
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:23",
+            "label": "Minsc & Boo, Timeless Heroes",
+            "random": {
+              "n": 200,
+              "wins": 124,
+              "draws": 7,
+              "losses": 69,
+              "mean": 0.6375,
+              "lo": 0.5689,
+              "hi": 0.701
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:19",
+            "label": "Murderous Rider (may play)",
+            "random": {
+              "n": 200,
+              "wins": 141,
+              "draws": 6,
+              "losses": 53,
+              "mean": 0.72,
+              "lo": 0.6541,
+              "hi": 0.7776
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.21,
+          "regretLo": 0.1474,
+          "regretHi": 0.2825,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.71
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 26,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:29",
+            "label": "Hornet Queen",
+            "random": {
+              "n": 200,
+              "wins": 148,
+              "draws": 6,
+              "losses": 46,
+              "mean": 0.755,
+              "lo": 0.691,
+              "hi": 0.8094
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 62,
+              "draws": 3,
+              "losses": 35,
+              "mean": 0.635,
+              "lo": 0.5373,
+              "hi": 0.7227
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:23",
+            "label": "Minsc & Boo, Timeless Heroes",
+            "random": {
+              "n": 150,
+              "wins": 85,
+              "draws": 8,
+              "losses": 57,
+              "mean": 0.5933,
+              "lo": 0.5133,
+              "hi": 0.6687
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.68,
+        "forgeOptions": [
+          0
+        ]
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:23",
+            "label": "Minsc & Boo, Timeless Heroes",
+            "random": {
+              "n": 200,
+              "wins": 183,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.915,
+              "lo": 0.8681,
+              "hi": 0.9463
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 42,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.84,
+              "lo": 0.7149,
+              "hi": 0.9166
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:19",
+            "label": "Murderous Rider (may play)",
+            "random": {
+              "n": 200,
+              "wins": 188,
+              "draws": 3,
+              "losses": 9,
+              "mean": 0.9475,
+              "lo": 0.9073,
+              "hi": 0.9708
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0325,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.84,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:23#0",
+            "label": "Minsc & Boo, Timeless Heroes: +1: Put three +1/+1 counters o",
+            "random": {
+              "n": 200,
+              "wins": 183,
+              "draws": 6,
+              "losses": 11,
+              "mean": 0.93,
+              "lo": 0.8859,
+              "hi": 0.9578
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 131,
+              "draws": 5,
+              "losses": 14,
+              "mean": 0.89,
+              "lo": 0.8299,
+              "hi": 0.9307
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:19",
+            "label": "Murderous Rider (may play)",
+            "random": {
+              "n": 200,
+              "wins": 188,
+              "draws": 4,
+              "losses": 8,
+              "mean": 0.95,
+              "lo": 0.9104,
+              "hi": 0.9726
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.0526,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9067,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 20,
+        "kind": "p",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 181,
+              "draws": 5,
+              "losses": 14,
+              "mean": 0.9175,
+              "lo": 0.8711,
+              "hi": 0.9482
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:19",
+            "label": "Murderous Rider (may play)",
+            "random": {
+              "n": 200,
+              "wins": 195,
+              "draws": 2,
+              "losses": 3,
+              "mean": 0.98,
+              "lo": 0.9497,
+              "hi": 0.9922
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0625,
+          "regretLo": 0.0225,
+          "regretHi": 0.1025,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": false,
+        "screenMean": 0.93
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:29,31,108,109,110,114",
+            "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Insect Token+Restless Vents",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 21,
+              "draws": 1,
+              "losses": 3,
+              "mean": 0.86,
+              "lo": 0.6766,
+              "hi": 0.9475
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:29,31,108,109,110",
+            "label": "attack Insect Token+Hornet Queen+Insect Token+Insect Token+Restless Vents",
+            "random": {
+              "n": 25,
+              "wins": 23,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.92,
+              "lo": 0.7503,
+              "hi": 0.9778
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:29,31,109,110,114",
+            "label": "attack Boo+Hornet Queen+Insect Token+Insect Token+Restless Vents",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:31,108,109,110,114",
+            "label": "attack Boo+Insect Token+Insect Token+Insect Token+Restless Vents",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:29,31,108,110,114",
+            "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Restless Vents",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:29,31,108,109,114",
+            "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Restless Vents",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:29,108,109,110,114",
+            "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Insect Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.9725
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 9,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d1": 3,
+        "d10": 4,
+        "d15": 4,
+        "d17": 3,
+        "d18": 3,
+        "d19": 3,
+        "d21": 8,
+        "d20": 2
+      },
+      "meanOptions": 3.67,
+      "screened": [
+        {
+          "d": 21,
+          "mean": 0.9725,
+          "replacedBy": 20
+        }
+      ],
+      "stopped": [
+        {
+          "d": 0,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 10,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 17,
+          "o": 2,
+          "at": 150
+        },
+        {
+          "d": 18,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 1,
+          "at": 150
+        }
+      ],
+      "stoppedOptions": 6,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 4550,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 177,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2807,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 91311,
+    "gamesIdChecked": 4551,
+    "frameLogs": 9102,
+    "frameLogsFailed": 0,
+    "redactionMs": 46148,
+    "forks": 4550,
+    "forkProblems": 0,
+    "leakChecks": 9,
+    "leaks": 0,
+    "leakControlsMoved": 9,
+    "guardrails": {
+      "logs": 9100,
+      "priorityDecisions": 208150,
+      "landOffered": 26067,
+      "landTaken": 26067,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 1600,
+      "refusedCast": 1420,
+      "noRepeatRefused": 507,
+      "xDrawn": 1290,
+      "zeroXLeftOut": 108193,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4550,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4550,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4550,
+      "errored": 177,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 177
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 98026
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 6085,
+      "units": 65,
+      "branchGames": 4550,
+      "ms": 2206600,
+      "workers": 6
+    },
+    "wallMs": 2212685,
+    "jobs": 6
+  }
+}

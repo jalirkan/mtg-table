@@ -1,0 +1,82 @@
+{
+ "note": "J171 deck draws: D447 with D482's engine-unplayable list, drawn into lab-j170 by J170's pilot at 24038bcd (kept by J171's pilot, which draws only an absent folder) and again into the clone by J171's pilot at its pin; drawsha = each folder's decks.jsonl, then its .dck files by name",
+ "spinesAsRun": "faee7df31b55ffd0079f8deaf5280e8d2416f93493d13fc4cb2999a99f45ff6b 26",
+ "all13Registered": "faee7df31b55ffd0079f8deaf5280e8d2416f93493d13fc4cb2999a99f45ff6b 26",
+ "twelve": "e27796b73073bab5e172c2225047cecfe8424ee5ceeb4d839d44484d9da07419 24",
+ "twelveRegistered": "e27796b73073bab5e172c2225047cecfe8424ee5ceeb4d839d44484d9da07419 24",
+ "s04": "81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00 2",
+ "s04Registered": "81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00 2",
+ "bySpine": {
+  "s01-pauper-2001": {
+   "draw": "a40fb5addec594bd6e97b0e7b16d78af1f08280dcc555366b3a2301feda4ff34 2",
+   "registered": "a40fb5addec594bd6e97b0e7b16d78af1f08280dcc555366b3a2301feda4ff34",
+   "decksOk": true
+  },
+  "s02-peasant-2002": {
+   "draw": "86ccaaf3b3ba6f5959aacf073a9dc0465aadf1a9d02ddac8eac695091eaea576 2",
+   "registered": "86ccaaf3b3ba6f5959aacf073a9dc0465aadf1a9d02ddac8eac695091eaea576",
+   "decksOk": true
+  },
+  "s03-legacy-2003": {
+   "draw": "0e9d8c744abd6eff72d2fc1cca4003c7cecfdb85830c077d8c29e16891bfacc1 2",
+   "registered": "0e9d8c744abd6eff72d2fc1cca4003c7cecfdb85830c077d8c29e16891bfacc1",
+   "decksOk": true
+  },
+  "s04-powered-2004": {
+   "draw": "81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00 2",
+   "registered": "81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00",
+   "decksOk": true
+  },
+  "s05-pauper-2005": {
+   "draw": "afc7ce320e966d96e5c92ec9d28c357e6f603c59927f677549ce261227b1b92e 2",
+   "registered": "afc7ce320e966d96e5c92ec9d28c357e6f603c59927f677549ce261227b1b92e",
+   "decksOk": true
+  },
+  "s06-peasant-2006": {
+   "draw": "191a5d8aac5d516f5472f0a01a0cacf660a9fa931e70b806a42723e4dfba161f 2",
+   "registered": "191a5d8aac5d516f5472f0a01a0cacf660a9fa931e70b806a42723e4dfba161f",
+   "decksOk": true
+  },
+  "s07-legacy-2007": {
+   "draw": "5287d2666529b6dd35ec4a271a1b71c5b01d8096bcf1c3acd114945c7a435636 2",
+   "registered": "5287d2666529b6dd35ec4a271a1b71c5b01d8096bcf1c3acd114945c7a435636",
+   "decksOk": true
+  },
+  "s08-powered-2008": {
+   "draw": "d653b4cf2bf2d94649449caaf174d21453cd34b58972c3e22ea8e26dacf75f71 2",
+   "registered": "d653b4cf2bf2d94649449caaf174d21453cd34b58972c3e22ea8e26dacf75f71",
+   "decksOk": true
+  },
+  "s09-pauper-2009": {
+   "draw": "1216932fb9807608a5bf859ac768e12efa40c031fc685f16b56b274a2bbf7601 2",
+   "registered": "1216932fb9807608a5bf859ac768e12efa40c031fc685f16b56b274a2bbf7601",
+   "decksOk": true
+  },
+  "s10-peasant-2010": {
+   "draw": "e4676bda05d0204f3ce43e3f8d1ee1a0ca0c8e24c7f8cf09860423d00ddedd9b 2",
+   "registered": "e4676bda05d0204f3ce43e3f8d1ee1a0ca0c8e24c7f8cf09860423d00ddedd9b",
+   "decksOk": true
+  },
+  "s11-legacy-2011": {
+   "draw": "4ca069ba7bdae91d218e589a41c28da836c7544da53577d14c5994aa64ca8642 2",
+   "registered": "4ca069ba7bdae91d218e589a41c28da836c7544da53577d14c5994aa64ca8642",
+   "decksOk": true
+  },
+  "s12-powered-2012": {
+   "draw": "5d49d21add4ba8cc269babde10dc63c7b7885e94b1df7437d217e02bd2db820d 2",
+   "registered": "5d49d21add4ba8cc269babde10dc63c7b7885e94b1df7437d217e02bd2db820d",
+   "decksOk": true
+  },
+  "s13-pauper-2013": {
+   "draw": "6f20b45b168bf6ba0e365bf27e507e31c431eb76c6f389336cfc8db3e3752591 2",
+   "registered": "6f20b45b168bf6ba0e365bf27e507e31c431eb76c6f389336cfc8db3e3752591",
+   "decksOk": true
+  }
+ },
+ "smoke": "edfdc861736fb049bc1080d525269064c6776ecabd47de496463fa3dc684c931 2",
+ "smokeRegistered": "edfdc861736fb049bc1080d525269064c6776ecabd47de496463fa3dc684c931 2",
+ "validation": "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26",
+ "validationRegistered": "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26",
+ "redrawSpines": "faee7df31b55ffd0079f8deaf5280e8d2416f93493d13fc4cb2999a99f45ff6b 26",
+ "redrawValidation": "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26"
+}

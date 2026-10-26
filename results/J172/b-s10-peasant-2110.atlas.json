@@ -1,0 +1,1447 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s10-peasant-2010/decks/peasant-2010-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s10-peasant-2010/decks/peasant-2010-00002.dck",
+    "seed": 2110,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 27,
+      "first": "A",
+      "decisionsListed": 46
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:37#0",
+            "label": "Perilous Landscape: {T}, Sacrifice CARDNAME: Search your lib",
+            "random": {
+              "n": 200,
+              "wins": 58,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.29,
+              "lo": 0.2315,
+              "hi": 0.3564
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 48,
+              "draws": 2,
+              "losses": 150,
+              "mean": 0.245,
+              "lo": 0.1906,
+              "hi": 0.309
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:28",
+            "label": "Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 51,
+              "draws": 1,
+              "losses": 148,
+              "mean": 0.2575,
+              "lo": 0.2019,
+              "hi": 0.3223
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:23",
+            "label": "Ivora, Insatiable Heir",
+            "random": {
+              "n": 200,
+              "wins": 67,
+              "draws": 1,
+              "losses": 132,
+              "mean": 0.3375,
+              "lo": 0.2756,
+              "hi": 0.4055
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0475,
+          "regretLo": 0,
+          "regretHi": 0.13,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.22
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 47,
+              "draws": 0,
+              "losses": 153,
+              "mean": 0.235,
+              "lo": 0.1816,
+              "hi": 0.2984
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:28",
+            "label": "Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 66,
+              "draws": 0,
+              "losses": 134,
+              "mean": 0.33,
+              "lo": 0.2686,
+              "hi": 0.3978
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Carrion Ants",
+            "random": {
+              "n": 200,
+              "wins": 56,
+              "draws": 0,
+              "losses": 144,
+              "mean": 0.28,
+              "lo": 0.2224,
+              "hi": 0.3459
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.095,
+          "regretLo": 0.0199,
+          "regretHi": 0.18,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2267
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 58,
+              "draws": 5,
+              "losses": 137,
+              "mean": 0.3025,
+              "lo": 0.2431,
+              "hi": 0.3694
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:10,28",
+            "label": "attack Scolding Administrator+Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 78,
+              "draws": 4,
+              "losses": 118,
+              "mean": 0.4,
+              "lo": 0.3346,
+              "hi": 0.4692
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:10",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 200,
+              "wins": 73,
+              "draws": 6,
+              "losses": 121,
+              "mean": 0.38,
+              "lo": 0.3156,
+              "hi": 0.4489
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:28",
+            "label": "attack Morbid Opportunist",
+            "random": {
+              "n": 100,
+              "wins": 30,
+              "draws": 3,
+              "losses": 67,
+              "mean": 0.315,
+              "lo": 0.2322,
+              "hi": 0.4114
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0975,
+          "regretLo": 0.0425,
+          "regretHi": 0.17,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.39,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "d": 22,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:10,38",
+            "label": "attack Carrion Ants+Scolding Administrator",
+            "random": {
+              "n": 200,
+              "wins": 116,
+              "draws": 7,
+              "losses": 77,
+              "mean": 0.5975,
+              "lo": 0.5283,
+              "hi": 0.663
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 112,
+              "draws": 12,
+              "losses": 76,
+              "mean": 0.59,
+              "lo": 0.5208,
+              "hi": 0.6558
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:10,17,28,38",
+            "label": "attack Carrion Ants+Scolding Administrator+Morbid Opportunist+Juri, Master of the Revue",
+            "random": {
+              "n": 200,
+              "wins": 119,
+              "draws": 4,
+              "losses": 77,
+              "mean": 0.605,
+              "lo": 0.5359,
+              "hi": 0.6702
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:10",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 150,
+              "wins": 67,
+              "draws": 7,
+              "losses": 76,
+              "mean": 0.47,
+              "lo": 0.3919,
+              "hi": 0.5496
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 4,
+            "token": "attack:38",
+            "label": "attack Carrion Ants",
+            "random": {
+              "n": 50,
+              "wins": 25,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.51,
+              "lo": 0.3758,
+              "hi": 0.6428
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:10,28,38",
+            "label": "attack Carrion Ants+Scolding Administrator+Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 125,
+              "draws": 6,
+              "losses": 69,
+              "mean": 0.64,
+              "lo": 0.5714,
+              "hi": 0.7033
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:10,17,38",
+            "label": "attack Carrion Ants+Scolding Administrator+Juri, Master of the Revue",
+            "random": {
+              "n": 200,
+              "wins": 116,
+              "draws": 4,
+              "losses": 80,
+              "mean": 0.59,
+              "lo": 0.5208,
+              "hi": 0.6558
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0425,
+          "regretLo": 0,
+          "regretHi": 0.1301,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5886,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          5,
+          6
+        ]
+      },
+      {
+        "d": 28,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:14",
+            "label": "attack Artisan of Kozilek",
+            "random": {
+              "n": 200,
+              "wins": 127,
+              "draws": 4,
+              "losses": 69,
+              "mean": 0.645,
+              "lo": 0.5765,
+              "hi": 0.708
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 25,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.5,
+              "lo": 0.3664,
+              "hi": 0.6336
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:14,27,28",
+            "label": "attack Artisan of Kozilek+Morbid Opportunist+Signal Pest",
+            "random": {
+              "n": 200,
+              "wins": 139,
+              "draws": 3,
+              "losses": 58,
+              "mean": 0.7025,
+              "lo": 0.6358,
+              "hi": 0.7616
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:14,28",
+            "label": "attack Artisan of Kozilek+Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 131,
+              "draws": 3,
+              "losses": 66,
+              "mean": 0.6625,
+              "lo": 0.5945,
+              "hi": 0.7244
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:14,27",
+            "label": "attack Artisan of Kozilek+Signal Pest",
+            "random": {
+              "n": 50,
+              "wins": 28,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.56,
+              "lo": 0.4231,
+              "hi": 0.6884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0575,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.58,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 33,
+        "kind": "p",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:11",
+            "label": "Unearth",
+            "random": {
+              "n": 200,
+              "wins": 126,
+              "draws": 0,
+              "losses": 74,
+              "mean": 0.63,
+              "lo": 0.5612,
+              "hi": 0.6939
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 77,
+              "draws": 1,
+              "losses": 72,
+              "mean": 0.5167,
+              "lo": 0.4373,
+              "hi": 0.5952
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:35",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 150,
+              "wins": 74,
+              "draws": 2,
+              "losses": 74,
+              "mean": 0.5,
+              "lo": 0.421,
+              "hi": 0.579
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5867,
+        "forgeOptions": [
+          0
+        ]
+      },
+      {
+        "d": 40,
+        "kind": "p",
+        "turn": 25,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:9",
+            "label": "Nahiri, Storm of Stone",
+            "random": {
+              "n": 200,
+              "wins": 163,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.815,
+              "lo": 0.7554,
+              "hi": 0.8627
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 174,
+              "draws": 1,
+              "losses": 25,
+              "mean": 0.8725,
+              "lo": 0.8192,
+              "hi": 0.9118
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:2",
+            "label": "Exorcist",
+            "random": {
+              "n": 200,
+              "wins": 175,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.8775,
+              "lo": 0.8248,
+              "hi": 0.916
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:35",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 200,
+              "wins": 172,
+              "draws": 1,
+              "losses": 27,
+              "mean": 0.8625,
+              "lo": 0.8079,
+              "hi": 0.9034
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0625,
+          "regretLo": 0.0249,
+          "regretHi": 0.13,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.895
+      },
+      {
+        "d": 45,
+        "kind": "a",
+        "turn": 27,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:14,17,19,27",
+            "label": "attack Juri, Master of the Revue+Two-Headed Giant of Foriys+Signal Pest+Artisan of Kozilek",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 40,
+              "draws": 0,
+              "losses": 10,
+              "mean": 0.8,
+              "lo": 0.6696,
+              "hi": 0.8876
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:2,14,17,19,27,28",
+            "label": "attack Juri, Master of the Revue+Two-Headed Giant of Foriys+Signal Pest+Artisan of Kozilek+Morbid Opportunist+Exorcist",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:14,19,27",
+            "label": "attack Two-Headed Giant of Foriys+Signal Pest+Artisan of Kozilek",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:14,17,27",
+            "label": "attack Juri, Master of the Revue+Signal Pest+Artisan of Kozilek",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:14,17,19",
+            "label": "attack Juri, Master of the Revue+Two-Headed Giant of Foriys+Artisan of Kozilek",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:17,19,27",
+            "label": "attack Juri, Master of the Revue+Two-Headed Giant of Foriys+Signal Pest",
+            "random": {
+              "n": 100,
+              "wins": 93,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.93,
+              "lo": 0.8625,
+              "hi": 0.9657
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 7,
+            "token": "attack:14,17,19,27,28",
+            "label": "attack Juri, Master of the Revue+Two-Headed Giant of Foriys+Signal Pest+Artisan of Kozilek+Morbid Opportunist",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.945,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          5,
+          7
+        ]
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 8,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 4,
+        "d10": 3,
+        "d15": 4,
+        "d22": 7,
+        "d28": 5,
+        "d33": 3,
+        "d40": 4,
+        "d45": 8
+      },
+      "meanOptions": 4.75,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 15,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 22,
+          "o": 3,
+          "at": 150
+        },
+        {
+          "d": 22,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 28,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 28,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 1,
+          "at": 150
+        },
+        {
+          "d": 33,
+          "o": 2,
+          "at": 150
+        },
+        {
+          "d": 45,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 6,
+          "at": 100
+        }
+      ],
+      "stoppedOptions": 10,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 6500,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 79,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2430,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 231873,
+    "gamesIdChecked": 6501,
+    "frameLogs": 13002,
+    "frameLogsFailed": 0,
+    "redactionMs": 112119,
+    "forks": 6500,
+    "forkProblems": 0,
+    "leakChecks": 8,
+    "leaks": 0,
+    "leakControlsMoved": 8,
+    "guardrails": {
+      "logs": 13000,
+      "priorityDecisions": 502821,
+      "landOffered": 36678,
+      "landTaken": 36678,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 1353,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6500,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6500,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6500,
+      "errored": 79,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 79
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 2,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 121360
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 16,
+      "units": 0,
+      "ms": 0
+    },
+    "wallMs": 16,
+    "jobs": 6
+  }
+}

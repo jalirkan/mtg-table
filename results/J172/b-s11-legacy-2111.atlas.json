@@ -1,0 +1,1940 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j170/decks/s11-legacy-2011/decks/legacy-2011-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j170/decks/s11-legacy-2011/decks/legacy-2011-00002.dck",
+    "seed": 2111,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 18,
+      "first": "B",
+      "decisionsListed": 22
+    },
+    "decisions": [
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:30",
+            "label": "Murderous Rider — Swift End",
+            "random": {
+              "n": 200,
+              "wins": 69,
+              "draws": 3,
+              "losses": 128,
+              "mean": 0.3525,
+              "lo": 0.2896,
+              "hi": 0.4209
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 47,
+              "draws": 7,
+              "losses": 96,
+              "mean": 0.3367,
+              "lo": 0.266,
+              "hi": 0.4155
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:30",
+            "label": "Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 94,
+              "draws": 7,
+              "losses": 99,
+              "mean": 0.4875,
+              "lo": 0.4191,
+              "hi": 0.5564
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:20",
+            "label": "Shallow Grave",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 1,
+              "losses": 38,
+              "mean": 0.23,
+              "lo": 0.1352,
+              "hi": 0.3633
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.135,
+          "regretLo": 0.0425,
+          "regretHi": 0.23,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.32,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:30",
+            "label": "Murderous Rider (may play)",
+            "random": {
+              "n": 200,
+              "wins": 98,
+              "draws": 4,
+              "losses": 98,
+              "mean": 0.5,
+              "lo": 0.4314,
+              "hi": 0.5686
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 1,
+              "losses": 38,
+              "mean": 0.23,
+              "lo": 0.1352,
+              "hi": 0.3633
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:31",
+            "label": "Mind Twist",
+            "random": {
+              "n": 100,
+              "wins": 33,
+              "draws": 1,
+              "losses": 66,
+              "mean": 0.335,
+              "lo": 0.2501,
+              "hi": 0.4321
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:27",
+            "label": "Bitterblossom",
+            "random": {
+              "n": 200,
+              "wins": 82,
+              "draws": 0,
+              "losses": 118,
+              "mean": 0.41,
+              "lo": 0.3442,
+              "hi": 0.4792
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:20",
+            "label": "Shallow Grave",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 1,
+              "losses": 39,
+              "mean": 0.21,
+              "lo": 0.1199,
+              "hi": 0.3414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.324,
+        "forgeOptions": [
+          0,
+          3
+        ]
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 46,
+              "draws": 3,
+              "losses": 151,
+              "mean": 0.2375,
+              "lo": 0.1838,
+              "hi": 0.3011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,30",
+            "label": "attack Evolved Sleeper+Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 56,
+              "draws": 3,
+              "losses": 141,
+              "mean": 0.2875,
+              "lo": 0.2292,
+              "hi": 0.3538
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Evolved Sleeper",
+            "random": {
+              "n": 200,
+              "wins": 57,
+              "draws": 3,
+              "losses": 140,
+              "mean": 0.2925,
+              "lo": 0.2338,
+              "hi": 0.359
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:30",
+            "label": "attack Murderous Rider",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 1,
+              "losses": 38,
+              "mean": 0.23,
+              "lo": 0.1352,
+              "hi": 0.3633
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.055,
+          "regretLo": 0,
+          "regretHi": 0.1501,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.255,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 38,
+              "draws": 0,
+              "losses": 162,
+              "mean": 0.19,
+              "lo": 0.1417,
+              "hi": 0.25
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:20",
+            "label": "Shallow Grave",
+            "random": {
+              "n": 200,
+              "wins": 30,
+              "draws": 0,
+              "losses": 170,
+              "mean": 0.15,
+              "lo": 0.1071,
+              "hi": 0.2061
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:37",
+            "label": "Hell's Caretaker",
+            "random": {
+              "n": 200,
+              "wins": 29,
+              "draws": 0,
+              "losses": 171,
+              "mean": 0.145,
+              "lo": 0.1029,
+              "hi": 0.2005
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.035,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.12
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 29,
+              "draws": 0,
+              "losses": 171,
+              "mean": 0.145,
+              "lo": 0.1029,
+              "hi": 0.2005
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,30",
+            "label": "attack Evolved Sleeper+Murderous Rider",
+            "random": {
+              "n": 200,
+              "wins": 44,
+              "draws": 0,
+              "losses": 156,
+              "mean": 0.22,
+              "lo": 0.1682,
+              "hi": 0.2824
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Evolved Sleeper",
+            "random": {
+              "n": 200,
+              "wins": 50,
+              "draws": 0,
+              "losses": 150,
+              "mean": 0.25,
+              "lo": 0.1951,
+              "hi": 0.3143
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:30",
+            "label": "attack Murderous Rider",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.105,
+          "regretLo": 0.04,
+          "regretHi": 0.1778,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 17,
+        "screened": false,
+        "screenMean": 0.09,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:37",
+            "label": "Hell's Caretaker",
+            "random": {
+              "n": 200,
+              "wins": 32,
+              "draws": 0,
+              "losses": 168,
+              "mean": 0.16,
+              "lo": 0.1157,
+              "hi": 0.2171
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 37,
+              "draws": 0,
+              "losses": 163,
+              "mean": 0.185,
+              "lo": 0.1373,
+              "hi": 0.2446
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:31",
+            "label": "Mind Twist",
+            "random": {
+              "n": 200,
+              "wins": 43,
+              "draws": 1,
+              "losses": 156,
+              "mean": 0.2175,
+              "lo": 0.1659,
+              "hi": 0.2797
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:20",
+            "label": "Shallow Grave",
+            "random": {
+              "n": 200,
+              "wins": 43,
+              "draws": 0,
+              "losses": 157,
+              "mean": 0.215,
+              "lo": 0.1637,
+              "hi": 0.277
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0575,
+          "regretLo": 0.01,
+          "regretHi": 0.1375,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.22
+      },
+      {
+        "d": 14,
+        "kind": "b",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:3>85",
+            "label": "block Evolved Sleeper>Human Token",
+            "random": {
+              "n": 200,
+              "wins": 33,
+              "draws": 0,
+              "losses": 167,
+              "mean": 0.165,
+              "lo": 0.12,
+              "hi": 0.2227
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 200,
+              "wins": 29,
+              "draws": 0,
+              "losses": 171,
+              "mean": 0.145,
+              "lo": 0.1029,
+              "hi": 0.2005
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:83>47,3>85",
+            "label": "block Evolved Sleeper>Human Token, Faerie Rogue Token>Consecrated Sphinx",
+            "random": {
+              "n": 200,
+              "wins": 41,
+              "draws": 0,
+              "losses": 159,
+              "mean": 0.205,
+              "lo": 0.1549,
+              "hi": 0.2663
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:3>85,30>85",
+            "label": "block Evolved Sleeper>Human Token, Murderous Rider>Human Token",
+            "random": {
+              "n": 200,
+              "wins": 40,
+              "draws": 0,
+              "losses": 160,
+              "mean": 0.2,
+              "lo": 0.1505,
+              "hi": 0.2609
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:3>85,83>85",
+            "label": "block Evolved Sleeper>Human Token, Faerie Rogue Token>Human Token",
+            "random": {
+              "n": 200,
+              "wins": 33,
+              "draws": 0,
+              "losses": 167,
+              "mean": 0.165,
+              "lo": 0.12,
+              "hi": 0.2227
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:3>85,37>85",
+            "label": "block Evolved Sleeper>Human Token, Hell's Caretaker>Human Token",
+            "random": {
+              "n": 200,
+              "wins": 38,
+              "draws": 0,
+              "losses": 162,
+              "mean": 0.19,
+              "lo": 0.1417,
+              "hi": 0.25
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.04,
+          "regretLo": 0.005,
+          "regretHi": 0.1001,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "replaces",
+        "replaces": 19,
+        "screened": false,
+        "screenMean": 0.12
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:83",
+            "label": "attack Faerie Rogue Token",
+            "random": {
+              "n": 200,
+              "wins": 6,
+              "draws": 0,
+              "losses": 194,
+              "mean": 0.03,
+              "lo": 0.0138,
+              "hi": 0.0639
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 200,
+              "wins": 12,
+              "draws": 0,
+              "losses": 188,
+              "mean": 0.06,
+              "lo": 0.0347,
+              "hi": 0.1019
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3,37,83",
+            "label": "attack Faerie Rogue Token+Evolved Sleeper+Hell's Caretaker",
+            "random": {
+              "n": 200,
+              "wins": 10,
+              "draws": 0,
+              "losses": 190,
+              "mean": 0.05,
+              "lo": 0.0274,
+              "hi": 0.0896
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,83",
+            "label": "attack Faerie Rogue Token+Evolved Sleeper",
+            "random": {
+              "n": 200,
+              "wins": 9,
+              "draws": 0,
+              "losses": 191,
+              "mean": 0.045,
+              "lo": 0.0239,
+              "hi": 0.0833
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:37,83",
+            "label": "attack Faerie Rogue Token+Hell's Caretaker",
+            "random": {
+              "n": 100,
+              "wins": 2,
+              "draws": 0,
+              "losses": 98,
+              "mean": 0.02,
+              "lo": 0.0055,
+              "hi": 0.07
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.03,
+          "regretLo": 0,
+          "regretHi": 0.075,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.048,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:31",
+            "label": "Mind Twist",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:20",
+            "label": "Shallow Grave",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 18,
+        "screened": true,
+        "screenMean": 0.0133
+      },
+      {
+        "d": 18,
+        "kind": "b",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:87>47,37>78,3>89",
+            "label": "block Hell's Caretaker>Adeline, Resplendent Cathar, Faerie Rogue Token>Consecrated Sphinx, Evolved Sleeper>Human Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:87>47,3>89",
+            "label": "block Faerie Rogue Token>Consecrated Sphinx, Evolved Sleeper>Human Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:37>78,3>89",
+            "label": "block Hell's Caretaker>Adeline, Resplendent Cathar, Evolved Sleeper>Human Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:87>47,37>78",
+            "label": "block Hell's Caretaker>Adeline, Resplendent Cathar, Faerie Rogue Token>Consecrated Sphinx",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 19,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:37",
+            "label": "attack Hell's Caretaker",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3,37,83",
+            "label": "attack Hell's Caretaker+Evolved Sleeper+Faerie Rogue Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,37",
+            "label": "attack Hell's Caretaker+Evolved Sleeper",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:37,83",
+            "label": "attack Hell's Caretaker+Faerie Rogue Token",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": true,
+        "screenMean": 0.016
+      },
+      {
+        "d": 21,
+        "kind": "b",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:93>41,3>78,83>95",
+            "label": "block Faerie Rogue Token>Figure of Destiny, Evolved Sleeper>Adeline, Resplendent Cathar, Faerie Rogue Token>Human Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:3>78,83>95",
+            "label": "block Evolved Sleeper>Adeline, Resplendent Cathar, Faerie Rogue Token>Human Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:93>41,83>95",
+            "label": "block Faerie Rogue Token>Figure of Destiny, Faerie Rogue Token>Human Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:93>41,3>78",
+            "label": "block Faerie Rogue Token>Figure of Destiny, Evolved Sleeper>Adeline, Resplendent Cathar",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 12,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d3": 4,
+        "d7": 5,
+        "d9": 4,
+        "d11": 3,
+        "d13": 4,
+        "d16": 5,
+        "d18": 5,
+        "d21": 5,
+        "d19": 5,
+        "d17": 3,
+        "d14": 6,
+        "d12": 4
+      },
+      "meanOptions": 4.42,
+      "screened": [
+        {
+          "d": 18,
+          "mean": 0,
+          "replacedBy": 17
+        },
+        {
+          "d": 21,
+          "mean": 0,
+          "replacedBy": 19
+        },
+        {
+          "d": 19,
+          "mean": 0.016,
+          "replacedBy": 14
+        },
+        {
+          "d": 17,
+          "mean": 0.0133,
+          "replacedBy": 12
+        }
+      ],
+      "stopped": [
+        {
+          "d": 3,
+          "o": 1,
+          "at": 150
+        },
+        {
+          "d": 3,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 7,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 9,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 16,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 8,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 6450,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 36,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2892,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 178620,
+    "gamesIdChecked": 6451,
+    "frameLogs": 12902,
+    "frameLogsFailed": 0,
+    "redactionMs": 72735,
+    "forks": 6450,
+    "forkProblems": 0,
+    "leakChecks": 12,
+    "leaks": 0,
+    "leakControlsMoved": 12,
+    "guardrails": {
+      "logs": 12900,
+      "priorityDecisions": 414147,
+      "landOffered": 40036,
+      "landTaken": 40036,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 1806,
+      "refusedCast": 91,
+      "noRepeatRefused": 60,
+      "xDrawn": 6215,
+      "zeroXLeftOut": 76935,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6450,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6450,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6450,
+      "errored": 36,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 36
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 102656
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5608,
+      "units": 68,
+      "branchGames": 6450,
+      "ms": 4368591,
+      "workers": 6
+    },
+    "wallMs": 4374199,
+    "jobs": 6
+  }
+}

@@ -1,0 +1,5 @@
+b-s02-peasant-2102 0
+b-s04-powered-2104 0
+b-s08-powered-2108 0
+b-s09-pauper-2109 0
+b-s10-peasant-2110 0
