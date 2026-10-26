@@ -1204,3 +1204,12 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   checker; s06 and s10 quarantined as `.j168-stale` and re-branched at the same seeds; lost casts counted from
   the frames with `lostCastOptions == 0` on the re-branched spines; s05 kept as J168's, marked biased, out of
   the headline sizing until D486; ~2.75 h at 6 workers.
+- 21:50 EDT: **D486 built and gated** (lane commit 818a9de4 on D485's head; review running; merge after J169):
+  the random seat can now target cards (the three `getAllCandidates(sa, true)` call sites → `false`, `canTarget`
+  and visibility kept); it draws a modal spell's modes and legal targets itself, a cast-time `chooseModeForAbility`
+  hook fills modes a cast arrives without, uncastable modal spells leave the listings, and the fork keeps a forced
+  modal option's targets. What was really stranding s05's Suplex: "choose one" spells with NO legal mode at cast
+  time (Forge picks the modes after the card is on the stack and stops silently — 991 lost casts, 453 printed
+  lines), and the atlas offering them as options (Abrade and Suplex at d0 stranded 25/25 and still scored above
+  pass). s05 reproduction: stranded casts 136 → 0; 11.9% of listings now carry a card-targeting option the old
+  seat could never pick. A policy change: labels and reads across D486 are never pooled; decision indices shift.
