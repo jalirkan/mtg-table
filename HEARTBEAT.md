@@ -1220,3 +1220,12 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   population's final state: 13 spines, 97 labels / 27 confident, s05 marked biased). The read is being written
   (results/J169/summary.md). D486 (#214) merged locally on 16c21445; its gate is running; J170 (all 13 spines
   fresh on the D486 seat, a new population, `lab-j170`) is drafted and is posted when the gate is green.
+- 23:50 EDT: **D486 merged** (#214, main 24038bcd; the merged tree's gate check-all OK, 59 jobs, 513.0 s). The
+  pilot's smoke run by hand on the new main: 2 decisions branched in full, 2 labels, checks clean. **J169's read
+  posted** (results/J169/summary.md): re-branching s06 and s10 under D485 changed NONE of the 97 labels or 27
+  confident (J168's random-drop bias test was itself biased); lost casts on those two 0 (744 rows re-targeted);
+  the pre-D486 population's final sizing read 32.0 confident per night without s05 [20.9–46.9]; lost casts across
+  the 13: 1,652, all but 38 on s05. Recommendation: pool nothing across D486; keep v1–v3 as a frozen old-seat set.
+  **J170 posted** (`drafts/J170-atlas-4b-card-targets.md`): rung 4b, all 13 spines fresh on D486's seat in
+  `lab-j170` (empty folder made by hand), the same deck draws and seeds, the lost-cast scan on every spine with
+  `lostCastOptions == 0`, the D486 counters; ~10.5 h at 6 workers (9.5–12).
