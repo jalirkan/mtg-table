@@ -1,8 +1,8 @@
-running
+done
 runner: forgecoach-runner e9f7ed0c
 started: 2026-10-25T20:54:49-04:00
-phase: commands 5/5
+finished: 2026-10-25T23:35:41-04:00
 mtg-table: e9f7ed0
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.56), budget 21.4 GB)
 peak_worker_rss_gb: 1.56
-blocks_done: run1 exit 0 at 2026-10-25T21:16:43-04:00, run2 exit 0 at 2026-10-25T22:36:19-04:00, run3 exit 0 at 2026-10-25T23:31:40-04:00, run4 exit 0 at 2026-10-25T23:35:16-04:00
+blocks_done: run1 exit 0 at 2026-10-25T21:16:43-04:00, run2 exit 0 at 2026-10-25T22:36:19-04:00, run3 exit 0 at 2026-10-25T23:31:40-04:00, run4 exit 0 at 2026-10-25T23:35:16-04:00, run5 exit 0 at 2026-10-25T23:35:40-04:00

@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-25T23:35:16-04:00
+- time: 2026-10-25T23:35:41-04:00
 - runner: e9f7ed0c, up since 2026-10-25T20:53:45-04:00
-- running: J169 commands 5/5, 72075/71525 lines, 6365.6/h, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5; memory 6.5/30.5 GB, swap 4241 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 3.48; memory 6.5/30.5 GB, swap 4241 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J168 failed at 2026-10-25T19:51:23-04:00: branches 71525 · atlas.spinesDone 13 · atlas.branchedInFull 97 · atlas.screened 39 · atlas.stoppedOptions 135 · atlas.labels 97 · atlas.confident 27 · atlas.confidentPer7Worker10hNight 31.1 · atlas.timeoutShare 0 · atlas.identityOptions 829 · atlas.chooseSourceGuardRows 537 · atlas.chooseSourceGuard 6187 · atlas.effectSourceNullBranches 0 · atlas.exileLinksLostBranches 2000 · atlas.branchRestarted 0 · atlas.branchCapped 2386 · atlas.problems 3
+- last finished: J169 done at 2026-10-25T23:35:41-04:00: branches 72075 · atlas.spinesDone 13 · atlas.labels 97 · atlas.confident 27 · atlas.confidentPer7Worker10hNight 30.7 · atlas.confidentPer7Unbiased 32 · atlas.lostCastsD485 0 · atlas.lostCastOptionsD485 0 · atlas.lostCastOptions 5 · atlas.retargetedRows 744 · atlas.retargeted 756 · atlas.recheckJ169Ok 3 · atlas.timeoutShare 0 · atlas.chooseSourceGuardRows 537 · atlas.problems 0
 
 ## Messages
+
+- FOLLOW-UP READY [J169@2026-10-25T23:35:41-04:00] (the runner, for the cloud session): J169 is done; write and post the template morning-read. It decides: nothing by itself. Rung 4a's night, mended: J168 (2026-10-25) finished the 13 spines but failed `atlas.problems == 0` on s06, s10 and s13 (the redaction checker flagged the viewer's own dead token in Forge's stale target lists), and its read found the random seat losing spells it had paid for -- s10 8.7% of its branches, s06 2.7%, s05 18% (Suplex; J169's frame scan adds Abrade) -- with 6 of the night's 27 confident labels doubtful. D485 mends the stale-target loss (s06, s10) and the checker; it does not mend s05's modal spells (D486, a later night). J169 re-checks s06, s10 and s13 under D485's checker, re-branches s06 and s10 on D485's tree, and measures the night again on 13 spines with s05 marked: labels and confident labels per spine and night, the lost casts per spine from the frames, and D485's counter. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J164@2026-10-24T21:23:06-04:00] (the runner, for the cloud session): J164 is done; write and post the template morning-read. It decides: nothing by itself. D479 found that every copy the atlas forked held a Monarch with no triggers (Forge's copier drops an effect card's triggers), so at J162 pauper5 464's d17-d31 the monarch at the fork never drew and could never lose the crown by combat damage; D479 says those maps and labels are not pooled across the fix "unless recomputed". This job recomputes them: the same plan, baseline, decisions, seeds and branch counts on the fixed copier, and reads how far the bias had moved the values, the labels, the best options and the one confident label in the range (d29). Ledger: LEDGER.md. Delete this line once posted.
 

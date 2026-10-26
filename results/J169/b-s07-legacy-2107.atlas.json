@@ -1,0 +1,1782 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s07-legacy-2007/decks/legacy-2007-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s07-legacy-2007/decks/legacy-2007-00002.dck",
+    "seed": 2107,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 40,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 14,
+      "first": "B",
+      "decisionsListed": 16
+    },
+    "decisions": [
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:10",
+            "label": "Ydwen Efreet",
+            "random": {
+              "n": 200,
+              "wins": 174,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.87,
+              "lo": 0.8163,
+              "hi": 0.9097
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.775,
+              "lo": 0.625,
+              "hi": 0.8768
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 119,
+              "draws": 0,
+              "losses": 31,
+              "mean": 0.7933,
+              "lo": 0.7216,
+              "hi": 0.8504
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:3",
+            "label": "Sedge Troll",
+            "random": {
+              "n": 200,
+              "wins": 171,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.855,
+              "lo": 0.7995,
+              "hi": 0.8971
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.775,
+              "lo": 0.625,
+              "hi": 0.8768
+            }
+          },
+          {
+            "o": 3,
+            "token": "activate:17",
+            "label": "Cori-Steel Cutter: Equip {1}{R} ({1}{R}: Attach to target cr",
+            "random": {
+              "n": 200,
+              "wins": 165,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.825,
+              "lo": 0.7664,
+              "hi": 0.8714
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:22",
+            "label": "Sweltering Suns",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.6,
+              "lo": 0.4618,
+              "hi": 0.7239
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "cast:39",
+            "label": "Disrupting Scepter",
+            "random": {
+              "n": 100,
+              "wins": 65,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.65,
+              "lo": 0.5525,
+              "hi": 0.7364
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.035,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.125,
+          "regretLo": 0.025,
+          "regretHi": 0.25,
+          "best": 3
+        },
+        "rho": -0.866,
+        "rhoLo": -1,
+        "rhoHi": 0.866,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7533,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Sedge Troll",
+            "random": {
+              "n": 200,
+              "wins": 178,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.89,
+              "lo": 0.8391,
+              "hi": 0.9262
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.775,
+              "lo": 0.625,
+              "hi": 0.8768
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 173,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.865,
+              "lo": 0.8107,
+              "hi": 0.9055
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.775,
+              "lo": 0.625,
+              "hi": 0.8768
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:22",
+            "label": "Sweltering Suns",
+            "random": {
+              "n": 100,
+              "wins": 74,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.74,
+              "lo": 0.6463,
+              "hi": 0.816
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "activate:17",
+            "label": "Cori-Steel Cutter: Equip {1}{R} ({1}{R}: Attach to target cr",
+            "random": {
+              "n": 200,
+              "wins": 170,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.85,
+              "lo": 0.7939,
+              "hi": 0.8929
+            },
+            "forge": {
+              "n": 40,
+              "wins": 29,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.725,
+              "lo": 0.5717,
+              "hi": 0.8389
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:39",
+            "label": "Disrupting Scepter",
+            "random": {
+              "n": 50,
+              "wins": 35,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.7,
+              "lo": 0.5625,
+              "hi": 0.809
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.04,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "rho": 0.866,
+        "rhoLo": -0.866,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.768,
+        "forgeOptions": [
+          0,
+          1,
+          3
+        ]
+      },
+      {
+        "d": 7,
+        "kind": "a",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:10",
+            "label": "attack Ydwen Efreet",
+            "random": {
+              "n": 200,
+              "wins": 176,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.88,
+              "lo": 0.8277,
+              "hi": 0.918
+            },
+            "forge": {
+              "n": 40,
+              "wins": 31,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.775,
+              "lo": 0.625,
+              "hi": 0.8768
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.84,
+              "lo": 0.773,
+              "hi": 0.8901
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "attack:10,12",
+            "label": "attack Ydwen Efreet+Fervent Champion",
+            "random": {
+              "n": 200,
+              "wins": 184,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.92,
+              "lo": 0.874,
+              "hi": 0.9502
+            },
+            "forge": {
+              "n": 40,
+              "wins": 32,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.8,
+              "lo": 0.6524,
+              "hi": 0.895
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.04,
+          "regretLo": 0.005,
+          "regretHi": 0.075,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 2
+        },
+        "rho": 1,
+        "rhoLo": 1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 15,
+        "screened": false,
+        "screenMean": 0.92,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:4",
+            "label": "Stadium Headliner",
+            "random": {
+              "n": 200,
+              "wins": 180,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.9,
+              "lo": 0.8506,
+              "hi": 0.9343
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "activate:17",
+            "label": "Cori-Steel Cutter: Equip {1}{R} ({1}{R}: Attach to target cr",
+            "random": {
+              "n": 200,
+              "wins": 190,
+              "draws": 0,
+              "losses": 10,
+              "mean": 0.95,
+              "lo": 0.9104,
+              "hi": 0.9726
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:22",
+            "label": "Sweltering Suns",
+            "random": {
+              "n": 50,
+              "wins": 37,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.74,
+              "lo": 0.6045,
+              "hi": 0.8413
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:39",
+            "label": "Disrupting Scepter",
+            "random": {
+              "n": 100,
+              "wins": 83,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.83,
+              "lo": 0.7445,
+              "hi": 0.8911
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.848,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,12",
+            "label": "attack Sedge Troll+Fervent Champion",
+            "random": {
+              "n": 200,
+              "wins": 191,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.955,
+              "lo": 0.9167,
+              "hi": 0.9761
+            },
+            "forge": {
+              "n": 40,
+              "wins": 32,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.8,
+              "lo": 0.6524,
+              "hi": 0.895
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:12",
+            "label": "attack Fervent Champion",
+            "random": {
+              "n": 200,
+              "wins": 182,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.91,
+              "lo": 0.8622,
+              "hi": 0.9423
+            },
+            "forge": {
+              "n": 40,
+              "wins": 23,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.575,
+              "lo": 0.422,
+              "hi": 0.7149
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3",
+            "label": "attack Sedge Troll",
+            "random": {
+              "n": 200,
+              "wins": 187,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.935,
+              "lo": 0.892,
+              "hi": 0.9616
+            },
+            "forge": {
+              "n": 40,
+              "wins": 28,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.7,
+              "lo": 0.5457,
+              "hi": 0.8193
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0158,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.025,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": 0.5,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 184,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.92,
+              "lo": 0.874,
+              "hi": 0.9502
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Sweltering Suns",
+            "random": {
+              "n": 50,
+              "wins": 28,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.56,
+              "lo": 0.4231,
+              "hi": 0.6884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Disrupting Scepter",
+            "random": {
+              "n": 100,
+              "wins": 86,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.86,
+              "lo": 0.7786,
+              "hi": 0.9147
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:8",
+            "label": "Manabarbs",
+            "random": {
+              "n": 200,
+              "wins": 188,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.94,
+              "lo": 0.8981,
+              "hi": 0.9653
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.85,
+        "forgeOptions": [
+          0,
+          3
+        ]
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,4,12",
+            "label": "attack Sedge Troll+Stadium Headliner+Fervent Champion",
+            "random": {
+              "n": 200,
+              "wins": 198,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.99,
+              "lo": 0.9643,
+              "hi": 0.9973
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.82,
+              "lo": 0.692,
+              "hi": 0.9023
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:4,12",
+            "label": "attack Stadium Headliner+Fervent Champion",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:3,12",
+            "label": "attack Sedge Troll+Fervent Champion",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:3,4",
+            "label": "attack Sedge Troll+Stadium Headliner",
+            "random": {
+              "n": 200,
+              "wins": 195,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.975,
+              "lo": 0.9428,
+              "hi": 0.9893
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.005,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.92,
+        "forgeOptions": [
+          0,
+          4
+        ]
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:8",
+            "label": "Manabarbs",
+            "random": {
+              "n": 200,
+              "wins": 200,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9812,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 146,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9733,
+              "lo": 0.9334,
+              "hi": 0.9896
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Disrupting Scepter",
+            "random": {
+              "n": 100,
+              "wins": 95,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.95,
+              "lo": 0.8882,
+              "hi": 0.9785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:22",
+            "label": "Sweltering Suns",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 14,
+        "screened": false,
+        "screenMean": 0.95,
+        "forgeOptions": [
+          0
+        ]
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Sweltering Suns",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Disrupting Scepter",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,4,12",
+            "label": "attack Sedge Troll+Stadium Headliner+Fervent Champion",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:4,12",
+            "label": "attack Stadium Headliner+Fervent Champion",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,12",
+            "label": "attack Sedge Troll+Fervent Champion",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:3,4",
+            "label": "attack Sedge Troll+Stadium Headliner",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      }
+    ],
+    "agreement": {
+      "decisions": 8,
+      "meanRho": 0.6,
+      "meanRhoInterval": [
+        -0.1464,
+        1
+      ],
+      "sameBest": 5,
+      "sameBestInterval": [
+        0.3057,
+        0.8632
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 10,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d4": 6,
+        "d6": 5,
+        "d8": 5,
+        "d10": 4,
+        "d11": 4,
+        "d12": 5,
+        "d14": 3,
+        "d15": 5,
+        "d13": 4,
+        "d7": 3
+      },
+      "meanOptions": 4.4,
+      "screened": [
+        {
+          "d": 14,
+          "mean": 1,
+          "replacedBy": 13
+        },
+        {
+          "d": 15,
+          "mean": 1,
+          "replacedBy": 7
+        }
+      ],
+      "stopped": [
+        {
+          "d": 4,
+          "o": 1,
+          "at": 150
+        },
+        {
+          "d": 4,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 4,
+          "o": 5,
+          "at": 100
+        },
+        {
+          "d": 6,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 6,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 8,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 8,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 8,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 10,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 11,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 11,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 12,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 13,
+          "o": 1,
+          "at": 150
+        },
+        {
+          "d": 13,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 13,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 1,
+          "at": 150
+        }
+      ],
+      "stoppedOptions": 18,
+      "labels": 8
+    },
+    "disagreeMost": [
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 6,
+        "rho": -0.866,
+        "rhoInterval": [
+          -1,
+          0.866
+        ],
+        "sameBest": false,
+        "bestRandom": 0,
+        "bestForge": 3
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 8,
+        "rho": 0.866,
+        "rhoInterval": [
+          -0.866,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 0,
+        "bestForge": 0
+      },
+      {
+        "d": 7,
+        "kind": "a",
+        "turn": 8,
+        "rho": 1,
+        "rhoInterval": [
+          1,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 2,
+        "bestForge": 2
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 10,
+        "rho": 1,
+        "rhoInterval": [
+          0.5,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 0,
+        "bestForge": 0
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 12,
+        "rho": 1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 0,
+        "bestForge": 0
+      }
+    ],
+    "branchGames": 5970,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 0,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 1133,
+      "forge": 573
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 93370,
+    "gamesIdChecked": 5971,
+    "frameLogs": 11942,
+    "frameLogsFailed": 0,
+    "redactionMs": 39518,
+    "forks": 5970,
+    "forkProblems": 0,
+    "leakChecks": 18,
+    "leaks": 0,
+    "leakControlsMoved": 18,
+    "guardrails": {
+      "logs": 10500,
+      "priorityDecisions": 211007,
+      "landOffered": 26694,
+      "landTaken": 26694,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 253,
+      "refusedCast": 3,
+      "noRepeatRefused": 0,
+      "xDrawn": 1197,
+      "zeroXLeftOut": 66741,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5970,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5970,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5970,
+      "errored": 0,
+      "threshold": 0.25,
+      "byError": [],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 2,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 60063
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4174,
+      "units": 82,
+      "branchGames": 5970,
+      "ms": 1275551,
+      "workers": 6
+    },
+    "wallMs": 1279725,
+    "jobs": 6
+  }
+}

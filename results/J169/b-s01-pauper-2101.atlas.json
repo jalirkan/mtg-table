@@ -1,0 +1,1468 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s01-pauper-2001/decks/pauper-2001-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s01-pauper-2001/decks/pauper-2001-00002.dck",
+    "seed": 2101,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 40,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 32,
+      "first": "B",
+      "decisionsListed": 23
+    },
+    "decisions": [
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:6",
+            "label": "Wrenn's Resolve",
+            "random": {
+              "n": 200,
+              "wins": 85,
+              "draws": 56,
+              "losses": 59,
+              "mean": 0.565,
+              "lo": 0.4957,
+              "hi": 0.6318
+            },
+            "forge": {
+              "n": 40,
+              "wins": 17,
+              "draws": 1,
+              "losses": 22,
+              "mean": 0.4375,
+              "lo": 0.296,
+              "hi": 0.5899
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 86,
+              "draws": 62,
+              "losses": 52,
+              "mean": 0.585,
+              "lo": 0.5157,
+              "hi": 0.6511
+            },
+            "forge": {
+              "n": 40,
+              "wins": 19,
+              "draws": 2,
+              "losses": 19,
+              "mean": 0.5,
+              "lo": 0.352,
+              "hi": 0.648
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Mintstrosity",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 9,
+              "losses": 19,
+              "mean": 0.53,
+              "lo": 0.3945,
+              "hi": 0.6612
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.1076,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.0625,
+          "regretLo": 0,
+          "regretHi": 0.2,
+          "best": 1
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.64,
+        "forgeOptions": [
+          0,
+          1
+        ]
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 118,
+              "draws": 32,
+              "losses": 50,
+              "mean": 0.67,
+              "lo": 0.6022,
+              "hi": 0.7314
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Flayer Husk",
+            "random": {
+              "n": 200,
+              "wins": 118,
+              "draws": 35,
+              "losses": 47,
+              "mean": 0.6775,
+              "lo": 0.6099,
+              "hi": 0.7384
+            },
+            "forge": {
+              "n": 40,
+              "wins": 23,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.575,
+              "lo": 0.422,
+              "hi": 0.7149
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Mindstab Thrull",
+            "random": {
+              "n": 200,
+              "wins": 125,
+              "draws": 32,
+              "losses": 43,
+              "mean": 0.705,
+              "lo": 0.6384,
+              "hi": 0.7639
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 2,
+              "losses": 14,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Mindstab Thrull",
+            "random": {
+              "n": 200,
+              "wins": 125,
+              "draws": 32,
+              "losses": 43,
+              "mean": 0.705,
+              "lo": 0.6384,
+              "hi": 0.7639
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 2,
+              "losses": 14,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.035,
+          "regretLo": 0,
+          "regretHi": 0.1101,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.125,
+          "best": 0
+        },
+        "rho": -0.3333,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.65
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Mindstab Thrull",
+            "random": {
+              "n": 200,
+              "wins": 114,
+              "draws": 39,
+              "losses": 47,
+              "mean": 0.6675,
+              "lo": 0.5996,
+              "hi": 0.7291
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 3,
+              "losses": 12,
+              "mean": 0.6625,
+              "lo": 0.5076,
+              "hi": 0.789
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 80,
+              "draws": 33,
+              "losses": 37,
+              "mean": 0.6433,
+              "lo": 0.564,
+              "hi": 0.7155
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Flayer Husk",
+            "random": {
+              "n": 200,
+              "wins": 131,
+              "draws": 26,
+              "losses": 43,
+              "mean": 0.72,
+              "lo": 0.6541,
+              "hi": 0.7776
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Mindstab Thrull",
+            "random": {
+              "n": 200,
+              "wins": 114,
+              "draws": 39,
+              "losses": 47,
+              "mean": 0.6675,
+              "lo": 0.5996,
+              "hi": 0.7291
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 3,
+              "losses": 12,
+              "mean": 0.6625,
+              "lo": 0.5076,
+              "hi": 0.789
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:29",
+            "label": "Stone Rain",
+            "random": {
+              "n": 200,
+              "wins": 126,
+              "draws": 35,
+              "losses": 39,
+              "mean": 0.7175,
+              "lo": 0.6515,
+              "hi": 0.7753
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0525,
+          "regretLo": 0.0025,
+          "regretHi": 0.1325,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.68,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Pyrotechnics",
+            "random": {
+              "n": 200,
+              "wins": 50,
+              "draws": 46,
+              "losses": 104,
+              "mean": 0.365,
+              "lo": 0.3014,
+              "hi": 0.4337
+            },
+            "forge": {
+              "n": 40,
+              "wins": 11,
+              "draws": 1,
+              "losses": 28,
+              "mean": 0.2875,
+              "lo": 0.1709,
+              "hi": 0.4414
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 62,
+              "draws": 32,
+              "losses": 106,
+              "mean": 0.39,
+              "lo": 0.3251,
+              "hi": 0.4591
+            },
+            "forge": {
+              "n": 40,
+              "wins": 11,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.275,
+              "lo": 0.1611,
+              "hi": 0.4283
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:2",
+            "label": "Path to the World Tree",
+            "random": {
+              "n": 200,
+              "wins": 59,
+              "draws": 47,
+              "losses": 94,
+              "mean": 0.4125,
+              "lo": 0.3465,
+              "hi": 0.4817
+            },
+            "forge": {
+              "n": 40,
+              "wins": 23,
+              "draws": 1,
+              "losses": 16,
+              "mean": 0.5875,
+              "lo": 0.4339,
+              "hi": 0.7258
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:17",
+            "label": "Ashnod's Altar",
+            "random": {
+              "n": 200,
+              "wins": 64,
+              "draws": 38,
+              "losses": 98,
+              "mean": 0.415,
+              "lo": 0.3489,
+              "hi": 0.4843
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.1325,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.3375,
+          "regretLo": 0.2125,
+          "regretHi": 0.5125,
+          "best": 3
+        },
+        "rho": 0.8,
+        "rhoLo": -0.5025,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.425
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:17",
+            "label": "Ashnod's Altar",
+            "random": {
+              "n": 200,
+              "wins": 53,
+              "draws": 38,
+              "losses": 109,
+              "mean": 0.36,
+              "lo": 0.2967,
+              "hi": 0.4286
+            },
+            "forge": {
+              "n": 40,
+              "wins": 13,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.325,
+              "lo": 0.2008,
+              "hi": 0.4798
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 20,
+              "draws": 21,
+              "losses": 59,
+              "mean": 0.305,
+              "lo": 0.2234,
+              "hi": 0.4011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:2",
+            "label": "Path to the World Tree",
+            "random": {
+              "n": 200,
+              "wins": 53,
+              "draws": 38,
+              "losses": 109,
+              "mean": 0.36,
+              "lo": 0.2967,
+              "hi": 0.4286
+            },
+            "forge": {
+              "n": 40,
+              "wins": 14,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.35,
+              "lo": 0.2213,
+              "hi": 0.5049
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0675,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.175,
+          "best": 2
+        },
+        "rho": null,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3267,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:16",
+            "label": "Faerie Guidemother",
+            "random": {
+              "n": 200,
+              "wins": 37,
+              "draws": 86,
+              "losses": 77,
+              "mean": 0.4,
+              "lo": 0.3346,
+              "hi": 0.4692
+            },
+            "forge": {
+              "n": 40,
+              "wins": 33,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.825,
+              "lo": 0.6805,
+              "hi": 0.9125
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 34,
+              "draws": 89,
+              "losses": 77,
+              "mean": 0.3925,
+              "lo": 0.3275,
+              "hi": 0.4616
+            },
+            "forge": {
+              "n": 40,
+              "wins": 28,
+              "draws": 1,
+              "losses": 11,
+              "mean": 0.7125,
+              "lo": 0.5586,
+              "hi": 0.8291
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Regrowth",
+            "random": {
+              "n": 200,
+              "wins": 50,
+              "draws": 71,
+              "losses": 79,
+              "mean": 0.4275,
+              "lo": 0.3609,
+              "hi": 0.4968
+            },
+            "forge": {
+              "n": 40,
+              "wins": 32,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.8,
+              "lo": 0.6524,
+              "hi": 0.895
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0275,
+          "regretLo": 0,
+          "regretHi": 0.085,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.025,
+          "best": 0
+        },
+        "rho": 0.5,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3667
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Regrowth",
+            "random": {
+              "n": 200,
+              "wins": 56,
+              "draws": 72,
+              "losses": 72,
+              "mean": 0.46,
+              "lo": 0.3923,
+              "hi": 0.5292
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 14,
+              "draws": 48,
+              "losses": 38,
+              "mean": 0.38,
+              "lo": 0.291,
+              "hi": 0.4779
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "activate:18",
+            "label": "Flayer Husk: Equip {2} ({2}: Attach to target creature you c",
+            "random": {
+              "n": 200,
+              "wins": 49,
+              "draws": 77,
+              "losses": 74,
+              "mean": 0.4375,
+              "lo": 0.3706,
+              "hi": 0.5068
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0375,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3733,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 16,
+        "kind": "p",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:26",
+            "label": "Troll of Khazad-dûm",
+            "random": {
+              "n": 200,
+              "wins": 121,
+              "draws": 27,
+              "losses": 52,
+              "mean": 0.6725,
+              "lo": 0.6047,
+              "hi": 0.7338
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 26,
+              "losses": 15,
+              "mean": 0.44,
+              "lo": 0.3116,
+              "hi": 0.5769
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "activate:18",
+            "label": "Flayer Husk: Equip {2} ({2}: Attach to target creature you c",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 22,
+              "losses": 15,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5867,
+        "forgeOptions": [
+          0
+        ]
+      }
+    ],
+    "agreement": {
+      "decisions": 8,
+      "meanRho": 0.1933,
+      "meanRhoInterval": [
+        -0.4667,
+        0.8
+      ],
+      "sameBest": 4,
+      "sameBestInterval": [
+        0.2152,
+        0.7848
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 8,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d3": 3,
+        "d6": 4,
+        "d7": 5,
+        "d9": 4,
+        "d11": 3,
+        "d14": 3,
+        "d15": 3,
+        "d16": 3
+      },
+      "meanOptions": 3.5,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 3,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 1,
+          "at": 150
+        },
+        {
+          "d": 11,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 15,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 16,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 16,
+          "o": 2,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 6,
+      "labels": 8
+    },
+    "disagreeMost": [
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 10,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 10,
+        "rho": -0.3333,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 28,
+        "rho": 0.5,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 14,
+        "rho": 0.8,
+        "rhoInterval": [
+          -0.5025,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 3,
+        "bestForge": 3
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 8,
+        "rho": 1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 1,
+        "bestForge": 1
+      }
+    ],
+    "branchGames": 5780,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 1201,
+    "cappedForge": 16,
+    "meanBranchMs": {
+      "random": 2807,
+      "forge": 1433
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 213428,
+    "gamesIdChecked": 5781,
+    "frameLogs": 11562,
+    "frameLogsFailed": 0,
+    "redactionMs": 112149,
+    "forks": 5780,
+    "forkProblems": 0,
+    "leakChecks": 16,
+    "leaks": 0,
+    "leakControlsMoved": 16,
+    "guardrails": {
+      "logs": 9800,
+      "priorityDecisions": 565964,
+      "landOffered": 44710,
+      "landTaken": 44710,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 0,
+      "refusedCast": 82,
+      "noRepeatRefused": 36,
+      "xDrawn": 2891,
+      "zeroXLeftOut": 16336,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5780,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5780,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5780,
+      "errored": 1217,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 1217
+        }
+      ],
+      "options": [
+        {
+          "d": 3,
+          "o": 1,
+          "token": "pass",
+          "label": "pass",
+          "branches": 240,
+          "errored": 64,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 62
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 2
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 64
+            }
+          ]
+        },
+        {
+          "d": 14,
+          "o": 0,
+          "token": "cast:16",
+          "label": "Faerie Guidemother",
+          "branches": 240,
+          "errored": 84,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 84
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 0
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 84
+            }
+          ]
+        },
+        {
+          "d": 14,
+          "o": 1,
+          "token": "pass",
+          "label": "pass",
+          "branches": 240,
+          "errored": 89,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 88
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 1
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 89
+            }
+          ]
+        },
+        {
+          "d": 14,
+          "o": 2,
+          "token": "cast:21",
+          "label": "Regrowth",
+          "branches": 240,
+          "errored": 71,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 71
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 0
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 71
+            }
+          ]
+        },
+        {
+          "d": 15,
+          "o": 0,
+          "token": "cast:21",
+          "label": "Regrowth",
+          "branches": 240,
+          "errored": 71,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 71
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 0
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 71
+            }
+          ]
+        },
+        {
+          "d": 15,
+          "o": 1,
+          "token": "pass",
+          "label": "pass",
+          "branches": 100,
+          "errored": 48,
+          "byContinuation": {
+            "random": {
+              "branches": 100,
+              "errored": 48
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 48
+            }
+          ]
+        },
+        {
+          "d": 15,
+          "o": 2,
+          "token": "activate:18",
+          "label": "Flayer Husk: Equip {2} ({2}: Attach to target creature you c",
+          "branches": 240,
+          "errored": 76,
+          "byContinuation": {
+            "random": {
+              "branches": 200,
+              "errored": 76
+            },
+            "forge": {
+              "branches": 40,
+              "errored": 0
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 76
+            }
+          ]
+        },
+        {
+          "d": 16,
+          "o": 1,
+          "token": "pass",
+          "label": "pass",
+          "branches": 50,
+          "errored": 26,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 26
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 26
+            }
+          ]
+        },
+        {
+          "d": 16,
+          "o": 2,
+          "token": "activate:18",
+          "label": "Flayer Husk: Equip {2} ({2}: Attach to target creature you c",
+          "branches": 50,
+          "errored": 22,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 22
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 22
+            }
+          ]
+        }
+      ],
+      "notDrawn": 0
+    },
+    "warnings": [
+      "d3 option 1 `pass` (pass): 64 of 240 branch game(s) were capped (random 62 of 200, forge 2 of 40): 64 x ended at the turn cap",
+      "d14 option 0 `cast:16` (Faerie Guidemother): 84 of 240 branch game(s) were capped (random 84 of 200, forge 0 of 40): 84 x ended at the turn cap",
+      "d14 option 1 `pass` (pass): 89 of 240 branch game(s) were capped (random 88 of 200, forge 1 of 40): 89 x ended at the turn cap",
+      "d14 option 2 `cast:21` (Regrowth): 71 of 240 branch game(s) were capped (random 71 of 200, forge 0 of 40): 71 x ended at the turn cap",
+      "d15 option 0 `cast:21` (Regrowth): 71 of 240 branch game(s) were capped (random 71 of 200, forge 0 of 40): 71 x ended at the turn cap",
+      "d15 option 1 `pass` (pass): 48 of 100 branch game(s) were capped (random 48 of 100): 48 x ended at the turn cap",
+      "d15 option 2 `activate:18` (Flayer Husk: Equip {2} ({2}: Attach to target creature you c): 76 of 240 branch game(s) were capped (random 76 of 200, forge 0 of 40): 76 x ended at the turn cap",
+      "d16 option 1 `pass` (pass): 26 of 50 branch game(s) were capped (random 26 of 50): 26 x ended at the turn cap",
+      "d16 option 2 `activate:18` (Flayer Husk: Equip {2} ({2}: Attach to target creature you c): 22 of 50 branch game(s) were capped (random 22 of 50): 22 x ended at the turn cap"
+    ],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 169122
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5557,
+      "units": 80,
+      "branchGames": 5780,
+      "ms": 2685198,
+      "workers": 6
+    },
+    "wallMs": 2690755,
+    "jobs": 6
+  }
+}

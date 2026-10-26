@@ -1,0 +1,39 @@
+{
+ "note": "J169 deck draws: D447 with D482's engine-unplayable list, drawn by J166's pilot (s04: J167's run2); drawsha = each folder's decks.jsonl, then its .dck files by name",
+ "spinesAsRun": "faee7df31b55ffd0079f8deaf5280e8d2416f93493d13fc4cb2999a99f45ff6b 26",
+ "twelveUnchanged": "e27796b73073bab5e172c2225047cecfe8424ee5ceeb4d839d44484d9da07419 24",
+ "twelveRegistered": "e27796b73073bab5e172c2225047cecfe8424ee5ceeb4d839d44484d9da07419 24",
+ "s04": "81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00 2",
+ "s04Registered": "81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00 2",
+ "s04Deck1": "873bb7e41c40f2ad4a40fbd8e3abf7185820fa93b1e90c40d2abff5907e3f003",
+ "s04Deck1Registered": "873bb7e41c40f2ad4a40fbd8e3abf7185820fa93b1e90c40d2abff5907e3f003",
+ "s05": "afc7ce320e966d96e5c92ec9d28c357e6f603c59927f677549ce261227b1b92e 2",
+ "s05Registered": "afc7ce320e966d96e5c92ec9d28c357e6f603c59927f677549ce261227b1b92e 2",
+ "s05DeckA": "d2c9c9c0d7a4823bb02de196f7ca13d7fb9f2d3c9c2cdd105d4a8f3932bce72f",
+ "s05DeckB": "37828917f92483f367b656d071ea09a72836b7cc7242d1db9556e926f23b28b3",
+ "s06": "191a5d8aac5d516f5472f0a01a0cacf660a9fa931e70b806a42723e4dfba161f 2",
+ "s06Registered": "191a5d8aac5d516f5472f0a01a0cacf660a9fa931e70b806a42723e4dfba161f 2",
+ "s06Decks": [
+  "f0b8532d0e13788503f751dc239f4f02e459239aa745f73b4178dfdc880d5c2f",
+  "b90d1ae102f4b9b7a8dfbbfbbd4080bfbb026b962eb0db1c7a40a6a4b35d1072"
+ ],
+ "s06DecksRegistered": [
+  "f0b8532d0e13788503f751dc239f4f02e459239aa745f73b4178dfdc880d5c2f",
+  "b90d1ae102f4b9b7a8dfbbfbbd4080bfbb026b962eb0db1c7a40a6a4b35d1072"
+ ],
+ "s10": "e4676bda05d0204f3ce43e3f8d1ee1a0ca0c8e24c7f8cf09860423d00ddedd9b 2",
+ "s10Registered": "e4676bda05d0204f3ce43e3f8d1ee1a0ca0c8e24c7f8cf09860423d00ddedd9b 2",
+ "s10Decks": [
+  "d051adba41580377b7b1f627bc62f40ae25b5bac182c37f8bd7ec877bba6ce59",
+  "3ee08305330298d022189e0404dc8e0d0c874acb6e0a61ffea3ecb71ddb48b1d"
+ ],
+ "s10DecksRegistered": [
+  "d051adba41580377b7b1f627bc62f40ae25b5bac182c37f8bd7ec877bba6ce59",
+  "3ee08305330298d022189e0404dc8e0d0c874acb6e0a61ffea3ecb71ddb48b1d"
+ ],
+ "j166S04Aside": "d78468cde81712cfcbf350e53f6caaeac8aecaabf657829067c94f92b100271a 2",
+ "j166S04Registered": "d78468cde81712cfcbf350e53f6caaeac8aecaabf657829067c94f92b100271a 2",
+ "smoke": "edfdc861736fb049bc1080d525269064c6776ecabd47de496463fa3dc684c931 2",
+ "validation": "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26",
+ "validationRegistered": "7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de 26"
+}

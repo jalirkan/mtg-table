@@ -1,0 +1,495 @@
+{
+ "contract": "mtg-table rung-4a label v3 (J169)",
+ "training": true,
+ "pools": {
+  "random-peasant": [
+   "s06",
+   "s10"
+  ]
+ },
+ "branched": 21,
+ "labels": 16,
+ "screenedRows": 5,
+ "rowsUnmatched": 0,
+ "confident": 9,
+ "confidentQ": 9,
+ "confidentForge": 0,
+ "trainingRows": 21,
+ "byListing": {
+  "pre-D483": {
+   "spines": [],
+   "rows": 0,
+   "labels": 0,
+   "confident": 0,
+   "tokenTwice": 0
+  },
+  "D483": {
+   "spines": [
+    "s06",
+    "s10"
+   ],
+   "rows": 21,
+   "labels": 16,
+   "confident": 9,
+   "tokenTwice": 0
+  }
+ },
+ "biasedRows": 0,
+ "lostCastVoid": 0,
+ "lostCastVoidList": [],
+ "lostCastOptionRows": [],
+ "byRandomSeat": {
+  "pre-D485": {
+   "spines": [],
+   "rows": 0,
+   "labels": 0,
+   "confident": 0
+  },
+  "D485": {
+   "spines": [
+    "s06",
+    "s10"
+   ],
+   "rows": 21,
+   "labels": 16,
+   "confident": 9
+  }
+ },
+ "bySpine": {
+  "s06": {
+   "pool": "random-peasant",
+   "deckSeed": 2006,
+   "gameSeed": 2106,
+   "sha": "e9f7ed0c",
+   "listing": "D483",
+   "folder": "b-s06-peasant-2106",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s06-peasant-2006/decks/peasant-2006-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s06-peasant-2006/decks/peasant-2006-00002.dck",
+   "baseline": {
+    "turns": 22,
+    "winner": "A",
+    "listed": 23
+   },
+   "branchedInFull": 8,
+   "screened": 3,
+   "fill": 0,
+   "stoppedOptions": 26,
+   "meanOptions": 6,
+   "randomSeat": "D485",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "rows": 11,
+   "labels": 8,
+   "screenedRows": 3,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 5,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 8,
+     "confident": 5
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.1975,
+   "regretMean": 0.09,
+   "confidentList": [
+    "d2 p t5 k5 activate:16#0 -> o2, 22.0 [15.0, 29.0]",
+    "d6 p t11 k6 pass -> o4, 3.5 [1.0, 6.5]",
+    "d10 p t13 k7 cast:37 -> o6, 17.0 [10.0, 25.0]",
+    "d12 p t15 k6 pass -> o5, 13.0 [4.5, 21.5]",
+    "d15 p t17 k5 pass -> o4, 16.5 [9.5, 25.0]"
+   ]
+  },
+  "s10": {
+   "pool": "random-peasant",
+   "deckSeed": 2010,
+   "gameSeed": 2110,
+   "sha": "e9f7ed0c",
+   "listing": "D483",
+   "folder": "b-s10-peasant-2110",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s10-peasant-2010/decks/peasant-2010-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s10-peasant-2010/decks/peasant-2010-00002.dck",
+   "baseline": {
+    "turns": 27,
+    "winner": "A",
+    "listed": 46
+   },
+   "branchedInFull": 8,
+   "screened": 2,
+   "fill": 0,
+   "stoppedOptions": 7,
+   "meanOptions": 4.5,
+   "randomSeat": "D485",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "rows": 10,
+   "labels": 8,
+   "screenedRows": 2,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 4,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 2
+    },
+    "a": {
+     "labels": 3,
+     "confident": 2
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.1263,
+   "regretMean": 0.0441,
+   "confidentList": [
+    "d2 p t5 k4 activate:37#0 -> o3, 11.8 [3.5, 19.8]",
+    "d10 p t11 k3 pass -> o1, 6.8 [1.2, 15.0]",
+    "d15 a t13 k4 attack:none -> o1, 7.2 [0.7, 14.8]",
+    "d28 a t21 k5 attack:14 -> o2, 9.0 [1.0, 17.5]"
+   ]
+  }
+ },
+ "byPool": {
+  "random-peasant": {
+   "spines": 2,
+   "labels": 16,
+   "confident": 9
+  }
+ },
+ "a_confidentShare": {
+  "n": 16,
+  "point": 0.5625,
+  "interval": [
+   0.3125,
+   0.8125
+  ],
+  "byPool": {
+   "random-peasant": {
+    "n": 16,
+    "point": 0.5625,
+    "interval": [
+     0.3125,
+     0.8125
+    ]
+   }
+  },
+  "bySpine": {
+   "s06": {
+    "n": 8,
+    "point": 0.625,
+    "interval": [
+     0.25,
+     0.875
+    ]
+   },
+   "s10": {
+    "n": 8,
+    "point": 0.5,
+    "interval": [
+     0.125,
+     0.875
+    ]
+   }
+  }
+ },
+ "a_confidentShareByKind": {
+  "p": {
+   "n": 13,
+   "point": 0.5385,
+   "interval": [
+    0.2,
+    0.8125
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 13,
+     "point": 0.5385,
+     "interval": [
+      0.2,
+      0.8125
+     ]
+    }
+   }
+  },
+  "a": {
+   "n": 3,
+   "point": 0.6667,
+   "interval": [
+    0.1667,
+    1.0
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 3,
+     "point": 0.6667,
+     "interval": [
+      0.1667,
+      1.0
+     ]
+    }
+   }
+  },
+  "b": {
+   "n": 0,
+   "point": null,
+   "interval": [
+    null,
+    null
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareByK": {
+  "2": {
+   "n": 0,
+   "point": null,
+   "interval": [
+    null,
+    null
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    }
+   }
+  },
+  "3-4": {
+   "n": 6,
+   "point": 0.5,
+   "interval": [
+    0.1667,
+    0.8333
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 6,
+     "point": 0.5,
+     "interval": [
+      0.1667,
+      0.8333
+     ]
+    }
+   }
+  },
+  "5-6": {
+   "n": 6,
+   "point": 0.8333,
+   "interval": [
+    0.5,
+    1.0
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 6,
+     "point": 0.8333,
+     "interval": [
+      0.5,
+      1.0
+     ]
+    }
+   }
+  },
+  "7-8": {
+   "n": 4,
+   "point": 0.25,
+   "interval": [
+    0.0,
+    0.75
+   ],
+   "byPool": {
+    "random-peasant": {
+     "n": 4,
+     "point": 0.25,
+     "interval": [
+      0.0,
+      0.75
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareQ": {
+  "n": 16,
+  "point": 0.5625,
+  "interval": [
+   0.3125,
+   0.8125
+  ],
+  "byPool": {
+   "random-peasant": {
+    "n": 16,
+    "point": 0.5625,
+    "interval": [
+     0.3125,
+     0.8125
+    ]
+   }
+  }
+ },
+ "b_gapMedian": {
+  "random-peasant": 0.1825
+ },
+ "b_gapMean": {
+  "n": 16,
+  "point": 0.1567,
+  "interval": [
+   0.1073,
+   0.2016
+  ],
+  "byPool": {
+   "random-peasant": {
+    "n": 16,
+    "point": 0.1567,
+    "interval": [
+     0.1073,
+     0.2016
+    ]
+   }
+  }
+ },
+ "b_regretMean": {
+  "n": 16,
+  "point": 0.067,
+  "interval": [
+   0.0283,
+   0.1175
+  ],
+  "byPool": {
+   "random-peasant": {
+    "n": 16,
+    "point": 0.067,
+    "interval": [
+     0.0283,
+     0.1175
+    ]
+   }
+  }
+ },
+ "b_settledShare": {
+  "n": 16,
+  "point": 0.0,
+  "interval": [
+   0.0,
+   0.0
+  ],
+  "byPool": {
+   "random-peasant": {
+    "n": 16,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "c_sizing7": {
+  "bySpine": {
+   "s06": {
+    "wallSec": 4767,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 5,
+    "wallSecAt7": 4086,
+    "labelsPer10hNight": 60,
+    "confidentPer10hNight": 38,
+    "labelsPer7Worker10hNight": 70,
+    "confidentPer7Worker10hNight": 44.1
+   },
+   "s10": {
+    "wallSec": 3321,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 4,
+    "wallSecAt7": 2847,
+    "labelsPer10hNight": 87,
+    "confidentPer10hNight": 43,
+    "labelsPer7Worker10hNight": 101,
+    "confidentPer7Worker10hNight": 50.6
+   }
+  },
+  "byPool": {
+   "random-peasant": {
+    "wallSec": 8088,
+    "spinesTimed": 2,
+    "labels": 16,
+    "confident": 9,
+    "wallSecAt7": 6933,
+    "labelsPer10hNight": 71,
+    "confidentPer10hNight": 40,
+    "labelsPer7Worker10hNight": 83,
+    "confidentPer7Worker10hNight": 46.7
+   }
+  },
+  "asRun": {
+   "wallSec": 8088,
+   "spinesTimed": 2,
+   "labels": 16,
+   "confident": 9,
+   "wallSecAt7": 6933,
+   "labelsPer10hNight": 71,
+   "confidentPer10hNight": 40,
+   "labelsPer7Worker10hNight": 83,
+   "confidentPer7Worker10hNight": 46.7
+  }
+ },
+ "c_sizingRead": {
+  "confidentPer7Worker10hNight": 46.7,
+  "expectation": "J168 all 13 as run: 112 labels and 31.1 confident labels per 7-worker 10-h night (27 confident labels), 24.2-29.9 with the lost-spell bias taken out by its read; J166 s01-s03: 122 / 22.3; the atlas review, section 5: ~25-27 (cube pairs); registered as the sizing read, no verdict"
+ },
+ "c_sizingReadUnbiased": {
+  "wallSec": 8088,
+  "spinesTimed": 2,
+  "labels": 16,
+  "confident": 9,
+  "wallSecAt7": 6933,
+  "labelsPer10hNight": 71,
+  "confidentPer10hNight": 40,
+  "labelsPer7Worker10hNight": 83,
+  "confidentPer7Worker10hNight": 46.7,
+  "spines": [
+   "s06",
+   "s10"
+  ],
+  "left": [],
+  "note": "the sizing read over the spines not marked biased (J169: s05 out, its Suplex and Abrade casts lost); the headline"
+ },
+ "voidLabels": 0,
+ "voidList": [],
+ "sameGameNotBlock": []
+}

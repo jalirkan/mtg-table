@@ -1,0 +1,2323 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s06-peasant-2006/decks/peasant-2006-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s06-peasant-2006/decks/peasant-2006-00002.dck",
+    "seed": 2106,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 22,
+      "first": "A",
+      "decisionsListed": 23
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:16#0",
+            "label": "Foreboding Landscape: {T}, Sacrifice CARDNAME: Search your l",
+            "random": {
+              "n": 200,
+              "wins": 134,
+              "draws": 0,
+              "losses": 66,
+              "mean": 0.67,
+              "lo": 0.6022,
+              "hi": 0.7314
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.66,
+              "lo": 0.5215,
+              "hi": 0.7756
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:31",
+            "label": "Curse of Predation",
+            "random": {
+              "n": 200,
+              "wins": 178,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.89,
+              "lo": 0.8391,
+              "hi": 0.9262
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 50,
+              "wins": 40,
+              "draws": 0,
+              "losses": 10,
+              "mean": 0.8,
+              "lo": 0.6696,
+              "hi": 0.8876
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.22,
+          "regretLo": 0.15,
+          "regretHi": 0.29,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.68,
+        "forgeOptions": [
+          0,
+          2
+        ]
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:5",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.9867
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:5",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 4,
+        "screened": true,
+        "screenMean": 0.992
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 191,
+              "draws": 2,
+              "losses": 7,
+              "mean": 0.96,
+              "lo": 0.9231,
+              "hi": 0.9796
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 200,
+              "wins": 196,
+              "draws": 1,
+              "losses": 3,
+              "mean": 0.9825,
+              "lo": 0.9532,
+              "hi": 0.9936
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 150,
+              "wins": 145,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9667,
+              "lo": 0.9243,
+              "hi": 0.9857
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 3,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 100,
+              "wins": 96,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.96,
+              "lo": 0.9016,
+              "hi": 0.9843
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 4,
+            "token": "cast:5",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 200,
+              "wins": 199,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.995,
+              "lo": 0.9722,
+              "hi": 0.9991
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:2",
+            "label": "Veteran Beastrider",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.035,
+          "regretLo": 0.01,
+          "regretHi": 0.065,
+          "best": 4
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9567,
+        "forgeOptions": [
+          0,
+          1,
+          4
+        ]
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 200,
+              "wins": 196,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.98,
+              "lo": 0.9497,
+              "hi": 0.9922
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 93,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.93,
+              "lo": 0.8625,
+              "hi": 0.9657
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 200,
+              "wins": 191,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.955,
+              "lo": 0.9167,
+              "hi": 0.9761
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 200,
+              "wins": 192,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.96,
+              "lo": 0.9231,
+              "hi": 0.9796
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:2",
+            "label": "Veteran Beastrider",
+            "random": {
+              "n": 100,
+              "wins": 93,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.93,
+              "lo": 0.8625,
+              "hi": 0.9657
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.015,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 5,
+        "screened": false,
+        "screenMean": 0.936,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:37",
+            "label": "Angelic Voices",
+            "random": {
+              "n": 200,
+              "wins": 96,
+              "draws": 0,
+              "losses": 104,
+              "mean": 0.48,
+              "lo": 0.4118,
+              "hi": 0.549
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 71,
+              "draws": 0,
+              "losses": 79,
+              "mean": 0.4733,
+              "lo": 0.3951,
+              "hi": 0.5529
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 2,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 100,
+              "wins": 47,
+              "draws": 0,
+              "losses": 53,
+              "mean": 0.47,
+              "lo": 0.3751,
+              "hi": 0.5671
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 200,
+              "wins": 119,
+              "draws": 0,
+              "losses": 81,
+              "mean": 0.595,
+              "lo": 0.5258,
+              "hi": 0.6606
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 150,
+              "wins": 76,
+              "draws": 0,
+              "losses": 74,
+              "mean": 0.5067,
+              "lo": 0.4275,
+              "hi": 0.5855
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 5,
+            "token": "cast:2",
+            "label": "Veteran Beastrider",
+            "random": {
+              "n": 100,
+              "wins": 46,
+              "draws": 0,
+              "losses": 54,
+              "mean": 0.46,
+              "lo": 0.3656,
+              "hi": 0.5574
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 6,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 200,
+              "wins": 130,
+              "draws": 0,
+              "losses": 70,
+              "mean": 0.65,
+              "lo": 0.5816,
+              "hi": 0.7127
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.17,
+          "regretLo": 0.1,
+          "regretHi": 0.25,
+          "best": 6
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4114,
+        "forgeOptions": [
+          0,
+          3,
+          6
+        ]
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 121,
+              "draws": 0,
+              "losses": 79,
+              "mean": 0.605,
+              "lo": 0.5359,
+              "hi": 0.6702
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.52,
+              "lo": 0.3851,
+              "hi": 0.652
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 150,
+              "wins": 96,
+              "draws": 0,
+              "losses": 54,
+              "mean": 0.64,
+              "lo": 0.5606,
+              "hi": 0.7124
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 3,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 150,
+              "wins": 96,
+              "draws": 0,
+              "losses": 54,
+              "mean": 0.64,
+              "lo": 0.5606,
+              "hi": 0.7124
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 4,
+            "token": "cast:2",
+            "label": "Veteran Beastrider",
+            "random": {
+              "n": 100,
+              "wins": 59,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.59,
+              "lo": 0.492,
+              "hi": 0.6813
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 200,
+              "wins": 147,
+              "draws": 0,
+              "losses": 53,
+              "mean": 0.735,
+              "lo": 0.6698,
+              "hi": 0.7913
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.13,
+          "regretLo": 0.045,
+          "regretHi": 0.215,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.62,
+        "forgeOptions": [
+          0,
+          5
+        ]
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 130,
+              "draws": 0,
+              "losses": 70,
+              "mean": 0.65,
+              "lo": 0.5816,
+              "hi": 0.7127
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 50,
+              "wins": 35,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.7,
+              "lo": 0.5625,
+              "hi": 0.809
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 150,
+              "wins": 106,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.7067,
+              "lo": 0.6294,
+              "hi": 0.7736
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          },
+          {
+            "o": 3,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 200,
+              "wins": 152,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.76,
+              "lo": 0.6963,
+              "hi": 0.8139
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 200,
+              "wins": 163,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.815,
+              "lo": 0.7554,
+              "hi": 0.8627
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.165,
+          "regretLo": 0.095,
+          "regretHi": 0.25,
+          "best": 4
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.752,
+        "forgeOptions": [
+          0,
+          3,
+          4
+        ]
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:13",
+            "label": "Unburial Rites",
+            "random": {
+              "n": 200,
+              "wins": 159,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.795,
+              "lo": 0.7337,
+              "hi": 0.8451
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.52,
+              "lo": 0.3851,
+              "hi": 0.652
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.54,
+              "lo": 0.404,
+              "hi": 0.6703
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.66,
+              "lo": 0.5215,
+              "hi": 0.7756
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 200,
+              "wins": 149,
+              "draws": 0,
+              "losses": 51,
+              "mean": 0.745,
+              "lo": 0.6804,
+              "hi": 0.8004
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "cast:5",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 50,
+              "wins": 34,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.68,
+              "lo": 0.5419,
+              "hi": 0.7924
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "cast:21",
+            "label": "Land Tax",
+            "random": {
+              "n": 50,
+              "wins": 32,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0387,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.645,
+        "forgeOptions": [
+          0,
+          5
+        ]
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:13",
+            "label": "Unburial Rites",
+            "random": {
+              "n": 200,
+              "wins": 197,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.985,
+              "lo": 0.9568,
+              "hi": 0.9949
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 194,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.97,
+              "lo": 0.9361,
+              "hi": 0.9862
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:29",
+            "label": "Floral Spuzzem",
+            "random": {
+              "n": 200,
+              "wins": 193,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.965,
+              "lo": 0.9295,
+              "hi": 0.9829
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Honest Rutstein",
+            "random": {
+              "n": 200,
+              "wins": 196,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.98,
+              "lo": 0.9497,
+              "hi": 0.9922
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:11",
+            "label": "The Mountain-king's Return",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "cast:14",
+            "label": "Loxodon Smiter",
+            "random": {
+              "n": 200,
+              "wins": 197,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.985,
+              "lo": 0.9568,
+              "hi": 0.9949
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "cast:5",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 200,
+              "wins": 196,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.98,
+              "lo": 0.9497,
+              "hi": 0.9922
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "cast:21",
+            "label": "Land Tax",
+            "random": {
+              "n": 150,
+              "wins": 142,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.9467,
+              "lo": 0.8983,
+              "hi": 0.9727
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 150
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.025,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": false,
+        "screenMean": 0.95,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          3,
+          5,
+          6
+        ]
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:2,3,23",
+            "label": "attack Veteran Beastrider+Dauntless Scrapbot+Hero of the Dunes",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 21,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.84,
+              "lo": 0.6535,
+              "hi": 0.936
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3,23",
+            "label": "attack Dauntless Scrapbot+Hero of the Dunes",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:2,23",
+            "label": "attack Veteran Beastrider+Hero of the Dunes",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:2,3",
+            "label": "attack Veteran Beastrider+Dauntless Scrapbot",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.968
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 11,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 5,
+        "d4": 6,
+        "d6": 6,
+        "d10": 7,
+        "d12": 6,
+        "d15": 5,
+        "d17": 8,
+        "d21": 5,
+        "d5": 5,
+        "d8": 5,
+        "d19": 8
+      },
+      "meanOptions": 6,
+      "screened": [
+        {
+          "d": 4,
+          "mean": 0.9867,
+          "replacedBy": 5
+        },
+        {
+          "d": 21,
+          "mean": 0.968,
+          "replacedBy": 19
+        },
+        {
+          "d": 5,
+          "mean": 0.992,
+          "replacedBy": 8
+        }
+      ],
+      "stopped": [
+        {
+          "d": 2,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 6,
+          "o": 2,
+          "at": 150
+        },
+        {
+          "d": 6,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 6,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 10,
+          "o": 1,
+          "at": 150
+        },
+        {
+          "d": 10,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 10,
+          "o": 4,
+          "at": 150
+        },
+        {
+          "d": 10,
+          "o": 5,
+          "at": 100
+        },
+        {
+          "d": 12,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 2,
+          "at": 150
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 150
+        },
+        {
+          "d": 12,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 15,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 2,
+          "at": 150
+        },
+        {
+          "d": 17,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 8,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 8,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 19,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 7,
+          "at": 150
+        }
+      ],
+      "stoppedOptions": 26,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 7500,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 3,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 3121,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 213936,
+    "gamesIdChecked": 7501,
+    "frameLogs": 15002,
+    "frameLogsFailed": 0,
+    "redactionMs": 84340,
+    "forks": 7500,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 11,
+    "guardrails": {
+      "logs": 15000,
+      "priorityDecisions": 501720,
+      "landOffered": 34864,
+      "landTaken": 34864,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 2533,
+      "refusedCast": 7,
+      "noRepeatRefused": 0,
+      "xDrawn": 367,
+      "zeroXLeftOut": 2271,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 7500,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 7500,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 7500,
+      "errored": 3,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 3
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 2,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 107363
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 7252,
+      "units": 67,
+      "branchGames": 7500,
+      "ms": 4628253,
+      "workers": 6
+    },
+    "wallMs": 4635506,
+    "jobs": 6
+  }
+}

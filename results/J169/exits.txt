@@ -1,0 +1,15 @@
+b-s01-pauper-2101 0
+b-s02-peasant-2102 3
+b-s03-legacy-2103 3
+b-s04-powered-2104 0
+b-s05-pauper-2105 0
+b-s06-peasant-2106 3
+b-s07-legacy-2107 0
+b-s08-powered-2108 0
+b-s09-pauper-2109 0
+b-s10-peasant-2110 3
+b-s11-legacy-2111 0
+b-s12-powered-2112 0
+b-s13-pauper-2113 3
+b-s06-peasant-2106 0
+b-s10-peasant-2110 0

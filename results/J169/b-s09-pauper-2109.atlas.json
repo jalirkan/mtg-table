@@ -1,0 +1,1949 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j166/decks/s09-pauper-2009/decks/pauper-2009-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j166/decks/s09-pauper-2009/decks/pauper-2009-00002.dck",
+    "seed": 2109,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 200,
+    "branchForge": 0,
+    "decisions": 8,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100,
+        150
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 23,
+      "first": "B",
+      "decisionsListed": 27
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 107,
+              "draws": 26,
+              "losses": 67,
+              "mean": 0.6,
+              "lo": 0.5308,
+              "hi": 0.6654
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:4",
+            "label": "Threadbind Clique",
+            "random": {
+              "n": 200,
+              "wins": 109,
+              "draws": 24,
+              "losses": 67,
+              "mean": 0.605,
+              "lo": 0.5359,
+              "hi": 0.6702
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:32",
+            "label": "Gush",
+            "random": {
+              "n": 200,
+              "wins": 110,
+              "draws": 30,
+              "losses": 60,
+              "mean": 0.625,
+              "lo": 0.5561,
+              "hi": 0.6891
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.105,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6067
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:4",
+            "label": "Threadbind Clique",
+            "random": {
+              "n": 200,
+              "wins": 92,
+              "draws": 27,
+              "losses": 81,
+              "mean": 0.5275,
+              "lo": 0.4584,
+              "hi": 0.5955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 100,
+              "draws": 24,
+              "losses": 76,
+              "mean": 0.56,
+              "lo": 0.4907,
+              "hi": 0.627
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:32",
+            "label": "Gush",
+            "random": {
+              "n": 200,
+              "wins": 109,
+              "draws": 21,
+              "losses": 70,
+              "mean": 0.5975,
+              "lo": 0.5283,
+              "hi": 0.663
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.07,
+          "regretLo": 0.0025,
+          "regretHi": 0.1475,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 16,
+        "screened": false,
+        "screenMean": 0.6
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Rancor",
+            "random": {
+              "n": 200,
+              "wins": 103,
+              "draws": 1,
+              "losses": 96,
+              "mean": 0.5175,
+              "lo": 0.4486,
+              "hi": 0.5858
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 86,
+              "draws": 0,
+              "losses": 114,
+              "mean": 0.43,
+              "lo": 0.3633,
+              "hi": 0.4993
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:33",
+            "label": "Wood Elves",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 1,
+              "losses": 33,
+              "mean": 0.33,
+              "lo": 0.2159,
+              "hi": 0.4683
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:34",
+            "label": "Mogg War Marshal",
+            "random": {
+              "n": 200,
+              "wins": 95,
+              "draws": 1,
+              "losses": 104,
+              "mean": 0.4775,
+              "lo": 0.4094,
+              "hi": 0.5465
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0501,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.405,
+        "forgeOptions": [
+          0,
+          1,
+          3
+        ]
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:33",
+            "label": "Wood Elves",
+            "random": {
+              "n": 200,
+              "wins": 89,
+              "draws": 0,
+              "losses": 111,
+              "mean": 0.445,
+              "lo": 0.3778,
+              "hi": 0.5143
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 86,
+              "draws": 0,
+              "losses": 114,
+              "mean": 0.43,
+              "lo": 0.3633,
+              "hi": 0.4993
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:34",
+            "label": "Mogg War Marshal",
+            "random": {
+              "n": 200,
+              "wins": 104,
+              "draws": 0,
+              "losses": 96,
+              "mean": 0.52,
+              "lo": 0.451,
+              "hi": 0.5882
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.075,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4667
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:4",
+            "label": "attack Threadbind Clique",
+            "random": {
+              "n": 200,
+              "wins": 70,
+              "draws": 1,
+              "losses": 129,
+              "mean": 0.3525,
+              "lo": 0.2896,
+              "hi": 0.4209
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 1,
+              "losses": 39,
+              "mean": 0.21,
+              "lo": 0.1199,
+              "hi": 0.3414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:4,33,34,40,87",
+            "label": "attack Threadbind Clique+Wood Elves+Mogg War Marshal+Goblin Token+Fanatical Firebrand",
+            "random": {
+              "n": 200,
+              "wins": 87,
+              "draws": 0,
+              "losses": 113,
+              "mean": 0.435,
+              "lo": 0.3682,
+              "hi": 0.5043
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:4,33",
+            "label": "attack Threadbind Clique+Wood Elves",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:4,34",
+            "label": "attack Threadbind Clique+Mogg War Marshal",
+            "random": {
+              "n": 200,
+              "wins": 74,
+              "draws": 0,
+              "losses": 126,
+              "mean": 0.37,
+              "lo": 0.3061,
+              "hi": 0.4388
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:4,87",
+            "label": "attack Threadbind Clique+Goblin Token",
+            "random": {
+              "n": 200,
+              "wins": 71,
+              "draws": 0,
+              "losses": 129,
+              "mean": 0.355,
+              "lo": 0.292,
+              "hi": 0.4235
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:4,40",
+            "label": "attack Threadbind Clique+Fanatical Firebrand",
+            "random": {
+              "n": 200,
+              "wins": 86,
+              "draws": 0,
+              "losses": 114,
+              "mean": 0.43,
+              "lo": 0.3633,
+              "hi": 0.4993
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.0825,
+          "regretLo": 0.015,
+          "regretHi": 0.185,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "replaces",
+        "replaces": 22,
+        "screened": false,
+        "screenMean": 0.3371,
+        "forgeOptions": [
+          0,
+          2,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "d": 13,
+        "kind": "b",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 200,
+              "wins": 43,
+              "draws": 0,
+              "losses": 157,
+              "mean": 0.215,
+              "lo": 0.1637,
+              "hi": 0.277
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:33>70",
+            "label": "block Wood Elves>Seeker of the Way",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.32,
+              "lo": 0.2076,
+              "hi": 0.4581
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "block:34>70",
+            "label": "block Mogg War Marshal>Seeker of the Way",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.32,
+              "lo": 0.2076,
+              "hi": 0.4581
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "block:87>70",
+            "label": "block Goblin Token>Seeker of the Way",
+            "random": {
+              "n": 50,
+              "wins": 17,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.34,
+              "lo": 0.2244,
+              "hi": 0.4785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "block:40>70",
+            "label": "block Fanatical Firebrand>Seeker of the Way",
+            "random": {
+              "n": 200,
+              "wins": 88,
+              "draws": 0,
+              "losses": 112,
+              "mean": 0.44,
+              "lo": 0.373,
+              "hi": 0.5093
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:33>55",
+            "label": "block Wood Elves>Repentant Blacksmith",
+            "random": {
+              "n": 50,
+              "wins": 15,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.225,
+          "regretLo": 0.145,
+          "regretHi": 0.3101,
+          "best": 4
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.36,
+        "forgeOptions": [
+          0,
+          4
+        ]
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:4",
+            "label": "attack Threadbind Clique",
+            "random": {
+              "n": 200,
+              "wins": 120,
+              "draws": 0,
+              "losses": 80,
+              "mean": 0.6,
+              "lo": 0.5308,
+              "hi": 0.6654
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 15,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:4,33,34,87",
+            "label": "attack Threadbind Clique+Wood Elves+Mogg War Marshal+Goblin Token",
+            "random": {
+              "n": 200,
+              "wins": 123,
+              "draws": 0,
+              "losses": 77,
+              "mean": 0.615,
+              "lo": 0.546,
+              "hi": 0.6797
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:4,33",
+            "label": "attack Threadbind Clique+Wood Elves",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:4,34",
+            "label": "attack Threadbind Clique+Mogg War Marshal",
+            "random": {
+              "n": 200,
+              "wins": 123,
+              "draws": 0,
+              "losses": 77,
+              "mean": 0.615,
+              "lo": 0.546,
+              "hi": 0.6797
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:4,87",
+            "label": "attack Threadbind Clique+Goblin Token",
+            "random": {
+              "n": 50,
+              "wins": 28,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.56,
+              "lo": 0.4231,
+              "hi": 0.6884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.015,
+          "regretLo": 0,
+          "regretHi": 0.1234,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5133,
+        "forgeOptions": [
+          0,
+          2,
+          4
+        ]
+      },
+      {
+        "d": 16,
+        "kind": "b",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:33>55,87>70",
+            "label": "block Goblin Token>Seeker of the Way, Wood Elves>Repentant Blacksmith",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:33>55",
+            "label": "block Wood Elves>Repentant Blacksmith",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:87>70",
+            "label": "block Goblin Token>Seeker of the Way",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:33>55,87>70,34>80",
+            "label": "block Goblin Token>Seeker of the Way, Wood Elves>Repentant Blacksmith, Mogg War Marshal>Reckless Fireweaver",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:33>55,34>70,87>70",
+            "label": "block Goblin Token>Seeker of the Way, Wood Elves>Repentant Blacksmith, Mogg War Marshal>Seeker of the Way",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "block:33>55,34>57,87>70",
+            "label": "block Goblin Token>Seeker of the Way, Wood Elves>Repentant Blacksmith, Mogg War Marshal>Tundra Wolves",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 7,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": true,
+        "screenMean": 0.0229
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Rancor",
+            "random": {
+              "n": 200,
+              "wins": 10,
+              "draws": 0,
+              "losses": 190,
+              "mean": 0.05,
+              "lo": 0.0274,
+              "hi": 0.0896
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 200,
+              "wins": 9,
+              "draws": 0,
+              "losses": 191,
+              "mean": 0.045,
+              "lo": 0.0239,
+              "hi": 0.0833
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Stickytongue Sentinel",
+            "random": {
+              "n": 200,
+              "wins": 20,
+              "draws": 0,
+              "losses": 180,
+              "mean": 0.1,
+              "lo": 0.0657,
+              "hi": 0.1494
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 200,
+          "regret": 0.05,
+          "regretLo": 0.01,
+          "regretHi": 0.095,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.0667
+      },
+      {
+        "d": 21,
+        "kind": "p",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Rancor",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Stickytongue Sentinel",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Rubble Rouser",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 22,
+        "kind": "p",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:8",
+            "label": "Stickytongue Sentinel",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Rubble Rouser",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 26,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 26,
+        "kind": "b",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:21>60,90>79",
+            "label": "block Rubble Rouser>Owlbear, Goblin Token>Firebrand Archer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:90>79",
+            "label": "block Goblin Token>Firebrand Archer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:21>60",
+            "label": "block Rubble Rouser>Owlbear",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100,
+          150
+        ],
+        "screen": 25,
+        "minOptions": 3
+      },
+      "decisions": 8,
+      "picked": 12,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d5": 4,
+        "d8": 3,
+        "d13": 6,
+        "d15": 6,
+        "d17": 3,
+        "d21": 4,
+        "d26": 4,
+        "d22": 3,
+        "d16": 7,
+        "d12": 7,
+        "d1": 3
+      },
+      "meanOptions": 4.42,
+      "screened": [
+        {
+          "d": 21,
+          "mean": 0,
+          "replacedBy": 16
+        },
+        {
+          "d": 26,
+          "mean": 0,
+          "replacedBy": 22
+        },
+        {
+          "d": 22,
+          "mean": 0,
+          "replacedBy": 12
+        },
+        {
+          "d": 16,
+          "mean": 0.0229,
+          "replacedBy": 1
+        }
+      ],
+      "stopped": [
+        {
+          "d": 5,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 13,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 13,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 13,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 13,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 10,
+      "labels": 8
+    },
+    "disagreeMost": [],
+    "branchGames": 5950,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 157,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2294,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 223691,
+    "gamesIdChecked": 5951,
+    "frameLogs": 11902,
+    "frameLogsFailed": 0,
+    "redactionMs": 86790,
+    "forks": 5950,
+    "forkProblems": 0,
+    "leakChecks": 12,
+    "leaks": 0,
+    "leakControlsMoved": 12,
+    "guardrails": {
+      "logs": 11900,
+      "priorityDecisions": 589625,
+      "landOffered": 53488,
+      "landTaken": 53488,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 0,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 1958,
+      "zeroXLeftOut": 5762,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5950,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5950,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5950,
+      "errored": 157,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 157
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 132417
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5292,
+      "units": 68,
+      "branchGames": 5950,
+      "ms": 2851308,
+      "workers": 6
+    },
+    "wallMs": 2856601,
+    "jobs": 6
+  }
+}
