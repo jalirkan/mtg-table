@@ -187,11 +187,11 @@ const withGuardrails = (frames: Array<Record<string, any>>, g: unknown): void =>
   frames.find((f) => f.dir === 'ai' && f.type === 'decisions')!.body.explore.guardrails = g;
 };
 
-test('M71: a random seat\'s summary may carry its guardrail counts (G5 and, M73, G6 included; D485\'s two too)', () => {
+test('M71: a random seat\'s summary may carry its guardrail counts (G5 and, M73, G6 included; D485\'s two and D486\'s one too)', () => {
   const r = rewrite(EXP_LOGS[0] as string, (frames) => {
     frames[0]!.playExplore = { epsilon: 1, closeCall: 0, opening: false };
     withGuardrails(frames, { land: 5, keep: 1, noRepeatNoOp: 0, refusedCast: 2, noRepeatRefused: 2, xDrawn: 3, zeroXLeftOut: 22, zeroX: 0,
-      retargeted: 4, staleRefused: 1 });
+      retargeted: 4, staleRefused: 1, cardTargetOffered: 7 });
   });
   assert.equal(r.status, 0, r.out);
 });

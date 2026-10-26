@@ -689,8 +689,8 @@ public final class SearchPolicy {
             }
             try {
                 sa.setActivatingPlayer(ai);
-                if (!sa.canPlay()) {
-                    continue;
+                if (!sa.canPlay() || !Explorer.modesCastable(sa)) {
+                    continue;   // D486: a modal spell with too few legal modes is refused by the cast, card stranded
                 }
                 final AiPlayDecision d = aic.canPlaySa(sa);
                 if (!ComputerUtilCost.canPayCost(sa, ai, false)) {
@@ -944,12 +944,24 @@ public final class SearchPolicy {
                 if (hit == null) {
                     throw new IllegalStateException("mode not found");
                 }
+                // D486: the mode's targets too -- the cast copies the chosen modes onto the spell with their
+                // targets (CharmEffect.chainAbilities), and the copy's own modes carry none: without this every
+                // forced modal candidate went to the engine with an empty target list and was dropped after
+                // its payment ("failed to target", J168: 650 of s05's 991 lost Suplex casts)
+                hit.setActivatingPlayer(aiCopy);
+                copyTargets(cp, m, hit);
                 chosen.add(hit);
             }
             found.setChosenList(chosen);
         }
-        SpellAbility src = orig;
-        SpellAbility dst = found;
+        copyTargets(cp, orig, found);
+        return found;
+    }
+
+    /** Each targeting part of the chain from {@code src}: its targets, found in the copy, onto the same part of {@code dst}'s chain. */
+    private static void copyTargets(final LenientGameCopier cp, final SpellAbility from, final SpellAbility to) {
+        SpellAbility src = from;
+        SpellAbility dst = to;
         while (src != null && dst != null) {
             if (src.usesTargeting()) {
                 dst.resetTargets();
@@ -964,7 +976,6 @@ public final class SearchPolicy {
             src = src.getSubAbility();
             dst = dst.getSubAbility();
         }
-        return found;
     }
 
     /**

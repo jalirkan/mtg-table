@@ -787,6 +787,25 @@ public class PolicyControllerAi extends PlayerControllerAi {
         return r;
     }
 
+    /**
+     * D486: a modal spell's modes, asked inside the cast ({@code CharmEffect.makeChoices}).
+     * The random seat answers it itself when no legal modes are chosen yet
+     * ({@link Explorer#modesAtCast}): Forge's mandatory path can choose a mode with no
+     * legal target, and the engine then drops the paid spell.  Every other seat, and a
+     * random seat whose chosen modes are legal, gets Forge's answer.
+     */
+    @Override
+    public List<forge.game.spellability.AbilitySub> chooseModeForAbility(final SpellAbility sa,
+            final List<forge.game.spellability.AbilitySub> possible, final int min, final int num, final boolean allowRepeat) {
+        if (explorer != null && explorer.math().config().random && !allowRepeat && sa.getActivatingPlayer() == player) {
+            final List<forge.game.spellability.AbilitySub> mine = explorer.modesAtCast(sa, player, possible, min, num);
+            if (mine != null) {
+                return mine;
+            }
+        }
+        return super.chooseModeForAbility(sa, possible, min, num, allowRepeat);
+    }
+
     @Override
     public boolean confirmTrigger(final WrappedAbility wrapper) {
         if (decisions == null) {

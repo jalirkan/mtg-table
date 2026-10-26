@@ -387,6 +387,7 @@ public final class DecisionSelfTest {
         g5Planted(r);
         g6Planted(r);
         staleTargetsPlanted(r);
+        cardTargetsPlanted(r);
         optionalCosts();
         payCap();
         stepClock();
@@ -788,6 +789,58 @@ public final class DecisionSelfTest {
         check(Explorer.dropRefused(stranded, ex2.refusedIn(nextPriority), m2) == 0
                 && m2.guardrails().getOrDefault("noRepeatRefused", 0) == 0,
                 "G5 planted: with the refused card gone from the listing, nothing is left out (J156's 0 of 4,942)");
+    }
+
+    /**
+     * D486: the random seat's own targets come from every candidate, cards
+     * included.  Planted: a "target creature" part (Murder) with the engine's
+     * candidates as {@code getAllCandidates(s, false)} lists them -- the two
+     * players are not among them (a creature part), the opponent's Grizzly
+     * Bears, a hexproof Gladecover Scout and a White Knight with protection from
+     * black (both refused by {@code canTarget}), and a card in the opponent's
+     * hand the seat cannot see.  The old call, {@code getAllCandidates(s, true)},
+     * returned the players alone -- here none -- so the part had nothing to draw
+     * and the play was never offered.  Then the counts a part and a modal spell
+     * may take.
+     */
+    private static void cardTargetsPlanted(final ExploreMath.Config r) {
+        final java.util.Set<String> hidden = java.util.Set.of("hand12");
+        final java.util.Set<String> refused = java.util.Set.of("gladecover31", "whiteknight32");
+        final List<String> all = List.of("bears30", "gladecover31", "whiteknight32", "hand12");
+        final List<String> got = Explorer.keepLegal(all, e -> !hidden.contains(e), e -> !refused.contains(e));
+        check(List.of("bears30").equals(got),
+                "D486: Murder's candidates are the Bears alone -- hexproof and protection refused, the hidden hand card unseen: " + got);
+        final List<String> withPlayers = Explorer.keepLegal(List.of("p0", "p1", "bears30", "gladecover31"), e -> true,
+                e -> !refused.contains(e));
+        check(List.of("p0", "p1", "bears30").equals(withPlayers),
+                "D486: an \"any target\" part keeps both players and the Bears, in the engine's order: " + withPlayers);
+        final List<String> playersOnly = Explorer.keepLegal(List.<String>of(), e -> true, e -> true);
+        check(Explorer.targetCount(1, 1, playersOnly.size()) == null && Explorer.targetCount(1, 1, got.size()) != null,
+                "D486: with the old players-only list a creature part has nothing to draw (not offered); with the cards it has the Bears");
+        check(java.util.Arrays.equals(Explorer.targetCount(1, 1, 3), new int[] {1, 1})
+                        && java.util.Arrays.equals(Explorer.targetCount(1, 2, 5), new int[] {1, 2})
+                        && java.util.Arrays.equals(Explorer.targetCount(0, 2, 5), new int[] {1, 2})
+                        && java.util.Arrays.equals(Explorer.targetCount(0, 1, 0), new int[] {0, 0})
+                        && java.util.Arrays.equals(Explorer.targetCount(0, 0, 4), new int[] {0, 0})
+                        && Explorer.targetCount(2, 2, 1) == null && Explorer.targetCount(1, 1, 0) == null,
+                "D486: a part takes max(min, 1) to min(max, legal) targets; none when it may and has none (or max 0); "
+                        + "null below its minimum");
+        check(java.util.Arrays.equals(Explorer.modeCount(1, 1, 2), new int[] {1, 1})
+                        && java.util.Arrays.equals(Explorer.modeCount(1, 2, 2), new int[] {1, 2})
+                        && java.util.Arrays.equals(Explorer.modeCount(0, 2, 2), new int[] {1, 2})
+                        && java.util.Arrays.equals(Explorer.modeCount(1, 3, 2), new int[] {1, 2})
+                        && Explorer.modeCount(1, 1, 0) == null && Explorer.modeCount(2, 2, 1) == null,
+                "D486: a modal spell takes max(min, 1) to min(num, legal modes) modes; null with fewer legal modes than its "
+                        + "minimum (s05's Suplex with no creature or artifact: never offered)");
+        // the count is a seeded uniform draw over the range, so a part of up to two targets takes each count sometimes
+        final ExploreMath m = new ExploreMath(r, 486);
+        final int[] seen = new int[3];
+        for (int i = 0; i < 200; i++) {
+            final int[] range = Explorer.targetCount(0, 2, 4);
+            seen[range[0] + m.pick(range[1] - range[0] + 1)]++;
+        }
+        check(seen[0] == 0 && seen[1] > 0 && seen[2] > 0,
+                "D486: \"up to two targets\" takes one or two, never none: " + seen[0] + "/" + seen[1] + "/" + seen[2]);
     }
 
     /**

@@ -3125,8 +3125,9 @@ const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCa
 // M71 / D451, D458: the random seat's guardrail counts, by name (G1 land, G4 keep, G3 noRepeatNoOp, G5 refusedCast / noRepeatRefused);
 // M73 / D471: G6's xDrawn / zeroXLeftOut and its violation zeroX.  D485: retargeted (a play cast after its stale
 // targets were replaced) and staleRefused (Forge's answer not offered: its stale targets could not be made legal).
+// M75 / D486: cardTargetOffered (a listing offered a play only a card target makes possible).
 const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX',
-  'retargeted', 'staleRefused'];
+  'retargeted', 'staleRefused', 'cardTargetOffered'];
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);

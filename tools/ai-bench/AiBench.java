@@ -1513,6 +1513,8 @@ public final class AiBench {
         chooseSourceScenarios();
         staleTargetScenarios();
         modalCastTargetsScenario();
+        cardTargetScenarios();
+        modalScenarios();
     }
 
     /**
@@ -1687,6 +1689,282 @@ public final class AiBench {
                     && sa.getTargets().get(0) == staleList.get(0) && sa.getTargets().get(1) == staleList.get(1),
                     "stale-targets-refused: the card stays in hand, and Forge's own list is left as Forge left it");
         });
+    }
+
+
+
+    /**
+     * D486: the random seat targets cards.  {@code getAllCandidates(sa, true)}
+     * is the players alone (its flag is {@code onlyNonCard}), and the seat's own
+     * listing, its target redraw and the target records all passed {@code true}:
+     * a play that must target a card was never the seat's own pick.  (a) Murder
+     * with the opponent's Grizzly Bears: the seat's own listing offers it with
+     * the Bears as its target and casts it; with the old call
+     * ({@code Explorer.playersOnlyForTest}) it is never offered.  (b) Beside a
+     * hexproof Gladecover Scout and a White Knight (protection from black): the
+     * Bears are the only target ever drawn, and the target record lists them
+     * alone, complete.
+     */
+    static void cardTargetScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the random seat targets cards (D486, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Swamp", "aihand=Murder", "aibattlefield=Swamp;Swamp;Swamp");
+        scenario("card-target-offered", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card murder = named(ai.getCardsIn(ZoneType.Hand), "Murder");
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final forge.game.spellability.SpellAbility sa = murder.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            final String tok = mtgtable.ai.Decisions.saToken(sa);
+            final List<forge.game.GameEntity> old = sa.getTargetRestrictions().getAllCandidates(sa, true);
+            final List<forge.game.GameEntity> all = sa.getTargetRestrictions().getAllCandidates(sa, false);
+            check(old.isEmpty() && all.contains(bears),
+                    "card-target-offered: Forge's getAllCandidates(sa, true) is the players alone (" + old + "), (sa, false) has the Bears (" + all + ")");
+            // the old flag: never offered
+            mtgtable.ai.Explorer.playersOnlyForTest(true);
+            int oldOffers = 0;
+            try {
+                for (long seed = 1; seed <= 40; seed++) {
+                    final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                            mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                    final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                    oldOffers += r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0))) ? 1 : 0;
+                    oldOffers += ex.math().guardrails().getOrDefault("cardTargetOffered", 0);
+                }
+            } finally {
+                mtgtable.ai.Explorer.playersOnlyForTest(false);
+            }
+            check(oldOffers == 0, "card-target-offered (control): with the old players-only call Murder is never picked in 40 listings ("
+                    + oldOffers + ")");
+            List<forge.game.spellability.SpellAbility> pick = null;
+            int listings = 0;
+            int counted = 0;
+            boolean targetsOk = true;
+            for (long seed = 1; seed <= 40 && pick == null; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                listings++;
+                counted += ex.math().guardrails().getOrDefault("cardTargetOffered", 0);
+                if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                    pick = r;
+                    targetsOk = sa.getTargets().size() == 1 && sa.getTargets().get(0) == bears;
+                }
+            }
+            check(pick != null && targetsOk, "card-target-offered: the seat's own listing picks Murder aimed at the Bears ("
+                    + listings + " listing(s)): " + sa.getTargets());
+            check(counted == listings, "card-target-offered: every listing counted a play only a card target makes possible ("
+                    + counted + " of " + listings + ")");
+            if (pick == null) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility cast = pick.get(0);
+            final String err = stderrOf(() -> ctl.playChosenSpellAbility(cast));
+            check(!err.contains("failed to target") && g.getStack().getSpellMatchingHost(murder) != null,
+                    "card-target-offered: Murder is on the stack aimed at the Bears, nothing printed" + (err.isEmpty() ? "" : " (" + err.trim() + ")"));
+        });
+        final List<String> guarded = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Gladecover Scout;White Knight;Swamp", "aihand=Murder", "aibattlefield=Swamp;Swamp;Swamp");
+        scenario("card-target-hexproof", guarded, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card murder = named(ai.getCardsIn(ZoneType.Hand), "Murder");
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final forge.game.spellability.SpellAbility sa = murder.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            final String tok = mtgtable.ai.Decisions.saToken(sa);
+            int picks = 0;
+            final java.util.Set<String> drawn = new java.util.TreeSet<>();
+            for (long seed = 1; seed <= 60; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                    picks++;
+                    for (final forge.game.GameObject o : sa.getTargets()) {
+                        drawn.add(o instanceof Card ? ((Card) o).getName() : String.valueOf(o));
+                    }
+                    ex.played(ai, sa, true);   // as if refused: the listing's targets are put back for the next seed
+                }
+            }
+            check(picks >= 3 && drawn.equals(java.util.Set.of("Grizzly Bears")),
+                    "card-target-hexproof: in " + picks + " pick(s) of Murder the only target drawn is the Bears: " + drawn);
+            sa.resetTargets();
+            sa.getTargets().add(bears);
+            final List<mtgtable.ai.Decision> recs = mtgtable.ai.Decisions.targets(sa, ai, "targets");
+            check(recs.size() == 1 && recs.get(0).options.equals(List.of("target:" + bears.getId())) && recs.get(0).complete,
+                    "card-target-hexproof: the target record lists the Bears alone, complete (no Scout, no Knight): "
+                            + (recs.isEmpty() ? "none" : recs.get(0).options + " complete=" + recs.get(0).complete));
+        });
+    }
+
+    /**
+     * D486: a modal spell is never stranded.  Suplex ("choose one": 3 damage to
+     * target creature, or exile target artifact), the opponent's Grizzly Bears
+     * and Expedition Map on the battlefield.  The cast copies the chosen modes
+     * onto the spell with their targets (CharmEffect.makeChoices, after the card
+     * is on the stack), and {@code MagicStack.add} drops a paid spell whose part
+     * has no target.  (a) Control: the exile mode chosen with no target -- what
+     * the atlas's forced option carried into its copy before D486
+     * ({@code SearchPolicy.mapSa} mapped the modes but not their targets) -- and
+     * Forge's own hand-off prints "failed to target" and strands the card.
+     * (b) The random seat given that as Forge's answer fills the target (the
+     * Map) and casts it.  (c) Forge chose the damage mode aimed at the Bears,
+     * and the Bears died: the seat cannot re-target the mode, draws the modes
+     * afresh (exile the Map) and casts it.  (d) No modes chosen at all (the
+     * atlas's declined option): the seat chooses them inside the cast.  (e) The
+     * mapped option carries the mode's target into the copy.  (f) With no
+     * creature or artifact, Suplex has no legal mode: Forge's hand-off strands it
+     * silently, and no listing offers it.
+     */
+    static void modalScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a modal spell, never stranded (D486, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Expedition Map;Mountain", "aihand=Suplex", "aibattlefield=Mountain;Mountain");
+        scenario("modal-empty-mode-forge", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
+            final forge.game.spellability.SpellAbility sa = plantModes(ai, "Exile target artifact", null);
+            final String err = stderrOf(() -> forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, sa, null));
+            check(err.contains("failed to target") && strandedOnStack(ai.getGame(), sa),
+                    "modal-empty-mode-forge (control): Forge's hand-off of a mode with no target prints \"failed to target\" "
+                            + "and strands Suplex in the stack zone");
+        });
+        scenario("modal-empty-mode-seat", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final forge.game.spellability.SpellAbility sa = plantModes(ai, "Exile target artifact", null);
+            modalSeatCasts("modal-empty-mode-seat", ai, sa, "Expedition Map");
+        });
+        scenario("modal-target-died-seat", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final forge.game.spellability.SpellAbility sa = plantModes(ai, "deals 3 damage", bears);
+            ai.getGame().getAction().moveToGraveyard(bears, null);
+            modalSeatCasts("modal-target-died-seat", ai, sa, "Expedition Map");
+        });
+        scenario("modal-no-modes-at-cast", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card sup = named(ai.getCardsIn(ZoneType.Hand), "Suplex");
+            final forge.game.spellability.SpellAbility sa = sup.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            sa.setChosenList(null);
+            sa.setSubAbility(null);
+            final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                    mtgtable.ai.ExploreMath.Config.randomSeat(), 7));
+            ctl.setExplorer(ex);
+            final String err = stderrOf(() -> ctl.playChosenSpellAbility(sa));
+            final forge.game.spellability.SpellAbility onStack = ai.getGame().getStack().getSpellMatchingHost(sup);
+            check(!err.contains("failed to target") && onStack != null && onStack.getSubAbility() != null
+                            && onStack.getSubAbility().getTargets().size() == 1
+                            && ex.math().guardrails().getOrDefault("retargeted", 0) == 1,
+                    "modal-no-modes-at-cast: with no modes chosen the seat chooses them inside the cast: Suplex on the stack with "
+                            + (onStack == null || onStack.getSubAbility() == null ? "none" : onStack.getSubAbility().getTargets())
+                            + ", counted " + ex.math().guardrails() + (err.isEmpty() ? "" : " (" + err.trim() + ")"));
+        });
+        scenario("modal-mapped-targets", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Card map = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Expedition Map");
+            final forge.game.spellability.SpellAbility sa = plantModes(ai, "Exile target artifact", map);
+            final forge.game.spellability.SpellAbility mapped = mtgtable.ai.SearchPolicy.mapForTest(ai, sa);
+            final List<forge.game.spellability.AbilitySub> modes = mapped.getChosenList();
+            final forge.game.GameObject t = modes == null || modes.size() != 1 || modes.get(0).getTargets().size() != 1 ? null
+                    : modes.get(0).getTargets().get(0);
+            check(t instanceof Card && ((Card) t).getId() == map.getId() && ((Card) t).getGame() != ai.getGame(),
+                    "modal-mapped-targets: the atlas's option mapped into a copy carries its mode's target, the copy's Map ("
+                            + t + ")");
+        });
+        final List<String> bare = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Mountain", "aihand=Suplex", "aibattlefield=Mountain;Mountain");
+        scenario("modal-no-legal-mode", bare, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card sup = named(ai.getCardsIn(ZoneType.Hand), "Suplex");
+            final forge.game.spellability.SpellAbility sa = sup.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            final String tok = mtgtable.ai.Decisions.saToken(sa);
+            check(!mtgtable.ai.Explorer.modesCastable(sa), "modal-no-legal-mode: Suplex has no legal mode");
+            boolean listed = false;
+            for (final forge.game.spellability.SpellAbility a : mtgtable.ai.SearchPolicy.alternativesForTest(ai, null)) {
+                listed |= tok.equals(mtgtable.ai.Decisions.saToken(a));
+            }
+            final mtgtable.ai.Decision rec = mtgtable.ai.Decisions.priority(ai);
+            int offered = 0;
+            for (long seed = 1; seed <= 30; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                offered += r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0))) ? 1 : 0;
+            }
+            check(!listed && !rec.options.contains(tok) && offered == 0,
+                    "modal-no-legal-mode: not a search or atlas candidate (" + listed + "), not in the record's options ("
+                            + rec.options + "), never the random seat's pick in 30 listings (" + offered + ")");
+            sa.setChosenList(null);
+            sa.setSubAbility(null);
+            final boolean handled = forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, sa, null);
+            check(!handled && strandedOnStack(ai.getGame(), sa),
+                    "modal-no-legal-mode (control): Forge's own hand-off strands it in the stack zone, silently");
+        });
+    }
+
+    /** D486: Suplex with Forge's chosen mode (the one whose description contains {@code mode}) aimed at {@code target}, or at nothing. */
+    private static forge.game.spellability.SpellAbility plantModes(final Player ai, final String mode, final Card target) {
+        final Card sup = named(ai.getCardsIn(ZoneType.Hand), "Suplex");
+        final forge.game.spellability.SpellAbility sa = sup.getFirstSpellAbility();
+        sa.setActivatingPlayer(ai);
+        forge.game.spellability.AbilitySub m = null;
+        for (final forge.game.spellability.AbilitySub c : sa.getAdditionalAbilityList("Choices")) {
+            if (c.getParamOrDefault("SpellDescription", "").contains(mode)) {
+                m = c;
+            }
+        }
+        check(m != null, "D486 planted: Suplex has the mode \"" + mode + "\"");
+        m.setActivatingPlayer(ai);
+        m.resetTargets();
+        if (target != null) {
+            m.getTargets().add(target);
+        }
+        final List<forge.game.spellability.AbilitySub> chosen = new ArrayList<>();
+        chosen.add(m);
+        sa.setChosenList(chosen);
+        sa.setSubAbility(null);
+        return sa;
+    }
+
+    /** D486: the random seat, given {@code sa} as Forge's answer, picks it (some seed), with the mode aimed at {@code want}, and casts it legally. */
+    private static void modalSeatCasts(final String name, final Player ai, final forge.game.spellability.SpellAbility sa,
+                                       final String want) {
+        final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+        final Card sup = sa.getHostCard();
+        final String tok = mtgtable.ai.Decisions.saToken(sa);
+        final List<forge.game.spellability.AbilitySub> planted = sa.getChosenList();
+        List<forge.game.spellability.SpellAbility> pick = null;
+        mtgtable.ai.Explorer ex = null;
+        boolean restored = true;
+        int passes = 0;
+        for (long seed = 1; seed <= 60 && pick == null; seed++) {
+            ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+            ctl.setExplorer(ex);
+            final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), new ArrayList<>(List.of(sa)));
+            if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                pick = r;
+            } else {
+                passes++;
+                restored &= sa.getChosenList() == planted;   // not picked: Forge's own modes are put back
+            }
+        }
+        check(pick != null && restored, name + ": the seat picks Forge's answer after " + passes
+                + " listing(s) that each put Forge's modes back");
+        if (pick == null) {
+            return;
+        }
+        final List<forge.game.spellability.AbilitySub> modes = sa.getChosenList();
+        check(modes != null && modes.size() == 1 && modes.get(0).getTargets().size() == 1
+                        && modes.get(0).getTargets().get(0) instanceof Card
+                        && want.equals(((Card) modes.get(0).getTargets().get(0)).getName())
+                        && ex.takeRetargeted() && ex.math().guardrails().getOrDefault("retargeted", 0) == 1,
+                name + ": the pick's mode is aimed at the " + want + ", marked and counted: "
+                        + (modes == null ? "none" : modes.get(0).getTargets()) + " " + ex.math().guardrails());
+        final forge.game.spellability.SpellAbility cast = pick.get(0);
+        final String err = stderrOf(() -> ctl.playChosenSpellAbility(cast));
+        final forge.game.spellability.SpellAbility onStack = ai.getGame().getStack().getSpellMatchingHost(sup);
+        check(!err.contains("failed to target") && onStack != null && ai.getGame().getStack().size() == 1,
+                name + ": Suplex is on the stack, cast legally, nothing printed" + (err.isEmpty() ? "" : " (" + err.trim() + ")"));
     }
 
     /**
