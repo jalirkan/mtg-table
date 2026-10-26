@@ -1,0 +1,8 @@
+==== J172 run4 started 2026-10-26T13:12:54-04:00 in unit lab-J172-run4, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline (23 turns, winner B) lists 27 decision(s) of seat A; branching at 17: d0 (p, turn 10, 3 options), d5 (p, turn 14, 4 options), d8 (p, turn 14, 3 options), d13 (b, turn 17, 6 options), d15 (a, turn 18, 6 options), d17 (p, turn 20, 3 options), d21 (p, turn 22, 4 options), d26 (b, turn 23, 4 options), d22 (p, turn 22, 3 options), d16 (b, turn 19, 7 options), d12 (a, turn 16, 7 options), d1 (p, turn 10, 3 options), d25 (p, turn 22, 2 options), d24 (p, turn 22, 2 options), d23 (a, turn 22, 2 options), d20 (b, turn 21, 2 options), d19 (a, turn 20, 2 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (73 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 183 s
+atlas: /home/justin-a/code/lab/data/lab-j170/b-s09-pauper-2109/atlas.json and atlas.md; phase A 0 game(s), phase B 6075 branch game(s) at 17 decision(s); checks: clean (226077 rows, 12152 frame logs, 17 leak check(s))
+  atlas warning: d0 option 2 `cast:32` (Gush): 51 of 200 branch game(s) were capped (random 51 of 200): 51 x ended at the turn cap
+  atlas warning: d1 option 1 `pass` (pass): 51 of 200 branch game(s) were capped (random 51 of 200): 51 x ended at the turn cap
