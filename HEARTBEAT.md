@@ -1246,3 +1246,12 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   modesDrawn 1,125) — the first population on the D486 seat. The job's one failed check: `atlas.problems == 0`
   with FIVE spines reporting a problem; being classified now (a leak, a checker rule the new records need, or a
   tool fault) before anything else is posted. The read is being written (results/J171/summary.md).
+- 12:45 EDT: **J171's read posted** (results/J171/summary.md): the first D486 population — 147 decisions, 101 labels
+  / 28 confident, **28.9 confident per 7-worker 10-h night [19.2–41.8]** (across populations: J169 32.0, J168
+  31.1); card-targeting options offered on 16.4% of listings; a card-targeting option is the best in 10 of 22
+  labels that offer one; the five "problems" are one record shape (Forge's empty optional target recorded as
+  `chosen: null`, 4,501 logs, no leak; D487 lane); lost casts 645, NEW with D486 — Fireball on s09 (545: the seat
+  drew 8 targets for a spell whose cost rises per target and could not pay) and Bone Shards / Vicious Offering on
+  s13 (64: the seat targeted the creature its own extra cost sacrifices); s05's are gone. C1 on s01 flips to NOT
+  SHOWN on the random map (−3.13). J172 = a re-check of the five spines once D487 lands (~30 min); D488 (lane):
+  the target draw respects per-target costs and never targets what its own cost sacrifices.

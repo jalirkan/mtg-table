@@ -1,0 +1,5120 @@
+{
+ "summary": {
+  "labels": {
+   "labels": 97,
+   "withCardTargetingOption": 16,
+   "cardTargetingOptions": 18,
+   "options": 401,
+   "bestIsCardTargeting": 7,
+   "bestIsCardTargetingWhereOffered": 7
+  },
+  "confident": {
+   "labels": 27,
+   "withCardTargetingOption": 3,
+   "cardTargetingOptions": 3,
+   "options": 118,
+   "bestIsCardTargeting": 0,
+   "bestIsCardTargetingWhereOffered": 0
+  },
+  "bySpine": {
+   "s01": {
+    "labels": 8,
+    "withCardTargetingOption": 5,
+    "cardTargetingOptions": 6,
+    "options": 28,
+    "bestIsCardTargeting": 2,
+    "bestIsCardTargetingWhereOffered": 2
+   },
+   "s02": {
+    "labels": 6,
+    "withCardTargetingOption": 0,
+    "cardTargetingOptions": 0,
+    "options": 13,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s03": {
+    "labels": 8,
+    "withCardTargetingOption": 1,
+    "cardTargetingOptions": 1,
+    "options": 33,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s04": {
+    "labels": 3,
+    "withCardTargetingOption": 0,
+    "cardTargetingOptions": 0,
+    "options": 8,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s05": {
+    "labels": 8,
+    "withCardTargetingOption": 0,
+    "cardTargetingOptions": 0,
+    "options": 33,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s06": {
+    "labels": 8,
+    "withCardTargetingOption": 2,
+    "cardTargetingOptions": 2,
+    "options": 50,
+    "bestIsCardTargeting": 2,
+    "bestIsCardTargetingWhereOffered": 2
+   },
+   "s07": {
+    "labels": 8,
+    "withCardTargetingOption": 3,
+    "cardTargetingOptions": 3,
+    "options": 36,
+    "bestIsCardTargeting": 1,
+    "bestIsCardTargetingWhereOffered": 1
+   },
+   "s08": {
+    "labels": 8,
+    "withCardTargetingOption": 0,
+    "cardTargetingOptions": 0,
+    "options": 40,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s09": {
+    "labels": 8,
+    "withCardTargetingOption": 2,
+    "cardTargetingOptions": 2,
+    "options": 35,
+    "bestIsCardTargeting": 1,
+    "bestIsCardTargetingWhereOffered": 1
+   },
+   "s10": {
+    "labels": 8,
+    "withCardTargetingOption": 1,
+    "cardTargetingOptions": 1,
+    "options": 34,
+    "bestIsCardTargeting": 1,
+    "bestIsCardTargetingWhereOffered": 1
+   },
+   "s11": {
+    "labels": 8,
+    "withCardTargetingOption": 1,
+    "cardTargetingOptions": 1,
+    "options": 33,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s12": {
+    "labels": 8,
+    "withCardTargetingOption": 0,
+    "cardTargetingOptions": 0,
+    "options": 24,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   },
+   "s13": {
+    "labels": 8,
+    "withCardTargetingOption": 1,
+    "cardTargetingOptions": 2,
+    "options": 34,
+    "bestIsCardTargeting": 0,
+    "bestIsCardTargetingWhereOffered": 0
+   }
+  },
+  "N": 10,
+  "source": "/home/justin-a/code/lab/data/lab-j166/report/labels.jsonl"
+ },
+ "rows": [
+  {
+   "spine": "s01",
+   "d": 3,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:6",
+     "label": "Wrenn's Resolve",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:24",
+     "label": "Mintstrosity",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 6,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:18",
+     "label": "Flayer Husk",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:1",
+     "label": "Mindstab Thrull",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:1",
+     "label": "Mindstab Thrull",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 7,
+   "kind": "p",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:1",
+     "label": "Mindstab Thrull",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:18",
+     "label": "Flayer Husk",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:1",
+     "label": "Mindstab Thrull",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:29",
+     "label": "Stone Rain",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 9,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 3,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:5",
+     "label": "Pyrotechnics",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:2",
+     "label": "Path to the World Tree",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:17",
+     "label": "Ashnod's Altar",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 11,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:17",
+     "label": "Ashnod's Altar",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:2",
+     "label": "Path to the World Tree",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 14,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:16",
+     "label": "Faerie Guidemother",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:21",
+     "label": "Regrowth",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 15,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 2,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:21",
+     "label": "Regrowth",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "activate:18",
+     "label": "Flayer Husk: Equip {2} ({2}: Attach to target creature you c",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    }
+   ]
+  },
+  {
+   "spine": "s01",
+   "d": 16,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:26",
+     "label": "Troll of Khazad-d\u00fbm",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "activate:18",
+     "label": "Flayer Husk: Equip {2} ({2}: Attach to target creature you c",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    }
+   ]
+  },
+  {
+   "spine": "s02",
+   "d": 0,
+   "kind": "p",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:25",
+     "label": "Evolution Sage",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s02",
+   "d": 1,
+   "kind": "p",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:25",
+     "label": "Evolution Sage",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s02",
+   "d": 2,
+   "kind": "p",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:13",
+     "label": "Eusocial Engineering",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s02",
+   "d": 3,
+   "kind": "a",
+   "k": 2,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:25",
+     "label": "attack Evolution Sage",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s02",
+   "d": 4,
+   "kind": "p",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:13",
+     "label": "Eusocial Engineering",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s02",
+   "d": 5,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:1",
+     "label": "Fact or Fiction",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:5",
+     "label": "Flow State",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 0,
+   "kind": "p",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:38",
+     "label": "Springheart Nantuko",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:11",
+     "label": "Zirda, the Dawnwaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 7,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 9,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 11,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 15,
+   "kind": "p",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:29",
+     "label": "Hornet Queen",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:23",
+     "label": "Minsc & Boo, Timeless Heroes",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 18,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:23",
+     "label": "Minsc & Boo, Timeless Heroes",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 19,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:23#0",
+     "label": "Minsc & Boo, Timeless Heroes: +1: Put three +1/+1 counters o",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:19",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s03",
+   "d": 21,
+   "kind": "a",
+   "k": 8,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:29,31,108,109,110,114",
+     "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Insect Token+Restless Vents",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:29,31,108,109,110",
+     "label": "attack Insect Token+Hornet Queen+Insect Token+Insect Token+Restless Vents",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:29,31,109,110,114",
+     "label": "attack Boo+Hornet Queen+Insect Token+Insect Token+Restless Vents",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:31,108,109,110,114",
+     "label": "attack Boo+Insect Token+Insect Token+Insect Token+Restless Vents",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "attack:29,31,108,110,114",
+     "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Restless Vents",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 6,
+     "token": "attack:29,31,108,109,114",
+     "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Restless Vents",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 7,
+     "token": "attack:29,108,109,110,114",
+     "label": "attack Boo+Insect Token+Hornet Queen+Insect Token+Insect Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s04",
+   "d": 0,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:9",
+     "label": "Hexdrinker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:40",
+     "label": "Talisman of Curiosity",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s04",
+   "d": 2,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:40",
+     "label": "Talisman of Curiosity",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "activate:9",
+     "label": "Hexdrinker: Level up {1} ({1}: Put a level counter on this. ",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s04",
+   "d": 3,
+   "kind": "p",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:9",
+     "label": "Hexdrinker: Level up {1} ({1}: Put a level counter on this. ",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 0,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:2",
+     "label": "Abrade",
+     "counts": {
+      "nocast": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:1",
+     "label": "Suplex",
+     "counts": {
+      "nocast": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 2,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:1",
+     "label": "Suplex",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:10",
+     "label": "Potioner's Trove",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 3,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:10",
+     "label": "Potioner's Trove",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:1",
+     "label": "Suplex",
+     "counts": {
+      "nocast": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 5,
+   "kind": "p",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 5,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:39",
+     "label": "Sunastian Falconer",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:8",
+     "label": "Primordial Pachyderm",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:40",
+     "label": "Lifeforce",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:1",
+     "label": "Suplex",
+     "counts": {
+      "nocast": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:6",
+     "label": "Acidic Slime",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 8,
+   "kind": "p",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 4,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:1",
+     "label": "Suplex",
+     "counts": {
+      "nocast": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:8",
+     "label": "Primordial Pachyderm",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:40",
+     "label": "Lifeforce",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:38",
+     "label": "Voldaren Epicure",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 10,
+   "kind": "a",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:6,39",
+     "label": "attack Acidic Slime+Sunastian Falconer",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:39",
+     "label": "attack Sunastian Falconer",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:6",
+     "label": "attack Acidic Slime",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 11,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:8",
+     "label": "Primordial Pachyderm",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:40",
+     "label": "Lifeforce",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:38",
+     "label": "Voldaren Epicure",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s05",
+   "d": 13,
+   "kind": "a",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:6,8,39",
+     "label": "attack Acidic Slime+Sunastian Falconer+Primordial Pachyderm",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:8,39",
+     "label": "attack Sunastian Falconer+Primordial Pachyderm",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:6,8",
+     "label": "attack Acidic Slime+Primordial Pachyderm",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:6,39",
+     "label": "attack Acidic Slime+Sunastian Falconer",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 2,
+   "kind": "p",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:16#0",
+     "label": "Foreboding Landscape: {T}, Sacrifice CARDNAME: Search your l",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:31",
+     "label": "Curse of Predation",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:14",
+     "label": "Loxodon Smiter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 6,
+   "kind": "p",
+   "k": 6,
+   "confident": true,
+   "bestRandom": 4,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:1",
+     "label": "Honest Rutstein",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:5",
+     "label": "Kitchen Finks",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:2",
+     "label": "Veteran Beastrider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 8,
+   "kind": "p",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:5",
+     "label": "Kitchen Finks",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:2",
+     "label": "Veteran Beastrider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 10,
+   "kind": "p",
+   "k": 7,
+   "confident": true,
+   "bestRandom": 6,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:37",
+     "label": "Angelic Voices",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:1",
+     "label": "Honest Rutstein",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:2",
+     "label": "Veteran Beastrider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 6,
+     "token": "cast:14",
+     "label": "Loxodon Smiter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 12,
+   "kind": "p",
+   "k": 6,
+   "confident": true,
+   "bestRandom": 5,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:1",
+     "label": "Honest Rutstein",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:2",
+     "label": "Veteran Beastrider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:14",
+     "label": "Loxodon Smiter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 15,
+   "kind": "p",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 4,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:1",
+     "label": "Honest Rutstein",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:14",
+     "label": "Loxodon Smiter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 17,
+   "kind": "p",
+   "k": 8,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:13",
+     "label": "Unburial Rites",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:1",
+     "label": "Honest Rutstein",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:14",
+     "label": "Loxodon Smiter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 6,
+     "token": "cast:5",
+     "label": "Kitchen Finks",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 7,
+     "token": "cast:21",
+     "label": "Land Tax",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s06",
+   "d": 19,
+   "kind": "p",
+   "k": 8,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:13",
+     "label": "Unburial Rites",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:29",
+     "label": "Floral Spuzzem",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:1",
+     "label": "Honest Rutstein",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:11",
+     "label": "The Mountain-king's Return",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:14",
+     "label": "Loxodon Smiter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 6,
+     "token": "cast:5",
+     "label": "Kitchen Finks",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 7,
+     "token": "cast:21",
+     "label": "Land Tax",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 4,
+   "kind": "p",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:10",
+     "label": "Ydwen Efreet",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:3",
+     "label": "Sedge Troll",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "activate:17",
+     "label": "Cori-Steel Cutter: Equip {1}{R} ({1}{R}: Attach to target cr",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 4,
+     "token": "cast:22",
+     "label": "Sweltering Suns",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:39",
+     "label": "Disrupting Scepter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 6,
+   "kind": "p",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:3",
+     "label": "Sedge Troll",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:22",
+     "label": "Sweltering Suns",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "activate:17",
+     "label": "Cori-Steel Cutter: Equip {1}{R} ({1}{R}: Attach to target cr",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 4,
+     "token": "cast:39",
+     "label": "Disrupting Scepter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 7,
+   "kind": "a",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:10",
+     "label": "attack Ydwen Efreet",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:10,12",
+     "label": "attack Ydwen Efreet+Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 8,
+   "kind": "p",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:4",
+     "label": "Stadium Headliner",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "activate:17",
+     "label": "Cori-Steel Cutter: Equip {1}{R} ({1}{R}: Attach to target cr",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 3,
+     "token": "cast:22",
+     "label": "Sweltering Suns",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:39",
+     "label": "Disrupting Scepter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 10,
+   "kind": "a",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:3,12",
+     "label": "attack Sedge Troll+Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:12",
+     "label": "attack Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:3",
+     "label": "attack Sedge Troll",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 11,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 3,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:22",
+     "label": "Sweltering Suns",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:39",
+     "label": "Disrupting Scepter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:8",
+     "label": "Manabarbs",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 12,
+   "kind": "a",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:3,4,12",
+     "label": "attack Sedge Troll+Stadium Headliner+Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:4,12",
+     "label": "attack Stadium Headliner+Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:3,12",
+     "label": "attack Sedge Troll+Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:3,4",
+     "label": "attack Sedge Troll+Stadium Headliner",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s07",
+   "d": 13,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:8",
+     "label": "Manabarbs",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:39",
+     "label": "Disrupting Scepter",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:22",
+     "label": "Sweltering Suns",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 1,
+   "kind": "p",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:18",
+     "label": "Jace, Wielder of Mysteries",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 6,
+   "kind": "p",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 3,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:17",
+     "label": "Fervent Champion",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:8",
+     "label": "Fable of the Mirror-Breaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:3",
+     "label": "Hanweir Garrison",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:30",
+     "label": "Spectral Sailor",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 7,
+   "kind": "p",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:8",
+     "label": "Fable of the Mirror-Breaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:3",
+     "label": "Hanweir Garrison",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:30",
+     "label": "Spectral Sailor",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 9,
+   "kind": "p",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 3,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:18#0",
+     "label": "Jace, Wielder of Mysteries: +1: Target player mills two card",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:8",
+     "label": "Fable of the Mirror-Breaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:3",
+     "label": "Hanweir Garrison",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:30",
+     "label": "Spectral Sailor",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 10,
+   "kind": "p",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:3",
+     "label": "Hanweir Garrison",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:8",
+     "label": "Fable of the Mirror-Breaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:30",
+     "label": "Spectral Sailor",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 11,
+   "kind": "p",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:16",
+     "label": "Two-Headed Giant of Foriys",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:8",
+     "label": "Fable of the Mirror-Breaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:30",
+     "label": "Spectral Sailor",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 12,
+   "kind": "a",
+   "k": 4,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:3,17",
+     "label": "attack Fervent Champion+Hanweir Garrison",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:17",
+     "label": "attack Fervent Champion",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:3",
+     "label": "attack Hanweir Garrison",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s08",
+   "d": 13,
+   "kind": "p",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:18#0",
+     "label": "Jace, Wielder of Mysteries: +1: Target player mills two card",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:16",
+     "label": "Two-Headed Giant of Foriys",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:8",
+     "label": "Fable of the Mirror-Breaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:36",
+     "label": "Prismari Command",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "cast:30",
+     "label": "Spectral Sailor",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 0,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:4",
+     "label": "Threadbind Clique",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:32",
+     "label": "Gush",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 1,
+   "kind": "p",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:4",
+     "label": "Threadbind Clique",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:32",
+     "label": "Gush",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 5,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:5",
+     "label": "Rancor",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:33",
+     "label": "Wood Elves",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:34",
+     "label": "Mogg War Marshal",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 8,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:33",
+     "label": "Wood Elves",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:34",
+     "label": "Mogg War Marshal",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 12,
+   "kind": "a",
+   "k": 7,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:4",
+     "label": "attack Threadbind Clique",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:4,33,34,40,87",
+     "label": "attack Threadbind Clique+Wood Elves+Mogg War Marshal+Goblin Token+Fanatical Firebrand",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:4,33",
+     "label": "attack Threadbind Clique+Wood Elves",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:4,34",
+     "label": "attack Threadbind Clique+Mogg War Marshal",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "attack:4,87",
+     "label": "attack Threadbind Clique+Goblin Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 6,
+     "token": "attack:4,40",
+     "label": "attack Threadbind Clique+Fanatical Firebrand",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 13,
+   "kind": "b",
+   "k": 6,
+   "confident": true,
+   "bestRandom": 4,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "block:none",
+     "label": "block none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "block:33>70",
+     "label": "block Wood Elves>Seeker of the Way",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "block:34>70",
+     "label": "block Mogg War Marshal>Seeker of the Way",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "block:87>70",
+     "label": "block Goblin Token>Seeker of the Way",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "block:40>70",
+     "label": "block Fanatical Firebrand>Seeker of the Way",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "block:33>55",
+     "label": "block Wood Elves>Repentant Blacksmith",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 15,
+   "kind": "a",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:4",
+     "label": "attack Threadbind Clique",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:4,33,34,87",
+     "label": "attack Threadbind Clique+Wood Elves+Mogg War Marshal+Goblin Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:4,33",
+     "label": "attack Threadbind Clique+Wood Elves",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:4,34",
+     "label": "attack Threadbind Clique+Mogg War Marshal",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "attack:4,87",
+     "label": "attack Threadbind Clique+Goblin Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s09",
+   "d": 17,
+   "kind": "p",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:5",
+     "label": "Rancor",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:8",
+     "label": "Stickytongue Sentinel",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 2,
+   "kind": "p",
+   "k": 4,
+   "confident": true,
+   "bestRandom": 3,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:37#0",
+     "label": "Perilous Landscape: {T}, Sacrifice CARDNAME: Search your lib",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:28",
+     "label": "Morbid Opportunist",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:23",
+     "label": "Ivora, Insatiable Heir",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 10,
+   "kind": "p",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:28",
+     "label": "Morbid Opportunist",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:38",
+     "label": "Carrion Ants",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 15,
+   "kind": "a",
+   "k": 4,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:10,28",
+     "label": "attack Scolding Administrator+Morbid Opportunist",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:10",
+     "label": "attack Scolding Administrator",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:28",
+     "label": "attack Morbid Opportunist",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 22,
+   "kind": "a",
+   "k": 7,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:10,38",
+     "label": "attack Carrion Ants+Scolding Administrator",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:10,17,28,38",
+     "label": "attack Carrion Ants+Scolding Administrator+Morbid Opportunist+Juri, Master of the Revue",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:10",
+     "label": "attack Scolding Administrator",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:38",
+     "label": "attack Carrion Ants",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "attack:10,28,38",
+     "label": "attack Carrion Ants+Scolding Administrator+Morbid Opportunist",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 6,
+     "token": "attack:10,17,38",
+     "label": "attack Carrion Ants+Scolding Administrator+Juri, Master of the Revue",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 28,
+   "kind": "a",
+   "k": 5,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:14",
+     "label": "attack Artisan of Kozilek",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:14,27,28",
+     "label": "attack Artisan of Kozilek+Morbid Opportunist+Signal Pest",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:14,28",
+     "label": "attack Artisan of Kozilek+Morbid Opportunist",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:14,27",
+     "label": "attack Artisan of Kozilek+Signal Pest",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 33,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": true,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:11",
+     "label": "Unearth",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:35",
+     "label": "Sensei's Divining Top",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 40,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:9",
+     "label": "Nahiri, Storm of Stone",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:2",
+     "label": "Exorcist",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:35",
+     "label": "Sensei's Divining Top",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s10",
+   "d": 43,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "activate:26",
+     "label": "Evolving Wilds: {T}, Sacrifice CARDNAME: Search your library",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:4",
+     "label": "Dauntless Scrapbot",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:35",
+     "label": "Sensei's Divining Top",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 3,
+   "kind": "p",
+   "k": 4,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 1,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:30",
+     "label": "Murderous Rider \u2014 Swift End",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:30",
+     "label": "Murderous Rider",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:20",
+     "label": "Shallow Grave",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 7,
+   "kind": "p",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:30",
+     "label": "Murderous Rider (may play)",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:31",
+     "label": "Mind Twist",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:27",
+     "label": "Bitterblossom",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "cast:20",
+     "label": "Shallow Grave",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 8,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:20",
+     "label": "Shallow Grave",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:27",
+     "label": "Bitterblossom",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 9,
+   "kind": "a",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:3,30",
+     "label": "attack Evolved Sleeper+Murderous Rider",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:3",
+     "label": "attack Evolved Sleeper",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:30",
+     "label": "attack Murderous Rider",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 10,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:27",
+     "label": "Bitterblossom",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:31",
+     "label": "Mind Twist",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:20",
+     "label": "Shallow Grave",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 11,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:20",
+     "label": "Shallow Grave",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:37",
+     "label": "Hell's Caretaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 13,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:37",
+     "label": "Hell's Caretaker",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:31",
+     "label": "Mind Twist",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:20",
+     "label": "Shallow Grave",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s11",
+   "d": 14,
+   "kind": "b",
+   "k": 6,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "block:3>85",
+     "label": "block Evolved Sleeper>Human Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "block:none",
+     "label": "block none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "block:83>47,3>85",
+     "label": "block Evolved Sleeper>Human Token, Faerie Rogue Token>Consecrated Sphinx",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "block:3>85,30>85",
+     "label": "block Evolved Sleeper>Human Token, Murderous Rider>Human Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "block:3>85,83>85",
+     "label": "block Evolved Sleeper>Human Token, Faerie Rogue Token>Human Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "block:3>85,37>85",
+     "label": "block Evolved Sleeper>Human Token, Hell's Caretaker>Human Token",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 0,
+   "kind": "p",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:22",
+     "label": "Delighted Halfling",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 4,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:29",
+     "label": "Laelia, the Blade Reforged",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:21",
+     "label": "Agatha's Soul Cauldron",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 5,
+   "kind": "a",
+   "k": 2,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:29",
+     "label": "attack Laelia, the Blade Reforged",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 7,
+   "kind": "a",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:29",
+     "label": "attack Laelia, the Blade Reforged",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:22,29",
+     "label": "attack Laelia, the Blade Reforged+Delighted Halfling",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 10,
+   "kind": "a",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:22,29,37",
+     "label": "attack Restless Ridgeline+Delighted Halfling+Laelia, the Blade Reforged",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:22,29",
+     "label": "attack Delighted Halfling+Laelia, the Blade Reforged",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:29,37",
+     "label": "attack Restless Ridgeline+Laelia, the Blade Reforged",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:22,37",
+     "label": "attack Restless Ridgeline+Delighted Halfling",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 11,
+   "kind": "p",
+   "k": 4,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:29",
+     "label": "Laelia, the Blade Reforged (may play)",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:20",
+     "label": "Grist, the Hunger Tide",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "cast:24",
+     "label": "Omnath, Locus of Rage",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 12,
+   "kind": "p",
+   "k": 2,
+   "confident": true,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:20",
+     "label": "Grist, the Hunger Tide",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s12",
+   "d": 13,
+   "kind": "a",
+   "k": 3,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:37",
+     "label": "attack Restless Ridgeline",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:29,37",
+     "label": "attack Restless Ridgeline+Laelia, the Blade Reforged",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 0,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:28",
+     "label": "Unwilling Ingredient",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:27",
+     "label": "Stone-Throwing Devils",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 2,
+   "kind": "p",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 1,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": true,
+   "nCardTargetingOptions": 2,
+   "options": [
+    {
+     "o": 0,
+     "token": "cast:3",
+     "label": "Savor",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 1,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:23",
+     "label": "Go for the Throat",
+     "counts": {
+      "card": 10
+     },
+     "cardShare": 1.0,
+     "cardTargeting": true
+    },
+    {
+     "o": 3,
+     "token": "cast:27",
+     "label": "Stone-Throwing Devils",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 9,
+   "kind": "a",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:27,28",
+     "label": "attack Stone-Throwing Devils+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:28",
+     "label": "attack Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:27",
+     "label": "attack Stone-Throwing Devils",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 11,
+   "kind": "p",
+   "k": 3,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "pass",
+     "label": "pass",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "cast:37",
+     "label": "Three Tree Rootweaver",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "cast:26",
+     "label": "Okiba Reckoner Raid",
+     "counts": {
+      "none": 10
+     },
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 15,
+   "kind": "a",
+   "k": 6,
+   "confident": true,
+   "bestRandom": 2,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:38",
+     "label": "attack Syr Konrad, the Grim",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:27,28,37,38",
+     "label": "attack Syr Konrad, the Grim+Unwilling Ingredient+Stone-Throwing Devils+Three Tree Rootweaver",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:28,38",
+     "label": "attack Syr Konrad, the Grim+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:27,38",
+     "label": "attack Syr Konrad, the Grim+Stone-Throwing Devils",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 5,
+     "token": "attack:37,38",
+     "label": "attack Syr Konrad, the Grim+Three Tree Rootweaver",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 18,
+   "kind": "a",
+   "k": 4,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:28,37",
+     "label": "attack Three Tree Rootweaver+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:28",
+     "label": "attack Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:37",
+     "label": "attack Three Tree Rootweaver",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 24,
+   "kind": "a",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 0,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:28,32,35",
+     "label": "attack Thieving Sprite+Hasran Ogress+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:28,35",
+     "label": "attack Hasran Ogress+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:28,32",
+     "label": "attack Thieving Sprite+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:32,35",
+     "label": "attack Thieving Sprite+Hasran Ogress",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  },
+  {
+   "spine": "s13",
+   "d": 25,
+   "kind": "a",
+   "k": 5,
+   "confident": false,
+   "bestRandom": 3,
+   "forgeOption": 0,
+   "bestCardTargeting": false,
+   "anyCardTargeting": false,
+   "nCardTargetingOptions": 0,
+   "options": [
+    {
+     "o": 0,
+     "token": "attack:28,32,35",
+     "label": "attack Thieving Sprite+Hasran Ogress+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 1,
+     "token": "attack:none",
+     "label": "attack none",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 2,
+     "token": "attack:28,35",
+     "label": "attack Hasran Ogress+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 3,
+     "token": "attack:28,32",
+     "label": "attack Thieving Sprite+Unwilling Ingredient",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    },
+    {
+     "o": 4,
+     "token": "attack:32,35",
+     "label": "attack Thieving Sprite+Hasran Ogress",
+     "counts": {},
+     "cardShare": 0.0,
+     "cardTargeting": false
+    }
+   ]
+  }
+ ]
+}
