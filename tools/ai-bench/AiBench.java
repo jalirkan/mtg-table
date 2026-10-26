@@ -1512,6 +1512,7 @@ public final class AiBench {
         copierCarryScenarios();
         chooseSourceScenarios();
         staleTargetScenarios();
+        modalCastTargetsScenario();
     }
 
     /**
@@ -1644,7 +1645,9 @@ public final class AiBench {
                     pick = r;
                 } else {
                     passes++;
-                    restored &= sa.getTargets().size() == 2;   // not picked: Forge's own list is put back
+                    // not picked: Forge's own list is put back, the same objects in the same order
+                    restored &= sa.getTargets().size() == stale.size() && sa.getTargets().get(0) == stale.get(0)
+                            && sa.getTargets().get(1) == stale.get(1);
                 }
             }
             check(pick != null && pick.get(0) == sa, "stale-targets-seat: the seat picks Forge's answer (" + tries + " seeds)" + (pick == null && ex != null ? " " + ex.math().guardrails() : ""));
@@ -1664,6 +1667,7 @@ public final class AiBench {
         scenario("stale-targets-refused", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
             final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
             final forge.game.spellability.SpellAbility sa = plantStale(ai, true);
+            final forge.game.spellability.TargetChoices staleList = sa.getTargets().clone();
             final Card troll = sa.getHostCard();
             final String tok = mtgtable.ai.Decisions.saToken(sa);
             final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
@@ -1679,8 +1683,55 @@ public final class AiBench {
                     && gr.getOrDefault("noRepeatRefused", 0) == 29 && gr.getOrDefault("retargeted", 0) == 0,
                     "stale-targets-refused: with no creature of its own left the play is never offered, refused once in "
                             + "the window and left out after: " + gr);
-            check(troll.getZone() != null && troll.getZone().is(ZoneType.Hand) && sa.getTargets().size() == 2,
+            check(troll.getZone() != null && troll.getZone().is(ZoneType.Hand) && sa.getTargets().size() == 2
+                    && sa.getTargets().get(0) == staleList.get(0) && sa.getTargets().get(1) == staleList.get(1),
                     "stale-targets-refused: the card stays in hand, and Forge's own list is left as Forge left it");
+        });
+    }
+
+    /**
+     * D485 (the skeptic review): a modal spell's target records show what is
+     * cast.  Izzet Charm with its damage mode chosen at the Hill Giant
+     * ({@code setChosenList}), and the chain of copies {@code CharmAi} builds
+     * planted aimed at the Grizzly Bears instead (as the seat's
+     * {@code randomTargets} leaves it): the cast's {@code CharmEffect.makeChoices}
+     * rebuilds the chain from the chosen mode (the Giant), and
+     * {@code Decisions.castTargets} records the Giant, where the chain read
+     * records the Bears.
+     */
+    static void modalCastTargetsScenario() throws Exception {
+        scenario("stale-targets-modal-record", List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai",
+                "activephase=MAIN1", "humanbattlefield=Hill Giant;Grizzly Bears", "aihand=Izzet Charm",
+                "aibattlefield=Island;Mountain"), PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
+            final Card charm = named(ai.getCardsIn(ZoneType.Hand), "Izzet Charm");
+            final forge.game.spellability.SpellAbility sa = charm.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            final Card giant = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Hill Giant");
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            forge.game.spellability.AbilitySub dmg = null;
+            for (final forge.game.spellability.AbilitySub sub : forge.game.ability.effects.CharmEffect.makePossibleOptions(sa)) {
+                if (sub.getApi() == forge.game.ability.ApiType.DealDamage) {
+                    dmg = sub;
+                }
+            }
+            dmg.setActivatingPlayer(ai);
+            dmg.resetTargets();
+            dmg.getTargets().add(giant);
+            sa.setChosenList(new ArrayList<>(List.of(dmg)));
+            sa.setSubAbility(null);
+            forge.game.ability.effects.CharmEffect.chainAbilities(sa, sa.getChosenList());
+            final forge.game.spellability.SpellAbility copy = sa.getSubAbility();
+            copy.resetTargets();
+            copy.getTargets().add(bears);   // the discarded chain, aimed elsewhere
+            final List<mtgtable.ai.Decision> chainRead = mtgtable.ai.Decisions.targets(sa, ai, "targets");
+            final List<mtgtable.ai.Decision> castRead = mtgtable.ai.Decisions.castTargets(sa, ai, null);
+            check(chainRead.size() == 1 && ("target:" + bears.getId()).equals(chainRead.get(0).chosen),
+                    "stale-targets-modal-record: the chain of copies is aimed at the Bears (" + (chainRead.isEmpty() ? "none" : chainRead.get(0).chosen) + ")");
+            check(castRead.size() == 1 && ("target:" + giant.getId()).equals(castRead.get(0).chosen),
+                    "stale-targets-modal-record: the record reads the chosen mode, the Giant (" + (castRead.isEmpty() ? "none" : castRead.get(0).chosen) + ")");
+            check(forge.game.ability.effects.CharmEffect.makeChoices(sa) && sa.getSubAbility() != null
+                    && sa.getSubAbility().getTargets().size() == 1 && sa.getSubAbility().getTargets().get(0) == giant,
+                    "stale-targets-modal-record: the cast's makeChoices rebuilds the chain from the chosen mode -- the Giant, as recorded");
         });
     }
 

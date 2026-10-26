@@ -64,14 +64,23 @@ addendum in D481's file).
      exactly as before.
    - **Its old targets are noted first** (`Explorer.Before`, D471's put-back) and put back unless the play is the pick:
      a listed answer the seat did not pick, and a pick the engine refused, keep Forge's own list, as Forge left it.
-   - **A modal spell** (`ApiType.Charm`): the targets the engine reads at the cast are its chosen modes', which
-     `CharmEffect.makeChoices` copies onto the spell with their targets; so those parts are checked, for Forge's answer
-     and for the seat's own listing of a modal spell (whose `randomTargets` drew on the chain the cast rebuilds). One
+   - **A modal spell** (`ApiType.Charm`): Forge's `CharmAi.checkApiLogic` builds a chain of copies of the modes it
+     chose, but at the cast `CharmEffect.makeChoices` throws that chain away (`setSubAbility(null)`) and rebuilds it
+     from `getChosenList()`, copying each chosen mode with its own targets. So the parts checked are the chosen modes'
+     (`Explorer.castParts`), for Forge's answer and for the seat's own listing of a modal spell. The seat's own
+     `randomTargets` draws on the discarded chain, so **since D451 the seat's own modal pick has cast the targets Forge
+     left on the chosen modes, not its random ones** (unchanged here; those are now checked and kept unless stale). One
      with no modes chosen yet is not checked: Forge chooses them inside the cast (see *Not fixed here*).
+   - **The decision record shows what is cast** (added after the skeptic review): the priority path records a play's
+     target decisions from the same parts (`Decisions.castTargets`), so a modal spell's records name its chosen modes'
+     targets, not the discarded chain's. Every other play's parts are its chain, as before. The trigger and
+     `chooseTargetsFor` records are unchanged.
    - **When it cannot be made legal** (no legal list reaches the minimum; a stale part with divided damage, a
      cross-target constraint or a spell as a target), **the play is not offered**: the seat picks among the rest. It is
      G5's refused play for the rest of the priority window (`refusedCast` the first time, `noRepeatRefused` after, as
-     D458 counts a payment refusal), and counted as `staleRefused`. The card stays where it is.
+     D458 counts a payment refusal), and counted as `staleRefused`. The card stays where it is. A throw inside the check
+     (after some parts may have changed) is treated the same way, and counted as an explore failure: a play is never
+     offered half-fixed.
    - **Counted.** A pick of a re-targeted answer is counted (`retargeted`), both in the seat's `explore.guardrails`
      (protocol **M74**; `tools/check-redaction.mjs` accepts the two names) and on the branch row (`Atlas.Branch.retargeted`,
      `BranchRow.retargeted` in `tools/cubelab/atlas.ts`, written when above 0). Its decision records -- the priority
@@ -111,12 +120,28 @@ atlas after it is a new policy, D458 point 3) and the decision records' options,
 part of this one.
 
 **Not fixed here.**
-- **A modal spell with no modes chosen** (s05's Suplex, 453 lines, `[[]]`): Forge's `CharmAi` leaves `chosenList` null
-  when no mode suits it, and the cast's `chooseModeForAbility` then runs `doTrigger(sa, true)`, which can choose a mode
-  with no legal target. The check runs before the modes exist.
+- **A modal spell with no modes chosen** (s05's Suplex, 453 lines, `[[]]`). It is the **seat's own pick**, not Forge's
+  answer: a modal spell with no chain passes `randomTargets` (it has no targeting part to draw for). Forge's `CharmAi`
+  leaves `chosenList` null when no mode suits it, and the cast -- `ComputerUtil.handlePlayingSpellAbility`:
+  `moveToStack` (`:100`), then `CharmEffect.makeChoices` (`:110`), then the payment and `MagicStack.add` -- asks
+  `chooseModeForAbility`, which runs `doTrigger(sa, true)` and can choose a mode with no legal target. The check runs
+  before the modes exist. The candidate for D486: override `chooseModeForAbility` for the random seat
+  (`AtlasController.java:268` already hooks it, on the game thread) and draw the modes and their targets there.
 - **A trigger's targets** (s07's Headliner Scarlett, 138 lines, `[[]]`): Forge's AI chose no target for the ETB trigger;
   the random seat does not choose trigger targets.
 - **The plain Forge seat** strands the same way (part 1).
+
+**Follow-ups (the skeptic review, 2026-10-25).**
+- **A stale spell target is not detected**: a counterspell whose target left the stack keeps a target that is no
+  `GameEntity`, which the check does not judge unless the count is invalid. Such a spell fizzles at resolution; it is
+  not stranded.
+- **Not in the refuse list**: `MaxTotalTargetCMC`, `MaxTotalTargetPower`, `TargetsWithRelatedProperty` and
+  `TargetsWithSharedCardType`. A stale part under one of them is re-targeted with `canTarget` judging each target one
+  at a time, which these totals and relations are not.
+- **G5's counts now include stale refusals**: `refusedCast` and `noRepeatRefused` count a stale answer that was not
+  offered as well as a payment the engine refused (M74 says so); `staleRefused` is the stale share.
+- **`retargeted` counts the pick**, even when the engine then refuses its payment (the targets are then put back).
+- Done in the review's commit: the bench's put-back check compares Forge's two targets object by object, in order.
 
 **Comparability (D458 point 3).** Only a decision that meets a stale list changes: the seat's pick of Forge's answer is
 cast (with other targets) instead of being lost, or not offered at all, and the cut and fill draw from the seat's stream.
@@ -175,6 +200,15 @@ targeting); the Forge map is unchanged.
   - **What else moved**: of the 215 rows (same keys in both runs), 191 are identical (result, turns, steps). Of the 24 that
     differ, 20 are the rows with a re-targeted pick. The other 4 have none; the listing's cut and fill draw from the
     seat's stream whenever it meets a stale list, picked or not, which is the likely cause (not traced).
+- **After the skeptic review** (the second commit: modal records, the fill order, a throw refuses, the put-back check):
+  `./bridge/build.sh` OK, `decision selftest: 204 check(s), 0 failure(s)`; `./tools/ai-bench.sh --selftest` **219
+  checks, 0 failures** -- three new ("stale-targets-modal-record", `AiBench.modalCastTargetsScenario`: Izzet Charm's
+  damage mode chosen at the Hill Giant, its chain of copies planted at the Grizzly Bears; the chain read records the
+  Bears, `Decisions.castTargets` the Giant, and the cast's `CharmEffect.makeChoices` rebuilds the chain at the Giant),
+  and the put-back checks now compare Forge's targets object by object, in order; `check-redaction-selftest.mjs` OK. The
+  s10 reproduction once more (`--out var/d485-s10b`): 215 branch games in 282 s, checks clean, **0 `failed to target`
+  lines**, 20 `retargeted` rows, and all 215 rows identical (result, turns, steps) to the first run after the fix.
 - **The gate**: `rm -rf bridge/out && ./tools/make-forge-home.sh && FORGE_JAR=<config.json's forgeJar> WSPORT=9800
   GATE_JOBS=4 ./tools/check-all.sh`, **`check-all OK`**, 510.4 s wall, 59 jobs (`var/check-all/20261025-200452-3249297`;
   node 1862 pass, 11 skipped, 0 fail). `./tools/ai-bench.sh --selftest` on the gate's build: 216 checks, 0 failures.
+  On the review's commit: **`check-all OK`**, 555.1 s wall, 59 jobs (`var/check-all/20261025-203235-3886623`).

@@ -280,7 +280,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 final SearchPolicy.Report trep = search == null ? null : search.takeTargetReport();
                 if (sa != null) {
                     boolean first = true;
-                    for (final Decision t : Decisions.targets(sa, player, "targets", targetMarks)) {
+                    for (final Decision t : Decisions.castTargets(sa, player, targetMarks)) {   // D485: what is cast
                         t.parent = n;
                         t.by = lastBy;
                         if (retargeted) {

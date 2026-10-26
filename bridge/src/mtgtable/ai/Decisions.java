@@ -329,10 +329,31 @@ public final class Decisions {
         return quiet(() -> targets0(sa, ai, source, marks));
     }
 
+    /**
+     * D485: the targets of a play the seat hands to the engine at priority, read
+     * from the parts the engine reads when it casts it ({@link Explorer#castParts}):
+     * for a modal spell, its chosen modes, not the chain of copies Forge's
+     * {@code CharmAi} built, which the cast discards.  Any other play: its chain,
+     * as {@link #targets(SpellAbility, Player, String, java.util.Map)}.
+     */
+    public static List<Decision> castTargets(final SpellAbility sa, final Player ai,
+                                             final java.util.Map<SpellAbility, Decision.Explore> marks) {
+        return quiet(() -> targets0(Explorer.castParts(sa), ai, "targets", marks));
+    }
+
     private static List<Decision> targets0(final SpellAbility sa, final Player ai, final String source,
                                            final java.util.Map<SpellAbility, Decision.Explore> marks) {
-        final List<Decision> out = new ArrayList<>();
+        final List<SpellAbility> chain = new ArrayList<>();
         for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            chain.add(s);
+        }
+        return targets0(chain, ai, source, marks);
+    }
+
+    private static List<Decision> targets0(final List<SpellAbility> parts, final Player ai, final String source,
+                                           final java.util.Map<SpellAbility, Decision.Explore> marks) {
+        final List<Decision> out = new ArrayList<>();
+        for (final SpellAbility s : parts) {
             if (!s.usesTargeting()) {
                 continue;
             }

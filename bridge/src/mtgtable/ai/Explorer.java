@@ -495,11 +495,13 @@ public final class Explorer {
             // D485: Forge's answer goes to the engine with the targets Forge left on it, which can be
             // stale (a target that died or left, or one too many): made legal here, or not offered
             final String ftok = tokenOf(chosen);
-            int fixed = 0;
+            int fixed;
             try {
                 fixed = staleTargets(forgeSa, ai);
             } catch (final RuntimeException e) {
+                // a throw can come after some parts changed: never offered half-fixed (put back with the rest)
                 math.failed();
+                fixed = -1;
             }
             if (fixed < 0) {
                 refuseStale(g, ai, ftok);
@@ -552,8 +554,10 @@ public final class Explorer {
                     continue;
                 }
                 if (sa.getApi() == ApiType.Charm) {
-                    // D485: a modal spell's targets at the cast are its chosen modes' (randomTargets drew
-                    // on the chain the engine rebuilds from them), so those are made legal too, or it is left out
+                    // D485: a modal spell's targets at the cast are its chosen modes' own, Forge's (CharmEffect.makeChoices
+                    // discards CharmAi's chain of copies and rebuilds it from getChosenList()); randomTargets drew on that
+                    // discarded chain (so since D451 the seat's own modal pick casts Forge's targets), and these are made
+                    // legal here, or the play is left out
                     final int fixed = staleTargets(sa, ai);
                     if (fixed < 0) {
                         continue;
@@ -661,9 +665,10 @@ public final class Explorer {
      * chain, which {@code CharmEffect.makeChoices} copies onto the spell at the
      * cast, targets included ({@code SpellAbility.copy} clones them).  A modal
      * spell with no modes chosen yet has its modes and their targets chosen by
-     * Forge inside the cast, after this check.
+     * Forge inside the cast, after this check.  The decision record reads the
+     * same parts ({@link Decisions#castTargets}), so it shows what is cast.
      */
-    private static List<SpellAbility> castParts(final SpellAbility sa) {
+    static List<SpellAbility> castParts(final SpellAbility sa) {
         final List<SpellAbility> out = new ArrayList<>();
         if (sa.getApi() == ApiType.Charm && !sa.isCopied()) {
             if (sa.usesTargeting()) {
@@ -755,7 +760,9 @@ public final class Explorer {
                     fill.add(e);
                 }
             }
-            fill.sort((a, b) -> Integer.compare(a.getId(), b.getId()));   // a seeded draw needs a fixed order
+            // a seeded draw needs a fixed order: players before cards (player 1 and card 1 share an id), then by id
+            fill.sort((a, b) -> a instanceof Player != b instanceof Player ? (a instanceof Player ? -1 : 1)
+                    : Integer.compare(a.getId(), b.getId()));
             final SpellAbility part = s;
             final List<GameEntity> next = legalTargetList(cur, e -> cands.contains(e) && part.canTarget(e), fill,
                     tr.getMinTargets(host, s), tr.getMaxTargets(host, s), math);
