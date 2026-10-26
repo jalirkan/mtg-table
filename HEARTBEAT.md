@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-25T23:31:41-04:00
+- time: 2026-10-25T23:35:16-04:00
 - runner: e9f7ed0c, up since 2026-10-25T20:53:45-04:00
-- running: J169 commands 4/5, 72075/71525 lines, 7066.3/h, 6 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 7.43; memory 7.5/30.5 GB, swap 4241 MB, pressure 0% (lab budget 23.4 GB)
+- running: J169 commands 5/5, 72075/71525 lines, 6365.6/h, 6 worker(s), 1 core(s)
+- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
+- load: 5; memory 6.5/30.5 GB, swap 4241 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J168 failed at 2026-10-25T19:51:23-04:00: branches 71525 · atlas.spinesDone 13 · atlas.branchedInFull 97 · atlas.screened 39 · atlas.stoppedOptions 135 · atlas.labels 97 · atlas.confident 27 · atlas.confidentPer7Worker10hNight 31.1 · atlas.timeoutShare 0 · atlas.identityOptions 829 · atlas.chooseSourceGuardRows 537 · atlas.chooseSourceGuard 6187 · atlas.effectSourceNullBranches 0 · atlas.exileLinksLostBranches 2000 · atlas.branchRestarted 0 · atlas.branchCapped 2386 · atlas.problems 3
