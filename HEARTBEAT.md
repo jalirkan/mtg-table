@@ -1180,3 +1180,13 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   violations; the job's one failed check is `atlas.problems == 0` (3: the stale-target redaction flags on s06,
   s10 and s13 — not a leak; D485). The morning read is being written (results/J168/summary.md), with the
   lost-spell bias quantified per label.
+- 21:05 EDT: **J168's read is posted** (`results/J168/summary.md`): 13 spines, 71,525 branch games, **97 labels,
+  27 confident** (31.1 confident per 7-worker 10-h night on 27, Poisson 20.5–45.2; 24.2–29.9 with the lost-spell
+  bias removed — on the review's ~25–27); the cuts saved 31.9% of branch time (the screen fired on 39 decisions),
+  the checks 4.9% of the wall; 0 errors/timeouts; D484's guard fired on s05 only (537 rows). The lost-spell bias:
+  1,328 stranded casts (s05 991 Suplex = 18% of its branches; s10 512; s06 201); 71 of 97 labels untouched, 26
+  touched; of the 27 confident: s05 d8 void (Forge's own Suplex lost 200/200), s06 d6 and s10 d28 lose confidence
+  beyond a random drop, 21 hold. C1 HOLDS on s01, NOT SHOWN on s07 and s13 (5 and 3 decisions). J169 (drafting):
+  re-check s06/s10/s13 under D485's checker; quarantine and re-branch s05, s10 and s06 at the same seeds on D485's
+  tree (~3 h); a `lostCastOptions == 0` check from the frames. Follow-up: 2 errored rows on s12
+  (IndexOutOfBoundsException), unexplained.
