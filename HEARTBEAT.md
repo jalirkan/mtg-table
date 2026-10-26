@@ -1199,3 +1199,8 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   random policy = the label population (never pooled across it). Also not fixed by D485: a modal spell's stale
   targets (s05's Suplex, 991 lost casts) — Forge picks the modes during the cast, after the check; D486 too.
   **J169 tonight on D485:** re-check s06/s10/s13; re-branch s06 and s10 only; s05 waits for D486.
+- 20:53 EDT: **D485 merged** (#213, main e9f7ed0c; the merged tree's gate check-all OK, 59 jobs, wall 618.7 s; review's
+  three fixes in). **J169 posted** (`drafts/J169-atlas-4a-night-four.md`): s06, s10, s13 re-checked under D485's
+  checker; s06 and s10 quarantined as `.j168-stale` and re-branched at the same seeds; lost casts counted from
+  the frames with `lostCastOptions == 0` on the re-branched spines; s05 kept as J168's, marked biased, out of
+  the headline sizing until D486; ~2.75 h at 6 workers.
