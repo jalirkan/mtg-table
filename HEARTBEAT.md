@@ -1229,3 +1229,10 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   **J170 posted** (`drafts/J170-atlas-4b-card-targets.md`): rung 4b, all 13 spines fresh on D486's seat in
   `lab-j170` (empty folder made by hand), the same deck draws and seeds, the lost-cast scan on every spine with
   `lostCastOptions == 0`, the D486 counters; ~10.5 h at 6 workers (9.5–12).
+- 00:05 EDT (10-26): **J170 failed in its pilot after 11 min** on one check, `identity == 1`: `seat-identity`'s
+  forge, search and explore games differ from the golden fixture — which D486 changes on purpose (every recorded
+  seat's records; the search seat's play) and whose regeneration neither the D486 review nor the gate covers
+  (the gate does not run seat-identity). The plain game is unchanged. A lane is classifying the diffs (the forge
+  game's PLAY must not differ, only its records), regenerating the golden with a D486 addendum, and adding the
+  check to the review list or the gate; J171 (J170 re-posted on the new pin; the pilot's draws already in
+  lab-j170 are verified, not redrawn) is drafted beside it. Eleven minutes lost, not a night.
