@@ -1,0 +1,6 @@
+==== J172 run3 started 2026-10-26T13:10:18-04:00 in unit lab-J172-run3, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline (13 turns, winner A) lists 24 decision(s) of seat A; branching at 15: d1 (p, turn 1, 3 options), d6 (p, turn 7, 6 options), d9 (p, turn 7, 6 options), d11 (p, turn 9, 5 options), d14 (p, turn 9, 6 options), d17 (a, turn 11, 6 options), d20 (p, turn 13, 6 options), d23 (a, turn 13, 8 options), d18 (p, turn 11, 3 options), d21 (p, turn 13, 5 options), d15 (p, turn 11, 6 options), d13 (p, turn 9, 6 options), d12 (a, turn 9, 4 options), d10 (p, turn 7, 5 options), d7 (p, turn 7, 5 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (71 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 148 s
+atlas: /home/justin-a/code/lab/data/lab-j170/b-s08-powered-2108/atlas.json and atlas.md; phase A 0 game(s), phase B 6750 branch game(s) at 15 decision(s); checks: clean (155553 rows, 13502 frame logs, 15 leak check(s))
