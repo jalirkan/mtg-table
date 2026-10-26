@@ -161,6 +161,18 @@ const REQUIRED = [
   ['m76-target-none-on-a-min-1-part.jsonl', 'fail'],
   ['m76-target-none-without-min.jsonl', 'fail'],
   ['m76-target-none-on-a-priority-record.jsonl', 'fail'],
+  // the D487 review: the legacy shape bounded to a move-atlas log started before D487 merged, one marker off it at a
+  // time, an answer the seat cannot see, and the rest of the M76 rules
+  ['m76-legacy-null-target-after-d487.jsonl', 'fail'],
+  ['m76-legacy-null-target-not-an-atlas.jsonl', 'fail'],
+  ['m76-unseen-answer-null.jsonl', 'fail'],
+  ['m76-legacy-null-by-search.jsonl', 'fail'],
+  ['m76-legacy-null-source-modes.jsonl', 'fail'],
+  ['m76-target-none-in-a-chosen-list.jsonl', 'fail'],
+  ['m76-min-without-target-none.jsonl', 'fail'],
+  ['m76-min-negative.jsonl', 'fail'],
+  ['m76-min-not-an-integer.jsonl', 'fail'],
+  ['m76-no-target-elsewhere.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

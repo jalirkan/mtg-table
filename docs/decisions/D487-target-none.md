@@ -15,7 +15,8 @@ wrote a part with no target as null; before D486 such a part listed players alon
 permanents it had no option, was a forced record and was never written.
 
 **Verified first, on all of it** (the reading had to hold before the shape changed: a target outside the options would be
-a leak or a record fault, not a shape). A scan of every phase-B branch frame log of the five spines (54,350 logs) for a record
+a leak or a record fault, not a shape), with `docs/evidence/d487-null-targets.py` (`scan`, `summary`, and `scripts` for
+each card's `TargetMin$` / `TargetMax$` from the pinned engine's `cardsfolder.zip`). A scan of every phase-B branch frame log of the five spines (54,350 logs) for a record
 with `chosen: null`, each matched to its parent priority answer, every target record of that parent, and the cast event
 that followed (its stack text, which names each part's targets with their ids, and the stack item's targets):
 
@@ -59,8 +60,8 @@ with a minimum of 1 left empty. Nothing leaked; the record's shape was wrong.
    - a part whose **minimum is 1 or more, left empty** (an engine fault the cast will meet as "failed to target") answers
      `target:none` too, listed, with its `min`, **`complete: false`** and **`why: "NO_TARGET"`**; the priority and
      modes callers (`PolicyControllerAi`) keep that `why` rather than writing `STALE_TARGETS` or `MODES_DRAWN` over it;
-   - a part whose answer carries only a target the seat cannot see is **not** "none": it keeps its null answer, which the
-     audit fails, as before.
+   - a part whose answer carries a target the seat cannot see is **not** "none": the record is marked `complete: false`
+     (the review's fix, below), and with no visible target it keeps its null answer, which the audit fails.
    `min` is present exactly when `target:none` is listed. Every other target record is what it was.
 2. **The M55 audit** (`tools/check-redaction.mjs`): `target:none` passes only where it is listed (D4 already said the
    answer is an option); listing it needs `min`; `min` 0 passes; `min` 1 or more passes only beside `complete: false`
@@ -70,10 +71,13 @@ with a minimum of 1 left empty. Nothing leaked; the record's shape was wrong.
 3. **The legacy shape is accepted, dated and counted** (`legacyNullTarget`; `M55 legacy null target records=<n>`):
    `kind: "target"`, `by: "forge"`, `source: "targets"`, `chosen: null`, two or more `target:<id>` / `target:p<id>`
    options, no `target:none`, and none of `min`, `why`, `complete`, `hidden`, `explore`, `search` -- exactly the 4,717
-   records above. **Decided: accept, not re-run.** (1) found no leak, and the alternative is about four hours of the five
-   spines for records whose every answer the stack text confirms. A record written after D487 lists `target:none` and
-   carries `min` when its part may be empty, so it can never take the legacy path; a null answer of any other shape still
-   fails (the controls below).
+   records above -- **and dated in code**: only in a move-atlas log (its session header carries `lab.atlas`) whose
+   `startedAt` is before `LEGACY_NULL_TARGET_BEFORE = '2026-10-26T18:00:00Z'` (`tools/check-redaction.mjs`; J171's
+   headers run from 05:20Z to 11:52Z that day; the bound is that plus a margin, about the hour D487 merges, and D487's own
+   bridge cannot write the shape inside the margin). **Decided: accept, not re-run.** (1)
+   found no leak, and the alternative is about four hours of the five spines for records whose every answer the stack
+   text confirms. A log started after the bound cannot take the legacy path whatever its shape, and D487's bridge never
+   writes it, and within the bound a null answer of any other shape still fails (the controls below).
 4. **Not changed: the atlas's replay and plans.** `Atlas.Unit.expect` and the schedule compare the search's candidate
    tokens at the branched decision (`SearchPolicy.token`, `Atlas.Hook.decision`), never a decision record, and the
    schedule header holds the plan and the decks' hashes: a resumed J171 plan is unaffected. Measured: the s09 baseline on
@@ -132,6 +136,39 @@ is the golden's in all four games: none of its games meets a min-0 part.
   checker needs the minimum only where `target:none` is listed.
 
 **Not done.**
-- A cast with only a hidden target (a face-down card in exile) still answers null and fails the audit: none was met.
+- A cast with only a hidden target (a face-down card in exile) still answers null (now beside `complete: false`) and fails
+  the audit: none was met.
+- **On the priority path `NO_TARGET` wins over `STALE_TARGETS` and the drawn modes' `why`** (`PolicyControllerAi` at the
+  priority record's target loop and in `chooseModeForAbility`): a target record that is both an empty mandatory part and
+  a re-targeted or mode-drawn play says only `NO_TARGET`, and the parent priority record still carries the other `why`.
+  None met; a record with two reasons would need a second field.
+- **`tools/ml/policy_data.py` does not drop `NO_TARGET` / `complete: false` target records**: a policy dataset built from
+  logs after D487 would carry rows answering `target:none` for an empty mandatory part, an engine fault rather than a
+  choice. Follow-up: drop them (or every `complete: false` target record) in `policy_data.py`, with a test.
 - An engine record that **answers** `target:none` from a min-0 part was not produced in this lane's runs (the s04 and s08
   planeswalkers are rare); the next night on s04 or s08 shows it, counted by nothing new -- a plain written record.
+
+**Addendum, 2026-10-26: the skeptic review's fixes** (second commit on the branch; the review found no leak).
+
+1. **An answer the seat cannot see could still write the legacy shape.** A min-1 part whose answer is a target the seat
+   cannot see (`unseen > 0`), not among the candidates (`hidden` 0), wrote `chosen: null` with no `min`, `complete` or
+   `why` -- exactly J171's shape, and a probe passed as legacy. `Decisions.targetAnswer` now marks any record with an
+   unseen answer `complete: false`, so such a null falls to the null-token failure. `DecisionSelfTest` asserts the written
+   JSON (min 1 and min 0: `chosen` null beside `complete: false`), and `m76-unseen-answer-null` fails.
+2. **The legacy branch is bounded in code**: `lab.atlas` in the header and `startedAt` before
+   `LEGACY_NULL_TARGET_BEFORE` (above); `m76-legacy-null-target-after-d487` and `-not-an-atlas` fail, and the committed
+   legacy control carries an atlas `lab` block and a J171 `startedAt`.
+3. **The single-marker controls the review probed, committed**: a legacy-like null `by: "search"`, `source: "modes"`
+   (and `source: "trigger"`, already there); `target:none` inside a list of answers; `min` without `target:none`; `min` -1
+   and 0.5; `NO_TARGET` on a min-0 record. 19 `m76-*` controls in all.
+4. **Docs**: `tools/CLAUDE.md` and M76 name the full predicate (`target:p<id>` options too; none of `min`, `why`,
+   `complete`, `hidden`, `explore`, `search`) and the date bound; the scan is `docs/evidence/d487-null-targets.py`.
+5. **Not fixed, written down** under *Not done*: `NO_TARGET` wins over the other `why` on the priority path, and
+   `policy_data.py` keeps `NO_TARGET` rows.
+
+Checks on the second commit: `./bridge/build.sh` OK (decision selftest 220/0); `node tools/check-redaction-selftest.mjs`
+OK (126 controls, 19 `m76-*`); `npm --prefix web test` OK (node 1851 pass, 9 skipped, 0 fail; vitest 161 passed);
+`docs/evidence/d487-null-targets.py scan` + `summary` over the five spines reproduce the table above record for record;
+and the J171 sweep under the bounded predicate: **54,360 logs, 54,360 PASS, 0 FAIL, 4,717 legacy records in 4,501
+logs** (s02 1,426 in 1,212; s04 62 in 61; s08 39 in 38; s09 2,361 in 2,361; s10 829 in 829; 9 min 50 s). No full gate
+on the branch for this commit: the gate runs on the merged tree.

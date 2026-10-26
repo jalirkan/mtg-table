@@ -1219,25 +1219,55 @@ m76Pass('m76-target-none-listed.jsonl',
 m76Pass('m76-target-none-mandatory-part.jsonl',
   'amendment M76 / D487: an empty mandatory part (min 1) -- target:none listed and chosen, complete:false, why NO_TARGET; counted, not a problem',
   { min: 1, complete: false, why: 'NO_TARGET' });
-{
-  // the legacy control: the viewer's own two cards as the options, no target:none, no min, chosen null
-  const name = 'm76-legacy-null-target.jsonl';
-  const why = 'amendment M76 / D487: J171\'s legacy shape -- chosen null on a target/forge/targets record listing card candidates, no min, no target:none; counted, not a problem';
-  const fs = slice();
-  const b = withTargetRecord(fs, { min: undefined, chosen: null });
+// The legacy shape is bounded (the D487 review): a move-atlas log (`lab.atlas`) started before D487 merged.
+const legacyHeader = { ...header, startedAt: '2026-10-26T11:52:53.069808383Z', lab: { atlas: 'b-s09-pauper-2109', decision: 0 } };
+/** A legacy-like record: chosen null, the viewer's own cards as the options, no target:none, no min. */
+const legacyLike = (fs, patch = {}) => {
+  const b = withTargetRecord(fs, { min: undefined, chosen: null, ...patch });
   b.options = b.options.filter((t) => t !== 'target:none');
-  write(name, fs);
+  for (const k of Object.keys(b)) if (b[k] === undefined) delete b[k];
+  return b;
+};
+{
+  const name = 'm76-legacy-null-target.jsonl';
+  const why = 'amendment M76 / D487: J171\'s legacy shape -- chosen null on a target/forge/targets record listing card candidates, no min, no target:none, in a move-atlas log started before D487 merged; counted, not a problem';
+  const fs = slice();
+  legacyLike(fs);
+  write(name, fs, legacyHeader);
   manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
   console.log(`  PASS  ${name}  (the legacy null answer, no defect)`);
 }
-const m76Probe = (name, why, expect, patch, after = () => {}) => probe(name, why, expect, (fs) => { after(withTargetRecord(fs, patch)); });
-m76Probe('m76-chosen-null-beside-target-none.jsonl',
+/** A probe with one marker off J171's legacy shape (or the M76 shape), written under the legacy header. */
+const m76LegacyProbe = (name, why, expect, mutate, headerOut = legacyHeader) => {
+  const fs = slice();
+  mutate(fs);
+  const bytes = write(name, fs, headerOut);
+  manifest.push({ file: name, level: 'fail', expect, why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+const { lab: _noLab, ...notAtlasHeader } = legacyHeader;
+m76LegacyProbe('m76-legacy-null-target-after-d487.jsonl',
+  'amendment M76 / D487: the legacy shape is accepted only in a log started before D487 merged (LEGACY_NULL_TARGET_BEFORE) -- a later null answer is a bridge fault',
+  'chosen null is not a token', (fs) => { legacyLike(fs); }, { ...legacyHeader, startedAt: '2026-10-27T09:00:00Z' });
+m76LegacyProbe('m76-legacy-null-target-not-an-atlas.jsonl',
+  'amendment M76 / D487: the legacy shape is accepted only in a move-atlas log (lab.atlas in its header)',
+  'chosen null is not a token', (fs) => { legacyLike(fs); }, notAtlasHeader);
+m76LegacyProbe('m76-unseen-answer-null.jsonl',
+  'amendment M76 / D487 (review): a min-1 part answered with a target the seat cannot see writes chosen null beside complete:false -- never the legacy shape',
+  'chosen null is not a token', (fs) => { legacyLike(fs, { complete: false }); });
+m76LegacyProbe('m76-legacy-null-by-search.jsonl',
+  'amendment M76 / D487: the legacy shape is Forge\'s answer only -- a search seat\'s null answer fails',
+  'chosen null is not a token', (fs) => { legacyLike(fs, { by: 'search' }); });
+m76LegacyProbe('m76-legacy-null-source-modes.jsonl',
+  'amendment M76 / D487: the legacy shape is a priority answer\'s targets only -- a modes record\'s null answer fails',
+  'chosen null is not a token', (fs) => { legacyLike(fs, { source: 'modes' }); });
+m76LegacyProbe('m76-chosen-null-beside-target-none.jsonl',
   'amendment M76 / D487: a record written after D487 (it lists target:none and carries min) never answers null',
-  'chosen null is not a token', { chosen: null });
-m76Probe('m76-chosen-null-trigger.jsonl',
+  'chosen null is not a token', (fs) => { withTargetRecord(fs, { chosen: null }); });
+m76LegacyProbe('m76-chosen-null-trigger.jsonl',
   'amendment M76 / D487: the legacy null answer is accepted in J171\'s one shape only -- a trigger\'s target record is not it',
-  'chosen null is not a token', { min: undefined, chosen: null, source: 'trigger' },
-  (b) => { b.options = b.options.filter((t) => t !== 'target:none'); });
+  'chosen null is not a token', (fs) => { legacyLike(fs, { source: 'trigger' }); });
+const m76Probe = (name, why, expect, patch, after = () => {}) => probe(name, why, expect, (fs) => { after(withTargetRecord(fs, patch)); });
 m76Probe('m76-target-none-not-listed.jsonl',
   'amendment M76 / D487: target:none is an answer only where it is listed',
   'chose "target:none", which is not among its options', { min: undefined },
@@ -1251,6 +1281,23 @@ m76Probe('m76-target-none-without-min.jsonl',
 m76Probe('m76-target-none-on-a-priority-record.jsonl',
   'amendment M76 / D487: target:none answers a target record, never another kind',
   'which only a target record answers', { kind: 'priority', min: undefined });
+m76Probe('m76-target-none-in-a-chosen-list.jsonl',
+  'amendment M76 / D487: target:none is the whole answer of an empty part, never one of several targets',
+  'chose target:none among other targets', {},
+  (b) => { b.chosen = ['target:none', b.options[1]]; });
+m76Probe('m76-min-without-target-none.jsonl',
+  'amendment M76 / D487: min is written exactly when target:none is listed',
+  'carries min but does not list target:none', {},
+  (b) => { b.options = b.options.filter((t) => t !== 'target:none'); b.chosen = b.options[0]; });
+m76Probe('m76-min-negative.jsonl',
+  'amendment M76 / D487: min is a non-negative integer',
+  'min -1', { min: -1 });
+m76Probe('m76-min-not-an-integer.jsonl',
+  'amendment M76 / D487: min is a non-negative integer',
+  'min 0.5', { min: 0.5 });
+m76Probe('m76-no-target-elsewhere.jsonl',
+  'amendment M76 / D487: why NO_TARGET marks an empty mandatory part only -- not a min-0 part',
+  'is not an empty mandatory target part', { why: 'NO_TARGET' });
 
 // Amendment M58 (D389): the search's prior in M55's search block -- `prior` per
 // option and `generated` -- a control that passes and one malformed probe.

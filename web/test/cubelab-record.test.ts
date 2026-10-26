@@ -160,7 +160,10 @@ test('M75: a target record with source "modes" passes; an unknown source FAILS t
 // (chosen null on a target/forge/targets record, no min, no target:none) passes, counted; a null answer in any other
 // shape, an unlisted target:none and target:none on a min-1 part not marked NO_TARGET all FAIL the checker.
 test('M76: target:none listed with min 0 passes; the legacy null passes counted; the other shapes FAIL', () => {
-  const targeted = (edit: (b: Record<string, any>) => void) => rewrite(DEC_LOGS[0] as string, (frames) => {
+  const targeted = (edit: (b: Record<string, any>) => void, startedAt?: string) => rewrite(DEC_LOGS[0] as string, (frames) => {
+    // the legacy shape is bounded to a move-atlas log started before D487 merged (LEGACY_NULL_TARGET_BEFORE)
+    frames[0]!.lab = { ...(frames[0]!.lab ?? {}), atlas: 'b-s09-pauper-2109' };
+    if (startedAt) frames[0]!.startedAt = startedAt;
     const rec = frames.find((f) => f.dir === 'ai' && f.type === 'decision' && f.body.kind === 'target')!;
     rec.body.by = 'forge';
     rec.body.source = 'targets';
@@ -174,6 +177,11 @@ test('M76: target:none listed with min 0 passes; the legacy null passes counted;
   const legacy = targeted((b) => { b.chosen = null; });
   assert.equal(legacy.status, 0, legacy.out);
   assert.match(legacy.out, /M55 legacy null target records=1 /);
+  const late = targeted((b) => { b.chosen = null; }, '2026-10-27T09:00:00Z');
+  assert.equal(late.status, 1, late.out);
+  assert.match(late.out, /chosen null is not a token/);
+  const unseen = targeted((b) => { b.chosen = null; b.complete = false; });
+  assert.equal(unseen.status, 1, unseen.out);
   const nullNew = targeted((b) => { b.options = ['target:none', ...b.options]; b.min = 0; b.chosen = null; });
   assert.equal(nullNew.status, 1, nullNew.out);
   assert.match(nullNew.out, /chosen null is not a token/);

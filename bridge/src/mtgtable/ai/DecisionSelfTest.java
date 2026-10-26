@@ -203,8 +203,15 @@ public final class DecisionSelfTest {
                 "min 1, a target taken: as before D487 (no none, no min)");
         // an answer the seat cannot see is not "none"
         final Decision unseen = part.apply(new Object[] {List.of("target:5", "target:67"), List.of(), 1, 1});
-        check(unseen.chosen == null && unseen.chosenAll.isEmpty() && !unseen.options.contains("target:none"),
-                "a target the seat cannot see keeps the null answer (the checker fails it)");
+        final Map<?, ?> un = (Map<?, ?>) Json.parse(unseen.toJson(1, 23, 141, 123));
+        check(unseen.chosen == null && unseen.chosenAll.isEmpty() && !unseen.options.contains("target:none")
+                        && un.containsKey("chosen") && un.get("chosen") == null && Boolean.FALSE.equals(un.get("complete"))
+                        && !un.containsKey("min") && !un.containsKey("why"),
+                "a target the seat cannot see (min 1): chosen null beside complete:false -- never J171's legacy shape");
+        final Decision unseen0 = part.apply(new Object[] {List.of("target:5"), List.of(), 1, 0});
+        final Map<?, ?> u0 = (Map<?, ?>) Json.parse(unseen0.toJson(1, 24, 141, 123));
+        check(u0.get("chosen") == null && Boolean.FALSE.equals(u0.get("complete")) && Long.valueOf(0).equals(u0.get("min")),
+                "a target the seat cannot see (min 0): chosen null, complete:false, min 0 -- never the legacy shape");
     }
 
     /** D388–D390: the config switches, the NaN-aware statistics and the anytime schedule, on numbers. */

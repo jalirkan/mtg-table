@@ -3132,12 +3132,21 @@ const NO_TARGET = 'NO_TARGET';
  * Asunder its kicker shut (TargetMin$ and TargetMax$ both 0) and 101 "up to" planeswalker abilities left empty
  * (TargetMin$ 0: Garruk, Curse Breaker's +2, The Wandering Emperor's +1, Minsc & Boo's +1).  D487 read each against
  * its cast's stack text: every empty part was the record's, and no cast carried a target outside its records'
- * options.  Accepted in exactly that shape and counted (`M55 legacy null target records`); any other null answer --
+ * options.  Accepted in exactly that shape, in a move-atlas log started before LEGACY_NULL_TARGET_BEFORE, and counted
+ * (`M55 legacy null target records`); any other null answer --
  * another kind, source or policy, or a record that carries `min`, `why`, `complete`, `hidden`, `explore` or `search`,
  * or lists `target:none` -- still fails.
  */
-function legacyNullTarget(b) {
-  return b.chosen === null && b.kind === 'target' && b.by === 'forge' && b.source === 'targets' && b.min === undefined
+// The bound (the D487 review): only a move-atlas log (`lab.atlas` in its header) started before this instant can carry
+// the legacy shape.  J171's headers run from 2026-10-26T05:20Z to 11:52Z; the instant is that day's last J-night start
+// plus a margin, about the hour D487 merges.  A log started later -- by any bridge -- that writes a null answer fails
+// rather than passing as legacy; one started inside the margin by D487's bridge cannot write the shape (an empty part
+// lists target:none and carries min, and an unseen answer is complete:false).
+const LEGACY_NULL_TARGET_BEFORE = '2026-10-26T18:00:00Z';
+function legacyNullTarget(b, header) {
+  const started = Date.parse(header?.startedAt ?? '');
+  return typeof header?.lab?.atlas === 'string' && Number.isFinite(started) && started < Date.parse(LEGACY_NULL_TARGET_BEFORE)
+    && b.chosen === null && b.kind === 'target' && b.by === 'forge' && b.source === 'targets' && b.min === undefined
     && b.why === undefined && b.complete === undefined && b.hidden === undefined && b.explore === undefined
     && b.search === undefined && Array.isArray(b.options) && b.options.length > 1
     && b.options.every((t) => typeof t === 'string' && t !== TARGET_NONE && /^target:p?\d+$/.test(t));
@@ -3335,7 +3344,7 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
       }
     }
     if (b.why === NO_TARGET && !(listsNone && Number.isInteger(b.min) && b.min > 0)) bad(lineNo, `decision ${b.n} why ${NO_TARGET} on a record that is not an empty mandatory target part (M76, D487)`);
-    if (legacyNullTarget(b)) {
+    if (legacyNullTarget(b, header)) {
       stats.legacyNullTargets = (stats.legacyNullTargets ?? 0) + 1;
     } else {
       const chosen = Array.isArray(b.chosen) ? b.chosen : [b.chosen];

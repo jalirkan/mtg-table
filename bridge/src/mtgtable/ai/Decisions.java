@@ -424,7 +424,8 @@ public final class Decisions {
      * is an engine fault the play will meet ("failed to target"): it answers
      * {@code target:none} too, listed, with {@code min}, {@code complete: false}
      * and {@code why: NO_TARGET}.  A target the seat cannot see is not "none":
-     * such a part keeps its null answer, which the checker fails, as before.
+     * the record is marked {@code complete: false}, and with no visible target
+     * it keeps its null answer, which the checker fails.
      * Engine-free, for the self-test.
      */
     static void targetAnswer(final Decision d, final Set<String> opts, final List<String> chosen, final int unseen,
@@ -432,6 +433,12 @@ public final class Decisions {
         final List<String> sorted = new ArrayList<>(opts);
         sorted.sort(Decisions::byId);
         final boolean none = chosen.isEmpty() && unseen == 0;
+        if (unseen > 0) {
+            // D487 review: an answer the seat cannot see is not among the options it was shown, so the record is
+            // incomplete -- and an empty visible answer then writes chosen null beside complete:false, never the
+            // J171 legacy shape (which has no complete), so the audit fails it
+            d.complete = false;
+        }
         if (min <= 0 || none) {
             d.options.add(TARGET_NONE);
             d.min = Math.max(min, 0);
