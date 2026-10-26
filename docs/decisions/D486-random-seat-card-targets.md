@@ -205,3 +205,48 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
   drawn when it cannot be paid. That is a refused payment (D458's G5, D466's `putBack`), not a strand -- but it wastes
   the option and inflates `refusedCast`. Follow-up: check the chosen modes' cost before the play is listed.
 - **A trigger's targets** (D485's s07, Headliner Scarlett) are still Forge's.
+
+**Addendum, 2026-10-26: the seat-identity golden regenerated, and gated (step 12m).**
+
+*Branch `pc/d486-seat-identity-golden`, on `24038bcd` (D486 merged).* The lab's J170, the first night on D486,
+failed its pilot at the `identity` check: `tools/cubelab.sh seat-identity` found three of its four games different
+from `fixtures/cubelab/seat-identity.json` -- `forge` (B in 15 turns, 57 lines against the golden's 59), `search`
+(A in 13, 92 against 93) and `explore` (A in 18, 193 lines both, another digest); `plain` the same (B in 14). The
+same four digests here, and the same again on a second run. Neither the review nor the gate ran the command
+(D483's follow-up said so).
+
+- **Before.** `seat-identity` on `e9f7ed0c` (D485 merged, in a detached worktree): all four games the golden's --
+  so every difference is D486's.
+- **Each differing line, classified** (each record matched across the two runs by seat, kind, turn and phase, `n`
+  and `parent` aside; the last states and `over` lines are identical in every game):
+
+  | game | lines | a one-candidate target record no longer written | a target record now lists cards | renumbered (`n`) only | a play changed |
+  |---|---|---|---|---|---|
+  | `forge` | 59 → 57 | 2 (seat 0, turns 4 and 14) | 1 (seat 1, turn 3: `[target:25]` `complete: false` → `[target:25, target:56]`) | 17 | **0** |
+  | `search` | 93 → 92 | 1 (seat 0, the search seat, turn 7) | 0 | 40 | **0** |
+  | `explore` | 193 → 193 | 0 | 2 (seat 0, turn 14: 1 → 5 candidates; seat 1, turn 9: 1 → 3) | 0 | **0** |
+  | `plain` | the same game | -- | -- | -- | -- |
+
+  The dropped records are point 1's: the records list every candidate, so a part whose only legal target is a card
+  is a one-candidate record, counted in the summary's `forced.target` and not written, as every one-candidate record
+  is -- the logs' summaries carry `forced.target` 2 (`forge`, seat 0) and 1 (`search`, seat 0) where D485's carry
+  none, every other `forced` count equal. **Every answer is the one before**: no priority listing changed (neither
+  deck holds a modal spell, so `Decisions.playable` drops nothing), the search seat's numbers are identical record
+  for record (no candidate of its own was modal, so neither `alternatives` nor `mapSa` moved it), the exploring seat's
+  explore marks are the ones before (its new target redraw and close call changed nothing here), and no `cardTargetOffered`, `modesDrawn` or `source: "modes"` appears (no
+  random seat plays these games). **The `forge` game differs in its records alone** -- the verdict this check exists
+  for -- and so, in this game, do the search and exploring seats, whose play D486 could have changed.
+- **Regenerated** with `tools/cubelab.sh seat-identity --write` on this branch: `forge` B in 15 `78f3a94998355ea8`,
+  `search` A in 13 `c68c2a849b7b0d54`, `explore` A in 18 `82d6d18c57bbd861`, `plain` B in 14; the check then reads
+  `all 4 games are the golden's`.
+- **The gap, closed: the gate runs it as step 12m** (`s12m_seatid`, job `12m-seatid`): about 11 s of wall time on
+  one worker (11.45 s cold, 10.86 s warm), output `var/check-all-seatid/`, homes under the job's own, under `jvm`'s
+  timeout; it waits for 12g, the other `cubelab.sh` job, because both would recompile `var/cubelab/classes/` at
+  once on a fresh `bridge/out`. A change to what a seat records or how a policy seat plays now fails the gate until
+  the golden is regenerated, and `--write` is for after a classification like this one. `atlas-selftest` and
+  `tools/ai-bench.sh --selftest` stay out of the gate (D483's follow-up, still open).
+- **Checks**: `./bridge/build.sh` OK (inside the gate, from a deleted `bridge/out`); `npm --prefix web test` OK (node
+  1849 pass, 10 skipped, 0 fail; vitest 161 passed); `node tools/decisions.mjs check` OK. **The gate**: `rm -rf
+  bridge/out && ./tools/make-forge-home.sh && FORGE_JAR=<config.json's forgeJar> WSPORT=9800 GATE_JOBS=4
+  ./tools/check-all.sh`, **`check-all OK`**, 514.1 s wall, 60 jobs (`var/check-all/20261026-001117-1090688`; 12m
+  11.0 s, all four games the golden's; node 1863 pass, 11 skipped, 0 fail; vitest 161 passed).

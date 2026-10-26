@@ -192,6 +192,14 @@
 #                                 D423): input.selectable's player rule and a
 #                                 declaration's chosen blocks / attacks on real
 #                                 cards (a second engine boot)
+#                                 Then 12m: tools/cubelab.sh seat-identity
+#                                 (D451, gated since D486's addendum) -- four
+#                                 fixed games (a Forge, a seeded search, a D358
+#                                 exploring and a plain census game) held to
+#                                 fixtures/cubelab/seat-identity.json, every
+#                                 decision record of both seats; after 12g,
+#                                 which compiles the lab's classes (~11 s, one
+#                                 worker)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -2347,6 +2355,27 @@ s12l_playable() {
   fi
 }
 
+# 12m. D451 (gated by D486's addendum, 2026-10-26): tools/cubelab.sh seat-identity
+#      plays four fixed games on one lab worker -- Forge vs Forge recorded, a
+#      seeded fixed-round search seat, a D358 exploring seat, and a plain census
+#      game -- and holds each to fixtures/cubelab/seat-identity.json: every
+#      decision record of both seats (its options, answer, who answered, the
+#      search's numbers but its wall time), the last state and `over`.  A change
+#      to what a seat records or how a policy seat plays changes a digest here,
+#      and the golden is regenerated (`--write`) only with a written
+#      classification of every differing line (D486's addendum is the model).
+#      Until D486 nothing ran it: J170's pilot found D486's record changes the
+#      morning after the merge.  It waits for 12g, the other cubelab.sh job:
+#      both would otherwise recompile var/cubelab/classes/ at once on a fresh
+#      bridge/out.  Its homes are this job's, its output var/check-all-seatid/;
+#      about 11 s.
+s12m_seatid() {
+  printf '\n=== 12m. cubelab.sh seat-identity -- the Forge, search and exploring seats play and record the golden games (D451, D486) ===\n'
+  local out="var/check-all-seatid"
+  CUBELAB_HOME_ROOT="$JOB_HOME/cubelab-homes" jvm ./tools/cubelab.sh seat-identity --out "$out" \
+    || die "cubelab.sh seat-identity (12m: a seat's records or play differ from fixtures/cubelab/seat-identity.json -- diff $out/<game>.identity.txt against a run of the previous tree, classify every line, and regenerate with --write only when every difference is one the change's decision names; D451, D486)"
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -2492,6 +2521,7 @@ job 12i-midmove   12 both     s12i_midmove      "$PRE"
 job 12j-timeout   12 both     s12j_timeout      "$PRE"
 job 12k-facedown  12 both     s12k_facedown     "$PRE"
 job 12l-playable  12 both     s12l_playable     "$PRE"
+job 12m-seatid    12 both     s12m_seatid       "12g-cubelab"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
