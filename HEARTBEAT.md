@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-26T00:00:31-04:00
+- time: 2026-10-26T00:02:29-04:00
 - runner: 24038bcd, up since 2026-10-25T23:45:40-04:00
-- running: J170 pilot 1/1, 0/71525 lines, 3 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.97; memory 9.7/30.5 GB, swap 4041 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 2.9; memory 7/30.5 GB, swap 4041 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J169 done at 2026-10-25T23:35:41-04:00: branches 72075 · atlas.spinesDone 13 · atlas.labels 97 · atlas.confident 27 · atlas.confidentPer7Worker10hNight 30.7 · atlas.confidentPer7Unbiased 32 · atlas.lostCastsD485 0 · atlas.lostCastOptionsD485 0 · atlas.lostCastOptions 5 · atlas.retargetedRows 744 · atlas.retargeted 756 · atlas.recheckJ169Ok 3 · atlas.timeoutShare 0 · atlas.chooseSourceGuardRows 537 · atlas.problems 0
+- last finished: J170 failed at 2026-10-26T00:02:29-04:00
 
 ## Messages
 

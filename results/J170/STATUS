@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: identity == 1 (identity = 0)
 runner: forgecoach-runner 24038bcd
 started: 2026-10-25T23:50:56-04:00
-phase: pilot 1/1
+finished: 2026-10-26T00:02:29-04:00
 mtg-table: 24038bc
 workers: 3
+peak_worker_rss_gb: 1.58
