@@ -141,6 +141,21 @@ test('negative control: an option naming the opponent\'s concealed hand card FAI
   assert.match(r.out, /which its state frame does not show/);
 });
 
+// M75 / D486: a target record may carry source "modes" (a modal spell's modes drawn by the random seat inside the
+// cast) and why "MODES_DRAWN"; any other source still FAILS the checker.
+test('M75: a target record with source "modes" passes; an unknown source FAILS the checker', () => {
+  const sourced = (src: string) => rewrite(DEC_LOGS[0] as string, (frames) => {
+    const rec = frames.find((f) => f.dir === 'ai' && f.type === 'decision' && f.body.kind === 'target')!;
+    rec.body.source = src;
+    rec.body.why = 'MODES_DRAWN';
+  });
+  const ok = sourced('modes');
+  assert.equal(ok.status, 0, ok.out);
+  const odd = sourced('castModes');
+  assert.equal(odd.status, 1, odd.out);
+  assert.match(odd.out, /decision source "castModes"/);
+});
+
 // D358: fixtures/cubelab/explore/ is one lab game played with play exploration
 // (`--play-explore share=1,epsilon=0.2,closecall=0.05,opening=on`), both chairs.
 // Both pass the checker with their marks; the planted leak is a mark whose
@@ -187,11 +202,11 @@ const withGuardrails = (frames: Array<Record<string, any>>, g: unknown): void =>
   frames.find((f) => f.dir === 'ai' && f.type === 'decisions')!.body.explore.guardrails = g;
 };
 
-test('M71: a random seat\'s summary may carry its guardrail counts (G5 and, M73, G6 included; D485\'s two too)', () => {
+test('M71: a random seat\'s summary may carry its guardrail counts (G5 and, M73, G6 included; D485\'s two and D486\'s two too)', () => {
   const r = rewrite(EXP_LOGS[0] as string, (frames) => {
     frames[0]!.playExplore = { epsilon: 1, closeCall: 0, opening: false };
     withGuardrails(frames, { land: 5, keep: 1, noRepeatNoOp: 0, refusedCast: 2, noRepeatRefused: 2, xDrawn: 3, zeroXLeftOut: 22, zeroX: 0,
-      retargeted: 4, staleRefused: 1 });
+      retargeted: 4, staleRefused: 1, cardTargetOffered: 7, modesDrawn: 2 });
   });
   assert.equal(r.status, 0, r.out);
 });

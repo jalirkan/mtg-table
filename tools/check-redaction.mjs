@@ -3115,7 +3115,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
 const DECISION_KINDS = ['priority', 'attack', 'block', 'target', 'choice', 'mulligan'];
 const DECISION_BY = ['forge', 'outlets', 'search'];
-const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'cards', 'confirm'];
+// M75 / D486: 'modes', the target records of a modal spell whose modes the random seat drew inside the cast.
+const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'cards', 'confirm', 'modes'];
 const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn', 'phase', 'options', 'complete',
   'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search', 'explore']);
 // M57 / D358: a decision play exploration answered: the rule, and the seat's own answer as a token.
@@ -3125,8 +3126,10 @@ const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCa
 // M71 / D451, D458: the random seat's guardrail counts, by name (G1 land, G4 keep, G3 noRepeatNoOp, G5 refusedCast / noRepeatRefused);
 // M73 / D471: G6's xDrawn / zeroXLeftOut and its violation zeroX.  D485: retargeted (a play cast after its stale
 // targets were replaced) and staleRefused (Forge's answer not offered: its stale targets could not be made legal).
+// M75 / D486: cardTargetOffered (a listing offered a play only a card target makes possible) and modesDrawn (a play
+// cast with modes the seat drew in place of Forge's: at the listing, or inside the cast).
 const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX',
-  'retargeted', 'staleRefused'];
+  'retargeted', 'staleRefused', 'cardTargetOffered', 'modesDrawn'];
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);

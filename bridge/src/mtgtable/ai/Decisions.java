@@ -273,8 +273,8 @@ public final class Decisions {
         }
         try {
             sa.setActivatingPlayer(ai);
-            if (!sa.canPlay()) {
-                return Boolean.FALSE;
+            if (!sa.canPlay() || !Explorer.modesCastable(sa)) {
+                return Boolean.FALSE;   // D486: a modal spell with too few legal modes cannot be cast
             }
             if (ComputerUtilCost.canPayCost(sa, ai, false)) {
                 plays.add(tok);
@@ -338,7 +338,13 @@ public final class Decisions {
      */
     public static List<Decision> castTargets(final SpellAbility sa, final Player ai,
                                              final java.util.Map<SpellAbility, Decision.Explore> marks) {
-        return quiet(() -> targets0(Explorer.castParts(sa), ai, "targets", marks));
+        return castTargets(sa, ai, "targets", marks);
+    }
+
+    /** {@link #castTargets(SpellAbility, Player, java.util.Map)} under another {@code source} (D486: {@code "modes"}). */
+    public static List<Decision> castTargets(final SpellAbility sa, final Player ai, final String source,
+                                             final java.util.Map<SpellAbility, Decision.Explore> marks) {
+        return quiet(() -> targets0(Explorer.castParts(sa), ai, source, marks));
     }
 
     private static List<Decision> targets0(final SpellAbility sa, final Player ai, final String source,
@@ -363,7 +369,10 @@ public final class Decisions {
             final Set<String> opts = new LinkedHashSet<>();
             final TargetRestrictions tr = s.getTargetRestrictions();
             if (tr != null) {
-                final Collection<GameEntity> cands = tr.getAllCandidates(s, true);
+                // D486: every candidate, players and cards -- getAllCandidates' flag is onlyNonCard (forge-game
+                // TargetRestrictions.java:571-584 at the forge-2.0.14 tag), so (s, true) listed the players alone
+                // and every card target was added from the answer with the record marked incomplete
+                final Collection<GameEntity> cands = tr.getAllCandidates(s, false);
                 for (final GameEntity e : cands) {
                     final String t = entityToken("target", e, ai);
                     if (t == null) {

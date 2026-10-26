@@ -350,6 +350,12 @@ public final class Atlas {
          * {@code retargeted} guardrail).
          */
         public int retargeted;
+        /**
+         * D486: the plays the branch's random seats cast with modes they drew in
+         * place of Forge's, at the listing or inside the cast (their
+         * {@code modesDrawn} guardrail).
+         */
+        public int modesDrawn;
         public final List<String> forkProblems = new ArrayList<>();
         /** The no-leak check: null not run; true the branch did not move when the opponent's hidden cards did. */
         public Boolean leakSame;
@@ -658,6 +664,9 @@ public final class Atlas {
         if (b.retargeted > 0) {
             j.n("retargeted", (long) b.retargeted);
         }
+        if (b.modesDrawn > 0) {
+            j.n("modesDrawn", (long) b.modesDrawn);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -917,15 +926,18 @@ public final class Atlas {
     static void disarm(final List<AtlasController> seats, final Branch b) {
         int guarded = 0;
         int retargeted = 0;
+        int modesDrawn = 0;
         for (final AtlasController c : seats) {
             c.disarm();
             guarded += c.counts().getOrDefault(PolicyControllerAi.CHOOSE_SOURCE_GUARD, 0);
             if (c.explorer() != null) {
                 retargeted += c.explorer().math().guardrails().getOrDefault("retargeted", 0);   // D485
+                modesDrawn += c.explorer().math().guardrails().getOrDefault("modesDrawn", 0);   // D486
             }
         }
         b.chooseSourceGuard = guarded;
         b.retargeted = retargeted;
+        b.modesDrawn = modesDrawn;
     }
 
     /**

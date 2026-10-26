@@ -33,7 +33,9 @@ import forge.ai.ComputerUtilCost;
 import forge.game.Game;
 import forge.game.GameEntity;
 import forge.game.GameObject;
+import forge.game.ability.AbilityUtils;
 import forge.game.ability.ApiType;
+import forge.game.ability.effects.CharmEffect;
 import forge.game.card.Card;
 import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
@@ -84,10 +86,14 @@ import forge.game.zone.ZoneType;
  * is a uniform pick among pass, each land it may play, Forge's own answer, and
  * EVERY spell or non-mana ability the seat can play and pay for now -- Forge's
  * per-card judgment is not asked, and a targeted one gets targets drawn
- * uniformly from the legal ones the seat can see (a part with a cross-target
- * constraint, divided damage, or no visible legal target leaves the play out).
- * The attack, the blocks and each single target are random as above; mana
- * payment, costs, modes and other choices stay Forge's.  Its guardrails are
+ * uniformly from the legal ones the seat can see, players and cards (D486:
+ * before it, from the players alone; a part with a cross-target constraint,
+ * divided damage, a spell as its target, or fewer visible legal targets than
+ * its minimum leaves the play out).  A modal spell of its own gets its modes
+ * drawn with their targets ({@link #randomModes}, D486), and one with no modes
+ * chosen when it is cast gets them from the seat inside the cast
+ * ({@link #modesAtCast}).  The attack, the blocks and each single target are
+ * random as above; mana payment, costs and other choices stay Forge's.  Its guardrails are
  * mechanical, never strategy: (G1) a legal land drop is always taken, uniformly
  * among the lands -- which also means (G2) it never passes while a land drop
  * is pending, so G2 has no code of its own; (G3) a pure no-op is never repeated twice in a row: an
@@ -185,6 +191,12 @@ public final class Explorer {
     private boolean pendingRetargeted;
     /** D485: the decision record's {@code why} for a play whose stale targets the seat replaced. */
     public static final String STALE_TARGETS = "STALE_TARGETS";
+    /** D486: the tokens of this listing's plays of Forge's whose modes the seat drew ({@link #randomModes}). */
+    private final Set<String> modesDrawnToks = new LinkedHashSet<>();
+    /** D486: the play just returned is Forge's answer with modes the seat drew, until the record reads it ({@link #takeModesDrawn}). */
+    private boolean pendingModesDrawn;
+    /** D486: the decision record's {@code why} for a play whose modes the seat drew in place of Forge's (nothing was stale). */
+    public static final String MODES_DRAWN = "MODES_DRAWN";
     /**
      * G6 (#192's review): every play the seat wrote on at this decision's
      * listing -- a drawn X, random targets -- with what it carried before
@@ -409,6 +421,8 @@ public final class Explorer {
         pendingOwnX = false;
         pendingRetargeted = false;
         retargetedToks.clear();
+        pendingModesDrawn = false;
+        modesDrawnToks.clear();
         try {
             final Game g = ai.getGame();
             final Set<String> refusedHere = refusedIn(window(g, ai));
@@ -496,8 +510,23 @@ public final class Explorer {
             // stale (a target that died or left, or one too many): made legal here, or not offered
             final String ftok = tokenOf(chosen);
             int fixed;
+            boolean drawn = false;
             try {
-                fixed = staleTargets(forgeSa, ai);
+                if (isModal(forgeSa) && forgeSa.getChosenList() == null) {
+                    // D486: Forge's answer with no modes chosen (CharmAi left none): at the cast Forge would
+                    // choose them by doTrigger(sa, true), which can choose a mode with no legal target
+                    // (s05's Suplex); the seat draws the modes and their targets now, or does not offer it
+                    fixed = randomModes(forgeSa, ai) < 0 ? -1 : 0;
+                    drawn = fixed == 0;
+                } else {
+                    fixed = staleTargets(forgeSa, ai);
+                    if (fixed < 0 && isModal(forgeSa)) {
+                        // D486: Forge's modes cannot be made legal (a chosen mode's every target gone): the
+                        // seat draws the modes and their targets, as for a modal spell with none chosen
+                        fixed = randomModes(forgeSa, ai) < 0 ? -1 : 0;
+                        drawn = fixed == 0;
+                    }
+                }
             } catch (final RuntimeException e) {
                 // a throw can come after some parts changed: never offered half-fixed (put back with the rest)
                 math.failed();
@@ -510,6 +539,9 @@ public final class Explorer {
                 if (fixed > 0) {
                     retargetedToks.add(ftok);
                 }
+                if (drawn) {
+                    modesDrawnToks.add(ftok);   // D486: counted modesDrawn, MODES_DRAWN on the record, not D485's
+                }
             }
         }
         final List<SpellAbility> all;
@@ -520,6 +552,7 @@ public final class Explorer {
             math.failed();
             return out;
         }
+        boolean cardOnly = false;
         for (final SpellAbility sa : all) {
             if (sa == forgeSa || sa.isLandAbility() || sa.isManaAbility() || sa.isTrigger()) {
                 continue;
@@ -550,14 +583,22 @@ public final class Explorer {
                     }
                     sa.setXManaCostPaid(x);
                 }
-                if (!ComputerUtilCost.canPayCost(sa, ai, false) || !randomTargets(sa, ai)) {
+                if (!ComputerUtilCost.canPayCost(sa, ai, false)) {
                     continue;
                 }
-                if (sa.getApi() == ApiType.Charm) {
-                    // D485: a modal spell's targets at the cast are its chosen modes' own, Forge's (CharmEffect.makeChoices
-                    // discards CharmAi's chain of copies and rebuilds it from getChosenList()); randomTargets drew on that
-                    // discarded chain (so since D451 the seat's own modal pick casts Forge's targets), and these are made
-                    // legal here, or the play is left out
+                final boolean playersOnly = playersOnlyWouldList(sa, ai);   // D486: before the draw writes on it
+                if (isModal(sa)) {
+                    // D486: a modal spell's targets at the cast are its chosen modes' (CharmEffect.makeChoices
+                    // rebuilds the chain from them), so the seat draws the modes and their targets together;
+                    // left out when no legal set of modes is left
+                    if (randomModes(sa, ai) < 0) {
+                        continue;
+                    }
+                } else if (!randomTargets(before(sa), sa, ai)) {
+                    continue;
+                } else if (sa.getApi() == ApiType.Charm) {
+                    // D485: a modal spell whose modes the seat does not choose (copied, random, an opponent's
+                    // choice, repeatable): its chosen modes' targets are made legal, or it is left out
                     final int fixed = staleTargets(sa, ai);
                     if (fixed < 0) {
                         continue;
@@ -566,6 +607,9 @@ public final class Explorer {
                         retargetedToks.add(tok);
                     }
                 }
+                if (!playersOnly) {
+                    cardOnly = true;
+                }
                 final List<SpellAbility> one = new ArrayList<>(1);
                 one.add(sa);
                 out.put(tok, one);
@@ -573,26 +617,33 @@ public final class Explorer {
                 math.failed();
             }
         }
+        if (cardOnly) {
+            math.guardrail("cardTargetOffered");   // D486: a play only a card target makes possible is in this listing
+        }
         return out;
     }
 
     /**
-     * Give every targeting part of {@code sa} targets drawn uniformly from the
-     * legal ones the seat can see; false when a part cannot be targeted that way
-     * (no visible legal target, divided damage, a cross-target constraint) --
-     * the play is then left out.  Each part's targets are noted before they are
-     * reset, and put back unless this play is the pick ({@link #restoreChoices}):
+     * Give every targeting part of the chain from {@code head} targets drawn
+     * uniformly from the legal ones the seat can see ({@link #candidates}:
+     * players and cards, D486); false when a part cannot be targeted that way
+     * (fewer legal visible targets than its minimum, divided damage, a
+     * cross-target constraint, a spell as a target) -- the play is then left
+     * out.  A part takes {@code max(min, 1)} to {@code min(max, legal)}
+     * targets, the count drawn uniformly when there is a choice, each target
+     * drawn in turn from those still legal beside the ones already drawn (a
+     * total-CMC cap); a part with a minimum of 0 and nothing legal takes none.
+     * Each part's targets are noted in {@code owner} (the play's {@link Before})
+     * before they are reset, and put back unless the play is the pick ({@link #restoreChoices}):
      * Forge's AI does not always choose a play's targets afresh (D471).
      */
-    private boolean randomTargets(final SpellAbility sa, final Player ai) {
-        for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+    private boolean randomTargets(final Before owner, final SpellAbility head, final Player ai) {
+        for (SpellAbility s = head; s != null; s = s.getSubAbility()) {
             if (!s.usesTargeting()) {
                 continue;
             }
             final TargetRestrictions tr = s.getTargetRestrictions();
-            if (tr == null || s.isDividedAsYouChoose() || tr.isRandomTarget() || tr.isUniqueTargets()
-                    || tr.isSameController() || tr.isDifferentControllers() || tr.isDifferentCMC()
-                    || tr.isDifferentNames() || tr.isEqualToughness() || tr.isWithoutSameCreatureType()) {
+            if (tr == null || s.isDividedAsYouChoose() || constrained(tr) || tr.getZone().contains(ZoneType.Stack)) {
                 return false;
             }
             final Card host = s.getHostCard();
@@ -600,19 +651,19 @@ public final class Explorer {
             final int max = tr.getMaxTargets(host, s);
             final SpellAbility part = s;
             final TargetChoices was = s.getTargets() == null ? new TargetChoices() : s.getTargets().clone();
-            before(sa).note(part, () -> part.setTargets(was));
+            owner.note(part, () -> part.setTargets(was));
             s.resetTargets();
-            final List<GameEntity> legal = new ArrayList<>();
-            for (final GameEntity e : tr.getAllCandidates(s, true)) {
-                if (Decisions.entityToken("target", e, ai) != null && s.canTarget(e)) {
-                    legal.add(e);
-                }
-            }
-            final int k = Math.min(Math.max(min, 1), Math.min(max, legal.size()));
-            if (k < min || k == 0 && min > 0) {
+            final List<GameEntity> legal = candidates(s, ai);
+            final int[] range = targetCount(min, max, legal.size());
+            if (range == null) {
                 return false;
             }
+            final int k = range[0] + (range[1] > range[0] ? math.pick(range[1] - range[0] + 1) : 0);
             for (int i = 0; i < k; i++) {
+                legal.removeIf(e -> !part.canTarget(e));   // a target's legality can depend on those drawn
+                if (legal.isEmpty()) {
+                    break;
+                }
                 s.getTargets().add(legal.remove(math.pick(legal.size())));
             }
             if (!s.isTargetNumberValid()) {
@@ -622,6 +673,275 @@ public final class Explorer {
         }
         return true;
     }
+
+    /**
+     * D486: how many targets the random seat draws for a part with {@code min}
+     * and {@code max} targets and {@code legal} legal visible ones: from
+     * {@code max(min, 1)} up to {@code min(max, legal)}, as {@code {lo, hi}};
+     * {@code {0, 0}} for a part that may take none and has none to take (or a
+     * maximum of 0, a kicker-only part unkicked); null when the minimum cannot
+     * be reached.  Engine-free, for the self-test.
+     */
+    static int[] targetCount(final int min, final int max, final int legal) {
+        final int hi = Math.min(max, legal);
+        final int lo = Math.min(Math.max(min, 1), hi);
+        if (hi < 0 || lo < min) {
+            return null;
+        }
+        return new int[] {Math.max(lo, 0), Math.max(hi, 0)};
+    }
+
+    /** A part with a cross-target constraint or a random target: the seat does not draw for it. */
+    private static boolean constrained(final TargetRestrictions tr) {
+        return tr.isRandomTarget() || tr.isUniqueTargets() || tr.isSameController() || tr.isDifferentControllers()
+                || tr.isDifferentCMC() || tr.isDifferentNames() || tr.isEqualToughness() || tr.isWithoutSameCreatureType();
+    }
+
+    /**
+     * D486: the legal targets of {@code s} the seat can see now, players and
+     * cards, in the engine's order.  {@code TargetRestrictions.getAllCandidates}'s
+     * flag is {@code onlyNonCard} (forge-game {@code TargetRestrictions.java:571-584}
+     * at the {@code forge-2.0.14} tag; the pinned jar's bytecode returns after
+     * the players when it is true), so it is called with {@code false}; it keeps
+     * what {@code canTarget} allows -- protection, hexproof, shroud, the
+     * targeting restrictions -- and {@link Decisions#entityToken} keeps what the
+     * seat can see (no other hand, no library).
+     */
+    static List<GameEntity> candidates(final SpellAbility s, final Player ai) {
+        return keepLegal(s.getTargetRestrictions().getAllCandidates(s, playersOnlyForTest),
+                e -> Decisions.entityToken("target", e, ai) != null, s::canTarget);
+    }
+
+    /** D486's negative control, for the self-test only: the old call ({@code getAllCandidates(s, true)}, players alone). */
+    private static volatile boolean playersOnlyForTest;
+
+    /** For the self-test only (D486): draw the seat's own targets from the players alone, as before D486. */
+    public static void playersOnlyForTest(final boolean on) {
+        playersOnlyForTest = on;
+    }
+
+    /**
+     * D486: the candidates the seat may draw, in order: the ones it can see
+     * ({@code visible}) that the part may target now ({@code canTarget}).
+     * Engine-free, for the self-test.
+     */
+    static <T> List<T> keepLegal(final Iterable<? extends T> all, final java.util.function.Predicate<T> visible,
+                                 final java.util.function.Predicate<T> canTarget) {
+        final List<T> out = new ArrayList<>();
+        for (final T e : all) {
+            if (visible.test(e) && canTarget.test(e)) {
+                out.add(e);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * D486: whether the random seat's own listing before D486 -- its targets
+     * drawn from the players alone ({@code getAllCandidates(s, true)}) -- would
+     * have offered {@code sa}: each targeting part of its chain (for a modal
+     * spell, the chain Forge's AI last built on it) reaches its minimum with
+     * players.  Counts {@code cardTargetOffered}; draws nothing and writes
+     * nothing.
+     */
+    private static boolean playersOnlyWouldList(final SpellAbility sa, final Player ai) {
+        for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            if (!s.usesTargeting()) {
+                continue;
+            }
+            final TargetRestrictions tr = s.getTargetRestrictions();
+            if (tr == null || s.isDividedAsYouChoose() || constrained(tr)) {
+                return false;
+            }
+            int players = 0;
+            for (final GameEntity e : tr.getAllCandidates(s, true)) {
+                players += e instanceof Player ? 1 : 0;
+            }
+            final Card host = s.getHostCard();
+            final int min = tr.getMinTargets(host, s);
+            final int k = Math.min(Math.max(min, 1), Math.min(tr.getMaxTargets(host, s), players));
+            if (k < min || k == 0 && min > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // D486: modal spells
+    // ------------------------------------------------------------------
+
+    /** The key {@link Before} notes a modal spell's chosen modes and chain under. */
+    static final Object MODES = new Object();
+
+    /** A modal spell or ability whose modes its controller chooses at the cast (not a copy, not chosen at random or by an opponent). */
+    static boolean isModal(final SpellAbility sa) {
+        return sa.getApi() == ApiType.Charm && !sa.isCopied() && !sa.isTrigger() && !sa.hasParam("Random")
+                && !sa.hasParam("Chooser") && !sa.hasParam("CanRepeatModes");
+    }
+
+    /**
+     * D486: the random seat chooses a modal spell's modes and their targets
+     * together, before the cast, as Forge's {@code CharmAi} does for its own
+     * plays ({@code sa.setChosenList}, which the cast's
+     * {@code chooseModeForAbility} returns as it is): the count uniform from
+     * {@code max(MinCharmNum, 1)} to {@code CharmNum} (every mode for
+     * entwine), then distinct modes drawn uniformly among the legal ones
+     * ({@code CharmEffect.makePossibleOptions}, 603.3c), each kept only when
+     * {@link #randomTargets} can target its chain.  Without it the cast's
+     * modes were whatever Forge's last evaluation left on the spell -- or, with
+     * none left, Forge's forced {@code doTrigger(sa, true)} inside the cast,
+     * which chose a mode with no legal target and stranded the card (J168,
+     * s05's Suplex).  The old modes and chain are noted first and put back
+     * unless this play is the pick.  Returns 1 when chosen, -1 when no legal
+     * set of modes is left (the play must not be cast).
+     */
+    int randomModes(final SpellAbility sa, final Player ai) {
+        final Card host = sa.getHostCard();
+        final List<AbilitySub> choices = CharmEffect.makePossibleOptions(sa);
+        int num = AbilityUtils.calculateAmount(host, sa.getParamOrDefault("CharmNum", "1"), sa);
+        int min = sa.hasParam("MinCharmNum") ? AbilityUtils.calculateAmount(host, sa.getParam("MinCharmNum"), sa) : num;
+        if (sa.isEntwine()) {
+            num = choices.size();
+            min = num;
+        }
+        if (modeCount(min, num, choices.size()) == null) {
+            return -1;
+        }
+        final List<AbilitySub> oldChosen = sa.getChosenList();
+        final AbilitySub oldChain = sa.getSubAbility();
+        before(sa).note(MODES, () -> {
+            sa.setChosenList(oldChosen);
+            sa.setSubAbility(oldChain);
+        });
+        final List<AbilitySub> chosen = drawModes(before(sa), ai, choices, min, num);
+        if (chosen == null) {
+            return -1;
+        }
+        sa.setChosenList(chosen);   // the record reads them (Decisions.castTargets, D485); the cast copies them
+        return 1;
+    }
+
+    /**
+     * D486: {@code count} modes from {@code choices}: the count uniform over
+     * {@link #modeCount}, then distinct modes drawn uniformly, each kept only
+     * when {@link #randomTargets} can target its chain (its old targets noted
+     * in {@code b}); null when fewer than the minimum can be targeted.
+     */
+    private List<AbilitySub> drawModes(final Before b, final Player ai, final List<AbilitySub> choices, final int min,
+                                       final int num) {
+        final int[] range = modeCount(min, num, choices.size());
+        if (range == null) {
+            return null;
+        }
+        final int want = range[0] + (range[1] > range[0] ? math.pick(range[1] - range[0] + 1) : 0);
+        final List<AbilitySub> pool = new ArrayList<>(choices);
+        final List<AbilitySub> chosen = new ArrayList<>();
+        while (chosen.size() < want && !pool.isEmpty()) {
+            final AbilitySub m = pool.remove(math.pick(pool.size()));
+            m.setActivatingPlayer(ai);
+            if (randomTargets(b, m, ai)) {
+                chosen.add(m);
+            }
+        }
+        return chosen.size() < range[0] ? null : chosen;
+    }
+
+    /**
+     * D486: the hook the seat owns inside the cast.  {@code CharmEffect.makeChoices}
+     * asks the caster's controller for the modes ({@code chooseModeForAbility})
+     * after the card is on the stack and before the payment; Forge's AI returns
+     * the modes its last evaluation chose ({@code getChosenList}), or, with none,
+     * runs {@code doTrigger(sa, true)} -- the mandatory path, which can choose a
+     * mode it cannot target ({@code [[]]}), and {@code MagicStack.add} then drops
+     * the paid spell ("failed to target").  The atlas's forced option is such a
+     * cast: {@code SearchPolicy.alternatives} lists a modal spell Forge declines
+     * as an untargeted play, with no modes chosen (J168: 650 of s05's 991 lost
+     * Suplex casts).  So for the random seat: modes already chosen whose targets
+     * are all legal now stand (null: Forge's answer, untouched, nothing drawn --
+     * the seat's own listed picks always arrive so); otherwise the seat draws
+     * the modes and their targets now ({@link #drawModes}, seeded, counted as
+     * {@code modesDrawn}; the controller writes their target records, {@code why: "MODES_DRAWN"}).  Null too when no legal set exists: Forge answers.
+     */
+    public List<AbilitySub> modesAtCast(final SpellAbility sa, final Player ai, final List<AbilitySub> possible,
+                                        final int min, final int num) {
+        if (!isModal(sa) || possible == null) {
+            return null;
+        }
+        try {
+            return Decisions.quiet(() -> {
+                final List<AbilitySub> cur = sa.getChosenList();
+                if (cur != null && cur.size() >= Math.max(min, 1) && cur.size() <= num && legalModes(cur)) {
+                    return null;
+                }
+                final List<AbilitySub> chosen = drawModes(new Before(), ai, possible, min, num);
+                if (chosen == null) {
+                    return null;
+                }
+                math.guardrail("modesDrawn");
+                sa.setChosenList(chosen);
+                return chosen;
+            });
+        } catch (final RuntimeException e) {
+            math.failed();
+            return null;
+        }
+    }
+
+    /** D486: every targeting part of every mode's chain holds a valid count of targets the part may target now. */
+    private static boolean legalModes(final List<AbilitySub> modes) {
+        for (final AbilitySub m : modes) {
+            for (SpellAbility s = m; s != null; s = s.getSubAbility()) {
+                if (!s.usesTargeting()) {
+                    continue;
+                }
+                if (!s.isTargetNumberValid() || s.getTargetRestrictions() == null) {
+                    return false;
+                }
+                final Set<GameEntity> cands = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+                cands.addAll(s.getTargetRestrictions().getAllCandidates(s, false));
+                for (final GameObject o : s.getTargets()) {
+                    if (o instanceof GameEntity && (!cands.contains(o) || !s.canTarget(o))) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * D486: whether a modal spell can be cast at all: {@code CharmEffect.makeChoices}
+     * refuses one with fewer legal modes ({@code makePossibleOptions}, 603.3c: a
+     * mode whose targeting has no candidate is not one) than its minimum -- after
+     * the card is on the stack, so the engine strands it, silently (J168: s05's
+     * Suplex at d0, with no creature or artifact on the battlefield).  True for
+     * anything that is not such a spell.  The listings that offer a play without
+     * choosing its modes -- {@code SearchPolicy.alternatives}' declined spells,
+     * the decision record's options -- leave such a spell out.
+     */
+    public static boolean modesCastable(final SpellAbility sa) {
+        if (sa.getApi() != ApiType.Charm || sa.isCopied() || sa.isTrigger() || sa.isEntwine()
+                || sa.hasParam("CanRepeatModes") || sa.getHostCard() == null || sa.getHostCard().getZone() == null) {
+            return true;
+        }
+        final Card host = sa.getHostCard();
+        final int num = AbilityUtils.calculateAmount(host, sa.getParamOrDefault("CharmNum", "1"), sa);
+        final int min = sa.hasParam("MinCharmNum") ? AbilityUtils.calculateAmount(host, sa.getParam("MinCharmNum"), sa) : num;
+        return min <= CharmEffect.makePossibleOptions(sa).size();
+    }
+
+    /**
+     * D486: a modal spell's mode count: from {@code max(min, 1)} to
+     * {@code min(num, modes)}, as {@code {lo, hi}}; null when fewer legal
+     * modes are left than the minimum.  Engine-free, for the self-test.
+     */
+    static int[] modeCount(final int min, final int num, final int modes) {
+        final int hi = Math.min(num, modes);
+        final int lo = Math.max(min, 1);
+        return lo > hi ? null : new int[] {lo, hi};
+    }
+
 
     // ------------------------------------------------------------------
     // D485: stale targets
@@ -640,6 +960,17 @@ public final class Explorer {
             pendingRetargeted = true;
             math.guardrail("retargeted");
         }
+        if (tok != null && modesDrawnToks.contains(tok)) {
+            pendingModesDrawn = true;
+            math.guardrail("modesDrawn");
+        }
+    }
+
+    /** D486: the pick just returned was Forge's answer with modes the seat drew ({@link #MODES_DRAWN}), once. */
+    public boolean takeModesDrawn() {
+        final boolean r = pendingModesDrawn;
+        pendingModesDrawn = false;
+        return r;
     }
 
     /**
@@ -748,9 +1079,7 @@ public final class Explorer {
             if (!stale && s.isTargetNumberValid()) {
                 continue;
             }
-            if (spell || s.isDividedAsYouChoose() || tr.isRandomTarget() || tr.isUniqueTargets() || tr.isSameController()
-                    || tr.isDifferentControllers() || tr.isDifferentCMC() || tr.isDifferentNames() || tr.isEqualToughness()
-                    || tr.isWithoutSameCreatureType()) {
+            if (spell || s.isDividedAsYouChoose() || constrained(tr)) {
                 return -1;
             }
             final Card host = s.getHostCard();
@@ -894,6 +1223,9 @@ public final class Explorer {
      * checks the close-call rule.  {@code marks} gets each changed part's mark.
      */
     public void targets(final SpellAbility sa, final Player ai, final Map<SpellAbility, Decision.Explore> marks) {
+        if (sa.getApi() == ApiType.Charm && !sa.isCopied() && !sa.isTrigger()) {
+            return;   // D486: the cast rebuilds a modal spell's chain from its chosen modes; a redraw on it would not be cast
+        }
         for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
             final SpellAbility part = s;
             if (!simpleSingleTarget(part)) {
@@ -928,16 +1260,15 @@ public final class Explorer {
         if (tr.getMinTargets(host, s) != 1 || tr.getMaxTargets(host, s) != 1) {
             return false;
         }
-        return !(tr.isRandomTarget() || tr.isUniqueTargets() || tr.isSameController() || tr.isDifferentControllers()
-                || tr.isDifferentCMC() || tr.isDifferentNames() || tr.isEqualToughness() || tr.isWithoutSameCreatureType());
+        return !constrained(tr);
     }
 
     /** The legal targets of {@code s} the seat can see, the current one first. */
     private static List<GameEntity> legalTargets(final SpellAbility s, final Player ai, final GameEntity cur) {
         final List<GameEntity> out = new ArrayList<>();
         out.add(cur);
-        for (final GameEntity e : s.getTargetRestrictions().getAllCandidates(s, true)) {
-            if (e != cur && Decisions.entityToken("target", e, ai) != null && s.canTarget(e)) {
+        for (final GameEntity e : candidates(s, ai)) {   // D486: players and cards
+            if (e != cur) {
                 out.add(e);
             }
         }
