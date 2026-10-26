@@ -1255,3 +1255,9 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   s13 (64: the seat targeted the creature its own extra cost sacrifices); s05's are gone. C1 on s01 flips to NOT
   SHOWN on the random map (−3.13). J172 = a re-check of the five spines once D487 lands (~30 min); D488 (lane):
   the target draw respects per-target costs and never targets what its own cost sacrifices.
+- 13:20 EDT: **D487 built and gated** (lane commit 651d7d52; review running): every one of J171's 4,717 null-target
+  records checked on all 54,350 logs of the five spines — Forge's own play with a min-0 targeting part left empty
+  (Tear Asunder's shut kicker half, "up to one" loyalty targets); no cast carried a target outside its record's
+  options; no leak. New shape M76 (`target:none` listed with `min`; a min≥1 part left empty marked NO_TARGET);
+  J171's exact legacy shape accepted and counted so its data stands. J172 (re-check the five, ~45 min) drafted
+  for the D487 pin; D488 (per-target costs, sacrifice targets) lane running.
