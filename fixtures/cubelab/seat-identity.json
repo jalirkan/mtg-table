@@ -46,23 +46,23 @@
       "turns": 15,
       "first": "B",
       "reason": "AllOpponentsLost",
-      "digest": "70b36c8575ab6574",
-      "lines": 59
+      "digest": "78f3a94998355ea8",
+      "lines": 57
     },
     "search": {
       "winner": "A",
       "turns": 13,
       "first": "A",
       "reason": "AllOpponentsLost",
-      "digest": "19995346a6342137",
-      "lines": 93
+      "digest": "c68c2a849b7b0d54",
+      "lines": 92
     },
     "explore": {
       "winner": "A",
       "turns": 18,
       "first": "B",
       "reason": "AllOpponentsLost",
-      "digest": "20e2d8a32e35f445",
+      "digest": "82d6d18c57bbd861",
       "lines": 193
     },
     "plain": {

@@ -9,7 +9,9 @@
 // or a D358 exploring seat plays.  This command plays four fixed games on the cube lab's worker -- the
 // same decks, seeds and seat specs every time -- and compares what each game was with a committed golden,
 // fixtures/cubelab/seat-identity.json, which was made from the code BEFORE D450 (origin/main at 7a87bb02,
-// its own classes on the worker, this driver unchanged):
+// its own classes on the worker, this driver unchanged) and regenerated once since, for D486's record changes
+// (target records list cards, so a one-candidate record is no longer written; every line classified in D486's
+// addendum, no play changed):
 //
 //   forge    Default vs Default, both chairs recorded (our controller with no policy, D315/D347)
 //   search   a deterministic search seat (search-v1's loop at a fixed two rounds, seed 1, a budget it never
@@ -23,7 +25,8 @@
 // state frame: the recorder cuts frames on a 500 ms clock, so where they are cut moves with the machine
 // (measured: one more cut in the mulligans on a cold JVM) while the game does not.  An unrecorded game's
 // identity is its winner, turns, first player and reason.  Exit 0 when every game is the golden's, 4 otherwise (naming the first different line).
-// --write makes the golden (from whatever classes CUBELAB_CP names).  Not in the gate: it boots Forge.
+// --write makes the golden (from whatever classes CUBELAB_CP names).  The gate runs it as step 12m (since D486's
+// addendum); --write only with every differing line classified against the decision that changed it.
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
