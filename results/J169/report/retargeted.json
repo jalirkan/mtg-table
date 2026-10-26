@@ -1,0 +1,132 @@
+{
+ "b-s06-peasant-2106": {
+  "rows": 7500,
+  "retargetedRows": 207,
+  "retargetedSum": 218,
+  "byDecision": {
+   "d2": 92,
+   "d4": 23,
+   "d5": 13,
+   "d6": 36,
+   "d8": 43
+  },
+  "byOption": {
+   "d2/o2": 38,
+   "d6/o1": 8,
+   "d4/o0": 3,
+   "d4/o1": 3,
+   "d4/o2": 5,
+   "d4/o3": 5,
+   "d2/o0": 32,
+   "d4/o4": 4,
+   "d2/o4": 9,
+   "d2/o1": 6,
+   "d2/o3": 7,
+   "d6/o0": 10,
+   "d6/o4": 6,
+   "d4/o5": 3,
+   "d5/o0": 4,
+   "d5/o2": 3,
+   "d5/o3": 3,
+   "d6/o2": 6,
+   "d5/o4": 1,
+   "d6/o3": 4,
+   "d6/o5": 2,
+   "d5/o1": 2,
+   "d8/o4": 6,
+   "d8/o1": 6,
+   "d8/o2": 9,
+   "d8/o0": 9,
+   "d8/o3": 13
+  },
+  "logsScanned": 414,
+  "targetRecords": 436,
+  "staleChosen": [
+   {
+    "seat": 0,
+    "kind": "priority",
+    "chosen": "cast:15",
+    "n": 115,
+    "name": null
+   },
+   {
+    "seat": 0,
+    "kind": "priority",
+    "chosen": "cast:35",
+    "n": 103,
+    "name": null
+   }
+  ]
+ },
+ "b-s10-peasant-2110": {
+  "rows": 6275,
+  "retargetedRows": 537,
+  "retargetedSum": 538,
+  "byDecision": {
+   "d2": 121,
+   "d10": 58,
+   "d15": 111,
+   "d22": 154,
+   "d28": 60,
+   "d33": 7,
+   "d40": 19,
+   "d43": 5,
+   "d44": 1,
+   "d45": 1
+  },
+  "byOption": {
+   "d15/o0": 33,
+   "d22/o1": 31,
+   "d15/o1": 32,
+   "d15/o3": 21,
+   "d10/o0": 18,
+   "d22/o6": 25,
+   "d33/o1": 2,
+   "d2/o2": 10,
+   "d2/o1": 25,
+   "d15/o2": 25,
+   "d2/o0": 45,
+   "d22/o0": 23,
+   "d22/o2": 16,
+   "d22/o3": 15,
+   "d22/o4": 19,
+   "d2/o3": 41,
+   "d22/o5": 25,
+   "d10/o2": 19,
+   "d28/o2": 12,
+   "d28/o3": 11,
+   "d28/o1": 4,
+   "d10/o1": 21,
+   "d28/o4": 16,
+   "d28/o0": 17,
+   "d33/o0": 5,
+   "d40/o0": 4,
+   "d40/o2": 5,
+   "d40/o3": 5,
+   "d45/o1": 1,
+   "d44/o0": 1,
+   "d40/o1": 5,
+   "d43/o1": 1,
+   "d43/o3": 2,
+   "d43/o0": 2
+  },
+  "logsScanned": 1074,
+  "targetRecords": 1062,
+  "staleChosen": [
+   {
+    "seat": 1,
+    "kind": "priority",
+    "chosen": "cast:76",
+    "n": 524,
+    "name": null
+   },
+   {
+    "seat": 1,
+    "kind": "priority",
+    "chosen": "cast:51",
+    "n": 14,
+    "name": null
+   }
+  ]
+ }
+}

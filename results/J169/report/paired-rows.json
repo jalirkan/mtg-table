@@ -1,0 +1,290 @@
+{
+ "b-s06-peasant-2106": {
+  "onlyOld": 0,
+  "onlyNew": 150,
+  "total": {
+   "both": 7350,
+   "sameScore": 7321,
+   "sameGame": 7046,
+   "rt": 204,
+   "rtSameScore": 181,
+   "rtSameGame": 5,
+   "nonRtSameGame": 7041,
+   "nonRt": 7146,
+   "rtScoreUp": 21,
+   "rtScoreDown": 2
+  },
+  "byDecision": {
+   "d2": {
+    "both": 550,
+    "sameScore": 529,
+    "sameGame": 429,
+    "rt": 92,
+    "rtSameScore": 75,
+    "rtSameGame": 1,
+    "nonRtSameGame": 428,
+    "nonRt": 458,
+    "rtScoreUp": 16,
+    "rtScoreDown": 1
+   },
+   "d4": {
+    "both": 150,
+    "sameScore": 150,
+    "sameGame": 122,
+    "rt": 23,
+    "rtSameScore": 23,
+    "rtSameGame": 0,
+    "nonRtSameGame": 122,
+    "nonRt": 127,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d5": {
+    "both": 125,
+    "sameScore": 124,
+    "sameGame": 102,
+    "rt": 13,
+    "rtSameScore": 12,
+    "rtSameGame": 0,
+    "nonRtSameGame": 102,
+    "nonRt": 112,
+    "rtScoreUp": 1,
+    "rtScoreDown": 0
+   },
+   "d6": {
+    "both": 850,
+    "sameScore": 849,
+    "sameGame": 788,
+    "rt": 36,
+    "rtSameScore": 35,
+    "rtSameGame": 2,
+    "nonRtSameGame": 786,
+    "nonRt": 814,
+    "rtScoreUp": 1,
+    "rtScoreDown": 0
+   },
+   "d8": {
+    "both": 700,
+    "sameScore": 694,
+    "sameGame": 630,
+    "rt": 40,
+    "rtSameScore": 36,
+    "rtSameGame": 2,
+    "nonRtSameGame": 628,
+    "nonRt": 660,
+    "rtScoreUp": 3,
+    "rtScoreDown": 1
+   },
+   "d10": {
+    "both": 1100,
+    "sameScore": 1100,
+    "sameGame": 1100,
+    "rt": 0,
+    "rtSameScore": 0,
+    "rtSameGame": 0,
+    "nonRtSameGame": 1100,
+    "nonRt": 1100,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d12": {
+    "both": 850,
+    "sameScore": 850,
+    "sameGame": 850,
+    "rt": 0,
+    "rtSameScore": 0,
+    "rtSameGame": 0,
+    "nonRtSameGame": 850,
+    "nonRt": 850,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d15": {
+    "both": 800,
+    "sameScore": 800,
+    "sameGame": 800,
+    "rt": 0,
+    "rtSameScore": 0,
+    "rtSameGame": 0,
+    "nonRtSameGame": 800,
+    "nonRt": 800,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d17": {
+    "both": 700,
+    "sameScore": 700,
+    "sameGame": 700,
+    "rt": 0,
+    "rtSameScore": 0,
+    "rtSameGame": 0,
+    "nonRtSameGame": 700,
+    "nonRt": 700,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d19": {
+    "both": 1400,
+    "sameScore": 1400,
+    "sameGame": 1400,
+    "rt": 0,
+    "rtSameScore": 0,
+    "rtSameGame": 0,
+    "nonRtSameGame": 1400,
+    "nonRt": 1400,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d21": {
+    "both": 125,
+    "sameScore": 125,
+    "sameGame": 125,
+    "rt": 0,
+    "rtSameScore": 0,
+    "rtSameGame": 0,
+    "nonRtSameGame": 125,
+    "nonRt": 125,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   }
+  }
+ },
+ "b-s10-peasant-2110": {
+  "onlyOld": 0,
+  "onlyNew": 400,
+  "total": {
+   "both": 5875,
+   "sameScore": 5717,
+   "sameGame": 5327,
+   "rt": 514,
+   "rtSameScore": 367,
+   "rtSameGame": 9,
+   "nonRtSameGame": 5318,
+   "nonRt": 5361,
+   "rtScoreUp": 36,
+   "rtScoreDown": 111
+  },
+  "byDecision": {
+   "d2": {
+    "both": 550,
+    "sameScore": 517,
+    "sameGame": 413,
+    "rt": 121,
+    "rtSameScore": 91,
+    "rtSameGame": 0,
+    "nonRtSameGame": 413,
+    "nonRt": 429,
+    "rtScoreUp": 8,
+    "rtScoreDown": 22
+   },
+   "d10": {
+    "both": 600,
+    "sameScore": 590,
+    "sameGame": 533,
+    "rt": 58,
+    "rtSameScore": 49,
+    "rtSameGame": 0,
+    "nonRtSameGame": 533,
+    "nonRt": 542,
+    "rtScoreUp": 2,
+    "rtScoreDown": 7
+   },
+   "d15": {
+    "both": 800,
+    "sameScore": 763,
+    "sameGame": 686,
+    "rt": 111,
+    "rtSameScore": 75,
+    "rtSameGame": 1,
+    "nonRtSameGame": 685,
+    "nonRt": 689,
+    "rtScoreUp": 8,
+    "rtScoreDown": 28
+   },
+   "d22": {
+    "both": 1150,
+    "sameScore": 1099,
+    "sameGame": 1007,
+    "rt": 141,
+    "rtSameScore": 93,
+    "rtSameGame": 4,
+    "nonRtSameGame": 1003,
+    "nonRt": 1009,
+    "rtScoreUp": 14,
+    "rtScoreDown": 34
+   },
+   "d28": {
+    "both": 700,
+    "sameScore": 682,
+    "sameGame": 646,
+    "rt": 54,
+    "rtSameScore": 38,
+    "rtSameGame": 3,
+    "nonRtSameGame": 643,
+    "nonRt": 646,
+    "rtScoreUp": 3,
+    "rtScoreDown": 13
+   },
+   "d33": {
+    "both": 350,
+    "sameScore": 348,
+    "sameGame": 340,
+    "rt": 7,
+    "rtSameScore": 6,
+    "rtSameGame": 0,
+    "nonRtSameGame": 340,
+    "nonRt": 343,
+    "rtScoreUp": 0,
+    "rtScoreDown": 1
+   },
+   "d40": {
+    "both": 650,
+    "sameScore": 645,
+    "sameGame": 634,
+    "rt": 15,
+    "rtSameScore": 10,
+    "rtSameGame": 0,
+    "nonRtSameGame": 634,
+    "nonRt": 635,
+    "rtScoreUp": 1,
+    "rtScoreDown": 4
+   },
+   "d43": {
+    "both": 800,
+    "sameScore": 798,
+    "sameGame": 795,
+    "rt": 5,
+    "rtSameScore": 3,
+    "rtSameGame": 1,
+    "nonRtSameGame": 794,
+    "nonRt": 795,
+    "rtScoreUp": 0,
+    "rtScoreDown": 2
+   },
+   "d44": {
+    "both": 75,
+    "sameScore": 75,
+    "sameGame": 74,
+    "rt": 1,
+    "rtSameScore": 1,
+    "rtSameGame": 0,
+    "nonRtSameGame": 74,
+    "nonRt": 74,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   },
+   "d45": {
+    "both": 200,
+    "sameScore": 200,
+    "sameGame": 199,
+    "rt": 1,
+    "rtSameScore": 1,
+    "rtSameGame": 0,
+    "nonRtSameGame": 199,
+    "nonRt": 199,
+    "rtScoreUp": 0,
+    "rtScoreDown": 0
+   }
+  }
+ }
+}
