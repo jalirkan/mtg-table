@@ -1,0 +1,386 @@
+==== J173 pilot1 started 2026-10-26T14:09:57-04:00 in unit lab-J173-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J173: data folder free GB 597.5
+J173: lab-j173 at the first pilot: state 1, {"entries": [], "spineDraws": 0, "validationDraws": 0, "smokeDraw": 0, "smoke": 0}
+J173: D481: docs/decisions/D481-decision-names-an-object-entered-between-frames.md added by 51564f1bef07a8be10b52ceca2c22e141923756a
+J173: D482: docs/decisions/D482-census-engine-unplayable-list.md added by b9f62f07cf76fcb1e4de56b7ce6970c2d1aa7a99
+J173: D483: docs/decisions/D483-play-identity.md added by ea1f56bd9cc0f92607365cc642cc0cae5feb6e20
+J173: D484: docs/decisions/D484-choose-source-loop.md added by 28acf721d4579e402c0f7099324cdc5962a3a627
+J173: D485: docs/decisions/D485-random-seat-stale-targets.md added by f6c950b06879317340ed0f622f320a6576b925b4
+J173: D486: docs/decisions/D486-random-seat-card-targets.md added by 818a9de4bceab5861a5017552bb6e9badb1c0db7
+J173: D487: docs/decisions/D487-target-none.md added by 651d7d52b90b3540972208fe07ee3f71dbc9551a
+J173: D488: docs/decisions/D488-random-seat-target-costs.md added by 7f60b85689081518548f08abdae056557f88a799
+J173: seat-identity golden: fixture last changed by 4c1f15b3229b7aec2d0448838ab1b868124821d2, D486's file added by 818a9de4bceab5861a5017552bb6e9badb1c0db7: {"descends": 1, "changed": 1, "note": 1, "digestsJ170": 1}
+✔ --min-options: the spread over decisions with k or more options, filled from the rest; k = 1 is D451's spread (1.364103ms)
+✔ D483: --min-options counts plays, not tokens or listed options; the options branched are still every listed one (0.320036ms)
+✔ the screen settles a near-decided decision; its replacement is the next listed one not yet branched, k or more options first (0.172947ms)
+✔ early stopping: an option clearly below the leader stops; option 0 and the leader never do; a close one runs on (7.241601ms)
+✔ with every cut off the schedule is D451's: the same units in the same order, and no event written (0.85053ms)
+✔ the cut schedule: stage by stage behind the barrier, the options still running, the Forge map on the survivors, a screened decision replaced; a resume decides nothing again (6.140596ms)
+✔ the schedule's plan guard: the header written once; a clean resume replays the events and decides nothing again; another plan or an edited deck is refused, naming both hashes (7.564261ms)
+✔ a spine with no Forge map: complete, decided and settled on the random map, and no agreement read (1.958999ms)
+✔ the review's numbers on its own data: the atlas reproduced at 96 of 96; the screen and early stopping keep 13 of 13 confident labels, no flip (8861.833342ms)
+✔ the guardrails of slices put back together are one pass's: counts summed, the first 50 violations named in order (1.250738ms)
+✔ --checks-parallel: atlas.json's checks are the serial run's, byte for byte, but the redaction's wall time (7376.929404ms)
+✔ the pool behind the barrier: the next stage waits, a worker the first stage did not need starts for the later ones, the jobs carry the options (1231.659997ms)
+✔ the atlas's redaction check: --empty-hand-ok reaches the checker, and proves before it excuses (D460) (135.812571ms)
+✔ a worker that dies mid-unit: the fresh one resumes at the branches it has no row for, each played once (44.472498ms)
+✔ a worker that retires after two OutOfMemoryErrors: the pool starts a fresh one, which resumes; the OOM branches stay as engine errors (40.473257ms)
+✔ a unit that dies at the same place every time is given up after two attempts, recorded unfinished (37.987291ms)
+✔ the resume policy, and the branches a unit already holds (0.489617ms)
+✔ the arithmetic: Wilson with draws, ranks, Spearman (1.539344ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (24.704232ms)
+✔ the agreement of two maps (18.165772ms)
+✔ how many rollouts, and the even spread of decisions (0.257988ms)
+✔ the deck pair rule: the most even record with the most games (0.82408ms)
+✔ a decision's two maps from its branch rows (22.812711ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.45442ms)
+✔ the guardrails read back from the decision records (0.399817ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (0.630153ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.403664ms)
+✔ atlas.md renders the two maps side by side (1.776213ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.26915ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.127441ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.270472ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (110.601519ms)
+✔ G6 (D471): X drawn, X = 0-only offers left out and own plays paid at X = 0 are counted; a play paid at 0 is a violation and a problem (244.116239ms)
+✔ branch errors are counted by text, and an option past --branch-error-max is named with its error (D466, J156 spine 458) (0.670599ms)
+✔ writeAtlas makes an errored option a problem and shows the errors in atlas.md's checks (D466) (3.152939ms)
+✔ an option the copy cannot give is unavailable: left out of the map, counted apart from errors, a problem past the bar (D470, J158 spine 461) (3.52279ms)
+✔ a branch whose game Karn restarted is played on: its row carries the restarts, it counts in the map, phase B counts it (D477, J162 modern7) (2.185547ms)
+✔ a copy that could not name an effect's source, or lost an exile link, is counted: on the row, in phase B and atlas.md, never a problem (D479) (2.426514ms)
+✔ a capped branch is a draw: one written as seat A's win is a problem; an option capped past --branch-capped-warn is a warning, never a problem (D478 and its addendum) (8.881816ms)
+✔ G1, planted (D466): a land the seat's own listing does not hold is no flag; a land in hand, drop unused, not played, is one (0.22161ms)
+✔ every guardrail violation is counted, though only the first 50 are named (D466: J156 vintage, 200 shown of 3,071) (43.743117ms)
+✔ a truncated frame log is skipped and named, and atlas.json is still written (D466: J156 spine 458's hung branch) (2.455369ms)
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.590421ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (875.150691ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (709.838391ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.369599ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2328.67173ms)
+✔ the prior covers the spectrum over 1,000 decks (1233.876776ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (53.365777ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.138372ms)
+✔ the land formula on fixture decks (0.552276ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.339733ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.195219ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (532.296079ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (2.12336ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.410818ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.082506ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (23.073074ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.224732ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (1.017596ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (227.803497ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (182.992247ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (573.379203ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1768.850429ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.932235ms)
+✔ the engine-unplayable list (D482): the committed file, its shape, every card in the library (0.338872ms)
+✔ the engine-unplayable list (D482): a listed card is never dealt, every skip counted, every other deck unchanged (1908.589785ms)
+✔ decks writes the list it applied and its skips; --unplayable none is D447's draw; --cube refuses it (497.33819ms)
+✔ both chairs of a lab recording pass the redaction checker (184.626088ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (33.129543ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (126.48401ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (161.196609ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (155.880084ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (134.944106ms)
+✔ M75: a target record with source "modes" passes; an unknown source FAILS the checker (265.36565ms)
+✔ M76: target:none listed with min 0 passes; the legacy null passes counted; the other shapes FAIL (1096.959929ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (150.85466ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (144.635736ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (100.941941ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 and, M73, G6 included; D485's two, D486's two and D488's two too) (138.052442ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (269.201354ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (418.916336ms)
+✔ M72: a Forge-piloted atlas branch seat's summary may carry its pay-cap count (289.77198ms)
+✔ negative control: forgePayCap outside an atlas Forge branch, in a random seat's log, or malformed FAILS the checker (M72) (818.374154ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.69189ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2632.057603ms)
+✔ a worker that never answers is still killed as hung at its deadline (2004.856689ms)
+ℹ tests 87
+ℹ suites 0
+ℹ pass 87
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17664.99942
+check-redaction self-test: 126 controls in fixtures/negative/redaction/
+  ok    baseline.jsonl passes clean (the control)
+  ok    p1-stub-without-owner.jsonl is rejected (amendment P1: the redacted stub is five keys, and `owner` is the fifth)
+  ok    p15-card-without-token.jsonl is rejected (amendment P15: every full card carries `token` (CardView.isToken))
+  ok    p3-card-without-alt.jsonl is rejected (amendment P3: every full card carries `alt`, `null` unless the seat may flip it)
+  ok    p2-library-without-cards.jsonl is rejected (amendment P2: a library is {count, cards}, not a bare count)
+  ok    p3-facedownhidden-revived.jsonl is rejected (amendment P3 retired the eleven-key faceDownHidden object; no emitter writes one)
+  ok    a1-stub-with-a-name.jsonl is rejected (A1: a sixth key on a stub is a leak, and a name is the worst one)
+  ok    a6-opponent-hand-named.jsonl is rejected (A4/A6: a full named card in the opponent hand, for an id nothing ever revealed)
+  ok    a3-opponent-library-revealed.jsonl is rejected (A3: an opponent library dumped as full cards -- reachable, but it must be declared)
+  ok    a3-revealed-top-under-courser.jsonl passes clean (the control)
+  ok    a3-revealed-top-two-cards.jsonl is rejected (A3, D315: Courser reveals ONE card; a second card of the opponent's library is a leak)
+  ok    a3-revealed-top-look-is-private.jsonl is rejected (A3, D315: Experimental Frenzy says "you may look" -- private, even though Forge scripts it MayLookAt$ Player)
+  ok    a9-look-permission-under-gonti.jsonl passes clean (the control)
+  ok    a9-exiled-face-down-named-without-a-dig.jsonl is rejected (A9, D371: an opponent's face-down card in exile with an alt, and no dig from a library behind it)
+  ok    a9-dig-by-the-opponent.jsonl is rejected (A9, D371: the dig was the OPPONENT's effect -- their look permission is not the viewer's)
+  ok    a9-alt-appears-after-the-dig.jsonl is rejected (A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source)
+  ok    a9-opponent-morph-named.jsonl is rejected (A9: the opponent's face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for)
+  ok    a9-stolen-morph-named-for-its-owner.jsonl is rejected (A9, D371: in play a face-down card's face is its CONTROLLER's -- the owner of a stolen morph does not see it)
+  ok    own-hand-card-redacted.jsonl is rejected (the viewer's own hand card served as a redacted stub: over-redaction, and the checker names the stub's controller)
+  ok    a6-library-reveal-is-not-a-whitelist.jsonl is rejected (A6: an opponent-library reveal must not excuse the same id later in their HAND)
+  ok    notice-names-a-concealed-card.jsonl is rejected (section 6: both notice strings go through Snap.sweepText, so an id here is OUR gate failing)
+  ok    ask-text-initial-null.jsonl is rejected (section 5.2: `text.initial` is a string, "" when Forge has none -- never null)
+  ok    ask-ability-menu-cardid-null.jsonl is rejected (section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send)
+  ok    a6-reveal-ask-one-frame-too-late.jsonl is rejected (the lookahead is ONE frame: a reveal ask two frames after the state does not justify it)
+  ok    p12-choose-list-reveals-without-the-flag.jsonl is rejected (P12: only `reveal: true` (or a delayedReveal) lets a list-shaped ask carry an opponent hand card)
+  ok    a7-reveal-flag-on-the-wrong-ask-kind.jsonl is rejected (amendment A7: `reveal: true` is Forge's getChoices(min < 0) channel and is a `choose_list` only)
+  ok    m44-match-present.jsonl passes clean (the control)
+  ok    m44-aideck-carries-path.jsonl is rejected (amendment M44: the AI's deck is its NAME and card COUNT; a path identifies the opponent's decklist)
+  ok    m44-aideck-cards-is-a-list.jsonl is rejected (amendment M44: aiDeck.cards is a COUNT; a list of names there is the opponent's decklist on the wire)
+  ok    m44-yourdeck-path-mismatch.jsonl is rejected (amendment M44: hello_ok.match and the session header are written from the same Deck objects; a different yourDeck.path means one of them describes a different match)
+  ok    m47-spectated-present.jsonl passes clean (the control)
+  ok    m47-yourprofile-on-a-human-seat.jsonl is rejected (amendment M47: yourProfile is a fact about an AI seat; on a viewer players[] marks human it describes a different match)
+  ok    m47-yourprofile-is-a-path.jsonl is rejected (amendment M47: yourProfile is the base name of a .ai file, never a path)
+  ok    m56-aipolicy-present.jsonl passes clean (the control)
+  ok    m56-aipolicy-not-a-policy.jsonl is rejected (amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path)
+  ok    m47-pace-not-a-number.jsonl is rejected (amendment M47: the session header's paceMs is a positive integer of milliseconds)
+  ok    m49-keywords-present.jsonl passes clean (the control)
+  ok    m49-stub-carries-keywords.jsonl is rejected (amendment M49: a redacted stub is five keys -- a keyword on it is a sixth key, and a fact about a hidden card)
+  ok    m49-keyword-is-a-display-string.jsonl is rejected (amendment M49: a keyword is a Keyword constant's name() -- a display string (or a card name) is not one)
+  ok    m49-face-down-carries-keywords.jsonl is rejected (amendment M49: a face-down card's keywords are [] in both branches of gate 2, like its name)
+  ok    m49-keywords-half-present.jsonl is rejected (amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it)
+  ok    m55-decisions-present.jsonl passes clean (the control)
+  ok    m55-decision-of-the-other-seat.jsonl is rejected (amendment M55 / D347: a seat's legal options name its hand -- the OTHER seat's record in this log is a leak)
+  ok    m55-option-names-the-opponent-hand.jsonl is rejected (amendment M55 / D347: an option naming a card the viewer cannot see (the opponent's concealed hand) is a leak)
+  ok    m55-decision-carries-a-label.jsonl is rejected (amendment M55 / D347: a decision record is tokens and numbers -- a label is an engine string that can name a card)
+  ok    m55-chosen-is-not-an-option.jsonl is rejected (amendment M55 / D347: the answer is one of the legal options)
+  ok    m55-frame-is-not-a-state.jsonl is rejected (amendment M55 / D347: a decision points at the state frame it was taken in)
+  ok    m55-decision-in-a-seat-recording.jsonl is rejected (amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log)
+  ok    m55-option-entered-between-frames.jsonl passes clean (the control)
+  ok    m55-option-never-shown.jsonl is rejected (D481: an option naming an id no state frame shows and no zone event moves into the viewer's public zones is still a failure)
+  ok    m55-option-entered-the-opponent-hand.jsonl is rejected (D481: an id the next state frame's events deal into the OPPONENT's hand is hidden -- a decision naming it is a leak)
+  ok    m55-option-cast-between-frames.jsonl passes clean (the control)
+  ok    m55-option-cast-from-the-opponent-hand.jsonl is rejected (D481: a card moved to the stack from ANOTHER seat's hand is not vouched for -- it can be cast face down)
+  ok    m55-option-entered-then-went-to-the-opponent-hand.jsonl is rejected (D481: only the LATEST zone event counts -- a token on the viewer's battlefield that then went to the opponent's hand is hidden)
+  ok    m55-option-cast-a-frame-before-the-decision.jsonl passes clean (the control)
+  ok    m55-option-entered-then-ceased-to-exist.jsonl passes clean (the control)
+  ok    m55-option-born-on-the-opponent-battlefield.jsonl is rejected (D481: a token born onto the OPPONENT's battlefield and gone to their graveyard is not the viewer's own -- not vouched for)
+  ok    m55-option-born-then-taken-by-the-opponent.jsonl is rejected (D481: a token born onto the viewer's battlefield whose latest move is onto the OPPONENT's battlefield is not vouched for)
+  ok    m55-option-born-on-the-opponent-then-taken.jsonl is rejected (D481: the birth must be onto the VIEWER's battlefield -- a token born onto the opponent's and then taken by the viewer is not vouched for)
+  ok    m55-option-entered-the-viewer-exile.jsonl is rejected (D481: exile is never accepted (a card can go there face down) -- a token born onto the viewer's battlefield and exiled is not vouched for)
+  ok    m55-option-cast-from-the-viewer-library.jsonl is rejected (D481: a card moved to the stack from the viewer's own LIBRARY is not vouched for -- the viewer could not see it when the option was offered)
+  ok    m55-option-not-born-in-the-graveyard.jsonl is rejected (D481: the token branch needs a birth (from: null onto the viewer's battlefield) -- a card merely moved into the viewer's graveyard from its library is not vouched for)
+  ok    m55-option-entered-a-state-too-late.jsonl is rejected (D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not)
+  ok    stale-token-died-earlier.jsonl passes clean (the control)
+  ok    stale-token-bounced-to-own-hand.jsonl passes clean (the control)
+  ok    stale-token-bounced-to-the-opponent-hand.jsonl is rejected (D485: a stale target whose latest move is into the OPPONENT's hand is hidden -- not vouched for)
+  ok    stale-token-of-the-opponent.jsonl is rejected (D485: only the viewer's OWN token is vouched for -- the opponent's token, dead in the opponent's graveyard, is not)
+  ok    stale-token-then-exiled.jsonl is rejected (D485: exile is never accepted (a card can go there face down) -- the viewer's token exiled is not vouched for)
+  ok    stale-nontoken-ghost.jsonl is rejected (D485: only a TOKEN ceases to exist -- a nontoken card (token: false) last moved to the graveyard is listed there or it is not the viewer's to name)
+  ok    stale-token-shown-only-after-the-window.jsonl is rejected (D485: the listing as the viewer's own token must be in the window (up to the first state after the decision) -- one only later does not vouch)
+  ok    m57-explore-present.jsonl passes clean (the control)
+  ok    m57-explore-without-header.jsonl is rejected (amendment M57 / D358: an explore mark only in a recording whose header says it explored)
+  ok    m57-explore-forge-names-the-opponent-hand.jsonl is rejected (amendment M57 / D358: the mark's Forge answer is a token like any other -- naming a card the viewer cannot see is a leak)
+  ok    m57-explore-carries-a-label.jsonl is rejected (amendment M57 / D358: an explore mark is a rule and a token -- nothing else)
+  ok    m57-playexplore-in-a-seat-recording.jsonl is rejected (amendment M57 / D358: a seat a person plays never explores)
+  ok    m76-target-none-listed.jsonl passes clean (the control)
+  ok    m76-target-none-mandatory-part.jsonl passes clean (the control)
+  ok    m76-legacy-null-target.jsonl passes clean (the control)
+  ok    m76-legacy-null-target-after-d487.jsonl is rejected (amendment M76 / D487: the legacy shape is accepted only in a log started before D487 merged (LEGACY_NULL_TARGET_BEFORE) -- a later null answer is a bridge fault)
+  ok    m76-legacy-null-target-not-an-atlas.jsonl is rejected (amendment M76 / D487: the legacy shape is accepted only in a move-atlas log (lab.atlas in its header))
+  ok    m76-unseen-answer-null.jsonl is rejected (amendment M76 / D487 (review): a min-1 part answered with a target the seat cannot see writes chosen null beside complete:false -- never the legacy shape)
+  ok    m76-legacy-null-by-search.jsonl is rejected (amendment M76 / D487: the legacy shape is Forge's answer only -- a search seat's null answer fails)
+  ok    m76-legacy-null-source-modes.jsonl is rejected (amendment M76 / D487: the legacy shape is a priority answer's targets only -- a modes record's null answer fails)
+  ok    m76-chosen-null-beside-target-none.jsonl is rejected (amendment M76 / D487: a record written after D487 (it lists target:none and carries min) never answers null)
+  ok    m76-chosen-null-trigger.jsonl is rejected (amendment M76 / D487: the legacy null answer is accepted in J171's one shape only -- a trigger's target record is not it)
+  ok    m76-target-none-not-listed.jsonl is rejected (amendment M76 / D487: target:none is an answer only where it is listed)
+  ok    m76-target-none-on-a-min-1-part.jsonl is rejected (amendment M76 / D487: a part whose minimum is 1 lists target:none only as an empty mandatory part, marked complete:false and NO_TARGET)
+  ok    m76-target-none-without-min.jsonl is rejected (amendment M76 / D487: a record listing target:none says the part's minimum)
+  ok    m76-target-none-on-a-priority-record.jsonl is rejected (amendment M76 / D487: target:none answers a target record, never another kind)
+  ok    m76-target-none-in-a-chosen-list.jsonl is rejected (amendment M76 / D487: target:none is the whole answer of an empty part, never one of several targets)
+  ok    m76-min-without-target-none.jsonl is rejected (amendment M76 / D487: min is written exactly when target:none is listed)
+  ok    m76-min-negative.jsonl is rejected (amendment M76 / D487: min is a non-negative integer)
+  ok    m76-min-not-an-integer.jsonl is rejected (amendment M76 / D487: min is a non-negative integer)
+  ok    m76-no-target-elsewhere.jsonl is rejected (amendment M76 / D487: why NO_TARGET marks an empty mandatory part only -- not a min-0 part)
+  ok    m58-search-prior-present.jsonl passes clean (the control)
+  ok    m58-generated-is-not-a-count.jsonl is rejected (amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string)
+  ok    m60-best-of-three-present.jsonl passes clean (the control)
+  ok    m60-score-in-a-one-game-match.jsonl is rejected (amendment M60: score belongs to a best of three; a one-game table carries exactly M59's four keys)
+  ok    m60-score-not-a-count.jsonl is rejected (amendment M60: score is the games each side won before this one, 0 or 1 each -- never a list or a name)
+  ok    m60-score-ahead-of-the-game.jsonl is rejected (amendment M60: game 2 follows exactly one game, so the score cannot add up to two)
+  ok    m60-record-not-a-boolean.jsonl is rejected (amendment M60 / D407: record is a seat's consent, true or false)
+  ok    m60-record-against-the-ai.jsonl is rejected (amendment M60 / D407: only a seat at a table of two says whether it may be recorded)
+  ok    m62-ai-unexpected-key.jsonl is rejected (amendment M62 / D414: the header's ai is the search's own knobs, never a deck or anything else)
+  ok    m62-ai-without-transport.jsonl is rejected (amendment M62 / D414: only a seat a person plays names its AI opponent in the header)
+  ok    m61-playable-present.jsonl passes clean (the control)
+  ok    m61-playable-names-the-opponent-hand.jsonl is rejected (amendment M61 / D413: the list is the seat's own cards -- naming a card in the opponent's hidden hand is a leak)
+  ok    m61-playable-on-the-battlefield.jsonl is rejected (amendment M61: the list names cards outside the battlefield only)
+  ok    m61-playable-off-priority.jsonl is rejected (amendment M61: the list is written only at the seat's own priority, null otherwise)
+  ok    m61-playable-half-present.jsonl is rejected (amendment M61: a seat writes the key on every state -- some with and some without is a broken emitter)
+  ok    m63-activatable-present.jsonl passes clean (the control)
+  ok    m63-activatable-names-the-opponent-permanent.jsonl is rejected (amendment M63 / D420: the list is the permanents the seat controls -- naming the opponent's is a lie about control)
+  ok    m63-activatable-off-the-battlefield.jsonl is rejected (amendment M63: the list names battlefield permanents only (a card elsewhere is M61's playable))
+  ok    m63-activatable-off-priority.jsonl is rejected (amendment M63: the list is written only at the seat's own priority, null otherwise)
+  ok    m63-activatable-half-present.jsonl is rejected (amendment M63: a seat writes the key on every state -- some with and some without is a broken emitter)
+  ok    m65-m66-selection-present.jsonl passes clean (the control)
+  ok    m66-playerids-names-no-seat.jsonl is rejected (amendment M66 / D423: playerIds names seats -- an id that is no seat is a card id in the wrong list)
+  ok    m65-chosen-was-never-offered.jsonl is rejected (amendment M65 / D422: a target or list entry chosen is one the engine offered this seat in the same input)
+  ok    m65-block-by-the-opponent.jsonl is rejected (amendment M65 / D422: a block declaration is the viewing seat's own -- a blocker it does not control is a lie about control)
+  ok    m65-chosen-shape.jsonl is rejected (amendment M65: chosen is exactly {cardIds, playerIds, blocks, attacks})
+  ok    m65-chosen-half-present.jsonl is rejected (amendment M65: a seat writes chosen on every input -- some with and some without is a broken emitter)
+  ok    m67-assign-damage-refused.jsonl passes clean (the control)
+  ok    m67-illegal-damage-applied.jsonl is rejected (amendment M67 / D424: damage on the defender while defenderAllowed is false must be refused -- the next ask is the same question with a reason)
+  ok    m67-defender-allowed-half-present.jsonl is rejected (amendment M67: a bridge since M67 writes defenderAllowed on every assign_damage ask -- some with and some without is a broken emitter)
+  ok    m68-answer-refused.jsonl passes clean (the control)
+  ok    m68-illegal-answer-applied.jsonl is rejected (amendment M68 / D426: a choose_list answer outside [min, max] must be refused -- the next ask is the same question with a reason)
+  ok    m68-reason-half-present.jsonl is rejected (amendment M68: a bridge since M68 writes reason on every ask of a kind -- some with and some without is a broken emitter)
+  ok    p1-stub-without-owner.jsonl is a WARN under --pre-amendment
+  ok    p15-card-without-token.jsonl is a WARN under --pre-amendment
+  ok    p3-card-without-alt.jsonl is a WARN under --pre-amendment
+  ok    p2-library-without-cards.jsonl is a WARN under --pre-amendment
+  ok    p3-facedownhidden-revived.jsonl is a WARN under --pre-amendment
+  ok    a1-stub-with-a-name.jsonl is still rejected under --pre-amendment
+  ok    a6-opponent-hand-named.jsonl is still rejected under --pre-amendment
+  ok    a3-opponent-library-revealed.jsonl is a WARN under --opponent-library-ok
+  ok    a6-library-reveal-is-not-a-whitelist.jsonl is still rejected under --opponent-library-ok
+  ok    a6-opponent-hand-named.jsonl is still rejected under --opponent-library-ok
+  ok    --partial: every one of the 126 controls has the same verdict, for the same reason
+  ok    a two-line prefix: --partial exit 3 (coverage skipped, nothing leaked); without the flag still exit 1
+  ok    a prefix ending in a leaking state: --partial exit 1, A1
+  ok    A6's slack cut inside it: --partial holds the state back (decided=10618 bytes), one frame later it fails
+  ok    M55 D3 cut before the next state: undecided; with it: a failure
+  ok    526 prefixes of the committed recordings pass --partial (1.7 s)
+  ok    --empty-hand-ok: every one of the 126 controls has the same verdict, for the same reason
+  ok    an opponent hand empty in every state: a failure by default, a WARN under --empty-hand-ok
+  ok    a viewer hand empty in every state: a failure by default, a WARN under --empty-hand-ok
+  ok    opp-full-card-count-1.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-count-1-no-stub.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-library-listed.jsonl: still a failure under --empty-hand-ok (a card of another seat's hand or library is listed)
+  ok    opp-seat-never-listed.jsonl: still a failure under --empty-hand-ok (no state lists any seat but the viewer's)
+  ok    opp-seat-missing-once.jsonl: still a failure under --empty-hand-ok (the state at line 3 lists 1 of the 2 seats)
+  ok    viewer-count-1-stub.jsonl: still a failure under --empty-hand-ok (the viewer's hand is not empty)
+
+check-redaction self-test OK
+J173 scan self-test b-s09-pauper-2109 castsRefused 1448 refusedCastOptions [] ok
+J173 scan self-test b-s13-pauper-2113 castsRefused 787 refusedCastOptions [] ok
+1
+decks: 2 pauper deck(s), seed 2014, into /home/justin-a/code/lab/data/lab-j173/decks/s01-pauper-2014: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2214, into /home/justin-a/code/lab/data/lab-j173/validation/v01-pauper-2214: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2014, into var/lab-j173-local/redraw/s01-pauper-2014: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2214, into var/lab-j173-local/redraw/v01-pauper-2214: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2015, into /home/justin-a/code/lab/data/lab-j173/decks/s02-peasant-2015: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2215, into /home/justin-a/code/lab/data/lab-j173/validation/v02-peasant-2215: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2015, into var/lab-j173-local/redraw/s02-peasant-2015: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2215, into var/lab-j173-local/redraw/v02-peasant-2215: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2016, into /home/justin-a/code/lab/data/lab-j173/decks/s03-legacy-2016: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2216, into /home/justin-a/code/lab/data/lab-j173/validation/v03-legacy-2216: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2016, into var/lab-j173-local/redraw/s03-legacy-2016: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2216, into var/lab-j173-local/redraw/v03-legacy-2216: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2017, into /home/justin-a/code/lab/data/lab-j173/decks/s04-powered-2017: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2217, into /home/justin-a/code/lab/data/lab-j173/validation/v04-powered-2217: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2017, into var/lab-j173-local/redraw/s04-powered-2017: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2217, into var/lab-j173-local/redraw/v04-powered-2217: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2018, into /home/justin-a/code/lab/data/lab-j173/decks/s05-pauper-2018: k = 1..5 0 / 0 / 0 / 0 / 2; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2218, into /home/justin-a/code/lab/data/lab-j173/validation/v05-pauper-2218: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2018, into var/lab-j173-local/redraw/s05-pauper-2018: k = 1..5 0 / 0 / 0 / 0 / 2; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2218, into var/lab-j173-local/redraw/v05-pauper-2218: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2019, into /home/justin-a/code/lab/data/lab-j173/decks/s06-peasant-2019: k = 1..5 0 / 0 / 2 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2219, into /home/justin-a/code/lab/data/lab-j173/validation/v06-peasant-2219: k = 1..5 0 / 0 / 2 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2019, into var/lab-j173-local/redraw/s06-peasant-2019: k = 1..5 0 / 0 / 2 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2219, into var/lab-j173-local/redraw/v06-peasant-2219: k = 1..5 0 / 0 / 2 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2020, into /home/justin-a/code/lab/data/lab-j173/decks/s07-legacy-2020: k = 1..5 0 / 0 / 2 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2220, into /home/justin-a/code/lab/data/lab-j173/validation/v07-legacy-2220: k = 1..5 0 / 0 / 0 / 2 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2020, into var/lab-j173-local/redraw/s07-legacy-2020: k = 1..5 0 / 0 / 2 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2220, into var/lab-j173-local/redraw/v07-legacy-2220: k = 1..5 0 / 0 / 0 / 2 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2021, into /home/justin-a/code/lab/data/lab-j173/decks/s08-powered-2021: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2221, into /home/justin-a/code/lab/data/lab-j173/validation/v08-powered-2221: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2021, into var/lab-j173-local/redraw/s08-powered-2021: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2221, into var/lab-j173-local/redraw/v08-powered-2221: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2022, into /home/justin-a/code/lab/data/lab-j173/decks/s09-pauper-2022: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2222, into /home/justin-a/code/lab/data/lab-j173/validation/v09-pauper-2222: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2022, into var/lab-j173-local/redraw/s09-pauper-2022: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2222, into var/lab-j173-local/redraw/v09-pauper-2222: k = 1..5 0 / 2 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2023, into /home/justin-a/code/lab/data/lab-j173/decks/s10-peasant-2023: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2223, into /home/justin-a/code/lab/data/lab-j173/validation/v10-peasant-2223: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2023, into var/lab-j173-local/redraw/s10-peasant-2023: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2223, into var/lab-j173-local/redraw/v10-peasant-2223: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2024, into /home/justin-a/code/lab/data/lab-j173/decks/s11-legacy-2024: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2224, into /home/justin-a/code/lab/data/lab-j173/validation/v11-legacy-2224: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2024, into var/lab-j173-local/redraw/s11-legacy-2024: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2224, into var/lab-j173-local/redraw/v11-legacy-2224: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2025, into /home/justin-a/code/lab/data/lab-j173/decks/s12-powered-2025: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2225, into /home/justin-a/code/lab/data/lab-j173/validation/v12-powered-2225: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2025, into var/lab-j173-local/redraw/s12-powered-2025: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2225, into var/lab-j173-local/redraw/v12-powered-2225: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2026, into /home/justin-a/code/lab/data/lab-j173/decks/s13-pauper-2026: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2226, into /home/justin-a/code/lab/data/lab-j173/validation/v13-pauper-2226: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2026, into var/lab-j173-local/redraw/s13-pauper-2026: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2226, into var/lab-j173-local/redraw/v13-pauper-2226: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2099, into /home/justin-a/code/lab/data/lab-j173/decks/p-powered-2099: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2099, into var/lab-j173-local/redraw/p-powered-2099: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), 0 deck(s) with a skip
+J173 draws: recorded in var/lab-j173-local/draws-pilot.json
+{"spines13": 13, "validation13": 13, "all13": 1, "validationAll": 1, "smokeData": 1, "smokeRedraw": 1, "newDraws13": 13, "newValidation": 1, "recorded": 1}
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 1101 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/4] d0-forge-0: 4/4 branch game(s); 766 branch games/h
+  [B 2/4] d17-random-0: 4/4 branch game(s); 1130 branch games/h
+  [B 3/4] d17-forge-0: 4/4 branch game(s); 1521 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1496 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (558 rows, 38 frame logs, 8 leak check(s))
+atlas phase A: 16 rollout(s) from the opening, both seats random; 0 done, 16 to play on 2 worker(s)
+  [A 16/16] 1617 games/h
+atlas: var/cubelab/atlas-selftest/g5/atlas.json and atlas.md; phase A 16 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (1274 rows, 32 frame logs, 0 leak check(s))
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 2 worker(s)
+  [A 6/6] 1381 games/h
+atlas: var/cubelab/atlas-selftest/g6/atlas.json and atlas.md; phase A 6 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (408 rows, 12 frame logs, 0 leak check(s))
+atlas: the checks on 2 workers took 1 s
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (558 rows, 38 frame logs, 8 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 3306 branch games/h
+  [B 2/3] d2-random-0: 6/6 branch game(s); 3173 branch games/h
+  [B 3/4] d31-random-2: 12/12 branch game(s); 4458 branch games/h
+  [B 4/6] d31-random-4: 12/12 branch game(s); 4819 branch games/h
+  [B 5/6] d2-random-2: 6/6 branch game(s); 4828 branch games/h
+  [B 6/8] d31-forge-0: 12/12 branch game(s); 5543 branch games/h
+  [B 7/8] d2-forge-0: 6/6 branch game(s); 5262 branch games/h
+  [B 8/8] d2-random-4: 6/6 branch game(s); 4841 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts/atlas.json and atlas.md; phase A 0 game(s), phase B 72 branch game(s) at 2 decision(s); checks: clean (1750 rows, 146 frame logs, 4 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 1: d18 (p, turn 17, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 2 (option 0 never stops; the Forge map on the options still running); checkpoints 2/4
+atlas phase B: 1 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/1] d18-random-0: 6/6 branch game(s); 993 branch games/h
+  [B 2/2] d18-random-2: 6/6 branch game(s); 1117 branch games/h
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/cuts-noforge/atlas.json and atlas.md; phase A 0 game(s), phase B 12 branch game(s) at 1 decision(s); checks: clean (578 rows, 26 frame logs, 1 leak check(s))
+atlas-selftest: OK (cuts cuts: 2 in full, 0 screened, 0 option(s) stopped; cuts-noforge: 1 in full, 0 screened, 0 option(s) stopped; 16 forks, 8 no-leak checks, 38 frame logs, 558 rows; G3 12, G5 refused 0 / left out 0; pay cap 0; copies held 1; the tax pair's G5 refused 2 / left out 2; the Crypt Rats pair's G6 drew X 12 / left out 89 / paid at 0 0)
+seat-identity: forge: the same game (B in 15 turns, 57 lines, digest 78f3a94998355ea8; golden B in 15, 57 lines, 78f3a94998355ea8)
+seat-identity: search: the same game (A in 13 turns, 92 lines, digest c68c2a849b7b0d54; golden A in 13, 92 lines, c68c2a849b7b0d54)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 82d6d18c57bbd861; golden A in 18, 193 lines, 82d6d18c57bbd861)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 16 decision(s) of seat A; branching at 2: d2 (p, turn 6, 3 options), d14 (p, turn 16, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 5 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 10/15/20 (option 0 never stops; the Forge map on the options still running); checkpoints 5/10/15/20/25
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 5 branches, on 3 worker(s)
+worker 2: unparked (maxWorkers 3)
+  [B 1/2] d14-random-0: 15/15 branch game(s); 3122 branch games/h
+  [B 2/3] d14-random-5: 15/15 branch game(s); 3942 branch games/h
+  [B 3/4] d14-random-10: 15/15 branch game(s); 4522 branch games/h
+  [B 4/5] d14-random-15: 10/10 branch game(s); 4858 branch games/h
+  [B 5/7] d2-random-0: 15/15 branch game(s); 5427 branch games/h
+  [B 6/8] d14-forge-0: 10/10 branch game(s); 5416 branch games/h
+  [B 7/8] d14-random-20: 10/10 branch game(s); 5312 branch games/h
+  [B 8/8] d2-random-5: 15/15 branch game(s); 4160 branch games/h
+  [B 9/9] d2-random-10: 15/15 branch game(s); 3502 branch games/h
+  [B 10/10] d2-random-15: 15/15 branch game(s); 2949 branch games/h
+  [B 11/12] d2-forge-0: 15/15 branch game(s); 2905 branch games/h
+  [B 12/12] d2-random-20: 15/15 branch game(s); 2884 branch games/h
+atlas: the checks on 3 workers took 6 s
+atlas: /home/justin-a/code/lab/data/lab-j173/pilot-smoke-j173/atlas.json and atlas.md; phase A 0 game(s), phase B 165 branch game(s) at 2 decision(s); checks: clean (4609 rows, 332 frame logs, 4 leak check(s))
+{"scan": "J173 v5", "folder": "pilot-smoke-j173", "atlasMtime": 1793038750, "logs": 330, "byCard": {}, "byName": {}, "byNameRefused": {}, "byNamePutBack": {}, "guardrails": {"land": 1056, "cardTargetOffered": 533, "noRepeatNoOp": 124, "costTargetAvoided": 15}, "casts": 1433, "lostCasts": 0, "lostCastForced": 0, "staleTargetRecords": 0, "modesDrawnRecords": 0, "modesSourceRecords": 0, "targetRecords": 304, "targetRecordsCard": 275, "targetRecordsComplete": 304, "targetRecordsCardComplete": 275, "summaries": 330, "randomised": 11528, "randomisedPriority": 9715, "cardTargetOffered": 533, "modesDrawn": 0, "retargeted": 0, "staleRefused": 0, "refusedCast": 0, "noRepeatRefused": 0, "targetCountTrimmed": 0, "costTargetAvoided": 15, "castsRefused": 0, "castsRefusedForced": 0, "lostPutBack": 0, "lostStranded": 0, "targetNoneChosen": 10, "targetNoneListed": 48, "noTargetRecords": 0, "nullChosenTargets": 0, "legacyNullTargets": 0, "cardTargetShare": 0.0549, "refusedCastShare": 0.0, "castsRefusedShare": 0.0, "completeShare": 1.0, "lostCastBranches": 0, "refusedCastBranches": 0, "lostCastOptions": [], "refusedCastOptions": []}
