@@ -1,0 +1,97 @@
+==== J171 run1 started 2026-10-26T00:33:37-04:00 in unit lab-J171-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (32 turns, winner A) lists 23 decision(s) of seat A; branching at 8: d3 (p, turn 8, 3 options), d6 (p, turn 10, 3 options), d7 (p, turn 10, 4 options), d9 (p, turn 14, 4 options), d11 (p, turn 16, 3 options), d14 (p, turn 28, 3 options), d15 (p, turn 28, 3 options), d16 (p, turn 28, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 8 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/8] d14-random-0: 75/75 branch game(s); 5714 branch games/h
+  [B 2/9] d11-random-0: 75/75 branch game(s); 6015 branch games/h
+  [B 3/10] d6-random-0: 75/75 branch game(s); 6143 branch games/h
+  [B 4/11] d14-random-25: 75/75 branch game(s); 6170 branch games/h
+  [B 5/13] d3-random-0: 75/75 branch game(s); 6155 branch games/h
+  [B 6/14] d9-random-0: 100/100 branch game(s); 6172 branch games/h
+  [B 7/15] d7-random-0: 100/100 branch game(s); 6200 branch games/h
+  [B 8/16] d14-random-50: 50/50 branch game(s); 6274 branch games/h
+  [B 9/16] d11-random-25: 75/75 branch game(s); 6332 branch games/h
+  [B 10/18] d14-random-75: 50/50 branch game(s); 6381 branch games/h
+  [B 11/20] d6-random-25: 75/75 branch game(s); 6405 branch games/h
+  [B 12/22] d3-random-25: 75/75 branch game(s); 6445 branch games/h
+  [B 13/24] d14-random-100: 50/50 branch game(s); 6471 branch games/h
+  [B 14/24] d9-random-25: 100/100 branch game(s); 6432 branch games/h
+  [B 15/26] d11-random-50: 75/75 branch game(s); 6389 branch games/h
+  [B 16/26] d7-random-25: 100/100 branch game(s); 6340 branch games/h
+  [B 17/28] d6-random-50: 75/75 branch game(s); 6318 branch games/h
+  [B 18/28] d3-random-50: 75/75 branch game(s); 6312 branch games/h
+  [B 19/28] d3-random-75: 75/75 branch game(s); 6329 branch games/h
+  [B 20/30] d9-random-50: 100/100 branch game(s); 6316 branch games/h
+  [B 21/30] d9-random-75: 100/100 branch game(s); 6301 branch games/h
+  [B 22/32] d7-random-50: 75/75 branch game(s); 6297 branch games/h
+  [B 23/32] d7-random-75: 75/75 branch game(s); 6308 branch games/h
+  [B 24/34] d6-random-75: 75/75 branch game(s); 6287 branch games/h
+  [B 25/36] d3-random-125: 75/75 branch game(s); 6268 branch games/h
+  [B 26/36] d3-random-100: 75/75 branch game(s); 6268 branch games/h
+  [B 27/40] d6-random-100: 50/50 branch game(s); 6257 branch games/h
+  [B 28/40] d9-random-125: 100/100 branch game(s); 6250 branch games/h
+  [B 29/40] d9-random-100: 100/100 branch game(s); 6244 branch games/h
+  [B 30/44] d7-random-100: 75/75 branch game(s); 6247 branch games/h
+  [B 31/44] d6-random-125: 50/50 branch game(s); 6289 branch games/h
+  [B 32/48] d3-forge-0: 75/75 branch game(s); 6286 branch games/h
+  [B 33/48] d3-random-150: 75/75 branch game(s); 6281 branch games/h
+  [B 34/48] d6-random-150: 50/50 branch game(s); 6289 branch games/h
+  [B 35/48] d3-random-175: 75/75 branch game(s); 6320 branch games/h
+  [B 36/48] d6-forge-0: 50/50 branch game(s); 6326 branch games/h
+  [B 37/48] d6-random-175: 50/50 branch game(s); 6336 branch games/h
+  [B 38/48] d9-random-150: 100/100 branch game(s); 6334 branch games/h
+  [B 39/48] d6-forge-25: 30/30 branch game(s); 6342 branch games/h
+  [B 40/48] d9-random-175: 100/100 branch game(s); 6392 branch games/h
+  [B 41/48] d3-forge-25: 45/45 branch game(s); 6536 branch games/h
+  [B 42/48] d9-forge-25: 60/60 branch game(s); 6554 branch games/h
+  [B 43/48] d14-random-125: 50/50 branch game(s); 6567 branch games/h
+  [B 44/52] d9-forge-0: 100/100 branch game(s); 6611 branch games/h
+  [B 45/52] d14-random-150: 50/50 branch game(s); 6738 branch games/h
+  [B 46/52] d15-random-0: 75/75 branch game(s); 6783 branch games/h
+  [B 47/53] d14-random-175: 50/50 branch game(s); 6810 branch games/h
+  [B 48/53] d7-random-125: 75/75 branch game(s); 6842 branch games/h
+  [B 49/57] d16-random-0: 75/75 branch game(s); 6866 branch games/h
+  [B 50/58] d11-random-75: 75/75 branch game(s); 6873 branch games/h
+  [B 51/60] d14-forge-0: 50/50 branch game(s); 6884 branch games/h
+  [B 52/60] d14-forge-25: 30/30 branch game(s); 6902 branch games/h
+  [B 53/60] d15-random-25: 75/75 branch game(s); 7004 branch games/h
+  [B 54/62] d16-random-25: 75/75 branch game(s); 7002 branch games/h
+  [B 55/64] d11-random-125: 75/75 branch game(s); 7045 branch games/h
+  [B 56/64] d11-random-100: 75/75 branch game(s); 7047 branch games/h
+  [B 57/68] d7-random-150: 75/75 branch game(s); 7067 branch games/h
+  [B 58/68] d16-random-50: 75/75 branch game(s); 7095 branch games/h
+  [B 59/68] d15-random-50: 75/75 branch game(s); 7131 branch games/h
+  [B 60/68] d7-random-175: 75/75 branch game(s); 7131 branch games/h
+  [B 61/68] d16-random-75: 75/75 branch game(s); 7239 branch games/h
+  [B 62/70] d11-forge-25: 45/45 branch game(s); 7291 branch games/h
+  [B 63/70] d11-forge-0: 75/75 branch game(s); 7295 branch games/h
+  [B 64/70] d15-random-75: 75/75 branch game(s); 7386 branch games/h
+  [B 65/72] d11-random-175: 75/75 branch game(s); 7435 branch games/h
+  [B 66/72] d16-random-100: 75/75 branch game(s); 7438 branch games/h
+  [B 67/72] d11-random-150: 75/75 branch game(s); 7439 branch games/h
+  [B 68/72] d16-random-125: 75/75 branch game(s); 7468 branch games/h
+  [B 69/76] d7-forge-0: 75/75 branch game(s); 7474 branch games/h
+  [B 70/76] d7-forge-25: 45/45 branch game(s); 7658 branch games/h
+  [B 71/76] d16-forge-0: 75/75 branch game(s); 7659 branch games/h
+  [B 72/76] d15-random-100: 75/75 branch game(s); 7690 branch games/h
+  [B 73/76] d15-random-125: 75/75 branch game(s); 7706 branch games/h
+  [B 74/80] d16-forge-25: 45/45 branch game(s); 7739 branch games/h
+  [B 75/80] d16-random-150: 75/75 branch game(s); 7847 branch games/h
+  [B 76/80] d16-random-175: 75/75 branch game(s); 7861 branch games/h
+  [B 77/80] d15-forge-25: 45/45 branch game(s); 7880 branch games/h
+  [B 78/80] d15-forge-0: 75/75 branch game(s); 7886 branch games/h
+  [B 79/80] d15-random-175: 75/75 branch game(s); 7819 branch games/h
+  [B 80/80] d15-random-150: 75/75 branch game(s); 7819 branch games/h
+atlas: the checks on 6 workers took 169 s
+atlas: /home/justin-a/code/lab/data/lab-j170/b-s01-pauper-2101/atlas.json and atlas.md; phase A 0 game(s), phase B 5720 branch game(s) at 8 decision(s); checks: clean (200255 rows, 11442 frame logs, 16 leak check(s))
+  atlas warning: d3 option 0 `cast:6` (Wrenn's Resolve): 83 of 240 branch game(s) were capped (random 82 of 200, forge 1 of 40): 83 x ended at the turn cap
+  atlas warning: d3 option 1 `pass` (pass): 91 of 240 branch game(s) were capped (random 89 of 200, forge 2 of 40): 91 x ended at the turn cap
+  atlas warning: d3 option 2 `cast:24` (Mintstrosity): 87 of 240 branch game(s) were capped (random 85 of 200, forge 2 of 40): 87 x ended at the turn cap
+  atlas warning: d6 option 0 `pass` (pass): 61 of 240 branch game(s) were capped (random 61 of 200, forge 0 of 40): 61 x ended at the turn cap
+  atlas warning: d6 option 1 `cast:18` (Flayer Husk): 29 of 100 branch game(s) were capped (random 29 of 100): 29 x ended at the turn cap
+  atlas warning: d7 option 0 `cast:1` (Mindstab Thrull (may play)): 62 of 240 branch game(s) were capped (random 59 of 200, forge 3 of 40): 62 x ended at the turn cap
+  atlas warning: d7 option 2 `cast:18` (Flayer Husk): 18 of 50 branch game(s) were capped (random 18 of 50): 18 x ended at the turn cap
+  atlas warning: d7 option 3 `cast:29` (Stone Rain (may play)): 61 of 240 branch game(s) were capped (random 61 of 200, forge 0 of 40): 61 x ended at the turn cap
+  atlas warning: d9 option 1 `pass` (pass): 71 of 240 branch game(s) were capped (random 71 of 200, forge 0 of 40): 71 x ended at the turn cap
+  atlas warning: d11 option 1 `pass` (pass): 62 of 240 branch game(s) were capped (random 61 of 200, forge 1 of 40): 62 x ended at the turn cap
