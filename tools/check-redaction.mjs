@@ -2589,7 +2589,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       illegalDamage = null;
     }
     if (Array.isArray(f.body?.players)) {
-      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat), moves: zoneMoves(f.body) });
+      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat), moves: zoneMoves(f.body), ownTokens: ownTokenIds(f.body, seat) });
       stateOrder.push(i - 1);
     }
     if (typeof f.body?.turn === 'number' && f.body.turn > stats.maxTurn) stats.maxTurn = f.body.turn;
@@ -3106,7 +3106,10 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //       (D481: or the viewer's own object no frame lists -- a token born onto
 //       its battlefield whose latest zone event, as of the first state frame
 //       after the decision, left it there or in its graveyard, or a card that
-//       event moved from its own hand onto the stack -- counted);
+//       event moved from its own hand onto the stack -- counted; D485: or the
+//       viewer's own token, born or listed as its own in the window, whose
+//       latest move took it from its battlefield to its own graveyard or hand
+//       -- a stale target, counted apart);
 //   D4  the answer is one of the options.
 
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
@@ -3120,8 +3123,10 @@ const EXPLORE_KEYS = new Set(['rule', 'forge']);
 const EXPLORE_RULES = ['random', 'closeCall'];
 const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind', 'guardrails']);
 // M71 / D451, D458: the random seat's guardrail counts, by name (G1 land, G4 keep, G3 noRepeatNoOp, G5 refusedCast / noRepeatRefused);
-// M73 / D471: G6's xDrawn / zeroXLeftOut and its violation zeroX.
-const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX'];
+// M73 / D471: G6's xDrawn / zeroXLeftOut and its violation zeroX.  D485: retargeted (a play cast after its stale
+// targets were replaced) and staleRefused (Forge's answer not offered: its stale targets could not be made legal).
+const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX',
+  'retargeted', 'staleRefused'];
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
@@ -3171,6 +3176,37 @@ function movedToViewersOwnPublicZone(e, seat, born) {
   if (!e?.to) return false;
   if (born && e.to.player === seat && (e.to.zone === 'battlefield' || e.to.zone === 'graveyard')) return true;
   return e.to.zone === 'stack' && e.from?.zone === 'hand' && e.from.player === seat;
+}
+
+/**
+ * D485: the ids a state lists as the viewer's OWN tokens on its OWN battlefield
+ * (`token: true`, controller and owner its seat) -- the vouching listing for a
+ * token that predates the log and so has no birth event.
+ */
+function ownTokenIds(body, seat) {
+  const ids = new Set();
+  for (const p of body.players ?? []) {
+    if (p.id !== seat) continue;
+    for (const c of p.zones?.battlefield?.cards ?? []) {
+      if (c && c.hidden !== true && c.token === true && c.controller === seat && c.owner === seat && typeof c.id === 'number') ids.add(c.id);
+    }
+  }
+  return ids;
+}
+
+/**
+ * D485: a STALE TARGET -- the viewer's own token that ceased to exist turns
+ * before the decision and still sits in the target list Forge's AI left on a
+ * play (J168: FightAi appends Troll Negotiations' "creature you control" target
+ * at every evaluation).  Accepted only when the id is the viewer's own token
+ * (`ownToken`: born onto its battlefield in the window, or listed by a state in
+ * the window as its own token there) and its latest move took it from the
+ * viewer's own battlefield into the viewer's own graveyard or hand, where a token
+ * ceases to exist.  Exile, a library and any other seat's zone never.
+ */
+function ceasedFromViewersBattlefield(e, seat, ownToken) {
+  return ownToken && e?.from?.zone === 'battlefield' && e.from.player === seat
+    && (e.to?.zone === 'graveyard' || e.to?.zone === 'hand') && e.to.player === seat;
 }
 
 /** The card ids (not player ids) a token names. */
@@ -3348,8 +3384,13 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
         // it ends is judged by the zone it was last in rather than failing.
         const latest = moves.filter((m) => m.to != null).at(-1);
         const born = moves.some((m) => m.from == null && m.to?.zone === 'battlefield' && m.to.player === seat);
+        // D485: or shown as the viewer's own token by a state in the window (one older than the log has no birth)
+        const ownToken = born || (!allowed.has(id) && after !== undefined
+          && stateOrder.some((k) => k <= after && stateAt.get(k).ownTokens?.has(id)));
         if (!allowed.has(id) && movedToViewersOwnPublicZone(latest, seat, born)) {
           stats.enteredBetweenFrames = (stats.enteredBetweenFrames ?? 0) + 1;
+        } else if (!allowed.has(id) && ceasedFromViewersBattlefield(latest, seat, ownToken)) {
+          stats.ceasedToExist = (stats.ceasedToExist ?? 0) + 1;
         } else if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
             'a stub\'s id, a library card or another seat\'s hidden card is never an option', nx === undefined);
@@ -3553,6 +3594,10 @@ function main() {
     if (stats.enteredBetweenFrames > 0) {
       console.log(`      M55 decision ids entered between frames=${stats.enteredBetweenFrames} (D481: the viewer's own `
         + 'object in no state frame -- a token born onto its battlefield, last on its battlefield or in its graveyard, or a card moved from its own hand onto the stack)');
+    }
+    if (stats.ceasedToExist > 0) {
+      console.log(`      M55 decision ids that ceased to exist=${stats.ceasedToExist} (D485: the viewer's own token, `
+        + 'last moved from its battlefield to its own graveyard or hand, still named by a stale target list)');
     }
     // M49.  Whether this file carries the status layer's keywords -- on every
     // full card, or (a recording older than M49) on none.

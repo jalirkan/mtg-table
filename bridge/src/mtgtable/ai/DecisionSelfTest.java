@@ -386,6 +386,7 @@ public final class DecisionSelfTest {
                 "G5: a land drop (the same turn, phase and stack) is another window, and offers the refused cast again");
         g5Planted(r);
         g6Planted(r);
+        staleTargetsPlanted(r);
         optionalCosts();
         payCap();
         stepClock();
@@ -787,6 +788,63 @@ public final class DecisionSelfTest {
         check(Explorer.dropRefused(stranded, ex2.refusedIn(nextPriority), m2) == 0
                 && m2.guardrails().getOrDefault("noRepeatRefused", 0) == 0,
                 "G5 planted: with the refused card gone from the listing, nothing is left out (J156's 0 of 4,942)");
+    }
+
+    /**
+     * D485: a stale targeting part made legal before the cast
+     * ({@link Explorer#legalTargetList}), planted as J168 found it: Troll
+     * Negotiations' "creature you control" part (one target) carrying the
+     * viewer's dead Spider Token and a live Fractal Token, because Forge's
+     * {@code FightAi} appends one at every evaluation.  The engine's
+     * {@code MagicStack.add} refuses a count above the maximum and drops the
+     * spell after the payment, so: the dead one goes, a live one stays, and the
+     * part is never over its maximum or under its minimum; an over-full list of
+     * live targets is cut to one by a seeded draw (each kept sometimes); a part
+     * with nothing legal left is filled from the legal targets, or refused
+     * (null) when there are none; Tear Asunder's kicker-only part (max 0,
+     * unkicked) is emptied; an empty part with a minimum of one (Headliner
+     * Scarlett's {@code [[]]}) is filled.
+     */
+    private static void staleTargetsPlanted(final ExploreMath.Config r) {
+        final ExploreMath m = new ExploreMath(r, 31);
+        final java.util.Set<String> alive = java.util.Set.of("fractal139", "bears48", "moose57", "rabbit78");
+        final java.util.function.Predicate<String> legal = alive::contains;
+        final List<String> fill = List.of("bears48", "fractal139", "moose57");
+        check(List.of("fractal139").equals(Explorer.legalTargetList(List.of("spider121", "fractal139"), legal, fill, 1, 1, m)),
+                "D485: J168's Troll Negotiations part [dead Spider Token, Fractal Token] keeps the live one alone");
+        final int[] seen = new int[3];
+        boolean bad = false;
+        final List<String> three = List.of("bears48", "moose57", "rabbit78");
+        for (int i = 0; i < 300; i++) {
+            final List<String> got = Explorer.legalTargetList(three, legal, fill, 1, 1, m);
+            bad |= got == null || got.size() != 1 || !three.contains(got.get(0));
+            if (got != null && got.size() == 1 && three.contains(got.get(0))) {
+                seen[three.indexOf(got.get(0))]++;
+            }
+        }
+        check(!bad && seen[0] > 0 && seen[1] > 0 && seen[2] > 0,
+                "D485: an over-full list of live targets (3 for a maximum of 1) is cut to one, each kept sometimes: "
+                        + seen[0] + "/" + seen[1] + "/" + seen[2]);
+        final List<String> refilled = Explorer.legalTargetList(List.of("spider121"), legal, fill, 1, 1, m);
+        check(refilled != null && refilled.size() == 1 && fill.contains(refilled.get(0)),
+                "D485: a part whose only target died is filled from the legal targets: " + refilled);
+        check(Explorer.legalTargetList(List.of("spider121"), legal, List.of(), 1, 1, m) == null,
+                "D485: with no legal target left the part cannot be made legal (null: the play is not cast)");
+        check(Explorer.legalTargetList(List.of("mite72"), legal, fill, 0, 0, m).isEmpty(),
+                "D485: Tear Asunder unkicked -- a target on the kicker-only part (maximum 0) is dropped");
+        final List<String> empty = Explorer.legalTargetList(List.of(), legal, fill, 1, 1, m);
+        check(empty != null && empty.size() == 1, "D485: an empty part with a minimum of 1 is filled to it: " + empty);
+        check(List.of("bears48").equals(Explorer.legalTargetList(List.of("bears48", "bears48"), legal, fill, 1, 1, m)),
+                "D485: a target listed twice is kept once");
+        check(List.of("bears48", "moose57").equals(Explorer.legalTargetList(List.of("spider121", "bears48", "moose57"), legal,
+                fill, 0, 2, m)), "D485: up to two targets: the dead one goes, both live ones stay, in order, no draw");
+        final List<String> a = Explorer.legalTargetList(three, legal, fill, 1, 1, new ExploreMath(r, 77));
+        final List<String> b = Explorer.legalTargetList(three, legal, fill, 1, 1, new ExploreMath(r, 77));
+        check(a.equals(b), "D485: the cut is the seat's seeded draw (same seed, same target)");
+        final ExploreMath quiet = new ExploreMath(r, 5);
+        final ExploreMath twin = new ExploreMath(r, 5);
+        Explorer.legalTargetList(List.of("spider121", "fractal139"), legal, fill, 1, 1, quiet);
+        check(quiet.pick(1000) == twin.pick(1000), "D485: a fix that needs no draw moves no random stream");
     }
 
     /**

@@ -1024,6 +1024,110 @@ probe('m55-option-entered-a-state-too-late.jsonl',
     after[1].body.events.push(...bornAndGone(fresh, header.seat));
   });
 
+// D485: STALE TARGETS.  Forge's AI can leave a target list on a play that names
+// the viewer's own token long gone (J168: FightAi appends Troll Negotiations'
+// "creature you control" target at every evaluation), and the decision record
+// of that play's targets names it.  No state frame the decision can use lists
+// it, and a token older than the log has no birth event; the vouching facts are
+// a state in the window listing it as the viewer's own token and its latest
+// move, from the viewer's battlefield into the viewer's own graveyard or hand.
+// Five state frames: the token on the viewer's battlefield in the first, its
+// move in the second, a target decision at the fourth naming it (complete:
+// false), the window ending at the fifth.  The controls: it bounced to the
+// opponent's hand, it was the opponent's token, it was exiled, it was no token,
+// and the only listing of it as the viewer's token comes after the window.
+
+/** The slice with `n` state frames: the extra ones copies of the last, with no events (nothing happened). */
+function longSlice(n) {
+  const fs = slice();
+  while (statesOf(fs).length < n) {
+    const c = structuredClone(statesOf(fs).at(-1));
+    c.body.events = [];
+    fs.splice(fs.findIndex((f) => f.type === 'over'), 0, c);
+  }
+  fs.forEach((f, i) => { f.seq = i + 1; });
+  return fs;
+}
+
+/**
+ * A target decision at state `at` (its frame) naming one of the viewer's live
+ * permanents and a fresh token id, listed by the states in `showIn` on
+ * `owner`'s battlefield (`token` its flag) and moved by `move` in state 1.
+ */
+function withStaleTarget(fs, { owner = header.seat, token = true, showIn = [0], move, at = 3 }) {
+  const sts = statesOf(fs);
+  const fresh = Math.max(...sts.flatMap((f) => [...cardsOf(f.body)].map((h) => h.card.id))) + 1;
+  for (const k of showIn) {
+    const p = sts[k].body.players.find((q) => q.id === owner);
+    const proto = p.zones.battlefield.cards.find((c) => c.hidden !== true);
+    p.zones.battlefield.cards.push({ ...structuredClone(proto), id: fresh, name: 'Spider Token', setCode: 'TMSH', manaCost: null,
+      types: 'Token Creature - Spider', token, controller: owner, owner, attachedToId: null, attachmentIds: [] });
+    p.zones.battlefield.count = p.zones.battlefield.cards.length;
+  }
+  sts[1].body.events.push({ kind: 'zone', cardId: fresh, ...move(owner) });
+  const b = withDecision(fs);
+  const line = fs.splice(fs.findIndex((f) => f.dir === 'ai' && f.type === 'decision'), 1)[0];
+  const st = statesOf(fs)[at];
+  const idx = fs.indexOf(st);
+  fs.splice(idx + 1, 0, line);
+  const me = st.body.players.find((q) => q.id === header.seat);
+  const live = me.zones.battlefield.cards.find((c) => c.hidden !== true && c.id !== fresh).id;
+  delete b.search;
+  Object.assign(b, { kind: 'target', frame: idx, stateSeq: st.seq, turn: st.body.turn, phase: st.body.phase ?? 'MAIN1',
+    options: [`target:${live}`, `target:${fresh}`], chosen: [`target:${live}`, `target:${fresh}`], complete: false, by: 'forge', source: 'targets' });
+  return fresh;
+}
+const died = (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'graveyard', player: seat } });
+
+{
+  const name = 'stale-token-died-earlier.jsonl';
+  const fs = longSlice(5);
+  withStaleTarget(fs, { move: died });
+  write(name, fs);
+  manifest.push({
+    file: name, level: 'pass', expect: 'PASS',
+    why: 'D485: a target decision naming the viewer\'s own token (listed as its own from the first state, no birth event) that died to its own graveyard two states before -- a stale target list; counted, not a problem',
+  });
+  console.log(`  PASS  ${name}  (a stale target: the viewer's own dead token, no defect)`);
+}
+
+{
+  const name = 'stale-token-bounced-to-own-hand.jsonl';
+  const fs = longSlice(5);
+  withStaleTarget(fs, { move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'hand', player: seat } }) });
+  write(name, fs);
+  manifest.push({
+    file: name, level: 'pass', expect: 'PASS',
+    why: 'D485: a stale target naming the viewer\'s own token that was returned to its own hand (where a token ceases to exist); counted, not a problem',
+  });
+  console.log(`  PASS  ${name}  (a stale target: the viewer's own token bounced to its own hand, no defect)`);
+}
+
+const staleProbe = (name, why, opts) => {
+  const fs = longSlice(5);
+  withStaleTarget(fs, opts);
+  const bytes = write(name, fs);
+  manifest.push({ file: name, level: 'fail', expect: 'which its state frame does not show', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+const themOf = () => header.decks.find((d) => d.player !== header.seat).player;
+
+staleProbe('stale-token-bounced-to-the-opponent-hand.jsonl',
+  'D485: a stale target whose latest move is into the OPPONENT\'s hand is hidden -- not vouched for',
+  { move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'hand', player: themOf() } }) });
+staleProbe('stale-token-of-the-opponent.jsonl',
+  'D485: only the viewer\'s OWN token is vouched for -- the opponent\'s token, dead in the opponent\'s graveyard, is not',
+  { owner: themOf(), move: died });
+staleProbe('stale-token-then-exiled.jsonl',
+  'D485: exile is never accepted (a card can go there face down) -- the viewer\'s token exiled is not vouched for',
+  { move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'exile', player: seat } }) });
+staleProbe('stale-nontoken-ghost.jsonl',
+  'D485: only a TOKEN ceases to exist -- a nontoken card (token: false) last moved to the graveyard is listed there or it is not the viewer\'s to name',
+  { token: false, move: died });
+staleProbe('stale-token-shown-only-after-the-window.jsonl',
+  'D485: the listing as the viewer\'s own token must be in the window (up to the first state after the decision) -- one only later does not vouch',
+  { showIn: [4], at: 2, move: died });
+
 // ---------------------------------------------------------------------------
 // Amendment M57 (D358): play exploration.  An exploring recording's header
 // carries `playExplore` (epsilon, closeCall, opening); a decision the explorer

@@ -33,10 +33,12 @@ import forge.ai.ComputerUtilCost;
 import forge.game.Game;
 import forge.game.GameEntity;
 import forge.game.GameObject;
+import forge.game.ability.ApiType;
 import forge.game.card.Card;
 import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
 import forge.game.player.Player;
+import forge.game.spellability.AbilitySub;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.SpellAbilityStackInstance;
 import forge.game.spellability.TargetChoices;
@@ -97,8 +99,12 @@ import forge.game.zone.ZoneType;
  * in its mana cost gets X drawn uniformly from 1 to the most the seat can pay
  * ({@code ComputerUtilCost.setMaxXValue}, Forge's own maximum), and is left
  * out when only X = 0 is payable -- X = 0 is never the seat's own answer, as it
- * is never Forge's ({@link #drawX}).  Forge's own answer keeps Forge's X.  The turn cap is the
- * game loop's (the cube lab's {@code turnCap}).
+ * is never Forge's ({@link #drawX}).  Forge's own answer keeps Forge's X.  (D485) No play is
+ * handed to the engine with an illegal targeting: Forge's own answer, which the seat does not
+ * re-target, keeps its targets only while they are legal ({@link #staleTargets}) -- its AI can
+ * leave a stale list on a play (FightAi appends a target at every evaluation), and the engine
+ * then moves the card to the stack, takes the payment and drops the spell ("failed to target").
+ * The turn cap is the game loop's (the cube lab's {@code turnCap}).
  *
  * <p><b>Its own randomness.</b>  Every draw is {@link ExploreMath}'s seeded
  * generator; the engine calls made to list options run inside
@@ -173,6 +179,12 @@ public final class Explorer {
     private String pendingPick;
     /** G6 (D471): the play just returned is the seat's own pick (not Forge's answer) with {X} in its mana cost. */
     private boolean pendingOwnX;
+    /** D485: the tokens of this listing's plays whose targets the seat made legal ({@link #staleTargets}). */
+    private final Set<String> retargetedToks = new LinkedHashSet<>();
+    /** D485: the play just returned is one the seat re-targeted, until the decision record reads it ({@link #takeRetargeted}). */
+    private boolean pendingRetargeted;
+    /** D485: the decision record's {@code why} for a play whose stale targets the seat replaced. */
+    public static final String STALE_TARGETS = "STALE_TARGETS";
     /**
      * G6 (#192's review): every play the seat wrote on at this decision's
      * listing -- a drawn X, random targets -- with what it carried before
@@ -395,6 +407,8 @@ public final class Explorer {
     private List<SpellAbility> randomPick(final Player ai, final AiController aic, final List<SpellAbility> chosen) {
         pendingPick = null;
         pendingOwnX = false;
+        pendingRetargeted = false;
+        retargetedToks.clear();
         try {
             final Game g = ai.getGame();
             final Set<String> refusedHere = refusedIn(window(g, ai));
@@ -436,6 +450,7 @@ public final class Explorer {
                 mark = null;
                 final List<SpellAbility> l = opts.get(only);
                 pendingPick = l == null ? null : only;
+                noteRetargeted(only);
                 if (l != chosen) {
                     noteOwnX(l);
                 }
@@ -443,6 +458,7 @@ public final class Explorer {
             }
             final String tok = keys.get(math.pick(keys.size()));
             pendingPick = "pass".equals(tok) ? null : tok;
+            noteRetargeted(tok);
             math.randomised("priority", tok.equals(forgeTok));
             mark = new Decision.Explore("random", forgeTok);
             if (tok.startsWith("activate:")) {
@@ -476,7 +492,23 @@ public final class Explorer {
         out.putAll(Decisions.landPlays(ai));   // D466: the record's listing too
         final SpellAbility forgeSa = chosen == null || chosen.isEmpty() ? null : chosen.get(0);
         if (forgeSa != null && !forgeSa.isLandAbility()) {
-            out.put(tokenOf(chosen), chosen);
+            // D485: Forge's answer goes to the engine with the targets Forge left on it, which can be
+            // stale (a target that died or left, or one too many): made legal here, or not offered
+            final String ftok = tokenOf(chosen);
+            int fixed = 0;
+            try {
+                fixed = staleTargets(forgeSa, ai);
+            } catch (final RuntimeException e) {
+                math.failed();
+            }
+            if (fixed < 0) {
+                refuseStale(g, ai, ftok);
+            } else {
+                out.put(ftok, chosen);
+                if (fixed > 0) {
+                    retargetedToks.add(ftok);
+                }
+            }
         }
         final List<SpellAbility> all;
         try {
@@ -518,6 +550,17 @@ public final class Explorer {
                 }
                 if (!ComputerUtilCost.canPayCost(sa, ai, false) || !randomTargets(sa, ai)) {
                     continue;
+                }
+                if (sa.getApi() == ApiType.Charm) {
+                    // D485: a modal spell's targets at the cast are its chosen modes' (randomTargets drew
+                    // on the chain the engine rebuilds from them), so those are made legal too, or it is left out
+                    final int fixed = staleTargets(sa, ai);
+                    if (fixed < 0) {
+                        continue;
+                    }
+                    if (fixed > 0) {
+                        retargetedToks.add(tok);
+                    }
                 }
                 final List<SpellAbility> one = new ArrayList<>(1);
                 one.add(sa);
@@ -574,6 +617,197 @@ public final class Explorer {
             }
         }
         return true;
+    }
+
+    // ------------------------------------------------------------------
+    // D485: stale targets
+    // ------------------------------------------------------------------
+
+    /** D485: the pick just returned was a play the seat re-targeted ({@link #STALE_TARGETS}), once. */
+    public boolean takeRetargeted() {
+        final boolean r = pendingRetargeted;
+        pendingRetargeted = false;
+        return r;
+    }
+
+    /** D485: the seat returns {@code tok}; a play it re-targeted at this listing is counted ({@code retargeted}). */
+    private void noteRetargeted(final String tok) {
+        if (tok != null && retargetedToks.contains(tok)) {
+            pendingRetargeted = true;
+            math.guardrail("retargeted");
+        }
+    }
+
+    /**
+     * D485: Forge's answer whose targets cannot be made legal is not offered,
+     * and is G5's refused play for the rest of this priority window
+     * ({@code refusedCast} the first time, {@code noRepeatRefused} after; both
+     * also counted as {@code staleRefused}) -- the engine would take the card
+     * and the payment and drop the spell.
+     */
+    private void refuseStale(final Game g, final Player ai, final String tok) {
+        math.guardrail("staleRefused");
+        final String w = window(g, ai);
+        if (refusedIn(w).contains(tok)) {
+            math.guardrail("noRepeatRefused");
+        } else {
+            noteRefused(w, tok);
+        }
+    }
+
+    /**
+     * D485: the targeting parts the engine reads when {@code sa} is cast: its
+     * chain, or -- for a modal spell whose modes are chosen -- each chosen mode's
+     * chain, which {@code CharmEffect.makeChoices} copies onto the spell at the
+     * cast, targets included ({@code SpellAbility.copy} clones them).  A modal
+     * spell with no modes chosen yet has its modes and their targets chosen by
+     * Forge inside the cast, after this check.
+     */
+    private static List<SpellAbility> castParts(final SpellAbility sa) {
+        final List<SpellAbility> out = new ArrayList<>();
+        if (sa.getApi() == ApiType.Charm && !sa.isCopied()) {
+            if (sa.usesTargeting()) {
+                out.add(sa);
+            }
+            if (sa.getChosenList() != null) {
+                for (final AbilitySub sub : sa.getChosenList()) {
+                    for (SpellAbility s = sub; s != null; s = s.getSubAbility()) {
+                        out.add(s);
+                    }
+                }
+            }
+            return out;
+        }
+        for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            out.add(s);
+        }
+        return out;
+    }
+
+    /**
+     * D485: make the targets {@code sa} carries legal before it is handed to
+     * the engine, where the seat did not draw them itself.  A part is stale when
+     * its target count is not valid ({@code isTargetNumberValid}: more than its
+     * maximum, as Forge's {@code FightAi} leaves Troll Negotiations after
+     * appending at every evaluation, or fewer than its minimum) or a target is
+     * no longer a legal one (not among the part's candidates now, or
+     * {@code canTarget} says no: a token that died, a card that left).  Such a
+     * part keeps the targets that are still legal, drops the rest, and is
+     * filled to its minimum from the legal targets the seat can see
+     * ({@link #legalTargetList}, seeded); its old targets are noted first and
+     * put back unless this play is the pick ({@link #restoreChoices}).  A part
+     * that is not stale is never touched, and draws nothing.  Returns 0 when
+     * nothing was stale, 1 when a part was re-targeted, -1 when a stale part
+     * cannot be made legal (no legal list, a part with divided damage or a
+     * cross-target constraint, or a target that is a spell) -- the play must
+     * then not be cast.  {@code MagicStack.add} checks only the count
+     * ({@code hasLegalTargeting}); a dead target that leaves the count valid
+     * would fizzle, and is replaced all the same.
+     */
+    int staleTargets(final SpellAbility sa, final Player ai) {
+        int changed = 0;
+        for (final SpellAbility s : castParts(sa)) {
+            if (!s.usesTargeting()) {
+                if (s.getTargets() != null && !s.getTargets().isEmpty()) {
+                    final SpellAbility part = s;
+                    final TargetChoices was = s.getTargets().clone();
+                    before(sa).note(part, () -> part.setTargets(was));
+                    s.resetTargets();
+                    changed = 1;
+                }
+                continue;
+            }
+            final TargetRestrictions tr = s.getTargetRestrictions();
+            if (tr == null) {
+                if (!s.isTargetNumberValid()) {
+                    return -1;
+                }
+                continue;
+            }
+            // every candidate, cards included: getAllCandidates' flag is onlyNonCard (forge-game
+            // TargetRestrictions.java:571-584 at the forge-2.0.14 tag), so (s, true) is the players alone
+            final Set<GameEntity> cands = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+            cands.addAll(tr.getAllCandidates(s, false));
+            final List<GameEntity> cur = new ArrayList<>();
+            boolean spell = false;
+            boolean stale = false;
+            for (final GameObject o : s.getTargets()) {
+                if (o instanceof GameEntity) {
+                    final GameEntity e = (GameEntity) o;
+                    cur.add(e);
+                    stale |= !cands.contains(e) || !s.canTarget(e);
+                } else {
+                    spell = true;
+                }
+            }
+            if (!stale && s.isTargetNumberValid()) {
+                continue;
+            }
+            if (spell || s.isDividedAsYouChoose() || tr.isRandomTarget() || tr.isUniqueTargets() || tr.isSameController()
+                    || tr.isDifferentControllers() || tr.isDifferentCMC() || tr.isDifferentNames() || tr.isEqualToughness()
+                    || tr.isWithoutSameCreatureType()) {
+                return -1;
+            }
+            final Card host = s.getHostCard();
+            final List<GameEntity> fill = new ArrayList<>();
+            for (final GameEntity e : cands) {
+                if (Decisions.entityToken("target", e, ai) != null && s.canTarget(e)) {
+                    fill.add(e);
+                }
+            }
+            fill.sort((a, b) -> Integer.compare(a.getId(), b.getId()));   // a seeded draw needs a fixed order
+            final SpellAbility part = s;
+            final List<GameEntity> next = legalTargetList(cur, e -> cands.contains(e) && part.canTarget(e), fill,
+                    tr.getMinTargets(host, s), tr.getMaxTargets(host, s), math);
+            if (next == null) {
+                return -1;
+            }
+            final TargetChoices was = s.getTargets().clone();
+            before(sa).note(part, () -> part.setTargets(was));
+            s.resetTargets();
+            for (final GameEntity e : next) {
+                s.getTargets().add(e);
+            }
+            if (!s.isTargetNumberValid()) {
+                return -1;
+            }
+            changed = 1;
+        }
+        return changed;
+    }
+
+    /**
+     * D485: one stale targeting part's new targets: the ones in {@code current}
+     * that are {@code stillLegal} (once each, in order), cut down to {@code max}
+     * by seeded uniform draws when more are left, then filled to {@code min} by
+     * seeded uniform draws from {@code fill} (the legal targets the seat can see
+     * now, not already kept); null when {@code min} cannot be reached.
+     * Engine-free, for the self-test.
+     */
+    static <T> List<T> legalTargetList(final List<T> current, final java.util.function.Predicate<T> stillLegal,
+                                       final List<T> fill, final int min, final int max, final ExploreMath math) {
+        final List<T> keep = new ArrayList<>();
+        for (final T t : current) {
+            if (!keep.contains(t) && stillLegal.test(t)) {
+                keep.add(t);
+            }
+        }
+        while (keep.size() > Math.max(max, 0)) {
+            keep.remove(math.pick(keep.size()));
+        }
+        final List<T> pool = new ArrayList<>();
+        for (final T t : fill) {
+            if (!keep.contains(t) && !pool.contains(t)) {
+                pool.add(t);
+            }
+        }
+        while (keep.size() < min) {
+            if (pool.isEmpty() || keep.size() >= max) {
+                return null;
+            }
+            keep.add(pool.remove(math.pick(pool.size())));
+        }
+        return keep;
     }
 
     /**

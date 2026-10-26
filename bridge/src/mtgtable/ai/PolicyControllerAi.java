@@ -251,6 +251,8 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         final List<SpellAbility> r = flushObserved(payCapped(explored(choose())));
         final Decision.Explore explored = explorer == null ? null : explorer.takeMark();
+        // D485: the random seat replaced stale targets on the play it returns (Forge's own answer)
+        final boolean retargeted = explorer != null && explorer.takeRetargeted();
         final long t0 = System.nanoTime();
         try {
             final SpellAbility sa = r == null || r.isEmpty() ? null : r.get(0);
@@ -261,7 +263,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 d.complete = false;
             }
             d.by = lastBy;
-            d.why = lastWhy;
+            d.why = retargeted ? Explorer.STALE_TARGETS : lastWhy;
             d.explore = explored;
             final SearchPolicy.Report rep = search == null ? null : search.takeReport();
             if (rep != null) {
@@ -281,6 +283,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
                     for (final Decision t : Decisions.targets(sa, player, "targets", targetMarks)) {
                         t.parent = n;
                         t.by = lastBy;
+                        if (retargeted) {
+                            t.why = Explorer.STALE_TARGETS;   // D485: the targets as cast, not the stale ones Forge left
+                        }
                         if (trep != null) {
                             // D417: the target search's verdict covers every targeted part; its numbers go on the first
                             t.by = trep.fallback == null && trep.chosen >= 0 ? "search" : t.by;

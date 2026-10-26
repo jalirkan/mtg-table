@@ -344,6 +344,12 @@ public final class Atlas {
          * Forge's null or divider card ({@link PolicyControllerAi#CHOOSE_SOURCE_GUARD}).
          */
         public int chooseSourceGuard;
+        /**
+         * D485: the plays the branch's random seats handed to the engine after
+         * replacing the stale targets Forge's answer carried (their
+         * {@code retargeted} guardrail).
+         */
+        public int retargeted;
         public final List<String> forkProblems = new ArrayList<>();
         /** The no-leak check: null not run; true the branch did not move when the opponent's hidden cards did. */
         public Boolean leakSame;
@@ -649,6 +655,9 @@ public final class Atlas {
         if (b.chooseSourceGuard > 0) {
             j.n("chooseSourceGuard", (long) b.chooseSourceGuard);
         }
+        if (b.retargeted > 0) {
+            j.n("retargeted", (long) b.retargeted);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -904,14 +913,19 @@ public final class Atlas {
         return b;
     }
 
-    /** D484: the seats' decision clocks off (the copy ends without them), and the ChooseSource answers they made counted. */
+    /** D484: the seats' decision clocks off (the copy ends without them), and the ChooseSource answers they made counted; D485: and the random seats' re-targeted plays. */
     static void disarm(final List<AtlasController> seats, final Branch b) {
         int guarded = 0;
+        int retargeted = 0;
         for (final AtlasController c : seats) {
             c.disarm();
             guarded += c.counts().getOrDefault(PolicyControllerAi.CHOOSE_SOURCE_GUARD, 0);
+            if (c.explorer() != null) {
+                retargeted += c.explorer().math().guardrails().getOrDefault("retargeted", 0);   // D485
+            }
         }
         b.chooseSourceGuard = guarded;
+        b.retargeted = retargeted;
     }
 
     /**
