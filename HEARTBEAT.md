@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-26T16:05:20-04:00
+- time: 2026-10-26T16:05:35-04:00
 - runner: 6e87e5d4, up since 2026-10-26T14:08:27-04:00, PAUSED (tools/runner.sh resume)
-- running: J173 stopping, 19484/71940 lines, 3406.1/h, ETA 2026-10-27T07:29:23-04:00, 6 worker(s), 7 core(s), PAUSED
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.53; memory 12.8/30.5 GB, swap 2788 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 7.56; memory 6.4/30.5 GB, swap 2788 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
-- waiting: nothing
+- waiting: J173 (the runner is paused)
 - last finished: J172 done at 2026-10-26T13:33:27-04:00: atlas.problems 0 · recheck.ok 5 · legacy.records 4717 · legacy.logsWithRecords 4501 · legacy.scanned 54350 · atlas.labels 101 · atlas.confident 28 · atlas.confidentPer7Worker10hNight 28.9 · atlas.lostCastOptions 0 · recheck.recheckSec 728
 
 ## Messages

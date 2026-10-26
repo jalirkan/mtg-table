@@ -1,0 +1,23 @@
+==== J173 run4 started 2026-10-26T15:27:32-04:00 in unit lab-J173-run4, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (26 turns, winner A) lists 30 decision(s) of seat A; branching at 8: d4 (p, turn 8, 3 options), d6 (p, turn 10, 5 options), d10 (p, turn 12, 5 options), d13 (a, turn 14, 7 options), d16 (b, turn 15, 8 options), d19 (b, turn 17, 8 options), d24 (b, turn 21, 6 options), d29 (a, turn 26, 5 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 8 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/8] d4-random-0: 75/75 branch game(s); 3216 branch games/h
+  [B 2/9] d6-random-0: 125/125 branch game(s); 3172 branch games/h
+  [B 3/10] d4-random-25: 75/75 branch game(s); 3189 branch games/h
+  [B 4/12] d10-random-0: 125/125 branch game(s); 3193 branch games/h
+  [B 5/13] d4-random-50: 75/75 branch game(s); 3272 branch games/h
+  [B 6/13] d6-random-25: 125/125 branch game(s); 3284 branch games/h
+  [B 7/15] d13-random-0: 175/175 branch game(s); 3284 branch games/h
+  [B 8/16] d4-random-75: 75/75 branch game(s); 3308 branch games/h
+  [B 9/18] d19-random-0: 200/200 branch game(s); 3303 branch games/h
+  [B 10/19] d4-random-100: 50/50 branch game(s); 3323 branch games/h
+  [B 11/19] d10-random-25: 125/125 branch game(s); 3327 branch games/h
+  [B 12/21] d6-random-50: 125/125 branch game(s); 3345 branch games/h
+worker 1: no answer in 1800 s (hung) during d16-random-0; recorded as an engine error, starting a fresh worker
+  [B] d16-random-0: 183/200 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 17 it lacks
+  [B 13/21] d4-random-125: 50/50 branch game(s); 3368 branch games/h
+  [B 14/23] d16-random-0: 200/200 branch game(s) in 2 attempts; 3354 branch games/h
+  [B 15/24] d4-random-150: 50/50 branch game(s); 3360 branch games/h
+  [B 16/24] d4-random-175: 50/50 branch game(s); 3380 branch games/h
