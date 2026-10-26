@@ -1236,3 +1236,8 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   game's PLAY must not differ, only its records), regenerating the golden with a D486 addendum, and adding the
   check to the review list or the gate; J171 (J170 re-posted on the new pin; the pilot's draws already in
   lab-j170 are verified, not redrawn) is drafted beside it. Eleven minutes lost, not a night.
+- 00:21 EDT: the seat-identity diffs classified (forge 59→57 lines, search 93→92, explore 193→193: every
+  difference a record change D486 names, not one play changed; plain the same game), the golden regenerated,
+  seat-identity now gate job 12m (11 s), D486 addendum — merged as #215 (main f2b4e9c2; gate check-all OK, 60
+  jobs, 514.1 s). **J171 posted** (`drafts/J171-atlas-4b-card-targets.md`): J170 re-posted on the new pin, the
+  pilot's draws in lab-j170 verified rather than redrawn, three golden checks; ~10.5 h at 6 workers.
