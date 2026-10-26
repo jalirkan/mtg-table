@@ -130,6 +130,19 @@ const REQUIRED = [
   ['m55-option-entered-the-viewer-exile.jsonl', 'fail'],
   ['m55-option-cast-from-the-viewer-library.jsonl', 'fail'],
   ['m55-option-not-born-in-the-graveyard.jsonl', 'fail'],
+  // D485: a stale target -- the viewer's own token, gone turns before, still in a
+  // target list Forge's AI left on a play (J168).  Vouched for when a state in the
+  // window lists it as the viewer's own token (or it was born there) and its
+  // latest move took it from the viewer's battlefield to the viewer's own
+  // graveyard or hand.  The controls: the opponent's hand, the opponent's token,
+  // exile, a nontoken card, and a listing that comes only after the window.
+  ['stale-token-died-earlier.jsonl', 'pass'],
+  ['stale-token-bounced-to-own-hand.jsonl', 'pass'],
+  ['stale-token-bounced-to-the-opponent-hand.jsonl', 'fail'],
+  ['stale-token-of-the-opponent.jsonl', 'fail'],
+  ['stale-token-then-exiled.jsonl', 'fail'],
+  ['stale-nontoken-ghost.jsonl', 'fail'],
+  ['stale-token-shown-only-after-the-window.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
   ['m57-explore-present.jsonl', 'pass'],

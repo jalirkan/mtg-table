@@ -30,6 +30,17 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-25 — a random seat's guardrail counts include D485's two
+
+The move atlas's random seat no longer hands the engine Forge's answer with stale targets (D485: a
+target that died or left, or one more than a part allows -- the engine took the card and the mana and
+dropped the spell): it replaces them, or does not offer the play. Decision **D485** (M74). Held by
+`web/test/cubelab-record.test.ts` (a random seat's summary with the two counts passes).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M74 | §8.2, M71 | **A random seat's guardrail counts gain D485's two names.** The `explore.guardrails` block of M71 may also carry **`retargeted`** (the seat's pick of Forge's answer, cast after its stale targets were replaced by legal ones) and **`staleRefused`** (Forge's answer not offered, because its stale targets could not be made legal; each is also G5's `refusedCast` the first time in a priority window and `noRepeatRefused` after, so from this amendment those two count stale refusals as well as payments the engine refused); `retargeted` counts the pick even when the engine then refuses its payment; non-negative integers, a name absent when it never fired, no card named. The decision records of such a pick carry `why: "STALE_TARGETS"` (the priority record and its target records). A play's target records at priority now read the parts the engine casts: for a modal spell, its chosen modes, not the chain of copies the cast discards. Every M71 rule is unchanged. **Optional**: absent from every log before this amendment. | D485 |
+
 ### 2026-10-24 — a random seat's guardrail counts include G6's
 
 The move atlas's random seat sizes X itself (D471, guardrail G6: X drawn from 1 to the most it can

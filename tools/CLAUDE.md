@@ -321,6 +321,7 @@ count with no stub, still fails under it, and every leak rule is unchanged;
 `check-redaction-selftest.mjs` holds both.
 
 An M55 decision may name an id no state frame lists when, as of the first state frame after the decision, the zone events show a token born onto the viewer's own battlefield and last there or in its graveyard, or a card moved from the viewer's own hand onto the stack with no stack instance — counted as *entered between frames*, never a problem; anything else stays a failure (D481).
+It may also name the viewer's own token that ceased to exist before the decision — born onto the viewer's battlefield in that window or listed there by a state in it as its own token (`token`, controller and owner the viewer), its latest move from the viewer's battlefield into the viewer's own graveyard or hand — a stale target Forge's AI left on a play, counted as *ceased to exist*; exile, a library or another seat's zone never (D485).
 
 ## The coach helper — the conventions D292 added
 

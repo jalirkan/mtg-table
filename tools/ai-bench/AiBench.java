@@ -1511,6 +1511,8 @@ public final class AiBench {
         mayPlayShapeScenarios();
         copierCarryScenarios();
         chooseSourceScenarios();
+        staleTargetScenarios();
+        modalCastTargetsScenario();
     }
 
     /**
@@ -1584,6 +1586,202 @@ public final class AiBench {
                     }
                     check(effect, name + ": the Circle's prevention effect is in its controller's command zone");
                 });
+    }
+
+    /**
+     * D485: the random seat never hands the engine an illegal targeting.  J168:
+     * Forge's {@code FightAi} appends Troll Negotiations' "creature you
+     * control" target at every evaluation, so Forge's own answer can carry a
+     * dead creature and one target too many; the random seat played that answer
+     * as it was, and the engine moved the card to the stack, took the mana and
+     * dropped the spell ({@code MagicStack.add}: "Couldn't add to stack, failed
+     * to target").  Planted here: the seat's Llanowar Elves and Grizzly Bears
+     * both targeted (one more than the part's maximum), the fight aimed at the
+     * opponent's Hill Giant, then the Elves put into the graveyard.  (a) The
+     * control: Forge's own hand-off strands the card, as J168's 1,346 lines
+     * did.  (b) The random seat, given that list as Forge's answer: when it
+     * picks the play, the Elves are dropped and the spell is on the stack with
+     * the Bears alone, with nothing printed; when it does not, the play gets
+     * Forge's list back.  (c) With no creature of its own left, the play
+     * cannot be made legal: it is never offered (G5's refused play, once, and
+     * left out after), and the card stays in hand.
+     */
+    static void staleTargetScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: stale targets on Forge's answer, never handed to the engine (D485, engine)");
+        final List<String> board = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Hill Giant;Mountain", "aihand=Troll Negotiations",
+                "aibattlefield=Grizzly Bears;Llanowar Elves;Forest;Forest;Forest;Forest");
+        scenario("stale-targets-forge", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
+            final forge.game.spellability.SpellAbility sa = plantStale(ai, false);
+            final Card troll = sa.getHostCard();
+            final String err = stderrOf(() -> forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, sa, null));
+            check(err.contains("failed to target") && strandedOnStack(ai.getGame(), sa),
+                    "stale-targets-forge (control): Forge's own hand-off of the stale list strands the card in the stack zone "
+                            + "with no stack item (" + troll.getZone() + ")");
+        });
+        scenario("stale-targets-seat", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final forge.game.spellability.SpellAbility sa = plantStale(ai, false);
+            final Card troll = sa.getHostCard();
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final String tok = mtgtable.ai.Decisions.saToken(sa);
+            final forge.game.spellability.TargetChoices stale = sa.getTargets().clone();
+            List<forge.game.spellability.SpellAbility> pick = null;
+            mtgtable.ai.Explorer ex = null;
+            boolean restored = true;
+            int tries = 0;
+            int passes = 0;
+            for (long seed = 1; seed <= 60 && pick == null; seed++) {
+                ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), new ArrayList<>(List.of(sa)));
+                tries++;
+                if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                    if (passes == 0) {
+                        sa.setTargets(stale.clone());   // picked before any pass: plant it again, so a pass is seen first
+                        continue;
+                    }
+                    pick = r;
+                } else {
+                    passes++;
+                    // not picked: Forge's own list is put back, the same objects in the same order
+                    restored &= sa.getTargets().size() == stale.size() && sa.getTargets().get(0) == stale.get(0)
+                            && sa.getTargets().get(1) == stale.get(1);
+                }
+            }
+            check(pick != null && pick.get(0) == sa, "stale-targets-seat: the seat picks Forge's answer (" + tries + " seeds)" + (pick == null && ex != null ? " " + ex.math().guardrails() : ""));
+            if (pick == null) {
+                return;
+            }
+            check(restored && passes > 0, "stale-targets-seat: each of the " + passes + " listing(s) that did not pick it put Forge's two targets back");
+            check(sa.getTargets().size() == 1 && sa.getTargets().get(0) == bears && sa.isTargetNumberValid(),
+                    "stale-targets-seat: the dead Elves dropped, the Bears kept: " + sa.getTargets());
+            check(ex.takeRetargeted() && ex.math().guardrails().getOrDefault("retargeted", 0) == 1,
+                    "stale-targets-seat: the pick is marked for the record (STALE_TARGETS) and counted once: " + ex.math().guardrails());
+            final List<forge.game.spellability.SpellAbility> chosen = pick;
+            final String err = stderrOf(() -> ctl.playChosenSpellAbility(chosen.get(0)));
+            check(!err.contains("failed to target") && g.getStack().getSpellMatchingHost(troll) != null,
+                    "stale-targets-seat: Troll Negotiations is on the stack, cast legally, nothing printed" + (err.isEmpty() ? "" : " (" + err.trim() + ")"));
+        });
+        scenario("stale-targets-refused", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final forge.game.spellability.SpellAbility sa = plantStale(ai, true);
+            final forge.game.spellability.TargetChoices staleList = sa.getTargets().clone();
+            final Card troll = sa.getHostCard();
+            final String tok = mtgtable.ai.Decisions.saToken(sa);
+            final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                    mtgtable.ai.ExploreMath.Config.randomSeat(), 3));
+            ctl.setExplorer(ex);
+            boolean never = true;
+            for (int i = 0; i < 30; i++) {
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), new ArrayList<>(List.of(sa)));
+                never &= r == null || r.isEmpty() || !tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)));
+            }
+            final Map<String, Integer> gr = ex.math().guardrails();
+            check(never && gr.getOrDefault("staleRefused", 0) == 30 && gr.getOrDefault("refusedCast", 0) == 1
+                    && gr.getOrDefault("noRepeatRefused", 0) == 29 && gr.getOrDefault("retargeted", 0) == 0,
+                    "stale-targets-refused: with no creature of its own left the play is never offered, refused once in "
+                            + "the window and left out after: " + gr);
+            check(troll.getZone() != null && troll.getZone().is(ZoneType.Hand) && sa.getTargets().size() == 2
+                    && sa.getTargets().get(0) == staleList.get(0) && sa.getTargets().get(1) == staleList.get(1),
+                    "stale-targets-refused: the card stays in hand, and Forge's own list is left as Forge left it");
+        });
+    }
+
+    /**
+     * D485 (the skeptic review): a modal spell's target records show what is
+     * cast.  Izzet Charm with its damage mode chosen at the Hill Giant
+     * ({@code setChosenList}), and the chain of copies {@code CharmAi} builds
+     * planted aimed at the Grizzly Bears instead (as the seat's
+     * {@code randomTargets} leaves it): the cast's {@code CharmEffect.makeChoices}
+     * rebuilds the chain from the chosen mode (the Giant), and
+     * {@code Decisions.castTargets} records the Giant, where the chain read
+     * records the Bears.
+     */
+    static void modalCastTargetsScenario() throws Exception {
+        scenario("stale-targets-modal-record", List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai",
+                "activephase=MAIN1", "humanbattlefield=Hill Giant;Grizzly Bears", "aihand=Izzet Charm",
+                "aibattlefield=Island;Mountain"), PolicyLobbyPlayerAi.Outlets.OFF, null, 10, (ai, pol) -> {
+            final Card charm = named(ai.getCardsIn(ZoneType.Hand), "Izzet Charm");
+            final forge.game.spellability.SpellAbility sa = charm.getFirstSpellAbility();
+            sa.setActivatingPlayer(ai);
+            final Card giant = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Hill Giant");
+            final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            forge.game.spellability.AbilitySub dmg = null;
+            for (final forge.game.spellability.AbilitySub sub : forge.game.ability.effects.CharmEffect.makePossibleOptions(sa)) {
+                if (sub.getApi() == forge.game.ability.ApiType.DealDamage) {
+                    dmg = sub;
+                }
+            }
+            dmg.setActivatingPlayer(ai);
+            dmg.resetTargets();
+            dmg.getTargets().add(giant);
+            sa.setChosenList(new ArrayList<>(List.of(dmg)));
+            sa.setSubAbility(null);
+            forge.game.ability.effects.CharmEffect.chainAbilities(sa, sa.getChosenList());
+            final forge.game.spellability.SpellAbility copy = sa.getSubAbility();
+            copy.resetTargets();
+            copy.getTargets().add(bears);   // the discarded chain, aimed elsewhere
+            final List<mtgtable.ai.Decision> chainRead = mtgtable.ai.Decisions.targets(sa, ai, "targets");
+            final List<mtgtable.ai.Decision> castRead = mtgtable.ai.Decisions.castTargets(sa, ai, null);
+            check(chainRead.size() == 1 && ("target:" + bears.getId()).equals(chainRead.get(0).chosen),
+                    "stale-targets-modal-record: the chain of copies is aimed at the Bears (" + (chainRead.isEmpty() ? "none" : chainRead.get(0).chosen) + ")");
+            check(castRead.size() == 1 && ("target:" + giant.getId()).equals(castRead.get(0).chosen),
+                    "stale-targets-modal-record: the record reads the chosen mode, the Giant (" + (castRead.isEmpty() ? "none" : castRead.get(0).chosen) + ")");
+            check(forge.game.ability.effects.CharmEffect.makeChoices(sa) && sa.getSubAbility() != null
+                    && sa.getSubAbility().getTargets().size() == 1 && sa.getSubAbility().getTargets().get(0) == giant,
+                    "stale-targets-modal-record: the cast's makeChoices rebuilds the chain from the chosen mode -- the Giant, as recorded");
+        });
+    }
+
+    /**
+     * D485: Troll Negotiations' spell with J168's stale list planted: both of the
+     * seat's creatures in its first part, the opponent's Hill Giant in the fight,
+     * then the Elves put into the graveyard (and the Bears too, {@code both}).
+     */
+    private static forge.game.spellability.SpellAbility plantStale(final Player ai, final boolean both) {
+        final Game g = ai.getGame();
+        final Card troll = named(ai.getCardsIn(ZoneType.Hand), "Troll Negotiations");
+        final forge.game.spellability.SpellAbility sa = troll.getFirstSpellAbility();
+        sa.setActivatingPlayer(ai);
+        final Card elves = named(ai.getCardsIn(ZoneType.Battlefield), "Llanowar Elves");
+        final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+        sa.resetTargets();
+        sa.getTargets().add(elves);
+        sa.getTargets().add(bears);
+        final forge.game.spellability.SpellAbility fight = sa.getSubAbility();
+        fight.setActivatingPlayer(ai);
+        fight.resetTargets();
+        fight.getTargets().add(named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Hill Giant"));
+        g.getAction().moveToGraveyard(elves, null);
+        if (both) {
+            g.getAction().moveToGraveyard(bears, null);
+        }
+        check(sa.getTargets().size() == 2 && !sa.isTargetNumberValid(),
+                "D485 planted: Troll Negotiations' first part holds 2 targets for a maximum of 1, one of them in the graveyard");
+        return sa;
+    }
+
+    /** D485: the spell's card is in the stack zone with no stack item: the engine took it and dropped the spell. */
+    private static boolean strandedOnStack(final Game g, final forge.game.spellability.SpellAbility sa) {
+        final Card c = sa.getHostCard();
+        return c != null && c.getZone() != null && c.getZone().is(ZoneType.Stack) && g.getStack().getSpellMatchingHost(c) == null;
+    }
+
+    /** D485: what {@code r} prints on stderr (MagicStack's "failed to target" goes there), printed through too. */
+    private static String stderrOf(final Runnable r) {
+        final java.io.PrintStream old = System.err;
+        final java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        System.setErr(new java.io.PrintStream(buf, true, java.nio.charset.StandardCharsets.UTF_8));
+        try {
+            r.run();
+        } finally {
+            System.setErr(old);
+        }
+        final String s = buf.toString(java.nio.charset.StandardCharsets.UTF_8);
+        old.print(s);
+        return s;
     }
 
     /**

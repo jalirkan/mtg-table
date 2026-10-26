@@ -127,3 +127,20 @@ All fifteen are in the selftest's REQUIRED list. Ten mutants of the rule each fa
   88's `target:17`, counted twice because it is both an option and the answer.
 - Over `fixtures/games/` and `fixtures/synthetic/`, the checker's output is byte-for-byte the same as origin/main's, because
   no committed recording carries a decision record.
+
+## Addendum (2026-10-25, D485): the s02 spell was a stranded cast, not one mid-cast
+
+The second shape above says the random seat "was mid-cast" when decision 88 named Tear Asunder (17). It was not. J168's
+diagnosis (D485) traced it: at decision 84 (`d2-random-o1-b21-seat0.jsonl.gz` line 408) the random seat drew Forge's own
+answer, `cast:17` (`explore.forge` is `cast:17`), and decisions 85 and 86 put a target on **each** of Tear Asunder's two
+parts, Haywire Mite (72) and Gonti, Lord of Luxury (73). Its parts are sized by the kicker (`TargetMin$`/`TargetMax$` X =
+`Count$Kicked.0.1` on the first, Y = `Count$Kicked.1.0` on the kicker-only second), so one of the two parts was over its
+maximum of 0. Forge's AI moved the card from the hand to the stack and took the payment, and `MagicStack.add` refused the
+targeting and returned (the s02 worker logs hold 8 `Tear Asunder (17) - [Couldn't add to stack, failed to target]` lines,
+`[[Haywire Mite (72)], [Gonti, Lord of Luxury (73)]]` among them). The card was left in the stack zone with no stack
+instance: seq 323's `{hand, 0}` → `{stack, null}` event, and no `cast` event for it. Decision 87's `complete:false` is
+Take It Back's own priority record, not a cast in progress. Take It Back (67) then targeted the stranded card and returned
+it to its owner's hand (seq 326).
+
+The acceptance stands: the card was the viewer's own, moved from its own hand onto the stack, and the zone events say so.
+What D485 changes is that new runs no longer strand such a cast; this rule stays for the recordings already made.

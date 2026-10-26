@@ -378,6 +378,48 @@
     "why": "D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not"
   },
   {
+    "file": "stale-token-died-earlier.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D485: a target decision naming the viewer's own token (listed as its own from the first state, no birth event) that died to its own graveyard two states before -- a stale target list; counted, not a problem"
+  },
+  {
+    "file": "stale-token-bounced-to-own-hand.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D485: a stale target naming the viewer's own token that was returned to its own hand (where a token ceases to exist); counted, not a problem"
+  },
+  {
+    "file": "stale-token-bounced-to-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D485: a stale target whose latest move is into the OPPONENT's hand is hidden -- not vouched for"
+  },
+  {
+    "file": "stale-token-of-the-opponent.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D485: only the viewer's OWN token is vouched for -- the opponent's token, dead in the opponent's graveyard, is not"
+  },
+  {
+    "file": "stale-token-then-exiled.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D485: exile is never accepted (a card can go there face down) -- the viewer's token exiled is not vouched for"
+  },
+  {
+    "file": "stale-nontoken-ghost.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D485: only a TOKEN ceases to exist -- a nontoken card (token: false) last moved to the graveyard is listed there or it is not the viewer's to name"
+  },
+  {
+    "file": "stale-token-shown-only-after-the-window.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D485: the listing as the viewer's own token must be in the window (up to the first state after the decision) -- one only later does not vouch"
+  },
+  {
     "file": "m57-explore-present.jsonl",
     "level": "pass",
     "expect": "PASS",
