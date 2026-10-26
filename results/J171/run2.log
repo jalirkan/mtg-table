@@ -1,0 +1,49 @@
+==== J171 run2 started 2026-10-26T01:20:27-04:00 in unit lab-J171-run2, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (12 turns, winner B) lists 6 decision(s) of seat A; branching at 6: d0 (p, turn 5, 2 options), d1 (p, turn 5, 2 options), d2 (p, turn 7, 2 options), d3 (a, turn 7, 2 options), d4 (p, turn 7, 2 options), d5 (p, turn 11, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 6 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/6] d5-random-0: 75/75 branch game(s); 4855 branch games/h
+  [B 2/6] d4-random-0: 50/50 branch game(s); 4749 branch games/h
+  [B 3/7] d1-random-0: 50/50 branch game(s); 4667 branch games/h
+  [B 4/8] d3-random-0: 50/50 branch game(s); 4635 branch games/h
+  [B 5/9] d2-random-0: 50/50 branch game(s); 4603 branch games/h
+  [B 6/10] d0-random-0: 50/50 branch game(s); 4532 branch games/h
+  [B 7/11] d4-random-25: 50/50 branch game(s); 4322 branch games/h
+  [B 8/13] d1-random-25: 50/50 branch game(s); 4345 branch games/h
+  [B 9/15] d3-random-25: 50/50 branch game(s); 4357 branch games/h
+  [B 10/17] d0-random-25: 50/50 branch game(s); 4332 branch games/h
+  [B 11/19] d2-random-25: 50/50 branch game(s); 4327 branch games/h
+  [B 12/21] d4-random-50: 50/50 branch game(s); 4408 branch games/h
+  [B 13/21] d4-random-75: 50/50 branch game(s); 4421 branch games/h
+  [B 14/23] d1-random-50: 50/50 branch game(s); 4377 branch games/h
+  [B 15/23] d3-random-50: 50/50 branch game(s); 4389 branch games/h
+  [B 16/23] d2-random-50: 50/50 branch game(s); 4398 branch games/h
+  [B 17/23] d0-random-50: 50/50 branch game(s); 4398 branch games/h
+  [B 18/23] d4-random-100: 50/50 branch game(s); 4410 branch games/h
+  [B 19/23] d0-random-75: 50/50 branch game(s); 4410 branch games/h
+  [B 20/25] d4-random-125: 50/50 branch game(s); 4411 branch games/h
+  [B 21/27] d2-random-75: 50/50 branch game(s); 4403 branch games/h
+  [B 22/29] d3-random-75: 50/50 branch game(s); 4425 branch games/h
+  [B 23/31] d1-random-75: 50/50 branch game(s); 4397 branch games/h
+  [B 24/33] d4-random-150: 50/50 branch game(s); 4436 branch games/h
+  [B 25/33] d0-random-125: 50/50 branch game(s); 4434 branch games/h
+  [B 26/33] d0-random-100: 50/50 branch game(s); 4436 branch games/h
+  [B 27/35] d2-random-100: 50/50 branch game(s); 4441 branch games/h
+  [B 28/35] d3-random-100: 50/50 branch game(s); 4426 branch games/h
+  [B 29/35] d1-random-100: 50/50 branch game(s); 4425 branch games/h
+  [B 30/35] d1-random-125: 50/50 branch game(s); 4442 branch games/h
+  [B 31/37] d0-random-150: 50/50 branch game(s); 4435 branch games/h
+  [B 32/37] d0-random-175: 50/50 branch game(s); 4432 branch games/h
+  [B 33/37] d3-random-125: 50/50 branch game(s); 4434 branch games/h
+  [B 34/39] d2-random-125: 50/50 branch game(s); 4421 branch games/h
+  [B 35/41] d4-random-175: 50/50 branch game(s); 4420 branch games/h
+  [B 36/41] d3-random-150: 50/50 branch game(s); 4426 branch games/h
+  [B 37/41] d1-random-150: 50/50 branch game(s); 4427 branch games/h
+  [B 38/41] d1-random-175: 50/50 branch game(s); 4415 branch games/h
+  [B 39/41] d3-random-175: 50/50 branch game(s); 4410 branch games/h
+  [B 40/41] d2-random-175: 50/50 branch game(s); 4370 branch games/h
+  [B 41/41] d2-random-150: 50/50 branch game(s); 4323 branch games/h
+atlas: the checks on 6 workers took 214 s
+atlas: /home/justin-a/code/lab/data/lab-j170/b-s02-peasant-2102/atlas.json and atlas.md; phase A 0 game(s), phase B 2075 branch game(s) at 6 decision(s); checks: 1 PROBLEM(S) (127193 rows, 4152 frame logs, 6 leak check(s))
+  ATLAS PROBLEM: 1212 frame log(s) failed tools/check-redaction.mjs: d0-random-o0-b1-seat0.jsonl.gz, d0-random-o0-b102-seat0.jsonl.gz, d0-random-o0-b105-seat0.jsonl.gz, d0-random-o0-b106-seat0.jsonl.gz, d0-random-o0-b107-seat0.jsonl.gz
