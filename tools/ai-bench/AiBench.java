@@ -1515,6 +1515,7 @@ public final class AiBench {
         modalCastTargetsScenario();
         cardTargetScenarios();
         modalScenarios();
+        targetCostScenarios();
     }
 
     /**
@@ -1798,6 +1799,445 @@ public final class AiBench {
                     "card-target-hexproof: the target record lists the Bears alone, complete (no Scout, no Knight): "
                             + (recs.isEmpty() ? "none" : recs.get(0).options + " complete=" + recs.get(0).complete));
         });
+    }
+
+    /**
+     * D488: the random seat's targets fit the play's cost.  (a) Fireball ("{1}
+     * more for each target beyond the first") with three Mountains and five
+     * legal targets: every pick the seat makes is payable as drawn
+     * ({@code canPayCost}), some picks had their count cut
+     * ({@code targetCountTrimmed}), and a pick goes on the stack with nothing
+     * printed; the control, the seat with the fit switched off
+     * ({@code Explorer.fitOffForTest}), picks a count it cannot pay, and the
+     * payment prints "Didn't find what to pay for" and is refused (J171's s09).
+     * (b) Bone Shards (sacrifice a creature or discard a card) with the seat's
+     * Grizzly Bears its only creature and none of the opponent's: the
+     * sacrifice version never targets the Bears; the control targets them and
+     * Forge's AI payment, which never sacrifices the spell's own target
+     * ({@code paymentChoicesWithoutTargets}), refuses it (J171's s13).  (c) With
+     * Llanowar Elves beside the Bears: a sacrifice pick targets one, the cast
+     * sacrifices the other and the target is still there.
+     */
+    static void targetCostScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the random seat's targets fit the play's cost (D488, engine)");
+        final List<String> fire = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Grizzly Bears;Hill Giant;Llanowar Elves;Mountain", "aihand=Fireball",
+                "aibattlefield=Mountain;Mountain;Mountain");
+        scenario("target-cost-fireball-control", fire, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card fireball = named(ai.getCardsIn(ZoneType.Hand), "Fireball");
+            final String tok = mtgtable.ai.Decisions.saToken(fireball.getFirstSpellAbility());
+            mtgtable.ai.Explorer.fitOffForTest(true);
+            try {
+                forge.game.spellability.SpellAbility bad = null;
+                mtgtable.ai.Explorer ex = null;
+                for (long seed = 1; seed <= 200 && bad == null; seed++) {
+                    ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                    ctl.setExplorer(ex);
+                    final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                    if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                        if (!forge.ai.ComputerUtilCost.canPayCost(r.get(0), ai, false)) {
+                            bad = r.get(0);
+                        } else {
+                            ex.played(ai, r.get(0), true);   // put back for the next seed
+                        }
+                    }
+                }
+                check(bad != null, "target-cost-fireball-control: with the fit off the seat picks Fireball with a target count it cannot pay");
+                if (bad == null) {
+                    return;
+                }
+                final int n = bad.getTargets().size();
+                final Integer x = bad.getXManaCostPaid();
+                final forge.game.spellability.SpellAbility cast = bad;
+                final mtgtable.ai.Explorer seat = ex;
+                final String out = outputOf(() -> ctl.playChosenSpellAbility(cast));
+                check(out.contains("Didn't find what to pay for") && seat.math().guardrails().getOrDefault("refusedCast", 0) == 1
+                                && fireball.getZone() != null && fireball.getZone().is(ZoneType.Hand),
+                        "target-cost-fireball-control: its " + n + " target(s) at X=" + x
+                                + " are refused at the payment (G5; D466 puts the card back): " + seat.math().guardrails());
+            } finally {
+                mtgtable.ai.Explorer.fitOffForTest(false);
+            }
+        });
+        scenario("target-cost-fireball", fire, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card fireball = named(ai.getCardsIn(ZoneType.Hand), "Fireball");
+            final String tok = mtgtable.ai.Decisions.saToken(fireball.getFirstSpellAbility());
+            int picks = 0;
+            int trimmed = 0;
+            boolean payable = true;
+            final java.util.Set<Integer> counts = new java.util.TreeSet<>();
+            long castSeed = -1;
+            for (long seed = 1; seed <= 200; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                    picks++;
+                    final int cut = ex.math().guardrails().getOrDefault("targetCountTrimmed", 0);
+                    trimmed += cut;
+                    counts.add(r.get(0).getTargets().size());
+                    payable &= forge.ai.ComputerUtilCost.canPayCost(r.get(0), ai, false);
+                    if (cut > 0 && r.get(0).getTargets().size() > 1 && castSeed < 0) {
+                        castSeed = seed;   // a cut pick that still holds two targets or more: the one cast below
+                    }
+                }
+                if (r != null && !r.isEmpty()) {
+                    ex.played(ai, r.get(0), true);   // as if refused: X and targets put back for the next seed
+                }
+            }
+            check(picks >= 10 && payable && trimmed > 0 && trimmed < picks && castSeed > 0,
+                    "target-cost-fireball: every one of " + picks + " picks is payable as drawn; " + trimmed
+                            + " had their count cut; counts " + counts);
+            if (castSeed < 0) {
+                return;
+            }
+            final mtgtable.ai.Explorer again = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                    mtgtable.ai.ExploreMath.Config.randomSeat(), castSeed));
+            ctl.setExplorer(again);
+            final List<forge.game.spellability.SpellAbility> last = again.priority(ai, ctl.getAi(), null);
+            final forge.game.spellability.SpellAbility cast = last.get(0);
+            final int n = cast.getTargets().size();
+            final String out = outputOf(() -> ctl.playChosenSpellAbility(cast));
+            check(!out.contains("Didn't find what to pay for") && g.getStack().getSpellMatchingHost(fireball) != null,
+                    "target-cost-fireball: Fireball is on the stack with " + n + " target(s), nothing printed"
+                            + (out.isEmpty() ? "" : " (" + out.trim() + ")"));
+        });
+        final List<String> shards = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Swamp", "aihand=Bone Shards", "aibattlefield=Grizzly Bears;Swamp;Swamp");
+        scenario("target-cost-shards-control", shards, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card shard = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            mtgtable.ai.Explorer.fitOffForTest(true);
+            try {
+                forge.game.spellability.SpellAbility bad = null;
+                mtgtable.ai.Explorer ex = null;
+                for (long seed = 1; seed <= 100 && bad == null; seed++) {
+                    ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                    ctl.setExplorer(ex);
+                    final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                    if (r != null && !r.isEmpty() && r.get(0).getHostCard() == shard && sacrifices(r.get(0))) {
+                        bad = r.get(0);
+                    } else if (r != null && !r.isEmpty()) {
+                        ex.played(ai, r.get(0), true);
+                    }
+                }
+                check(bad != null && bad.getTargets().size() == 1 && bad.getTargets().get(0) == bears,
+                        "target-cost-shards-control: with the fit off the seat picks Bone Shards' sacrifice aimed at its only creature");
+                if (bad == null) {
+                    return;
+                }
+                final forge.game.spellability.SpellAbility cast = bad;
+                final mtgtable.ai.Explorer seat = ex;
+                outputOf(() -> ctl.playChosenSpellAbility(cast));
+                check(cast.isSkip() && seat.math().guardrails().getOrDefault("refusedCast", 0) == 1
+                                && bears.getZone() != null && bears.getZone().is(ZoneType.Battlefield),
+                        "target-cost-shards-control: Forge's AI payment will not sacrifice the spell's own target: refused (G5) "
+                                + seat.math().guardrails());
+            } finally {
+                mtgtable.ai.Explorer.fitOffForTest(false);
+            }
+        });
+        scenario("target-cost-shards", shards, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card shard = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            int sacPicks = 0;
+            int aimedAtBears = 0;
+            int listings = 0;
+            for (long seed = 1; seed <= 100; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                listings++;
+                if (r != null && !r.isEmpty() && r.get(0).getHostCard() == shard && sacrifices(r.get(0))) {
+                    sacPicks++;
+                    aimedAtBears += r.get(0).getTargets().contains(bears) ? 1 : 0;
+                }
+                if (r != null && !r.isEmpty()) {
+                    ex.played(ai, r.get(0), true);
+                }
+            }
+            check(sacPicks == 0 && aimedAtBears == 0,
+                    "target-cost-shards: with its only creature the only legal target, Bone Shards' sacrifice is never the seat's pick in "
+                            + listings + " listings (" + sacPicks + " picks)");
+        });
+        final List<String> shardsFoe = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Hill Giant;Swamp", "aihand=Bone Shards", "aibattlefield=Grizzly Bears;Swamp;Swamp");
+        scenario("target-cost-shards-avoided", shardsFoe, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card shard = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final Card giant = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Hill Giant");
+            int sacPicks = 0;
+            int atGiant = 0;
+            int avoided = 0;
+            long castSeed = -1;
+            for (long seed = 1; seed <= 100; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                if (r != null && !r.isEmpty() && r.get(0).getHostCard() == shard && sacrifices(r.get(0))) {
+                    sacPicks++;
+                    atGiant += r.get(0).getTargets().size() == 1 && r.get(0).getTargets().get(0) == giant ? 1 : 0;
+                    final int a = ex.math().guardrails().getOrDefault("costTargetAvoided", 0);
+                    avoided += a;
+                    castSeed = castSeed < 0 && a > 0 ? seed : castSeed;
+                }
+                if (r != null && !r.isEmpty()) {
+                    ex.played(ai, r.get(0), true);
+                }
+            }
+            check(sacPicks >= 5 && atGiant == sacPicks && avoided > 0 && avoided < sacPicks && castSeed > 0,
+                    "target-cost-shards-avoided: every one of " + sacPicks + " sacrifice picks is aimed at the Hill Giant; " + avoided
+                            + " were drawn again away from the Bears (costTargetAvoided)");
+            if (castSeed < 0) {
+                return;
+            }
+            final mtgtable.ai.Explorer again = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                    mtgtable.ai.ExploreMath.Config.randomSeat(), castSeed));
+            ctl.setExplorer(again);
+            final forge.game.spellability.SpellAbility cast = again.priority(ai, ctl.getAi(), null).get(0);
+            final String out = outputOf(() -> ctl.playChosenSpellAbility(cast));
+            check(!cast.isSkip() && g.getStack().getSpellMatchingHost(shard) != null && giant.getZone().is(ZoneType.Battlefield)
+                            && bears.getZone() != null && bears.getZone().is(ZoneType.Graveyard),
+                    "target-cost-shards-avoided: Bone Shards is on the stack aimed at the Hill Giant, the Bears sacrificed"
+                            + (out.isEmpty() ? "" : " (" + out.trim() + ")"));
+        });
+        // Forge's answer, re-targeted (D485's repair): Bone Shards' sacrifice aimed at a Hill Giant that has since died;
+        // the repair's fill must not pick the seat's own Bears, the creature the cost needs
+        final List<String> shardsStale = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Hill Giant;Swamp", "aihand=Bone Shards", "aibattlefield=Grizzly Bears;Swamp;Swamp");
+        for (final boolean foe : new boolean[] {false, true}) {
+            final List<String> board = new ArrayList<>(shardsStale);
+            if (foe) {
+                board.set(5, "humanbattlefield=Hill Giant;Llanowar Elves;Swamp");
+            }
+            final String name = foe ? "target-cost-shards-answer-filled" : "target-cost-shards-answer-refused";
+            scenario(name, board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+                final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                final Card shard = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+                final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+                final Card giant = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Hill Giant");
+                forge.game.spellability.SpellAbility sac = null;
+                for (final forge.game.spellability.SpellAbility a : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                        new ArrayList<>(shard.getSpellAbilities()), ai)) {
+                    if (sacrifices(a)) {
+                        sac = a;
+                    }
+                }
+                final forge.game.spellability.SpellAbility sa = sac;
+                sa.setActivatingPlayer(ai);
+                sa.resetTargets();
+                sa.getTargets().add(giant);
+                ai.getGame().getAction().moveToGraveyard(giant, null);
+                final String tok = mtgtable.ai.Decisions.saToken(sa);
+                int picked = 0;
+                boolean aimedOk = true;
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), 7));
+                ctl.setExplorer(ex);
+                for (int i = 0; i < 30; i++) {
+                    final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), new ArrayList<>(List.of(sa)));
+                    if (r != null && !r.isEmpty() && r.get(0) == sa) {
+                        picked++;
+                        aimedOk &= sa.getTargets().size() == 1 && sa.getTargets().get(0) != bears;
+                        ex.played(ai, sa, false);
+                        sa.resetTargets();
+                        sa.getTargets().add(giant);   // planted again: the answer Forge would give
+                    }
+                }
+                final Map<String, Integer> gr = ex.math().guardrails();
+                if (!foe) {
+                    // the control: D485's repair alone fills the dead Giant's place with the Bears
+                    mtgtable.ai.Explorer.fitOffForTest(true);
+                    try {
+                        final mtgtable.ai.Explorer off = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                                mtgtable.ai.ExploreMath.Config.randomSeat(), 7));
+                        ctl.setExplorer(off);
+                        boolean atBears = false;
+                        for (int i = 0; i < 30 && !atBears; i++) {
+                            final List<forge.game.spellability.SpellAbility> r = off.priority(ai, ctl.getAi(), new ArrayList<>(List.of(sa)));
+                            atBears = r != null && !r.isEmpty() && r.get(0) == sa && sa.getTargets().size() == 1
+                                    && sa.getTargets().get(0) == bears;
+                            if (r != null && !r.isEmpty() && r.get(0) == sa) {
+                                off.played(ai, sa, false);
+                                sa.resetTargets();
+                                sa.getTargets().add(giant);
+                            }
+                        }
+                        check(atBears, name + " (control): with the fit off D485's repair aims Forge's answer at the Bears, its own payment");
+                    } finally {
+                        mtgtable.ai.Explorer.fitOffForTest(false);
+                    }
+                }
+                if (foe) {
+                    final int avoided = gr.getOrDefault("costTargetAvoided", 0);
+                    check(picked > 0 && aimedOk && avoided > 0 && avoided < picked,
+                            name + ": Forge's answer re-targeted at the Elves, never the Bears its cost sacrifices (" + picked
+                                    + " picks, " + avoided + " filled again away from the Bears): " + gr);
+                } else {
+                    check(picked == 0 && gr.getOrDefault("staleRefused", 0) == 30 && bears.getZone().is(ZoneType.Battlefield),
+                            name + ": with only the Bears to fill it, Forge's answer is never offered (D485's refusal): " + gr);
+                }
+            });
+        }
+        // the single-target redraw after the pick (D358's Explorer.targets, which the random seat runs too): Bone Shards'
+        // sacrifice aimed at the Hill Giant, redrawn half the time among every candidate -- the Bears among them
+        scenario("target-cost-shards-redraw", shardsFoe, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Card shard = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+            final Card bears = named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final Card giant = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Hill Giant");
+            forge.game.spellability.SpellAbility sac = null;
+            for (final forge.game.spellability.SpellAbility a : forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
+                    new ArrayList<>(shard.getSpellAbilities()), ai)) {
+                if (sacrifices(a)) {
+                    sac = a;
+                }
+            }
+            final forge.game.spellability.SpellAbility sa = sac;
+            sa.setActivatingPlayer(ai);
+            for (final boolean off : new boolean[] {true, false}) {
+                mtgtable.ai.Explorer.fitOffForTest(off);
+                int atBears = 0;
+                int moved = 0;
+                int avoided = 0;
+                try {
+                    for (long seed = 1; seed <= 60; seed++) {
+                        final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                                mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                        sa.resetTargets();
+                        sa.getTargets().add(giant);
+                        ex.targets(sa, ai, new java.util.HashMap<>());
+                        atBears += sa.getTargets().get(0) == bears ? 1 : 0;
+                        moved += sa.getTargets().get(0) != giant ? 1 : 0;
+                        avoided += ex.math().guardrails().getOrDefault("costTargetAvoided", 0);
+                    }
+                } finally {
+                    mtgtable.ai.Explorer.fitOffForTest(false);
+                }
+                if (off) {
+                    check(atBears > 0, "target-cost-shards-redraw (control): with the fit off the redraw moves the target to the Bears "
+                            + atBears + " time(s) in 60");
+                } else {
+                    check(atBears == 0 && avoided > 0,
+                            "target-cost-shards-redraw: the redraw never lands on the Bears its cost sacrifices (" + avoided
+                                    + " redrawn away from them, " + moved + " moved)");
+                }
+            }
+            sa.resetTargets();
+        });
+        // Ward is a trigger, not the payment (the review of D488): Murder at the opponent's only creature, Kappa
+        // Cannoneer (Ward {4}), on three Swamps. canPayCost adds the Ward and asks Forge's AI whether it would pay it
+        // (willPayCosts: no, the seat has no mana left), but the cast is legal and its payment takes {1}{B}{B}.
+        final List<String> ward = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Kappa Cannoneer;Swamp", "aihand=Murder", "aibattlefield=Swamp;Swamp;Swamp");
+        scenario("target-cost-ward", ward, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card murder = named(ai.getCardsIn(ZoneType.Hand), "Murder");
+            final Card kappa = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Kappa Cannoneer");
+            final String tok = mtgtable.ai.Decisions.saToken(murder.getFirstSpellAbility());
+            long castSeed = -1;
+            int picks = 0;
+            boolean wardJudged = true;
+            for (long seed = 1; seed <= 40; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                    picks++;
+                    wardJudged &= r.get(0).getTargets().size() == 1 && r.get(0).getTargets().get(0) == kappa
+                            && !forge.ai.ComputerUtilCost.canPayCost(r.get(0), ai, false)
+                            && mtgtable.ai.Explorer.manaPayable(r.get(0), ai);
+                    castSeed = castSeed < 0 ? seed : castSeed;
+                }
+                if (r != null && !r.isEmpty()) {
+                    ex.played(ai, r.get(0), true);
+                }
+            }
+            check(picks > 0 && wardJudged,
+                    "target-cost-ward: the seat picks Murder at the Ward creature (" + picks + " of 40 listings) -- canPayCost, "
+                            + "which judges the Ward, says no; the cost the payment takes is payable");
+            if (castSeed < 0) {
+                return;
+            }
+            final mtgtable.ai.Explorer again = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                    mtgtable.ai.ExploreMath.Config.randomSeat(), castSeed));
+            ctl.setExplorer(again);
+            final forge.game.spellability.SpellAbility cast = again.priority(ai, ctl.getAi(), null).get(0);
+            final String out = outputOf(() -> ctl.playChosenSpellAbility(cast));
+            check(!cast.isSkip() && g.getStack().getSpellMatchingHost(murder) != null && !out.contains("Didn't find what to pay for"),
+                    "target-cost-ward: Murder is on the stack at the Kappa Cannoneer, its payment taken"
+                            + (out.isEmpty() ? "" : " (" + out.trim() + ")"));
+        });
+        final List<String> shardsTwo = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Swamp", "aihand=Bone Shards", "aibattlefield=Grizzly Bears;Llanowar Elves;Swamp;Swamp");
+        scenario("target-cost-shards-two", shardsTwo, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card shard = named(ai.getCardsIn(ZoneType.Hand), "Bone Shards");
+            List<forge.game.spellability.SpellAbility> pick = null;
+            mtgtable.ai.Explorer ex = null;
+            for (long seed = 1; seed <= 100 && pick == null; seed++) {
+                ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                if (r != null && !r.isEmpty() && r.get(0).getHostCard() == shard && sacrifices(r.get(0))) {
+                    pick = r;
+                } else if (r != null && !r.isEmpty()) {
+                    ex.played(ai, r.get(0), true);
+                }
+            }
+            check(pick != null && pick.get(0).getTargets().size() == 1,
+                    "target-cost-shards-two: with two creatures the seat picks Bone Shards' sacrifice aimed at one of them");
+            if (pick == null) {
+                return;
+            }
+            final forge.game.spellability.SpellAbility cast = pick.get(0);
+            final Card target = (Card) cast.getTargets().get(0);
+            final Card other = named(ai.getCardsIn(ZoneType.Battlefield),
+                    "Grizzly Bears".equals(target.getName()) ? "Llanowar Elves" : "Grizzly Bears");
+            final String out = outputOf(() -> ctl.playChosenSpellAbility(cast));
+            check(!cast.isSkip() && g.getStack().getSpellMatchingHost(shard) != null && target.getZone().is(ZoneType.Battlefield)
+                            && other.getZone() != null && other.getZone().is(ZoneType.Graveyard),
+                    "target-cost-shards-two: Bone Shards is on the stack aimed at the " + target.getName() + ", the "
+                            + other.getName() + " sacrificed" + (out.isEmpty() ? "" : " (" + out.trim() + ")"));
+        });
+    }
+
+    /** D488: the play's cost holds a sacrifice (Bone Shards' one alternative of two). */
+    private static boolean sacrifices(final forge.game.spellability.SpellAbility sa) {
+        for (final forge.game.cost.CostPart p : sa.getPayCosts().getCostParts()) {
+            if (p instanceof forge.game.cost.CostSacrifice) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** D488: what {@code r} prints on stdout and stderr (Forge's payment prints "Didn't find what to pay for" on stdout), printed through. */
+    private static String outputOf(final Runnable r) {
+        final java.io.PrintStream oldOut = System.out;
+        final java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        System.setOut(new java.io.PrintStream(buf, true, java.nio.charset.StandardCharsets.UTF_8));
+        String err;
+        try {
+            err = stderrOf(r);
+        } finally {
+            System.setOut(oldOut);
+        }
+        final String s = buf.toString(java.nio.charset.StandardCharsets.UTF_8);
+        oldOut.print(s);
+        return s + err;
     }
 
     /**

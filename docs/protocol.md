@@ -30,6 +30,18 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-26 — a random seat's guardrail counts include D488's two
+
+The move atlas's random seat now fits the targets it draws to the play's cost: a cost that rises with each
+target (Fireball) is checked with the targets drawn, and a target its own sacrifice, exile or return would take
+from the seat is drawn again away from it (Forge's AI payment never takes a card the play targets), or the play
+is not offered. Decision **D488** (M77). Held by `web/test/cubelab-record.test.ts` (a random seat's summary with the
+two counts passes).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M77 | §8.2, M71 | **A random seat's guardrail counts gain `targetCountTrimmed` and `costTargetAvoided`.** The `explore.guardrails` block of M71 may also carry **`targetCountTrimmed`**: the plays the seat handed to the engine whose target count it cut, one target at a time toward each part's floor (`max(min, 1)`), until the play's cost could be paid with them (a cost raised per target, as Fireball's); and **`costTargetAvoided`**: the plays whose targets it drew again (its own play) or repaired again (Forge's answer, M74's re-targeting) with every card of its own that the play's sacrifice, exile, return or put-into-library cost could take left out, because Forge's AI payment would not take a card the play targets. Each is a non-negative integer, counted once per pick, absent when it never fired; no card is named. A play whose targets cannot be made payable is not offered (Forge's answer: M74's `staleRefused`). The decision records, the tokens and every other M55 / M71 rule are unchanged. **Optional**: absent from every log before this amendment. | D488 |
+
 ### 2026-10-26 — a targeting part left empty answers `target:none`
 
 A target record whose part the answer left empty said `chosen: null` -- not a token and not an option, so the M55

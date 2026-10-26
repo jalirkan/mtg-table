@@ -356,6 +356,14 @@ public final class Atlas {
          * {@code modesDrawn} guardrail).
          */
         public int modesDrawn;
+        /**
+         * D488: the plays the branch's random seats handed to the engine with
+         * their target count cut to one they could pay for, and with targets
+         * drawn away from what the play's own cost takes (their
+         * {@code targetCountTrimmed} and {@code costTargetAvoided} guardrails).
+         */
+        public int targetCountTrimmed;
+        public int costTargetAvoided;
         public final List<String> forkProblems = new ArrayList<>();
         /** The no-leak check: null not run; true the branch did not move when the opponent's hidden cards did. */
         public Boolean leakSame;
@@ -667,6 +675,12 @@ public final class Atlas {
         if (b.modesDrawn > 0) {
             j.n("modesDrawn", (long) b.modesDrawn);
         }
+        if (b.targetCountTrimmed > 0) {
+            j.n("targetCountTrimmed", (long) b.targetCountTrimmed);
+        }
+        if (b.costTargetAvoided > 0) {
+            j.n("costTargetAvoided", (long) b.costTargetAvoided);
+        }
         if (b.leakSame != null) {
             j.n("leakSame", b.leakSame).n("controlMoved", Boolean.TRUE.equals(b.controlMoved));
         }
@@ -859,6 +873,7 @@ public final class Atlas {
                 b.turns = ph == null ? 0 : turnsBefore + ph.getTurn();
             } else {
                 b.error = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+                logStack(b.key, e);   // D488: the row keeps one line; the worker log keeps where it was thrown
             }
             for (final SeatRecorder r : recs) {
                 r.crashed();
@@ -922,22 +937,47 @@ public final class Atlas {
         return b;
     }
 
+    /**
+     * D488: an errored branch's stack, in the worker's log (stderr), the row
+     * keeping its one-line {@code error}: J171's s12 rows said
+     * "IndexOutOfBoundsException: Index 0 out of bounds for length 0" and
+     * nothing said where.  The throw and its causes, 40 frames each.
+     */
+    static void logStack(final String key, final Throwable e) {
+        final StringBuilder sb = new StringBuilder("[atlas] ").append(key).append(": branch error, stack:\n");
+        Throwable t = e;
+        for (int depth = 0; t != null && depth < 4; depth++, t = t.getCause()) {
+            sb.append(depth == 0 ? "  " : "  caused by: ").append(t).append('\n');
+            final StackTraceElement[] st = t.getStackTrace();
+            for (int i = 0; i < st.length && i < 40; i++) {
+                sb.append("    at ").append(st[i]).append('\n');
+            }
+        }
+        System.err.print(sb);
+    }
+
     /** D484: the seats' decision clocks off (the copy ends without them), and the ChooseSource answers they made counted; D485: and the random seats' re-targeted plays. */
     static void disarm(final List<AtlasController> seats, final Branch b) {
         int guarded = 0;
         int retargeted = 0;
         int modesDrawn = 0;
+        int trimmed = 0;
+        int avoided = 0;
         for (final AtlasController c : seats) {
             c.disarm();
             guarded += c.counts().getOrDefault(PolicyControllerAi.CHOOSE_SOURCE_GUARD, 0);
             if (c.explorer() != null) {
                 retargeted += c.explorer().math().guardrails().getOrDefault("retargeted", 0);   // D485
                 modesDrawn += c.explorer().math().guardrails().getOrDefault("modesDrawn", 0);   // D486
+                trimmed += c.explorer().math().guardrails().getOrDefault("targetCountTrimmed", 0);   // D488
+                avoided += c.explorer().math().guardrails().getOrDefault("costTargetAvoided", 0);    // D488
             }
         }
         b.chooseSourceGuard = guarded;
         b.retargeted = retargeted;
         b.modesDrawn = modesDrawn;
+        b.targetCountTrimmed = trimmed;
+        b.costTargetAvoided = avoided;
     }
 
     /**

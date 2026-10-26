@@ -453,6 +453,7 @@ public final class DecisionSelfTest {
         g6Planted(r);
         staleTargetsPlanted(r);
         cardTargetsPlanted(r);
+        targetCostsPlanted(r);
         optionalCosts();
         payCap();
         stepClock();
@@ -923,6 +924,63 @@ public final class DecisionSelfTest {
      * unkicked) is emptied; an empty part with a minimum of one (Headliner
      * Scarlett's {@code [[]]}) is filled.
      */
+    /**
+     * D488: a target count the seat cannot pay for is cut toward each part's
+     * floor until it can ({@link Explorer#trimToPayable}).  Fireball's part,
+     * eight targets drawn with mana for X and two targets ("{1} more for each
+     * target beyond the first"): cut to two, the first two kept, each of the
+     * others dropped sometimes; already payable: untouched and no draw; at its
+     * floor and still not: -1 (the play is not offered); two parts: the cut
+     * never takes a part below its floor; the cut is seeded.
+     */
+    private static void targetCostsPlanted(final ExploreMath.Config r) {
+        final List<String> eight = List.of("p0", "p1", "c3", "c5", "c8", "c13", "c21", "c34");
+        final java.util.function.Function<List<List<String>>, java.util.function.BooleanSupplier> upTo = (ls) -> () -> {
+            int n = 0;
+            for (final List<String> l : ls) {
+                n += l.size();
+            }
+            return n <= 2;
+        };
+        final java.util.Set<String> dropped = new java.util.TreeSet<>();
+        boolean allTwo = true;
+        boolean firstKept = true;
+        for (long seed = 1; seed <= 60; seed++) {
+            final List<List<String>> ls = List.of(new ArrayList<>(eight));
+            final int t = Explorer.trimToPayable(ls, List.of(1), upTo.apply(ls), new ExploreMath(r, seed));
+            allTwo &= t == 1 && ls.get(0).size() == 2;
+            firstKept &= "p0".equals(ls.get(0).get(0));
+            final java.util.Set<String> gone = new java.util.TreeSet<>(eight);
+            gone.removeAll(ls.get(0));
+            dropped.addAll(gone);
+        }
+        check(allTwo && firstKept && dropped.equals(new java.util.TreeSet<>(eight.subList(1, 8))),
+                "D488: Fireball's eight targets with mana for two are cut to two (60 seeds), the part's floor kept, every "
+                        + "other target dropped sometimes: dropped " + dropped);
+        final ExploreMath quiet = new ExploreMath(r, 5);
+        final ExploreMath twin = new ExploreMath(r, 5);
+        final List<List<String>> two = List.of(new ArrayList<>(List.of("p1", "c3")));
+        check(Explorer.trimToPayable(two, List.of(1), upTo.apply(two), quiet) == 0 && two.get(0).size() == 2
+                        && quiet.pick(1000) == twin.pick(1000),
+                "D488: a payable count is untouched and draws nothing from the seat's stream");
+        final List<List<String>> never = List.of(new ArrayList<>(List.of("p1", "c3", "c5")));
+        check(Explorer.trimToPayable(never, List.of(1), () -> false, new ExploreMath(r, 6)) == -1 && never.get(0).size() == 1,
+                "D488: at its floor and still unpayable: -1, the play is not offered");
+        boolean floors = true;
+        for (long seed = 1; seed <= 40; seed++) {
+            final List<List<String>> ps = List.of(new ArrayList<>(List.of("a1", "a2", "a3")), new ArrayList<>(List.of("b1", "b2")));
+            final java.util.function.BooleanSupplier small = () -> ps.get(0).size() + ps.get(1).size() <= 3;
+            final int t = Explorer.trimToPayable(ps, List.of(1, 2), small, new ExploreMath(r, seed));
+            floors &= t == 1 && ps.get(1).size() == 2 && ps.get(0).size() == 1;
+        }
+        check(floors, "D488: two parts, the second at its floor of 2: only the first is cut, to 1");
+        final List<List<String>> a = List.of(new ArrayList<>(eight));
+        final List<List<String>> b = List.of(new ArrayList<>(eight));
+        Explorer.trimToPayable(a, List.of(1), upTo.apply(a), new ExploreMath(r, 88));
+        Explorer.trimToPayable(b, List.of(1), upTo.apply(b), new ExploreMath(r, 88));
+        check(a.equals(b), "D488: the cut is seeded: " + a + " / " + b);
+    }
+
     private static void staleTargetsPlanted(final ExploreMath.Config r) {
         final ExploreMath m = new ExploreMath(r, 31);
         final java.util.Set<String> alive = java.util.Set.of("fractal139", "bears48", "moose57", "rabbit78");

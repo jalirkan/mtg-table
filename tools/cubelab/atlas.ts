@@ -150,6 +150,10 @@ export interface BranchRow {
   retargeted?: number;
   /** D486: the plays the branch's random seats cast with modes they drew in place of Forge's (written when > 0). */
   modesDrawn?: number;
+  /** D488: the plays the branch's random seats cast with their target count cut to one they could pay for (written when > 0). */
+  targetCountTrimmed?: number;
+  /** D488: the plays the branch's random seats cast with targets drawn away from what the play's own cost takes (written when > 0). */
+  costTargetAvoided?: number;
 }
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
@@ -678,6 +682,8 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     ...(b.chooseSourceGuard ? { chooseSourceGuard: b.chooseSourceGuard } : {}),
     ...(b.retargeted ? { retargeted: b.retargeted } : {}),
     ...(b.modesDrawn ? { modesDrawn: b.modesDrawn } : {}),
+    ...(b.targetCountTrimmed ? { targetCountTrimmed: b.targetCountTrimmed } : {}),
+    ...(b.costTargetAvoided ? { costTargetAvoided: b.costTargetAvoided } : {}),
     ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
   st.done.add(key);
   st.fresh++;
