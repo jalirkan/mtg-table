@@ -191,6 +191,12 @@ public final class Explorer {
     private boolean pendingRetargeted;
     /** D485: the decision record's {@code why} for a play whose stale targets the seat replaced. */
     public static final String STALE_TARGETS = "STALE_TARGETS";
+    /** D486: the tokens of this listing's plays of Forge's whose modes the seat drew ({@link #randomModes}). */
+    private final Set<String> modesDrawnToks = new LinkedHashSet<>();
+    /** D486: the play just returned is Forge's answer with modes the seat drew, until the record reads it ({@link #takeModesDrawn}). */
+    private boolean pendingModesDrawn;
+    /** D486: the decision record's {@code why} for a play whose modes the seat drew in place of Forge's (nothing was stale). */
+    public static final String MODES_DRAWN = "MODES_DRAWN";
     /**
      * G6 (#192's review): every play the seat wrote on at this decision's
      * listing -- a drawn X, random targets -- with what it carried before
@@ -415,6 +421,8 @@ public final class Explorer {
         pendingOwnX = false;
         pendingRetargeted = false;
         retargetedToks.clear();
+        pendingModesDrawn = false;
+        modesDrawnToks.clear();
         try {
             final Game g = ai.getGame();
             final Set<String> refusedHere = refusedIn(window(g, ai));
@@ -502,18 +510,21 @@ public final class Explorer {
             // stale (a target that died or left, or one too many): made legal here, or not offered
             final String ftok = tokenOf(chosen);
             int fixed;
+            boolean drawn = false;
             try {
                 if (isModal(forgeSa) && forgeSa.getChosenList() == null) {
                     // D486: Forge's answer with no modes chosen (CharmAi left none): at the cast Forge would
                     // choose them by doTrigger(sa, true), which can choose a mode with no legal target
                     // (s05's Suplex); the seat draws the modes and their targets now, or does not offer it
-                    fixed = randomModes(forgeSa, ai) < 0 ? -1 : 1;
+                    fixed = randomModes(forgeSa, ai) < 0 ? -1 : 0;
+                    drawn = fixed == 0;
                 } else {
                     fixed = staleTargets(forgeSa, ai);
                     if (fixed < 0 && isModal(forgeSa)) {
                         // D486: Forge's modes cannot be made legal (a chosen mode's every target gone): the
                         // seat draws the modes and their targets, as for a modal spell with none chosen
-                        fixed = randomModes(forgeSa, ai) < 0 ? -1 : 1;
+                        fixed = randomModes(forgeSa, ai) < 0 ? -1 : 0;
+                        drawn = fixed == 0;
                     }
                 }
             } catch (final RuntimeException e) {
@@ -527,6 +538,9 @@ public final class Explorer {
                 out.put(ftok, chosen);
                 if (fixed > 0) {
                     retargetedToks.add(ftok);
+                }
+                if (drawn) {
+                    modesDrawnToks.add(ftok);   // D486: counted modesDrawn, MODES_DRAWN on the record, not D485's
                 }
             }
         }
@@ -847,7 +861,7 @@ public final class Explorer {
      * are all legal now stand (null: Forge's answer, untouched, nothing drawn --
      * the seat's own listed picks always arrive so); otherwise the seat draws
      * the modes and their targets now ({@link #drawModes}, seeded, counted as
-     * {@code retargeted}).  Null too when no legal set exists: Forge answers.
+     * {@code modesDrawn}; the controller writes their target records, {@code why: "MODES_DRAWN"}).  Null too when no legal set exists: Forge answers.
      */
     public List<AbilitySub> modesAtCast(final SpellAbility sa, final Player ai, final List<AbilitySub> possible,
                                         final int min, final int num) {
@@ -864,7 +878,7 @@ public final class Explorer {
                 if (chosen == null) {
                     return null;
                 }
-                math.guardrail("retargeted");
+                math.guardrail("modesDrawn");
                 sa.setChosenList(chosen);
                 return chosen;
             });
@@ -946,6 +960,17 @@ public final class Explorer {
             pendingRetargeted = true;
             math.guardrail("retargeted");
         }
+        if (tok != null && modesDrawnToks.contains(tok)) {
+            pendingModesDrawn = true;
+            math.guardrail("modesDrawn");
+        }
+    }
+
+    /** D486: the pick just returned was Forge's answer with modes the seat drew ({@link #MODES_DRAWN}), once. */
+    public boolean takeModesDrawn() {
+        final boolean r = pendingModesDrawn;
+        pendingModesDrawn = false;
+        return r;
     }
 
     /**

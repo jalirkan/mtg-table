@@ -56,7 +56,8 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
      modes, so a redraw on it would be recorded and not cast.
    - **The target records** list every candidate the engine allows, players and cards, sorted as before; a candidate
      the seat cannot see is counted in `hidden`, never named. A card target is now `complete: true` when it is among
-     them (protocol **M75**).
+     them (protocol **M75**). `hidden` is a filtered count: the hidden cards `canTarget` accepts -- a face-down card in
+     exile, a card in the ante zone; no script in the pinned engine targets a card in a hand or a library.
 2. **A modal spell's modes are the seat's, with their targets** (`Explorer.randomModes`, `Explorer.isModal`: a Charm
    whose controller chooses -- not a copy, a trigger, `Random`, `Chooser` or `CanRepeatModes`, which keep D485's check).
    - **Its own listing**: the count uniform from `max(MinCharmNum, 1)` to `min(CharmNum, legal modes)` (all for
@@ -66,12 +67,16 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
      copies them); the old modes are noted first (`Before`, key `MODES`) and put back unless the play is the pick.
    - **Forge's answer**: modes Forge chose stay Forge's while D485's check can make their targets legal; with **no**
      modes chosen, or modes D485 cannot make legal (a chosen mode's every target gone), the seat draws them as above --
-     counted `retargeted`, the records `why: "STALE_TARGETS"` (D485's names) -- and when it cannot, the play is refused
-     as D485's (`staleRefused`).
+     counted **`modesDrawn`** when picked, its priority and target records `why: "MODES_DRAWN"` (not D485's
+     `retargeted` / `STALE_TARGETS`, which stay the count of a stale list re-targeted) -- and when it cannot, the play
+     is refused as D485's (`staleRefused`).
    - **Inside the cast, a hook the seat owns** (`PolicyControllerAi.chooseModeForAbility` → `Explorer.modesAtCast`): a
      random seat whose spell arrives with modes chosen and every target legal gets them back untouched, nothing drawn
      (the seat's own listed picks always arrive so); otherwise -- the atlas's forced option, or anything that cleared
-     the modes -- the seat draws them now, seeded, counted `retargeted`. Null when no legal set exists: Forge answers.
+     the modes -- the seat draws them now, seeded, counted **`modesDrawn`**, and writes the modes' target records then
+     and there (`source: "modes"`, `why: "MODES_DRAWN"`, through `Decisions.castTargets`): the callback is on the game
+     thread with the seat's recorder, as `chooseTargetsFor`'s records are, and no priority record precedes a forced
+     option. Null when no legal set exists: Forge answers.
    - Hard rule 3: no new hop, no thread; all of it runs in the seat's callbacks on the game thread, in `Decisions.quiet`.
 3. **No listing offers a modal spell the cast would refuse** (`Explorer.modesCastable`: fewer legal modes than its
    minimum). `SearchPolicy.alternatives` (the search's candidates, the atlas's options, the exploring seat's listing) and
@@ -83,7 +88,9 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
 5. **Counted** (protocol **M75**): `cardTargetOffered` in the random seat's `explore.guardrails`, once per priority
    listing that offered at least one play of its own that only a card target made possible -- one the players-only
    draw before D486 would have left out (`Explorer.playersOnlyWouldList`, which reads the play before the draw writes on
-   it; for a modal spell, the chain Forge's AI last left). `tools/check-redaction.mjs` accepts the name.
+   it; for a modal spell, the chain Forge's AI last left); and `modesDrawn` (2), also summed on the atlas's branch row
+   (`Atlas.Branch.modesDrawn`, `BranchRow.modesDrawn`, written when above 0). `tools/check-redaction.mjs` accepts both
+   names, the `why` `MODES_DRAWN` (any `^[A-Z_]+$`) and the record source `modes`.
 
 **Comparability (D458 point 3). This changes the random policy, so it changes the label population.**
 - The random seat's support is new wherever a deck holds a play that targets a card: removal, pumps, auras, Troll
@@ -94,7 +101,17 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
   where D485's branched at d0 and d13).
 - The exploring seat's (D358) target redraw and close call are new, and the search's rollouts of a modal candidate (4).
 - The Forge map's continuation is Forge's own; its forced option is mapped with its modes' targets now (4).
-- So **labels and reads from before D486 are never pooled with those after it**: the split is the git sha and the lab
+- **Every recorded policy seat's records**, not the random seat's only: `Decisions.playable` (`Decisions.java:276`)
+  drops an uncastable modal spell from the priority record's options for the Forge, outlets and search seats too, and
+  every seat's target records now list cards (1). Rows and labels built from those records change shape.
+- **The search seat's own play**: `SearchPolicy.alternatives` (`SearchPolicy.java:692`) offers fewer candidates (no
+  uncastable modal spell), and a modal candidate's rollouts now keep their modes' targets through `mapSa` (4) -- so the
+  live `--ai-policy search` opponent, the ladder and the lab's search seats play a changed policy.
+- **The coach's grade**: `Grader.spellOptions` builds its options with `SearchPolicy.priorityCand`
+  (`bridge/src/mtgtable/grade/Grader.java:681,694`), whose rollouts map through `mapSa`; before D486 a modal cast in the
+  grader's rollouts went to the engine with no targets and was dropped, so a modal spell's grade was a lost card's.
+- So **labels, reads, ladder results and grades from before D486 are never pooled with those after it** -- every
+  consumer above: the split is the git sha and the lab
   version (`tools/cubelab/versions.ts`: the code tree under `bridge/src` changed, so the version id did). A J-night
   that compares across it compares two populations, never a repeat.
 
@@ -117,7 +134,8 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
     with no target, as the old `mapSa` left it in a fork -- prints `failed to target` and strands Suplex in the stack
     zone through Forge's own hand-off; the random seat given that as Forge's answer fills the target (the Map), counts
     it and casts it legally; Forge's damage mode aimed at the Bears, the Bears then dead: the seat draws the modes
-    afresh (exile the Map) and casts it; no modes chosen at all: the seat chooses them inside the cast (`retargeted` 1);
+    afresh (exile the Map) and casts it; no modes chosen at all: the seat chooses them inside the cast (`modesDrawn` 1, `retargeted` 0; the dead-Bears case is `modesDrawn` too, the
+    empty-target case D485's `retargeted`);
     the mapped option carries its mode's target into the copy; with no creature or artifact, Suplex is not a search or
     atlas candidate, not in the record's options, never the seat's pick in 30 listings, and Forge's own hand-off
     strands it silently (the control).
@@ -139,18 +157,28 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
   - **After**: 190 branch games at d0 (now turn 6), d10 and d11, 0 errors, checks clean (7,638 rows, 382 frame logs,
     3 leak checks). **0 `failed to target` lines and 0 stranded casts** in 380 logs (2,505 casts from hand, Suplex 75
     and Branching Bolt 56 among them). The turn-4 decision is no longer branched: with its two uncastable options gone it
-    has one option. `retargeted` 50: the forced options `cast:1` Suplex at d0 and `cast:3` Goblin Surprise (modal, no
-    targets) at d10, each with no modes chosen, got the seat's modes inside the cast in 25 of 25 branches. 627 target
+    has one option. `modesDrawn` 50 (branch rows 50), `retargeted` 0: the forced options `cast:1` Suplex at d0 and `cast:3` Goblin
+    Surprise (modal, no targets) at d10, each with no modes chosen, got the seat's modes inside the cast in 25 of 25
+    branches. No record carries `STALE_TARGETS` or `MODES_DRAWN`: no stale list was met, each of the 25 Suplex draws had
+    one legal target, so its `source: "modes"` target record was a one-option record (counted in the summary's
+    `forced.target`, not written, as every one-option record is), and Goblin Surprise's modes target nothing. 627 target
     records, every one with a card among its options and every one `complete: true` (before: 214, none complete).
+    (Run three times -- before and after the rebase onto `947bc344`, and after the `modesDrawn` split -- with the same
+    190 branch games and counts, the split moving 50 from `retargeted` to `modesDrawn`.)
   - **The seat's listings that D485's tree would not have offered**: `cardTargetOffered` **1,539** of the 12,958
     randomised priority listings (11.9%) in the after run's random seats' logs carried at least one play of the seat's
     own that only a card target made possible (D485: none, by construction).
-  - The after run was made twice, on this branch before and after its rebase onto D485's review commit `947bc344`:
-    the same 190 branch games, the same counts. The before run is on `f6c950b0` (D485 before its review).
+  - The before run is on `f6c950b0` (D485 before its review).
 - **`./tools/ai-bench.sh --selftest`** on the rebased build: `242 check(s), 0 failure(s)` (the gate does not run it).
 - **The gate**: `rm -rf bridge/out && ./tools/make-forge-home.sh && FORGE_JAR=<config.json's forgeJar> WSPORT=9900
   GATE_JOBS=4 ./tools/check-all.sh`, **`check-all OK`**, 579.0 s wall, 59 jobs (`var/check-all/20261025-205502-537344`;
   node 1862 pass, 11 skipped, 0 fail).
+
+- **The skeptic review's follow-ups** (second commit: the `modesDrawn` split, its records and branch row; the
+  comparability consumers; the stack-zone and mode-cost follow-ups; `hidden` as a filtered count): `./bridge/build.sh`
+  OK (decision selftest 210/0), `./tools/ai-bench.sh --selftest` 242/0, `node tools/check-redaction-selftest.mjs` OK,
+  `npm --prefix web test` OK (node 1850 pass, 9 skipped; vitest 161 passed), the s05 reproduction as above. No full
+  gate on the branch: it runs on the merged tree.
 
 **Rejected.**
 - **Fix the record's call only, leave the seat players-only.** The records would then list targets the seat never draws;
@@ -167,6 +195,13 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
 - **The plain Forge seat** (a Forge-continuation branch, a lab seat with no explorer) still meets `doTrigger(sa, true)`
   inside a cast; the forced option there is now mapped with its modes' targets, which was the J166 case.
 - **A modal spell with `CanRepeatModes`, `Random` or `Chooser`**: its modes stay the engine's (D485's check on them).
-- **A spell as a target** (a counterspell) is still never the random seat's own pick: its candidates are spells on the
-  stack, which `getAllCandidates` does not list.
+- **A part whose zones include the stack** is never drawn by the random seat: `randomTargets` leaves the play out on
+  `tr.getZone().contains(ZoneType.Stack)` (`Explorer.java:646`), so a counterspell is never its own pick. The same rule
+  drops a "target spell or permanent" part (30 script lines at the `forge-2.0.14` tag carry `TgtZone$ Stack,Battlefield`
+  or the reverse) even when a permanent would be a legal target. Follow-up: draw such a part's permanents, or its spells
+  through `canTargetSpellAbility`.
+- **A mode's own cost is not paid for in the listing**: `ComputerUtilCost.canPayCost` runs before `randomModes`, on the
+  spell's base cost, so a mode with a cost of its own (`ModeCost$`, 72 script lines; Escalate, 18; Spree, 45) can be
+  drawn when it cannot be paid. That is a refused payment (D458's G5, D466's `putBack`), not a strand -- but it wastes
+  the option and inflates `refusedCast`. Follow-up: check the chosen modes' cost before the play is listed.
 - **A trigger's targets** (D485's s07, Headliner Scarlett) are still Forge's.

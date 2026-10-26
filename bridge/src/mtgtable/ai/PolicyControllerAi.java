@@ -253,6 +253,8 @@ public class PolicyControllerAi extends PlayerControllerAi {
         final Decision.Explore explored = explorer == null ? null : explorer.takeMark();
         // D485: the random seat replaced stale targets on the play it returns (Forge's own answer)
         final boolean retargeted = explorer != null && explorer.takeRetargeted();
+        // D486: or drew the modes of Forge's answer, which had none it could cast
+        final String drawnWhy = explorer != null && explorer.takeModesDrawn() ? Explorer.MODES_DRAWN : null;
         final long t0 = System.nanoTime();
         try {
             final SpellAbility sa = r == null || r.isEmpty() ? null : r.get(0);
@@ -263,7 +265,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 d.complete = false;
             }
             d.by = lastBy;
-            d.why = retargeted ? Explorer.STALE_TARGETS : lastWhy;
+            d.why = retargeted ? Explorer.STALE_TARGETS : drawnWhy != null ? drawnWhy : lastWhy;
             d.explore = explored;
             final SearchPolicy.Report rep = search == null ? null : search.takeReport();
             if (rep != null) {
@@ -285,6 +287,8 @@ public class PolicyControllerAi extends PlayerControllerAi {
                         t.by = lastBy;
                         if (retargeted) {
                             t.why = Explorer.STALE_TARGETS;   // D485: the targets as cast, not the stale ones Forge left
+                        } else if (drawnWhy != null) {
+                            t.why = drawnWhy;                 // D486: the modes the seat drew, as cast
                         }
                         if (trep != null) {
                             // D417: the target search's verdict covers every targeted part; its numbers go on the first
@@ -800,6 +804,19 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (explorer != null && explorer.math().config().random && !allowRepeat && sa.getActivatingPlayer() == player) {
             final List<forge.game.spellability.AbilitySub> mine = explorer.modesAtCast(sa, player, possible, min, num);
             if (mine != null) {
+                if (decisions != null) {
+                    // D486: the modes' targets as the seat drew them inside the cast -- on the game thread, in this
+                    // callback, as chooseTargetsFor writes its records; no priority record precedes a forced option
+                    try {
+                        for (final Decision t : Decisions.castTargets(sa, player, "modes", null)) {
+                            t.by = "forge";
+                            t.why = Explorer.MODES_DRAWN;
+                            writeOrCount(t, null);
+                        }
+                    } catch (final RuntimeException e) {
+                        decisions.error("modes", e);
+                    }
+                }
                 return mine;
             }
         }

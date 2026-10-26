@@ -338,7 +338,13 @@ public final class Decisions {
      */
     public static List<Decision> castTargets(final SpellAbility sa, final Player ai,
                                              final java.util.Map<SpellAbility, Decision.Explore> marks) {
-        return quiet(() -> targets0(Explorer.castParts(sa), ai, "targets", marks));
+        return castTargets(sa, ai, "targets", marks);
+    }
+
+    /** {@link #castTargets(SpellAbility, Player, java.util.Map)} under another {@code source} (D486: {@code "modes"}). */
+    public static List<Decision> castTargets(final SpellAbility sa, final Player ai, final String source,
+                                             final java.util.Map<SpellAbility, Decision.Explore> marks) {
+        return quiet(() -> targets0(Explorer.castParts(sa), ai, source, marks));
     }
 
     private static List<Decision> targets0(final SpellAbility sa, final Player ai, final String source,

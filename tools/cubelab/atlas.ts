@@ -148,6 +148,8 @@ export interface BranchRow {
   chooseSourceGuard?: number;
   /** D485: the plays the branch's random seats cast after replacing the stale targets on Forge's answer (written when > 0). */
   retargeted?: number;
+  /** D486: the plays the branch's random seats cast with modes they drew in place of Forge's (written when > 0). */
+  modesDrawn?: number;
 }
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
@@ -675,6 +677,7 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     ...(b.exileLinksLost ? { exileLinksLost: b.exileLinksLost } : {}),
     ...(b.chooseSourceGuard ? { chooseSourceGuard: b.chooseSourceGuard } : {}),
     ...(b.retargeted ? { retargeted: b.retargeted } : {}),
+    ...(b.modesDrawn ? { modesDrawn: b.modesDrawn } : {}),
     ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
   st.done.add(key);
   st.fresh++;

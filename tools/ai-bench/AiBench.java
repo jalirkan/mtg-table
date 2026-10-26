@@ -1832,13 +1832,13 @@ public final class AiBench {
         });
         scenario("modal-empty-mode-seat", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
             final forge.game.spellability.SpellAbility sa = plantModes(ai, "Exile target artifact", null);
-            modalSeatCasts("modal-empty-mode-seat", ai, sa, "Expedition Map");
+            modalSeatCasts("modal-empty-mode-seat", ai, sa, "Expedition Map", "retargeted");   // a part under its minimum: D485's stale list
         });
         scenario("modal-target-died-seat", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
             final Card bears = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
             final forge.game.spellability.SpellAbility sa = plantModes(ai, "deals 3 damage", bears);
             ai.getGame().getAction().moveToGraveyard(bears, null);
-            modalSeatCasts("modal-target-died-seat", ai, sa, "Expedition Map");
+            modalSeatCasts("modal-target-died-seat", ai, sa, "Expedition Map", "modesDrawn");   // the mode cannot be re-targeted: modes drawn
         });
         scenario("modal-no-modes-at-cast", board, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
             final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
@@ -1854,7 +1854,8 @@ public final class AiBench {
             final forge.game.spellability.SpellAbility onStack = ai.getGame().getStack().getSpellMatchingHost(sup);
             check(!err.contains("failed to target") && onStack != null && onStack.getSubAbility() != null
                             && onStack.getSubAbility().getTargets().size() == 1
-                            && ex.math().guardrails().getOrDefault("retargeted", 0) == 1,
+                            && ex.math().guardrails().getOrDefault("modesDrawn", 0) == 1
+                            && ex.math().guardrails().getOrDefault("retargeted", 0) == 0,
                     "modal-no-modes-at-cast: with no modes chosen the seat chooses them inside the cast: Suplex on the stack with "
                             + (onStack == null || onStack.getSubAbility() == null ? "none" : onStack.getSubAbility().getTargets())
                             + ", counted " + ex.math().guardrails() + (err.isEmpty() ? "" : " (" + err.trim() + ")"));
@@ -1928,7 +1929,7 @@ public final class AiBench {
 
     /** D486: the random seat, given {@code sa} as Forge's answer, picks it (some seed), with the mode aimed at {@code want}, and casts it legally. */
     private static void modalSeatCasts(final String name, final Player ai, final forge.game.spellability.SpellAbility sa,
-                                       final String want) {
+                                       final String want, final String counter) {
         final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
         final Card sup = sa.getHostCard();
         final String tok = mtgtable.ai.Decisions.saToken(sa);
@@ -1957,8 +1958,11 @@ public final class AiBench {
         check(modes != null && modes.size() == 1 && modes.get(0).getTargets().size() == 1
                         && modes.get(0).getTargets().get(0) instanceof Card
                         && want.equals(((Card) modes.get(0).getTargets().get(0)).getName())
-                        && ex.takeRetargeted() && ex.math().guardrails().getOrDefault("retargeted", 0) == 1,
-                name + ": the pick's mode is aimed at the " + want + ", marked and counted: "
+                        && ("retargeted".equals(counter) ? ex.takeRetargeted() && !ex.takeModesDrawn()
+                            : ex.takeModesDrawn() && !ex.takeRetargeted())
+                        && ex.math().guardrails().getOrDefault(counter, 0) == 1
+                        && ex.math().guardrails().getOrDefault("retargeted".equals(counter) ? "modesDrawn" : "retargeted", 0) == 0,
+                name + ": the pick's mode is aimed at the " + want + ", marked " + counter + " and counted once: "
                         + (modes == null ? "none" : modes.get(0).getTargets()) + " " + ex.math().guardrails());
         final forge.game.spellability.SpellAbility cast = pick.get(0);
         final String err = stderrOf(() -> ctl.playChosenSpellAbility(cast));
