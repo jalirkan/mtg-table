@@ -1,0 +1,20 @@
+==== J169 run1 started 2026-10-25T21:09:39-04:00 in unit lab-J169-run1, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J169: /home/justin-a/code/lab/data/lab-j166/b-s06-peasant-2106: plan.json and baseline.json written at [1792948148, 1792948155], 7350 branch rows
+J169: J168's spine set aside: /home/justin-a/code/lab/data/lab-j166/b-s06-peasant-2106.j168-stale
+J169: /home/justin-a/code/lab/data/lab-j166/b-s10-peasant-2110: plan.json and baseline.json written at [1792960955, 1792960962], 5875 branch rows
+J169: J168's spine set aside: /home/justin-a/code/lab/data/lab-j166/b-s10-peasant-2110.j168-stale
+atlas phase B: the baseline (22 turns, winner A) lists 23 decision(s) of seat A; branching at 11: d2 (p, turn 5, 5 options), d4 (p, turn 9, 6 options), d6 (p, turn 11, 6 options), d10 (p, turn 13, 7 options), d12 (p, turn 15, 6 options), d15 (p, turn 17, 5 options), d17 (p, turn 19, 8 options), d21 (a, turn 21, 5 options), d5 (p, turn 9, 5 options), d8 (p, turn 11, 5 options), d19 (p, turn 21, 8 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (67 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 133 s
+atlas: /home/justin-a/code/lab/data/lab-j166/b-s06-peasant-2106.j168-stale/atlas.json and atlas.md; phase A 0 game(s), phase B 7350 branch game(s) at 11 decision(s); checks: clean (207951 rows, 14702 frame logs, 11 leak check(s))
+atlas phase B: the baseline (27 turns, winner A) lists 46 decision(s) of seat A; branching at 10: d2 (p, turn 5, 4 options), d10 (p, turn 11, 3 options), d15 (a, turn 13, 4 options), d22 (a, turn 17, 7 options), d28 (a, turn 21, 5 options), d33 (p, turn 23, 3 options), d40 (p, turn 25, 4 options), d45 (a, turn 27, 8 options), d44 (p, turn 27, 3 options), d43 (p, turn 27, 4 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (66 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 130 s
+atlas: /home/justin-a/code/lab/data/lab-j166/b-s10-peasant-2110.j168-stale/atlas.json and atlas.md; phase A 0 game(s), phase B 5875 branch game(s) at 10 decision(s); checks: clean (220282 rows, 11752 frame logs, 10 leak check(s))
+atlas phase B: the baseline (29 turns, winner B) lists 32 decision(s) of seat A; branching at 9: d0 (p, turn 2, 3 options), d2 (p, turn 4, 4 options), d9 (a, turn 10, 4 options), d11 (p, turn 12, 3 options), d15 (a, turn 14, 6 options), d18 (a, turn 16, 4 options), d24 (a, turn 22, 5 options), d31 (b, turn 27, 5 options), d25 (a, turn 24, 5 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100/150 (option 0 never stops; the Forge map on the options still running); checkpoints 25/50/100/150/200
+atlas phase B: 0 unit(s) to play now (more as each checkpoint is passed) (81 done), chunks of 25 branches, on 6 worker(s)
+atlas: the checks on 6 workers took 149 s
+atlas: /home/justin-a/code/lab/data/lab-j166/b-s13-pauper-2113/atlas.json and atlas.md; phase A 0 game(s), phase B 6925 branch game(s) at 9 decision(s); checks: clean (231424 rows, 13852 frame logs, 17 leak check(s))
