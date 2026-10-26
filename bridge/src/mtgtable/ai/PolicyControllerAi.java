@@ -285,7 +285,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
                     for (final Decision t : Decisions.castTargets(sa, player, targetMarks)) {   // D485: what is cast
                         t.parent = n;
                         t.by = lastBy;
-                        if (retargeted) {
+                        if (Decisions.NO_TARGET.equals(t.why)) {
+                            // D487: an empty part with a minimum of 1 or more says so, whatever drew the play
+                        } else if (retargeted) {
                             t.why = Explorer.STALE_TARGETS;   // D485: the targets as cast, not the stale ones Forge left
                         } else if (drawnWhy != null) {
                             t.why = drawnWhy;                 // D486: the modes the seat drew, as cast
@@ -810,7 +812,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
                     try {
                         for (final Decision t : Decisions.castTargets(sa, player, "modes", null)) {
                             t.by = "forge";
-                            t.why = Explorer.MODES_DRAWN;
+                            if (!Decisions.NO_TARGET.equals(t.why)) {   // D487: an empty mandatory part says so
+                                t.why = Explorer.MODES_DRAWN;
+                            }
                             writeOrCount(t, null);
                         }
                     } catch (final RuntimeException e) {

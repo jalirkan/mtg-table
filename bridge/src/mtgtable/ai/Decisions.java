@@ -317,11 +317,18 @@ public final class Decisions {
      * and its sub-abilities): every candidate the engine allows, and the
      * targets the answer carries.  A candidate on the stack (a spell to
      * counter) is not in Forge's candidate list; it is added from the answer
-     * and the decision marked incomplete.
+     * and the decision marked incomplete.  D487: a part that may take no
+     * target (minimum 0) lists {@code target:none} and carries {@code min}; a
+     * part left empty answers {@code target:none}, never null.
      */
     public static List<Decision> targets(final SpellAbility sa, final Player ai, final String source) {
         return targets(sa, ai, source, null);
     }
+
+    /** D487: the answer of a targeting part left empty, listed when the part's minimum is 0 (protocol M76). */
+    public static final String TARGET_NONE = "target:none";
+    /** D487: the {@code why} of a target record whose part has a minimum of 1 or more and was left empty. */
+    public static final String NO_TARGET = "NO_TARGET";
 
     /** {@link #targets(SpellAbility, Player, String)}, each part play exploration changed carrying its mark (D358). */
     public static List<Decision> targets(final SpellAbility sa, final Player ai, final String source,
@@ -368,10 +375,15 @@ public final class Decisions {
             d.explore = marks == null ? null : marks.get(s);
             final Set<String> opts = new LinkedHashSet<>();
             final TargetRestrictions tr = s.getTargetRestrictions();
-            if (tr != null) {
+            // D487: the part's minimum and maximum (TargetMin$ / TargetMax$, which may be SVars: Tear Asunder's
+            // X and Y are 0 or 1 on whether it was kicked).  Unknown (no restrictions): one, as a plain target.
+            final int min = tr == null ? 1 : tr.getMinTargets(s.getHostCard(), s);
+            final int max = tr == null ? 1 : tr.getMaxTargets(s.getHostCard(), s);
+            if (tr != null && max > 0) {
                 // D486: every candidate, players and cards -- getAllCandidates' flag is onlyNonCard (forge-game
                 // TargetRestrictions.java:571-584 at the forge-2.0.14 tag), so (s, true) listed the players alone
-                // and every card target was added from the answer with the record marked incomplete
+                // and every card target was added from the answer with the record marked incomplete.  D487: a part
+                // whose maximum is 0 (Tear Asunder's other half) takes no target, so it lists no candidate.
                 final Collection<GameEntity> cands = tr.getAllCandidates(s, false);
                 for (final GameEntity e : cands) {
                     final String t = entityToken("target", e, ai);
@@ -383,6 +395,7 @@ public final class Decisions {
                 }
             }
             final List<String> chosen = new ArrayList<>();
+            int unseen = 0;
             for (final GameObject t : s.getTargets()) {
                 final String tok = entityToken("target", t, ai);
                 if (tok != null) {
@@ -390,19 +403,58 @@ public final class Decisions {
                     if (opts.add(tok)) {
                         d.complete = false;
                     }
+                } else {
+                    unseen++;
                 }
             }
-            final List<String> sorted = new ArrayList<>(opts);
-            sorted.sort(Decisions::byId);
-            d.options.addAll(sorted);
-            if (chosen.size() == 1) {
-                d.chosen = chosen.get(0);
-            } else {
-                d.chosenAll.addAll(chosen);
-            }
+            targetAnswer(d, opts, chosen, unseen, min);
             out.add(d);
         }
         return out;
+    }
+
+    /**
+     * D487 (protocol M76): a target record's options and answer, from the part's
+     * visible candidates ({@code opts}, the answer's own already added), the
+     * answer's visible targets, how many of its targets the seat cannot see, and
+     * the part's minimum.  A part that may take no target (minimum 0) lists
+     * {@code target:none} first, as {@code attack:none} and {@code block:none}
+     * are listed, and carries {@code min: 0}; a part left empty answers
+     * {@code target:none} -- never null.  An empty part whose minimum is 1 or more
+     * is an engine fault the play will meet ("failed to target"): it answers
+     * {@code target:none} too, listed, with {@code min}, {@code complete: false}
+     * and {@code why: NO_TARGET}.  A target the seat cannot see is not "none":
+     * the record is marked {@code complete: false}, and with no visible target
+     * it keeps its null answer, which the checker fails.
+     * Engine-free, for the self-test.
+     */
+    static void targetAnswer(final Decision d, final Set<String> opts, final List<String> chosen, final int unseen,
+                             final int min) {
+        final List<String> sorted = new ArrayList<>(opts);
+        sorted.sort(Decisions::byId);
+        final boolean none = chosen.isEmpty() && unseen == 0;
+        if (unseen > 0) {
+            // D487 review: an answer the seat cannot see is not among the options it was shown, so the record is
+            // incomplete -- and an empty visible answer then writes chosen null beside complete:false, never the
+            // J171 legacy shape (which has no complete), so the audit fails it
+            d.complete = false;
+        }
+        if (min <= 0 || none) {
+            d.options.add(TARGET_NONE);
+            d.min = Math.max(min, 0);
+            if (min > 0) {
+                d.complete = false;
+                d.why = NO_TARGET;
+            }
+        }
+        d.options.addAll(sorted);
+        if (none) {
+            d.chosen = TARGET_NONE;
+        } else if (chosen.size() == 1) {
+            d.chosen = chosen.get(0);
+        } else {
+            d.chosenAll.addAll(chosen);
+        }
     }
 
     // ------------------------------------------------------------------

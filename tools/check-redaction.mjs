@@ -3112,13 +3112,45 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //       -- a stale target, counted apart);
 //   D4  the answer is one of the options.
 
-const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
+const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|target:none|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
 const DECISION_KINDS = ['priority', 'attack', 'block', 'target', 'choice', 'mulligan'];
 const DECISION_BY = ['forge', 'outlets', 'search'];
 // M75 / D486: 'modes', the target records of a modal spell whose modes the random seat drew inside the cast.
 const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'cards', 'confirm', 'modes'];
 const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn', 'phase', 'options', 'complete',
-  'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search', 'explore']);
+  'atoms', 'hidden', 'min', 'chosen', 'by', 'why', 'parent', 'source', 'search', 'explore']);
+// M76 / D487: a targeting part left empty answers `target:none`, listed only when the record says the part's minimum
+// (`min`) is 0 -- or, for a part whose minimum is 1 or more, beside `complete: false` and `why: "NO_TARGET"`.
+const TARGET_NONE = 'target:none';
+const NO_TARGET = 'NO_TARGET';
+
+/**
+ * M76 / D487: THE LEGACY SHAPE, J171 (2026-10-26, the first night on D486's seat).  Before D487 the bridge wrote a
+ * targeting part Forge's own answer left empty as `chosen: null`; from D486 such a part lists its card candidates, so
+ * it became a written record.  J171's five flagged spines hold 4,717 of them in 4,501 logs, every one `kind:
+ * "target"`, `by: "forge"`, `source: "targets"`, no `min`, no `why`, no `target:none`: 4,616 the half of Tear
+ * Asunder its kicker shut (TargetMin$ and TargetMax$ both 0) and 101 "up to" planeswalker abilities left empty
+ * (TargetMin$ 0: Garruk, Curse Breaker's +2, The Wandering Emperor's +1, Minsc & Boo's +1).  D487 read each against
+ * its cast's stack text: every empty part was the record's, and no cast carried a target outside its records'
+ * options.  Accepted in exactly that shape, in a move-atlas log started before LEGACY_NULL_TARGET_BEFORE, and counted
+ * (`M55 legacy null target records`); any other null answer --
+ * another kind, source or policy, or a record that carries `min`, `why`, `complete`, `hidden`, `explore` or `search`,
+ * or lists `target:none` -- still fails.
+ */
+// The bound (the D487 review): only a move-atlas log (`lab.atlas` in its header) started before this instant can carry
+// the legacy shape.  J171's headers run from 2026-10-26T05:20Z to 11:52Z; the instant is that day's last J-night start
+// plus a margin, about the hour D487 merges.  A log started later -- by any bridge -- that writes a null answer fails
+// rather than passing as legacy; one started inside the margin by D487's bridge cannot write the shape (an empty part
+// lists target:none and carries min, and an unseen answer is complete:false).
+const LEGACY_NULL_TARGET_BEFORE = '2026-10-26T18:00:00Z';
+function legacyNullTarget(b, header) {
+  const started = Date.parse(header?.startedAt ?? '');
+  return typeof header?.lab?.atlas === 'string' && Number.isFinite(started) && started < Date.parse(LEGACY_NULL_TARGET_BEFORE)
+    && b.chosen === null && b.kind === 'target' && b.by === 'forge' && b.source === 'targets' && b.min === undefined
+    && b.why === undefined && b.complete === undefined && b.hidden === undefined && b.explore === undefined
+    && b.search === undefined && Array.isArray(b.options) && b.options.length > 1
+    && b.options.every((t) => typeof t === 'string' && t !== TARGET_NONE && /^target:p?\d+$/.test(t));
+}
 // M57 / D358: a decision play exploration answered: the rule, and the seat's own answer as a token.
 const EXPLORE_KEYS = new Set(['rule', 'forge']);
 const EXPLORE_RULES = ['random', 'closeCall'];
@@ -3292,10 +3324,34 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
     };
     if (!Array.isArray(b.options) || b.options.length === 0) bad(lineNo, `decision ${b.n} has no options`);
     for (const t of b.options ?? []) checkToken(t, 'option');
-    const chosen = Array.isArray(b.chosen) ? b.chosen : [b.chosen];
-    for (const t of chosen) {
-      checkToken(t, 'chosen');
-      if (!Array.isArray(b.chosen) && !(b.options ?? []).includes(t)) bad(lineNo, `decision ${b.n} chose ${JSON.stringify(t)}, which is not among its options`);
+    // M76 / D487: target:none, a targeting part left empty -- a target record's answer, listed beside its minimum.
+    const listsNone = Array.isArray(b.options) && b.options.includes(TARGET_NONE);
+    const chosesNone = b.chosen === TARGET_NONE || (Array.isArray(b.chosen) && b.chosen.includes(TARGET_NONE));
+    if ((listsNone || chosesNone) && b.kind !== 'target') bad(lineNo, `decision ${b.n} (${b.kind}) names ${TARGET_NONE}, which only a target record answers (M76, D487)`);
+    if (Array.isArray(b.chosen) && b.chosen.includes(TARGET_NONE)) bad(lineNo, `decision ${b.n} chose ${TARGET_NONE} among other targets (M76, D487)`);
+    if (b.min !== undefined) {
+      if (b.kind !== 'target' || !Number.isInteger(b.min) || b.min < 0) bad(lineNo, `decision ${b.n} min ${JSON.stringify(b.min)} -- a target record's part minimum, a non-negative integer (M76, D487)`);
+      if (!listsNone) bad(lineNo, `decision ${b.n} carries min but does not list ${TARGET_NONE} (M76, D487)`);
+    }
+    if (listsNone && b.kind === 'target') {
+      if (b.min === undefined) bad(lineNo, `decision ${b.n} lists ${TARGET_NONE} without the part's min (M76, D487)`);
+      else if (Number.isInteger(b.min) && b.min > 0) {
+        // a part whose minimum is 1 or more, left empty: an engine fault the record names, never an answer to list
+        if (b.complete !== false || b.why !== NO_TARGET || b.chosen !== TARGET_NONE) {
+          bad(lineNo, `decision ${b.n} lists ${TARGET_NONE} on a part whose minimum is ${b.min} -- only a part that ` +
+            `may take no target lists it, or an empty mandatory part marked complete:false and why ${NO_TARGET} (M76, D487)`);
+        } else stats.noTargetRecords = (stats.noTargetRecords ?? 0) + 1;
+      }
+    }
+    if (b.why === NO_TARGET && !(listsNone && Number.isInteger(b.min) && b.min > 0)) bad(lineNo, `decision ${b.n} why ${NO_TARGET} on a record that is not an empty mandatory target part (M76, D487)`);
+    if (legacyNullTarget(b, header)) {
+      stats.legacyNullTargets = (stats.legacyNullTargets ?? 0) + 1;
+    } else {
+      const chosen = Array.isArray(b.chosen) ? b.chosen : [b.chosen];
+      for (const t of chosen) {
+        checkToken(t, 'chosen');
+        if (!Array.isArray(b.chosen) && !(b.options ?? []).includes(t)) bad(lineNo, `decision ${b.n} chose ${JSON.stringify(t)}, which is not among its options`);
+      }
     }
     for (const a of b.atoms ?? []) {
       if (typeof a !== 'string' || !/^\d+(>\d+)?$/.test(a)) bad(lineNo, `decision ${b.n} atom ${JSON.stringify(a)}`);
@@ -3601,6 +3657,14 @@ function main() {
     if (stats.ceasedToExist > 0) {
       console.log(`      M55 decision ids that ceased to exist=${stats.ceasedToExist} (D485: the viewer's own token, `
         + 'last moved from its battlefield to its own graveyard or hand, still named by a stale target list)');
+    }
+    if (stats.legacyNullTargets > 0) {
+      console.log(`      M55 legacy null target records=${stats.legacyNullTargets} (D487: J171's shape, written before M76 -- `
+        + 'Forge\'s answer left a targeting part empty and the record said null; target/forge/targets, card candidates, no min)');
+    }
+    if (stats.noTargetRecords > 0) {
+      console.log(`      M76 empty mandatory target parts=${stats.noTargetRecords} (D487: target:none on a part whose minimum `
+        + 'is 1 or more, marked complete:false and NO_TARGET -- the play will fail to target)');
     }
     // M49.  Whether this file carries the status layer's keywords -- on every
     // full card, or (a recording older than M49) on none.

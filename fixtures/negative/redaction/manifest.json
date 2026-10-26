@@ -450,6 +450,120 @@
     "why": "amendment M57 / D358: a seat a person plays never explores"
   },
   {
+    "file": "m76-target-none-listed.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M76 / D487: a part that may take no target (min 0), left empty -- target:none listed and chosen; the control for the m76 probes"
+  },
+  {
+    "file": "m76-target-none-mandatory-part.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M76 / D487: an empty mandatory part (min 1) -- target:none listed and chosen, complete:false, why NO_TARGET; counted, not a problem"
+  },
+  {
+    "file": "m76-legacy-null-target.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M76 / D487: J171's legacy shape -- chosen null on a target/forge/targets record listing card candidates, no min, no target:none, in a move-atlas log started before D487 merged; counted, not a problem"
+  },
+  {
+    "file": "m76-legacy-null-target-after-d487.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: the legacy shape is accepted only in a log started before D487 merged (LEGACY_NULL_TARGET_BEFORE) -- a later null answer is a bridge fault"
+  },
+  {
+    "file": "m76-legacy-null-target-not-an-atlas.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: the legacy shape is accepted only in a move-atlas log (lab.atlas in its header)"
+  },
+  {
+    "file": "m76-unseen-answer-null.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487 (review): a min-1 part answered with a target the seat cannot see writes chosen null beside complete:false -- never the legacy shape"
+  },
+  {
+    "file": "m76-legacy-null-by-search.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: the legacy shape is Forge's answer only -- a search seat's null answer fails"
+  },
+  {
+    "file": "m76-legacy-null-source-modes.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: the legacy shape is a priority answer's targets only -- a modes record's null answer fails"
+  },
+  {
+    "file": "m76-chosen-null-beside-target-none.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: a record written after D487 (it lists target:none and carries min) never answers null"
+  },
+  {
+    "file": "m76-chosen-null-trigger.jsonl",
+    "level": "fail",
+    "expect": "chosen null is not a token",
+    "why": "amendment M76 / D487: the legacy null answer is accepted in J171's one shape only -- a trigger's target record is not it"
+  },
+  {
+    "file": "m76-target-none-not-listed.jsonl",
+    "level": "fail",
+    "expect": "chose \"target:none\", which is not among its options",
+    "why": "amendment M76 / D487: target:none is an answer only where it is listed"
+  },
+  {
+    "file": "m76-target-none-on-a-min-1-part.jsonl",
+    "level": "fail",
+    "expect": "on a part whose minimum is 1",
+    "why": "amendment M76 / D487: a part whose minimum is 1 lists target:none only as an empty mandatory part, marked complete:false and NO_TARGET"
+  },
+  {
+    "file": "m76-target-none-without-min.jsonl",
+    "level": "fail",
+    "expect": "without the part's min",
+    "why": "amendment M76 / D487: a record listing target:none says the part's minimum"
+  },
+  {
+    "file": "m76-target-none-on-a-priority-record.jsonl",
+    "level": "fail",
+    "expect": "which only a target record answers",
+    "why": "amendment M76 / D487: target:none answers a target record, never another kind"
+  },
+  {
+    "file": "m76-target-none-in-a-chosen-list.jsonl",
+    "level": "fail",
+    "expect": "chose target:none among other targets",
+    "why": "amendment M76 / D487: target:none is the whole answer of an empty part, never one of several targets"
+  },
+  {
+    "file": "m76-min-without-target-none.jsonl",
+    "level": "fail",
+    "expect": "carries min but does not list target:none",
+    "why": "amendment M76 / D487: min is written exactly when target:none is listed"
+  },
+  {
+    "file": "m76-min-negative.jsonl",
+    "level": "fail",
+    "expect": "min -1",
+    "why": "amendment M76 / D487: min is a non-negative integer"
+  },
+  {
+    "file": "m76-min-not-an-integer.jsonl",
+    "level": "fail",
+    "expect": "min 0.5",
+    "why": "amendment M76 / D487: min is a non-negative integer"
+  },
+  {
+    "file": "m76-no-target-elsewhere.jsonl",
+    "level": "fail",
+    "expect": "is not an empty mandatory target part",
+    "why": "amendment M76 / D487: why NO_TARGET marks an empty mandatory part only -- not a min-0 part"
+  },
+  {
     "file": "m58-search-prior-present.jsonl",
     "level": "pass",
     "expect": "PASS",
