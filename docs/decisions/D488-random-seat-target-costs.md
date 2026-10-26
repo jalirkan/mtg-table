@@ -59,25 +59,46 @@ redraws a single target among every candidate, after the listing's checks.
      Forge's answer: `staleTargets` with it, a held target in the set counting as stale) with every card of the seat's
      that such a part could take left out. So a creature the play needs to sacrifice is never its target; with two
      creatures, one may be the target and the other the payment, as Forge's AI would pay it. Counted
-     **`costTargetAvoided`** when such a play is the pick. Those choosers draw no random number (read at the tag), so
-     asking them moves no stream.
-   - **(a) then, the count** (`Explorer.trimToPayable`, engine-free): while `canPayCost` fails with the targets drawn,
+     **`costTargetAvoided`** when such a play is the pick. (The sacrifice chooser can shuffle -- `getCardPreference`
+     → `CardLists.shuffle` on `MyRandom` -- but every call here runs inside `Decisions.quiet`, which swaps in a fixed
+     `Random(0x5EED)`, so the game's stream does not move.)
+   - **(a) then, the count** (`Explorer.trimToPayable`, engine-free): while the cost cannot be paid with the targets
+     drawn (`Explorer.manaPayable`, below),
      one target is cut -- a uniform draw over the targets above their part's floor `max(min, 1)`, from the seat's
      stream -- and the cost asked again. A part never goes below its floor, the first `floor` targets drawn are kept, and
      a play payable as drawn is untouched and draws nothing. Counted **`targetCountTrimmed`** when such a play is the
      pick. The count is therefore no longer uniform over D486's range: every drawn count above the largest payable one
      lands on it.
+   - **Redrawn before it is dropped** (added after the skeptic review): at every part's floor and still unpayable, the
+     cost depends on *which* cards are targeted (a cost raised for a kind of target), so the cards held now are added to
+     the `avoid` set and the targets drawn again, as for (b); counted `costTargetAvoided`. In all `FIT_ATTEMPTS` = 4 draws
+     of a play's targets (the first included), each through (b) and (a), before it gives the play up. No bench case
+     reaches this branch (no card in the lab's decks raises its cost for one target and not another, once Ward is out);
+     it is written so that such a card is redrawn, never dropped while a payable target exists.
    - **(c) no payable legal set: the play is not offered.** An own play is left out of the listing, as an unpayable one
      always was; Forge's answer is D485's refused stale answer (`staleRefused`, G5's `refusedCast` / `noRepeatRefused`).
      Never a payment that would refuse it.
-   - A planeswalker ability's `canPayCost` flips Forge's own coin (`MyRandom`, "try not to lose a planeswalker",
-     `ComputerUtilCost.java:576-588`), so it is not asked again after the draw (`Explorer.manaPayable`): no loyalty cost
-     rises per target, and asking would move the game's stream.
+   - **"Payable" is the payment's own question, not Forge's judgment** (`Explorer.manaPayable`, changed after the skeptic
+     review): the two checks `ComputerUtilCost.canPayCost` ends with -- `ComputerUtilMana.canPayManaCost` (the cost as
+     `CostAdjustment` prices it for these targets, which is where Fireball's raise is) and
+     `CostPayment.canPayAdditionalCosts` -- without what `canPayCost` adds first: a targeted opponent creature's **Ward**
+     cost, judged by Forge's AI (`willPayCosts`, `ComputerUtilCost.java:597-610` at the tag, confirmed in the jar), the
+     `AI_SpellsNeedExtraMana` taxes, and the planeswalker coin (`MyRandom`, `:576-588`, which can say no at random).
+     The first version asked `canPayCost` itself, and so dropped a single-target play whose drawn target had a Ward the
+     AI would not pay, and undid a redraw onto one. **Ward is not taken as a cost here, by choice**: it is a trigger on
+     the stack after the cast, not part of the payment; a cast at a Ward creature is legal and its payment goes through,
+     so it was never a G5 refusal; and whether to pay it is a decision of its own, which the random seat must not settle
+     by asking Forge's judgment. The listing's own `canPayCost` before the draw is unchanged (it sees no new targets).
 2. **The single-target redraw keeps the fit** (`Explorer.refitRedraw`): when D358's redraw moves a target and the cost no
-   longer fits (the cost's cards, or `canPayCost`), the target is drawn again with the cost's cards left out (counted
-   `costTargetAvoided` on a random seat), or put back where it was. This also holds for the D358 exploring seat, where a
-   refused payment strands the card (D466's `putBack` is the random seat's alone); its guardrail count is not written
-   (M71's counts are a random seat's).
+   longer fits (the cost's cards, or `manaPayable`), the target is drawn again among the legal ones with the cost's
+   cards and the unfit target left out, or put back where it was; a close call's rival that does not fit is not
+   swapped in. The redraw is counted as what it ends on (after the review): M71's `changed`, the `target` kind's
+   counts and `closeCallsChanged` count a change only when the target it ends on is not Forge's. `costTargetAvoided`
+   counts once per pick, whether the listing or the redraw drew away from the cost (a flag per pick, cleared after the
+   pick's redraw). This also holds for the D358 exploring seat, where a refused payment strands the card (D466's
+   `putBack` is the random seat's alone); its guardrail count is not written (M71's counts are a random seat's). The
+   exploring seat's half is **untested** here (the bench runs the redraw with a random seat's config), and the seat
+   identity game that plays it did not change (the gate's 12m).
 3. **Counted** (protocol **M77**): `targetCountTrimmed` and `costTargetAvoided` in the random seat's `explore.guardrails`,
    summed on the atlas's branch row (`Atlas.Branch`, `BranchRow` in `tools/cubelab/atlas.ts`, written when above 0);
    `tools/check-redaction.mjs`'s `GUARDRAIL_NAMES` accepts both (a two-line hunk beside D487's changes to that file). The
@@ -93,9 +114,11 @@ redraws a single target among every candidate, after the listing's checks.
 a per-target cost, a sacrifice / exile / return cost that could take one of the seat's own targets -- is now listed,
 targeted and redrawn differently, and every draw the fit makes comes from the seat's stream; every later decision of
 that branch is a different random game. A play payable as drawn is untouched and draws nothing, so a game that never
-meets one plays as before. The D358 exploring seat's redraw can now be put back or redrawn (point 2). The Forge map,
-Forge's seats and the search seats are untouched. Labels and reads from before D488 are not pooled with those after
-it: the split is the git sha and the lab version (`tools/cubelab/versions.ts`, the code tree under `bridge/src`).
+meets one plays as before. The D358 exploring seat's redraw can now be put back or redrawn (point 2), so **D358's
+position data (the exploring seat's rows) from before D488 are not pooled with those after it either**, wherever a
+redraw met a cost it now refits. The Forge map, Forge's seats and the search seats are untouched. Labels and reads from
+before D488 are not pooled with those after it: the split is the git sha and the lab version
+(`tools/cubelab/versions.ts`, the code tree under `bridge/src`).
 
 **Not fixed here.**
 - **A modal spell's cost with its modes' targets** (a mode with a sacrifice cost aimed at the seat's own creature; Escalate,
@@ -105,18 +128,27 @@ it: the split is the git sha and the lab version (`tools/cubelab/versions.ts`, t
 - **The plain Forge seat** pays as Forge does.
 - **s12's IndexOutOfBoundsException is a Forge 2.0.14 engine fault**, found here (point 4) and not fixed: below.
 - **The read's lost-cast metric** counts D466's put-back cards as lost (no zone event) and misses a refused cast followed by
-  a real one. A metric that reads G5's refusals should count `refusedCast` and the worker logs' `AI failed to play` lines,
-  or the next state's hand; the lab's `metrics.py` is the lab's to change.
+  a real one. A metric that reads payment refusals should count the worker logs' `AI failed to play` lines, or the next
+  state's hand; `refusedCast` is not that count alone: it also counts D485's stale answers that were not offered
+  (`refuseStale` → `noteRefused`) and, now, Forge's answers this decision could not fit -- `refusedCast` minus
+  `staleRefused`'s first-in-window share is the payment refusals. The lab's `metrics.py` is the lab's to change.
+- **`costPool` is over-strict** (follow-ups): on a multi-target play it leaves out every card the cost could take, when
+  targeting one of them would still leave a payment; and on a cost Forge's AI always refuses (`Sac<All/...>`, an exile with
+  `zoneRestriction` 0, `FromTopGrave`) it returns the pool, so the redraw leaves those cards out before the play is
+  given up -- the right end (Forge would refuse the payment), reached by a longer road.
+- **`TargetChoices.retainAll`** (the cut) does not clean `dividedMap`; `fitCosts` never meets a divided part (the draw
+  leaves them out), so this is theoretical.
 
 **Evidence.**
 
-- **`DecisionSelfTest`** (in `bridge/build.sh`): `decision selftest: 215 check(s), 0 failure(s)` -- five new
+- **`DecisionSelfTest`** (in `bridge/build.sh`): `decision selftest: 225 check(s), 0 failure(s)` on the rebased tree (215 before the rebase onto D487, whose M76 cases
+  are the other ten) -- five new
   (`targetCostsPlanted`, engine-free `Explorer.trimToPayable`): Fireball's eight targets with mana for two are cut to
   two in 60 of 60 seeds, the floor's first target kept and each other target dropped sometimes; a payable count is
   untouched and moves no stream; at the floor and still unpayable it answers -1; with two parts only the one above its
   floor is cut; the cut is seeded.
-- **`./tools/ai-bench.sh --selftest`**: `258 check(s), 0 failure(s)` (242 before; `AiBench.targetCostScenarios`, 16 new,
-  engine):
+- **`./tools/ai-bench.sh --selftest`**: `260 check(s), 0 failure(s)` (242 before; `AiBench.targetCostScenarios`, 18 new,
+  engine; 16 in the first commit, the Ward case's 2 after the review):
   - `target-cost-fireball-control`: with the fit off (`Explorer.fitOffForTest`) the seat picks Fireball with 5 targets
     at X = 1 on three Mountains; the payment prints `ComputerUtilMana: payManaCost() cost was not paid for Fireball ...
     Didn't find what to pay for {1}` and `[Ai] AI failed to play Fireball (5) [Stack]` -- J171's s09 lines -- and is
@@ -131,7 +163,12 @@ it: the split is the git sha and the lab version (`tools/cubelab/versions.ts`, t
     of them drawn again away from the Bears (`costTargetAvoided`); one cast: on the stack at the Giant, the Bears
     sacrificed.
   - `target-cost-shards-redraw`: D358's single-target redraw on that pick moves it to the Bears 33 times in 60 with the
-    fit off (the control), and never with it on (33 redrawn away).
+    fit off (the control), and never with it on (33 redrawn away from them, back to the Giant -- the only other legal
+    target -- and so, since the review, not counted as a change).
+  - `target-cost-ward` (the review): Murder at the opponent's Kappa Cannoneer (Ward {4}), on three Swamps. The seat picks
+    it at the Cannoneer in 26 of 40 listings; on each pick `canPayCost`, which judges the Ward, says no and
+    `Explorer.manaPayable` says yes (the first version would have dropped every one); a cast goes on the stack, its
+    payment taken, nothing printed.
   - `target-cost-shards-answer-refused` / `-filled`: Forge's answer, Bone Shards' sacrifice aimed at a Hill Giant that
     died. With the fit off D485's repair fills the Bears (the control); with it on, and the Bears the only other target,
     the answer is never offered in 30 priorities (`staleRefused` 30, `refusedCast` 1, `noRepeatRefused` 29); with the
@@ -151,14 +188,19 @@ it: the split is the git sha and the lab version (`tools/cubelab/versions.ts`, t
   |---|---|---|---|---|---|---|
   | s09 before | 295 | 26 (Fireball, every one back in hand) | 37 (Fireball 37) | 37 | 37 | -- |
   | **s09 after** | 315 | **0** | **0** | **0** | **0** | 35 (35 picks) / 0 |
+  | **s09 after review** | 315 | **0** | **0** | **0** | **0** | 35 (35 picks) / 0 |
   | s13 before | 250 | 0 (the metric misses them: each card was cast later) | 19 (Vicious Offering 12, Bone Shards 5, Vulshok Morningstar 2) | 2 | 19 | -- |
   | **s13 after** | 250 | **0** | **0** | **0** | **0** | 0 / 3 rows (5 picks) |
+  | **s13 after review** | 250 | **0** | **0** | **0** | **0** | 0 / 8 rows (8 picks) |
 
-  On s09, Fireball reached the stack 51 times before and 82 times after. Both runs branched the same decisions' baseline
+  The "after review" rows are the rebased tree with the review's fixes (Ward out of the check, the redraw before a drop,
+  the redraw counted as what it ends on, `costTargetAvoided` once per pick); s13's avoided count is now one per pick.
+  On s09, Fireball reached the stack 51 times before and 82 times after (both after runs). Both runs branched the same decisions' baseline
   (Forge's, unchanged); the option sets differ by the cuts' screen and early stop. s13's checks are clean before and after.
   s09's checks carry one problem in both runs, the same class: 86 frame logs before and 95 after fail
   `check-redaction.mjs` on `decision N chosen null is not a token` -- Tear Asunder's empty kicker part, J171's 2,361
-  null-chosen logs on s09, which D487 (M76) fixes (merged after these runs); no other check line differs.
+  null-chosen logs on s09, which D487 (M76) fixes; no other check line differs. The "after review" run, on the tree with
+  D487 merged, has **clean** checks on s09 (9,601 rows, 632 frame logs, 7 leak checks) and on s13.
   - The first s13 run after the listing's fit alone still had 3 refusals (Bone Shards 2, Vicious Offering 1): their
     target records carried `explore: {rule: "random", forge: <the opponent's creature>}` with the seat's own creature
     chosen -- D358's redraw, after the listing. Point 2 is that finding; the table's after run includes it.
@@ -187,3 +229,11 @@ it: the split is the git sha and the lab version (`tools/cubelab/versions.ts`, t
   the load average reached 34 with other lanes' engines running beside it; node 1863 pass, 11 skipped, 0 fail). **12m: all
   4 seat-identity games are the golden's** -- no seat there is a random seat, and the exploring seat's redraw met no cost
   it changed -- so the golden is not regenerated.
+- **After the skeptic review** (the second commit, on the tree rebased onto `7476e706`, D487 merged): `./bridge/build.sh`
+  OK (decision selftest 225/0), `./tools/ai-bench.sh --selftest` 260/0, `node tools/check-redaction-selftest.mjs` OK,
+  `npm --prefix web test` OK (node 1851 pass, 9 skipped; vitest 161 passed), `node tools/decisions.mjs check` OK, the two
+  reproductions above ("after review"). **The gate**: `rm -rf bridge/out && ./tools/make-forge-home.sh &&
+  FORGE_JAR=<config.json's forgeJar> WSPORT=9900 GATE_JOBS=4 ./tools/check-all.sh`, **`check-all OK`**, 532.9 s wall, 60
+  jobs (`var/check-all/20261026-135753-828726`; node 1864 pass, 11 skipped, 0 fail); 12m: all 4 seat-identity games the
+  golden's, not regenerated. Two Javadoc blocks in `Explorer.java` (`fitCosts`, `costPool`) were corrected after that
+  run, comments only; `./bridge/build.sh` OK on them.

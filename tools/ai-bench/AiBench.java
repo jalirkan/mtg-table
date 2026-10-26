@@ -2134,6 +2134,51 @@ public final class AiBench {
             }
             sa.resetTargets();
         });
+        // Ward is a trigger, not the payment (the review of D488): Murder at the opponent's only creature, Kappa
+        // Cannoneer (Ward {4}), on three Swamps. canPayCost adds the Ward and asks Forge's AI whether it would pay it
+        // (willPayCosts: no, the seat has no mana left), but the cast is legal and its payment takes {1}{B}{B}.
+        final List<String> ward = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Kappa Cannoneer;Swamp", "aihand=Murder", "aibattlefield=Swamp;Swamp;Swamp");
+        scenario("target-cost-ward", ward, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final Card murder = named(ai.getCardsIn(ZoneType.Hand), "Murder");
+            final Card kappa = named(ai.getWeakestOpponent().getCardsIn(ZoneType.Battlefield), "Kappa Cannoneer");
+            final String tok = mtgtable.ai.Decisions.saToken(murder.getFirstSpellAbility());
+            long castSeed = -1;
+            int picks = 0;
+            boolean wardJudged = true;
+            for (long seed = 1; seed <= 40; seed++) {
+                final mtgtable.ai.Explorer ex = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                        mtgtable.ai.ExploreMath.Config.randomSeat(), seed));
+                ctl.setExplorer(ex);
+                final List<forge.game.spellability.SpellAbility> r = ex.priority(ai, ctl.getAi(), null);
+                if (r != null && !r.isEmpty() && tok.equals(mtgtable.ai.Decisions.saToken(r.get(0)))) {
+                    picks++;
+                    wardJudged &= r.get(0).getTargets().size() == 1 && r.get(0).getTargets().get(0) == kappa
+                            && !forge.ai.ComputerUtilCost.canPayCost(r.get(0), ai, false)
+                            && mtgtable.ai.Explorer.manaPayable(r.get(0), ai);
+                    castSeed = castSeed < 0 ? seed : castSeed;
+                }
+                if (r != null && !r.isEmpty()) {
+                    ex.played(ai, r.get(0), true);
+                }
+            }
+            check(picks > 0 && wardJudged,
+                    "target-cost-ward: the seat picks Murder at the Ward creature (" + picks + " of 40 listings) -- canPayCost, "
+                            + "which judges the Ward, says no; the cost the payment takes is payable");
+            if (castSeed < 0) {
+                return;
+            }
+            final mtgtable.ai.Explorer again = new mtgtable.ai.Explorer(new mtgtable.ai.ExploreMath(
+                    mtgtable.ai.ExploreMath.Config.randomSeat(), castSeed));
+            ctl.setExplorer(again);
+            final forge.game.spellability.SpellAbility cast = again.priority(ai, ctl.getAi(), null).get(0);
+            final String out = outputOf(() -> ctl.playChosenSpellAbility(cast));
+            check(!cast.isSkip() && g.getStack().getSpellMatchingHost(murder) != null && !out.contains("Didn't find what to pay for"),
+                    "target-cost-ward: Murder is on the stack at the Kappa Cannoneer, its payment taken"
+                            + (out.isEmpty() ? "" : " (" + out.trim() + ")"));
+        });
         final List<String> shardsTwo = List.of("humanlife=20", "ailife=20", "turn=4", "activeplayer=ai", "activephase=MAIN1",
                 "humanbattlefield=Swamp", "aihand=Bone Shards", "aibattlefield=Grizzly Bears;Llanowar Elves;Swamp;Swamp");
         scenario("target-cost-shards-two", shardsTwo, PolicyLobbyPlayerAi.Outlets.OFF, null, 20, (ai, pol) -> {

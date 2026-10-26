@@ -31,6 +31,7 @@ import forge.ai.AiCostDecision;
 import forge.ai.ComputerUtilAbility;
 import forge.ai.ComputerUtilCard;
 import forge.ai.ComputerUtilCost;
+import forge.ai.ComputerUtilMana;
 import forge.game.Game;
 import forge.game.GameEntity;
 import forge.game.GameObject;
@@ -42,6 +43,7 @@ import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
 import forge.game.cost.CostExile;
 import forge.game.cost.CostPart;
+import forge.game.cost.CostPayment;
 import forge.game.cost.CostPutCardToLib;
 import forge.game.cost.CostReturn;
 import forge.game.cost.CostSacrifice;
@@ -202,6 +204,8 @@ public final class Explorer {
     private final Set<String> modesDrawnToks = new LinkedHashSet<>();
     /** D486: the play just returned is Forge's answer with modes the seat drew, until the record reads it ({@link #takeModesDrawn}). */
     private boolean pendingModesDrawn;
+    /** D488: this pick's costTargetAvoided is counted (at the listing or at the redraw), so it is not counted twice. */
+    private boolean pickAvoided;
     /** D488: the tokens of this listing's plays whose target count the seat cut to one it can pay for ({@link #fitCosts}). */
     private final Set<String> trimmedToks = new LinkedHashSet<>();
     /** D488: the tokens of this listing's plays whose targets the seat drew away from what the play's own cost takes ({@link #fitCosts}). */
@@ -436,6 +440,7 @@ public final class Explorer {
         modesDrawnToks.clear();
         trimmedToks.clear();
         avoidedToks.clear();
+        pickAvoided = false;
         try {
             final Game g = ai.getGame();
             final Set<String> refusedHere = refusedIn(window(g, ai));
@@ -831,8 +836,12 @@ public final class Explorer {
      *   {@code TargetedObjects}) -- which the engine prices at the payment: the
      *   seat drew 8 targets, could not pay, and the payment was refused (J171,
      *   s09's 545 Fireballs).  The count is cut, one target at a time, toward
-     *   the part's floor ({@code max(min, 1)}) until {@code canPayCost} holds
-     *   ({@link #trimToPayable}, the seat's stream); {@link #TRIMMED}.</li>
+     *   the part's floor ({@code max(min, 1)}) until the cost can be paid
+     *   ({@link #trimToPayable}, {@link #manaPayable} -- the payment's own
+     *   question, never Forge's Ward judgment; the seat's stream);
+     *   {@link #TRIMMED}.  At the floor and still unpayable, the cards held
+     *   are left out and the targets drawn again (up to {@link #FIT_ATTEMPTS}
+     *   draws in all) before the play is given up.</li>
      * <li><b>a payment Forge's AI will not take from among the play's own
      *   targets</b>: its sacrifice, exile, return and put-into-library choosers
      *   all filter out the payer's own cards the play targets
@@ -857,41 +866,75 @@ public final class Explorer {
             return 0;
         }
         int out = 0;
-        final Set<Card> pool = costPool(sa, ai);
-        if (pool != null) {
-            final boolean drawn = own ? randomTargets(before(sa), sa, ai, pool) : staleTargets(sa, ai, pool) >= 0;
-            if (!drawn || costPool(sa, ai) != null) {
-                return -1;
+        Set<Card> avoid = null;
+        for (int attempt = 0; attempt < FIT_ATTEMPTS; attempt++) {
+            if (attempt > 0) {
+                // drawn again (own play) or repaired again (Forge's answer) away from every card in avoid
+                final boolean drawn = own ? randomTargets(before(sa), sa, ai, avoid) : staleTargets(sa, ai, avoid) >= 0;
+                if (!drawn) {
+                    return -1;
+                }
+                out |= AVOIDED;
             }
-            out |= AVOIDED;
-        }
-        final List<SpellAbility> parts = new ArrayList<>();
-        final List<List<GameObject>> lists = new ArrayList<>();
-        final List<Integer> floors = new ArrayList<>();
-        for (final SpellAbility s : castParts(sa)) {
-            if (s.usesTargeting() && s.getTargets() != null && !s.getTargets().isEmpty()) {
-                final TargetRestrictions tr = s.getTargetRestrictions();
-                final int min = tr == null ? s.getTargets().size() : tr.getMinTargets(s.getHostCard(), s);
-                parts.add(s);
-                lists.add(new ArrayList<>(s.getTargets()));
-                floors.add(Math.max(min, 1));
+            final Set<Card> pool = costPool(sa, ai);
+            if (pool != null) {
+                avoid = union(avoid, pool);   // (b): the cards the cost could take are never its targets
+                continue;
             }
-        }
-        final int trimmed = trimToPayable(lists, floors, () -> {
-            for (int i = 0; i < parts.size(); i++) {
-                final SpellAbility part = parts.get(i);
-                if (part.getTargets().size() != lists.get(i).size()) {
-                    final TargetChoices was = part.getTargets().clone();
-                    before(sa).note(part, () -> part.setTargets(was));   // the first note is the original
-                    part.getTargets().retainAll(lists.get(i));
+            final List<SpellAbility> parts = new ArrayList<>();
+            final List<List<GameObject>> lists = new ArrayList<>();
+            final List<Integer> floors = new ArrayList<>();
+            for (final SpellAbility s : castParts(sa)) {
+                if (s.usesTargeting() && s.getTargets() != null && !s.getTargets().isEmpty()) {
+                    final TargetRestrictions tr = s.getTargetRestrictions();
+                    final int min = tr == null ? s.getTargets().size() : tr.getMinTargets(s.getHostCard(), s);
+                    parts.add(s);
+                    lists.add(new ArrayList<>(s.getTargets()));
+                    floors.add(Math.max(min, 1));
                 }
             }
-            return manaPayable(sa, ai);
-        }, math);
-        if (trimmed < 0) {
-            return -1;
+            final int trimmed = trimToPayable(lists, floors, () -> {
+                for (int i = 0; i < parts.size(); i++) {
+                    final SpellAbility part = parts.get(i);
+                    if (part.getTargets().size() != lists.get(i).size()) {
+                        final TargetChoices was = part.getTargets().clone();
+                        before(sa).note(part, () -> part.setTargets(was));   // the first note is the original
+                        part.getTargets().retainAll(lists.get(i));
+                    }
+                }
+                return manaPayable(sa, ai);
+            }, math);
+            if (trimmed >= 0) {
+                return trimmed > 0 ? out | TRIMMED : out;
+            }
+            // (a) at every part's floor and still unpayable: the cost depends on WHICH cards are targeted
+            // (a cost raised for a kind of target), so the cards held now are left out and the targets drawn again
+            final Set<Card> held = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+            for (final SpellAbility part : parts) {
+                for (final GameObject o : part.getTargets()) {
+                    if (o instanceof Card) {
+                        held.add((Card) o);
+                    }
+                }
+            }
+            if (held.isEmpty() || avoid != null && avoid.containsAll(held)) {
+                return -1;
+            }
+            avoid = union(avoid, held);
         }
-        return trimmed > 0 ? out | TRIMMED : out;
+        return -1;
+    }
+
+    /** D488: how many times {@link #fitCosts} draws a play's targets in all (the first draw included) before it gives the play up. */
+    static final int FIT_ATTEMPTS = 4;
+
+    private static Set<Card> union(final Set<Card> a, final Set<Card> b) {
+        final Set<Card> out = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+        if (a != null) {
+            out.addAll(a);
+        }
+        out.addAll(b);
+        return out;
     }
 
     /** D488's negative control, for the self-test only: the targets go to the engine as drawn, as before D488. */
@@ -919,10 +962,12 @@ public final class Explorer {
      * otherwise every card of the seat's that such a refused part could take:
      * the cards to leave out of the targets.  The AI's own decision
      * ({@code AiCostDecision}, the one {@code ComputerUtil.handlePlayingSpellAbility}
-     * pays with), asked of those parts alone: their choosers draw no random
-     * number, so asking them moves no stream.  The tap and untap choosers do
-     * not filter targets (a tapped creature is still a legal target), and the
-     * mana is {@code canPayCost}'s.
+     * pays with), asked of those parts alone.  The sacrifice chooser can
+     * shuffle ({@code getCardPreference} → {@code CardLists.shuffle}), but the
+     * seat's callers run this inside {@code Decisions.quiet}, whose fixed
+     * random leaves the game's stream where it was.  The tap and untap
+     * choosers do not filter targets (a tapped creature is still a legal
+     * target), and the mana is {@link #manaPayable}'s.
      */
     static Set<Card> costPool(final SpellAbility sa, final Player ai) {
         if (sa.getPayCosts() == null) {
@@ -1198,6 +1243,7 @@ public final class Explorer {
         }
         if (tok != null && avoidedToks.contains(tok)) {
             math.guardrail("costTargetAvoided");    // D488: the pick's targets were drawn away from its own cost's payment
+            pickAvoided = true;
         }
     }
 
@@ -1473,52 +1519,52 @@ public final class Explorer {
             }
             final boolean heads = math.coin();
             try {
-                final Decision.Explore m = Decisions.quiet(() -> heads ? randomTarget(part, ai, (GameEntity) cur)
-                        : closeTarget(part, ai, (GameEntity) cur));
+                final Decision.Explore m = Decisions.quiet(() -> heads ? randomTarget(sa, part, ai, (GameEntity) cur)
+                        : closeTarget(sa, part, ai, (GameEntity) cur));
                 if (m != null) {
                     marks.put(part, m);
-                    if (part.getTargets().get(0) != cur) {
-                        Decisions.quiet(() -> refitRedraw(sa, part, ai, (GameEntity) cur));
-                    }
                 }
             } catch (final RuntimeException e) {
                 math.failed();
             }
         }
+        pickAvoided = false;   // D488: the next pick's costTargetAvoided is its own
     }
 
     /**
-     * D488: the redraw above moved {@code part}'s one target from {@code cur};
-     * if the play's cost no longer fits it ({@link #costPool}: Forge's AI
-     * payment will not take a card the play targets; or {@code canPayCost}),
-     * the target is drawn again with the cards the cost could take left out
-     * (counted {@code costTargetAvoided} on a random seat), and put back to
-     * {@code cur} when no such target fits either.  J171-style: the random
-     * seat's pick of Bone Shards aimed at the opponent's creature, redrawn
-     * here at the seat's only creature, was refused at the payment.
+     * D488: a redraw just moved {@code part}'s one target from {@code cur} to
+     * {@code now}; if the play's cost no longer fits ({@link #costFits}: Forge's
+     * AI payment would not take a card the play targets, or the cost as it is
+     * priced for this target cannot be paid), the target is drawn again among
+     * the legal ones, the cost's cards and {@code now} left out -- counted
+     * {@code costTargetAvoided} on a random seat, once per pick -- and put back
+     * to {@code cur} when that does not fit either ({@code redraw} false: put
+     * back at once, the close call's rival).  Returns the target the part
+     * holds after.  J171-style: Bone Shards aimed at the opponent's creature,
+     * redrawn here at the seat's only creature, was refused at the payment.
      */
-    private boolean refitRedraw(final SpellAbility sa, final SpellAbility part, final Player ai, final GameEntity cur) {
-        if (fitOffForTest || costFits(sa, ai)) {
-            return true;
+    private GameEntity refitRedraw(final SpellAbility sa, final SpellAbility part, final Player ai, final GameEntity cur,
+                                   final GameEntity now, final boolean redraw) {
+        if (now == cur || fitOffForTest || costFits(sa, ai)) {
+            return now;
         }
-        final Set<Card> pool = costPool(sa, ai);
-        if (pool != null) {
+        if (redraw) {
+            final Set<Card> pool = costPool(sa, ai);
             final List<GameEntity> opts = legalTargets(part, ai, cur);
-            opts.removeIf(pool::contains);
+            opts.removeIf(e -> e == now || pool != null && pool.contains(e));
             if (!opts.isEmpty()) {
-                final GameEntity now = (GameEntity) part.getTargets().get(0);
                 final GameEntity pick = opts.get(math.pick(opts.size()));
                 if (retarget(part, now, pick) && costFits(sa, ai)) {
-                    if (math.config().random) {
+                    if (math.config().random && !pickAvoided) {
                         math.guardrail("costTargetAvoided");
+                        pickAvoided = true;
                     }
-                    return true;
+                    return pick;
                 }
             }
         }
-        final GameEntity now = (GameEntity) part.getTargets().get(0);
-        retarget(part, now, cur);
-        return false;
+        retarget(part, (GameEntity) part.getTargets().get(0), cur);
+        return cur;
     }
 
     /** D488: Forge's AI would pay {@code sa} with the targets it holds now. */
@@ -1527,16 +1573,25 @@ public final class Explorer {
     }
 
     /**
-     * D488: {@code ComputerUtilCost.canPayCost} with the targets as they stand
-     * -- except on a planeswalker's ability, where it flips Forge's own coin
-     * ({@code MyRandom}, "try not to lose a planeswalker", forge-ai
-     * ComputerUtilCost.java:576-588 at the tag): asking it again would move the
-     * game's stream and could say no at random.  No loyalty cost rises per
-     * target, so such an ability is taken as payable here (the listing's own
-     * check before the draw stands).
+     * D488: whether the play's cost can be paid with the targets as they
+     * stand -- the two checks {@code ComputerUtilCost.canPayCost} ends with
+     * ({@code ComputerUtilMana.canPayManaCost}, which prices the cost as
+     * {@code CostAdjustment} raises or lowers it for these targets, and
+     * {@code CostPayment.canPayAdditionalCosts}), without what it adds before
+     * them: a targeted opponent's creature's Ward cost judged by Forge's AI
+     * ({@code willPayCosts}, ComputerUtilCost.java:597-610 at the tag), the
+     * {@code AI_SpellsNeedExtraMana} taxes, and the planeswalker coin
+     * ({@code MyRandom}, :576-588, which can say no at random).  Ward and those
+     * taxes are triggers or the AI's prudence, not the payment -- a cast at a
+     * Ward creature is legal and the payment takes it -- and the random seat
+     * does not ask Forge's judgment.
      */
-    private static boolean manaPayable(final SpellAbility sa, final Player ai) {
-        return sa.isPwAbility() || ComputerUtilCost.canPayCost(sa, ai, false);
+    public static boolean manaPayable(final SpellAbility sa, final Player ai) {
+        if (sa.getActivatingPlayer() == null) {
+            sa.setActivatingPlayer(ai);
+        }
+        return ComputerUtilMana.canPayManaCost(sa.getPayCosts(), sa, ai, 0, false)
+                && CostPayment.canPayAdditionalCosts(sa.getPayCosts(), sa, false, ai);
     }
 
     private static boolean simpleSingleTarget(final SpellAbility s) {
@@ -1566,7 +1621,7 @@ public final class Explorer {
         return out;
     }
 
-    private Decision.Explore randomTarget(final SpellAbility s, final Player ai, final GameEntity cur) {
+    private Decision.Explore randomTarget(final SpellAbility head, final SpellAbility s, final Player ai, final GameEntity cur) {
         final List<GameEntity> opts = legalTargets(s, ai, cur);
         if (opts.size() < 2) {
             return null;
@@ -1577,11 +1632,13 @@ public final class Explorer {
             math.failed();
             return null;
         }
-        math.randomised("target", pick == cur);
+        // D488: the cost with the target drawn; counted as a change only when the target it ends on is not Forge's
+        final GameEntity end = refitRedraw(head, s, ai, cur, pick, true);
+        math.randomised("target", end == cur);
         return new Decision.Explore("random", forgeTok);
     }
 
-    private Decision.Explore closeTarget(final SpellAbility s, final Player ai, final GameEntity cur) {
+    private Decision.Explore closeTarget(final SpellAbility head, final SpellAbility s, final Player ai, final GameEntity cur) {
         if (math.config().closeCall <= 0 || !scorable(cur, ai)) {
             return null;
         }
@@ -1597,11 +1654,13 @@ public final class Explorer {
             return null;
         }
         final String forgeTok = Decisions.entityToken("target", cur, ai);
-        final boolean swap = math.fair();
-        if (swap && !retarget(s, cur, rival)) {
+        final boolean fair = math.fair();
+        if (fair && !retarget(s, cur, rival)) {
             math.failed();
             return null;
         }
+        // D488: a rival the cost does not fit is not swapped in (put back), and not counted as a change
+        final boolean swap = fair && refitRedraw(head, s, ai, cur, rival, false) == rival;
         math.closeCall(swap);
         return new Decision.Explore("closeCall", forgeTok);
     }
