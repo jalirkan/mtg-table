@@ -1215,3 +1215,8 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   lines), and the atlas offering them as options (Abrade and Suplex at d0 stranded 25/25 and still scored above
   pass). s05 reproduction: stranded casts 136 → 0; 11.9% of listings now carry a card-targeting option the old
   seat could never pick. A policy change: labels and reads across D486 are never pooled; decision indices shift.
+- 23:40 EDT: **J169 finished clean** (20:55–23:35; every block exit 0, atlas.problems 0, 0 errors, 0 timeouts;
+  s06 re-branched 7,500 rows, s10 6,275; 744 rows re-targeted; s06/s10/s13 re-checks pass; the pre-D486
+  population's final state: 13 spines, 97 labels / 27 confident, s05 marked biased). The read is being written
+  (results/J169/summary.md). D486 (#214) merged locally on 16c21445; its gate is running; J170 (all 13 spines
+  fresh on the D486 seat, a new population, `lab-j170`) is drafted and is posted when the gate is green.
