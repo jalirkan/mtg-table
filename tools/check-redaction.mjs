@@ -3160,8 +3160,9 @@ const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCa
 // targets were replaced) and staleRefused (Forge's answer not offered: its stale targets could not be made legal).
 // M75 / D486: cardTargetOffered (a listing offered a play only a card target makes possible) and modesDrawn (a play
 // cast with modes the seat drew in place of Forge's: at the listing, or inside the cast).
+// M77 / D488: targetCountTrimmed and costTargetAvoided (a play cast with its targets fitted to its cost).
 const GUARDRAIL_NAMES = ['land', 'keep', 'noRepeatNoOp', 'refusedCast', 'noRepeatRefused', 'xDrawn', 'zeroXLeftOut', 'zeroX',
-  'retargeted', 'staleRefused', 'cardTargetOffered', 'modesDrawn'];
+  'retargeted', 'staleRefused', 'cardTargetOffered', 'modesDrawn', 'targetCountTrimmed', 'costTargetAvoided'];
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
