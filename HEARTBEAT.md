@@ -1241,3 +1241,8 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   seat-identity now gate job 12m (11 s), D486 addendum — merged as #215 (main f2b4e9c2; gate check-all OK, 60
   jobs, 514.1 s). **J171 posted** (`drafts/J171-atlas-4b-card-targets.md`): J170 re-posted on the new pin, the
   pilot's draws in lab-j170 verified rather than redrawn, three golden checks; ~10.5 h at 6 workers.
+- 11:56 EDT (10-26): **J171 finished all 13 spines** (00:22–11:55; every block exit 0; 71,940 branch rows; 0
+  errors, 0 timeouts; lost-cast options 0 on all 13; 101 labels / 28 confident; cardTargetOffered 653,579,
+  modesDrawn 1,125) — the first population on the D486 seat. The job's one failed check: `atlas.problems == 0`
+  with FIVE spines reporting a problem; being classified now (a leak, a checker rule the new records need, or a
+  tool fault) before anything else is posted. The read is being written (results/J171/summary.md).
