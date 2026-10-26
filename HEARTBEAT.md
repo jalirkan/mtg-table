@@ -1261,3 +1261,7 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   options; no leak. New shape M76 (`target:none` listed with `min`; a min≥1 part left empty marked NO_TARGET);
   J171's exact legacy shape accepted and counted so its data stands. J172 (re-check the five, ~45 min) drafted
   for the D487 pin; D488 (per-target costs, sacrifice targets) lane running.
+- 13:04 EDT: **D487 merged** (#216, main 7476e706; gate check-all OK, 60 jobs, wall 528.4 s; the review's two
+  fixes in: an unseen answer can no longer match the legacy shape, and the legacy acceptance is bounded to atlas
+  logs started before 2026-10-26T18:00Z). **J172 posted** (`drafts/J172-atlas-4b-recheck.md`): the five spines
+  re-checked in place, the legacy records counted (4,717 expected), J171's report re-run; ~45 min.
