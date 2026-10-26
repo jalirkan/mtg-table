@@ -1,23 +1,71 @@
 {
  "schema": 1,
- "updated": "2026-10-26T13:00:32-04:00",
- "heartbeat": "2026-10-26T13:00:32-04:00",
+ "updated": "2026-10-26T13:05:15-04:00",
+ "heartbeat": "2026-10-26T13:05:15-04:00",
  "paused": false,
- "state": "idle",
- "idleSince": "2026-10-26T11:55:43-04:00",
- "idleReason": "queue empty",
+ "state": "running",
+ "idleSince": null,
+ "idleReason": null,
  "host": {
-  "load1": 5.99,
-  "memUsedGb": 14.8,
+  "load1": 2.73,
+  "memUsedGb": 7.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3815,
+  "swapUsedMb": 3572,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 0,
+  "coresUsed": 7,
   "coresTotal": 8
  },
- "running": [],
+ "running": [
+  {
+   "publicTitle": "Move atlas 4b re-check: legacy null targets",
+   "publicEst": "~45 min",
+   "id": "J172",
+   "title": "The move atlas, rung 4b, re-checked -- J171's night on the D487 pin, NOTHING REPLAYED: J171's five flagged spines (s02, s04, s08, s09, s10: 4,501 frame logs failed the M55 audit on one record shape, a targeting part Forge's answer left empty written `chosen: null`) re-checked in place by resuming their finished atlases under D487's checker, which accepts exactly J171's legacy null-target shape and counts it (`M55 legacy null target records=<n>`); J171's atlas.json and atlas.md kept beside as `atlas.j171.*`, rows and units unmoved, the re-checks' exits and walls in files of their own; the legacy count read from the pinned checker's own per-log lines by a sweep of the five spines' 54,350 branch logs (expected 4,717 records in 4,501 logs); then J171's Report re-run over all 13 spines with J171's readers (byte for byte, two one-line path edits, registered), the label contract v4 and the labels unchanged (101 labels, 28 confident, a check). No deck drawn, no game played, no smoke. Never pooled with any label, read, ladder result or grade from before D486",
+   "cpu": "heavy",
+   "phase": "prepare",
+   "started": "2026-10-26T13:05:14-04:00",
+   "elapsed": 1,
+   "done": 0,
+   "total": 5,
+   "unit": "lines",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": 0,
+   "paused": false,
+   "dataUpdated": "2026-10-26T13:05:15-04:00",
+   "memGb": null,
+   "live": {
+    "atlas.problems": -1,
+    "recheck.ok": -1,
+    "legacy.scanned": -1,
+    "armed": 0,
+    "big_frames": 0,
+    "branch_timeouts": 0,
+    "branches": 71940,
+    "data_free_gb": 598.2,
+    "data_used_gb": 12.42,
+    "elapsed_s": 0,
+    "engine_errors": 0,
+    "pressure_events": 0,
+    "unit_errors": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "atlas.problems",
+    "recheck.ok",
+    "legacy.scanned"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J172-prepare"
+  }
+ ],
  "queue": [],
  "waiting": [],
  "finished": [
@@ -851,8 +899,8 @@
   }
  ],
  "runner": {
-  "commit": "f2b4e9c2",
-  "started": "2026-10-26T00:21:08-04:00",
+  "commit": "7476e706",
+  "started": "2026-10-26T13:04:08-04:00",
   "dryRun": false
  }
 }
