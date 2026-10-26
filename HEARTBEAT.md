@@ -1276,3 +1276,9 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   refused payments put back to hand by a zone move that fires no event — the metric must count `refusedCast`
   instead; s12's ten errors reproduced: Forge's `PumpEffect.resolve` on Practiced Offense with its creature
   target exiled, an engine fault, recorded not fixed). Rebasing onto main, then review, then merge.
+- 14:08 EDT: **D488 merged** (#217, main 6e87e5d4; the lane's gate on the same tree: check-all OK, 60 jobs,
+  532.9 s; the review's Ward finding fixed — Ward is a trigger, not a payment: the post-draw check asks only what
+  the payment asks, and a play is redrawn before it is dropped). **J173 posted** (`drafts/J173-atlas-4b-night-two.md`):
+  rung 4b night two, 13 NEW spines (deck seeds 2014–2026, game seeds 2114–2126, validation 2214–2226, all
+  checked free), the first D488 population (J171 stays D486's: D488 changes which plays are offered), the
+  refused-cast metric from the frames replacing the lost-cast reading, `refusedCastOptions == 0`; ~10.5 h.
