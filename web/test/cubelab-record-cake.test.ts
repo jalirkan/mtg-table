@@ -280,6 +280,19 @@ test('the rows\' redaction check: every id a row names is one its seat\'s own lo
     assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
     writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), bornLog({ zone: 'graveyard', player: 1 }));        // the other seat's graveyard
     assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
+    // Born onto the OTHER seat's battlefield and ending in the viewer's graveyard (stolen, then lost): not the viewer's birth.
+    const otherBorn = zlib.gzipSync([JSON.stringify({ kind: 'session' }), zlib.gunzipSync(log([13])).toString().split('\n')[1],
+      events([{ kind: 'zone', cardId: 12, from: null, to: { zone: 'battlefield', player: 1 } }, { kind: 'zone', cardId: 12, from: { zone: 'battlefield', player: 1 }, to: { zone: 'graveyard', player: 0 } }])].join('\n'));
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), otherBorn);
+    assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
+    // The seat index is the one checked: a seat-1 row is vouched for by seat 1's own log, with the birth onto seat 1's battlefield.
+    writeFileSync(join(rows, 'rows-1.jsonl'), [HEADER, BEGIN('k'), ROW('k', { seat: 'Drafter B', kind: 'a', n: 2, tokens: ['attack:none', 'attack:12'], c: [[1], [0]] }), END('k')].join('\n') + '\n');
+    const seat1Born = (player: number): Buffer => zlib.gzipSync([JSON.stringify({ kind: 'session' }),
+      events([{ kind: 'zone', cardId: 12, from: null, to: { zone: 'battlefield', player } }, { kind: 'zone', cardId: 12, from: { zone: 'battlefield', player }, to: { zone: 'graveyard', player } }])].join('\n'));
+    writeFileSync(join(dir, 'g3-seat1.jsonl.gz'), seat1Born(1));
+    assert.deepEqual(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems, []);
+    writeFileSync(join(dir, 'g3-seat1.jsonl.gz'), seat1Born(0));                                    // seat 0's token, in seat 1's log
+    assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

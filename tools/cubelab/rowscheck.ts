@@ -15,7 +15,8 @@
 //      that names cards.
 //   2. IDS (when the game's frame logs exist: census-play --record full, the move atlas).  Every id a
 //      row's tokens name must be one the deciding seat's OWN log shows as a card it may see (a full,
-//      not hidden, card object) -- so a row can never be the place a hidden card's id first appears.
+//      not hidden, card object -- or, D491, its own token the zone events show born onto its battlefield
+//      and left there or in its graveyard) -- so a row can never be the place a hidden card's id first appears.
 //
 // The engine half -- the state must not move when only the opponent's hidden cards do -- is
 // mtgtable.ai.RowsLeakCheck (census-play --rows-check-every N).
@@ -123,7 +124,7 @@ export function visibleIds(logText: string, seat?: number): Set<number> {
       if (!e || e.kind !== 'zone' || typeof e.cardId !== 'number') continue;
       const to = (e.to && typeof e.to === 'object' ? e.to : null) as { zone?: string; player?: number } | null;
       if (e.from === null && to?.zone === 'battlefield' && to.player === seat) born.add(e.cardId);
-      latest.set(e.cardId, to);
+      if (to) latest.set(e.cardId, to);   // as the checker: the latest move WITH a destination
     }
   };
   for (const line of logText.split('\n')) {

@@ -9,8 +9,8 @@
     },
     "Chain of Smog": {
       "since": "J173",
-      "why": "'target player discards two cards; that player may copy this spell and choose a new target for the copy': with Forge's AI in both seats each copies it back at the other without end, so the engine runs 140,000-300,000 events inside one step until the branch deadline (D467) fires; all 494 of spine s06's 494 timed-out branches (of 2,925) had it on the stack at their last state, 0 timeouts in the night's five other spines, and the step ran past the runner's 10,800 s cap",
-      "evidence": "/home/justin-a/code/lab/data/lab-j173/b-s06-peasant-2119/phaseB/ (branches.jsonl, frames/d5-random-o0-b0-seat0.jsonl.gz, its last state's stack); /home/justin-a/code/pc-results/results/J173/STATUS; deck /home/justin-a/code/lab/data/lab-j173/decks/s06-peasant-2019/decks/peasant-2019-00001.dck"
+      "why": "'target player discards two cards; that player may copy this spell and choose a new target for the copy': with Forge's AI in both seats each copies it back at the other without end, so the engine runs 82,000-599,000 events (median 272,000) inside one step until the branch deadline (D467/D484) fires; 494 of spine s06's 2,925 branch games timed out (486 inside one step, 4 at a confirm or target callback, 4 with no error text), every one with it on the stack at the last state of a seat's log (492 in seat 0's, the other 2 in seat 1's), against a 1.3 s mean (0.85 s median) for the spine's other branches; 0 timeouts in the night's five other spines; the step ran past the runner's 10,800 s cap and failed the job",
+      "evidence": "/home/justin-a/code/lab/data/lab-j173/b-s06-peasant-2119/phaseB/ (branches.jsonl, frames/d5-random-o0-b0-seat0.jsonl.gz, its last state's stack); the runner's journal, 2026-10-27 04:54 EDT: 'J173: failed (timeout: step run6 ran past 10800 s)'; deck /home/justin-a/code/lab/data/lab-j173/decks/s06-peasant-2019/decks/peasant-2019-00001.dck"
     }
   }
 }
