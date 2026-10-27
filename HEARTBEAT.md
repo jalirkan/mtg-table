@@ -1293,3 +1293,7 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   keeps phones honest. Then he plays lands on the board and judges. Also tonight: his friend's Vintage MenguCube
   (540 cards) — a one-file printing picker (`var/mengu-cube/MenguCube-pick-printings.html`, 4,365 Scryfall
   printings) delivered; print-ready files for makeplayingcards.com follow his friend's picks; a custom back later.
+- 00:20 EDT (10-27): on Justin's word, deleted `lab-j166/b-s05-pauper-2105.j167-cop` (17 GB; J167's hung s05 run —
+  284 frame logs of the Circle loop's identical records, no atlas). J168's s05 (`b-s05-pauper-2105`) and the
+  `.j168-stale` folders are untouched. `docs/decisions/D484-choose-source-loop.md` and D482's evidence paths that
+  named that folder now point at a deleted run; the numbers stand in the decisions themselves.
