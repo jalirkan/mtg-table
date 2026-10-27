@@ -212,3 +212,13 @@ atlas.md says what the rule did, and marks each partial label and each control.
   confident labels per branch worker-hour. It adds the night's controls to the pooled count, and reads their confident
   share against the review's .04 only once the pool is large enough to show it.
 - **The k=3 and early-turn arms** (the review's #3 and #4) remain registered arms, not defaults.
+
+## Comparability (added at the merge, 2026-10-27)
+
+The cap and the futility stop change HOW MANY branches a decision gets, not which plays the seat offers or
+how it plays them: the random seat, its listings and its targets are D488's, unchanged (`git diff 6e87e5d4
+HEAD -- bridge/src fixtures/cubelab/seat-identity.json` is empty). So nights on either side of D489 on the
+same seat (J173 at 200 branches without the rule, J174 at 150 with it) MAY be pooled for a model, with the
+branch count (`branchRandom`) and `partial` carried as columns on every row and partial rows never confident.
+D488's split "by the lab version" (which hashes `tools/cubelab`) is a split of SEAT populations; a change to
+the cut design alone does not open a new population. A future change to the seat or to what it offers does.
