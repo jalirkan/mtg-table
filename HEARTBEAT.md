@@ -1285,3 +1285,5 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
 - 16:05 EDT: **Justin is switching the PC to Windows.** The runner stopped cleanly with J173 at its start (resume
   later: withdraw J173's job file first, then re-post or `resume`; its folder lab-j173 holds whatever the pilot drew).
   Nothing else is running. Scenery parked. Pick up here when the Linux side is back.
+- 23:01 EDT: **back on Linux; J173 resumed** (`tools/runner.sh resume`): s01–s03 finished before the stop (7,290 /
+  5,100 / 5,025 rows, atlases written), s04 resumes in place from 2,109 rows; ~8 h to go at 6 workers.
