@@ -95,9 +95,18 @@ export function checkRowsText(text: string, where: string, out: RowsCheck, byGam
   if (!header && out.rows > 0) out.problems.push(`${where}: rows with no header line`);
 }
 
-/** The ids a seat's own frame log shows as cards it may see (full, not hidden). */
-export function visibleIds(logText: string): Set<number> {
+/**
+ * The ids a seat's own frame log shows as cards it may see (full, not hidden) -- and, given the viewer's `seat`, the
+ * viewer's own tokens the state frames' zone events show born onto its battlefield (`from: null`) whose latest move
+ * left them there or in its graveyard: an object made and gone inside one engine step, which no snapshot lists but the
+ * seat could act on (D491, the rows' half of D481's first shape; J173 s04's Food Token, made and sacrificed between
+ * frames). The window is the whole log: the id is the viewer's own object in a public zone whenever it exists.
+ */
+export function visibleIds(logText: string, seat?: number): Set<number> {
   const ids = new Set<number>();
+  // D491: the viewer's own tokens born between frames (D481's first shape), from the state frames' zone events.
+  const born = new Set<number>();
+  const latest = new Map<number, { zone?: string; player?: number } | null>();
   const walk = (x: unknown): void => {
     if (Array.isArray(x)) { for (const y of x) walk(y); return; }
     if (x && typeof x === 'object') {
@@ -106,9 +115,24 @@ export function visibleIds(logText: string): Set<number> {
       for (const v of Object.values(o)) walk(v);
     }
   };
+  const moves = (frame: unknown): void => {
+    if (seat === undefined || !frame || typeof frame !== 'object') return;
+    const f = frame as { type?: unknown; body?: { events?: unknown } };
+    if (f.type !== 'state' || !Array.isArray(f.body?.events)) return;
+    for (const e of f.body.events as Array<Record<string, unknown>>) {
+      if (!e || e.kind !== 'zone' || typeof e.cardId !== 'number') continue;
+      const to = (e.to && typeof e.to === 'object' ? e.to : null) as { zone?: string; player?: number } | null;
+      if (e.from === null && to?.zone === 'battlefield' && to.player === seat) born.add(e.cardId);
+      latest.set(e.cardId, to);
+    }
+  };
   for (const line of logText.split('\n')) {
     if (!line.trim()) continue;
-    try { walk(JSON.parse(line)); } catch { /* a torn line: the redaction checker's business */ }
+    try { const frame = JSON.parse(line); walk(frame); moves(frame); } catch { /* a torn line: the redaction checker's business */ }
+  }
+  for (const id of born) {
+    const to = latest.get(id);
+    if (to && to.player === seat && (to.zone === 'battlefield' || to.zone === 'graveyard')) ids.add(id);
   }
   return ids;
 }
@@ -194,7 +218,7 @@ export function checkGameIds(g: GameIds, read: (file: string) => string | null):
       const log = g.logs[k] ?? null;
       const text = log && fs.existsSync(log) ? read(log) : null;   // D466: null for a log the reader cannot inflate
       if (log && text === null && fs.existsSync(log)) res.skipped.push({ game: g.key, log });
-      vis.set(k, text === null ? null : visibleIds(text));
+      vis.set(k, text === null ? null : visibleIds(text, k));   // D491: seat k's own born tokens count as shown
     }
     const v = vis.get(k);
     if (!v) continue;

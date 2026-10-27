@@ -6,6 +6,11 @@
       "since": "J166",
       "why": "copies itself on every land drop, so boards reach 50-127 tokens and Forge's AI attack/block prediction iterates them for 1,000-1,300 s inside one event-free engine step that the branch deadline (D467) cannot see; 134 of spine s04's 135 timed-out branches had it on the battlefield (124 with 40+ copies), 14 unit kills, 0 on the other three spines",
       "evidence": "/home/justin-a/code/lab/data/lab-j166/b-s04-powered-2104/phaseB/ (branches.jsonl, units.jsonl, logs/worker-*.log, frames/d0-random-o4-b29-seat0.jsonl.gz, frames/d6-random-o0-b84-seat0.jsonl.gz); /home/justin-a/code/pc-results/results/J166/run4.log; deck /home/justin-a/code/lab/data/lab-j166/decks/s04-powered-2004/decks/powered-2004-00001.dck"
+    },
+    "Chain of Smog": {
+      "since": "J173",
+      "why": "'target player discards two cards; that player may copy this spell and choose a new target for the copy': with Forge's AI in both seats each copies it back at the other without end, so the engine runs 140,000-300,000 events inside one step until the branch deadline (D467) fires; all 494 of spine s06's 494 timed-out branches (of 2,925) had it on the stack at their last state, 0 timeouts in the night's five other spines, and the step ran past the runner's 10,800 s cap",
+      "evidence": "/home/justin-a/code/lab/data/lab-j173/b-s06-peasant-2119/phaseB/ (branches.jsonl, frames/d5-random-o0-b0-seat0.jsonl.gz, its last state's stack); /home/justin-a/code/pc-results/results/J173/STATUS; deck /home/justin-a/code/lab/data/lab-j173/decks/s06-peasant-2019/decks/peasant-2019-00001.dck"
     }
   }
 }

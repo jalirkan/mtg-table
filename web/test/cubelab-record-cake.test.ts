@@ -265,6 +265,21 @@ test('the rows\' redaction check: every id a row names is one its seat\'s own lo
     writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), log([13]));       // 12 never shown to seat 0
     const bad = checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`));
     assert.match(bad.problems.join(), /names id 12 .*never shows it/);
+    // D491 (D481's first shape): a token born onto the viewer's own battlefield between frames, gone to its graveyard
+    // before the next snapshot, is shown by its zone events alone (J173 s04: Food Token 96, made and sacrificed in one step).
+    const events = (moves: unknown[]): string => JSON.stringify({ dir: 's2c', type: 'state', body: { players: [], events: moves } });
+    const bornLog = (to: { zone: string; player: number }, from: unknown = null): Buffer => zlib.gzipSync([JSON.stringify({ kind: 'session' }), log([13]).length ? zlib.gunzipSync(log([13])).toString().split('\n')[1] : '',
+      events([{ kind: 'zone', cardId: 12, from, to: { zone: 'battlefield', player: 0 } }, { kind: 'sacrificed', cardId: 12 }, { kind: 'zone', cardId: 12, from: { zone: 'battlefield', player: 0 }, to }])].join('\n'));
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), bornLog({ zone: 'graveyard', player: 0 }));
+    assert.ok(visibleIds(zlib.gunzipSync(readFileSync(join(dir, 'g3-seat0.jsonl.gz'))).toString(), 0).has(12), 'born to seat 0, ended in its graveyard: shown');
+    assert.ok(!visibleIds(zlib.gunzipSync(readFileSync(join(dir, 'g3-seat0.jsonl.gz'))).toString()).has(12), 'without a seat the events vouch for nothing');
+    assert.deepEqual(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems, []);
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), bornLog({ zone: 'exile', player: 0 }));            // its latest move is into exile
+    assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), bornLog({ zone: 'graveyard', player: 0 }, { zone: 'hand', player: 0 }));   // not born: it came from a hand
+    assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), bornLog({ zone: 'graveyard', player: 1 }));        // the other seat's graveyard
+    assert.match(checkRowsDir(rows, (_b, seat) => join(dir, `g3-seat${seat}.jsonl.gz`)).problems.join(), /names id 12 .*never shows it/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
