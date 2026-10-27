@@ -1287,3 +1287,9 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   Nothing else is running. Scenery parked. Pick up here when the Linux side is back.
 - 23:01 EDT: **back on Linux; J173 resumed** (`tools/runner.sh resume`): s01–s03 finished before the stop (7,290 /
   5,100 / 5,025 rows, atlases written), s04 resumes in place from 2,109 rows; ~8 h to go at 6 workers.
+- 23:55 EDT: **scenery resumed, Justin's way:** the one-world seams go INTO the live board he likes. The painter is
+  sketching the stage grid for the seven remaining pairs (112 cells, ~4 GPU-h; the three from 10-25 stay);
+  a ForgeCoach lane makes `?pairfull=1` default to `pairs-v6` (all ten grids), pre-warms a pair's first cell and
+  keeps phones honest. Then he plays lands on the board and judges. Also tonight: his friend's Vintage MenguCube
+  (540 cards) — a one-file printing picker (`var/mengu-cube/MenguCube-pick-printings.html`, 4,365 Scryfall
+  printings) delivered; print-ready files for makeplayingcards.com follow his friend's picks; a custom back later.
