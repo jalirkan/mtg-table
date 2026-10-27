@@ -1297,3 +1297,11 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   284 frame logs of the Circle loop's identical records, no atlas). J168's s05 (`b-s05-pauper-2105`) and the
   `.j168-stale` folders are untouched. `docs/decisions/D484-choose-source-loop.md` and D482's evidence paths that
   named that folder now point at a deleted run; the numbers stand in the decisions themselves.
+- 01:30 EDT: **atlas review 2 posted** (`study/atlas-review-2026-10-27.md`, 29 spine runs): the gains are in how long
+  we branch, not where — the confident count plateaus at 150 branches (150→200 nets +1 label for 21 worker-hours),
+  and when Forge's own option leads or ties at the 50-branch checkpoint only 3 of 77 decisions end confident;
+  **cap at 150 + a futility stop at 50 ≈ +39% confident labels a night (~46 instead of ~33)**; the k/turn/kind
+  levers +10–20% each with intervals through zero; the screen and early stopping already right; the Forge map
+  adds no label (1.8% of time, kept for the agreement study). **D489** (the futility stop, a 10% control sample
+  played in full, partial rows kept) built and gated (lane c4e1bda6; review running); J174 (13 new decks, the
+  150 cap, futility on, `--decisions` raised to spend the saved time) drafting for after J173.
