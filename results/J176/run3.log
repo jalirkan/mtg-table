@@ -1,0 +1,41 @@
+==== J176 run3 started 2026-10-27T07:22:00-04:00 in unit lab-J176-run3, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (13 turns, winner B) lists 6 decision(s) of seat A; branching at 6: d0 (p, turn 6, 2 options), d1 (p, turn 6, 2 options), d2 (p, turn 10, 2 options), d3 (b, turn 11, 2 options), d4 (p, turn 12, 2 options), d5 (p, turn 12, 2 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 6 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/6] d4-random-0: 50/50 branch game(s); 53358 branch games/h
+  [B 2/7] d3-random-0: 50/50 branch game(s); 53752 branch games/h
+  [B 3/8] d2-random-0: 50/50 branch game(s); 54005 branch games/h
+  [B 4/9] d5-random-0: 50/50 branch game(s); 52121 branch games/h
+  [B 5/10] d3-random-25: 50/50 branch game(s); 81948 branch games/h
+  [B 6/12] d2-random-25: 50/50 branch game(s); 83716 branch games/h
+  [B 7/14] d4-random-25: 50/50 branch game(s); 84737 branch games/h
+  [B 8/16] d5-random-25: 50/50 branch game(s); 84951 branch games/h
+  [B 9/18] d2-random-50: 50/50 branch game(s); 115475 branch games/h
+  [B 10/18] d3-random-50: 50/50 branch game(s); 115667 branch games/h
+  [B 11/18] d4-random-50: 50/50 branch game(s); 116449 branch games/h
+  [B 12/18] d5-random-50: 50/50 branch game(s); 117302 branch games/h
+  [B 13/18] d5-random-75: 50/50 branch game(s); 148308 branch games/h
+  [B 14/20] d4-random-75: 50/50 branch game(s); 148609 branch games/h
+  [B 15/22] d2-random-75: 50/50 branch game(s); 147900 branch games/h
+  [B 16/24] d3-random-75: 50/50 branch game(s); 146532 branch games/h
+  [B 17/26] d5-random-100: 50/50 branch game(s); 175627 branch games/h
+  [B 18/26] d4-random-100: 50/50 branch game(s); 175209 branch games/h
+  [B 19/26] d2-random-100: 50/50 branch game(s); 174135 branch games/h
+  [B 20/26] d3-random-100: 50/50 branch game(s); 172486 branch games/h
+  [B 21/26] d2-random-125: 50/50 branch game(s); 193169 branch games/h
+  [B 22/26] d3-random-125: 50/50 branch game(s); 196504 branch games/h
+  [B 23/26] d4-random-125: 50/50 branch game(s); 196812 branch games/h
+  [B 24/26] d5-random-125: 50/50 branch game(s); 196011 branch games/h
+  [B 25/26] d0-random-0: 50/50 branch game(s); 74780 branch games/h
+  [B 26/26] d1-random-0: 50/50 branch game(s); 73159 branch games/h
+atlas: the checks on 6 workers took 3 s
+atlas: /home/justin-a/code/lab/data/lab-j176/b-s03-legacy-2129/atlas.json and atlas.md; phase A 0 game(s), phase B 1300 branch game(s) at 6 decision(s); checks: 8 PROBLEM(S) (2540 rows, 202 frame logs, 6 leak check(s))
+  ATLAS PROBLEM: d2 option 0 `activate:6` (Marsh Flats: {T}, Pay 1 life, Sacrifice CARDNAME: Search you): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d2 option 1 `pass` (pass): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d3 option 0 `block:28>67` (block Restless Vents>Sentinel of the Nameless City): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d3 option 1 `block:none` (block none): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d4 option 0 `pass` (pass): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d4 option 1 `cast:17` (Corpse Dance): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d5 option 0 `pass` (pass): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
+  ATLAS PROBLEM: d5 option 1 `cast:17` (Corpse Dance): 150 of 150 branch game(s) errored (random 150 of 150): 150 x IndexOutOfBoundsException: Index # out of bounds for length #
