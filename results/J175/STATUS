@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: deck_code == 1 (deck_code = 0)
 runner: forgecoach-runner cc7467f6
 started: 2026-10-27T05:25:23-04:00
-phase: pilot 1/1
+finished: 2026-10-27T05:35:00-04:00
 mtg-table: cc7467f
 workers: 3
+peak_worker_rss_gb: 1.19
