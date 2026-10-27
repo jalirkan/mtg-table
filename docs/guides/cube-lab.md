@@ -1487,6 +1487,13 @@ Off by default ([D489](../decisions/D489-atlas-futility-stop.md), amending D480,
 - **The counters.** `phaseB.schedule` gains `futility` (each read: `d`, `at`, `gap`, `futile`, `control`, `stopped`),
   `futileStopped`, `futileControls`, `futileBranchGamesSaved` and `partialLabels`. The games saved are an upper bound: the
   stopped decisions' later random stages and Forge map, counted with every option that was running at the checkpoint.
+  `labels` still counts complete rows only. `branchedInFull` leaves out the stopped decisions as well as the screened ones.
+- **Spending the saving.** A futile decision is not replaced. At a fixed spine count and `--decisions`, the night just
+  ends earlier. To get more labels, the job raises `--decisions` (or the spine count). Compare nights by confident labels
+  per branch worker-hour, not by confident share: controls count as complete labels. Pool the controls across nights,
+  since about 3.5 a night at share .1 show nothing alone.
+- **A control** still obeys early stopping, at the futility checkpoint and after it: it is the decision as it would have
+  run with the rule off.
 - **The record.** Every read is a `futility` line of `phaseB/schedule.jsonl` (the means, the gap, the draw, `control`,
   `stopped`). A stopped decision writes no `stop` line at that checkpoint and is not replaced. The rule's settings are in
   plan.json's `cuts.futility` and in the schedule header's plan hash, so a resume under another `--futility`,

@@ -955,7 +955,8 @@ export function scheduleSummary(events: ScheduleEvent[], ds: DecisionAtlas[], o:
   } : {};
   return {
     cuts: o.cuts ?? CUTS_OFF, decisions: o.decisions,
-    picked: picks.length, branchedInFull: picks.length - screened.length, fill: picks.filter(([, c]) => c.why === 'fill').length,
+    // D489: a decision the futility rule stopped is not branched in full either (its count is `futileStopped`)
+    picked: picks.length, branchedInFull: picks.length - screened.length - picks.filter(([, c]) => c.futility?.stopped).length, fill: picks.filter(([, c]) => c.why === 'fill').length,
     optionsByDecision: Object.fromEntries(picks.map(([d, c]) => [`d${d}`, c.k])), meanOptions: k.length ? Math.round((k.reduce((a, b) => a + b, 0) / k.length) * 100) / 100 : null,
     screened, stopped, stoppedOptions: stopped.length,
     labels: ds.filter((d) => d.complete).length,
@@ -1179,7 +1180,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       // D480: what the cut design did
       L.push('### The cut design (D480)', '');
       const cuts = sc.cuts;
-      L.push(`${sc.picked} decision(s) branched, ${sc.branchedInFull} of them in full${cuts.minOptions > 1 ? `; picked among those with ${cuts.minOptions} or more options first${sc.fill ? ` (${sc.fill} filled from the rest)` : ''}` : ''}.${cuts.screen ? ` The screen at ${cuts.screen} random branches settled ${sc.screened.length}: ${sc.screened.map((x) => `d${x.d} (mean value ${pct(x.mean)}%${x.replacedBy === null ? ', nothing left to replace it' : `, replaced by d${x.replacedBy}`})`).join(', ') || 'none'}.` : ''}${cuts.earlyStop.length ? ` Early stopping at ${cuts.earlyStop.join('/')} random branches stopped ${sc.stopped.length} option(s): ${sc.stopped.map((x) => `d${x.d} o${x.o} at ${x.at}`).join(', ') || 'none'} (option 0 never stops; a stopped option's value is on its own branches, and the Forge map played only the options still running).` : ''}`, '');
+      L.push(`${sc.picked} decision(s) branched, ${sc.branchedInFull} of them in full${sc.futileStopped ? ` (${sc.futileStopped} more stopped by the futility rule, D489)` : ''}${cuts.minOptions > 1 ? `; picked among those with ${cuts.minOptions} or more options first${sc.fill ? ` (${sc.fill} filled from the rest)` : ''}` : ''}.${cuts.screen ? ` The screen at ${cuts.screen} random branches settled ${sc.screened.length}: ${sc.screened.map((x) => `d${x.d} (mean value ${pct(x.mean)}%${x.replacedBy === null ? ', nothing left to replace it' : `, replaced by d${x.replacedBy}`})`).join(', ') || 'none'}.` : ''}${cuts.earlyStop.length ? ` Early stopping at ${cuts.earlyStop.join('/')} random branches stopped ${sc.stopped.length} option(s): ${sc.stopped.map((x) => `d${x.d} o${x.o} at ${x.at}`).join(', ') || 'none'} (option 0 never stops; a stopped option's value is on its own branches, and the Forge map played only the options still running).` : ''}`, '');
       // D489
       if (cuts.futility && sc.futility) L.push(`The futility stop (D489) read ${sc.futility.length} decision(s) at ${futilityAt(cuts)} random branches: option 0 the best or within ${cuts.futility.tie} of it at ${sc.futility.filter((x) => x.futile).length}. It stopped ${sc.futileStopped ?? 0} (${sc.futility.filter((x) => x.stopped).map((x) => `d${x.d}`).join(', ') || 'none'}), each a partial label at that n, never confident, saving at most ${sc.futileBranchGamesSaved ?? 0} branch games; ${sc.futileControls ?? 0} it would have stopped played on to the full n as controls (${sc.futility.filter((x) => x.control).map((x) => `d${x.d}`).join(', ') || 'none'}; the share ${cuts.futility.sample}, drawn by seed).`, '');
     }

@@ -582,6 +582,7 @@ test('D489, the futility stop in the schedule: a stopped decision\'s later units
   const sum = scheduleSummary(x.written, ds, { branchRandom: 8, branchForge: 2, decisions: 3, cuts } as AtlasOptions);
   assert.deepEqual([sum.futileStopped, sum.futileControls, sum.futileBranchGamesSaved, sum.partialLabels, sum.labels], [2, 0, 2 * 3 * (8 - 4 + 2), 2, 1],
     'two stopped, no control; each would have played 4 more random branches and 2 Forge ones of 3 options');
+  assert.deepEqual([sum.picked, sum.branchedInFull], [3, 1], 'a futile-stopped decision is picked, not branched in full');
   // with every would-stop decision a control (share 1): both play on to the full n, and say so
   const c = run({ ...cuts, futility: { at: 0, tie: 0, sample: 1 } });
   assert.ok(['d0-random-6', 'd2-random-6'].every((u) => ids(c.played).some((p) => p.startsWith(u))), 'the controls run to the full n');
@@ -589,7 +590,7 @@ test('D489, the futility stop in the schedule: a stopped decision\'s later units
   const ctl = decisionAtlas(all[0]!, c.rows.filter((r) => r.d === 0), 300, 451, cc.get(0));
   assert.deepEqual([ctl.futilityControl, ctl.partial, ctl.complete, ctl.random.branches], [true, undefined, true, 8]);
   const csum = scheduleSummary(c.written, [0, 1, 2].map((d) => decisionAtlas(all[d]!, c.rows.filter((r) => r.d === d), 300, 451, cc.get(d))), { branchRandom: 8, branchForge: 2, decisions: 3, cuts } as AtlasOptions);
-  assert.deepEqual([csum.futileStopped, csum.futileControls, csum.futileBranchGamesSaved], [0, 2, 0]);
+  assert.deepEqual([csum.futileStopped, csum.futileControls, csum.futileBranchGamesSaved, csum.branchedInFull], [0, 2, 0, 3], 'controls are branched in full');
   // with the rule off: no futility line, and every decision runs to the full n
   const off = run({ ...cuts, futility: undefined });
   assert.equal(off.written.filter((e) => e.type === 'futility').length, 0);

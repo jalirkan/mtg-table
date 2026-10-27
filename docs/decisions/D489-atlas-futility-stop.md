@@ -17,14 +17,14 @@ the cheap partial labels in the label file, and play a random sample of the stop
 same units, events, plan.json and plan hash.
 
 1. **`--futility i`** (`off` or a checkpoint index; default off). At `--early-stop`'s `i`-th checkpoint (0 is the first: 50
-   under `on`), the schedule reads every decision that reaches it (`atlascuts.ts` `futileAt`, called from
+   under `on`), the schedule reads every decision that reaches it (`atlascuts.ts` `futileAt`, at `:236`, called from
    `AtlasSchedule.checkpoint`, `tools/cubelab/atlascuts.ts:461-476`):
    - the paired rows below the checkpoint, over the options still running (as early stopping reads them);
    - each option's mean, and the best (the highest mean; the first on a tie, as early stopping's leader);
    - the **gap**, the best's mean minus option 0's (never below zero).
 
-   The decision is **futile** when the gap is at most `--futility-tie` (`futileAt`, `atlascuts.ts:236`;
-   `gap <= tie + 1e-12`). A futile decision is **stopped**, unless it is a control (point 3):
+   The decision is **futile** when the gap is at most `--futility-tie` (the comparison `gap <= tie + 1e-12`,
+   `atlascuts.ts:244`). A futile decision is **stopped**, unless it is a control (point 3):
    - no more random branches of any option and no Forge map;
    - no `stop` line at that checkpoint;
    - no replacement: the decision keeps its place among `--decisions` with a partial label.
@@ -53,8 +53,20 @@ same units, events, plan.json and plan hash.
    decision is played to the full n as if the rule were off, and marked. The draw is uniform on [0, 1), from the atlas seed,
    the decision and the checkpoint (`futilityDraw`: `rng(seed * 1013 + d * 7919 + at, 'atlas/futility')`, a stream of its
    own). It is fixed before any branch is played and does not depend on the rows, so the controls are a simple random
-   sample of the futile decisions. A night can therefore measure what the rule costs: the controls' share of confident
-   labels, weighted by `1 / s`, estimates the labels lost.
+   sample of the futile decisions. The controls measure what the rule costs: the controls' confident labels, weighted by
+   `1 / s`, estimate the labels lost.
+
+   A control is the right counterfactual: it is the decision as it would have run with the rule off. It still obeys early
+   stopping, both at the futility checkpoint and at the later ones, since the futility read comes first and a control
+   then goes on to the ordinary early-stop verdict.
+
+   **One night is too few controls.** At share .1, a 13-spine night has about 3.5 controls (the J171 replay: 35 futile, 6
+   drawn). At the review's .04 rate that is about 0.14 confident labels expected, so one night's controls show nothing.
+   The controls are **pooled across nights**, or the first nights raise `--futility-sample` to .25.
+
+   **Controls also move the confident share.** A control counts as an ordinary complete label, so a night with controls has
+   a higher confident share than one without, for that reason alone. The number that compares across nights is
+   **confident labels per branch worker-hour** (or the controls weighted by `1 / s`), never the share.
 
 **The record.**
 - **`phaseB/schedule.jsonl`.** Every read is a `futility` line: `d`, `at`, `alive`, `tie`, `sample`, `o0Mean`, `best`,
@@ -79,6 +91,17 @@ what the next job's readers follow):
 | `complete` | — | **false** on a stopped decision, so a reader's confident test (`complete` and `random.regretLo > 0`, J172's and the review's) never counts it |
 | `why` | — | unchanged: the pick's `spread`, `fill` or `replaces` |
 
+**What readers should know.**
+- **A partial row is never confident.** It carries `partial`, `stoppedAt`, `stopWhy` and `futilityGap`, and
+  `futilityControl` is absent. A control row carries `futilityControl` and `futilityGap`.
+- **`phaseB.schedule.labels` is unchanged.** It still counts `complete` rows only, so it leaves out screened rows (as
+  under D480) and partial rows. The partial rows are counted separately in `partialLabels`.
+- **`branchedInFull` changed.** It was `picked − screened` (`atlas.ts:958`). It now also leaves out the decisions the
+  futility rule stopped (`picked − screened − futileStopped`), and atlas.md says how many those were. This is a one-line
+  code change, tested in the cuts test. With the rule off, the value is what it was. A job's completeness check that
+  reads `branchedInFull` (D480's *Completeness*) therefore counts only decisions that ran to the full n, controls
+  included.
+
 The brief named the field `why: "futile"`. It is `stopWhy`, because `why` already carries the pick's reason on every
 decision, and J172's label rows copy it (`"why":"spread"`). A reader that drops partial labels filters on `partial`; one
 that keeps them as cheap labels reads them like a screened decision's (D480 point 3).
@@ -94,9 +117,13 @@ atlas.md says what the rule did, and marks each partial label and each control.
 
 **Rejected.**
 - **Replacing a futile decision, as the screen replaces a settled one.** A screened decision is a lost or won position
-  with nothing to label. A futile one is labelled, partially, and that label is evidence about Forge's own pick. The
-  review's gain is per branch worker-hour, so the time saved goes to the next spine. A replacement chain would stretch
-  every spine by an amount the review never measured.
+  with nothing to label. A futile one is labelled, partially, and that label is evidence about Forge's own pick. A
+  replacement chain would stretch every spine by an amount the review never measured.
+
+  **The saved time is realised only if the job schedules more work.** A futile decision is not replaced. At a fixed 13
+  spines × `--decisions 8`, the night simply ends about 15% earlier, with the same number of complete labels less those
+  the rule stopped. The review's +17% and +39% are rates per branch worker-hour, not per night. To turn the rate into
+  labels, the next job raises `--decisions` (or the spine count) so that a spine's wall stays near 45 minutes.
 - **`why: "futile"`.** It would overwrite the pick's reason on the label row (above).
 - **A checkpoint by branch count** (`--futility 50`). The rule needs early stopping's barrier. An index into
   `--early-stop` cannot name a count that is not a checkpoint.
@@ -150,8 +177,10 @@ atlas.md says what the rule did, and marks each partial label and each control.
 - **The same replay on all 13 of J171's spines** (`lab-j170/b-s01` … `b-s13`):
   - 101 decisions read and **35 futile**, which is the review's D486 row at N = 50, leads/ties, exactly (35 stopped).
   - **1 of the 28 confident labels lost** (s11 d3), the review's 27 of 28.
-  - 13,240 of 71,940 branch games saved (18.4%), 8.92 of 54.05 branch hours (16.5%).
   - At share .1, 6 of the 35 would have been controls (s03 d19, s07 d3 and d5, s08 d13, s12 d0 and d5).
+  - **Saved, the rule's ceiling (no controls):** 13,240 of 71,940 branch games (18.4%), 8.92 of 54.05 branch hours
+    (16.5%).
+  - **Saved at share .1** (the six controls play on): 11,510 games (16.0%), 7.83 branch hours (14.5%).
 - **`tools/cubelab.sh atlas-selftest --jobs 2`** (`CUBELAB_HOME_ROOT=var/d489-homes`, beside J173 on the CPU). Every
   cuts leg now carries `--futility 0`, and there is a third leg, `cuts-futile`. It is the first leg's spine (pauper5, seed
   464) at `--futility-sample 0` where the first runs at .5, so the engine runs both paths: at seed 464, d31 has option 0
@@ -178,6 +207,8 @@ atlas.md says what the rule did, and marks each partial label and each control.
 
 **Follow-ups.**
 - **The next night's job** turns the rule on beside the 150 cap: `--branch-random 150 --early-stop 50,100 --futility 0`.
-  Its label reader carries `partial`, `stopWhy`, `futilityControl` and `futilityGap` into the label rows. Its morning
-  read reports the controls' confident share against the review's .04.
+  It raises `--decisions` (or the spine count) so the saved time is spent (*Rejected*, first item). Its label reader
+  carries `partial`, `stopWhy`, `futilityControl` and `futilityGap` into the label rows. Its morning read reports
+  confident labels per branch worker-hour. It adds the night's controls to the pooled count, and reads their confident
+  share against the review's .04 only once the pool is large enough to show it.
 - **The k=3 and early-turn arms** (the review's #3 and #4) remain registered arms, not defaults.
