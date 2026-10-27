@@ -3,8 +3,9 @@ runner: forgecoach-runner 6e87e5d4
 started: 2026-10-26T23:00:12-04:00
 phase: commands 6/15
 mtg-table: 6e87e5d
-workers: 5 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.17), budget 21.4 GB)
+workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.17), budget 21.4 GB)
 peak_worker_rss_gb: 1.17
 resumed: 2026-10-26T23:00:12-04:00: retry after "stopped: tools/runner.sh stop"; the pilot had passed; resumes at run4 (run1, run2, run3 done, exit 0); the tools skip what is done
 blocks_done: run1 exit 0 at 2026-10-26T14:53:44-04:00, run2 exit 0 at 2026-10-26T15:03:22-04:00, run3 exit 0 at 2026-10-26T15:27:32-04:00, run4 exit 0 at 2026-10-27T01:29:45-04:00, run5 exit 0 at 2026-10-27T01:54:19-04:00
 pressure-1: 2026-10-27T02:44:47-04:00 drop to 5 worker(s): some avg10 1.4%, swap-in 6622/s, job 8.6/21.4 GB
+pressure-2: 2026-10-27T03:02:58-04:00 raise to 6 worker(s): some avg10 0.0%, swap-in 0/s, job 7.2/21.4 GB
