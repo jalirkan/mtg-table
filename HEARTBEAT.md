@@ -1305,3 +1305,6 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   adds no label (1.8% of time, kept for the agreement study). **D489** (the futility stop, a 10% control sample
   played in full, partial rows kept) built and gated (lane c4e1bda6; review running); J174 (13 new decks, the
   150 cap, futility on, `--decisions` raised to spend the saved time) drafting for after J173.
+- 01:29 EDT: **D489 merged** (#218, main 8e6a3a1e; the merged tree's gate check-all OK, 60 jobs, wall 1041.2 s at GATE_JOBS=2 beside J173, run var/check-all/20261027-011121-1929717; the
+  review's five amendments and a comparability section: the cuts change the branch count, not the seat, so J173
+  and J174 pool with `branchRandom` and `partial` as columns). J174 is drafted and posts when J173 ends.
