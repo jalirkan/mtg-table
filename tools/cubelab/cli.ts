@@ -157,6 +157,7 @@ function usage(msg?: string): never {
                         [--branch-error-max 0.1]   (D466: an option whose branch games errored past this share is a problem)
                         [--branch-capped-warn 0.25]   (D478: an option whose branch games the turn cap ended past this share is a warning)
                         [--checks-parallel 1] [--early-stop off|on|a,b,c] [--screen 0] [--min-options 1]   (D480: the cut design, each off by default)
+                        [--futility off|<i>] [--futility-tie 0] [--futility-sample 0.1]   (D489: the futility stop, off by default)
        tools/cubelab.sh atlas-selftest [--jobs 2]   (D451: a tiny atlas, its forks, no-leak checks and guardrails asserted)
        tools/cubelab.sh seat-identity [--write]     (D451: the Forge, search and explore seats play origin/main's games)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)

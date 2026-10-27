@@ -1469,6 +1469,32 @@ Five flags, each off by default, so a J158- or J162-shaped job runs as it did
   --checks-parallel <workers> --unit-timeout 30`, with `--branch-forge 0` on all but one spine in six if the night is for
   labels rather than agreement.
 
+### The futility stop (D489)
+
+Off by default ([D489](../decisions/D489-atlas-futility-stop.md), amending D480, from the atlas review of 2026-10-27 §5 #2):
+
+| flag | what it changes | default |
+|---|---|---|
+| `--futility i` | at `--early-stop`'s `i`-th checkpoint (0: the first, 50 with `on`), a decision whose option 0 has the best mean over the paired rows of the options still running, or is within `--futility-tie` of it, is stopped: no more branches of any option and no Forge map. Its label is partial | off |
+| `--futility-tie t` | the margin: option 0's gap to the best mean (`best − o0`) at or below `t` is futile | 0 (o0 leads or ties) |
+| `--futility-sample s` | a seeded share `s` of the decisions the rule would stop is played to the full n anyway, as the rule's bias control | 0.1 |
+
+- **The label rows.** A stopped decision stays in `atlas.json`'s `phaseB.decisions` with its numbers at the checkpoint's
+  n and `partial: true`, `stoppedAt` (the checkpoint) and `stopWhy: "futile"`. It is never `complete`, so a reader's
+  confident test (`complete` and the random `regretLo` above zero) never counts it. `why` stays the pick's reason
+  (`spread`, `fill` or `replaces`). A control has `futilityControl: true` and is otherwise an ordinary decision. Every
+  decision the rule read carries `futilityGap`: option 0's gap to the best at the checkpoint.
+- **The counters.** `phaseB.schedule` gains `futility` (each read: `d`, `at`, `gap`, `futile`, `control`, `stopped`),
+  `futileStopped`, `futileControls`, `futileBranchGamesSaved` and `partialLabels`. The games saved are an upper bound: the
+  stopped decisions' later random stages and Forge map, counted with every option that was running at the checkpoint.
+- **The record.** Every read is a `futility` line of `phaseB/schedule.jsonl` (the means, the gap, the draw, `control`,
+  `stopped`). A stopped decision writes no `stop` line at that checkpoint and is not replaced. The rule's settings are in
+  plan.json's `cuts.futility` and in the schedule header's plan hash, so a resume under another `--futility`,
+  `--futility-tie` or `--futility-sample` is refused. With the rule off, both are D480's, key for key.
+- **Replaying a finished spine:** `node docs/evidence/d489-futility-replay.mjs <spine dir>` replays the spine's own
+  schedule through `AtlasSchedule` and adds only the futility read. It prints what the rule would have stopped and saved,
+  and which of the spine's confident labels it would have cost.
+
 ## The library card model and the balanced-cube generator (D473)
 
 `balance-model` fits every card the deck census drew — a ridge linear-probability model of deck win on its

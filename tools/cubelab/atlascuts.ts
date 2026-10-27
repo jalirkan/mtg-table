@@ -15,6 +15,10 @@
 //                      lies entirely below zero stops there (`dropAt`); option 0, Forge's own answer, never stops, so the
 //                      label (regret against option 0) keeps all of its branches.  The Forge map plays only the options still
 //                      running after the last checkpoint.
+//   --futility i       D489: at early stopping's i-th checkpoint (0: the first, 50 with `on`), a decision whose option 0 has the
+//                      best mean over the paired rows, or one within --futility-tie of it, is STOPPED: no more branches of any
+//                      option, no Forge map, and its label is a PARTIAL one at that n (`futileAt`); a seeded --futility-sample
+//                      share of those decisions is played on to the full n anyway as the rule's bias control.
 //
 // A unit that crosses no checkpoint is the unit it always was; a decision's next units wait for every unit of its current
 // stage (the checkpoint BARRIER), and the units after a checkpoint carry the options still running (`Unit.options`).  Every
@@ -33,7 +37,23 @@ export interface Cuts {
   screen: number;
   /** Decisions are spread over those with at least this many options first; 1 is every listed decision. */
   minOptions: number;
+  /** D489: the futility stop (absent: off, and the cuts' JSON -- plan.json, the schedule's plan hash -- is D480's). */
+  futility?: Futility;
 }
+
+/**
+ * D489: the futility stop.  At early stopping's checkpoint `at` (an index into `earlyStop`), a decision whose option 0 --
+ * Forge's own answer -- has the best mean over the paired rows of the options still running, or trails the best by `tie` or
+ * less, stops: its regret cannot come out confidently above zero often enough to pay for the rest of its branches (the atlas
+ * review of 2026-10-27: o0 leading or tied at 50 branches, 3 of 77 decisions ended confident).  A seeded `sample` share of the
+ * decisions it would stop is played on to the full n anyway (`futilityControl`), so a night measures what the rule loses.
+ */
+export interface Futility { at: number; tie: number; sample: number }
+
+/** D489: --futility-tie's default: o0 leads or ties exactly (the review's recommended row; D489 says why not .02). */
+export const FUTILITY_TIE_DEFAULT = 0;
+/** D489: --futility-sample's default: one in ten of the decisions the rule would stop is played to the full n. */
+export const FUTILITY_SAMPLE_DEFAULT = 0.1;
 
 export const CUTS_OFF: Cuts = { earlyStop: [], screen: 0, minOptions: 1 };
 
@@ -45,7 +65,7 @@ export const SCREEN_LOW = 0.04;
 export const SCREEN_HIGH = 0.96;
 
 /** Whether any cut changes what phase B plays or records (a schedule.jsonl is written only then). */
-export const cutsOn = (c: Cuts): boolean => c.earlyStop.length > 0 || c.screen > 0 || c.minOptions > 1;
+export const cutsOn = (c: Cuts): boolean => c.earlyStop.length > 0 || c.screen > 0 || c.minOptions > 1 || c.futility !== undefined;
 
 /** Whether phase B has checkpoint barriers (units waiting for others). */
 export const hasBarriers = (c: Cuts): boolean => c.earlyStop.length > 0 || c.screen > 0;
@@ -59,6 +79,28 @@ export function parseEarlyStop(v: string | undefined): number[] {
   return xs;
 }
 
+/**
+ * D489: `--futility`, `--futility-tie` and `--futility-sample`: off (undefined), or the checkpoint index with its margin and
+ * control share.  The margin and the share without the rule are refused, so a job cannot believe it turned the rule on.
+ */
+export function parseFutility(v: string | undefined, tie: string | undefined, sample: string | undefined): Futility | undefined {
+  if (v === undefined || v === 'off') {
+    if (tie !== undefined || sample !== undefined) throw new Error('atlas: --futility-tie and --futility-sample need --futility <checkpoint index>');
+    return undefined;
+  }
+  const at = Number(v);
+  if (!/^\d+$/.test(v) || !Number.isInteger(at)) throw new Error('atlas: --futility takes off or a checkpoint index into --early-stop (0: the first)');
+  const share = (x: string | undefined, d: number, flag: string): number => {
+    const n = x === undefined ? d : Number(x);
+    if (!Number.isFinite(n) || n < 0 || n > 1) throw new Error(`atlas: --${flag} wants a number from 0 to 1`);
+    return n;
+  };
+  return { at, tie: share(tie, FUTILITY_TIE_DEFAULT, 'futility-tie'), sample: share(sample, FUTILITY_SAMPLE_DEFAULT, 'futility-sample') };
+}
+
+/** D489: the random-branch count the futility rule is read at (null: off). */
+export const futilityAt = (c: Cuts): number | null => (c.futility ? (c.earlyStop[c.futility.at] ?? null) : null);
+
 /** The cuts checked against the spine's branch counts: every barrier on a chunk boundary, increasing, below --branch-random. */
 export function checkCuts(c: Cuts, branchRandom: number, chunk: number): void {
   const marks = [...(c.screen ? [c.screen] : []), ...c.earlyStop];
@@ -69,6 +111,11 @@ export function checkCuts(c: Cuts, branchRandom: number, chunk: number): void {
   for (let j = 1; j < c.earlyStop.length; j++) if ((c.earlyStop[j] as number) <= (c.earlyStop[j - 1] as number)) throw new Error('atlas: --early-stop wants increasing branch counts');
   if (c.screen && c.earlyStop.length && c.screen > (c.earlyStop[0] as number)) throw new Error('atlas: --screen must come before the first --early-stop checkpoint');
   if (!Number.isInteger(c.minOptions) || c.minOptions < 1) throw new Error('atlas: --min-options wants a whole number >= 1');
+  if (c.futility) {
+    const f = c.futility;
+    if (!Number.isInteger(f.at) || f.at < 0 || f.at >= c.earlyStop.length) throw new Error(`atlas: --futility ${f.at} names no --early-stop checkpoint (${c.earlyStop.length ? `0 to ${c.earlyStop.length - 1}: ${c.earlyStop.join(', ')}` : 'early stopping is off'})`);
+    if (!(f.tie >= 0 && f.tie <= 1) || !(f.sample >= 0 && f.sample <= 1)) throw new Error('atlas: --futility-tie and --futility-sample want numbers from 0 to 1');
+  }
 }
 
 /** The ends of a decision's random stages: every barrier, then --branch-random.  One stage when no cut has a barrier. */
@@ -177,6 +224,32 @@ export function dropAt(m: number[][], alive: number[], boot: number, seed: numbe
   return { leader: alive[lead] as number, dropped, low };
 }
 
+/** D489: what the futility rule reads at a checkpoint: option 0's mean, the best running option's, and the gap between them. */
+export interface FutilityRead { o0Mean: number | null; best: number | null; bestMean: number | null; gap: number | null; futile: boolean }
+
+/**
+ * D489: the futility rule at a checkpoint.  `m` is the paired rows over the running options `alive` (option 0 among them: it
+ * never stops), as dropAt reads them.  The best is the running option with the highest mean (the first on a tie, as dropAt's
+ * leader); the gap is best's mean minus option 0's, never below zero; the decision is FUTILE when the gap is at most `tie`
+ * (0: option 0 is a best).  No paired row -- every branch of some option errored -- is no evidence, and never futile.
+ */
+export function futileAt(m: number[][], alive: number[], tie: number): FutilityRead {
+  const j0 = alive.indexOf(0);
+  if (!m.length || j0 < 0) return { o0Mean: null, best: null, bestMean: null, gap: null, futile: false };
+  const mu = means(m, alive.length) as number[];
+  let lead = 0;
+  for (let j = 1; j < alive.length; j++) if ((mu[j] as number) > (mu[lead] as number)) lead = j;
+  const gap = (mu[lead] as number) - (mu[j0] as number);
+  const r4 = (x: number): number => Math.round(x * 1e4) / 1e4;
+  return { o0Mean: r4(mu[j0] as number), best: alive[lead] as number, bestMean: r4(mu[lead] as number), gap: r4(gap), futile: gap <= tie + 1e-12 };
+}
+
+/** D489: the futility control's seed for decision `d` (its own stream: no draw shared with early stopping's bootstrap). */
+export const futilitySeed = (seed: number, d: number, at: number): number => seed * 1013 + d * 7919 + at;
+
+/** D489: decision `d`'s control draw at checkpoint `at`, uniform on [0, 1): a decision the rule stops is a control when it is below the share. */
+export const futilityDraw = (seed: number, d: number, at: number): number => rng(futilitySeed(seed, d, at), 'atlas/futility').next();
+
 /** The checkpoint's bootstrap seed for decision `d`: a function of the atlas seed, the decision and the checkpoint. */
 export const stopSeed = (seed: number, d: number, at: number): number => seed * 1009 + d * 7919 + at;
 
@@ -184,7 +257,10 @@ export const stopSeed = (seed: number, d: number, at: number): number => seed * 
 export type ScheduleEvent =
   | { v: 1; type: 'pick'; d: number; k: number; why: PickWhy; replaces?: number }
   | { v: 1; type: 'screen'; d: number; at: number; mean: number | null; settled: boolean }
-  | { v: 1; type: 'stop'; d: number; at: number; leader: number | null; dropped: number[]; alive: number[]; low: Record<number, number | null> };
+  | { v: 1; type: 'stop'; d: number; at: number; leader: number | null; dropped: number[]; alive: number[]; low: Record<number, number | null> }
+  // D489: the futility rule read at its checkpoint, for every decision that reaches it: `futile` the rule's verdict, `control`
+  // a futile decision played on anyway (its `draw` below the share), `stopped` a futile one that is not a control
+  | ({ v: 1; type: 'futility'; d: number; at: number; alive: number[]; tie: number; sample: number; draw: number; control: boolean; stopped: boolean } & FutilityRead);
 
 /**
  * D480's follow-up: the FIRST line of a schedule.jsonl the cuts write -- the plan its verdicts were made under.  A pick is
@@ -217,6 +293,8 @@ export interface DecisionCut {
   /** The options the Forge map plays (null: every option). */
   forgeOptions: number[] | null;
   screened: boolean; screenMean?: number | null;
+  /** D489: the futility rule's read at its checkpoint (absent: off, or the decision never reached it). */
+  futility?: { at: number; gap: number | null; futile: boolean; control: boolean; stopped: boolean; alive: number[] };
 }
 
 /** The schedule's events folded into each decision's cut (decisions in pick order). */
@@ -231,6 +309,7 @@ export function decisionCuts(events: ScheduleEvent[]): Map<number, DecisionCut> 
       for (const o of e.dropped) x.stoppedAt[o] = e.at;
       x.forgeOptions = e.alive.filter((o) => !e.dropped.includes(o));
     }
+    if (e.type === 'futility') x.futility = { at: e.at, gap: e.gap, futile: e.futile, control: e.control, stopped: e.stopped, alive: [...e.alive] };
   }
   return out;
 }
@@ -262,7 +341,7 @@ export class AtlasSchedule {
   private readonly st = new Map<number, DState>();
   private readonly rows = new Map<number, Map<number, number[]>>();
   private readonly events: ScheduleEvent[] = [];
-  private readonly recorded: { screen: Map<string, Extract<ScheduleEvent, { type: 'screen' }>>; stop: Map<string, Extract<ScheduleEvent, { type: 'stop' }>> } = { screen: new Map(), stop: new Map() };
+  private readonly recorded: { screen: Map<string, Extract<ScheduleEvent, { type: 'screen' }>>; stop: Map<string, Extract<ScheduleEvent, { type: 'stop' }>>; futility: Map<string, Extract<ScheduleEvent, { type: 'futility' }>> } = { screen: new Map(), stop: new Map(), futility: new Map() };
   /** Every unit admitted to the run (initial and released), by id: the say line's total. */
   readonly known = new Set<string>();
   initial: Unit[] = [];
@@ -284,6 +363,7 @@ export class AtlasSchedule {
       if (e.type === 'pick') this.picks.push({ d: e.d, k: e.k, why: e.why, ...(e.replaces !== undefined ? { replaces: e.replaces } : {}) });
       if (e.type === 'screen') this.recorded.screen.set(`${e.d}:${e.at}`, e);
       if (e.type === 'stop') this.recorded.stop.set(`${e.d}:${e.at}`, e);
+      if (e.type === 'futility') this.recorded.futility.set(`${e.d}:${e.at}`, e);
     }
     if (!this.picks.length) for (const p of pickDecisions(all, o.decisions, cuts.minOptions)) this.pick(p);
     // replay each decision's stages: a stage whose checkpoint is recorded is applied as written; one whose units are all done
@@ -299,9 +379,12 @@ export class AtlasSchedule {
         this.initial.push(...todo);
         if (this.lastStage(s)) { s.outstanding = new Set(todo.filter((u) => u.c === 'random').map(uid)); s.done = true; break; }
         const at = this.ends[s.stage] as number;
-        const isRecorded = (!this.isScreen(at) || this.recorded.screen.has(`${s.d}:${at}`)) && (!this.isStop(at) || this.recorded.stop.has(`${s.d}:${at}`));
+        // D489: a futility read that stopped the decision writes no stop line at its checkpoint, so either line records it
+        const futileStop = this.recorded.futility.get(`${s.d}:${at}`)?.stopped === true;
+        const isRecorded = (!this.isScreen(at) || this.recorded.screen.has(`${s.d}:${at}`)) && (!this.isFutility(at) || this.recorded.futility.has(`${s.d}:${at}`))
+          && (!this.isStop(at) || futileStop || this.recorded.stop.has(`${s.d}:${at}`));
         if (!isRecorded && todo.length) { s.outstanding = new Set(todo.map(uid)); break; }
-        if (!this.checkpoint(s)) break;   // screened: settled, and replaced
+        if (!this.checkpoint(s)) break;   // screened (settled, and replaced) or stopped by the futility rule (D489)
       }
     }
   }
@@ -318,6 +401,7 @@ export class AtlasSchedule {
 
   private isScreen(at: number): boolean { return this.cuts.screen > 0 && at === this.cuts.screen; }
   private isStop(at: number): boolean { return this.cuts.earlyStop.includes(at); }
+  private isFutility(at: number): boolean { return futilityAt(this.cuts) === at; }
   private lastStage(s: DState): boolean { return s.stage === this.ends.length - 1; }
 
   /** Stage `s.stage`'s units: random chunks over the running options, and on the last stage the Forge map's too. */
@@ -350,8 +434,9 @@ export class AtlasSchedule {
   }
 
   /**
-   * The checkpoint at the end of `s`'s stage, from its recorded events or decided now: the screen, then early stopping.  True
-   * when the decision goes on (its next stage is current), false when the screen settled it (and its replacement is picked).
+   * The checkpoint at the end of `s`'s stage, from its recorded events or decided now: the screen, then the futility rule
+   * (D489), then early stopping.  True when the decision goes on (its next stage is current), false when the screen settled it
+   * (and its replacement is picked) or the futility rule stopped it (no replacement: its partial label is a decision's label).
    */
   private checkpoint(s: DState): boolean {
     const at = this.ends[s.stage] as number;
@@ -370,6 +455,23 @@ export class AtlasSchedule {
         const next = nextDecision(this.all, taken, s.d, this.cuts.minOptions);
         const already = this.picks.some((p) => p.replaces === s.d);
         if (next !== null && !already) this.pick({ d: next, k: (this.all[next] as DecisionListing).tokens.length, why: 'replaces', replaces: s.d });
+        return false;
+      }
+    }
+    if (this.isFutility(at)) {
+      const f = this.cuts.futility as Futility;
+      let e = this.recorded.futility.get(`${s.d}:${at}`);
+      if (!e) {
+        const x = futileAt(this.paired(s.d, at, s.alive), s.alive, f.tie);
+        const draw = Math.round(futilityDraw(this.o.seed, s.d, at) * 1e6) / 1e6;
+        const control = x.futile && draw < f.sample;
+        e = { v: 1, type: 'futility', d: s.d, at, alive: [...s.alive], tie: f.tie, sample: f.sample, ...x, draw, control, stopped: x.futile && !control };
+        this.recorded.futility.set(`${s.d}:${at}`, e);
+        this.emit(e);
+      }
+      if (e.stopped) {
+        s.done = true;
+        s.outstanding.clear();
         return false;
       }
     }
@@ -430,12 +532,14 @@ export class AtlasSchedule {
  * The branch rows a spine would have kept under `cut`: a random row of an option early stopping stopped is gone from its stop
  * on, a Forge row of an option the Forge map did not play is gone, and a screened decision keeps its first `screen` random
  * branches and no Forge row.  On a finished spine's rows (branch i of every option on one seed, whatever else is played) this
- * is what the cut run records, which is how D480's numbers replay the review's on J158's and J162's branches.
+ * is what the cut run records, which is how D480's numbers replay the review's on J158's and J162's branches.  D489: a decision
+ * the futility rule stopped keeps its random branches below the checkpoint and no Forge row.
  */
 export function rowsUnderCut<R extends Pick<BranchRow, 'c' | 'o' | 'i'>>(rows: R[], cut: DecisionCut | undefined, screen: number): R[] {
   if (!cut) return rows;
   return rows.filter((r) => {
     if (cut.screened) return r.c === 'random' && r.i < screen;
+    if (cut.futility?.stopped) return r.c === 'random' && r.i < cut.futility.at;   // D489: a partial label, no Forge map
     if (r.c === 'random') return cut.stoppedAt[r.o] === undefined || r.i < (cut.stoppedAt[r.o] as number);
     return !cut.forgeOptions || cut.forgeOptions.includes(r.o);
   });
