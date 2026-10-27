@@ -1,7 +1,8 @@
-running
+waiting
+reason: stopped: tools/runner.sh stop
 runner: forgecoach-runner 6e87e5d4
 started: 2026-10-27T04:54:38-04:00
-phase: stopping
+finished: 2026-10-27T05:01:04-04:00
 mtg-table: 8e6a3a1
 workers: 3
 peak_worker_rss_gb: 1.14
