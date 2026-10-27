@@ -9,6 +9,7 @@
 //       [--ladder var/ai-ladder] [--pairs tools/ai-bench/pairs-confirm.txt] [--phase a|b|both|report]
 //       [--branch-error-max 0.1] [--branch-capped-warn 0.25]
 //       [--checks-parallel 1] [--early-stop off|on|a,b,c] [--screen 0] [--min-options 1]   (D480, the cut design: below)
+//       [--futility off|<i>] [--futility-tie 0] [--futility-sample 0.1]                     (D489, the futility stop: below)
 //
 // THE PAIR (--pair auto): the line of the pairs file with the most ladder games and the most even record,
 // as one rule (atlasmath.ts rankPairs: the smallest |p - 1/2| + 1.96 sqrt(p(1-p)/n) over the decisive
@@ -65,6 +66,13 @@
 // spreads the decisions over those with k or more options first; and a spine with --branch-forge 0 reads complete / decided /
 // settled on its random map.  Phase B's units then go out behind each checkpoint (runUnits, the pool's holdIdle), and every
 // verdict is a line of phaseB/schedule.jsonl, replayed when the atlas resumes.
+//
+// D489, THE FUTILITY STOP (off by default): --futility i reads, at early stopping's i-th checkpoint (0: 50 with `on`), whether
+// option 0 has the best mean over the paired rows (or trails it by --futility-tie or less); such a decision is stopped there --
+// no more branches, no Forge map -- and its label is PARTIAL (`partial: true`, `stoppedAt`, `stopWhy: 'futile'`, never
+// `complete`, so never confident), unless its seeded draw falls in --futility-sample's share: then it is played to the full n
+// as the rule's bias control (`futilityControl: true`).  atlas.json's `phaseB.schedule` counts `futileStopped`,
+// `futileControls` and `futileBranchGamesSaved`; the rule's settings are in plan.json's `cuts` and the schedule's plan hash.
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -77,7 +85,7 @@ import { labPath, recipePath, shownPath } from './labdata.ts';
 import type { Ledger } from './censusplay.ts';
 import { checksParallel, checksSerial, type CheckInputs, type CheckParts, type GuardrailCheck, COUNTED_GUARDRAILS } from './atlaschecks.ts';
 export { COUNTED_GUARDRAILS, emptyGuardrails, forgePayCapOf, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, guardrailPass, mergeGuardrails, type GuardrailCheck } from './atlaschecks.ts';
-import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, hasBarriers, parseEarlyStop, playCount, repeatedPlays, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
+import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, futilityAt, hasBarriers, parseEarlyStop, parseFutility, playCount, repeatedPlays, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
 import {
   agreement, gamesFor, meanInterval, pairLines, rankPairs, regretInterval, scoreOf, scoreStat, variance,
   wilson, type LadderGame, type PairRow,
@@ -366,7 +374,12 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
     branchErrorMax: fraction(one(f, 'branch-error-max'), BRANCH_ERROR_MAX_DEFAULT),
     branchCappedWarn: fraction(one(f, 'branch-capped-warn'), BRANCH_CAPPED_WARN_DEFAULT, 'branch-capped-warn'),
     cuts: { earlyStop: one(f, 'early-stop') === undefined && priorCuts ? priorCuts.earlyStop : parseEarlyStop(one(f, 'early-stop')),
-      screen: one(f, 'screen') === undefined && priorCuts ? priorCuts.screen : int('screen', 0), minOptions: one(f, 'min-options') === undefined && priorCuts ? priorCuts.minOptions : int('min-options', 1, 1) },
+      screen: one(f, 'screen') === undefined && priorCuts ? priorCuts.screen : int('screen', 0), minOptions: one(f, 'min-options') === undefined && priorCuts ? priorCuts.minOptions : int('min-options', 1, 1),
+      // D489: the futility stop, off unless asked (a report reads the folder's own)
+      ...((): { futility?: Cuts['futility'] } => {
+        const fu = one(f, 'futility') === undefined && priorCuts ? priorCuts.futility : parseFutility(one(f, 'futility'), one(f, 'futility-tie'), one(f, 'futility-sample'));
+        return fu ? { futility: { at: fu.at, tie: fu.tie, sample: fu.sample } } : {};
+      })() },
     checksParallel: int('checks-parallel', 1, 1),
   };
   checkCuts(o.cuts as Cuts, o.branchRandom, o.chunk);
@@ -445,7 +458,8 @@ export function scheduleHeader(repo: string, o: AtlasOptions): ScheduleHeader {
   const c = o.cuts ?? CUTS_OFF;
   const v: Record<string, unknown> = { deckA: shownPath(repo, o.deckA), deckB: shownPath(repo, o.deckB), seed: o.seed, turnCap: o.turnCap, options: o.options, chunk: o.chunk,
     branchTimeoutSec: o.branchTimeoutSec, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, boot: o.boot,
-    cuts: { earlyStop: c.earlyStop, screen: c.screen, minOptions: c.minOptions } };
+    // D489: the futility stop only when on, so a D480 schedule's plan hash is what it was
+    cuts: { earlyStop: c.earlyStop, screen: c.screen, minOptions: c.minOptions, ...(c.futility ? { futility: { at: c.futility.at, tie: c.futility.tie, sample: c.futility.sample } } : {}) } };
   const plan = Object.fromEntries(SCHEDULE_PLAN_KEYS.map((k) => [k, v[k]]));
   return { v: 1, type: 'plan', decision: 'D480', planSha256: sha256(JSON.stringify(plan)), deckSha256: { deckA: sha256(fs.readFileSync(o.deckA)), deckB: sha256(fs.readFileSync(o.deckB)) }, plan };
 }
@@ -515,7 +529,7 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
     priorEvents, priorRows, doneUnits, (e) => { if (sfd !== null) fs.writeSync(sfd, `${JSON.stringify(e)}\n`); });
   const picked = sched.picks.map((p) => p.d);
   say(`atlas phase B: the baseline (${baseline.turns} turns, winner ${baseline.winner}) lists ${all.length} decision(s) of seat A; branching at ${picked.length}: ${picked.map((d) => `d${d} (${all[d]?.kind}, turn ${all[d]?.turn}, ${all[d]?.tokens.length} options)`).join(', ')}`);
-  if (cutsOn(cuts)) say(`atlas phase B: the cut design (D480):${cuts.minOptions > 1 ? ` decisions with ${cuts.minOptions}+ options first;` : ''}${cuts.screen ? ` the screen at ${cuts.screen} branches (settled at <= ${SCREEN_LOW} or >= ${SCREEN_HIGH}, replaced);` : ''}${cuts.earlyStop.length ? ` early stopping at ${cuts.earlyStop.join('/')} (option 0 never stops; the Forge map on the options still running);` : ''} checkpoints ${sched.ends.join('/')}`);
+  if (cutsOn(cuts)) say(`atlas phase B: the cut design (D480):${cuts.minOptions > 1 ? ` decisions with ${cuts.minOptions}+ options first;` : ''}${cuts.screen ? ` the screen at ${cuts.screen} branches (settled at <= ${SCREEN_LOW} or >= ${SCREEN_HIGH}, replaced);` : ''}${cuts.earlyStop.length ? ` early stopping at ${cuts.earlyStop.join('/')} (option 0 never stops; the Forge map on the options still running);` : ''}${cuts.futility ? ` the futility stop at ${futilityAt(cuts)} (D489: option 0 best or within ${cuts.futility.tie}; ${cuts.futility.sample} of those played on as controls);` : ''} checkpoints ${sched.ends.join('/')}`);
   const units = sched.initial;
   const barriers = hasBarriers(cuts);
   const resumed = units.filter((u) => doneBranches(priorRows, u).size > 0).length;
@@ -766,6 +780,13 @@ export interface DecisionAtlas {
   settled: boolean;
   /** D480, written when the schedule has a word: the option count, why the decision was branched, the screen's verdict, the Forge map's options. */
   k?: number; why?: PickWhy; replaces?: number; screened?: boolean; screenMean?: number | null; forgeOptions?: number[];
+  /**
+   * D489, on a decision the futility rule read: option 0's gap to the best running option's mean at its checkpoint; and on one
+   * it STOPPED, a partial label -- `partial: true`, `stoppedAt` (the checkpoint's random-branch count) and `stopWhy: 'futile'`,
+   * never `complete` (so never confident, and no Forge map) -- or, on one it would have stopped but played on as the rule's
+   * bias control, `futilityControl: true`.  `why` stays the pick's (spread, fill, replaces).
+   */
+  futilityGap?: number | null; partial?: true; stoppedAt?: number; stopWhy?: 'futile'; futilityControl?: true;
 }
 
 /** D466: one map's regret block, its numbers copied out as strings and back (see decisionAtlas). */
@@ -820,7 +841,9 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
   const options = listing.tokens.map((token, o) => ({ o, token, label: listing.labels[o] ?? token, random: scoreStat(col(mR, o)), forge: scoreStat(col(mF, o)),
     ...(stopped[o] !== undefined ? { stoppedAt: stopped[o] as number } : {}) }));
   const screened = cut?.screened === true;
-  const complete = !screened && mR.length > 0 && (!forgeMap || mF.length > 0);
+  const fu = cut?.futility;
+  // D489: a decision the futility rule stopped is a partial label, never complete
+  const complete = !screened && !fu?.stopped && mR.length > 0 && (!forgeMap || mF.length > 0);
   const played = (x: (typeof options)[number]): boolean => !fo || fo.includes(x.o);
   const every = (pred: (m: number) => boolean): boolean => options.every((x) => x.random.mean !== null && pred(x.random.mean))
     && (!forgeMap || options.filter(played).every((x) => x.forge.mean !== null && pred(x.forge.mean)));
@@ -834,6 +857,7 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
     complete, decided, settled: screened || decided || (complete && every((m) => m <= LOST_AT)),
     ...(cut ? { k: cut.k, why: cut.why, ...(cut.replaces !== undefined ? { replaces: cut.replaces } : {}), ...(cut.screenMean !== undefined ? { screened, screenMean: cut.screenMean } : {}),
       ...(fo ? { forgeOptions: fo } : {}) } : {}),
+    ...(fu ? { futilityGap: fu.gap, ...(fu.stopped ? { partial: true as const, stoppedAt: fu.at, stopWhy: 'futile' as const } : {}), ...(fu.control ? { futilityControl: true as const } : {}) } : {}),
   };
 }
 
@@ -920,12 +944,23 @@ export function scheduleSummary(events: ScheduleEvent[], ds: DecisionAtlas[], o:
   const screened = picks.filter(([, c]) => c.screened).map(([d, c]) => ({ d, mean: c.screenMean ?? null, replacedBy: picks.find(([, x]) => x.replaces === d)?.[0] ?? null }));
   const stopped = picks.flatMap(([d, c]) => Object.entries(c.stoppedAt).map(([op, at]) => ({ d, o: Number(op), at })));
   const k = picks.map(([, c]) => c.k);
+  // D489: the futility rule's reads, the decisions it stopped and its controls; the branch games saved are the stopped decisions'
+  // later random stages and Forge map with every option running at the checkpoint (an upper bound when early stopping is on)
+  const fr = picks.filter(([, c]) => c.futility).map(([d, c]) => ({ d, at: c.futility!.at, gap: c.futility!.gap, futile: c.futility!.futile, control: c.futility!.control, stopped: c.futility!.stopped, alive: c.futility!.alive.length }));
+  const futile = (o.cuts ?? CUTS_OFF).futility ? {
+    futility: fr.map(({ alive: _a, ...x }) => x),
+    futileStopped: fr.filter((x) => x.stopped).length, futileControls: fr.filter((x) => x.control).length,
+    futileBranchGamesSaved: fr.filter((x) => x.stopped).reduce((a, x) => a + x.alive * (o.branchRandom - x.at + o.branchForge), 0),
+    partialLabels: ds.filter((d) => d.partial).length,
+  } : {};
   return {
     cuts: o.cuts ?? CUTS_OFF, decisions: o.decisions,
-    picked: picks.length, branchedInFull: picks.length - screened.length, fill: picks.filter(([, c]) => c.why === 'fill').length,
+    // D489: a decision the futility rule stopped is not branched in full either (its count is `futileStopped`)
+    picked: picks.length, branchedInFull: picks.length - screened.length - picks.filter(([, c]) => c.futility?.stopped).length, fill: picks.filter(([, c]) => c.why === 'fill').length,
     optionsByDecision: Object.fromEntries(picks.map(([d, c]) => [`d${d}`, c.k])), meanOptions: k.length ? Math.round((k.reduce((a, b) => a + b, 0) / k.length) * 100) / 100 : null,
     screened, stopped, stoppedOptions: stopped.length,
     labels: ds.filter((d) => d.complete).length,
+    ...futile,
   };
 }
 
@@ -1139,12 +1174,15 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       L.push(`| d${d.d} | ${d.turn} | ${d.kind} | ${d.options.length} | ${best(d.random.best)}, ${pct(d.random.regret)}${iv(d.random.regretLo, d.random.regretHi)} (n ${d.random.branches}) | ${best(d.forge.best)}, ${pct(d.forge.regret)}${iv(d.forge.regretLo, d.forge.regretHi)} (n ${d.forge.branches}) | ${num2(d.rho)}${iv(d.rhoLo, d.rhoHi, num2)} | ${d.sameBest === null ? '-' : d.sameBest ? 'yes' : 'no'} |`);
     }
     L.push('');
-    const sc = b.schedule as undefined | { picked: number; branchedInFull: number; fill: number; screened: Array<{ d: number; mean: number | null; replacedBy: number | null }>; stopped: Array<{ d: number; o: number; at: number }>; cuts: Cuts };
+    const sc = b.schedule as undefined | { picked: number; branchedInFull: number; fill: number; screened: Array<{ d: number; mean: number | null; replacedBy: number | null }>; stopped: Array<{ d: number; o: number; at: number }>; cuts: Cuts;
+      futility?: Array<{ d: number; at: number; gap: number | null; futile: boolean; control: boolean; stopped: boolean }>; futileStopped?: number; futileControls?: number; futileBranchGamesSaved?: number };
     if (sc) {
       // D480: what the cut design did
       L.push('### The cut design (D480)', '');
       const cuts = sc.cuts;
-      L.push(`${sc.picked} decision(s) branched, ${sc.branchedInFull} of them in full${cuts.minOptions > 1 ? `; picked among those with ${cuts.minOptions} or more options first${sc.fill ? ` (${sc.fill} filled from the rest)` : ''}` : ''}.${cuts.screen ? ` The screen at ${cuts.screen} random branches settled ${sc.screened.length}: ${sc.screened.map((x) => `d${x.d} (mean value ${pct(x.mean)}%${x.replacedBy === null ? ', nothing left to replace it' : `, replaced by d${x.replacedBy}`})`).join(', ') || 'none'}.` : ''}${cuts.earlyStop.length ? ` Early stopping at ${cuts.earlyStop.join('/')} random branches stopped ${sc.stopped.length} option(s): ${sc.stopped.map((x) => `d${x.d} o${x.o} at ${x.at}`).join(', ') || 'none'} (option 0 never stops; a stopped option's value is on its own branches, and the Forge map played only the options still running).` : ''}`, '');
+      L.push(`${sc.picked} decision(s) branched, ${sc.branchedInFull} of them in full${sc.futileStopped ? ` (${sc.futileStopped} more stopped by the futility rule, D489)` : ''}${cuts.minOptions > 1 ? `; picked among those with ${cuts.minOptions} or more options first${sc.fill ? ` (${sc.fill} filled from the rest)` : ''}` : ''}.${cuts.screen ? ` The screen at ${cuts.screen} random branches settled ${sc.screened.length}: ${sc.screened.map((x) => `d${x.d} (mean value ${pct(x.mean)}%${x.replacedBy === null ? ', nothing left to replace it' : `, replaced by d${x.replacedBy}`})`).join(', ') || 'none'}.` : ''}${cuts.earlyStop.length ? ` Early stopping at ${cuts.earlyStop.join('/')} random branches stopped ${sc.stopped.length} option(s): ${sc.stopped.map((x) => `d${x.d} o${x.o} at ${x.at}`).join(', ') || 'none'} (option 0 never stops; a stopped option's value is on its own branches, and the Forge map played only the options still running).` : ''}`, '');
+      // D489
+      if (cuts.futility && sc.futility) L.push(`The futility stop (D489) read ${sc.futility.length} decision(s) at ${futilityAt(cuts)} random branches: option 0 the best or within ${cuts.futility.tie} of it at ${sc.futility.filter((x) => x.futile).length}. It stopped ${sc.futileStopped ?? 0} (${sc.futility.filter((x) => x.stopped).map((x) => `d${x.d}`).join(', ') || 'none'}), each a partial label at that n, never confident, saving at most ${sc.futileBranchGamesSaved ?? 0} branch games; ${sc.futileControls ?? 0} it would have stopped played on to the full n as controls (${sc.futility.filter((x) => x.control).map((x) => `d${x.d}`).join(', ') || 'none'}; the share ${cuts.futility.sample}, drawn by seed).`, '');
     }
     const ag = b.agreement;
     if (b.forgeMap === false) {
@@ -1163,7 +1201,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
     L.push('');
     L.push('### Each decision\'s options, side by side', '');
     for (const d of b.decisions) {
-      L.push(`**d${d.d}** (turn ${d.turn}, ${d.kind}; option 0 is Forge's answer)${d.screened ? ` -- settled by the screen (mean value ${pct(d.screenMean)}%), a cheap label` : ''}:`, '');
+      L.push(`**d${d.d}** (turn ${d.turn}, ${d.kind}; option 0 is Forge's answer)${d.screened ? ` -- settled by the screen (mean value ${pct(d.screenMean)}%), a cheap label` : ''}${d.partial ? ` -- stopped by the futility rule at ${d.stoppedAt} random branches (option 0 ${d.futilityGap ? `within ${pct(d.futilityGap)} points of the best` : 'the best'}), a partial label (D489)` : ''}${d.futilityControl ? ' -- a futility control: the rule would have stopped it, played to the full n (D489)' : ''}:`, '');
       L.push('| option | token | what | random: value | forge: value |', '|---|---|---|---|---|');
       for (const op of d.options) L.push(`| ${op.o}${op.o === 0 ? ' (played)' : ''} | \`${op.token}\` | ${op.label.replace(/\|/g, '/')} | ${pct(op.random.mean)}${iv(op.random.lo, op.random.hi)} (n ${op.random.n}${op.stoppedAt !== undefined ? `, stopped at ${op.stoppedAt}` : ''}) | ${pct(op.forge.mean)}${iv(op.forge.lo, op.forge.hi)} (n ${op.forge.n}) |`);
       L.push('');
@@ -1284,7 +1322,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   const serialChecks = checksJson(out);
   const rcPar = await atlasCommand(repo, new Map([...flags, ['phase', ['report']], ['checks-parallel', ['2']]]), say);
   want(rcPar === rc && checksJson(out) === serialChecks, 'D480: the checks on two workers are the serial run\'s, byte for byte but the redaction\'s wall time');
-  // D480: the cut design, all five on -- two short spines, the second with no Forge map
+  // D480: the cut design, all five on -- two short spines, the second with no Forge map; D489: the futility stop on both
   const cuts = await atlasSelftestCuts(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
   for (const x of cuts.fails) fails.push(`the cuts leg: ${x}`);
   // D483: no baseline of any leg lists one play twice (every listing carries its options' play identities)
@@ -1320,19 +1358,24 @@ async function atlasSelftestCuts(repo: string, out: string, jobs: string, say: (
   const fails: string[] = [];
   const want = (ok: boolean, what: string): void => { if (!ok) fails.push(what); };
   const legs = [
-    { dir: path.join(out, 'cuts'), decisions: 2, random: 6, forge: 2, stop: '4' },
-    { dir: path.join(out, 'cuts-noforge'), decisions: 1, random: 4, forge: 0, stop: '2' },
+    { dir: path.join(out, 'cuts'), decisions: 2, random: 6, forge: 2, stop: '4', sample: '0.5', want: 'control' },
+    { dir: path.join(out, 'cuts-noforge'), decisions: 1, random: 4, forge: 0, stop: '2', sample: '0.5', want: '' },
+    { dir: path.join(out, 'cuts-futile'), decisions: 2, random: 6, forge: 2, stop: '4', sample: '0', want: 'stopped' },
   ];
+  // D489: the futility stop on every leg, at the first checkpoint (on the second, the screen's own).  The first and third are
+  // one spine: at seed 464 its d31 has option 0 leading at 4 branches, and its control draw (.38) falls under the first leg's
+  // share (.5) -- played on and marked -- and over the third's (0) -- stopped, a partial label.  So the engine runs both paths.
   const said: string[] = [];
   for (const leg of legs) {
     const flags = new Map<string, string[]>([
       ['deck-a', [SELFTEST_CUTS.deckA]], ['deck-b', [SELFTEST_CUTS.deckB]], ['seed', [String(SELFTEST_CUTS.seed)]], ['phase', ['b']], ['decisions', [String(leg.decisions)]],
       ['branch-random', [String(leg.random)]], ['branch-forge', [String(leg.forge)]], ['chunk', ['2']], ['leak-checks', ['1']], ['boot', ['200']],
       ['screen', ['2']], ['early-stop', [leg.stop]], ['min-options', ['3']], ['checks-parallel', ['2']], ['jobs', [jobs]], ['out', [leg.dir]],
+      ['futility', ['0']], ['futility-sample', [leg.sample]],
     ]);
     const rc = await atlasCommand(repo, flags, say);
     const B = path.join(leg.dir, 'phaseB');
-    const doc = JSON.parse(fs.readFileSync(path.join(leg.dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[] }; phaseB: { decisions: DecisionAtlas[]; forgeMap?: boolean; agreement: { decisions: number }; schedule?: { branchedInFull: number; screened: unknown[]; stoppedOptions: number } } };
+    const doc = JSON.parse(fs.readFileSync(path.join(leg.dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[] }; phaseB: { decisions: DecisionAtlas[]; forgeMap?: boolean; agreement: { decisions: number }; schedule?: { branchedInFull: number; screened: unknown[]; stoppedOptions: number; futileStopped?: number; futileControls?: number; futileBranchGamesSaved?: number; futility?: unknown[] } } };
     const tag = path.basename(leg.dir);
     want(rc === 0 && doc.checks.problems.length === 0, `${tag}: the atlas's own checks: ${doc.checks.problems.join('; ') || `exit ${rc}`}`);
     const listed = (JSON.parse(fs.readFileSync(path.join(B, 'baseline.json'), 'utf8')) as { decisions: DecisionListing[] }).decisions;
@@ -1352,6 +1395,17 @@ async function atlasSelftestCuts(repo: string, out: string, jobs: string, say: (
         want(events.some((e) => e.type === 'pick' && e.replaces === d) || listed.every((_, j) => cut.has(j)), `${tag}: d${d} was screened and not replaced`);
         continue;
       }
+      // D489: every decision past the screen is read by the futility rule at the first checkpoint; a stopped one has no branch
+      // past it and no Forge branch, and its label is partial; a control runs to the full n and says so
+      const ad = doc.phaseB.decisions.find((x) => x.d === d);
+      want(c.futility !== undefined && c.futility.at === Number(leg.stop), `${tag}: d${d} has no futility read at ${leg.stop}`);
+      want(!c.futility?.control || c.futility.futile, `${tag}: d${d} is a control the rule did not stop`);
+      if (c.futility?.stopped) {
+        want(mine.every((r) => r.c === 'random' && r.i < c.futility!.at), `${tag}: d${d} was stopped as futile, but has branches past ${c.futility.at} or a Forge branch`);
+        want(ad?.partial === true && ad.complete === false && ad.stopWhy === 'futile' && ad.stoppedAt === c.futility.at, `${tag}: d${d} was stopped as futile, but its label is not a partial one`);
+        continue;
+      }
+      if (c.futility?.control) want(ad?.futilityControl === true && mine.some((r) => r.c === 'random' && r.i >= c.futility!.at), `${tag}: d${d} is a futility control, but was not played on or not marked`);
       want(mine.every((r) => r.c !== 'random' || c.stoppedAt[r.o] === undefined || r.i < (c.stoppedAt[r.o] as number)), `${tag}: d${d} has a branch of a stopped option past its stop`);
       want(mine.every((r) => r.c !== 'forge' || !c.forgeOptions || c.forgeOptions.includes(r.o)), `${tag}: d${d} has a Forge branch of an option the Forge map did not play`);
       want(c.stoppedAt[0] === undefined, `${tag}: d${d}'s option 0 stopped`);
@@ -1365,9 +1419,15 @@ async function atlasSelftestCuts(repo: string, out: string, jobs: string, say: (
     want(doc.phaseB.decisions.every((x) => typeof x.k === 'number' && typeof x.why === 'string'), `${tag}: every decision records its k and why`);
     if (leg.forge === 0) {
       want(doc.phaseB.forgeMap === false && doc.phaseB.agreement.decisions === 0, `${tag}: no Forge map, no agreement read`);
-      want(doc.phaseB.decisions.filter((x) => !x.screened).every((x) => x.complete), `${tag}: complete on the random map alone`);
+      want(doc.phaseB.decisions.filter((x) => !x.screened && !x.partial).every((x) => x.complete), `${tag}: complete on the random map alone`);
     }
-    said.push(`${tag}: ${doc.phaseB.schedule?.branchedInFull ?? 0} in full, ${doc.phaseB.schedule?.screened.length ?? 0} screened, ${doc.phaseB.schedule?.stoppedOptions ?? 0} option(s) stopped`);
+    const sc = doc.phaseB.schedule;
+    want(typeof sc?.futileStopped === 'number' && typeof sc.futileControls === 'number' && typeof sc.futileBranchGamesSaved === 'number' && Array.isArray(sc.futility),
+      `${tag}: D489's counters (futileStopped, futileControls, futileBranchGamesSaved) in the schedule summary`);
+    want(sc?.futileStopped === doc.phaseB.decisions.filter((x) => x.partial).length, `${tag}: futileStopped is the partial labels' count`);
+    if (leg.want === 'control') want((sc?.futileControls ?? 0) >= 1, `${tag}: no futility control (d31 is futile at 4 and its draw is under .5)`);
+    if (leg.want === 'stopped') want((sc?.futileStopped ?? 0) >= 1 && (sc?.futileBranchGamesSaved ?? 0) > 0, `${tag}: nothing stopped as futile (d31 is futile at 4, and the share is 0)`);
+    said.push(`${tag}: ${sc?.branchedInFull ?? 0} in full, ${sc?.screened.length ?? 0} screened, ${sc?.stoppedOptions ?? 0} option(s) stopped, ${sc?.futileStopped ?? 0} futile (${sc?.futileControls ?? 0} control(s), ${sc?.futileBranchGamesSaved ?? 0} branch games saved)`);
   }
   return { fails, summary: `cuts ${said.join('; ')}` };
 }

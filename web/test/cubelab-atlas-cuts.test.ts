@@ -26,7 +26,11 @@
  *  - --checks-parallel: atlas.json's checks from the parallel run are the serial run's byte for byte, but the redaction's
  *    wall time -- id problems past the 200 cap and guardrail violations past the 50 named, split across slices;
  *  - the pool behind the barrier (a fake `java`, as cubelab-atlas-resume.test.ts): a decision's next units wait for its current
- *    ones, a worker the first stage did not need is started for the later stages (holdIdle), and the jobs carry the options.
+ *    ones, a worker the first stage did not need is started for the later stages (holdIdle), and the jobs carry the options;
+ *  - D489, the futility stop: the rule at its checkpoint (option 0 leads, ties within the margin, trails); the control draw
+ *    seeded and its share held over 1,000 decisions; a stopped decision's later units gone, its label partial and never
+ *    complete, a control played on and marked; the counters; a resume deciding nothing again; the plan hash and plan.json's
+ *    cuts changed by the rule and unchanged without it; and the rule replayed on the review's fixture.
  */
 
 import assert from 'node:assert/strict';
@@ -38,12 +42,12 @@ import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 
 import {
-  AtlasSchedule, checkCuts, CUTS_OFF, decisionCuts, dropAt, nextDecision, parseEarlyStop, pickDecisions, playCount, repeatedPlays, rowsUnderCut, screenMean, settledAt, stageEnds,
+  AtlasSchedule, checkCuts, CUTS_OFF, decisionCuts, dropAt, futileAt, futilityAt, futilityDraw, nextDecision, parseEarlyStop, parseFutility, pickDecisions, playCount, repeatedPlays, rowsUnderCut, screenMean, settledAt, stageEnds,
   type Cuts, type ScheduleEvent, type ScheduleLine,
 } from '../../tools/cubelab/atlascuts.ts';
 import { mergeGuardrails, slices, type GuardrailCheck } from '../../tools/cubelab/atlaschecks.ts';
 import {
-  decisionAtlas, guardrailCheck, openSchedule, runUnits, scheduleHeader, unitsOf, writeAtlas, writeAtlasChecked,
+  decisionAtlas, guardrailCheck, openSchedule, runUnits, scheduleHeader, scheduleSummary, unitsOf, writeAtlas, writeAtlasChecked,
   type AtlasOptions, type BranchRow, type DecisionListing, type Unit, type UnitLine,
 } from '../../tools/cubelab/atlas.ts';
 import { spread } from '../../tools/cubelab/atlasmath.ts';
@@ -272,8 +276,8 @@ interface FixDecision { d: number; kind: string; turn: number; k: number; random
 const FIX = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(REPO, 'fixtures/cubelab/atlas-cuts/primary-six.json.gz'))).toString('utf8')) as {
   spines: Array<{ spine: string; seed: number; branchRandom: number; branchForge: number; decisions: FixDecision[] }> };
 
-function replayFixture(cuts: Cuts): { decisions: number; reproduced: number; n150: number; confident: number; kept: number; flips: number; screened: number; screenedConfident: number; stopped: number; o0Stopped: number; gamesSaved: number } {
-  const t = { decisions: 0, reproduced: 0, n150: 0, confident: 0, kept: 0, flips: 0, screened: 0, screenedConfident: 0, stopped: 0, o0Stopped: 0, gamesSaved: 0 };
+function replayFixture(cuts: Cuts): { decisions: number; reproduced: number; n150: number; confident: number; kept: number; flips: number; screened: number; screenedConfident: number; stopped: number; o0Stopped: number; gamesSaved: number; futile: number; futileConfident: number } {
+  const t = { decisions: 0, reproduced: 0, n150: 0, confident: 0, kept: 0, flips: 0, screened: 0, screenedConfident: 0, stopped: 0, o0Stopped: 0, gamesSaved: 0, futile: 0, futileConfident: 0 };
   let full = 0, kept = 0;
   for (const sp of FIX.spines) {
     // the branched decisions, as a listing of their own (the schedule replays each one's checkpoints on its own rows)
@@ -306,6 +310,7 @@ function replayFixture(cuts: Cuts): { decisions: number; reproduced: number; n15
       t.stopped += Object.keys(cut?.stoppedAt ?? {}).length;
       if (cut?.stoppedAt[0] !== undefined) t.o0Stopped++;
       if (cut?.screened) { t.screened++; if (conf) t.screenedConfident++; return; }
+      if (cut?.futility?.stopped) { t.futile++; if (conf) t.futileConfident++; }   // D489
       const b = decisionAtlas(listing[j]!, under, 1000, sp.seed + x.d * 7919, cut);
       const conf2 = b.complete && (b.random.regretLo ?? 0) > 0;
       if (conf && conf2) t.kept++;
@@ -483,3 +488,171 @@ test('the pool behind the barrier: the next stage waits, a worker the first stag
   assert.deepEqual(events.map((e) => e.type), ['pick', 'screen', 'stop']);
   assert.ok(!said.some((x) => /could not boot/.test(x)), said.join('\n'));
 });
+
+test('D489, the futility rule at its checkpoint: option 0 leads, ties within the margin, or trails; the flags and their checks', () => {
+  // 20 paired rows over options 0, 1, 2: option 0 wins 12, option 1 wins 10, option 2 wins 4
+  const m = Array.from({ length: 20 }, (_, i) => [i < 12 ? 1 : 0, i < 10 ? 1 : 0, i < 4 ? 1 : 0]);
+  const lead = futileAt(m, [0, 1, 2], 0);
+  assert.deepEqual(lead, { o0Mean: 0.6, best: 0, bestMean: 0.6, gap: 0, futile: true }, 'option 0 leads: futile');
+  // option 1 ties option 0 exactly: futile at margin 0 (a best), and the best named is the first of the tie
+  const tie = futileAt(m.map((r, i) => [r[0]!, i < 12 ? 1 : 0, r[2]!]), [0, 1, 2], 0);
+  assert.deepEqual([tie.futile, tie.gap, tie.best], [true, 0, 0], 'an exact tie is futile at margin 0');
+  // option 1 ahead by one branch in 20 (.05): futile only with a margin of .05 or more
+  const near = m.map((r, i) => [r[0]!, i < 13 ? 1 : 0, r[2]!]);
+  assert.deepEqual([futileAt(near, [0, 1, 2], 0).futile, futileAt(near, [0, 1, 2], 0).gap, futileAt(near, [0, 1, 2], 0).best], [false, 0.05, 1], 'trails by .05: not futile at 0');
+  assert.equal(futileAt(near, [0, 1, 2], 0.02).futile, false, 'nor within .02');
+  assert.equal(futileAt(near, [0, 1, 2], 0.05).futile, true, 'within a .05 margin it is (the float gap compared with a tolerance)');
+  // option 2 far ahead: not futile at any review margin
+  const trail = m.map((r) => [r[0]!, r[1]!, 1]);
+  assert.deepEqual([futileAt(trail, [0, 1, 2], 0.04).futile, futileAt(trail, [0, 1, 2], 0.04).gap], [false, 0.4]);
+  // the columns are the running options in order; option 0 is found wherever it sits; no row is no evidence
+  assert.equal(futileAt(m.map((r) => [r[1]!, r[0]!]), [1, 0], 0).futile, true);
+  assert.deepEqual(futileAt([], [0, 1], 0), { o0Mean: null, best: null, bestMean: null, gap: null, futile: false });
+  // the flags
+  assert.equal(parseFutility(undefined, undefined, undefined), undefined);
+  assert.equal(parseFutility('off', undefined, undefined), undefined);
+  assert.deepEqual(parseFutility('0', undefined, undefined), { at: 0, tie: 0, sample: 0.1 }, 'the defaults: o0 best or tied, one in ten a control');
+  assert.deepEqual(parseFutility('1', '0.02', '0.25'), { at: 1, tie: 0.02, sample: 0.25 });
+  assert.throws(() => parseFutility('on', undefined, undefined), /checkpoint index/);
+  assert.throws(() => parseFutility('-1', undefined, undefined), /checkpoint index/);
+  assert.throws(() => parseFutility('0', undefined, '1.5'), /--futility-sample wants a number from 0 to 1/);
+  assert.throws(() => parseFutility(undefined, '0.02', undefined), /need --futility/);
+  const on: Cuts = { earlyStop: [50, 100, 150], screen: 25, minOptions: 3, futility: { at: 0, tie: 0, sample: 0.1 } };
+  checkCuts(on, 200, 25);
+  assert.equal(futilityAt(on), 50, 'index 0 is early stopping\'s first checkpoint');
+  assert.equal(futilityAt({ ...on, futility: { at: 2, tie: 0, sample: 0.1 } }), 150);
+  assert.equal(futilityAt({ ...on, futility: undefined }), null);
+  assert.deepEqual(stageEnds(on, 200), [25, 50, 100, 150, 200], 'the rule adds no checkpoint of its own');
+  assert.throws(() => checkCuts({ ...on, futility: { at: 3, tie: 0, sample: 0.1 } }, 200, 25), /names no --early-stop checkpoint/);
+  assert.throws(() => checkCuts({ earlyStop: [], screen: 0, minOptions: 1, futility: { at: 0, tie: 0, sample: 0.1 } }, 200, 25), /early stopping is off/);
+});
+
+test('D489, the control draw: seeded per decision and checkpoint, and its share holds over 1,000 decisions', () => {
+  assert.equal(futilityDraw(2106, 7, 50), futilityDraw(2106, 7, 50), 'the same seed, decision and checkpoint: the same draw');
+  assert.notEqual(futilityDraw(2106, 7, 50), futilityDraw(2106, 8, 50));
+  assert.notEqual(futilityDraw(2106, 7, 50), futilityDraw(2107, 7, 50));
+  for (const share of [0.1, 0.25, 0.5]) {
+    for (const seed of [1, 2106, 900000005]) {
+      const n = Array.from({ length: 1000 }, (_, d) => futilityDraw(seed, d, 50)).filter((x) => x < share).length;
+      // binomial(1000, share): 4 standard deviations either side
+      const sd = Math.sqrt(1000 * share * (1 - share));
+      assert.ok(Math.abs(n - 1000 * share) < 4 * sd, `share ${share}, seed ${seed}: ${n} of 1,000 drawn as controls`);
+    }
+  }
+  const all = Array.from({ length: 1000 }, (_, d) => futilityDraw(2106, d, 50));
+  assert.ok(all.every((x) => x >= 0 && x < 1));
+});
+
+test('D489, the futility stop in the schedule: a stopped decision\'s later units vanish and its label is partial; a control plays on; the counters; a resume decides nothing again', () => {
+  const all = listingOf([3, 3, 3]);
+  // d0: option 0 always wins (futile at 4); d1: option 2 always wins, option 0 never (runs on); d2: option 0 wins every other
+  // branch, the others never (futile)
+  const score = (d: number, o: number, i: number): number => (d === 0 ? (o === 0 ? 1 : i % 2) : d === 1 ? (o === 2 ? 1 : 0) : o === 0 ? i % 2 : 0);
+  const cuts: Cuts = { earlyStop: [4], screen: 0, minOptions: 1, futility: { at: 0, tie: 0, sample: 0 } };
+  const so = { ...O, decisions: 3 as number | 'all' };
+  const run = (c: Cuts): { played: Unit[]; written: ScheduleEvent[]; rows: BranchRow[]; s: AtlasSchedule } => {
+    const written: ScheduleEvent[] = [];
+    const s = new AtlasSchedule(all, so, c, [], [], new Set(), (e) => written.push(e));
+    const played: Unit[] = [];
+    const rows: BranchRow[] = [];
+    const queue = [...s.initial];
+    while (queue.length) {
+      const u = queue.shift() as Unit;
+      played.push(u);
+      for (const r of play(u, 3, (o, i) => score(u.d, o, i))) { s.addRow(r); rows.push(r); }
+      queue.push(...s.unitDone(u));
+    }
+    return { played, written, rows, s };
+  };
+  const ids = (us: Unit[]): string[] => us.map((u) => `d${u.d}-${u.c}-${u.i0}${u.options ? `:${u.options.join('')}` : ''}`);
+  const x = run(cuts);
+  assert.deepEqual(ids(x.played).filter((u) => u.startsWith('d0') || u.startsWith('d2')), ['d0-random-0', 'd0-random-2', 'd2-random-0', 'd2-random-2'], 'd0 and d2 stop at 4: no later random unit and no Forge map');
+  assert.ok(ids(x.played).some((u) => u.startsWith('d1-random-6')) && ids(x.played).some((u) => u.startsWith('d1-forge')), 'd1 runs to the full n, Forge map included');
+  const fe = x.written.filter((e) => e.type === 'futility') as Array<Extract<ScheduleEvent, { type: 'futility' }>>;
+  assert.deepEqual(fe.map((e) => [e.d, e.at, e.futile, e.control, e.stopped, e.gap]), [[0, 4, true, false, true, 0], [1, 4, false, false, false, 1], [2, 4, true, false, true, 0]]);
+  assert.deepEqual(x.written.filter((e) => e.type === 'stop').map((e) => e.d), [1], 'a stopped decision writes no early-stop line; the one that runs on does');
+  const cut = decisionCuts(x.written);
+  assert.deepEqual(rowsUnderCut(x.rows.filter((r) => r.d === 0), cut.get(0), 0), x.rows.filter((r) => r.d === 0), 'what was played is what the cut keeps');
+  const a0 = decisionAtlas(all[0]!, x.rows.filter((r) => r.d === 0), 300, 451, cut.get(0));
+  assert.deepEqual([a0.partial, a0.stoppedAt, a0.stopWhy, a0.complete, a0.settled, a0.random.branches, a0.futilityGap, a0.why], [true, 4, 'futile', false, false, 4, 0, 'spread'],
+    'a partial label: its 4-branch numbers, never complete (so never confident), the pick\'s why kept');
+  const a1 = decisionAtlas(all[1]!, x.rows.filter((r) => r.d === 1), 300, 451, cut.get(1));
+  assert.deepEqual([a1.partial, a1.complete, a1.futilityGap, a1.futilityControl], [undefined, true, 1, undefined]);
+  const ds = [0, 1, 2].map((d) => decisionAtlas(all[d]!, x.rows.filter((r) => r.d === d), 300, 451, cut.get(d)));
+  const sum = scheduleSummary(x.written, ds, { branchRandom: 8, branchForge: 2, decisions: 3, cuts } as AtlasOptions);
+  assert.deepEqual([sum.futileStopped, sum.futileControls, sum.futileBranchGamesSaved, sum.partialLabels, sum.labels], [2, 0, 2 * 3 * (8 - 4 + 2), 2, 1],
+    'two stopped, no control; each would have played 4 more random branches and 2 Forge ones of 3 options');
+  assert.deepEqual([sum.picked, sum.branchedInFull], [3, 1], 'a futile-stopped decision is picked, not branched in full');
+  // with every would-stop decision a control (share 1): both play on to the full n, and say so
+  const c = run({ ...cuts, futility: { at: 0, tie: 0, sample: 1 } });
+  assert.ok(['d0-random-6', 'd2-random-6'].every((u) => ids(c.played).some((p) => p.startsWith(u))), 'the controls run to the full n');
+  const cc = decisionCuts(c.written);
+  const ctl = decisionAtlas(all[0]!, c.rows.filter((r) => r.d === 0), 300, 451, cc.get(0));
+  assert.deepEqual([ctl.futilityControl, ctl.partial, ctl.complete, ctl.random.branches], [true, undefined, true, 8]);
+  const csum = scheduleSummary(c.written, [0, 1, 2].map((d) => decisionAtlas(all[d]!, c.rows.filter((r) => r.d === d), 300, 451, cc.get(d))), { branchRandom: 8, branchForge: 2, decisions: 3, cuts } as AtlasOptions);
+  assert.deepEqual([csum.futileStopped, csum.futileControls, csum.futileBranchGamesSaved, csum.branchedInFull], [0, 2, 0, 3], 'controls are branched in full');
+  // with the rule off: no futility line, and every decision runs to the full n
+  const off = run({ ...cuts, futility: undefined });
+  assert.equal(off.written.filter((e) => e.type === 'futility').length, 0);
+  assert.equal(off.played.filter((u) => u.c === 'forge').length, 3);
+  assert.equal(scheduleSummary(off.written, [], { branchRandom: 8, branchForge: 2, decisions: 3, cuts: { ...cuts, futility: undefined } } as AtlasOptions).futileStopped, undefined, 'no counters with the rule off');
+  // the resume, after d0's and d2's checkpoints were decided and part of d1's later stage was played: nothing decided again,
+  // and neither stopped decision comes back
+  const doneIds = new Set(x.played.slice(0, x.played.findIndex((u) => u.d === 1 && u.i0 === 6)).map((u) => `d${u.d}-${u.c}-${u.i0}`));
+  const again: ScheduleEvent[] = [];
+  const s2 = new AtlasSchedule(all, so, cuts, x.written, x.rows.filter((r) => doneIds.has(`d${r.d}-${r.c}-${Math.floor(r.i / 2) * 2}`)), doneIds, (e) => again.push(e));
+  assert.deepEqual(again, [], 'nothing decided again');
+  assert.ok(s2.initial.every((u) => u.d === 1), `only d1's units are left: ${ids(s2.initial).join(' ')}`);
+  // a crash after d0's units were done but before its futility line: decided on resume, and its later units never released
+  const s3w: ScheduleEvent[] = [];
+  const firstStage = new Set(['d0-random-0', 'd0-random-2']);
+  const s3 = new AtlasSchedule(all, so, cuts, x.written.filter((e) => e.type === 'pick'), x.rows.filter((r) => r.d === 0 && r.i < 4), firstStage, (e) => s3w.push(e));
+  assert.deepEqual(s3w.map((e) => `${e.type} d${e.d}`), ['futility d0'], 'd0\'s checkpoint is decided now');
+  assert.ok(!s3.initial.some((u) => u.d === 0), 'and d0 has nothing left to play');
+});
+
+test('D489: the futility stop changes the schedule\'s plan hash and plan.json\'s cuts; off, both are D480\'s; a resume under another --futility is refused', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cubelab-atlas-futility-'));
+  try {
+    const deckA = path.join(tmp, 'a.dck'), deckB = path.join(tmp, 'b.dck');
+    fs.writeFileSync(deckA, '[metadata]\nName=A\n[Main]\n20 Mountain\n');
+    fs.writeFileSync(deckB, '[metadata]\nName=B\n[Main]\n20 Island\n');
+    const base: Cuts = { earlyStop: [4], screen: 2, minOptions: 1 };
+    const o = { deckA, deckB, seed: 451, turnCap: 40, rollouts: 0, branchRandom: 8, branchForge: 2, decisions: 2, options: 8, chunk: 2, leakChecks: 0,
+      branchTimeoutSec: 60, boot: 300, pair: null, unitTimeoutMin: 5, cuts: base } as AtlasOptions;
+    const h0 = scheduleHeader(REPO, o);
+    assert.deepEqual(h0.plan.cuts, { earlyStop: [4], screen: 2, minOptions: 1 }, 'off: the cuts are D480\'s, key for key, so a D480 schedule resumes');
+    const hOn = scheduleHeader(REPO, { ...o, cuts: { ...base, futility: { at: 0, tie: 0, sample: 0.1 } } });
+    assert.notEqual(hOn.planSha256, h0.planSha256);
+    assert.deepEqual((hOn.plan.cuts as Cuts).futility, { at: 0, tie: 0, sample: 0.1 });
+    const hTie = scheduleHeader(REPO, { ...o, cuts: { ...base, futility: { at: 0, tie: 0.02, sample: 0.1 } } });
+    const hShare = scheduleHeader(REPO, { ...o, cuts: { ...base, futility: { at: 0, tie: 0, sample: 0.2 } } });
+    assert.equal(new Set([h0.planSha256, hOn.planSha256, hTie.planSha256, hShare.planSha256]).size, 4, 'the margin and the share are in the hash too');
+    const file = path.join(tmp, 'schedule.jsonl');
+    openSchedule(file, hOn, () => {});
+    assert.throws(() => openSchedule(file, h0, () => {}), /made under another plan.*cuts/);
+    assert.throws(() => openSchedule(file, hTie, () => {}), /"tie":0\b.*"tie":0\.02/);
+    assert.deepEqual(openSchedule(file, scheduleHeader(REPO, { ...o, cuts: { ...base, futility: { at: 0, tie: 0, sample: 0.1 } } }), () => {}), [], 'the same rule resumes');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('D489 on the review\'s fixture: the futility stop at 50 with the review\'s cuts -- what it stops, what it saves, the confident labels it keeps', () => {
+  // the six primary spines of J158 and J162 (D480's fixture): the review's B cuts plus the futility stop at 50, controls off,
+  // so the count is the rule's own; a stopped decision is never confident, so every label it costs is counted
+  const cuts: Cuts = { earlyStop: [50, 100, 150], screen: 25, minOptions: 1 };
+  const base = replayFixture(cuts);
+  const fu = replayFixture({ ...cuts, futility: { at: 0, tie: 0, sample: 0 } });
+  assert.equal(fu.decisions, 96);
+  assert.equal(base.kept, 13);
+  assert.ok(fu.futile > 0, `the rule stopped ${fu.futile} of the 90`);
+  assert.ok(fu.gamesSaved > base.gamesSaved, `branch games saved ${base.gamesSaved} -> ${fu.gamesSaved}`);
+  assert.equal(fu.futileConfident, 13 - fu.kept, 'every confident label lost is a stopped one');
+  assert.deepEqual([fu.futile, fu.futileConfident, fu.kept, fu.flips - fu.futileConfident], [FIXTURE_FUTILE.stopped, FIXTURE_FUTILE.lost, 13 - FIXTURE_FUTILE.lost, 0],
+    `the rule on the fixture: ${fu.futile} stopped, ${fu.futileConfident} confident lost, saved ${fu.gamesSaved}`);
+  assert.deepEqual([base.gamesSaved, fu.gamesSaved], [FIXTURE_FUTILE.savedBase, FIXTURE_FUTILE.saved], 'the share of the 90\'s branch rows not played: B\'s cuts, then with the rule');
+});
+
+/** D489's numbers on D480's fixture (the six primary spines of J158 and J162; written in D489's evidence). */
+const FIXTURE_FUTILE = { stopped: 37, lost: 1, savedBase: 0.324, saved: 0.555 } as const;
