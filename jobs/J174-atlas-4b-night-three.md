@@ -1,0 +1,3105 @@
+id: J174
+title: The move atlas, rung 4b, night three -- the first night on D489's futility stop and the review's 150 cap (the atlas review of 2026-10-27, section 5 #1 and #2): a decision whose option 0 leads or ties at the 50-branch checkpoint stops there as a PARTIAL label, a seeded quarter of those played on to the full n as the rule's controls (`--futility 0 --futility-tie 0 --futility-sample 0.25`), every other decision capped at 150 random branches (`--branch-random 150 --early-stop 50,100`), and the saved time spent on more decisions a spine (`--decisions 10`, was 8); 13 NEW spines (breadth over depth) on D488's random seat, UNCHANGED since J173 (J173's population continues), drawn by the pilot into a NEW data folder, lab-j174, at deck seeds 2027-2039 (D447 with D482's list, the bands cycled as J166's) and game seeds 2127-2139, the Forge map on s01, s07 and s13 (kept for the agreement study; the review: it adds no label), chunk 25; a validation draw made fresh at deck seeds 2227-2239 (game seeds 2327-2339 reserved), never branched; J173's refused-cast reading, D484-D488's counters and its checks unchanged; the label contract v6 (v5 plus D489's `partial`, `stoppedAt`, `stopWhy`, `futilityControl`, `futilityGap`, and `branchRandom: 150`). Pre-registered reads, numbers only: the futility read, the cap read, the sizing read and what the saved time bought. No outcome rule beyond D451's and J156's (iv)
+public_title: Move atlas 4b night three: the futility stop and the 150 cap
+public_est: ~9 h to 12 h
+public_decides: None by itself; first night with the futility stop and 150 cap, 13 new spines
+cpu: heavy
+cores: 7
+max_workers: 7
+mem_per_worker_gb: 2.7
+repos: mtg-table@8e6a3a1ed5583c7da238cc4846e60e31b8a5afd3 (origin/main: the merge of pc/d489-futility, D489, on 6e87e5d4 (#217, D488's merge, J173's pin); the owner writes that merge's full sha here before posting; merged == 1, the commits that added D481-D489's decision files, D489's names, and the seat's code unchanged since J173's pin checked by the pilot)
+decides: nothing by itself. Rung 4b's third night, the first on D489's futility stop with the review's 150 cap, and the second of D488's population: **the random seat is unchanged since J173** -- `git diff 6e87e5d4 <pin> -- bridge/src fixtures/cubelab/seat-identity.json` is empty (a pilot check, `seat_code`), so the plays the seat offers and how it draws them are J173's. The cap and the futility stop change HOW MANY branches a decision gets (and whether it stops at 50), not which plays the seat offers. So J173 and J174 MAY be pooled for a model, with the branch count as a column (`branchRandom` 200 / 150, `partial`, `stoppedAt`, `futilityControl` on every v6 row); a partial row is never confident; and nothing before D488 is pooled with either (D488, Comparability: "Labels and reads from before D488 are not pooled with those after it: the split is the git sha and the lab version"). D489 as drafted has no Comparability paragraph; the sentences this job follows are its label rows' -- "A reader that drops partial labels filters on `partial`; one that keeps them as cheap labels reads them like a screened decision's (D480 point 3)" -- and its "All are off by default, so a D480-shaped job runs unchanged". It measures, on D489's design: labels, confident labels and partial labels per spine and per night; the futility read (the controls: how many of the decisions the rule would have stopped end confident at the full n, beside the review's 3 of 77; this night's share of a read POOLED across nights); the cap read (the share of the final confident set already confident at 50, 100 and 150 branches, beside the review's n curve); the sizing read (confident labels per worker-hour and per 7-worker 10-h night with its Poisson interval, beside J173's and the review's ~46); what the saved time bought (decisions branched a spine against J173's 8); the cuts' savings, the checks' share, the refused payments and D484-D488's counters as J173 reads them; C1 and agreement on the three Forge-map spines; each spine beside J173's at the same position (other decks, the same seat, another branching design)
+hypothesis: none to confirm about the maps. Registered expectations, as information: the rule reads every decision past the screen at 50 and stops about a third of them (the review: 77 of 222 complete decisions on 29 spines; D489's replay of J171's 13 spines: 35 of 101), a quarter of those played on as controls, so ~30-40 futile decisions and ~8-11 controls on the night; the controls end confident about as rarely as the review's 3 of 77 (.04), which ~10 controls can neither confirm nor refute (the read is pooled across nights); at 150 branches about 0.85-0.88 of the final confident set is confident at 150 by the review's 200-branch curve, and here 150 IS the final n, so the cap read is the curve below it (50 and 100); confident labels ~+39% a branch worker-hour over the as-run design (the review: +25% to +55%, ~46 a 7-worker night on its mix with no controls; ~43-44 with a quarter of the futile decisions played on); no option has its own forced cast refused in most of its branches and no lost-cast option (checks, J173's); 0 legacy null target records (a check); refused payments, `cardTargetShare` and the target records' complete share near J173's (read beside, not predicted); the walls ~46 min a spine at J171's pace, which J173's first three spines beat by half
+rule: D451 (method; no outcome rule) with D458/D462/D466 (G5), D459, D465, D466, D467, D470, D471 (G6), D472, D476, D477, D478, D479, D480 (the cuts) and its follow-up (the schedule's plan-hash guard), D481, D482, D483, D484, D485, D486, D487, D488 (the seat, unchanged since J173) and D489 (the futility stop: `--futility`, `--futility-tie`, `--futility-sample`; the label rows' `partial`, `stoppedAt`, `stopWhy: "futile"`, `futilityControl`, `futilityGap`; `phaseB.schedule`'s `futileStopped`, `futileControls`, `futileBranchGamesSaved`, `partialLabels`; plan.json's `cuts.futility`); D447 (the deck draw). Pre-registered here, before any J174 data: the label contract v6 and its reads (a)-(c) and the futility read (f) computed by var/lab-j174-local/bin/labels.py, the cap read by ncurve.py, the agreement reads (i)-(vi) by reads.py, the savings, the checks' share and what the saved time bought by cuts.py, the tool's counters, the refused and lost casts and D486-D488's counters by metrics.py, the comparison with J173 by compare.py, all exactly as written in the pilot; the final checks `refusedCastOptions == 0`, `lostCastOptions == 0` and `legacyNullTargetRecords == 0` over the 13 scanned spines (J173's), and D489's: every spine's schedule carries the four counters, `partialLabels == futileStopped`, and no partial row is confident. A candidate of (iv) HOLDS on a spine only if its point is > 0 and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. Every other difference is a candidate (D447 point 9). No read carries any other verdict
+followup: morning-read
+est: ~10.5 h at 6 workers (range 6-12 h; sizing below): pilot ~40 min (J173's ~35 plus the new readers' self-tests, the cap read on J171's night ~1 min); the 13 spines ~10 h at J171's pace (13 x ~46 min; J173's first three spines ran at less than half of it, 34.5, 9.6 and 24.1 min); the scan ~6 min; the report ~5 min. Disk ~11-15 GB on the lab data folder /home/justin-a/code/lab/data (J171's 13 spines: 12.4 GB)
+resumable: yes
+timeout: 3h
+progress: lines /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl of 64000
+metrics: branches = lines /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl
+metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"engineError\":true"
+metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"timedOut\":true"
+metrics: unavailable = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"unavailable\":\""
+metrics: trimmed_rows = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"targetCountTrimmed\":"
+metrics: avoided_rows = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"costTargetAvoided\":"
+metrics: modes_drawn_rows = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"modesDrawn\":"
+metrics: retargeted_rows = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/branches.jsonl "\"retargeted\":"
+metrics: futility_reads = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/schedule.jsonl "\"type\":\"futility\""
+metrics: futile_stopped_lines = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/schedule.jsonl "\"stopped\":true"
+metrics: futile_control_lines = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/schedule.jsonl "\"control\":true"
+metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/units.jsonl "\"ok\":false"
+metrics: failed_to_play = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/logs/*.log "AI failed to play"
+metrics: payfail = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/logs/*.log "Didn't find what to pay for"
+metrics: failed_to_target = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/logs/*.log "failed to target"
+metrics: branch_error_stacks = count /home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/logs/*.log "branch error, stack:"
+metrics: big_frames = sh: python3 -c "import glob, os; print(sum(1 for f in glob.glob('/home/justin-a/code/lab/data/lab-j174/b-s??-*-21??/phaseB/frames/*.gz') if os.path.getsize(f) > 2e8))" 2>/dev/null || echo 0
+metrics: armed = sh: cat var/lab-j174-local/armed.txt 2>/dev/null || echo 0
+metrics: atlas = sh: python3 -I var/lab-j174-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
+metrics: data_free_gb = sh: python3 -c "import shutil; print(round(shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9, 1))" 2>/dev/null || echo 0
+metrics: data_used_gb = sh: python3 -c "import os; print(round(sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk('/home/justin-a/code/lab/data/lab-j174') for f in fs) / 1e9, 2))" 2>/dev/null || echo 0
+headline: branches, atlas.spinesDone, atlas.labels, atlas.confident, atlas.partialLabels, atlas.futileStopped, atlas.futileControls, atlas.confidentPerWorkerHour, atlas.confidentPer7Worker10hNight, atlas.refusedCastShare, atlas.refusedCastOptions, atlas.failedToPlay, atlas.cardTargetShare, atlas.lostCastOptions, atlas.legacyNullTargetRecords, atlas.timeoutShare, atlas.problems
+
+**Before posting -- the owner, by hand (nothing in this file does them).**
+1. **The data folder, empty:** `/home/justin-a/code/lab/data/lab-j174` already exists (made 2026-10-27 01:04, empty when this was
+   drafted). Check it is still empty (`ls -A` prints nothing); if it is gone, `mkdir` it. The pilot stops at its first lines if it is
+   missing, and records once (`state`) that it holds nothing (or only this job's own pilot outputs, `decks/`, `validation/` and
+   `pilot-smoke-j174/`, from an earlier J174 pilot); it draws only a folder that is absent and never creates, moves, cleans or deletes
+   anything there; no block of this job has a `clean:` line.
+2. **Write the pin:** replace `8e6a3a1ed5583c7da238cc4846e60e31b8a5afd3` in `repos:` with the full sha of the merge of `pc/d489-futility` on origin/main
+   (`runner.sh check` fails until then, on that placeholder alone).
+3. **If D489's review renamed or changed anything this file reads, correct it before posting** (drafted against the lane's c4e1bda6 in
+   `/home/justin-a/code/mtg-table-d489`, under its skeptic review): the flags `--futility`, `--futility-tie`, `--futility-sample` (and
+   the sample's meaning: a futile decision is a control when its draw is below it); the label fields `partial`, `stoppedAt`, `stopWhy:
+   "futile"`, `futilityControl`, `futilityGap`; the schedule's `futility`, `futileStopped`, `futileControls`, `futileBranchGamesSaved`,
+   `partialLabels`; the `type: "futility"` line of `schedule.jsonl` with `alive`, `stopped` and `control`; plan.json's `cuts.futility`
+   `{at, tie, sample}`; and the pilot's `has-d489` grep (`futilityDraw`, `futileAt`, the `cuts-futile` self-test leg). **Two review
+   points are already absorbed and need nothing:** whether `branchedInFull` counts a futile-stopped decision (every reader here counts
+   "branched in full" itself, as complete rows whose option 0 has `branchRandom` random rows, and the units planned per decision from
+   its own `partial` / `stoppedAt`, so either answer reads right), and the control share (this file passes `--futility-sample 0.25`
+   explicitly, whatever the default becomes). **If the amended D489 adds a Comparability paragraph, quote it in `decides:` and the
+   Report's first line and follow it** -- in particular if it keeps J173 and J174 apart, change the pool names to `random-<band>-d489`
+   (labels.py's `--seat`, metrics.py's `poolOk`, the Report's `largs`) and drop "may be pooled". Note for that decision: D488's split
+   names "the lab version", and the lab version's `codeTree` hashes `tools/cubelab`, which D489 changes, so J174's lab version is not
+   J173's even though the seat's code is.
+4. **J173 first.** J174 reads J173's night (lab-j173 and `var/lab-j173-local/`) read-only, for its J173 columns. Both are `cores: 7`,
+   so the queue starts J174 only when J173 has ended (no `after:` line: J173 was still running, at its run4, when this was drafted). If
+   J173 ends without its Report, the J173 columns read null and the summary says so; nothing fails on it.
+5. **Optional, before posting: re-size `--decisions`** if J173's finished night says the walls differ from the arithmetic below
+   (*Sizing*): `decisions = round(45 / (W173 / 8 x 0.71))`, where W173 is J173's mean minutes a spine at 6 workers from
+   `lab-j173/spine-times.txt`, kept within 8-12 (the listing runs out above 12). If it changes, change it in all 13 spine blocks, in
+   metrics.py's `want` (`'decisions': 10`) and in the Report's text, and nowhere else.
+6. **Nothing else to make, move or clean.** J174 reads lab-j170 (J171's night), lab-j173 (J173's), lab-j162 and lab-j158 for its readers'
+   self-tests and comparisons and writes none of them; it reads `var/lab-j173-local/draws-pilot.json` and writes no `var/lab-j17x-local/`
+   folder but its own. Post nothing that writes lab-j173 or lab-j174 beside J174.
+
+**Why J174.** The atlas review of 2026-10-27 (`study/atlas-review-2026-10-27.md`; 29 spines, 222 complete decisions, 64 confident
+labels) found that two thirds of branch time goes to decisions that end without a confident label, and two cuts that change only how
+many branches a decision gets: **cap at 150** (the confident count plateaus there: 64.8 at 150, 65.4 at 200; +22% labels a branch
+worker-hour, flags only) and **end a decision at 50 when option 0 leads or ties** (3 of 77 such decisions end confident; +17% alone,
+**+39% [+25, +55] with the cap, ~46 a night instead of ~33**). Its path: "now, #1 (a flag change) on the next night; next, #2 as a small
+lane, pre-registered before the night it first runs on", and against selection bias "keep the cheap partial labels in the label file,
+and keep a full-length random sample of the stopped decisions". **D489** is #2: `--futility 0` reads every decision past the screen at
+early stopping's first checkpoint (50 here); a futile one (option 0's gap to the best mean at most `--futility-tie`, 0 here) is stopped
+-- no more branches, no Forge map, no replacement -- and keeps its place among `--decisions` as a **partial label** (`partial: true`,
+`stoppedAt: 50`, `stopWhy: "futile"`, `complete: false`), unless its seeded draw falls under `--futility-sample`: then it is a
+**control**, played to the full n and marked (`futilityControl: true`). J174 is the first night on both, pre-registered here.
+
+**Three choices this file makes, from D489's skeptic review:**
+- **The saved time is spent, not banked.** A futile decision is not replaced, so the time it saves is realised only if the night
+  schedules more work: `--decisions 10` (was 8), the night kept at 13 spines (*Sizing* has the arithmetic).
+- **The control share is 0.25 on this first night**, not D489's default 0.1: at 0.1 a night would carry ~3-4 controls, too few to
+  read. Later nights drop to 0.1 once the pooled control count is enough. **The control read is POOLED across nights**: this night's
+  numbers are its first contribution, and the Report says they are partial.
+- **The yield number to compare across nights is confident labels per worker-hour** (and per 7-worker 10-h night), **not the confident
+  share.** The futile decisions the rule stops leave the complete set (only their controls stay), and they are the ones that rarely end
+  confident, so the confident share over complete rows rises with no change in what a night yields. Both are reported; the summary
+  reads the per-hour one.
+
+**So J174 continues J173's population, on new spines** (`decides:`): the seat is D488's at J173's pin, unchanged, so J174's labels are
+D488 labels made with fewer branches -- `pool: random-<band>-d488` as J173's, contract v6 carrying the branch count. **Breadth over
+depth:** 13 new pairs at the next 13 deck seeds (the bands cycled as J166's, so s01 is pauper and s13 pauper again), into a new folder.
+**J173's numbers are a comparison by position, never a baseline**: s01 beside s01 is the same band and the same seat, but other decks,
+other seeds and another branching design -- every difference is a candidate. J171's night (D486's seat) stays another population and
+appears only in the readers' self-tests.
+
+**The seeds are new** (checked by this draft, 2026-10-27): `git -C /home/justin-a/code/mtg-table grep -n -w -E
+'20(2[7-9]|3[0-9])|21(2[7-9]|3[0-9])|22(2[7-9]|3[0-9])|23(2[7-9]|3[0-9])' origin/pc-jobs -- jobs/` (origin/pc-jobs at ddafd90b, J173's
+post, the same as the remote's; 126 job files) finds nothing outside dates; the same grep over `/home/justin-a/code/pc-results/drafts/*.md`
+finds nothing; every computed seed in a job or draft is `$((1400 + K))`, `$((1450 + K))`, `$((1490 + K))`, `$((1500 + K))`, `$((1590 +
+K))`, `$((1660 + K))`, `$((1670 + K))` (small K), `$((2000 + K))`, `$((2200 + K))` (K = 1-13: 2001-2013, 2201-2213) or J173's `$((2013 +
+K))`, `$((2213 + K))` (2014-2026, 2214-2226); and no folder under `/home/justin-a/code/lab/data` (three levels deep) ends in one of them.
+No block was shifted. The smoke keeps J166's pair (deck seed 2099) at game seed 2199, in a new folder, as every pilot since J167.
+
+## The decks
+
+**The draw is D447's with D482's list**, as J167-J173's: `tools/cubelab.sh decks --band <b> --count 2 --seed <s> --cross-band 0.10
+--out ...`, the committed list by default. **J174's pilot draws them into lab-j174** (the 13 spine pairs onto `lab-j174/decks/`, the 13
+validation pairs onto `lab-j174/validation/`, the smoke's pair onto `lab-j174/decks/p-powered-2099/`), each only where its `decks.jsonl`
+is not yet there (a pilot re-run keeps the first draw), and **again into the clone** (`var/lab-j174-local/redraw/`, an absolute path so
+nothing is re-rooted). The two must agree deck for deck; the smoke's pair must be its registered sha256 (`edfdc861...`, J166's); and no
+spine draw may be one of J171's 13 or J173's 13 registered draws, and the validation draw neither J171's nor J173's (a guard against an
+unshifted seed; J173's are registered from `lab-j173/decks` and match its `draws-pilot.json`). **The deck code is unchanged since J171's
+pin**: `deck_code` checks that `git diff f2b4e9c2 HEAD` touches none of `tools/cubelab/deckcensus.ts`, `tools/cubelab/engine-unplayable.json`
+and `cubes/library/` (D487, D488 and D489 touch none; checked on the D489 lane, 2026-10-27).
+
+**The sha256s are recorded, not registered.** These seeds were never drawn, and this draft runs nothing, so no value is known before the
+pilot. The pilot writes them once into `var/lab-j174-local/draws-pilot.json` (`draws.py --record`), only when the data folder's draw
+and the redraw agree on all 13 spines, all 13 validation pairs and the smoke's, and never over an earlier record; `draws.recorded == 1`
+requires the file to equal the data folder as it lies. **Each spine block checks its own folder and both decks against that record
+before it plays** (`deckcheck.py`), and the Report copies it (`draws.json`).
+
+| spine | band | deck seed | game seed | Forge map | validation (deck seed / reserved game seed) | J173 at this position (the same seat, other decks, 200 branches) |
+|---|---|---|---|---|---|---|
+| s01 | pauper | 2027 | 2127 | **40** | 2227 / 2327 | 2014 / 2114: 8 labels, 5 confident, 34.5 min |
+| s02 | peasant | 2028 | 2128 | 0 | 2228 / 2328 | 2015 / 2115: 8, 2, 9.6 min |
+| s03 | legacy | 2029 | 2129 | 0 | 2229 / 2329 | 2016 / 2116: 8, 2, 24.1 min |
+| s04 | powered | 2030 | 2130 | 0 | 2230 / 2330 | 2017 / 2117: running when drafted |
+| s05 | pauper | 2031 | 2131 | 0 | 2231 / 2331 | 2018 / 2118 |
+| s06 | peasant | 2032 | 2132 | 0 | 2232 / 2332 | 2019 / 2119 |
+| s07 | legacy | 2033 | 2133 | **40** | 2233 / 2333 | 2020 / 2120 |
+| s08 | powered | 2034 | 2134 | 0 | 2234 / 2334 | 2021 / 2121 |
+| s09 | pauper | 2035 | 2135 | 0 | 2235 / 2335 | 2022 / 2122 |
+| s10 | peasant | 2036 | 2136 | 0 | 2236 / 2336 | 2023 / 2123 |
+| s11 | legacy | 2037 | 2137 | 0 | 2237 / 2337 | 2024 / 2124 |
+| s12 | powered | 2038 | 2138 | 0 | 2238 / 2338 | 2025 / 2125 |
+| s13 | pauper | 2039 | 2139 | **40** | 2239 / 2339 | 2026 / 2126 |
+
+(J173's s01-s03 as its atlas.json files read on 2026-10-27, read only; the rest were not yet run. compare.py reads all 13 at the Report.)
+
+Folders: `lab-j174/decks/s<nn>-<band>-<deck seed>/` (decks `<band>-<deck seed>-0000{1,2}.dck`), `lab-j174/b-s<nn>-<band>-<game seed>/`,
+`lab-j174/validation/v<nn>-<band>-<deck seed>/`.
+
+**The validation draw is made fresh and never branched**: the same command at deck seeds 2227-2239 into
+`lab-j174/validation/v<nn>-<band>-<seed>/`; game seeds 2327-2339 stay reserved for the job that branches them (J171's and J173's
+validation draws stay theirs). A final check fails the job if any spine's plan names a validation deck or any validation folder holds a
+plan or a phase B. The report records it (`validation.json`), with the sha256 the pilot recorded.
+
+## The design: J173's, with D489's stop, the 150 cap and 10 decisions
+
+The per-spine flags: `--phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 40|0
+--futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers}` (the
+Forge map, 40, on s01, s07 and s13 only). Against J173's, four things change and nothing else:
+- `--branch-random 150` and `--early-stop 50,100` (was 200 and `on` = 50,100,150): the review's #1, a flag change. Checkpoints must lie
+  below `--branch-random` (`checkCuts`), so 150 leaves the list; the screen at 25 and early stopping at 50 and 100 are J173's.
+- `--futility 0 --futility-tie 0 --futility-sample 0.25`: D489 at the first checkpoint (50), option 0 leading or tied exactly, a quarter
+  of the futile decisions played on as controls (above).
+- `--decisions 10` (was 8): the saved time spent (*Sizing*).
+- **The Forge map stays on s01, s07 and s13.** The review (section 3) found it adds no label (confidence comes from the random map),
+  agrees with the random map near chance, and costs 1.8% of branch time; it is kept this night for the agreement study (i)-(iv), and a
+  futile-stopped decision gets none (D489).
+D480's other cuts with D483's play count, D484's guard and D485-D488's seat are in the tree, unchanged since J173's pin.
+
+**Sizing: why `--decisions 10`.** A spine's wall is, to first order, its decisions times the branch time a decision takes (the baseline
+game takes seconds; the checks and the idle share scale with the branch games). Let r be a decision's branch time on J174's design over
+J173's. The review re-scored the same 222 decisions (`report/policy.md`):
+- the as-run design 110.61 branch worker-hours; the cap alone 89.51 (r = 0.81); the cap and the futility stop 74.67 (**r = 0.675**, no
+  controls); on D488's three J173 spines 5.69, 4.58 and 4.11 (r = 0.805 and **0.722**).
+- **With a quarter of the futile decisions played on as controls**, a quarter of the futility stop's own saving comes back: r = 0.675 +
+  0.25 x (0.809 - 0.675) = **0.71** on all 29 spines, 0.722 + 0.25 x (0.805 - 0.722) = **0.74** on D488's three.
+- D489's review's rough form gives a lower bound: ~35% of read decisions stop at 50, a quarter of those come back as controls (26% stay
+  stopped), a stopped decision costs about a third of a capped one (50 of 150 branches, no Forge map), and the cap saves ~25% of the rest:
+  r = 0.74 x 0.75 + 0.26 x 0.75 / 3 = **0.62** (a bound: early stopping already trims some of what the cap and the stop save).
+- **To hold a spine's wall, decisions = 8 / r = 10.8-11.3 (12.9 at the bound).** **10 is proposed**, for three reasons: the measured r
+  is from 26 older-seat spines and three D488 ones; the listing runs out -- a spine lists ~14 decisions with 3+ options (the review's
+  14.1), J173's s03 listed 7 and already filled one from k = 2 at 8, and its s02 screened 10 of 18, so the 11th and 12th decisions are
+  ever more often k = 2 fills, the review's weakest cell (.21); and the night stays at 13 spines inside its 3-h block timeout.
+- **The arithmetic at 10:** a spine's wall is W173 x 10/8 x r = **0.78-0.93 x J173's at the same pace** (0.89 at r = 0.71). At J171's
+  measured pace (40,653 s for 13 spines at 6 workers, **52.1 min a spine**) that is **~46 min a spine (40-48)**, ~10 h for 13 -- the
+  ~45 min a spine the brief asks for. J173's first three spines ran at less than half that pace (34.5, 9.6 and 24.1 min: 22.7 min a
+  spine), which would make the night ~5 h; *Before posting* item 5 re-sizes if J173's whole night says so.
+- **What it buys:** 2 more decisions a spine, 26 more a night (130 against J173's 104), for about J173's wall. ~64,000 branch rows when
+  done (`progress:`: J171's 71,940 x 10/8 x 0.71, an estimate). `timeout: 3h` bounds each block (~2x J171's longest, 80 min, times 1.16).
+  A stall costs at most 3 h and fails the job at that block; a runner retry resumes it (`resumable: yes`). **Disk** ~11-15 GB; the pilot
+  and every block require 50 GB free, and `abort:` fires under 50 GB.
+
+**What is expected of the rule on this night:** 13 x 10 = 130 decisions, ~110 of them past the screen and read at 50; about a third
+futile (~35-40), of which a quarter (~9-10) are controls and ~27-30 stopped; ~30 partial labels. The review's ~46 confident labels a
+7-worker night assumed no controls; with a quarter played on, ~43-44 on its mix (its hours x 0.675 / 0.71). Neither is a prediction for
+these decks (*hypothesis*).
+
+**Where it writes: the lab data folder, lab-j174**: every atlas and deck command runs under `LAB_DATA_DIR=/home/justin-a/code/lab/data`
+with `--out var/lab-j174/...`. The Forge homes (`CUBELAB_HOME_ROOT=var/cubelab/homes-J174`), the self-test's folder, the redraw and the
+job's scripts and caches (`var/lab-j174-local/`) stay in the clone. Every block asserts the path, the 50 GB and its own decks again; **no
+`clean:`, nothing deleted**. A restart from scratch needs J174's outputs in lab-j174 (the `b-s*` folders, `report/`, `exits.txt`,
+`spine-times.txt`, `pilot-smoke-j174/`) moved aside by hand and `var/lab-j174-local/state.txt` and `armed.txt` removed; the draws can stay
+(and `draws-pilot.json` with them: a pilot never re-records). A resume under other futility flags is refused by the atlas itself (D489:
+`cuts.futility` is in plan.json and the schedule's plan hash).
+
+**The abort lines read only this run's artefacts (the J152 lesson):** every abort that reads the atlas's files is gated on `armed == 1`,
+written by this pilot and removed by the Report block's last line; and every glob is under lab-j174's `b-s??-*-21??`, which only this
+job writes.
+
+**Nothing beside it.** `cores: 7` of 8 reserves the box: post nothing heavy beside it. No `pilot_cores:`. **No `after:` line** (*Before
+posting* item 4).
+
+## The refused casts, the lost casts and D484-D488's counters, from the frames
+
+**J173's reading, unchanged** (`drafts/J173-atlas-4b-night-two.md`, the section of this name): metrics.py `--scan` reads every branch
+frame log of a spine once, in a block of its own after the 13 spines (one cache a folder, stamped with its `atlas.json`'s mtime and the
+scan's version, now `J174 v5` -- the same scan under this job's stamp; a cache of another atlas.json or another version is never read).
+It places every cast: **ON THE STACK**; **REFUSED** (`castsRefused`; **forced** when the card is the branch's own option and is put back
+before the branch's first AI decision record; **a refused-cast option** is one whose forced cast was refused in more than half of its
+branch rows, and **`refusedCastOptions == 0` is a final check**); and J169's **LOST CAST** kept as defined, split into `lostPutBack` and
+`lostStranded` (**`lostCastOptions == 0` stays a final check**). **The headline is `refusedCastShare`** = the seats' own `refusedCast`
+(G5's count, an upper bound on the payment refusals: D488's Not fixed) over the casts, per spine and for the night, beside
+`castsRefusedShare`, `staleRefused`, the worker logs' `AI failed to play <card>` lines (`failedToPlay`, by card), `payFail` and
+`noRepeatRefused`; **by card, read twice** (the frames' put-backs and the worker logs), never the worker logs' count alone.
+**D484-D488's counters** as J173 reads them: D488's `targetCountTrimmed`, `costTargetAvoided`; D486's `cardTargetOffered`,
+`modesDrawn`, `cardTargetShare` and the target records with their `complete: true` share; D487's `target:none` chosen and listed,
+`NO_TARGET`, null answers and **`legacyNullTargetRecords == 0`, a final check**; D485's `retargeted` / `staleRefused` and
+`staleTargetRecords`; D484's `chooseSourceGuardRows`; and the branch rows' `...Rows` / `...OnRows`. **Self-tested on J171's own night**
+(pilot, read only): the scan of lab-j170's s09 and s13 must give J173's registered numbers back, unchanged.
+
+A futile-stopped decision's 50 random branches are scanned like any other; its later branches do not exist. **Beside J173's numbers**
+(compare.py, the J173 column) and J171's (registered in J173's file), never predicted.
+
+## The label set: the rung-4b contract, v6
+
+`report/labels.jsonl`, one JSON row a **branched** decision of seat A on all 13 spines -- complete, screened, or futile-partial: every
+row is kept (the review: "keep the cheap partial labels in the label file") -- written by labels.py, `contract` **`mtg-table rung-4b
+label v6 (J174)`**, `v: 6`: every v5 field (J173's: `targetCountTrimmed`, `costTargetAvoided`, their `...Branches`, `branchRows`, the
+refused-cast fields; J170's v4; J169's v3; J167's v2; J166's v1), and:
+
+| field | value |
+|---|---|
+| `sha` | **the pin** on every row (`var/lab-j174-local/sha.txt`, 8 hex) |
+| `pool` | **`random-<band>-d488`**, as J173's: the same seat, the same population (`decides:`) |
+| `randomSeat` | **`"D488"`** on every row |
+| `branchRandom` | new: the plan's random-branch count, **150** on every row (J173's rows: 200, in `branches.random`) -- the column a pooled model splits on |
+| `partial`, `stoppedAt`, `stopWhy` | new (D489): `true`, the checkpoint's branch count (50) and `"futile"` on a decision the futility rule stopped; `false`, null, null elsewhere. A partial row's numbers (every option's random stat, the regret and its interval) are at n = 50 and it has no Forge map |
+| `futilityControl` | new (D489): `true` on a decision the rule would have stopped and played to the full n; else `false` |
+| `futilityGap` | new (D489): option 0's gap to the best mean at the checkpoint, on every decision the rule read (null on a screened one) |
+| `fullN`, `branchedInFull` | new: option 0's random branch rows (any outcome; option 0 never stops early), and whether the row is complete with `fullN >= branchRandom` -- computed here, so it is right whether or not atlas.json's `branchedInFull` counts a futile-stopped decision |
+
+- **`complete` and `confident` are J173's, unchanged**: `confident` = complete and the random `regretLo` > 0. **A partial row is never
+  complete, so never confident** (D489; labels.py also requires `partial` false, and a final check holds `confidentPartial == 0`).
+- **`labels` stays the count of complete rows** (and `screenedRows` the screened ones, as J173's); **`partialLabels` counts the partial
+  rows separately**, and `branched` all rows.
+- `training: true`, `split: "train"` on every row, partial rows included (a reader that drops them filters on `partial`, D489). **Never
+  pooled with v1-v4** (D488). **May be pooled with J173's v5 rows** with `branchRandom` (or `branches.random`) and `partial` as columns
+  (`decides:`).
+- **Expected: 0 void labels** (D470's `void`), 0 `lostCastVoid`, 0 `refusedCastVoid`.
+- **Nothing is cleaned**: rung 4 reads the spine folders through each row's paths. `labels.jsonl` is collected.
+
+## Pre-registered reads (numbers only)
+J173's reads, definitions unchanged, over **all 13 spines**, and:
+- **(a)-(b)** the confident share (pooled pool -> spine -> decision, by pool, by spine, by kind, by k, over Q), the gap, the regret, the
+  settled share (labels.py), over complete rows as J173's. **The confident share is not this night's yield number** (above): the
+  futile decisions it no longer holds would have lowered it.
+- **(c) the sizing read** (`c_sizingRead`): labels and confident labels per spine, per pool and for the night at the measured walls
+  (spine-times.txt, checks included), scaled to **7 workers and a 10-h night**, with the confident count's exact Poisson 95% interval
+  scaled the same way (`poisson95`), and **`confidentPerWorkerHour`** (confident labels over the walls times the workers): **the number
+  to compare across nights.** Beside it, **as information: J173's** (the same seat, 200 branches, other decks; read from
+  `lab-j173/report/labels.json` at the Report, null if absent) and **the review's ~46 [41, 51] a 7-worker night** (32.8 x 1.39 [1.25,
+  1.55], no controls; ~43-44 with a quarter played on). Both as a confident share and per hour, the per-hour one named as the one to
+  read. No verdict.
+- **(d) the cuts' savings and what the saved time bought** (cuts.py): J173's -- branch time saved by early stopping and the screen
+  against a projection without them, the idle share, the checks' wall and share, the redaction checker's wall -- and, new: **the
+  futility stop's saving** (`futileSavedMs`: each stopped decision's options running at the checkpoint, from its `futility` line's
+  `alive`, times the random branches it did not play, times its own mean random-branch ms, plus on a Forge-map spine 40 Forge branches
+  of each at the spine's mean; `futileBranchGamesSaved` from atlas.json beside it, an upper bound) and **the cap's** (`capSavedMs`: each
+  complete decision's options still running at 150 times the 50 branches to 200 at its mean ms; an upper bound, since J173's design
+  would have early-stopped some at 150), their share of the projection to J173's design (`savedVsJ173Share`), and **what it bought**:
+  the decisions branched a spine (`decisionsBranched`: not screened, complete or partial) and branched in full, beside J173's 8 a spine
+  (compare.py) -- the saved time is realised only through `--decisions 10`, and this read says how much of it was.
+- **(f) the futility read** (labels.py `f_futilityRead`): the decisions read at 50, the futile ones, the stopped ones (`partialLabels`)
+  and **the controls -- the decisions the rule would have stopped, played to the full n -- and how many of them ended confident: the
+  rule's measured loss**, its share with an exact (Clopper-Pearson) 95% interval, beside **the review's 3 of 77 (.04)**; the labels lost
+  estimated as (confident controls / controls) x stopped decisions, with the interval scaled the same way. **This night's numbers are
+  its first contribution to a read POOLED across nights** (`pooledInputs`: the counts a later night adds to); ~10 controls cannot
+  separate .04 from .2, and the summary says the read is partial.
+- **(g) the cap read** (ncurve.py, `report/ncurve.json`): **at n = 50, 100 and 150, the share of the final confident set already
+  confident** (`keptShare`) and the expected confident count (`expected`), on this night's own branches with the review's definitions
+  (the paired matrix below n, the as-run stops kept, a 1,000-draw paired bootstrap, the mean over five seeds), and `selfAgree` (at the
+  full n, the seed-mean verdict against atlas.json's own; the review's 215 of 222). Beside, **the review's n curve** (all 29 spines, a
+  200-branch design: kept 35.0 / 44.6 / 57.0 of 65.4 at 50 / 100 / 150 -- 54%, 68%, 87%). Here 150 is the final n, so `keptShare` at
+  150 is ~1 by construction; the read is the curve below it.
+- **(iv) C1 "cast now where Forge passes" on s01, s07, s13**: HOLDS / NOT SHOWN by the registered rule, over complete decisions (a partial
+  one has no Forge map); **(i)-(iii)** same best, rho, regret by kind on the three Forge-map spines; C2 and the random-map C1 on the other
+  ten as information.
+- **(v)** the guardrails per spine and per pool; **(vi)** the sizing line per spine (reads.py).
+- **(ix) D483**, **(xii) D484**, **(xiii) D485**, **(xiv) the refused casts and the lost casts** (`refusedCastShare` the headline;
+  **`refusedCastOptions == 0` and `lostCastOptions == 0`, checks**), **(xvi) D486** (`cardTargetOffered >= 1` a check), **(xviii) D487**
+  (`legacyNullTargetRecords == 0` a check), **(xix) D488**: J173's, unchanged.
+- **(xx) D489's counters** per spine and for the night (metrics.py): `futilityReads`, `futileStopped`, `futileControls`,
+  `futileBranchGamesSaved`, `partialLabels`, from each atlas.json's `phaseB.schedule`, beside the `futility` lines of `schedule.jsonl`
+  (the live metrics). **Checks: the four counters on every spine (`futilityKeys == 13`), `partialLabels == futileStopped`, and no partial
+  row confident.**
+- **(xvii) J174 beside J173, BY POSITION, DIFFERENT DECKS, THE SAME SEAT, ANOTHER BRANCHING DESIGN** (compare.py,
+  `report/compare-j173.json`; J173's column computed from its folders and report with the same code): per spine position and for the
+  night, decisions listed per baseline turn, decisions branched, branched in full, partial labels, options per decision branched, labels,
+  confident labels, the confident share, **confident labels per worker-hour**, the mean regret at Forge's choice, the capped share, the
+  branch games and the wall. No verdict.
+- **(xi)** the draws and the redraw (pilot); the validation draw (final checks).
+- Everything else is a candidate (D447 point 9).
+
+**Outputs** (on the data folder, `/home/justin-a/code/lab/data/lab-j174/`).
+- `decks/s<nn>-<band>-<seed>/`, `decks/p-powered-2099/`, `validation/v<nn>-<band>-<seed>/` (the pilot's draw).
+- `b-s<nn>-<band>-<seed>/` (the 13 spines), `pilot-smoke-j174/` (the smoke).
+- `exits.txt`, `spine-times.txt`.
+- `report/`: `labels.json`, `labels.jsonl`, `labels-head.jsonl`, `ncurve.json`, `reads.json`, `cuts.json`, `tool.json`,
+  `compare-j173.json`, `lost-<folder>.json` (13), `draws.json`, `validation.json`, `spines.json`, `<spine>.atlas.json` and `.atlas.md`,
+  the two text files, `missing.txt`. Never `summary.md` or `metrics.json`.
+## Pilot
+About 40 minutes: J173's pilot, and D489. The data folder (it must exist, holding nothing at the first pilot) and the abort gate; the pin
+carries D466-D489 (**`has_d489`**: the decision file, `--futility` in cli.ts, `futileStopped`, `partialLabels`, `futileBranchGamesSaved`
+and `stopWhy: 'futile'` in atlas.ts, `futilityDraw` and `futileAt` in atlascuts.ts, the self-test's `cuts-futile` leg), the commits that
+added D481-D489's decision files, **the seat's code unchanged since J173's pin** (`seat_code`: `git diff 6e87e5d4 HEAD -- bridge/src
+fixtures/cubelab/seat-identity.json` empty -- what makes J173's population continue), the seat-identity golden D486 regenerated
+(`golden`, three parts; `identity == 1` stays the real check) and the deck draw's code of J171's pin (`deck_code`); the node tests (D489's
+17 cut tests among them) and the redaction checker's selftest; the readers' self-tests (J162's and J158's, as every pilot since J166's,
+and **J171's own night in lab-j170**: labels.py, reads.py, cuts.py, compare.py and metrics.py must give J171's numbers back, and the new
+ncurve.py the numbers registered below from this draft's own read-only run); the scan's self-test on J171's s09 and s13 (J173's,
+unchanged); J173's night read as information (`j173`: what its report holds, if anything); the deck draws into lab-j174 and the redraw
+into the clone, which must agree, recorded once, and differ from J171's and J173's; the two engine self-tests (D489's `atlas-selftest`
+plays a futility control on its `cuts` leg and a futile stop on its `cuts-futile` leg); the readers on the self-test's three cuts legs,
+partial and control rows included; a 1-spine smoke **with the futility stop on** (J166's smoke pair at game seed 2199, `pilot-smoke-j174`,
+J173's smoke flags plus `--futility 0 --futility-tie 0 --futility-sample 0.25`), which must carry `phaseB.schedule.futileStopped` (>= 0)
+and the three other counters and plan.json's `cuts.futility` `{at: 0, tie: 0, sample: 0.25}`, and its frame scan.
+```bash
+# the lab data folder: exactly /home/justin-a/code/lab/data (README safety rules); lab-j174 made empty by the owner, never by this job
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import json, sys; v = json.load(open('config.json')).get('labDataDir'); sys.exit(0 if v in (None, '', '/home/justin-a/code/lab/data') else 'J174: config.json labDataDir is %r, not /home/justin-a/code/lab/data' % v)"
+test -d /home/justin-a/code/lab/data/lab-j174 || { echo "J174: /home/justin-a/code/lab/data/lab-j174 does not exist: the owner makes it, empty, before posting; this job never creates it" >&2; exit 1; }
+mkdir -p var/lab-j174-local/bin
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; print('J174: data folder free GB', round(f, 1)); sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+echo 1 > var/lab-j174-local/datadir.txt
+# state: what lab-j174 held at this job's first pilot, recorded once (a later pilot run keeps the first answer): 1 when it holds nothing, or
+# nothing but this job's own pilot outputs (decks/, validation/, pilot-smoke-j174/, from an earlier J174 pilot). Else 0, and nothing is drawn
+test -f var/lab-j174-local/state.txt || python3 -I -c "import os; d = '/home/justin-a/code/lab/data/lab-j174'; print(1 if os.path.isdir(d) and set(os.listdir(d)) <= {'decks', 'validation', 'pilot-smoke-j174'} else 0)" > var/lab-j174-local/state.txt
+# found (information, recorded once): what lab-j174 held at the first pilot
+test -f var/lab-j174-local/found.json || python3 -I -c "import glob, json, os; d = '/home/justin-a/code/lab/data/lab-j174'; print(json.dumps({'entries': sorted(os.listdir(d)), 'spineDraws': len(glob.glob(d + '/decks/s??-*/decks.jsonl')), 'validationDraws': len(glob.glob(d + '/validation/v??-*/decks.jsonl')), 'smokeDraw': len(glob.glob(d + '/decks/p-powered-2099/decks.jsonl')), 'smoke': 1 if os.path.isdir(d + '/pilot-smoke-j174') else 0}))" > var/lab-j174-local/found.json
+echo "J174: lab-j174 at the first pilot: state $(cat var/lab-j174-local/state.txt), $(cat var/lab-j174-local/found.json)"
+test "$(cat var/lab-j174-local/state.txt)" = 1 || { echo "J174: lab-j174 held more than this job's own pilot outputs at this job's first pilot (var/lab-j174-local/state.txt): nothing drawn" >&2; exit 1; }
+# the abort gate (the J152 lesson): this job's own run is armed from here; the Report block disarms it
+echo 1 > var/lab-j174-local/armed.txt
+git merge-base --is-ancestor HEAD origin/main && echo 1 > var/lab-j174-local/merged.txt || echo 0 > var/lab-j174-local/merged.txt
+git rev-parse --short=8 HEAD > var/lab-j174-local/sha.txt
+# D466-D486: J171's greps, unchanged
+grep -q 'chosenOptionalCosts' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'class StepClock' bridge/src/mtgtable/ai/Atlas.java && grep -q 'class OptionUnavailable' bridge/src/mtgtable/ai/RolloutController.java && grep -q 'zeroXLeftOut' bridge/src/mtgtable/ai/Explorer.java && grep -q 'restoreChoices' bridge/src/mtgtable/ai/Explorer.java && grep -q 'copyCandidates' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'COUNTED_GUARDRAILS' tools/cubelab/atlas.ts && grep -q 'unit-timeout' tools/cubelab/atlas.ts && grep -q 'empty-hand-ok' tools/check-redaction.mjs && echo 1 > var/lab-j174-local/has-d466-d472.txt || echo 0 > var/lab-j174-local/has-d466-d472.txt
+grep -q 'D476' bridge/src/mtgtable/ai/SearchPolicy.java && echo 1 > var/lab-j174-local/has-d476.txt || echo 0 > var/lab-j174-local/has-d476.txt
+grep -q 'final class ForkRestart' bridge/src/mtgtable/ai/ForkRestart.java && grep -q 'branchRestarted' tools/cubelab/atlas.ts && echo 1 > var/lab-j174-local/has-d477.txt || echo 0 > var/lab-j174-local/has-d477.txt
+grep -q 'BRANCH_CAPPED_WARN_DEFAULT' tools/cubelab/atlas.ts && grep -q 'export function cappedBranches' tools/cubelab/atlas.ts && echo 1 > var/lab-j174-local/has-d478.txt || echo 0 > var/lab-j174-local/has-d478.txt
+grep -q 'effectSourceNull' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'exileLinksLost' bridge/src/mtgtable/ai/Atlas.java && grep -q 'exileLinksLost' tools/cubelab/atlas.ts && echo 1 > var/lab-j174-local/has-d479.txt || echo 0 > var/lab-j174-local/has-d479.txt
+grep -q 'export class AtlasSchedule' tools/cubelab/atlascuts.ts && grep -q "export const EARLY_STOP_ON = \[50, 100, 150\]" tools/cubelab/atlascuts.ts && grep -q 'export const SCREEN_LOW = 0.04' tools/cubelab/atlascuts.ts && grep -q 'export async function redactionCheckParallel' tools/cubelab/censusplay.ts && grep -q 'holdIdle' tools/cubelab/engine.ts && grep -q 'SELFTEST_CUTS' tools/cubelab/atlas.ts && test -f web/test/cubelab-atlas-cuts.test.ts && echo 1 > var/lab-j174-local/has-d480.txt || echo 0 > var/lab-j174-local/has-d480.txt
+grep -q 'export function openSchedule' tools/cubelab/atlas.ts && grep -q 'SCHEDULE_PLAN_KEYS' tools/cubelab/atlas.ts && echo 1 > var/lab-j174-local/has-d480f.txt || echo 0 > var/lab-j174-local/has-d480f.txt
+ls docs/decisions/D481-*.md >/dev/null 2>&1 && grep -q 'enteredBetweenFrames' tools/check-redaction.mjs && test -f fixtures/negative/redaction/m55-option-entered-between-frames.jsonl && echo 1 > var/lab-j174-local/has-d481.txt || echo 0 > var/lab-j174-local/has-d481.txt
+ls docs/decisions/D482-*.md >/dev/null 2>&1 && test -f tools/cubelab/engine-unplayable.json && grep -q '"Scute Swarm"' tools/cubelab/engine-unplayable.json && grep -q 'engine-unplayable.json' tools/cubelab/deckcensus.ts && grep -q 'engineSkips' tools/cubelab/deckcensus.ts && echo 1 > var/lab-j174-local/has-d482.txt || echo 0 > var/lab-j174-local/has-d482.txt
+ls docs/decisions/D483-*.md >/dev/null 2>&1 && grep -q 'public static String playIdentity' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'identities' bridge/src/mtgtable/ai/Atlas.java && grep -q 'export function playCount' tools/cubelab/atlascuts.ts && grep -q 'export function repeatedPlays' tools/cubelab/atlascuts.ts && echo 1 > var/lab-j174-local/has-d483.txt || echo 0 > var/lab-j174-local/has-d483.txt
+ls docs/decisions/D484-*.md >/dev/null 2>&1 && grep -q 'ChooseSource' docs/decisions/D484-*.md && grep -rq 'chooseSourceGuard' bridge/src/mtgtable/ai tools/cubelab && echo 1 > var/lab-j174-local/has-d484.txt || echo 0 > var/lab-j174-local/has-d484.txt
+ls docs/decisions/D485-*.md >/dev/null 2>&1 && grep -q 'STALE_TARGETS' docs/decisions/D485-*.md && grep -q 'retargeted' tools/cubelab/atlas.ts && grep -q 'retargeted' bridge/src/mtgtable/ai/Atlas.java && grep -q 'STALE_TARGETS' bridge/src/mtgtable/ai/Explorer.java && grep -q 'staleRefused' tools/check-redaction.mjs && test -f fixtures/negative/redaction/stale-token-died-earlier.jsonl && grep -q 'D485' docs/decisions/D481-*.md && echo 1 > var/lab-j174-local/has-d485.txt || echo 0 > var/lab-j174-local/has-d485.txt
+ls docs/decisions/D486-*.md >/dev/null 2>&1 && grep -q 'MODES_DRAWN' docs/decisions/D486-*.md && grep -q 'cardTargetOffered' bridge/src/mtgtable/ai/Explorer.java && grep -q 'MODES_DRAWN' bridge/src/mtgtable/ai/Explorer.java && grep -q 'modesAtCast' bridge/src/mtgtable/ai/PolicyControllerAi.java && grep -q 'modesDrawn' bridge/src/mtgtable/ai/Atlas.java && grep -q 'modesDrawn' tools/cubelab/atlas.ts && grep -q "'cardTargetOffered', 'modesDrawn'" tools/check-redaction.mjs && grep -q "'confirm', 'modes'" tools/check-redaction.mjs && grep -q '^| M75 |' docs/protocol.md && echo 1 > var/lab-j174-local/has-d486.txt || echo 0 > var/lab-j174-local/has-d486.txt
+# D487: J172's grep, unchanged (the audit's legacy shape and its printed count, target:none in the checker and the bridge, protocol M76, its m76 fixtures)
+ls docs/decisions/D487-*.md >/dev/null 2>&1 && grep -q 'legacy null target' docs/decisions/D487-*.md && grep -q 'function legacyNullTarget' tools/check-redaction.mjs && grep -q 'M55 legacy null target records=' tools/check-redaction.mjs && grep -q "target:none" tools/check-redaction.mjs && grep -q 'TARGET_NONE' bridge/src/mtgtable/ai/Decisions.java && grep -q '^| M76 |' docs/protocol.md && test -f fixtures/negative/redaction/m76-chosen-null-trigger.jsonl && echo 1 > var/lab-j174-local/has-d487.txt || echo 0 > var/lab-j174-local/has-d487.txt
+# D488 (the names this file reads: the fit's four methods, the branch row's two fields in the bridge and the lab, the checker's GUARDRAIL_NAMES,
+# the errored branch's stack, protocol M77; checked against the lane's 7f60b856 with its review edits; the owner corrects them if the merge renamed any)
+ls docs/decisions/D488-*.md >/dev/null 2>&1 && grep -q 'costTargetAvoided' docs/decisions/D488-*.md && grep -q 'fitCosts(' bridge/src/mtgtable/ai/Explorer.java && grep -q 'trimToPayable(' bridge/src/mtgtable/ai/Explorer.java && grep -q 'refitRedraw(' bridge/src/mtgtable/ai/Explorer.java && grep -q 'manaPayable(' bridge/src/mtgtable/ai/Explorer.java && grep -q 'public int targetCountTrimmed;' bridge/src/mtgtable/ai/Atlas.java && grep -q 'public int costTargetAvoided;' bridge/src/mtgtable/ai/Atlas.java && grep -q 'static void logStack(' bridge/src/mtgtable/ai/Atlas.java && grep -q 'targetCountTrimmed?: number' tools/cubelab/atlas.ts && grep -q 'costTargetAvoided?: number' tools/cubelab/atlas.ts && grep -q "'modesDrawn', 'targetCountTrimmed', 'costTargetAvoided'" tools/check-redaction.mjs && grep -q '^| M77 |' docs/protocol.md && echo 1 > var/lab-j174-local/has-d488.txt || echo 0 > var/lab-j174-local/has-d488.txt
+# D489 (the names this file reads: the flags, the schedule's counters, the label rows' stopWhy, the control draw and the futility read, the
+# self-test's cuts-futile leg; checked against the lane's c4e1bda6 under its review; the owner corrects them if the merge renamed any)
+ls docs/decisions/D489-*.md >/dev/null 2>&1 && grep -q 'futileStopped' docs/decisions/D489-*.md && grep -q -- '--futility' tools/cubelab/cli.ts && grep -q 'futileStopped' tools/cubelab/atlas.ts && grep -q 'partialLabels' tools/cubelab/atlas.ts && grep -q 'futileBranchGamesSaved' tools/cubelab/atlas.ts && grep -q "stopWhy: 'futile'" tools/cubelab/atlas.ts && grep -q 'futilityControl' tools/cubelab/atlas.ts && grep -q 'export const futilityDraw' tools/cubelab/atlascuts.ts && grep -q 'export function futileAt' tools/cubelab/atlascuts.ts && grep -q 'cuts-futile' tools/cubelab/atlas.ts && echo 1 > var/lab-j174-local/has-d489.txt || echo 0 > var/lab-j174-local/has-d489.txt
+# the random seat is J173's: nothing under bridge/src and not the seat-identity golden changed since J173's pin (6e87e5d4, D488's merge)
+git diff --quiet 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src fixtures/cubelab/seat-identity.json && echo 1 > var/lab-j174-local/seat-code.txt || echo 0 > var/lab-j174-local/seat-code.txt
+# D481-D489 by decision id: the commit that added each decision's file is an ancestor of the pin (whatever sha the merge gave it)
+anc=1
+for x in D481 D482 D483 D484 D485 D486 D487 D488 D489; do
+  f=$(git ls-tree -r --name-only HEAD docs/decisions/ | grep "^docs/decisions/$x-" | head -n 1 || true)
+  c=""
+  if [ -n "$f" ]; then c=$(git log --diff-filter=A --format=%H -n 1 HEAD -- "$f" || true); fi
+  if [ -z "$c" ] || ! git merge-base --is-ancestor "$c" HEAD; then anc=0; fi
+  echo "J174: $x: ${f:-no decision file} added by ${c:-no commit}"
+done
+echo $anc > var/lab-j174-local/has-d481-d489-commits.txt
+# the seat-identity golden D486 regenerated: J171's three parts, unchanged (D488's gate: 12m, all 4 games the golden's, not regenerated)
+f486=$(git ls-tree -r --name-only HEAD docs/decisions/ | grep '^docs/decisions/D486-' | head -n 1 || true)
+c486=""
+if [ -n "$f486" ]; then c486=$(git log --diff-filter=A --format=%H -n 1 HEAD -- "$f486" || true); fi
+cg=$(git log --format=%H -n 1 HEAD -- fixtures/cubelab/seat-identity.json || true)
+g1=0
+if [ -n "$c486" ] && [ -n "$cg" ] && git merge-base --is-ancestor "$c486" "$cg"; then g1=1; fi
+g2=0
+if [ -n "$c486" ] && ! git diff --quiet "$c486" HEAD -- fixtures/cubelab/seat-identity.json; then g2=1; fi
+python3 -I -c "import glob, json, sys; t = [open(f).read() for f in sorted(glob.glob('docs/decisions/*.md'))]; r = json.load(open('fixtures/cubelab/seat-identity.json')).get('results') or {}; dg = {k: (r.get(k) or {}).get('digest') for k in ('forge', 'search', 'explore')}; print(json.dumps({'descends': int(sys.argv[1]), 'changed': int(sys.argv[2]), 'note': 1 if any('seat-identity' in x and 'D486' in x for x in t) else 0, 'digestsJ170': 1 if dg == {'forge': '78f3a94998355ea8', 'search': 'c68c2a849b7b0d54', 'explore': '82d6d18c57bbd861'} else 0}))" $g1 $g2 > var/lab-j174-local/golden.json || echo '{"descends":-1}' > var/lab-j174-local/golden.json
+echo "J174: seat-identity golden: fixture last changed by ${cg:-no commit}, D486's file added by ${c486:-no commit}: $(cat var/lab-j174-local/golden.json)"
+# the deck draw's code is J171's pin's (D447 with D482's committed list): nothing since f2b4e9c2 touched it
+git diff --quiet f2b4e9c26227ef135e5df1102384e026cbf2f195 HEAD -- tools/cubelab/deckcensus.ts tools/cubelab/engine-unplayable.json cubes/library/ && echo 1 > var/lab-j174-local/deck-code.txt || echo 0 > var/lab-j174-local/deck-code.txt
+test -z "${CUBELAB_WORKER_XMX:-}" && echo 1 > var/lab-j174-local/xmx-unset.txt || echo 0 > var/lab-j174-local/xmx-unset.txt
+env -u LAB_DATA_DIR node --test web/test/cubelab-atlas.test.ts web/test/cubelab-atlas-cuts.test.ts web/test/cubelab-atlas-resume.test.ts web/test/cubelab-atlas-redaction.test.ts web/test/cubelab-record.test.ts web/test/cubelab-watchdog.test.ts web/test/cubelab-deck-census.test.ts && echo 1 > var/lab-j174-local/nodetests.txt || echo 0 > var/lab-j174-local/nodetests.txt
+node tools/check-redaction-selftest.mjs && echo 1 > var/lab-j174-local/redaction-self.txt || echo 0 > var/lab-j174-local/redaction-self.txt
+cat > var/lab-j174-local/bin/drawsha.py <<'PY'
+# J174: J171's drawsha.py, unchanged (J170's, J169's, J168's, J167's, J166's).
+# The sha256 of a set of deck draws, in the order named: each folder's decks.jsonl, then its decks/*.dck by name.
+# Usage: drawsha.py DIR... ; prints the hex digest and the deck count. Standard library only.
+import glob, hashlib, os, sys
+h, n = hashlib.sha256(), 0
+for d in sys.argv[1:]:
+    h.update(open(os.path.join(d, 'decks.jsonl'), 'rb').read())
+    for f in sorted(glob.glob(os.path.join(d, 'decks', '*.dck'))):
+        h.update(os.path.basename(f).encode() + b'\0' + open(f, 'rb').read())
+        n += 1
+print(h.hexdigest(), n)
+PY
+cat > var/lab-j174-local/bin/draws.py <<'PY'
+# J174 (drafts/J174-atlas-4b-night-three.md): J173's draws.py for J174's seeds. The deck draws, made by J174's pilot into the NEW data
+# folder lab-j174 (D447 with D482's list, at the pin, deck seeds 2027-2039 and 2227-2239) and again into the clone (var/lab-j174-local/redraw/,
+# J167's redraw). These seeds were never drawn before, so no spine's sha256 is registered: the two draws must agree deck for deck, the smoke's
+# pair (deck seed 2099) must be J166's registered sha256, and no spine draw may be one of J171's 13 or J173's 13, nor the validation draw
+# J171's or J173's (registered below: a guard against an unshifted seed). The pilot then
+# RECORDS the sha256s once (--record), and every spine block checks its decks against that record (deckcheck.py). From files only (no engine).
+#   draws.py            one JSON object of numbers (the pilot's `draws` metric reads it from draws.json)
+#   draws.py --record   writes var/lab-j174-local/draws-pilot.json when it is absent and every check of agreement holds; never overwrites
+#   draws.py --report   the sha256s as run and as recorded (report/draws.json)
+import glob, hashlib, json, os, sys
+D = '/home/justin-a/code/lab/data/lab-j174'
+R = 'var/lab-j174-local/redraw'
+REC = 'var/lab-j174-local/draws-pilot.json'
+BANDS = ['pauper', 'peasant', 'legacy', 'powered'] * 3 + ['pauper']
+SP = ['s%02d-%s-%d' % (k, BANDS[k - 1], 2026 + k) for k in range(1, 14)]
+VA = ['v%02d-%s-%d' % (k, BANDS[k - 1], 2226 + k) for k in range(1, 14)]
+REG_SMOKE = 'edfdc861736fb049bc1080d525269064c6776ecabd47de496463fa3dc684c931 2'
+# J171's 13 spine draws (drafts/J171-atlas-4b-card-targets.md, draws.py's DECKS) and its validation draw: none may come back here
+J171_DRAWS = {'a40fb5addec594bd6e97b0e7b16d78af1f08280dcc555366b3a2301feda4ff34', '86ccaaf3b3ba6f5959aacf073a9dc0465aadf1a9d02ddac8eac695091eaea576',
+              '0e9d8c744abd6eff72d2fc1cca4003c7cecfdb85830c077d8c29e16891bfacc1', '81c4dd22dcdbd1a110b0339476cbab04e8f6d2791f1881e42499b97f8675dc00',
+              'afc7ce320e966d96e5c92ec9d28c357e6f603c59927f677549ce261227b1b92e', '191a5d8aac5d516f5472f0a01a0cacf660a9fa931e70b806a42723e4dfba161f',
+              '5287d2666529b6dd35ec4a271a1b71c5b01d8096bcf1c3acd114945c7a435636', 'd653b4cf2bf2d94649449caaf174d21453cd34b58972c3e22ea8e26dacf75f71',
+              '1216932fb9807608a5bf859ac768e12efa40c031fc685f16b56b274a2bbf7601', 'e4676bda05d0204f3ce43e3f8d1ee1a0ca0c8e24c7f8cf09860423d00ddedd9b',
+              '4ca069ba7bdae91d218e589a41c28da836c7544da53577d14c5994aa64ca8642', '5d49d21add4ba8cc269babde10dc63c7b7885e94b1df7437d217e02bd2db820d',
+              '6f20b45b168bf6ba0e365bf27e507e31c431eb76c6f389336cfc8db3e3752591'}
+J171_VALIDATION = '7def89fa82af9e14ef82042df0162a23e458c3a3d7a34fd8fb889dfa4cb117de'
+# J173's 13 spine draws and its validation draw (lab-j173/decks and validation as this draft read them, 2026-10-27, equal to J173's
+# var/lab-j173-local/draws-pilot.json): none may come back here either
+J173_DRAWS = {'bda23027e30bfa785eb8800a59c13598c652bae8a32b5dfa6f72554675726ef2', 'a2cad311341fa662eaa0720286386e169b06eeb8270e8880a0f910d86b901646',
+              '1009922ed3a4e306172d66c2e0808622464e16dcb7d8832b767623d8ec00a2bb', '6611f1104b84e8616449628d548e2caf764978a9881a0093e83e3424e6bee350',
+              'bdaf4cdc41cb5b91c18b5f050e482949a7835694cc1e752e351c44aae6faeac5', '43d09352be81da6e0173079c35773d4ce23bc8490b9d4313351644fc80a5f150',
+              '1b65977550215bded3baaa8349ba42281eb4f2d9e4c898c3ff36f4b5bbf2395e', '5c63e8e936bb1e0fb35aa12cb204088b51937c78655fabb5a57f4eb5709d852a',
+              '3abe41cb921d801ca19c360fd02fb15c0a72332eae730f6d1525d639c96ec356', 'f70e76d1e77bf1d0d9675e854772b32709d115645959459d8a5cb14e4f5c615b',
+              '6e54962a5e5f58e3b693f850879998fa37b6a863a4a416caaa1c2c79286879f4', '491a0e3a45844c784927cb120003115bb16eb2b0fd67b090322a916523b56b16',
+              '45ddf51d3e764483d277f259f92e8a95127aa414872464709adb08fb510067d0'}
+J173_VALIDATION = '2d8fc399fb267eb70b060f984d573843b8f5801976f69b38b6eb8f80810fae19'
+
+
+def drawsha(dirs):
+    h, n = hashlib.sha256(), 0
+    for d in dirs:
+        h.update(open(os.path.join(d, 'decks.jsonl'), 'rb').read())
+        for f in sorted(glob.glob(os.path.join(d, 'decks', '*.dck'))):
+            h.update(os.path.basename(f).encode() + b'\0' + open(f, 'rb').read())
+            n += 1
+    return '%s %d' % (h.hexdigest(), n)
+
+
+def fsha(p):
+    return hashlib.sha256(open(p, 'rb').read()).hexdigest()
+
+
+def safe(f):
+    try:
+        return f()
+    except (OSError, ValueError, KeyError, IndexError, TypeError):
+        return None
+
+
+def now(root, x):
+    """[the folder's draw, deck 1's sha256, deck 2's] (None where a file is missing)"""
+    band, seed = x.split('-')[1], x.split('-')[2]
+    return [safe(lambda: drawsha([root + '/' + x])), safe(lambda: fsha('%s/%s/decks/%s-%s-00001.dck' % (root, x, band, seed))),
+            safe(lambda: fsha('%s/%s/decks/%s-%s-00002.dck' % (root, x, band, seed)))]
+
+
+def agree(x, base):
+    a, b = now(D + '/' + base, x), now(R, x)
+    return None not in a and a == b and a[0].endswith(' 2')
+
+
+def state():
+    s = {'spines': {x: now(D + '/decks', x) for x in SP}, 'validationBySet': {x: now(D + '/validation', x) for x in VA},
+         'all13': safe(lambda: drawsha([D + '/decks/' + x for x in SP])), 'validation': safe(lambda: drawsha([D + '/validation/' + x for x in VA])),
+         'smoke': safe(lambda: drawsha([D + '/decks/p-powered-2099']))}
+    return s
+
+
+out = {}
+out['spines13'] = sum(1 for x in SP if agree(x, 'decks'))
+out['validation13'] = sum(1 for x in VA if agree(x, 'validation'))
+a13, r13 = safe(lambda: drawsha([D + '/decks/' + x for x in SP])), safe(lambda: drawsha([R + '/' + x for x in SP]))
+out['all13'] = 1 if a13 is not None and a13 == r13 and a13.endswith(' 26') else 0
+av, rv = safe(lambda: drawsha([D + '/validation/' + x for x in VA])), safe(lambda: drawsha([R + '/' + x for x in VA]))
+out['validationAll'] = 1 if av is not None and av == rv and av.endswith(' 26') else 0
+out['smokeData'] = 1 if safe(lambda: drawsha([D + '/decks/p-powered-2099'])) == REG_SMOKE else 0
+out['smokeRedraw'] = 1 if safe(lambda: drawsha([R + '/p-powered-2099'])) == REG_SMOKE else 0
+out['newDraws13'] = sum(1 for x in SP for v in [now(D + '/decks', x)[0]] if v is not None and v.split()[0] not in J171_DRAWS | J173_DRAWS)
+out['newValidation'] = 1 if av is not None and av.split()[0] not in (J171_VALIDATION, J173_VALIDATION) else 0
+ok = out['spines13'] == 13 and out['validation13'] == 13 and out['all13'] == 1 and out['validationAll'] == 1 and out['smokeData'] == 1 and out['smokeRedraw'] == 1
+if '--record' in sys.argv[1:]:
+    if os.path.exists(REC):
+        print('J174 draws: %s exists, kept as recorded' % REC)
+    elif not ok:
+        print('J174 draws: the draws do not agree, nothing recorded: %s' % json.dumps(out))
+    else:
+        with open(REC, 'w') as f:
+            json.dump(dict(state(), note='J174 deck draws, recorded once by the pilot at the pin: D447 with D482\'s list, deck seeds 2027-2039 (spines), 2227-2239 (validation), 2099 (smoke); drawsha = each folder\'s decks.jsonl, then its .dck files by name'), f, indent=1)
+        print('J174 draws: recorded in %s' % REC)
+    sys.exit(0)
+rec = safe(lambda: json.load(open(REC)))
+if '--report' in sys.argv[1:]:
+    print(json.dumps({'note': 'J174 deck draws, made by J174\'s pilot into lab-j174 and again into the clone, recorded once (draws-pilot.json)',
+                      'asRun': state(), 'recorded': rec, 'redrawSpines': r13, 'redrawValidation': rv, 'smokeRegistered': REG_SMOKE}, indent=1))
+    sys.exit(0)
+cur = state()
+out['recorded'] = 1 if rec and all(rec.get(k) == cur[k] for k in ('spines', 'validationBySet', 'all13', 'validation', 'smoke')) else 0
+print(json.dumps(out))
+PY
+cat > var/lab-j174-local/bin/deckcheck.py <<'PY'
+# J174: a spine block's check of its own decks: the folder's draw and both decks are the sha256s the pilot recorded (draws-pilot.json).
+# Usage: deckcheck.py NAME FOLDER DECK1 DECK2 ; exits 0 when they are, else 1. Standard library only.
+import glob, hashlib, json, os, sys
+name, k0, a, b = sys.argv[1:5]
+
+
+def drawsha(d):
+    h, n = hashlib.sha256(), 0
+    h.update(open(os.path.join(d, 'decks.jsonl'), 'rb').read())
+    for f in sorted(glob.glob(os.path.join(d, 'decks', '*.dck'))):
+        h.update(os.path.basename(f).encode() + b'\0' + open(f, 'rb').read())
+        n += 1
+    return '%s %d' % (h.hexdigest(), n)
+
+
+try:
+    want = json.load(open('var/lab-j174-local/draws-pilot.json'))['spines'][name]
+    got = [drawsha(k0), hashlib.sha256(open(a, 'rb').read()).hexdigest(), hashlib.sha256(open(b, 'rb').read()).hexdigest()]
+except (OSError, ValueError, KeyError) as e:
+    sys.exit('J174: %s: %s' % (name, e))
+sys.exit(0 if got == want and got[0].endswith(' 2') else 'J174: %s: the decks under %s are not the draw the pilot recorded' % (name, k0))
+PY
+cat > var/lab-j174-local/bin/labels.py <<'PY'
+# J174 (drafts/J174-atlas-4b-night-three.md): J173's labels.py (contract v5) with the rung-4b contract v6, registered before any J174 data.
+# v6 is v5 on D489's design: the SAME population as J173's v5 (D488's seat, unchanged), branched with fewer branches, so its rows may be
+# pooled with J173's with the branch count as a column, and never with v1-v4's. What v6 changes (every v5 field kept, every v5 read and
+# definition unchanged): `v` 6, `contract` v6's; EVERY branched row is kept -- complete, screened, or a futile-stopped PARTIAL one -- and
+# each carries D489's `partial` (bool), `stoppedAt` and `stopWhy` (the decision-level checkpoint and "futile" on a partial row; null
+# elsewhere: an option's own `stoppedAt` stays inside `options`), `futilityControl` (bool) and `futilityGap` (null where the rule did
+# not read the decision), `branchRandom` (the plan's), `fullN` (option 0's random branch rows, any outcome) and `branchedInFull`
+# (complete and fullN >= branchRandom, computed here whatever atlas.json's own `branchedInFull` counts). `confident` is v5's and also
+# requires `partial` false (D489 makes a partial row incomplete; this is a second lock). `labels` stays the complete rows' count;
+# `partialLabels`, `futilityControls`, `branchedInFullRows` and `confidentPartial` (0 expected) are new. New reads, registered before
+# any J174 data:
+#   f_futilityRead   the decisions the rule read (futilityGap not null), the futile ones (stopped or control), the stopped ones and the
+#                    CONTROLS (futilityControl): how many controls are complete and confident at the full n (the rule's measured loss),
+#                    their share with an exact Clopper-Pearson 95% interval, beside the atlas review's 3 of 77; the labels lost
+#                    estimated as share x stopped, the interval scaled the same way. `pooledInputs` are the counts a later night adds to
+#                    (the read is POOLED across nights; one night's is partial)
+#   c_sizing7        adds `workerHours` (the walls times their workers) and `confidentPerWorkerHour`: THE yield number to compare
+#                    across nights; the confident share over complete rows is not (the stopped futile decisions left the denominator)
+#   c_sizingRead     adds J173's own sizing read (--j173=LABELS_JSON: its c_sizingRead and per-worker-hour yield, the same seat at 200
+#                    branches, other decks; null when the file is absent) and the review's ~46 [41, 51] (32.8 x 1.39 [1.25, 1.55], no
+#                    controls), as information, no verdict
+# J173's header, unchanged below:
+# v5 is a NEW POPULATION (D488, Comparability: "Labels and reads from before D488 are not pooled with those after it"): its rows are
+# never pooled with v1-v4's. What v5 changes (every v4 field kept): `v` 5, `contract` v5's; `randomSeat` is --seat= (default "D488"; the
+# pilot's self-test on J171's night passes --seat=D486), the same on every spine; the pool as named on the command line (J174:
+# `random-<band>-d488`); each row adds D488's branch-row counters `targetCountTrimmed` and `costTargetAvoided` (the sums over the
+# decision's branch rows, both maps; BranchRow writes each when > 0), `targetCountTrimmedBranches` and `costTargetAvoidedBranches` (its
+# branch rows with each > 0) and `branchRows` (all of its branch rows); and, from metrics.py --scan's v5 caches (--lost=DIR),
+# `refusedCastOptions` (the options whose OWN forced cast was refused -- put back in its caster's hand -- in more than half of their
+# branches, either map), `refusedCastVoid` (option 0, Forge's own answer, is one of them), `refusedCastBranches` (the decision's branch
+# games with any refused cast) and `refusedCastBranchShare` (over `branchRows`); a row with no v5 cache carries null in the four. Out:
+# `d488Rows`, `refusedCastVoid` / `refusedCastVoidList`, `refusedCastOptionRows`; each spine's scan numbers beside its labels. The
+# sizing read's expectation names J171's numbers as ANOTHER population. The reads themselves are J171's, unchanged.
+# J171's (J170's v4) header, in short: --biased= and --lost= are J169's; `lostCastOptions`, `lostCastVoid` and `lostCastBranches` are
+# J169's (the lost cast as J169 defined it; metrics.py's scan keeps it); `confidentPer7Poisson95` is Garwood's exact interval scaled
+# as the point is; `byRandomSeat` counts whatever seats the rows carry. J167's: each spine names its own sha; `listing`, `playCount`,
+# `tokenTwice`, each option's `identity`; `byListing`.
+# From spine folders named on the command line as NAME:POOL:DECKSEED:GAMESEED:SHA:DIR (DIR holds plan.json, atlas.json, phaseB/).
+#   --out=FILE       write labels.jsonl there (one row per branched decision: complete, screened or neither)
+#   --times=FILE     spine-times.txt ("<folder> <start epoch s> <end epoch s> <workers>", one line a run of a spine's block)
+#   --training=1     mark every row `training: true`; anything else writes `training: false`
+# Standard library only; no engine. Prints one JSON object (the label reads) to stdout.
+# Definitions (J166's, fixed before any J166 data):
+#   label      a branched decision of seat A that atlas.json calls complete (D480), not screened
+#   regret     atlas.json's random-map regret: the best option's mean minus option 0's (Forge's answer, the one the spine
+#              played), with atlas.json's paired-bootstrap interval; an option early stopping dropped keeps its own n (D480)
+#   confident  complete and the regret's low end is > 0 (random map); `confidentForge` the same under the Forge map, on a
+#              spine with one (null on a spine without), as information
+#   decided    atlas.json's (D480); fallback J158's: every option's mean >= 0.95 under both maps; inQ = complete, not decided
+#   settled    atlas.json's (D480: decided, or every option <= 0.05 under each map, or screened); fallback J158's
+#   gap        best minus worst option mean under the random map, over every option (J157's "information" measure)
+#   k bucket   the decision's option count (listed and branched): 2, 3-4, 5-6, 7-8
+#   interval   95% percentile bootstrap, 10,000 draws, seed 150: pool -> spine -> decision when more than one pool is read,
+#              spine -> decision for one pool, decision for one spine
+#   rows       the d-th row of seat A in the spine's baseline rows IS decision d (`rows.match`), J158's rule
+#   void       J162's: "D470" when a block decision played one game under every option in every continuation the spine has
+#   c_sizing7  labels and confident labels per 10-h night at the measured wall (spine-times.txt, checks included) scaled to 7
+#              workers (wall x workers / 7), per spine, per pool and as run
+import collections, glob, json, math, os, random, statistics, sys
+
+B, SEED = 10000, 150
+CONTRACT = 'mtg-table rung-4b label v6 (J174)'
+SCAN_V = 'J174 v5'
+args, opt = [], {}
+for a in sys.argv[1:]:
+    if a.startswith('--'):
+        k, _, v = a[2:].partition('=')
+        opt[k] = v
+    else:
+        args.append(a)
+TRAINING = opt.get('training') == '1'
+SEAT = opt.get('seat') or 'D488'
+BIASED = set(x for x in opt.get('biased', '').split(',') if x)
+ROW_KEYS = ('modesDrawn', 'retargeted', 'targetCountTrimmed', 'costTargetAvoided')
+ROW0 = {'modesDrawn': 0, 'retargeted': 0, 'targetCountTrimmed': 0, 'costTargetAvoided': 0,
+        'modesDrawnBranches': 0, 'targetCountTrimmedBranches': 0, 'costTargetAvoidedBranches': 0, 'branchRows': 0, 'fullN': 0}
+
+
+def lost_cache(folder):
+    """metrics.py --scan's cache for this spine folder, only when it was made from this folder's atlas.json as it stands"""
+    if not opt.get('lost'):
+        return None
+    try:
+        c = json.load(open(os.path.join(opt['lost'], os.path.basename(folder) + '.json')))
+        return c if c.get('atlasMtime') == int(os.path.getmtime(os.path.join(folder, 'atlas.json'))) else None
+    except (OSError, ValueError):
+        return None
+
+
+def forge_map(doc):
+    return (doc.get('phaseB') or {}).get('forgeMap', True) is not False and doc['plan'].get('branchForge', 40) > 0
+
+
+def complete(x, fm):
+    if x.get('screened'):
+        return False
+    if 'decided' in x:   # D480's atlas: its own `complete`
+        return bool(x['complete'])
+    return x['complete'] and all(o['random']['mean'] is not None and (not fm or o['forge']['mean'] is not None) for o in x['options'])
+
+
+def decided(x, fm):
+    if 'decided' in x:
+        return bool(x['decided'])
+    return all(o['random']['mean'] >= 0.95 and (not fm or o['forge']['mean'] >= 0.95) for o in x['options'])
+
+
+def settled(x, fm, comp):
+    if 'settled' in x:
+        return bool(x['settled'])
+    return comp and decided(x, fm) or comp and all(o['random']['mean'] <= 0.05 and (not fm or o['forge']['mean'] <= 0.05) for o in x['options'])
+
+
+def kbucket(k):
+    return '2' if k <= 2 else '3-4' if k <= 4 else '5-6' if k <= 6 else '7-8'
+
+
+def seat_rows(spine):
+    for f in sorted(glob.glob(os.path.join(spine, 'phaseB', 'baseline', 'rows', '*.jsonl'))):
+        rows, begin = [], None
+        for line in open(f):
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if r.get('type') == 'begin':
+                begin = r
+            elif r.get('type') == 'row':
+                rows.append(r)
+        if not begin:
+            continue
+        seat = 0 if begin.get('seat0') == 'Drafter A' else 1 if begin.get('seat1') == 'Drafter A' else None
+        if seat is None:
+            continue
+        return f, seat, 'Drafter A', [r for r in rows if r.get('seat') == 'Drafter A']
+    return None, None, None, []
+
+
+def same_game(branches_file, conts):
+    """Per decision: whether every option played the same game at every index where all of them played (J162's void test)."""
+    rows, nopt = collections.defaultdict(dict), collections.defaultdict(set)
+    if os.path.exists(branches_file):
+        for line in open(branches_file):
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            rows[(r['d'], r['c'], r['i'])][r['o']] = r
+            nopt[r['d']].add(r['o'])
+    s = {}
+    for (d, c, i), opts in rows.items():
+        e = s.setdefault(d, {}).setdefault(c, {'indices': 0, 'allPlayed': 0, 'identical': 0})
+        e['indices'] += 1
+        if len(opts) < len(nopt[d]):
+            continue
+        if not all(r.get('error') is None and not r.get('timedOut') and not r.get('engineError') and not r.get('unavailable') for r in opts.values()):
+            continue
+        e['allPlayed'] += 1
+        if len({(r['turns'], r['steps'], r['result']) for r in opts.values()}) == 1:
+            e['identical'] += 1
+    res = {}
+    for d, cs in s.items():
+        same = all(cs.get(c, {}).get('allPlayed', 0) > 0 and cs[c]['identical'] == cs[c]['allPlayed'] for c in conts)
+        ev = {c: '%d of %d played indices identical across the %d options (%d of %d indices had an errored, timed-out, unavailable or stopped option)' % (
+            cs.get(c, {}).get('identical', 0), cs.get(c, {}).get('allPlayed', 0), len(nopt[d]),
+            cs.get(c, {}).get('indices', 0) - cs.get(c, {}).get('allPlayed', 0), cs.get(c, {}).get('indices', 0)) for c in conts}
+        res[d] = {'same': same, 'evidence': ev}
+    return res
+
+
+def row_counts(branches_file):
+    """v5: per decision, the sums of D486's modesDrawn, D485's retargeted and D488's targetCountTrimmed and costTargetAvoided over its
+    branch rows (both maps), its rows with modesDrawn, targetCountTrimmed and costTargetAvoided above 0, and all of its branch rows"""
+    rc = {}
+    if os.path.exists(branches_file):
+        for line in open(branches_file):
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            e = rc.setdefault(r['d'], dict(ROW0))
+            e['branchRows'] += 1
+            e['fullN'] += 1 if r.get('c') == 'random' and r.get('o') == 0 else 0
+            for k in ROW_KEYS:
+                v = r.get(k)
+                if isinstance(v, (int, float)) and v > 0:
+                    e[k] += v
+                    if k != 'retargeted':
+                        e[k + 'Branches'] += 1
+    return rc
+
+
+def poisson95(k):
+    """the exact (Garwood) 95% interval of a Poisson mean with k observed, by bisection on the Poisson CDF"""
+    def cdf(n, mu):
+        return sum(math.exp(i * math.log(mu) - mu - math.lgamma(i + 1)) for i in range(n + 1)) if mu > 0 else 1.0
+
+    def solve(f, lo, hi):
+        for _ in range(200):   # f falls as mu grows: keep the root between lo and hi
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if f(mid) > 0 else (lo, mid)
+        return (lo + hi) / 2
+    top = 10.0 * (k + 10)
+    lower = 0.0 if k == 0 else solve(lambda mu: cdf(k - 1, mu) - 0.975, 0.0, top)
+    upper = solve(lambda mu: cdf(k, mu) - 0.025, 0.0, top)
+    return lower, upper
+
+
+labels, tree, same_any, meta = [], {}, [], {}
+for a in args:
+    name, pool, dseed, gseed, sha, spine = a.split(':', 5)
+    spine = os.path.abspath(spine)
+    doc = json.load(open(os.path.join(spine, 'atlas.json')))
+    plan = json.load(open(os.path.join(spine, 'plan.json')))
+    base = json.load(open(os.path.join(spine, 'phaseB', 'baseline.json')))
+    fm = forge_map(doc)
+    btok = {x['d']: x for x in base['decisions']}
+    spine_listing = 'D483' if base['decisions'] and all(x.get('identities') for x in base['decisions']) else 'pre-D483' if not any(x.get('identities') for x in base['decisions']) else 'mixed'
+    rf, seat, player, arows = seat_rows(spine)
+    sg_all = same_game(os.path.join(spine, 'phaseB', 'branches.jsonl'), ('random', 'forge') if fm else ('random',))
+    rc_all = row_counts(os.path.join(spine, 'phaseB', 'branches.jsonl'))
+    pb = doc.get('phaseB') or {}
+    sch = pb.get('schedule') or {}
+    lc = lost_cache(spine)
+    v5 = lc is not None and lc.get('scan') == SCAN_V
+    meta[name] = {'pool': pool, 'deckSeed': int(dseed), 'gameSeed': int(gseed), 'sha': sha, 'listing': spine_listing, 'folder': os.path.basename(spine), 'forgeMap': fm,
+                  'deckA': plan['deckA'], 'deckB': plan['deckB'],
+                  'baseline': {'turns': (pb.get('baseline') or {}).get('turns'), 'winner': (pb.get('baseline') or {}).get('winner'),
+                               'listed': (pb.get('baseline') or {}).get('decisionsListed')},
+                  'branchedInFull': sch.get('branchedInFull'), 'screened': len(sch.get('screened') or []), 'fill': sch.get('fill'),
+                  'stoppedOptions': sch.get('stoppedOptions'), 'meanOptions': sch.get('meanOptions'),
+                  'randomSeat': SEAT, 'biased': 'lost-cast' if name in BIASED else None,
+                  'lostScanned': lc is not None, 'lostCasts': lc.get('lostCasts') if lc else None, 'lostCastBranches': lc.get('lostCastBranches') if lc else None,
+                  'scanV5': v5, 'casts': lc.get('casts') if v5 else None, 'refusedCast': lc.get('refusedCast') if v5 else None,
+                  'refusedCastShare': lc.get('refusedCastShare') if v5 else None, 'castsRefused': lc.get('castsRefused') if v5 else None,
+                  'refusedCastBranches': lc.get('refusedCastBranches') if v5 else None}
+    tree.setdefault(pool, {}).setdefault(name, [])
+    for x in pb.get('decisions', []):
+        d = x['d']
+        row = arows[d] if d < len(arows) else None
+        match = bool(row) and d in btok and row['tokens'] == btok[d]['tokens'] and row['kind'] == x['kind'] and row['turn'] == x['turn']
+        comp = complete(x, fm)
+        dec = comp and decided(x, fm)
+        rnd = [o['random']['mean'] for o in x['options'] if o['random']['mean'] is not None]
+        lst = btok.get(d) or {}
+        ids = lst.get('identities') or []
+        toks = lst.get('tokens') or []
+        lab = {
+            'v': 6, 'contract': CONTRACT, 'spine': name, 'pool': pool, 'training': TRAINING, 'split': 'train' if TRAINING else None,
+            'deckA': plan['deckA'], 'deckB': plan['deckB'], 'deckSeed': int(dseed), 'spineSeed': int(gseed), 'sha': sha,
+            'listing': 'D483' if ids else 'pre-D483', 'playCount': len(set(ids)) if ids else len(toks), 'tokenTwice': len(set(toks)) < len(toks),
+            'randomSeat': SEAT, 'biased': 'lost-cast' if name in BIASED else None,
+            'd': d, 'kind': x['kind'], 'turn': x['turn'], 'k': len(x['options']), 'kBucket': kbucket(len(x['options'])),
+            'why': x.get('why'), 'replaces': x.get('replaces'),
+            'forgeOption': x['chosen'], 'forgeToken': x['options'][x['chosen']]['token'],
+            'options': [{'o': o['o'], 'token': o['token'], 'label': o['label'], 'identity': ids[o['o']] if ids and o['o'] < len(ids) else None,
+                         'stoppedAt': o.get('stoppedAt'),
+                         'random': {k: o['random'][k] for k in ('n', 'mean', 'lo', 'hi')},
+                         'forge': {k: o['forge'][k] for k in ('n', 'mean', 'lo', 'hi')}} for o in x['options']],
+            'bestRandom': x['random']['best'], 'bestForge': x['forge']['best'] if fm else None,
+            'regret': x['random']['regret'], 'regretLo': x['random']['regretLo'], 'regretHi': x['random']['regretHi'],
+            'regretForge': x['forge']['regret'] if fm else None, 'regretForgeLo': x['forge']['regretLo'] if fm else None,
+            'regretForgeHi': x['forge']['regretHi'] if fm else None,
+            'confident': comp and not x.get('partial') and x['random']['regretLo'] is not None and x['random']['regretLo'] > 0,
+            'confidentForge': (comp and x['forge']['regretLo'] is not None and x['forge']['regretLo'] > 0) if fm else None,
+            'complete': comp, 'screened': bool(x.get('screened')), 'screenMean': x.get('screenMean'),
+            'partial': bool(x.get('partial')), 'stoppedAt': x.get('stoppedAt') if x.get('partial') else None,
+            'stopWhy': x.get('stopWhy') if x.get('partial') else None, 'futilityControl': bool(x.get('futilityControl')),
+            'futilityGap': x.get('futilityGap'), 'branchRandom': plan['branchRandom'],
+            'decided': dec, 'inQ': comp and not dec, 'settled': settled(x, fm, comp),
+            'gap': round(max(rnd) - min(rnd), 4) if comp and rnd else None,
+            'rho': x['rho'] if fm else None, 'sameBest': x['sameBest'] if fm else None, 'forgeMap': fm,
+            'branches': {'random': plan['branchRandom'], 'forge': plan['branchForge'], 'branchTimeoutSec': plan.get('branchTimeoutSec'), 'cuts': plan.get('cuts')},
+            'view': {'seat': seat, 'player': player, 'deck': 'A'},
+            'frameLog': os.path.join(spine, 'phaseB', 'baseline', 'frames', 'baseline-seat%s.jsonl.gz' % seat) if seat is not None else None,
+            'rows': {'file': rf, 'seatRow': d, 'match': match},
+            'branchFrames': os.path.join(spine, 'phaseB', 'frames', 'd%d-{random|forge}-o{o}-b{i}-seat%s.jsonl.gz' % (d, seat)),
+            'branchesFile': os.path.join(spine, 'phaseB', 'branches.jsonl'),
+            'atlas': os.path.join(spine, 'atlas.json'),
+        }
+        lab.update(rc_all.get(d, dict(ROW0)))
+        lab['branchedInFull'] = comp and lab['fullN'] >= plan['branchRandom']
+        keys = [(o['o'], 'd%d/%s/o%d' % (d, c, o['o'])) for o in x['options'] for c in ('random', 'forge')]
+        if lc is not None:
+            bo = lc.get('byOption') or {}
+            lab['lostCastOptions'] = sorted({oo for oo, kk in keys if (bo.get(kk) or {}).get('forcedLostBranches', 0) * 2 > (bo.get(kk) or {}).get('branches', 0) > 0})
+            lab['lostCastVoid'] = 0 in lab['lostCastOptions']
+            lab['lostCastBranches'] = sum((bo.get(kk) or {}).get('lostBranches', 0) for oo, kk in keys)
+        else:
+            lab['lostCastOptions'], lab['lostCastVoid'], lab['lostCastBranches'] = None, None, None
+        if v5:
+            bo = lc.get('byOption') or {}
+            lab['refusedCastOptions'] = sorted({oo for oo, kk in keys if (bo.get(kk) or {}).get('forcedRefusedBranches', 0) * 2 > (bo.get(kk) or {}).get('branches', 0) > 0})
+            lab['refusedCastVoid'] = 0 in lab['refusedCastOptions']
+            lab['refusedCastBranches'] = sum((bo.get(kk) or {}).get('refusedBranches', 0) for oo, kk in keys)
+            lab['refusedCastBranchShare'] = round(lab['refusedCastBranches'] / lab['branchRows'], 4) if lab['branchRows'] else None
+        else:
+            lab['refusedCastOptions'], lab['refusedCastVoid'], lab['refusedCastBranches'], lab['refusedCastBranchShare'] = None, None, None, None
+        sg = sg_all.get(d, {'same': False, 'evidence': None})
+        same_any.append((lab, sg['same']))
+        lab['void'] = 'D470' if x['kind'] == 'b' and sg['same'] and comp else None
+        if lab['void']:
+            lab['voidEvidence'] = sg['evidence']
+        labels.append(lab)
+        if comp:
+            tree[pool][name].append(lab)
+
+if opt.get('out'):
+    with open(opt['out'], 'w') as f:
+        for lab in labels:
+            f.write(json.dumps(lab, separators=(',', ':')) + '\n')
+
+
+def mean(xs):
+    return sum(xs) / len(xs) if xs else None
+
+
+def boot(t, stat):
+    """t: {pool: {spine: [items]}}: pool -> spine -> decision when t has several pools, spine -> decision for one, decision for one spine."""
+    rng = random.Random(SEED)
+    pools = sorted(t)
+    vals = []
+    for _ in range(B):
+        items = []
+        ps = [rng.choice(pools) for _ in pools] if len(pools) > 1 else pools
+        for p in ps:
+            ss = sorted(t[p])
+            for s in ([rng.choice(ss) for _ in ss] if len(ss) > 1 else ss):
+                xs = t[p][s]
+                items.extend(rng.choice(xs) for _ in xs)
+        v = stat(items)
+        if v is not None:
+            vals.append(v)
+    if len(vals) < B / 2:
+        return [None, None]
+    vals.sort()
+    return [round(vals[int(0.025 * len(vals))], 4), round(vals[min(len(vals) - 1, int(0.975 * len(vals)))], 4)]
+
+
+def read(sel, stat, by_spine=False):
+    t = {p: {s: [x for x in xs if sel(x)] for s, xs in ss.items()} for p, ss in tree.items()}
+    flat = [x for ss in t.values() for xs in ss.values() for x in xs]
+    pt = stat(flat)
+    res = {'n': len(flat), 'point': None if pt is None else round(pt, 4), 'interval': boot(t, stat) if flat else [None, None], 'byPool': {}}
+    for p in sorted(t):
+        xs = [x for v in t[p].values() for x in v]
+        q = stat(xs)
+        res['byPool'][p] = {'n': len(xs), 'point': None if q is None else round(q, 4), 'interval': boot({p: t[p]}, stat) if xs else [None, None]}
+    if by_spine:
+        res['bySpine'] = {}
+        for p in sorted(t):
+            for s in sorted(t[p]):
+                xs = t[p][s]
+                q = stat(xs)
+                res['bySpine'][s] = {'n': len(xs), 'point': None if q is None else round(q, 4), 'interval': boot({p: {s: xs}}, stat) if xs else [None, None]}
+    return res
+
+
+share = lambda key: (lambda xs: mean([1.0 if x[key] else 0.0 for x in xs]))
+everything = lambda x: True
+out = {'contract': CONTRACT, 'training': TRAINING, 'pools': {p: sorted(ss) for p, ss in tree.items()},
+       'branched': len(labels), 'labels': sum(1 for x in labels if x['complete']),
+       'screenedRows': sum(1 for x in labels if x['screened']),
+       'rowsUnmatched': sum(1 for x in labels if not x['rows']['match']),
+       'confident': sum(1 for x in labels if x['confident']),
+       'confidentQ': sum(1 for x in labels if x['confident'] and x['inQ']),
+       'confidentForge': sum(1 for x in labels if x['confidentForge']),
+       'trainingRows': sum(1 for x in labels if x['training'] is True),
+       'partialLabels': sum(1 for x in labels if x['partial']), 'futilityControls': sum(1 for x in labels if x['futilityControl']),
+       'branchedInFullRows': sum(1 for x in labels if x['branchedInFull']), 'confidentPartial': sum(1 for x in labels if x['partial'] and x['confident']),
+       'futilityRead': sum(1 for x in labels if x['futilityGap'] is not None)}
+out['byListing'] = {L: {'spines': sorted({x['spine'] for x in labels if x['listing'] == L}), 'rows': sum(1 for x in labels if x['listing'] == L),
+                        'labels': sum(1 for x in labels if x['listing'] == L and x['complete']), 'confident': sum(1 for x in labels if x['listing'] == L and x['confident']),
+                        'tokenTwice': sum(1 for x in labels if x['listing'] == L and x['tokenTwice'])} for L in ('pre-D483', 'D483')}
+out['biasedRows'] = sum(1 for x in labels if x['biased'])
+out['lostCastVoid'] = sum(1 for x in labels if x['lostCastVoid'])
+out['lostCastVoidList'] = ['%s d%d %s' % (x['spine'], x['d'], x['forgeToken']) for x in labels if x['lostCastVoid']]
+out['lostCastOptionRows'] = ['%s d%d o%s' % (x['spine'], x['d'], ','.join(str(o) for o in x['lostCastOptions'])) for x in labels if x['lostCastOptions']]
+out['refusedCastVoid'] = sum(1 for x in labels if x['refusedCastVoid'])
+out['refusedCastVoidList'] = ['%s d%d %s' % (x['spine'], x['d'], x['forgeToken']) for x in labels if x['refusedCastVoid']]
+out['refusedCastOptionRows'] = ['%s d%d o%s' % (x['spine'], x['d'], ','.join(str(o) for o in x['refusedCastOptions'])) for x in labels if x['refusedCastOptions']]
+out['byRandomSeat'] = {S: {'spines': sorted({x['spine'] for x in labels if x['randomSeat'] == S}), 'rows': sum(1 for x in labels if x['randomSeat'] == S),
+                           'labels': sum(1 for x in labels if x['randomSeat'] == S and x['complete']), 'confident': sum(1 for x in labels if x['randomSeat'] == S and x['confident'])}
+                       for S in sorted({x['randomSeat'] for x in labels})}
+out['bySpine'] = {}
+for name, m in meta.items():
+    xs = [x for x in labels if x['spine'] == name]
+    cs = [x for x in xs if x['complete']]
+    out['bySpine'][name] = dict(m, rows=len(xs), labels=len(cs), screenedRows=sum(1 for x in xs if x['screened']),
+                                partialLabels=sum(1 for x in xs if x['partial']), futilityControls=sum(1 for x in xs if x['futilityControl']),
+                                branchedInFullRows=sum(1 for x in xs if x['branchedInFull']), decisionsBranched=sum(1 for x in xs if not x['screened']),
+                                inQ=sum(1 for x in cs if x['inQ']), decided=sum(1 for x in cs if x['decided']), settled=sum(1 for x in cs if x['settled']),
+                                confident=sum(1 for x in cs if x['confident']), confidentForge=sum(1 for x in cs if x['confidentForge']) if m['forgeMap'] else None,
+                                byKind={k: {'labels': sum(1 for x in cs if x['kind'] == k), 'confident': sum(1 for x in cs if x['kind'] == k and x['confident'])} for k in ('p', 'a', 'b')},
+                                gapMedian=round(statistics.median([x['gap'] for x in cs]), 4) if cs else None,
+                                regretMean=round(mean([x['regret'] for x in cs if x['regret'] is not None]), 4) if any(x['regret'] is not None for x in cs) else None,
+                                confidentList=['d%d %s t%d k%d %s -> o%s, %.1f [%.1f, %.1f]' % (x['d'], x['kind'], x['turn'], x['k'], x['forgeToken'], x['bestRandom'],
+                                               100 * x['regret'], 100 * x['regretLo'], 100 * x['regretHi']) for x in cs if x['confident']])
+out['byPool'] = {p: {'spines': len(ss), 'labels': sum(len(v) for v in ss.values()), 'confident': sum(1 for v in ss.values() for x in v if x['confident'])} for p, ss in tree.items()}
+# (a) the confident share: pooled, by pool, by spine; by kind; by option count; over Q
+out['a_confidentShare'] = read(everything, share('confident'), by_spine=True)
+out['a_confidentShareByKind'] = {k: read(lambda x, k=k: x['kind'] == k, share('confident')) for k in ('p', 'a', 'b')}
+out['a_confidentShareByK'] = {k: read(lambda x, k=k: x['kBucket'] == k, share('confident')) for k in ('2', '3-4', '5-6', '7-8')}
+out['a_confidentShareQ'] = read(lambda x: x['inQ'], share('confident'))
+# (b) what a label tells: the gap, the regret, the settled share
+out['b_gapMedian'] = {p: (round(statistics.median([x['gap'] for v in ss.values() for x in v]), 4) if any(ss.values()) else None) for p, ss in tree.items()}
+out['b_gapMean'] = read(everything, lambda xs: mean([x['gap'] for x in xs]))
+out['b_regretMean'] = read(everything, lambda xs: mean([x['regret'] for x in xs if x['regret'] is not None]))
+out['b_settledShare'] = read(everything, share('settled'))
+# (c) the sizing: per spine, per pool, per night, at the measured wall (checks included), and scaled to 7 workers
+wall = {}
+if opt.get('times') and os.path.exists(opt['times']):
+    for line in open(opt['times']):
+        f = line.split()
+        if len(f) >= 3 and f[1].isdigit() and f[2].isdigit():
+            prev = wall.get(f[0], (0, set()))
+            wall[f[0]] = (prev[0] + int(f[2]) - int(f[1]), prev[1] | ({f[3]} if len(f) > 3 else set()))
+
+
+def size(names):
+    s = {'wallSec': 0, 'spinesTimed': 0, 'labels': 0, 'confident': 0, 'wallSecAt7': 0.0, 'workerHours': 0.0}
+    for n in names:
+        m = meta[n]
+        w = wall.get(m['folder'])
+        if w is None:
+            continue
+        ws = [int(v) for v in w[1] if str(v).isdigit()]
+        s['wallSec'] += w[0]
+        s['spinesTimed'] += 1
+        s['labels'] += len(tree[m['pool']][n])
+        s['confident'] += sum(1 for x in tree[m['pool']][n] if x['confident'])
+        s['wallSecAt7'] += w[0] * (ws[0] / 7) if len(ws) == 1 else float('nan')
+        s['workerHours'] += w[0] * ws[0] / 3600 if len(ws) == 1 else float('nan')
+    h, h7 = s['wallSec'] / 3600, s['wallSecAt7'] / 3600
+    ok7 = h7 == h7 and h7 > 0
+    s['wallSecAt7'] = round(s['wallSecAt7']) if ok7 else None
+    s['labelsPer10hNight'] = round(10 * s['labels'] / h) if h else None
+    s['confidentPer10hNight'] = round(10 * s['confident'] / h) if h else None
+    s['labelsPer7Worker10hNight'] = round(10 * s['labels'] / h7) if ok7 else None
+    s['confidentPer7Worker10hNight'] = round(10 * s['confident'] / h7, 1) if ok7 else None
+    lo, hi = poisson95(s['confident'])
+    s['confidentPer7Poisson95'] = [round(10 * lo / h7, 1), round(10 * hi / h7, 1)] if ok7 else None
+    okw = s['workerHours'] == s['workerHours'] and s['workerHours'] > 0
+    s['confidentPerWorkerHour'] = round(s['confident'] / s['workerHours'], 4) if okw else None
+    s['confidentPerWorkerHourPoisson95'] = [round(lo / s['workerHours'], 4), round(hi / s['workerHours'], 4)] if okw else None
+    s['workerHours'] = round(s['workerHours'], 2) if okw else None
+    return s
+
+
+out['c_sizing7'] = {'bySpine': {n: size([n]) for n in meta}, 'byPool': {p: size(sorted(ss)) for p, ss in tree.items()}, 'asRun': size(list(meta))}
+out['c_sizingRead'] = {'confidentPer7Worker10hNight': out['c_sizing7']['asRun']['confidentPer7Worker10hNight'],
+                       'confident': out['c_sizing7']['asRun']['confident'], 'labelsPer7Worker10hNight': out['c_sizing7']['asRun']['labelsPer7Worker10hNight'],
+                       'poisson95': out['c_sizing7']['asRun']['confidentPer7Poisson95'],
+                       'confidentPerWorkerHour': out['c_sizing7']['asRun']['confidentPerWorkerHour'],
+                       'confidentPerWorkerHourPoisson95': out['c_sizing7']['asRun']['confidentPerWorkerHourPoisson95'],
+                       'readThis': 'confidentPerWorkerHour and confidentPer7Worker10hNight are the yield to compare across nights; the confident share over complete rows is not (D489: the stopped futile decisions are not in it)',
+                       'review': {'confidentPer7Worker10hNight': 45.6, 'interval': [41.0, 50.8], 'base': 32.8, 'gain': [1.39, 1.25, 1.55],
+                                  'note': 'the atlas review of 2026-10-27, section 5: the cap and the futility stop re-scored on 29 spines (no controls; ~43-44 with a quarter of the futile decisions played on: its hours x 0.675 / 0.71); another mix of decks and seats; as information'},
+                       'expectation': 'as information, no verdict: J173 (the same D488 seat, 200 branches, 8 decisions, other decks) below as its own report read it; J171 (D486, ANOTHER POPULATION) 28.9 [19.2, 41.8]; the review ~46 [41, 51]'}
+J173 = None
+if opt.get('j173') and os.path.exists(opt['j173']):
+    try:
+        j3 = json.load(open(opt['j173']))
+        a3 = j3['c_sizing7']['asRun']
+        wh3 = a3['wallSecAt7'] * 7 / 3600 if a3.get('wallSecAt7') else None
+        J173 = {'labels': j3['labels'], 'confident': j3['confident'], 'confidentShare': (j3.get('a_confidentShare') or {}).get('point'),
+                'confidentPer7Worker10hNight': a3['confidentPer7Worker10hNight'], 'poisson95': a3['confidentPer7Poisson95'],
+                'workerHours': round(wh3, 2) if wh3 else None, 'confidentPerWorkerHour': round(a3['confident'] / wh3, 4) if wh3 else None,
+                'spines': len(j3.get('bySpine') or {}), 'contract': j3.get('contract')}
+    except (OSError, ValueError, KeyError, TypeError):
+        J173 = None
+out['c_sizingRead']['j173'] = J173
+
+
+def clopper(k, n):
+    """the exact (Clopper-Pearson) 95% interval of a binomial share, k of n, by bisection on the binomial CDF"""
+    if n == 0:
+        return [None, None]
+
+    def cdf(kk, p):
+        return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(kk + 1))
+
+    def solve(f):
+        lo, hi = 0.0, 1.0
+        for _ in range(100):
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if f(mid) > 0 else (lo, mid)
+        return (lo + hi) / 2
+    low = 0.0 if k == 0 else solve(lambda p: cdf(k - 1, p) - 0.975)
+    high = 1.0 if k == n else solve(lambda p: cdf(k, p) - 0.025)
+    return [round(low, 4), round(high, 4)]
+
+
+# (f) the futility read: the controls are the decisions the rule would have stopped, played to the full n; how many end confident is
+# what the rule loses. POOLED across nights: this night's counts are pooledInputs; one night's ~10 controls are a partial read
+ctl = [x for x in labels if x['futilityControl']]
+stp = [x for x in labels if x['partial']]
+kc = sum(1 for x in ctl if x['confident'])
+cp = clopper(kc, len(ctl))
+out['f_futilityRead'] = {'read': sum(1 for x in labels if x['futilityGap'] is not None), 'futile': len(ctl) + len(stp), 'stopped': len(stp),
+                         'controls': len(ctl), 'controlsComplete': sum(1 for x in ctl if x['complete']), 'controlsConfident': kc,
+                         'controlConfidentShare': round(kc / len(ctl), 4) if ctl else None, 'controlConfidentShare95': cp,
+                         'labelsLostEstimate': round(kc / len(ctl) * len(stp), 2) if ctl else None,
+                         'labelsLostEstimate95': [round(cp[0] * len(stp), 2), round(cp[1] * len(stp), 2)] if ctl else None,
+                         'controlList': ['%s d%d k%d gap %s -> %s' % (x['spine'], x['d'], x['k'], x['futilityGap'], 'confident' if x['confident'] else 'not confident') for x in ctl],
+                         'stoppedList': ['%s d%d k%d gap %s' % (x['spine'], x['d'], x['k'], x['futilityGap']) for x in stp],
+                         'review': {'confident': 3, 'of': 77, 'share': 0.039, 'note': 'the atlas review of 2026-10-27, section 1: o0 leading or tied at 50 branches -> 3 of 77 confident at the full n (200), on 29 spines of three seats; read after the fact, not on controls'},
+                         'pooledInputs': {'controls': len(ctl), 'controlsConfident': kc, 'stopped': len(stp), 'read': sum(1 for x in labels if x['futilityGap'] is not None)},
+                         'partial': True, 'note': 'one night of a read pooled across nights: add pooledInputs to later nights\' before reading the share; no verdict'}
+unb = [n for n in meta if n not in BIASED]
+out['c_sizingReadUnbiased'] = dict(size(unb), spines=sorted(unb), left=sorted(n for n in meta if n in BIASED),
+                                   note='the sizing read over the spines not marked biased (--biased=); J174 marks none, so it is the as-run read')
+out['d486Rows'] = {'modesDrawn': sum(x['modesDrawn'] for x in labels), 'modesDrawnBranches': sum(x['modesDrawnBranches'] for x in labels),
+                   'retargeted': sum(x['retargeted'] for x in labels), 'rowsWithModesDrawn': sum(1 for x in labels if x['modesDrawn'] > 0)}
+out['d488Rows'] = {'targetCountTrimmed': sum(x['targetCountTrimmed'] for x in labels), 'costTargetAvoided': sum(x['costTargetAvoided'] for x in labels),
+                   'targetCountTrimmedBranches': sum(x['targetCountTrimmedBranches'] for x in labels),
+                   'costTargetAvoidedBranches': sum(x['costTargetAvoidedBranches'] for x in labels),
+                   'rowsWithTrimmed': sum(1 for x in labels if x['targetCountTrimmed'] > 0), 'rowsWithAvoided': sum(1 for x in labels if x['costTargetAvoided'] > 0),
+                   'refusedCastBranches': sum(x['refusedCastBranches'] or 0 for x in labels)}
+# the void count (0 expected since D470), any non-block decision that played one game under every option
+out['voidLabels'] = sum(1 for x in labels if x['void'])
+out['voidList'] = ['%s d%d %s' % (x['spine'], x['d'], x['forgeToken']) for x in labels if x['void']]
+out['sameGameNotBlock'] = ['%s d%d' % (x['spine'], x['d']) for x, same in same_any if same and x['kind'] != 'b' and x['complete']]
+print(json.dumps(out, indent=1))
+PY
+cat > var/lab-j174-local/bin/reads.py <<'PY'
+# J174: J173's reads.py, unchanged. A futile-stopped (partial) decision is never complete, so (i)-(iv) and Q never read one; (vi) counts
+# its branches in the branch games per label, the cost they are. J173's header: J171's reads.py, unchanged (J170's, J169's, J168's,
+# J167's: J166's reads.py, J162's and J156's definitions, made per spine),
+# registered before any J166 data. From atlas.json files named on the command line as NAME:POOL:PATH. Standard library only; no engine.
+# A spine is a pair of its own (random decks of one band; the pool is the band, `random-<band>-d488` on J173's and J174's nights); `complete` and
+# `decided` are atlas.json's (D480), with J158's definitions as the fallback for an atlas written before it; the agreement reads (i)-(iii)
+# and the registered (iv) are made on the spines WITH a Forge map only (D480 point 5); C1's random-map statistic on a spine without one is
+# printed as information, with no verdict. Definitions otherwise J156's, unchanged:
+#   decided    atlas.json's (D480); fallback every option's mean >= 0.95 under BOTH maps
+#   Q          the complete decisions that are not decided (screened decisions are never complete)
+#   R          the complete decisions whose rank correlation is defined
+#   interval   95% percentile bootstrap, 10,000 draws, seed 150: pool -> spine -> decision when several pools are read; spine ->
+#              decision for one pool, which for one spine is decision-level
+#   (i)   same best over Q;  (ii) mean rho over R, how many have two options;  (iii) regret at Forge's choice by kind under each
+#         map, and how many decisions have a regret interval whose low end is above zero
+#   (iv)  C1 "cast now where Forge passes": over Q priority decisions listing pass and at least one cast:/activate: option, the
+#         mean over decisions of (the mean random value of the cast/activate options minus pass's random value; an option
+#         early stopping dropped counts at its own n); HOLDS on a spine when the point is > 0 and the interval's low end is
+#         > 0, else NOT SHOWN, on every spine with a Forge map; the Forge map's same statistic beside (over the options it
+#         played), and C2 "don't attack" as information
+#   (v)   the guardrail counts of every atlas.json, per spine and per pool
+#   (vi)  the sizing line from atlas.json's branch counts and mean branch times, per spine
+import json, random, sys
+
+B, SEED = 10000, 150
+spines, guard, pools, fmap = {}, {}, {}, {}
+for a in sys.argv[1:]:
+    name, pool, p = a.split(':', 2)
+    doc = json.load(open(p))
+    g = doc['checks']['guardrails']
+    gp = guard.setdefault(name, {})
+    for k, v in g.items():
+        if isinstance(v, (int, float)):
+            gp[k] = gp.get(k, 0) + v
+    if not doc.get('phaseB'):
+        continue
+    spines[name] = doc
+    pools[name] = pool
+    fmap[name] = doc['phaseB'].get('forgeMap', True) is not False and doc['plan'].get('branchForge', 40) > 0
+
+
+def complete(x, fm):
+    if x.get('screened'):
+        return False
+    if 'decided' in x:
+        return bool(x['complete'])
+    return x['complete'] and all(o['random']['mean'] is not None and (not fm or o['forge']['mean'] is not None) for o in x['options'])
+
+
+def decided(x, fm):
+    if 'decided' in x:
+        return bool(x['decided'])
+    return all(o['random']['mean'] is not None and o['random']['mean'] >= 0.95 and (not fm or (o['forge']['mean'] is not None and o['forge']['mean'] >= 0.95)) for o in x['options'])
+
+
+def Q(name):
+    fm = fmap[name]
+    return [x for x in spines[name]['phaseB']['decisions'] if complete(x, fm) and not decided(x, fm)]
+
+
+def R(name):
+    return [x for x in spines[name]['phaseB']['decisions'] if complete(x, fmap[name]) and x['rho'] is not None]
+
+
+def mean(xs):
+    return sum(xs) / len(xs) if xs else None
+
+
+def boot(tree, stat):
+    """J162's boot, the pool in the pair's place: tree {pool: {spine: [items]}}; levels 3 when several pools, else 2."""
+    rng = random.Random(SEED)
+    ps0 = sorted(tree)
+    out = []
+    for _ in range(B):
+        items = []
+        ps = [rng.choice(ps0) for _ in ps0] if len(ps0) > 1 else ps0
+        for p in ps:
+            ss = sorted(tree[p])
+            for s in [rng.choice(ss) for _ in ss]:
+                xs = tree[p][s]
+                items.extend(rng.choice(xs) for _ in xs)
+        v = stat(items)
+        if v is not None:
+            out.append(v)
+    if len(out) < B / 2:
+        return [None, None]
+    out.sort()
+    return [round(out[int(0.025 * len(out))], 4), round(out[min(len(out) - 1, int(0.975 * len(out)))], 4)]
+
+
+def read(select, stat, names):
+    """Pooled over `names` (pool -> spine -> decision), and each spine's (decision-level)."""
+    tree = {}
+    for n in names:
+        tree.setdefault(pools[n], {})[n] = select(n)
+    flat = [x for ss in tree.values() for xs in ss.values() for x in xs]
+    pt = stat(flat)
+    res = {'n': len(flat), 'point': None if pt is None else round(pt, 4), 'interval': boot(tree, stat) if flat else [None, None], 'bySpine': {}}
+    for n in sorted(names):
+        xs = select(n)
+        q = stat(xs)
+        res['bySpine'][n] = {'n': len(xs), 'point': None if q is None else round(q, 4), 'interval': boot({pools[n]: {n: xs}}, stat) if xs else [None, None]}
+    return res
+
+
+F = sorted(n for n in spines if fmap[n])
+N = sorted(n for n in spines if not fmap[n])
+out = {'spines': {n: {'pool': pools[n], 'forgeMap': fmap[n]} for n in sorted(spines)}, 'forgeSpines': F, 'definitions': 'see the header of this script'}
+alld = [(n, x) for n in spines for x in spines[n]['phaseB']['decisions']]
+out['decisions'] = len(alld)
+out['complete'] = sum(1 for n, x in alld if complete(x, fmap[n]))
+out['decided'] = sum(1 for n, x in alld if complete(x, fmap[n]) and decided(x, fmap[n]))
+out['Q'] = out['complete'] - out['decided']
+out['screened'] = sum(1 for n, x in alld if x.get('screened'))
+# (i)-(iii), the spines with a Forge map
+out['i_sameBest'] = read(Q, lambda xs: mean([1.0 if x['sameBest'] else 0.0 for x in xs if x['sameBest'] is not None]), F)
+out['ii_rho'] = read(R, lambda xs: mean([x['rho'] for x in xs]), F)
+out['ii_rho']['twoOption'] = sum(1 for n in F for x in R(n) if len(x.get('forgeOptions') or x['options']) == 2)
+out['iii_regret'] = {}
+for k in ('p', 'a', 'b'):
+    sel = lambda n, k=k: [x for x in Q(n) if x['kind'] == k]
+    row = {}
+    for m in ('random', 'forge'):
+        row[m] = read(sel, lambda xs, m=m: mean([x[m]['regret'] for x in xs if x[m]['regret'] is not None]), F)
+        row[m]['clearOfZero'] = sum(1 for n in F for x in sel(n) if x[m]['regretLo'] is not None and x[m]['regretLo'] > 0)
+    out['iii_regret'][k] = row
+
+
+# (iv)
+def val(x, tok, m):
+    for o in x['options']:
+        if o['token'] == tok:
+            return o[m]['mean']
+    return None
+
+
+def c1(m):
+    def sel(n):
+        xs = []
+        for x in Q(n):
+            toks = [o['token'] for o in x['options']]
+            acts = [o[m]['mean'] for o in x['options'] if o['token'].startswith(('cast:', 'activate:')) and o[m]['mean'] is not None]
+            pv = val(x, 'pass', m)
+            if x['kind'] == 'p' and 'pass' in toks and acts and pv is not None:
+                xs.append(mean(acts) - pv)
+        return xs
+    return sel
+
+
+def c2(m):
+    def sel(n):
+        xs = []
+        for x in Q(n):
+            toks = [o['token'] for o in x['options']]
+            nv, v0 = val(x, 'attack:none', m), x['options'][0][m]['mean']
+            if x['kind'] == 'a' and 'attack:none' in toks and toks[0] != 'attack:none' and nv is not None and v0 is not None:
+                xs.append(nv - v0)
+        return xs
+    return sel
+
+
+def verdict(r):
+    lo = r['interval'][0]
+    return 'HOLDS' if r['point'] is not None and r['point'] > 0 and lo is not None and lo > 0 else 'NOT SHOWN'
+
+
+r1, f1 = read(c1('random'), mean, F), read(c1('forge'), mean, F)
+r2, f2 = read(c2('random'), mean, F), read(c2('forge'), mean, F)
+out['iv_bySpine'] = {}
+for n in F:
+    c = r1['bySpine'][n]
+    out['iv_bySpine'][n] = {'C1_castNow': {'random': c, 'verdict': verdict(c), 'forgeMap': f1['bySpine'][n]},
+                            'C2_dontAttack': {'random': r2['bySpine'][n], 'forgeMap': f2['bySpine'][n], 'verdict': None}}
+out['iv_pooledForgeSpines'] = {'C1_castNow': {'random': {k: r1[k] for k in ('n', 'point', 'interval')}, 'forgeMap': {k: f1[k] for k in ('n', 'point', 'interval')}, 'verdict': None}}
+ri = read(c1('random'), mean, N) if N else None
+out['iv_information_noForgeSpines'] = {'C1_castNow_random': ri, 'verdict': None}
+# (v)
+tot, byPool = {}, {}
+for n, gp in guard.items():
+    bp = byPool.setdefault(pools.get(n, '?'), {})
+    for k, v in gp.items():
+        tot[k] = tot.get(k, 0) + v
+        bp[k] = bp.get(k, 0) + v
+out['v_guardrails'] = {'bySpine': guard, 'byPool': byPool, 'total': tot}
+
+
+# (vi)
+def sizing(n):
+    doc = spines[n]
+    ds = [x for x in doc['phaseB']['decisions'] if not x.get('screened')]
+    nr = sum(o['random']['n'] for x in ds for o in x['options'])
+    nf = sum(o['forge']['n'] for x in ds for o in x['options'])
+    ms = doc['phaseB'].get('meanBranchMs') or {}
+    tr, tf = (ms.get('random') or 0) / 1000, (ms.get('forge') or 0) / 1000
+    comp = sum(1 for x in ds if complete(x, fmap[n]))
+    if not comp or not tr:
+        return None
+    ws = (nr * tr + nf * tf) / comp
+    return {'optionsPerDecision': round(sum(len(x['options']) for x in ds) / len(ds), 2), 'branchGamesPerLabel': round((nr + nf) / comp),
+            'secRandomBranch': round(tr, 2), 'secForgeBranch': round(tf, 2) if nf else None, 'workerSecPerLabel': round(ws),
+            'labelsPer7WorkerHour': round(7 * 3600 / ws, 1), 'labelsPer10hNightAt7': round(70 * 3600 / ws)}
+
+
+out['vi_bySpine'] = {n: sizing(n) for n in sorted(spines)}
+print(json.dumps(out, indent=1))
+PY
+cat > var/lab-j174-local/bin/cuts.py <<'PY'
+# J174: J173's cuts.py with D489's and the cap's savings and what they bought, registered before any J174 data (every J173 number and
+# definition unchanged; on a spine with no futility read and branchRandom 200 the new ones are 0). New, per spine and for the night:
+#   futileSavedMs     for each decision the futility rule STOPPED (its schedule.jsonl `futility` line, `stopped: true`): the options
+#                     running at the checkpoint (`alive`) x (branchRandom - at) x the decision's mean random-branch ms, plus, on a
+#                     Forge-map spine, branchForge x alive x the spine's mean Forge-branch ms (a stopped decision has no Forge map)
+#   capSavedMs        for each complete decision when branchRandom < 200 (J173's design): its options early stopping did not stop x
+#                     (200 - branchRandom) x its mean random-branch ms -- an upper bound (J173's design early-stops some at 150)
+#   futilityCapShare  (futileSavedMs + capSavedMs) / (branchMs + futileSavedMs + capSavedMs): the branch time the two saved, against
+#                     the same decisions on J173's design
+#   futileBranchGamesSaved, futileStopped, futileControls   atlas.json's (an upper bound, D489)
+#   decisionsBranched the decisions not screened (complete or partial); partial the futile-stopped ones; branchedInFullRows the complete
+#                     ones whose option 0 has branchRandom random rows (computed here, whatever atlas.json's branchedInFull counts):
+#                     what the saved time bought, against J173's 8 a spine (compare.py has J173's column)
+# J173's header: J172's cuts.py (J171's with `atlas.j171.json` among the timing copies, so the pilot's self-test on J171's night, whose five
+# re-checked spines carry J171's phase-B timing in that copy, gives J171's numbers back; lab-j174 holds no copy, so every J174 spine's
+# timing is its own atlas.json's), with one addition registered before any J173 data: the night's `redactionHours` (the sum of each
+# atlas.json's `checks.redactionMs`: the redaction checker's own wall, which J171's failing logs tripled on five spines) and
+# `redactionShareOfChecks` (its share of `checksHours`). J171's header (J170's, J169's, J168's, J167's, J166's):
+# What the cut design (D480) saved, per spine and for the night. A spine whose atlas.json was rewritten by a re-check reads phase B's
+# timing from the first of its `atlas.j166.json`, `atlas.j168.json`, `atlas.j171.json` copies that exists (a re-check's own timing says
+# 0 units, 0 ms); --recheck-times=FILE gives each re-check's wall apart (`recheckSec`), never added to the spine's checks.
+# Definitions (J166's, registered before any J166 data):
+#   branchMs         the sum of every branch row's ms (both continuations, errors included): the branch time as run
+#   earlyStopAvoided for each option early stopping stopped at `at` random branches: (branchRandom - at) x the decision's mean
+#                    random-branch ms, plus, on a spine with a Forge map, branchForge x the decision's mean Forge-branch ms
+#   screenAvoided    for each screened decision: (branchRandom - screen) x k x its mean random-branch ms, plus, on a spine with
+#                    a Forge map, branchForge x k x the spine's mean Forge-branch ms (a screened decision has no Forge map)
+#   projectedMs      branchMs + earlyStopAvoided + screenAvoided: the same decisions branched in full, uncut
+#   savedShare       (projectedMs - branchMs) / projectedMs; the review's replay of the cuts on six spines: 18-20%
+#   idleShare        1 - (sum of the ok units' ms) / (phase B wall x workers): the workers' time phase B held without a unit
+#   checksSec        the spine's wall in spine-times.txt (its block's start to end, summed over resumed runs) minus atlas.json's
+#                    timing.wallMs (the baseline and phase B; written before the checks run): the post-spine checks' wall
+#   checksSecPerKGames  checksSec per 1,000 branch games; J162's serial checks took 60-113 s per 1,000 (mean 93)
+#   checksShare      the night's checksSec over its wallSec (J170's addition)
+import json, os, sys
+
+J162_SERIAL_S_PER_KGAMES = 93
+J173_RANDOM = 200
+args = [a for a in sys.argv[1:] if not a.startswith('--')]
+wall, rewall = {}, {}
+for a in sys.argv[1:]:
+    for flag, dst in (('--times=', wall), ('--recheck-times=', rewall)):
+        if a.startswith(flag) and os.path.exists(a.split('=', 1)[1]):
+            for line in open(a.split('=', 1)[1]):
+                f = line.split()
+                if len(f) >= 3 and f[1].isdigit() and f[2].isdigit():
+                    dst[f[0]] = dst.get(f[0], 0) + int(f[2]) - int(f[1])
+out, night = {'bySpine': {}}, {'branchMs': 0, 'earlyStopAvoidedMs': 0, 'screenAvoidedMs': 0, 'projectedMs': 0, 'checksSec': 0, 'branchGames': 0,
+                                'unitMs': 0, 'heldMs': 0, 'screened': 0, 'stoppedOptions': 0, 'spines': 0, 'recheckSec': 0, 'wallSec': 0, 'redactionSec': 0,
+                                'futileSavedMs': 0, 'capSavedMs': 0, 'futileBranchGamesSaved': 0, 'futileStopped': 0, 'futileControls': 0,
+                                'decisionsBranched': 0, 'partial': 0, 'branchedInFullRows': 0}
+for spine in args:
+    name = os.path.basename(os.path.abspath(spine))
+    try:
+        doc = json.load(open(os.path.join(spine, 'atlas.json')))
+    except (OSError, ValueError):
+        continue
+    tfile = next((os.path.join(spine, x) for x in ('atlas.j166.json', 'atlas.j168.json', 'atlas.j171.json') if os.path.exists(os.path.join(spine, x))), os.path.join(spine, 'atlas.j166.json'))
+    tdoc = doc
+    if os.path.exists(tfile):
+        try:
+            tdoc = json.load(open(tfile))
+        except (OSError, ValueError):
+            pass
+    plan, pb, tm = doc['plan'], doc.get('phaseB') or {}, tdoc.get('timing') or {}
+    R, F, screen = plan['branchRandom'], plan['branchForge'], ((plan.get('cuts') or {}).get('screen') or 0)
+    fm = pb.get('forgeMap', True) is not False and F > 0
+    rows = []
+    for line in open(os.path.join(spine, 'phaseB', 'branches.jsonl')):
+        try:
+            rows.append(json.loads(line))
+        except ValueError:
+            pass
+    ms = {}
+    for r in rows:
+        ms.setdefault((r['d'], r['c']), []).append(r.get('ms') or 0)
+    mean = lambda xs: sum(xs) / len(xs) if xs else 0.0
+    allF = [m for (d, c), v in ms.items() if c == 'forge' for m in v]
+    sch = pb.get('schedule') or {}
+    kof = {int(k[1:]): v for k, v in (sch.get('optionsByDecision') or {}).items()}
+    es = sum((R - s['at']) * mean(ms.get((s['d'], 'random'), [])) + (F * mean(ms.get((s['d'], 'forge'), [])) if fm else 0) for s in sch.get('stopped') or [])
+    sc = sum((R - screen) * kof.get(s['d'], 0) * mean(ms.get((s['d'], 'random'), [])) + (F * kof.get(s['d'], 0) * mean(allF) if fm else 0) for s in sch.get('screened') or [])
+    bms = sum(r.get('ms') or 0 for r in rows)
+    proj = bms + es + sc
+    # D489 and the cap: what they saved against the same decisions on J173's design
+    fut = 0.0
+    sf = os.path.join(spine, 'phaseB', 'schedule.jsonl')
+    if os.path.exists(sf):
+        for line in open(sf):
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            if e.get('type') == 'futility' and e.get('stopped'):
+                na = len(e.get('alive') or [])
+                fut += na * (R - e['at']) * mean(ms.get((e['d'], 'random'), [])) + (F * na * mean(allF) if fm else 0)
+    o0r = {}
+    for r in rows:
+        if r['c'] == 'random' and r['o'] == 0:
+            o0r[r['d']] = o0r.get(r['d'], 0) + 1
+    cap = 0.0
+    if R < J173_RANDOM:
+        for x in pb.get('decisions') or []:
+            if x.get('complete') and not x.get('partial'):
+                cap += sum(1 for o in x['options'] if o.get('stoppedAt') is None) * (J173_RANDOM - R) * mean(ms.get((x['d'], 'random'), []))
+    dec = [x for x in pb.get('decisions') or [] if not x.get('screened')]
+    units = []
+    uf = os.path.join(spine, 'phaseB', 'units.jsonl')
+    if os.path.exists(uf):
+        for line in open(uf):
+            try:
+                u = json.loads(line)
+            except ValueError:
+                continue
+            if u.get('ok') and u.get('ms'):
+                units.append(u['ms'])
+    tb = tm.get('phaseB') or {}
+    held = (tb.get('ms') or 0) * (tb.get('workers') or 0)
+    chk = wall[name] - (tm.get('wallMs') or 0) / 1000 if name in wall else 0
+    red = ((doc.get('checks') or {}).get('redactionMs') or 0) / 1000
+    s = {'forgeMap': fm, 'timingFrom': os.path.basename(tfile) if tdoc is not doc else 'atlas.json', 'branchGames': len(rows), 'branchMs': bms,
+         'earlyStopAvoidedMs': round(es), 'screenAvoidedMs': round(sc), 'projectedMs': round(proj),
+         'savedShare': round((proj - bms) / proj, 4) if proj else None, 'earlyStopShare': round(es / proj, 4) if proj else None,
+         'screenShare': round(sc / proj, 4) if proj else None, 'screened': len(sch.get('screened') or []), 'stoppedOptions': sch.get('stoppedOptions', 0),
+         'phaseBWallSec': round((tb.get('ms') or 0) / 1000), 'workers': tb.get('workers'), 'unitSec': round(sum(units) / 1000),
+         'idleShare': round(1 - sum(units) / held, 4) if held else None, 'checksSec': round(chk), 'redactionSec': round(red),
+         'checksSecPerKGames': round(1000 * chk / len(rows), 1) if rows else None, 'j162SerialSecPerKGames': J162_SERIAL_S_PER_KGAMES,
+         'recheckSec': rewall.get(name),
+         'futileSavedMs': round(fut), 'capSavedMs': round(cap), 'futilityCapShare': round((fut + cap) / (bms + fut + cap), 4) if bms + fut + cap else None,
+         'futileBranchGamesSaved': sch.get('futileBranchGamesSaved', 0), 'futileStopped': sch.get('futileStopped', 0), 'futileControls': sch.get('futileControls', 0),
+         'decisionsBranched': len(dec), 'partial': sum(1 for x in dec if x.get('partial')),
+         'branchedInFullRows': sum(1 for x in dec if x.get('complete') and o0r.get(x['d'], 0) >= R)}
+    out['bySpine'][name] = s
+    for k in ('branchMs', 'branchGames', 'screened', 'stoppedOptions'):
+        night[k] += s[k]
+    night['earlyStopAvoidedMs'] += es
+    night['screenAvoidedMs'] += sc
+    night['projectedMs'] += proj
+    night['checksSec'] += chk
+    night['unitMs'] += sum(units)
+    night['heldMs'] += held
+    night['spines'] += 1
+    night['recheckSec'] += rewall.get(name) or 0
+    night['wallSec'] += wall.get(name, 0)
+    night['redactionSec'] += red
+    night['futileSavedMs'] += fut
+    night['capSavedMs'] += cap
+    for k in ('futileBranchGamesSaved', 'futileStopped', 'futileControls', 'decisionsBranched', 'partial', 'branchedInFullRows'):
+        night[k] += s[k]
+p = night['projectedMs']
+out['night'] = {'spines': night['spines'], 'branchGames': night['branchGames'], 'branchHours': round(night['branchMs'] / 3.6e6, 2), 'projectedHours': round(p / 3.6e6, 2),
+                'savedShare': round((p - night['branchMs']) / p, 4) if p else None, 'earlyStopShare': round(night['earlyStopAvoidedMs'] / p, 4) if p else None,
+                'screenShare': round(night['screenAvoidedMs'] / p, 4) if p else None, 'screened': night['screened'], 'stoppedOptions': night['stoppedOptions'],
+                'idleShare': round(1 - night['unitMs'] / night['heldMs'], 4) if night['heldMs'] else None, 'checksHours': round(night['checksSec'] / 3600, 2),
+                'wallSec': night['wallSec'], 'checksShare': round(night['checksSec'] / night['wallSec'], 4) if night['wallSec'] else None,
+                'checksSecPerKGames': round(1000 * night['checksSec'] / night['branchGames'], 1) if night['branchGames'] else None,
+                'checksHoursAtJ162Serial': round(night['branchGames'] * J162_SERIAL_S_PER_KGAMES / 1000 / 3600, 2), 'recheckSec': night['recheckSec'],
+                'redactionHours': round(night['redactionSec'] / 3600, 2),
+                'redactionShareOfChecks': round(night['redactionSec'] / night['checksSec'], 4) if night['checksSec'] else None,
+                'reviewExpectation': 'cuts save 18-20% of branch time (atlas review 3b+3d; D480 replay 20.3%); J171 measured 31.5% (early stop 16.4%, screen 15.1%)',
+                'futileSavedHours': round(night['futileSavedMs'] / 3.6e6, 2), 'capSavedHours': round(night['capSavedMs'] / 3.6e6, 2),
+                'futilityCapShare': round((night['futileSavedMs'] + night['capSavedMs']) / (night['branchMs'] + night['futileSavedMs'] + night['capSavedMs']), 4) if night['branchMs'] else None,
+                'futileBranchGamesSaved': night['futileBranchGamesSaved'], 'futileStopped': night['futileStopped'], 'futileControls': night['futileControls'],
+                'decisionsBranched': night['decisionsBranched'], 'partial': night['partial'], 'branchedInFullRows': night['branchedInFullRows'],
+                'decisionsBranchedPerSpine': round(night['decisionsBranched'] / night['spines'], 2) if night['spines'] else None,
+                'futilityExpectation': 'the atlas review, policy.md: the cap and the futility stop take the same decisions from 110.61 to 74.67 branch worker-hours (32.5% saved; no controls); D489 replay of J171: the stop alone 16.5% of branch hours; J173 branched 8 decisions a spine'}
+print(json.dumps(out, indent=1))
+PY
+cat > var/lab-j174-local/bin/metrics.py <<'PY'
+# J174's metrics (drafts/J174-atlas-4b-night-three.md): J173's metrics.py for a NEW data folder, lab-j174, where all 13 spines are J174's,
+# branched at the pin by D488's random seat (unchanged since J173) on D489's design; registered before any J174 data. What changed from
+# J173's (every J173 key and definition kept):
+# (a) The spine table is J174's (deck seeds 2027-2039, game seeds 2127-2139, the bands cycled as J166's); the plan wanted is
+#     --branch-random 150, --decisions 10 and the cuts {earlyStop [50, 100], screen 25, minOptions 3, futility {at 0, tie 0, sample 0.25}}.
+# (b) D489's counters per spine and summed, from each atlas.json's phaseB.schedule: `futilityReads` (len of `futility`), `futileRead`
+#     (those futile), `futileStopped`, `futileControls`, `futileBranchGamesSaved`, `partialLabels`; `futilityKeys` the spines whose schedule
+#     carries all four counters; `partialDecisions` the decisions with `partial: true` (== futileStopped, a check through labels.json).
+# (c) "Branched in full" and the units planned are computed per decision from atlas.json's own fields, so they are right whether or not
+#     atlas.json's `branchedInFull` counts a futile-stopped decision: `decisionsBranched` = not screened (complete or partial); fullShort
+#     when that is below min(decisions, listed - screened); units planned = a screened decision's ceil(screen / chunk), a partial one's
+#     ceil(stoppedAt / chunk), every other's ceil(branchRandom / chunk) + ceil(branchForge / chunk).
+# (d) From labels.json: `partialLabels` (rows), `confidentPartial` (0), `futilityControls`, `confidentPerWorkerHour`; compare-j173.json
+#     (column `j174`) for the `compare` key.
+# J173's header (J171's metrics.py, lab-j173): the validation draw's sha256 is the one the pilot recorded
+#     (var/lab-j174-local/draws-pilot.json, made at the pin and checked against the redraw), not a constant; J167's s04 deck check is gone;
+#     the pools are `random-<band>-d488` and the seat "D488" (poolOk).
+# (2) THE SCAN places every cast, beside J169's lost casts. D488 (Context) found that 614 of J171's 645 "lost casts" were G5's refused
+#     payments: D466's put-back returns the card to the hand by a zone move that fires no event, so J169's definition counts it lost,
+#     and misses a refused cast whose card is cast again later. So, per cast (a zone event {hand, the viewer} -> {stack, null}):
+#       ON THE STACK  a state frame at or after it lists the card in `stackCards`, or a `cast` event or a zone event off the stack names it;
+#       REFUSED       before the first such line, the first state frame that lists the card anywhere lists it in its caster's own hand
+#                     (the viewer's: `castsRefused`, by card name); FORCED when the card is the branch's own option and it is put back
+#                     before the branch's first AI decision record (`castsRefusedForced`);
+#       A REFUSED-CAST OPTION: (decision, map, option) whose forced cast was refused in more than half of its branch rows
+#                     (`refusedCastOptions`; J173's final check, 0);
+#     J169's LOST CAST is kept as defined (no stack evidence after the cast, ever; `lostCastOptions`, a final check at 0), split into
+#     `lostPutBack` (its card is next listed in its caster's hand: a refusal J169 counted lost) and `lostStranded` (the rest).
+#     THE HEADLINE: `refusedCastShare` = the seats' own `refusedCast` (G5's count, each log's guardrail summary) / casts, per spine and for
+#     the night (J171: 4,451 / 840,488); `castsRefusedShare` = castsRefused / casts beside it. `refusedCast` is an upper bound on the
+#     payment refusals (D488, Not fixed: it also counts D485's stale answers not offered and Forge's answers D488 could not fit), so
+#     `staleRefused` is read beside it and the put-backs are the frames' own count of the payment refusals.
+#     D488's counters from the same summaries: `targetCountTrimmed`, `costTargetAvoided` (protocol M77).
+#     D487's from the target records: `target:none` chosen (`targetNoneChosen`) and listed (`targetNoneListed`), `why: "NO_TARGET"`
+#     (`noTargetRecords`), any null answer (`nullChosenTargets`) and J171's legacy shape (`legacyNullTargets`: by forge, source targets,
+#     chosen null, two or more target:<id> / target:p<id> options and nothing else, none of min, why, complete, hidden, explore, search;
+#     D487, M76) -- 0 expected on a D487 pin, a final check (`legacyNullTargetRecords`). `completeShare`: complete target records / all.
+#     The cache carries `scan: "J174 v5"`; main mode reads only such caches.
+# (3) The branch rows' `targetCountTrimmed` and `costTargetAvoided` (D488, BranchRow, written when > 0), beside D486's `modesDrawn`.
+# (4) The worker logs, per spine: `AI failed to play <card> (<id>) [...]` (`failedToPlay`, by card: Forge's own line for a payment the
+#     AI refused, naming the card), `Didn't find what to pay for` (`payFail`) and D488's `branch error, stack:` (`branchErrorStacks`).
+# (5) An optional third argument: the scan caches' folder (default var/lab-j174-local/lost; the pilot's self-tests pass lost-self).
+# J169's and J171's definitions otherwise, unchanged.
+#   metrics.py --scan FOLDER CACHE_DIR [JOBS]  scans FOLDER's phase B branch frame logs and writes CACHE_DIR/<folder>.json, stamped
+#                                              with FOLDER's atlas.json mtime (a cache of another atlas.json is never read)
+#   metrics.py [DATA_DIR] [SPINE_GLOB] [CACHE_DIR]   default /home/justin-a/code/lab/data/lab-j174, b-s??-*-21?? (never the pilot
+#                                              folders) and var/lab-j174-local/lost
+# Standard library only; no engine.
+import bisect, glob, gzip, hashlib, json, math, os, re, sys
+NAME = re.compile(r'd(\d+)-(random|forge)-o(\d+)-b(\d+)-seat(\d)\.jsonl\.gz$')
+CAST_RE = re.compile(r'"kind":"zone","cardId":(\d+),"from":\{"zone":"hand","player":(\d+)\},"to":\{"zone":"stack","player":null\}')
+LIVE_RE = re.compile(r'"kind":"zone","cardId":(\d+),"from":\{"zone":"stack"|"kind":"cast","stackId":-?\d+,"cardId":(\d+)')
+CARD_TOKEN = re.compile(r'target:p?\d+$')
+FTP = re.compile(r'AI failed to play (.+?) \(\d+\) \[')
+LEGACY_BAN = ('min', 'why', 'complete', 'hidden', 'explore', 'search')
+SCAN_V = 'J174 v5'
+SCAN_COUNTS = ('casts', 'lost', 'forced', 'refused', 'refusedForced', 'lostPutBack', 'stale', 'modesWhy', 'modesSource', 'targetRecords',
+               'targetRecordsCard', 'targetRecordsComplete', 'targetRecordsCardComplete', 'targetNoneChosen', 'targetNoneListed',
+               'noTargetRecords', 'nullChosenTargets', 'legacyNullTargets', 'randomised', 'randomisedPriority', 'summaries')
+BO0 = {'branches': 0, 'lostBranches': 0, 'forcedLostBranches': 0, 'refusedBranches': 0, 'forcedRefusedBranches': 0}
+
+
+def where(body, cid, seat):
+    """where a state frame lists card cid: 'stack', 'hand' (its caster's, the viewer's, own hand), another zone's name, or None"""
+    for sc in body.get('stackCards') or []:
+        if isinstance(sc, dict) and sc.get('id') == cid:
+            return 'stack'
+    for p in body.get('players') or []:
+        zs = p.get('zones') if isinstance(p, dict) else None
+        for zn, z in (zs if isinstance(zs, dict) else {}).items():
+            for cd in (z.get('cards') if isinstance(z, dict) else None) or []:
+                if isinstance(cd, dict) and cd.get('id') == cid:
+                    return 'hand' if zn == 'hand' and p.get('id') == seat else zn
+    return None
+
+
+def legacy(b):
+    """J171's legacy null target record (D487, M76), whatever the log's date"""
+    opts = b.get('options') or []
+    return (b.get('by') == 'forge' and b.get('source') == 'targets' and 'chosen' in b and b['chosen'] is None and len(opts) >= 2
+            and all(isinstance(t, str) and CARD_TOKEN.match(t) for t in opts) and not any(k in b for k in LEGACY_BAN))
+
+
+def scan_log(path):
+    """one branch frame log: its casts from the viewer's own hand, where each went (the stack, back in hand: refused, or nowhere: J169's
+    lost), the forced ones, the cards' names, D485's, D486's and D487's records, and its decisions summary's explore counts"""
+    m = NAME.search(path)
+    d, c, o, i, seat = int(m.group(1)), m.group(2), int(m.group(3)), int(m.group(4)), int(m.group(5))
+    casts, live, states, first_dec, tok = [], {}, {}, None, None
+    n = dict.fromkeys(SCAN_COUNTS, 0)
+    g = {}
+    with gzip.open(path, 'rt') as f:
+        for k, l in enumerate(f):
+            if k == 0:
+                try:
+                    h = json.loads(l)
+                    tok, seat = (h.get('lab') or {}).get('optionToken'), h.get('seat', seat)
+                except ValueError:
+                    pass
+                continue
+            if '"dir":"ai"' in l:
+                if '"type":"decisions"' in l:
+                    try:
+                        e = ((json.loads(l).get('body') or {}).get('explore')) or {}
+                    except ValueError:
+                        e = {}
+                    n['summaries'] += 1
+                    n['randomised'] += e.get('decisionsRandomised') or 0
+                    n['randomisedPriority'] += (e.get('byKind') or {}).get('priority') or 0
+                    for kk, v in (e.get('guardrails') or {}).items():
+                        if isinstance(v, (int, float)):
+                            g[kk] = g.get(kk, 0) + v
+                elif '"type":"decision"' in l:
+                    first_dec = k if first_dec is None else first_dec
+                    n['stale'] += 1 if '"STALE_TARGETS"' in l else 0
+                    n['modesWhy'] += 1 if '"MODES_DRAWN"' in l else 0
+                    n['modesSource'] += 1 if '"source":"modes"' in l else 0
+                    if '"kind":"target"' in l:
+                        try:
+                            b = json.loads(l).get('body') or {}
+                        except ValueError:
+                            b = {}
+                        if b.get('kind') == 'target':
+                            opts = b.get('options') or []
+                            card = any(isinstance(t, str) and t.startswith('target:') and not t.startswith('target:p') and t != 'target:none' for t in opts)
+                            whole = b.get('complete') is not False
+                            n['targetRecords'] += 1
+                            n['targetRecordsCard'] += 1 if card else 0
+                            n['targetRecordsComplete'] += 1 if whole else 0
+                            n['targetRecordsCardComplete'] += 1 if card and whole else 0
+                            n['targetNoneChosen'] += 1 if b.get('chosen') == 'target:none' else 0
+                            n['targetNoneListed'] += 1 if 'target:none' in opts else 0
+                            n['noTargetRecords'] += 1 if b.get('why') == 'NO_TARGET' else 0
+                            n['nullChosenTargets'] += 1 if 'chosen' in b and b['chosen'] is None else 0
+                            n['legacyNullTargets'] += 1 if legacy(b) else 0
+                continue
+            if '"type":"state"' not in l:
+                continue
+            states[k] = l
+            for mm in CAST_RE.finditer(l):
+                if int(mm.group(2)) == seat:
+                    casts.append((int(mm.group(1)), k))
+            for mm in LIVE_RE.finditer(l):
+                live.setdefault(int(mm.group(1) or mm.group(2)), []).append(k)
+            if '"stackCards":[{' in l:
+                try:
+                    b = json.loads(l).get('body') or {}
+                except ValueError:
+                    b = {}
+                for sc in b.get('stackCards') or []:
+                    if isinstance(sc, dict) and isinstance(sc.get('id'), int):
+                        live.setdefault(sc['id'], []).append(k)
+    own = lambda cid: isinstance(tok, str) and (tok == 'cast:%d' % cid or tok.startswith('cast:%d#' % cid))
+    order = sorted(states)
+    lost, refused, putback = [], [], []
+    for cid, ln in casts:
+        lv = live.get(cid) or []
+        j = bisect.bisect_left(lv, ln)
+        fl = lv[j] if j < len(lv) else None   # the first line at or after the cast with the card on the stack
+        placed = None
+        if fl != ln:
+            for k in order[bisect.bisect_left(order, ln):]:
+                if fl is not None and k >= fl:
+                    break
+                try:
+                    b = json.loads(states[k]).get('body') or {}
+                except ValueError:
+                    continue
+                placed = where(b, cid, seat)
+                if placed is not None:
+                    break
+        before = first_dec is None or ln < first_dec
+        is_lost = not lv or lv[-1] < ln   # J169's: no stack evidence after the cast, ever
+        if is_lost:
+            lost.append(cid)
+            n['forced'] += 1 if own(cid) and before else 0
+        if placed == 'hand':
+            refused.append(cid)
+            n['refusedForced'] += 1 if own(cid) and before else 0
+            if is_lost:
+                putback.append(cid)
+    n['casts'], n['lost'], n['refused'], n['lostPutBack'] = len(casts), len(lost), len(refused), len(putback)
+    names = {}
+    want = set(lost) | set(refused)
+    if want:   # rare: the cards' names, from the caster's own state frames (its hand named them)
+        for k in order:
+            l = states[k]
+            for cid in list(want - set(names)):
+                mm = re.search(r'\{"id":%d,"name":"((?:[^"\\]|\\.)*)"' % cid, l)
+                if mm:
+                    names[cid] = mm.group(1)
+            if len(names) == len(want):
+                break
+    return {'key': 'd%d/%s/o%d' % (d, c, o), 'i': i, 'n': n, 'g': g, 'cards': lost, 'names': [names.get(x, '?') for x in lost],
+            'refusedNames': [names.get(x, '?') for x in refused], 'putBackNames': [names.get(x, '?') for x in putback]}
+
+
+def scan_folder(F, J):
+    """every phase B branch frame log of the spine folder F, on J processes: the cache's content"""
+    import multiprocessing
+    Pool = multiprocessing.get_context('fork').Pool   # the module's top level is the default mode: never re-imported in a worker
+    F = os.path.abspath(F)
+    mt = int(os.path.getmtime(F + '/atlas.json'))
+    bo = {}
+    for line in open(F + '/phaseB/branches.jsonl'):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        bo.setdefault('d%d/%s/o%d' % (r['d'], r['c'], r['o']), dict(BO0))['branches'] += 1
+    files = sorted(glob.glob(F + '/phaseB/frames/d*-*-o*-b*-seat?.jsonl.gz'))
+    tot = dict.fromkeys(SCAN_COUNTS, 0)
+    res = {'scan': SCAN_V, 'folder': os.path.basename(F), 'atlasMtime': mt, 'logs': len(files), 'byCard': {}, 'byName': {}, 'byNameRefused': {},
+           'byNamePutBack': {}, 'guardrails': {}}
+    sets = {'lostBranches': set(), 'forcedLostBranches': set(), 'refusedBranches': set(), 'forcedRefusedBranches': set()}
+    with Pool(J) as p:
+        for x in p.imap_unordered(scan_log, files, chunksize=16):
+            for k in SCAN_COUNTS:
+                tot[k] += x['n'][k]
+            for k, v in x['g'].items():
+                res['guardrails'][k] = res['guardrails'].get(k, 0) + v
+            for cid, nm in zip(x['cards'], x['names']):
+                res['byCard'][str(cid)] = res['byCard'].get(str(cid), 0) + 1
+                res['byName'][nm] = res['byName'].get(nm, 0) + 1
+            for nm in x['refusedNames']:
+                res['byNameRefused'][nm] = res['byNameRefused'].get(nm, 0) + 1
+            for nm in x['putBackNames']:
+                res['byNamePutBack'][nm] = res['byNamePutBack'].get(nm, 0) + 1
+            for key, cnt in (('lostBranches', 'lost'), ('forcedLostBranches', 'forced'), ('refusedBranches', 'refused'), ('forcedRefusedBranches', 'refusedForced')):
+                if x['n'][cnt]:
+                    sets[key].add((x['key'], x['i']))
+    for key, s in sets.items():
+        for k, i in s:
+            bo.setdefault(k, dict(BO0))[key] += 1
+    gr = res['guardrails']
+    res.update({'casts': tot['casts'], 'lostCasts': tot['lost'], 'lostCastForced': tot['forced'], 'staleTargetRecords': tot['stale'],
+                'modesDrawnRecords': tot['modesWhy'], 'modesSourceRecords': tot['modesSource'], 'targetRecords': tot['targetRecords'],
+                'targetRecordsCard': tot['targetRecordsCard'], 'targetRecordsComplete': tot['targetRecordsComplete'],
+                'targetRecordsCardComplete': tot['targetRecordsCardComplete'], 'summaries': tot['summaries'], 'randomised': tot['randomised'],
+                'randomisedPriority': tot['randomisedPriority'], 'cardTargetOffered': gr.get('cardTargetOffered', 0),
+                'modesDrawn': gr.get('modesDrawn', 0), 'retargeted': gr.get('retargeted', 0), 'staleRefused': gr.get('staleRefused', 0),
+                'refusedCast': gr.get('refusedCast', 0), 'noRepeatRefused': gr.get('noRepeatRefused', 0),
+                'targetCountTrimmed': gr.get('targetCountTrimmed', 0), 'costTargetAvoided': gr.get('costTargetAvoided', 0),
+                'castsRefused': tot['refused'], 'castsRefusedForced': tot['refusedForced'], 'lostPutBack': tot['lostPutBack'],
+                'lostStranded': tot['lost'] - tot['lostPutBack'], 'targetNoneChosen': tot['targetNoneChosen'], 'targetNoneListed': tot['targetNoneListed'],
+                'noTargetRecords': tot['noTargetRecords'], 'nullChosenTargets': tot['nullChosenTargets'], 'legacyNullTargets': tot['legacyNullTargets']})
+    res['cardTargetShare'] = round(res['cardTargetOffered'] / res['randomisedPriority'], 4) if res['randomisedPriority'] else None
+    res['refusedCastShare'] = round(res['refusedCast'] / res['casts'], 5) if res['casts'] else None
+    res['castsRefusedShare'] = round(res['castsRefused'] / res['casts'], 5) if res['casts'] else None
+    res['completeShare'] = round(res['targetRecordsComplete'] / res['targetRecords'], 4) if res['targetRecords'] else None
+    res['lostCastBranches'] = len(sets['lostBranches'])
+    res['refusedCastBranches'] = len(sets['refusedBranches'])
+    res['byOption'] = bo
+    res['lostCastOptions'] = sorted(k for k, v in bo.items() if v['branches'] and 2 * v['forcedLostBranches'] > v['branches'])
+    res['refusedCastOptions'] = sorted(k for k, v in bo.items() if v['branches'] and 2 * v['forcedRefusedBranches'] > v['branches'])
+    return res
+
+
+if len(sys.argv) > 1 and sys.argv[1] == '--scan':
+    res = scan_folder(sys.argv[2], int(sys.argv[4]) if len(sys.argv) > 4 else 1)
+    C = sys.argv[3]
+    os.makedirs(C, exist_ok=True)
+    with open(os.path.join(C, res['folder'] + '.json'), 'w') as f:
+        json.dump(res, f)
+    print(json.dumps({k: v for k, v in res.items() if k != 'byOption'}))
+    sys.exit(0)
+D = sys.argv[1] if len(sys.argv) > 1 else '/home/justin-a/code/lab/data/lab-j174'
+G = sys.argv[2] if len(sys.argv) > 2 else 'b-s??-*-21??'
+L = 'var/lab-j174-local'
+CD = sys.argv[3] if len(sys.argv) > 3 else L + '/lost'
+# name: (band, deck seed, game seed, branchForge) -- J174's spine table
+BANDS = ['pauper', 'peasant', 'legacy', 'powered'] * 3 + ['pauper']
+SPINES = {'s%02d' % k: (BANDS[k - 1], 2026 + k, 2126 + k, 40 if k in (1, 7, 13) else 0) for k in range(1, 14)}
+try:
+    VALIDATION_SHA = json.load(open(L + '/draws-pilot.json'))['validation'].split()[0]
+except (OSError, ValueError, KeyError, AttributeError):
+    VALIDATION_SHA = None
+CUTS = {'earlyStop': [50, 100], 'screen': 25, 'minOptions': 3, 'futility': {'at': 0, 'tie': 0, 'sample': 0.25}}
+SCAN_KEYS = ('casts', 'lostCasts', 'lostCastBranches', 'lostCastForced', 'lostPutBack', 'lostStranded', 'castsRefused', 'castsRefusedForced',
+             'refusedCastBranches', 'refusedCast', 'noRepeatRefused', 'targetCountTrimmed', 'costTargetAvoided', 'staleTargetRecords',
+             'modesDrawnRecords', 'modesSourceRecords', 'targetRecords', 'targetRecordsCard', 'targetRecordsComplete', 'targetRecordsCardComplete',
+             'targetNoneChosen', 'targetNoneListed', 'noTargetRecords', 'nullChosenTargets', 'legacyNullTargets', 'randomised', 'randomisedPriority',
+             'cardTargetOffered', 'modesDrawn', 'retargeted', 'staleRefused')
+out = {'atlases': 0, 'spinesDone': 0, 'problems': 0, 'warnings': 0, 'guardViolations': 0, 'violationsG1': 0, 'violationsG4': 0, 'violationsG6': 0,
+       'g5keys': 0, 'g6keys': 0, 'd479keys': 0, 'scheduleKeys': 0, 'noRepeatNoOp': 0,
+       'xDrawn': 0, 'zeroXLeftOut': 0, 'zeroX': 0, 'branchErroredOptions': 0, 'unavailableOptionsOverBar': 0, 'cappedOptionsOverWarn': 0, 'truncatedLogs': 0,
+       'atlasRefusedCast': 0, 'atlasNoRepeatRefused': 0, 'atlasTargetCountTrimmed': 0, 'atlasCostTargetAvoided': 0,
+       'planOk': 0, 'planBad': [], 'forgeSpines': 0, 'cutsSpines': 0,
+       'branchRows': 0, 'branchTimeouts': 0, 'branchTimeoutsInStep': 0, 'timeoutShare': None, 'branchErrored': 0, 'branchUnavailable': 0,
+       'branchRestarted': 0, 'branchCapped': 0, 'effectSourceNullBranches': 0, 'effectSourceNullCards': 0, 'exileLinksLostBranches': 0, 'exileLinksLostLinks': 0,
+       'errorsByKind': {}, 'unavailableByReason': {}, 'decisions': 0, 'branchedInFull': 0, 'screened': 0, 'fill': 0, 'stoppedOptions': 0,
+       'unitsPlanned': 0, 'unitsOk': 0, 'unitsShort': 0, 'fullShort': 0, 'meanRho': None,
+       'listedDecisions': 0, 'identityDecisions': 0, 'identityOptions': 0, 'identityListingsShort': 0, 'd483Spines': 0, 'pre483Spines': 0,
+       'repeatedPlays': 0, 'sharedToken': 0, 'scuteDecks': 0,
+       'chooseSourceGuardRows': 0, 'chooseSourceGuard': 0, 'chooseSourceGuardKeyRows': 0, 'retargetedRows': 0, 'retargetedOnRows': 0,
+       'modesDrawnRows': 0, 'modesDrawnOnRows': 0, 'targetCountTrimmedRows': 0, 'targetCountTrimmedOnRows': 0, 'costTargetAvoidedRows': 0, 'costTargetAvoidedOnRows': 0,
+       'failedToPlay': 0, 'failedToPlayByCard': {}, 'payFail': 0, 'branchErrorStacks': 0,
+       'lostCastScanned': 0, 'lostCastOptions': 0, 'lostCastOptionList': [], 'lostCastCards': {}, 'lostPutBackCards': {}, 'refusedCastOptions': 0,
+       'refusedCastOptionList': [], 'refusedCastCards': {}, 'scanLogs': 0, 'cardTargetSpines': 0, 'cardTargetShare': None, 'refusedCastShare': None,
+       'castsRefusedShare': None, 'completeShare': None, 'legacyNullTargetRecords': 0, 'trimmedSpines': 0, 'avoidedSpines': 0,
+       'validationFolders': 0, 'validationDecks': 0, 'validationShaOk': 0, 'validationBranched': 0,
+       'reads': 0, 'labels': -1, 'confident': -1, 'confidentPer7Worker10hNight': None, 'confidentPer7Poisson95': None, 'rowsUnmatched': -1, 'voidLabels': -1,
+       'branchedRows': -1, 'trainingRows': -1, 'lostCastVoid': -1, 'refusedCastVoid': -1, 'poolOk': 0, 'compare': 0, 'bySpine': {},
+       'futilityKeys': 0, 'futilityReads': 0, 'futileRead': 0, 'futileStopped': 0, 'futileControls': 0, 'futileBranchGamesSaved': 0,
+       'partialDecisions': 0, 'decisionsBranched': 0, 'ncurve': 0, 'partialLabels': -1, 'confidentPartial': -1, 'futilityControls': -1, 'confidentPerWorkerHour': None}
+for k in SCAN_KEYS:
+    out[k] = 0
+for b in ('pauper', 'peasant', 'legacy', 'powered'):
+    out['spines_' + b] = 0
+
+
+def key_of(name):
+    """b-s01-pauper-2114 -> s01"""
+    return name.split('-')[1] if name.count('-') >= 3 else None
+
+
+def kind_of(err):
+    if err.startswith('BranchTimeout'):
+        return 'timeout (D467)'
+    if re.match(r"IllegalStateException: no .* on the copy's ", err):
+        return 'play not rebuilt on the copy (D472, D476)'
+    if re.match(r'IllegalStateException: optional cost .* is not offered on the copy', err):
+        return 'optional cost not offered (D466)'
+    if err.startswith('recording:'):
+        return 'recording'
+    return err.split(':', 1)[0].strip() or 'other'
+
+
+def scute(p):
+    try:
+        return re.search(rb'(?m)^\d+ Scute Swarm\s*$', open(p, 'rb').read()) is not None
+    except OSError:
+        return False
+
+
+rhos = []
+for f in sorted(glob.glob(D + '/' + G + '/plan.json')):
+    dd = os.path.dirname(f)
+    name = os.path.basename(dd)
+    k = key_of(name)
+    plan = json.load(open(f))
+    sp = out['bySpine'].setdefault(name, {})
+    if k in SPINES:
+        band, ds, gs, bf = SPINES[k]
+        want = {'deckA': '%s/decks/%s-%s-%d/decks/%s-%d-00001.dck' % (D, k, band, ds, band, ds), 'deckB': '%s/decks/%s-%s-%d/decks/%s-%d-00002.dck' % (D, k, band, ds, band, ds),
+                'seed': gs, 'branchForge': bf, 'branchRandom': 150, 'chunk': 25, 'decisions': 10}
+        bad = [x for x, v in want.items() if plan.get(x) != v and not (x.startswith('deck') and str(plan.get(x, '')).endswith(v.split(D + '/', 1)[1]))]
+        cuts = plan.get('cuts') or {}
+        if any(cuts.get(x) != v for x, v in CUTS.items()):
+            bad.append('cuts')
+        if name != 'b-%s-%s-%d' % (k, band, gs):
+            bad.append('folder')
+    else:
+        bad = ['not in the spine table']
+    if bad:
+        out['planBad'].append('%s: %s' % (name, ', '.join(bad)))
+    else:
+        out['planOk'] += 1
+    out['forgeSpines'] += 1 if plan.get('branchForge', 0) > 0 else 0
+    out['cutsSpines'] += 1 if (plan.get('cuts') or {}).get('decision') == 'D480' else 0
+    out['scuteDecks'] += sum(1 for x in ('deckA', 'deckB') if scute(str(plan.get(x))))
+    for x in ('deckA', 'deckB'):
+        if '/validation/' in str(plan.get(x)):
+            out['validationBranched'] += 1
+    # D483: the baseline's listing (every J174 spine lists identities)
+    try:
+        ls = json.load(open(os.path.join(dd, 'phaseB', 'baseline.json')))['decisions']
+    except (OSError, ValueError, KeyError, TypeError):
+        ls = None
+    if ls is not None:
+        withid = [x for x in ls if x.get('identities')]
+        out['listedDecisions'] += len(ls)
+        out['identityDecisions'] += len(withid)
+        out['identityOptions'] += sum(len(x['identities']) for x in withid)
+        out['d483Spines'] += 1 if ls and all(len(x.get('identities') or []) == len(x['tokens']) for x in ls) else 0
+        out['pre483Spines'] += 1 if not withid else 0
+        out['identityListingsShort'] += sum(1 for x in ls if len(x.get('identities') or []) != len(x['tokens']))
+        for x in ls:
+            ids, toks = x.get('identities') or [], x['tokens']
+            if ids:
+                out['repeatedPlays'] += 1 if len(set(ids)) < len(ids) else 0
+                by = {}
+                for t, i in zip(toks, ids):
+                    by.setdefault(t, set()).add(i)
+                out['sharedToken'] += 1 if any(len(v) > 1 for v in by.values()) else 0
+    af = os.path.join(dd, 'atlas.json')
+    if not os.path.exists(af):
+        continue
+    d = json.load(open(af))
+    c, g = d['checks'], d['checks']['guardrails']
+    out['atlases'] += 1
+    out['problems'] += len(c['problems'])
+    out['warnings'] += len(c.get('warnings') or [])
+    out['guardViolations'] += g.get('violations', 0)
+    vb = g.get('violationsBy') or {}
+    for x in ('G1', 'G4', 'G6'):
+        out['violations' + x] += vb.get(x, 0)
+    out['g5keys'] += 1 if 'refusedCast' in g and 'noRepeatRefused' in g else 0
+    out['g6keys'] += 1 if all(x in g for x in ('xDrawn', 'zeroXLeftOut', 'zeroX')) else 0
+    for x in ('noRepeatNoOp', 'xDrawn', 'zeroXLeftOut', 'zeroX'):
+        out[x] += g.get(x, 0)
+    for x, y in (('refusedCast', 'atlasRefusedCast'), ('noRepeatRefused', 'atlasNoRepeatRefused'), ('targetCountTrimmed', 'atlasTargetCountTrimmed'),
+                 ('costTargetAvoided', 'atlasCostTargetAvoided')):
+        out[y] += g.get(x, 0)
+    out['branchErroredOptions'] += len((c.get('branchErrors') or {}).get('options', []))
+    out['unavailableOptionsOverBar'] += len((c.get('optionUnavailable') or {}).get('options', []))
+    out['cappedOptionsOverWarn'] += len((c.get('branchCapped') or {}).get('options', []))
+    out['truncatedLogs'] += len(c.get('unreadableFrameLogs') or [])
+    sp.update({'problems': len(c['problems']), 'warnings': len(c.get('warnings') or []), 'problemList': c['problems'][:5], 'warningList': (c.get('warnings') or [])[:5]})
+    b = d.get('phaseB')
+    if not b:
+        continue
+    out['spinesDone'] += 1
+    if k in SPINES:
+        out['spines_' + SPINES[k][0]] += 1
+    out['decisions'] += len(b['decisions'])
+    out['d479keys'] += 1 if isinstance(b.get('effectSourceNull'), dict) and isinstance(b.get('exileLinksLost'), dict) and 'branchRestarted' in b else 0
+    rhos += [x['rho'] for x in b['decisions'] if x['complete'] and x.get('rho') is not None]
+    s = b.get('schedule')
+    if s:
+        out['scheduleKeys'] += 1
+        listed = b['baseline']['decisionsListed']
+        nscr = len(s.get('screened') or [])
+        # (c): branched and planned per decision, from atlas.json's own fields (whatever its branchedInFull counts)
+        full = sum(1 for x in b['decisions'] if not x.get('screened'))
+        out['branchedInFull'] += s.get('branchedInFull', 0)
+        out['decisionsBranched'] += full
+        # (b): D489's counters
+        fk = all(isinstance(s.get(x), int) for x in ('futileStopped', 'futileControls', 'futileBranchGamesSaved', 'partialLabels')) and isinstance(s.get('futility'), list)
+        out['futilityKeys'] += 1 if fk else 0
+        fr = s.get('futility') or []
+        fsum = {'futilityReads': len(fr), 'futileRead': sum(1 for x in fr if x.get('futile')), 'futileStopped': s.get('futileStopped', 0) or 0,
+                'futileControls': s.get('futileControls', 0) or 0, 'futileBranchGamesSaved': s.get('futileBranchGamesSaved', 0) or 0,
+                'partialDecisions': sum(1 for x in b['decisions'] if x.get('partial'))}
+        for kk, vv in fsum.items():
+            out[kk] += vv
+        sp.update(fsum)
+        out['screened'] += nscr
+        out['fill'] += s.get('fill', 0)
+        out['stoppedOptions'] += s.get('stoppedOptions', 0)
+        plan_ = d['plan']
+        want_full = min(plan_['decisions'] if plan_['decisions'] != 'all' else listed, listed - nscr)
+        short = 1 if full < want_full else 0
+        out['fullShort'] += short
+        per = math.ceil(plan_['branchRandom'] / plan_['chunk']) + math.ceil(plan_['branchForge'] / plan_['chunk'])
+        scr_units = math.ceil(((plan_.get('cuts') or {}).get('screen') or plan_['branchRandom']) / plan_['chunk'])
+        planned = sum(scr_units if x.get('screened') else math.ceil(x['stoppedAt'] / plan_['chunk']) if x.get('partial') else per for x in b['decisions'])
+        ok = set()
+        uf = os.path.join(dd, 'phaseB', 'units.jsonl')
+        if os.path.exists(uf):
+            for line in open(uf):
+                try:
+                    u = json.loads(line)
+                except ValueError:
+                    continue
+                if u.get('ok'):
+                    ok.add(u['id'])
+        out['unitsPlanned'] += planned
+        out['unitsOk'] += len(ok)
+        out['unitsShort'] += max(0, planned - len(ok))
+        sp.update({'listed': listed, 'branchedInFull': s.get('branchedInFull', 0), 'decisionsBranched': full, 'screened': nscr, 'fill': s.get('fill', 0), 'stoppedOptions': s.get('stoppedOptions', 0),
+                   'meanOptions': s.get('meanOptions'), 'unitsPlanned': planned, 'unitsOk': len(ok), 'fullShort': short,
+                   'baseline': '%s turns, winner %s' % (b['baseline']['turns'], b['baseline']['winner'])})
+out['meanRho'] = round(sum(rhos) / len(rhos), 4) if rhos else None
+# the branch rows, live
+ROWC = ('chooseSourceGuardRows', 'chooseSourceGuard', 'retargetedRows', 'retargetedOnRows', 'modesDrawnRows', 'modesDrawnOnRows',
+        'targetCountTrimmedRows', 'targetCountTrimmedOnRows', 'costTargetAvoidedRows', 'costTargetAvoidedOnRows')
+for f in sorted(glob.glob(D + '/' + G + '/phaseB/branches.jsonl')):
+    name = os.path.basename(os.path.dirname(os.path.dirname(f)))
+    sp = out['bySpine'].setdefault(name, {})
+    n = t = 0
+    e = dict({'errored': 0, 'unavailable': 0, 'restarted': 0, 'capped': 0, 'effectSourceNull': 0, 'exileLinksLost': 0, 'errorsByKind': {}}, **dict.fromkeys(ROWC, 0))
+    for line in open(f):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        n += 1
+        if r.get('timedOut'):
+            t += 1
+            out['branchTimeoutsInStep'] += 1 if r.get('engineError') else 0
+        if r.get('unavailable'):
+            e['unavailable'] += 1
+            kk = re.sub(r'\d+', '#', r['unavailable'])[:160]
+            out['unavailableByReason'][kk] = out['unavailableByReason'].get(kk, 0) + 1
+        if r.get('error'):
+            e['errored'] += 1
+            kk = kind_of(r['error'])
+            out['errorsByKind'][kk] = out['errorsByKind'].get(kk, 0) + 1
+            e['errorsByKind'][kk] = e['errorsByKind'].get(kk, 0) + 1
+        e['restarted'] += 1 if (r.get('restarts') or 0) > 0 else 0
+        e['capped'] += 1 if r.get('capped') else 0
+        if (r.get('effectSourceNull') or 0) > 0:
+            e['effectSourceNull'] += 1
+            out['effectSourceNullCards'] += r['effectSourceNull']
+        if (r.get('exileLinksLost') or 0) > 0:
+            e['exileLinksLost'] += 1
+            out['exileLinksLostLinks'] += r['exileLinksLost']
+        # D484: the ChooseSource guard's counter on the branch row (a count, or true)
+        v = r.get('chooseSourceGuard')
+        if v is not None:
+            out['chooseSourceGuardKeyRows'] += 1
+        if isinstance(v, (int, float)) and v > 0:
+            e['chooseSourceGuardRows'] += 1
+            e['chooseSourceGuard'] += v
+        # D485: plays cast after their stale targets were replaced; D486: with modes the seat drew; D488: with their target count cut to a
+        # payable one, and with targets drawn away from what their own cost takes (each written when > 0)
+        for key in ('retargeted', 'modesDrawn', 'targetCountTrimmed', 'costTargetAvoided'):
+            v = r.get(key)
+            if isinstance(v, (int, float)) and v > 0:
+                e[key + 'Rows'] += 1
+                e[key + 'OnRows'] += v
+    sp.update({'rows': n, 'timeouts': t, **e})
+    out['branchRows'] += n
+    out['branchTimeouts'] += t
+    out['branchErrored'] += e['errored']
+    out['branchUnavailable'] += e['unavailable']
+    out['branchRestarted'] += e['restarted']
+    out['branchCapped'] += e['capped']
+    out['effectSourceNullBranches'] += e['effectSourceNull']
+    out['exileLinksLostBranches'] += e['exileLinksLost']
+    for key in ROWC:
+        out[key] += e[key]
+    out['trimmedSpines'] += 1 if e['targetCountTrimmedRows'] else 0
+    out['avoidedSpines'] += 1 if e['costTargetAvoidedRows'] else 0
+if out['branchRows']:
+    out['timeoutShare'] = round(out['branchTimeouts'] / out['branchRows'], 5)
+# the worker logs: Forge's refused payments by card, the payment failures, D488's errored-branch stacks
+for dd in sorted(glob.glob(D + '/' + G)):
+    lfs = sorted(glob.glob(dd + '/phaseB/logs/*.log'))
+    if not lfs:
+        continue
+    name = os.path.basename(dd)
+    ftp = pay = stk = 0
+    byc = {}
+    for lf in lfs:
+        with open(lf, errors='replace') as fh:
+            for l in fh:
+                if 'AI failed to play' in l:
+                    ftp += 1
+                    mm = FTP.search(l)
+                    nm = mm.group(1) if mm else '?'
+                    byc[nm] = byc.get(nm, 0) + 1
+                if "Didn't find what to pay for" in l:
+                    pay += 1
+                if 'branch error, stack:' in l:
+                    stk += 1
+    out['bySpine'].setdefault(name, {}).update({'failedToPlay': ftp, 'failedToPlayByCard': byc, 'payFail': pay, 'branchErrorStacks': stk})
+    out['failedToPlay'] += ftp
+    out['payFail'] += pay
+    out['branchErrorStacks'] += stk
+    for nm, v in byc.items():
+        out['failedToPlayByCard'][nm] = out['failedToPlayByCard'].get(nm, 0) + v
+# the refused and lost casts and D486-D488's counters, from metrics.py --scan's v5 caches (a cache of another atlas.json or scan is not read)
+for f in sorted(glob.glob(D + '/' + G + '/atlas.json')):
+    name = os.path.basename(os.path.dirname(f))
+    try:
+        c = json.load(open(CD + '/' + name + '.json'))
+    except (OSError, ValueError):
+        continue
+    if c.get('atlasMtime') != int(os.path.getmtime(f)) or c.get('scan') != SCAN_V:
+        continue
+    sp = out['bySpine'].setdefault(name, {})
+    sp.update({k: c.get(k, 0) for k in SCAN_KEYS})
+    sp.update({'cardTargetShare': c.get('cardTargetShare'), 'refusedCastShare': c.get('refusedCastShare'), 'castsRefusedShare': c.get('castsRefusedShare'),
+               'completeShare': c.get('completeShare'), 'lostCastOptions': len(c['lostCastOptions']), 'refusedCastOptions': len(c['refusedCastOptions']),
+               'lostCastCards': c.get('byName') or {}, 'lostPutBackCards': c.get('byNamePutBack') or {}, 'refusedCastCards': c.get('byNameRefused') or {},
+               'scanLogs': c['logs']})
+    out['lostCastScanned'] += 1
+    out['scanLogs'] += c['logs']
+    for k in SCAN_KEYS:
+        out[k] += c.get(k, 0)
+    out['cardTargetSpines'] += 1 if c.get('cardTargetOffered', 0) > 0 else 0
+    out['lostCastOptions'] += len(c['lostCastOptions'])
+    out['lostCastOptionList'] += ['%s %s' % (key_of(name), x) for x in c['lostCastOptions']]
+    out['refusedCastOptions'] += len(c['refusedCastOptions'])
+    out['refusedCastOptionList'] += ['%s %s' % (key_of(name), x) for x in c['refusedCastOptions']]
+    for src, dst in (('byName', 'lostCastCards'), ('byNamePutBack', 'lostPutBackCards'), ('byNameRefused', 'refusedCastCards')):
+        for nm, v in (c.get(src) or {}).items():
+            out[dst][nm] = out[dst].get(nm, 0) + v
+out['legacyNullTargetRecords'] = out['legacyNullTargets']
+out['cardTargetShare'] = round(out['cardTargetOffered'] / out['randomisedPriority'], 4) if out['randomisedPriority'] else None
+out['refusedCastShare'] = round(out['refusedCast'] / out['casts'], 5) if out['casts'] else None
+out['castsRefusedShare'] = round(out['castsRefused'] / out['casts'], 5) if out['casts'] else None
+out['completeShare'] = round(out['targetRecordsComplete'] / out['targetRecords'], 4) if out['targetRecords'] else None
+# the validation draw: 13 folders of 2 decks, the sha256 the pilot recorded, and no spine folder of its own
+vd = sorted(glob.glob(D + '/validation/v*'))
+out['validationFolders'] = len(vd)
+h = hashlib.sha256()
+try:
+    for v in vd:
+        h.update(open(os.path.join(v, 'decks.jsonl'), 'rb').read())
+        for x in sorted(glob.glob(os.path.join(v, 'decks', '*.dck'))):
+            h.update(os.path.basename(x).encode() + b'\0' + open(x, 'rb').read())
+            out['validationDecks'] += 1
+    out['validationShaOk'] = 1 if VALIDATION_SHA and h.hexdigest() == VALIDATION_SHA else 0
+except OSError:
+    pass
+out['validationBranched'] += len(glob.glob(D + '/validation/*/plan.json')) + len(glob.glob(D + '/validation/*/phaseB'))
+try:
+    r = json.load(open(D + '/report/reads.json'))
+    out['reads'] = 1 if len(r['spines']) == 13 and r['forgeSpines'] == ['s01', 's07', 's13'] and len(r['iv_bySpine']) == 3 else 0
+except (OSError, ValueError, KeyError, TypeError):
+    pass
+try:
+    lb = json.load(open(D + '/report/labels.json'))
+    sha = open(L + '/sha.txt').read().strip()
+    out.update({'labels': lb['labels'], 'confident': lb['confident'], 'rowsUnmatched': lb['rowsUnmatched'], 'voidLabels': lb['voidLabels'],
+                'branchedRows': lb['branched'], 'trainingRows': lb['trainingRows'], 'lostCastVoid': lb['lostCastVoid'], 'refusedCastVoid': lb['refusedCastVoid'],
+                'confidentPer7Worker10hNight': lb['c_sizing7']['asRun']['confidentPer7Worker10hNight'],
+                'confidentPer7Poisson95': lb['c_sizingRead'].get('poisson95'), 'partialLabels': lb['partialLabels'], 'confidentPartial': lb['confidentPartial'],
+                'futilityControls': lb['futilityControls'], 'confidentPerWorkerHour': lb['c_sizingRead'].get('confidentPerWorkerHour')})
+    # each spine's rows carry its band's D488 pool, its seeds, D483's listing, D488's seat, the pin, and a v5 scan
+    out['poolOk'] = sum(1 for n, m in lb['bySpine'].items() if n in SPINES and m['pool'] == 'random-%s-d488' % SPINES[n][0]
+                        and m['deckSeed'] == SPINES[n][1] and m['gameSeed'] == SPINES[n][2] and m['forgeMap'] == (SPINES[n][3] > 0)
+                        and m['listing'] == 'D483' and m['randomSeat'] == 'D488' and m['sha'] == sha and m['lostScanned'] is True and m['scanV5'] is True)
+except (OSError, ValueError, KeyError, TypeError):
+    pass
+try:
+    nc = json.load(open(D + '/report/ncurve.json'))
+    out['ncurve'] = 1 if len(nc['bySpine']) == 13 and nc['complete'] == out['labels'] and sorted(nc['atN']) == ['100', '150', '50'] else 0
+except (OSError, ValueError, KeyError, TypeError):
+    pass
+try:
+    cp = json.load(open(D + '/report/compare-j173.json'))
+    out['compare'] = 1 if len(cp['bySpine']) == 13 and all(v['this'].get('labels') is not None for v in cp['bySpine'].values()) else 0
+except (OSError, ValueError, KeyError, TypeError, AttributeError):
+    pass
+print(json.dumps(out))
+PY
+cat > var/lab-j174-local/bin/compare.py <<'PY'
+# J174 (drafts/J174-atlas-4b-night-three.md): each spine's numbers beside J173's AT THE SAME POSITION (s01 beside s01, ...), registered
+# before any J174 data. DIFFERENT DECKS (J173: deck seeds 2014-2026, game seeds 2114-2126; J174: 2027-2039, 2127-2139; the same band at
+# each position), THE SAME SEAT (D488's, unchanged) and ANOTHER BRANCHING DESIGN (J173: 200 random branches, 8 decisions; J174: 150,
+# the futility stop, 10 decisions): a difference is a candidate, never a verdict, and no position is a pair. J173's compare.py (J171's,
+# J170's, on J168's definitions) made symmetric: BOTH columns are computed from their folders and labels.json by the same code, so
+# J173's column is read from lab-j173 at the Report (read only) and is null where J173 left nothing.
+# Definitions, per spine and for the night (J168's, plus J174's last five):
+#   listedPerTurn    decisions listed (phaseB/baseline.json) / the baseline game's turns     (the night: sum / sum)
+#   optionsPerFull   options of the decisions branched (not screened) / those decisions     (sum / sum)
+#   labels, confident, confidentShare   labels.json's bySpine (confidentShare = confident / labels)   (sum, sum, sum / sum)
+#   regretMean       labels.json's bySpine regretMean; the night: labels.json's b_regretMean point (pooled over every label)
+#   cappedShare      branch rows ended at the turn cap / branch rows     (sum / sum)
+#   branchGames      branch rows; wallSec: the spine's spine-times.txt lines summed
+#   decisionsBranched   the decisions not screened (complete, or futile-stopped and partial); partial: those with `partial: true`
+#   branchedInFullRows  the complete decisions whose option 0 has the plan's branchRandom random rows (computed here)
+#   workerHours, confidentPerWorkerHour   the walls times their workers (spine-times.txt's fourth field); confident / workerHours:
+#                    THE yield to compare (the confident share is not: D489's stopped decisions leave its denominator)
+#   compare.py THIS_DIR THIS_LABELS_JSON [BEFORE_DIR BEFORE_LABELS_JSON] [--only=s01,s07,...]   prints one JSON object: `this` (J174),
+#   `before` (J173). The pilot's self-test runs it with lab-j170 (J171's own folders) and J171's labels as labels.py gives them as THIS,
+#   and requires J171's registered values (J173's compare.py) back (`selfMatch` 13).
+# Standard library only; no engine.
+import glob, json, os, sys
+# J171's per-spine numbers (results/J172/compare-j168.json, column j171), registered in J173's compare.py: the self-test's want only;
+# `by` says what each position held
+J171 = {
+    's01': {'by': 'J171 f2b4e9c2, pauper 2001/2101', 'listedPerTurn': 0.72, 'optionsPerFull': 3.25, 'labels': 8, 'confident': 2, 'regretMean': 0.0275, 'cappedShare': 0.2837, 'wallSec': 2808, 'branchGames': 5720},
+    's02': {'by': 'J171 f2b4e9c2, peasant 2002/2102', 'listedPerTurn': 0.5, 'optionsPerFull': 2.0, 'labels': 5, 'confident': 1, 'regretMean': 0.043, 'cappedShare': 0.1017, 'wallSec': 1946, 'branchGames': 2075},
+    's03': {'by': 'J171 f2b4e9c2, legacy 2003/2103', 'listedPerTurn': 0.79, 'optionsPerFull': 3.12, 'labels': 8, 'confident': 2, 'regretMean': 0.0481, 'cappedShare': 0.0389, 'wallSec': 2282, 'branchGames': 4550},
+    's04': {'by': 'J171 f2b4e9c2, powered 2004/2104', 'listedPerTurn': 1.06, 'optionsPerFull': 3.38, 'labels': 8, 'confident': 1, 'regretMean': 0.025, 'cappedShare': 0.0005, 'wallSec': 4782, 'branchGames': 5775},
+    's05': {'by': 'J171 f2b4e9c2, pauper 2005/2105', 'listedPerTurn': 0.86, 'optionsPerFull': 4.62, 'labels': 8, 'confident': 2, 'regretMean': 0.0225, 'cappedShare': 0.0563, 'wallSec': 3684, 'branchGames': 6325},
+    's06': {'by': 'J171 f2b4e9c2, peasant 2006/2106', 'listedPerTurn': 1.05, 'optionsPerFull': 5.88, 'labels': 8, 'confident': 4, 'regretMean': 0.0819, 'cappedShare': 0.0, 'wallSec': 4367, 'branchGames': 6525},
+    's07': {'by': 'J171 f2b4e9c2, legacy 2007/2107', 'listedPerTurn': 1.14, 'optionsPerFull': 3.75, 'labels': 8, 'confident': 1, 'regretMean': 0.015, 'cappedShare': 0.0008, 'wallSec': 1269, 'branchGames': 5110},
+    's08': {'by': 'J171 f2b4e9c2, powered 2008/2108', 'listedPerTurn': 1.85, 'optionsPerFull': 5.0, 'labels': 8, 'confident': 4, 'regretMean': 0.0713, 'cappedShare': 0.0, 'wallSec': 3984, 'branchGames': 6750},
+    's09': {'by': 'J171 f2b4e9c2, pauper 2009/2109', 'listedPerTurn': 1.17, 'optionsPerFull': 4.25, 'labels': 8, 'confident': 1, 'regretMean': 0.0381, 'cappedShare': 0.0533, 'wallSec': 3242, 'branchGames': 6075},
+    's10': {'by': 'J171 f2b4e9c2, peasant 2010/2110', 'listedPerTurn': 1.7, 'optionsPerFull': 4.75, 'labels': 8, 'confident': 3, 'regretMean': 0.0503, 'cappedShare': 0.0122, 'wallSec': 3495, 'branchGames': 6500},
+    's11': {'by': 'J171 f2b4e9c2, legacy 2011/2111', 'listedPerTurn': 1.22, 'optionsPerFull': 4.38, 'labels': 8, 'confident': 4, 'regretMean': 0.0528, 'cappedShare': 0.0056, 'wallSec': 4484, 'branchGames': 6450},
+    's12': {'by': 'J171 f2b4e9c2, powered 2012/2112', 'listedPerTurn': 1.17, 'optionsPerFull': 3.0, 'labels': 8, 'confident': 2, 'regretMean': 0.0652, 'cappedShare': 0.0011, 'wallSec': 2317, 'branchGames': 3650},
+    's13': {'by': 'J171 f2b4e9c2, pauper 2013/2113', 'listedPerTurn': 1.1, 'optionsPerFull': 4.25, 'labels': 8, 'confident': 1, 'regretMean': 0.0334, 'cappedShare': 0.0328, 'wallSec': 1993, 'branchGames': 6435},
+}
+# J171's night (results/J172/compare-j168.json, night.j171): 101 labels and 28 confident, 11 h 18 of walls at 6 workers, 71,940 rows
+J171_NIGHT = {'listedPerTurn': 1.09, 'optionsPerFull': 4.03, 'labels': 101, 'confident': 28, 'confidentShare': 0.2772, 'regretMean': 0.0442,
+              'cappedShare': 0.0421, 'wallSec': 40653, 'branchGames': 71940}
+args = [a for a in sys.argv[1:] if not a.startswith('--')]
+opt = dict(a[2:].split('=', 1) for a in sys.argv[1:] if a.startswith('--') and '=' in a)
+only = set(x for x in opt.get('only', '').split(',') if x)
+
+
+def side(D, LJ):
+    """one night's columns from its folder and labels.json: ({position: values}, night); empty when the labels are absent"""
+    try:
+        lab = json.load(open(LJ))
+    except (OSError, ValueError):
+        return {}, None
+    wall, wk = {}, {}
+    if os.path.exists(D + '/spine-times.txt'):
+        for line in open(D + '/spine-times.txt'):
+            f = line.split()
+            if len(f) >= 3 and f[1].isdigit() and f[2].isdigit():
+                wall[f[0]] = wall.get(f[0], 0) + int(f[2]) - int(f[1])
+                if len(f) > 3 and f[3].isdigit():
+                    wk[f[0]] = wk.get(f[0], 0) + (int(f[2]) - int(f[1])) * int(f[3])
+    by = {}
+    tot = {'listed': 0, 'turns': 0, 'options': 0, 'branched': 0, 'labels': 0, 'confident': 0, 'capped': 0, 'rows': 0, 'wallSec': 0, 'workerSec': 0,
+           'partial': 0, 'fullRows': 0}
+    for sp in sorted(glob.glob(D + '/b-s??-*-21??')):
+        name = os.path.basename(sp)
+        s = name.split('-')[1]
+        if only and s not in only:
+            continue
+        try:
+            a = json.load(open(sp + '/atlas.json'))
+            pb = a['phaseB']
+            b = json.load(open(sp + '/phaseB/baseline.json'))['decisions']
+            rows = [json.loads(x) for x in open(sp + '/phaseB/branches.jsonl') if x.strip()]
+            m = lab['bySpine'][s]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        R = a['plan']['branchRandom']
+        br = [x for x in pb['decisions'] if not x.get('screened')]
+        o0 = {}
+        for r in rows:
+            if r['c'] == 'random' and r['o'] == 0:
+                o0[r['d']] = o0.get(r['d'], 0) + 1
+        capped = sum(1 for r in rows if r.get('capped'))
+        part = sum(1 for x in br if x.get('partial'))
+        fullr = sum(1 for x in br if x.get('complete') and o0.get(x['d'], 0) >= R)
+        ws = wk.get(name)
+        v = {'folder': name, 'branchRandom': R, 'listedPerTurn': round(len(b) / pb['baseline']['turns'], 2), 'optionsPerFull': round(sum(len(x['options']) for x in br) / max(1, len(br)), 2),
+             'decisionsBranched': len(br), 'partial': part, 'branchedInFullRows': fullr,
+             'labels': m['labels'], 'confident': m['confident'], 'confidentShare': round(m['confident'] / m['labels'], 4) if m['labels'] else None,
+             'regretMean': m['regretMean'], 'cappedShare': round(capped / len(rows), 4) if rows else None, 'wallSec': wall.get(name), 'branchGames': len(rows),
+             'workerHours': round(ws / 3600, 2) if ws else None, 'confidentPerWorkerHour': round(m['confident'] / (ws / 3600), 4) if ws else None}
+        by[s] = v
+        tot['listed'] += len(b)
+        tot['turns'] += pb['baseline']['turns']
+        tot['options'] += sum(len(x['options']) for x in br)
+        tot['branched'] += len(br)
+        tot['labels'] += m['labels']
+        tot['confident'] += m['confident']
+        tot['capped'] += capped
+        tot['rows'] += len(rows)
+        tot['wallSec'] += wall.get(name) or 0
+        tot['workerSec'] += ws or 0
+        tot['partial'] += part
+        tot['fullRows'] += fullr
+    night = {'spines': len(by), 'listedPerTurn': round(tot['listed'] / tot['turns'], 2) if tot['turns'] else None,
+             'optionsPerFull': round(tot['options'] / tot['branched'], 2) if tot['branched'] else None, 'labels': tot['labels'],
+             'confident': tot['confident'], 'confidentShare': round(tot['confident'] / tot['labels'], 4) if tot['labels'] else None,
+             'regretMean': (lab.get('b_regretMean') or {}).get('point'), 'cappedShare': round(tot['capped'] / tot['rows'], 4) if tot['rows'] else None,
+             'wallSec': tot['wallSec'], 'branchGames': tot['rows'], 'decisionsBranched': tot['branched'], 'partial': tot['partial'],
+             'branchedInFullRows': tot['fullRows'], 'decisionsBranchedPerSpine': round(tot['branched'] / len(by), 2) if by else None,
+             'workerHours': round(tot['workerSec'] / 3600, 2) if tot['workerSec'] else None,
+             'confidentPerWorkerHour': round(tot['confident'] / (tot['workerSec'] / 3600), 4) if tot['workerSec'] else None}
+    return by, night
+
+
+this, tn = side(args[0], args[1])
+before, bn = side(args[2], args[3]) if len(args) >= 4 else ({}, None)
+out = {'note': 'BY POSITION, DIFFERENT DECKS, THE SAME SEAT, ANOTHER BRANCHING DESIGN: J173 (D488, deck seeds 2014-2026, 200 branches, 8 decisions) beside J174 (D488, deck seeds 2027-2039, 150 branches, the futility stop, 10 decisions), the same band at each position; read confidentPerWorkerHour, not confidentShare; a difference is a candidate, not a verdict',
+       'bySpine': {s: {'before': before.get(s), 'this': v} for s, v in this.items()}, 'night': {'before': bn, 'this': tn}}
+# the self-test's number: positions whose every J171 value comes back from the folders read (meaningful only on J171's own, lab-j170)
+K = ('listedPerTurn', 'optionsPerFull', 'labels', 'confident', 'regretMean', 'cappedShare', 'wallSec', 'branchGames')
+out['selfMatch'] = sum(1 for s, v in this.items() if s in J171 and all(J171[s][k] == v[k] for k in K))
+out['selfMatchNight'] = 1 if tn and all(tn.get(k) == J171_NIGHT[k] for k in K + ('confidentShare',)) else 0
+print(json.dumps(out, indent=1))
+PY
+cat > var/lab-j174-local/bin/ncurve.py <<'PY'
+# J174 (drafts/J174-atlas-4b-night-three.md): the cap read, (g) -- the atlas review's n curve (study/atlas-review-2026-10-27,
+# bin/ncurve.py, report/ncurve.md) on this night's own branches, registered before any J174 data. Standard library only; no engine.
+# For every COMPLETE decision of seat A (not screened, not a futility-stopped partial label; a futility control is complete):
+#   the paired random-map matrix as decisionAtlas builds it -- branch rows i < N of every option, a row kept when every option
+#   has a score there or is stopped by early stopping at or before i (its cell then empty), an errored or unavailable row empty;
+#   the regret (the best option's mean minus option 0's) and its paired bootstrap interval, 1,000 draws, the best re-picked in
+#   each draw, the 2.5% / 97.5% quantiles; CONFIDENT AT N when the low end is > 0. The bootstrap is Python's random.Random, seeded
+#   s + 7 d + N for s in 101, 202, 303, 404, 505 (the review's seeds and offsets), and a decision's confident-at-N is the MEAN over
+#   the five (the review's "smoothed over 5 bootstrap seeds"), so the read is a seed mean, not atlas.json's own interval.
+#   the final set   the decisions atlas.json calls confident (complete and random.regretLo > 0) at their full n
+#   keptAtN         the sum over the final set of the decision's confident-at-N: how much of the final set is already
+#                   confident with N branches; keptShareAtN = keptAtN / |final set|
+#   expectedAtN     the sum over every complete decision of its confident-at-N (the review's E[confident])
+#   selfAgree       at the decision's full n, the decisions whose seed-mean verdict (> .5) is atlas.json's own (the review: 215 of 222)
+#   ncurve.py [--n=50,100,150] NAME:DIR ...   prints one JSON object
+import glob, json, os, random, sys
+
+SEEDS = (101, 202, 303, 404, 505)
+B = 1000
+args = [a for a in sys.argv[1:] if not a.startswith('--')]
+opt = dict(a[2:].split('=', 1) for a in sys.argv[1:] if a.startswith('--') and '=' in a)
+NS = [int(x) for x in opt.get('n', '50,100,150').split(',')]
+# the review's n curve, all 29 spines (old, D486 and D488 seats; final n = 200): E[confident] and E[overlap with 200]
+REVIEW = {'final': 65.4, 'atN': {'50': {'expected': 43.4, 'kept': 35.0}, '100': {'expected': 50.0, 'kept': 44.6},
+                                 '150': {'expected': 64.8, 'kept': 57.0}, '200': {'expected': 65.4, 'kept': 65.4}},
+          'note': 'study/atlas-review-2026-10-27/report/ncurve.md, seat "all": a 200-branch design; "at 150, 88% of the final confident set is already confident" (section 2)'}
+
+
+def matrix(rows, k, nmax, stops):
+    by = {}
+    for o, i, s in rows:
+        if nmax is not None and i >= nmax:
+            continue
+        if o in stops and i >= stops[o]:
+            continue
+        by.setdefault(i, [None] * k)[o] = s
+    out = []
+    for i in sorted(by):
+        r = by[i]
+        if all(r[o] is not None or (o in stops and i >= stops[o]) for o in range(k)):
+            out.append(r)
+    return out
+
+
+def regret_lo(m, k, seed):
+    n = len(m)
+    if n < 2:
+        return None
+    v = [[(r[o] if r[o] is not None else 0.0) for r in m] for o in range(k)]
+    w = [[(1.0 if r[o] is not None else 0.0) for r in m] for o in range(k)]
+    full = [all(x == 1.0 for x in w[o]) for o in range(k)]
+    if any(sum(w[o]) == 0 for o in range(k)):
+        return None
+    rng = random.Random(seed)
+    idx_all = range(n)
+    g = []
+    for _ in range(B):
+        idx = rng.choices(idx_all, k=n)
+        mu = []
+        ok = True
+        for o in range(k):
+            s = sum(map(v[o].__getitem__, idx))
+            c = n if full[o] else sum(map(w[o].__getitem__, idx))
+            if c == 0:
+                ok = False
+                break
+            mu.append(s / c)
+        if ok:
+            g.append(max(mu) - mu[0])
+    if not g:
+        return None
+    g.sort()
+    return g[int(0.025 * (len(g) - 1) + 0.5)]
+
+
+out = {'definitions': 'see the header of this script', 'n': NS, 'review': REVIEW, 'bySpine': {}, 'final': 0, 'complete': 0,
+       'atN': {str(N): {'expected': 0.0, 'kept': 0.0} for N in NS}, 'selfAgree': 0}
+for a in args:
+    name, d0 = a.split(':', 1)
+    try:
+        doc = json.load(open(os.path.join(d0, 'atlas.json')))
+    except (OSError, ValueError):
+        continue
+    rows = {}
+    for line in open(os.path.join(d0, 'phaseB', 'branches.jsonl')):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if r.get('c') != 'random':
+            continue
+        s = r.get('score') if r.get('error') is None and not r.get('unavailable') else None
+        rows.setdefault(r['d'], []).append((r['o'], r['i'], s))
+    sp = {'final': 0, 'complete': 0, 'atN': {str(N): {'expected': 0.0, 'kept': 0.0} for N in NS}, 'selfAgree': 0}
+    for x in doc['phaseB']['decisions']:
+        if not x.get('complete') or x.get('screened') or x.get('partial'):
+            continue
+        k = len(x['options'])
+        stops = {o['o']: o['stoppedAt'] for o in x['options'] if o.get('stoppedAt') is not None}
+        conf = x['random']['regretLo'] is not None and x['random']['regretLo'] > 0
+        sp['complete'] += 1
+        sp['final'] += 1 if conf else 0
+        full = matrix(rows.get(x['d'], []), k, None, stops)
+        fm = sum(1 for s in SEEDS if (lambda lo: lo is not None and lo > 0)(regret_lo(full, k, s + 7 * x['d'] + len(full)))) / len(SEEDS)
+        sp['selfAgree'] += 1 if (fm > 0.5) == conf else 0
+        for N in NS:
+            m = matrix(rows.get(x['d'], []), k, N, stops)
+            e = sum(1 for s in SEEDS if (lambda lo: lo is not None and lo > 0)(regret_lo(m, k, s + 7 * x['d'] + N))) / len(SEEDS)
+            sp['atN'][str(N)]['expected'] += e
+            sp['atN'][str(N)]['kept'] += e if conf else 0.0
+    for N in NS:
+        for kk in ('expected', 'kept'):
+            sp['atN'][str(N)][kk] = round(sp['atN'][str(N)][kk], 2)
+            out['atN'][str(N)][kk] += sp['atN'][str(N)][kk]
+    for kk in ('final', 'complete', 'selfAgree'):
+        out[kk] += sp[kk]
+    out['bySpine'][name] = sp
+for N in NS:
+    a = out['atN'][str(N)]
+    a['expected'], a['kept'] = round(a['expected'], 2), round(a['kept'], 2)
+    a['keptShare'] = round(a['kept'] / out['final'], 4) if out['final'] else None
+print(json.dumps(out, indent=1))
+PY
+cat > var/lab-j174-local/bin/pilot.py <<'PY'
+# J174 pilot: J173's pilot.py with J174's paths and D489: the smoke runs with the futility stop on, so its plan must carry
+# cuts.futility {at 0, tie 0, sample 0.25} and its schedule D489's four counters (futileStopped >= 0), `partialLabels` must equal the
+# partial decisions, and its units are planned per decision (a partial one: ceil(stoppedAt / chunk)); the smoke's `labels` + `partial`
+# are its two decisions; and the self-test's `cuts-futile` leg is read beside `cuts` (a control there, a stop here).
+# J173's: J171's pilot.py with J173's paths (the smoke in its own folder, its decks the pilot's own draw) and the smoke's
+# frame scan read with J173's scan (refused-cast options, D486-D488's counters, D487's null and legacy records). J171's (J170's, J169's):
+# the smoke (J166's powered pair, deck seed 2099, game seed 2199, every cut on, a new folder) and the atlas-selftest's G5, G6 and cuts
+# legs, as one JSON object; the smoke's D483 listing read (an identity beside every token, no play twice).
+# Standard library only; no engine. Run from the clone (the self-test's folder is var/cubelab/atlas-selftest).
+import json, math, os
+S = '/home/justin-a/code/lab/data/lab-j174/pilot-smoke-j174'
+out = {'smoke': {'problems': -1}, 'g5': {'refusedCast': -1}, 'g6': {'zeroXLeftOut': -1}, 'cuts': {'problems': -1}, 'cutsNoforge': {'problems': -1}, 'cutsFutile': {'problems': -1}}
+
+
+def units_ok(d):
+    ok = set()
+    for line in open(os.path.join(d, 'phaseB', 'units.jsonl')):
+        try:
+            u = json.loads(line)
+        except ValueError:
+            continue
+        if u.get('ok'):
+            ok.add(u['id'])
+    return len(ok)
+
+
+try:
+    d = json.load(open(S + '/atlas.json'))
+    c, g, b = d['checks'], d['checks']['guardrails'], d['phaseB']
+    s, p = b['schedule'], d['plan']
+    rows = [json.loads(l) for l in open(S + '/phaseB/branches.jsonl') if l.strip()]
+    lb = json.load(open('var/lab-j174-local/pilot-labels.json'))
+    ls = json.load(open(S + '/phaseB/baseline.json'))['decisions']
+    per = math.ceil(p['branchRandom'] / p['chunk']) + math.ceil(p['branchForge'] / p['chunk'])
+    scr = math.ceil(p['cuts']['screen'] / p['chunk'])
+    planned = sum(scr if x.get('screened') else math.ceil(x['stoppedAt'] / p['chunk']) if x.get('partial') else per for x in b['decisions'])
+    fu = (p.get('cuts') or {}).get('futility')
+    out['smoke'] = {'problems': len(c['problems']), 'warnings': len(c.get('warnings') or []), 'decisions': len(b['decisions']),
+                    'branchedInFull': s['branchedInFull'], 'branched': sum(1 for x in b['decisions'] if not x.get('screened')),
+                    'screened': len(s['screened']), 'stoppedOptions': s['stoppedOptions'],
+                    'unitsPlanned': planned, 'unitsOk': units_ok(S),
+                    'futilityPlan': 1 if fu == {'at': 0, 'tie': 0, 'sample': 0.25} else 0,
+                    'futileStopped': s['futileStopped'] if isinstance(s.get('futileStopped'), int) else -1,
+                    'futileControls': s['futileControls'] if isinstance(s.get('futileControls'), int) else -1,
+                    'futileBranchGamesSaved': s['futileBranchGamesSaved'] if isinstance(s.get('futileBranchGamesSaved'), int) else -1,
+                    'partialLabelsKey': s['partialLabels'] if isinstance(s.get('partialLabels'), int) else -1,
+                    'futilityReads': len(s['futility']) if isinstance(s.get('futility'), list) else -1,
+                    'partialDecisions': sum(1 for x in b['decisions'] if x.get('partial')), 'partial': lb['partialLabels'], 'confidentPartial': lb['confidentPartial'],
+                    'cuts': 1 if p.get('cuts', {}).get('decision') == 'D480' and p['cuts']['minOptions'] == 3 else 0,
+                    'g6': 1 if all(k in g for k in ('xDrawn', 'zeroXLeftOut', 'zeroX')) else 0, 'zeroX': g.get('zeroX', -1),
+                    'd479': 1 if isinstance(b.get('effectSourceNull'), dict) and isinstance(b.get('exileLinksLost'), dict) and 'branchRestarted' in b else 0,
+                    'guardViolations': g['violations'], 'branchTimeoutSec': p['branchTimeoutSec'],
+                    'branches': len(rows), 'timeouts': sum(1 for r in rows if r.get('timedOut')),
+                    'unavailable': sum(1 for r in rows if r.get('unavailable')), 'errored': sum(1 for r in rows if r.get('error')),
+                    'trimmedRows': sum(1 for r in rows if (r.get('targetCountTrimmed') or 0) > 0), 'avoidedRows': sum(1 for r in rows if (r.get('costTargetAvoided') or 0) > 0),
+                    'labels': lb['labels'], 'rowsUnmatched': lb['rowsUnmatched'], 'voidLabels': lb['voidLabels'],
+                    'trainingRows': lb['trainingRows'], 'branchedRows': lb['branched'],
+                    'listed': len(ls), 'identities': 1 if ls and all(len(x.get('identities') or []) == len(x['tokens']) for x in ls) else 0,
+                    'repeatedPlays': sum(1 for x in ls if len(set(x.get('identities') or [])) < len(x.get('identities') or []))}
+except (OSError, ValueError, KeyError, TypeError):
+    pass
+try:
+    c = json.load(open('var/lab-j174-local/lost-smoke/pilot-smoke-j174.json'))
+    out['smoke']['scan'] = {'scanned': 1 if c.get('atlasMtime') == int(os.path.getmtime(S + '/atlas.json')) and c.get('scan') == 'J174 v5' else 0, 'logs': c['logs'],
+                            'lostCastOptions': len(c['lostCastOptions']), 'refusedCastOptions': len(c['refusedCastOptions']), 'lostCasts': c['lostCasts'],
+                            **{k: c.get(k, 0) for k in ('casts', 'refusedCast', 'castsRefused', 'lostPutBack', 'lostStranded', 'cardTargetOffered', 'randomisedPriority',
+                                                         'modesDrawn', 'retargeted', 'targetCountTrimmed', 'costTargetAvoided', 'modesDrawnRecords', 'modesSourceRecords',
+                                                         'targetRecords', 'targetRecordsCard', 'targetRecordsCardComplete', 'targetNoneChosen', 'targetNoneListed',
+                                                         'noTargetRecords', 'nullChosenTargets', 'legacyNullTargets')},
+                            'refusedCastShare': c.get('refusedCastShare')}
+except (OSError, ValueError, KeyError, TypeError):
+    out['smoke']['scan'] = {'scanned': 0, 'lostCastOptions': -1, 'refusedCastOptions': -1, 'legacyNullTargets': -1, 'nullChosenTargets': -1}
+for leg in ('g5', 'g6'):
+    try:
+        d = json.load(open('var/cubelab/atlas-selftest/%s/atlas.json' % leg))
+        g = d['checks']['guardrails']
+        out[leg] = {'problems': len(d['checks']['problems']), 'refusedCast': g.get('refusedCast', 0), 'noRepeatRefused': g.get('noRepeatRefused', 0),
+                    'xDrawn': g.get('xDrawn', 0), 'zeroXLeftOut': g.get('zeroXLeftOut', 0), 'zeroX': g.get('zeroX', -1)}
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+for key, leg in (('cuts', 'cuts'), ('cutsNoforge', 'cuts-noforge'), ('cutsFutile', 'cuts-futile')):
+    try:
+        d = json.load(open('var/cubelab/atlas-selftest/%s/atlas.json' % leg))
+        sc = d['phaseB']['schedule']
+        out[key] = {'problems': len(d['checks']['problems']), 'schedule': 1 if d['phaseB'].get('schedule') else 0,
+                    'forgeMap': 0 if d['phaseB'].get('forgeMap') is False else 1, 'labels': sc['labels'],
+                    'futileStopped': sc.get('futileStopped', -1), 'futileControls': sc.get('futileControls', -1),
+                    'partial': sum(1 for x in d['phaseB']['decisions'] if x.get('partial')),
+                    'control': sum(1 for x in d['phaseB']['decisions'] if x.get('futilityControl'))}
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+print(json.dumps(out))
+PY
+# the readers' self-tests on J162's and J158's files (read, never written): each must give the registered numbers (J169's to J171's pilots')
+L2=/home/justin-a/code/lab/data/lab-j162
+L8=/home/justin-a/code/lab/data/lab-j158
+python3 -I var/lab-j174-local/bin/labels.py pauper5:confirm-j162:0:464:f6dba5e4:$L2/b-pauper5-464 synergy9:confirm-j162:0:465:f6dba5e4:$L2/b-synergy9-465 modern7:confirm-j162:0:466:f6dba5e4:$L2/b-modern7-466 ff5:confirm-j162:0:462:f6dba5e4:$L2/b-ff5-462 --out=var/lab-j174-local/labels-j162.jsonl --times=$L2/spine-times.txt > var/lab-j174-local/labels-j162.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/labels-j162.json')); a = d['a_confidentShare']; print(1 if (d['labels'], d['confident'], d['confidentForge'], d['rowsUnmatched'], d['voidLabels'], d['trainingRows'], a['point'], a['interval'], d['c_sizing7']['asRun']['labelsPer7Worker10hNight']) == (59, 7, 5, 0, 0, 0, 0.1186, [0.0339, 0.2203], 91) else 0)" > var/lab-j174-local/labels-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/labels-self.txt
+python3 -I var/lab-j174-local/bin/labels.py ff5:confirm-j158:0:461:-:$L8/b-ff5-461 peasant7:confirm-j158:0:463:-:$L8/b-peasant7-463 --times=$L8/spine-times.txt > var/lab-j174-local/labels-j158.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/labels-j158.json')); print(1 if (d['labels'], d['confident'], d['voidLabels'], d['voidList'], d['sameGameNotBlock']) == (32, 6, 3, ['ff5 d10 block:35>78', 'ff5 d14 block:21>71', 'ff5 d30 block:25>80,40>81'], []) else 0)" > var/lab-j174-local/void-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/void-self.txt
+python3 -I var/lab-j174-local/bin/reads.py pauper5:pauper5:$L2/b-pauper5-464/atlas.json synergy9:synergy9:$L2/b-synergy9-465/atlas.json modern7:modern7:$L2/b-modern7-466/atlas.json ff5:ff5:$L2/b-ff5-462/atlas.json > var/lab-j174-local/reads-j162.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/reads-j162.json')); iv = {n: (v['C1_castNow']['random']['point'], v['C1_castNow']['random']['interval'], v['C1_castNow']['verdict']) for n, v in d['iv_bySpine'].items()}; ok = iv == {'pauper5': (0.0411, [0.0126, 0.069], 'HOLDS'), 'synergy9': (0.0002, [-0.0133, 0.0136], 'NOT SHOWN'), 'modern7': (0.063, [0.017, 0.1231], 'HOLDS'), 'ff5': (0.0523, [-0.0047, 0.1313], 'NOT SHOWN')} and (d['i_sameBest']['point'], d['i_sameBest']['interval'], d['ii_rho']['point'], d['ii_rho']['interval']) == (0.5088, [0.322, 0.7], 0.2181, [-0.1188, 0.5799]); print(1 if ok else 0)" > var/lab-j174-local/reads-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/reads-self.txt
+python3 -I var/lab-j174-local/bin/cuts.py $L2/b-pauper5-464 $L2/b-synergy9-465 $L2/b-modern7-466 $L2/b-ff5-462 --times=$L2/spine-times.txt > var/lab-j174-local/cuts-j162.json || true
+python3 -I -c "import json; n = json.load(open('var/lab-j174-local/cuts-j162.json'))['night']; print(1 if (n['spines'], n['branchGames'], n['savedShare'], n['checksSecPerKGames']) == (4, 55680, 0.0, 92.3) else 0)" > var/lab-j174-local/cuts-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/cuts-self.txt
+python3 -I var/lab-j174-local/bin/metrics.py $L2 'b-*' var/lab-j174-local/lost-none > var/lab-j174-local/metrics-j162.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/metrics-j162.json')); print(1 if (d['atlases'], d['problems'], d['branchRows'], d['errorsByKind'].get('play not rebuilt on the copy (D472, D476)'), d['xDrawn'], d['planOk']) == (4, 10, 55680, 2400, 32626, 0) else 0)" > var/lab-j174-local/metrics-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/metrics-self.txt
+# ... ON J171'S OWN NIGHT (lab-j170 as J172 left it: J171's 13 spines, five atlases re-checked under D487 with J171's in atlas.j171.json; read only):
+# labels.py, reads.py, cuts.py, compare.py and metrics.py must give J171's numbers back (results/J172/: labels.json, reads.json, cuts.json,
+# compare-j168.json's j171 column, metrics.json; J171's pool names, seat and sha on the command line, as J171's Report passed them)
+L7=/home/justin-a/code/lab/data/lab-j170
+largs=""; args=""; dirs=""; nargs=""
+for d in $L7/b-s??-*-21??; do
+  n=$(basename "$d"); s=$(echo "$n" | cut -d- -f2); b=$(echo "$n" | cut -d- -f3); g=$(echo "$n" | cut -d- -f4)
+  largs="$largs $s:random-$b-d486:$((g - 100)):$g:f2b4e9c2:$d"; args="$args $s:random-$b-d486:$d/atlas.json"; dirs="$dirs $d"; nargs="$nargs $s:$d"
+done
+python3 -I var/lab-j174-local/bin/labels.py $largs --times=$L7/spine-times.txt --training=1 --seat=D486 > var/lab-j174-local/labels-j171.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/labels-j171.json')); a = d['a_confidentShare']; z = d['c_sizing7']['asRun']; sp = {n: (m['labels'], m['confident']) for n, m in d['bySpine'].items()}; ok = (d['labels'], d['confident'], d['confidentForge'], d['rowsUnmatched'], d['voidLabels'], d['trainingRows'], d['branched'], a['point'], a['interval'], z['labelsPer7Worker10hNight'], z['confidentPer7Worker10hNight'], z['confidentPer7Poisson95'], d['byListing']['D483']['labels'], d['d486Rows'], d['d488Rows']['targetCountTrimmed'], d['d488Rows']['costTargetAvoided']) == (101, 28, 1, 0, 0, 147, 147, 0.2772, [0.1607, 0.4253], 104, 28.9, [19.2, 41.8], 101, {'modesDrawn': 1125, 'modesDrawnBranches': 1125, 'retargeted': 2401, 'rowsWithModesDrawn': 14}, 0, 0) and sp == {'s01': (8, 2), 's02': (5, 1), 's03': (8, 2), 's04': (8, 1), 's05': (8, 2), 's06': (8, 4), 's07': (8, 1), 's08': (8, 4), 's09': (8, 1), 's10': (8, 3), 's11': (8, 4), 's12': (8, 2), 's13': (8, 1)} and {p: v['confident'] for p, v in d['byPool'].items()} == {'random-pauper-d486': 6, 'random-peasant-d486': 8, 'random-legacy-d486': 7, 'random-powered-d486': 7}; print(1 if ok else 0)" > var/lab-j174-local/labels-j171-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/labels-j171-self.txt
+python3 -I var/lab-j174-local/bin/reads.py $args > var/lab-j174-local/reads-j171.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/reads-j171.json')); iv = {n: (v['C1_castNow']['random']['point'], v['C1_castNow']['random']['interval'], v['C1_castNow']['verdict']) for n, v in d['iv_bySpine'].items()}; print(1 if d['forgeSpines'] == ['s01', 's07', 's13'] and iv == {'s01': (-0.0313, [-0.0472, -0.0148], 'NOT SHOWN'), 's07': (-0.0099, [-0.0598, 0.045], 'NOT SHOWN'), 's13': (0.014, [-0.0042, 0.025], 'NOT SHOWN')} and (d['i_sameBest']['point'], d['i_sameBest']['interval'], d['ii_rho']['point'], d['ii_rho']['interval'], d['decisions'], d['complete'], d['Q']) == (0.5833, [0.3438, 0.875], 0.2833, [-0.0568, 0.875], 147, 101, 101) else 0)" > var/lab-j174-local/reads-j171-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/reads-j171-self.txt
+python3 -I var/lab-j174-local/bin/cuts.py $dirs --times=$L7/spine-times.txt > var/lab-j174-local/cuts-j171.json || true
+python3 -I -c "import json; n = json.load(open('var/lab-j174-local/cuts-j171.json'))['night']; print(1 if (n['spines'], n['branchGames'], n['savedShare'], n['earlyStopShare'], n['screenShare'], n['checksSecPerKGames'], n['idleShare'], n['wallSec'], n['checksShare'], n['checksHours']) == (13, 71940, 0.315, 0.1639, 0.1511, 32.5, 0.1391, 40653, 0.0575, 0.65) else 0)" > var/lab-j174-local/cuts-j171-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/cuts-j171-self.txt
+python3 -I var/lab-j174-local/bin/compare.py $L7 var/lab-j174-local/labels-j171.json > var/lab-j174-local/compare-j171.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/compare-j171.json')); print(1 if d['selfMatch'] == 13 and len(d['bySpine']) == 13 and d['selfMatchNight'] == 1 else 0)" > var/lab-j174-local/compare-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/compare-self.txt
+# ... the cap read (ncurve.py, new) on J171's 13 spines at 50/100/150/200 branches: the numbers this draft's own read-only run gave,
+# 2026-10-27, 37 s (the review's D486 row at 150: E[confident] 28.8, the same; its RNG is numpy's, so the other points differ a little)
+python3 -I var/lab-j174-local/bin/ncurve.py --n=50,100,150,200 $nargs > var/lab-j174-local/ncurve-j171.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/ncurve-j171.json')); a = d['atN']; print(1 if (d['final'], d['complete'], d['selfAgree'], len(d['bySpine'])) == (28, 101, 100, 13) and {n: (a[n]['expected'], a[n]['kept'], a[n]['keptShare']) for n in a} == {'50': (18.8, 15.2, 0.5429), '100': (21.8, 20.0, 0.7143), '150': (28.8, 24.0, 0.8571), '200': (29.6, 28.0, 1.0)} else 0)" > var/lab-j174-local/ncurve-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/ncurve-self.txt
+# J173's night, read only, as information (J174 runs after it; its report may be absent if it ended early): what compare.py and
+# labels.py's c_sizingRead will read at the Report
+python3 -I -c "import glob, json, os; D = '/home/justin-a/code/lab/data/lab-j173'; r = {'atlases': len(glob.glob(D + '/b-s??-*-21??/atlas.json')), 'report': 1 if os.path.exists(D + '/report/labels.json') else 0}
+try:
+    lb = json.load(open(D + '/report/labels.json')); r.update({'labels': lb['labels'], 'confident': lb['confident'], 'confidentPer7Worker10hNight': lb['c_sizing7']['asRun']['confidentPer7Worker10hNight'], 'poisson95': lb['c_sizingRead'].get('poisson95')})
+except (OSError, ValueError, KeyError, TypeError):
+    pass
+print(json.dumps(r))" > var/lab-j174-local/j173.json 2>/dev/null || echo '{"atlases":-1}' > var/lab-j174-local/j173.json
+cat var/lab-j174-local/j173.json
+# ... THE SCAN on J171's s09 and s13 (read only; caches in lost-self/, never the Report's lost/): J171's numbers for every key J171's scan read
+# (results/J172/lost-*.json), D488's classification of every lost cast as a refused payment put back in hand (D488, Context: Fireball 545 on
+# s09; Bone Shards 36, Vicious Offering 28, Candy Grapple 4, Disfigure 1 on s13), D487's legacy count on s09 (J172's sweep: 2,361), no
+# target:none and no D488 count on logs written before them, and at least as many put-backs as lost casts (a refusal later cast again is one)
+mkdir -p var/lab-j174-local/lost-self
+for n in b-s09-pauper-2109 b-s13-pauper-2113; do
+  python3 -I var/lab-j174-local/bin/metrics.py --scan $L7/$n var/lab-j174-local/lost-self {workers} > /dev/null || true
+done
+python3 -I -c "
+import json
+W = {'b-s09-pauper-2109': dict(logs=12150, casts=91317, lostCasts=545, lostCastBranches=362, lostCastForced=0, lostCastOptions=[], byName={'Fireball': 545},
+                               byNamePutBack={'Fireball': 545}, lostPutBack=545, lostStranded=0, refusedCast=1509, noRepeatRefused=1500, cardTargetOffered=22733,
+                               randomisedPriority=310861, targetRecords=38324, targetRecordsCard=37341, targetRecordsComplete=38270, targetRecordsCardComplete=37287,
+                               nullChosenTargets=2361, legacyNullTargets=2361, targetNoneChosen=0, targetNoneListed=0, targetCountTrimmed=0, costTargetAvoided=0, scan='J174 v5',
+                               castsRefused=1448, castsRefusedForced=0, refusedCastBranches=951, byNameRefused={'Fireball': 1448}, refusedCastOptions=[]),
+     'b-s13-pauper-2113': dict(logs=12870, casts=71632, lostCasts=69, lostCastBranches=32, lostCastForced=0, lostCastOptions=[],
+                               byName={'Bone Shards': 36, 'Candy Grapple': 4, 'Vicious Offering': 28, 'Disfigure': 1},
+                               byNamePutBack={'Bone Shards': 36, 'Candy Grapple': 4, 'Vicious Offering': 28, 'Disfigure': 1}, lostPutBack=69, lostStranded=0,
+                               refusedCast=844, noRepeatRefused=795, cardTargetOffered=72778, randomisedPriority=326131, targetRecords=31221, targetRecordsCard=31221,
+                               targetRecordsComplete=31221, targetRecordsCardComplete=31221, nullChosenTargets=0, legacyNullTargets=0, targetNoneChosen=0,
+                               targetNoneListed=0, targetCountTrimmed=0, costTargetAvoided=0, scan='J174 v5', castsRefused=787, castsRefusedForced=0, refusedCastBranches=347,
+                               byNameRefused={'Bone Shards': 195, 'Vicious Offering': 522, 'Candy Grapple': 41, 'Stab': 6, 'Howl from Beyond': 15, 'Disfigure': 8}, refusedCastOptions=[])}
+ok = 1
+for n, w in W.items():
+    try:
+        c = json.load(open('var/lab-j174-local/lost-self/%s.json' % n))
+    except (OSError, ValueError):
+        c = {}
+    bad = {k: (c.get(k), v) for k, v in w.items() if c.get(k) != v}
+    more = c.get('castsRefused', -1) >= c.get('lostCasts', 0) and c.get('castsRefused', -1) >= 1
+    print('J174 scan self-test', n, 'castsRefused', c.get('castsRefused'), 'refusedCastOptions', c.get('refusedCastOptions'), 'ok' if not bad and more else 'WANT (got, want) %s; castsRefused >= lostCasts %s' % (bad, more))
+    ok = ok if not bad and more else 0
+print(ok)
+" > var/lab-j174-local/scan-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/scan-self.txt
+cat var/lab-j174-local/scan-self.txt
+# ... and metrics.py's live reads of J171's night, with the two scanned spines' caches: the branch rows' counters, the D483 listing, the worker
+# logs' refused payments by spine and card (this draft's count over lab-j170, 2026-10-26: 4,474 lines, 2,077 payment failures), the two scans
+python3 -I var/lab-j174-local/bin/metrics.py $L7 'b-s??-*-21??' var/lab-j174-local/lost-self > var/lab-j174-local/metrics-j171.json || true
+python3 -I -c "import json; d = json.load(open('var/lab-j174-local/metrics-j171.json')); b = d['bySpine']; c = d['failedToPlayByCard']; print(1 if (d['atlases'], d['spinesDone'], d['branchRows'], d['problems'], d['chooseSourceGuardRows'], d['chooseSourceGuard'], d['retargetedRows'], d['retargetedOnRows'], d['modesDrawnRows'], d['modesDrawnOnRows'], d['targetCountTrimmedRows'], d['costTargetAvoidedRows'], d['d483Spines'], d['identityListingsShort'], d['repeatedPlays'], d['atlasRefusedCast'], d['failedToPlay'], d['payFail'], b['b-s09-pauper-2109']['failedToPlay'], b['b-s13-pauper-2113']['failedToPlay'], b['b-s03-legacy-2103']['failedToPlay'], c.get('Fireball'), c.get('Vicious Offering'), c.get('Bone Shards'), c.get('Candy Grapple'), d['lostCastScanned'], d['lostCasts'], d['lostPutBack'], d['refusedCast'], d['casts'], d['legacyNullTargetRecords']) == (13, 13, 71940, 0, 416, 5086, 1564, 2401, 1125, 1125, 0, 0, 13, 0, 0, 4451, 4474, 2077, 1514, 859, 1420, 1505, 536, 196, 41, 2, 614, 614, 2353, 162949, 2361) else 0)" > var/lab-j174-local/metrics-j171-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/metrics-j171-self.txt
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+# THE DECK DRAWS (D447 with D482's list; no engine): the 13 spine pairs, the 13 validation pairs and the smoke's pair into lab-j174 (each only
+# where its decks.jsonl is not there yet: a pilot re-run keeps the first draw), then all of them again into the clone (absolute paths, so
+# nothing is re-rooted); draws.py --record writes the sha256s once when the two agree
+K=0
+for B in pauper peasant legacy powered pauper peasant legacy powered pauper peasant legacy powered pauper; do
+  K=$((K + 1)); N=$(printf '%02d' $K)
+  test -s /home/justin-a/code/lab/data/lab-j174/decks/s$N-$B-$((2026 + K))/decks.jsonl || tools/cubelab.sh decks --band $B --count 2 --seed $((2026 + K)) --cross-band 0.10 --out var/lab-j174/decks/s$N-$B-$((2026 + K))
+  test -s /home/justin-a/code/lab/data/lab-j174/validation/v$N-$B-$((2226 + K))/decks.jsonl || tools/cubelab.sh decks --band $B --count 2 --seed $((2226 + K)) --cross-band 0.10 --out var/lab-j174/validation/v$N-$B-$((2226 + K))
+  tools/cubelab.sh decks --band $B --count 2 --seed $((2026 + K)) --cross-band 0.10 --out "$PWD/var/lab-j174-local/redraw/s$N-$B-$((2026 + K))"
+  tools/cubelab.sh decks --band $B --count 2 --seed $((2226 + K)) --cross-band 0.10 --out "$PWD/var/lab-j174-local/redraw/v$N-$B-$((2226 + K))"
+done
+test -s /home/justin-a/code/lab/data/lab-j174/decks/p-powered-2099/decks.jsonl || tools/cubelab.sh decks --band powered --count 2 --seed 2099 --cross-band 0.10 --out var/lab-j174/decks/p-powered-2099
+tools/cubelab.sh decks --band powered --count 2 --seed 2099 --cross-band 0.10 --out "$PWD/var/lab-j174-local/redraw/p-powered-2099"
+python3 -I var/lab-j174-local/bin/draws.py --record || true
+python3 -I var/lab-j174-local/bin/draws.py > var/lab-j174-local/draws.json || echo '{"spines13":-1}' > var/lab-j174-local/draws.json
+cat var/lab-j174-local/draws.json
+# the engine self-tests: atlas-selftest with its G5, G6, cuts and D483 legs, then seat-identity
+tools/cubelab.sh atlas-selftest --jobs 2 && echo 1 > var/lab-j174-local/selftest.txt || echo 0 > var/lab-j174-local/selftest.txt
+tools/cubelab.sh seat-identity --jobs {workers} && echo 1 > var/lab-j174-local/identity.txt || echo 0 > var/lab-j174-local/identity.txt
+# the readers on the self-test's own cuts legs (D489: `cuts` carries a futility control, `cuts-futile` a futile stop; J173's two-leg
+# read below is unchanged, then labels.py and cuts.py on all three)
+C=var/cubelab/atlas-selftest
+python3 -I var/lab-j174-local/bin/labels.py cuts:selftest:0:464:selftest:$C/cuts nf:selftest:0:464:selftest:$C/cuts-noforge --out=var/lab-j174-local/labels-cuts.jsonl --training=1 > var/lab-j174-local/labels-cuts.json || true
+python3 -I var/lab-j174-local/bin/reads.py cuts:selftest:$C/cuts/atlas.json nf:selftest:$C/cuts-noforge/atlas.json > var/lab-j174-local/reads-cuts.json || true
+python3 -I var/lab-j174-local/bin/cuts.py $C/cuts $C/cuts-noforge > var/lab-j174-local/cuts-cuts.json || true
+python3 -I var/lab-j174-local/bin/labels.py cuts:selftest:0:464:selftest:$C/cuts nf:selftest:0:464:selftest:$C/cuts-noforge fu:selftest:0:464:selftest:$C/cuts-futile --out=var/lab-j174-local/labels-futile.jsonl --training=1 > var/lab-j174-local/labels-futile.json || true
+python3 -I var/lab-j174-local/bin/cuts.py $C/cuts $C/cuts-noforge $C/cuts-futile > var/lab-j174-local/cuts-futile.json || true
+# the v6 rows: the stopped decision is a partial row (stoppedAt 4, "futile", not complete, not confident, futilityGap set), the control a
+# complete row marked as one; labels, partialLabels and the controls equal the schedules' own counts; cuts.py sees the stop and its saving
+python3 -I -c "
+import json
+l = json.load(open('var/lab-j174-local/labels-futile.json'))
+rows = [json.loads(x) for x in open('var/lab-j174-local/labels-futile.jsonl') if x.strip()]
+sc = {x: json.load(open('var/cubelab/atlas-selftest/%s/atlas.json' % x))['phaseB']['schedule'] for x in ('cuts', 'cuts-noforge', 'cuts-futile')}
+c = json.load(open('var/lab-j174-local/cuts-futile.json'))['night']
+part = [r for r in rows if r['partial']]
+ctl = [r for r in rows if r['futilityControl']]
+ok = (l['contract'] == 'mtg-table rung-4b label v6 (J174)' and all(r['v'] == 6 for r in rows) and l['rowsUnmatched'] == 0
+      and l['labels'] == sum(x['labels'] for x in sc.values()) and l['partialLabels'] == sum(x['futileStopped'] for x in sc.values()) >= 1
+      and l['futilityControls'] == sum(x['futileControls'] for x in sc.values()) >= 1 and l['confidentPartial'] == 0 and l['trainingRows'] == l['branched']
+      and all(r['stoppedAt'] == 4 and r['stopWhy'] == 'futile' and not r['complete'] and not r['confident'] and r['futilityGap'] is not None and r['spine'] == 'fu' for r in part)
+      and all(r['complete'] and not r['partial'] and r['spine'] == 'cuts' for r in ctl) and all(r['branchRandom'] in (6, 4) for r in rows)
+      and l['f_futilityRead']['stopped'] == len(part) and l['f_futilityRead']['controls'] == len(ctl)
+      and c['spines'] == 3 and c['futileStopped'] >= 1 and c['futileSavedHours'] >= 0 and c['partial'] == len(part))
+print(1 if ok else 0)
+" > var/lab-j174-local/labels-futile-self.txt 2>/dev/null || echo 0 > var/lab-j174-local/labels-futile-self.txt
+python3 -I -c "import json; l = json.load(open('var/lab-j174-local/labels-cuts.json')); r = json.load(open('var/lab-j174-local/reads-cuts.json')); c = json.load(open('var/lab-j174-local/cuts-cuts.json')); s = [json.load(open('var/cubelab/atlas-selftest/%s/atlas.json' % x))['phaseB']['schedule']['labels'] for x in ('cuts', 'cuts-noforge')]; ok = l['rowsUnmatched'] == 0 and l['labels'] == sum(s) and l['trainingRows'] == l['branched'] and l['branched'] >= 2 and r['forgeSpines'] == ['cuts'] and list(r['iv_bySpine']) == ['cuts'] and c['night']['spines'] == 2 and l['byListing']['D483']['rows'] == l['branched']; print(1 if ok else 0)" > var/lab-j174-local/readers-cuts.txt 2>/dev/null || echo 0 > var/lab-j174-local/readers-cuts.txt
+# the smoke: J166's powered pair (this pilot's draw, its registered sha256) at game seed 2199, a new folder, every cut on at that scale (J169's
+# to J173's smoke) and D489's futility stop on as the night runs it (at the first checkpoint, 10 here; tie 0; a quarter played on), then its
+# frame scan; a smoke decision may stop as futile, so its labels and partial rows together are its two decisions
+P=/home/justin-a/code/lab/data/lab-j174/decks/p-powered-2099/decks
+tools/cubelab.sh atlas --deck-a $P/powered-2099-00001.dck --deck-b $P/powered-2099-00002.dck --seed 2199 --phase b --decisions 2 --min-options 3 --screen 5 --early-stop 10,15,20 --branch-random 25 --branch-forge 5 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 5 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/pilot-smoke-j174 || true
+python3 -I var/lab-j174-local/bin/metrics.py --scan /home/justin-a/code/lab/data/lab-j174/pilot-smoke-j174 var/lab-j174-local/lost-smoke {workers} || true
+python3 -I var/lab-j174-local/bin/labels.py smoke:random-powered-d488:2099:2199:$(cat var/lab-j174-local/sha.txt):/home/justin-a/code/lab/data/lab-j174/pilot-smoke-j174 --out=var/lab-j174-local/pilot-labels.jsonl --training=1 --lost=var/lab-j174-local/lost-smoke > var/lab-j174-local/pilot-labels.json || true
+python3 -I var/lab-j174-local/bin/reads.py smoke:random-powered-d488:/home/justin-a/code/lab/data/lab-j174/pilot-smoke-j174/atlas.json > var/lab-j174-local/pilot-reads.json || true
+python3 -I var/lab-j174-local/bin/cuts.py /home/justin-a/code/lab/data/lab-j174/pilot-smoke-j174 > var/lab-j174-local/pilot-cuts.json || true
+python3 -I -c "import json; r = json.load(open('var/lab-j174-local/pilot-reads.json')); c = json.load(open('var/lab-j174-local/pilot-cuts.json')); print(1 if r['forgeSpines'] == ['smoke'] and 'smoke' in r['iv_bySpine'] and c['night']['spines'] == 1 and c['night']['branchGames'] >= 1 else 0)" > var/lab-j174-local/pilot-readers.txt 2>/dev/null || echo 0 > var/lab-j174-local/pilot-readers.txt
+```
+metrics: datadir = sh: cat var/lab-j174-local/datadir.txt 2>/dev/null || echo 0
+metrics: state = sh: cat var/lab-j174-local/state.txt 2>/dev/null || echo 0
+metrics: merged = sh: cat var/lab-j174-local/merged.txt 2>/dev/null || echo 0
+metrics: has_d466_d472 = sh: cat var/lab-j174-local/has-d466-d472.txt 2>/dev/null || echo 0
+metrics: has_d476 = sh: cat var/lab-j174-local/has-d476.txt 2>/dev/null || echo 0
+metrics: has_d477 = sh: cat var/lab-j174-local/has-d477.txt 2>/dev/null || echo 0
+metrics: has_d478 = sh: cat var/lab-j174-local/has-d478.txt 2>/dev/null || echo 0
+metrics: has_d479 = sh: cat var/lab-j174-local/has-d479.txt 2>/dev/null || echo 0
+metrics: has_d480 = sh: cat var/lab-j174-local/has-d480.txt 2>/dev/null || echo 0
+metrics: has_d480f = sh: cat var/lab-j174-local/has-d480f.txt 2>/dev/null || echo 0
+metrics: has_d481 = sh: cat var/lab-j174-local/has-d481.txt 2>/dev/null || echo 0
+metrics: has_d482 = sh: cat var/lab-j174-local/has-d482.txt 2>/dev/null || echo 0
+metrics: has_d483 = sh: cat var/lab-j174-local/has-d483.txt 2>/dev/null || echo 0
+metrics: has_d484 = sh: cat var/lab-j174-local/has-d484.txt 2>/dev/null || echo 0
+metrics: has_d485 = sh: cat var/lab-j174-local/has-d485.txt 2>/dev/null || echo 0
+metrics: has_d486 = sh: cat var/lab-j174-local/has-d486.txt 2>/dev/null || echo 0
+metrics: has_d487 = sh: cat var/lab-j174-local/has-d487.txt 2>/dev/null || echo 0
+metrics: has_d488 = sh: cat var/lab-j174-local/has-d488.txt 2>/dev/null || echo 0
+metrics: has_d489 = sh: cat var/lab-j174-local/has-d489.txt 2>/dev/null || echo 0
+metrics: seat_code = sh: cat var/lab-j174-local/seat-code.txt 2>/dev/null || echo 0
+metrics: d481_d489_commits = sh: cat var/lab-j174-local/has-d481-d489-commits.txt 2>/dev/null || echo 0
+metrics: golden = sh: cat var/lab-j174-local/golden.json 2>/dev/null || echo '{"descends":-1}'
+metrics: deck_code = sh: cat var/lab-j174-local/deck-code.txt 2>/dev/null || echo 0
+metrics: found = sh: cat var/lab-j174-local/found.json 2>/dev/null || echo '{"spineDraws":-1}'
+metrics: xmx_unset = sh: cat var/lab-j174-local/xmx-unset.txt 2>/dev/null || echo 0
+metrics: nodetests = sh: cat var/lab-j174-local/nodetests.txt 2>/dev/null || echo 0
+metrics: redaction_self = sh: cat var/lab-j174-local/redaction-self.txt 2>/dev/null || echo 0
+metrics: labels_self = sh: cat var/lab-j174-local/labels-self.txt 2>/dev/null || echo 0
+metrics: void_self = sh: cat var/lab-j174-local/void-self.txt 2>/dev/null || echo 0
+metrics: reads_self = sh: cat var/lab-j174-local/reads-self.txt 2>/dev/null || echo 0
+metrics: cuts_self = sh: cat var/lab-j174-local/cuts-self.txt 2>/dev/null || echo 0
+metrics: metrics_self = sh: cat var/lab-j174-local/metrics-self.txt 2>/dev/null || echo 0
+metrics: labels_j171_self = sh: cat var/lab-j174-local/labels-j171-self.txt 2>/dev/null || echo 0
+metrics: reads_j171_self = sh: cat var/lab-j174-local/reads-j171-self.txt 2>/dev/null || echo 0
+metrics: cuts_j171_self = sh: cat var/lab-j174-local/cuts-j171-self.txt 2>/dev/null || echo 0
+metrics: compare_self = sh: cat var/lab-j174-local/compare-self.txt 2>/dev/null || echo 0
+metrics: scan_self = sh: tail -n 1 var/lab-j174-local/scan-self.txt 2>/dev/null || echo 0
+metrics: metrics_j171_self = sh: cat var/lab-j174-local/metrics-j171-self.txt 2>/dev/null || echo 0
+metrics: ncurve_self = sh: cat var/lab-j174-local/ncurve-self.txt 2>/dev/null || echo 0
+metrics: j173 = sh: cat var/lab-j174-local/j173.json 2>/dev/null || echo '{"atlases":-1}'
+metrics: labels_futile_self = sh: cat var/lab-j174-local/labels-futile-self.txt 2>/dev/null || echo 0
+metrics: draws = sh: cat var/lab-j174-local/draws.json 2>/dev/null || echo '{"spines13":-1}'
+metrics: selftest = sh: cat var/lab-j174-local/selftest.txt 2>/dev/null || echo 0
+metrics: identity = sh: cat var/lab-j174-local/identity.txt 2>/dev/null || echo 0
+metrics: readers_cuts = sh: cat var/lab-j174-local/readers-cuts.txt 2>/dev/null || echo 0
+metrics: pilot_readers = sh: cat var/lab-j174-local/pilot-readers.txt 2>/dev/null || echo 0
+metrics: pilot = sh: python3 -I var/lab-j174-local/bin/pilot.py 2>/dev/null || echo '{"smoke":{"problems":-1}}'
+check: datadir == 1
+check: data_free_gb >= 50
+check: state == 1
+check: merged == 1
+check: has_d466_d472 == 1
+check: has_d476 == 1
+check: has_d477 == 1
+check: has_d478 == 1
+check: has_d479 == 1
+check: has_d480 == 1
+check: has_d480f == 1
+check: has_d481 == 1
+check: has_d482 == 1
+check: has_d483 == 1
+check: has_d484 == 1
+check: has_d485 == 1
+check: has_d486 == 1
+check: has_d487 == 1
+check: has_d488 == 1
+check: has_d489 == 1
+check: seat_code == 1
+check: d481_d489_commits == 1
+check: golden.descends == 1
+check: golden.changed == 1
+check: golden.note == 1
+check: deck_code == 1
+check: xmx_unset == 1
+check: nodetests == 1
+check: redaction_self == 1
+check: labels_self == 1
+check: void_self == 1
+check: reads_self == 1
+check: cuts_self == 1
+check: metrics_self == 1
+check: labels_j171_self == 1
+check: reads_j171_self == 1
+check: cuts_j171_self == 1
+check: compare_self == 1
+check: scan_self == 1
+check: metrics_j171_self == 1
+check: ncurve_self == 1
+check: draws.spines13 == 13
+check: draws.all13 == 1
+check: draws.validation13 == 13
+check: draws.validationAll == 1
+check: draws.smokeData == 1
+check: draws.smokeRedraw == 1
+check: draws.newDraws13 == 13
+check: draws.newValidation == 1
+check: draws.recorded == 1
+check: selftest == 1
+check: identity == 1
+check: readers_cuts == 1
+check: labels_futile_self == 1
+check: pilot_readers == 1
+check: pilot.g5.problems == 0
+check: pilot.g5.refusedCast >= 1
+check: pilot.g5.noRepeatRefused >= 1
+check: pilot.g6.problems == 0
+check: pilot.g6.xDrawn >= 1
+check: pilot.g6.zeroXLeftOut >= 1
+check: pilot.g6.zeroX == 0
+check: pilot.cuts.problems == 0
+check: pilot.cuts.schedule == 1
+check: pilot.cutsNoforge.problems == 0
+check: pilot.cutsNoforge.schedule == 1
+check: pilot.cutsNoforge.forgeMap == 0
+check: pilot.cuts.futileControls >= 1
+check: pilot.cuts.control >= 1
+check: pilot.cutsFutile.problems == 0
+check: pilot.cutsFutile.futileStopped >= 1
+check: pilot.cutsFutile.partial == pilot.cutsFutile.futileStopped
+check: pilot.smoke.problems == 0
+check: pilot.smoke.cuts == 1
+check: pilot.smoke.branched == 2
+check: pilot.smoke.futilityPlan == 1
+check: pilot.smoke.futileStopped >= 0
+check: pilot.smoke.futileControls >= 0
+check: pilot.smoke.futileBranchGamesSaved >= 0
+check: pilot.smoke.futilityReads >= 0
+check: pilot.smoke.partialLabelsKey == pilot.smoke.partialDecisions
+check: pilot.smoke.partial == pilot.smoke.futileStopped
+check: pilot.smoke.confidentPartial == 0
+check: pilot.smoke.unitsOk >= pilot.smoke.unitsPlanned
+check: pilot.smoke.g6 == 1
+check: pilot.smoke.zeroX == 0
+check: pilot.smoke.d479 == 1
+check: pilot.smoke.branches >= 1
+check: pilot.smoke.timeouts == 0
+check: pilot.smoke.guardViolations == 0
+check: pilot.smoke.branchTimeoutSec == 120
+check: pilot.smoke.labels + pilot.smoke.partial == 2
+check: pilot.smoke.rowsUnmatched == 0
+check: pilot.smoke.voidLabels == 0
+check: pilot.smoke.trainingRows == pilot.smoke.branchedRows
+check: pilot.smoke.identities == 1
+check: pilot.smoke.repeatedPlays == 0
+check: pilot.smoke.scan.scanned == 1
+check: pilot.smoke.scan.lostCastOptions == 0
+check: pilot.smoke.scan.refusedCastOptions == 0
+check: pilot.smoke.scan.legacyNullTargets == 0
+check: pilot.smoke.scan.nullChosenTargets == 0
+## Commands
+One block a spine, s01 to s13 in the table's order (run1-run13), then the scan of the 13 spines' frames (run14), then the Report.
+Every atlas command resumes what is done (under the same futility flags: D489 refuses another). A spine atlas that finds a problem
+exits 3 and the job goes on (the exit is kept in `exits.txt`; `atlas.problems == 0` fails the job at the end). Each block asserts the
+data folder, its 50 GB and its own decks -- the pilot's draw, byte for byte the one it recorded -- before it plays. **Expected wall:
+~10 h for the 13 at 6 workers, ~40-48 min a spine at J171's pace (*Sizing*)**; the 3-h block timeout is ~2x the longest expected.
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s01-pauper-2127; K0=$D/decks/s01-pauper-2027; A=$K0/decks/pauper-2027-00001.dck; B=$K0/decks/pauper-2027-00002.dck
+# s01's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s01-pauper-2027 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2127 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 40 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s02-peasant-2128; K0=$D/decks/s02-peasant-2028; A=$K0/decks/peasant-2028-00001.dck; B=$K0/decks/peasant-2028-00002.dck
+# s02's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s02-peasant-2028 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2128 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s03-legacy-2129; K0=$D/decks/s03-legacy-2029; A=$K0/decks/legacy-2029-00001.dck; B=$K0/decks/legacy-2029-00002.dck
+# s03's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s03-legacy-2029 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2129 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s04-powered-2130; K0=$D/decks/s04-powered-2030; A=$K0/decks/powered-2030-00001.dck; B=$K0/decks/powered-2030-00002.dck
+# s04's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s04-powered-2030 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2130 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s05-pauper-2131; K0=$D/decks/s05-pauper-2031; A=$K0/decks/pauper-2031-00001.dck; B=$K0/decks/pauper-2031-00002.dck
+# s05's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s05-pauper-2031 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2131 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s06-peasant-2132; K0=$D/decks/s06-peasant-2032; A=$K0/decks/peasant-2032-00001.dck; B=$K0/decks/peasant-2032-00002.dck
+# s06's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s06-peasant-2032 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2132 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s07-legacy-2133; K0=$D/decks/s07-legacy-2033; A=$K0/decks/legacy-2033-00001.dck; B=$K0/decks/legacy-2033-00002.dck
+# s07's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s07-legacy-2033 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2133 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 40 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s08-powered-2134; K0=$D/decks/s08-powered-2034; A=$K0/decks/powered-2034-00001.dck; B=$K0/decks/powered-2034-00002.dck
+# s08's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s08-powered-2034 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2134 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s09-pauper-2135; K0=$D/decks/s09-pauper-2035; A=$K0/decks/pauper-2035-00001.dck; B=$K0/decks/pauper-2035-00002.dck
+# s09's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s09-pauper-2035 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2135 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s10-peasant-2136; K0=$D/decks/s10-peasant-2036; A=$K0/decks/peasant-2036-00001.dck; B=$K0/decks/peasant-2036-00002.dck
+# s10's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s10-peasant-2036 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2136 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s11-legacy-2137; K0=$D/decks/s11-legacy-2037; A=$K0/decks/legacy-2037-00001.dck; B=$K0/decks/legacy-2037-00002.dck
+# s11's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s11-legacy-2037 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2137 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s12-powered-2138; K0=$D/decks/s12-powered-2038; A=$K0/decks/powered-2038-00001.dck; B=$K0/decks/powered-2038-00002.dck
+# s12's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s12-powered-2038 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2138 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 0 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+if [ -n "${LAB_DATA_DIR:-}" ] && [ "$LAB_DATA_DIR" != /home/justin-a/code/lab/data ]; then echo "J174: LAB_DATA_DIR is $LAB_DATA_DIR, not /home/justin-a/code/lab/data" >&2; exit 1; fi
+python3 -c "import shutil, sys; f = shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9; sys.exit(0 if f >= 50 else 'J174: under 50 GB free on the data folder')"
+export LAB_DATA_DIR=/home/justin-a/code/lab/data
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J174
+D=/home/justin-a/code/lab/data/lab-j174
+n=b-s13-pauper-2139; K0=$D/decks/s13-pauper-2039; A=$K0/decks/pauper-2039-00001.dck; B=$K0/decks/pauper-2039-00002.dck
+# s13's decks: the pilot's draw, byte for byte the one it recorded (the folder's draw, then each deck)
+python3 -I var/lab-j174-local/bin/deckcheck.py s13-pauper-2039 $K0 $A $B || { echo "J174: $n: the decks under $K0 are not the recorded draw" >&2; exit 1; }
+t0=$(date +%s)
+rc=0; tools/cubelab.sh atlas --deck-a $A --deck-b $B --seed 2139 --phase b --decisions 10 --min-options 3 --screen 25 --early-stop 50,100 --branch-random 150 --branch-forge 40 --futility 0 --futility-tie 0 --futility-sample 0.25 --chunk 25 --checks-parallel {workers} --unit-timeout 30 --jobs {workers} --out var/lab-j174/$n || rc=$?
+echo "$n $rc" >> $D/exits.txt
+echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
+```
+```bash
+# the refused and lost casts and D486-D488's counters, from the frames (J173's scan under J174's stamp): one cache a spine folder, stamped with
+# its atlas.json's mtime
+D=/home/justin-a/code/lab/data/lab-j174
+mkdir -p var/lab-j174-local/lost
+for d in $D/b-s??-*-21??; do
+  test -f $d/atlas.json || { echo "J174: $d: no atlas.json, not scanned"; continue; }
+  python3 -I var/lab-j174-local/bin/metrics.py --scan $d var/lab-j174-local/lost {workers}
+done
+```
+cores: 1
+```bash
+D=/home/justin-a/code/lab/data/lab-j174
+mkdir -p $D/report
+: > $D/report/missing.txt
+T=$D/spine-times.txt
+SHA=$(cat var/lab-j174-local/sha.txt)
+LO="--lost=var/lab-j174-local/lost --training=1 --times=$T"
+args=""; largs=""; dirs=""; nargs=""
+# J173's night, read only, for the J173 columns (compare.py) and J173's sizing read (labels.py --j173): absent files read as null
+J3=/home/justin-a/code/lab/data/lab-j173
+# the night's 13 spines: b-s??-*-21?? matches no pilot folder; every row names the pin and its band's D488 pool (J173's population)
+for d in $D/b-s??-*-21??; do
+  n=$(basename "$d"); s=$(echo "$n" | cut -d- -f2); b=$(echo "$n" | cut -d- -f3); g=$(echo "$n" | cut -d- -f4)
+  if [ -f "$d/atlas.json" ]; then
+    cp "$d/atlas.json" "$D/report/$n.atlas.json"
+    cp "$d/atlas.md" "$D/report/$n.atlas.md" || echo "$n: no atlas.md" >> $D/report/missing.txt
+    largs="$largs $s:random-$b-d488:$((g - 100)):$g:$SHA:$d"; args="$args $s:random-$b-d488:$d/atlas.json"; dirs="$dirs $d"; nargs="$nargs $s:$d"
+  else
+    echo "$n: no atlas.json" >> $D/report/missing.txt
+  fi
+done
+for f in var/lab-j174-local/lost/*.json; do cp "$f" "$D/report/lost-$(basename "$f")"; done || echo "lost caches: none" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/labels.py $largs --out=$D/report/labels.jsonl $LO --j173=$J3/report/labels.json > $D/report/labels.json || echo "labels.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/ncurve.py --n=50,100,150 $nargs > $D/report/ncurve.json || echo "ncurve.py exited $?" >> $D/report/missing.txt
+head -n 20 $D/report/labels.jsonl > $D/report/labels-head.jsonl || echo "labels.jsonl: none" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/reads.py $args > $D/report/reads.json || echo "reads.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/cuts.py $dirs --times=$T > $D/report/cuts.json || echo "cuts.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/compare.py $D $D/report/labels.json $J3 $J3/report/labels.json > $D/report/compare-j173.json || echo "compare.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/metrics.py > $D/report/tool.json || echo "metrics.py exited $?" >> $D/report/missing.txt
+python3 -I var/lab-j174-local/bin/draws.py --report > $D/report/draws.json || echo "draws.py exited $?" >> $D/report/missing.txt
+# the validation draw (made fresh by this pilot, never branched), recorded for the job that will branch it
+python3 -I -c "import glob, json, os; D = '$D'; vs = sorted(glob.glob(D + '/validation/v*')); rec = json.load(open('var/lab-j174-local/draws-pilot.json')); rows = [{'set': os.path.basename(v).split('-')[0], 'band': os.path.basename(v).split('-')[1], 'pool': 'random-' + os.path.basename(v).split('-')[1], 'deckSeed': int(os.path.basename(v).split('-')[2]), 'reservedGameSeed': int(os.path.basename(v).split('-')[2]) + 100, 'decks': sorted(glob.glob(v + '/decks/*.dck')), 'split': 'validation', 'training': False} for v in vs]; print(json.dumps({'note': 'the 4b night-three validation draw, made by the J174 pilot into lab-j174 at deck seeds 2227-2239 (D447 with D482\'s list, --cross-band 0.10): deck files only, never branched; no job may train on these decks or use these seeds (game seeds 2327-2339 reserved) before the validation job that branches them', 'drawSha256': rec.get('validation'), 'sets': rows}, indent=1))" > $D/report/validation.json || echo "validation.json: failed" >> $D/report/missing.txt
+python3 -I -c "import glob, json, os; D = '$D'; out = {}; [out.__setitem__(os.path.basename(d), {k: json.load(open(d + '/plan.json')).get(k) for k in ('deckA', 'deckB', 'seed', 'branchRandom', 'branchForge', 'decisions', 'chunk', 'cuts')}) for d in sorted(glob.glob(D + '/b-s??-*-21??'))]; print(json.dumps({'note': 'all 13 spines branched by J174 at the pin, by D488s random seat (unchanged since J173), on new decks (deck seeds 2027-2039, game seeds 2127-2139), on D489s design (150 random branches, the futility stop at 50 with a 0.25 control share, 10 decisions): J173s population, poolable with J173 with the branch count as a column; never pooled with J166-J172 (D486 or earlier seats)', 'sha': '$SHA', 'spines': out}, indent=1))" > $D/report/spines.json || echo "spines.json: failed" >> $D/report/missing.txt
+for f in exits.txt spine-times.txt; do cp $D/$f $D/report/$f || echo "$f: none" >> $D/report/missing.txt; done
+# disarm the abort gate: a re-post of this file starts disarmed until its own pilot
+rm -f var/lab-j174-local/armed.txt
+```
+check: atlas.atlases == 13
+check: atlas.spinesDone == 13
+check: atlas.planOk == 13
+check: atlas.cutsSpines == 13
+check: atlas.forgeSpines == 3
+check: atlas.scheduleKeys == 13
+check: atlas.spines_pauper == 4
+check: atlas.spines_peasant == 3
+check: atlas.spines_legacy == 3
+check: atlas.spines_powered == 3
+check: unit_errors == 0
+check: atlas.unitsShort == 0
+check: atlas.fullShort == 0
+check: atlas.g5keys == 13
+check: atlas.g6keys == 13
+check: atlas.d479keys == 13
+check: atlas.zeroX == 0
+check: atlas.guardViolations == 0
+check: atlas.problems == 0
+check: atlas.unavailableOptionsOverBar == 0
+check: atlas.timeoutShare < 1%
+check: engine_errors - atlas.branchTimeoutsInStep <= 50
+check: atlas.validationFolders == 13
+check: atlas.validationDecks == 26
+check: atlas.validationShaOk == 1
+check: atlas.validationBranched == 0
+check: atlas.reads == 1
+check: atlas.labels >= 1
+check: atlas.rowsUnmatched == 0
+check: atlas.voidLabels == 0
+check: atlas.trainingRows == atlas.branchedRows
+check: atlas.poolOk == 13
+check: atlas.compare == 1
+check: atlas.scuteDecks == 0
+check: atlas.d483Spines == 13
+check: atlas.pre483Spines == 0
+check: atlas.identityListingsShort == 0
+check: atlas.repeatedPlays == 0
+check: atlas.lostCastScanned == 13
+check: atlas.refusedCastOptions == 0
+check: atlas.lostCastOptions == 0
+check: atlas.legacyNullTargetRecords == 0
+check: atlas.cardTargetOffered >= 1
+check: atlas.futilityKeys == 13
+check: atlas.futilityReads >= 1
+check: atlas.partialDecisions == atlas.futileStopped
+check: atlas.partialLabels == atlas.futileStopped
+check: atlas.futilityControls == atlas.futileControls
+check: atlas.confidentPartial == 0
+check: atlas.ncurve == 1
+
+## Abort if
+abort: armed == 1 and unit_errors > 20
+abort: armed == 1 and engine_errors > 500
+abort: armed == 1 and big_frames >= 6
+abort: data_free_gb < 50
+`armed` is 1 only from this job's pilot to its Report block, so the first three cannot read another run's files; and every count
+reads `lab-j174/b-s??-*-21??`, which only this job writes. **`big_frames`** is J167's hung s05's signature (a frame log over 200
+MB, where a sound branch's is kilobytes); D484 makes it impossible, and if it fires a loop D484 does not cover is back -- D488's fit
+asks Forge's cost choosers and `canPayCost` inside the seat's priority callback, new code inside a listing, so it is watched from the
+first spine. `unit_errors == 0` means every unit of the 13 spines finished; `atlas.unitsShort` and `atlas.fullShort` as J169.
+**`atlas.problems == 0`** includes the redaction check over every frame log, so D487's record shapes (`target:none`, `min`, `why:
+"NO_TARGET"`) and D488's guardrail names are checked on every spine by the checker D487 and D488 amended. **`atlas.refusedCastOptions
+== 0`** fails if any option of any spine had its own forced cast refused (put back in hand) in more than half of its branches (a cost
+D488 does not fit: a modal spell's mode costs, D488's Not fixed, or a new one); **`atlas.lostCastOptions == 0`** if one lost its forced
+cast outright; the summary names the spine, the option and the card. **`atlas.legacyNullTargetRecords == 0`** fails a night whose seats
+wrote J171's legacy null target shape, which D487's bridge cannot write. **`atlas.cardTargetOffered >= 1`** fails a night whose random
+seats never offered a card-only play: not D486's seat or later. **A random library deck can meet a card no atlas has played**: a new
+tool gap fails `atlas.problems == 0`, its spine's exit 3 is kept, and the summary names it with its error text and cost; an errored
+branch row's stack is in its spine's worker logs (D488's `branch error, stack:`; Forge 2.0.14's `PumpEffect.java:299` is known). An
+option capped past 0.25 is a warning, reported, never a failed check. **D489's checks:** `atlas.futilityKeys == 13` fails a spine
+whose schedule lacks the rule's counters (the flags did not reach it); `atlas.futilityReads >= 1` a night where the rule read nothing;
+`partialDecisions`, `partialLabels` (labels.json's rows) and `futileStopped` must agree, and so must the controls; and
+`atlas.confidentPartial == 0` fails any partial row counted confident. `atlas.unitsShort == 0` and `atlas.fullShort == 0` count a
+futile-stopped decision's units as its two stages to 50 and the decision as branched, so the rule cannot trip them.
+
+## Report
+collect: /home/justin-a/code/lab/data/lab-j174/report/*.atlas.md
+collect: /home/justin-a/code/lab/data/lab-j174/report/*.atlas.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/labels.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/labels.jsonl
+collect: /home/justin-a/code/lab/data/lab-j174/report/labels-head.jsonl
+collect: /home/justin-a/code/lab/data/lab-j174/report/reads.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/cuts.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/tool.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/compare-j173.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/ncurve.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/lost-*.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/draws.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/validation.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/spines.json
+collect: /home/justin-a/code/lab/data/lab-j174/report/exits.txt
+collect: /home/justin-a/code/lab/data/lab-j174/report/spine-times.txt
+collect: /home/justin-a/code/lab/data/lab-j174/report/missing.txt
+The summary says, for Justin, in plain words and numbers only:
+- **The population, first line:** random library decks by band, drawn as the census draws them (D447, D482), on the cut design with
+  **D489's futility stop and the 150 cap**; **13 NEW spines (deck seeds 2027-2039, game seeds 2127-2139) branched by J174 at the pin,
+  by D488's random seat, unchanged since J173** -- J173's population with fewer branches a decision: `training: true`, `pool:
+  random-<band>-d488`, contract v6 with `branchRandom: 150` and the partial rows marked; **poolable with J173's v5 rows with the branch
+  count and `partial` as columns, never with anything before D488** (D488, Comparability, quoted; D489's label-row sentence, quoted;
+  and any Comparability sentence the amended D489 carries, quoted and followed).
+- **The run:** exits, walls per spine and for the night (against J173's, the same seat, and the ~46 min a spine *Sizing* expected),
+  rows, timeouts, unit errors, engine errors (with any errored row's stack from the worker logs), capped, D479's and D477's counters, disk.
+- **The yield, the number to read** (`labels.json` (c)): **confident labels per worker-hour and per 7-worker 10-h night, with the
+  Poisson 95% interval** (`c_sizingRead`), per spine, per band and for the night; beside it **J173's** (the same seat at 200 branches and
+  8 decisions, other decks; or "J173 had no report") and **the review's ~46 [41, 51]** (~43-44 with a quarter of the futile decisions
+  played on). Then labels, partial labels and confident labels, and the confident share, **said plainly to be inflated** by the stopped
+  futile decisions it no longer holds and therefore not comparable with J173's; what 1,000 confident labels take at this rate.
+- **(f) The futility read** (`labels.json` `f_futilityRead`, atlas.md's futility lines): decisions read at 50, futile, stopped (partial
+  labels) and **controls**; **how many controls ended confident at the full n, with the exact 95% interval, beside the review's 3 of 77
+  (.04)**, and the labels lost estimated from it; each control and each stopped decision in one line (spine, d, k, gap). **Say that this
+  is the first night of a read POOLED across nights** (`pooledInputs`), that ~10 controls cannot tell .04 from .2, and that the control
+  share drops to 0.1 on later nights once the pooled count is enough.
+- **(g) The cap read** (`ncurve.json`): at 50, 100 and 150 branches, the share of the night's final confident set already confident
+  (`keptShare`) and the expected confident count, beside the review's 54%, 68% and 87% at the same n on its 200-branch nights;
+  `selfAgree` beside the review's 215 of 222.
+- **(d) What the saved time bought** (`cuts.json`, `compare-j173.json`): the branch time the futility stop and the cap saved
+  (`futileSavedHours`, `capSavedHours`, `futilityCapShare`, against the review's 32.5% on the same decisions and D489's 16.5% for the stop
+  alone on J171), `futileBranchGamesSaved` (an upper bound), and **the decisions branched a spine (10 asked; branched, branched in
+  full, partial) against J173's 8**, the walls beside J173's: whether the saved time was spent on more decisions or came back as a
+  shorter night. Then J173's reads: early stop and screen savings, the idle share, the checks' wall and share, the redaction wall.
+- **The refused payments, the headline of J173's reading** (`tool.json`, `lost-*.json`, the worker logs): `refusedCastShare` per spine
+  and for the night beside J173's (and J171's 0.53%), `castsRefusedShare`, `staleRefused`, `failedToPlay` and `payFail`; **by card, read
+  twice** (the frames' put-backs and the worker logs), never the worker logs' count alone; `refusedCastOptions` (checked 0) and the
+  label rows' `refusedCastBranchShare` where above 0; J169's lost casts as `lostPutBack` and `lostStranded`, by name (checked: no
+  lost-cast option).
+- **D484-D488's counters** as J173's summary gives them: D488's `targetCountTrimmed` and `costTargetAvoided` (seats and rows, where they
+  fired, the spells if traced, else "not traced", `d488Rows`); D486's `cardTargetOffered` / `cardTargetShare`, `modesDrawn`, the target
+  records and the `complete: true` share; D487's `target:none`, `NO_TARGET`, null answers and `legacyNullTargetRecords` (checked 0);
+  D485's and D484's as information.
+- **D489's counters** (`tool.json`): per spine and for the night `futilityReads`, `futileRead`, `futileStopped`, `futileControls`,
+  `futileBranchGamesSaved`, `partialLabels`, and the checks that tie them together.
+- **The three Forge-map spines:** **(iv)** C1 on s01, s07, s13, HOLDS / NOT SHOWN, with J173's values at the same positions beside (the
+  same seat, other decks); **(i)-(iii)** same best, rho, regret by kind, `confidentForge`, over complete decisions (a futile-stopped one
+  has no Forge map); C2 and the random-map C1 on the other ten as information; and one line that the Forge map was kept for this
+  agreement study, not for labels (the review: it adds none).
+- **J174 beside J173, by position** (`compare-j173.json`): **a table, one row a position and a night row**: decisions listed per baseline
+  turn, decisions branched / branched in full / partial, options per decision, labels / confident labels, **confident per worker-hour**,
+  the confident share, mean regret at Forge's choice, capped share and wall; **labelled: different decks, the same seat, another
+  branching design, no verdict** -- a difference is a candidate.
+- **(a)** the confident share by pool, kind and k (over complete rows, with the same caution), **(b)**, **(v)**, **D483** (identities, 0
+  short, 0 repeated), **per spine** one line (decks, baseline, listed, branched / partial / screened / fill, options, labels /
+  confident, wall), **the draws** (made fresh, recorded, each block's check passed), **the validation draw** (made fresh, its recorded
+  sha256, never branched, game seeds 2327-2339 reserved), **the checks** with any exit explained, **the intervals' coarseness**, and
+  **the label set** (`labels.jsonl`'s rows: complete, screened and partial; v6's fields; one random seat, one commit; the spine folders
+  kept for rung 4).
+- **No verdict** beyond (iv)'s: any other surprise is a candidate until a fresh draw shows it.
