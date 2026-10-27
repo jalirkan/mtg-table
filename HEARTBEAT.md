@@ -1308,3 +1308,7 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
 - 01:29 EDT: **D489 merged** (#218, main 8e6a3a1e; the merged tree's gate check-all OK, 60 jobs, wall 1041.2 s at GATE_JOBS=2 beside J173, run var/check-all/20261027-011121-1929717; the
   review's five amendments and a comparability section: the cuts change the branch count, not the seat, so J173
   and J174 pool with `branchRandom` and `partial` as columns). J174 is drafted and posts when J173 ends.
+- 01:29 EDT: **J174 posted** (`drafts/J174-atlas-4b-night-three.md`, pin 8e6a3a1e): rung 4b night three, 13 new
+  spines (deck seeds 2027–2039), the D488 seat unchanged, `--branch-random 150 --early-stop 50,100 --futility 0
+  --futility-sample 0.25`, `--decisions 10`, the Forge map kept on s01/s07/s13 for the agreement study; the
+  readers count partial labels apart and read the yield per worker-hour. The runner holds it until J173 ends.
