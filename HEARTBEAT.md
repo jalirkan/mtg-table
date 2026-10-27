@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-27T03:16:54-04:00
+- time: 2026-10-27T03:21:32-04:00
 - runner: 6e87e5d4, up since 2026-10-26T22:52:20-04:00
-- running: J173 commands 6/15, 29133/71940 lines, 1110.4/h, ETA 2026-10-28T17:49:53-04:00, 6 worker(s), 7 core(s)
+- running: J173 commands 6/15, 29240/71940 lines, 1275.9/h, ETA 2026-10-28T12:49:34-04:00, 6 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 15.08; memory 12.6/30.5 GB, swap 2400 MB, pressure 0% (lab budget 23.4 GB)
+- load: 12.86; memory 14.1/30.5 GB, swap 2398 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J174
 - waiting: nothing
 - last finished: J172 done at 2026-10-26T13:33:27-04:00: atlas.problems 0 · recheck.ok 5 · legacy.records 4717 · legacy.logsWithRecords 4501 · legacy.scanned 54350 · atlas.labels 101 · atlas.confident 28 · atlas.confidentPer7Worker10hNight 28.9 · atlas.lostCastOptions 0 · recheck.recheckSec 728
