@@ -1,10 +1,10 @@
 running
 runner: forgecoach-runner cc7467f6
 started: 2026-10-27T05:37:21-04:00
-phase: commands 13/15
+phase: commands 14/15
 mtg-table: cc7467f
 workers: 4 (sized 4: min(cores 7, memory 6, max_workers 7, cap 4); peak 2.70 GB per worker (declared; measured 1.72), budget 21.4 GB)
 peak_worker_rss_gb: 1.72
 resumed: 2026-10-31T08:36:29-04:00: the runner restarted during run6; it runs again and skips what is done, at most 4 worker(s)
 restart_reason: 2026-10-31T08:36:29-04:00: the previous runner (pid 4619, cc7467f6) exited at 2026-10-27T08:37:21-04:00: SIGTERM; the machine rebooted since (boot de7a1d25 -> 100fdd81); up 0 min; invocation 77d0fdec; clock: NTP synchronized after a 30-s wait; synchronized now; elapsed times are monotonic (D461)
-blocks_done: run1 exit 0 at 2026-10-27T06:55:28-04:00, run2 exit 0 at 2026-10-27T07:22:00-04:00, run3 exit 0 at 2026-10-27T07:23:19-04:00, run4 exit 0 at 2026-10-27T07:56:34-04:00, run5 exit 0 at 2026-10-27T08:24:56-04:00, run6 exit 0 at 2026-10-31T08:51:57-04:00, run7 exit 0 at 2026-10-31T09:22:25-04:00, run8 exit 0 at 2026-10-31T10:41:13-04:00, run9 exit 0 at 2026-10-31T11:03:29-04:00, run10 exit 0 at 2026-10-31T11:07:58-04:00, run11 exit 0 at 2026-10-31T11:45:54-04:00, run12 exit 0 at 2026-10-31T12:25:37-04:00
+blocks_done: run1 exit 0 at 2026-10-27T06:55:28-04:00, run2 exit 0 at 2026-10-27T07:22:00-04:00, run3 exit 0 at 2026-10-27T07:23:19-04:00, run4 exit 0 at 2026-10-27T07:56:34-04:00, run5 exit 0 at 2026-10-27T08:24:56-04:00, run6 exit 0 at 2026-10-31T08:51:57-04:00, run7 exit 0 at 2026-10-31T09:22:25-04:00, run8 exit 0 at 2026-10-31T10:41:13-04:00, run9 exit 0 at 2026-10-31T11:03:29-04:00, run10 exit 0 at 2026-10-31T11:07:58-04:00, run11 exit 0 at 2026-10-31T11:45:54-04:00, run12 exit 0 at 2026-10-31T12:25:37-04:00, run13 exit 0 at 2026-10-31T13:29:05-04:00
