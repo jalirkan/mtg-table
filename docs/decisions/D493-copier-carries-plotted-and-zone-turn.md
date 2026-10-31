@@ -142,9 +142,15 @@ There is no reflection (lint rule 8). The real game is only read.
   nothing per decision. Re-running s10 would also need its decks, under the lab and outside this lane. The self-test
   stands in for it: it reproduces the error on the parent's copier and the forced plotted cast's branch on this one.
   The next spine with a plotted card at a decision is the field measurement (PLAN.md, *Search AI follow-ups*).
-- `tools/cubelab.sh atlas-selftest --jobs 1`: ATLAS_SELFTEST.
-- `bridge/build.sh`: OK. `npm --prefix web test`: WEBTEST.
-- **The gate**: GATE_LINE.
+- `tools/cubelab.sh atlas-selftest --jobs 1`: **OK** (16 forks, 8 no-leak checks, 38 frame logs, 558 rows; the cut
+  variants clean), in 14 min 50 s at a load average near 30 (two other lanes were gating).
+- `bridge/build.sh`: OK. `npm --prefix web test`: OK (the node suites 1,855 passed, 0 failed; then vitest 161 of
+  161). `node tools/decisions.mjs check`: OK.
+- One ai-bench run under that load failed a timing bound unrelated to the copier: *an evaluator leaf costs … (in the
+  search 1080.0 us)*, against 1,000 µs. The next run passed 272 of 272.
+- **The gate:** `./tools/check-all.sh` at `GATE_JOBS=3` (`WSPORT=9800`) from a deleted `bridge/out`, on `87f63a56`
+  (this branch's code; only these lines differ): **OK, 60 of 60 jobs**, 1,026.8 s wall (job seconds 2,888.4; load
+  average up to 41.75, two other lanes gating beside it).
 
 **Comparability.** The carried turn changes `enteredThisTurn()` on almost every copied card in a public zone. Before
 this decision every such card read as entered this turn. That reaches every fork:
