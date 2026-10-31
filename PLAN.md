@@ -14,8 +14,9 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 369 items still open across 42 follow-up lists** — 343
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the
+**The index below lists 371 items still open across 42 follow-up lists** — 345
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — D494
+(2026-10-31) added the cube lab's 7 and 8; the
 drafting AI's learning loop (D301–D302, 2026-10-03) added a list of five; Omega's
 evolve loop (D299–D300, 2026-10-03) added a list of six; the cube lab
 (D293–D296, 2026-10-03) added a list of six; the test
@@ -402,6 +403,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 4 | open | The watchdog's timeout, stuck-exit and restart paths have not fired on a real hang | `tools/cubelab/engine.ts` |
 | [Cube lab](#fu-cube-lab) | 5 | open | `motion.test.ts`'s film digest fails under Node 22, on `main` too | `web/test/motion.test.ts` |
 | [Cube lab](#fu-cube-lab) | 6 | open | Winston pools are thin for two colours: 10 of 40 decks stretched | `tools/cubelab/deck.ts` |
+| [Cube lab](#fu-cube-lab) | 7 | open | Nothing checks the pool against the card scripts, so a new card on a listed fork-crash path (D492's Prepare, D494's planeswalker token with a keyword) is dealt until a spine measures it | `tools/cubelab/engine-unplayable.json` |
+| [Cube lab](#fu-cube-lab) | 8 | open | The fork cannot re-make a token copy of a Saga either (*Error in Keyword Chapter*: `TokenInfo` carries no SVars); reproduced, not yet met by a spine (D494) | `docs/decisions/D494-planeswalker-token-copy-engine-unplayable.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9850,7 +9853,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -9887,6 +9890,20 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    needed the stretched splash and 34 splashed at all; real Winston players play
    three colours or 18 lands. Whether the lab should allow either is the owner's
    call (the brief said two colours plus a splash, 16–17 lands).
+7. **Nothing checks the pool against the card scripts** (2026-10-31, D492 and
+   D494). The engine-unplayable list names every pool card on a measured
+   fork-crash path — D492's `AlternateMode:Prepare` cards, D494's Ob Nixilis,
+   the Adversary (a planeswalker made a token with a keyword) — as of the day
+   it was written; a card that enters the pool on one of those paths is dealt
+   until a spine measures it. A check needs Forge's resources, which CI does not
+   fetch.
+8. **The fork cannot re-make a token copy of a Saga** (2026-10-31, D494).
+   `GameCopier.createCardCopy`'s `TokenInfo(...).makeOneToken` re-adds the
+   token's keywords before its SVars are copied, and a `Chapter` keyword's
+   traits need them: *Error in Keyword Chapter:3:DBToken,DBToken,DBPump* for a
+   token History of Benalia, reproduced on the pinned jar. No pool card's own
+   mechanic makes one (Fractured Identity can, by choice), so nothing is listed;
+   the first spine that meets it is its measurement.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 
