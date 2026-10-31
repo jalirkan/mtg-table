@@ -153,6 +153,11 @@ public final class SearchPolicy {
         return mapSa(cp, sa, (Player) cp.find(ai));
     }
 
+    /** For the self-test only (D493): {@link #copyCandidates}, the plays {@link #mapSa} looks for on a copy's card. */
+    public static List<SpellAbility> copyCandidatesForTest(final Card hostCopy, final Player aiCopy) {
+        return copyCandidates(hostCopy, aiCopy);
+    }
+
     /**
      * For the self-test only (D483): {@link #alternatives} at this position, Forge's own pick
      * {@code forgeSa} (or null) left out as the search leaves it out.

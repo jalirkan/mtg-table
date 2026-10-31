@@ -72,9 +72,12 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
   by its play identity, where Forge's doubled may-play twin (an adventure's
   creature from exile, an impulse-drawn card) took a second candidate slot and
   a second share of the rollout budget, and where a flashback copy that keeps
-  the base's description is no longer merged with the same-named card in hand.
-  Search results from before and after each of D476, D477, D478's addendum,
-  D479 and D483 are not pooled.
+  the base's description is no longer merged with the same-named card in hand;
+  and D493 (`pc/d493-plot`), which gives every fork's copied card its plotted
+  flag and, in a public zone, the turn it entered that zone, where every copied
+  card read as entered this turn and a plotted or foretold card had no cast
+  from exile. Search results from before and after each of D476, D477, D478's
+  addendum, D479, D483 and D493 are not pooled.
 - **Anchors** (`"anchor": true`) are stock Forge: `forge-default`,
   `forge-reckless`, `forge-cautious`, `forge-experimental`. They are always in
   the pool, the scheduler always gives them a share, and `forge-default` is the
