@@ -1186,9 +1186,11 @@ only on the census, the flags, the seed and i.
 
 **The engine-unplayable list** ([D482](../decisions/D482-census-engine-unplayable-list.md)). `decks --band`
 never deals a card listed in `tools/cubelab/engine-unplayable.json`. A card is listed when Forge's AI cannot
-finish its games inside the atlas's branch budget. Today that is two cards: Scute Swarm, whose token boards
-stalled the AI's combat prediction for 1,000–1,300 s inside one event-free engine step in J166, and Chain of
-Smog, which two Forge AIs copy at each other without end (J173, [D490](../decisions/D490-chain-of-smog-engine-unplayable.md)). This is an
+finish its games inside the atlas's branch budget, or whose effect the fork cannot copy. Today that is six cards: Scute
+Swarm, whose token boards stalled the AI's combat prediction for 1,000–1,300 s inside one event-free engine step in J166;
+Chain of Smog, which two Forge AIs copy at each other without end (J173, [D490](../decisions/D490-chain-of-smog-engine-unplayable.md));
+and the pool's four Prepare cards (Emeritus of Abundance, Elite Interceptor, Emeritus of Ideation, Studious First-Year), whose
+prepared-spell effect makes every fork throw in 2.0.14 (J176, [D492](../decisions/D492-prepare-cards-engine-unplayable.md)). This is an
 engine limitation, not a judgement about the card or anyone's decks, and a card goes on the list only with
 a measured stall and its evidence (`since`, `why`, `evidence` per card). A pick that lands on a listed card
 is made again from the same list. So a deck none of whose picks landed on a listed card is byte for byte the deck it was (its `.dck`
