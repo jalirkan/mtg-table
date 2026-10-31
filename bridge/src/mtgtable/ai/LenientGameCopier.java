@@ -36,6 +36,8 @@ import forge.game.player.Player;
 import forge.game.replacement.ReplacementEffect;
 import forge.game.spellability.SpellAbility;
 import forge.game.trigger.Trigger;
+import forge.game.trigger.TriggerHandler;
+import forge.game.trigger.TriggerType;
 import forge.game.zone.Zone;
 import forge.game.zone.ZoneType;
 
@@ -119,12 +121,37 @@ import forge.game.zone.ZoneType;
  * of that kind (the same player's, or the stack), so an effect source's
  * {@code isInZone}/{@code isInPlay} reads what the original's does -- never
  * null, which the original's object is not.
+ *
+ * <p><b>What a card may be cast for</b> (D493, amending D479).
+ * {@code GameActionUtil.getAlternativeCosts} builds a card's "(Plotted)" cast
+ * from {@code isPlotted()} and its "(Foretold)" cast from {@code isForetold()},
+ * each only when {@code !enteredThisTurn()}.  {@code GameCopier} copies the
+ * foretold flags but not the plotted one, and its {@code Zone.add} stamps every
+ * copied card with the copy's own turn as the turn it entered its zone, so on
+ * a copy every card "entered this turn": a card plotted or foretold on an
+ * earlier turn had no such cast, and the atlas's forced cast of one threw in
+ * {@code SearchPolicy.mapSa} (J176's s10, d7: 150 of 150 branches).  The carry
+ * pass sets the plotted flag (with the copy's {@code BecomesPlotted} triggers
+ * held, because the plot happened in the original game) and, for a card on the
+ * battlefield, in a graveyard, in exile, on the stack or in the command zone,
+ * the turn it entered that zone.  A card in a hand or a library
+ * keeps the copy's turn: those are the zones the Determinizer redeals, and a
+ * real turn there would mark which redealt card came from the hand.
  */
 public final class LenientGameCopier extends GameCopier {
 
     /** The zones {@code GameCopier} copies (its private {@code ZONES}, 2.0.14). */
     static final Set<ZoneType> COPIED = Set.of(ZoneType.Battlefield, ZoneType.Hand, ZoneType.Graveyard,
             ZoneType.Library, ZoneType.Exile, ZoneType.Stack, ZoneType.Command);
+
+    /**
+     * D493: the zones whose cards get their original's turn in the zone: the
+     * public ones.  A hand and a library (the Determinizer's zones) keep the
+     * copy's turn, and so does any other zone (a sideboard: uniform, never
+     * redealt, never read).
+     */
+    static final Set<ZoneType> ZONE_TURN_CARRIED = Set.of(ZoneType.Battlefield, ZoneType.Graveyard, ZoneType.Exile,
+            ZoneType.Stack, ZoneType.Command);
 
     private boolean copying;
     private final Map<Card, Card> standIns = new HashMap<>();
@@ -138,6 +165,8 @@ public final class LenientGameCopier extends GameCopier {
     private int traitsCarried;
     private int linksCarried;
     private int plainTimestampsMoved;
+    private int plottedCarried;
+    private int zoneTurnsCarried;
     /** D479's follow-up, for the self-test only: false leaves a plain card with the timestamps Forge gave it. */
     private static volatile boolean carryPlainTimestamps = true;
 
@@ -196,6 +225,16 @@ public final class LenientGameCopier extends GameCopier {
         return plainTimestampsMoved;
     }
 
+    /** D493: how many copied cards were given their original's plotted flag (Forge's copier sets none). */
+    public int plottedCarried() {
+        return plottedCarried;
+    }
+
+    /** D493: how many copied cards in a public zone were given the turn their original entered it. */
+    public int zoneTurnsCarried() {
+        return zoneTurnsCarried;
+    }
+
     /**
      * For the self-test only (D479's follow-up): false makes every copy leave
      * a plain card with the timestamps Forge gave it, as before D479, so a
@@ -243,7 +282,7 @@ public final class LenientGameCopier extends GameCopier {
             }
             byId.put(c.getId(), c);
         }
-        final int carriedBefore = traitsCarried + linksCarried;
+        final int carriedBefore = traitsCarried + linksCarried + plottedCarried + zoneTurnsCarried;
         for (final Map.Entry<Card, Card> e : live.entrySet()) {
             final Card o = e.getKey();
             final Card c = e.getValue();
@@ -260,6 +299,7 @@ public final class LenientGameCopier extends GameCopier {
             if (traits) {
                 carryTraits(o, c);
             }
+            carryCastability(copy, o, c);
             final Card src = o.getEffectSource();
             if (src != null && c.getEffectSource() == null) {
                 final Card m = link(src, live, byId);
@@ -294,9 +334,44 @@ public final class LenientGameCopier extends GameCopier {
                 }
             }
         }
-        if (traitsCarried + linksCarried > carriedBefore) {
+        if (traitsCarried + linksCarried + plottedCarried + zoneTurnsCarried > carriedBefore) {
             copy.getAction().checkStaticAbilities();
             copy.getTriggerHandler().resetActiveTriggers();
+        }
+    }
+
+    /**
+     * D493: what {@code GameActionUtil.getAlternativeCosts} reads off a card
+     * that {@code GameCopier} leaves off or resets: the plotted flag, and the
+     * turn the card entered its zone ({@code enteredThisTurn()}), which the
+     * copier's {@code Zone.add} sets to the copy's turn.  The turn is carried
+     * in the public zones only ({@link #ZONE_TURN_CARRIED}): never in a hand or
+     * a library, the Determinizer's zones.  Either
+     * one makes {@link #carry} apply the statics again: a static may read the
+     * turn ({@code ThisTurnEntered}: Warp's "you may cast it from exile on a
+     * later turn" is one), and Forge's copy applied them with the copy's.
+     */
+    private void carryCastability(final Game copy, final Card o, final Card c) {
+        if (c.isPlotted() != o.isPlotted()) {
+            // Card.setPlotted(true) runs BecomesPlotted: the plot is the original game's, not an event of the copy
+            final TriggerHandler th = copy.getTriggerHandler();
+            final boolean held = th.isTriggerSuppressed(TriggerType.BecomesPlotted);
+            if (!held) {
+                th.suppressMode(TriggerType.BecomesPlotted);
+            }
+            try {
+                c.setPlotted(o.isPlotted());
+            } finally {
+                if (!held) {
+                    th.clearSuppression(TriggerType.BecomesPlotted);
+                }
+            }
+            plottedCarried++;
+        }
+        final Zone z = c.getZone();
+        if (z != null && ZONE_TURN_CARRIED.contains(z.getZoneType()) && c.getTurnInZone() != o.getTurnInZone()) {
+            c.setTurnInZone(o.getTurnInZone());
+            zoneTurnsCarried++;
         }
     }
 
@@ -362,6 +437,7 @@ public final class LenientGameCopier extends GameCopier {
         }
         mirror.setGameTimestamp(o.getGameTimestamp());
         mirror.setLayerTimestamp(o.getLayerTimestamp());
+        mirror.setTurnInZone(o.getTurnInZone());   // D493: the old object's, as its timestamps
         mirror.setZone(zoneOnCopy(base.getGame(), o.getZone()));   // copyCard gave it the live card's
         mirrors.put(o, mirror);
         return mirror;

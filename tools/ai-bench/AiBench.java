@@ -56,6 +56,7 @@ import forge.game.Match;
 import forge.game.card.Card;
 import forge.game.player.Player;
 import forge.game.player.RegisteredPlayer;
+import forge.game.spellability.AlternativeCost;
 import forge.game.zone.ZoneType;
 import forge.item.PaperCard;
 import forge.model.FModel;
@@ -1510,6 +1511,7 @@ public final class AiBench {
         adventureScenarios();
         mayPlayShapeScenarios();
         copierCarryScenarios();
+        plottedScenarios();
         chooseSourceScenarios();
         staleTargetScenarios();
         modalCastTargetsScenario();
@@ -3042,6 +3044,167 @@ public final class AiBench {
         });
     }
 
+    /**
+     * D493 (amending D479): a plotted card, and a foretold one, on a fork.
+     * {@code GameCopier} copies the foretold flags but not the plotted one,
+     * and its {@code Zone.add} stamps every copied card with the copy's turn as
+     * the turn it entered its zone, so on Forge's own copy a card plotted or
+     * foretold on an earlier turn "entered this turn":
+     * {@code GameActionUtil.getAlternativeCosts} builds no "(Plotted)" and no
+     * "(Foretold)" cast, and {@code SearchPolicy.mapSa} threw on the atlas's
+     * forced cast (J176's s10, d7: 150 of 150 branches).  The real game plots
+     * Slickshot Lockpicker and foretells Delayed Blast Fireball (both in the
+     * library pool) at turn 5, and the exile's turn is then set back to 3, the
+     * one thing planted: the cast comes "on a later turn".  Longhorn
+     * Sharpshooter (not in the pool) is plotted directly: its "when this
+     * becomes plotted" trigger is how a copy that ran the plot again would
+     * show.  Forge's own copier is the control.
+     */
+    static void plottedScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a plotted card and a foretold one on a copy (D493, engine)");
+        final String lib = "Island;Island;Island;Island";
+        scenario("copy-plotted", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanhand=Forest", "humanlibrary=" + lib, "ailibrary=" + lib,
+                "aihand=Slickshot Lockpicker;Delayed Blast Fireball", "aiexile=Longhorn Sharpshooter",
+                "aibattlefield=Island;Island;Island;Mountain;Mountain"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Player human = ai.getWeakestOpponent();
+            final AlternativeCost plotK = AlternativeCost.Plotted;
+            final AlternativeCost foreK = AlternativeCost.Foretold;
+            final int fbId = named(ai.getCardsIn(ZoneType.Hand), "Delayed Blast Fireball").getId();   // face down in exile: no name
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, abilityOf(ai, "Slickshot Lockpicker", "Plot"), null),
+                    "setup: the real game plots Slickshot Lockpicker");
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, abilityOf(ai, "Delayed Blast Fireball", "Foretell"), null),
+                    "setup: the real game foretells Delayed Blast Fireball");
+            check(g.getStack().isEmpty(), "setup: plot and foretell are special actions: the stack is empty");
+            final Card lp = named(ai.getCardsIn(ZoneType.Exile), "Slickshot Lockpicker");
+            final Card fb = byId(ai.getCardsIn(ZoneType.Exile), fbId);
+            final Card ls = named(ai.getCardsIn(ZoneType.Exile), "Longhorn Sharpshooter");
+            ls.setPlotted(true);   // before the triggers are live: the real game's plot is not the test
+            for (final Card c : List.of(lp, fb, ls)) {
+                c.setTurnInZone(3);
+            }
+            final Card libCard = ai.getCardsIn(ZoneType.Library).get(0);
+            final Card handCard = human.getCardsIn(ZoneType.Hand).get(0);
+            libCard.setTurnInZone(1);
+            handCard.setTurnInZone(2);
+            g.setAge(forge.game.GameStage.Play);
+            g.getTriggerHandler().resetActiveTriggers();
+            final forge.game.spellability.SpellAbility plotted = playOf(ai, "Slickshot Lockpicker", (sa) -> sa.isAlternativeCost(plotK));
+            final forge.game.spellability.SpellAbility foretold = playOf(ai, fb, (sa) -> sa.isAlternativeCost(foreK));
+            check(lp.isPlotted() && !lp.enteredThisTurn() && fb.isForetold() && !fb.enteredThisTurn(),
+                    "setup: the real game's Lockpicker is plotted and its Fireball foretold, both since turn 3; Forge offers "
+                            + plotted.getDescription() + " and " + foretold.getDescription());
+            final Game plain = new forge.ai.simulation.GameCopier(g).makeCopy();
+            final Player aiP = plain.getPlayer(ai.getId());
+            final Card plp = named(aiP.getCardsIn(ZoneType.Exile), "Slickshot Lockpicker");
+            final Card pfb = byId(aiP.getCardsIn(ZoneType.Exile), fbId);
+            check(!plp.isPlotted() && plp.enteredThisTurn() && pfb.isForetold() && pfb.enteredThisTurn()
+                            && !hasAlt(mtgtable.ai.SearchPolicy.copyCandidatesForTest(plp, aiP), plotK)
+                            && !hasAlt(mtgtable.ai.SearchPolicy.copyCandidatesForTest(pfb, aiP), foreK),
+                    "control: Forge's own copy drops the plot and stamps both with the copy's turn (plotted " + plp.isPlotted()
+                            + ", turn in exile " + plp.getTurnInZone() + " and " + pfb.getTurnInZone()
+                            + "): no Plotted cast, no Foretold cast");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            final Player aiC = (Player) cp.find(ai);
+            final Player humanC = (Player) cp.find(human);
+            final Card lpC = named(aiC.getCardsIn(ZoneType.Exile), "Slickshot Lockpicker");
+            final Card fbC = byId(aiC.getCardsIn(ZoneType.Exile), fbId);
+            final Card lsC = named(aiC.getCardsIn(ZoneType.Exile), "Longhorn Sharpshooter");
+            check(lpC.isPlotted() && lsC.isPlotted() && !lpC.enteredThisTurn() && lpC.getTurnInZone() == 3
+                            && fbC.isForetold() && !fbC.enteredThisTurn() && cp.plottedCarried() == 2,
+                    "the copy's Lockpicker and Sharpshooter are plotted, since turn 3, and the Fireball foretold since turn 3 (plotted "
+                            + lpC.isPlotted() + "/" + lsC.isPlotted() + ", turns " + lpC.getTurnInZone() + "/" + fbC.getTurnInZone()
+                            + ", " + cp.plottedCarried() + " plot(s) and " + cp.zoneTurnsCarried() + " turn(s) carried)");
+            check(copy.getStack().isEmpty() && !copy.getStack().hasSimultaneousStackEntries()
+                            && humanC.getLife() == 20 && aiC.getLife() == 20,
+                    "the copy ran no BecomesPlotted trigger: the Sharpshooter's 2 damage is nowhere (stack " + copy.getStack().size()
+                            + ", waiting to go on it " + copy.getStack().hasSimultaneousStackEntries()
+                            + ", life " + aiC.getLife() + "/" + humanC.getLife() + ")");
+            final Card libC = (Card) cp.find(libCard);
+            final Card handC = (Card) cp.find(handCard);
+            final int t = copy.getPhaseHandler().getTurn();
+            check(libC.getTurnInZone() == t && handC.getTurnInZone() == t,
+                    "a library's and a hand's cards keep the copy's turn, " + t + " (the Determinizer's zones; real 1 and 2, copy "
+                            + libC.getTurnInZone() + " and " + handC.getTurnInZone() + ")");
+            final String pk = mtgtable.ai.SearchPolicy.matchKey(plotted);
+            final String fk = mtgtable.ai.SearchPolicy.matchKey(foretold);
+            check(hasAlt(mtgtable.ai.SearchPolicy.copyCandidatesForTest(lpC, aiC), plotK, pk)
+                            && hasAlt(mtgtable.ai.SearchPolicy.copyCandidatesForTest(fbC, aiC), foreK, fk),
+                    "copyCandidates on the copy lists the Plotted cast (" + pk + ") and the Foretold cast (" + fk + ")");
+            final forge.game.spellability.SpellAbility mp = mtgtable.ai.SearchPolicy.mapForTest(ai, plotted);
+            final forge.game.spellability.SpellAbility mf = mtgtable.ai.SearchPolicy.mapForTest(ai, foretold);
+            check(mp != null && mp.isAlternativeCost(plotK) && mp.getHostCard().getGame() != g && pk.equals(mtgtable.ai.SearchPolicy.matchKey(mp))
+                            && mf != null && mf.isAlternativeCost(foreK) && mf.getHostCard().getGame() != g,
+                    "mapSa maps both onto the copy's card (" + (mp == null ? null : mp.getAlternativeCost()) + ", "
+                            + (mf == null ? null : mf.getAlternativeCost()) + ")");
+            // the production path that failed 150 of 150: one atlas branch forcing the Plotted cast
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = g.getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(plotted), 0, 0, 7, u,
+                    "d493", new LinkedHashMap<>(), null, "d493", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && b.steps > 0,
+                    "an atlas branch forcing the Plotted Lockpicker plays (" + b.steps + " steps, error " + b.error + ")");
+            // and the fork's cast is the plotted one: the copy's Lockpicker has left exile for the battlefield
+            final String[] where = {"no leaf"};
+            mtgtable.ai.SearchPolicy.leafProbeForTest((cg, aiL) -> {
+                for (final Card c : cg.getCardsInGame()) {
+                    if (c.getId() == lp.getId()) {
+                        where[0] = String.valueOf(c.getZone() == null ? null : c.getZone().getZoneType());
+                    }
+                }
+            });
+            final CountSink sink = new CountSink();
+            try {
+                mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(plotted), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+            } finally {
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            check("Battlefield".equals(where[0]) || "Graveyard".equals(where[0]),
+                    "the fork cast the Lockpicker from exile: on the copy it ends the turn in " + where[0] + " (" + sink.counts + ")");
+            check(lp.isPlotted() && ai.getCardsIn(ZoneType.Exile).contains(lp) && human.getLife() == 20,
+                    "the real game is untouched: the Lockpicker plotted in exile, life 20");
+        });
+    }
+
+    /** D493: the card of id {@code id} among {@code cards}. */
+    private static Card byId(final Iterable<Card> cards, final int id) {
+        for (final Card c : cards) {
+            if (c.getId() == id) {
+                return c;
+            }
+        }
+        throw new IllegalStateException("no card " + id);
+    }
+
+    /** D493: the seat's ability of {@code name} whose description starts with {@code prefix} (Plot, Foretell). */
+    private static forge.game.spellability.SpellAbility abilityOf(final Player ai, final String name, final String prefix) {
+        final Card c = named(ai.getCardsIn(ZoneType.Hand), name);
+        for (final forge.game.spellability.SpellAbility sa : c.getAllSpellAbilities()) {
+            if (sa.getDescription() != null && sa.getDescription().startsWith(prefix)) {
+                sa.setActivatingPlayer(ai);
+                return sa;
+            }
+        }
+        throw new IllegalStateException("no " + prefix + " on " + name);
+    }
+
+    /** D493: whether {@code l} holds a play by alternative cost {@code k} (and, if given, of match key {@code key}). */
+    private static boolean hasAlt(final List<forge.game.spellability.SpellAbility> l, final AlternativeCost k, final String... key) {
+        for (final forge.game.spellability.SpellAbility sa : l) {
+            if (sa.isAlternativeCost(k) && (key.length == 0 || key[0].equals(mtgtable.ai.SearchPolicy.matchKey(sa)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** D479: the command-zone effect whose name starts with {@code host}'s, or null. */
     private static Card effectOf(final Player p, final String host) {
         for (final Card c : p.getCardsIn(ZoneType.Command)) {
@@ -3706,7 +3869,13 @@ public final class AiBench {
     /** D472: the seat's play of {@code name} that {@code which} picks, from Forge's own candidate list (originals and alternatives). */
     private static forge.game.spellability.SpellAbility playOf(final Player ai, final String name,
             final java.util.function.Predicate<forge.game.spellability.SpellAbility> which) {
-        final Card c = named(ai.getGame().getCardsInGame(), name);
+        return playOf(ai, named(ai.getGame().getCardsInGame(), name), which);
+    }
+
+    /** D493: the same, of card {@code c} (a face-down card has no name to look up). */
+    private static forge.game.spellability.SpellAbility playOf(final Player ai, final Card c,
+            final java.util.function.Predicate<forge.game.spellability.SpellAbility> which) {
+        final String name = c.getName();
         final List<forge.game.spellability.SpellAbility> all = forge.ai.ComputerUtilAbility.getOriginalAndAltCostAbilities(
                 new ArrayList<>(c.getAllPossibleAbilities(ai, false)), ai);
         for (final forge.game.spellability.SpellAbility sa : all) {

@@ -10214,6 +10214,30 @@ D312–D314. Roadmap step 2 of D311 (and step 3, combat, with it).
 6. **ForgeCoach's match launcher cannot ask for the search yet**: `play.sh
    --ai-search` keeps it across launcher restarts, but `POST /match` has no field
    for it (D303's contract changes in both repositories at once).
+7. **J176's s10 d7 was not re-branched after D493** (2026-10-31). The copy now
+   carries a card's plotted flag and, in a public zone, the turn it entered it,
+   and the self-test plays the forced Plotted cast that failed 150 of 150 there.
+   But the atlas has no command that re-branches one decision of a spine, and the
+   spine's decks are the lab's. The next atlas spine with a plotted or foretold
+   card at a decision is the field check: its option should show 0 errored
+   branches. `docs/decisions/D493-copier-carries-plotted-and-zone-turn.md`.
+8. **What D493 left on the copier, checked and not carried** (2026-10-31): the
+   discarded flag (Mayhem's cast, no pool card), the turn's controller
+   (`EnteredUnder`, no pool card), a hand's or a library's turn (the
+   Determinizer's zones), and each zone's `cardsAddedThisTurn` /
+   `enteredFromThisTurn` log, which `GameCopier` never copies and is empty on
+   every copy. That log is what `Count$ThisTurnEntered_<zone>_from_…` and the
+   `ThisTurnEnteredFrom_` property read, so Barrin, Tolarian Archmage, Cult
+   Conscript and Khabál Ghoul still count nothing on a fork. A card with Mayhem entering the pool would meet the
+   first; nothing checks the pool against the copier, as nothing checks it
+   against D492's list. Warp's later cast (four pool cards) reads the carried
+   turn through a may-play static that the carry pass applies again. No
+   self-test casts a warped card on a copy yet.
+9. **The atlas records no code version** (2026-10-31, D493's review).
+   `schedule.jsonl` holds the plan and the decks' sha256 but no git sha, so a
+   phase B resumed across a merge that changes the fork (D479, D483, D493)
+   mixes branches played under both. A code-version marker in the schedule's
+   header, which a resume refuses to cross, would close it.
 
 ## The matchup model — one card scale across every cube, bridge drafts and the overnight queue (2026-10-03, D322–D324)
 
