@@ -34,8 +34,8 @@ ArrayIndexOutOfBoundsException: Index 2 out of bounds for length 2
 What was on the board: seat 1 (deck 2, `legacy-2033-00002`) cast **Ob Nixilis, the Adversary** at turn 7 and paid its
 casualty. Its script is `K:Casualty:X:NonLegendary$ True | SetLoyalty$ Casualty`, so the spell's copy resolved as a
 **token** planeswalker: in the baseline's seat-0 log, id 97, *Ob Nixilis, the Adversary*, `Planeswalker - Nixilis` (not
-legendary), loyalty 3, `keywords: ["CASUALTY"]`, `token: true`, on the battlefield from frame 116 (turn 7) to frame 208
-(turn 10). The errored decisions are exactly the ones taken while it was there. Evidence:
+legendary), loyalty 3, `keywords: ["CASUALTY"]`, `token: true`, on the battlefield in that log's state frames from
+`seq` 106 (line 116, turn 7) to `seq` 177 (line 207, turn 10), and gone from the next state frame (line 208, turn 10). The errored decisions are exactly the ones taken while it was there. Evidence:
 `/home/justin-a/code/lab/data/lab-j176/b-s07-legacy-2133/` (`atlas.md` and `atlas.json`: 12 PROBLEMS, d3–d6;
 `phaseB/branches.jsonl`; `phaseB/logs/worker-*.log`; `phaseB/baseline/frames/baseline-seat0.jsonl.gz`); the deck
 `/home/justin-a/code/lab/data/lab-j176/decks/s07-legacy-2033/decks/legacy-2033-00002.dck`.
@@ -57,8 +57,10 @@ legendary), loyalty 3, `keywords: ["CASUALTY"]`, `token: true`, on the battlefie
    `makeEtbCounter` reads part `[2]` on line 550. The battle branch beside it (`etbCounter:DEFENSE:` + `baseDefense`,
    line 743) is the same shape.
 
-So the fault needs a token whose types are Planeswalker (or Battle) **and** that carries at least one keyword: with none,
-`makeOneToken` never asks for replacement effects before line 301 has set the loyalty.
+So the fault needs a token whose types are Planeswalker (or Battle) **and** that carries at least one keyword at fork
+time, printed or granted: with none, `makeOneToken` never asks for replacement effects before line 301 has set the
+loyalty. "Granted" because `TokenInfo(Card)` reads `Card.getKeywords()`, the current state's keyword cache, which applies
+`getChangedCardKeywordsList` — a keyword a spell or ability gave the token is in it, as its printed ones are.
 
 **The reproduction**, a scratch program against the pinned jar (the self-tests' own way to build a position:
 `Bootstrap`, a `GameState`, the game pool; not committed, because it is evidence and not a check): a permanent on the
@@ -84,25 +86,33 @@ forks cleanly. Ob Nixilis's copy always crashes the fork, because the Casualty k
 1. **Ob Nixilis, the Adversary goes on `tools/cubelab/engine-unplayable.json`**, `since: "J176"`, with the measurement
    above as its `why` and the paths as its `evidence` — D492 point 1's measured fork crash, with the card's effect (its
    token copy) on the board.
-2. **It is the only pool card whose own mechanic is this path.** Of the pool's 1,593 cards (`cubes/library/library-pool.tsv`,
-   the scripts read from `cardsfolder.zip`), Ob Nixilis is the only one with Casualty on a planeswalker or a `SetLoyalty`,
+2. **It is the only pool card whose own mechanic is this path.** Of the pool's 1,592 cards (`cubes/library/library-pool.tsv`,
+   its header's count; 1,568 of them have a script in `cardsfolder.zip`, which is what was read), Ob Nixilis is the only one with Casualty on a planeswalker or a `SetLoyalty`,
    and no other pool card's own effect makes a token copy of a planeswalker: the pool's token copiers copy a
    creature (Dance of Many, Fable of the Mirror-Breaker, Scute Swarm, Springheart Nantuko, Vaultborn Tyrant, Vitu-Ghazi
    Guildmage's populate, and the Offspring and Eternalize cards) or a target they choose (Fractured Identity: a nonland permanent; Esika's Chariot: a token you
-   control; Ocelot Pride: tokens that entered this turn), and its spell copiers (Fork, Lutri, Sage of the Skies, the two
-   Chain spells, Storm, Replicate) copy instants and sorceries. The planeswalkers outside the pool that copy themselves
+   control; Ocelot Pride: tokens that entered this turn), its spell copiers (Fork, Lutri, the two Chain spells, Storm,
+   Replicate) copy instants and sorceries, and Sage of the Skies copies itself, a creature spell, into a creature token
+   (with flying and lifelink). The planeswalkers outside the pool that copy themselves
    (Jace, Cunning Castaway; Jace, Mirror Mage) are not listed: the list names only what the band draw can deal (D492
    point 2).
 3. **What it is not** (D492 point 3's line). Fractured Identity, Esika's Chariot and Ocelot Pride *might* make such a
-   token — Fractured Identity on any of the pool's five planeswalkers with a keyword (Kaito, Bane of Nightmares; Minsc &
-   Boo; Tamiyo, Inquisitive Student; The Wandering Emperor; Ob Nixilis), the other two on Ob Nixilis's copy — but that is
+   token — Fractured Identity on any of the pool's four planeswalkers with a printed keyword (Kaito, Bane of Nightmares,
+   Ninjutsu; Minsc & Boo, its commander line; The Wandering Emperor, Flash; Ob Nixilis, Casualty — not Tamiyo,
+   Inquisitive Student, whose Flying is on its creature face while its planeswalker face, the one `TokenInfo` would read,
+   has no keyword line), the other two on Ob Nixilis's copy — but that is
    a choice in a game, not the card's own mechanic, and none is listed without a measurement of its own. A keyword-less
-   planeswalker made a token is not affected (the reproduction's Liliana). Not a judgement of the card, and not a bias
+   planeswalker made a token is not affected (the reproduction's Liliana) only while nothing grants it a keyword: a
+   granted one counts (above), and the pool holds granters — Tamiyo's Safekeeping (hexproof and indestructible on a
+   permanent you control) and Ajani Vengeant's +1 (a hidden keyword on any permanent) among them. That too is a
+   choice in a game, and lists nothing. Not a judgement of the card, and not a bias
    toward or against anyone's decks or cubes.
 
 **Rejected: a repair in our copier.** The throw is inside `super.makeCopy` (`LenientGameCopier.java:222`), in
 `GameCopier.createCardCopy`, before D479's carry pass can run, and every method on that path (`copyGameState`, `addCard`,
-`createCardCopy`) is private: `GameCopier` offers no hook between `makeOneToken` and the line that sets the loyalty.
+`createCardCopy`) is private: `GameCopier` offers no hook between `makeOneToken` and the line that sets the loyalty. The one
+method `LenientGameCopier` overrides on that path, the public `find()`, is not reached there: `createCardCopy`'s token
+branch calls no `find`, so nothing of ours runs between `makeOneToken`'s start and its throw.
 Catching the throw leaves no copy; avoiding it means reimplementing `GameCopier.makeCopy` (a second copier to keep against
 the pinned jar) or altering the live game's token before each fork, which a fork must never do. As D492 found, the list
 is the lighter, measured fix. Unlike D492, no newer engine is known to guard it: the 2.0.15 source checkout makes the
@@ -111,7 +121,8 @@ token the same way, so an official release takes the card off only with a measur
 **The draw, measured** (as D490 and D492): J176's 13 spine pairs and 13 validation pairs redrawn from their seeds
 (`tools/cubelab.sh decks --band <b> --count 2 --seed <s> --cross-band 0.10`) on D492's list and on this one: **51 of the
 52 decks byte-identical**; the one that held Ob Nixilis, `s07-legacy-2033` deck 2 (its fourth spell pick, 3 skips over the
-draw's attempts), is redrawn from that pick on, 43 lines of its card list changed. Against the decks J176 actually
+draw's attempts), is redrawn from that pick on: a line diff of the two `.dck` files gives 49 lines (23 out, 26 in), and 22 of the deck's
+40 cards differ (counted by copies, lands included). Against the decks J176 actually
 recorded (drawn before D492), 47 of 52 are identical: D492's four and this one.
 
 **Follow-ups** (PLAN.md's cube lab list, 7 and 8). Nothing checks the pool against the scripts (D492's follow-up, which
