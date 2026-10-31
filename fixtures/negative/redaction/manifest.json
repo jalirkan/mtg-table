@@ -420,6 +420,60 @@
     "why": "D485: the listing as the viewer's own token must be in the window (up to the first state after the decision) -- one only later does not vouch"
   },
   {
+    "file": "stack-copy-cast-by-the-viewer.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D495: a target decision naming the viewer's own spell copy, cast in the first state after the decision and never in a zone -- counted, not a problem"
+  },
+  {
+    "file": "stack-copy-cast-by-the-opponent.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D495: the same with the OPPONENT's copy -- the stack is public and a copy has no hidden face, so it is a visible object for both seats; counted, not a problem"
+  },
+  {
+    "file": "stack-copy-cast-after-empty-states.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D495: three copies choose targets one after another and the recorder flushes an EMPTY state before each decision -- the window runs to the first state after the decision that records an event; counted, not a problem"
+  },
+  {
+    "file": "stack-copy-resolves-into-a-token.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D495: a copy of a permanent spell resolves into a token -- its one zone event goes from the stack to a battlefield, which is public; counted, not a problem"
+  },
+  {
+    "file": "stack-copy-cast-a-step-too-late.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495: the cast must be in the window -- one in the second state after the decision, when the first records an engine step, does not vouch"
+  },
+  {
+    "file": "stack-copy-then-into-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495: a copy is never in a zone -- an id with a cast event AND a later zone event into the opponent's hand is a card, not a copy, and hidden"
+  },
+  {
+    "file": "stack-copy-is-an-opponent-hand-stub.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495: an opponent's cast event naming a card its hand lists as a stub (an ability of a card in hand, ninjutsu's shape) is not a copy -- the stub is listed, so the cast vouches for nothing"
+  },
+  {
+    "file": "stack-copy-is-a-card-from-a-library.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495: a cast whose id a zone event moved from a LIBRARY onto the stack is a card the viewer could not see, not a copy -- not vouched for"
+  },
+  {
+    "file": "stack-copy-already-off-the-stack.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495: a copy cast and taken off the stack in or before the decision's own state is gone -- naming it is not vouched for"
+  },
+  {
     "file": "m57-explore-present.jsonl",
     "level": "pass",
     "expect": "PASS",

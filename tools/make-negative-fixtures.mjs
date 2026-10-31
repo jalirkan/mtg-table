@@ -1128,6 +1128,101 @@ staleProbe('stale-token-shown-only-after-the-window.jsonl',
   'D485: the listing as the viewer\'s own token must be in the window (up to the first state after the decision) -- one only later does not vouch',
   { showIn: [4], at: 2, move: died });
 
+// D495: A SPELL COPY ON THE STACK.  A copy (replicate, storm, a Fork) is made on
+// the stack: no zone list, no stackCards entry and no zone event names it, and it
+// chooses its targets before it is cast, so the `cast` event naming it lands in
+// the state after the decision (J176 s09: Lose Focus's copies 96 and 97, copy
+// 97's target decision offering target:96).  Vouched for by a `cast` event in
+// the window -- up to the first state after the decision that records any
+// event -- by either seat (the stack is public), when the whole log never lists
+// it as a stub, lists it nowhere before its cast, moves it only among the stack,
+// battlefields and graveyards, and it was not taken off the stack in or before
+// the decision's state; a copy of a permanent spell that resolves into a token
+// passes too.  The controls: no cast at all is m55-option-never-shown; a cast
+// one engine step too late; a later move into the opponent's hand; an
+// opponent's cast naming its own concealed hand card (an ability of a card in
+// hand, ninjutsu's shape); a card cast from a library; a copy already off the
+// stack.
+
+/** A target decision at the first state naming one of the viewer's permanents and a fresh id. */
+function withCopyTarget(fs) {
+  const { fresh, after } = withFreshOption(fs);
+  const b = fs.find((f) => f.dir === 'ai' && f.type === 'decision').body;
+  const me = statesOf(fs)[0].body.players.find((p) => p.id === header.seat);
+  const live = me.zones.battlefield.cards.find((c) => c.hidden !== true).id;
+  delete b.search;
+  Object.assign(b, { kind: 'target', options: [`target:${live}`, `target:${fresh}`], chosen: `target:${live}`, by: 'forge', source: 'chooseTargets' });
+  return { fresh, after, b };
+}
+/** A copy's life on the stack as the next state frame records it: cast (text "" as s09's), resolved, unstacked. */
+const copyCast = (id, controller) => [
+  { kind: 'cast', stackId: 9000 + id, cardId: id, controller, text: '' },
+  { kind: 'resolved', cardId: id, fizzled: false },
+  { kind: 'unstacked', cardId: id },
+];
+const copyPass = (name, why, mutate) => {
+  const fs = slice();
+  mutate(fs);
+  write(name, fs);
+  manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
+  console.log(`  PASS  ${name}  (${why.split(' -- ')[0]})`);
+};
+
+copyPass('stack-copy-cast-by-the-viewer.jsonl',
+  'D495: a target decision naming the viewer\'s own spell copy, cast in the first state after the decision and never in a zone -- counted, not a problem',
+  (fs) => { const { fresh, after } = withCopyTarget(fs); after[0].body.events.push(...copyCast(fresh, header.seat)); });
+copyPass('stack-copy-cast-by-the-opponent.jsonl',
+  'D495: the same with the OPPONENT\'s copy -- the stack is public and a copy has no hidden face, so it is a visible object for both seats; counted, not a problem',
+  (fs) => { const { fresh, after } = withCopyTarget(fs); after[0].body.events.push(...copyCast(fresh, themOf())); });
+copyPass('stack-copy-cast-after-empty-states.jsonl',
+  'D495: three copies choose targets one after another and the recorder flushes an EMPTY state before each decision -- the window runs to the first state after the decision that records an event; counted, not a problem',
+  (fs) => {
+    const { fresh, after } = withCopyTarget(fs);
+    after[0].body.events = [];
+    after[1].body.events.push(...copyCast(fresh, header.seat));
+  });
+copyPass('stack-copy-resolves-into-a-token.jsonl',
+  'D495: a copy of a permanent spell resolves into a token -- its one zone event goes from the stack to a battlefield, which is public; counted, not a problem',
+  (fs) => {
+    const { fresh, after } = withCopyTarget(fs);
+    after[0].body.events.push(copyCast(fresh, themOf())[0],
+      { kind: 'zone', cardId: fresh, from: { zone: 'stack', player: null }, to: { zone: 'battlefield', player: themOf() } });
+  });
+
+probe('stack-copy-cast-a-step-too-late.jsonl',
+  'D495: the cast must be in the window -- one in the second state after the decision, when the first records an engine step, does not vouch',
+  'which its state frame does not show',
+  (fs) => { const { fresh, after } = withCopyTarget(fs); after[1].body.events.push(...copyCast(fresh, header.seat)); });
+probe('stack-copy-then-into-the-opponent-hand.jsonl',
+  'D495: a copy is never in a zone -- an id with a cast event AND a later zone event into the opponent\'s hand is a card, not a copy, and hidden',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, after } = withCopyTarget(fs);
+    after[0].body.events.push(copyCast(fresh, header.seat)[0]);
+    after[1].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'stack', player: null }, to: { zone: 'hand', player: themOf() } });
+  });
+probe('stack-copy-is-an-opponent-hand-stub.jsonl',
+  'D495: an opponent\'s cast event naming a card its hand lists as a stub (an ability of a card in hand, ninjutsu\'s shape) is not a copy -- the stub is listed, so the cast vouches for nothing',
+  'which its state frame does not show',
+  (fs) => {
+    const { after, b } = withCopyTarget(fs);
+    const stub = statesOf(fs)[0].body.players.find((p) => p.id !== header.seat).zones.hand.cards.find((c) => c.hidden === true).id;
+    b.options[1] = `target:${stub}`;
+    after[0].body.events.push(...copyCast(stub, themOf()));
+  });
+probe('stack-copy-is-a-card-from-a-library.jsonl',
+  'D495: a cast whose id a zone event moved from a LIBRARY onto the stack is a card the viewer could not see, not a copy -- not vouched for',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, after } = withCopyTarget(fs);
+    after[0].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'library', player: themOf() }, to: { zone: 'stack', player: null } },
+      copyCast(fresh, themOf())[0]);
+  });
+probe('stack-copy-already-off-the-stack.jsonl',
+  'D495: a copy cast and taken off the stack in or before the decision\'s own state is gone -- naming it is not vouched for',
+  'which its state frame does not show',
+  (fs) => { const { fresh } = withCopyTarget(fs); statesOf(fs)[0].body.events.push(...copyCast(fresh, header.seat)); });
+
 // ---------------------------------------------------------------------------
 // Amendment M57 (D358): play exploration.  An exploring recording's header
 // carries `playExplore` (epsilon, closeCall, opening); a decision the explorer

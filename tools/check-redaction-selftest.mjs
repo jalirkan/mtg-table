@@ -143,6 +143,21 @@ const REQUIRED = [
   ['stale-token-then-exiled.jsonl', 'fail'],
   ['stale-nontoken-ghost.jsonl', 'fail'],
   ['stale-token-shown-only-after-the-window.jsonl', 'fail'],
+  // D495: a spell copy on the stack -- never in a zone, its `cast` event after the
+  // decision -- vouched for by a cast in the window by either seat (the stack is
+  // public), and one that resolves into a token.  The controls: a cast too late,
+  // a later move into the opponent's hand, an opponent's cast naming its own hand
+  // stub, a card cast from a library, a copy already gone (no cast at all is
+  // m55-option-never-shown).
+  ['stack-copy-cast-by-the-viewer.jsonl', 'pass'],
+  ['stack-copy-cast-by-the-opponent.jsonl', 'pass'],
+  ['stack-copy-cast-after-empty-states.jsonl', 'pass'],
+  ['stack-copy-resolves-into-a-token.jsonl', 'pass'],
+  ['stack-copy-cast-a-step-too-late.jsonl', 'fail'],
+  ['stack-copy-then-into-the-opponent-hand.jsonl', 'fail'],
+  ['stack-copy-is-an-opponent-hand-stub.jsonl', 'fail'],
+  ['stack-copy-is-a-card-from-a-library.jsonl', 'fail'],
+  ['stack-copy-already-off-the-stack.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
   ['m57-explore-present.jsonl', 'pass'],
