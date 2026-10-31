@@ -10197,6 +10197,21 @@ D312–D314. Roadmap step 2 of D311 (and step 3, combat, with it).
 6. **ForgeCoach's match launcher cannot ask for the search yet**: `play.sh
    --ai-search` keeps it across launcher restarts, but `POST /match` has no field
    for it (D303's contract changes in both repositories at once).
+7. **J176's s10 d7 was not re-branched after D493** (2026-10-31). The copy now
+   carries a card's plotted flag and, in a public zone, the turn it entered it,
+   and the self-test plays the forced Plotted cast that failed 150 of 150 there.
+   But the atlas has no command that re-branches one decision of a spine, and the
+   spine's decks are the lab's. The next atlas spine with a plotted or foretold
+   card at a decision is the field check: its option should show 0 errored
+   branches. `docs/decisions/D493-copier-carries-plotted-and-zone-turn.md`.
+8. **What D493 left on the copier, checked and not carried** (2026-10-31): the
+   discarded flag (Mayhem's cast, no pool card), the turn's controller
+   (`EnteredUnder`, no pool card) and a hand's or a library's turn (the
+   Determinizer's zones). A card with Mayhem entering the pool would meet the
+   first; nothing checks the pool against the copier, as nothing checks it
+   against D492's list. Warp's later cast (four pool cards) reads the carried
+   turn through a may-play static that the carry pass applies again. No
+   self-test casts a warped card on a copy yet.
 
 ## The matchup model — one card scale across every cube, bridge drafts and the overnight queue (2026-10-03, D322–D324)
 
