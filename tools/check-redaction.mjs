@@ -2589,7 +2589,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       illegalDamage = null;
     }
     if (Array.isArray(f.body?.players)) {
-      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat), moves: zoneMoves(f.body), ownTokens: ownTokenIds(f.body, seat) });
+      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat), moves: zoneMoves(f.body), ownTokens: ownTokenIds(f.body, seat),
+        ...stackEvents(f.body), ...listedIds(f.body) });
       stateOrder.push(i - 1);
     }
     if (typeof f.body?.turn === 'number' && f.body.turn > stats.maxTurn) stats.maxTurn = f.body.turn;
@@ -3109,7 +3110,12 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //       event moved from its own hand onto the stack -- counted; D485: or the
 //       viewer's own token, born or listed as its own in the window, whose
 //       latest move took it from its battlefield to its own graveyard or hand
-//       -- a stale target, counted apart);
+//       -- a stale target, counted apart; D495: or a spell copy on the
+//       stack, either seat's -- a `cast` event names it by the first state
+//       after the decision that records an event, and no state lists it as a
+//       stub or before that cast, every zone event moves it only among the
+//       stack, battlefields, graveyards or nowhere, no `unstacked` took it off
+//       before the decision -- counted apart);
 //   D4  the answer is one of the options.
 
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|target:none|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
@@ -3192,6 +3198,34 @@ function visibleIds(body, seat) {
 function zoneMoves(body) {
   return (Array.isArray(body.events) ? body.events : [])
     .filter((e) => e?.kind === 'zone' && typeof e.cardId === 'number');
+}
+
+/**
+ * D495: a state's stack events -- its `cast` events ({cardId, controller}) and
+ * the ids its `unstacked` events take off the stack -- and whether it records
+ * any event at all (a state the recorder flushed with nothing new is not an
+ * engine step).
+ */
+function stackEvents(body) {
+  const events = Array.isArray(body.events) ? body.events : [];
+  return {
+    casts: events.filter((e) => e?.kind === 'cast' && typeof e.cardId === 'number'),
+    unstacked: new Set(events.filter((e) => e?.kind === 'unstacked' && typeof e.cardId === 'number').map((e) => e.cardId)),
+    eventful: events.length > 0,
+  };
+}
+
+/** D495: every id a state lists in any zone or in stackCards (`listed`), and those it lists as stubs (`stubs`). */
+function listedIds(body) {
+  const listed = new Set();
+  const stubs = new Set();
+  for (const c of [...(body.players ?? []).flatMap((p) => Object.values(p?.zones ?? {}).flatMap((z) => z?.cards ?? [])),
+    ...(body.stackCards ?? [])]) {
+    if (typeof c?.id !== 'number') continue;
+    listed.add(c.id);
+    if (c.hidden === true) stubs.add(c.id);
+  }
+  return { listed, stubs };
 }
 
 /**
@@ -3436,6 +3470,51 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
       }
       return out;
     };
+    /*
+     * D495: A SPELL COPY ON THE STACK.  A copy (replicate, storm, a Fork) is made
+     * on the stack, not moved there: no zone list, no `stackCards` entry and no
+     * zone event names it while it is a spell, and Forge's copy chooses its
+     * targets BEFORE it is cast -- so the `cast` event that names it lands in a
+     * state after the decision.  J176 s09: Lose Focus (48) with replicate, copies
+     * 96 and 97; copy 97's target decision offers target:96 at state seq 338, and
+     * seq 339 carries `cast` {cardId 96} and `cast` {cardId 97}; no state frame
+     * of the log ever names either.  With three copies the recorder flushes an
+     * EMPTY state before each copy's decision, so the window runs to the first
+     * state after the decision that records any event (`copyEnd`, the engine's
+     * next step), not merely the first state.
+     *
+     * Accepted, counted, when a `cast` event in the window (the first state
+     * frame to `copyEnd`) names the id, by either seat -- the stack is public and
+     * a copy has no hidden face and no hidden zone it came from -- and, over the
+     * WHOLE log: no state lists it as a stub; no state before the one with its
+     * cast lists it at all (it was a card in a zone, not a copy); every zone
+     * event naming it goes from and to only the stack, a battlefield, a
+     * graveyard or nowhere (a copy of a permanent spell resolves into a token);
+     * and no `unstacked` event took it off the stack in or before the decision's
+     * own state (a copy already gone).  The guards matter because a `cast`
+     * event is not only a spell's: it fires for every stack object, abilities
+     * included, and Snap writes its source card's id ungated -- so it can name a
+     * hidden card (an ability activated from a hand).  What they keep out: a
+     * hand card (a stub, or a zone event from a hand), a card shown in a zone
+     * before its cast (a face-down exiled card), a library card (a zone event
+     * from a library), anything that went to a hand, a library or exile, and a
+     * copy already gone.
+     */
+    let copyEnd;
+    for (const k of stateOrder) if (k > index && stateAt.get(k).eventful) { copyEnd = k; break; }
+    const publicRef = (z) => z == null || z.zone === 'stack' || z.zone === 'battlefield' || z.zone === 'graveyard';
+    const stackCopy = (id) => {
+      if (copyEnd === undefined) return false;
+      const castAt = stateOrder.find((k) => k <= copyEnd
+        && stateAt.get(k).casts.some((e) => e.cardId === id && (players.size === 0 || players.has(e.controller))));
+      if (castAt === undefined) return false;
+      for (const k of stateOrder) {
+        const s = stateAt.get(k);
+        if (s.stubs.has(id) || (k < castAt && s.listed.has(id)) || (k <= b.frame && s.unstacked.has(id))) return false;
+        if (s.moves.some((m) => m.cardId === id && !(publicRef(m.from) && publicRef(m.to)))) return false;
+      }
+      return true;
+    };
     for (const t of tokens) {
       for (const id of tokenCardIds(t)) {
         const moves = allowed.has(id) ? [] : windowMoves(id);
@@ -3451,9 +3530,12 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
           stats.enteredBetweenFrames = (stats.enteredBetweenFrames ?? 0) + 1;
         } else if (!allowed.has(id) && ceasedFromViewersBattlefield(latest, seat, ownToken)) {
           stats.ceasedToExist = (stats.ceasedToExist ?? 0) + 1;
+        } else if (!allowed.has(id) && stackCopy(id)) {
+          stats.stackCopies = (stats.stackCopies ?? 0) + 1;
         } else if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
-            'a stub\'s id, a library card or another seat\'s hidden card is never an option', nx === undefined);
+            'a stub\'s id, a library card or another seat\'s hidden card is never an option',
+            nx === undefined || copyEnd === undefined);   // D495: a prefix may not yet hold the copy's cast
         }
       }
       for (const m of t.matchAll(/p(\d+)/g)) {
@@ -3658,6 +3740,10 @@ function main() {
     if (stats.ceasedToExist > 0) {
       console.log(`      M55 decision ids that ceased to exist=${stats.ceasedToExist} (D485: the viewer's own token, `
         + 'last moved from its battlefield to its own graveyard or hand, still named by a stale target list)');
+    }
+    if (stats.stackCopies > 0) {
+      console.log(`      M55 decision ids that are spell copies on the stack=${stats.stackCopies} (D495: a copy cast in the `
+        + 'window, in no zone before its cast, never a stub, moved only among the stack, battlefields, graveyards or nowhere, not yet off the stack)');
     }
     if (stats.legacyNullTargets > 0) {
       console.log(`      M55 legacy null target records=${stats.legacyNullTargets} (D487: J171's shape, written before M76 -- `
