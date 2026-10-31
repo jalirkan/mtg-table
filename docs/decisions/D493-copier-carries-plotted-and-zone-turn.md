@@ -58,8 +58,9 @@ original) also carries what a cast from exile reads (`carryCastability`):
    `clearSuppression`, only if it was not held already). Without the hold, Longhorn Sharpshooter's "deals 2 damage
    when it becomes plotted" waits to go on the copy's stack (ablation C).
 2. **The turn the card entered its zone** (`setTurnInZone(o.getTurnInZone())`), for a card in a **public zone** only:
-   battlefield, graveyard, exile, stack or command.
-   - A card in a hand or a library keeps the copy's turn, the same for all of them. Those are the zones the
+   battlefield, graveyard, exile, stack or command (`LenientGameCopier.ZONE_TURN_CARRIED`, an allow-list).
+   - A card in a hand or a library keeps the copy's turn, the same for all of them; so does a card in any other zone
+     (a sideboard: uniform, never redealt). Those are the zones the
      Determinizer redeals (`setCards`, which keeps each card object's own fields). A real turn there would mark which
      redealt card came from the real hand.
    - No alternative cost is read in a hand or a library: Plotted and Foretold read exile, Mayhem the graveyard.
@@ -67,8 +68,11 @@ original) also carries what a cast from exile reads (`carryCastability`):
 3. **Counters**: `plottedCarried()` and `zoneTurnsCarried()`, for the self-test. They are not atlas row fields. Such
    a fork is not a problem: it is the real game's position.
 4. **Then the statics are applied again**, as after a carried trait or link (D479 point 6). Forge's copy applied
-   them with the copy's turn, and 278 scripts in the 2.0.14 cardsfolder read `ThisTurnEntered`. One of them is in the
-   jar's own code: Warp's "you may cast it from exile on a later turn" is a may-play static with
+   them with the copy's turn. In the 2.0.14 cardsfolder, 65 scripts use the plain `ThisTurnEntered` card property
+   (`Card.ThisTurnEntered`, `+ThisTurnEntered`), 13 of them on an `S:` static line, and more read the
+   `ThisTurnEnteredFrom_<zone>` property, which also asks `enteredThisTurn()`. (The substring appears in 278 scripts,
+   most of them in the `Count$ThisTurnEntered_…` form, which does not read the card's turn; see the table.) One static
+   that reads the plain property is in the jar's own code: Warp's "you may cast it from exile on a later turn" is a may-play static with
    `Affected$ Card.IsRemembered+nonLand+!ThisTurnEntered` (`ChangeZoneEffect`, its constant in the jar). On Forge's
    copy that static applied to nothing, so a warped card had no cast from exile. Since nearly every fork moves some
    card's turn, this re-run now happens on nearly every copy. That is one `checkStaticAbilities()` more per copy,
@@ -84,7 +88,8 @@ against the pool: every script of `cubes/library/library-pool.tsv` in the jar's 
 | flag (reader) | the copier | pool cards | here |
 |---|---|---|---|
 | `isPlotted` (Plotted) | dropped | 4 with `K:Plot`: Pillage the Bog, Slickshot Lockpicker, Slickshot Show-Off, Spinewoods Paladin; 0 that plot another card | **carried** |
-| `turnInZone` → `enteredThisTurn` (Plotted, Foretold, Mayhem) | reset to the copy's turn | the 4 above, Delayed Blast Fireball (`K:Foretell`); also read by the `ThisTurnEntered` property of 8 (Barrin, Tolarian Archmage; Cult Conscript; Khabál Ghoul; Moon-Circuit Hacker; Night Nurse, Healer of Heroes; Ocelot Pride; Phelia, Exuberant Shepherd; The Wandering Emperor) | **carried**, public zones only |
+| `turnInZone` → `enteredThisTurn` (Plotted, Foretold, Mayhem; the `ThisTurnEntered` card property) | reset to the copy's turn | the 4 above, Delayed Blast Fireball (`K:Foretell`); and 5 that read the card property (Moon-Circuit Hacker; Night Nurse, Healer of Heroes; Ocelot Pride; Phelia, Exuberant Shepherd; The Wandering Emperor) | **carried**, public zones only |
+| a zone's `cardsAddedThisTurn` / `enteredFromThisTurn` log (`Count$ThisTurnEntered_<zone>_from_…` through `CardUtil.getThisTurnEntered` → `Zone.getCardsAddedThisTurn`; the `ThisTurnEnteredFrom_` property's `isCardAddedThisTurn`) | never copied (`GameCopier`'s own `TODO`), and `Zone.add` logs a card only when it comes from a zone, which a fresh copy never does: empty on every copy | 3 read the count (Barrin, Tolarian Archmage; Cult Conscript; Khabál Ghoul) | **not carried**: a log per zone of last-known states, not a card's field; D493 does not fix these three (PLAN.md, *Search AI follow-ups* 8) |
 | `isForetold`, `isForetoldCostByEffect` (Foretold) | copied | 1 (Delayed Blast Fireball); 0 foretold by an effect | already right |
 | `wasDiscarded` (Mayhem) | dropped (no `setDiscarded`) | 0 with `K:Mayhem` | **not carried**: no pool card reads it on this path |
 | `getTurnInController` (`EnteredUnder`, `CostRevealChosen`) | the copy's zone's player | 0 with `EnteredUnder` | **not carried**: not on a cast path, and no pool card |
@@ -116,7 +121,7 @@ There is no reflection (lint rule 8). The real game is only read.
 
 **Measured.**
 - **The self-test** is `tools/ai-bench.sh --selftest`. That is where D472's and D479's copier scenarios live; it is not
-  one of `bridge/build.sh`'s self-tests. Its new scenario is `copy-plotted` (`plottedScenarios`), with 12 checks.
+  one of `bridge/build.sh`'s self-tests. Its new scenario is `copy-plotted` (`plottedScenarios`), with 13 checks.
   - **The setup.** The real game plots Slickshot Lockpicker and foretells Delayed Blast Fireball, both from the hand,
     by their own special actions at turn 5. Their turn in exile is then set back to 3: that is the one planted thing,
     because the cast comes on a later turn. Longhorn Sharpshooter is plotted directly in exile, before the triggers go
@@ -126,8 +131,12 @@ There is no reflection (lint rule 8). The real game is only read.
   - **This copy**: the Lockpicker and the Sharpshooter are plotted, both cards are in exile since turn 3, and nothing
     is on or waiting for the copy's stack. A library card at turn 1 and a hand card at turn 2 keep the copy's turn 5.
     `copyCandidates` lists both casts, with the real plays' match keys, and `mapSa` maps both. **An atlas branch
-    forcing the Plotted cast plays** (24 steps, no error); that is the production path that failed 150 of 150. The
-    real game is untouched.
+    forcing the Plotted cast plays** (24 steps, no error); that is the production path that failed 150 of 150. A
+    search playout of the same forced cast ends the turn with the copy's Lockpicker on the battlefield: the fork cast
+    it from exile. The real game is untouched.
+  - **The ablations below were hand edits**, made in the working tree for one run each and reverted. No switch for them
+    is in the tree. The built-in control is Forge's own `GameCopier`, which reproduces the defect but is not the
+    parent's `LenientGameCopier`.
   - **Ablation A** (D493's carry taken out, which is the parent's copier): 2 checks fail. The scenario then throws
     **`no Slickshot Lockpicker - Creature 2 / 3 (without paying its mana cost) [Plotted] on the copy's Slickshot
     Lockpicker (7)`**, J176's error word for word but the id.
@@ -135,7 +144,7 @@ There is no reflection (lint rule 8). The real game is only read.
     needed.
   - **Ablation C** (the trigger hold taken out): 1 fails, with the Sharpshooter's trigger waiting to go on the copy's
     stack.
-  - The whole self-test: **272 checks, 0 failures**, 25 s. D479's `copy-plain-timestamps` still finds its 12 branch
+  - The whole self-test: **272 checks, 0 failures**, 25 s (after the review, with its leaf check: **273 checks, 0 failures**). D479's `copy-plain-timestamps` still finds its 12 branch
     pairs identical.
 - **The recorded position, not replayed.** The atlas has no command that re-branches one decision of a spine.
   `tools/cubelab.sh --help` and `tools/cubelab/atlas.ts` offer a whole atlas run (`--phase a|b|both|report`) and
@@ -155,9 +164,12 @@ There is no reflection (lint rule 8). The real game is only read.
 **Comparability.** The carried turn changes `enteredThisTurn()` on almost every copied card in a public zone. Before
 this decision every such card read as entered this turn. That reaches every fork:
 - the casts above;
-- the 8 pool cards' `ThisTurnEntered` reads;
+- the 5 pool cards that read the `ThisTurnEntered` card property (the 3 that read the count form are unchanged:
+  the table);
 - any AI heuristic that asks `enteredThisTurn()`.
 
 These are the real game's readings, not new errors. As with D479's timestamps, **search-v2 results and atlas maps
-from before and after D493 are not pooled**. Split them by git sha (`docs/guides/ai-ladder.md`'s *A code change is
+from before and after D493 are not pooled**. The atlas records no code version: `schedule.jsonl` holds the plan and
+the decks' sha256, no git sha, so a phase B resumed across this merge would mix branches played before and after
+D493 (PLAN.md, *Search AI follow-ups* 9). Split them by git sha (`docs/guides/ai-ladder.md`'s *A code change is
 not a config change*).

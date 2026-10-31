@@ -132,8 +132,9 @@ import forge.game.zone.ZoneType;
  * earlier turn had no such cast, and the atlas's forced cast of one threw in
  * {@code SearchPolicy.mapSa} (J176's s10, d7: 150 of 150 branches).  The carry
  * pass sets the plotted flag (with the copy's {@code BecomesPlotted} triggers
- * held, because the plot happened in the original game) and, for a card in a
- * public zone, the turn it entered that zone.  A card in a hand or a library
+ * held, because the plot happened in the original game) and, for a card on the
+ * battlefield, in a graveyard, in exile, on the stack or in the command zone,
+ * the turn it entered that zone.  A card in a hand or a library
  * keeps the copy's turn: those are the zones the Determinizer redeals, and a
  * real turn there would mark which redealt card came from the hand.
  */
@@ -142,6 +143,15 @@ public final class LenientGameCopier extends GameCopier {
     /** The zones {@code GameCopier} copies (its private {@code ZONES}, 2.0.14). */
     static final Set<ZoneType> COPIED = Set.of(ZoneType.Battlefield, ZoneType.Hand, ZoneType.Graveyard,
             ZoneType.Library, ZoneType.Exile, ZoneType.Stack, ZoneType.Command);
+
+    /**
+     * D493: the zones whose cards get their original's turn in the zone: the
+     * public ones.  A hand and a library (the Determinizer's zones) keep the
+     * copy's turn, and so does any other zone (a sideboard: uniform, never
+     * redealt, never read).
+     */
+    static final Set<ZoneType> ZONE_TURN_CARRIED = Set.of(ZoneType.Battlefield, ZoneType.Graveyard, ZoneType.Exile,
+            ZoneType.Stack, ZoneType.Command);
 
     private boolean copying;
     private final Map<Card, Card> standIns = new HashMap<>();
@@ -335,7 +345,8 @@ public final class LenientGameCopier extends GameCopier {
      * that {@code GameCopier} leaves off or resets: the plotted flag, and the
      * turn the card entered its zone ({@code enteredThisTurn()}), which the
      * copier's {@code Zone.add} sets to the copy's turn.  The turn is carried
-     * outside a hand and a library only (the Determinizer's zones).  Either
+     * in the public zones only ({@link #ZONE_TURN_CARRIED}): never in a hand or
+     * a library, the Determinizer's zones.  Either
      * one makes {@link #carry} apply the statics again: a static may read the
      * turn ({@code ThisTurnEntered}: Warp's "you may cast it from exile on a
      * later turn" is one), and Forge's copy applied them with the copy's.
@@ -358,7 +369,7 @@ public final class LenientGameCopier extends GameCopier {
             plottedCarried++;
         }
         final Zone z = c.getZone();
-        if (z != null && !z.is(ZoneType.Hand) && !z.is(ZoneType.Library) && c.getTurnInZone() != o.getTurnInZone()) {
+        if (z != null && ZONE_TURN_CARRIED.contains(z.getZoneType()) && c.getTurnInZone() != o.getTurnInZone()) {
             c.setTurnInZone(o.getTurnInZone());
             zoneTurnsCarried++;
         }

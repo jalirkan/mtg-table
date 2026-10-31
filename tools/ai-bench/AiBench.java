@@ -3044,7 +3044,6 @@ public final class AiBench {
         });
     }
 
-    /** D479: the command-zone effect whose name starts with {@code host}'s, or null. */
     /**
      * D493 (amending D479): a plotted card, and a foretold one, on a fork.
      * {@code GameCopier} copies the foretold flags but not the plotted one,
@@ -3151,6 +3150,24 @@ public final class AiBench {
                     "d493", new LinkedHashMap<>(), null, "d493", false);
             check(b.error == null && b.unavailable == null && !b.engineError && b.steps > 0,
                     "an atlas branch forcing the Plotted Lockpicker plays (" + b.steps + " steps, error " + b.error + ")");
+            // and the fork's cast is the plotted one: the copy's Lockpicker has left exile for the battlefield
+            final String[] where = {"no leaf"};
+            mtgtable.ai.SearchPolicy.leafProbeForTest((cg, aiL) -> {
+                for (final Card c : cg.getCardsInGame()) {
+                    if (c.getId() == lp.getId()) {
+                        where[0] = String.valueOf(c.getZone() == null ? null : c.getZone().getZoneType());
+                    }
+                }
+            });
+            final CountSink sink = new CountSink();
+            try {
+                mtgtable.ai.SearchPolicy.playout(g, ai, mtgtable.ai.SearchPolicy.priorityCand(plotted), 7,
+                        new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 20_000), sink, false, null);
+            } finally {
+                mtgtable.ai.SearchPolicy.leafProbeForTest(null);
+            }
+            check("Battlefield".equals(where[0]) || "Graveyard".equals(where[0]),
+                    "the fork cast the Lockpicker from exile: on the copy it ends the turn in " + where[0] + " (" + sink.counts + ")");
             check(lp.isPlotted() && ai.getCardsIn(ZoneType.Exile).contains(lp) && human.getLife() == 20,
                     "the real game is untouched: the Lockpicker plotted in exile, life 20");
         });
@@ -3188,6 +3205,7 @@ public final class AiBench {
         return false;
     }
 
+    /** D479: the command-zone effect whose name starts with {@code host}'s, or null. */
     private static Card effectOf(final Player p, final String host) {
         for (final Card c : p.getCardsIn(ZoneType.Command)) {
             if (c.getName().startsWith(host) && c.getGamePieceType() == forge.card.GamePieceType.EFFECT) {
