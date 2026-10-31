@@ -1,0 +1,27 @@
+==== J177 run3 started 2026-10-31T16:42:08-04:00 in unit lab-J177-run3, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (14 turns, winner B) lists 10 decision(s) of seat A; branching at 10: d0 (p, turn 9, 3 options), d1 (p, turn 9, 3 options), d2 (p, turn 11, 4 options), d3 (p, turn 11, 2 options), d4 (a, turn 11, 2 options), d5 (p, turn 11, 2 options), d6 (p, turn 13, 3 options), d7 (a, turn 13, 4 options), d8 (p, turn 13, 3 options), d9 (b, turn 14, 4 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d4-random-0: 50/50 branch game(s); 7110 branch games/h
+  [B 2/10] d3-random-0: 50/50 branch game(s); 7128 branch games/h
+  [B 3/10] d5-random-0: 50/50 branch game(s); 7998 branch games/h
+  [B 4/10] d2-random-0: 100/100 branch game(s); 10541 branch games/h
+  [B 5/10] d8-random-0: 75/75 branch game(s); 10544 branch games/h
+  [B 6/10] d6-random-0: 75/75 branch game(s); 11850 branch games/h
+  [B 7/10] d9-random-0: 100/100 branch game(s); 12007 branch games/h
+  [B 8/10] d7-random-0: 100/100 branch game(s); 11649 branch games/h
+  [B 9/10] d0-random-0: 75/75 branch game(s); 11395 branch games/h
+  [B 10/11] d1-random-0: 75/75 branch game(s); 9588 branch games/h
+  [B 11/12] d0-random-25: 75/75 branch game(s); 7843 branch games/h
+  [B 12/14] d1-random-25: 75/75 branch game(s); 7107 branch games/h
+  [B 13/16] d0-random-75: 75/75 branch game(s); 6831 branch games/h
+  [B 14/16] d0-random-50: 75/75 branch game(s); 6733 branch games/h
+  [B 15/18] d1-random-75: 75/75 branch game(s); 6365 branch games/h
+  [B 16/18] d1-random-50: 75/75 branch game(s); 6341 branch games/h
+  [B 17/20] d0-random-125: 75/75 branch game(s); 6054 branch games/h
+  [B 18/20] d0-random-100: 75/75 branch game(s); 5985 branch games/h
+  [B 19/20] d1-random-100: 75/75 branch game(s); 5932 branch games/h
+  [B 20/20] d1-random-125: 75/75 branch game(s); 5830 branch games/h
+atlas: the checks on 6 workers took 22 s
+atlas: /home/justin-a/code/lab/data/lab-j177/b-s03-legacy-2142/atlas.json and atlas.md; phase A 0 game(s), phase B 1500 branch game(s) at 10 decision(s); checks: clean (35738 rows, 3002 frame logs, 10 leak check(s))
