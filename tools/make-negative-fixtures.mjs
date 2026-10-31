@@ -1141,8 +1141,10 @@ staleProbe('stale-token-shown-only-after-the-window.jsonl',
 // passes too.  The controls: no cast at all is m55-option-never-shown; a cast
 // one engine step too late; a later move into the opponent's hand; an
 // opponent's cast naming its own concealed hand card (an ability of a card in
-// hand, ninjutsu's shape); a card cast from a library; a copy already off the
-// stack.
+// hand, ninjutsu's shape) -- and the same in the log's first state, where only
+// the stub rejects it; a face-down exiled card listed before its cast, where
+// only the earlier listing rejects it; a card cast from a library; a copy
+// already off the stack.
 
 /** A target decision at the first state naming one of the viewer's permanents and a fresh id. */
 function withCopyTarget(fs) {
@@ -1218,6 +1220,37 @@ probe('stack-copy-is-a-card-from-a-library.jsonl',
     after[0].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'library', player: themOf() }, to: { zone: 'stack', player: null } },
       copyCast(fresh, themOf())[0]);
   });
+// Guards 2 and 3 alone (the #223 review): each has a control the other cannot catch.
+probe('stack-copy-hand-stub-cast-in-the-first-state.jsonl',
+  'D495 guard 2: the opponent activates an ability of a card in its hand (ninjutsu\'s shape) in the log\'s FIRST state -- the cast and the stub are in the same state, so nothing lists it BEFORE the cast; the stub alone rejects it',
+  'which its state frame does not show',
+  (fs) => {
+    const { b } = withCopyTarget(fs);
+    const stub = statesOf(fs)[0].body.players.find((p) => p.id !== header.seat).zones.hand.cards.find((c) => c.hidden === true).id;
+    b.options[1] = `target:${stub}`;
+    statesOf(fs)[0].body.events.push(copyCast(stub, themOf())[0]);
+  });
+{
+  const name = 'stack-copy-face-down-exile-listed-before-its-cast.jsonl';
+  const why = 'D495 guard 3: the opponent\'s face-down exiled card, listed with a blank face (a full card, not a stub) in the first state and in none after, then a cast naming it with no zone event -- it was in a zone before its cast, so it is a card, not a copy';
+  const fs = longSlice(5);
+  const sts = statesOf(fs);
+  const fresh = Math.max(...sts.flatMap((f) => [...cardsOf(f.body)].map((h) => h.card.id))) + 1;
+  putCard(sts[0].body.players.find((p) => p.id === themOf()), 'exile', faceDownCard(fs, fresh, 'exile', themOf(), themOf(), false));
+  const b = withDecision(fs);
+  const line = fs.splice(fs.findIndex((f) => f.dir === 'ai' && f.type === 'decision'), 1)[0];
+  const st = statesOf(fs)[2];
+  const idx = fs.indexOf(st);
+  fs.splice(idx + 1, 0, line);
+  const live = st.body.players.find((q) => q.id === header.seat).zones.battlefield.cards.find((c) => c.hidden !== true).id;
+  delete b.search;
+  Object.assign(b, { kind: 'target', frame: idx, stateSeq: st.seq, turn: st.body.turn, phase: st.body.phase ?? 'MAIN1',
+    options: [`target:${live}`, `target:${fresh}`], chosen: `target:${live}`, by: 'forge', source: 'chooseTargets' });
+  statesOf(fs)[3].body.events.push(copyCast(fresh, themOf())[0]);
+  const bytes = write(name, fs);
+  manifest.push({ file: name, level: 'fail', expect: 'which its state frame does not show', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
 probe('stack-copy-already-off-the-stack.jsonl',
   'D495: a copy cast and taken off the stack in or before the decision\'s own state is gone -- naming it is not vouched for',
   'which its state frame does not show',

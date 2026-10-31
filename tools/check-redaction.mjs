@@ -3113,9 +3113,9 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //       -- a stale target, counted apart; D495: or a spell copy on the
 //       stack, either seat's -- a `cast` event names it by the first state
 //       after the decision that records an event, and no state lists it as a
-//       stub or before that cast, no zone event moves it from or into a
-//       hidden zone, no `unstacked` took it off before the decision -- counted
-//       apart);
+//       stub or before that cast, every zone event moves it only among the
+//       stack, battlefields, graveyards or nowhere, no `unstacked` took it off
+//       before the decision -- counted apart);
 //   D4  the answer is one of the options.
 
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|target:none|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
@@ -3491,10 +3491,14 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
      * event naming it goes from and to only the stack, a battlefield, a
      * graveyard or nowhere (a copy of a permanent spell resolves into a token);
      * and no `unstacked` event took it off the stack in or before the decision's
-     * own state (a copy already gone).  What the guards keep out: a hand card (a
-     * stub, or a zone event from a hand), a library card (a zone event from a
-     * library), anything that went to a hand, a library or exile, and a copy
-     * already gone.
+     * own state (a copy already gone).  The guards matter because a `cast`
+     * event is not only a spell's: it fires for every stack object, abilities
+     * included, and Snap writes its source card's id ungated -- so it can name a
+     * hidden card (an ability activated from a hand).  What they keep out: a
+     * hand card (a stub, or a zone event from a hand), a card shown in a zone
+     * before its cast (a face-down exiled card), a library card (a zone event
+     * from a library), anything that went to a hand, a library or exile, and a
+     * copy already gone.
      */
     let copyEnd;
     for (const k of stateOrder) if (k > index && stateAt.get(k).eventful) { copyEnd = k; break; }
@@ -3739,7 +3743,7 @@ function main() {
     }
     if (stats.stackCopies > 0) {
       console.log(`      M55 decision ids that are spell copies on the stack=${stats.stackCopies} (D495: a copy cast in the `
-        + 'window, in no zone before its cast, never a stub, moved only among the stack, battlefields and graveyards, not yet off the stack)');
+        + 'window, in no zone before its cast, never a stub, moved only among the stack, battlefields, graveyards or nowhere, not yet off the stack)');
     }
     if (stats.legacyNullTargets > 0) {
       console.log(`      M55 legacy null target records=${stats.legacyNullTargets} (D487: J171's shape, written before M76 -- `

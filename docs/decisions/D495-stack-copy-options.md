@@ -53,14 +53,31 @@ line's new `M55 decision ids that are spell copies on the stack=<n>`), when it i
 public zone (Forge's `canBeShownTo` is true for it unconditionally, hard rule 8), a copy has no face-down state and came
 from no hand or library, and the `cast` event is the bridge's own public record that the item is on the stack for both
 seats. So `target:<the opponent's copy>` -- a counterspell aimed at a copy of the opponent's spell -- is a legal option the
-viewer can see, and the audit accepts it. Guards 2-4 are what keep the opponent's half tight, because the `cast` event's
-`cardId` is not itself gated (`Snap.event`: an id that resolves against no zone is a card the viewer may not see): an
-ability whose source is a card in the opponent's hand (ninjutsu's shape) names a stub (guard 2); a card cast from a hand
-or a library has a zone event from that zone (guard 4).
+viewer can see, and the audit accepts it.
+
+**A `cast` event is not only a spell's.** `GameEventSpellAbilityCast` fires for every object put on the stack -- a spell,
+an activated ability, a trigger -- and `Snap.event` writes its `cardId` as `si.getSourceCard()`'s id, **ungated** (its own
+comment: an id that resolves against no zone is a card the viewer may not see). So a `cast` event can name an ability's
+source, and that source can be a hidden card: a card in the opponent's hand (ninjutsu, channel and cycling are activated
+from a hand), a face-down card in exile, a library card. The event alone therefore vouches for nothing; guards 2-4 are what
+make it vouch only for an object that was never anywhere hidden. A hand card is listed as a stub (guard 2, which alone
+rejects an activation in the log's first state, where nothing can be listed before it); a card listed in any zone before
+its cast -- a face-down exiled card shown with a blank face, say -- was a card, not a copy (guard 3, which alone rejects
+that); a card cast or moved from or into a hand, a library or exile has a zone event that says so (guard 4).
+
+**Report 06's caution, answered.** Report 06 (`docs/research/06-hidden-information-audit.md`, section 1's listing) says a
+`CardView` with a null zone must be treated as *suspicious rather than public*: Forge's `canBeShownTo` is fail-open on
+`zone == null`, and LKI copies, `getCardForUi` views and pile headers all have one. That caution is about the
+**serialiser** deciding what to show, and it stands: `Snap` still gates on the caller's own `zoneHint`, never on
+`cv.getZone()`. This rule is the other end -- the post-game checker deciding whether an **id** the seat was offered could
+have been a hidden card -- and it treats an object in no zone as public only behind guards 2-5: no stub, no zone before
+its cast, no move through a hidden zone, still on the stack. A null-zone LKI copy of a hidden card shares that card's id,
+and the card itself is listed (as a stub, or in a zone before) or moved, so it fails a guard; what passes is an id the
+whole log never places anywhere but the stack, a battlefield, a graveyard or nowhere.
 
 **What stays rejected.** An id with no `cast` event (as today); a `cast` only after the window; an id any state lists as a
-stub; an id listed in a zone before its cast; an id any zone event moves from or into a hand, a library, exile or the
-command zone (so an id with a cast and a later move into the opponent's hand fails); a copy taken off the stack before the
+stub; an id listed in a zone before its cast; an id any zone event moves from or into anything but the stack, a
+battlefield, a graveyard or nowhere -- a hand, a library, exile or the command zone (so an id with a cast and a later move into the opponent's hand fails); a copy taken off the stack before the
 decision. The bridge's own gate at decision time (`Decisions.visible`) is unchanged; this is the post-game checker learning
 one more public object, like D481 and D485.
 
@@ -73,7 +90,7 @@ decisions only (its token grammar, `TOKEN`, has no `target:`; J176 s09's rows ar
 and a copy is never castable, activatable, an attacker or a blocker, so no row can name one; the atlas's rows check passed
 s09 (107,332 rows). Mirroring the acceptance there would be a rule nothing can exercise.
 
-**Tests.** The checker's controls, as D481's and D485's are: nine new files in `fixtures/negative/redaction/`, built by
+**Tests.** The checker's controls, as D481's and D485's are: eleven new files in `fixtures/negative/redaction/`, built by
 `tools/make-negative-fixtures.mjs` and named in `tools/check-redaction-selftest.mjs`'s `REQUIRED` (gate step 12, CI):
 
 - pass: `stack-copy-cast-by-the-viewer` (the s09 shape, a target decision naming the viewer's copy, cast in the next
@@ -81,11 +98,19 @@ s09 (107,332 rows). Mirroring the acceptance there would be a rule nothing can e
   three-copy shape: the first state after the decision is empty, the cast in the second); `stack-copy-resolves-into-a-token`;
 - fail: `stack-copy-cast-a-step-too-late` (the first state after the decision records an event, the cast is in the
   second); `stack-copy-then-into-the-opponent-hand`; `stack-copy-is-an-opponent-hand-stub` (the opponent's cast naming
-  its own concealed hand card); `stack-copy-is-a-card-from-a-library`; `stack-copy-already-off-the-stack`. The same id with
-  no `cast` event is the existing `m55-option-never-shown`, which still fails.
+  its own concealed hand card, which guards 2 and 3 both reject); `stack-copy-hand-stub-cast-in-the-first-state` (the same
+  in the log's first state: guard 2 alone); `stack-copy-face-down-exile-listed-before-its-cast` (the opponent's face-down
+  exiled card, a full card with a blank face, listed in the first state, then a cast naming it: guard 3 alone);
+  `stack-copy-is-a-card-from-a-library`; `stack-copy-already-off-the-stack`. The same id with no `cast` event is the existing
+  `m55-option-never-shown`, which still fails.
+- `--partial` (the self-test's M55 partial block): `stack-copy-cast-after-empty-states` cut after its empty state is
+  undecided, not a failure, and passes once the eventful state is in the prefix.
 
-Each guard was removed in turn in a scratch copy of the checker and its control flipped to PASS (the window widened to the
-whole log, guard 2-3, guard 4, guard 5), and narrowing the window to D481's flipped the three-copy control to FAIL.
+Each guard was removed in turn in a scratch copy of the checker, and its own control flipped to PASS: the window widened
+to the whole log (`cast-a-step-too-late`), guard 2 alone (`hand-stub-cast-in-the-first-state`), guard 3 alone
+(`face-down-exile-listed-before-its-cast`), guard 4 (`is-a-card-from-a-library`, `then-into-the-opponent-hand`), guard 5
+(`already-off-the-stack`); narrowing the window to D481's flipped the three-copy control to FAIL. (Before the #223 review
+guards 2 and 3 had only one control between them, which removing either alone did not flip.)
 
 **Measured.** Both checkers, `main`'s (`9c4737e9`) and this branch's, over every branch frame log of J176's thirteen
 spines (`/home/justin-a/code/lab/data/lab-j176/b-s*/phaseB/frames/*.jsonl.gz`, read only), with the atlas's own
@@ -110,4 +135,4 @@ spines (`/home/justin-a/code/lab/data/lab-j176/b-s*/phaseB/frames/*.jsonl.gz`, r
 On every spine every other line of the two outputs is identical (the per-file stats, sorted, with the failing lines and the
 new count line set aside), so the rule changed nothing but the 60 options it was written for, and it accepted nothing
 anywhere else. `node tools/check-redaction.mjs fixtures/games/*.jsonl` passes its 22 recordings, and the self-test passes
-its 135 controls.
+its 137 controls (135 before the review's two).

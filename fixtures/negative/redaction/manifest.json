@@ -468,6 +468,18 @@
     "why": "D495: a cast whose id a zone event moved from a LIBRARY onto the stack is a card the viewer could not see, not a copy -- not vouched for"
   },
   {
+    "file": "stack-copy-hand-stub-cast-in-the-first-state.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495 guard 2: the opponent activates an ability of a card in its hand (ninjutsu's shape) in the log's FIRST state -- the cast and the stub are in the same state, so nothing lists it BEFORE the cast; the stub alone rejects it"
+  },
+  {
+    "file": "stack-copy-face-down-exile-listed-before-its-cast.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D495 guard 3: the opponent's face-down exiled card, listed with a blank face (a full card, not a stub) in the first state and in none after, then a cast naming it with no zone event -- it was in a zone before its cast, so it is a card, not a copy"
+  },
+  {
     "file": "stack-copy-already-off-the-stack.jsonl",
     "level": "fail",
     "expect": "which its state frame does not show",

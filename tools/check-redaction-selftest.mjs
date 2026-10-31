@@ -147,8 +147,9 @@ const REQUIRED = [
   // decision -- vouched for by a cast in the window by either seat (the stack is
   // public), and one that resolves into a token.  The controls: a cast too late,
   // a later move into the opponent's hand, an opponent's cast naming its own hand
-  // stub, a card cast from a library, a copy already gone (no cast at all is
-  // m55-option-never-shown).
+  // stub (and the same in the log's first state: guard 2 alone), a face-down
+  // exiled card listed before its cast (guard 3 alone), a card cast from a
+  // library, a copy already gone (no cast at all is m55-option-never-shown).
   ['stack-copy-cast-by-the-viewer.jsonl', 'pass'],
   ['stack-copy-cast-by-the-opponent.jsonl', 'pass'],
   ['stack-copy-cast-after-empty-states.jsonl', 'pass'],
@@ -157,6 +158,8 @@ const REQUIRED = [
   ['stack-copy-then-into-the-opponent-hand.jsonl', 'fail'],
   ['stack-copy-is-an-opponent-hand-stub.jsonl', 'fail'],
   ['stack-copy-is-a-card-from-a-library.jsonl', 'fail'],
+  ['stack-copy-hand-stub-cast-in-the-first-state.jsonl', 'fail'],
+  ['stack-copy-face-down-exile-listed-before-its-cast.jsonl', 'fail'],
   ['stack-copy-already-off-the-stack.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
@@ -366,6 +369,16 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
   if (d4.problems.length > 0 || d4.undecided.length === 0 || d4.decidedBytes !== Buffer.byteLength(cut(d3, 3))) bad(`a decision naming a card with no later state yet: --partial should hold it undecided, got problems=${d4.problems.length} undecided=${d4.undecided.length}`);
   else if (d5.problems.length === 0) bad('the same decision once the next state is in the prefix (and does not show the card): --partial should fail it');
   else lead('M55 D3 cut before the next state: undecided; with it: a failure');
+
+  // D495: a spell copy's cast may come after EMPTY states (three copies choosing
+  // targets in turn); cut after the empty state the decision waits, and once the
+  // eventful state is in the prefix it passes.
+  const sc = `${DIR}/stack-copy-cast-after-empty-states.jsonl`;
+  const sc5 = checkFile('sc.jsonl', { partial: true, text: cut(sc, 5) });
+  const sc6 = checkFile('sc.jsonl', { partial: true, text: cut(sc, 6) });
+  if (sc5.problems.length > 0 || sc5.undecided.length === 0) bad(`a spell copy's decision cut after its empty state: --partial should hold it undecided, got problems=${sc5.problems.length} undecided=${sc5.undecided.length}`);
+  else if (sc6.problems.length > 0 || sc6.undecided.length > 0) bad(`the same decision once the copy's cast is in the prefix: --partial should pass it, got problems=${sc6.problems.length} undecided=${sc6.undecided.length}`);
+  else lead('D495 spell copy cut after its empty state: undecided; with the cast: a pass');
 
   // No prefix of a healthy recording fails --partial.
   const t0 = Date.now();
