@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: scan_self == 1 (scan_self = 0); metrics_j171_self == 1 (metrics_j171_self = 0)
 runner: forgecoach-runner 7a984963
 started: 2026-11-01T02:04:11-05:00
-phase: pilot 1/1
+finished: 2026-11-01T02:14:01-05:00
 mtg-table: 7a98496
 workers: 3
+peak_worker_rss_gb: 1.19
