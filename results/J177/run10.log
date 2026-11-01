@@ -1,0 +1,54 @@
+==== J177 run10 started 2026-10-31T20:37:57-04:00 in unit lab-J177-run10, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (18 turns, winner A) lists 19 decision(s) of seat A; branching at 10: d0 (p, turn 4, 3 options), d1 (p, turn 4, 3 options), d3 (p, turn 6, 4 options), d5 (p, turn 10, 3 options), d8 (p, turn 12, 3 options), d9 (a, turn 12, 4 options), d11 (p, turn 14, 3 options), d12 (a, turn 14, 5 options), d15 (a, turn 16, 7 options), d18 (a, turn 18, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d1-random-0: 75/75 branch game(s); 5857 branch games/h
+  [B 2/11] d0-random-0: 75/75 branch game(s); 5940 branch games/h
+  [B 3/12] d8-random-0: 75/75 branch game(s); 5992 branch games/h
+  [B 4/13] d3-random-0: 100/100 branch game(s); 6034 branch games/h
+  [B 5/14] d5-random-0: 75/75 branch game(s); 6138 branch games/h
+  [B 6/15] d9-random-0: 100/100 branch game(s); 6314 branch games/h
+  [B 7/16] d1-random-25: 75/75 branch game(s); 6609 branch games/h
+  [B 8/16] d0-random-25: 75/75 branch game(s); 6603 branch games/h
+  [B 9/16] d8-random-25: 75/75 branch game(s); 6630 branch games/h
+  [B 10/16] d3-random-25: 100/100 branch game(s); 6664 branch games/h
+  [B 11/18] d5-random-25: 75/75 branch game(s); 6731 branch games/h
+  [B 12/18] d9-random-25: 100/100 branch game(s); 7016 branch games/h
+  [B 13/20] d11-random-0: 75/75 branch game(s); 7128 branch games/h
+  [B 14/21] d3-random-50: 100/100 branch game(s); 7228 branch games/h
+  [B 15/21] d3-random-75: 100/100 branch game(s); 7258 branch games/h
+  [B 16/23] d12-random-0: 125/125 branch game(s); 7264 branch games/h
+  [B 17/24] d9-random-50: 100/100 branch game(s); 7448 branch games/h
+  [B 18/24] d15-random-0: 175/175 branch game(s); 7446 branch games/h
+  [B 19/25] d11-random-25: 75/75 branch game(s); 7441 branch games/h
+  [B 20/27] d3-random-100: 100/100 branch game(s); 7529 branch games/h
+  [B 21/27] d9-random-75: 100/100 branch game(s); 7607 branch games/h
+  [B 22/29] d12-random-25: 125/125 branch game(s); 7626 branch games/h
+  [B 23/31] d11-random-50: 75/75 branch game(s); 7623 branch games/h
+  [B 24/31] d3-random-125: 100/100 branch game(s); 7607 branch games/h
+  [B 25/31] d11-random-75: 75/75 branch game(s); 7683 branch games/h
+  [B 26/33] d15-random-25: 175/175 branch game(s); 7725 branch games/h
+  [B 27/35] d9-random-100: 100/100 branch game(s); 7736 branch games/h
+  [B 28/35] d12-random-75: 125/125 branch game(s); 7749 branch games/h
+  [B 29/35] d9-random-125: 100/100 branch game(s); 7748 branch games/h
+  [B 30/35] d11-random-100: 75/75 branch game(s); 7746 branch games/h
+  [B 31/35] d12-random-50: 125/125 branch game(s); 7749 branch games/h
+  [B 32/37] d11-random-125: 75/75 branch game(s); 7918 branch games/h
+  [B 33/37] d12-random-100: 125/125 branch game(s); 7939 branch games/h
+  [B 34/37] d12-random-125: 125/125 branch game(s); 7933 branch games/h
+  [B 35/37] d18-random-0: 150/150 branch game(s); 7898 branch games/h
+  [B 36/38] d15-random-50: 175/175 branch game(s); 7887 branch games/h
+  [B 37/38] d15-random-75: 175/175 branch game(s); 7799 branch games/h
+  [B 38/40] d18-random-25: 150/150 branch game(s); 7670 branch games/h
+  [B 39/40] d15-random-125: 150/150 branch game(s); 7515 branch games/h
+  [B 40/40] d15-random-100: 150/150 branch game(s); 7510 branch games/h
+atlas: the checks on 6 workers took 150 s
+atlas: /home/justin-a/code/lab/data/lab-j177/b-s10-peasant-2149/atlas.json and atlas.md; phase A 0 game(s), phase B 4300 branch game(s) at 10 decision(s); checks: clean (117156 rows, 8602 frame logs, 10 leak check(s))
+  atlas warning: d5 option 0 `pass` (pass): 16 of 50 branch game(s) were capped (random 16 of 50): 16 x ended at the turn cap
+  atlas warning: d5 option 1 `cast:39` (Fallen Angel): 19 of 50 branch game(s) were capped (random 19 of 50): 19 x ended at the turn cap
+  atlas warning: d5 option 2 `cast:25` (Jade Statue): 15 of 50 branch game(s) were capped (random 15 of 50): 15 x ended at the turn cap
+  atlas warning: d15 option 1 `attack:none` (attack none): 40 of 150 branch game(s) were capped (random 40 of 150): 40 x ended at the turn cap
+  atlas warning: d15 option 2 `attack:25,26,38,39` (attack Su-Chi+Fallen Angel+Jade Statue+Zulaport Cutthroat): 39 of 150 branch game(s) were capped (random 39 of 150): 39 x ended at the turn cap
+  atlas warning: d15 option 4 `attack:25,26,36,38` (attack Vampire Nighthawk+Su-Chi+Jade Statue+Zulaport Cutthroat): 39 of 150 branch game(s) were capped (random 39 of 150): 39 x ended at the turn cap
+  atlas warning: d15 option 5 `attack:26,36,38,39` (attack Vampire Nighthawk+Su-Chi+Fallen Angel+Zulaport Cutthroat): 29 of 100 branch game(s) were capped (random 29 of 100): 29 x ended at the turn cap
