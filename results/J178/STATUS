@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: seat_code == 1 (seat_code = 0); deck_code == 1 (deck_code = 0)
 runner: forgecoach-runner 7a984963
 started: 2026-11-01T01:45:44-05:00
-phase: pilot 1/1
+finished: 2026-11-01T01:55:35-05:00
 mtg-table: 7a98496
 workers: 3
+peak_worker_rss_gb: 1.51
