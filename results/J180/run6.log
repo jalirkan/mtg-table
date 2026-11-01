@@ -1,0 +1,47 @@
+==== J180 run6 started 2026-11-01T05:03:31-05:00 in unit lab-J180-run6, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (13 turns, winner B) lists 9 decision(s) of seat A; branching at 9: d0 (p, turn 4, 4 options), d1 (p, turn 6, 5 options), d2 (p, turn 6, 3 options), d3 (p, turn 6, 2 options), d4 (p, turn 8, 3 options), d5 (p, turn 10, 5 options), d6 (p, turn 10, 4 options), d7 (p, turn 12, 5 options), d8 (p, turn 12, 5 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 9 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/9] d3-random-0: 50/50 branch game(s); 8307 branch games/h
+  [B 2/10] d2-random-0: 75/75 branch game(s); 8908 branch games/h
+  [B 3/11] d4-random-0: 75/75 branch game(s); 9356 branch games/h
+  [B 4/12] d5-random-0: 125/125 branch game(s); 9646 branch games/h
+  [B 5/13] d3-random-25: 50/50 branch game(s); 10124 branch games/h
+  [B 6/15] d1-random-0: 125/125 branch game(s); 10438 branch games/h
+  [B 7/16] d3-random-50: 25/25 branch game(s); 10499 branch games/h
+  [B 8/16] d2-random-25: 75/75 branch game(s); 10556 branch games/h
+  [B 9/16] d4-random-25: 75/75 branch game(s); 10799 branch games/h
+  [B 10/18] d3-random-75: 25/25 branch game(s); 10768 branch games/h
+  [B 11/20] d5-random-25: 125/125 branch game(s); 10868 branch games/h
+  [B 12/22] d3-random-100: 25/25 branch game(s); 10953 branch games/h
+  [B 13/22] d0-random-0: 100/100 branch game(s); 10985 branch games/h
+  [B 14/23] d6-random-0: 100/100 branch game(s); 11192 branch games/h
+  [B 15/24] d4-random-50: 75/75 branch game(s); 11549 branch games/h
+  [B 16/24] d5-random-50: 100/100 branch game(s); 11587 branch games/h
+  [B 17/24] d1-random-25: 125/125 branch game(s); 11637 branch games/h
+  [B 18/26] d3-random-125: 25/25 branch game(s); 11750 branch games/h
+  [B 19/26] d6-random-25: 100/100 branch game(s); 11753 branch games/h
+  [B 20/28] d5-random-75: 100/100 branch game(s); 11768 branch games/h
+  [B 21/30] d6-random-50: 75/75 branch game(s); 11898 branch games/h
+  [B 22/30] d4-random-75: 75/75 branch game(s); 11888 branch games/h
+  [B 23/32] d5-random-100: 75/75 branch game(s); 11916 branch games/h
+  [B 24/32] d0-random-25: 100/100 branch game(s); 11933 branch games/h
+  [B 25/34] d1-random-50: 125/125 branch game(s); 11820 branch games/h
+  [B 26/34] d1-random-75: 125/125 branch game(s); 11801 branch games/h
+  [B 27/36] d5-random-125: 75/75 branch game(s); 11791 branch games/h
+  [B 28/36] d4-random-100: 75/75 branch game(s); 11708 branch games/h
+  [B 29/36] d4-random-125: 75/75 branch game(s); 11723 branch games/h
+  [B 30/36] d6-random-75: 75/75 branch game(s); 12119 branch games/h
+  [B 31/38] d7-random-0: 125/125 branch game(s); 12130 branch games/h
+  [B 32/38] d6-random-125: 75/75 branch game(s); 11963 branch games/h
+  [B 33/38] d1-random-125: 125/125 branch game(s); 12095 branch games/h
+  [B 34/38] d6-random-100: 75/75 branch game(s); 12200 branch games/h
+  [B 35/38] d1-random-100: 125/125 branch game(s); 12194 branch games/h
+  [B 36/38] d8-random-0: 125/125 branch game(s); 12143 branch games/h
+  [B 37/38] d0-random-75: 100/100 branch game(s); 11969 branch games/h
+  [B 38/38] d0-random-50: 100/100 branch game(s); 11919 branch games/h
+  [B 39/40] d0-random-125: 100/100 branch game(s); 10596 branch games/h
+  [B 40/40] d0-random-100: 100/100 branch game(s); 10436 branch games/h
+atlas: the checks on 6 workers took 69 s
+atlas: /home/justin-a/code/lab/data/lab-j180/b-s06-peasant-2171/atlas.json and atlas.md; phase A 0 game(s), phase B 3500 branch game(s) at 9 decision(s); checks: clean (113447 rows, 7002 frame logs, 9 leak check(s))
