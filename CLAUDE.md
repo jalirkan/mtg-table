@@ -169,7 +169,10 @@ code; if you think one is wrong, say so in prose first.
     - **5. `CardView` outside the serialiser** (below);
     - **6 and 7. threads and game-thread hops** (below, and hard rule 3).
     - 8. a Forge field read by name through reflection: `InputPeek` alone,
-      for `InputSelectTargets`' private targets and ability (D423).
+      for `InputSelectTargets`' private targets and ability (D423); and 8b,
+      the one field looked up by name to be written: `Card.paperCard`, once,
+      tagged, in `LenientGameCopier`, for a forked token's paper card; the
+      ways round a lookup by name are banned everywhere (D497).
 
     Every exemption is a repo-relative PATH, never a file name. The lint
     rejects the identifier **`CardView` in any scanned file other than

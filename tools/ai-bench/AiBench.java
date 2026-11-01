@@ -1513,6 +1513,7 @@ public final class AiBench {
         copierCarryScenarios();
         plottedScenarios();
         revealScenarios();
+        forkTokenCopyScenarios();
         chooseSourceScenarios();
         staleTargetScenarios();
         modalCastTargetsScenario();
@@ -3152,6 +3153,170 @@ public final class AiBench {
                     "tools/check-redaction.mjs passes the seat's log, reveal line and all (exit " + code + ")"
                             + (code == 0 ? "" : ": " + out));
         });
+    }
+
+    /**
+     * D497: a copy of a token, made on a fork.  {@code GameCopier} re-makes a
+     * token with no paper card, and {@code CopyPermanentEffect.getProtoType}
+     * builds the copy from {@code original.getPaperCard()}: on a fork every
+     * {@code CopyPermanent} whose original was a token from a token script
+     * threw {@code NullPointerException} in {@code CardFactory.readCard}
+     * (J180's s11, d18 and d19: Reflection of Kiki-Jiki on a Goblin Shaman
+     * token, 77 of 4,875 branches).  The board: Fable of the Mirror-Breaker's
+     * back face and the Goblin Shaman token its chapter I makes, from the token
+     * script (GameState's {@code T:}, a {@code PaperToken}, as the real chapter
+     * makes it).  Forge's own copier is the control; the real game's Kiki copy
+     * is what the fork's must equal; then the atlas branch that failed in the
+     * field, recorded with {@code tools/ai-bench/decks/fork-token-copy.dck} as
+     * both seats' deck: its copy has haste and is sacrificed at the end step,
+     * and {@code tools/check-redaction.mjs} passes both seats' logs.
+     */
+    static void forkTokenCopyScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a copy of a token on a fork (D497, engine)");
+        final String lib = "Mountain;Mountain;Mountain;Mountain;Mountain;Mountain";
+        scenario("fork-token-copy", List.of("humanlife=20", "ailife=20", "turn=15", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Mountain", "humanhand=Mountain", "humanlibrary=" + lib, "ailibrary=" + lib,
+                "aibattlefield=Fable of the Mirror-Breaker|Transformed;T:r_2_2_goblin_shaman_treasure;Mountain;Mountain"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Card kiki = named(ai.getCardsIn(ZoneType.Battlefield), "Reflection of Kiki-Jiki");
+            final Card tok = named(ai.getCardsIn(ZoneType.Battlefield), "Goblin Shaman Token");
+            final forge.item.IPaperCard paper = tok.getPaperCard();
+            check(tok.isToken() && paper instanceof forge.item.PaperToken && LenientGameCopier.paperCardWritable(),
+                    "setup: the real game's Goblin Shaman token carries its token script's paper card (" + paper
+                            + "), and the copier found Card.paperCard");
+            g.setAge(forge.game.GameStage.Play);   // the lab's games are in Play (D478's note)
+            g.getTriggerHandler().resetActiveTriggers();
+            final Game plain = new forge.ai.simulation.GameCopier(g).makeCopy();
+            final Card pTok = byId(plain.getCardsIn(ZoneType.Battlefield), tok.getId());
+            String plainCopy;
+            try {
+                plainCopy = kikiOn(plain, kiki.getId(), tok.getId());
+            } catch (final NullPointerException e) {
+                plainCopy = "throws " + e;
+            }
+            check(pTok.getPaperCard() == null && plainCopy.startsWith("throws java.lang.NullPointerException"),
+                    "control: Forge's own copy re-makes the token with no paper card, and Kiki-Jiki's copy of it throws ("
+                            + plainCopy + ")");
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            final Card cTok = byId(copy.getCardsIn(ZoneType.Battlefield), tok.getId());
+            check(cTok.getPaperCard() == paper && cp.paperCardsCarried() == 1 && cp.paperCardsLost().isEmpty(),
+                    "the copy's token has the real token's paper card (" + cTok.getPaperCard() + ", " + cp.paperCardsCarried()
+                            + " carried, lost " + cp.paperCardsLost() + ")");
+            String inCopy;
+            try {
+                inCopy = kikiOn(copy, kiki.getId(), tok.getId());
+            } catch (final NullPointerException e) {
+                inCopy = "throws " + e;   // without D497's carry: the field's crash, and the branch below meets it too
+            }
+            // the production path that failed in the field: an atlas branch forcing Kiki-Jiki's ability, recorded
+            forge.game.spellability.SpellAbility act = null;
+            for (final forge.game.spellability.SpellAbility sa : kiki.getSpellAbilities()) {
+                act = act == null && sa.isActivatedAbility() && sa.getApi() == forge.game.ability.ApiType.CopyPermanent ? sa : act;
+            }
+            act.setActivatingPlayer(ai);
+            act.resetTargets();
+            act.getTargets().add(tok);   // a candidate carries its targets, as the atlas's listing chose them (D486)
+            final Config cfg = Config.load();
+            final File deckFile = new File(cfg.root(), "tools/ai-bench/decks/fork-token-copy.dck");
+            final Deck deck = DeckSerializer.fromFile(deckFile);
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = g.getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            u.jarSha = BenchRecording.jarSha(cfg);
+            u.seats = new ArrayList<>();
+            for (int s = 0; s < 2; s++) {
+                u.seats.add(new SeatRecorder.Seat("fork-token-copy", deckFile, BenchRecording.relPath(cfg, deckFile), deck,
+                        Bootstrap.DEFAULT_AI_PROFILE));
+            }
+            final File dir = new File(cfg.root(), "var/ai-bench/fork-token-copy");
+            for (final File f : dir.exists() ? dir.listFiles() : new File[0]) {
+                f.delete();
+            }
+            final Map<String, Object> fields = new LinkedHashMap<>();   // the lab header's fields, as Atlas.run writes them
+            fields.put("decision", 0L);
+            fields.put("kind", "p");
+            fields.put("turn", (long) g.getPhaseHandler().getTurn());
+            fields.put("option", 0L);
+            fields.put("optionToken", mtgtable.ai.SearchPolicy.token(mtgtable.ai.SearchPolicy.priorityCand(act)));
+            fields.put("continuation", u.continuation);
+            fields.put("branch", 0L);
+            fields.put("branchSeed", 7L);
+            fields.put("turnCap", (long) u.turnCap);
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(act), 0, 0, 7, u,
+                    "d497", fields, dir, "d497", false);
+            check(b.error == null && b.unavailable == null && !b.engineError && b.steps > 0,
+                    "an atlas branch forcing Kiki-Jiki's ability on the token plays (" + b.steps + " steps, error " + b.error + ")");
+            final int seat = g.getPlayers().indexOf(ai);
+            final File log = new File(dir, "d497-seat" + seat + ".jsonl.gz");
+            final List<String> lines = new ArrayList<>();
+            if (log.exists()) {
+                try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(
+                        new java.util.zip.GZIPInputStream(new java.io.FileInputStream(log)), StandardCharsets.UTF_8))) {
+                    for (String l = r.readLine(); l != null; l = r.readLine()) {
+                        lines.add(l);
+                    }
+                }
+            }
+            int made = -1;
+            for (final String l : lines) {
+                if (made < 0 && l.contains("\"type\":\"state\"")) {
+                    final java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                            "\\{\"id\":(\\d+),\"name\":\"Goblin Shaman Token\"[^{}]*\"keywords\":\\[[^\\]]*\"HASTE\"").matcher(l);
+                    while (m.find()) {
+                        made = Integer.parseInt(m.group(1));
+                    }
+                }
+            }
+            boolean sacrificed = false;
+            for (final String l : lines) {
+                sacrificed |= made >= 0 && l.contains("\"kind\":\"sacrificed\",\"cardId\":" + made + "}");
+            }
+            check(made >= 0 && made != tok.getId() && sacrificed,
+                    "the branch's log shows the copy, a Goblin Shaman token with haste (id " + made
+                            + "), sacrificed at the end step (" + sacrificed + ")");
+            for (int s = 0; s < 2; s++) {
+                final File f = new File(dir, "d497-seat" + s + ".jsonl.gz");
+                final Process p = new ProcessBuilder("node", "tools/check-redaction.mjs", "--empty-hand-ok", f.getPath())
+                        .directory(cfg.root()).redirectErrorStream(true).start();
+                final String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                final int code = p.waitFor();
+                check(code == 0, "tools/check-redaction.mjs passes the branch's seat " + s + " log (exit " + code + ")"
+                        + (code == 0 ? "" : ": " + out));
+            }
+            // last, so neither fork above starts from a board with the real game's copy on it
+            final String inReal = kikiOn(g, kiki.getId(), tok.getId());
+            check(inReal.startsWith("Goblin Shaman Token, token, haste, 2/2, 1 trigger(s), rules Goblin Shaman Token"),
+                    "the real game: Kiki-Jiki copies the token (" + inReal + ")");
+            check(inCopy.equals(inReal), "the copy's Kiki-Jiki made what the real game's makes: " + inCopy);
+        });
+    }
+
+    /** D497: Kiki-Jiki's ability (no cost paid) on the token, in game {@code g}: the new token, described. */
+    private static String kikiOn(final Game g, final int kikiId, final int tokId) {
+        final Card k = byId(g.getCardsIn(ZoneType.Battlefield), kikiId);
+        final Card t = byId(g.getCardsIn(ZoneType.Battlefield), tokId);
+        forge.game.spellability.SpellAbility sa = null;
+        for (final forge.game.spellability.SpellAbility s : k.getSpellAbilities()) {
+            sa = sa == null && s.isActivatedAbility() && s.getApi() == forge.game.ability.ApiType.CopyPermanent ? s : sa;
+        }
+        sa.setActivatingPlayer(k.getController());
+        sa.resetTargets();
+        sa.getTargets().add(t);
+        final List<Card> before = new ArrayList<>(k.getController().getCardsIn(ZoneType.Battlefield));
+        forge.game.ability.AbilityUtils.resolve(sa);
+        for (final Card c : k.getController().getCardsIn(ZoneType.Battlefield)) {
+            if (!before.contains(c)) {
+                return c.getName() + (c.isToken() ? ", token" : ", not a token")
+                        + (c.hasKeyword(forge.game.keyword.Keyword.HASTE) ? ", haste" : ", no haste") + ", " + c.getNetPower() + "/"
+                        + c.getNetToughness() + ", " + c.getTriggers().size() + " trigger(s), rules "
+                        + (c.getRules() == null ? null : c.getRules().getName()) + ", paper " + c.getPaperCard();
+            }
+        }
+        return "no new card";
     }
 
     /**

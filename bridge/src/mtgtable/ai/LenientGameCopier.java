@@ -18,6 +18,7 @@
  */
 package mtgtable.ai;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -40,6 +41,7 @@ import forge.game.trigger.TriggerHandler;
 import forge.game.trigger.TriggerType;
 import forge.game.zone.Zone;
 import forge.game.zone.ZoneType;
+import forge.item.IPaperCard;
 
 /**
  * Forge's {@link GameCopier} with the one failure that ends simulated cube
@@ -137,6 +139,22 @@ import forge.game.zone.ZoneType;
  * the turn it entered that zone.  A card in a hand or a library
  * keeps the copy's turn: those are the zones the Determinizer redeals, and a
  * real turn there would mark which redealt card came from the hand.
+ *
+ * <p><b>A token's paper card</b> (D497).  {@code GameCopier} re-makes every
+ * token with {@code TokenInfo.makeOneToken}, which builds it with
+ * {@code new Card(id, game)}: no paper card.  A token the live game made from
+ * a token script carries one (a {@code PaperToken}), and
+ * {@code Card.getPaperCard()} finds nothing by a token's name in the card
+ * databases, so on a copy it returned null for every such token -- and every
+ * {@code CopyPermanent} effect whose original was one threw
+ * {@code NullPointerException} in {@code CardFactory.readCard} (Reflection of
+ * Kiki-Jiki copying a Goblin Shaman token, J180's s11, d18 and d19).  The
+ * carry pass gives each re-made token its original's paper card, field to
+ * field, before anything else it carries.  {@code Card.paperCard} is
+ * {@code private final} with no setter in the pinned jar, so this is the one
+ * reflective write of a Forge field the lint allows (its rule
+ * {@code forge-field-write}); on an engine where the field is not there,
+ * nothing is written and {@link #paperCardsLost} counts each token.
  */
 public final class LenientGameCopier extends GameCopier {
 
@@ -167,6 +185,14 @@ public final class LenientGameCopier extends GameCopier {
     private int plainTimestampsMoved;
     private int plottedCarried;
     private int zoneTurnsCarried;
+    private int paperCardsCarried;
+    private final List<String> paperCardsLost = new ArrayList<>();
+    /**
+     * D497: {@code Card.paperCard}, the field {@link #carryPaperCard} writes
+     * (null when this engine has no such field of type {@code IPaperCard}).
+     */
+    private static final Field PAPER_CARD = paperCardField();
+
     /** D479's follow-up, for the self-test only: false leaves a plain card with the timestamps Forge gave it. */
     private static volatile boolean carryPlainTimestamps = true;
 
@@ -235,6 +261,21 @@ public final class LenientGameCopier extends GameCopier {
         return zoneTurnsCarried;
     }
 
+    /** D497: how many re-made tokens were given their original's paper card. */
+    public int paperCardsCarried() {
+        return paperCardsCarried;
+    }
+
+    /** D497: the re-made tokens whose original has a paper card the copy could not be given (their names). */
+    public List<String> paperCardsLost() {
+        return paperCardsLost;
+    }
+
+    /** D497: true when the paper-card field was found (the self-test asserts it). */
+    public static boolean paperCardWritable() {
+        return PAPER_CARD != null;
+    }
+
     /**
      * For the self-test only (D479's follow-up): false makes every copy leave
      * a plain card with the timestamps Forge gave it, as before D479, so a
@@ -281,6 +322,9 @@ public final class LenientGameCopier extends GameCopier {
                 live.put((Card) o, c);
             }
             byId.put(c.getId(), c);
+        }
+        for (final Map.Entry<Card, Card> e : live.entrySet()) {
+            carryPaperCard(e.getKey(), e.getValue());   // D497: first, so a mirror copied from a token has it too
         }
         final int carriedBefore = traitsCarried + linksCarried + plottedCarried + zoneTurnsCarried;
         for (final Map.Entry<Card, Card> e : live.entrySet()) {
@@ -372,6 +416,57 @@ public final class LenientGameCopier extends GameCopier {
         if (z != null && ZONE_TURN_CARRIED.contains(z.getZoneType()) && c.getTurnInZone() != o.getTurnInZone()) {
             c.setTurnInZone(o.getTurnInZone());
             zoneTurnsCarried++;
+        }
+    }
+
+    /**
+     * D497: a token {@code GameCopier.createCardCopy} re-made from its
+     * {@code TokenInfo} (a token that is not immutable) gets its original's
+     * paper card when the copy's field is empty and the original's is not.
+     * Field to field: {@code getPaperCard()} would fall back to up to four
+     * card-database lookups for every token of every fork, and would let a
+     * script token named like a printed card (Llanowar Mentor's Llanowar
+     * Elves) answer with the printed card where the live token answers with
+     * its script.  A token the live game holds with no paper card (only
+     * {@code GameState}'s {@code t:} tokens are) stays as its original is.
+     */
+    private void carryPaperCard(final Card o, final Card c) {
+        if (!o.isToken() || o.isImmutable()) {
+            return;
+        }
+        if (PAPER_CARD == null) {
+            if (c.getPaperCard() == null && o.getPaperCard() != null) {
+                paperCardsLost.add(o.getName());
+            }
+            return;
+        }
+        try {
+            if (PAPER_CARD.get(c) != null) {
+                return;
+            }
+            final Object pc = PAPER_CARD.get(o);
+            if (pc == null) {
+                return;
+            }
+            PAPER_CARD.set(c, pc);
+            paperCardsCarried++;
+        } catch (final IllegalAccessException | RuntimeException e) {
+            paperCardsLost.add(o.getName());
+        }
+    }
+
+    private static Field paperCardField() {
+        try {
+            final Field f = Card.class.getDeclaredField("paperCard");   // ALLOW paperCard write: D497
+            if (f.getType() != IPaperCard.class) {
+                throw new NoSuchFieldException("Card.paperCard is a " + f.getType().getName() + ", not an IPaperCard");
+            }
+            f.setAccessible(true);
+            return f;
+        } catch (final ReflectiveOperationException | RuntimeException e) {
+            System.err.println("COPIER: Card.paperCard is not writable on this engine (" + e
+                    + "); a forked token keeps no paper card and a copy of it cannot be made (D497)");
+            return null;
         }
     }
 

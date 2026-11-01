@@ -74,11 +74,17 @@ export function engineEnv(repo: string, xmxDefault?: string): EngineEnv {
   return { cp, homes, repo, xmx: workerXmx(xmxDefault) };
 }
 
-/** Hard rule 6's JVM (its -Xmx from env.xmx or workerXmx()), plus the Forge home's config. */
+/**
+ * Hard rule 6's JVM (its -Xmx from env.xmx or workerXmx()), plus the Forge home's config, plus one
+ * diagnostic flag (D497): -XX:-OmitStackTraceInFastThrow, so a crash a worker meets thousands of
+ * times keeps its message and stack in the worker log -- HotSpot's default replaces an implicit
+ * exception thrown hot at one site with a preallocated one that has neither (J180's s11: 13 of 77
+ * NullPointerExceptions named their site, 64 were bare).  It changes no result.
+ */
 export function javaArgs(env: EngineEnv, home: string, main: string[]): string[] {
   return ['-u', 'DISPLAY', 'java', `-Xmx${env.xmx ?? workerXmx()}`, '-Djava.awt.headless=true',
     '-Dio.netty.tryReflectionSetAccessible=true', '-Dfile.encoding=UTF-8',
-    '-Dsentry.uncaught.handler.enabled=false', `-Dmtgtable.config=${home}`,
+    '-Dsentry.uncaught.handler.enabled=false', '-XX:-OmitStackTraceInFastThrow', `-Dmtgtable.config=${home}`,
     '-cp', env.cp, 'mtgtable.cubelab.CubeLab', ...main];
 }
 
