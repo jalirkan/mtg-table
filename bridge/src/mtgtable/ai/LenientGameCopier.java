@@ -192,6 +192,9 @@ public final class LenientGameCopier extends GameCopier {
      * (null when this engine has no such field of type {@code IPaperCard}).
      */
     private static final Field PAPER_CARD = paperCardField();
+    /** D497: whether a refused write has been said on stderr (once per JVM). */
+    private static final java.util.concurrent.atomic.AtomicBoolean WRITE_REFUSED_SAID =
+            new java.util.concurrent.atomic.AtomicBoolean();
 
     /** D479's follow-up, for the self-test only: false leaves a plain card with the timestamps Forge gave it. */
     private static volatile boolean carryPlainTimestamps = true;
@@ -452,6 +455,11 @@ public final class LenientGameCopier extends GameCopier {
             paperCardsCarried++;
         } catch (final IllegalAccessException | RuntimeException e) {
             paperCardsLost.add(o.getName());
+            if (!WRITE_REFUSED_SAID.getAndSet(true)) {
+                // once per JVM, and no card name: a JDK that refuses final-field writes shows in the worker log
+                System.err.println("COPIER: the write of Card.paperCard was refused (" + e.getClass().getName()
+                        + "); forked tokens keep no paper card and a copy of one cannot be made (D497)");
+            }
         }
     }
 

@@ -17,7 +17,8 @@ commit.
 **The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D496
+said 371 across 42, three rows and one list behind its table) — D497
+(2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
 drafting AI's learning loop (D301–D302, 2026-10-03) added a list of five; Omega's
@@ -412,6 +413,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 10 | open | D496's reveal lines: no field log carries one yet; the first atlas night on the new bridge should pass J177's cascade shape and count it | `docs/decisions/D496-reveal-records.md` |
 | [Cube lab](#fu-cube-lab) | 11 | open | The board's replay stops at a lab log's first `dir:"ai"` line: `reduce()` throws on `decision` (M55) and `reveal` (M78) | `web/src/transport/replay.ts` |
 | [Cube lab](#fu-cube-lab) | 12 | open | D497's paper-card carry: a copy of a token on a fork is proved on the bench only; the first night on the new bridge should branch it cleanly, with no bare exception in its worker logs | `docs/decisions/D497-fork-token-paper-card.md` |
+| [Cube lab](#fu-cube-lab) | 13 | open | The lint's reflection rules cannot see a name built at run time, a line opening with a comment marker, or an unbudgeted `getDeclaredMethod` / `getDeclaredConstructor` | `tools/lint-bridge.sh` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9860,7 +9862,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12, 2026-11-01 (D497)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -9954,6 +9956,13 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    exception. The write is a reflective write of a `final` field: on an engine that renames the field the copier says so
    once on stderr (its `paperCardsLost()` is read by the bench, not an atlas row) and the crash returns, and a later JDK
    may warn about or refuse such writes; OpenJDK 21 does neither.
+13. **The bridge lint's reflection rules have three holes no grep closes.** (2026-11-01, D497's review; all three
+   older than D497.) `tools/lint-bridge.sh` section 8 matches identifiers, so it cannot see:
+   - a name built at run time (`getMethod("getDeclared" + "Field")`, a class name concatenated in pieces) — D423's hole;
+   - any line that opens with a comment marker, `/* x */ code` included (`strip_comments`, every rule);
+   - `getDeclaredMethod` / `getDeclaredConstructor` on a Forge class, which have no budget at all
+     (`tools/cubelab/CubeLab.java:854-855` uses them).
+   Closing them needs a parser (or a javap pass over `bridge/out`), not a grep.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

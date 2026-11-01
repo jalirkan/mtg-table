@@ -90,8 +90,9 @@ still all messaged), so the field's count of three is not reproduced, only the s
    script. A token copy of a printed card (Kiki-Jiki on Grizzly Bears), which Forge already found again by name, now
    carries its original's own paper card too; a token the live game holds with no paper card stays without one.
    `paperCardsCarried()` counts the writes; `paperCardsLost()` names a token the copy could not be given one (the field
-   missing on another engine, or the write refused) — read by the bench, not carried in an atlas row, so on such an
-   engine the copier's one line on stderr at class load is the field's signal; `paperCardWritable()` says whether the
+   missing on another engine, or the write refused) — read by the bench, not carried in an atlas row, so the worker
+   log is where it shows: one stderr line at class load when the field is missing, and one, with no card name, at the
+   first refused write (a later JDK that refuses final-field writes); `paperCardWritable()` says whether the
    field was found. The pass runs where D479's runs, on the thread that made the copy; no thread changes.
 2. **It is a reflective write of a Forge field, the second reflective seam the lint allows** (D423's reads were the
    first). `Card.paperCard` is `private final`: `Card.class.getDeclaredField("paperCard")`, its type checked to be
@@ -104,26 +105,34 @@ still all messaged), so the field's count of three is not reproduced, only the s
    now reads on the copy what it reads on the original. `Card.cp2card` is the UI's static cache, keyed by a `PaperCard`
    and read only by `getCardForUi` and `updateCard`, which a fork never calls; image keys and set codes are the card state's, set by
    `TokenInfo`, and the write does not touch them.
-3. **The lint (section 8 of `tools/lint-bridge.sh`).** `forge-field-read` becomes a check of its own: `getDeclaredField(`
-   is allowed in `InputPeek.java` (D423) and in `LenientGameCopier.java`, which it leaves to the new
-   **`forge-field-write`**: exactly one `getDeclaredField(` in that file (counted by occurrence, not by line), naming
-   `"paperCard"`, on a line tagged `// ALLOW paperCard write: D497` — a budget of one, as rules 4 and 4b are. The lane's review
-   found the ways round a lookup by name unbanned, so `forge-field-read` now also rejects `getDeclaredFields(`,
-   `MethodHandles.privateLookupIn(` and `sun.misc.Unsafe` / `jdk.internal.misc.Unsafe` in every file (none is used). What
-   the lint budgets is the lookup: that InputPeek's fields are only read is review, not grep, as it was under D423. A
-   line that opens with a comment marker is still unseen by every rule (`strip_comments`), which this does not change.
-   `tools/lint-bridge-selftest.sh` has nine new cases: the tagged line in another file and in
-   `tools/probe/LenientGameCopier.java` (the exemption is a path), `getDeclaredFields()` and `privateLookupIn` each fire
-   `forge-field-read`; a second tagged line, a second lookup on the tagged line itself, the line naming another field,
-   the tag taken off and the line taken out each fire `forge-field-write`, and no other rule. CLAUDE.md's hard rule 10
-   names the rule beside D423's.
+3. **The lint (section 8 of `tools/lint-bridge.sh`).** Both rules match the identifier, not the call text: a space
+   before the bracket, a call split across lines and a method reference (`Class::getDeclaredField`) all name it (the
+   first cut matched `getDeclaredField(` and the PR's review beat it all three ways). `forge-field-read` becomes a check
+   of its own: `getDeclaredField` is allowed in `InputPeek.java` (D423) and in `LenientGameCopier.java`, which it leaves
+   to the new **`forge-field-write`**: exactly one `getDeclaredField` in that file (counted by occurrence, not by line),
+   naming `"paperCard"`, on a line tagged `// ALLOW paperCard write: D497` — a budget of one, as rules 4 and 4b are.
+   `forge-field-read` also rejects the identifiers `getDeclaredFields`, `privateLookupIn` and `Unsafe` in every file
+   (none is used; a class name split as `"sun.misc." + "Unsafe"` still names it), and a `getMethod("getDeclaredField")`
+   names the identifier in its literal and fails too. **What stays open**: a name assembled at run time
+   (`"getDeclared" + "Field"` through `getMethod`, or a class name built the same way) names nothing a grep can see —
+   D423's hole, unchanged by this, written down as the cube lab's follow-up 13 with two more of the same kind: a line
+   that opens with a comment marker is unseen by every rule (`strip_comments`), and `getDeclaredMethod` /
+   `getDeclaredConstructor` on a Forge class have no budget (`tools/cubelab/CubeLab.java:854-855` uses them). What the
+   lint budgets is the lookup: that InputPeek's fields are only read is review, not grep, as it was under D423.
+   `tools/lint-bridge-selftest.sh` has sixteen new cases: `forge-field-read` fires on the tagged line in another file
+   and in `tools/probe/LenientGameCopier.java` (the exemption is a path), `getDeclaredFields()`, `privateLookupIn`, a
+   spaced call, a call split across lines, `Class::getDeclaredField`, `Class::getDeclaredFields`,
+   `getMethod("getDeclaredField")` and `Class.forName("sun.misc." + "Unsafe")`; `forge-field-write` fires on a second
+   tagged line, a second lookup on the tagged line itself, a second spaced lookup, the line naming another field, the
+   tag taken off and the line taken out — each its own rule and no other. CLAUDE.md's hard rule 10 names the rule
+   beside D423's.
 4. **The lab's worker JVM keeps a hot exception's stack.** `tools/cubelab/engine.ts`'s `javaArgs`, the one argv every
    lab worker starts with (the atlas's, `play`'s and the facts call), adds `-XX:-OmitStackTraceInFastThrow` after hard
    rule 6's flags. Hard rule 6's line is the bridge's own JVM and is unchanged; the worker's carries this one diagnostic
    flag more, so that the next crash a worker meets thousands of times names its site in every row, as 64 of J180's 77
    did not. It changes no result: it only stops HotSpot from swapping an implicit exception for its preallocated one,
    and the atlas self-test's summary is the same with it (below). Its one cost is a stack trace built per throw, which
-   only a fault pays. `web/test/cubelab-worker-heap.test.ts` holds the argv,
+   only a fault pays. "No result changes" is true of this flag alone, not of point 1 (*Comparability*). `web/test/cubelab-worker-heap.test.ts` holds the argv,
    the flag once and before the class path.
 
 **Rejected.**
@@ -160,7 +169,7 @@ still all messaged), so the field's count of three is not reproduced, only the s
   `LenientGameCopier`, lint and lint self-test checked out, the scenario's three calls to the new accessors stubbed):
   6 of the 9 fail — the copy's paper card is null, the branch errors with the field's NPE at 0 steps, its logs have no
   state frame (the copy and the two redaction checks fail), and the copy's Kiki throws.
-- **The lint**: `tools/lint-bridge-selftest.sh`, 33 rules, 72 firing cases (63 before), each firing its own rule and no
+- **The lint**: `tools/lint-bridge-selftest.sh`, 33 rules, 79 firing cases (63 before), each firing its own rule and no
   other.
 - **The worker**: `tools/cubelab.sh atlas-selftest --jobs 1` passes, before and after the review's field-to-field change, with the flag in its workers' argv (read from the
   running worker's command line: `… -Dsentry.uncaught.handler.enabled=false -XX:-OmitStackTraceInFastThrow …
@@ -173,6 +182,16 @@ token now answers `getRules()` with its script's rules where it answered null, a
 those (26 `getRules()` call sites in the 2.0.15 source's `forge-ai`, the AI hints among them), so a branch's play after
 a token appears may differ from the same seed's play before this change — toward the live game's. The atlas self-test's
 numbers did not move.
+
+**Comparability.** Atlas labels and reads, and search results, from before and after D497 are **not pooled**; split
+them by git sha (`docs/guides/ai-ladder.md`'s *A code change is not a config change*), as D479's and D493's are. It is
+a new population in two ways. Branches that used to error now finish: J180's s11 lost 77 branches, and every board
+with a token-copying permanent beside a script token was exposed. And every forked token from a token script now
+answers `getRules()` with its script's rules where it answered null, which Forge's AI reads —
+`ComputerUtilCard`'s `getRules().getTokens()` and its `isRemAIDeck` guard (which `CopyPermanentAi`'s target filter
+uses), `AiDeckStatistics`, `SetStateAi` — so a branch's play after any such token appears may change, toward the live
+game's. The atlas self-test's numbers did not move, which says the self-test's boards met none of it, not that the
+change is neutral. Only point 4's flag changes no result. The next lab night (J181) opens the new population.
 
 **Not replayed.** The atlas has no command that re-branches one decision of a spine (D493's note), and s11's decks are
 the lab's; the bench scenario is the production path on the same board shape. The first atlas night on this bridge

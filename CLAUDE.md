@@ -171,8 +171,10 @@ code; if you think one is wrong, say so in prose first.
     - 8. a Forge field read by name through reflection: `InputPeek` alone,
       for `InputSelectTargets`' private targets and ability (D423); and 8b,
       the one field looked up by name to be written: `Card.paperCard`, once,
-      tagged, in `LenientGameCopier`, for a forked token's paper card; the
-      ways round a lookup by name are banned everywhere (D497).
+      tagged, in `LenientGameCopier`, for a forked token's paper card. Both
+      match the identifier; `getDeclaredFields`, `privateLookupIn` and
+      `Unsafe` are banned everywhere; a name built at run time is not seen
+      (D497, the cube lab's follow-up 13).
 
     Every exemption is a repo-relative PATH, never a file name. The lint
     rejects the identifier **`CardView` in any scanned file other than
