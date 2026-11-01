@@ -691,6 +691,104 @@ c_field_read_tools() { probe tools/probe/InputPeek.java <<'JAVA'
 JAVA
 }
 fires forge-field-read 'getDeclaredField in tools/probe/InputPeek.java: the ALLOW is a path, not a file name' c_field_read_tools
+c_field_write_elsewhere() { probe bridge/src/mtgtable/ai/LintProbe.java <<'JAVA'
+    static java.lang.reflect.Field paper() throws ReflectiveOperationException {
+        return forge.game.card.Card.class.getDeclaredField("paperCard");   // ALLOW paperCard write: D497
+    }
+JAVA
+}
+fires forge-field-read "Card.paperCard by name, TAGGED, in a file other than LenientGameCopier.java (the tag exempts nothing)" c_field_write_elsewhere
+c_field_write_tools() { probe tools/probe/LenientGameCopier.java <<'JAVA'
+    static java.lang.reflect.Field paper() throws ReflectiveOperationException {
+        return forge.game.card.Card.class.getDeclaredField("paperCard");   // ALLOW paperCard write: D497
+    }
+JAVA
+}
+fires forge-field-read 'getDeclaredField in tools/probe/LenientGameCopier.java: the ALLOW is a path, not a file name' c_field_write_tools
+c_field_all() { probe bridge/src/mtgtable/ai/LintProbe.java <<'JAVA'
+    static java.lang.reflect.Field paper() {
+        for (final java.lang.reflect.Field f : forge.game.card.Card.class.getDeclaredFields()) {
+            if (f.getName().equals("paperCard")) {
+                return f;
+            }
+        }
+        return null;
+    }
+JAVA
+}
+fires forge-field-read 'Card.paperCard found among getDeclaredFields() (round the lookup by name)' c_field_all
+c_field_lookup() { probe tools/probe/FieldProbe.java <<'JAVA'
+    static Object paper() throws ReflectiveOperationException {
+        return java.lang.invoke.MethodHandles.privateLookupIn(forge.game.card.Card.class,
+                java.lang.invoke.MethodHandles.lookup());
+    }
+JAVA
+}
+fires forge-field-read 'a MethodHandles.privateLookupIn onto Card, in tools/ (round the lookup by name)' c_field_lookup
+c_field_spaced() { probe bridge/src/mtgtable/ai/LintProbe.java <<'JAVA'
+    static java.lang.reflect.Field owner() throws ReflectiveOperationException {
+        return forge.game.card.Card.class.getDeclaredField ("owner");
+    }
+JAVA
+}
+fires forge-field-read 'a spaced call, getDeclaredField ("owner"), in another file (the identifier, not the call text)' c_field_spaced
+c_field_split() { probe tools/probe/FieldProbe.java <<'JAVA'
+    static java.lang.reflect.Field owner() throws ReflectiveOperationException {
+        return forge.game.card.Card.class
+                .getDeclaredField(
+                        "owner");
+    }
+JAVA
+}
+fires forge-field-read 'a lookup split across lines, in tools/' c_field_split
+c_field_ref() { probe bridge/src/mtgtable/ai/LintProbe.java <<'JAVA'
+    static final java.util.function.BiFunction<Class<?>, String, Object> LOOKUP = Class::getDeclaredField;
+JAVA
+}
+fires forge-field-read 'a method reference, Class::getDeclaredField' c_field_ref
+c_field_by_name() { probe tools/probe/FieldProbe.java <<'JAVA'
+    static Object lookup() throws ReflectiveOperationException {
+        return Class.class.getMethod("getDeclaredField", String.class);
+    }
+JAVA
+}
+fires forge-field-read 'getMethod("getDeclaredField") -- the name as a literal is still the identifier' c_field_by_name
+c_field_all_ref() { probe bridge/src/mtgtable/ai/LintProbe.java <<'JAVA'
+    static final java.util.function.Function<Class<?>, Object> ALL = Class::getDeclaredFields;
+JAVA
+}
+fires forge-field-read 'a method reference, Class::getDeclaredFields' c_field_all_ref
+c_field_unsafe() { probe tools/probe/FieldProbe.java <<'JAVA'
+    static Object unsafe() throws ReflectiveOperationException {
+        return Class.forName("sun.misc." + "Unsafe");
+    }
+JAVA
+}
+fires forge-field-read 'Unsafe reached by a split class name, Class.forName("sun.misc." + "Unsafe")' c_field_unsafe
+
+# -- 8b. the one Forge field written by name: Card.paperCard, a budget of one, in LenientGameCopier (D497)
+c_field_write_second() { inject bridge/src/mtgtable/ai/LenientGameCopier.java <<'JAVA'
+    static Field secondPaper() throws ReflectiveOperationException {
+        return Card.class.getDeclaredField("paperCard");   // ALLOW paperCard write: D497
+    }
+JAVA
+}
+fires forge-field-write 'a SECOND tagged getDeclaredField("paperCard") in LenientGameCopier.java' c_field_write_second
+c_field_write_same_line() { edit bridge/src/mtgtable/ai/LenientGameCopier.java 's/(Card\.class\.getDeclaredField\("paperCard"\);)/$1 Card.class.getDeclaredField("owner");/'; }
+fires forge-field-write 'a second getDeclaredField( on the tagged line itself (occurrences, not lines)' c_field_write_same_line
+c_field_write_spaced() { inject bridge/src/mtgtable/ai/LenientGameCopier.java <<'JAVA'
+    static Field owner() throws ReflectiveOperationException {
+        return Card.class.getDeclaredField ("owner");
+    }
+JAVA
+}
+fires forge-field-write 'a second, spaced getDeclaredField ("owner") in LenientGameCopier.java (the budget counts the identifier)' c_field_write_spaced
+c_field_write_other() { edit bridge/src/mtgtable/ai/LenientGameCopier.java 's/getDeclaredField\("paperCard"\)/getDeclaredField("owner")/'; }
+fires forge-field-write 'the tagged line names another Card field (owner) instead of paperCard' c_field_write_other
+c_field_write_untagged() { edit bridge/src/mtgtable/ai/LenientGameCopier.java 's|   // ALLOW paperCard write: D497||'; }
+fires forge-field-write "the real write's // ALLOW paperCard write: tag taken off" c_field_write_untagged
+c_field_write_gone() { edit bridge/src/mtgtable/ai/LenientGameCopier.java 's/Card\.class\.getDeclaredField\("paperCard"\);/(Field) null;/'; }
+fires forge-field-write 'the ONE getDeclaredField("paperCard") taken out of LenientGameCopier.java (the budget is exactly 1)' c_field_write_gone
 
 # ---------------------------------------------------------------------------
 # 5. What the rules must NOT catch.

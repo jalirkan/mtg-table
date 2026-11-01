@@ -545,7 +545,7 @@ check_game_pool_reflection() {
 rule game-pool-reflection check_game_pool_reflection
 
 # --------------------------------------------------------------------------
-# 8. A Forge field read by name (D423)
+# 8. A Forge field read by name (D423), and the one written by name (D497)
 #
 # A private field read through reflection is a seam javap does not list and an
 # engine upgrade can move without a compile error.  The bridge has exactly one
@@ -555,9 +555,57 @@ rule game-pool-reflection check_game_pool_reflection
 # both.  It looks each field up once and sends null when one is missing.  A
 # second reader is a decision, not a formality.  (Reflection onto our OWN
 # classes, as OverRaceSelfTest does with getDeclaredMethod, is not this rule.)
+#
+# 8b. LenientGameCopier WRITES one Forge field, and it is a budget of one
+# (D497): Card.paperCard, private final with no setter.  GameCopier re-makes a
+# token with no paper card, and every CopyPermanent effect whose original is
+# such a token threw NullPointerException on a fork (J180's s11: Reflection of
+# Kiki-Jiki copying a Goblin Shaman token).  The carry pass gives the copy the
+# original's.  Exactly one getDeclaredField in that file (the identifier,
+# counted by occurrence), naming "paperCard", on a line tagged `// ALLOW
+# paperCard write: D497`; forge-field-read leaves that file to this rule, and
+# bans getDeclaredFields, privateLookupIn and Unsafe everywhere.  A name built
+# at run time is beyond any grep (an open follow-up).  What the lint budgets is the LOOKUP: that
+# InputPeek's fields are only read is review, not grep.  A second written
+# field is a second decision.
 # --------------------------------------------------------------------------
-ban_except forge-field-read 'bridge/src/mtgtable/InputPeek.java' 'getDeclaredField(' \
-  'a field read by name through reflection. The one allowed reader is InputPeek (InputSelectTargets has no getter for its targets or its ability, D423); add a second only with a decision.'
+COPIER_JAVA='bridge/src/mtgtable/ai/LenientGameCopier.java'
+
+check_forge_field_read() {
+  local hits around
+  # Identifiers, not call text (D497's review): a space before the bracket, a call split across lines and a method
+  # reference (Class::getDeclaredField) all name the identifier.  \b keeps getDeclaredFields out of this match.
+  hits="$(grep_java -E '\bgetDeclaredField\b' \
+    | grep -v -e '^bridge/src/mtgtable/InputPeek\.java:' -e "^${COPIER_JAVA//./\\.}:" || true)"
+  # The ways round a lookup by name: every field at once, a private lookup's VarHandle or setter, Unsafe (a split
+  # "sun.misc." + "Unsafe" still names it).  No file is exempt.  A name assembled at run time ("getDeclared" +
+  # "Field" through getMethod) names nothing a grep can see: that hole is open, and a follow-up (D497).
+  around="$(grep_java -E '\bgetDeclaredFields\b|\bprivateLookupIn\b|\bUnsafe\b' || true)"
+  if [ -n "$around" ]; then
+    lint_fail "a field reached round getDeclaredField (getDeclaredFields, MethodHandles.privateLookupIn, Unsafe) -- the same seam with no name for the lint to budget (D423, D497)."
+    echo "$around" | sed 's/^/  /' >&2
+  fi
+  if [ -n "$hits" ]; then
+    lint_fail "getDeclaredField -- a field read by name through reflection. The one allowed reader is InputPeek (InputSelectTargets has no getter for its targets or its ability, D423), and the one allowed write is LenientGameCopier's paper card (forge-field-write, D497); add another only with a decision."
+    echo "$hits" | sed 's/^/  /' >&2
+  fi
+  return 0
+}
+rule forge-field-read check_forge_field_read
+
+check_forge_field_write() {
+  local hits n=0 bad
+  hits="$(grep_java -E '\bgetDeclaredField\b' | grep "^${COPIER_JAVA//./\\.}:" || true)"
+  [ -n "$hits" ] && n="$(printf '%s\n' "$hits" | grep -o -E '\bgetDeclaredField\b' | wc -l)"   # occurrences, not lines
+  bad="$(printf '%s' "$hits" | grep -v -F -e 'getDeclaredField("paperCard")' || true)"
+  bad="$bad$(printf '%s' "$hits" | grep -F 'getDeclaredField("paperCard")' | grep -v -F '// ALLOW paperCard write: D497' || true)"
+  if [ "$n" != "1" ] || [ -n "$bad" ]; then
+    lint_fail "getDeclaredField appears $n time(s) in $COPIER_JAVA, expected exactly 1: getDeclaredField(\"paperCard\") tagged \`// ALLOW paperCard write: D497\` (a forked token's paper card, D497). A second field written by name is a decision, not a formality."
+    [ -n "$hits" ] && echo "$hits" | sed 's/^/  /' >&2
+  fi
+  return 0
+}
+rule forge-field-write check_forge_field_write
 
 [ "$LIST" = 1 ] && exit 0
 

@@ -1,7 +1,8 @@
 /*
  * mtg-table — the cube lab's worker heap (tools/cubelab/engine.ts): CUBELAB_WORKER_XMX reaches the
  * worker's java argv, the default is hard rule 6's -Xmx4096m byte for byte, and the atlas alone
- * defaults its workers to a smaller heap (three OOM kills of a long phase B, 2026-10).
+ * defaults its workers to a smaller heap (three OOM kills of a long phase B, 2026-10).  D497 added
+ * -XX:-OmitStackTraceInFastThrow to every worker, once (a hot crash keeps its stack in the log).
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import assert from 'node:assert/strict';
@@ -21,15 +22,18 @@ function withEnv(vars: Record<string, string | undefined>, f: () => void): void 
 
 const LAB = { CUBELAB_CP: '/cp/a:/cp/b', CUBELAB_HOMES: '/h/0.json,/h/1.json' };
 
-/** The argv the worker pool spawned before the heap was configurable, as it was written. */
+/**
+ * The argv the worker pool spawned before the heap was configurable, as it was written -- with
+ * D497's one diagnostic flag after hard rule 6's, which keeps a hot crash's stack in the worker log.
+ */
 const BEFORE = ['-u', 'DISPLAY', 'java', '-Xmx4096m', '-Djava.awt.headless=true',
   '-Dio.netty.tryReflectionSetAccessible=true', '-Dfile.encoding=UTF-8',
-  '-Dsentry.uncaught.handler.enabled=false', '-Dmtgtable.config=/h/0.json',
+  '-Dsentry.uncaught.handler.enabled=false', '-XX:-OmitStackTraceInFastThrow', '-Dmtgtable.config=/h/0.json',
   '-cp', '/cp/a:/cp/b', 'mtgtable.cubelab.CubeLab', 'play'];
 
 const xmxOf = (argv: string[]): string[] => argv.filter((a) => a.startsWith('-Xmx'));
 
-test('with CUBELAB_WORKER_XMX unset, the worker argv is the old one byte for byte', () => {
+test('with CUBELAB_WORKER_XMX unset, the worker argv is the old one byte for byte, plus D497\'s flag', () => {
   withEnv({ ...LAB, CUBELAB_WORKER_XMX: undefined }, () => {
     assert.equal(WORKER_XMX_DEFAULT, '4096m');
     assert.equal(workerXmx(), '4096m');
@@ -65,6 +69,16 @@ test('the atlas defaults its workers to a smaller heap; the env still wins over 
   });
   withEnv({ ...LAB, CUBELAB_WORKER_XMX: '4096m' }, () => {
     assert.deepEqual(xmxOf(javaArgs(engineEnv('/repo', ATLAS_WORKER_XMX), '/h/0.json', ['play'])), ['-Xmx4096m']);
+  });
+});
+
+test('D497: every worker JVM keeps a hot exception\'s stack, the flag once, before the class path', () => {
+  withEnv({ ...LAB, CUBELAB_WORKER_XMX: undefined }, () => {
+    for (const main of [['play'], ['facts', '--names', 'n', '--out', 'o']]) {
+      const argv = javaArgs(engineEnv('/repo', ATLAS_WORKER_XMX), '/h/0.json', main);
+      assert.equal(argv.filter((a) => a.includes('OmitStackTraceInFastThrow')).length, 1);
+      assert.ok(argv.indexOf('-XX:-OmitStackTraceInFastThrow') < argv.indexOf('-cp'), 'a JVM option, not a program argument');
+    }
   });
 });
 
