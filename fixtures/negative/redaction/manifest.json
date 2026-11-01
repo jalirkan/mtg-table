@@ -489,7 +489,7 @@
     "file": "reveal-vouches-the-option.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "D496: the cascade's choice names a card no state frame lists, and a reveal line of the seat between the decision's state frame and the decision names it -- the engine showed it to the seat in that step; counted, not a problem"
+    "why": "D496: the cascade's choice names a card no state frame lists; a reveal line of the seat between the decision's state frame and the decision names it, and the next state moves it library -> exile -> library (J177 s02) -- counted, not a problem"
   },
   {
     "file": "reveal-before-the-decision-state.jsonl",
@@ -526,6 +526,36 @@
     "level": "fail",
     "expect": "is not a non-empty list of card ids",
     "why": "D496: a reveal line names at least one card -- an empty one is not a reveal (the decision beside it names only cards its state shows, so the empty list is the one defect)"
+  },
+  {
+    "file": "reveal-zone-not-a-zone-word.jsonl",
+    "level": "fail",
+    "expect": "is not a zone word",
+    "why": "D496: `zone` is the reveal line's only string, and only a ZoneType word may fill it -- a card name there is an engine string, and the line vouches for nothing"
+  },
+  {
+    "file": "reveal-owner-not-a-player.jsonl",
+    "level": "fail",
+    "expect": "is not a player of this game",
+    "why": "D496: `owner` is a player of the game -- any other number is not, and the line vouches for nothing"
+  },
+  {
+    "file": "reveal-of-an-opponent-hand-stub.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D496: the bridge never offers an opponent's hand card -- one the decision's state frame (and the next) lists as a stub is refused even when a reveal names it and a zone event moves it out of the hand"
+  },
+  {
+    "file": "reveal-moved-a-state-too-late.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D496: the zone event must be in the states up to the first one after the decision (held events ship with that snapshot) -- a move in the second state after it is a later step, and does not vouch"
+  },
+  {
+    "file": "reveal-of-a-peeked-library-card-that-never-moves.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D496: a reveal alone does not vouch -- a library card revealed to the seat (a peek) that no zone event moves where the seat sees it is still a library card, and the bridge never offers one"
   },
   {
     "file": "m57-explore-present.jsonl",

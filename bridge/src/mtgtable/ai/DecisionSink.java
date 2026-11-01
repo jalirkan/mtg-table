@@ -51,13 +51,15 @@ public interface DecisionSink {
      * D496 (protocol M78): Forge revealed cards to this seat --
      * {@code PlayerController.reveal}, which {@code GameAction.reveal} calls for
      * every player of the game and {@code GameAction.revealTo} for the players
-     * it names.  {@code cardIds} the cards' ids (never empty), {@code zone} the
-     * zone they were revealed from as the protocol spells a zone
-     * ({@code ZoneType.name()} lowercased; null when Forge passed none),
-     * {@code owner} their owner's player id (null when Forge passed none).  No
-     * name and no message string.  Written in order, with NO flush: the line
-     * must sit after the state frame the next decision names and before that
-     * decision.  Game thread only, like {@link #write}.
+     * it names.  {@code cardIds} the cards' ids (never empty); {@code zone} and
+     * {@code owner} are Forge's own arguments, which it takes from the FIRST
+     * card only ({@code Player.revealFaceDownCards} mixes battlefield, merged and
+     * exile cards in one call): the zone as the protocol spells a zone
+     * ({@code ZoneType.name()} lowercased) and that card's owner's player id.
+     * Null for either is defensive: every 2.0.14 path dereferences both before
+     * calling the controller.  No name and no message string.  Written in order,
+     * with NO flush: the line must sit after the state frame the next decision
+     * names and before that decision.  Game thread only, like {@link #write}.
      */
     void reveal(int[] cardIds, String zone, Integer owner);
 }

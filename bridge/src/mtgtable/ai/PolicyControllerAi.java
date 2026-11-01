@@ -785,10 +785,11 @@ public class PolicyControllerAi extends PlayerControllerAi {
      * {@code GameAction.revealTo} for the players it names (2.0.14, javap); a
      * cascade's {@code DigUntilEffect.resolve} calls {@code reveal(revealed, p,
      * false)} before it moves a dug card.  Forge's own answer first (it stores the
-     * cards in {@code AiCardMemory}), then, with a recorder attached, the ids, the
-     * zone they were revealed from and their owner go to the seat's own log -- no
-     * name, and {@code messagePrefix} (an engine string that can name a card) is
-     * never read.  The other overload, {@code reveal(List<CardView>, ...)}, is
+     * cards in {@code AiCardMemory}), then, with a recorder attached, the ids and
+     * Forge's own zone and owner arguments (taken from the first card only, so a
+     * mixed reveal such as {@code Player.revealFaceDownCards} names one zone) go
+     * to the seat's own log -- no name, and {@code messagePrefix} (an engine string
+     * that can name a card) is never read.  The other overload, {@code reveal(List<CardView>, ...)}, is
      * not overridden: it is reached only from {@code PlayerController.reveal(
      * DelayedReveal)} (a search's reveal, shown with the choice it goes with),
      * and naming its parameter type here is what lint rule 5 forbids outside the

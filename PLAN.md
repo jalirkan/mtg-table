@@ -9922,14 +9922,16 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
 10. **D496's reveal lines are proved on one real cascade and two hand-edited logs.**
    (2026-11-01, D496.) The seat's recorder now writes Forge's own reveal call as
    a `reveal` line (protocol M78), and `check-redaction.mjs` accepts a decision
-   option a reveal of the seat names between the decision's state frame and the
-   decision. What is measured: the ai-bench `cascade-reveal` scenario (a real
-   cascade, the line written before the exile's frame and before the decision),
-   the synthetic `reveal-*` controls, and J177 s02's two failing logs with the
-   line inserted by hand (they pass; `main`'s checker fails them). No field log
-   carries the line yet, so the first atlas night run on this bridge should show
-   the cascade shape passing with `M55 decision ids revealed to the seat in the
-   step` counted, and its reveal lines read for anything unexpected (a reveal
+   option that a reveal of the seat names between the decision's state frame and
+   the decision, when a zone event up to the first state after the decision then
+   moves it where the seat sees it and no nearby state lists it as a stub. What is
+   measured: the ai-bench `cascade-reveal` scenario (a real cascade, the line
+   written before the exile's frame and before the decision), the synthetic
+   `reveal-*` controls, and J177 s02's two failing logs with the line inserted by
+   hand (they pass; `main`'s checker fails them). No field log carries the line
+   yet, so the first atlas night run on this bridge should show the cascade shape
+   passing with `M55 decision ids revealed to the seat, then moved where it sees
+   them` counted, and its reveal lines read for anything unexpected (a reveal
    from a hand, an opponent's library). A log written by this bridge fails the
    checker of any commit before it (an unknown `ai` type), so a night is checked
    with the checker of the commit that recorded it, as the atlas already does.
