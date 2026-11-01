@@ -1,0 +1,20 @@
+==== J180 run8 started 2026-11-01T06:07:54-05:00 in unit lab-J180-run8, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (12 turns, winner A) lists 11 decision(s) of seat A; branching at 10: d0 (p, turn 4, 2 options), d2 (p, turn 6, 4 options), d3 (a, turn 6, 2 options), d4 (p, turn 8, 4 options), d5 (a, turn 8, 4 options), d6 (p, turn 10, 4 options), d7 (a, turn 10, 5 options), d8 (p, turn 10, 3 options), d9 (p, turn 12, 3 options), d10 (a, turn 12, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d3-random-0: 50/50 branch game(s); 7312 branch games/h
+  [B 2/11] d5-random-0: 100/100 branch game(s); 7598 branch games/h
+  [B 3/11] d6-random-0: 100/100 branch game(s); 7568 branch games/h
+  [B 4/11] d4-random-0: 100/100 branch game(s); 7783 branch games/h
+  [B 5/11] d0-random-0: 50/50 branch game(s); 8786 branch games/h
+  [B 6/12] d9-random-0: 75/75 branch game(s); 8820 branch games/h
+  [B 7/12] d10-random-0: 150/150 branch game(s); 10713 branch games/h
+  [B 8/12] d8-random-0: 75/75 branch game(s); 10723 branch games/h
+  [B 9/12] d2-random-0: 100/100 branch game(s); 9960 branch games/h
+  [B 10/12] d7-random-0: 125/125 branch game(s); 9855 branch games/h
+  [B 11/12] d1-random-0: 50/50 branch game(s); 9129 branch games/h
+  [B 12/13] d0-random-25: 50/50 branch game(s); 8172 branch games/h
+  [B 13/13] d1-random-25: 50/50 branch game(s); 6561 branch games/h
+atlas: the checks on 6 workers took 13 s
+atlas: /home/justin-a/code/lab/data/lab-j180/b-s08-powered-2173/atlas.json and atlas.md; phase A 0 game(s), phase B 1075 branch game(s) at 11 decision(s); checks: clean (18722 rows, 2152 frame logs, 11 leak check(s))
