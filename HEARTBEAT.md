@@ -1514,3 +1514,26 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
 - **The problem: s11 (legacy, `decks/s11-legacy-2076`, Fable of the Mirror-Breaker in both decks), d18 and d19, 77 of 4,875 branches errored**, option `attack:12,26` 16 of 150 (over the 10% bar). 13 carry the stack: `CopyPermanentEffect.getProtoType` → `CardFactory.getCard(original.getPaperCard() == null)` → `readCard` NPE; 64 are HotSpot's bare fast-throw of the same site (messaged first, bare after, in every worker log — D494's pattern). Cause: `GameCopier.createCardCopy` re-makes every token with `new TokenInfo(c).makeOneToken` → `new Card(id, game)`, no paper card, and `Card.paperCard` is private final; a live token from a token script carries its PaperToken, so Kiki-Jiki copying a Goblin token works in a game and dies in every branch. Not Fable-specific: any CopyPermanent choosing a token on a forked board. **Lane `pc/d497-fork-token-papercard` (Opus) reproduces it D494-style, measures the fix (preferred: the carry pass hands each re-made token the live one's paper card — a reflection write, a new lint exemption with a self-test case — else listing under D492's rule), adds an ai-bench scenario that fails on main and passes with it, and adds `-XX:-OmitStackTraceInFastThrow` to the atlas worker JVM so the next field crash keeps its stack.** Review, full gate, merge, then J181.
 - **D496 on its first field night:** every log carries reveal lines (85,454 over the night's 107,140 logs; per spine in `scratchpad/j180-reveal-count.txt`). The cascade shape appeared in s10 alone (178 lines, 128 logs); all 128 pass the checker and none needed D496's rule (`revealedThenSeen` = 0: every option was vouched by a state frame). So J177's exact shape — the "cast it?" choice inside a held frame — did not recur; D496 is exercised by its scenario and controls, not yet by a field decision. PLAN cube lab 10 stays open with that wording.
 - Painters: pinG pairs 3 of n painted by 07:54 EST, GPU at 100%. Lab runner idle; `lab-j181` not yet made.
+
+## 2026-11-01 11:40 EST — D497 merged (main 60177314), J181 posted (pc-jobs a0d24c92): a new population on the repaired fork
+
+- **D497 merged**: PR #225 (lane 23c46774 + review fixes b0cecfee), merge 60177314, gate on the merged tree from a deleted
+  `bridge/out`: check-all OK, 60 jobs, 650.2 s at GATE_JOBS=3 (`var/check-all/20261101-112018-3109745` in mtg-table-gate). The fix:
+  `LenientGameCopier`'s carry pass gives each token the fork re-made its original's paper card (a reflective write of `Card.paperCard`,
+  private final; lint rule `forge-field-write`, a budget of one, and the bans now match identifiers after the skeptic beat the call-text
+  patterns with a space, a split call, a method reference and a name built at run time -- the last stays open, written down as cube lab
+  follow-up 13); a `fork-token-copy` ai-bench scenario (9 checks) that fails on main's copier and passes with it;
+  `-XX:-OmitStackTraceInFastThrow` on every lab worker JVM. Rejected: listing the seven token-copying pool cards (Fable among them).
+  Comparability section added at the review's request: atlas labels before and after D497 are not pooled.
+- **J181 posted** (`jobs/J181-atlas-4b-night-six.md`, pin 60177314): J180's night on the new main, 13 new spines at deck seeds 2079-2091
+  (game 2179-2191, validation 2279-2291 / 2379-2391), data folder `lab-j181` made empty by hand, **the first night of D497's population**
+  (`random-<band>-d497`, `randomSeat: "D497"`, pooled with nothing); J180 read beside by position. Derived by
+  `drafts/derive-j181.py` from J180's text: history paragraphs rewritten before the shift, one inclusive hex-safe shift of the four
+  ranges, every numeric change audited by its context (all seed contexts), and **two registered J171 numbers that fell in the range
+  restored by name** (`'branchGames': 2075` in compare.py's self-test, `2077` in metrics.py's tuple) -- the same trap class as J179's
+  2361/2353. Embedded scripts compile, bash blocks parse, `runner.sh check` lint clean; `has_d497`, `seat_code` (the 480c837d list is
+  D496's six plus LenientGameCopier.java; 7a984963 → pin is LenientGameCopier.java alone), deck code untouched and the D497 commit's
+  ancestry all run by hand against the merge: 1 each. Runner updated to 60177314 while idle; main checkout built. A waiter parses the
+  status JSON. Morning read: `lab-j181/report/`, `compare-j180.json`; by hand, no `paperCard` in any errored branch's stack and no
+  bare exception in any worker log.
+- Painters: pinG 4 pairs by 11:12 EST, GPU busy.
