@@ -1312,3 +1312,205 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   spines (deck seeds 2027–2039), the D488 seat unchanged, `--branch-random 150 --early-stop 50,100 --futility 0
   --futility-sample 0.25`, `--decisions 10`, the Forge map kept on s01/s07/s13 for the agreement study; the
   readers count partial labels apart and read the yield per worker-hour. The runner holds it until J173 ends.
+
+## 2026-10-27 04:25 EDT — the MenguCube picker hosted; pairs-v6 tagged, PR #202 under review
+
+- **MenguCube picker.** The self-contained HTML showed empty on Justin's phone (the attachment preview runs no script; its
+  540 cards are embedded, not elsewhere). Hosted it twice: a claude.ai artifact (sprite sheets of all 4,365 Scryfall
+  thumbnails, since the artifact host blocks outside images) needed a sign-in, which failed on the phone; then as a plain
+  static page on ForgeCoach's Pages site, **https://jalirkan.github.io/ForgeCoach/mengu/** (ForgeCoach PR #203, merged
+  d2c9b7c, `public/mengu/index.html`, 1.3 MB, pictures from Scryfall). "Send picks" copies a `mengu-picks-v2 i=pi,...`
+  string; `var/mengu-cube/decode-picks.py` turns it into Scryfall ids. Verified live in the browser pane: 540 cards, the
+  pictures load.
+- **pairs-v6.** The painter finished the seven pairs (112 cells, 10-27 00:02–04:18, 101 s a picture, no faults).
+  `make_pairs_v6_draft.py --out serve/pairs-v6` wrote the ten-pair manifest (37.4 MB ref); tagged `pairs-v6` on
+  `pairs-v1-work` (fc71514: 160 cells, README, PROVENANCE), pushed, CDN warming (732 files); the CDN serves
+  `pairs.json` at sha256 f53f658f…ae80d. PR #202 got the snapshot and the published-manifest test (13 tests pass); the
+  full suite, typecheck and an Opus skeptic review are running; merge after them, then Justin judges by playing lands at
+  `?pairfull=1#ambience`.
+- J173 still running (the runner's status shows it as the one running job).
+- 05:55 EDT: **PR #202 merged (ForgeCoach main 3da447c), pairs-v6 is `?pairfull=1`'s default, live.** The skeptic review
+  (Opus) found nothing blocking and two should-fixes, both applied: the first-cell warm now runs on a mono side only (with
+  two colours the heaviest pair keeps the grid, so the extra warms were ~400 KB a side for nothing), and the ambience e2e
+  now runs its grid, pair-forming and phone checks on the flag's default too. Running it there found a stale expectation,
+  not a bug: on pairs-v6 every pair has a grid and 1.17 draws a third colour as nothing on a grid picture, so the worked
+  example (Plateau, Plains, Island) draws island+plains' cell, never pairs-v5's painted-in s2+RR; the e2e now expects the
+  cell where the manifest has a grid and the painted picture where it has none. Gate: tsc, vitest 199 / 2,999, the e2e on
+  the default and on the draft tag (both green; Playwright's browser is build 1248, so `BROWSER_PATH` points at it).
+  Live check in the browser pane: `?pairfull=1#ambience` says pairs-v6; island 4 | swamp 3 draws
+  `@pairs-v6/seams/island-swamp/s4x3-panorama.webp` at 3277 px with the caption "island s4 | swamp s3, seam 4x3".
+  Follow-ups from the review, not done: `pairGridGivesWay` on a third-party pack with no phone pictures; the warm's
+  `innerWidth` read once (a rotation past 600 px loads cold); `#ambience` warms band pictures without the flag.
+- 06:50 EDT: **J173 failed at 04:54 (the runner's 10,800 s step cap on run6), J174 stopped at its pilot; the two faults
+  read and fixed on `pc/d490-chain-of-smog`.** s06 (peasant 2119): 494 of 2,925 branch games timed out inside one engine
+  step (140k–300k events), every one with Chain of Smog on the stack -- Forge's AI in both seats copies it back and forth
+  for ever (the last 400 frames of `d5-random-o0-b0-seat0` are 159 yes/target answers); the five other spines had 0
+  timeouts. **D490** puts Chain of Smog on D482's engine-unplayable list with that measurement. s04 ended with one rows
+  problem (exit 3): Drafter B's row names Food Token 96, made and sacrificed inside one step; its zone events are D481's
+  first shape, which the checker accepts and the rows check did not -- **D491** teaches `visibleIds(log, seat)` the same
+  rule. J173's s01–s05 are sound data (s04's one problem is the check's, not a leak). J174 had drawn Chain of Smog into
+  s02, s03 and s10 (it would have died at s02 after ~4.5 h): stopped at 04:54+, to be withdrawn (the job file removed
+  from pc-jobs, runner.ts:713) when J175 -- J174 on the fixed pin, same seeds, three decks one card different -- posts.
+- 07:40 EDT: **D490 and D491 merged (main cc7467f6, PR #219), J175 posted, J174 withdrawn.** The skeptic review found nothing
+  blocking and five should-fixes, all applied: the measured numbers (486 of the 494 timeouts inside one step, 82k–599k events,
+  median 272k; Chain of Smog on the stack at a seat's last state in all 494), the deck draw measured rather than asserted
+  (a spell pick on a listed card is redrawn: J174's 13 pairs redrawn on the list give 23 of 26 decks byte-identical, the
+  three that held the card redrawn from that pick on), the guide's "one card" line, the rows check's latest move WITH a
+  destination (as the checker), and two more test cases (a birth onto the other seat's battlefield; a seat-1 row vouched by
+  seat 1's log). Gate: 60 jobs, 511.2 s at GATE_JOBS=4 from a deleted bridge/out on the lane's tree, which is the merge's.
+  J175 (`drafts/J175-atlas-4b-night-three-repost.md`, pin cc7467f6, data `lab-j175`, J174's seeds and flags) is on
+  pc-jobs (a2d19966; its first post had a public_title over 80 characters, corrected a minute later); J174's job file was
+  removed in the same push, so the runner marks it skipped. Runner code at main, `install` run, `resume` given.
+- 07:55 EDT: **J175 failed its pilot at 05:35 on one check of 102, `deck_code`**: the guard demands the deck draw's code untouched
+  since J171's pin (f2b4e9c2), including `engine-unplayable.json`, which D490 changes on purpose. Everything else passed (the
+  draws, the smoke, the redaction self-test, the atlas checks clean). **J176** is J175 with the guard reading the one permitted
+  difference: deckcensus.ts and cubes/library/ as J171's pin, the list J171's plus exactly Chain of Smog (since J173), every
+  other entry equal. Posted to pc-jobs; data folder `lab-j176` (J175's pilot draws stay in `lab-j175/`, read by nothing).
+  J174's STATUS still reads waiting (stopped); its file is gone from pc-jobs, so the runner marks it skipped when it reaches it.
+- 08:05 EDT: **J176's pilot passed** (every check, `deck_code` included); run1 started at 6 workers. The night is J174's
+  plan on the fixed pin: 13 spines, the D488 seat, the futility stop and the 150 cap; morning read when it ends.
+
+## 2026-10-31 09:30 EDT — back after the reboot: J176 resumed at run6; its s03 died at the fork on a Prepare card (D492)
+
+- The PC was off from 10-27 08:37 to 10-31 08:36 (SIGTERM at the reboot); the runner resumed J176 at run6, capped at 4 workers
+  (Justin at the PC), ETA ~22:00. Spines s01, s02, s04, s05 clean. **s03 (legacy 2129): 1,200 of 1,300 branch games errored at
+  their fork** -- `GameCopier.makeCopy` → `StaticAbilityContinuous.applyContinuousAbility:900` → `.get(0)` on an empty list --
+  from turn 10 on, 0 turns played, 71 s, no labels. The cause is Forge's **Prepare** mechanic: the opponent's Emeritus of
+  Abundance *enters prepared*, which makes a command-zone effect with `MayPlayPlayer$ EffectSourceController`; a game copy
+  resolves that to no player and 2.0.14's line 900 indexes the empty list unguarded (javap of the jar; the 2.0.15 source
+  iterates instead). Four Prepare cards are in the pool (Emeritus of Abundance, Elite Interceptor, Emeritus of Ideation,
+  Studious First-Year); J171 s05 held Elite Interceptor briefly, never prepared at a fork, 0 errors. **D492** (lane
+  `pc/d492-prepare`) widens D482 to a measured fork crash and lists the mechanic's four pool cards on the one measurement.
+  J176's remaining spines hold none (its validation decks with them are never played), so it runs on. GPU untouched
+  (Justin and a friend are watching video; nothing of mine uses it); the gate runs at GATE_JOBS=2 to stay light.
+- 09:40 EDT: **D492 merged (main 9c4737e9, PR #220).** The review's four should-fixes applied: the exact cause (GameCopier sets an
+  effect's source only for battlefield cards, so the copied command-zone effect has none and EffectSourceController finds
+  nobody), a repair in LenientGameCopier rejected in writing (the throw is inside super.makeCopy's own state check, before
+  D479's carry pass), the test for "a mechanic's code path" (the same faulting static from the same effect class for every
+  script of the form; why that reaches further than D490's per-card rule for the Chain cycle), and the slips (both first
+  decisions at turn 6; Regrowth in exile from turn 7; 50 of 54 scripts outside the pool). The draw measured: 48 of J176's
+  52 decks byte-identical, the four that held a Prepare card redrawn. Gate at GATE_JOBS=2 beside the lab: 1,375.7 s. The
+  runner's code update waits for J176's end (a job is running); J176's decks are drawn and unaffected.
+- 11:50 EDT: **Justin left the PC and handed over the GPU** ("Its all yours. Kick off the gpu stuff"). Two painter lanes started on
+  the one GPU under `gpu.lock`, both passes SYSTEM.md §C names after the seams: (1) **the seam grid's phone cells** (pairs-v6 is
+  desktop only; a phone still draws pairs-v5's whole places): the desktop cell as the band at 1/3 scale, each half's own sky
+  and foreground above and below, one seed per pair; pilot island-plains, sheet judged, then the nine; outputs under
+  `serve/pairs-v6-phone-draft/`, marker `work/phoneseam/DONE`. (2) **The third colours painted into the seam bases** (§C rule 3
+  and 7; pin.py's inpaint over `work/seamA/_build/*-full.png`): the heavier half's side by i vs j, both sides at i==j, same
+  motif and seed per (pair, colour, side); a 12-picture pilot interleaved now, the full 600 only after the phones' DONE marker;
+  outputs under `serve/pairs-v6-pin-draft/`. Nothing published; the reader lane (grid cells with phone and painted-in entries)
+  follows when the pictures exist. J176 unchanged at 4 workers (ETA ~22:00), its waiter standing.
+- 13:50 EDT: **J176 ended at 13:32, `failed` on one check, `atlas.problems == 0` (22), with every spine played**: 13 of 13, 49,425
+  branch games, 68 labels, 30 confident (0.85 confident per worker-hour; 59.6 per 7-worker 10-h night; sameBest 0.43 [0.20, 0.67],
+  rho 0.27 [-0.07, 0.54]; C1 cast-now pooled on the three Forge spines +0.019 [-0.022, 0.050], no verdict). Reads in
+  `lab-j176/report/` (reads.json, compare-j173.json: J173's five sound spines beside it by position, D489). The 22 problems are
+  four faults, three of them new, each diagnosed from the data: **s03** the Prepare fork crash (8 options; D492, merged this
+  morning); **s07** 1,838 forks died in Forge's `GameCopier.createCardCopy` re-making a TOKEN COPY OF A PLANESWALKER (Ob Nixilis,
+  the Adversary's casualty copy, id 97, on the board d3–d6) through `TokenInfo`'s string form, whose keyword round trip leaves
+  `etbCounter` with two parts (`makeEtbCounter` indexes [2]) — inside super.makeCopy, before our carry pass, so D492's rule applies:
+  lane **D494** reproduces it and lists the mechanic's pool cards; **s10** every fork of `cast Slickshot Lockpicker` threw OUR
+  `mapSa` alarm — Forge's copier carries `setForetold` but not `setPlotted`, so the copy's exiled card is not plotted and the
+  "(Plotted)" alternative is never enumerated — lane **D493** carries the flag in D479's carry pass (our gap, not the engine's;
+  the pool's four Plot cards stay); **s09** 48 frame logs failed check-redaction's option rule (M55/D347) on a REPLICATE copy
+  (Lose Focus, cards 96/97: a `cast` event with the viewer's own controller, on the stack within one step, never in a zone list;
+  nothing leaked) — lane **D495** lets a cast event in D481's window vouch for the viewer's own stack copy, measured over the 48.
+  Three Opus lanes run in parallel (WSPORT 9800/9840/9880, GATE_JOBS=3); PRs, not merges. **The runner is updated to main 9c4737e9**
+  and reinstalled (no job was running). The next night posts after the three merge. J176's folder stays as recorded (a failed job
+  is not reopened; its labels and reads are sound data for every spine but s03 and s10 — per D489 they pool only with J173 s01–s05).
+- 14:45 EDT: **D494 merged (main efbbcc53, PR #221)** after its review (four text slips fixed: the pool is 1,592 cards, 1,568 with
+  scripts; Sage of the Skies copies itself; four keyworded planeswalkers in the pool, not five; the draw diff is 49 lines). The cause
+  as reproduced is not the TokenInfo string: `GameCopier.createCardCopy` rebuilds a token with `makeOneToken` (line 300) BEFORE
+  copying its loyalty (301), and the first keyword added makes Forge build `"etbCounter:LOYALTY:" + baseLoyalty` with an empty
+  loyalty, two parts, `[2]` out of bounds — so the class is a planeswalker (or battle) token with any keyword at fork time, printed
+  or granted; Ob Nixilis, the Adversary is the pool's one own-mechanism case (listed, since J176); Fractured Identity, Esika's
+  Chariot and Ocelot Pride could copy one by choice and are not listed (D492 point 3). 2,280 of s07's 7,025 branches errored. Draw:
+  51 of 52 J176 decks identical. New follow-up found on the way: a token copy of a Saga also kills the fork (TokenInfo carries no
+  SVars). Gate on the merged tree: 60 jobs, 1,068.5 s at GATE_JOBS=3. **D493 (PR #222)** reviewed: no must-fix; the fix carries
+  the plotted flag AND the turn a card entered its public zone (Forge's copier stamps every copied card as entered this turn, so
+  the Plotted cast — and Delayed Blast Fireball's foretold one — is withheld on every copy), statics re-applied after; six text/
+  zone-list fixes requested, then it merges. The atlas records no code version (no "d479keys" exists; I misremembered): a
+  follow-up is a version marker in the schedule header that a resume refuses to cross. **D495** is in its gate.
+- 15:00 EDT: **D493 merged (main 3d78fc18, PR #222)** after its review and the six fixes (5 pool cards read "entered this turn",
+  not 8 — the Count$ThisTurnEntered form reads a per-zone log the copy never gets, noted as not carried; the zone list is an
+  explicit allow-list; the ablations were hand edits, said so; D493 added to ai-ladder.md's code-change list; a PLAN follow-up for a
+  code-version marker in the atlas schedule that a resume refuses to cross). Gate on the merged tree: 60 jobs, 768.9 s at
+  GATE_JOBS=3. The main checkout is pulled and built. **D495 (PR #223)** reported: all 48 s09 logs pass, 60 copies accepted,
+  nothing else changes over 91,590 J176 logs; either seat's cast vouches (the stack is public) behind five guards; under skeptic
+  review now (PLAN.md's cube-lab follow-up numbering collides with D494's, to be resolved before merge). **J177 is being drafted**
+  from J176's file: seeds 2040–2052 / 2140–2152, a NEW label population (D493 reaches every fork; never pooled with J173/J176),
+  the deck-code guard rewritten for D492/D494's list and header changes, `lab-j177` made empty by hand; it posts after D495 merges.
+- 15:20 EDT: **D495 merged (main 480c837d, PR #223)** after its review (no leak past the five guards; main merged in, PLAN's cube-lab
+  follow-up renumbered 9, a control each for guards 2 and 3, the --partial behaviour pinned, the wording: a cast event names any
+  stack object's source, ungated, so only the guards make it trustworthy). Gate on the merged tree: 60 jobs, 655.9 s at GATE_JOBS=3.
+  The main checkout is built and **the runner is at 480c837d**. **J177 posted** (pc-jobs 4b098961): J176's night carried forward,
+  deck seeds 2040–2052, game seeds 2140–2152, pools `random-<band>-d493` (a new population; never pooled with J173/J176), the
+  deck-code guard accepting exactly D492/D494's list and deckcensus header changes, a seat-code guard that requires D493's two
+  files and nothing else under bridge/src since J173's seat, `has_d493`/`has_d495` pilot greps, compare-j176 by position as a
+  candidate. Registered expectation: the four problem classes do not recur, so `atlas.problems == 0`. Data folder `lab-j177`,
+  empty, made by hand. A waiter parses the status JSON for its pickup and its end.
+- 2026-11-01 00:45 EDT: **J177 finished FAILED at 00:22** (picked up 15:14, 32,820 s): 13/13 spines, 61,535 branch games,
+  92 labels (30 confident), 0.563 confident/worker-hour (53.3 worker-hours; J176 0.852 on 35.2), sameBest 0.40 [0.17, 0.75] n=20,
+  rho −0.06 [−0.71, 0.64] n=17, capped share 0.022 (J176 0.051), 29 partial = 29 futility stops, 12 controls. **Every one of the
+  four J176 classes stayed away** (no Prepare/plot/planeswalker-token fork crashes, no stack-copy option failures, deck and
+  seat code guards all green, 104 pilot checks green); the one failing check is again `atlas.problems == 0`, now **1** (J176: 22):
+  spine s02 (peasant, 2141) has **2 of 7,750 logs** failing the redaction checker, both the same shape — **a cascade**.
+  Bloodbraid Elf's trigger reveals and exiles the seat's own Spicy Oatmeal Pizza (card 59), asks "cast it?" (`source:entity`,
+  `option:59`), the seat declines, the card goes to the bottom — all inside one held snapshot (D352/D399's mid-move hold keeps
+  the recorder from cutting a frame inside the resolution), so the decision names the frame before the exile and no state frame
+  ever lists 59; the next state's events carry library→exile→library. Nothing leaked (cascade exiles face up; Forge revealed the
+  card to both seats). D481 refuses exile and a library on purpose and D495's guard 4 too, so no present rule vouches for it; the
+  8 other `option:59` logs of the spine passed only because the clock cut a frame while the card sat in exile. **Lane D496
+  started** (worktree `mtg-table-d496`, branch `pc/d496-reveal-records`, Opus): `PolicyControllerAi` overrides Forge's
+  `reveal(CardCollectionView, ZoneType, Player, String, boolean)` — called for every player by `GameAction.reveal`, which
+  `DigUntilEffect` calls before moving the dug cards — and the seat's log gains a third `ai` line, `reveal {seat, cardIds, zone,
+  owner}` (amendment M78, ids only); the checker accepts an option id a `reveal` line of the seat names between the decision's
+  state frame and the decision line, with controls, a real-engine cascade scenario, the two J177 logs re-checked with the line
+  inserted, and both checkers over all 61,535 J177 logs. J178 follows the merge. Painters: phone lane still on its r4 pilot
+  (no DONE), pinG waiting; GPU 100 %, 6.2 GB.
+- 2026-11-01 02:05 EDT: **D496 reported (PR #224, a909fe17)**: gate green (60 jobs, 639.2 s at GATE_JOBS=3), J177's two logs pass with
+  the line the new bridge writes, both checkers byte-identical over all 123,070 J177 logs, seven controls, a real-engine `cascade-reveal`
+  scenario (279 ai-bench checks). **Skeptic review: merge after fixes.** Finding 1 is real: a reveal line alone vouched for an option
+  with no zone event behind it, so an opponent's hidden hand stub named by a reveal passed; the fix (sent back to the lane) also
+  requires a zone event in `(b.frame, after]` moving the id into a zone `Decisions.visible` counts and refuses stubs, with two more
+  controls; finding 2 adds controls for the zone/owner shape check; the rest is wording. **J178 is drafted** (`drafts/J178-atlas-4b-
+  night-five.md`, runner check clean): J177 carried forward, seeds 2053-2065 / 2153-2165, the SECOND night of D493's population (pooled
+  with J177's rows; D496 changes no decision), `seat_code` accepting D493's two files plus D496's five, `has_d496`, compare-j177 by
+  position; the pin, the gate line and the date are placeholders until the merge. `lab-j178` made empty by hand. Phone cells done
+  (160; 12 forest-s2 cells fail at the band's top, a later round); the painted-in queue has the GPU.
+- 2026-11-01 01:50 EST (clocks went back at 02:00 EDT): **D496 merged (main 7a984963, PR #224)** after the review's fixes (c52946e2: a
+  reveal line vouches only with a zone event in the next state moving the id where `Decisions.visible` counts and no stub; twelve
+  controls, 149 in the self-test; the stats line renamed `M55 decision ids revealed to the seat, then moved where it sees them`). Gate on
+  the merged tree: 60 jobs, 639.9 s at GATE_JOBS=3. The main checkout is built and **the runner is at 7a984963** (idle, reinstalled).
+  **J178 posted** (pc-jobs a5f2c03e, `jobs/J178-atlas-4b-night-five.md`): J177 carried forward onto that pin, deck seeds 2053-2065, game
+  seeds 2153-2165 (validation 2253-2265 / 2353-2365), the SECOND night of D493's population (its rows pool with J177's; D496 changes no
+  decision, the golden is unchanged), `seat_code` = D493's two files + D496's five since J173's pin, `has_d496`, compare-j177 by position
+  (the same copier now). Registered expectation: the cascade shape passes and `atlas.problems == 0`; D496's count summed by hand at the
+  morning read. Data folder `lab-j178`, empty, made by hand. A waiter parses the status JSON. The d496 worktree is removed.
+- 2026-11-01 02:20 EST: **J178 failed its pilot at 01:55** (picked up 01:45) on two guards and nothing else (103 of 105 pilot checks
+  green): `seat_code` listed D496's five files where the review's commit also touched `GameLog.java`'s javadoc (six under `bridge/src`
+  since J177's pin), and `deck_code` expected the five D492/D494 cards `since: "J177"` -- my J176->J177 rename had shifted the
+  registered string, which is `"J176"` in the list. Never reopened. **J179 posted** as the repost (pc-jobs: see `git log origin/pc-jobs
+  -1`; `jobs/J179-atlas-4b-night-five-repost.md`): both guards corrected and run by hand against main 7a984963 (1 and 1), the file lists
+  sorted under `LC_ALL=C`, the seeds moved to the next block (deck 2066-2078, game 2166-2178, validation 2266-2278 / 2366-2378; checked
+  unused) so J178's never-branched draws in `lab-j178` cannot be mistaken for this night's; `lab-j179` made empty by hand. Everything
+  else is J178's (the second night of D493's population, pooled with J177). Lesson for the next derivation: a blanket J<n> rename hits
+  registered strings too -- grep the quoted ones (`'J17x'`, `"J17x"`) after the shift.
+- 2026-11-01 02:45 EST: **J179 failed its pilot at 02:14** on `scan_self` and `metrics_j171_self` alone: my +13 seed shift had also
+  moved five registered numbers that fell in the shifted range (J171's `nullChosenTargets=2361`/`legacyNullTargets=2361` in two
+  self-tests, `2353`/`2361` in the scan's expected tuple, a `2361` inside J176's registered draw sha256, a `'wallSec'` in prose), and it
+  moved the literal seeds without the code's bases (`2052 + k`), so its pilot drew J178's block again. Going back I found J178's own
+  derivation had already corrupted the same sha256 (J177's `...8b2348ac4f...` to `2361`) and the wallSec prose (2349 to 2362), and its
+  spine table carried J176's per-spine numbers under J177's label. **J180 posted** (pc-jobs 6c65aad7, `jobs/J180-atlas-4b-night-five-
+  repost2.md`): J178's text with the two guards corrected (file lists under `LC_ALL=C`, both run by hand against main: 1 and 1), the
+  five numbers left as J171's, the sha256 and the prose value restored to J177's reading, the table's J177 column rewritten from
+  `compare-j176.json`, and the block moved bases and literals together (deck 2066-2078, game 2166-2178, validation 2266-2278 /
+  2366-2378) by a shift that skips any number touching a letter or hex digit, audited token by token. `lab-j180` empty by hand;
+  `lab-j178` and `lab-j179` hold two pilots' never-branched draws. J178 and J179 are never reopened. Rule for the next derivation:
+  shift bases and literals in one inclusive range, exclude hex neighbours, then audit every changed 4-digit token by context.
+
+## 2026-11-01 10:20 EST — J180 read: one problem, a fork gap (D497 lane); D496 confirmed on the recorder, the J177 shape did not recur
+
+- **J180 finished 09:54 EST, failed `atlas.problems == 0` on 1** (J177: 1, J176: 22). 13 spines, 53,570 branch games, 105 decisions branched, 76 labels, 24 confident, 0.551 confident labels a worker-hour on 43.6 worker-hours (J177: 92 / 30 / 0.563 on 53.3; the same population, read beside). Reads: Forge picks the branch-best 9 of 22 (0.41 [0.11, 0.83]); regret random 0.066, forge 0.067 (n 13 each); rho 0.06 (n 22). All guardrails 0. `report/compare-j177.json` and `reads.json` under `/home/justin-a/code/lab/data/lab-j180/`.
+- **The problem: s11 (legacy, `decks/s11-legacy-2076`, Fable of the Mirror-Breaker in both decks), d18 and d19, 77 of 4,875 branches errored**, option `attack:12,26` 16 of 150 (over the 10% bar). 13 carry the stack: `CopyPermanentEffect.getProtoType` → `CardFactory.getCard(original.getPaperCard() == null)` → `readCard` NPE; 64 are HotSpot's bare fast-throw of the same site (messaged first, bare after, in every worker log — D494's pattern). Cause: `GameCopier.createCardCopy` re-makes every token with `new TokenInfo(c).makeOneToken` → `new Card(id, game)`, no paper card, and `Card.paperCard` is private final; a live token from a token script carries its PaperToken, so Kiki-Jiki copying a Goblin token works in a game and dies in every branch. Not Fable-specific: any CopyPermanent choosing a token on a forked board. **Lane `pc/d497-fork-token-papercard` (Opus) reproduces it D494-style, measures the fix (preferred: the carry pass hands each re-made token the live one's paper card — a reflection write, a new lint exemption with a self-test case — else listing under D492's rule), adds an ai-bench scenario that fails on main and passes with it, and adds `-XX:-OmitStackTraceInFastThrow` to the atlas worker JVM so the next field crash keeps its stack.** Review, full gate, merge, then J181.
+- **D496 on its first field night:** every log carries reveal lines (85,454 over the night's 107,140 logs; per spine in `scratchpad/j180-reveal-count.txt`). The cascade shape appeared in s10 alone (178 lines, 128 logs); all 128 pass the checker and none needed D496's rule (`revealedThenSeen` = 0: every option was vouched by a state frame). So J177's exact shape — the "cast it?" choice inside a held frame — did not recur; D496 is exercised by its scenario and controls, not yet by a field decision. PLAN cube lab 10 stays open with that wording.
+- Painters: pinG pairs 3 of n painted by 07:54 EST, GPU at 100%. Lab runner idle; `lab-j181` not yet made.
