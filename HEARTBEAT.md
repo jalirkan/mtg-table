@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-01T00:21:41-04:00
+- time: 2026-11-01T00:22:07-04:00
 - runner: 480c837d, up since 2026-10-31T15:13:20-04:00
-- running: J177 commands 15/15, 61535/64000 lines, 6870.1/h, ETA 2026-11-01T00:43:13-04:00, 6 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.41; memory 7.4/30.5 GB, swap 2022 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 4.9; memory 7.3/30.5 GB, swap 2022 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J176 failed at 2026-10-31T13:32:34-04:00: branches 49425 · atlas.spinesDone 13 · atlas.labels 68 · atlas.confident 30 · atlas.partialLabels 33 · atlas.futileStopped 33 · atlas.futileControls 6 · atlas.confidentPerWorkerHour 0.852 · atlas.confidentPer7Worker10hNight 59.6 · atlas.refusedCastShare 0.003 · atlas.refusedCastOptions 0 · atlas.failedToPlay 1475 · atlas.cardTargetShare 0.179 · atlas.lostCastOptions 0 · atlas.legacyNullTargetRecords 0 · atlas.timeoutShare 0 · atlas.problems 22
+- last finished: J177 failed at 2026-11-01T00:22:07-04:00: branches 61535 · atlas.spinesDone 13 · atlas.labels 92 · atlas.confident 30 · atlas.partialLabels 29 · atlas.futileStopped 29 · atlas.futileControls 12 · atlas.confidentPerWorkerHour 0.563 · atlas.confidentPer7Worker10hNight 39.4 · atlas.refusedCastShare 0.003 · atlas.refusedCastOptions 0 · atlas.failedToPlay 1840 · atlas.cardTargetShare 0.161 · atlas.lostCastOptions 0 · atlas.legacyNullTargetRecords 0 · atlas.timeoutShare 0 · atlas.problems 1
 
 ## Messages
 
