@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 375 items still open across 43 follow-up lists** — 349
+**The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D495
+said 371 across 42, three rows and one list behind its table) — D496
+(2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
 drafting AI's learning loop (D301–D302, 2026-10-03) added a list of five; Omega's
 evolve loop (D299–D300, 2026-10-03) added a list of six; the cube lab
@@ -408,6 +409,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 7 | open | Nothing checks the pool against the card scripts, so a new card on a listed fork-crash path (D492's Prepare, D494's planeswalker token with a keyword) is dealt until a spine measures it | `tools/cubelab/engine-unplayable.json` |
 | [Cube lab](#fu-cube-lab) | 8 | open | The fork cannot re-make a token copy of a Saga either (*Error in Keyword Chapter*: `TokenInfo` carries no SVars); reproduced, not yet met by a spine (D494) | `docs/decisions/D494-planeswalker-token-copy-engine-unplayable.md` |
 | [Cube lab](#fu-cube-lab) | 9 | open | D495's spell-copy acceptance: the opponent's copy and a copy that becomes a token rest on synthetic controls only | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 10 | open | D496's reveal lines: no field log carries one yet; the first atlas night on the new bridge should pass J177's cascade shape and count it | `docs/decisions/D496-reveal-records.md` |
+| [Cube lab](#fu-cube-lab) | 11 | open | The board's replay stops at a lab log's first `dir:"ai"` line: `reduce()` throws on `decision` (M55) and `reveal` (M78) | `web/src/transport/replay.ts` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9856,7 +9859,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -9916,6 +9919,31 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    (`fixtures/negative/redaction/stack-copy-*`). The first real log of either
    (a storm or Fork copy the other seat made; a copied creature spell) should
    be read against the rule before its acceptance is trusted.
+10. **D496's reveal lines are proved on one real cascade and two hand-edited logs.**
+   (2026-11-01, D496.) The seat's recorder now writes Forge's own reveal call as
+   a `reveal` line (protocol M78), and `check-redaction.mjs` accepts a decision
+   option that a reveal of the seat names between the decision's state frame and
+   the decision, when a zone event up to the first state after the decision then
+   moves it where the seat sees it and no nearby state lists it as a stub. What is
+   measured: the ai-bench `cascade-reveal` scenario (a real cascade, the line
+   written before the exile's frame and before the decision), the synthetic
+   `reveal-*` controls, and J177 s02's two failing logs with the line inserted by
+   hand (they pass; `main`'s checker fails them). No field log carries the line
+   yet, so the first atlas night run on this bridge should show the cascade shape
+   passing with `M55 decision ids revealed to the seat, then moved where it sees
+   them` counted, and its reveal lines read for anything unexpected (a reveal
+   from a hand, an opponent's library). A log written by this bridge fails the
+   checker of any commit before it (an unknown `ai` type), so a night is checked
+   with the checker of the commit that recorded it, as the atlas already does.
+11. **The board's replay stops at a lab log's first `dir:"ai"` line.** (2026-11-01,
+   found while reading D496's readers.) `LogReplayTransport.stepForward`
+   (`web/src/transport/replay.ts`) feeds every frame of a log to `reduce()`, and
+   `reduce()` throws on a type outside §2 -- so `?replay=` of a cube-lab or
+   bench recording halts with the red banner at its first M55 `decision` line
+   (`fixtures/negative/redaction/m55-decisions-present.jsonl` applies 2 of its 7
+   frames), and an M78 `reveal` line would do the same. Protocol §8.2 says a
+   replay feeds only `s2c` frames to the reducer (and shows `c2s` ones); the
+   transport should skip `ai` lines, or hold them for a panel, with a test.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

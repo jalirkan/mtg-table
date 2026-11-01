@@ -250,9 +250,11 @@ public final class GameLog implements AutoCloseable {
 
     /**
      * Append a recorder-only line (protocol amendment M55, D347): {@code dir}
-     * {@code "ai"}, its own {@code seq} series, never on the wire.  Today one
-     * type, {@code decision} (an AI seat's decision record), and one summary,
-     * {@code decisions}, written into that seat's own recording only.
+     * {@code "ai"}, its own {@code seq} series, never on the wire.  Three
+     * types, each written into that seat's own recording only: {@code decision}
+     * (an AI seat's decision record), the game's closing summary
+     * {@code decisions}, and {@code reveal} (the card ids Forge revealed to the
+     * seat, amendment M78, D496).
      *
      * @return the {@code seq} assigned
      */

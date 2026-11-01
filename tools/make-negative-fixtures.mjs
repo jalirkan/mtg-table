@@ -1256,6 +1256,111 @@ probe('stack-copy-already-off-the-stack.jsonl',
   'which its state frame does not show',
   (fs) => { const { fresh } = withCopyTarget(fs); statesOf(fs)[0].body.events.push(...copyCast(fresh, header.seat)); });
 
+// D496 (amendment M78): REVEALED TO THE SEAT, THEN MOVED WHERE IT SEES IT.  A
+// cascade asks "cast it without paying?" inside the resolution that revealed the
+// card, and the recorder can hold the batch (MidMove), so the decision names a
+// state frame from before the reveal -- J177 s02's decision 15, option:59, the
+// seat's own library card, whose state seq 58 moves it library -> exile -> library.
+// The seat's recorder now writes Forge's own reveal call as a `reveal` line where
+// it happens; a line of this seat between the decision's state frame and the
+// decision, naming the id, vouches for it when a zone event after that frame (to
+// the first state after the decision) moves the id where the seat sees it and no
+// nearby state lists it as a stub.  The controls: the reveal before the decision's
+// state frame, after the decision, of another id, of another seat, with a key
+// beyond the four (a card name), with no ids, with a card name for a zone, with an
+// owner who is no player; an opponent's hand stub revealed and moved; a library
+// card revealed (a peek) that never moves.
+
+/**
+ * The cascade's choice at the first state: pass, or the fresh id (a card no state
+ * lists), the first state after the decision carrying the J177 moves (library ->
+ * exile -> library) unless `moves` is false.  The summary says what the decision is.
+ */
+function withCascadeChoice(fs, moves = true) {
+  const { fresh, after } = withFreshOption(fs);
+  const b = fs.find((f) => f.dir === 'ai' && f.type === 'decision').body;
+  delete b.search;
+  Object.assign(b, { kind: 'choice', options: ['pass', `option:${fresh}`], chosen: 'pass', by: 'forge', source: 'entity' });
+  Object.assign(fs.find((f) => f.type === 'decisions').body, { searched: 0, byKind: { choice: 1 }, byPolicy: { forge: 1 }, forced: {} });
+  if (moves) {
+    after[0].body.events.push(
+      { kind: 'zone', cardId: fresh, from: { zone: 'library', player: header.seat }, to: { zone: 'exile', player: header.seat } },
+      { kind: 'zone', cardId: fresh, from: { zone: 'exile', player: header.seat }, to: { zone: 'library', player: header.seat } });
+  }
+  return { fresh, b, after };
+}
+/** Insert a `reveal` line at `at` (a frame index) and number the `ai` lines again in file order. */
+function insertReveal(fs, at, body) {
+  fs.splice(at, 0, { v: 1, seq: 0, t: fs[Math.max(0, at - 1)].t, dir: 'ai', type: 'reveal', body });
+  let n = 0;
+  for (const f of fs) if (f.dir === 'ai') f.seq = ++n;
+}
+const revealOf = (ids, owner = header.seat) => ({ seat: header.seat, cardIds: ids, zone: 'library', owner });
+const decisionAt = (fs) => fs.findIndex((f) => f.dir === 'ai' && f.type === 'decision');
+
+copyPass('reveal-vouches-the-option.jsonl',
+  'D496: the cascade\'s choice names a card no state frame lists; a reveal line of the seat between the decision\'s state frame and the decision names it, and the next state moves it library -> exile -> library (J177 s02) -- counted, not a problem',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), revealOf([fresh])); });
+
+probe('reveal-before-the-decision-state.jsonl',
+  'D496: a reveal BEFORE the decision\'s state frame does not vouch -- a card still public then would be in that state',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, b } = withCascadeChoice(fs);
+    insertReveal(fs, fs.findIndex((f) => f.type === 'state'), revealOf([fresh]));
+    b.frame += 1;   // the line went in ahead of the decision's state frame, which moved down one
+  });
+probe('reveal-after-the-decision.jsonl',
+  'D496: a reveal AFTER the decision does not vouch -- the seat was offered the card before the engine showed it',
+  'which its state frame does not show',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs) + 1, revealOf([fresh])); });
+probe('reveal-names-another-id.jsonl',
+  'D496: a reveal in the window vouches only for the ids it names -- one naming another card does not vouch for the option',
+  'which its state frame does not show',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), revealOf([fresh + 1])); });
+probe('reveal-of-another-seat.jsonl',
+  'D496: a reveal line is the seat\'s own private record -- another seat\'s in this log is a leak, and vouches for nothing',
+  'reveal record of seat',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), { ...revealOf([fresh]), seat: themOf() }); });
+probe('reveal-with-an-unexpected-key.jsonl',
+  'D496: a reveal line is ids, a zone word and a player -- a fifth key (a card name) is an engine string, and the line vouches for nothing',
+  'reveal carries an unexpected key "name"',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), { ...revealOf([fresh]), name: 'Spicy Oatmeal Pizza' }); });
+probe('reveal-empty-card-ids.jsonl',
+  'D496: a reveal line names at least one card -- an empty one is not a reveal (the decision beside it names only cards its state shows, so the empty list is the one defect)',
+  'is not a non-empty list of card ids',
+  (fs) => { withDecision(fs); insertReveal(fs, decisionAt(fs), revealOf([])); });
+probe('reveal-zone-not-a-zone-word.jsonl',
+  'D496: `zone` is the reveal line\'s only string, and only a ZoneType word may fill it -- a card name there is an engine string, and the line vouches for nothing',
+  'is not a zone word',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), { ...revealOf([fresh]), zone: 'Spicy Oatmeal Pizza' }); });
+probe('reveal-owner-not-a-player.jsonl',
+  'D496: `owner` is a player of the game -- any other number is not, and the line vouches for nothing',
+  'is not a player of this game',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), revealOf([fresh], 7)); });
+probe('reveal-of-an-opponent-hand-stub.jsonl',
+  'D496: the bridge never offers an opponent\'s hand card -- one the decision\'s state frame (and the next) lists as a stub is refused even when a reveal names it and a zone event moves it out of the hand',
+  'which its state frame does not show',
+  (fs) => {
+    const { b, after } = withCascadeChoice(fs, false);
+    const stub = statesOf(fs)[0].body.players.find((p) => p.id !== header.seat).zones.hand.cards.find((c) => c.hidden === true).id;
+    b.options[1] = `option:${stub}`;
+    after[0].body.events.push({ kind: 'zone', cardId: stub, from: { zone: 'hand', player: themOf() }, to: { zone: 'exile', player: themOf() } });
+    insertReveal(fs, decisionAt(fs), { ...revealOf([stub], themOf()), zone: 'hand' });
+  });
+probe('reveal-moved-a-state-too-late.jsonl',
+  'D496: the zone event must be in the states up to the first one after the decision (held events ship with that snapshot) -- a move in the second state after it is a later step, and does not vouch',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, after } = withCascadeChoice(fs, false);
+    after[1].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'library', player: header.seat }, to: { zone: 'exile', player: header.seat } });
+    insertReveal(fs, decisionAt(fs), revealOf([fresh]));
+  });
+probe('reveal-of-a-peeked-library-card-that-never-moves.jsonl',
+  'D496: a reveal alone does not vouch -- a library card revealed to the seat (a peek) that no zone event moves where the seat sees it is still a library card, and the bridge never offers one',
+  'which its state frame does not show',
+  (fs) => { const { fresh } = withCascadeChoice(fs, false); insertReveal(fs, decisionAt(fs), revealOf([fresh])); });
+
 // ---------------------------------------------------------------------------
 // Amendment M57 (D358): play exploration.  An exploring recording's header
 // carries `playExplore` (epsilon, closeCall, opening); a decision the explorer

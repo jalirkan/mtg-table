@@ -592,6 +592,7 @@ public final class DecisionSelfTest {
 
         // 2. the cap: the same record at the same stateSeq, a deadline an hour away
         final int[] written = new int[1];
+        final List<String> revealed = new ArrayList<>();
         final DecisionSink inner = new DecisionSink() {
             @Override
             public int[] mark() {
@@ -611,11 +612,23 @@ public final class DecisionSelfTest {
 
             @Override
             public void error(final String where, final RuntimeException e) { }
+
+            @Override
+            public void reveal(final int[] cardIds, final String zone, final Integer owner) {
+                revealed.add(java.util.Arrays.toString(cardIds) + " " + zone + " " + owner);
+            }
         };
         final DecisionClock cc = new DecisionClock();
         cc.arm(System.nanoTime() + 3_600_000_000_000L);
         final DecisionSink capped = cc.capping(inner);
         check(cc.capping(null) == null, "D484: no recorder, no capping sink");
+        // D496: a reveal passes through the cap to the recorder, unchanged and uncounted
+        for (int k = 0; k < 2 * DecisionClock.REPEAT_CAP; k++) {
+            capped.reveal(new int[] {59}, "library", 1);
+        }
+        check(revealed.size() == 2 * DecisionClock.REPEAT_CAP && "[59] library 1".equals(revealed.get(0)) && written[0] == 0,
+                "D496: the capping sink hands every reveal to its recorder and counts none against the cap ("
+                        + revealed.size() + " reveals)");
         Atlas.BranchTimeout capThrow = null;
         int loops = 0;
         try {

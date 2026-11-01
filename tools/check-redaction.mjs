@@ -3175,6 +3175,12 @@ const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', '
 const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']);
 const SEARCH_RULES = ['margin', 'lcb'];
 const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore', 'guardrails']);
+// M78 / D496: a `reveal` line -- what Forge's PlayerController.reveal showed the viewing seat: the ids, the zone
+// they were revealed from, their owner.  Exactly these keys; no name, no engine string.
+const REVEAL_KEYS = ['seat', 'cardIds', 'zone', 'owner'];
+// The zone words: forge.game.zone.ZoneType's constants (the pinned 2.0.14 jar, javap), lowercased as Snap writes a zone.
+const REVEAL_ZONES = ['hand', 'library', 'graveyard', 'battlefield', 'exile', 'flashback', 'command', 'stack', 'sideboard',
+  'ante', 'merged', 'schemedeck', 'planardeck', 'attractiondeck', 'junkyard', 'contraptiondeck', 'subgame', 'extrahand', 'none'];
 // M72 / D465: a Forge-piloted move-atlas branch seat's own guardrail count (its pay cap's passes), by name.
 const FORGE_GUARDRAIL_NAMES = ['forgePayCap'];
 const FALLBACKS = [null, 'budget', 'copyError', 'unmappable', 'rolloutErrors', 'invalidAtEnd'];
@@ -3293,6 +3299,26 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
   const players = new Set((header.decks ?? []).map((d) => d?.player).filter((x) => typeof x === 'number'));
   const nextState = (idx) => stateOrder.find((k) => k > idx);
   let n = 0;
+  // M78 / D496: what is wrong with a `reveal` body -- the ids Forge revealed to this seat, the zone, the owner,
+  // and nothing else.  null zone or owner: Forge passed none (the vouching below reads neither).
+  const revealProblems = (b) => {
+    const out = [];
+    for (const k of Object.keys(b)) if (!REVEAL_KEYS.includes(k)) out.push(`carries an unexpected key "${k}"`);
+    for (const k of REVEAL_KEYS) if (!(k in b)) out.push(`has no "${k}"`);
+    if (!Array.isArray(b.cardIds) || b.cardIds.length === 0 || !b.cardIds.every((x) => Number.isInteger(x) && x >= 0)) {
+      out.push(`cardIds ${JSON.stringify(b.cardIds)?.slice(0, 80)} is not a non-empty list of card ids`);
+    }
+    if (b.zone !== null && !REVEAL_ZONES.includes(b.zone)) out.push(`zone ${JSON.stringify(b.zone)?.slice(0, 40)} is not a zone word`);
+    if (b.owner !== null && !(Number.isInteger(b.owner) && (players.size === 0 || players.has(b.owner)))) {
+      out.push(`owner ${JSON.stringify(b.owner)?.slice(0, 40)} is not a player of this game`);
+    }
+    return out;
+  };
+  // D496: every well-formed `reveal` line of this seat ({index, ids}), for the decision audit's window below.  The seat
+  // filter is defence in depth and never changes a verdict: another seat's reveal line already fails the seat check
+  // every `ai` line goes through, below.
+  const reveals = aiLines.filter(({ f }) => f.type === 'reveal' && f.body?.seat === seat && revealProblems(f.body).length === 0)
+    .map(({ f, index }) => ({ index, ids: new Set(f.body.cardIds) }));
   for (const { f, lineNo, index } of aiLines) {
     const b = f.body;
     if (header.transport !== undefined || isClientLog) {
@@ -3340,8 +3366,14 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
       }
       continue;
     }
+    if (f.type === 'reveal') {
+      const problems = revealProblems(b);
+      for (const m of problems) bad(lineNo, `reveal ${m} -- amendment M78, D496`);
+      if (problems.length === 0) stats.reveals = (stats.reveals ?? 0) + 1;
+      continue;
+    }
     if (f.type !== 'decision') {
-      bad(lineNo, `a "dir":"ai" line of type ${JSON.stringify(f.type)} -- only "decision" and "decisions" exist`);
+      bad(lineNo, `a "dir":"ai" line of type ${JSON.stringify(f.type)} -- only "decision", "decisions" and "reveal" exist`);
       continue;
     }
     for (const k of Object.keys(b)) if (!DECISION_KEYS.has(k)) bad(lineNo, `decision ${b.n} carries an unexpected key "${k}"`);
@@ -3515,6 +3547,48 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
       }
       return true;
     };
+    /*
+     * D496: REVEALED TO THE SEAT, THEN MOVED WHERE THE SEAT SEES IT.  A decision
+     * asked inside the resolution that revealed a card (a cascade:
+     * DigUntilEffect reveals the dug cards to every player, exiles them, and the
+     * Play effect asks "cast it without paying?") can name a state frame from
+     * before the reveal, because the recorder holds a batch cut mid-update
+     * (MidMove.hold, D352/D399): J177 s02's decision 15 offers option:59, the
+     * seat's own library card, at state seq 57, and seq 58 moves 59 library ->
+     * exile -> library.  Since M78 the seat's recorder writes the engine's own
+     * `reveal` call where it happens.  Accepted, counted, only when ALL of:
+     *   - a `reveal` line of this seat STRICTLY after the decision's state frame
+     *     and STRICTLY before the decision names the id -- revealed since the
+     *     last state frame written (not "in the same step": everything since that
+     *     frame, a whole cast and its triggers, sits in the window, and a reveal
+     *     with no event after it stays in it across later decisions);
+     *   - a zone event in a state after the decision's state frame, up to and
+     *     including the first state after the decision's line (`after`; held
+     *     events ship with the first snapshot after the decision), moves the id
+     *     INTO a zone the bridge's own gate, Decisions.visible, would name it in:
+     *     a battlefield, a graveyard, the stack, the command zone, exile, or the
+     *     viewer's own hand.  A reveal alone is not enough: the bridge never
+     *     offers an opponent's hand card or a library card, whatever was revealed
+     *     (a peek leaves the card where it was), so for a correct bridge a reveal
+     *     matters only when the card then moved somewhere public;
+     *   - neither the decision's state frame nor the state after it lists the id
+     *     as a stub.
+     * A reveal before the state frame does not vouch (a card still public then
+     * would be in that state), nor one after the decision.
+     *
+     * What this cannot see: whether the ask came before or after the card hid
+     * again (a revealed card can go back to a library or a hand inside the same
+     * resolution, as 59 does).  The log does not order the ask against the
+     * engine's moves inside a held batch; that remains the bridge's own gate at
+     * decision time, Decisions.visible (D347), as for D481, D485 and D495.
+     */
+    const SEEN_ZONES = ['battlefield', 'graveyard', 'stack', 'command', 'exile'];
+    const movedWhereSeen = (id) => after !== undefined && stateOrder.some((k) => k > b.frame && k <= after
+      && stateAt.get(k).moves.some((m) => m.cardId === id && m.to
+        && (SEEN_ZONES.includes(m.to.zone) || (m.to.zone === 'hand' && m.to.player === seat))));
+    const stubNearby = (id) => st.stubs.has(id) || (nx !== undefined && stateAt.get(nx).stubs.has(id));
+    const revealedThenSeen = (id) => reveals.some((r) => r.index > b.frame && r.index < index && r.ids.has(id))
+      && movedWhereSeen(id) && !stubNearby(id);
     for (const t of tokens) {
       for (const id of tokenCardIds(t)) {
         const moves = allowed.has(id) ? [] : windowMoves(id);
@@ -3532,6 +3606,8 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
           stats.ceasedToExist = (stats.ceasedToExist ?? 0) + 1;
         } else if (!allowed.has(id) && stackCopy(id)) {
           stats.stackCopies = (stats.stackCopies ?? 0) + 1;
+        } else if (!allowed.has(id) && revealedThenSeen(id)) {
+          stats.revealedThenSeen = (stats.revealedThenSeen ?? 0) + 1;
         } else if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
             'a stub\'s id, a library card or another seat\'s hidden card is never an option',
@@ -3744,6 +3820,13 @@ function main() {
     if (stats.stackCopies > 0) {
       console.log(`      M55 decision ids that are spell copies on the stack=${stats.stackCopies} (D495: a copy cast in the `
         + 'window, in no zone before its cast, never a stub, moved only among the stack, battlefields, graveyards or nowhere, not yet off the stack)');
+    }
+    if (stats.revealedThenSeen > 0) {
+      console.log(`      M55 decision ids revealed to the seat, then moved where it sees them=${stats.revealedThenSeen} (D496: a reveal line of the `
+        + 'seat, after the decision\'s state frame and before the decision, names the id, and a zone event then moves it where the seat sees it)');
+    }
+    if (stats.reveals > 0) {
+      console.log(`      M78 reveal lines=${stats.reveals} (D496: exact key set {seat, cardIds, zone, owner}, the seat's own)`);
     }
     if (stats.legacyNullTargets > 0) {
       console.log(`      M55 legacy null target records=${stats.legacyNullTargets} (D487: J171's shape, written before M76 -- `

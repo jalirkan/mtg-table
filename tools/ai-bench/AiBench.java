@@ -1512,6 +1512,7 @@ public final class AiBench {
         mayPlayShapeScenarios();
         copierCarryScenarios();
         plottedScenarios();
+        revealScenarios();
         chooseSourceScenarios();
         staleTargetScenarios();
         modalCastTargetsScenario();
@@ -3041,6 +3042,115 @@ public final class AiBench {
                             && !m.isInZone(ZoneType.Exile) && liveC.isInZone(ZoneType.Exile),
                     "the mirror names the copy's graveyard, as the original's source does, and is in none ("
                             + (m == null ? null : m + " @ " + m.getZone()) + "; the copy's card @ " + liveC.getZone() + ")");
+        });
+    }
+
+    /**
+     * D496 (protocol M78): a cascade, played in the real game through the
+     * seat's own {@link PolicyControllerAi} with a {@link SeatRecorder}
+     * attached, as a lab or bench seat records.  Forge's
+     * {@code DigUntilEffect.resolve} reveals the dug cards to every player
+     * before it exiles them, and the seat's controller writes that reveal into
+     * its own log as a {@code reveal} line -- the line {@code
+     * tools/check-redaction.mjs} reads to vouch for the cascade's "cast it?"
+     * option when the recorder held the frame that would have shown the card
+     * (J177 s02).  Whether the hold happens is the forwarder's clock, so this
+     * asserts the line, its place before the cascade's decision, its exact keys,
+     * and that the checker passes the log; the synthetic {@code reveal-*}
+     * controls hold the checker's rule.  The header's deck is
+     * {@code tools/ai-bench/decks/cascade-reveal.dck}; the board is
+     * {@code GameState}'s.
+     */
+    static void revealScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: a cascade's reveal reaches the seat's own log (D496, engine)");
+        scenario("cascade-reveal", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "humanhand=Forest;Forest", "humanlibrary=Forest;Forest;Forest;Forest",
+                "ailibrary=Forest;Forest;Lightning Bolt;Forest;Forest;Forest", "aihand=Bloodbraid Elf;Forest",
+                "aibattlefield=Mountain;Mountain;Forest;Forest"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Config cfg = Config.load();
+            final File deckFile = new File(cfg.root(), "tools/ai-bench/decks/cascade-reveal.dck");
+            final Deck deck = DeckSerializer.fromFile(deckFile);
+            final List<SeatRecorder.Seat> seats = new ArrayList<>();
+            for (int s = 0; s < 2; s++) {
+                seats.add(new SeatRecorder.Seat("cascade-reveal", deckFile, BenchRecording.relPath(cfg, deckFile), deck,
+                        Bootstrap.DEFAULT_AI_PROFILE));
+            }
+            final File dir = new File(cfg.root(), "var/ai-bench/cascade-reveal");
+            dir.mkdirs();
+            final File log = new File(dir, "seat1.jsonl");
+            final int seat = g.getPlayers().indexOf(ai);
+            final Map<String, Object> bench = new LinkedHashMap<>();
+            bench.put("scenario", "cascade-reveal");
+            final SeatRecorder rec = SeatRecorder.attach(g, seat, log, "cascade-reveal", 496L,
+                    BenchRecording.jarSha(cfg), seats, "bench", bench);
+            rec.mark();   // the first state frame: the hand Bloodbraid Elf is cast from
+            final int boltId = named(ai.getCardsIn(ZoneType.Library), "Lightning Bolt").getId();
+            final List<Integer> dug = new ArrayList<>();
+            for (final Card c : ai.getCardsIn(ZoneType.Library)) {
+                dug.add(c.getId());
+                if (c.getId() == boltId) {
+                    break;
+                }
+            }
+            g.setAge(forge.game.GameStage.Play);   // GameState's board: the cast trigger is live only in play (D493's setup)
+            g.getTriggerHandler().resetActiveTriggers();
+            check(forge.ai.ComputerUtil.handlePlayingSpellAbility(ai, playOf(ai, "Bloodbraid Elf", (sa) -> true), null),
+                    "setup: the real game casts Bloodbraid Elf");
+            for (int k = 0; k < 8; k++) {
+                g.getStack().addAllTriggeredAbilitiesToStack();
+                if (g.getStack().isEmpty()) {
+                    break;
+                }
+                g.getStack().resolveStack();
+            }
+            check(g.getStack().isEmpty() && named(ai.getCardsIn(ZoneType.Battlefield), "Bloodbraid Elf") != null,
+                    "setup: the cascade and the Elf resolved");
+            rec.finish();
+            rec.close();
+            final List<String> lines = Files.readAllLines(log.toPath(), StandardCharsets.UTF_8);
+            int revealAt = -1;
+            int decisionAt = -1;
+            int exiledAt = -1;
+            String reveal = null;
+            final String exiled = "\"kind\":\"zone\",\"cardId\":" + boltId
+                    + ",\"from\":{\"zone\":\"library\",\"player\":" + ai.getId() + "},\"to\":{\"zone\":\"exile\"";
+            for (int i = 0; i < lines.size(); i++) {
+                final String l = lines.get(i);
+                if (revealAt < 0 && l.contains("\"dir\":\"ai\",\"type\":\"reveal\"")) {
+                    revealAt = i;
+                    reveal = l;
+                }
+                if (decisionAt < 0 && l.contains("\"dir\":\"ai\",\"type\":\"decision\"")) {
+                    decisionAt = i;
+                }
+                if (exiledAt < 0 && l.contains("\"type\":\"state\"") && l.contains(exiled)) {
+                    exiledAt = i;
+                }
+            }
+            final StringBuilder ids = new StringBuilder();
+            for (final int id : dug) {
+                ids.append(ids.length() == 0 ? "" : ",").append(id);
+            }
+            final String want = "\"body\":{\"seat\":" + ai.getId() + ",\"cardIds\":[" + ids + "],\"zone\":\"library\",\"owner\":"
+                    + ai.getId() + "}}";
+            check(reveal != null && reveal.endsWith(want) && rec.reveals() >= 1,
+                    "the seat's log carries Forge's reveal of the dug cards, ids, zone and owner only (" + reveal
+                            + ", want ..." + want + ")");
+            check(revealAt > 0 && revealAt < exiledAt && revealAt < decisionAt,
+                    "the reveal line is written where Forge reveals: before the state frame that moves card " + boltId
+                            + " to exile and before the cascade's first decision (lines " + revealAt + ", " + exiledAt
+                            + ", " + decisionAt + ")");
+            check(reveal != null && !reveal.contains("Lightning Bolt") && !reveal.contains("Bloodbraid"),
+                    "the reveal line names no card");
+            final Process p = new ProcessBuilder("node", "tools/check-redaction.mjs", log.getPath())
+                    .directory(cfg.root()).redirectErrorStream(true).start();
+            final String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            final int code = p.waitFor();
+            check(code == 0 && out.contains("M78 reveal lines="),
+                    "tools/check-redaction.mjs passes the seat's log, reveal line and all (exit " + code + ")"
+                            + (code == 0 ? "" : ": " + out));
         });
     }
 
