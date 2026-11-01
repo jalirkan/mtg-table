@@ -131,6 +131,11 @@ final class DecisionClock {
             public void error(final String where, final RuntimeException e) {
                 inner.error(where, e);
             }
+
+            @Override
+            public void reveal(final int[] cardIds, final String zone, final Integer owner) {
+                inner.reveal(cardIds, zone, owner);   // D496: not a decision, so not counted against the cap
+            }
         };
     }
 

@@ -778,6 +778,42 @@ public class PolicyControllerAi extends PlayerControllerAi {
         return r;
     }
 
+    /**
+     * D496 (protocol M78): Forge revealed {@code cards} to this seat.
+     * {@code GameAction.reveal} calls this overload for every player of the game
+     * (all but the owner when {@code dontRevealToOwner}), and
+     * {@code GameAction.revealTo} for the players it names (2.0.14, javap); a
+     * cascade's {@code DigUntilEffect.resolve} calls {@code reveal(revealed, p,
+     * false)} before it moves a dug card.  Forge's own answer first (it stores the
+     * cards in {@code AiCardMemory}), then, with a recorder attached, the ids, the
+     * zone they were revealed from and their owner go to the seat's own log -- no
+     * name, and {@code messagePrefix} (an engine string that can name a card) is
+     * never read.  The other overload, {@code reveal(List<CardView>, ...)}, is
+     * not overridden: it is reached only from {@code PlayerController.reveal(
+     * DelayedReveal)} (a search's reveal, shown with the choice it goes with),
+     * and naming its parameter type here is what lint rule 5 forbids outside the
+     * serialiser.  A failure to record is counted, never thrown into the game.
+     */
+    @Override
+    public void reveal(final CardCollectionView cards, final ZoneType zone, final Player owner,
+            final String messagePrefix, final boolean addSuffix) {
+        super.reveal(cards, zone, owner, messagePrefix, addSuffix);
+        if (decisions == null || cards == null || cards.isEmpty()) {
+            return;
+        }
+        try {
+            final List<Integer> ids = new ArrayList<>();
+            for (final Card c : cards) {
+                ids.add(c.getId());
+            }
+            decisions.reveal(ids.stream().mapToInt(Integer::intValue).toArray(),
+                    zone == null ? null : zone.name().toLowerCase(java.util.Locale.ROOT),
+                    owner == null ? null : owner.getId());
+        } catch (final RuntimeException e) {
+            decisions.error("reveal", e);
+        }
+    }
+
     @Override
     public boolean confirmAction(final SpellAbility sa, final PlayerActionConfirmMode mode, final String message,
             final List<String> options, final Card cardToShow, final java.util.Map<String, Object> params) {

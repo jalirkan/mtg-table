@@ -161,6 +161,18 @@ const REQUIRED = [
   ['stack-copy-hand-stub-cast-in-the-first-state.jsonl', 'fail'],
   ['stack-copy-face-down-exile-listed-before-its-cast.jsonl', 'fail'],
   ['stack-copy-already-off-the-stack.jsonl', 'fail'],
+  // D496 (M78): a `reveal` line of the seat, after the decision's state frame and
+  // before the decision, vouches for the ids it names (a cascade's card, revealed
+  // in the step the decision was taken in).  The controls: a reveal before the
+  // state frame, after the decision, of another id, of another seat, with a fifth
+  // key, with no ids.
+  ['reveal-vouches-the-option.jsonl', 'pass'],
+  ['reveal-before-the-decision-state.jsonl', 'fail'],
+  ['reveal-after-the-decision.jsonl', 'fail'],
+  ['reveal-names-another-id.jsonl', 'fail'],
+  ['reveal-of-another-seat.jsonl', 'fail'],
+  ['reveal-with-an-unexpected-key.jsonl', 'fail'],
+  ['reveal-empty-card-ids.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
   ['m57-explore-present.jsonl', 'pass'],
@@ -379,6 +391,20 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
   if (sc5.problems.length > 0 || sc5.undecided.length === 0) bad(`a spell copy's decision cut after its empty state: --partial should hold it undecided, got problems=${sc5.problems.length} undecided=${sc5.undecided.length}`);
   else if (sc6.problems.length > 0 || sc6.undecided.length > 0) bad(`the same decision once the copy's cast is in the prefix: --partial should pass it, got problems=${sc6.problems.length} undecided=${sc6.undecided.length}`);
   else lead('D495 spell copy cut after its empty state: undecided; with the cast: a pass');
+
+  // D496: the reveal precedes the decision, so a prefix holding the decision holds
+  // its reveal -- the decision is decided at once, with no later state in the prefix;
+  // a reveal AFTER the decision cures nothing, so that one waits for the next state
+  // and then fails.
+  const rv = `${DIR}/reveal-vouches-the-option.jsonl`;
+  const rv5 = checkFile('rv.jsonl', { partial: true, text: cut(rv, 5) });
+  const ra = `${DIR}/reveal-after-the-decision.jsonl`;
+  const ra5 = checkFile('ra.jsonl', { partial: true, text: cut(ra, 5) });
+  const ra6 = checkFile('ra.jsonl', { partial: true, text: cut(ra, 6) });
+  if (rv5.problems.length > 0 || rv5.undecided.length > 0) bad(`a decision vouched by a reveal, cut right after it: --partial should pass it, got problems=${rv5.problems.length} undecided=${rv5.undecided.length}`);
+  else if (ra5.problems.length > 0 || ra5.undecided.length === 0) bad(`a decision whose reveal comes after it, cut after that reveal: --partial should hold it undecided, got problems=${ra5.problems.length} undecided=${ra5.undecided.length}`);
+  else if (ra6.problems.length === 0) bad('the same once the next state is in the prefix: --partial should fail it (a reveal after the decision vouches for nothing)');
+  else lead('D496 reveal: a decision cut right after its vouching reveal passes; a reveal after the decision waits, then fails');
 
   // No prefix of a healthy recording fails --partial.
   const t0 = Date.now();

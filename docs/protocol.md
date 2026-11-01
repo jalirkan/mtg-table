@@ -30,6 +30,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-11-01 — a seat's log records what the engine revealed to it
+
+A cascade asks "cast it without paying?" inside the resolution that revealed the card, and the recorder can hold
+that resolution's events (`MidMove`, D352/D399), so the decision names a state frame from before the reveal and no
+frame ever shows the card (J177, spine s02: two of 7,750 branch logs failed the M55 audit on `option:59`, the seat's
+own library card, cascaded and declined). The seat's recorder now writes Forge's own reveal call where it happens.
+Decision **D496** (M78). Held by `tools/check-redaction-selftest.mjs` (the `reveal-*` controls) and
+`tools/ai-bench`'s `cascade-reveal` scenario.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M78 | §8.2, M55 | **A third `ai` line type, `reveal`: `{seat, cardIds, zone, owner}`.** One line per call of Forge's `PlayerController.reveal(cards, zone, owner, …)` on the viewing seat's controller -- `GameAction.reveal` calls it for every player of the game (all but the owner when it says so), `GameAction.revealTo` for the players it names -- written in order where it happens, with **no flush**: it sits after the state frame the seat's next decision names and before that decision. `cardIds` are the revealed cards' ids (never empty), `zone` the zone they were revealed from as §8 spells a zone (`ZoneType.name()` lowercased: `library`, `hand`, …; `null` when Forge passed none), `owner` their owner's player id (`null` likewise). **No card name and no engine string**: Forge's message prefix is never read. Private to the seat's own log, like `decision`: the other seat's recorder writes its own seat's reveals, never this one's. A reveal of the seat **strictly after** a decision's state frame and **strictly before** the decision, naming an id the decision offers, vouches for that id in the M55 audit (`tools/check-redaction.mjs`, counted as `M55 decision ids revealed to the seat in the step`). The `decisions` summary is unchanged. Readers that feed `s2c` frames skip the line as they skip `decision`, and a reader of `decision` lines must select them by `type`. **Optional**: absent from every log before this amendment. | D496 |
+
 ### 2026-10-26 — a random seat's guardrail counts include D488's two
 
 The move atlas's random seat now fits the targets it draws to the play's cost: a cost that rises with each
@@ -2424,7 +2437,10 @@ Each subsequent line is a §1 envelope with **one added field, `dir`**:
 
 `dir` is `"s2c"` or `"c2s"` — or, in an AI-vs-AI recording made by the
 in-process recorder, `"ai"`: an AI seat's own decision records, never on the
-wire (amendment **M55**). `seq` is per direction, so the interleaved series
+wire (amendment **M55**) — three types: `decision`, the game's closing
+`decisions` summary, and `reveal`, the card ids the engine revealed to the
+seat, the zone and their owner, written where the reveal happens (amendment
+**M78**). `seq` is per direction, so the interleaved series
 each count independently; `t` gives the true ordering. A replay transport reads the
 file in file order and feeds only `s2c` frames to the reducer, using `c2s` lines to
 show what the player did.

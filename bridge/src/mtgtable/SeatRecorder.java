@@ -78,6 +78,14 @@ import mtgtable.ai.PolicyControllerAi;
  * show when this seat thought).  {@link #finish} adds a {@code decisions}
  * summary line.  The session header names every seat's profile and policy
  * ({@code seats}), so a dataset can stratify by them.
+ *
+ * <p>And what Forge revealed to the seat (D496, amendment M78): a {@code reveal}
+ * line per {@code PlayerController.reveal} call on the seat's controller -- the
+ * ids, the zone, the owner -- written where it happens, with no flush.  A
+ * decision asked inside the same resolution (a cascade's "cast it?") can name
+ * a state frame from before the reveal, because the recorder holds a batch cut
+ * mid-move ({@link MidMove}); the line is the engine's own evidence, between
+ * that frame and the decision, that the seat was shown the card.
  */
 public final class SeatRecorder implements AutoCloseable, DecisionSink {
 
@@ -125,6 +133,8 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
     private final Map<String, Integer> byPolicy = new TreeMap<>();
     private final Map<String, Integer> forcedByKind = new TreeMap<>();
     private int searched;
+    /** {@code reveal} lines written (D496). */
+    private int reveals;
     private int recordErrors;
     private long recordNanos;
     private long buildNanos;
@@ -265,6 +275,35 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
         if (recordErrors <= 5) {
             System.err.println("[decisions] seat " + seatId + " " + where + ": " + e);
         }
+    }
+
+    /**
+     * D496 (protocol M78): one {@code reveal} line, {@code {seat, cardIds, zone,
+     * owner}}, in order and with no flush -- {@link #mark} is not called, so the
+     * line sits after the state frame the seat's next decision names and before
+     * that decision, which is the window {@code tools/check-redaction.mjs} reads
+     * it in.  Ids, a zone word and a player id: no card name, no engine message.
+     * Not counted in the {@code decisions} summary (its keys are unchanged).
+     */
+    @Override
+    public void reveal(final int[] cardIds, final String zone, final Integer owner) {
+        if (cardIds == null || cardIds.length == 0) {
+            return;
+        }
+        final long t = System.nanoTime();
+        final JsonOut o = new JsonOut().obj().n("seat", seatId).key("cardIds").arr();
+        for (final int id : cardIds) {
+            o.v(id);
+        }
+        o.end().n("zone", zone).nInt("owner", owner);
+        log.ai("reveal", o.end().done());
+        reveals++;
+        recordNanos += System.nanoTime() - t;
+    }
+
+    /** {@code reveal} lines written (D496). */
+    public int reveals() {
+        return reveals;
     }
 
     /** Decision records written (D347). */

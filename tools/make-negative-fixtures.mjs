@@ -1256,6 +1256,66 @@ probe('stack-copy-already-off-the-stack.jsonl',
   'which its state frame does not show',
   (fs) => { const { fresh } = withCopyTarget(fs); statesOf(fs)[0].body.events.push(...copyCast(fresh, header.seat)); });
 
+// D496 (amendment M78): REVEALED TO THE SEAT IN THE STEP.  A cascade asks "cast it
+// without paying?" inside the resolution that revealed the card, and the recorder
+// can hold the batch (MidMove), so the decision names a state frame from before
+// the reveal -- J177 s02's decision 15, option:59, the seat's own library card.
+// The seat's recorder now writes Forge's own reveal call as a `reveal` line where
+// it happens, and a line of this seat between the decision's state frame and the
+// decision, naming the id, vouches for it.  The controls: the reveal before the
+// decision's state frame, after the decision, of another id, of another seat, with
+// a key beyond the four (a card name), and with no ids.
+
+/** The cascade's choice at the first state: pass, or the fresh id (a card no state lists). */
+function withCascadeChoice(fs) {
+  const { fresh } = withFreshOption(fs);
+  const b = fs.find((f) => f.dir === 'ai' && f.type === 'decision').body;
+  delete b.search;
+  Object.assign(b, { kind: 'choice', options: ['pass', `option:${fresh}`], chosen: 'pass', by: 'forge', source: 'entity' });
+  return { fresh, b };
+}
+/** Insert a `reveal` line at `at` (a frame index) and number the `ai` lines again in file order. */
+function insertReveal(fs, at, body) {
+  fs.splice(at, 0, { v: 1, seq: 0, t: fs[Math.max(0, at - 1)].t, dir: 'ai', type: 'reveal', body });
+  let n = 0;
+  for (const f of fs) if (f.dir === 'ai') f.seq = ++n;
+}
+const revealOf = (ids, owner = header.seat) => ({ seat: header.seat, cardIds: ids, zone: 'library', owner });
+const decisionAt = (fs) => fs.findIndex((f) => f.dir === 'ai' && f.type === 'decision');
+
+copyPass('reveal-vouches-the-option.jsonl',
+  'D496: the cascade\'s choice names a card no state frame lists, and a reveal line of the seat between the decision\'s state frame and the decision names it -- the engine showed it to the seat in that step; counted, not a problem',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), revealOf([fresh])); });
+
+probe('reveal-before-the-decision-state.jsonl',
+  'D496: a reveal BEFORE the decision\'s state frame does not vouch -- a card still public then would be in that state',
+  'which its state frame does not show',
+  (fs) => {
+    const { fresh, b } = withCascadeChoice(fs);
+    insertReveal(fs, fs.findIndex((f) => f.type === 'state'), revealOf([fresh]));
+    b.frame += 1;   // the line went in ahead of the decision's state frame, which moved down one
+  });
+probe('reveal-after-the-decision.jsonl',
+  'D496: a reveal AFTER the decision does not vouch -- the seat was offered the card before the engine showed it',
+  'which its state frame does not show',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs) + 1, revealOf([fresh])); });
+probe('reveal-names-another-id.jsonl',
+  'D496: a reveal in the window vouches only for the ids it names -- one naming another card does not vouch for the option',
+  'which its state frame does not show',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), revealOf([fresh + 1])); });
+probe('reveal-of-another-seat.jsonl',
+  'D496: a reveal line is the seat\'s own private record -- another seat\'s in this log is a leak, and vouches for nothing',
+  'reveal record of seat',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), { ...revealOf([fresh]), seat: themOf() }); });
+probe('reveal-with-an-unexpected-key.jsonl',
+  'D496: a reveal line is ids, a zone word and a player -- a fifth key (a card name) is an engine string, and the line vouches for nothing',
+  'reveal carries an unexpected key "name"',
+  (fs) => { const { fresh } = withCascadeChoice(fs); insertReveal(fs, decisionAt(fs), { ...revealOf([fresh]), name: 'Spicy Oatmeal Pizza' }); });
+probe('reveal-empty-card-ids.jsonl',
+  'D496: a reveal line names at least one card -- an empty one is not a reveal (the decision beside it names only cards its state shows, so the empty list is the one defect)',
+  'is not a non-empty list of card ids',
+  (fs) => { withDecision(fs); insertReveal(fs, decisionAt(fs), revealOf([])); });
+
 // ---------------------------------------------------------------------------
 // Amendment M57 (D358): play exploration.  An exploring recording's header
 // carries `playExplore` (epsilon, closeCall, opening); a decision the explorer

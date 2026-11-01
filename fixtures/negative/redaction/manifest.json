@@ -486,6 +486,48 @@
     "why": "D495: a copy cast and taken off the stack in or before the decision's own state is gone -- naming it is not vouched for"
   },
   {
+    "file": "reveal-vouches-the-option.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D496: the cascade's choice names a card no state frame lists, and a reveal line of the seat between the decision's state frame and the decision names it -- the engine showed it to the seat in that step; counted, not a problem"
+  },
+  {
+    "file": "reveal-before-the-decision-state.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D496: a reveal BEFORE the decision's state frame does not vouch -- a card still public then would be in that state"
+  },
+  {
+    "file": "reveal-after-the-decision.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D496: a reveal AFTER the decision does not vouch -- the seat was offered the card before the engine showed it"
+  },
+  {
+    "file": "reveal-names-another-id.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D496: a reveal in the window vouches only for the ids it names -- one naming another card does not vouch for the option"
+  },
+  {
+    "file": "reveal-of-another-seat.jsonl",
+    "level": "fail",
+    "expect": "reveal record of seat",
+    "why": "D496: a reveal line is the seat's own private record -- another seat's in this log is a leak, and vouches for nothing"
+  },
+  {
+    "file": "reveal-with-an-unexpected-key.jsonl",
+    "level": "fail",
+    "expect": "reveal carries an unexpected key \"name\"",
+    "why": "D496: a reveal line is ids, a zone word and a player -- a fifth key (a card name) is an engine string, and the line vouches for nothing"
+  },
+  {
+    "file": "reveal-empty-card-ids.jsonl",
+    "level": "fail",
+    "expect": "is not a non-empty list of card ids",
+    "why": "D496: a reveal line names at least one card -- an empty one is not a reveal (the decision beside it names only cards its state shows, so the empty list is the one defect)"
+  },
+  {
     "file": "m57-explore-present.jsonl",
     "level": "pass",
     "expect": "PASS",
