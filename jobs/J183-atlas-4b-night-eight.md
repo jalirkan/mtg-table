@@ -1,6 +1,6 @@
 id: J183
 title: The move atlas, rung 4b, night eight -- J182's night carried onto the new main (D502-D504: the redaction checker admits the three legitimate engine shapes that failed J182's s06, s10 and s04 -- an opponent's hideaway card shown to the seat that took control of the permanent that hid it, another seat's token that ceased to exist named by last known information, an opponent's spell cast from its hand inside a held batch; the bridge, the seat and the fork unchanged) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j183, at deck seeds 2414-2426 (D447 with D482's list as D490, D492 and D494 leave it, the bands cycled as J166's) and game seeds 2514-2526; a validation draw made fresh at deck seeds 2614-2626 (game seeds 2714-2726 reserved); THE SECOND NIGHT OF D498'S POPULATION, pooled with J182's; J182's night read beside, by position, as information
-public_title: Move atlas 4b night eight: 13 new spines, D502-D504 checker fixes, the D498 population night two
+public_title: Move atlas 4b night eight: 13 new spines, D498 population night two
 public_est: ~9 h to 12 h
 public_decides: None by itself; second night of the D498 population, pooled with J182
 cpu: heavy
