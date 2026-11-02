@@ -485,7 +485,10 @@ export function recordReport(repo: string, out: string, record: RecordMode, say:
   const doc = {
     mode: record, games: ok.length,
     sizes: { rows: sizeStats(sz.rows), ledger: sizeStats(sz.ledger), ...(record === 'full' ? { full: sizeStats(sz.full) } : {}) },
-    rowsCheck: { files: rc.files, rows: rc.rows, gamesIdChecked: rc.games, problems: rc.problems.length },
+    rowsCheck: { files: rc.files, rows: rc.rows, gamesIdChecked: rc.games, problems: rc.problems.length,
+      // D499: in full mode, the plays left out of the id check -- a killed worker's unended play, a stuck game's ok:false play
+      // beside its retry's ok:true one -- and the rows outside any begin..end
+      ...(rc.abandoned ? { abandonedPlays: rc.abandoned.length, supersededPlays: rc.superseded?.length ?? 0 } : {}), orphanRows: rc.orphanRows ?? 0 },
     leakCheck: { checks, leaks, controls, controlMoved, candidates },
     redaction: red ? { logs: red.checked, failed: red.failed.length, ms: red.ms } : null,
     problems: problems.slice(0, 50),

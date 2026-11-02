@@ -23,6 +23,10 @@
  *    atlas.md); every guardrail violation counted though only the first 50 are named; G1's planted controls (a land the
  *    seat's listing does not hold is no flag, a land in hand with the drop unused and not played is one); a truncated
  *    frame log skipped and named while atlas.json is still written.
+ *  - D499: a play a killed attempt abandoned (its begin with no end; the key ended in another rows file) is left out of the
+ *    rows' id check, counted in atlas.json (`abandonedPlays`, `abandonedRows`, `abandoned`) and said once, in the say line and
+ *    atlas.md; a key that ended ok:true in two files is a problem (`playedTwice`); two ok:false ends are one game timed out
+ *    twice, an ok:false end beside an ok:true one is superseded (`supersededPlays`), neither a problem.
  *  - D478: a capped (or loop-timed-out) branch scored other than a draw is a problem, as phase A's capped game is; capped
  *    branches are counted by option, and an option capped past --branch-capped-warn (0.25) is a WARNING, never a problem
  *    or exit 3 (D478's addendum: a long position, scored a half).
@@ -675,6 +679,65 @@ test('a truncated frame log is skipped and named, and atlas.json is still writte
     assert.equal(doc.checks.frameLogs, 0, 'not sent to the redaction checker');
     assert.ok(doc.checks.problems.some((p) => p.startsWith('3 frame log(s) could not be read (gzip: unexpected end of file) and were left out of the checks')), doc.checks.problems.join('\n'));
     assert.match(fs.readFileSync(path.join(out, 'atlas.md'), 'utf8'), /3 frame log\(s\) could not be read/);
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('a play a killed attempt abandoned is left out of the id check, counted in atlas.json and said once (D499: J181 s13\'s d28-forge-o2-b39)', () => {
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-abandoned-'));
+  try {
+    const B = path.join(out, 'phaseB');
+    const frames = path.join(B, 'frames');
+    const rowsDir = path.join(B, 'rows');
+    fs.mkdirSync(frames, { recursive: true });
+    fs.mkdirSync(rowsDir, { recursive: true });
+    const K = 'atlas:d28:forge:o2:b39';
+    const header = JSON.stringify({ type: 'header', v: 1, stateSize: 4, cand: { a: ['a'] } });
+    const begin = JSON.stringify({ type: 'begin', v: 1, game: K, decision: 28, continuation: 'forge', option: 2, branch: 39, seat0: 'Drafter A', seat1: 'Drafter B' });
+    const row = (ids: string): string => JSON.stringify({ type: 'row', v: 1, game: K, seat: 'Drafter B', kind: 'a', turn: 30, n: 1, chosen: 0, tokens: [`attack:${ids}`], s: [[0, 1]], c: [[1]] });
+    const end = JSON.stringify({ type: 'end', v: 1, game: K, ok: false, winner: null });
+    // the hung attempt's rows (id 250 was a card of that play alone), no end; the re-run's, to its end
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250')].join('\n') + '\n');
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522575.jsonl'), [header, begin, row('77'), end].join('\n') + '\n');
+    const log = zlib.gzipSync([JSON.stringify({ v: 1, seq: 1, dir: 's2c', type: 'state', body: { players: [{ zones: { battlefield: [{ id: 77, name: 'X', zone: 'battlefield' }] } }] } })].join('\n'));
+    for (const s of [0, 1]) fs.writeFileSync(path.join(frames, `d28-forge-o2-b39-seat${s}.jsonl.gz`), log);
+    const said: string[] = [];
+    writeAtlas(REPO, OPTS, out, {}, {}, (x) => said.push(x));
+    type Doc = { checks: { problems: string[]; rows: number; gamesIdChecked: number; abandonedPlays: number; abandonedRows: number; abandoned: Array<{ game: string; file: string; rows: number }>; playedTwice: unknown[] } };
+    const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc;
+    assert.deepEqual(doc.checks.problems.filter((p) => /never shows it|ended ok:true/.test(p)), [], doc.checks.problems.join('\n'));
+    assert.deepEqual([doc.checks.rows, doc.checks.gamesIdChecked, doc.checks.abandonedPlays, doc.checks.abandonedRows], [3, 1, 1, 2]);
+    assert.deepEqual(doc.checks.abandoned, [{ game: K, file: 'rows-1522578.jsonl', rows: 2 }]);
+    assert.deepEqual(doc.checks.playedTwice, []);
+    assert.equal(said.filter((x) => x.includes('abandoned by a killed attempt')).length, 1, said.join('\n'));
+    assert.ok(said.includes(`  atlas: 1 play abandoned by a killed attempt, its 2 rows left out (D499): ${K} in rows-1522578.jsonl`), said.join('\n'));
+    const md = fs.readFileSync(path.join(out, 'atlas.md'), 'utf8');
+    assert.equal(md.split('abandoned by a killed attempt').length - 1, 1, 'atlas.md says it once');
+    assert.match(md, /1 play abandoned by a killed attempt, its 2 rows left out of the id check \(D499\)/);
+    // the review's census shape: an ok:false end in the first file too -- two ok:false ends, one game ended twice the same way --
+    // is no problem, each play checked on its own against the logs on disk, so the first play's 250 fails as J181's night read it
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250'), end].join('\n') + '\n');
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    type Doc2 = Doc & { checks: { supersededPlays: number; orphanRows: number } };
+    const twiceFalse = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc2;
+    assert.deepEqual([twiceFalse.checks.abandonedPlays, twiceFalse.checks.playedTwice.length, twiceFalse.checks.supersededPlays, twiceFalse.checks.orphanRows], [0, 0, 0, 0]);
+    assert.equal(twiceFalse.checks.problems.filter((p) => /names id 250/.test(p)).length, 2);
+    // the control: two ok:true ends are a key played twice, a problem of its own
+    const ok = JSON.stringify({ type: 'end', v: 1, game: K, ok: true, winner: 'A' });
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250'), ok].join('\n') + '\n');
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522575.jsonl'), [header, begin, row('77'), ok].join('\n') + '\n');
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    const twice = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc2;
+    assert.equal(twice.checks.playedTwice.length, 1);
+    assert.ok(twice.checks.problems.some((p) => p.startsWith(`${K}: ended ok:true 2 times`)), twice.checks.problems.join('\n'));
+    // and one ok:true beside one ok:false: the ok:false play is superseded, no problem, its 250 not read
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250'), end].join('\n') + '\n');
+    const said2: string[] = [];
+    writeAtlas(REPO, OPTS, out, {}, {}, (x) => said2.push(x));
+    const sup = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc2;
+    assert.deepEqual([sup.checks.playedTwice.length, sup.checks.supersededPlays, sup.checks.problems.filter((p) => /never shows it|ended ok:true/.test(p)).length], [0, 1, 0]);
+    assert.ok(said2.some((x) => x.includes('superseded by an ok:true play')), said2.join('\n'));
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }
