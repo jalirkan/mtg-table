@@ -121,6 +121,17 @@ const REQUIRED = [
   ['a9-hideaway-dug-from-another-library.jsonl', 'fail'],
   ['a9-hideaway-dug-into-another-exile.jsonl', 'fail'],
   ['a9-hideaway-card-of-an-unrelated-host.jsonl', 'fail'],
+  // the second review (c12f8418): the log's first frame is no entry, the dig needs
+  // its host's hideaway trigger, and a host vouches for one dig only
+  ['a9-hideaway-retaken-the-frame-after-a-return.jsonl', 'pass'],
+  ['a9-hideaway-alt-dropped-while-returned.jsonl', 'pass'],
+  ['a9-hideaway-dig-with-no-host-trigger.jsonl', 'fail'],
+  ['a9-hideaway-dig-beside-the-log-start.jsonl', 'fail'],
+  ['a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl', 'fail'],
+  ['a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl', 'fail'],
+  ['a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl', 'fail'],
+  ['a9-hideaway-second-dig-beside-the-host-trigger.jsonl', 'fail'],
+  ['a9-hideaway-two-hosts-enter-together.jsonl', 'fail'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -277,6 +288,8 @@ const COUNTED = [
   ['a9-hideaway-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-alt-a-state-after-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-alt-a-state-after-the-host-leaves.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-retaken-the-frame-after-a-return.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-dropped-while-returned.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-source-choice.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],

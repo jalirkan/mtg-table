@@ -117,7 +117,7 @@
     "file": "a9-hideaway-alt-a-state-after-control-taken.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "A9, D502: the dig a state after the Watcher entered (b148: 91/92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem"
+    "why": "A9, D502: the Watcher enters with its hideaway trigger's cast and the dig lands a state later (b148: seq 91 / 92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem"
   },
   {
     "file": "a9-hideaway-alt-a-state-after-the-host-leaves.jsonl",
@@ -208,6 +208,60 @@
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D502: the card was dug beside the entry of the opponent's Mosswort Bridge, not of the Watcher the viewer took -- the Watcher's look does not reach it"
+  },
+  {
+    "file": "a9-hideaway-dig-with-no-host-trigger.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the dig beside the Watcher's entry carries no `cast` event naming the Watcher (its hideaway trigger) in its frame or the one before -- some other effect dug it"
+  },
+  {
+    "file": "a9-hideaway-retaken-the-frame-after-a-return.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502: the viewer takes the Watcher, gives it back (the alt kept one frame of lag) and takes it again the next frame -- the look is the current controller's throughout; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-dropped-while-returned.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502: taken, given back (the alt dropped after the lag frame) and taken again -- the alt comes back with the second taking; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-beside-the-log-start.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (second review): a permanent listed in the log's first state was there before the log began, so a dig in that frame is beside no entry the log shows -- stealing it later grants no look"
+  },
+  {
+    "file": "a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source"
+  },
+  {
+    "file": "a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger"
+  },
+  {
+    "file": "a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (second review): the Watcher enters with no hideaway trigger and another effect digs a card the next frame -- no cast names the Watcher, so the dig is not its"
+  },
+  {
+    "file": "a9-hideaway-second-dig-beside-the-host-trigger.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the Watcher's trigger digs C1 and another effect digs C2 the next frame, both beside its entry and its cast -- a hideaway digs ONE card, so the Watcher vouches for neither"
+  },
+  {
+    "file": "a9-hideaway-two-hosts-enter-together.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher's, so stealing it vouches for neither"
   },
   {
     "file": "own-hand-card-redacted.jsonl",

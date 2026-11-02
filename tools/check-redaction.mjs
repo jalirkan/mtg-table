@@ -67,9 +67,10 @@
  *       a library into exile, alt and all, while the viewing seat's effect
  *       resolves -- and only while the card stays there (D371); or, for
  *       hideaway's look (the CURRENT controller of the permanent that exiled
- *       it), a card dug from its owner's library beside that permanent's entry,
- *       from the frame the viewer took the permanent (or the next) and only
- *       while the viewer holds it, plus one frame of lag (D502).
+ *       it), a card dug from its owner's library beside that permanent's entry
+ *       and its hideaway trigger's cast (one card a permanent), from the frame
+ *       the viewer took the permanent (or the next) and only while the viewer
+ *       holds it, plus one frame of lag (D502).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -1769,9 +1770,13 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    *   enteredAt          permanent id -> the state frames it entered the
    *                      battlefield in (its latest zone event onto one, and its
    *                      latest first listing on one after a state without it);
-   *   exiledFromLibrary  card id -> {frame, owner} when its latest move into
-   *                      exile came from its owner's library (any other move
-   *                      of it clears the entry);
+   *   exiledFromLibrary  card id -> {frame, owner, casters} when its latest move
+   *                      into exile came from its owner's library (any other
+   *                      move of it clears the entry); `casters` the card ids a
+   *                      `cast` event named in that frame or the one before
+   *                      (the hideaway trigger's own cast names its host);
+   *   castsBefore        the card ids the previous state frame's `cast` events
+   *                      named;
    *   takenAt            permanent id -> the state frame its controller changed
    *                      from its owner (not the viewer) to the viewing seat;
    *   hideawayGrants     card id -> {host, holds}: the taken permanent whose look
@@ -1784,6 +1789,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
   let battlefieldBefore = new Map();
   const enteredAt = new Map();
   const exiledFromLibrary = new Map();
+  let castsBefore = new Set();
   const takenAt = new Map();
   let hideawayGrants = new Map();
   /** id -> was the last serialisation of this id concealed?  (A7) */
@@ -2729,6 +2735,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     // frame the permanent entered the battlefield, or the next -- and shows the
     // look move with the permanent's controller.  This frame's evidence first.
     stateNo++;
+    const castsNow = new Set((body.events ?? []).filter((ev) => plainObject(ev) && ev.kind === 'cast' && num(ev.cardId))
+      .map((ev) => ev.cardId));
     for (const ev of body.events ?? []) {
       if (!plainObject(ev) || ev.kind !== 'zone' || !num(ev.cardId)) continue;
       if (ev.to?.zone === 'battlefield') {
@@ -2736,7 +2744,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       }
       if (ev.to?.zone === 'exile' && ev.from?.zone === 'library' && num(ev.from.player)
           && ev.to.player === ev.from.player) {
-        exiledFromLibrary.set(ev.cardId, { frame: stateNo, owner: ev.from.player });
+        exiledFromLibrary.set(ev.cardId, { frame: stateNo, owner: ev.from.player, casters: new Set([...castsNow, ...castsBefore]) });
       } else {
         exiledFromLibrary.delete(ev.cardId);
       }
@@ -2747,7 +2755,9 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
         if (!num(c?.id)) continue;
         battlefieldNow.set(c.id, { owner: c.owner, controller: c.controller });
         const was = battlefieldBefore.get(c.id);
-        if (!was) enteredAt.set(c.id, { ...(enteredAt.get(c.id) ?? {}), listed: stateNo });
+        // Not in the log's first state frame: a branch log forks mid-game, and
+        // what its first frame lists was there before the log began.
+        if (!was && stateNo > 0) enteredAt.set(c.id, { ...(enteredAt.get(c.id) ?? {}), listed: stateNo });
         if (was && num(c.owner) && c.owner !== seat && was.owner === c.owner
             && was.controller === c.owner && c.controller === seat) {
           takenAt.set(c.id, stateNo);
@@ -2763,7 +2773,9 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
      * previous one (b76: the static re-applies a snapshot later), the viewer
      * still controls it, and the card's latest move into exile came from
      * `owner`'s library in the frame the permanent entered the battlefield or
-     * the next.
+     * the next, with a `cast` event naming the permanent -- its hideaway
+     * trigger -- in the dig's frame or the one before, and no other card in
+     * exile is tied to that permanent the same way.
      */
     const hideawayHost = (id, owner) => {
       const ex = exiledFromLibrary.get(id);
@@ -2772,8 +2784,15 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
         if (at !== stateNo && at !== stateNo - 1) continue;
         if (battlefieldNow.get(w)?.owner !== owner || !viewerHolds(w)) continue;
         const e = enteredAt.get(w) ?? {};
-        const beside = (k) => k !== undefined && (ex.frame === k || ex.frame === k + 1);
-        if (beside(e.event) || beside(e.listed)) return w;
+        const tied = (x) => x.owner === owner && x.casters.has(w)
+          && [e.event, e.listed].some((k) => k !== undefined && (x.frame === k || x.frame === k + 1));
+        if (!tied(ex)) continue;
+        // A hideaway trigger exiles ONE card: a permanent tied by timing and
+        // trigger to two digs (two hosts entering together, or another dig
+        // beside its trigger) cannot say which is its own, and vouches for none.
+        let ties = 0;
+        for (const x of exiledFromLibrary.values()) if (tied(x)) ties++;
+        if (ties === 1) return w;
       }
       return undefined;
     };
@@ -3056,6 +3075,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     viewerStackBefore = viewerStackNow;
     battlefieldBefore = battlefieldNow;
     hideawayGrants = nextHideaway;
+    castsBefore = castsNow;
     for (const p of players) {
       for (const [zname, z] of Object.entries(p.zones ?? {})) {
         if (zname === 'hand') continue;

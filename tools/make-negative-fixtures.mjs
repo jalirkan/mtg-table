@@ -375,6 +375,8 @@ probe('a9-stolen-morph-named-for-its-owner.jsonl',
 // exiled face down with its alt at the steal, the alt kept two states after
 // control returns, and a card dug beside another hideaway host's entry (Mosswort
 // Bridge) while the Watcher is the one stolen.
+/** A hideaway trigger on the stack: a `cast` event naming its host (its text "" as a copy's; the checker reads only the id). */
+const hideawayCast = (host, controller) => ({ kind: 'cast', stackId: 9200 + (host % 100), cardId: host, controller, text: '' });
 /** The opponent's seat (themOf, which is declared further down). */
 const hideawayThem = () => header.decks.find((d) => d.player !== header.seat).player;
 /**
@@ -390,6 +392,7 @@ const withHideaway = (fs, {
   owner = hideawayThem(), from = hideawayThem(), to = header.seat, changeAt = 1, altFrom = 1, altUntil = Infinity,
   enterAt = 0, exileAt = 0, exileFrom = 'library', hidIn = 'exile', returnAt = null, leaveAt = null,
   hostName = 'Watcher for Tomorrow', otherHostAt = null, digFrom = null, digTo = null, reExileAt = null,
+  hostCast = true, castAt = exileAt,
 } = {}) => {
   const them = hideawayThem();
   const sts = statesOf(fs);
@@ -416,6 +419,8 @@ const withHideaway = (fs, {
       if (i === otherHostAt) ev.push({ kind: 'zone', cardId: 90042, from: { zone: 'hand', player: them }, to: { zone: 'battlefield', player: them } });
       putCard(playerOf(sts[i], them), 'battlefield', { ...permanent(90042, 'Mosswort Bridge', them, them), manaCost: null, types: 'Land', power: null, toughness: null });
     }
+    // the hideaway trigger's own cast, naming its host (the Mosswort Bridge's when it is the one digging)
+    if (i === castAt && hostCast) ev.push(hideawayCast(otherHostAt === exileAt ? 90042 : 90041, them));
     if (i === exileAt) ev.push({ kind: 'zone', cardId: 90040, from: { zone: exileFrom, player: digFrom ?? them }, to: { zone: hidIn, player: digTo ?? them } });
     if (i === reExileAt) {
       ev.push({ kind: 'zone', cardId: 90040, from: { zone: 'exile', player: them }, to: { zone: 'hand', player: them } },
@@ -446,8 +451,8 @@ hideawayPass('a9-hideaway-control-taken.jsonl',
   'A9, D502: the opponent\'s Watcher for Tomorrow entered and dug a card of their library into exile face down; the viewer took control of it, and the card carries its alt from that state on -- hideaway\'s look goes to the Watcher\'s controller; counted, not a problem',
   3, {});
 hideawayPass('a9-hideaway-alt-a-state-after-control-taken.jsonl',
-  'A9, D502: the dig a state after the Watcher entered (b148: 91/92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem',
-  4, { exileAt: 1, changeAt: 2, altFrom: 3 });
+  'A9, D502: the Watcher enters with its hideaway trigger\'s cast and the dig lands a state later (b148: seq 91 / 92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem',
+  4, { exileAt: 1, castAt: 0, changeAt: 2, altFrom: 3 });
 hideawayPass('a9-hideaway-alt-a-state-after-the-host-leaves.jsonl',
   'A9, D502: the Watcher dies while the viewer controls it and the alt is still on the card in that state (J182 b76, seq 245: the static not yet re-applied) -- one state of grace, not a problem',
   4, { leaveAt: 3 });
@@ -493,6 +498,76 @@ hideawayProbe('a9-hideaway-dug-into-another-exile.jsonl',
 hideawayProbe('a9-hideaway-card-of-an-unrelated-host.jsonl',
   'A9, D502: the card was dug beside the entry of the opponent\'s Mosswort Bridge, not of the Watcher the viewer took -- the Watcher\'s look does not reach it',
   5, { exileAt: 2, otherHostAt: 2, changeAt: 3, altFrom: 3 });
+hideawayProbe('a9-hideaway-dig-with-no-host-trigger.jsonl',
+  'A9, D502: the dig beside the Watcher\'s entry carries no `cast` event naming the Watcher (its hideaway trigger) in its frame or the one before -- some other effect dug it',
+  3, { hostCast: false });
+
+// The second review of D502 (on c12f8418), in frame-by-frame specs: each state
+// lists permanents [id, owner, controller] and exiled face-down cards [id, owner,
+// alt?], and carries its events.  W is the Watcher (90041), B another permanent of
+// the opponent's (90042), C1 / C2 their face-down exiled cards (90040 / 90043).
+const [HW, HB, HC1, HC2] = [90041, 90042, 90040, 90043];
+const hEnter = (id) => ({ kind: 'zone', cardId: id, from: { zone: 'stack', player: null }, to: { zone: 'battlefield', player: hideawayThem() } });
+const hDig = (id) => ({ kind: 'zone', cardId: id, from: { zone: 'library', player: hideawayThem() }, to: { zone: 'exile', player: hideawayThem() } });
+const hCast = (id) => hideawayCast(id, hideawayThem());
+const hideawaySpec = (name, level, why, frames) => {
+  const fs = longSlice(frames.length);
+  const sts = statesOf(fs);
+  frames.forEach((fr, i) => {
+    const st = sts[i];
+    st.body.events.push(...(fr.ev ?? []));
+    for (const [id, owner, ctl] of fr.bf ?? []) {
+      putCard(st.body.players.find((p) => p.id === ctl), 'battlefield', Object.assign(structuredClone(firstFull(fs).card), {
+        id, name: id === HW ? 'Watcher for Tomorrow' : 'Grizzly Bears', setCode: 'MH2', manaCost: '{1}{G}', types: 'Creature',
+        power: '2', toughness: '2', faceDown: false, token: false, alt: null, attachedToId: null, attachmentIds: [],
+        owner, controller: ctl, zone: 'battlefield', abilities: [] }));
+    }
+    for (const [id, owner, alt] of fr.ex ?? []) {
+      putCard(st.body.players.find((p) => p.id === owner), 'exile', faceDownCard(fs, id, 'exile', owner, owner, alt === true));
+    }
+  });
+  const bytes = write(name, fs);
+  manifest.push({ file: name, level, expect: level === 'pass' ? 'PASS' : 'only a look permission', why });
+  console.log(`  ${level === 'pass' ? 'PASS' : 'FAIL'}  ${name}  (${bytes} bytes)  ${why}`);
+};
+{
+  const T = hideawayThem();
+  const V = header.seat;
+  hideawaySpec('a9-hideaway-retaken-the-frame-after-a-return.jsonl', 'pass',
+    'A9, D502: the viewer takes the Watcher, gives it back (the alt kept one frame of lag) and takes it again the next frame -- the look is the current controller\'s throughout; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-dropped-while-returned.jsonl', 'pass',
+    'A9, D502: taken, given back (the alt dropped after the lag frame) and taken again -- the alt comes back with the second taking; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-dig-beside-the-log-start.jsonl', 'fail',
+    'A9, D502 (second review): a permanent listed in the log\'s first state was there before the log began, so a dig in that frame is beside no entry the log shows -- stealing it later grants no look',
+    [{ bf: [[HB, T, T]], ex: [[HC2, T]], ev: [hCast(HB), hDig(HC2)] }, { bf: [[HB, T, T]], ex: [[HC2, T]] }, { bf: [[HB, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl', 'fail',
+    'A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source',
+    [{ bf: [[HB, T, T]] }, { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HB, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl', 'fail',
+    'A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger',
+    [{}, { bf: [[HB, T, T]], ev: [hEnter(HB)] }, { bf: [[HB, T, T]] },
+      { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HB, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl', 'fail',
+    'A9, D502 (second review): the Watcher enters with no hideaway trigger and another effect digs a card the next frame -- no cast names the Watcher, so the dig is not its',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hDig(HC2)] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-second-dig-beside-the-host-trigger.jsonl', 'fail',
+    'A9, D502: the Watcher\'s trigger digs C1 and another effect digs C2 the next frame, both beside its entry and its cast -- a hideaway digs ONE card, so the Watcher vouches for neither',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hDig(HC2)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T], [HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-two-hosts-enter-together.jsonl', 'fail',
+    'A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher\'s, so stealing it vouches for neither',
+    [{}, { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hEnter(HW), hEnter(HB), hCast(HW), hCast(HB), hDig(HC1), hDig(HC2)] },
+      { bf: [[HW, T, V], [HB, T, T]], ex: [[HC1, T, true], [HC2, T]] }]);
+}
 
 // The other night-2 finding (D371): the viewer's own hand card as a stub.  It
 // must fail, and the message must say which shape it was -- the clue to the cause.
