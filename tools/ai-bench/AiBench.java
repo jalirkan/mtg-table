@@ -1514,6 +1514,7 @@ public final class AiBench {
         plottedScenarios();
         revealScenarios();
         forkTokenCopyScenarios();
+        determinizeRevealedScenarios();
         chooseSourceScenarios();
         staleTargetScenarios();
         modalCastTargetsScenario();
@@ -3292,6 +3293,228 @@ public final class AiBench {
             check(inReal.startsWith("Goblin Shaman Token, token, haste, 2/2, 1 trigger(s), rules Goblin Shaman Token"),
                     "the real game: Kiki-Jiki copies the token (" + inReal + ")");
             check(inCopy.equals(inReal), "the copy's Kiki-Jiki made what the real game's makes: " + inCopy);
+        });
+    }
+
+    /** D498: the ids of {@code cards}, in order. */
+    private static List<Integer> ids(final Iterable<Card> cards) {
+        final List<Integer> l = new ArrayList<>();
+        for (final Card c : cards) {
+            l.add(c.getId());
+        }
+        return l;
+    }
+
+    /**
+     * D498: the Determinizer keeps every card the searching seat may look at
+     * where it is.  J181's s07, decision 14: the opponent's Oracle of Mul Daya
+     * played the top card of its library revealed, and D312's determinizer
+     * pooled that card with the hidden ones; in 48 of 150 branches it was dealt
+     * into the opponent's hand, where the copy's may-look grant still named it,
+     * and {@code tools/check-redaction.mjs} failed the branch's log (A6: a named
+     * card in a hidden zone with no reveal before it).  Four legs: the revealed
+     * top card stays on top over 40 seeds, and two games whose hidden cards are
+     * split and ordered differently still determinize byte for byte alike;
+     * a hand played revealed (Telepathy) stays the hand; one hand card the seat
+     * may look at stays in its slot among hidden ones; and the production path,
+     * atlas branches from the Oracle board recorded with
+     * {@code tools/ai-bench/decks/determinize-revealed.dck} as both seats'
+     * deck, whose every log {@code tools/check-redaction.mjs} passes.
+     */
+    static void determinizeRevealedScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the Determinizer keeps what the seat may look at (D498, engine)");
+        final int seeds = 40;
+        // 1. The opponent's Oracle of Mul Daya; Lightning Bolt on top of its library, revealed.  The same eight
+        //    hidden cards, split and ordered two ways.
+        final String[][] splits = {
+            {"humanhand=Grizzly Bears;Shock;Island", "humanlibrary=Lightning Bolt;Forest;Giant Growth;Mountain;Swamp;Plains"},
+            {"humanhand=Plains;Mountain;Giant Growth", "humanlibrary=Lightning Bolt;Swamp;Island;Shock;Grizzly Bears;Forest"},
+        };
+        final List<List<String>> det = new ArrayList<>();
+        for (int k = 0; k < 2; k++) {
+            final List<String> board = new ArrayList<>(List.of(
+                    "humanlife=20", "ailife=20", "turn=11", "activeplayer=ai", "activephase=MAIN2",
+                    "humanbattlefield=Oracle of Mul Daya;Forest;Forest;Forest;Forest", "aihand=Typhoid Rats",
+                    "ailibrary=Swamp;Mountain;Plains;Island", "aibattlefield=Swamp;Swamp"));
+            board.add(splits[k][0]);
+            board.add(splits[k][1]);
+            final int leg = k;
+            scenario("determinize-revealed-top-" + k, board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                final Game g = ai.getGame();
+                final Player opp = ai.getWeakestOpponent();
+                final Card top = opp.getCardsIn(ZoneType.Library).get(0);
+                int lookable = 0;
+                for (final Card c : opp.getCardsIn(EnumSet.of(ZoneType.Hand, ZoneType.Library))) {
+                    lookable += c.mayPlayerLook(ai) ? 1 : 0;
+                }
+                check("Lightning Bolt".equals(top.getName()) && top.mayPlayerLook(ai) && lookable == 1,
+                        "setup " + leg + ": the opponent's top card, " + top.getName() + ", is the one hand or library card the seat may look at ("
+                                + lookable + ")");
+                final List<String> out = new ArrayList<>();
+                final java.util.Set<String> hands = new java.util.HashSet<>();
+                int carried = 0, onTop = 0, inHand = 0, stillLookable = 0;
+                for (long seed = 1; seed <= seeds; seed++) {
+                    final LenientGameCopier cp = new LenientGameCopier(g);
+                    final Game copy = cp.makeCopy(null, ai);
+                    final Player aiC = (Player) cp.find(ai);
+                    final Player oppC = (Player) cp.find(opp);
+                    final Card cTop = oppC.getCardsIn(ZoneType.Library).get(0);
+                    carried += cTop.getId() == top.getId() && cTop.mayPlayerLook(aiC) ? 1 : 0;
+                    Determinizer.determinize(copy, aiC, new Random(seed));
+                    final Card after = oppC.getCardsIn(ZoneType.Library).get(0);
+                    onTop += after.getId() == top.getId() ? 1 : 0;
+                    stillLookable += after.mayPlayerLook(aiC) ? 1 : 0;
+                    inHand += ids(oppC.getCardsIn(ZoneType.Hand)).contains(top.getId()) ? 1 : 0;
+                    final String hand = String.join(",", names(oppC.getCardsIn(ZoneType.Hand)));
+                    hands.add(hand);
+                    out.add(hand + " | " + String.join(",", names(oppC.getCardsIn(ZoneType.Library)))
+                            + " | own hand " + String.join(",", names(aiC.getCardsIn(ZoneType.Hand))));
+                }
+                det.add(out);
+                check(carried == seeds, "the copy carries the grant: its top card is the real one and the seat may look at it ("
+                        + carried + " of " + seeds + ")");
+                check(onTop == seeds && stillLookable == seeds && inHand == 0,
+                        "the revealed top card stays on top in every determinization (" + onTop + " of " + seeds
+                                + " on top, in the opponent's hand " + inHand + ")");
+                check(hands.size() > 3, "the hidden cards are still redealt: " + hands.size() + " distinct opponent hands over "
+                        + seeds + " seeds");
+            });
+        }
+        check(det.size() == 2 && det.get(0).equals(det.get(1)),
+                "the same seeds give the same determinizations whatever the hidden split and order, beside a revealed top card"
+                + (det.size() == 2 ? " (first: " + det.get(0).get(0) + ")" : ""));
+
+        // 2. Telepathy on the seat's side: the opponent's hand is played revealed, so it is the hand in every redeal.
+        scenario("determinize-revealed-hand", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai",
+                "activephase=MAIN1", "humanbattlefield=Forest", "humanhand=Grizzly Bears;Shock;Island",
+                "humanlibrary=Forest;Giant Growth;Mountain;Swamp;Plains", "aibattlefield=Telepathy;Swamp",
+                "aihand=Typhoid Rats", "ailibrary=Swamp;Mountain"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Player opp = ai.getWeakestOpponent();
+            final List<Integer> hand = ids(opp.getCardsIn(ZoneType.Hand));
+            int lookable = 0;
+            for (final Card c : opp.getCardsIn(ZoneType.Hand)) {
+                lookable += c.mayPlayerLook(ai) ? 1 : 0;
+            }
+            check(lookable == hand.size() && !opp.getCardsIn(ZoneType.Library).get(0).mayPlayerLook(ai),
+                    "setup: Telepathy lets the seat look at the opponent's " + lookable + " hand cards, and not at its library");
+            int same = 0;
+            final java.util.Set<String> libs = new java.util.HashSet<>();
+            for (long seed = 1; seed <= seeds; seed++) {
+                final LenientGameCopier cp = new LenientGameCopier(g);
+                final Game copy = cp.makeCopy(null, ai);
+                final Player aiC = (Player) cp.find(ai);
+                Determinizer.determinize(copy, aiC, new Random(seed));
+                final Player oppC = (Player) cp.find(opp);
+                same += ids(oppC.getCardsIn(ZoneType.Hand)).equals(hand) ? 1 : 0;
+                libs.add(String.join(",", names(oppC.getCardsIn(ZoneType.Library))));
+            }
+            check(same == seeds, "a hand played revealed is the opponent's hand in every determinization (" + same + " of "
+                    + seeds + ")");
+            check(libs.size() > 3, "its library is still redealt: " + libs.size() + " orders over " + seeds + " seeds");
+        });
+
+        // 3. One hand card the seat may look at, among hidden ones: it keeps its slot, the others move.  The grant is
+        //    put on the copy (a look no static of this board makes), so this is the Determinizer's rule on its own.
+        scenario("determinize-revealed-hand-card", List.of("humanlife=20", "ailife=20", "turn=5", "activeplayer=ai",
+                "activephase=MAIN1", "humanbattlefield=Forest", "humanhand=Grizzly Bears;Shock;Island",
+                "humanlibrary=Forest;Giant Growth;Mountain;Swamp;Plains", "aibattlefield=Swamp", "aihand=Typhoid Rats",
+                "ailibrary=Swamp;Mountain"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Player opp = ai.getWeakestOpponent();
+            final Card shock = named(opp.getCardsIn(ZoneType.Hand), "Shock");
+            final int slot = ids(opp.getCardsIn(ZoneType.Hand)).indexOf(shock.getId());
+            int kept = 0;
+            final java.util.Set<String> hands = new java.util.HashSet<>();
+            for (long seed = 1; seed <= seeds; seed++) {
+                final LenientGameCopier cp = new LenientGameCopier(g);
+                final Game copy = cp.makeCopy(null, ai);
+                final Player aiC = (Player) cp.find(ai);
+                final Player oppC = (Player) cp.find(opp);
+                final Card cShock = byId(oppC.getCardsIn(ZoneType.Hand), shock.getId());
+                cShock.addMayLookAt(copy.getNextTimestamp(), List.of(aiC));
+                Determinizer.determinize(copy, aiC, new Random(seed));
+                final List<Integer> h = ids(oppC.getCardsIn(ZoneType.Hand));
+                kept += h.indexOf(shock.getId()) == slot ? 1 : 0;
+                hands.add(String.join(",", names(oppC.getCardsIn(ZoneType.Hand))));
+            }
+            check(kept == seeds, "a hand card the seat may look at keeps its slot in every determinization (" + kept + " of "
+                    + seeds + ")");
+            check(hands.size() > 3, "the other hand cards are still redealt: " + hands.size() + " distinct hands over " + seeds
+                    + " seeds");
+        });
+
+        // 4. The production path that failed in the field: atlas branches from the Oracle board, recorded, each log
+        //    through tools/check-redaction.mjs.
+        //    The option is an attack, as s07's decision 14 was: the branch's first state frame is written at the
+        //    declaration, before the engine's next static check, so a grant the redeal moved is still on the card.
+        scenario("determinize-revealed-atlas", List.of("humanlife=20", "ailife=20", "turn=11", "activeplayer=ai",
+                "activephase=COMBAT_DECLARE_ATTACKERS", "humanbattlefield=Oracle of Mul Daya;Forest;Forest;Forest;Forest",
+                splits[0][0], splits[0][1], "aihand=Typhoid Rats", "ailibrary=Swamp;Mountain;Plains;Island",
+                "aibattlefield=Swamp;Swamp;Grizzly Bears"), PolicyLobbyPlayerAi.Outlets.OFF, null, 120, (ai, pol) -> {
+            final Game g = ai.getGame();
+            g.setAge(forge.game.GameStage.Play);   // the lab's games are in Play (D478's note)
+            final Player opp = ai.getWeakestOpponent();
+            final Map<Card, forge.game.GameEntity> attack = Map.of(named(ai.getCardsIn(ZoneType.Battlefield), "Grizzly Bears"), opp);
+            final mtgtable.ai.SearchPolicy.Cand cand = mtgtable.ai.SearchPolicy.attackCand(attack);
+            final int topId = opp.getCardsIn(ZoneType.Library).get(0).getId();
+            final Config cfg = Config.load();
+            final File deckFile = new File(cfg.root(), "tools/ai-bench/decks/determinize-revealed.dck");
+            final Deck deck = DeckSerializer.fromFile(deckFile);
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = g.getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            u.jarSha = BenchRecording.jarSha(cfg);
+            u.seats = new ArrayList<>();
+            for (int s = 0; s < 2; s++) {
+                u.seats.add(new SeatRecorder.Seat("determinize-revealed", deckFile, BenchRecording.relPath(cfg, deckFile), deck,
+                        Bootstrap.DEFAULT_AI_PROFILE));
+            }
+            final File dir = new File(cfg.root(), "var/ai-bench/determinize-revealed");
+            for (final File f : dir.exists() ? dir.listFiles() : new File[0]) {
+                f.delete();
+            }
+            final int branches = 24;
+            int played = 0, passed = 0, logs = 0;
+            final List<String> failed = new ArrayList<>();
+            for (int b = 0; b < branches; b++) {
+                final Map<String, Object> fields = new LinkedHashMap<>();   // the lab header's fields, as Atlas.run writes them
+                fields.put("decision", 0L);
+                fields.put("kind", "a");
+                fields.put("turn", (long) g.getPhaseHandler().getTurn());
+                fields.put("option", 0L);
+                fields.put("optionToken", mtgtable.ai.SearchPolicy.token(cand));
+                fields.put("continuation", u.continuation);
+                fields.put("branch", (long) b);
+                fields.put("branchSeed", (long) b + 1);
+                fields.put("turnCap", (long) u.turnCap);
+                final mtgtable.ai.Atlas.Branch x = mtgtable.ai.Atlas.play(ai, cand, 0, b, b + 1, u, "d498-b" + b, fields, dir,
+                        "d498-b" + b, false);
+                played += x.error == null && x.unavailable == null && !x.engineError && x.steps > 0 ? 1 : 0;
+                for (int s = 0; s < 2; s++) {
+                    final File f = new File(dir, "d498-b" + b + "-seat" + s + ".jsonl.gz");
+                    if (!f.exists()) {
+                        failed.add(f.getName() + " (missing)");
+                        continue;
+                    }
+                    logs++;
+                    final Process p = new ProcessBuilder("node", "tools/check-redaction.mjs", "--empty-hand-ok", f.getPath())
+                            .directory(cfg.root()).redirectErrorStream(true).start();
+                    final String outp = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                    if (p.waitFor() == 0) {
+                        passed++;
+                    } else {
+                        final int at = outp.indexOf("      ! ");   // the checker's first finding
+                        failed.add(f.getName() + ": " + (at < 0 ? outp : outp.substring(at + 8, Math.min(outp.length(), at + 400)))
+                                .split("\n")[0]);
+                    }
+                }
+            }
+            check(played == branches, "the atlas branches from the Oracle board play (" + played + " of " + branches + ")");
+            check(logs == 2 * branches && passed == logs, "tools/check-redaction.mjs passes every branch log (" + passed + " of "
+                    + logs + "; the top card is id " + topId + ")" + (failed.isEmpty() ? "" : ": " + failed));
         });
     }
 
