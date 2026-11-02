@@ -127,11 +127,20 @@ const REQUIRED = [
   ['a9-hideaway-alt-dropped-while-returned.jsonl', 'pass'],
   ['a9-hideaway-dig-with-no-host-trigger.jsonl', 'fail'],
   ['a9-hideaway-dig-beside-the-log-start.jsonl', 'fail'],
+  ['a9-hideaway-dig-beside-a-later-trigger-of-the-host.jsonl', 'fail'],
   ['a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl', 'fail'],
   ['a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl', 'fail'],
   ['a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl', 'fail'],
   ['a9-hideaway-second-dig-beside-the-host-trigger.jsonl', 'fail'],
   ['a9-hideaway-two-hosts-enter-together.jsonl', 'fail'],
+  // the third review (50b92814): a creature spell's cast is no trigger, ties count
+  // every dig, a held grant ends on any move; and the one admitted residual
+  ['a9-hideaway-creature-spell-cast-then-unrelated-dig.jsonl', 'fail'],
+  ['a9-hideaway-real-card-played-then-steal.jsonl', 'fail'],
+  ['a9-hideaway-held-grant-card-re-dug-in-one-frame.jsonl', 'fail'],
+  ['a9-hideaway-held-grant-card-through-a-hand.jsonl', 'fail'],
+  ['a9-hideaway-card-re-dug-under-a-new-host.jsonl', 'pass'],
+  ['a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl', 'pass'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -290,6 +299,8 @@ const COUNTED = [
   ['a9-hideaway-alt-a-state-after-the-host-leaves.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-retaken-the-frame-after-a-return.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-alt-dropped-while-returned.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-card-re-dug-under-a-new-host.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-source-choice.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],

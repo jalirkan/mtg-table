@@ -231,7 +231,13 @@
     "file": "a9-hideaway-dig-beside-the-log-start.jsonl",
     "level": "fail",
     "expect": "only a look permission",
-    "why": "A9, D502 (second review): a permanent listed in the log's first state was there before the log began, so a dig in that frame is beside no entry the log shows -- stealing it later grants no look"
+    "why": "A9, D502 (second review): a permanent listed in the log's first state was there before the log began, so a trigger of it and a dig in the next frame are beside no entry the log shows -- stealing it later grants no look"
+  },
+  {
+    "file": "a9-hideaway-dig-beside-a-later-trigger-of-the-host.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: a cast naming the Watcher (another trigger or ability of it) beside a dig long after it entered -- the dig is not beside its entry, so it is not its hideaway card"
   },
   {
     "file": "a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl",
@@ -256,6 +262,42 @@
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D502: the Watcher's trigger digs C1 and another effect digs C2 the next frame, both beside its entry and its cast -- a hideaway digs ONE card, so the Watcher vouches for neither"
+  },
+  {
+    "file": "a9-hideaway-creature-spell-cast-then-unrelated-dig.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (third review): the opponent casts a creature (its spell's cast names it, before it enters) and another effect digs a card the next frame -- a spell cast is no hideaway trigger, so stealing the creature grants no look"
+  },
+  {
+    "file": "a9-hideaway-real-card-played-then-steal.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (third review): an unrelated dig beside the Watcher's trigger, then the Watcher's own dig, then its own card played from exile -- the Watcher was tied to two digs, and a card leaving exile does not make the other one its own"
+  },
+  {
+    "file": "a9-hideaway-held-grant-card-re-dug-in-one-frame.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> library -> exile in one frame -- Forge forgets a hideaway card that moves (ForgetOnMoved), so the grant ends and the new dig has no trigger"
+  },
+  {
+    "file": "a9-hideaway-held-grant-card-through-a-hand.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> hand -> exile in one frame, through a hidden zone -- the grant ends on the move"
+  },
+  {
+    "file": "a9-hideaway-card-re-dug-under-a-new-host.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502 (third review): the viewer took the Watcher and gave it back, the card went back to the library and a second Watcher dug it again, and the viewer took that one -- the second host's look; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502: STILL ADMITTED, the residual the log cannot rule out -- the Watcher's trigger digs nothing and another effect digs exactly one card the next frame; that card is the Watcher's only tie. Kept as a passing control so a change to it is seen"
   },
   {
     "file": "a9-hideaway-two-hosts-enter-together.jsonl",

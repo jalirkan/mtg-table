@@ -48,7 +48,7 @@ controls is on the stack, in that frame or the previous state frame (Gonti, Thie
 while it stays in exile (`lookGrants`). Hideaway's look reaches a seat that was not the digger, so no frame of these
 logs has that shape.
 
-**The rule after** (as tightened by two reviews, of `f3a3091b` and of `c12f8418`; see *The reviews* below). The rule
+**The rule after** (as tightened by three reviews, of `f3a3091b`, `c12f8418` and `50b92814`; see *The reviews* below). The rule
 also admits an alt on a face-down card in **exile**, owned and controlled by player P (not the viewer), when it can
 name the permanent W whose hideaway look it is. All of the following must hold:
 1. **The card was dug from its owner's library.** The card's latest move into exile is a zone event from
@@ -58,17 +58,24 @@ name the permanent W whose hideaway look it is. All of the following must hold:
    one. W's entry is either a zone event onto a battlefield, or its first listing on one after a state without it.
    The log's **first** state frame records no listing entry: a branch log forks mid-game, and what its first frame
    lists was there before the log began.
-3. **W's own hideaway trigger is beside the dig.** A `cast` event names W, the trigger on the stack, in the dig's
-   frame or the one before.
-4. **W vouches for one card only.** No other card whose latest move into exile is from P's library is tied to W by
-   points 2 and 3. A hideaway trigger exiles one card. Two cards tied to one W are ambiguous, so neither is admitted.
-   That covers two hosts entering and digging in one frame, and another dig landing beside W's trigger.
+3. **W's own hideaway trigger is beside the dig.** A trigger's `cast` event names W in the dig's frame or the one
+   before. A `cast` counts as a trigger's only in two cases. It may come after W's zone event onto the battlefield, in
+   the event order of the same frame. Or W may already be listed on a battlefield in the previous state frame. A
+   creature spell's own `cast` names the same card before it enters, so it never counts.
+4. **W vouches for one card only.** Counted over **every** library-to-exile dig of P's the log has recorded, a card
+   that has since left exile included, exactly one is tied to W by points 2 and 3. A hideaway trigger exiles one card,
+   so two digs tied to one W are ambiguous and neither is admitted. That covers two hosts entering and digging in one
+   frame, and another dig beside W's trigger. A card leaving exile never subtracts a tie: if W's real card is played
+   from exile, an earlier unrelated dig does not become W's.
 5. **The viewer took W from P.** W is owned by P, and its `controller` changed from P (previous state frame) to the
    viewing seat in the frame where the alt appears, or in the frame before it (`b76`).
 6. **The viewer still controls W** on the battlefield in that frame.
 
-All five logs show points 1 to 3. The Watcher's entry is a zone event and its hideaway trigger a `cast` naming card 47
-("Hideaway 4 ..."):
+All five logs show points 1 to 3. The Watcher's entry is a zone event, and its hideaway trigger is a `cast` naming card
+47 ("Hideaway 4 ..."), which follows that zone event in the frame's event order. In `b148` (both logs), `b76` and
+`b20`, the frame's events run: the Watcher's spell `cast` at index 3, its zone event onto the battlefield at 4, and
+the hideaway `cast` at 7. In `b47` they run: the zone event at 2 and the hideaway `cast` at 6. So the spell's own cast
+comes before the entry, and the trigger after it, in every log.
 
 | log | Watcher enters (zone event) | hideaway `cast` | card dug |
 |---|---|---|---|
@@ -77,8 +84,10 @@ All five logs show points 1 to 3. The Watcher's entry is a zone event and its hi
 | `b76` | seq 162 | seq 162 | seq 163 |
 | `b20` | seq 183 | seq 183 | seq 184 |
 
-**The grant ends.** After that, the card keeps the alt only while it stays in exile in consecutive state frames and the
-viewer still controls **that** W. One frame of grace follows the frame where the viewer stops controlling W, or W
+**The grant ends.** After that, the card keeps the alt only while it stays in exile in consecutive state frames, no zone
+event names it, and the viewer still controls **that** W. Forge's hideaway Effect is `ForgetOnMoved$ Exile`: a card
+that moves, even exile to library to exile within one frame, or through a hand, is forgotten, and the look ends with
+it. A card dug again later can only be admitted afresh, under a host that its new dig is tied to. One frame of grace follows the frame where the viewer stops controlling W, or W
 leaves the battlefield. A second frame ends the grant. Forge's look is the current controller's, so the real bridge
 drops the alt once control returns. The grace frame is the same snapshot lag as at the start: in `b76` the Watcher
 dies at seq 245 (line 278) and the alt is still on card 78 in that snapshot, gone with the card to its owner's hand at
@@ -114,12 +123,22 @@ needs its permission.
 - A dig in the log's first state frame, tied to a permanent the log first lists there. Stealing that permanent later
   admits nothing. That holds even when the steal comes in the lag frame of a real grant.
 - A second dig beside one host's trigger, and two hosts entering and digging in one frame. Neither card is admitted.
+  That stays true after one of the two cards leaves exile.
+- A creature spell's own `cast` taken for a trigger, with an unrelated dig beside it.
+- A held grant whose card moved (exile → library → exile, or exile → hand → exile) in the frame.
 - The alt still on the card two frames after the Watcher went back to the opponent, or after it left.
 - An alt in play on a card the viewer does not control (A9's in-play half), and D371's own probes, unchanged.
 
-**What is still admitted that the log cannot rule out.** A hideaway host whose own trigger digs nothing (an empty
-library) while some other effect digs exactly one card of its owner's beside its entry and its trigger. Then that one
-card is tied to the host. No J182 log comes near it.
+**What is still admitted that the log cannot rule out.** Two cases. Both need the opponent to dig exactly one card of
+their own library face down beside the entry of a permanent that the viewer then steals.
+- **A hideaway host whose own trigger digs nothing** (an empty library), while another effect digs exactly one card
+  of its owner's beside its entry and its trigger. That card is the host's only tie. The selftest keeps this as a
+  passing control, `a9-hideaway-residual-trigger-digs-nothing-another-dig-next`, so a change to it is seen.
+- **A permanent with another enters-the-battlefield trigger**, not hideaway (say, Elvish Visionary's "draw a card"),
+  whose trigger `cast` follows its entry, beside an unrelated dig. The two triggers differ only in their `cast` text.
+  That is an engine string, which the checker does not read (D504's reason too).
+
+No J182 log comes near either case.
 
 **What the rule cannot see.** If a branch log was forked after the Watcher entered, the entry, its trigger and the dig
 are not in it, and the alt fails. That needs its own decision if a night meets it (PLAN.md's cube lab follow-up 19).
@@ -149,11 +168,21 @@ are not in it, and the alt fails. That needs its own decision if a night meets i
     tied to any of them. This also let a steal in a grant's lag frame carry the alt on;
   - an unrelated dig in the frame after a host's entry was taken for the host's.
 
-  This form adds the first-frame rule (point 2), the host's trigger (point 3) and, beyond what the review asked,
+  `50b92814` added the first-frame rule (point 2), the host's trigger (point 3) and, beyond what the review asked,
   one card per host (point 4). Point 4 also closes the review's "two hosts entering in one frame", which it expected
   to stay admitted.
+- **The review of `50b92814`** found three more holes, each now closed:
+  - a creature spell's own `cast` names the same card as its hideaway trigger, so any creature cast from hand
+    satisfied point 3;
+  - the one-card count saw only cards still in exile, so the host's real card being played left an unrelated dig as
+    its only tie;
+  - a held grant survived its card leaving exile and coming back within one frame.
 
-**Tests.** The selftest (`tools/check-redaction-selftest.mjs`) has 26 controls for this rule, generated by
+  This form counts only a trigger's `cast` (point 3), counts ties over every dig (point 4) and ends a grant on any
+  move of its card. D371's Gonti path (`stayed`) has the same move-survival behaviour on `main`. It is left as it is
+  here and written down as the cube lab's follow-up 22.
+
+**Tests.** The selftest (`tools/check-redaction-selftest.mjs`) has 33 controls for this rule, generated by
 `tools/make-negative-fixtures.mjs` and all listed in `REQUIRED`. Every control outside this rule regenerated
 byte-identical.
 - **PASS, each holding the D502 count on its stats line** (the selftest's `COUNTED` list):
@@ -161,9 +190,10 @@ byte-identical.
   - `-alt-a-state-after-control-taken`: the cast at the entry and the dig a frame later (`b148`), and the alt a frame
     after the steal (`b76`);
   - `-alt-a-state-after-the-host-leaves`: `b76`'s grace frame;
-  - `-retaken-the-frame-after-a-return`: taken, returned with the alt in the lag frame, taken again (the review's
-    `n8`);
-  - `-alt-dropped-while-returned`: the same with the alt gone in between (the review's `p4`).
+  - `-retaken-the-frame-after-a-return` (the second review's `n8`);
+  - `-alt-dropped-while-returned` (`p4`);
+  - `-card-re-dug-under-a-new-host` (the third review's `x-c`);
+  - `-residual-trigger-digs-nothing-another-dig-next` (`r-n1b`). This one is admitted by design, as above.
 - **FAIL:**
   - `-no-control-change`;
   - `-viewer-controlled-from-the-start`;
@@ -180,15 +210,21 @@ byte-identical.
   - `-dug-into-another-exile`;
   - `-card-of-an-unrelated-host`;
   - `-dig-with-no-host-trigger`;
-  - `-dig-beside-the-log-start` (the review's `n5`);
+  - `-dig-beside-the-log-start` (`n5`: a trigger of a permanent listed since the log's first frame, and a dig in
+    the next);
+  - `-dig-beside-a-later-trigger-of-the-host`;
   - `-lag-frame-then-an-unrelated-steal` (`n3`);
   - `-lag-frame-then-a-steal-of-an-earlier-entry` (`n3b`);
   - `-unrelated-dig-after-an-entry-with-no-trigger` (`n1b`);
   - `-second-dig-beside-the-host-trigger`;
-  - `-two-hosts-enter-together` (`n1`).
+  - `-two-hosts-enter-together` (`n1`);
+  - `-creature-spell-cast-then-unrelated-dig` (`x-a`);
+  - `-real-card-played-then-steal` (`x-b2`);
+  - `-held-grant-card-re-dug-in-one-frame` (`x-c2`);
+  - `-held-grant-card-through-a-hand` (`x-c3`).
 
-**Mutants.** I ran 19 mutants of this form, each in a scratch copy against the whole selftest and the five s06 logs.
-These 18 each failed the selftest:
+**Mutants.** I ran 24 mutants of this form, each in a scratch copy against the whole selftest and the five s06 logs.
+These 22 each failed the selftest:
 - a move into exile from anywhere;
 - the dig's same-player check removed;
 - no entry link;
@@ -196,8 +232,11 @@ These 18 each failed the selftest:
 - the entry read from its first listing only;
 - the log's first frame counted as an entry;
 - no host trigger needed;
+- any `cast` counted as a trigger;
+- a `cast` before the entry counted;
 - the host trigger in the dig's frame only (this also fails four J182 logs);
 - no one-card limit;
+- ties counted over cards still in exile only;
 - the take this frame only;
 - the take at any time;
 - the host's owner unchecked;
@@ -205,10 +244,14 @@ These 18 each failed the selftest:
 - the dig's owner unchecked;
 - the grant kept forever;
 - no grace after loss;
+- a held grant surviving a move;
 - another zone event not clearing the dig;
 - the rule off.
 
-One survives: the entry read from its zone event only. That is a narrowing. No log or control needs the listing
-spelling once the first frame is excluded, and the listing is kept because it is the same fact.
+Two survive, and both are narrowings of an accepted alternative, not loosenings:
+- the entry read from its zone event only;
+- a trigger `cast` accepted only after an entry in the same frame, not for a host listed the frame before.
+
+No log or control needs either alternative. Both are kept because the reviewed predicate names them.
 
 **Measured.** The five J182 s06 logs pass with the D502 count (1 each). The table is in *Evidence* in **D504**.

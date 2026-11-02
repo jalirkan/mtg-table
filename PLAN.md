@@ -18,7 +18,7 @@ commit.
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
 said 371 across 42, three rows and one list behind its table) — D502–D504
-(2026-11-02) added the cube lab's 19, 20 and 21; D501
+(2026-11-02) added the cube lab's 19, 20, 21 and 22; D501
 (2026-11-01) added the cube lab's 18 and closed its 15; D500 (2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
@@ -421,9 +421,10 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 16 | open | D499's rows check: two killed attempts of one branch with no finished play are still each read against the last attempt's logs, and the first night on it should report its abandoned plays with no id problem | `tools/cubelab/rowscheck.ts` |
 | [Cube lab](#fu-cube-lab) | 17 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
 | [Cube lab](#fu-cube-lab) | 18 | open | D501's empty-hand proof with a revealed library top: measured on Oracle of Mul Daya only (J181's three s07 logs); the other revealers rest on synthetic controls, and the top card named outside its state's library still refuses the proof | `docs/decisions/D501-empty-hand-proof-revealed-top.md` |
-| [Cube lab](#fu-cube-lab) | 19 | open | D502's A9 hideaway admission (tightened by two reviews: dug from the owner's library beside the taken permanent's entry and its hideaway trigger's cast, one card a permanent, kept only while the viewer holds it): measured on J182's five s06 logs; both one-frame lags rest on one log (b76), and a branch log forked after the Watcher entered still fails | `docs/decisions/D502-hideaway-look-after-control-change.md` |
+| [Cube lab](#fu-cube-lab) | 19 | open | D502's A9 hideaway admission (tightened by three reviews: dug from the owner's library beside the taken permanent's entry and its hideaway trigger's cast, one dig a permanent, kept only while the viewer holds it and the card does not move): measured on J182's five s06 logs; both one-frame lags rest on one log (b76), and a branch log forked after the Watcher entered still fails | `docs/decisions/D502-hideaway-look-after-control-change.md` |
 | [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
+| [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9872,7 +9873,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–21, 2026-11-02 (D502–D504)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -10034,12 +10035,15 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
 19. **D502's hideaway admission in A9 is measured on one card's shape.** (2026-11-02, D502.) `check-redaction.mjs`'s A9
    now admits an opponent's face-down exiled card dug from its owner's library in the frame a permanent of that
    owner's entered the battlefield (or the next; never the log's first frame), beside that permanent's own hideaway
-   trigger (`cast`), the only card so tied to it, whose `alt` appears in the frame, or the one after, in which the
+   trigger (`cast`, after its entry in event order), the only dig of the log so tied to it, whose `alt` appears in the frame, or the one after, in which the
    viewer took that permanent from its owner, and only while the viewer still controls it (plus one frame of lag).
    Measured on J182's five `b-s06-peasant-2506` logs (Watcher for Tomorrow, exchanged by Burglar's Plot): FAIL on
    `main`, PASS here. The first form of the rule (`f3a3091b`) had no link from card to permanent and no end to the
    grant, and `c12f8418` counted the log's first frame as every permanent's entry and took an unrelated dig for the
-   host's; both reviews' leaking shapes are failing controls now. Both one-frame lags, at the take and at the
+   host's, and `50b92814` took a creature spell's cast for a trigger, forgot ties when a card left exile and kept a
+   grant through a move; the reviews' leaking shapes are failing controls now. Two shapes stay admitted by design
+   (D502's "what is still admitted"): a host whose trigger digs nothing beside one other dig, and another ETB
+   trigger's cast beside an unrelated dig, which only the engine text could tell apart. Both one-frame lags, at the take and at the
    Watcher's death, rest on one log (`d1-random-o0-b76`). Still failing by design, each needing its own decision if a
    night meets it: a branch log forked after the Watcher entered (no entry or dig in the log), two hideaway hosts
    entering in one frame (now refused: one card a host), and an alt two or more frames after the change.
@@ -10053,6 +10057,11 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    J182's `b-s04-powered-2504/.../d0-random-o1-b3-seat0` (Kormus Bell, countered by Force of Negation): FAIL on
    `main`, PASS here. A card drawn and cast inside one held batch is never a stub in the decision's state, so it
    still fails; if a night meets it, it needs its own decision.
+22. **D371's Gonti look keeps its alt through a move.** (2026-11-02, the third review of D502.) A9's `stayed` path keeps
+   an opponent's face-down card's `alt` while it is in exile in consecutive frames, even when a zone event in the frame
+   moved it out and back (exile -> library -> exile, or through a hand). Forge would forget the look on such a move.
+   D502's hideaway grant now ends on any zone event of its card; the Gonti path does not, on `main` too. Left alone by
+   the D502 lane: it is D371's rule, and no log has met it.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

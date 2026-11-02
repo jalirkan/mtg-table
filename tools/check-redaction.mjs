@@ -68,9 +68,9 @@
  *       resolves -- and only while the card stays there (D371); or, for
  *       hideaway's look (the CURRENT controller of the permanent that exiled
  *       it), a card dug from its owner's library beside that permanent's entry
- *       and its hideaway trigger's cast (one card a permanent), from the frame
- *       the viewer took the permanent (or the next) and only while the viewer
- *       holds it, plus one frame of lag (D502).
+ *       and its hideaway trigger's cast (one dig a permanent, ever), from the
+ *       frame the viewer took the permanent (or the next) and only while the
+ *       viewer holds it and the card does not move, plus one frame of lag (D502).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -1776,7 +1776,9 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    *                      `cast` event named in that frame or the one before
    *                      (the hideaway trigger's own cast names its host);
    *   castsBefore        the card ids the previous state frame's `cast` events
-   *                      named;
+   *                      named, a trigger's only (after the permanent's entry
+   *                      in event order, or the permanent listed before);
+   *   digLog             every such dig of the log, kept when its card moves;
    *   takenAt            permanent id -> the state frame its controller changed
    *                      from its owner (not the viewer) to the viewing seat;
    *   hideawayGrants     card id -> {host, holds}: the taken permanent whose look
@@ -1790,6 +1792,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
   const enteredAt = new Map();
   const exiledFromLibrary = new Map();
   let castsBefore = new Set();
+  /** D502: every library -> exile dig of the log, never removed (a host's ties are counted over all of them). */
+  const digLog = [];
   const takenAt = new Map();
   let hideawayGrants = new Map();
   /** id -> was the last serialisation of this id concealed?  (A7) */
@@ -2735,16 +2739,33 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     // frame the permanent entered the battlefield, or the next -- and shows the
     // look move with the permanent's controller.  This frame's evidence first.
     stateNo++;
-    const castsNow = new Set((body.events ?? []).filter((ev) => plainObject(ev) && ev.kind === 'cast' && num(ev.cardId))
-      .map((ev) => ev.cardId));
+    // A TRIGGER's cast: one naming a permanent that a zone event of this frame
+    // put onto the battlefield EARLIER in event order, or that the previous
+    // state frame already listed there.  A creature spell's own cast names the
+    // same card before it enters, so it never counts (the third review).
+    const castsNow = new Set();
+    {
+      const enteredSoFar = new Set();
+      for (const ev of body.events ?? []) {
+        if (!plainObject(ev) || !num(ev.cardId)) continue;
+        if (ev.kind === 'zone' && ev.to?.zone === 'battlefield') enteredSoFar.add(ev.cardId);
+        if (ev.kind === 'cast' && (enteredSoFar.has(ev.cardId) || battlefieldBefore.has(ev.cardId))) castsNow.add(ev.cardId);
+      }
+    }
+    // every card a zone event names in this frame: a held grant ends on any move
+    // of its card (Forge's hideaway effect is ForgetOnMoved$ Exile)
+    const movedNow = new Set();
     for (const ev of body.events ?? []) {
       if (!plainObject(ev) || ev.kind !== 'zone' || !num(ev.cardId)) continue;
+      movedNow.add(ev.cardId);
       if (ev.to?.zone === 'battlefield') {
         enteredAt.set(ev.cardId, { ...(enteredAt.get(ev.cardId) ?? {}), event: stateNo });
       }
       if (ev.to?.zone === 'exile' && ev.from?.zone === 'library' && num(ev.from.player)
           && ev.to.player === ev.from.player) {
-        exiledFromLibrary.set(ev.cardId, { frame: stateNo, owner: ev.from.player, casters: new Set([...castsNow, ...castsBefore]) });
+        const dug = { frame: stateNo, owner: ev.from.player, casters: new Set([...castsNow, ...castsBefore]) };
+        exiledFromLibrary.set(ev.cardId, dug);
+        digLog.push(dug);
       } else {
         exiledFromLibrary.delete(ev.cardId);
       }
@@ -2790,8 +2811,11 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
         // A hideaway trigger exiles ONE card: a permanent tied by timing and
         // trigger to two digs (two hosts entering together, or another dig
         // beside its trigger) cannot say which is its own, and vouches for none.
+        // Every dig ever recorded counts, whether or not its card is still in
+        // exile: a host's real card played from exile must not leave an
+        // unrelated dig as its only tie (the third review).
         let ties = 0;
-        for (const x of exiledFromLibrary.values()) if (tied(x)) ties++;
+        for (const x of digLog) if (tied(x)) ties++;
         if (ties === 1) return w;
       }
       return undefined;
@@ -2942,7 +2966,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
                 // at the start); a second frame without it ends the grant.
                 const held = hideawayGrants.get(c.id);
                 const host = !arrived && !stayed && zname === 'exile' && num(owner) && c.controller === owner
-                  ? (held !== undefined && (viewerHolds(held.host) || held.holds)
+                  ? (held !== undefined && !movedNow.has(c.id) && (viewerHolds(held.host) || held.holds)
                     ? held.host : hideawayHost(c.id, owner))
                   : undefined;
                 if (arrived || stayed) {

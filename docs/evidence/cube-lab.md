@@ -236,5 +236,5 @@ logs, under `/home/justin-a/code/lab/data/lab-j182/`, checked with the atlas's `
 | **all** | **11** | | | **11 FAIL** | **11 PASS** |
 
 All 11 pass without the flag too. `fixtures/games/` and `fixtures/synthetic/` check byte-for-byte as on `main`. The
-checker's self-test passes 198 controls (149 before). The rest of J182's spines were not re-run here.
+checker's self-test passes 205 controls (149 before). The rest of J182's spines were not re-run here.
 

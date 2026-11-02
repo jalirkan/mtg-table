@@ -543,8 +543,12 @@ const hideawaySpec = (name, level, why, frames) => {
       { bf: [[HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T]] },
       { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
   hideawaySpec('a9-hideaway-dig-beside-the-log-start.jsonl', 'fail',
-    'A9, D502 (second review): a permanent listed in the log\'s first state was there before the log began, so a dig in that frame is beside no entry the log shows -- stealing it later grants no look',
-    [{ bf: [[HB, T, T]], ex: [[HC2, T]], ev: [hCast(HB), hDig(HC2)] }, { bf: [[HB, T, T]], ex: [[HC2, T]] }, { bf: [[HB, T, V]], ex: [[HC2, T, true]] }]);
+    'A9, D502 (second review): a permanent listed in the log\'s first state was there before the log began, so a trigger of it and a dig in the next frame are beside no entry the log shows -- stealing it later grants no look',
+    [{ bf: [[HB, T, T]] }, { bf: [[HB, T, T]], ex: [[HC2, T]], ev: [hCast(HB), hDig(HC2)] }, { bf: [[HB, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-dig-beside-a-later-trigger-of-the-host.jsonl', 'fail',
+    'A9, D502: a cast naming the Watcher (another trigger or ability of it) beside a dig long after it entered -- the dig is not beside its entry, so it is not its hideaway card',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hCast(HW), hDig(HC2)] },
+      { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
   hideawaySpec('a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl', 'fail',
     'A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source',
     [{ bf: [[HB, T, T]] }, { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
@@ -563,6 +567,35 @@ const hideawaySpec = (name, level, why, frames) => {
     'A9, D502: the Watcher\'s trigger digs C1 and another effect digs C2 the next frame, both beside its entry and its cast -- a hideaway digs ONE card, so the Watcher vouches for neither',
     [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hDig(HC2)] },
       { bf: [[HW, T, V]], ex: [[HC1, T], [HC2, T, true]] }]);
+  // The third review (on 50b92814): a creature spell's own cast is no trigger, a
+  // host's ties count every dig ever made, and a held grant ends on any move.
+  const HW2 = 90044;
+  const hMove = (id, a, b) => ({ kind: 'zone', cardId: id, from: { zone: a, player: a === 'stack' ? null : T }, to: { zone: b, player: b === 'stack' ? null : T } });
+  const hSpell = (id) => ({ kind: 'cast', stackId: 9300 + (id % 100), cardId: id, controller: T, text: '' });
+  hideawaySpec('a9-hideaway-creature-spell-cast-then-unrelated-dig.jsonl', 'fail',
+    'A9, D502 (third review): the opponent casts a creature (its spell\'s cast names it, before it enters) and another effect digs a card the next frame -- a spell cast is no hideaway trigger, so stealing the creature grants no look',
+    [{}, { bf: [[HB, T, T]], ev: [hMove(HB, 'hand', 'stack'), hSpell(HB), hEnter(HB)] }, { bf: [[HB, T, T]], ex: [[HC2, T]], ev: [hDig(HC2)] },
+      { bf: [[HB, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-real-card-played-then-steal.jsonl', 'fail',
+    'A9, D502 (third review): an unrelated dig beside the Watcher\'s trigger, then the Watcher\'s own dig, then its own card played from exile -- the Watcher was tied to two digs, and a card leaving exile does not make the other one its own',
+    [{}, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hEnter(HW), hCast(HW), hDig(HC2)] }, { bf: [[HW, T, T]], ex: [[HC2, T], [HC1, T]], ev: [hDig(HC1)] },
+      { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hMove(HC1, 'exile', 'stack')] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-held-grant-card-re-dug-in-one-frame.jsonl', 'fail',
+    'A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> library -> exile in one frame -- Forge forgets a hideaway card that moves (ForgetOnMoved), so the grant ends and the new dig has no trigger',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]], ev: [hMove(HC1, 'exile', 'library'), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-held-grant-card-through-a-hand.jsonl', 'fail',
+    'A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> hand -> exile in one frame, through a hidden zone -- the grant ends on the move',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]], ev: [hMove(HC1, 'exile', 'hand'), hMove(HC1, 'hand', 'exile')] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-card-re-dug-under-a-new-host.jsonl', 'pass',
+    'A9, D502 (third review): the viewer took the Watcher and gave it back, the card went back to the library and a second Watcher dug it again, and the viewer took that one -- the second host\'s look; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]] }, { bf: [[HW, T, T]], ev: [hMove(HC1, 'exile', 'library')] },
+      { bf: [[HW, T, T], [HW2, T, T]], ex: [[HC1, T]], ev: [hEnter(HW2), hCast(HW2), hDig(HC1)] }, { bf: [[HW, T, T], [HW2, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl', 'pass',
+    'A9, D502: STILL ADMITTED, the residual the log cannot rule out -- the Watcher\'s trigger digs nothing and another effect digs exactly one card the next frame; that card is the Watcher\'s only tie. Kept as a passing control so a change to it is seen',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW)] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hDig(HC2)] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
   hideawaySpec('a9-hideaway-two-hosts-enter-together.jsonl', 'fail',
     'A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher\'s, so stealing it vouches for neither',
     [{}, { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hEnter(HW), hEnter(HB), hCast(HW), hCast(HB), hDig(HC1), hDig(HC2)] },
