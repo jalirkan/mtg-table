@@ -1537,3 +1537,28 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   status JSON. Morning read: `lab-j181/report/`, `compare-j180.json`; by hand, no `paperCard` in any errored branch's stack and no
   bare exception in any worker log.
 - Painters: pinG 4 pairs by 11:12 EST, GPU busy.
+
+## 2026-11-01 20:45 EST -- J181 read: three lab faults, three lanes; J182 drafted on a jumped seed block
+
+- **J181 finished 20:02 EST, failed** (`atlas.problems == 0`: 9; `atlas.poolOk == 13`: 0). 13 spines, 153 decisions branched, 80
+  labels, 23 confident, 35 partial, 13 controls (0 confident), 0.464 confident/worker-hour [20.6, 48.7 a 7-worker night], walls 29,764 s
+  (8.3 h at 6 workers). D497's signals held: no `paperCard` in any errored stack, no bare exception in any worker log.
+- **The 9 problems, two faults.** s07 (legacy 2085/2185): Oracle of Mul Daya revealed the opponent's top card 44; the Determinizer
+  pooled it with the hidden cards and in 48 of d14's 150 branches dealt it into the HAND, still lookable, so the branch log's first frame
+  showed a named card in a hand with no reveal record; the checker failed 51 logs (A6). Not a new leak; a determinization that contradicts
+  the seat's knowledge. s13 (pauper 2091/2191): unit d28-forge-25 hung (Forge AI eval loop, killed at 1800 s), D465 re-ran b39 on
+  another worker, and the killed attempt's 57 rows (begin, no end) stayed in rows-1522578.jsonl; rowscheck merged both plays and flagged
+  8 ids against the re-run's log.
+- **poolOk = 0 was J181's own derivation fault**: `'random-%s-d493'` (the `%s` spelling) survived the population regex. The J182 script
+  covers `%s` and greps itself for old population tokens.
+- **3 branches errored in s06 d19**: `Game.getDamageLKI` null in a DamagedBy property on a forked board -- GameCopier copies the
+  damage-this-turn pairs, not the identity-keyed LKI map. Under the bar; a fork gap.
+- **Three Opus lanes spawned 20:30 EST**, worktrees `mtg-table-d498` (Determinizer pins lookable cards), `-d499` (rowscheck abandons a
+  killed attempt's rows), `-d500` (copier rebuilds the damage LKI via the public `addGlobalDamageHistory`), each with a bench scenario
+  that fails on main. Decision block D498-D500 reserved. Then: skeptic review, one merge branch, one full gate, J182.
+- **J182 drafted** (`drafts/J182-atlas-4b-night-seven.md`, `derive-j182.py`): +13 would put deck seeds 2101-2104 and game seeds
+  2201-2204 on J166-J170's game/validation seeds (folders end in them), so the block jumps +322: deck 2401-2413, game 2501-2513,
+  validation 2601-2613, reserved 2701-2713; the audit found J171's `wallSec` 2282 in the shifted range and restored it. New population
+  `random-<band>-d498`, `randomSeat "D498"`, compared with J181 by position. Six placeholders wait on the merge (three has_d guards, the
+  bridge diff list, the merge line, the folder time).
+- Painters: 7 of 10 pinG pairs done; plains-forest painting (GPU 100%).
