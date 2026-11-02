@@ -95,7 +95,12 @@ import forge.game.zone.ZoneType;
  * it anyway -- except where a card of the searching seat's own library is
  * lookable by its opponent and not by itself, which would carry the grant to
  * another index of that library in the opponent's log; no field log has shown
- * that shape, and this does not cover it.
+ * that shape, and this does not cover it.  One-shot looks are still forgotten
+ * and redealt -- a card bounced to its owner's hand in public, a tutor's
+ * reveal, a Thoughtseize-style look at the hand -- because in a hand or a
+ * library only statics and {@code tempShowCard} grant {@code mayPlayerLook}:
+ * safe for the logs (the branch forgets the card and never names it), but a
+ * position the seat knows to be impossible.
  */
 public final class Determinizer {
 

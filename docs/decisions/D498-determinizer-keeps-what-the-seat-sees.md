@@ -66,6 +66,17 @@ does not forget:
    library, the hidden list is the whole pool, and the deal is D312's draw for draw: the same canonical order, the same
    one `Collections.shuffle` on a list of the same length, the same split — so a fork with no lookable card is
    byte-identical to `main`'s.
+   **Why `mayPlayerLook` is the right predicate.** For a card in an opponent's hand or library,
+   `CardView.canBeShownTo(viewer)` (the 2.0.15 source checkout, `CardView.java:629-690`) comes down to two things: the
+   `Hand` case returns early only for the card's own controller and the `Library` case never does, so both fall through
+   to `mayPlayerLook(viewer)`, and then to one more branch — the viewer is the controller's Mindslaver master, and the
+   card can be shown to the controller. `Snap`'s gate is `canBeShownTo` (hard rule 8; a hand or library card is face up,
+   so `canFaceDownBeShownTo` adds nothing), so a pinned card is exactly a card the seat's log shows it, by name, where it
+   is. That bounds a mistake in either direction: a pin that is too generous — a card kept that the seat should not see
+   — is a card `Snap` names in an opponent's hidden zone, which the checker fails loudly (A6 in a hand; A3 in a library,
+   anywhere but the one revealed top card A3 accepts), never silently. **The Mindslaver branch is unchanged from D312**:
+   a controlled player's hand is shown to the master but not lookable, so it is not pinned; it is redealt, and the
+   branch's log then names the redealt cards under A6, as it did before this change.
 2. **What may be known is restated** in the header: D312's list (everything public, its own hand, both decklists, so
    the multiset of the opponent's hand plus library) **plus every hand or library card the engine lets it look at**.
    The header's "safe direction" sentence is replaced by point 1–3 of *The cause*, and its *Known limits* paragraph says
@@ -98,8 +109,12 @@ does not forget:
 card) is hidden from the searching seat, so it is redealt, and its grant rides with it until the engine's next static
 check — into its owner's own hand or library, where its owner's log shows it anyway; the one shape this does not cover
 is a card of the searching seat's own library that its opponent may look at and it may not, whose grant would follow it
-to another index of that library in the opponent's log. No field log has shown that shape. The face-down limit is
-D312's, unchanged.
+to another index of that library in the opponent's log. No field log has shown that shape. **One-shot looks are still
+forgotten and redealt**: a card bounced to its owner's hand in public, a card a tutor revealed, a Thoughtseize-style
+look at the hand — in a hand or a library only statics and `PlayerControllerHuman.tempShowCard` grant `mayPlayerLook`
+(every `addMayLook*` caller in the 2.0.15 source checkout), so none of these is pinned. That is safe for the logs (the
+branch forgets the card and never names it), but it is a position the seat knows to be impossible, as D312's were. The
+face-down limit is D312's, unchanged.
 
 **Tests.**
 
@@ -151,9 +166,9 @@ D312's, unchanged.
 - **The build**: `./bridge/build.sh` (the lint and its self-test, javac, the self-tests, the grade self-test's
   common-random-numbers determinizations among them) passes.
 
-**Comparability.** Atlas labels and reads, and search results, from before and after D498 are **not pooled where a
-card the searching seat may look at was in a hand or a library** (a revealed top card, a revealed hand, its own top
-card under Future Sight): there the fork deals a different world, the one the seat's log describes. Where no such card
-was, the deal is D312's draw for draw (point 1), so those forks are byte-identical and their results comparable. Split
-by git sha when in doubt (`docs/guides/ai-ladder.md`'s *A code change is not a config change*). The next lab night
-opens the new population for the positions it touches.
+**Comparability.** Atlas labels and reads, and search results, from before and after D498 are **not pooled**; split
+them by git sha (`docs/guides/ai-ladder.md`'s *A code change is not a config change*), as D479's, D493's and D497's are.
+Nothing records which forks kept a card in place (`redealHidden`'s count is not carried into a branch row or a search
+counter, and the row contract stays as it is), so no subset of a night can be told apart afterwards. J182, the next
+lab night, opens the new population, `random-<band>-d498`. (As an aside, not a pooling rule: a fork with no lookable
+hand or library card is dealt byte for byte as on `main`, point 1.)

@@ -9975,8 +9975,8 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    `determinize-revealed-*` scenarios (on `main`'s determinizer 5 of their 16 checks fail, 11 of 48 branch logs among
    them) and decisions 13 and 14 of s07 replayed unit for unit through the atlas's own jobs (decision 14: the night's 48
    failing logs exactly on `main`'s determinizer, 0 on this one). The first night on the new bridge should show no A6
-   failure. Atlas labels and search results from before and after D498 are not pooled where a lookable card was in play
-   (the decision's *Comparability*).
+   failure. Atlas labels and search results from before and after D498 are not pooled (split by git sha; J182 opens
+   `random-<band>-d498`, the decision's *Comparability*).
 15. **`--empty-hand-ok`'s proof does not admit a revealed top card.** (2026-11-01, found by D498's replay; older than
    D498.) An atlas branch whose opponent has an empty hand in every state, beside an Oracle of Mul Daya (or any
    `REVEALS_OWN_TOP` permanent), fails `tools/check-redaction.mjs --empty-hand-ok` with "not one card was redacted":
