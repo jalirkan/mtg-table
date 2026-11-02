@@ -17,6 +17,9 @@
 //      row's tokens name must be one the deciding seat's OWN log shows as a card it may see (a full,
 //      not hidden, card object -- or, D491, its own token the zone events show born onto its battlefield
 //      and left there or in its graveyard) -- so a row can never be the place a hidden card's id first appears.
+//      D499: a game is ONE play -- the rows between a `begin` and its `end` in the same rows file.  A killed worker leaves a
+//      `begin` with no `end`; when its key ended in another file (D465's re-run), that play is abandoned and left out
+//      (`abandoned`); a key that ended in two files is a problem (`playedTwice`).
 //
 // The engine half -- the state must not move when only the opponent's hidden cards do -- is
 // mtgtable.ai.RowsLeakCheck (census-play --rows-check-every N).
@@ -31,16 +34,43 @@ const BEGIN_BANNED = /name|card|hand|library|list/i;
 
 export interface RowsCheck { files: number; rows: number; games: number; problems: string[];
   /** D466 (#184's review): the games whose id check was skipped because `read` could not read the seat's frame log, with that log. */
-  skipped?: Array<{ game: string; log: string }> }
+  skipped?: Array<{ game: string; log: string }>;
+  /**
+   * D499: the plays a killed attempt abandoned -- a `begin` with no `end` after it in its own rows file, whose game key has a
+   * play that ended in another file (D465's re-run of the unit) -- with the file and the rows each holds. Their rows are left out
+   * of the id check (the frame logs on disk are the re-run's). Set by collectRows when it collects games for the id check.
+   */
+  abandoned?: Array<{ game: string; file: string; rows: number }>;
+  /** D499: the game keys played to their `end` in more than one rows file, with those files: one key, two games; each a problem. */
+  playedTwice?: Array<{ game: string; files: string[] }> }
+
+/**
+ * D499: one play of a game in one rows file -- its `begin`, its rows, and whether its `end` followed in that file. A game's rows
+ * are the rows between a `begin` and its `end` in the SAME file: a worker writes one game at a time into its own
+ * rows-<pid>.jsonl, and a worker the pool killed leaves a `begin` there with no `end`.
+ */
+export interface RowsPlay { key: string; file: string; begin: Record<string, unknown> | null; rows: Array<{ seat: string; tokens: string[] }>; ended: boolean }
 
 /** Every id a token names. */
 export function tokenIds(tok: string): number[] {
   return (tok.replace(/#\d+$/, '').match(/\d+/g) ?? []).map(Number);
 }
 
-/** Check one rows file's shape; `seen` collects each game's rows by key for the id check. */
-export function checkRowsText(text: string, where: string, out: RowsCheck, byGame?: Map<string, { begin: Record<string, unknown> | null; rows: Array<{ seat: string; tokens: string[] }> }>): void {
+/**
+ * Check one rows file's shape; `plays` (D499) collects the file's plays, in order, for the id check: a `begin` opens its key's
+ * play, a row joins its key's open play, an `end` closes it; a play still open at the end of the file (or when its key begins
+ * again in the same file) never ended. A row whose key has no open play is a play with no begin (never id-checked, as before);
+ * an `end` with no open play (a branch that ended before its game began) closes nothing.
+ */
+export function checkRowsText(text: string, where: string, out: RowsCheck, plays?: RowsPlay[]): void {
   out.files++;
+  const open = new Map<string, RowsPlay>();
+  const playOf = (key: string, begin: Record<string, unknown> | null): RowsPlay => {
+    const p: RowsPlay = { key, file: where, begin, rows: [], ended: false };
+    plays?.push(p);
+    open.set(key, p);
+    return p;
+  };
   let header = null as { stateSize?: number; cand?: Record<string, string[]> } | null;
   const lines = text.split('\n');
   const bad = (i: number, why: string): void => { if (out.problems.length < 200) out.problems.push(`${where}:${i + 1}: ${why}`); };
@@ -55,18 +85,18 @@ export function checkRowsText(text: string, where: string, out: RowsCheck, byGam
     }
     const t = o.type;
     if (t === 'header') { header = o as { stateSize?: number; cand?: Record<string, string[]> }; continue; }
-    if (t === 'end') continue;
+    if (t === 'end') {
+      const p = typeof o.game === 'string' ? open.get(o.game) : undefined;
+      if (p) { p.ended = true; open.delete(p.key); }
+      continue;
+    }
     if (t === 'begin') {
       if (typeof o.game !== 'string') bad(i, 'begin has no string game key');
       for (const [k, v] of Object.entries(o)) {
         if (v !== null && typeof v !== 'string' && typeof v !== 'number' && typeof v !== 'boolean') bad(i, `begin.${k} is not a plain value`);
         if (BEGIN_BANNED.test(k) && !/^deck(File)?[AB]$|^decks?$/.test(k)) bad(i, `begin names a card-bearing key ${k}`);
       }
-      if (byGame && typeof o.game === 'string') {
-        const g = byGame.get(o.game) ?? { begin: null, rows: [] };
-        g.begin = o;
-        byGame.set(o.game, g);
-      }
+      if (plays && typeof o.game === 'string') playOf(o.game, o);   // D499: a begin again in one file leaves the earlier play unended
       continue;
     }
     if (t !== 'row') { bad(i, `unknown line type ${String(t)}`); continue; }
@@ -87,10 +117,9 @@ export function checkRowsText(text: string, where: string, out: RowsCheck, byGam
     const ch = o.chosen as number;
     if (!Number.isInteger(ch) || ch < 0 || ch >= n) bad(i, `chosen ${String(ch)} is not a candidate`);
     if (typeof o.seat !== 'string' || typeof o.game !== 'string') bad(i, 'seat / game missing');
-    if (byGame && typeof o.game === 'string') {
-      const g = byGame.get(o.game) ?? { begin: null, rows: [] };
-      g.rows.push({ seat: o.seat as string, tokens: tokens as string[] });
-      byGame.set(o.game, g);
+    if (plays && typeof o.game === 'string') {
+      const p = open.get(o.game) ?? playOf(o.game, null);
+      p.rows.push({ seat: o.seat as string, tokens: tokens as string[] });
     }
   }
   if (!header && out.rows > 0) out.problems.push(`${where}: rows with no header line`);
@@ -186,22 +215,51 @@ export interface GameIds { key: string; seats: unknown[]; rows: Array<{ seat: st
 export interface GameIdsResult { entries: Array<{ capped: boolean; text: string }>; skipped: Array<{ game: string; log: string }> }
 
 /**
+ * D499: which of a key's plays are its game.  Only plays with a `begin` count (a begin-less play was never id-checked).  When
+ * some play ENDED in its own file, the plays that did not are abandoned -- a killed attempt's, which D465's re-run replayed
+ * on another worker, over frame logs the re-run rewrote -- and only the ended plays are the game; two or more ended plays are a
+ * key played twice.  When none ended, every play is kept: the truncated case (the night ended on it, or its unit was given up),
+ * checked as it always was.
+ */
+export function gamePlays(plays: RowsPlay[]): { kept: RowsPlay[]; abandoned: RowsPlay[]; twice: boolean } {
+  const begun = plays.filter((p) => p.begin);
+  const ended = begun.filter((p) => p.ended);
+  if (!ended.length) return { kept: begun, abandoned: [], twice: false };
+  return { kept: ended, abandoned: begun.filter((p) => !p.ended), twice: ended.length > 1 };
+}
+
+/**
  * The shape check of every rows file under `rowsDir` (into `out`), and the games for the id check, in the order checkRowsDir
- * has always walked them (D480: split out so the post-spine checks can hand the games to several workers).
+ * has always walked them (D480: split out so the post-spine checks can hand the games to several workers).  D499: a game is
+ * one play's rows, never a key's rows from several files merged -- see gamePlays; the abandoned plays and the keys played
+ * twice go into `out` (a key played twice is a problem; each of its plays is id-checked on its own).
  */
 export function collectRows(rowsDir: string, logOf?: (begin: Record<string, unknown>, seat: number) => string | null): { out: RowsCheck; games: GameIds[] } {
   const out: RowsCheck = { files: 0, rows: 0, games: 0, problems: [] };
   if (!fs.existsSync(rowsDir)) return { out, games: [] };
-  const byGame = logOf ? new Map<string, { begin: Record<string, unknown> | null; rows: Array<{ seat: string; tokens: string[] }> }>() : undefined;
+  const plays: RowsPlay[] | undefined = logOf ? [] : undefined;
   for (const f of fs.readdirSync(rowsDir).filter((x) => /^rows-.*\.jsonl$/.test(x)).sort()) {
-    checkRowsText(fs.readFileSync(path.join(rowsDir, f), 'utf8'), f, out, byGame);
+    checkRowsText(fs.readFileSync(path.join(rowsDir, f), 'utf8'), f, out, plays);
   }
   const games: GameIds[] = [];
-  if (byGame && logOf) {
-    for (const [key, g] of byGame) {
-      if (!g.begin) continue;
-      out.games++;
-      games.push({ key, seats: [g.begin.seat0, g.begin.seat1], rows: g.rows, logs: [logOf(g.begin, 0), logOf(g.begin, 1)] });
+  if (plays && logOf) {
+    const byKey = new Map<string, RowsPlay[]>();   // in the order the keys first appear, as the games always were
+    for (const p of plays) { const ps = byKey.get(p.key); if (ps) ps.push(p); else byKey.set(p.key, [p]); }
+    out.abandoned = [];
+    out.playedTwice = [];
+    for (const [key, ps] of byKey) {
+      const { kept, abandoned, twice } = gamePlays(ps);
+      for (const p of abandoned) out.abandoned.push({ game: key, file: p.file, rows: p.rows.length });
+      if (twice) {
+        const files = kept.map((p) => p.file);
+        out.playedTwice.push({ game: key, files });
+        if (out.problems.length < 200) out.problems.push(`${key}: played to its end ${kept.length} times (${files.join(', ')}) -- one game key, ${kept.length} games (D499); each play's ids checked on its own`);
+      }
+      for (const p of kept) {
+        const b = p.begin as Record<string, unknown>;
+        out.games++;
+        games.push({ key, seats: [b.seat0, b.seat1], rows: p.rows, logs: [logOf(b, 0), logOf(b, 1)] });
+      }
     }
   }
   return { out, games };
@@ -239,16 +297,30 @@ export function applyGameIds(out: RowsCheck, _key: string, r: GameIdsResult): vo
   if (r.skipped.length) (out.skipped ??= []).push(...r.skipped);
 }
 
-/** Bytes each game's lines take in the rows files of `rowsDir` (begin, rows and end), by game key. */
+/**
+ * Bytes each game's lines take in the rows files of `rowsDir` (begin, rows and end), by game key.  D499: per play, as the id
+ * check reads them -- when a play of the key ended in its own file, the plays that did not (a killed attempt's) are not counted.
+ */
 export function rowBytesByGame(rowsDir: string): Map<string, number> {
-  const m = new Map<string, number>();
-  if (!fs.existsSync(rowsDir)) return m;
+  const ended = new Map<string, number>();
+  const unended = new Map<string, number>();
+  if (!fs.existsSync(rowsDir)) return ended;
+  const add = (m: Map<string, number>, k: string, n: number): void => { m.set(k, (m.get(k) ?? 0) + n); };
   for (const f of fs.readdirSync(rowsDir).filter((x) => /^rows-.*\.jsonl$/.test(x))) {
+    const open = new Map<string, number>();
     for (const line of fs.readFileSync(path.join(rowsDir, f), 'utf8').split('\n')) {
       if (!line) continue;
       const k = /"game":"([^"]*)"/.exec(line)?.[1];
-      if (k) m.set(k, (m.get(k) ?? 0) + Buffer.byteLength(line) + 1);
+      if (!k) continue;
+      const n = Buffer.byteLength(line) + 1;
+      const t = /^\{"type":"(begin|end)"/.exec(line)?.[1];
+      if (t === 'begin' && open.has(k)) add(unended, k, open.get(k) as number);
+      if (t === 'begin') { open.set(k, n); continue; }
+      open.set(k, (open.get(k) ?? 0) + n);
+      if (t === 'end') { add(ended, k, open.get(k) as number); open.delete(k); }
     }
+    for (const [k, n] of open) add(unended, k, n);
   }
-  return m;
+  for (const [k, n] of unended) if (!ended.has(k)) ended.set(k, n);
+  return ended;
 }

@@ -1301,7 +1301,7 @@ tools/cubelab.sh census-replay var/census/legacy/games/rows/rows-12345.jsonl --g
   to players). Public numbers only.
 - **The checks**, at the end of every run, fail it (exit 3) on any problem: every rows file by
   `rowscheck.ts` (shape, the token grammar, and in `full` mode every id a row names against its
-  seat's own log); every frame log by `tools/check-redaction.mjs`; and in `rows` mode the engine's
+  seat's own log, one play at a time -- D499: a killed worker's unfinished game is left out when its retry finished); every frame log by `tools/check-redaction.mjs`; and in `rows` mode the engine's
   `RowsLeakCheck` on every `--rows-check-every` (50) rows: the opponent's hidden cards redealt must
   not move the row's state or any candidate's vector, the seat's own hand swapped must move the state. `census-play.json`'s `record` has the
   sizes per game (mean, median, p90, max) and the checks' counts.
@@ -1385,6 +1385,15 @@ like this one, not a fault in the atlas.
   *Branch games that errored*). A frame log gunzip cannot read -- a worker the watchdog killed leaves its
   branch's two logs truncated -- is left out of the checks and named (`checks.unreadableFrameLogs`), and
   `atlas.json` is still written.
+- **Abandoned plays** ([D499](../decisions/D499-rows-play-is-one-file.md)): a game's rows are the rows between a `begin`
+  and its `end` in ONE rows file. A worker the unit watchdog killed leaves its branch's `begin` with no `end`; D465's re-run
+  plays that branch again on another worker, into another file, over the same frame-log names. When a key ended in some
+  file, its plays that did not are abandoned: shape-checked (the rows are still on disk) but left out of the id check, and
+  counted (`checks.abandonedPlays`, `abandonedRows`, the first 20 in `checks.abandoned`), said once in the say line and
+  atlas.md -- never a problem. A `begin` with no `end` and no ended play anywhere is the truncated case (the night ended on
+  it, or the unit was given up) and is checked as before. A key that ended in two files is a problem (`checks.playedTwice`),
+  each play checked on its own. J181's s13 lost its night to this (8 problems from one hung unit), and J176's s06 held 11
+  such plays (324 rows) that passed by luck.
 - **Capped branches** ([D478](../decisions/D478-capped-atlas-branch-is-a-draw.md)): a branch the turn cap
   (or the step cap, or the deadline between steps) ended is a draw, `result` 0 and `score` .5, kept in its
   option's value at a half. One written otherwise is a problem (`checks.branchCapped.notDrawn`, exit 3).

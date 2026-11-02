@@ -1018,6 +1018,12 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   const idSkipped = rc.flatMap((c) => c.skipped ?? []).map((x) => ({ game: x.game, log: path.relative(out, x.log) }));
   for (const x of idSkipped.slice(0, 20)) say(`  atlas: rows of ${x.game}: id check skipped, its frame log ${x.log} could not be read`);
   if (idSkipped.length > 20) say(`  atlas: ... and ${idSkipped.length - 20} more game(s) whose id check was skipped`);
+  // D499: the plays a killed attempt abandoned (a begin with no end, its key played to the end by D465's re-run) are left out of
+  // the id check, counted and said once; a key played to its end twice is a problem (rowscheck.ts put it in `problems`)
+  const abandoned = rc.flatMap((c) => c.abandoned ?? []);
+  const abandonedRows = abandoned.reduce((a, x) => a + x.rows, 0);
+  const playedTwice = rc.flatMap((c) => c.playedTwice ?? []);
+  if (abandoned.length) say(`  atlas: ${abandonedPlaysText(abandoned.length, abandonedRows)} (D499): ${abandoned.slice(0, 5).map((x) => `${x.game} in ${x.file}`).join(', ')}${abandoned.length > 5 ? ', ...' : ''}`);
   const red = { checked: redA.checked + redB.checked, failed: [...redA.failed, ...redB.failed], ms: redA.ms + redB.ms };
   if (red.failed.length) problems.push(`${red.failed.length} frame log(s) failed tools/check-redaction.mjs: ${red.failed.slice(0, 5).map((x) => path.basename(x)).join(', ')}`);
   const truncated = [...reader.unreadable].map(([f, why]) => ({ log: path.relative(out, f), why })).sort((a, b) => (a.log < b.log ? -1 : 1));
@@ -1114,6 +1120,9 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
       unreadableFrameLogs: truncated,
       // D466 (#184's review): the games whose rows went without the id check because of one of those logs
       idChecksSkipped: idSkipped,
+      // D499: the plays a killed attempt abandoned (left out of the id check: the frame logs are the re-run's), their rows, the
+      // first 20 named; and the keys played to their end in two rows files (each a problem)
+      abandonedPlays: abandoned.length, abandonedRows, abandoned: abandoned.slice(0, 20), playedTwice,
       // D465: the most branch copies any unit's worker still held after one GC at its end (null: no unit measured)
       copiesRetainedMax: retained.length ? Math.max(...retained) : null,
       problems },
@@ -1135,7 +1144,13 @@ interface AtlasDoc {
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
       xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number };
-    branchErrors?: BranchErrors; optionUnavailable?: BranchErrors; branchCapped?: BranchErrors & { notDrawn: number }; unreadableFrameLogs?: Array<{ log: string; why: string }> };
+    branchErrors?: BranchErrors; optionUnavailable?: BranchErrors; branchCapped?: BranchErrors & { notDrawn: number }; unreadableFrameLogs?: Array<{ log: string; why: string }>;
+    abandonedPlays?: number; abandonedRows?: number };
+}
+
+/** D499: the abandoned plays in one phrase, for the say line and atlas.md. */
+export function abandonedPlaysText(plays: number, rows: number): string {
+  return plays === 1 ? `1 play abandoned by a killed attempt, its ${rows} rows left out` : `${plays} plays abandoned by a killed attempt, their ${rows} rows left out`;
 }
 
 /** D458: checks.guardrails' counted keys -- G3's no-op removals, G5's refused picks and the removals after them, G6's (D471) -- read from the logs. */
@@ -1212,6 +1227,8 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   L.push('## Checks', '');
   const g = c.guardrails;
   L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.xDrawn === undefined ? '' : `; G6 (D471): ${g.xDrawn} pick(s) of the seats' own X plays had X drawn from 1 up, ${g.zeroXLeftOut ?? 0} offer(s) payable only at X = 0 were left out, and ${g.zeroX ?? 0} own play(s) were paid at X = 0`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4}${g.violationsBy.G6 === undefined ? '' : `, G6 ${g.violationsBy.G6}`})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}${c.warnings?.length ? ` Warnings (never a problem): ${c.warnings.length}, below.` : ''}`, '');
+  // D499: said once
+  if (c.abandonedPlays) L.push(`${abandonedPlaysText(c.abandonedPlays, c.abandonedRows ?? 0)} of the id check (D499): a worker killed mid-branch left the branch's \`begin\` with no \`end\` in its rows file, and the unit's re-run played the branch again, over the frame logs now on disk (\`checks.abandoned\` names them).`, '');
   const be = c.branchErrors;
   if (be && be.errored) {
     // D466: the branch errors, by text, and the options past the threshold
