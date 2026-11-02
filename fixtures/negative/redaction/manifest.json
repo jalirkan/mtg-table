@@ -111,13 +111,19 @@
     "file": "a9-hideaway-control-taken.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "A9, D502: the viewer took control of the opponent's Watcher for Tomorrow, and the card it hid face down in their exile carries its alt from that state on -- hideaway's look goes to whoever has controlled the permanent; counted, not a problem"
+    "why": "A9, D502: the opponent's Watcher for Tomorrow entered and dug a card of their library into exile face down; the viewer took control of it, and the card carries its alt from that state on -- hideaway's look goes to the Watcher's controller; counted, not a problem"
   },
   {
     "file": "a9-hideaway-alt-a-state-after-control-taken.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "A9, D502: the alt appears in the state after the one that moved control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem"
+    "why": "A9, D502: the dig a state after the Watcher entered (b148: 91/92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-a-state-after-the-host-leaves.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502: the Watcher dies while the viewer controls it and the alt is still on the card in that state (J182 b76, seq 245: the static not yet re-applied) -- one state of grace, not a problem"
   },
   {
     "file": "a9-hideaway-no-control-change.jsonl",
@@ -126,16 +132,16 @@
     "why": "A9, D502: the opponent's Watcher stays the opponent's -- with no change of control to the viewer, an alt on their exiled face-down card has no source"
   },
   {
-    "file": "a9-hideaway-viewer-own-permanent-taken-back.jsonl",
-    "level": "fail",
-    "expect": "only a look permission",
-    "why": "A9, D502: the permanent that changed hands is the VIEWER's own (taken back from the opponent), not one of the exiled card's owner's -- it grants no look at the opponent's card"
-  },
-  {
     "file": "a9-hideaway-viewer-controlled-from-the-start.jsonl",
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D502: the viewer controls the opponent's Watcher in every state and the alt appears later with no change of control -- the log shows no taking of control, so nothing ties the alt to the look"
+  },
+  {
+    "file": "a9-hideaway-viewer-own-permanent-taken-back.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the permanent that changed hands is the VIEWER's own (taken back from the opponent), not one of the exiled card's owner's -- it grants no look at the opponent's card"
   },
   {
     "file": "a9-hideaway-third-party-permanent.jsonl",
@@ -154,6 +160,54 @@
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D502: the alt must come with the change of control or one state after it -- one appearing two states later has no source"
+  },
+  {
+    "file": "a9-hideaway-foretold-card-under-a-stolen-creature.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (the review of f3a3091b): the opponent foretells a card (hand -> exile face down) and the viewer steals an unrelated Grizzly Bears -- a card that did not come from a library beside the creature's entry gains no look, and its alt is a leak"
+  },
+  {
+    "file": "a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502 (the review of f3a3091b): a hand card goes into exile face down carrying its alt in the very state the viewer steals a creature -- it came from a hand, not a library, and its alt is a leak"
+  },
+  {
+    "file": "a9-hideaway-alt-kept-after-control-returns.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the look follows the Watcher's CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source"
+  },
+  {
+    "file": "a9-hideaway-alt-after-control-already-returned.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the viewer took the Watcher and gave it back before the alt appeared -- a look that arrives when the viewer no longer controls the permanent has no source"
+  },
+  {
+    "file": "a9-hideaway-card-re-exiled-from-a-hand.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the dug card went back to the hand and into exile again (foretold) -- only a LATEST move into exile from its owner's library ties it to the Watcher"
+  },
+  {
+    "file": "a9-hideaway-dug-from-another-library.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the move into exile came from the VIEWER's library, not the exiled card's owner's -- it is not that owner's hideaway dig"
+  },
+  {
+    "file": "a9-hideaway-dug-into-another-exile.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the move went from the opponent's library into the VIEWER's exile -- a hideaway dig stays in its owner's exile"
+  },
+  {
+    "file": "a9-hideaway-card-of-an-unrelated-host.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the card was dug beside the entry of the opponent's Mosswort Bridge, not of the Watcher the viewer took -- the Watcher's look does not reach it"
   },
   {
     "file": "own-hand-card-redacted.jsonl",

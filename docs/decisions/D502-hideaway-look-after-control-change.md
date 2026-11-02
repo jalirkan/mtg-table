@@ -48,22 +48,38 @@ controls is on the stack, in that frame or the previous state frame (Gonti, Thie
 while it stays in exile (`lookGrants`). Hideaway's look reaches a seat that was not the digger, so no frame of these
 logs has that shape.
 
-**The rule after.** The rule also admits an alt on a face-down card in **exile** when all of the following hold:
-- the card is owned and controlled by player P, who is not the viewer;
-- P is the **owner** of a battlefield permanent whose `controller` changed from P (in the previous state frame) to
-  the viewing seat (in this one);
-- that change happened in the frame where the alt appears, or in the state frame before it. The previous frame is
-  allowed for the `b76` shape, and it mirrors D371's own "this frame or the previous one" for the stack item.
+**The rule after** (as tightened after the review of `f3a3091b`; see *The review* below). The rule also admits an alt on a
+face-down card in **exile**, owned and controlled by player P (not the viewer), when it can name the permanent W whose
+hideaway look it is. All of the following must hold:
+1. **The card was dug from its owner's library.** The card's latest move into exile is a zone event from
+   `{library, P}` to `{exile, P}`. Any later zone event of the card clears it: a card returned to a hand and exiled
+   again (foretold), say.
+2. **The dig is beside W's entry.** The dig sits in the state frame where W entered the battlefield, or in the next
+   one. W's entry is a zone event onto a battlefield, or its first listing on one after a state without it. This is
+   the hideaway trigger's timing, and all five logs show it:
 
-From then on, the card keeps the alt while it stays in exile in consecutive state frames, through the existing
-`nextGrants` / `stayed` mechanism, exactly as a Gonti card does. The stats line counts each admission once, in the
-frame it arrives: `alt blocks=N (k an opponent's hideaway card, its exiling permanent's control taken by the viewer,
-D502)`. That count is never a WARN.
+   | log | Watcher enters | card dug |
+   |---|---|---|
+   | `b47` | seq 275 | seq 275 |
+   | both `b148` | seq 91 | seq 92 |
+   | `b76` | seq 162 | seq 163 |
+   | `b20` | seq 183 | seq 184 |
 
-The log cannot tie the exiled card to the permanent that exiled it: nothing in a frame says which Watcher hid which
-card, and a branch log forked late may hold neither the hideaway trigger nor the exile. So the evidence is the
-narrowest that every one of the five logs shows. The face appears in the frame where the viewer takes control of a
-permanent of that card's owner, or the frame after.
+3. **The viewer took W from P.** W is owned by P, and its `controller` changed from P (previous state frame) to the
+   viewing seat in the frame where the alt appears, or in the frame before it (`b76`).
+4. **The viewer still controls W** on the battlefield in that frame.
+
+**The grant ends.** After that, the card keeps the alt only while it stays in exile in consecutive state frames and the
+viewer still controls **that** W. One frame of grace follows the frame where the viewer stops controlling W, or W
+leaves the battlefield. A second frame ends the grant. Forge's look is the current controller's, so the real bridge
+drops the alt once control returns. The grace frame is the same snapshot lag as at the start: in `b76` the Watcher
+dies at seq 245 (line 278) and the alt is still on card 78 in that snapshot, gone with the card to its owner's hand at
+seq 246.
+
+These grants live in their own map (`hideawayGrants`, card → {W, held this frame}), not in D371's `lookGrants`, which
+keeps an alt for as long as the card stays in exile. The stats line counts each admission once, in the frame it
+arrives: `alt blocks=N (k an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)`.
+That count is never a WARN.
 
 **The authority.** The bridge's own gate is `Snap.card`'s `canFaceDownBeShownTo`, the one serialisation function (hard
 rule 8), and it is unchanged. For a decision that names such a card, the gate at decision time is `Decisions.visible`
@@ -72,54 +88,88 @@ after-the-fact audit of that gate. It accepts this shape because the frames show
 needs its permission.
 
 **What is still rejected.**
-- An alt with no change of control: the Watcher stays the opponent's.
-- An alt where the viewer controlled the permanent from the start of the log and no change appears. A look granted
-  before the log began leaves no evidence in it.
-- A change of control of a permanent the viewer owns (one taken back from the opponent), or of a permanent of a third
-  owner. Neither is the exiled card's owner.
-- An alt that first appears two or more state frames after the change.
-- A face-down card outside exile (a graveyard, say). Hideaway's look is "in the exile zone".
-- An alt in play on a card the viewer does not control. That is A9's in-play half, unchanged.
-- D371's own probes, all unchanged.
+- No change of control: the Watcher stays the opponent's. Also control held from the start of the log, with no change
+  in it.
+- A change of control of the viewer's own permanent (taken back), or of a third owner's.
+- An alt that first appears two or more state frames after the change, or after the viewer has already given the
+  permanent back.
+- A face-down card outside exile.
+- **A card whose latest move into exile did not come from its owner's library.** This covers:
+  - a foretold card (hand → exile face down) under an unrelated stolen Grizzly Bears;
+  - a hand card exiled face down carrying its alt in the very frame of the steal;
+  - a dug card that went back to a hand and was exiled again;
+  - a dig from another seat's library, or into another seat's exile.
+
+  The first two are the leaking logs the review of `f3a3091b` built, which passed on the first form of this rule and fail on `main`.
+- A card dug beside another permanent's entry (the opponent's Mosswort Bridge) while the Watcher is the one stolen.
+- The alt still on the card two frames after the Watcher went back to the opponent.
+- An alt in play on a card the viewer does not control (A9's in-play half), and D371's own probes, unchanged.
+
+**What the rule cannot see.**
+- **A late branch log.** If the log was forked after the Watcher entered, so that neither its entry nor the dig is in
+  it, the alt fails. That needs its own decision if a night meets it (PLAN.md's cube lab follow-up 19).
+- **Two hideaway hosts entering in the same frame.** The log does not say which one dug which card.
 
 **Rejected alternatives.**
-- **Requiring the alt in the same frame as the change.** This was the brief's first form. It fails `b76`, whose
-  snapshot was cut between the control change and the static's re-application.
-- **"Ever controlled" anywhere in the log.** That is wider than any log needs. It would let an alt arrive turns
-  after the change with nothing to tie the two together.
-- **Tying the card to the hideaway trigger's `cast` and the library-to-exile event.** That would be tighter, but a
-  late branch log need not hold the exile, and none of the five needs it to be read correctly.
+- **The first form of this rule** (`f3a3091b`): any owner's permanent taken, with no link to the exiled card, and the
+  grant kept for as long as the card stayed in exile. The review showed it admits a foretold card's face under any
+  steal, and keeps it after control returns.
+- **Requiring the alt in the same frame as the change.** It fails `b76`, whose snapshot was cut between the control
+  change and the static's re-application.
+- **Ending the grant in the very frame control is lost.** It fails `b76` at the Watcher's death. The grace is one
+  frame, never two.
+- **Tying the card to the hideaway trigger's `cast` event.** The trigger's text is an engine string. Its `cardId` is the
+  Watcher's, already tied by the entry.
 - **Changing the bridge.** The bridge is right. Hiding the face would contradict Forge's `mayPlayerLook` and the rules.
 
-**Tests.** The selftest (`tools/check-redaction-selftest.mjs`) has new controls generated by
-`tools/make-negative-fixtures.mjs`, all listed in `REQUIRED`. Every older control regenerated byte-identical.
-- **PASS:**
-  - `a9-hideaway-control-taken`: the Watcher moves from the opponent's battlefield to the viewer's in state 1, with the
-    card's alt from state 1;
-  - `a9-hideaway-alt-a-state-after-control-taken`: the `b76` shape.
-  - Both must show the D502 count on the stats line (the selftest's new `COUNTED` list).
+**The review** (the skeptic's review of `f3a3091b`). As first committed, the rule admitted an alt on any face-down exiled
+card of the opponent's whenever the viewer took any of the opponent's permanents. `stayed` then kept the alt for as
+long as the card stayed in exile. The two leaking logs it built pass on `f3a3091b` and fail on `main`:
+- a foretold Doomskar under a Threatened Grizzly Bears, which keeps its alt after the Bears go back;
+- a hand stub exiled face down with its alt in the frame of a steal.
+
+Both fail now (4 and 2 complaints).
+
+**Tests.** The selftest (`tools/check-redaction-selftest.mjs`) has 17 controls for this rule, generated by
+`tools/make-negative-fixtures.mjs` and all listed in `REQUIRED`. Every older control regenerated byte-identical.
+- **PASS, each holding the D502 count on its stats line** (the selftest's `COUNTED` list):
+  - `a9-hideaway-control-taken`: the Watcher enters, the dig in that frame, the steal and the alt in the next;
+  - `a9-hideaway-alt-a-state-after-control-taken`: the dig a frame after the entry, and the alt a frame after the
+    steal;
+  - `a9-hideaway-alt-a-state-after-the-host-leaves`: `b76`'s grace frame.
 - **FAIL:**
-  - `a9-hideaway-no-control-change`;
-  - `a9-hideaway-viewer-controlled-from-the-start`;
-  - `a9-hideaway-viewer-own-permanent-taken-back`;
-  - `a9-hideaway-third-party-permanent` (owner 2);
-  - `a9-hideaway-alt-in-a-graveyard`;
-  - `a9-hideaway-alt-two-states-after-control-taken`.
+  - `-no-control-change`;
+  - `-viewer-controlled-from-the-start`;
+  - `-viewer-own-permanent-taken-back`;
+  - `-third-party-permanent`;
+  - `-alt-in-a-graveyard`;
+  - `-alt-two-states-after-control-taken`;
+  - `-foretold-card-under-a-stolen-creature`;
+  - `-hand-card-exiled-with-its-alt-at-the-steal`;
+  - `-alt-kept-after-control-returns`;
+  - `-alt-after-control-already-returned`;
+  - `-card-re-exiled-from-a-hand`;
+  - `-dug-from-another-library`;
+  - `-dug-into-another-exile`;
+  - `-card-of-an-unrelated-host`.
 
-**Mutants.** Each mutant ran in a scratch copy of the checker against the whole selftest. Every one of these failed the
-selftest:
-- the previous-frame allowance removed (`a9-hideaway-alt-a-state-after-control-taken` fails);
-- the previous controller check removed (`-viewer-controlled-from-the-start` and `-alt-two-states-after-...` pass);
-- any owner's permanent accepted (`-third-party-permanent` passes);
-- exile not required (`-alt-in-a-graveyard` passes);
-- the rule off (both PASS controls fail).
+**Mutants.** I ran 15 mutants of the tightened rule, each in a scratch copy against the whole selftest and the five s06
+logs. These 13 each failed the selftest:
+- a move into exile from anywhere;
+- the dig's same-player check removed;
+- no entry link;
+- the entry link the same frame only (this also fails four of the J182 logs);
+- the take this frame only (this also fails `b76`);
+- the take at any time;
+- the host's owner unchecked;
+- the host not held at admission;
+- the dig's owner unchecked;
+- the grant kept forever;
+- no grace after loss (this also fails `b76`);
+- another zone event not clearing the dig;
+- the rule off.
 
-Three guards survive their mutants, because in a two-seat game another guard already implies each of them. All three
-are kept as defence in depth:
-- **The permanent's owner is not the viewer.** The previous controller must be that owner, and the new one must be the
-  viewer.
-- **The new controller is the viewer, rather than merely not the owner.** With two seats, the only other seat is the
-  viewer.
-- **The exiled card's controller is its owner.** A card the viewer controls is "mine", and this path is never reached.
+Two survive: the entry read from its zone event only, and from its first listing only. These are not guards. They are
+the two accepted spellings of one fact, and every log and control shows both.
 
-**Measured.** See *Evidence* in **D504**, which covers all three decisions' runs over the J182 logs.
+**Measured.** The five J182 s06 logs pass with the D502 count (1 each). The table is in *Evidence* in **D504**.

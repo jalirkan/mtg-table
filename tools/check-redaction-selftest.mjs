@@ -95,19 +95,32 @@ const REQUIRED = [
   ['a9-alt-appears-after-the-dig.jsonl', 'fail'],
   ['a9-opponent-morph-named.jsonl', 'fail'],
   ['a9-stolen-morph-named-for-its-owner.jsonl', 'fail'],
-  // D502 (J182 s06): hideaway's look goes to whoever has controlled the permanent
-  // that exiled the card -- an opponent's face-down exiled card may show its face
-  // from the state in which (or the one after which) the viewer took control of a
-  // permanent of that opponent's.  The probes: no change of control, the viewer's
-  // own permanent taken back, the alt two states after the change.
+  // D502 (J182 s06): hideaway's look follows the CURRENT controller of the
+  // permanent that exiled the card -- an opponent's face-down card dug from their
+  // library into exile beside a permanent's entry may show its face from the
+  // state in which (or the one after which) the viewer took that permanent, for
+  // as long as the viewer holds it (and one state after).  The probes: no change
+  // of control, control from the start, the viewer's own permanent, a third
+  // owner's, outside exile, the alt two states late, a foretold card and a hand
+  // card under an unrelated steal (the review of f3a3091b), control returned, and a card
+  // of another hideaway host.
   ['a9-hideaway-control-taken.jsonl', 'pass'],
   ['a9-hideaway-alt-a-state-after-control-taken.jsonl', 'pass'],
+  ['a9-hideaway-alt-a-state-after-the-host-leaves.jsonl', 'pass'],
   ['a9-hideaway-no-control-change.jsonl', 'fail'],
-  ['a9-hideaway-viewer-own-permanent-taken-back.jsonl', 'fail'],
   ['a9-hideaway-viewer-controlled-from-the-start.jsonl', 'fail'],
+  ['a9-hideaway-viewer-own-permanent-taken-back.jsonl', 'fail'],
   ['a9-hideaway-third-party-permanent.jsonl', 'fail'],
   ['a9-hideaway-alt-in-a-graveyard.jsonl', 'fail'],
   ['a9-hideaway-alt-two-states-after-control-taken.jsonl', 'fail'],
+  ['a9-hideaway-foretold-card-under-a-stolen-creature.jsonl', 'fail'],
+  ['a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl', 'fail'],
+  ['a9-hideaway-alt-kept-after-control-returns.jsonl', 'fail'],
+  ['a9-hideaway-alt-after-control-already-returned.jsonl', 'fail'],
+  ['a9-hideaway-card-re-exiled-from-a-hand.jsonl', 'fail'],
+  ['a9-hideaway-dug-from-another-library.jsonl', 'fail'],
+  ['a9-hideaway-dug-into-another-exile.jsonl', 'fail'],
+  ['a9-hideaway-card-of-an-unrelated-host.jsonl', 'fail'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -263,6 +276,7 @@ const REQUIRED = [
 const COUNTED = [
   ['a9-hideaway-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-alt-a-state-after-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-a-state-after-the-host-leaves.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-source-choice.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],

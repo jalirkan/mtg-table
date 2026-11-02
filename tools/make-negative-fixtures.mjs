@@ -358,33 +358,74 @@ probe('a9-stolen-morph-named-for-its-owner.jsonl',
     putCard(them, 'battlefield', faceDownCard(fs, 90033, 'battlefield', me.id, them.id, true));
   });
 
-// D502 (J182 s06): HIDEAWAY'S LOOK.  Watcher for Tomorrow exiles its owner's card
-// face down, and Forge grants the look to "any player who has controlled the
-// permanent that exiled this card" (CR 702.75a) -- so when the viewer takes control
-// of the opponent's Watcher (Burglar's Plot exchanges it), the opponent's exiled
-// card carries its alt for the viewer.  The control: the Watcher on the opponent's
-// battlefield in the first state and on the viewer's from the second, the card's
-// alt from the second; the alt one state after the change passes too (b76: the
-// static re-applies after the snapshot that moved control).  The probes: no change
-// of control; the permanent that changed hands is the viewer's own (taken back);
-// the alt appearing two states after the change.
-/**
- * Every state from the first: the opponent's face-down card 90040 in their exile
- * (its alt from state `altFrom`), and a permanent 90041 owned by `owner` on
- * `from`'s battlefield, then on `to`'s from state `changeAt` (null: never).
- */
+// D502 (J182 s06): HIDEAWAY'S LOOK.  Watcher for Tomorrow's hideaway trigger digs
+// a card from its owner's library into exile face down as it enters, and Forge
+// grants the look to the CURRENT controller of the permanent that exiled it
+// (MayLookAt$ EffectSourceController; CR 702.75a) -- so when the viewer takes the
+// opponent's Watcher (Burglar's Plot exchanges it), the exiled card carries its alt
+// for the viewer, and only while the viewer holds that Watcher.  The log's link from
+// card to permanent is time: the library -> exile move sits in the state the
+// Watcher entered the battlefield, or the next.  The controls: the dig beside the
+// entry and the alt with the change of control; the dig a state after the entry
+// and the alt a state after the change (b76); the alt one state after the Watcher
+// left (b76 again, at its death).  The probes: no change of control, control held
+// from the start, the viewer's own permanent taken back, a third owner's
+// permanent, a face-down card outside exile, the alt two states after the change,
+// a foretold card (hand -> exile) under an unrelated stolen creature, a hand card
+// exiled face down with its alt at the steal, the alt kept two states after
+// control returns, and a card dug beside another hideaway host's entry (Mosswort
+// Bridge) while the Watcher is the one stolen.
 /** The opponent's seat (themOf, which is declared further down). */
 const hideawayThem = () => header.decks.find((d) => d.player !== header.seat).player;
-const withHideaway = (fs, { owner = hideawayThem(), from = hideawayThem(), to = header.seat, changeAt = 1, altFrom = 1, hidIn = 'exile' } = {}) => {
+/**
+ * The opponent's face-down card 90040, moved into their `hidIn` from their
+ * `exileFrom` in state `exileAt` (a stub in their hand before that when it came
+ * from the hand), its alt in states `altFrom` .. `altUntil`; a permanent 90041
+ * (`hostName`) owned by `owner`, entering the battlefield in state `enterAt` under
+ * `from`, controlled by `to` from state `changeAt` (null: never), back under
+ * `from` from `returnAt` and gone to its owner's graveyard from `leaveAt`; and,
+ * when `otherHostAt` is set, the opponent's Mosswort Bridge (90042) entering then.
+ */
+const withHideaway = (fs, {
+  owner = hideawayThem(), from = hideawayThem(), to = header.seat, changeAt = 1, altFrom = 1, altUntil = Infinity,
+  enterAt = 0, exileAt = 0, exileFrom = 'library', hidIn = 'exile', returnAt = null, leaveAt = null,
+  hostName = 'Watcher for Tomorrow', otherHostAt = null, digFrom = null, digTo = null, reExileAt = null,
+} = {}) => {
+  const them = hideawayThem();
   const sts = statesOf(fs);
+  const seatOf = (id) => sts[0].body.players.find((p) => p.id === id) ? id : them;   // a third owner's card sits on the opponent's side
+  const permanent = (id, name, ownerId, ctl) => Object.assign(structuredClone(firstFull(fs).card), {
+    id, name, setCode: 'MH2', manaCost: '{1}{U}', types: 'Creature', power: '2', toughness: '1', faceDown: false,
+    token: false, alt: null, attachedToId: null, attachmentIds: [], owner: ownerId, controller: ctl, zone: 'battlefield', abilities: [],
+  });
+  const playerOf = (st, id) => st.body.players.find((p) => p.id === id);
   for (let i = 0; i < sts.length; i++) {
-    const ctl = changeAt !== null && i >= changeAt ? to : from;
-    const watcher = structuredClone(firstFull(fs).card);
-    Object.assign(watcher, { id: 90041, name: 'Watcher for Tomorrow', setCode: 'MH2', manaCost: '{1}{U}',
-      types: 'Creature - Human Wizard', power: '2', toughness: '1', faceDown: false, token: false, alt: null,
-      attachedToId: null, attachmentIds: [], owner, controller: ctl, zone: 'battlefield', abilities: [] });
-    putCard(sts[i].body.players.find((p) => p.id === ctl) ?? sts[i].body.players.find((p) => p.id === hideawayThem()), 'battlefield', watcher);
-    putCard(sts[i].body.players.find((p) => p.id === hideawayThem()), hidIn, faceDownCard(fs, 90040, hidIn, hideawayThem(), hideawayThem(), i >= altFrom));
+    const ev = sts[i].body.events;
+    if (i === enterAt) ev.push({ kind: 'zone', cardId: 90041, from: { zone: 'stack', player: null }, to: { zone: 'battlefield', player: seatOf(from) } });
+    if (i >= enterAt && (leaveAt === null || i < leaveAt)) {
+      const taken = changeAt !== null && i >= changeAt && (returnAt === null || i < returnAt);
+      const ctl = taken ? to : from;
+      putCard(playerOf(sts[i], seatOf(ctl)), 'battlefield', permanent(90041, hostName, owner, ctl));
+    }
+    if (leaveAt !== null && i === leaveAt) {
+      ev.push({ kind: 'zone', cardId: 90041, from: { zone: 'battlefield', player: to }, to: { zone: 'graveyard', player: seatOf(owner) } });
+      putCard(playerOf(sts[i], seatOf(owner)), 'graveyard', { ...permanent(90041, hostName, owner, owner), zone: 'graveyard' });
+    }
+    if (leaveAt !== null && i > leaveAt) putCard(playerOf(sts[i], seatOf(owner)), 'graveyard', { ...permanent(90041, hostName, owner, owner), zone: 'graveyard' });
+    if (otherHostAt !== null && i >= otherHostAt) {
+      if (i === otherHostAt) ev.push({ kind: 'zone', cardId: 90042, from: { zone: 'hand', player: them }, to: { zone: 'battlefield', player: them } });
+      putCard(playerOf(sts[i], them), 'battlefield', { ...permanent(90042, 'Mosswort Bridge', them, them), manaCost: null, types: 'Land', power: null, toughness: null });
+    }
+    if (i === exileAt) ev.push({ kind: 'zone', cardId: 90040, from: { zone: exileFrom, player: digFrom ?? them }, to: { zone: hidIn, player: digTo ?? them } });
+    if (i === reExileAt) {
+      ev.push({ kind: 'zone', cardId: 90040, from: { zone: 'exile', player: them }, to: { zone: 'hand', player: them } },
+        { kind: 'zone', cardId: 90040, from: { zone: 'hand', player: them }, to: { zone: 'exile', player: them } });
+    }
+    if (i >= exileAt) {
+      putCard(playerOf(sts[i], them), hidIn, faceDownCard(fs, 90040, hidIn, them, them, i >= altFrom && i <= altUntil));
+    } else if (exileFrom === 'hand') {
+      putCard(playerOf(sts[i], them), 'hand', { id: 90040, zone: 'hand', owner: them, controller: them, hidden: true });
+    }
   }
 };
 const hideawayPass = (name, why, n, opts) => {
@@ -402,20 +443,23 @@ const hideawayProbe = (name, why, n, opts) => {
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 };
 hideawayPass('a9-hideaway-control-taken.jsonl',
-  'A9, D502: the viewer took control of the opponent\'s Watcher for Tomorrow, and the card it hid face down in their exile carries its alt from that state on -- hideaway\'s look goes to whoever has controlled the permanent; counted, not a problem',
+  'A9, D502: the opponent\'s Watcher for Tomorrow entered and dug a card of their library into exile face down; the viewer took control of it, and the card carries its alt from that state on -- hideaway\'s look goes to the Watcher\'s controller; counted, not a problem',
   3, {});
 hideawayPass('a9-hideaway-alt-a-state-after-control-taken.jsonl',
-  'A9, D502: the alt appears in the state after the one that moved control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem',
-  3, { altFrom: 2 });
+  'A9, D502: the dig a state after the Watcher entered (b148: 91/92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem',
+  4, { exileAt: 1, changeAt: 2, altFrom: 3 });
+hideawayPass('a9-hideaway-alt-a-state-after-the-host-leaves.jsonl',
+  'A9, D502: the Watcher dies while the viewer controls it and the alt is still on the card in that state (J182 b76, seq 245: the static not yet re-applied) -- one state of grace, not a problem',
+  4, { leaveAt: 3 });
 hideawayProbe('a9-hideaway-no-control-change.jsonl',
   'A9, D502: the opponent\'s Watcher stays the opponent\'s -- with no change of control to the viewer, an alt on their exiled face-down card has no source',
   3, { changeAt: null });
-hideawayProbe('a9-hideaway-viewer-own-permanent-taken-back.jsonl',
-  'A9, D502: the permanent that changed hands is the VIEWER\'s own (taken back from the opponent), not one of the exiled card\'s owner\'s -- it grants no look at the opponent\'s card',
-  3, { owner: header.seat, from: hideawayThem(), to: header.seat });
 hideawayProbe('a9-hideaway-viewer-controlled-from-the-start.jsonl',
   'A9, D502: the viewer controls the opponent\'s Watcher in every state and the alt appears later with no change of control -- the log shows no taking of control, so nothing ties the alt to the look',
   3, { from: header.seat, changeAt: null });
+hideawayProbe('a9-hideaway-viewer-own-permanent-taken-back.jsonl',
+  'A9, D502: the permanent that changed hands is the VIEWER\'s own (taken back from the opponent), not one of the exiled card\'s owner\'s -- it grants no look at the opponent\'s card',
+  3, { owner: header.seat });
 hideawayProbe('a9-hideaway-third-party-permanent.jsonl',
   'A9, D502: the permanent the viewer took is owned by a third party (player 2), not by the exiled card\'s owner -- it grants no look at that card',
   3, { owner: 2, from: 2 });
@@ -425,6 +469,30 @@ hideawayProbe('a9-hideaway-alt-in-a-graveyard.jsonl',
 hideawayProbe('a9-hideaway-alt-two-states-after-control-taken.jsonl',
   'A9, D502: the alt must come with the change of control or one state after it -- one appearing two states later has no source',
   4, { altFrom: 3 });
+hideawayProbe('a9-hideaway-foretold-card-under-a-stolen-creature.jsonl',
+  'A9, D502 (the review of f3a3091b): the opponent foretells a card (hand -> exile face down) and the viewer steals an unrelated Grizzly Bears -- a card that did not come from a library beside the creature\'s entry gains no look, and its alt is a leak',
+  5, { exileFrom: 'hand', hostName: 'Grizzly Bears', returnAt: 3 });
+hideawayProbe('a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl',
+  'A9, D502 (the review of f3a3091b): a hand card goes into exile face down carrying its alt in the very state the viewer steals a creature -- it came from a hand, not a library, and its alt is a leak',
+  3, { exileFrom: 'hand', exileAt: 1, hostName: 'Grizzly Bears' });
+hideawayProbe('a9-hideaway-alt-kept-after-control-returns.jsonl',
+  'A9, D502: the look follows the Watcher\'s CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source',
+  5, { returnAt: 2 });
+hideawayProbe('a9-hideaway-alt-after-control-already-returned.jsonl',
+  'A9, D502: the viewer took the Watcher and gave it back before the alt appeared -- a look that arrives when the viewer no longer controls the permanent has no source',
+  3, { returnAt: 2, altFrom: 2 });
+hideawayProbe('a9-hideaway-card-re-exiled-from-a-hand.jsonl',
+  'A9, D502: the dug card went back to the hand and into exile again (foretold) -- only a LATEST move into exile from its owner\'s library ties it to the Watcher',
+  3, { reExileAt: 1, changeAt: 2, altFrom: 2 });
+hideawayProbe('a9-hideaway-dug-from-another-library.jsonl',
+  'A9, D502: the move into exile came from the VIEWER\'s library, not the exiled card\'s owner\'s -- it is not that owner\'s hideaway dig',
+  3, { digFrom: header.seat, digTo: header.seat });
+hideawayProbe('a9-hideaway-dug-into-another-exile.jsonl',
+  'A9, D502: the move went from the opponent\'s library into the VIEWER\'s exile -- a hideaway dig stays in its owner\'s exile',
+  3, { digTo: header.seat });
+hideawayProbe('a9-hideaway-card-of-an-unrelated-host.jsonl',
+  'A9, D502: the card was dug beside the entry of the opponent\'s Mosswort Bridge, not of the Watcher the viewer took -- the Watcher\'s look does not reach it',
+  5, { exileAt: 2, otherHostAt: 2, changeAt: 3, altFrom: 3 });
 
 // The other night-2 finding (D371): the viewer's own hand card as a stub.  It
 // must fail, and the message must say which shape it was -- the clue to the cause.

@@ -124,8 +124,13 @@ token listed in the first, its move in the second, the decision at the fourth), 
 - the stub guard removed;
 - the rule off.
 
-Two survive, and both guards are kept as defence in depth:
+Two survive, and both guards are kept:
 - **"S is not the viewer".** The viewer's own token is D485's, which runs first. A viewer's token that D485 refuses
-  (its move into the opponent's hand) is refused here by the destination seat as well.
-- **The listing's owner equal to its controller.** A token listed on S's battlefield and owned by another seat would
-  have to die into its owner's graveyard, which is not S's.
+  (its move into the opponent's hand) is refused here by the destination seat as well. So no control can tell this
+  guard's mutant from the rule.
+- **The listing's owner equal to its controller.** No control kills its mutant, but it is not redundant. The
+  graveyard and hand branch would refuse a token listed on S's battlefield but owned by another seat, because that
+  token dies into its owner's graveyard, which is not S's. The `to: null` branch checks only that the token came
+  straight off S's battlefield, so without this guard the viewer's own token, stolen by S and then gone to nowhere off
+  S's battlefield, would be admitted as S's. The guard is what refuses that shape (*corrected after the review of f3a3091b*: the first text called it
+  implied by the destination check).
