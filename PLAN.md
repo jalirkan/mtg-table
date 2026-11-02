@@ -18,7 +18,7 @@ commit.
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
 said 371 across 42, three rows and one list behind its table) — D500
-(2026-11-01) added the cube lab's 16; D497
+(2026-11-01) added the cube lab's 17; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
@@ -415,7 +415,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 11 | open | The board's replay stops at a lab log's first `dir:"ai"` line: `reduce()` throws on `decision` (M55) and `reveal` (M78) | `web/src/transport/replay.ts` |
 | [Cube lab](#fu-cube-lab) | 12 | open | D497's paper-card carry: a copy of a token on a fork is proved on the bench only; the first night on the new bridge should branch it cleanly, with no bare exception in its worker logs | `docs/decisions/D497-fork-token-paper-card.md` |
 | [Cube lab](#fu-cube-lab) | 13 | open | The lint's reflection rules cannot see a name built at run time, a line opening with a comment marker, or an unbudgeted `getDeclaredMethod` / `getDeclaredConstructor` | `tools/lint-bridge.sh` |
-| [Cube lab](#fu-cube-lab) | 16 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
+| [Cube lab](#fu-cube-lab) | 17 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9965,13 +9965,14 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    - `getDeclaredMethod` / `getDeclaredConstructor` on a Forge class, which have no budget at all
      (`tools/cubelab/CubeLab.java:854-855` uses them).
    Closing them needs a parser (or a javap pass over `bridge/out`), not a grep.
-16. **D500's damage entries are proved on the bench, not yet on a night.** (2026-11-01, D500.)
+17. **D500's damage entries are proved on the bench, not yet on a night.** (2026-11-01, D500.)
    `LenientGameCopier` now gives every damage instance a fork holds its source and target (`Game.damageThisTurnLKI`,
    which `GameCopier` never copied), so a `DamagedBy`/`Damaged` question on a fork made after damage was dealt this
    turn no longer throws; J181's s06 lost 3 of d19's 450 branches to Etching of Kumano's replacement. Measured: the
    ai-bench `fork-damage-lki` scenario (an atlas branch in which the AI bolts its own damaged Wurm and Etching exiles
-   it; 7 of its 12 checks fail on `main`'s copier). The first night on the new bridge should show no `getDamageLKI`
-   stack in any worker log. Two things seen in passing and not done: a copy's damage *done* is still empty (`GameCopier`
+   it; 7 of its 12 checks fail on `main`'s copier) and its review's two controller cases. The first night on the new
+   bridge should show no `getDamageLKI` stack in any worker log, and `atlas.json`'s `phaseB.damageLkiLost` (a damage
+   instance a copy took off) should be absent or read. Two things seen in passing and not done: a copy's damage *done* is still empty (`GameCopier`
    copies no `CardDamageHistory`, so `getDamageDoneThisTurn`, `getTotalDamageDoneBy` and
    `hasDealtDamageToOpponentThisTurn` read 0 on every fork; `getAllDmgInstances()` is the history's own list, so it
    could be refilled without reflection, but that changes what the AI reads), and on a fork a transformed double-faced

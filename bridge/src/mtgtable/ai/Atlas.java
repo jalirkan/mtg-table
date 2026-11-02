@@ -339,6 +339,8 @@ public final class Atlas {
          */
         public int effectSourceNull;
         public int exileLinksLost;
+        /** D500: the damage instances the copy could not give a source and target, and so took off (written when &gt; 0). */
+        public int damageLkiLost;
         /**
          * D484: the ChooseSource answers the branch's seats made in place of
          * Forge's null or divider card ({@link PolicyControllerAi#CHOOSE_SOURCE_GUARD}).
@@ -666,6 +668,9 @@ public final class Atlas {
         if (b.exileLinksLost > 0) {
             j.n("exileLinksLost", (long) b.exileLinksLost);
         }
+        if (b.damageLkiLost > 0) {
+            j.n("damageLkiLost", (long) b.damageLkiLost);
+        }
         if (b.chooseSourceGuard > 0) {
             j.n("chooseSourceGuard", (long) b.chooseSourceGuard);
         }
@@ -781,6 +786,7 @@ public final class Atlas {
             b.standIns = cp.unmapped();
             b.effectSourceNull = cp.effectSourceNull().size();
             b.exileLinksLost = cp.exileLinksLost().size();
+            b.damageLkiLost = cp.damageLkiLost().size();
             b.forkProblems.addAll(forkProblems(game, ai, copy, aiCopy));
             if (probe != null) {
                 probe.append(java.util.Arrays.toString(DistillFeatures.state(aiCopy)));

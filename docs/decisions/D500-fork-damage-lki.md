@@ -59,7 +59,9 @@ Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/b
    `damageReceivedThisTurn` that has no entry on the copy, it reads the original game's entry for the same pair object
    and files one on the copy through the public `Game.addGlobalDamageHistory(history, pair, source, target)`:
    - the **source** (and a card **target**): `CardCopyService.getLKICopy` of the copy's card with the original's id —
-     its characteristics and controller as they stand on the copy — given the original entry's game and layer
+     its characteristics as they stand on the copy — given the original entry's **controller** (mapped onto the copy;
+     the review's fix: a creature stolen, used to deal damage and sacrificed, or damaged-by and then stolen, answers
+     `DamagedByCard.YouCtrl` by its controller at the damage, as in the live game) and its game and layer
      timestamps, so `equalsWithGameTimestamp` answers what it answers in the original (the source still on the
      battlefield is its card; one that has since changed zones is not). One copy per original last-known object. During
      combat `getLKICopy` also files a permanent in combat in the copy's combat LKI cache (`Combat.saveLKI`, by id, a
@@ -79,8 +81,12 @@ Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/b
    - a pair whose entry cannot be built (the original has none, or a copy throws) is **taken off** the copy entity's
      list (by identity) and named in `damageLkiLost()`: the copy then never asks about it, and loses that instance's
      amount and source — information-losing, and so far never taken (0 in the bench, and no stderr line).
-   Counters, read by the bench and not carried in an atlas row: `damageLkiCarried()`, `damageLkiRebuilt()`,
-   `damageLkiLost()`. The pass runs where D479's runs, on the thread that made the copy, reading the original's map as
+   Each lost string names the amount, the entity, the source and why: the exception's class, or *not rebuilt* for a
+   card with neither a token's script nor a paper card. Counters: `damageLkiCarried()` and `damageLkiRebuilt()` are
+   read by the bench; `damageLkiLost()`'s size is carried, once per copy and only when above 0, as D479's
+   `exileLinksLost` is: in the atlas branch row (`damageLkiLost`, summed in `atlas.json`'s `phaseB.damageLkiLost` as
+   `{branches, instances}` and named in `atlas.md`) and in the search sink (`search.damageLkiLost`, the first copy of a
+   decision), so a removal in production is seen. The pass runs where D479's runs, on the thread that made the copy, reading the original's map as
    that pass reads the original's cards; no thread changes and no hop.
 2. **No reflection.** `Game.addGlobalDamageHistory`, `Game.getDamageLKI`, `GameEntity.getDamageReceivedThisTurn` (which
    returns the entity's own list), `CardCopyService.getLKICopy(Card)`, `CardCopyService.copyCopiableCharacteristics`,
@@ -107,7 +113,7 @@ Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/b
 **Tests.**
 
 - **The real engine**: `tools/ai-bench.sh --selftest`'s new `fork-damage-lki` scenario (`forkDamageLkiScenarios`, 12
-  checks; the self-test 300 checks, 0 failures, 14.7 s), with `tools/ai-bench/decks/fork-damage-lki.dck` as both seats'
+  checks; the self-test 304 checks with the review's four, 0 failures, 19.3 s), with `tools/ai-bench/decks/fork-damage-lki.dck` as both seats'
   deck in the branch's recording. The board: the human's Etching of Kumano, Grizzly Bears, Hill Giant and a Goblin
   Shaman token from its script; the AI's Craw Wurm (6/4) and Lightning Bolt; turn 15, the AI's main phase 2. The real
   engine deals the damage (`GameAction.dealDamage`): 1 from each human creature to the Wurm and 2 from the Bears to the
@@ -126,7 +132,14 @@ Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/b
   empty): 7 of the 12 fail — no entry on the copy, the property and `getAssignedDamage` with a source throw, the branch
   errors at 0 steps with the field's stack (`CardProperty.cardHasProperty(CardProperty.java:1101)` ←
   `ReplaceMoved.canReplace(ReplaceMoved.java:45)` ← `checkStateEffects` ← `Atlas.play`), and its logs have no state
-  frame, so both redaction checks fail. The whole self-test: 300 checks, 7 failures, every one this scenario's.
+  frame, so both redaction checks fail. The whole self-test then: 300 checks, 7 failures, every one this scenario's.
+- **The controller as of the damage** (the review): `forkDamageLkiControllerScenarios`, 4 checks — the AI's Hill Giant
+  stolen by the human, dealing 1 to the AI's Wurm and dying (the real entry's controller the human, Etching's property
+  true), and dealing the 1 and then stolen (the AI, false). On the copy the entry's controller and the property are the
+  real game's in both. Without the controller mapping (the first commit's copier) both fail: the copy says the AI and
+  false, then the human and true (304 checks, 2 failures).
+- **The row and the report**: `web/test/cubelab-atlas.test.ts`'s D479 counter test carries `damageLkiLost` through the
+  worker row, `atlas.json`'s `phaseB.damageLkiLost` and `atlas.md`'s sentence.
 - **The build**: `./bridge/build.sh` green (the lint and its self-test unchanged, the eight self-tests).
 - **The atlas**: `tools/cubelab.sh atlas-selftest --jobs 1` passes on this branch, and its summary is D493's and D497's,
   number for number (16 forks, 8 no-leak checks, 38 frame logs, 558 rows) — which says its boards asked none of these
@@ -140,11 +153,16 @@ Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/b
   no source had dealt damage this turn (the bench: 2 and 3 in the real game, 0 and 0 on both copies). That is a
   fidelity gap, not a crash; the public `getAllDmgInstances()` returns the history's own list, so a later pass could
   refill it without reflection, but it changes what the AI reads and is the owner's call (PLAN.md, the cube lab's
-  follow-up 16).
+  follow-up 17).
+- **An entry's characteristics are the copy's card as it stands, not as at the damage**: only the controller and the
+  timestamps are the entry's. A source that has died since is read through its graveyard face (no effect's types, its
+  printed power), a source bounced face down through its real face, and a rebuilt card has no last-known zone. A
+  `DamagedBy` valid that asks a characteristic an effect gave the source at the time (a land animated, a type granted)
+  can answer otherwise than the live game. Rare; written, not fixed (the review's note).
 - **Seen in passing**: on a fork a transformed double-faced card is named by its **front** face on the wire. The copy's
   Etching of Kumano is `Backside` with Etching's replacement (it fired), but its view's current state is *Kumano Faces
   Kakkazan* and `isBackSide()` is false, so every branch frame of J181's s06 and of the bench names it so. Both faces are
-  public, so it is not a leak; it is the recorded branches' fidelity, not investigated here (follow-up 16).
+  public, so it is not a leak; it is the recorded branches' fidelity, not investigated here (follow-up 17).
 
 **Comparability.** Atlas labels and reads, and search results, from before and after D500 are **not pooled**; split them
 by git sha, as D479's, D493's and D497's are. Branches that used to error now finish (J181's s06 lost 3), and on every
@@ -153,6 +171,14 @@ fork made after damage was dealt this turn the `DamagedBy`/`Damaged` questions, 
 card script asks (a `DamagedBy` count or valid in an ability's SVars) and `SpecialCardAi` reads `getAssignedDamage`, so
 a branch's play after such a question may change, toward the live game's.
 
+**The branch ledger counts differently.** `GameLedger` (attached to every atlas copy that records frames,
+`Atlas.play`) sums each turn's damage from the players', battlefield cards' and graveyard cards' received pairs and
+skips a pair whose entry is null (`GameLedger.damage`). Before D500 every pre-fork damage instance on a fork had no
+entry, so the fork's turn counted only the damage dealt after the fork; now the pre-fork instances on players and
+battlefield cards count, attributed to their source's controller at the damage, so `phaseB/ledger.jsonl`'s `damage` and
+`damageToPlayers` for the fork's turn rise, toward the live game's. Damage to a creature that died before the fork is
+still not seen: Forge's copier copies the received list of battlefield cards only, so the graveyard card holds none.
+
 **Not replayed.** The atlas has no command that re-branches one decision of a spine (D493's note); the bench scenario is
 the production path on the field's board shape. The first night on this bridge should show no `getDamageLKI` stack in
-any worker log (PLAN.md, the cube lab's follow-up 16).
+any worker log (PLAN.md, the cube lab's follow-up 17).

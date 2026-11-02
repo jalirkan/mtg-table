@@ -223,6 +223,8 @@ public final class LenientGameCopier extends GameCopier {
     private int damageLkiCarried;
     private int damageLkiRebuilt;
     private final List<String> damageLkiLost = new ArrayList<>();
+    /** D500: the original last-known cards no copy could be made of, with the exception's class. */
+    private final Map<Card, String> failures = new IdentityHashMap<>();
     /**
      * D497: {@code Card.paperCard}, the field {@link #carryPaperCard} writes
      * (null when this engine has no such field of type {@code IPaperCard}).
@@ -321,7 +323,12 @@ public final class LenientGameCopier extends GameCopier {
         return damageLkiRebuilt;
     }
 
-    /** D500: the damage instances taken off the copy because no source or target could be given (amount, entity). */
+    /**
+     * D500: the damage instances taken off the copy because no source or target
+     * could be given (amount, entity, source, and why: the exception's class, or
+     * "not rebuilt" for a card with neither a token's script nor a paper card).
+     * The atlas row and the search sink carry its size, once per copy.
+     */
     public List<String> damageLkiLost() {
         return damageLkiLost;
     }
@@ -469,8 +476,12 @@ public final class LenientGameCopier extends GameCopier {
                 if (src == null || tgt == null) {
                     // the copy never reads a pair it does not hold: off its list, and said
                     it.remove();
+                    String why = o == null ? "no entry in the original" : src == null ? failures.get(o.getLeft()) : null;
+                    if (why == null && o != null && o.getRight() instanceof Card) {
+                        why = failures.get(o.getRight());
+                    }
                     damageLkiLost.add(p.getLeft() + (p.getRight() ? " combat" : "") + " to " + e
-                            + (o == null ? " (no entry in the original)" : " from " + o.getLeft()));
+                            + (o == null ? "" : " from " + o.getLeft()) + " (" + (why == null ? "not rebuilt" : why) + ")");
                     continue;
                 }
                 copy.addGlobalDamageHistory(src.getDamageHistory(), p, src, tgt);
@@ -505,6 +516,12 @@ public final class LenientGameCopier extends GameCopier {
             final Card base = byId.get(o.getId());
             if (base != null) {
                 out = CardCopyService.getLKICopy(base);
+                // the controller as of the damage, not as of now (a creature stolen, used and sacrificed, or
+                // damaged and then stolen): DamagedByCard.YouCtrl asks it.  Its characteristics stay the copy's.
+                final Player octl = o.getController() == null ? null : playerOnCopy(o.getController());
+                if (octl != null && octl != out.getController()) {
+                    out.setController(octl, 0);
+                }
             } else {
                 // built in the copy from the start, as GameCopier.createCardCopy builds a card: never a
                 // CardCopyService(o, copy).copyCard, whose token branch makes the card (and its view) in o's game
@@ -532,6 +549,7 @@ public final class LenientGameCopier extends GameCopier {
             }
         } catch (final RuntimeException e) {
             out = null;
+            failures.put(o, e.getClass().getName());
         }
         done.put(o, out);
         return out;

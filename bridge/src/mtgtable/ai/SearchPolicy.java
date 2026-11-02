@@ -2910,6 +2910,9 @@ public final class SearchPolicy {
             if (first && !cp.exileLinksLost().isEmpty()) {     // D479: exile links the copy could not map
                 sink.add("search.exileLinksLost", cp.exileLinksLost().size());
             }
+            if (first && !cp.damageLkiLost().isEmpty()) {      // D500: damage instances the copy took off
+                sink.add("search.damageLkiLost", cp.damageLkiLost().size());
+            }
             final Player aiCopy = (Player) cp.find(ai);
             RolloutForcing rc = null;
             for (final Player p : copy.getPlayers()) {
