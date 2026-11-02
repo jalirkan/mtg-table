@@ -1583,3 +1583,27 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
 - **Morning read for J182:** `lab-j182/report/`, `compare-j181.json`; by hand: no A6 failure in the checker sweep, `abandonedPlays`
   if any unit re-ran, no `getDamageLKI` / `paperCard` in any errored stack, no bare exception, `phaseB.damageLkiLost` 0.
 - Painters: 8 of 10 pinG pairs done (plains-mountain painting).
+
+## 2026-11-02 08:00 EST -- J182 read; D502-D504 merged (main 3275af30); J183 posted (pc-jobs 29ef0f6f); pairs-v7.1 live
+
+- **J182 finished 07:34 FAILED on `atlas.problems == 0` alone (3):** 89 labels / 26 confident, 0.451 confident per worker-hour
+  (J181 0.464), 60,855 branch games, 14 branch timeouts (J181 12), damageLkiLost 0 in every unit, no abandoned plays, exile links 0.
+  The three problems are eleven branch logs failing check-redaction in three shapes, every one legitimate engine behaviour the
+  checker's admitted shapes were too narrow for: s06 five -- a hideaway card (Watcher for Tomorrow) whose look passes to seat 0 when
+  Burglar's Plot exchanges the Watcher (CR 702.75a, Forge's `MayLookAt$ EffectSourceController`); s10 five -- the opponent's ceased Goat
+  Token named by Eye for an Eye's "choose a source" by last known information; s04 one -- Kormus Bell cast from the opponent's hand and
+  targeted by Force of Negation inside a held batch. One engine IndexOutOfBounds in Forge's PumpEffect.resolve (s11, one branch of
+  60,855) -- watched on J183 as `pump_effect_ioobe`.
+- **One lane, D502-D504, three skeptic rounds.** The first D502 failed open (any stolen permanent admitted any face-down exile alt);
+  the second let the log's first frame count as an entry and a creature's own spell cast count as its hideaway trigger; the third left
+  ties uncounted once the host's card left exile and a held grant alive through a re-exile. Final rule: the dig from the owner's library
+  beside the host's entry AND its trigger's cast (after the entry in event order), the only dig tied to that host, the alt at the control
+  change (+1 frame), the grant only while the viewer controls THAT permanent (+1 frame of snapshot lag), ended by any move. 205 selftest
+  controls (149 before). Lesson: a checker admission needs a link between the evidence and the card, never timing alone. Gate: check-all
+  OK, 60 jobs, 748.1 s at GATE_JOBS=3 beside J182, var/check-all/20261102-072934-3135480. The runner was not reinstalled (its code did
+  not change; the job pins 3275af30).
+- **J183** = D498's population, night two, pooled with J182, deck seeds 2414-2426, compared with J182 by position; derive-j183.py.
+- **Scenery:** pairs-v7, pairs-v7-phone, pairs-v7-pin and pairs-v7.1 tagged and warmed; ForgeCoach PR #204 merged (89d18b87): `?pairfull=1`
+  defaults to pairs-v7.1, the pairs manifest cap 256 KB -> 1 MB (the 1.18 manifest, 493 KB, was refused on the live look), the
+  writer names the manifest after its tag (pairs-v7 said "pairs-v6 draft"). Justin's phone showed the built-in scene: the pack switch or
+  its load, not the pack.
