@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-11-01T20:16:40-05:00",
- "heartbeat": "2026-11-01T20:16:40-05:00",
+ "updated": "2026-11-01T20:21:22-05:00",
+ "heartbeat": "2026-11-01T20:21:22-05:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-11-01T20:02:50-05:00",
  "idleReason": "queue empty",
  "host": {
-  "load1": 1.08,
-  "memUsedGb": 5.5,
+  "load1": 2.15,
+  "memUsedGb": 5.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 1822,
   "pressure": 0,
