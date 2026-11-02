@@ -152,6 +152,8 @@ export interface BranchRow {
   effectSourceNull?: number;
   /** D479: the "exiled with" links the copier could not map (written when > 0). */
   exileLinksLost?: number;
+  /** D500: the damage instances the copier could not give a source and target, and took off the copy (written when > 0). */
+  damageLkiLost?: number;
   /** D484: the ChooseSource answers the branch's seats made where Forge 2.0.14 answered null or a divider card (written when > 0). */
   chooseSourceGuard?: number;
   /** D485: the plays the branch's random seats cast after replacing the stale targets on Forge's answer (written when > 0). */
@@ -693,6 +695,7 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     ...(b.restarts ? { restarts: b.restarts } : {}),
     ...(b.effectSourceNull ? { effectSourceNull: b.effectSourceNull } : {}),
     ...(b.exileLinksLost ? { exileLinksLost: b.exileLinksLost } : {}),
+    ...(b.damageLkiLost ? { damageLkiLost: b.damageLkiLost } : {}),
     ...(b.chooseSourceGuard ? { chooseSourceGuard: b.chooseSourceGuard } : {}),
     ...(b.retargeted ? { retargeted: b.retargeted } : {}),
     ...(b.modesDrawn ? { modesDrawn: b.modesDrawn } : {}),
@@ -1106,6 +1109,8 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
       // D479: the forward instrument -- branches whose copy played an effect with no source, or lost an exile link
       effectSourceNull: { branches: bRows.filter((r) => (r.effectSourceNull ?? 0) > 0).length, cards: bRows.reduce((a, r) => a + (r.effectSourceNull ?? 0), 0) },
       exileLinksLost: { branches: bRows.filter((r) => (r.exileLinksLost ?? 0) > 0).length, links: bRows.reduce((a, r) => a + (r.exileLinksLost ?? 0), 0) },
+      // D500: branches whose copy took off a damage instance it could not give a source and target
+      damageLkiLost: { branches: bRows.filter((r) => (r.damageLkiLost ?? 0) > 0).length, instances: bRows.reduce((a, r) => a + (r.damageLkiLost ?? 0), 0) },
     } : null,
     checks: { rowsFiles: rc.reduce((a, c) => a + c.files, 0), rows: rc.reduce((a, c) => a + c.rows, 0), gamesIdChecked: rc.reduce((a, c) => a + c.games, 0),
       frameLogs: red.checked, frameLogsFailed: red.failed.length, redactionMs: red.ms, forks: bRows.length, forkProblems: forkBad.length,
@@ -1146,7 +1151,7 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
 interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
-  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; forgeMap?: boolean; schedule?: Record<string, unknown>; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number; effectSourceNull?: { branches: number; cards: number }; exileLinksLost?: { branches: number; links: number } };
+  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; forgeMap?: boolean; schedule?: Record<string, unknown>; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number; effectSourceNull?: { branches: number; cards: number }; exileLinksLost?: { branches: number; links: number }; damageLkiLost?: { branches: number; instances: number } };
   checks: { problems: string[]; warnings?: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
@@ -1228,7 +1233,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       for (const op of d.options) L.push(`| ${op.o}${op.o === 0 ? ' (played)' : ''} | \`${op.token}\` | ${op.label.replace(/\|/g, '/')} | ${pct(op.random.mean)}${iv(op.random.lo, op.random.hi)} (n ${op.random.n}${op.stoppedAt !== undefined ? `, stopped at ${op.stoppedAt}` : ''}) | ${pct(op.forge.mean)}${iv(op.forge.lo, op.forge.hi)} (n ${op.forge.n}) |`);
       L.push('');
     }
-    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}${b.branchUnavailable ? `; ${b.branchUnavailable} more where the option could not be given in the copy, left out too (D470)` : ''})${b.branchRestarted ? `; ${b.branchRestarted} played on through a restart of the game by Karn Liberated (D477), counted as played` : ''}; ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.${b.effectSourceNull?.branches ? ` In ${b.effectSourceNull.branches} branch game(s) the fork's copy held ${b.effectSourceNull.cards} effect(s) whose source it could not name, each played as if it had none (D479).` : ''}${b.exileLinksLost?.branches ? ` In ${b.exileLinksLost.branches} the copy lost ${b.exileLinksLost.links} "exiled with" link(s) (D479).` : ''}`, '');
+    L.push(`${b.branchGames} branch games (${b.branchErrors} with an error, left out${b.branchEngineErrors ? `; ${b.branchEngineErrors} of them engine errors, a Java Error such as OutOfMemoryError (D465)` : ''}${b.branchUnavailable ? `; ${b.branchUnavailable} more where the option could not be given in the copy, left out too (D470)` : ''})${b.branchRestarted ? `; ${b.branchRestarted} played on through a restart of the game by Karn Liberated (D477), counted as played` : ''}; ${b.cappedRandom} random and ${b.cappedForge} Forge branches ended at the turn cap.${b.effectSourceNull?.branches ? ` In ${b.effectSourceNull.branches} branch game(s) the fork's copy held ${b.effectSourceNull.cards} effect(s) whose source it could not name, each played as if it had none (D479).` : ''}${b.exileLinksLost?.branches ? ` In ${b.exileLinksLost.branches} the copy lost ${b.exileLinksLost.links} "exiled with" link(s) (D479).` : ''}${b.damageLkiLost?.branches ? ` In ${b.damageLkiLost.branches} the copy took off ${b.damageLkiLost.instances} damage instance(s) whose source it could not name (D500).` : ''}`, '');
   }
   const c = doc.checks;
   L.push('## Checks', '');

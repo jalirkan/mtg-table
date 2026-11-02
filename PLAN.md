@@ -17,8 +17,8 @@ commit.
 **The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D499
-(2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
+said 371 across 42, three rows and one list behind its table) — D500
+(2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
@@ -418,6 +418,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 14 | open | D498's determinizer keeps a card the seat may look at where it is: proved on the bench and on a re-run of s07's decision 14; the first night on the new bridge should show no A6 failure | `docs/decisions/D498-determinizer-keeps-what-the-seat-sees.md` |
 | [Cube lab](#fu-cube-lab) | 15 | open | `check-redaction.mjs --empty-hand-ok`'s proof (D460) fails an empty-handed opponent beside a revealed top card that A3 accepts: "not one card was redacted" with nothing hidden shown (J181 s07 d13) | `tools/check-redaction.mjs` |
 | [Cube lab](#fu-cube-lab) | 16 | open | D499's rows check: two killed attempts of one branch with no finished play are still each read against the last attempt's logs, and the first night on it should report its abandoned plays with no id problem | `tools/cubelab/rowscheck.ts` |
+| [Cube lab](#fu-cube-lab) | 17 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10001,6 +10002,19 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
      unit's attempt number in the `begin` line, or the worker's pid in the frame log's header.
    - **Not D499's subject.** The hang itself: Forge's AI evaluation timing out in
      `AiController.chooseSpellAbilityToPlayFromList` at s13's decision 28, Forge continuation, in two units.
+17. **D500's damage entries are proved on the bench, not yet on a night.** (2026-11-01, D500.)
+   `LenientGameCopier` now gives every damage instance a fork holds its source and target (`Game.damageThisTurnLKI`,
+   which `GameCopier` never copied), so a `DamagedBy`/`Damaged` question on a fork made after damage was dealt this
+   turn no longer throws; J181's s06 lost 3 of d19's 450 branches to Etching of Kumano's replacement. Measured: the
+   ai-bench `fork-damage-lki` scenario (an atlas branch in which the AI bolts its own damaged Wurm and Etching exiles
+   it; 7 of its 12 checks fail on `main`'s copier) and its review's two controller cases. The first night on the new
+   bridge should show no `getDamageLKI` stack in any worker log, and `atlas.json`'s `phaseB.damageLkiLost` (a damage
+   instance a copy took off) should be absent or read. Two things seen in passing and not done: a copy's damage *done* is still empty (`GameCopier`
+   copies no `CardDamageHistory`, so `getDamageDoneThisTurn`, `getTotalDamageDoneBy` and
+   `hasDealtDamageToOpponentThisTurn` read 0 on every fork; `getAllDmgInstances()` is the history's own list, so it
+   could be refilled without reflection, but that changes what the AI reads), and on a fork a transformed double-faced
+   card's view keeps its front face (the copy's Etching of Kumano is `Backside` and acts as Etching, but every branch
+   frame names it *Kumano Faces Kakkazan*).
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

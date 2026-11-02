@@ -22,16 +22,22 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import forge.ai.simulation.GameCopier;
 import forge.card.GamePieceType;
 import forge.game.Game;
+import forge.game.GameEntity;
 import forge.game.GameObject;
 import forge.game.card.Card;
 import forge.game.card.CardCopyService;
+import forge.game.card.CardFactory;
+import forge.game.card.token.TokenInfo;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.replacement.ReplacementEffect;
@@ -155,6 +161,31 @@ import forge.item.IPaperCard;
  * reflective write of a Forge field the lint allows (its rule
  * {@code forge-field-write}); on an engine where the field is not there,
  * nothing is written and {@link #paperCardsLost} counts each token.
+ *
+ * <p><b>Who dealt the damage this turn</b> (D500, D497's sibling).  Every
+ * damage instance is a {@code Pair<amount, combat>} that the target keeps in
+ * {@code damageReceivedThisTurn} and the game keys, by identity, to the last
+ * known source and target in {@code damageThisTurnLKI}
+ * ({@code CardDamageHistory.registerDamage} -&gt; {@code Game.addGlobalDamageHistory}).
+ * {@code GameCopier} copies a player's and a battlefield card's list -- the
+ * same pair objects -- but never the game's map, so on a fork made after
+ * damage was dealt every {@code DamagedBy}/{@code Damaged} card property
+ * (and {@code getAssignedDamage} with a source) dereferenced
+ * {@code getDamageLKI(pair)} as null: Etching of Kumano's replacement
+ * ("if a creature dealt damage this turn by a source you controlled would
+ * die") on a Colossal Skyturtle blocked earlier in the turn, J181's s06, d19.
+ * {@link #carryDamageLki} gives the copy an entry for every pair its
+ * entities hold, through the public {@code addGlobalDamageHistory}: the
+ * source and the target are last-known copies, on the copy, of the copy's
+ * card with the original's id (its current characteristics), with the
+ * original entry's timestamps, so {@code equalsWithGameTimestamp} answers
+ * what it answers in the original; a player maps to the copy's player; a
+ * card the copy holds no card of (a token that has ceased to exist) is
+ * rebuilt in the copy from the original's last-known object, as
+ * {@code GameCopier} rebuilds a card.  The history it is filed
+ * under is the copied source's own, which {@code GameCopier} leaves empty,
+ * so no count of damage done changes.  A pair that cannot be given an entry
+ * is taken off the copy's list and named in {@link #damageLkiLost}.
  */
 public final class LenientGameCopier extends GameCopier {
 
@@ -187,6 +218,13 @@ public final class LenientGameCopier extends GameCopier {
     private int zoneTurnsCarried;
     private int paperCardsCarried;
     private final List<String> paperCardsLost = new ArrayList<>();
+    /** D500: the game being copied ({@code GameCopier}'s own field is private). */
+    private final Game orig;
+    private int damageLkiCarried;
+    private int damageLkiRebuilt;
+    private final List<String> damageLkiLost = new ArrayList<>();
+    /** D500: the original last-known cards no copy could be made of, with the exception's class. */
+    private final Map<Card, String> failures = new IdentityHashMap<>();
     /**
      * D497: {@code Card.paperCard}, the field {@link #carryPaperCard} writes
      * (null when this engine has no such field of type {@code IPaperCard}).
@@ -201,6 +239,7 @@ public final class LenientGameCopier extends GameCopier {
 
     public LenientGameCopier(final Game origGame) {
         super(origGame);
+        this.orig = origGame;
     }
 
     /** How many cards were mapped to a stand-in while copying. */
@@ -272,6 +311,26 @@ public final class LenientGameCopier extends GameCopier {
     /** D497: the re-made tokens whose original has a paper card the copy could not be given (their names). */
     public List<String> paperCardsLost() {
         return paperCardsLost;
+    }
+
+    /** D500: how many damage instances of the copy were given their source and target (one per pair). */
+    public int damageLkiCarried() {
+        return damageLkiCarried;
+    }
+
+    /** D500: how many last-known sources and targets were rebuilt because the copy holds no card with their id. */
+    public int damageLkiRebuilt() {
+        return damageLkiRebuilt;
+    }
+
+    /**
+     * D500: the damage instances taken off the copy because no source or target
+     * could be given (amount, entity, source, and why: the exception's class, or
+     * "not rebuilt" for a card with neither a token's script nor a paper card).
+     * The atlas row and the search sink carry its size, once per copy.
+     */
+    public List<String> damageLkiLost() {
+        return damageLkiLost;
     }
 
     /** D497: true when the paper-card field was found (the self-test asserts it). */
@@ -385,6 +444,115 @@ public final class LenientGameCopier extends GameCopier {
             copy.getAction().checkStaticAbilities();
             copy.getTriggerHandler().resetActiveTriggers();
         }
+        carryDamageLki(copy, byId);   // D500: last, so a last-known copy sees the copy's statics applied
+    }
+
+    /**
+     * D500: an entry in the copy's {@code damageThisTurnLKI} for every damage
+     * instance a copied player or card holds, built from the original game's
+     * entry for the same pair object.  Read on the thread that made the copy,
+     * as every other original object {@link #carry} reads.
+     */
+    private void carryDamageLki(final Game copy, final Map<Integer, Card> byId) {
+        final Map<Card, Card> done = new IdentityHashMap<>();   // an original last-known card -> the copy's
+        final List<GameEntity> entities = new ArrayList<>(copy.getPlayers());
+        for (final Card c : copy.getCardsInGame()) {
+            entities.add(c);
+        }
+        for (final GameEntity e : entities) {
+            for (final Iterator<Pair<Integer, Boolean>> it = e.getDamageReceivedThisTurn().iterator(); it.hasNext();) {
+                final Pair<Integer, Boolean> p = it.next();
+                if (copy.getDamageLKI(p) != null) {
+                    continue;
+                }
+                final Pair<Card, GameEntity> o = orig.getDamageLKI(p);
+                Card src = null;
+                GameEntity tgt = null;
+                if (o != null) {
+                    src = o.getLeft() == null ? null : lkiOnCopy(copy, o.getLeft(), byId, done);
+                    tgt = o.getRight() instanceof Card ? lkiOnCopy(copy, (Card) o.getRight(), byId, done)
+                            : o.getRight() instanceof Player ? playerOnCopy((Player) o.getRight()) : null;
+                }
+                if (src == null || tgt == null) {
+                    // the copy never reads a pair it does not hold: off its list, and said
+                    it.remove();
+                    String why = o == null ? "no entry in the original" : src == null ? failures.get(o.getLeft()) : null;
+                    if (why == null && o != null && o.getRight() instanceof Card) {
+                        why = failures.get(o.getRight());
+                    }
+                    damageLkiLost.add(p.getLeft() + (p.getRight() ? " combat" : "") + " to " + e
+                            + (o == null ? "" : " from " + o.getLeft()) + " (" + (why == null ? "not rebuilt" : why) + ")");
+                    continue;
+                }
+                copy.addGlobalDamageHistory(src.getDamageHistory(), p, src, tgt);
+                damageLkiCarried++;
+            }
+        }
+    }
+
+    /** D500: the copy's player for an original one (null when the copier has none). */
+    private Player playerOnCopy(final Player p) {
+        try {
+            final GameObject m = find(p);
+            return m instanceof Player ? (Player) m : null;
+        } catch (final RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
+     * D500: the copy's last-known object for {@code o}, an original game's
+     * last-known card: a last-known copy of the copy's card with {@code o}'s
+     * id, else a card rebuilt on the copy from {@code o} (a token that has
+     * ceased to exist), either one given {@code o}'s timestamps.  Null when
+     * neither can be made.
+     */
+    private Card lkiOnCopy(final Game copy, final Card o, final Map<Integer, Card> byId, final Map<Card, Card> done) {
+        if (done.containsKey(o)) {
+            return done.get(o);
+        }
+        Card out = null;
+        try {
+            final Card base = byId.get(o.getId());
+            if (base != null) {
+                out = CardCopyService.getLKICopy(base);
+                // the controller as of the damage, not as of now (a creature stolen, used and sacrificed, or
+                // damaged and then stolen): DamagedByCard.YouCtrl asks it.  Its characteristics stay the copy's.
+                final Player octl = o.getController() == null ? null : playerOnCopy(o.getController());
+                if (octl != null && octl != out.getController()) {
+                    out.setController(octl, 0);
+                }
+            } else {
+                // built in the copy from the start, as GameCopier.createCardCopy builds a card: never a
+                // CardCopyService(o, copy).copyCard, whose token branch makes the card (and its view) in o's game
+                final Player owner = o.getOwner() == null ? null : playerOnCopy(o.getOwner());
+                if (owner != null && o.isToken() && !o.isImmutable()) {
+                    out = new TokenInfo(o).makeOneToken(owner, o.getId());
+                    new CardCopyService(o).copyCopiableCharacteristics(out, null, null);
+                } else if (owner != null && !o.isImmutable() && o.getPaperCard() != null) {
+                    out = CardFactory.getCard(o.getPaperCard(), owner, o.getId(), copy);
+                    if (out.hasState(o.getCurrentStateName())) {
+                        out.setState(o.getCurrentStateName(), true);
+                    }
+                }
+                if (out != null) {
+                    final Player ctl = o.getController() == null ? null : playerOnCopy(o.getController());
+                    if (ctl != null && ctl != owner) {
+                        out.setController(ctl, 0);
+                    }
+                    damageLkiRebuilt++;
+                }
+            }
+            if (out != null) {
+                out.setGameTimestamp(o.getGameTimestamp());
+                out.setLayerTimestamp(o.getLayerTimestamp());
+            }
+        } catch (final RuntimeException e) {
+            out = null;
+            failures.put(o, e.getClass().getName());
+        }
+        done.put(o, out);
+        return out;
     }
 
     /**

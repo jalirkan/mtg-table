@@ -1515,6 +1515,8 @@ public final class AiBench {
         revealScenarios();
         forkTokenCopyScenarios();
         determinizeRevealedScenarios();
+        forkDamageLkiScenarios();
+        forkDamageLkiControllerScenarios();
         chooseSourceScenarios();
         staleTargetScenarios();
         modalCastTargetsScenario();
@@ -3516,6 +3518,354 @@ public final class AiBench {
             check(logs == 2 * branches && passed == logs, "tools/check-redaction.mjs passes every branch log (" + passed + " of "
                     + logs + "; the top card is id " + topId + ")" + (failed.isEmpty() ? "" : ": " + failed));
         });
+    }
+
+    /**
+     * D500: who dealt the damage this turn, on a fork.  {@code GameCopier}
+     * copies every player's and battlefield card's {@code damageReceivedThisTurn}
+     * (the same pair objects) but never the game's {@code damageThisTurnLKI},
+     * which maps each pair to its last-known source and target, so on a fork
+     * made after damage was dealt a {@code DamagedBy} property threw
+     * {@code NullPointerException} on {@code getDamageLKI(pair).getLeft()}:
+     * Etching of Kumano's "if a creature dealt damage this turn by a source you
+     * controlled would die, exile it instead", checked as the AI's Colossal
+     * Skyturtle, blocked earlier in the turn, died to its own Hurricane (J181's
+     * s06, d19, three branches).  The board: the human's Etching of Kumano,
+     * Grizzly Bears, Hill Giant and a Goblin Shaman token; the AI's Craw Wurm
+     * (6/4) and Lightning Bolt, turn 15, its second main phase.  The real engine
+     * deals the damage ({@code GameAction.dealDamage}): one from each human
+     * creature to the Wurm, two from the Bears to the AI; then the token is
+     * exiled (it ceases to exist: the copy holds no card with its id) and the
+     * Hill Giant destroyed (the copy holds it, a new object, in the graveyard).
+     * Forge's own copy is the control; then the atlas branch that failed in the
+     * field, recorded with {@code tools/ai-bench/decks/fork-damage-lki.dck} as
+     * both seats' deck: the AI bolts its own Wurm, which dies and is exiled.
+     */
+    static void forkDamageLkiScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: who dealt the damage this turn, on a fork (D500, engine)");
+        final String lib = "Mountain;Mountain;Mountain;Mountain;Mountain;Mountain";
+        final String prop = "Creature.DamagedByCard.YouCtrl;Emblem.YouCtrl";   // Etching of Kumano's ValidLKI, as written
+        scenario("fork-damage-lki", List.of("humanlife=20", "ailife=20", "turn=15", "activeplayer=ai", "activephase=MAIN2",
+                "humanbattlefield=Kumano Faces Kakkazan|Transformed;Grizzly Bears;Hill Giant;T:r_2_2_goblin_shaman_treasure;Mountain",
+                "humanhand=Mountain", "humanlibrary=" + lib, "ailibrary=" + lib,
+                "aibattlefield=Craw Wurm;Mountain;Mountain", "aihand=Lightning Bolt"),
+                PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final Player human = g.getPlayers().get(0);
+            final Card etching = named(human.getCardsIn(ZoneType.Battlefield), "Etching of Kumano");
+            final Card bears = named(human.getCardsIn(ZoneType.Battlefield), "Grizzly Bears");
+            final Card giant = named(human.getCardsIn(ZoneType.Battlefield), "Hill Giant");
+            final Card tok = named(human.getCardsIn(ZoneType.Battlefield), "Goblin Shaman Token");
+            final Card wurm = named(ai.getCardsIn(ZoneType.Battlefield), "Craw Wurm");
+            final Card bolt = named(ai.getCardsIn(ZoneType.Hand), "Lightning Bolt");
+            g.setAge(forge.game.GameStage.Play);   // the lab's games are in Play (D478's note)
+            g.getTriggerHandler().resetActiveTriggers();
+            final forge.game.card.CardDamageTable dmg = new forge.game.card.CardDamageTable();
+            dmg.put(bears, wurm, 1);
+            dmg.put(giant, wurm, 1);
+            dmg.put(tok, wurm, 1);
+            dmg.put(bears, ai, 2);
+            g.getAction().dealDamage(false, dmg, new forge.game.card.CardDamageTable(), new forge.game.GameEntityCounterTable(), null);
+            final int tokId = tok.getId();
+            final int giantId = giant.getId();
+            final long giantTs = giant.getGameTimestamp();
+            g.getAction().exile(tok, null, null);
+            g.getAction().destroy(giant, null, true, null);
+            g.getAction().checkStateEffects(true);
+            Card giantNow = null;
+            boolean tokGone = true;
+            for (final Card c : g.getCardsInGame()) {
+                tokGone &= c.getId() != tokId;
+                giantNow = c.getId() == giantId ? c : giantNow;
+            }
+            final String realLki = damageLki(g, List.of(wurm, ai));
+            check(tokGone && giantNow != null && giantNow.isInZone(ZoneType.Graveyard) && giantNow.getGameTimestamp() != giantTs
+                    && wurm.getDamage() == 3 && ai.getLife() == 18 && wurm.isInPlay() && !realLki.contains("null"),
+                    "setup: the real game dealt the damage (Wurm " + wurm.getDamage() + " damage, AI at " + ai.getLife()
+                            + "), the token has ceased to exist and the Hill Giant is a new object in the graveyard; "
+                            + "every pair has its entry: " + realLki);
+            final boolean realProp = wurm.isValid(prop, human, etching, null);
+            check(realProp, "setup: in the real game the Wurm is a creature dealt damage this turn by a source the human controlled");
+
+            // the control: Forge's own copy
+            final Game plain = new forge.ai.simulation.GameCopier(g).makeCopy();
+            final Card pWurm = byId(plain.getCardsIn(ZoneType.Battlefield), wurm.getId());
+            final Card pEtching = byId(plain.getCardsIn(ZoneType.Battlefield), etching.getId());
+            final String plainLki = damageLki(plain, List.of(pWurm, plain.getPlayers().get(1)));
+            String plainProp;
+            try {
+                plainProp = String.valueOf(pWurm.isValid(prop, plain.getPlayers().get(0), pEtching, null));
+            } catch (final NullPointerException e) {
+                plainProp = "throws " + e;
+            }
+            check(nullEntries(plainLki) == 4 && plainProp.startsWith("throws java.lang.NullPointerException"),
+                    "control: Forge's own copy keeps the four pairs and none of their entries (" + plainLki
+                            + "), and Etching of Kumano's property throws (" + plainProp + ")");
+
+            final LenientGameCopier cp = new LenientGameCopier(g);
+            final Game copy = cp.makeCopy(null, ai);
+            final Card cWurm = byId(copy.getCardsIn(ZoneType.Battlefield), wurm.getId());
+            final Card cEtching = byId(copy.getCardsIn(ZoneType.Battlefield), etching.getId());
+            final Player cAi = copy.getPlayers().get(1);
+            final Player cHuman = copy.getPlayers().get(0);
+            final String copyLki = damageLki(copy, List.of(cWurm, cAi));
+            check(nullEntries(copyLki) == 0 && cp.damageLkiCarried() == 4 && cp.damageLkiRebuilt() == 1
+                    && cp.damageLkiLost().isEmpty(),
+                    "the copy has an entry for every pair (" + copyLki + "; " + cp.damageLkiCarried() + " carried, "
+                            + cp.damageLkiRebuilt() + " rebuilt, lost " + cp.damageLkiLost() + ")");
+            // each entry: the original's source and target, as objects of the copy, with the original's timestamps
+            final List<String> bad = new ArrayList<>();
+            final List<forge.game.GameEntity> realE = List.of(wurm, ai);
+            final List<forge.game.GameEntity> copyE = List.of(cWurm, cAi);
+            for (int k = 0; k < 2; k++) {
+                final List<org.apache.commons.lang3.tuple.Pair<Integer, Boolean>> rp = realE.get(k).getDamageReceivedThisTurn();
+                final List<org.apache.commons.lang3.tuple.Pair<Integer, Boolean>> cpl = copyE.get(k).getDamageReceivedThisTurn();
+                if (rp.size() != cpl.size()) {
+                    bad.add(realE.get(k) + ": " + rp.size() + " pairs, the copy " + cpl.size());
+                    continue;
+                }
+                for (int j = 0; j < rp.size(); j++) {
+                    final org.apache.commons.lang3.tuple.Pair<Card, forge.game.GameEntity> r = g.getDamageLKI(rp.get(j));
+                    final org.apache.commons.lang3.tuple.Pair<Card, forge.game.GameEntity> c = copy.getDamageLKI(cpl.get(j));
+                    if (c == null) {
+                        bad.add(realE.get(k) + " #" + j + ": no entry");
+                        continue;
+                    }
+                    final Card rs = r.getLeft();
+                    final Card cs = c.getLeft();
+                    if (cs.getGame() != copy || cs.getId() != rs.getId() || cs.getGameTimestamp() != rs.getGameTimestamp()
+                            || cs.getController() != cp.find(rs.getController())) {
+                        bad.add("source " + rs + " -> " + cs);
+                    }
+                    // the same answer as the original's: is the source the card that now holds its id?
+                    Card rNow = null;
+                    Card cNow = null;
+                    for (final Card x : g.getCardsInGame()) {
+                        rNow = x.getId() == rs.getId() ? x : rNow;
+                    }
+                    for (final Card x : copy.getCardsInGame()) {
+                        cNow = x.getId() == cs.getId() ? x : cNow;
+                    }
+                    final boolean rSame = rNow != null && rs.equalsWithGameTimestamp(rNow);
+                    final boolean cSame = cNow != null && cs.equalsWithGameTimestamp(cNow);
+                    if (rSame != cSame) {
+                        bad.add("source " + rs + ": equalsWithGameTimestamp " + rSame + " in the real game, " + cSame + " on the copy");
+                    }
+                    final forge.game.GameEntity rt = r.getRight();
+                    final forge.game.GameEntity ct = c.getRight();
+                    final boolean tOk = rt instanceof Player ? ct == cp.find(rt)
+                            : ct instanceof Card && ((Card) ct).getGame() == copy && ct.getId() == rt.getId()
+                                    && ((Card) ct).getGameTimestamp() == ((Card) rt).getGameTimestamp();
+                    if (!tOk) {
+                        bad.add("target " + rt + " -> " + ct);
+                    }
+                }
+            }
+            check(bad.isEmpty(), "each entry names the real entry's source and target on the copy: id, controller, timestamps"
+                    + " (the Bears' equalsWithGameTimestamp its card, the Hill Giant's not, the token's no card)"
+                    + (bad.isEmpty() ? "" : ": " + bad));
+            String copyProp;
+            try {
+                copyProp = String.valueOf(cWurm.isValid(prop, cHuman, cEtching, null));
+            } catch (final NullPointerException e) {
+                copyProp = "throws " + e;
+            }
+            check(copyProp.equals(String.valueOf(realProp)),
+                    "on the copy Etching of Kumano's property answers as in the real game (" + copyProp + ")");
+            String fromGiant;
+            try {
+                // GameEntity.getAssignedDamage with a source reads each pair's entry too
+                fromGiant = String.valueOf(cWurm.getAssignedDamage(null, byId(copy.getCardsInGame(), giantId)));
+            } catch (final NullPointerException e) {
+                fromGiant = "throws " + e;
+            }
+            check(cWurm.getAssignedDamage() == wurm.getAssignedDamage() && cAi.getAssignedDamage() == ai.getAssignedDamage()
+                    && fromGiant.equals(String.valueOf(wurm.getAssignedDamage(null, giantNow))),
+                    "damage received counts as in the real game: the Wurm " + cWurm.getAssignedDamage() + " (real "
+                            + wurm.getAssignedDamage() + "), from the Hill Giant's new object " + fromGiant + " (real "
+                            + wurm.getAssignedDamage(null, giantNow) + "), the AI " + cAi.getAssignedDamage() + " (real "
+                            + ai.getAssignedDamage() + ")");
+            // no count of damage DONE moves: the history each entry is filed under is the copy's empty one
+            final int maxCopy = copy.getSingleMaxDamageDoneThisTurn();
+            final int maxPlain = plain.getSingleMaxDamageDoneThisTurn();
+            final int doneCopy = copy.getDamageDoneThisTurn(null, false, null, null, null, cHuman, null).size();
+            final int donePlain = plain.getDamageDoneThisTurn(null, false, null, null, null, plain.getPlayers().get(0), null).size();
+            check(maxCopy == maxPlain && doneCopy == donePlain,
+                    "no count of damage done changes against Forge's own copy: single max " + maxCopy + " (Forge's copy "
+                            + maxPlain + "; the real game " + g.getSingleMaxDamageDoneThisTurn() + "), sources with damage "
+                            + doneCopy + " (" + donePlain + "; real " + g.getDamageDoneThisTurn(null, false, null, null, null, human,
+                            null).size() + ")");
+
+            // the production path that failed in the field: an atlas branch forcing the AI's Bolt on its own Wurm
+            final forge.game.spellability.SpellAbility act = bolt.getFirstSpellAbility();
+            act.setActivatingPlayer(ai);
+            act.resetTargets();
+            act.getTargets().add(wurm);
+            final Config cfg = Config.load();
+            final File deckFile = new File(cfg.root(), "tools/ai-bench/decks/fork-damage-lki.dck");
+            final Deck deck = DeckSerializer.fromFile(deckFile);
+            final mtgtable.ai.Atlas.Unit u = new mtgtable.ai.Atlas.Unit();
+            u.continuation = "forge";
+            u.turnCap = g.getPhaseHandler().getTurn();
+            u.branchTimeoutMs = 60_000;
+            u.observe = null;
+            u.jarSha = BenchRecording.jarSha(cfg);
+            u.seats = new ArrayList<>();
+            for (int s = 0; s < 2; s++) {
+                u.seats.add(new SeatRecorder.Seat("fork-damage-lki", deckFile, BenchRecording.relPath(cfg, deckFile), deck,
+                        Bootstrap.DEFAULT_AI_PROFILE));
+            }
+            final File dir = new File(cfg.root(), "var/ai-bench/fork-damage-lki");
+            for (final File f : dir.exists() ? dir.listFiles() : new File[0]) {
+                f.delete();
+            }
+            final Map<String, Object> fields = new LinkedHashMap<>();   // the lab header's fields, as Atlas.run writes them
+            fields.put("decision", 0L);
+            fields.put("kind", "p");
+            fields.put("turn", (long) g.getPhaseHandler().getTurn());
+            fields.put("option", 0L);
+            fields.put("optionToken", mtgtable.ai.SearchPolicy.token(mtgtable.ai.SearchPolicy.priorityCand(act)));
+            fields.put("continuation", u.continuation);
+            fields.put("branch", 0L);
+            fields.put("branchSeed", 7L);
+            fields.put("turnCap", (long) u.turnCap);
+            final mtgtable.ai.Atlas.Branch b = mtgtable.ai.Atlas.play(ai, mtgtable.ai.SearchPolicy.priorityCand(act), 0, 0, 7, u,
+                    "d500", fields, dir, "d500", false);
+            final int seat = g.getPlayers().indexOf(ai);
+            final File log = new File(dir, "d500-seat" + seat + ".jsonl.gz");
+            boolean exiled = false;
+            boolean graveyard = false;
+            if (log.exists()) {
+                try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(
+                        new java.util.zip.GZIPInputStream(new java.io.FileInputStream(log)), StandardCharsets.UTF_8))) {
+                    final String moved = "{\"kind\":\"zone\",\"cardId\":" + wurm.getId() + ",\"from\":{\"zone\":\"battlefield\"";
+                    for (String l = r.readLine(); l != null; l = r.readLine()) {
+                        int at = l.indexOf(moved);
+                        while (at >= 0) {
+                            final String rest = l.substring(at, Math.min(l.length(), at + 160));
+                            exiled |= rest.contains("\"to\":{\"zone\":\"exile\"");
+                            graveyard |= rest.contains("\"to\":{\"zone\":\"graveyard\"");
+                            at = l.indexOf(moved, at + 1);
+                        }
+                    }
+                }
+            }
+            check(b.error == null && b.unavailable == null && !b.engineError && b.steps > 0 && exiled && !graveyard,
+                    "an atlas branch forcing the AI's Bolt on its own damaged Wurm plays (" + b.steps + " steps, error " + b.error
+                            + "), and its log moves the Wurm from the battlefield to exile, not the graveyard (" + exiled + ", "
+                            + graveyard + ")");
+            for (int s = 0; s < 2; s++) {
+                final File f = new File(dir, "d500-seat" + s + ".jsonl.gz");
+                final Process pr = new ProcessBuilder("node", "tools/check-redaction.mjs", "--empty-hand-ok", f.getPath())
+                        .directory(cfg.root()).redirectErrorStream(true).start();
+                final String out = new String(pr.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                final int code = pr.waitFor();
+                check(code == 0, "tools/check-redaction.mjs passes the branch's seat " + s + " log (exit " + code + ")"
+                        + (code == 0 ? "" : ": " + out));
+            }
+            // last, so no fork above starts from it: the real game's Bolt, and the Wurm exiled by Etching of Kumano
+            act.setActivatingPlayer(ai);
+            act.resetTargets();
+            act.getTargets().add(wurm);
+            // the stack's resolution and the phase loop copy the last state; resolving by hand, the bench does it,
+            // or Etching of Kumano, absent from a last state taken before GameState built the board, never applies
+            g.copyLastState();
+            forge.game.ability.AbilityUtils.resolve(act);
+            g.getAction().checkStateEffects(true);
+            String wurmAt = "nowhere";
+            for (final Card c : g.getCardsInGame()) {
+                wurmAt = c.getId() == wurm.getId() ? String.valueOf(c.getZone()) : wurmAt;
+            }
+            check(wurmAt.contains("Exile"),
+                    "the real game: the Bolt kills the Wurm and Etching of Kumano exiles it, as the branch did (" + wurmAt + ")");
+        });
+    }
+
+    /**
+     * D500's review: the source's controller as of the damage, not as of now.
+     * {@code DamagedByCard.YouCtrl} asks the entry's controller, and the
+     * first cut built the copy's entry from the copy's card as it stands.
+     * The AI's Hill Giant is stolen by the human, deals 1 to the AI's Craw
+     * Wurm and dies ({@code stolen-then-died}: the entry's controller is the
+     * human, the card's now the AI); or deals the 1 and is then stolen
+     * ({@code damaged-then-stolen}: the entry's the AI, the card's now the
+     * human).  On the copy, the entry's controller and Etching of Kumano's
+     * property must be the real game's.  The reviewer's probe, kept.
+     */
+    static void forkDamageLkiControllerScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: who controlled the damage's source, on a fork (D500's review, engine)");
+        final String lib = "Mountain;Mountain;Mountain;Mountain;Mountain;Mountain";
+        final String prop = "Creature.DamagedByCard.YouCtrl;Emblem.YouCtrl";
+        for (final String mode : List.of("stolen-then-died", "damaged-then-stolen")) {
+            scenario("fork-damage-lki-" + mode, List.of("humanlife=20", "ailife=20", "turn=15", "activeplayer=ai",
+                    "activephase=MAIN2", "humanbattlefield=Kumano Faces Kakkazan|Transformed;Mountain", "humanhand=Mountain",
+                    "humanlibrary=" + lib, "ailibrary=" + lib, "aibattlefield=Craw Wurm;Hill Giant;Mountain;Mountain"),
+                    PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                final Game g = ai.getGame();
+                final Player human = g.getPlayers().get(0);
+                final Card etching = named(human.getCardsIn(ZoneType.Battlefield), "Etching of Kumano");
+                final Card giant = named(ai.getCardsIn(ZoneType.Battlefield), "Hill Giant");
+                final Card wurm = named(ai.getCardsIn(ZoneType.Battlefield), "Craw Wurm");
+                g.setAge(forge.game.GameStage.Play);
+                g.getTriggerHandler().resetActiveTriggers();
+                final boolean stolenFirst = mode.equals("stolen-then-died");
+                if (stolenFirst) {
+                    giant.addTempController(human, g.getNextTimestamp());
+                    g.getAction().controllerChangeZoneCorrection(giant);
+                }
+                final forge.game.card.CardDamageTable dmg = new forge.game.card.CardDamageTable();
+                dmg.put(giant, wurm, 1);
+                g.getAction().dealDamage(false, dmg, new forge.game.card.CardDamageTable(), new forge.game.GameEntityCounterTable(),
+                        null);
+                if (stolenFirst) {
+                    g.getAction().destroy(giant, null, true, null);
+                } else {
+                    giant.addTempController(human, g.getNextTimestamp());
+                    g.getAction().controllerChangeZoneCorrection(giant);
+                }
+                g.getAction().checkStateEffects(true);
+                g.clearChangeZoneLKIInfo();
+                final Player realCtl = g.getDamageLKI(wurm.getDamageReceivedThisTurn().get(0)).getLeft().getController();
+                final boolean realProp = wurm.isValid(prop, human, etching, null);
+                final LenientGameCopier cp = new LenientGameCopier(g);
+                final Game copy = cp.makeCopy(null, ai);
+                final Card cWurm = byId(copy.getCardsIn(ZoneType.Battlefield), wurm.getId());
+                final Card cEtching = byId(copy.getCardsIn(ZoneType.Battlefield), etching.getId());
+                final org.apache.commons.lang3.tuple.Pair<Card, forge.game.GameEntity> c =
+                        copy.getDamageLKI(cWurm.getDamageReceivedThisTurn().get(0));
+                String copyProp;
+                try {
+                    copyProp = String.valueOf(cWurm.isValid(prop, copy.getPlayers().get(0), cEtching, null));
+                } catch (final RuntimeException e) {
+                    copyProp = "throws " + e;
+                }
+                final Player copyCtl = c == null ? null : c.getLeft().getController();
+                check(realCtl == (stolenFirst ? human : ai) && realProp == stolenFirst,
+                        mode + ": setup: the real entry's source was controlled by " + realCtl + ", and Etching's property is "
+                                + realProp);
+                check(copyCtl != null && copyCtl == cp.find(realCtl) && copyProp.equals(String.valueOf(realProp))
+                                && cp.damageLkiCarried() == 1 && cp.damageLkiLost().isEmpty(),
+                        mode + ": the copy's entry names the controller as of the damage (" + copyCtl + ", real " + realCtl
+                                + ") and Etching's property answers as the real game's (" + copyProp + ", real " + realProp + ")");
+            });
+        }
+    }
+
+    /** D500: every damage pair {@code es} hold in {@code g}, with its entry's source (id@timestamp) or null. */
+    private static String damageLki(final Game g, final List<? extends forge.game.GameEntity> es) {
+        final StringBuilder sb = new StringBuilder();
+        for (final forge.game.GameEntity e : es) {
+            for (final org.apache.commons.lang3.tuple.Pair<Integer, Boolean> p : e.getDamageReceivedThisTurn()) {
+                final org.apache.commons.lang3.tuple.Pair<Card, forge.game.GameEntity> l = g.getDamageLKI(p);
+                sb.append(sb.length() == 0 ? "" : ", ").append(p.getLeft()).append(" to ").append(e.getName()).append(" from ")
+                        .append(l == null ? "null" : l.getLeft().getName() + "#" + l.getLeft().getId() + "@" + l.getLeft().getGameTimestamp());
+            }
+        }
+        return sb.toString();
+    }
+
+    private static int nullEntries(final String report) {
+        return report.split("from null", -1).length - 1;
     }
 
     /** D497: Kiki-Jiki's ability (no cost paid) on the token, in game {@code g}: the new token, described. */
