@@ -238,3 +238,27 @@ logs, under `/home/justin-a/code/lab/data/lab-j182/`, checked with the atlas's `
 All 11 pass without the flag too. `fixtures/games/` and `fixtures/synthetic/` check byte-for-byte as on `main`. The
 checker's self-test passes 205 controls (149 before). The rest of J182's spines were not re-run here.
 
+
+## 9. J183's hideaway failures (D505, 2026-11-02)
+
+Lab night J183 failed `tools/check-redaction.mjs` (`3275af30`, with D502) on 17 seat-1 branch frame logs. All 17 are in
+`/home/justin-a/code/lab/data/lab-j183/b-s11-legacy-2524/phaseB/frames/`, and all fail with rule A9's hideaway
+message. Each is the card under a Watcher for Tomorrow that seat 1 took from player 0. D502 ended the grant once the
+Watcher went back or left the battlefield. Forge keeps the look until the card moves: CR 702.75a's "any player who has
+controlled", held in the card's `mayLookFaceDownExile`. D505 keeps the grant to the move.
+
+| logs | count | `main` (`3275af30`) | `pc/d505-hideaway-look` |
+|---|---:|---|---|
+| `b-s11-legacy-2524`, every seat-1 log | 4,175 | 17 FAIL | 4 FAIL (D502's admission: follow-up 23) |
+| `b-s11-legacy-2524`, every seat-0 log | 4,175 | 0 FAIL | 0 FAIL |
+| `b-s06-peasant-2519`, 200 logs sampled | 200 | 0 FAIL | 0 FAIL |
+| J182's `b-s06-peasant-2506`, 200 logs sampled, and its five D502 logs | 205 | 0 FAIL | 0 FAIL |
+
+All runs used the atlas's `--empty-hand-ok`. `fixtures/games/` and `fixtures/synthetic/` check byte-for-byte as on
+`main`. The checker's self-test passes 211 controls (205 before).
+
+The 4 that still fail do so at the alt's first frame, because D502's tie from card to Watcher does not hold:
+- in two, the dig lands two or three state frames after the Watcher's entry;
+- in two, a flickered Watcher dug a second card under the same id.
+
+Neither is widened here; PLAN.md's cube lab follow-up 23 records both.

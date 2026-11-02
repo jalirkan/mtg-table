@@ -360,10 +360,11 @@ probe('a9-stolen-morph-named-for-its-owner.jsonl',
 
 // D502 (J182 s06): HIDEAWAY'S LOOK.  Watcher for Tomorrow's hideaway trigger digs
 // a card from its owner's library into exile face down as it enters, and Forge
-// grants the look to the CURRENT controller of the permanent that exiled it
+// grants the look to the current controller of the permanent that exiled it
 // (MayLookAt$ EffectSourceController; CR 702.75a) -- so when the viewer takes the
 // opponent's Watcher (Burglar's Plot exchanges it), the exiled card carries its alt
-// for the viewer, and only while the viewer holds that Watcher.  The log's link from
+// for the viewer, and keeps it while the card stays in exile, whoever holds the
+// Watcher afterwards (D505: "any player who has controlled").  The log's link from
 // card to permanent is time: the library -> exile move sits in the state the
 // Watcher entered the battlefield, or the next.  The controls: the dig beside the
 // entry and the alt with the change of control; the dig a state after the entry
@@ -372,9 +373,10 @@ probe('a9-stolen-morph-named-for-its-owner.jsonl',
 // from the start, the viewer's own permanent taken back, a third owner's
 // permanent, a face-down card outside exile, the alt two states after the change,
 // a foretold card (hand -> exile) under an unrelated stolen creature, a hand card
-// exiled face down with its alt at the steal, the alt kept two states after
-// control returns, and a card dug beside another hideaway host's entry (Mosswort
-// Bridge) while the Watcher is the one stolen.
+// exiled face down with its alt at the steal, and a card dug beside another
+// hideaway host's entry (Mosswort Bridge) while the Watcher is the one stolen.
+// D505 turned one probe into a control: the alt kept two states after control
+// returns.
 /** A hideaway trigger on the stack: a `cast` event naming its host (its text "" as a copy's; the checker reads only the id). */
 const hideawayCast = (host, controller) => ({ kind: 'cast', stackId: 9200 + (host % 100), cardId: host, controller, text: '' });
 /** The opponent's seat (themOf, which is declared further down). */
@@ -480,8 +482,8 @@ hideawayProbe('a9-hideaway-foretold-card-under-a-stolen-creature.jsonl',
 hideawayProbe('a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl',
   'A9, D502 (the review of f3a3091b): a hand card goes into exile face down carrying its alt in the very state the viewer steals a creature -- it came from a hand, not a library, and its alt is a leak',
   3, { exileFrom: 'hand', exileAt: 1, hostName: 'Grizzly Bears' });
-hideawayProbe('a9-hideaway-alt-kept-after-control-returns.jsonl',
-  'A9, D502: the look follows the Watcher\'s CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source',
+hideawayPass('a9-hideaway-alt-kept-after-control-returns.jsonl',
+  'A9, D505 (J183 s11, d5-random-o0-b119): the Watcher goes back to the opponent and the alt stays on the card for as long as it stays in exile -- the look is any player\'s who has controlled the Watcher (CR 702.75a); counted, not a problem',
   5, { returnAt: 2 });
 hideawayProbe('a9-hideaway-alt-after-control-already-returned.jsonl',
   'A9, D502: the viewer took the Watcher and gave it back before the alt appeared -- a look that arrives when the viewer no longer controls the permanent has no source',
@@ -550,15 +552,15 @@ const hideawaySpec = (name, level, why, frames) => {
     [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hCast(HW), hDig(HC2)] },
       { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
   hideawaySpec('a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl', 'fail',
-    'A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source',
+    'A9, D502 (second review), D505: the Watcher leaves and the alt drops in the frame the viewer steals a creature that was there before the log, then comes back -- that creature dug nothing, and an alt back after a gap has no source',
     [{ bf: [[HB, T, T]] }, { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
-      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T]] },
       { bf: [[HB, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] }]);
   hideawaySpec('a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl', 'fail',
-    'A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger',
+    'A9, D502 (second review), D505: the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger',
     [{}, { bf: [[HB, T, T]], ev: [hEnter(HB)] }, { bf: [[HB, T, T]] },
       { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
-      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T]] },
       { bf: [[HB, T, V]], ex: [[HC1, T, true]] }]);
   hideawaySpec('a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl', 'fail',
     'A9, D502 (second review): the Watcher enters with no hideaway trigger and another effect digs a card the next frame -- no cast names the Watcher, so the dig is not its',
@@ -600,6 +602,41 @@ const hideawaySpec = (name, level, why, frames) => {
     'A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher\'s, so stealing it vouches for neither',
     [{}, { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hEnter(HW), hEnter(HB), hCast(HW), hCast(HB), hDig(HC1), hDig(HC2)] },
       { bf: [[HW, T, V], [HB, T, T]], ex: [[HC1, T, true], [HC2, T]] }]);
+  /** the Watcher leaving the viewer's battlefield for its owner's graveyard */
+  const hLeave = { kind: 'zone', cardId: HW, from: { zone: 'battlefield', player: V }, to: { zone: 'graveyard', player: T } };
+  // D505 (J183 s11): a hideaway grant, once made, is kept while its card stays in
+  // exile with no zone event naming it -- control going back, or the Watcher
+  // leaving the battlefield, does not end it (Forge's mayLookFaceDownExile; CR
+  // 702.75a's "any player who has controlled").  A move still ends it, a gap in
+  // the alt still ends it, and a look never given is still no look.
+  hideawaySpec('a9-hideaway-alt-kept-while-returned-then-retaken.jsonl', 'pass',
+    'A9, D505 (J183 s11, d0-random-o0-b67): the viewer takes the Watcher, the opponent has it back for three frames with the alt still on the card, and the viewer takes it again -- counted once, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-kept-after-the-host-leaves.jsonl', 'pass',
+    'A9, D505 (J183 s11, d13-random-o0-b148 and d11-random-o3-b100): the Watcher dies under the viewer\'s control and the alt stays on the card for three more frames, until its leave trigger moves the card to its owner\'s hand -- counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { ex: [[HC1, T, true]], ev: [hLeave] }, { ex: [[HC1, T, true]] }, { ex: [[HC1, T, true]] },
+      { ev: [hMove(HC1, 'exile', 'hand')] }]);
+  hideawaySpec('a9-hideaway-alt-again-after-the-card-moved.jsonl', 'fail',
+    'A9, D505: the Watcher leaves, its trigger moves the card to its owner\'s hand, and the card is exiled face down again carrying its alt with no new take -- the grant ended with the move',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { ex: [[HC1, T, true]], ev: [hLeave] }, { ev: [hMove(HC1, 'exile', 'hand')] },
+      { ex: [[HC1, T, true]], ev: [hMove(HC1, 'hand', 'exile')] }]);
+  hideawaySpec('a9-hideaway-kept-grant-card-through-a-hand.jsonl', 'fail',
+    'A9, D505: the Watcher is back with the opponent and the grant kept, and the card goes exile -> hand -> exile in one frame -- the move ends a kept grant as it ends a held one',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T, true]], ev: [hMove(HC1, 'exile', 'hand'), hMove(HC1, 'hand', 'exile')] }]);
+  hideawaySpec('a9-hideaway-alt-after-the-host-left-never-taken.jsonl', 'fail',
+    'A9, D505: the Watcher leaves the battlefield without the viewer ever having controlled it, and the alt appears -- no take, no look',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, T]], ex: [[HC1, T]] },
+      { ex: [[HC1, T, true]], ev: [hLeave] }, { ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-back-after-a-gap-without-a-retake.jsonl', 'fail',
+    'A9, D505: taken, given back with the alt kept, then a frame without the alt, then the alt again with no new take -- a grant is kept only in consecutive frames, and Forge never drops a look it keeps',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }]);
 }
 
 // The other night-2 finding (D371): the viewer's own hand card as a stub.  It

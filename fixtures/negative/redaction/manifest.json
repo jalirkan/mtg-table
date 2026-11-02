@@ -175,9 +175,9 @@
   },
   {
     "file": "a9-hideaway-alt-kept-after-control-returns.jsonl",
-    "level": "fail",
-    "expect": "only a look permission",
-    "why": "A9, D502: the look follows the Watcher's CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source"
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d5-random-o0-b119): the Watcher goes back to the opponent and the alt stays on the card for as long as it stays in exile -- the look is any player's who has controlled the Watcher (CR 702.75a); counted, not a problem"
   },
   {
     "file": "a9-hideaway-alt-after-control-already-returned.jsonl",
@@ -243,13 +243,13 @@
     "file": "a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl",
     "level": "fail",
     "expect": "only a look permission",
-    "why": "A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source"
+    "why": "A9, D502 (second review), D505: the Watcher leaves and the alt drops in the frame the viewer steals a creature that was there before the log, then comes back -- that creature dug nothing, and an alt back after a gap has no source"
   },
   {
     "file": "a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl",
     "level": "fail",
     "expect": "only a look permission",
-    "why": "A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger"
+    "why": "A9, D502 (second review), D505: the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger"
   },
   {
     "file": "a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl",
@@ -304,6 +304,42 @@
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher's, so stealing it vouches for neither"
+  },
+  {
+    "file": "a9-hideaway-alt-kept-while-returned-then-retaken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d0-random-o0-b67): the viewer takes the Watcher, the opponent has it back for three frames with the alt still on the card, and the viewer takes it again -- counted once, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-kept-after-the-host-leaves.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d13-random-o0-b148 and d11-random-o3-b100): the Watcher dies under the viewer's control and the alt stays on the card for three more frames, until its leave trigger moves the card to its owner's hand -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-again-after-the-card-moved.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher leaves, its trigger moves the card to its owner's hand, and the card is exiled face down again carrying its alt with no new take -- the grant ended with the move"
+  },
+  {
+    "file": "a9-hideaway-kept-grant-card-through-a-hand.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher is back with the opponent and the grant kept, and the card goes exile -> hand -> exile in one frame -- the move ends a kept grant as it ends a held one"
+  },
+  {
+    "file": "a9-hideaway-alt-after-the-host-left-never-taken.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher leaves the battlefield without the viewer ever having controlled it, and the alt appears -- no take, no look"
+  },
+  {
+    "file": "a9-hideaway-alt-back-after-a-gap-without-a-retake.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: taken, given back with the alt kept, then a frame without the alt, then the alt again with no new take -- a grant is kept only in consecutive frames, and Forge never drops a look it keeps"
   },
   {
     "file": "own-hand-card-redacted.jsonl",

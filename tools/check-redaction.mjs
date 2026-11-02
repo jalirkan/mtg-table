@@ -66,11 +66,13 @@
  *       opponent's card only when the log shows how it was granted -- dug from
  *       a library into exile, alt and all, while the viewing seat's effect
  *       resolves -- and only while the card stays there (D371); or, for
- *       hideaway's look (the CURRENT controller of the permanent that exiled
- *       it), a card dug from its owner's library beside that permanent's entry
- *       and its hideaway trigger's cast (one dig a permanent, ever), from the
- *       frame the viewer took the permanent (or the next) and only while the
- *       viewer holds it and the card does not move, plus one frame of lag (D502).
+ *       hideaway's look (any player who has controlled the permanent that
+ *       exiled it), a card dug from its owner's library beside that permanent's
+ *       entry and its hideaway trigger's cast (one dig a permanent, ever), from
+ *       the frame the viewer took the permanent (or the next) (D502), and kept
+ *       while the card stays in exile and no zone event names it, whoever holds
+ *       the permanent now and whether or not it is still on the battlefield
+ *       (D505).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -1781,11 +1783,14 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    *   digLog             every such dig of the log, kept when its card moves;
    *   takenAt            permanent id -> the state frame its controller changed
    *                      from its owner (not the viewer) to the viewing seat;
-   *   hideawayGrants     card id -> {host, holds}: the taken permanent whose look
-   *                      it shows, and whether the viewer controls it on the
-   *                      battlefield in that frame; kept while the card stays in
-   *                      exile and the viewer controls THAT permanent, and one
-   *                      frame after (the static's lag), never two.
+   *   hideawayGrants     card id -> the taken permanent whose look it shows;
+   *                      kept while the card stays in exile, carrying its alt,
+   *                      in consecutive state frames with no zone event naming
+   *                      it -- whoever controls that permanent now, and whether
+   *                      or not it is still on the battlefield (D505: Forge's
+   *                      look at a face-down exiled card is never taken back
+   *                      while the card stays there, as CR 702.75a's "has
+   *                      controlled" says).
    */
   let stateNo = -1;
   let battlefieldBefore = new Map();
@@ -2733,11 +2738,14 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     }
     // A9 / D502: hideaway's look.  Forge grants it with a static on an Effect
     // (CardFactoryUtil's hideaway, MayLookAt$ EffectSourceController, CR
-    // 702.75a): the CURRENT controller of the permanent that exiled the card may
-    // look at it.  The log ties the card to that permanent by time -- the
-    // hideaway trigger digs it from its owner's library into exile in the state
-    // frame the permanent entered the battlefield, or the next -- and shows the
-    // look move with the permanent's controller.  This frame's evidence first.
+    // 702.75a): the permanent's current controller is granted the look, and
+    // Card.addMayLookAt adds every player it grants while the card is face down
+    // in exile to mayLookFaceDownExile, which nothing removes -- so "any player
+    // who has controlled the permanent" keeps it until the card moves (D505).
+    // The log ties the card to that permanent by time -- the hideaway trigger
+    // digs it from its owner's library into exile in the state frame the
+    // permanent entered the battlefield, or the next -- and shows the look
+    // arrive with the viewer's taking of it.  This frame's evidence first.
     stateNo++;
     // A TRIGGER's cast: one naming a permanent that a zone event of this frame
     // put onto the battlefield EARLIER in event order, or that the previous
@@ -2753,7 +2761,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       }
     }
     // every card a zone event names in this frame: a held grant ends on any move
-    // of its card (Forge's hideaway effect is ForgetOnMoved$ Exile)
+    // of its card, and on nothing else (Forge's hideaway effect is
+    // ForgetOnMoved$ Exile; D505)
     const movedNow = new Set();
     for (const ev of body.events ?? []) {
       if (!plainObject(ev) || ev.kind !== 'zone' || !num(ev.cardId)) continue;
@@ -2947,8 +2956,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
               // D502: or hideaway's look (hideawayHost above): the card, dug from
               // its owner's library into exile beside a permanent's entry, gains
               // its alt when the viewer takes THAT permanent from its owner (or a
-              // frame later), and keeps it only while it stays in exile and the
-              // viewer still controls that permanent.
+              // frame later), and keeps it while it stays in exile, whoever
+              // controls that permanent afterwards (D505).
               const inPlay = zname === 'battlefield' || zname === 'stack';
               const mine = owner === seat || c.controller === seat;
               if (inPlay && c.controller !== seat) {
@@ -2959,22 +2968,22 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
               } else if (!inPlay && !mine) {
                 const arrived = dugToExile.has(c.id) && zname === 'exile' && viewerEffect;
                 const stayed = lookGrants.has(c.id) && zname === 'exile';
-                // A grant held in the previous frame is kept while the viewer still
-                // controls its permanent, and for ONE frame after it stops (J182
-                // b76: the Watcher dies at seq 245 and the alt is still there in
-                // that snapshot, the static not yet re-applied -- the same lag as
-                // at the start); a second frame without it ends the grant.
+                // A grant held in the previous frame is kept while its card stays
+                // in exile and no zone event names it -- control of its permanent
+                // going back to the owner, or the permanent leaving the
+                // battlefield, does not end it (D505, J183 s11: Forge's
+                // mayLookFaceDownExile keeps every player that has had the look
+                // until the card moves, CR 702.75a's "has controlled").
                 const held = hideawayGrants.get(c.id);
                 const host = !arrived && !stayed && zname === 'exile' && num(owner) && c.controller === owner
-                  ? (held !== undefined && !movedNow.has(c.id) && (viewerHolds(held.host) || held.holds)
-                    ? held.host : hideawayHost(c.id, owner))
+                  ? (held !== undefined && !movedNow.has(c.id) ? held : hideawayHost(c.id, owner))
                   : undefined;
                 if (arrived || stayed) {
                   nextGrants.add(c.id);
                   if (arrived) stats.altByLook++;
                 } else if (host !== undefined) {
                   if (!hideawayGrants.has(c.id)) stats.altByControl++;
-                  nextHideaway.set(c.id, { host, holds: viewerHolds(host) });
+                  nextHideaway.set(c.id, host);
                 } else {
                   note(lineNo, `face-down card ${c.id} in ${zname} is owned and controlled by player ` +
                     `${c.controller}, not the viewing seat ${seat}, yet carries an "alt" block naming it ` +
@@ -2982,8 +2991,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
                     `(mayPlayerLook) shows a face-down card, and the only shape a log can show for ` +
                     `one is a card exiled from a library, alt and all, while the viewing seat's ` +
                     `effect resolves (Gonti, Thief of Sanity), kept while it stays in exile, or a card dug ` +
-                    `from its owner's library beside a permanent's entry while the viewing seat controls ` +
-                    `the permanent it took (hideaway, D502) (A9, D371)`);
+                    `from its owner's library beside a permanent's entry, from the frame the viewing seat took ` +
+                    `that permanent, kept while it stays in exile (hideaway, D502, D505) (A9, D371)`);
                 }
               }
             }
