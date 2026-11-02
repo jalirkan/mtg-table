@@ -17,7 +17,9 @@
  *  - D499: a game is one play, the rows between a begin and its end in one rows file: a killed attempt's begin with no end,
  *    whose key ended in another file (J181 s13's d28-forge-o2-b39), is abandoned -- left out of the id check and the size,
  *    counted -- while a begin with no end and no ended play elsewhere is the truncated case, checked as before; a key that
- *    ended in two files is a problem, each play checked on its own;
+ *    ended ok:true in two files is a problem, each play checked on its own; an ok:false end beside an ok:true one is superseded,
+ *    and two ok:false ends (census-play's retry of a stuck game, J160) are one game timed out twice, never a problem; a row
+ *    outside any begin..end is counted as an orphan;
  *  - census-replay's comparison: the last complete run of a game is the one read (a retried game is
  *    written twice), only the wall time may differ, and the first different row is named.
  */
@@ -340,20 +342,66 @@ test('D499: a killed attempt\'s play (a begin with no end) is abandoned when its
     assert.equal(trunc.problems.length, 2);
     assert.match(trunc.problems.join('\n'), /atlas:d28:forge:o2:b39: seat Drafter B's row names id 250 \(attack:77,250\), which its own log never shows it/);
     assert.equal(rowBytesByGame(rows).get(K), bytes(killed.split('\n').slice(4, -1)), 'a truncated play still has its size');
-    // a key played to its end in two files is a problem, and each play is checked on its own (the second's 250 still fails)
-    writeFileSync(join(rows, 'rows-1522575.jsonl'), rerun);
+    // a key that ended ok:true in two files is a problem, and each play is checked on its own (the second's 250 still fails)
+    const rerunOk = rerun.replace(/\{"type":"end".*\n$/, `${END(K)}\n`);
+    writeFileSync(join(rows, 'rows-1522575.jsonl'), rerunOk);
     writeFileSync(join(rows, 'rows-1522578.jsonl'), killed + END(K) + '\n');
     const twice = checkRowsDir(rows, logOf);
     assert.deepEqual(twice.playedTwice, [{ game: K, files: ['rows-1522575.jsonl', 'rows-1522578.jsonl'] }]);
-    assert.deepEqual(twice.abandoned, []);
+    assert.deepEqual([twice.abandoned, twice.superseded], [[], []]);
     assert.equal(twice.games, 3);
-    assert.match(twice.problems[0] as string, /^atlas:d28:forge:o2:b39: played to its end 2 times \(rows-1522575.jsonl, rows-1522578.jsonl\)/);
+    assert.match(twice.problems[0] as string, /^atlas:d28:forge:o2:b39: ended ok:true 2 times \(rows-1522575.jsonl, rows-1522578.jsonl\)/);
     assert.equal(twice.problems.filter((p) => /names id 250/.test(p)).length, 2);
+    // the review: an ok:false end beside an ok:true one is superseded, not a second game (the killed file's play here ends
+    // ok:true, the re-run's ok:false): no problem though the ok:false play names 250, which it is not checked for, and its rows
+    // are not in the size
+    writeFileSync(join(rows, 'rows-1522575.jsonl'), [HEADER, B(), atk('250'), JSON.stringify({ type: 'end', v: 1, game: K, ok: false, winner: null })].join('\n') + '\n');
+    writeFileSync(join(rows, 'rows-1522578.jsonl'), [HEADER, B(), atk('77'), END(K)].join('\n') + '\n');
+    const sup = checkRowsDir(rows, logOf);
+    assert.deepEqual([sup.problems, sup.playedTwice, sup.abandoned, sup.superseded, sup.games], [[], [], [], [{ game: K, file: 'rows-1522575.jsonl', rows: 1 }], 1]);
+    assert.equal(rowBytesByGame(rows).get(K), bytes([B(), atk('77'), END(K)]));
     // a begin again in the SAME file (a worker that lived on) leaves its earlier play unended: abandoned beside the later one
     rmSync(join(rows, 'rows-1522575.jsonl'));
     writeFileSync(join(rows, 'rows-1522578.jsonl'), [HEADER, B(), atk('250'), B(), atk('77'), END(K)].join('\n') + '\n');
     const again = checkRowsDir(rows, logOf);
     assert.deepEqual([again.problems, again.abandoned], [[], [{ game: K, file: 'rows-1522578.jsonl', rows: 1 }]]);
+    // the review: a row outside any begin..end of its key (after its end, or with no begin in its file) is an orphan, counted and
+    // not id-checked; a begin-less play gives no size, so the begun play's is the game's
+    writeFileSync(join(rows, 'rows-1522578.jsonl'), [HEADER, atk('250'), B(), atk('77'), END(K), atk('250')].join('\n') + '\n');
+    const orphans = checkRowsDir(rows, logOf);
+    assert.deepEqual([orphans.problems, orphans.orphanRows, orphans.games, orphans.rows], [[], 2, 1, 3]);
+    writeFileSync(join(rows, 'rows-1522575.jsonl'), [HEADER, atk('77'), END(K)].join('\n') + '\n');
+    writeFileSync(join(rows, 'rows-1522578.jsonl'), [HEADER, B(), atk('77')].join('\n') + '\n');
+    assert.equal(rowBytesByGame(rows).get(K), bytes([B(), atk('77')]), 'the begun play, not the begin-less one that ended');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('D499, the review: census-play\'s retry of a stuck game (J160 B-lab\'s census:1803001575) is one game, not a key played twice', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rowscheck-d499-census-'));
+  try {
+    const rows = join(dir, 'rows');
+    mkdirSync(rows);
+    const K = 'census:1803001575';
+    const stuck = JSON.stringify({ type: 'end', v: 1, game: K, ok: false, winner: null });
+    // J160: the game timed out and its thread would not stop; CubeLab wrote end ok:false, the worker exited 3, the pool called
+    // it an engine error, and census-play retried it on a fresh worker under the same key -- which timed out the same way.
+    const play = [HEADER, BEGIN(K), ROW(K), ROW(K, { tokens: ['cast:40', 'pass'] }), stuck].join('\n') + '\n';
+    writeFileSync(join(rows, 'rows-1397355.jsonl'), play);
+    writeFileSync(join(rows, 'rows-3965741.jsonl'), play);
+    writeFileSync(join(dir, 'g3-seat0.jsonl.gz'), zlib.gzipSync(JSON.stringify({ dir: 's2c', type: 'state', body: { players: [{ zones: { battlefield: [12, 40].map((id) => ({ id, name: 'X', zone: 'battlefield' })) } }] } })));
+    const logOf = (_b: Record<string, unknown>, seat: number): string => join(dir, `g3-seat${seat}.jsonl.gz`);
+    const both = checkRowsDir(rows, logOf);
+    assert.deepEqual([both.problems, both.playedTwice, both.abandoned, both.superseded, both.games], [[], [], [], [], 2], 'two ok:false ends: a game that timed out twice, each play checked, no problem');
+    const one = play.split('\n').slice(1, -1);
+    assert.equal(rowBytesByGame(rows).get(K), one.reduce((a, l) => a + Buffer.byteLength(l) + 1, 0), 'one play\'s size, not both added');
+    // the retry that finished: the stuck play is superseded, never a problem, and left out of the check and the size
+    const retry = [HEADER, BEGIN(K), ROW(K), END(K)];
+    writeFileSync(join(rows, 'rows-3965741.jsonl'), retry.join('\n') + '\n');
+    const fin = checkRowsDir(rows, logOf);
+    assert.deepEqual([fin.problems, fin.playedTwice, fin.superseded, fin.games], [[], [], [{ game: K, file: 'rows-1397355.jsonl', rows: 2 }], 1]);
+    assert.equal(rowBytesByGame(rows).get(K), retry.slice(1).reduce((a, l) => a + Buffer.byteLength(l) + 1, 0));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

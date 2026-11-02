@@ -1019,10 +1019,15 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   for (const x of idSkipped.slice(0, 20)) say(`  atlas: rows of ${x.game}: id check skipped, its frame log ${x.log} could not be read`);
   if (idSkipped.length > 20) say(`  atlas: ... and ${idSkipped.length - 20} more game(s) whose id check was skipped`);
   // D499: the plays a killed attempt abandoned (a begin with no end, its key played to the end by D465's re-run) are left out of
-  // the id check, counted and said once; a key played to its end twice is a problem (rowscheck.ts put it in `problems`)
+  // the id check, counted and said once; a key that ended ok:true twice is a problem (rowscheck.ts put it in `problems`)
   const abandoned = rc.flatMap((c) => c.abandoned ?? []);
   const abandonedRows = abandoned.reduce((a, x) => a + x.rows, 0);
   const playedTwice = rc.flatMap((c) => c.playedTwice ?? []);
+  // D499 (the review): plays that ended ok:false beside an ok:true end of their key (superseded), and rows outside any begin..end
+  const superseded = rc.flatMap((c) => c.superseded ?? []);
+  const orphanRows = rc.reduce((a, c) => a + (c.orphanRows ?? 0), 0);
+  if (superseded.length) say(`  atlas: ${superseded.length} play(s) that ended ok:false superseded by an ok:true play of their key, their ${superseded.reduce((a, x) => a + x.rows, 0)} rows left out (D499)`);
+  if (orphanRows) say(`  atlas: ${orphanRows} row(s) outside any begin..end of their game in their rows file, not id-checked (D499)`);
   if (abandoned.length) say(`  atlas: ${abandonedPlaysText(abandoned.length, abandonedRows)} (D499): ${abandoned.slice(0, 5).map((x) => `${x.game} in ${x.file}`).join(', ')}${abandoned.length > 5 ? ', ...' : ''}`);
   const red = { checked: redA.checked + redB.checked, failed: [...redA.failed, ...redB.failed], ms: redA.ms + redB.ms };
   if (red.failed.length) problems.push(`${red.failed.length} frame log(s) failed tools/check-redaction.mjs: ${red.failed.slice(0, 5).map((x) => path.basename(x)).join(', ')}`);
@@ -1123,6 +1128,8 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
       // D499: the plays a killed attempt abandoned (left out of the id check: the frame logs are the re-run's), their rows, the
       // first 20 named; and the keys played to their end in two rows files (each a problem)
       abandonedPlays: abandoned.length, abandonedRows, abandoned: abandoned.slice(0, 20), playedTwice,
+      // D499 (the review): the ok:false plays an ok:true play of their key superseded, and the rows outside any begin..end
+      supersededPlays: superseded.length, supersededRows: superseded.reduce((a, x) => a + x.rows, 0), orphanRows,
       // D465: the most branch copies any unit's worker still held after one GC at its end (null: no unit measured)
       copiesRetainedMax: retained.length ? Math.max(...retained) : null,
       problems },

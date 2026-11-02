@@ -17,8 +17,7 @@ commit.
 **The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D499
-(2026-11-01) added the cube lab's 15; D497
+said 371 across 42, three rows and one list behind its table) — D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
@@ -45,6 +44,7 @@ own entries say what is closed. **Of the 41 questions only the owner can settle,
 5 are answered** and 36 stand on the default this plan assumes. (Two stale
 paragraphs that counted 393 and 394 items across 32 lists, left here by more
 villain identity's rebase, were removed at the same recount.)
+D499 (2026-11-01) added the cube lab's 15.
 
 ### Open follow-ups
 
@@ -9968,12 +9968,15 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
 15. **D499's rows check is measured on J181's spine, not yet on a night, and leaves one case unordered.** (2026-11-01,
    D499.) A game is now one play, a `begin` and its `end` in one rows file. A killed attempt's unfinished play is left out
    of the id check when its key ended in another file, and counted (`checks.abandonedPlays`, `abandonedRows`). J181's
-   s13 read 8 problems before and 0 after (2 plays, 77 rows), and J176's s06 holds 11 such plays that passed by luck.
+   s13 read 8 problems before and 0 after (2 plays, 77 rows); J173's s04 and s06 (8 and 21) and J176's s06 (11) hold such
+   plays that passed by luck.
    - **On a night.** The first atlas night on this code should show any hung unit's abandoned plays counted, with no
-     `never shows it` problem from them.
+     `never shows it` problem from them; the first `census-play --record full` run with a stuck game should count its
+     retry's ok:false play as superseded, never a problem.
    - **The open case.** A branch with two killed attempts and no finished play (a unit given up, already a problem in
      `units.jsonl`) is still read play by play against the last attempt's frame logs, and the earlier play can name ids
-     those logs never show. Nothing in the folder orders plays across files. A fix would need a mark per attempt: the
+     those logs never show; so are two plays that both ended `ok:false` (census-play's stuck game retried and stuck again,
+     J160's two, whose plays were line for line the same). Nothing in the folder orders plays across files. A fix would need a mark per attempt: the
      unit's attempt number in the `begin` line, or the worker's pid in the frame log's header.
    - **Not D499's subject.** The hang itself: Forge's AI evaluation timing out in
      `AiController.chooseSpellAbilityToPlayFromList` at s13's decision 28, Forge continuation, in two units.

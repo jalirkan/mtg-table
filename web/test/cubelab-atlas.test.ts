@@ -25,7 +25,8 @@
  *    frame log skipped and named while atlas.json is still written.
  *  - D499: a play a killed attempt abandoned (its begin with no end; the key ended in another rows file) is left out of the
  *    rows' id check, counted in atlas.json (`abandonedPlays`, `abandonedRows`, `abandoned`) and said once, in the say line and
- *    atlas.md; a key played to its end twice is a problem (`playedTwice`).
+ *    atlas.md; a key that ended ok:true in two files is a problem (`playedTwice`); two ok:false ends are one game timed out
+ *    twice, an ok:false end beside an ok:true one is superseded (`supersededPlays`), neither a problem.
  *  - D478: a capped (or loop-timed-out) branch scored other than a draw is a problem, as phase A's capped game is; capped
  *    branches are counted by option, and an option capped past --branch-capped-warn (0.25) is a WARNING, never a problem
  *    or exit 3 (D478's addendum: a long position, scored a half).
@@ -705,7 +706,7 @@ test('a play a killed attempt abandoned is left out of the id check, counted in 
     writeAtlas(REPO, OPTS, out, {}, {}, (x) => said.push(x));
     type Doc = { checks: { problems: string[]; rows: number; gamesIdChecked: number; abandonedPlays: number; abandonedRows: number; abandoned: Array<{ game: string; file: string; rows: number }>; playedTwice: unknown[] } };
     const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc;
-    assert.deepEqual(doc.checks.problems.filter((p) => /never shows it|played to its end/.test(p)), [], doc.checks.problems.join('\n'));
+    assert.deepEqual(doc.checks.problems.filter((p) => /never shows it|ended ok:true/.test(p)), [], doc.checks.problems.join('\n'));
     assert.deepEqual([doc.checks.rows, doc.checks.gamesIdChecked, doc.checks.abandonedPlays, doc.checks.abandonedRows], [3, 1, 1, 2]);
     assert.deepEqual(doc.checks.abandoned, [{ game: K, file: 'rows-1522578.jsonl', rows: 2 }]);
     assert.deepEqual(doc.checks.playedTwice, []);
@@ -714,15 +715,29 @@ test('a play a killed attempt abandoned is left out of the id check, counted in 
     const md = fs.readFileSync(path.join(out, 'atlas.md'), 'utf8');
     assert.equal(md.split('abandoned by a killed attempt').length - 1, 1, 'atlas.md says it once');
     assert.match(md, /1 play abandoned by a killed attempt, its 2 rows left out of the id check \(D499\)/);
-    // the control: with an end in the first file too the key ended twice -- a problem of its own, and each play checked on its
-    // own against the logs on disk, so the first play's 250 fails as J181's night read it
+    // the review's census shape: an ok:false end in the first file too -- two ok:false ends, one game ended twice the same way --
+    // is no problem, each play checked on its own against the logs on disk, so the first play's 250 fails as J181's night read it
     fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250'), end].join('\n') + '\n');
     writeAtlas(REPO, OPTS, out, {}, {}, () => {});
-    const twice = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc;
-    assert.equal(twice.checks.abandonedPlays, 0);
+    type Doc2 = Doc & { checks: { supersededPlays: number; orphanRows: number } };
+    const twiceFalse = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc2;
+    assert.deepEqual([twiceFalse.checks.abandonedPlays, twiceFalse.checks.playedTwice.length, twiceFalse.checks.supersededPlays, twiceFalse.checks.orphanRows], [0, 0, 0, 0]);
+    assert.equal(twiceFalse.checks.problems.filter((p) => /names id 250/.test(p)).length, 2);
+    // the control: two ok:true ends are a key played twice, a problem of its own
+    const ok = JSON.stringify({ type: 'end', v: 1, game: K, ok: true, winner: 'A' });
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250'), ok].join('\n') + '\n');
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522575.jsonl'), [header, begin, row('77'), ok].join('\n') + '\n');
+    writeAtlas(REPO, OPTS, out, {}, {}, () => {});
+    const twice = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc2;
     assert.equal(twice.checks.playedTwice.length, 1);
-    assert.ok(twice.checks.problems.some((p) => p.startsWith(`${K}: played to its end 2 times`)), twice.checks.problems.join('\n'));
-    assert.equal(twice.checks.problems.filter((p) => /names id 250/.test(p)).length, 2);
+    assert.ok(twice.checks.problems.some((p) => p.startsWith(`${K}: ended ok:true 2 times`)), twice.checks.problems.join('\n'));
+    // and one ok:true beside one ok:false: the ok:false play is superseded, no problem, its 250 not read
+    fs.writeFileSync(path.join(rowsDir, 'rows-1522578.jsonl'), [header, begin, row('77,250'), row('250'), end].join('\n') + '\n');
+    const said2: string[] = [];
+    writeAtlas(REPO, OPTS, out, {}, {}, (x) => said2.push(x));
+    const sup = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as Doc2;
+    assert.deepEqual([sup.checks.playedTwice.length, sup.checks.supersededPlays, sup.checks.problems.filter((p) => /never shows it|ended ok:true/.test(p)).length], [0, 1, 0]);
+    assert.ok(said2.some((x) => x.includes('superseded by an ok:true play')), said2.join('\n'));
   } finally {
     fs.rmSync(out, { recursive: true, force: true });
   }
