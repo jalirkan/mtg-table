@@ -221,3 +221,20 @@ KiB a game for both chairs (median 142, max 252), 672 state frames a game;
 both chairs of every game passed `check-redaction.mjs`. A third round run
 concurrently was stopped at a load of 130 (the container is shared); its
 wall-clock overhead on the owner's PC is a PC job.
+
+## 8. J182's checker failures (D502–D504, 2026-11-02)
+
+The lab's atlas night J182 (2026-11-01) failed `tools/check-redaction.mjs` on 11 branch frame logs in 3 units. In
+every one, the engine and the bridge were right, and the checker's admitted shapes were too narrow. These are the
+logs, under `/home/justin-a/code/lab/data/lab-j182/`, checked with the atlas's `--empty-hand-ok`:
+
+| unit | logs | shape | decision | `main` (`ac07876b`) | `pc/d502-checker-shapes` |
+|---|---:|---|---|---|---|
+| `b-s04-powered-2504` | 1 | an opponent's spell cast from its hand inside a held batch, targeted on the stack | D504 | 1 FAIL | 1 PASS, `an opponent's cast=2` |
+| `b-s06-peasant-2506` | 5 | an opponent's hideaway card shown to the seat that took control of the Watcher | D502 | 5 FAIL | 5 PASS, `1 an opponent's hideaway card` each |
+| `b-s10-peasant-2510` | 5 | the opponent's Goat Token, sacrificed, named as a source by Eye for an Eye | D503 | 5 FAIL | 5 PASS, `another seat's token=2` (3 logs) or `=1` (2) |
+| **all** | **11** | | | **11 FAIL** | **11 PASS** |
+
+All 11 pass without the flag too. `fixtures/games/` and `fixtures/synthetic/` check byte-for-byte as on `main`. The
+checker's self-test passes 205 controls (149 before). The rest of J182's spines were not re-run here.
+

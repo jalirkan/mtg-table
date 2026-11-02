@@ -358,6 +358,250 @@ probe('a9-stolen-morph-named-for-its-owner.jsonl',
     putCard(them, 'battlefield', faceDownCard(fs, 90033, 'battlefield', me.id, them.id, true));
   });
 
+// D502 (J182 s06): HIDEAWAY'S LOOK.  Watcher for Tomorrow's hideaway trigger digs
+// a card from its owner's library into exile face down as it enters, and Forge
+// grants the look to the CURRENT controller of the permanent that exiled it
+// (MayLookAt$ EffectSourceController; CR 702.75a) -- so when the viewer takes the
+// opponent's Watcher (Burglar's Plot exchanges it), the exiled card carries its alt
+// for the viewer, and only while the viewer holds that Watcher.  The log's link from
+// card to permanent is time: the library -> exile move sits in the state the
+// Watcher entered the battlefield, or the next.  The controls: the dig beside the
+// entry and the alt with the change of control; the dig a state after the entry
+// and the alt a state after the change (b76); the alt one state after the Watcher
+// left (b76 again, at its death).  The probes: no change of control, control held
+// from the start, the viewer's own permanent taken back, a third owner's
+// permanent, a face-down card outside exile, the alt two states after the change,
+// a foretold card (hand -> exile) under an unrelated stolen creature, a hand card
+// exiled face down with its alt at the steal, the alt kept two states after
+// control returns, and a card dug beside another hideaway host's entry (Mosswort
+// Bridge) while the Watcher is the one stolen.
+/** A hideaway trigger on the stack: a `cast` event naming its host (its text "" as a copy's; the checker reads only the id). */
+const hideawayCast = (host, controller) => ({ kind: 'cast', stackId: 9200 + (host % 100), cardId: host, controller, text: '' });
+/** The opponent's seat (themOf, which is declared further down). */
+const hideawayThem = () => header.decks.find((d) => d.player !== header.seat).player;
+/**
+ * The opponent's face-down card 90040, moved into their `hidIn` from their
+ * `exileFrom` in state `exileAt` (a stub in their hand before that when it came
+ * from the hand), its alt in states `altFrom` .. `altUntil`; a permanent 90041
+ * (`hostName`) owned by `owner`, entering the battlefield in state `enterAt` under
+ * `from`, controlled by `to` from state `changeAt` (null: never), back under
+ * `from` from `returnAt` and gone to its owner's graveyard from `leaveAt`; and,
+ * when `otherHostAt` is set, the opponent's Mosswort Bridge (90042) entering then.
+ */
+const withHideaway = (fs, {
+  owner = hideawayThem(), from = hideawayThem(), to = header.seat, changeAt = 1, altFrom = 1, altUntil = Infinity,
+  enterAt = 0, exileAt = 0, exileFrom = 'library', hidIn = 'exile', returnAt = null, leaveAt = null,
+  hostName = 'Watcher for Tomorrow', otherHostAt = null, digFrom = null, digTo = null, reExileAt = null,
+  hostCast = true, castAt = exileAt,
+} = {}) => {
+  const them = hideawayThem();
+  const sts = statesOf(fs);
+  const seatOf = (id) => sts[0].body.players.find((p) => p.id === id) ? id : them;   // a third owner's card sits on the opponent's side
+  const permanent = (id, name, ownerId, ctl) => Object.assign(structuredClone(firstFull(fs).card), {
+    id, name, setCode: 'MH2', manaCost: '{1}{U}', types: 'Creature', power: '2', toughness: '1', faceDown: false,
+    token: false, alt: null, attachedToId: null, attachmentIds: [], owner: ownerId, controller: ctl, zone: 'battlefield', abilities: [],
+  });
+  const playerOf = (st, id) => st.body.players.find((p) => p.id === id);
+  for (let i = 0; i < sts.length; i++) {
+    const ev = sts[i].body.events;
+    if (i === enterAt) ev.push({ kind: 'zone', cardId: 90041, from: { zone: 'stack', player: null }, to: { zone: 'battlefield', player: seatOf(from) } });
+    if (i >= enterAt && (leaveAt === null || i < leaveAt)) {
+      const taken = changeAt !== null && i >= changeAt && (returnAt === null || i < returnAt);
+      const ctl = taken ? to : from;
+      putCard(playerOf(sts[i], seatOf(ctl)), 'battlefield', permanent(90041, hostName, owner, ctl));
+    }
+    if (leaveAt !== null && i === leaveAt) {
+      ev.push({ kind: 'zone', cardId: 90041, from: { zone: 'battlefield', player: to }, to: { zone: 'graveyard', player: seatOf(owner) } });
+      putCard(playerOf(sts[i], seatOf(owner)), 'graveyard', { ...permanent(90041, hostName, owner, owner), zone: 'graveyard' });
+    }
+    if (leaveAt !== null && i > leaveAt) putCard(playerOf(sts[i], seatOf(owner)), 'graveyard', { ...permanent(90041, hostName, owner, owner), zone: 'graveyard' });
+    if (otherHostAt !== null && i >= otherHostAt) {
+      if (i === otherHostAt) ev.push({ kind: 'zone', cardId: 90042, from: { zone: 'hand', player: them }, to: { zone: 'battlefield', player: them } });
+      putCard(playerOf(sts[i], them), 'battlefield', { ...permanent(90042, 'Mosswort Bridge', them, them), manaCost: null, types: 'Land', power: null, toughness: null });
+    }
+    // the hideaway trigger's own cast, naming its host (the Mosswort Bridge's when it is the one digging)
+    if (i === castAt && hostCast) ev.push(hideawayCast(otherHostAt === exileAt ? 90042 : 90041, them));
+    if (i === exileAt) ev.push({ kind: 'zone', cardId: 90040, from: { zone: exileFrom, player: digFrom ?? them }, to: { zone: hidIn, player: digTo ?? them } });
+    if (i === reExileAt) {
+      ev.push({ kind: 'zone', cardId: 90040, from: { zone: 'exile', player: them }, to: { zone: 'hand', player: them } },
+        { kind: 'zone', cardId: 90040, from: { zone: 'hand', player: them }, to: { zone: 'exile', player: them } });
+    }
+    if (i >= exileAt) {
+      putCard(playerOf(sts[i], them), hidIn, faceDownCard(fs, 90040, hidIn, them, them, i >= altFrom && i <= altUntil));
+    } else if (exileFrom === 'hand') {
+      putCard(playerOf(sts[i], them), 'hand', { id: 90040, zone: 'hand', owner: them, controller: them, hidden: true });
+    }
+  }
+};
+const hideawayPass = (name, why, n, opts) => {
+  const fs = longSlice(n);
+  withHideaway(fs, opts);
+  write(name, fs);
+  manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
+  console.log(`  PASS  ${name}  (${why.split(' -- ')[0]})`);
+};
+const hideawayProbe = (name, why, n, opts) => {
+  const fs = longSlice(n);
+  withHideaway(fs, opts);
+  const bytes = write(name, fs);
+  manifest.push({ file: name, level: 'fail', expect: 'only a look permission', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+hideawayPass('a9-hideaway-control-taken.jsonl',
+  'A9, D502: the opponent\'s Watcher for Tomorrow entered and dug a card of their library into exile face down; the viewer took control of it, and the card carries its alt from that state on -- hideaway\'s look goes to the Watcher\'s controller; counted, not a problem',
+  3, {});
+hideawayPass('a9-hideaway-alt-a-state-after-control-taken.jsonl',
+  'A9, D502: the Watcher enters with its hideaway trigger\'s cast and the dig lands a state later (b148: seq 91 / 92), and the alt a state after the change of control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem',
+  4, { exileAt: 1, castAt: 0, changeAt: 2, altFrom: 3 });
+hideawayPass('a9-hideaway-alt-a-state-after-the-host-leaves.jsonl',
+  'A9, D502: the Watcher dies while the viewer controls it and the alt is still on the card in that state (J182 b76, seq 245: the static not yet re-applied) -- one state of grace, not a problem',
+  4, { leaveAt: 3 });
+hideawayProbe('a9-hideaway-no-control-change.jsonl',
+  'A9, D502: the opponent\'s Watcher stays the opponent\'s -- with no change of control to the viewer, an alt on their exiled face-down card has no source',
+  3, { changeAt: null });
+hideawayProbe('a9-hideaway-viewer-controlled-from-the-start.jsonl',
+  'A9, D502: the viewer controls the opponent\'s Watcher in every state and the alt appears later with no change of control -- the log shows no taking of control, so nothing ties the alt to the look',
+  3, { from: header.seat, changeAt: null });
+hideawayProbe('a9-hideaway-viewer-own-permanent-taken-back.jsonl',
+  'A9, D502: the permanent that changed hands is the VIEWER\'s own (taken back from the opponent), not one of the exiled card\'s owner\'s -- it grants no look at the opponent\'s card',
+  3, { owner: header.seat });
+hideawayProbe('a9-hideaway-third-party-permanent.jsonl',
+  'A9, D502: the permanent the viewer took is owned by a third party (player 2), not by the exiled card\'s owner -- it grants no look at that card',
+  3, { owner: 2, from: 2 });
+hideawayProbe('a9-hideaway-alt-in-a-graveyard.jsonl',
+  'A9, D502: hideaway\'s look is a look at a card in EXILE -- a face-down card elsewhere outside play (a graveyard) gains nothing from the change of control',
+  3, { hidIn: 'graveyard' });
+hideawayProbe('a9-hideaway-alt-two-states-after-control-taken.jsonl',
+  'A9, D502: the alt must come with the change of control or one state after it -- one appearing two states later has no source',
+  4, { altFrom: 3 });
+hideawayProbe('a9-hideaway-foretold-card-under-a-stolen-creature.jsonl',
+  'A9, D502 (the review of f3a3091b): the opponent foretells a card (hand -> exile face down) and the viewer steals an unrelated Grizzly Bears -- a card that did not come from a library beside the creature\'s entry gains no look, and its alt is a leak',
+  5, { exileFrom: 'hand', hostName: 'Grizzly Bears', returnAt: 3 });
+hideawayProbe('a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl',
+  'A9, D502 (the review of f3a3091b): a hand card goes into exile face down carrying its alt in the very state the viewer steals a creature -- it came from a hand, not a library, and its alt is a leak',
+  3, { exileFrom: 'hand', exileAt: 1, hostName: 'Grizzly Bears' });
+hideawayProbe('a9-hideaway-alt-kept-after-control-returns.jsonl',
+  'A9, D502: the look follows the Watcher\'s CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source',
+  5, { returnAt: 2 });
+hideawayProbe('a9-hideaway-alt-after-control-already-returned.jsonl',
+  'A9, D502: the viewer took the Watcher and gave it back before the alt appeared -- a look that arrives when the viewer no longer controls the permanent has no source',
+  3, { returnAt: 2, altFrom: 2 });
+hideawayProbe('a9-hideaway-card-re-exiled-from-a-hand.jsonl',
+  'A9, D502: the dug card went back to the hand and into exile again (foretold) -- only a LATEST move into exile from its owner\'s library ties it to the Watcher',
+  3, { reExileAt: 1, changeAt: 2, altFrom: 2 });
+hideawayProbe('a9-hideaway-dug-from-another-library.jsonl',
+  'A9, D502: the move into exile came from the VIEWER\'s library, not the exiled card\'s owner\'s -- it is not that owner\'s hideaway dig',
+  3, { digFrom: header.seat, digTo: header.seat });
+hideawayProbe('a9-hideaway-dug-into-another-exile.jsonl',
+  'A9, D502: the move went from the opponent\'s library into the VIEWER\'s exile -- a hideaway dig stays in its owner\'s exile',
+  3, { digTo: header.seat });
+hideawayProbe('a9-hideaway-card-of-an-unrelated-host.jsonl',
+  'A9, D502: the card was dug beside the entry of the opponent\'s Mosswort Bridge, not of the Watcher the viewer took -- the Watcher\'s look does not reach it',
+  5, { exileAt: 2, otherHostAt: 2, changeAt: 3, altFrom: 3 });
+hideawayProbe('a9-hideaway-dig-with-no-host-trigger.jsonl',
+  'A9, D502: the dig beside the Watcher\'s entry carries no `cast` event naming the Watcher (its hideaway trigger) in its frame or the one before -- some other effect dug it',
+  3, { hostCast: false });
+
+// The second review of D502 (on c12f8418), in frame-by-frame specs: each state
+// lists permanents [id, owner, controller] and exiled face-down cards [id, owner,
+// alt?], and carries its events.  W is the Watcher (90041), B another permanent of
+// the opponent's (90042), C1 / C2 their face-down exiled cards (90040 / 90043).
+const [HW, HB, HC1, HC2] = [90041, 90042, 90040, 90043];
+const hEnter = (id) => ({ kind: 'zone', cardId: id, from: { zone: 'stack', player: null }, to: { zone: 'battlefield', player: hideawayThem() } });
+const hDig = (id) => ({ kind: 'zone', cardId: id, from: { zone: 'library', player: hideawayThem() }, to: { zone: 'exile', player: hideawayThem() } });
+const hCast = (id) => hideawayCast(id, hideawayThem());
+const hideawaySpec = (name, level, why, frames) => {
+  const fs = longSlice(frames.length);
+  const sts = statesOf(fs);
+  frames.forEach((fr, i) => {
+    const st = sts[i];
+    st.body.events.push(...(fr.ev ?? []));
+    for (const [id, owner, ctl] of fr.bf ?? []) {
+      putCard(st.body.players.find((p) => p.id === ctl), 'battlefield', Object.assign(structuredClone(firstFull(fs).card), {
+        id, name: id === HW ? 'Watcher for Tomorrow' : 'Grizzly Bears', setCode: 'MH2', manaCost: '{1}{G}', types: 'Creature',
+        power: '2', toughness: '2', faceDown: false, token: false, alt: null, attachedToId: null, attachmentIds: [],
+        owner, controller: ctl, zone: 'battlefield', abilities: [] }));
+    }
+    for (const [id, owner, alt] of fr.ex ?? []) {
+      putCard(st.body.players.find((p) => p.id === owner), 'exile', faceDownCard(fs, id, 'exile', owner, owner, alt === true));
+    }
+  });
+  const bytes = write(name, fs);
+  manifest.push({ file: name, level, expect: level === 'pass' ? 'PASS' : 'only a look permission', why });
+  console.log(`  ${level === 'pass' ? 'PASS' : 'FAIL'}  ${name}  (${bytes} bytes)  ${why}`);
+};
+{
+  const T = hideawayThem();
+  const V = header.seat;
+  hideawaySpec('a9-hideaway-retaken-the-frame-after-a-return.jsonl', 'pass',
+    'A9, D502: the viewer takes the Watcher, gives it back (the alt kept one frame of lag) and takes it again the next frame -- the look is the current controller\'s throughout; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-dropped-while-returned.jsonl', 'pass',
+    'A9, D502: taken, given back (the alt dropped after the lag frame) and taken again -- the alt comes back with the second taking; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T, true]] }, { bf: [[HW, T, T]], ex: [[HC1, T]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-dig-beside-the-log-start.jsonl', 'fail',
+    'A9, D502 (second review): a permanent listed in the log\'s first state was there before the log began, so a trigger of it and a dig in the next frame are beside no entry the log shows -- stealing it later grants no look',
+    [{ bf: [[HB, T, T]] }, { bf: [[HB, T, T]], ex: [[HC2, T]], ev: [hCast(HB), hDig(HC2)] }, { bf: [[HB, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-dig-beside-a-later-trigger-of-the-host.jsonl', 'fail',
+    'A9, D502: a cast naming the Watcher (another trigger or ability of it) beside a dig long after it entered -- the dig is not beside its entry, so it is not its hideaway card',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hCast(HW), hDig(HC2)] },
+      { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl', 'fail',
+    'A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source',
+    [{ bf: [[HB, T, T]] }, { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HB, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl', 'fail',
+    'A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger',
+    [{}, { bf: [[HB, T, T]], ev: [hEnter(HB)] }, { bf: [[HB, T, T]] },
+      { bf: [[HB, T, T], [HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] },
+      { bf: [[HB, T, T], [HW, T, V]], ex: [[HC1, T, true]] }, { bf: [[HB, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HB, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl', 'fail',
+    'A9, D502 (second review): the Watcher enters with no hideaway trigger and another effect digs a card the next frame -- no cast names the Watcher, so the dig is not its',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hDig(HC2)] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-second-dig-beside-the-host-trigger.jsonl', 'fail',
+    'A9, D502: the Watcher\'s trigger digs C1 and another effect digs C2 the next frame, both beside its entry and its cast -- a hideaway digs ONE card, so the Watcher vouches for neither',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hDig(HC2)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T], [HC2, T, true]] }]);
+  // The third review (on 50b92814): a creature spell's own cast is no trigger, a
+  // host's ties count every dig ever made, and a held grant ends on any move.
+  const HW2 = 90044;
+  const hMove = (id, a, b) => ({ kind: 'zone', cardId: id, from: { zone: a, player: a === 'stack' ? null : T }, to: { zone: b, player: b === 'stack' ? null : T } });
+  const hSpell = (id) => ({ kind: 'cast', stackId: 9300 + (id % 100), cardId: id, controller: T, text: '' });
+  hideawaySpec('a9-hideaway-creature-spell-cast-then-unrelated-dig.jsonl', 'fail',
+    'A9, D502 (third review): the opponent casts a creature (its spell\'s cast names it, before it enters) and another effect digs a card the next frame -- a spell cast is no hideaway trigger, so stealing the creature grants no look',
+    [{}, { bf: [[HB, T, T]], ev: [hMove(HB, 'hand', 'stack'), hSpell(HB), hEnter(HB)] }, { bf: [[HB, T, T]], ex: [[HC2, T]], ev: [hDig(HC2)] },
+      { bf: [[HB, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-real-card-played-then-steal.jsonl', 'fail',
+    'A9, D502 (third review): an unrelated dig beside the Watcher\'s trigger, then the Watcher\'s own dig, then its own card played from exile -- the Watcher was tied to two digs, and a card leaving exile does not make the other one its own',
+    [{}, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hEnter(HW), hCast(HW), hDig(HC2)] }, { bf: [[HW, T, T]], ex: [[HC2, T], [HC1, T]], ev: [hDig(HC1)] },
+      { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hMove(HC1, 'exile', 'stack')] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-held-grant-card-re-dug-in-one-frame.jsonl', 'fail',
+    'A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> library -> exile in one frame -- Forge forgets a hideaway card that moves (ForgetOnMoved), so the grant ends and the new dig has no trigger',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]], ev: [hMove(HC1, 'exile', 'library'), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-held-grant-card-through-a-hand.jsonl', 'fail',
+    'A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> hand -> exile in one frame, through a hidden zone -- the grant ends on the move',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]], ev: [hMove(HC1, 'exile', 'hand'), hMove(HC1, 'hand', 'exile')] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-card-re-dug-under-a-new-host.jsonl', 'pass',
+    'A9, D502 (third review): the viewer took the Watcher and gave it back, the card went back to the library and a second Watcher dug it again, and the viewer took that one -- the second host\'s look; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]] }, { bf: [[HW, T, T]], ev: [hMove(HC1, 'exile', 'library')] },
+      { bf: [[HW, T, T], [HW2, T, T]], ex: [[HC1, T]], ev: [hEnter(HW2), hCast(HW2), hDig(HC1)] }, { bf: [[HW, T, T], [HW2, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl', 'pass',
+    'A9, D502: STILL ADMITTED, the residual the log cannot rule out -- the Watcher\'s trigger digs nothing and another effect digs exactly one card the next frame; that card is the Watcher\'s only tie. Kept as a passing control so a change to it is seen',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW)] }, { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hDig(HC2)] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-two-hosts-enter-together.jsonl', 'fail',
+    'A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher\'s, so stealing it vouches for neither',
+    [{}, { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hEnter(HW), hEnter(HB), hCast(HW), hCast(HB), hDig(HC1), hDig(HC2)] },
+      { bf: [[HW, T, V], [HB, T, T]], ex: [[HC1, T, true], [HC2, T]] }]);
+}
+
 // The other night-2 finding (D371): the viewer's own hand card as a stub.  It
 // must fail, and the message must say which shape it was -- the clue to the cause.
 probe('own-hand-card-redacted.jsonl',
@@ -1115,9 +1359,6 @@ const themOf = () => header.decks.find((d) => d.player !== header.seat).player;
 staleProbe('stale-token-bounced-to-the-opponent-hand.jsonl',
   'D485: a stale target whose latest move is into the OPPONENT\'s hand is hidden -- not vouched for',
   { move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'hand', player: themOf() } }) });
-staleProbe('stale-token-of-the-opponent.jsonl',
-  'D485: only the viewer\'s OWN token is vouched for -- the opponent\'s token, dead in the opponent\'s graveyard, is not',
-  { owner: themOf(), move: died });
 staleProbe('stale-token-then-exiled.jsonl',
   'D485: exile is never accepted (a card can go there face down) -- the viewer\'s token exiled is not vouched for',
   { move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'exile', player: seat } }) });
@@ -1127,6 +1368,93 @@ staleProbe('stale-nontoken-ghost.jsonl',
 staleProbe('stale-token-shown-only-after-the-window.jsonl',
   'D485: the listing as the viewer\'s own token must be in the window (up to the first state after the decision) -- one only later does not vouch',
   { showIn: [4], at: 2, move: died });
+
+// D503 (J182 s10): ANOTHER SEAT'S TOKEN THAT CEASED TO EXIST.  The opponent's Goat
+// Token, listed on its own battlefield, sacrificed into its own graveyard, then
+// offered by the viewer's Eye for an Eye ("choose a source", last known
+// information).  A token on a battlefield is public whoever's it is, so D485's
+// rule extends to any seat's own token: listed as that seat's own token on its
+// battlefield in the window, its latest move from there into that seat's own
+// graveyard or hand, or to nowhere, and no stub of it in the decision's state or
+// the next.  stale-token-of-the-opponent (a D485 FAIL control) is that shape, and
+// now passes.  The probes: a nontoken card (a ghost, and a stub in the decision's
+// state), a token never listed on a battlefield, a latest move into exile or a
+// library, and a token bounced to its owner's hand and still a stub there.
+const ceasedPass = (name, why, opts, edit = () => {}) => {
+  const fs = longSlice(5);
+  const fresh = withStaleTarget(fs, opts);
+  edit(fs, fresh);
+  write(name, fs);
+  manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
+  console.log(`  PASS  ${name}  (${why.split(' -- ')[0]})`);
+};
+const ceasedProbe = (name, why, opts, edit = () => {}) => {
+  const fs = longSlice(5);
+  const fresh = withStaleTarget(fs, opts);
+  edit(fs, fresh);
+  const bytes = write(name, fs);
+  manifest.push({ file: name, level: 'fail', expect: 'which its state frame does not show', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+/** J182's decision: Eye for an Eye's "choose a source" -- a choice / entity record, not a target list. */
+const asSourceChoice = (fs) => {
+  const b = fs.find((f) => f.dir === 'ai' && f.type === 'decision').body;
+  const opts = b.options.map((t) => t.replace(/^target:/, 'option:'));
+  delete b.complete;
+  Object.assign(b, { kind: 'choice', options: opts, chosen: opts[1], source: 'entity' });
+};
+ceasedPass('stale-token-of-the-opponent.jsonl',
+  'D485, D503: the opponent\'s token, listed as its own on its battlefield and dead in its own graveyard, named by a target list -- a token on a battlefield is public whoever\'s it is (a D485 FAIL control until D503); counted, not a problem',
+  { owner: themOf(), move: died });
+ceasedPass('ceased-opponent-token-source-choice.jsonl',
+  'D503: J182 s10\'s shape -- the opponent\'s Goat Token, sacrificed into its own graveyard, offered by a choose-a-source choice (Eye for an Eye); counted, not a problem',
+  { owner: themOf(), move: died }, asSourceChoice);
+ceasedPass('ceased-opponent-token-bounced-to-its-hand.jsonl',
+  'D503: the opponent\'s token returned to its owner\'s hand, where a token ceases to exist, and listed nowhere after -- counted, not a problem',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'hand', player: seat } }) });
+ceasedPass('ceased-opponent-token-to-nowhere.jsonl',
+  'D503: the opponent\'s token whose one move goes straight off its battlefield to nowhere (to: null) -- counted, not a problem',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: null }) });
+ceasedProbe('ceased-opponent-nontoken-ghost.jsonl',
+  'D503: only a TOKEN ceases to exist -- the opponent\'s nontoken card (token: false) last moved to its graveyard and listed nowhere is not vouched for',
+  { owner: themOf(), token: false, move: died });
+ceasedProbe('ceased-opponent-nontoken-a-stub.jsonl',
+  'D503: the opponent\'s nontoken card moved battlefield -> graveyard and shown to the seat only as a stub at the decision -- a stub is never an option',
+  { owner: themOf(), token: false, move: died },
+  (fs, fresh) => {
+    const p = statesOf(fs)[3].body.players.find((q) => q.id === themOf());
+    putCard(p, 'graveyard', { id: fresh, zone: 'graveyard', owner: themOf(), controller: themOf(), hidden: true });
+  });
+ceasedProbe('ceased-opponent-token-never-listed.jsonl',
+  'D503: a token id the window never lists on a battlefield is not vouched for by its move alone',
+  { owner: themOf(), showIn: [], move: died });
+ceasedProbe('ceased-opponent-token-then-exiled.jsonl',
+  'D503: exile is never accepted (a card can go there face down) -- the opponent\'s token exiled is not vouched for',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'exile', player: seat } }) });
+ceasedProbe('ceased-opponent-token-into-a-library.jsonl',
+  'D503: a library is never accepted -- the opponent\'s token put into its library is not vouched for',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'library', player: seat } }) });
+ceasedProbe('ceased-opponent-token-shown-only-after-the-window.jsonl',
+  'D503: the listing as that seat\'s own token must be in the window (up to the first state after the decision) -- one only later does not vouch',
+  { owner: themOf(), showIn: [4], at: 2, move: died });
+ceasedProbe('ceased-opponent-token-into-the-viewer-hand.jsonl',
+  'D503: the latest move must end in the token\'s OWN seat\'s graveyard or hand -- the opponent\'s token moved into the viewer\'s hand is not vouched for',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'hand', player: header.seat } }) });
+ceasedProbe('ceased-opponent-token-exiled-then-to-graveyard.jsonl',
+  'D503: the latest move must come off the token\'s battlefield -- exiled, then from exile into its graveyard, is not vouched for',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'exile', player: seat } }) },
+  (fs, fresh) => statesOf(fs)[2].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'exile', player: themOf() }, to: { zone: 'graveyard', player: themOf() } }));
+ceasedProbe('ceased-opponent-token-exiled-then-gone.jsonl',
+  'D503: a move to nowhere vouches only straight off the token\'s battlefield -- exiled, then gone from exile, is not vouched for',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'exile', player: seat } }) },
+  (fs, fresh) => statesOf(fs)[2].body.events.push({ kind: 'zone', cardId: fresh, from: { zone: 'exile', player: themOf() }, to: null }));
+ceasedProbe('ceased-opponent-token-still-a-hand-stub.jsonl',
+  'D503: the opponent\'s token bounced to its hand and still listed there as a stub at the decision -- a stub is never an option',
+  { owner: themOf(), move: (seat) => ({ from: { zone: 'battlefield', player: seat }, to: { zone: 'hand', player: seat } }) },
+  (fs, fresh) => {
+    const p = statesOf(fs)[3].body.players.find((q) => q.id === themOf());
+    putCard(p, 'hand', { id: fresh, zone: 'hand', owner: themOf(), controller: themOf(), hidden: true });
+  });
 
 // D495: A SPELL COPY ON THE STACK.  A copy (replicate, storm, a Fork) is made on
 // the stack: no zone list, no stackCards entry and no zone event names it, and it
@@ -1360,6 +1688,79 @@ probe('reveal-of-a-peeked-library-card-that-never-moves.jsonl',
   'D496: a reveal alone does not vouch -- a library card revealed to the seat (a peek) that no zone event moves where the seat sees it is still a library card, and the bridge never offers one',
   'which its state frame does not show',
   (fs) => { const { fresh } = withCascadeChoice(fs, false); insertReveal(fs, decisionAt(fs), revealOf([fresh])); });
+
+// D504 (J182 s04): AN OPPONENT'S CAST, ENTERED BETWEEN FRAMES.  The opponent cast
+// Kormus Bell from its hand and the viewer's Force of Negation targeted it on the
+// stack, but the recorder held the batch, so the decision names a state in which
+// the Bell is still a stub in the opponent's hand, and the first state after the
+// decision carries its hand -> stack move and its `cast`.  A cast spell is public.
+// The control: that.  The probes: the move into a library or exile with no cast,
+// onto the stack with no cast, the cast with the card still a stub in the next
+// state, and the move and cast one state too late.
+/**
+ * A target decision at the first state naming the opponent's first hand stub;
+ * the states from `at` on no longer list it (unless `keepStub`), and state `at`
+ * carries `events(stub)`.
+ */
+function withOpponentCast(fs, { at = 1, to = 'stack', fromZone = 'hand', cast = true, castAt = at, keepStub = false, stub: given } = {}) {
+  const b = withDecision(fs);
+  const sts = statesOf(fs);
+  const stub = given ?? sts[0].body.players.find((p) => p.id === themOf()).zones.hand.cards.find((c) => c.hidden === true).id;
+  delete b.search;
+  Object.assign(b, { kind: 'target', options: [`target:${stub}`], chosen: `target:${stub}`, complete: false, by: 'forge', source: 'targets' });
+  if (!keepStub) {
+    for (let i = 1; i < sts.length; i++) {
+      const hand = sts[i].body.players.find((p) => p.id === themOf()).zones.hand;
+      hand.cards = hand.cards.filter((c) => c.id !== stub);
+      hand.count = hand.cards.length;
+    }
+  }
+  sts[at].body.events.push({ kind: 'zone', cardId: stub, from: { zone: fromZone, player: themOf() }, to: { zone: to, player: to === 'stack' ? null : themOf() } });
+  if (cast) sts[castAt].body.events.push({ kind: 'cast', stackId: 9100 + stub, cardId: stub, controller: themOf(), text: '' });
+  return stub;
+}
+copyPass('m55-option-cast-from-the-opponent-hand-held.jsonl',
+  'D504: J182 s04\'s shape -- a target naming a stub of the opponent\'s hand in the decision\'s state, and the first state after the decision moves it from that hand onto the stack and casts it (a held batch); a cast spell is public; counted, not a problem',
+  (fs) => { withOpponentCast(fs); });
+probe('m55-option-opponent-hand-to-library-no-cast.jsonl',
+  'D504: an opponent\'s hand card moved into its library, with no cast, is still hidden -- not vouched for',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { to: 'library', cast: false }); });
+probe('m55-option-opponent-hand-to-exile-no-cast.jsonl',
+  'D504: an opponent\'s hand card moved into exile, with no cast, is not vouched for (a card can go there face down)',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { to: 'exile', cast: false }); });
+probe('m55-option-opponent-hand-to-stack-no-cast.jsonl',
+  'D504: an opponent\'s hand card moved onto the stack with no cast event naming it is not vouched for -- the cast is what makes it public',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { cast: false }); });
+probe('m55-option-opponent-cast-still-a-stub-after.jsonl',
+  'D504: a cast event names it, but the state after the decision still lists it as a stub in the opponent\'s hand -- a stub is never an option',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { keepStub: true }); });
+probe('m55-option-opponent-hand-to-exile-with-a-cast.jsonl',
+  'D504: the latest move must be onto the STACK -- an opponent\'s hand card moved into exile is not vouched for even with a cast event naming it (a cast event also names an ability\'s source card)',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { to: 'exile' }); });
+probe('m55-option-opponent-cast-from-another-zone.jsonl',
+  'D504: the move onto the stack must come from the hand the decision\'s state showed the stub in -- one from a graveyard (flashback\'s shape), cast, is not this rule\'s evidence',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { fromZone: 'graveyard' }); });
+probe('m55-option-opponent-cast-never-a-stub.jsonl',
+  'D504: the decision\'s state must show the card as a stub in that hand -- an id it never listed, moved from the opponent\'s hand onto the stack and cast, is not evidenced as the hand card the batch held',
+  'which its state frame does not show',
+  (fs) => {
+    const fresh = Math.max(...statesOf(fs).flatMap((f) => [...cardsOf(f.body)].map((h) => h.card.id))) + 1;
+    withOpponentCast(fs, { stub: fresh });
+  });
+probe('m55-option-opponent-cast-event-a-state-too-late.jsonl',
+  'D504: the cast must be in the window too -- a move onto the stack in the first state after the decision with its cast only in the second does not vouch',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { castAt: 2 }); });
+probe('m55-option-opponent-cast-a-state-too-late.jsonl',
+  'D504: the move and the cast must be in the window (up to the first state after the decision) -- in the second state after it they do not vouch',
+  'which its state frame does not show',
+  (fs) => { withOpponentCast(fs, { at: 2 }); });
 
 // ---------------------------------------------------------------------------
 // Amendment M57 (D358): play exploration.  An exploring recording's header
