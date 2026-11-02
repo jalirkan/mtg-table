@@ -1,0 +1,519 @@
+==== J183 pilot1 started 2026-11-02T07:55:20-05:00 in unit lab-J183-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J183: data folder free GB 557.4
+J183: lab-j183 at the first pilot: state 1, {"entries": [], "spineDraws": 0, "validationDraws": 0, "smokeDraw": 0, "smoke": 0}
+J183: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's and D500's, the determinizer D498's (bridge/src since 7a984963: Atlas, Determinizer, LenientGameCopier, SearchPolicy; since J182's pin ac07876b: nothing): 1
+J183: D481: docs/decisions/D481-decision-names-an-object-entered-between-frames.md added by 51564f1bef07a8be10b52ceca2c22e141923756a
+J183: D482: docs/decisions/D482-census-engine-unplayable-list.md added by b9f62f07cf76fcb1e4de56b7ce6970c2d1aa7a99
+J183: D483: docs/decisions/D483-play-identity.md added by ea1f56bd9cc0f92607365cc642cc0cae5feb6e20
+J183: D484: docs/decisions/D484-choose-source-loop.md added by 28acf721d4579e402c0f7099324cdc5962a3a627
+J183: D485: docs/decisions/D485-random-seat-stale-targets.md added by f6c950b06879317340ed0f622f320a6576b925b4
+J183: D486: docs/decisions/D486-random-seat-card-targets.md added by 818a9de4bceab5861a5017552bb6e9badb1c0db7
+J183: D487: docs/decisions/D487-target-none.md added by 651d7d52b90b3540972208fe07ee3f71dbc9551a
+J183: D488: docs/decisions/D488-random-seat-target-costs.md added by 7f60b85689081518548f08abdae056557f88a799
+J183: D489: docs/decisions/D489-atlas-futility-stop.md added by c4e1bda6e2e63e70a18136c81221941f449d03ee
+J183: D490: docs/decisions/D490-chain-of-smog-engine-unplayable.md added by 66a502148cd51ebc65d4a107b8e7b7571a57c726
+J183: D491: docs/decisions/D491-rows-check-born-tokens.md added by 66a502148cd51ebc65d4a107b8e7b7571a57c726
+J183: D492: docs/decisions/D492-prepare-cards-engine-unplayable.md added by 2c6702774e99125a7f28b4c36cfe83df4f765d81
+J183: D493: docs/decisions/D493-copier-carries-plotted-and-zone-turn.md added by 87f63a56766a872390a00181eeec4e085cdbddd2
+J183: D494: docs/decisions/D494-planeswalker-token-copy-engine-unplayable.md added by aa74a8efa4ba0a73745a4a6c9336849d71978b57
+J183: D495: docs/decisions/D495-stack-copy-options.md added by 7874b0cec3d18b40f2e40be1d2f8de4b76ae5f91
+J183: D496: docs/decisions/D496-reveal-records.md added by a909fe17694831e162f2deb1975666259e4eae00
+J183: D497: docs/decisions/D497-fork-token-paper-card.md added by 23c467742e39678d06a8662a6a530968a7b08c71
+J183: D498: docs/decisions/D498-determinizer-keeps-what-the-seat-sees.md added by 24de32de33014a800c23e065aa731d775497fe28
+J183: D499: docs/decisions/D499-rows-play-is-one-file.md added by 05c5cf3f96fd0f1bd6258ba3ec9c04c63315a2d0
+J183: D500: docs/decisions/D500-fork-damage-lki.md added by 726c6c7432f2ae535f24f0f0b9bcf23b81dbbcea
+J183: D501: docs/decisions/D501-empty-hand-proof-revealed-top.md added by 54b6d7db6ad8a9e28226f67126eee6ca56a10d2c
+J183: D502: docs/decisions/D502-hideaway-look-after-control-change.md added by f3a3091b8003c2ebf53985d98f7f518a6a84263a
+J183: D503: docs/decisions/D503-another-seats-ceased-token.md added by f3a3091b8003c2ebf53985d98f7f518a6a84263a
+J183: D504: docs/decisions/D504-opponent-cast-entered-between-frames.md added by f3a3091b8003c2ebf53985d98f7f518a6a84263a
+J183: seat-identity golden: fixture last changed by 4c1f15b3229b7aec2d0448838ab1b868124821d2, D486's file added by 818a9de4bceab5861a5017552bb6e9badb1c0db7: {"descends": 1, "changed": 1, "note": 1, "digestsJ170": 1}
+J183 deck code: deckcensus.ts comments and the message only 1, the list J171's plus D490's, D492's and D494's 1, both blobs main 3d78fc18's 1
+J183: deck code: J171's pin's plus exactly D490, D492 and D494: 1
+✔ --min-options: the spread over decisions with k or more options, filled from the rest; k = 1 is D451's spread (1.346ms)
+✔ D483: --min-options counts plays, not tokens or listed options; the options branched are still every listed one (0.426227ms)
+✔ the screen settles a near-decided decision; its replacement is the next listed one not yet branched, k or more options first (0.234104ms)
+✔ early stopping: an option clearly below the leader stops; option 0 and the leader never do; a close one runs on (9.9768ms)
+✔ with every cut off the schedule is D451's: the same units in the same order, and no event written (0.686491ms)
+✔ the cut schedule: stage by stage behind the barrier, the options still running, the Forge map on the survivors, a screened decision replaced; a resume decides nothing again (3.844583ms)
+✔ the schedule's plan guard: the header written once; a clean resume replays the events and decides nothing again; another plan or an edited deck is refused, naming both hashes (6.982808ms)
+✔ a spine with no Forge map: complete, decided and settled on the random map, and no agreement read (1.670555ms)
+✔ the review's numbers on its own data: the atlas reproduced at 96 of 96; the screen and early stopping keep 13 of 13 confident labels, no flip (8940.236681ms)
+✔ the guardrails of slices put back together are one pass's: counts summed, the first 50 violations named in order (1.343966ms)
+✔ --checks-parallel: atlas.json's checks are the serial run's, byte for byte, but the redaction's wall time (7478.364446ms)
+✔ the pool behind the barrier: the next stage waits, a worker the first stage did not need starts for the later ones, the jobs carry the options (1230.78242ms)
+✔ D489, the futility rule at its checkpoint: option 0 leads, ties within the margin, or trails; the flags and their checks (0.808953ms)
+✔ D489, the control draw: seeded per decision and checkpoint, and its share holds over 1,000 decisions (5.467558ms)
+✔ D489, the futility stop in the schedule: a stopped decision's later units vanish and its label is partial; a control plays on; the counters; a resume decides nothing again (4.779314ms)
+✔ D489: the futility stop changes the schedule's plan hash and plan.json's cuts; off, both are D480's; a resume under another --futility is refused (2.024846ms)
+✔ D489 on the review's fixture: the futility stop at 50 with the review's cuts -- what it stops, what it saves, the confident labels it keeps (5318.354395ms)
+✔ the atlas's redaction check: --empty-hand-ok reaches the checker, and proves before it excuses (D460) (138.730429ms)
+✔ a worker that dies mid-unit: the fresh one resumes at the branches it has no row for, each played once (44.443583ms)
+✔ a worker that retires after two OutOfMemoryErrors: the pool starts a fresh one, which resumes; the OOM branches stay as engine errors (37.267859ms)
+✔ a unit that dies at the same place every time is given up after two attempts, recorded unfinished (42.573221ms)
+✔ the resume policy, and the branches a unit already holds (0.447267ms)
+✔ the arithmetic: Wilson with draws, ranks, Spearman (1.139538ms)
+✔ the paired regret: a planted better option shows clear of zero; none shows around zero (25.876721ms)
+✔ the agreement of two maps (17.959803ms)
+✔ how many rollouts, and the even spread of decisions (0.270001ms)
+✔ the deck pair rule: the most even record with the most games (0.854078ms)
+✔ a decision's two maps from its branch rows (26.290384ms)
+✔ phase A's report: draws by the cap, the variance, the rollouts needed (0.553719ms)
+✔ the guardrails read back from the decision records (0.534753ms)
+✔ the jobs: phase A's seeds and random seat, the units, their expected options and leak checks (1.018069ms)
+✔ every atlas game says it is never training data: frame-log headers and rows begin lines (#161 review) (0.54361ms)
+✔ atlas.md renders the two maps side by side (1.7633ms)
+✔ seat-identity: decisions without frame numbers, the last state and over (0.332149ms)
+✔ atlas-selftest clears the folder it writes, under LAB_DATA_DIR too (#161 review) (0.170253ms)
+✔ G3 and G5 (D458) are counted from each random seat's decisions summary, and atlas.json's checks carry them (0.335585ms)
+✔ writeAtlas puts G5's counts in atlas.json's checks, from phase A's and the random branches' logs only (D458) (111.029514ms)
+✔ G6 (D471): X drawn, X = 0-only offers left out and own plays paid at X = 0 are counted; a play paid at 0 is a violation and a problem (240.917091ms)
+✔ branch errors are counted by text, and an option past --branch-error-max is named with its error (D466, J156 spine 458) (0.725484ms)
+✔ writeAtlas makes an errored option a problem and shows the errors in atlas.md's checks (D466) (3.562669ms)
+✔ an option the copy cannot give is unavailable: left out of the map, counted apart from errors, a problem past the bar (D470, J158 spine 461) (4.514342ms)
+✔ a branch whose game Karn restarted is played on: its row carries the restarts, it counts in the map, phase B counts it (D477, J162 modern7) (3.25709ms)
+✔ a copy that could not name an effect's source, lost an exile link, or took off a damage instance, is counted: on the row, in phase B and atlas.md, never a problem (D479, D500) (2.975557ms)
+✔ a capped branch is a draw: one written as seat A's win is a problem; an option capped past --branch-capped-warn is a warning, never a problem (D478 and its addendum) (7.823982ms)
+✔ G1, planted (D466): a land the seat's own listing does not hold is no flag; a land in hand, drop unused, not played, is one (0.197404ms)
+✔ every guardrail violation is counted, though only the first 50 are named (D466: J156 vintage, 200 shown of 3,071) (44.982314ms)
+✔ a truncated frame log is skipped and named, and atlas.json is still written (D466: J156 spine 458's hung branch) (2.710786ms)
+✔ a play a killed attempt abandoned is left out of the id check, counted in atlas.json and said once (D499: J181 s13's d28-forge-o2-b39) (251.37352ms)
+✔ mana costs, as Forge writes them: plain, hybrid GW, Phyrexian BP, two-brid 2W, CW, X; a split card both faces (1.53063ms)
+✔ the generator is deterministic by seed, and the command writes the same bytes twice (883.749758ms)
+✔ every deck of every band is 40 cards, singleton, every spell castable from its own lands (the independent checker) (786.22052ms)
+✔ the independent checker catches what it should: a splash behind a fetcher with no basic, a split card's other face (0.361024ms)
+✔ 400 decks a band pass the independent checker: no spell without a real source, none short of its pips (2454.11932ms)
+✔ the prior covers the spectrum over 1,000 decks (1313.666147ms)
+✔ the bands: powered is drawn with legacy, the cross slice from the neighbours (57.805787ms)
+✔ the land count: 17 at mean mana value 3, two a mana value, 15 to 18 (0.128684ms)
+✔ the land formula on fixture decks (0.509144ms)
+✔ a fetcher or a cycler is a source only of the colours of the deck's lands it can find (0.318504ms)
+✔ card flow is #153's rule on the scripts: 40 library cards, the study's 17 among them (0.178809ms)
+✔ every deck row carries its variables: colours, creatures, the mana-value histogram, X spells, card flow, fixers (566.883479ms)
+✔ the pairing: deterministic, no self-pairs, every deck within one game of 2M / N; a replay plans the same games (1.982635ms)
+✔ the pairing is prefix-stable, so --pairs can be extended on resume; a smaller --pairs or another seed is refused (0.387484ms)
+✔ the search summary: searched, changed and ms a decision over p + a + b, as the ladder counts them (0.075864ms)
+✔ the read on a synthetic games folder: a planted mono advantage and a planted card stand out, the JSON is strict (22.215515ms)
+✔ census-read de-duplicates: a folder and its replay count 30 games, not 36; a --decks folder named twice counts once; mixed pilots refused unless asked (8.006989ms)
+✔ census-read reads two bands played on the same --seed together; two runs of one band on one seed are still refused (2.343139ms)
+✔ the cube lab CLI refuses a positional argument its command would ignore: --games A B (218.778822ms)
+✔ decks --cube: Omega's 180 cards yield castable 1-, 2- and 3-colour decks at every k, from the cube alone (192.656086ms)
+✔ decks --cube: the command writes the same bytes twice, reports every card's share, refuses band flags (566.865254ms)
+✔ the repeat cap: it changes no Omega deck, and it holds on a mono-heavy cube where it binds (1871.744834ms)
+✔ census-read reads a cube's group beside the bands, and its cards are keyed by it (0.792752ms)
+✔ the engine-unplayable list (D482): the committed file, its shape, every card in the library (0.268568ms)
+✔ the engine-unplayable list (D482): a listed card is never dealt, every skip counted, every other deck unchanged (2040.717232ms)
+✔ decks writes the list it applied and its skips; --unplayable none is D447's draw; --cube refuses it (462.71932ms)
+✔ both chairs of a lab recording pass the redaction checker (246.526568ms)
+✔ each chair is its own viewer: header seat, deck path only for itself, the lab block (30.024037ms)
+✔ negative control: an opponent hand card named in a lab recording FAILS the checker (130.407723ms)
+✔ decision records: both chairs pass, each holds only its own, the search seat carries the search (199.812994ms)
+✔ negative control: the other chair's decision records in a log FAIL the checker (125.768746ms)
+✔ negative control: an option naming the opponent's concealed hand card FAILS the checker (103.207395ms)
+✔ M75: a target record with source "modes" passes; an unknown source FAILS the checker (231.89492ms)
+✔ M76: target:none listed with min 0 passes; the legacy null passes counted; the other shapes FAIL (900.357911ms)
+✔ play exploration: both chairs pass, the header and the marks say the game explored (167.085877ms)
+✔ negative control: an explore mark naming the opponent's concealed hand card FAILS the checker (163.789195ms)
+✔ negative control: an explore mark in a log that did not explore FAILS the checker (145.453338ms)
+✔ M71: a random seat's summary may carry its guardrail counts (G5 and, M73, G6 included; D485's two, D486's two and D488's two too) (167.18228ms)
+✔ negative control: guardrail counts outside a random seat's log, or of an unknown name, FAIL the checker (M71) (331.275396ms)
+✔ negative control: guardrails that are not an object of counts (null, [], "") FAIL the checker (D462) (464.837373ms)
+✔ M72: a Forge-piloted atlas branch seat's summary may carry its pay-cap count (218.462293ms)
+✔ negative control: forgePayCap outside an atlas Forge branch, in a random seat's log, or malformed FAILS the checker (M72) (667.645602ms)
+✔ the deadline: deadlineSec when the job has one, else the game timeout's formula (J148: 7,960 s) (0.887451ms)
+✔ a 4-hour jump of the wall clock while a unit plays does not trip the watchdog (2647.58385ms)
+✔ a worker that never answers is still killed as hung at its deadline (2003.733966ms)
+ℹ tests 93
+ℹ suites 0
+ℹ pass 93
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23188.032065
+check-redaction self-test: 205 controls in fixtures/negative/redaction/
+  ok    a9-hideaway-control-taken.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    a9-hideaway-alt-a-state-after-control-taken.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    a9-hideaway-alt-a-state-after-the-host-leaves.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    a9-hideaway-retaken-the-frame-after-a-return.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    a9-hideaway-alt-dropped-while-returned.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    a9-hideaway-card-re-dug-under-a-new-host.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl passes, counted (an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)
+  ok    stale-token-of-the-opponent.jsonl passes, counted (ceased to exist, another seat's token=2)
+  ok    ceased-opponent-token-source-choice.jsonl passes, counted (ceased to exist, another seat's token=2)
+  ok    ceased-opponent-token-bounced-to-its-hand.jsonl passes, counted (ceased to exist, another seat's token=2)
+  ok    ceased-opponent-token-to-nowhere.jsonl passes, counted (ceased to exist, another seat's token=2)
+  ok    m55-option-cast-from-the-opponent-hand-held.jsonl passes, counted (entered between frames, an opponent's cast=2)
+  ok    baseline.jsonl passes clean (the control)
+  ok    p1-stub-without-owner.jsonl is rejected (amendment P1: the redacted stub is five keys, and `owner` is the fifth)
+  ok    p15-card-without-token.jsonl is rejected (amendment P15: every full card carries `token` (CardView.isToken))
+  ok    p3-card-without-alt.jsonl is rejected (amendment P3: every full card carries `alt`, `null` unless the seat may flip it)
+  ok    p2-library-without-cards.jsonl is rejected (amendment P2: a library is {count, cards}, not a bare count)
+  ok    p3-facedownhidden-revived.jsonl is rejected (amendment P3 retired the eleven-key faceDownHidden object; no emitter writes one)
+  ok    a1-stub-with-a-name.jsonl is rejected (A1: a sixth key on a stub is a leak, and a name is the worst one)
+  ok    a6-opponent-hand-named.jsonl is rejected (A4/A6: a full named card in the opponent hand, for an id nothing ever revealed)
+  ok    a3-opponent-library-revealed.jsonl is rejected (A3: an opponent library dumped as full cards -- reachable, but it must be declared)
+  ok    a3-revealed-top-under-courser.jsonl passes clean (the control)
+  ok    a3-revealed-top-two-cards.jsonl is rejected (A3, D315: Courser reveals ONE card; a second card of the opponent's library is a leak)
+  ok    a3-revealed-top-look-is-private.jsonl is rejected (A3, D315: Experimental Frenzy says "you may look" -- private, even though Forge scripts it MayLookAt$ Player)
+  ok    a9-look-permission-under-gonti.jsonl passes clean (the control)
+  ok    a9-exiled-face-down-named-without-a-dig.jsonl is rejected (A9, D371: an opponent's face-down card in exile with an alt, and no dig from a library behind it)
+  ok    a9-dig-by-the-opponent.jsonl is rejected (A9, D371: the dig was the OPPONENT's effect -- their look permission is not the viewer's)
+  ok    a9-alt-appears-after-the-dig.jsonl is rejected (A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source)
+  ok    a9-opponent-morph-named.jsonl is rejected (A9: the opponent's face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for)
+  ok    a9-stolen-morph-named-for-its-owner.jsonl is rejected (A9, D371: in play a face-down card's face is its CONTROLLER's -- the owner of a stolen morph does not see it)
+  ok    a9-hideaway-control-taken.jsonl passes clean (the control)
+  ok    a9-hideaway-alt-a-state-after-control-taken.jsonl passes clean (the control)
+  ok    a9-hideaway-alt-a-state-after-the-host-leaves.jsonl passes clean (the control)
+  ok    a9-hideaway-no-control-change.jsonl is rejected (A9, D502: the opponent's Watcher stays the opponent's -- with no change of control to the viewer, an alt on their exiled face-down card has no source)
+  ok    a9-hideaway-viewer-controlled-from-the-start.jsonl is rejected (A9, D502: the viewer controls the opponent's Watcher in every state and the alt appears later with no change of control -- the log shows no taking of control, so nothing ties the alt to the look)
+  ok    a9-hideaway-viewer-own-permanent-taken-back.jsonl is rejected (A9, D502: the permanent that changed hands is the VIEWER's own (taken back from the opponent), not one of the exiled card's owner's -- it grants no look at the opponent's card)
+  ok    a9-hideaway-third-party-permanent.jsonl is rejected (A9, D502: the permanent the viewer took is owned by a third party (player 2), not by the exiled card's owner -- it grants no look at that card)
+  ok    a9-hideaway-alt-in-a-graveyard.jsonl is rejected (A9, D502: hideaway's look is a look at a card in EXILE -- a face-down card elsewhere outside play (a graveyard) gains nothing from the change of control)
+  ok    a9-hideaway-alt-two-states-after-control-taken.jsonl is rejected (A9, D502: the alt must come with the change of control or one state after it -- one appearing two states later has no source)
+  ok    a9-hideaway-foretold-card-under-a-stolen-creature.jsonl is rejected (A9, D502 (the review of f3a3091b): the opponent foretells a card (hand -> exile face down) and the viewer steals an unrelated Grizzly Bears -- a card that did not come from a library beside the creature's entry gains no look, and its alt is a leak)
+  ok    a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl is rejected (A9, D502 (the review of f3a3091b): a hand card goes into exile face down carrying its alt in the very state the viewer steals a creature -- it came from a hand, not a library, and its alt is a leak)
+  ok    a9-hideaway-alt-kept-after-control-returns.jsonl is rejected (A9, D502: the look follows the Watcher's CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source)
+  ok    a9-hideaway-alt-after-control-already-returned.jsonl is rejected (A9, D502: the viewer took the Watcher and gave it back before the alt appeared -- a look that arrives when the viewer no longer controls the permanent has no source)
+  ok    a9-hideaway-card-re-exiled-from-a-hand.jsonl is rejected (A9, D502: the dug card went back to the hand and into exile again (foretold) -- only a LATEST move into exile from its owner's library ties it to the Watcher)
+  ok    a9-hideaway-dug-from-another-library.jsonl is rejected (A9, D502: the move into exile came from the VIEWER's library, not the exiled card's owner's -- it is not that owner's hideaway dig)
+  ok    a9-hideaway-dug-into-another-exile.jsonl is rejected (A9, D502: the move went from the opponent's library into the VIEWER's exile -- a hideaway dig stays in its owner's exile)
+  ok    a9-hideaway-card-of-an-unrelated-host.jsonl is rejected (A9, D502: the card was dug beside the entry of the opponent's Mosswort Bridge, not of the Watcher the viewer took -- the Watcher's look does not reach it)
+  ok    a9-hideaway-dig-with-no-host-trigger.jsonl is rejected (A9, D502: the dig beside the Watcher's entry carries no `cast` event naming the Watcher (its hideaway trigger) in its frame or the one before -- some other effect dug it)
+  ok    a9-hideaway-retaken-the-frame-after-a-return.jsonl passes clean (the control)
+  ok    a9-hideaway-alt-dropped-while-returned.jsonl passes clean (the control)
+  ok    a9-hideaway-dig-beside-the-log-start.jsonl is rejected (A9, D502 (second review): a permanent listed in the log's first state was there before the log began, so a trigger of it and a dig in the next frame are beside no entry the log shows -- stealing it later grants no look)
+  ok    a9-hideaway-dig-beside-a-later-trigger-of-the-host.jsonl is rejected (A9, D502: a cast naming the Watcher (another trigger or ability of it) beside a dig long after it entered -- the dig is not beside its entry, so it is not its hideaway card)
+  ok    a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl is rejected (A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source)
+  ok    a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl is rejected (A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger)
+  ok    a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl is rejected (A9, D502 (second review): the Watcher enters with no hideaway trigger and another effect digs a card the next frame -- no cast names the Watcher, so the dig is not its)
+  ok    a9-hideaway-second-dig-beside-the-host-trigger.jsonl is rejected (A9, D502: the Watcher's trigger digs C1 and another effect digs C2 the next frame, both beside its entry and its cast -- a hideaway digs ONE card, so the Watcher vouches for neither)
+  ok    a9-hideaway-creature-spell-cast-then-unrelated-dig.jsonl is rejected (A9, D502 (third review): the opponent casts a creature (its spell's cast names it, before it enters) and another effect digs a card the next frame -- a spell cast is no hideaway trigger, so stealing the creature grants no look)
+  ok    a9-hideaway-real-card-played-then-steal.jsonl is rejected (A9, D502 (third review): an unrelated dig beside the Watcher's trigger, then the Watcher's own dig, then its own card played from exile -- the Watcher was tied to two digs, and a card leaving exile does not make the other one its own)
+  ok    a9-hideaway-held-grant-card-re-dug-in-one-frame.jsonl is rejected (A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> library -> exile in one frame -- Forge forgets a hideaway card that moves (ForgetOnMoved), so the grant ends and the new dig has no trigger)
+  ok    a9-hideaway-held-grant-card-through-a-hand.jsonl is rejected (A9, D502 (third review): while the viewer holds the Watcher its card goes exile -> hand -> exile in one frame, through a hidden zone -- the grant ends on the move)
+  ok    a9-hideaway-card-re-dug-under-a-new-host.jsonl passes clean (the control)
+  ok    a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl passes clean (the control)
+  ok    a9-hideaway-two-hosts-enter-together.jsonl is rejected (A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher's, so stealing it vouches for neither)
+  ok    own-hand-card-redacted.jsonl is rejected (the viewer's own hand card served as a redacted stub: over-redaction, and the checker names the stub's controller)
+  ok    a6-library-reveal-is-not-a-whitelist.jsonl is rejected (A6: an opponent-library reveal must not excuse the same id later in their HAND)
+  ok    notice-names-a-concealed-card.jsonl is rejected (section 6: both notice strings go through Snap.sweepText, so an id here is OUR gate failing)
+  ok    ask-text-initial-null.jsonl is rejected (section 5.2: `text.initial` is a string, "" when Forge has none -- never null)
+  ok    ask-ability-menu-cardid-null.jsonl is rejected (section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send)
+  ok    a6-reveal-ask-one-frame-too-late.jsonl is rejected (the lookahead is ONE frame: a reveal ask two frames after the state does not justify it)
+  ok    p12-choose-list-reveals-without-the-flag.jsonl is rejected (P12: only `reveal: true` (or a delayedReveal) lets a list-shaped ask carry an opponent hand card)
+  ok    a7-reveal-flag-on-the-wrong-ask-kind.jsonl is rejected (amendment A7: `reveal: true` is Forge's getChoices(min < 0) channel and is a `choose_list` only)
+  ok    m44-match-present.jsonl passes clean (the control)
+  ok    m44-aideck-carries-path.jsonl is rejected (amendment M44: the AI's deck is its NAME and card COUNT; a path identifies the opponent's decklist)
+  ok    m44-aideck-cards-is-a-list.jsonl is rejected (amendment M44: aiDeck.cards is a COUNT; a list of names there is the opponent's decklist on the wire)
+  ok    m44-yourdeck-path-mismatch.jsonl is rejected (amendment M44: hello_ok.match and the session header are written from the same Deck objects; a different yourDeck.path means one of them describes a different match)
+  ok    m47-spectated-present.jsonl passes clean (the control)
+  ok    m47-yourprofile-on-a-human-seat.jsonl is rejected (amendment M47: yourProfile is a fact about an AI seat; on a viewer players[] marks human it describes a different match)
+  ok    m47-yourprofile-is-a-path.jsonl is rejected (amendment M47: yourProfile is the base name of a .ai file, never a path)
+  ok    m56-aipolicy-present.jsonl passes clean (the control)
+  ok    m56-aipolicy-not-a-policy.jsonl is rejected (amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path)
+  ok    m47-pace-not-a-number.jsonl is rejected (amendment M47: the session header's paceMs is a positive integer of milliseconds)
+  ok    m49-keywords-present.jsonl passes clean (the control)
+  ok    m49-stub-carries-keywords.jsonl is rejected (amendment M49: a redacted stub is five keys -- a keyword on it is a sixth key, and a fact about a hidden card)
+  ok    m49-keyword-is-a-display-string.jsonl is rejected (amendment M49: a keyword is a Keyword constant's name() -- a display string (or a card name) is not one)
+  ok    m49-face-down-carries-keywords.jsonl is rejected (amendment M49: a face-down card's keywords are [] in both branches of gate 2, like its name)
+  ok    m49-keywords-half-present.jsonl is rejected (amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it)
+  ok    m55-decisions-present.jsonl passes clean (the control)
+  ok    m55-decision-of-the-other-seat.jsonl is rejected (amendment M55 / D347: a seat's legal options name its hand -- the OTHER seat's record in this log is a leak)
+  ok    m55-option-names-the-opponent-hand.jsonl is rejected (amendment M55 / D347: an option naming a card the viewer cannot see (the opponent's concealed hand) is a leak)
+  ok    m55-decision-carries-a-label.jsonl is rejected (amendment M55 / D347: a decision record is tokens and numbers -- a label is an engine string that can name a card)
+  ok    m55-chosen-is-not-an-option.jsonl is rejected (amendment M55 / D347: the answer is one of the legal options)
+  ok    m55-frame-is-not-a-state.jsonl is rejected (amendment M55 / D347: a decision points at the state frame it was taken in)
+  ok    m55-decision-in-a-seat-recording.jsonl is rejected (amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log)
+  ok    m55-option-entered-between-frames.jsonl passes clean (the control)
+  ok    m55-option-never-shown.jsonl is rejected (D481: an option naming an id no state frame shows and no zone event moves into the viewer's public zones is still a failure)
+  ok    m55-option-entered-the-opponent-hand.jsonl is rejected (D481: an id the next state frame's events deal into the OPPONENT's hand is hidden -- a decision naming it is a leak)
+  ok    m55-option-cast-between-frames.jsonl passes clean (the control)
+  ok    m55-option-cast-from-the-opponent-hand.jsonl is rejected (D481: a card moved to the stack from ANOTHER seat's hand is not vouched for -- it can be cast face down)
+  ok    m55-option-entered-then-went-to-the-opponent-hand.jsonl is rejected (D481: only the LATEST zone event counts -- a token on the viewer's battlefield that then went to the opponent's hand is hidden)
+  ok    m55-option-cast-a-frame-before-the-decision.jsonl passes clean (the control)
+  ok    m55-option-entered-then-ceased-to-exist.jsonl passes clean (the control)
+  ok    m55-option-born-on-the-opponent-battlefield.jsonl is rejected (D481: a token born onto the OPPONENT's battlefield and gone to their graveyard is not the viewer's own -- not vouched for)
+  ok    m55-option-born-then-taken-by-the-opponent.jsonl is rejected (D481: a token born onto the viewer's battlefield whose latest move is onto the OPPONENT's battlefield is not vouched for)
+  ok    m55-option-born-on-the-opponent-then-taken.jsonl is rejected (D481: the birth must be onto the VIEWER's battlefield -- a token born onto the opponent's and then taken by the viewer is not vouched for)
+  ok    m55-option-entered-the-viewer-exile.jsonl is rejected (D481: exile is never accepted (a card can go there face down) -- a token born onto the viewer's battlefield and exiled is not vouched for)
+  ok    m55-option-cast-from-the-viewer-library.jsonl is rejected (D481: a card moved to the stack from the viewer's own LIBRARY is not vouched for -- the viewer could not see it when the option was offered)
+  ok    m55-option-not-born-in-the-graveyard.jsonl is rejected (D481: the token branch needs a birth (from: null onto the viewer's battlefield) -- a card merely moved into the viewer's graveyard from its library is not vouched for)
+  ok    m55-option-entered-a-state-too-late.jsonl is rejected (D481: only the FIRST state frame after the decision vouches for a between-frames token -- events in a later one do not)
+  ok    stale-token-died-earlier.jsonl passes clean (the control)
+  ok    stale-token-bounced-to-own-hand.jsonl passes clean (the control)
+  ok    stale-token-bounced-to-the-opponent-hand.jsonl is rejected (D485: a stale target whose latest move is into the OPPONENT's hand is hidden -- not vouched for)
+  ok    stale-token-then-exiled.jsonl is rejected (D485: exile is never accepted (a card can go there face down) -- the viewer's token exiled is not vouched for)
+  ok    stale-nontoken-ghost.jsonl is rejected (D485: only a TOKEN ceases to exist -- a nontoken card (token: false) last moved to the graveyard is listed there or it is not the viewer's to name)
+  ok    stale-token-shown-only-after-the-window.jsonl is rejected (D485: the listing as the viewer's own token must be in the window (up to the first state after the decision) -- one only later does not vouch)
+  ok    stale-token-of-the-opponent.jsonl passes clean (the control)
+  ok    ceased-opponent-token-source-choice.jsonl passes clean (the control)
+  ok    ceased-opponent-token-bounced-to-its-hand.jsonl passes clean (the control)
+  ok    ceased-opponent-token-to-nowhere.jsonl passes clean (the control)
+  ok    ceased-opponent-nontoken-ghost.jsonl is rejected (D503: only a TOKEN ceases to exist -- the opponent's nontoken card (token: false) last moved to its graveyard and listed nowhere is not vouched for)
+  ok    ceased-opponent-nontoken-a-stub.jsonl is rejected (D503: the opponent's nontoken card moved battlefield -> graveyard and shown to the seat only as a stub at the decision -- a stub is never an option)
+  ok    ceased-opponent-token-never-listed.jsonl is rejected (D503: a token id the window never lists on a battlefield is not vouched for by its move alone)
+  ok    ceased-opponent-token-then-exiled.jsonl is rejected (D503: exile is never accepted (a card can go there face down) -- the opponent's token exiled is not vouched for)
+  ok    ceased-opponent-token-into-a-library.jsonl is rejected (D503: a library is never accepted -- the opponent's token put into its library is not vouched for)
+  ok    ceased-opponent-token-shown-only-after-the-window.jsonl is rejected (D503: the listing as that seat's own token must be in the window (up to the first state after the decision) -- one only later does not vouch)
+  ok    ceased-opponent-token-into-the-viewer-hand.jsonl is rejected (D503: the latest move must end in the token's OWN seat's graveyard or hand -- the opponent's token moved into the viewer's hand is not vouched for)
+  ok    ceased-opponent-token-exiled-then-to-graveyard.jsonl is rejected (D503: the latest move must come off the token's battlefield -- exiled, then from exile into its graveyard, is not vouched for)
+  ok    ceased-opponent-token-exiled-then-gone.jsonl is rejected (D503: a move to nowhere vouches only straight off the token's battlefield -- exiled, then gone from exile, is not vouched for)
+  ok    ceased-opponent-token-still-a-hand-stub.jsonl is rejected (D503: the opponent's token bounced to its hand and still listed there as a stub at the decision -- a stub is never an option)
+  ok    stack-copy-cast-by-the-viewer.jsonl passes clean (the control)
+  ok    stack-copy-cast-by-the-opponent.jsonl passes clean (the control)
+  ok    stack-copy-cast-after-empty-states.jsonl passes clean (the control)
+  ok    stack-copy-resolves-into-a-token.jsonl passes clean (the control)
+  ok    stack-copy-cast-a-step-too-late.jsonl is rejected (D495: the cast must be in the window -- one in the second state after the decision, when the first records an engine step, does not vouch)
+  ok    stack-copy-then-into-the-opponent-hand.jsonl is rejected (D495: a copy is never in a zone -- an id with a cast event AND a later zone event into the opponent's hand is a card, not a copy, and hidden)
+  ok    stack-copy-is-an-opponent-hand-stub.jsonl is rejected (D495: an opponent's cast event naming a card its hand lists as a stub (an ability of a card in hand, ninjutsu's shape) is not a copy -- the stub is listed, so the cast vouches for nothing)
+  ok    stack-copy-is-a-card-from-a-library.jsonl is rejected (D495: a cast whose id a zone event moved from a LIBRARY onto the stack is a card the viewer could not see, not a copy -- not vouched for)
+  ok    stack-copy-hand-stub-cast-in-the-first-state.jsonl is rejected (D495 guard 2: the opponent activates an ability of a card in its hand (ninjutsu's shape) in the log's FIRST state -- the cast and the stub are in the same state, so nothing lists it BEFORE the cast; the stub alone rejects it)
+  ok    stack-copy-face-down-exile-listed-before-its-cast.jsonl is rejected (D495 guard 3: the opponent's face-down exiled card, listed with a blank face (a full card, not a stub) in the first state and in none after, then a cast naming it with no zone event -- it was in a zone before its cast, so it is a card, not a copy)
+  ok    stack-copy-already-off-the-stack.jsonl is rejected (D495: a copy cast and taken off the stack in or before the decision's own state is gone -- naming it is not vouched for)
+  ok    reveal-vouches-the-option.jsonl passes clean (the control)
+  ok    reveal-before-the-decision-state.jsonl is rejected (D496: a reveal BEFORE the decision's state frame does not vouch -- a card still public then would be in that state)
+  ok    reveal-after-the-decision.jsonl is rejected (D496: a reveal AFTER the decision does not vouch -- the seat was offered the card before the engine showed it)
+  ok    reveal-names-another-id.jsonl is rejected (D496: a reveal in the window vouches only for the ids it names -- one naming another card does not vouch for the option)
+  ok    reveal-of-another-seat.jsonl is rejected (D496: a reveal line is the seat's own private record -- another seat's in this log is a leak, and vouches for nothing)
+  ok    reveal-with-an-unexpected-key.jsonl is rejected (D496: a reveal line is ids, a zone word and a player -- a fifth key (a card name) is an engine string, and the line vouches for nothing)
+  ok    reveal-empty-card-ids.jsonl is rejected (D496: a reveal line names at least one card -- an empty one is not a reveal (the decision beside it names only cards its state shows, so the empty list is the one defect))
+  ok    reveal-zone-not-a-zone-word.jsonl is rejected (D496: `zone` is the reveal line's only string, and only a ZoneType word may fill it -- a card name there is an engine string, and the line vouches for nothing)
+  ok    reveal-owner-not-a-player.jsonl is rejected (D496: `owner` is a player of the game -- any other number is not, and the line vouches for nothing)
+  ok    reveal-of-an-opponent-hand-stub.jsonl is rejected (D496: the bridge never offers an opponent's hand card -- one the decision's state frame (and the next) lists as a stub is refused even when a reveal names it and a zone event moves it out of the hand)
+  ok    reveal-moved-a-state-too-late.jsonl is rejected (D496: the zone event must be in the states up to the first one after the decision (held events ship with that snapshot) -- a move in the second state after it is a later step, and does not vouch)
+  ok    reveal-of-a-peeked-library-card-that-never-moves.jsonl is rejected (D496: a reveal alone does not vouch -- a library card revealed to the seat (a peek) that no zone event moves where the seat sees it is still a library card, and the bridge never offers one)
+  ok    m55-option-cast-from-the-opponent-hand-held.jsonl passes clean (the control)
+  ok    m55-option-opponent-hand-to-library-no-cast.jsonl is rejected (D504: an opponent's hand card moved into its library, with no cast, is still hidden -- not vouched for)
+  ok    m55-option-opponent-hand-to-exile-no-cast.jsonl is rejected (D504: an opponent's hand card moved into exile, with no cast, is not vouched for (a card can go there face down))
+  ok    m55-option-opponent-hand-to-stack-no-cast.jsonl is rejected (D504: an opponent's hand card moved onto the stack with no cast event naming it is not vouched for -- the cast is what makes it public)
+  ok    m55-option-opponent-cast-still-a-stub-after.jsonl is rejected (D504: a cast event names it, but the state after the decision still lists it as a stub in the opponent's hand -- a stub is never an option)
+  ok    m55-option-opponent-hand-to-exile-with-a-cast.jsonl is rejected (D504: the latest move must be onto the STACK -- an opponent's hand card moved into exile is not vouched for even with a cast event naming it (a cast event also names an ability's source card))
+  ok    m55-option-opponent-cast-from-another-zone.jsonl is rejected (D504: the move onto the stack must come from the hand the decision's state showed the stub in -- one from a graveyard (flashback's shape), cast, is not this rule's evidence)
+  ok    m55-option-opponent-cast-never-a-stub.jsonl is rejected (D504: the decision's state must show the card as a stub in that hand -- an id it never listed, moved from the opponent's hand onto the stack and cast, is not evidenced as the hand card the batch held)
+  ok    m55-option-opponent-cast-event-a-state-too-late.jsonl is rejected (D504: the cast must be in the window too -- a move onto the stack in the first state after the decision with its cast only in the second does not vouch)
+  ok    m55-option-opponent-cast-a-state-too-late.jsonl is rejected (D504: the move and the cast must be in the window (up to the first state after the decision) -- in the second state after it they do not vouch)
+  ok    m57-explore-present.jsonl passes clean (the control)
+  ok    m57-explore-without-header.jsonl is rejected (amendment M57 / D358: an explore mark only in a recording whose header says it explored)
+  ok    m57-explore-forge-names-the-opponent-hand.jsonl is rejected (amendment M57 / D358: the mark's Forge answer is a token like any other -- naming a card the viewer cannot see is a leak)
+  ok    m57-explore-carries-a-label.jsonl is rejected (amendment M57 / D358: an explore mark is a rule and a token -- nothing else)
+  ok    m57-playexplore-in-a-seat-recording.jsonl is rejected (amendment M57 / D358: a seat a person plays never explores)
+  ok    m76-target-none-listed.jsonl passes clean (the control)
+  ok    m76-target-none-mandatory-part.jsonl passes clean (the control)
+  ok    m76-legacy-null-target.jsonl passes clean (the control)
+  ok    m76-legacy-null-target-after-d487.jsonl is rejected (amendment M76 / D487: the legacy shape is accepted only in a log started before D487 merged (LEGACY_NULL_TARGET_BEFORE) -- a later null answer is a bridge fault)
+  ok    m76-legacy-null-target-not-an-atlas.jsonl is rejected (amendment M76 / D487: the legacy shape is accepted only in a move-atlas log (lab.atlas in its header))
+  ok    m76-unseen-answer-null.jsonl is rejected (amendment M76 / D487 (review): a min-1 part answered with a target the seat cannot see writes chosen null beside complete:false -- never the legacy shape)
+  ok    m76-legacy-null-by-search.jsonl is rejected (amendment M76 / D487: the legacy shape is Forge's answer only -- a search seat's null answer fails)
+  ok    m76-legacy-null-source-modes.jsonl is rejected (amendment M76 / D487: the legacy shape is a priority answer's targets only -- a modes record's null answer fails)
+  ok    m76-chosen-null-beside-target-none.jsonl is rejected (amendment M76 / D487: a record written after D487 (it lists target:none and carries min) never answers null)
+  ok    m76-chosen-null-trigger.jsonl is rejected (amendment M76 / D487: the legacy null answer is accepted in J171's one shape only -- a trigger's target record is not it)
+  ok    m76-target-none-not-listed.jsonl is rejected (amendment M76 / D487: target:none is an answer only where it is listed)
+  ok    m76-target-none-on-a-min-1-part.jsonl is rejected (amendment M76 / D487: a part whose minimum is 1 lists target:none only as an empty mandatory part, marked complete:false and NO_TARGET)
+  ok    m76-target-none-without-min.jsonl is rejected (amendment M76 / D487: a record listing target:none says the part's minimum)
+  ok    m76-target-none-on-a-priority-record.jsonl is rejected (amendment M76 / D487: target:none answers a target record, never another kind)
+  ok    m76-target-none-in-a-chosen-list.jsonl is rejected (amendment M76 / D487: target:none is the whole answer of an empty part, never one of several targets)
+  ok    m76-min-without-target-none.jsonl is rejected (amendment M76 / D487: min is written exactly when target:none is listed)
+  ok    m76-min-negative.jsonl is rejected (amendment M76 / D487: min is a non-negative integer)
+  ok    m76-min-not-an-integer.jsonl is rejected (amendment M76 / D487: min is a non-negative integer)
+  ok    m76-no-target-elsewhere.jsonl is rejected (amendment M76 / D487: why NO_TARGET marks an empty mandatory part only -- not a min-0 part)
+  ok    m58-search-prior-present.jsonl passes clean (the control)
+  ok    m58-generated-is-not-a-count.jsonl is rejected (amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string)
+  ok    m60-best-of-three-present.jsonl passes clean (the control)
+  ok    m60-score-in-a-one-game-match.jsonl is rejected (amendment M60: score belongs to a best of three; a one-game table carries exactly M59's four keys)
+  ok    m60-score-not-a-count.jsonl is rejected (amendment M60: score is the games each side won before this one, 0 or 1 each -- never a list or a name)
+  ok    m60-score-ahead-of-the-game.jsonl is rejected (amendment M60: game 2 follows exactly one game, so the score cannot add up to two)
+  ok    m60-record-not-a-boolean.jsonl is rejected (amendment M60 / D407: record is a seat's consent, true or false)
+  ok    m60-record-against-the-ai.jsonl is rejected (amendment M60 / D407: only a seat at a table of two says whether it may be recorded)
+  ok    m62-ai-unexpected-key.jsonl is rejected (amendment M62 / D414: the header's ai is the search's own knobs, never a deck or anything else)
+  ok    m62-ai-without-transport.jsonl is rejected (amendment M62 / D414: only a seat a person plays names its AI opponent in the header)
+  ok    m61-playable-present.jsonl passes clean (the control)
+  ok    m61-playable-names-the-opponent-hand.jsonl is rejected (amendment M61 / D413: the list is the seat's own cards -- naming a card in the opponent's hidden hand is a leak)
+  ok    m61-playable-on-the-battlefield.jsonl is rejected (amendment M61: the list names cards outside the battlefield only)
+  ok    m61-playable-off-priority.jsonl is rejected (amendment M61: the list is written only at the seat's own priority, null otherwise)
+  ok    m61-playable-half-present.jsonl is rejected (amendment M61: a seat writes the key on every state -- some with and some without is a broken emitter)
+  ok    m63-activatable-present.jsonl passes clean (the control)
+  ok    m63-activatable-names-the-opponent-permanent.jsonl is rejected (amendment M63 / D420: the list is the permanents the seat controls -- naming the opponent's is a lie about control)
+  ok    m63-activatable-off-the-battlefield.jsonl is rejected (amendment M63: the list names battlefield permanents only (a card elsewhere is M61's playable))
+  ok    m63-activatable-off-priority.jsonl is rejected (amendment M63: the list is written only at the seat's own priority, null otherwise)
+  ok    m63-activatable-half-present.jsonl is rejected (amendment M63: a seat writes the key on every state -- some with and some without is a broken emitter)
+  ok    m65-m66-selection-present.jsonl passes clean (the control)
+  ok    m66-playerids-names-no-seat.jsonl is rejected (amendment M66 / D423: playerIds names seats -- an id that is no seat is a card id in the wrong list)
+  ok    m65-chosen-was-never-offered.jsonl is rejected (amendment M65 / D422: a target or list entry chosen is one the engine offered this seat in the same input)
+  ok    m65-block-by-the-opponent.jsonl is rejected (amendment M65 / D422: a block declaration is the viewing seat's own -- a blocker it does not control is a lie about control)
+  ok    m65-chosen-shape.jsonl is rejected (amendment M65: chosen is exactly {cardIds, playerIds, blocks, attacks})
+  ok    m65-chosen-half-present.jsonl is rejected (amendment M65: a seat writes chosen on every input -- some with and some without is a broken emitter)
+  ok    m67-assign-damage-refused.jsonl passes clean (the control)
+  ok    m67-illegal-damage-applied.jsonl is rejected (amendment M67 / D424: damage on the defender while defenderAllowed is false must be refused -- the next ask is the same question with a reason)
+  ok    m67-defender-allowed-half-present.jsonl is rejected (amendment M67: a bridge since M67 writes defenderAllowed on every assign_damage ask -- some with and some without is a broken emitter)
+  ok    m68-answer-refused.jsonl passes clean (the control)
+  ok    m68-illegal-answer-applied.jsonl is rejected (amendment M68 / D426: a choose_list answer outside [min, max] must be refused -- the next ask is the same question with a reason)
+  ok    m68-reason-half-present.jsonl is rejected (amendment M68: a bridge since M68 writes reason on every ask of a kind -- some with and some without is a broken emitter)
+  ok    p1-stub-without-owner.jsonl is a WARN under --pre-amendment
+  ok    p15-card-without-token.jsonl is a WARN under --pre-amendment
+  ok    p3-card-without-alt.jsonl is a WARN under --pre-amendment
+  ok    p2-library-without-cards.jsonl is a WARN under --pre-amendment
+  ok    p3-facedownhidden-revived.jsonl is a WARN under --pre-amendment
+  ok    a1-stub-with-a-name.jsonl is still rejected under --pre-amendment
+  ok    a6-opponent-hand-named.jsonl is still rejected under --pre-amendment
+  ok    a3-opponent-library-revealed.jsonl is a WARN under --opponent-library-ok
+  ok    a6-library-reveal-is-not-a-whitelist.jsonl is still rejected under --opponent-library-ok
+  ok    a6-opponent-hand-named.jsonl is still rejected under --opponent-library-ok
+  ok    --partial: every one of the 205 controls has the same verdict, for the same reason
+  ok    a two-line prefix: --partial exit 3 (coverage skipped, nothing leaked); without the flag still exit 1
+  ok    a prefix ending in a leaking state: --partial exit 1, A1
+  ok    A6's slack cut inside it: --partial holds the state back (decided=10618 bytes), one frame later it fails
+  ok    M55 D3 cut before the next state: undecided; with it: a failure
+  ok    D495 spell copy cut after its empty state: undecided; with the cast: a pass
+  ok    D496 reveal: cut before the next state, undecided; with its zone events, a pass; a reveal after the decision waits, then fails
+  ok    669 prefixes of the committed recordings pass --partial (1.8 s)
+  ok    --empty-hand-ok: every one of the 205 controls has the same verdict, for the same reason
+  ok    an opponent hand empty in every state: a failure by default, a WARN under --empty-hand-ok
+  ok    a viewer hand empty in every state: a failure by default, a WARN under --empty-hand-ok
+  ok    opp-full-card-count-1.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-count-1-no-stub.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-library-listed.jsonl: still a failure under --empty-hand-ok (a card of another seat's hand or library is listed)
+  ok    opp-seat-never-listed.jsonl: still a failure under --empty-hand-ok (no state lists any seat but the viewer's)
+  ok    opp-seat-missing-once.jsonl: still a failure under --empty-hand-ok (the state at line 3 lists 1 of the 2 seats)
+  ok    an opponent hand empty in every state, its library listing only the top card A3 vouches for: a failure by default, a WARN under --empty-hand-ok (D501)
+  ok    opp-top-revealed-hand-card.jsonl: still a failure under --empty-hand-ok (another seat's hand is not empty)
+  ok    opp-library-listed-no-revealer.jsonl: still a failure under --empty-hand-ok (a card of another seat's hand or library is listed)
+  ok    opp-library-listed-viewer-revealer.jsonl: still a failure under --empty-hand-ok (a card of another seat's hand or library is listed)
+  ok    opp-top-revealed-two-cards.jsonl: still a failure under --empty-hand-ok (a card of another seat's hand or library is listed)
+  ok    viewer-count-1-stub.jsonl: still a failure under --empty-hand-ok (the viewer's hand is not empty)
+
+check-redaction self-test OK
+{"atlases": 13, "report": 1, "labels": 89, "confident": 26, "confidentPer7Worker10hNight": 31.6, "poisson95": [20.6, 46.3], "confidentPerWorkerHour": 0.4512, "contract": "mtg-table rung-4b label v6 (J177)"}
+J183 scan self-test b-s09-pauper-2109 castsRefused 1448 refusedCastOptions [] ok
+J183 scan self-test b-s13-pauper-2113 castsRefused 787 refusedCastOptions [] ok
+1
+decks: 2 pauper deck(s), seed 2414, into /home/justin-a/code/lab/data/lab-j183/decks/s01-pauper-2414: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (1 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2614, into /home/justin-a/code/lab/data/lab-j183/validation/v01-pauper-2614: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2414, into var/lab-j183-local/redraw/s01-pauper-2414: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (1 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2614, into var/lab-j183-local/redraw/v01-pauper-2614: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2415, into /home/justin-a/code/lab/data/lab-j183/decks/s02-peasant-2415: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2615, into /home/justin-a/code/lab/data/lab-j183/validation/v02-peasant-2615: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2415, into var/lab-j183-local/redraw/s02-peasant-2415: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2615, into var/lab-j183-local/redraw/v02-peasant-2615: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2416, into /home/justin-a/code/lab/data/lab-j183/decks/s03-legacy-2416: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2616, into /home/justin-a/code/lab/data/lab-j183/validation/v03-legacy-2616: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (2 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (1 skip(s)), 2 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2416, into var/lab-j183-local/redraw/s03-legacy-2416: k = 1..5 1 / 0 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2616, into var/lab-j183-local/redraw/v03-legacy-2616: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (2 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (1 skip(s)), 2 deck(s) with a skip
+decks: 2 powered deck(s), seed 2417, into /home/justin-a/code/lab/data/lab-j183/decks/s04-powered-2417: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (1 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 powered deck(s), seed 2617, into /home/justin-a/code/lab/data/lab-j183/validation/v04-powered-2617: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (1 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 powered deck(s), seed 2417, into var/lab-j183-local/redraw/s04-powered-2417: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (1 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 powered deck(s), seed 2617, into var/lab-j183-local/redraw/v04-powered-2617: k = 1..5 0 / 0 / 1 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (1 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2418, into /home/justin-a/code/lab/data/lab-j183/decks/s05-pauper-2418: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2618, into /home/justin-a/code/lab/data/lab-j183/validation/v05-pauper-2618: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2418, into var/lab-j183-local/redraw/s05-pauper-2418: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2618, into var/lab-j183-local/redraw/v05-pauper-2618: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2419, into /home/justin-a/code/lab/data/lab-j183/decks/s06-peasant-2419: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2619, into /home/justin-a/code/lab/data/lab-j183/validation/v06-peasant-2619: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2419, into var/lab-j183-local/redraw/s06-peasant-2419: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2619, into var/lab-j183-local/redraw/v06-peasant-2619: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2420, into /home/justin-a/code/lab/data/lab-j183/decks/s07-legacy-2420: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2620, into /home/justin-a/code/lab/data/lab-j183/validation/v07-legacy-2620: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2420, into var/lab-j183-local/redraw/s07-legacy-2420: k = 1..5 1 / 1 / 0 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2620, into var/lab-j183-local/redraw/v07-legacy-2620: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2421, into /home/justin-a/code/lab/data/lab-j183/decks/s08-powered-2421: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2621, into /home/justin-a/code/lab/data/lab-j183/validation/v08-powered-2621: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (1 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 powered deck(s), seed 2421, into var/lab-j183-local/redraw/s08-powered-2421: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2621, into var/lab-j183-local/redraw/v08-powered-2621: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (1 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2422, into /home/justin-a/code/lab/data/lab-j183/decks/s09-pauper-2422: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2622, into /home/justin-a/code/lab/data/lab-j183/validation/v09-pauper-2622: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2422, into var/lab-j183-local/redraw/s09-pauper-2422: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2622, into var/lab-j183-local/redraw/v09-pauper-2622: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2423, into /home/justin-a/code/lab/data/lab-j183/decks/s10-peasant-2423: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2623, into /home/justin-a/code/lab/data/lab-j183/validation/v10-peasant-2623: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2423, into var/lab-j183-local/redraw/s10-peasant-2423: k = 1..5 1 / 0 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 peasant deck(s), seed 2623, into var/lab-j183-local/redraw/v10-peasant-2623: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool peasant, cross pauper+legacy; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2424, into /home/justin-a/code/lab/data/lab-j183/decks/s11-legacy-2424: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (1 skip(s)), 1 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2624, into /home/justin-a/code/lab/data/lab-j183/validation/v11-legacy-2624: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (1 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2424, into var/lab-j183-local/redraw/s11-legacy-2424: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (1 skip(s)), 1 deck(s) with a skip
+decks: 2 legacy deck(s), seed 2624, into var/lab-j183-local/redraw/v11-legacy-2624: k = 1..5 0 / 1 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool legacy, cross peasant+powered; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (1 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 powered deck(s), seed 2425, into /home/justin-a/code/lab/data/lab-j183/decks/s12-powered-2425: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2625, into /home/justin-a/code/lab/data/lab-j183/validation/v12-powered-2625: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2425, into var/lab-j183-local/redraw/s12-powered-2425: k = 1..5 0 / 0 / 1 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2625, into var/lab-j183-local/redraw/v12-powered-2625: k = 1..5 0 / 1 / 1 / 0 / 0; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2426, into /home/justin-a/code/lab/data/lab-j183/decks/s13-pauper-2426: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2626, into /home/justin-a/code/lab/data/lab-j183/validation/v13-pauper-2626: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (1 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2426, into var/lab-j183-local/redraw/s13-pauper-2426: k = 1..5 0 / 0 / 0 / 1 / 1; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 pauper deck(s), seed 2626, into var/lab-j183-local/redraw/v13-pauper-2626: k = 1..5 1 / 0 / 0 / 1 / 0; 0 rejected draw(s), 0 new makeup(s); pool pauper, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (1 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 1 deck(s) with a skip
+decks: 2 powered deck(s), seed 2099, into /home/justin-a/code/lab/data/lab-j183/decks/p-powered-2099: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+decks: 2 powered deck(s), seed 2099, into var/lab-j183-local/redraw/p-powered-2099: k = 1..5 0 / 1 / 0 / 0 / 1; 0 rejected draw(s), 0 new makeup(s); pool powered+legacy, cross peasant; engine-unplayable (D482) tools/cubelab/engine-unplayable.json: Scute Swarm (0 skip(s)), Chain of Smog (0 skip(s)), Emeritus of Abundance (0 skip(s)), Elite Interceptor (0 skip(s)), Emeritus of Ideation (0 skip(s)), Studious First-Year (0 skip(s)), Ob Nixilis, the Adversary (0 skip(s)), 0 deck(s) with a skip
+J183 draws: recorded in var/lab-j183-local/draws-pilot.json
+{"spines13": 13, "validation13": 13, "all13": 1, "validationAll": 1, "smokeData": 1, "smokeRedraw": 1, "newDraws13": 13, "newValidation": 1, "recorded": 1}
+atlas phase A: 2 rollout(s) from the opening, both seats random; 0 done, 2 to play on 2 worker(s)
+  [A 2/2] 1142 games/h
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 18 decision(s) of seat A; branching at 2: d0 (p, turn 2, 2 options), d17 (a, turn 16, 2 options)
+atlas phase B: 4 unit(s) to play (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/4] d0-forge-0: 4/4 branch game(s); 906 branch games/h
+  [B 2/4] d17-random-0: 4/4 branch game(s); 1271 branch games/h
+  [B 3/4] d17-forge-0: 4/4 branch game(s); 1598 branch games/h
+  [B 4/4] d0-random-0: 4/4 branch game(s); 1582 branch games/h
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (558 rows, 38 frame logs, 8 leak check(s))
+atlas phase A: 16 rollout(s) from the opening, both seats random; 0 done, 16 to play on 2 worker(s)
+  [A 16/16] 1591 games/h
+atlas: var/cubelab/atlas-selftest/g5/atlas.json and atlas.md; phase A 16 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (1274 rows, 32 frame logs, 0 leak check(s))
+atlas phase A: 6 rollout(s) from the opening, both seats random; 0 done, 6 to play on 2 worker(s)
+  [A 6/6] 1387 games/h
+atlas: var/cubelab/atlas-selftest/g6/atlas.json and atlas.md; phase A 6 game(s), phase B 0 branch game(s) at 0 decision(s); checks: clean (408 rows, 12 frame logs, 0 leak check(s))
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/atlas.json and atlas.md; phase A 2 game(s), phase B 16 branch game(s) at 2 decision(s); checks: clean (558 rows, 38 frame logs, 8 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); the futility stop at 4 (D489: option 0 best or within 0; 0.5 of those played on as controls); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 3249 branch games/h
+  [B 2/3] d2-random-0: 6/6 branch game(s); 3171 branch games/h
+  [B 3/4] d31-random-2: 12/12 branch game(s); 4361 branch games/h
+  [B 4/6] d31-random-4: 12/12 branch game(s); 4765 branch games/h
+  [B 5/6] d2-random-2: 6/6 branch game(s); 4626 branch games/h
+  [B 6/8] d31-forge-0: 12/12 branch game(s); 5450 branch games/h
+  [B 7/8] d2-forge-0: 6/6 branch game(s); 4989 branch games/h
+  [B 8/8] d2-random-4: 6/6 branch game(s); 4772 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts/atlas.json and atlas.md; phase A 0 game(s), phase B 72 branch game(s) at 2 decision(s); checks: clean (1750 rows, 146 frame logs, 4 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 1: d18 (p, turn 17, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 2 (option 0 never stops; the Forge map on the options still running); the futility stop at 2 (D489: option 0 best or within 0; 0.5 of those played on as controls); checkpoints 2/4
+atlas phase B: 1 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+worker 1: unparked (maxWorkers 2)
+  [B 1/1] d18-random-0: 6/6 branch game(s); 1028 branch games/h
+  [B 2/2] d18-random-2: 6/6 branch game(s); 1084 branch games/h
+atlas: the checks on 2 workers took 2 s
+atlas: var/cubelab/atlas-selftest/cuts-noforge/atlas.json and atlas.md; phase A 0 game(s), phase B 12 branch game(s) at 1 decision(s); checks: clean (578 rows, 26 frame logs, 1 leak check(s))
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (25 turns, winner A) lists 32 decision(s) of seat A; branching at 2: d2 (p, turn 5, 3 options), d31 (a, turn 25, 6 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 2 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 4 (option 0 never stops; the Forge map on the options still running); the futility stop at 4 (D489: option 0 best or within 0; 0 of those played on as controls); checkpoints 2/4/6
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 2 branches, on 2 worker(s)
+  [B 1/2] d31-random-0: 12/12 branch game(s); 3163 branch games/h
+  [B 2/3] d2-random-0: 6/6 branch game(s); 2938 branch games/h
+  [B 3/4] d31-random-2: 12/12 branch game(s); 4167 branch games/h
+  [B 4/4] d2-random-2: 6/6 branch game(s); 3375 branch games/h
+  [B 5/6] d2-forge-0: 6/6 branch game(s); 3419 branch games/h
+  [B 6/6] d2-random-4: 6/6 branch game(s); 3153 branch games/h
+atlas: the checks on 2 workers took 4 s
+atlas: var/cubelab/atlas-selftest/cuts-futile/atlas.json and atlas.md; phase A 0 game(s), phase B 48 branch game(s) at 2 decision(s); checks: clean (1595 rows, 98 frame logs, 3 leak check(s))
+atlas-selftest: OK (cuts cuts: 2 in full, 0 screened, 0 option(s) stopped, 0 futile (1 control(s), 0 branch games saved); cuts-noforge: 1 in full, 0 screened, 0 option(s) stopped, 0 futile (0 control(s), 0 branch games saved); cuts-futile: 1 in full, 0 screened, 0 option(s) stopped, 1 futile (0 control(s), 24 branch games saved); 16 forks, 8 no-leak checks, 38 frame logs, 558 rows; G3 12, G5 refused 0 / left out 0; pay cap 0; copies held 1; the tax pair's G5 refused 2 / left out 2; the Crypt Rats pair's G6 drew X 12 / left out 89 / paid at 0 0)
+seat-identity: forge: the same game (B in 15 turns, 57 lines, digest 78f3a94998355ea8; golden B in 15, 57 lines, 78f3a94998355ea8)
+seat-identity: search: the same game (A in 13 turns, 92 lines, digest c68c2a849b7b0d54; golden A in 13, 92 lines, c68c2a849b7b0d54)
+seat-identity: explore: the same game (A in 18 turns, 193 lines, digest 82d6d18c57bbd861; golden A in 18, 193 lines, 82d6d18c57bbd861)
+seat-identity: plain: the same game (B in 14 turns; golden B in 14)
+seat-identity: all 4 games are the golden's
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (17 turns, winner B) lists 16 decision(s) of seat A; branching at 2: d2 (p, turn 6, 3 options), d14 (p, turn 16, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 5 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 10/15/20 (option 0 never stops; the Forge map on the options still running); the futility stop at 10 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 5/10/15/20/25
+atlas phase B: 2 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 5 branches, on 3 worker(s)
+worker 2: unparked (maxWorkers 3)
+  [B 1/2] d14-random-0: 15/15 branch game(s); 3151 branch games/h
+  [B 2/3] d14-random-5: 15/15 branch game(s); 3904 branch games/h
+  [B 3/4] d14-random-10: 15/15 branch game(s); 4383 branch games/h
+  [B 4/5] d14-random-15: 10/10 branch game(s); 4624 branch games/h
+  [B 5/7] d14-forge-0: 10/10 branch game(s); 5161 branch games/h
+  [B 6/7] d2-random-0: 15/15 branch game(s); 5140 branch games/h
+  [B 7/8] d14-random-20: 10/10 branch game(s); 5079 branch games/h
+  [B 8/8] d2-random-5: 15/15 branch game(s); 3877 branch games/h
+atlas: the checks on 3 workers took 4 s
+atlas: /home/justin-a/code/lab/data/lab-j183/pilot-smoke-j183/atlas.json and atlas.md; phase A 0 game(s), phase B 105 branch game(s) at 2 decision(s); checks: clean (2050 rows, 212 frame logs, 3 leak check(s))
+{"scan": "J183 v5", "folder": "pilot-smoke-j183", "atlasMtime": 1793624673, "logs": 210, "byCard": {}, "byName": {}, "byNameRefused": {}, "byNamePutBack": {}, "guardrails": {"land": 532, "cardTargetOffered": 290, "noRepeatNoOp": 46, "costTargetAvoided": 12}, "casts": 683, "lostCasts": 0, "lostCastForced": 0, "staleTargetRecords": 0, "modesDrawnRecords": 0, "modesSourceRecords": 0, "targetRecords": 143, "targetRecordsCard": 133, "targetRecordsComplete": 143, "targetRecordsCardComplete": 133, "summaries": 210, "randomised": 5826, "randomisedPriority": 4941, "cardTargetOffered": 290, "modesDrawn": 0, "retargeted": 0, "staleRefused": 0, "refusedCast": 0, "noRepeatRefused": 0, "targetCountTrimmed": 0, "costTargetAvoided": 12, "castsRefused": 0, "castsRefusedForced": 0, "lostPutBack": 0, "lostStranded": 0, "targetNoneChosen": 8, "targetNoneListed": 33, "noTargetRecords": 0, "nullChosenTargets": 0, "legacyNullTargets": 0, "cardTargetShare": 0.0587, "refusedCastShare": 0.0, "castsRefusedShare": 0.0, "completeShare": 1.0, "lostCastBranches": 0, "refusedCastBranches": 0, "lostCastOptions": [], "refusedCastOptions": []}
