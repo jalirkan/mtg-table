@@ -1,8 +1,8 @@
 running
 runner: forgecoach-runner 60177314
 started: 2026-11-01T11:33:01-05:00
-phase: commands 14/15
+phase: commands 15/15
 mtg-table: 6017731
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.13), budget 21.4 GB)
 peak_worker_rss_gb: 1.13
-blocks_done: run1 exit 0 at 2026-11-01T13:00:28-05:00, run2 exit 0 at 2026-11-01T13:15:36-05:00, run3 exit 0 at 2026-11-01T13:44:29-05:00, run4 exit 0 at 2026-11-01T14:00:32-05:00, run5 exit 0 at 2026-11-01T14:41:43-05:00, run6 exit 0 at 2026-11-01T15:07:00-05:00, run7 exit 0 at 2026-11-01T15:28:47-05:00, run8 exit 0 at 2026-11-01T16:22:57-05:00, run9 exit 0 at 2026-11-01T17:14:14-05:00, run10 exit 0 at 2026-11-01T17:38:15-05:00, run11 exit 0 at 2026-11-01T17:44:04-05:00, run12 exit 0 at 2026-11-01T18:22:49-05:00, run13 exit 0 at 2026-11-01T19:59:52-05:00
+blocks_done: run1 exit 0 at 2026-11-01T13:00:28-05:00, run2 exit 0 at 2026-11-01T13:15:36-05:00, run3 exit 0 at 2026-11-01T13:44:29-05:00, run4 exit 0 at 2026-11-01T14:00:32-05:00, run5 exit 0 at 2026-11-01T14:41:43-05:00, run6 exit 0 at 2026-11-01T15:07:00-05:00, run7 exit 0 at 2026-11-01T15:28:47-05:00, run8 exit 0 at 2026-11-01T16:22:57-05:00, run9 exit 0 at 2026-11-01T17:14:14-05:00, run10 exit 0 at 2026-11-01T17:38:15-05:00, run11 exit 0 at 2026-11-01T17:44:04-05:00, run12 exit 0 at 2026-11-01T18:22:49-05:00, run13 exit 0 at 2026-11-01T19:59:52-05:00, run14 exit 0 at 2026-11-01T20:02:24-05:00
