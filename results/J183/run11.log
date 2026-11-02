@@ -1,0 +1,74 @@
+==== J183 run11 started 2026-11-02T14:43:18-05:00 in unit lab-J183-run11, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (16 turns, winner B) lists 17 decision(s) of seat A; branching at 10: d0 (p, turn 1, 2 options), d5 (p, turn 5, 3 options), d6 (a, turn 5, 4 options), d7 (p, turn 5, 3 options), d9 (a, turn 7, 5 options), d11 (a, turn 9, 6 options), d12 (a, turn 11, 6 options), d13 (a, turn 13, 5 options), d15 (a, turn 15, 5 options), d16 (p, turn 15, 2 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d0-random-0: 50/50 branch game(s); 6734 branch games/h
+  [B 2/11] d7-random-0: 75/75 branch game(s), 2 engine error(s); 6701 branch games/h
+  [B 3/12] d9-random-0: 125/125 branch game(s); 6842 branch games/h
+  [B 4/13] d11-random-0: 150/150 branch game(s), 4 engine error(s); 6779 branch games/h
+  [B 5/14] d5-random-0: 75/75 branch game(s), 3 engine error(s); 6843 branch games/h
+  [B 6/15] d0-random-25: 50/50 branch game(s), 2 engine error(s); 7250 branch games/h
+  [B 7/17] d6-random-0: 100/100 branch game(s), 5 engine error(s); 7368 branch games/h
+  [B 8/18] d7-random-25: 75/75 branch game(s), 3 engine error(s); 7583 branch games/h
+  [B 9/18] d9-random-25: 125/125 branch game(s); 7511 branch games/h
+  [B 10/18] d12-random-0: 150/150 branch game(s), 1 engine error(s); 8284 branch games/h
+  [B 11/19] d5-random-25: 75/75 branch game(s), 1 engine error(s); 8217 branch games/h
+  [B 12/21] d11-random-25: 150/150 branch game(s), 3 engine error(s); 8189 branch games/h
+  [B 13/23] d14-random-0: 50/50 branch game(s); 7977 branch games/h
+  [B 14/24] d14-random-25: 50/50 branch game(s); 7792 branch games/h
+  [B 15/24] d6-random-25: 100/100 branch game(s), 8 engine error(s); 7469 branch games/h
+  [B 16/26] d11-random-75: 100/100 branch game(s); 7227 branch games/h
+  [B 17/26] d6-random-75: 100/100 branch game(s), 3 engine error(s); 5892 branch games/h
+worker 5: no answer in 1800 s (hung) during d0-random-50; recorded as an engine error, starting a fresh worker
+  [B] d0-random-50: 0/50 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 50 it lacks
+worker 2: no answer in 1800 s (hung) during d0-random-75; recorded as an engine error, starting a fresh worker
+  [B] d0-random-75: 15/50 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 35 it lacks
+  [B 18/26] d0-random-50: 50/50 branch game(s) in 2 attempts, 1 engine error(s); 2592 branch games/h
+worker 4: no answer in 1800 s (hung) during d5-random-50; recorded as an engine error, starting a fresh worker
+  [B] d5-random-50: 0/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 75 it lacks
+worker 1: no answer in 1800 s (hung) during d11-random-50; recorded as an engine error, starting a fresh worker
+  [B] d11-random-50: 0/100 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 100 it lacks
+  [B 19/26] d0-random-75: 50/50 branch game(s) in 2 attempts, 3 engine error(s); 2666 branch games/h
+worker 0: no answer in 1800 s (hung) during d6-random-50; recorded as an engine error, starting a fresh worker
+  [B] d6-random-50: 0/100 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 100 it lacks
+  [B 20/28] d11-random-50: 100/100 branch game(s) in 2 attempts; 2846 branch games/h
+  [B 21/30] d13-random-0: 125/125 branch game(s), 1 engine error(s); 2905 branch games/h
+  [B 22/31] d0-random-100: 50/50 branch game(s), 2 engine error(s); 2967 branch games/h
+  [B 23/31] d5-random-50: 75/75 branch game(s) in 2 attempts, 2 engine error(s); 3009 branch games/h
+  [B 24/31] d11-random-100: 100/100 branch game(s), 1 engine error(s); 3148 branch games/h
+  [B 25/31] d11-random-125: 100/100 branch game(s), 3 engine error(s); 3279 branch games/h
+  [B 26/31] d13-random-25: 125/125 branch game(s), 1 engine error(s); 3285 branch games/h
+  [B 27/33] d0-random-125: 50/50 branch game(s), 1 engine error(s); 3307 branch games/h
+worker 3: no answer in 1800 s (hung) during d5-random-75; recorded as an engine error, starting a fresh worker
+  [B] d5-random-75: 0/75 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 75 it lacks
+  [B 28/33] d16-random-0: 50/50 branch game(s); 3419 branch games/h
+  [B 29/34] d15-random-0: 125/125 branch game(s); 3552 branch games/h
+  [B 30/35] d16-random-25: 50/50 branch game(s); 3625 branch games/h
+  [B 31/35] d6-random-50: 100/100 branch game(s) in 2 attempts, 4 engine error(s); 3704 branch games/h
+  [B 32/37] d13-random-50: 125/125 branch game(s), 1 engine error(s); 3754 branch games/h
+  [B 33/37] d13-random-75: 125/125 branch game(s), 2 engine error(s); 3766 branch games/h
+  [B 34/39] d5-random-75: 75/75 branch game(s) in 2 attempts, 3 engine error(s); 3862 branch games/h
+  [B 35/41] d15-random-25: 125/125 branch game(s); 3954 branch games/h
+  [B 36/43] d13-random-100: 125/125 branch game(s), 4 engine error(s); 3998 branch games/h
+  [B 37/43] d5-random-100: 75/75 branch game(s), 1 engine error(s); 4109 branch games/h
+  [B 38/43] d15-random-50: 125/125 branch game(s); 4125 branch games/h
+  [B 39/43] d13-random-125: 125/125 branch game(s), 1 engine error(s); 4132 branch games/h
+  [B 40/43] d6-random-100: 100/100 branch game(s), 1 engine error(s); 4121 branch games/h
+  [B 41/43] d5-random-125: 75/75 branch game(s), 1 engine error(s); 4022 branch games/h
+worker 0: no answer in 1800 s (hung) during d6-random-125; recorded as an engine error, starting a fresh worker
+  [B] d6-random-125: 0/100 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 100 it lacks
+worker 5: no answer in 1800 s (hung) during d15-random-75; recorded as an engine error, starting a fresh worker
+  [B] d15-random-75: 0/125 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 125 it lacks
+  [B 42/43] d6-random-125: 100/100 branch game(s) in 2 attempts, 2 engine error(s); 2839 branch games/h
+worker 2: no answer in 1800 s (hung) during d15-random-75; recorded as an engine error, starting a fresh worker
+  [B 43/43] d15-random-75: 0/125 branch game(s) in 2 attempts -- no answer in 1800 s (hung); 2094 branch games/h
+  [B 44/45] d15-random-125: 125/125 branch game(s); 2122 branch games/h
+worker 1: no answer in 1800 s (hung) during d15-random-100; recorded as an engine error, starting a fresh worker
+  [B] d15-random-100: 0/125 branch game(s) after attempt 1 (no answer in 1800 s (hung)); resuming at the 125 it lacks
+  [B 45/45] d15-random-100: 125/125 branch game(s) in 2 attempts; 1729 branch games/h
+atlas: the checks on 6 workers took 118 s
+  atlas: 1 play abandoned by a killed attempt, its 58 rows left out (D499): atlas:d0:random:o1:b82 in rows-2956496.jsonl
+atlas: /home/justin-a/code/lab/data/lab-j183/b-s11-legacy-2524/atlas.json and atlas.md; phase A 0 game(s), phase B 4175 branch game(s) at 11 decision(s); checks: 2 PROBLEM(S) (127505 rows, 8352 frame logs, 11 leak check(s))
+  ATLAS PROBLEM: 17 frame log(s) failed tools/check-redaction.mjs: d0-random-o0-b67-seat1.jsonl.gz, d11-random-o3-b100-seat1.jsonl.gz, d11-random-o3-b31-seat1.jsonl.gz, d13-random-o0-b148-seat1.jsonl.gz, d5-random-o0-b119-seat1.jsonl.gz
+  ATLAS PROBLEM: 1 unit(s) did not finish: d15-random-75: no answer in 1800 s (hung)
