@@ -1562,3 +1562,24 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   `random-<band>-d498`, `randomSeat "D498"`, compared with J181 by position. Six placeholders wait on the merge (three has_d guards, the
   bridge diff list, the merge line, the folder time).
 - Painters: 7 of 10 pinG pairs done; plains-forest painting (GPU 100%).
+
+## 2026-11-01 22:00 EST -- D498-D501 merged (PR #226, main ac07876b); J182 posted (pc-jobs 6ccbf5b5)
+
+- **Four lanes, four skeptic reviews, one merge, one gate.** D498 (determinizer pins `mayPlayerLook` cards; review: flat
+  Comparability naming J182, one-shot looks as a limit, why mayPlayerLook is Snap's gate), D499 (a play is begin..end in one file;
+  abandoned / superseded / orphan rows counted, `playedTwice` only on two ok:true ends; review found the census stuck-retry case on
+  J160's real data, fixed), D500 (copier rebuilds the damage LKI via `addGlobalDamageHistory`; review found the controller bug -- a stolen
+  creature that dealt damage and died -- fixed with its own scenario; `damageLkiLost` in the atlas row and `search.damageLkiLost`; the
+  branch ledger named in Comparability), D501 (the empty-hand proof admits the one library card A3 vouches for; the night's 106,600 logs
+  swept on both checkers, only s07's three d13 logs changed verdict). PLAN cube-lab follow-ups 14-18, 15 closed by D501 at the merge.
+  AiBench.java conflicted (both lanes inserted at the same two points); rebuilt from main plus both pure insertions, bench 320/0.
+  Gate: check-all OK, 60 jobs, 645.6 s at GATE_JOBS=3, var/check-all/20261101-212847-749570. Runner reinstalled at ac07876b while idle.
+- **J182 posted** (`jobs/J182-atlas-4b-night-seven.md`, pin ac07876b): deck seeds 2401-2413, game 2501-2513, validation 2601-2613,
+  reserved 2701-2713 (the block jumped +322 past J166-J170's game and validation seeds; J171's `wallSec` 2282 restored by name);
+  population `random-<band>-d498`, `randomSeat "D498"`, compared with J181 by position; guards has_d498..has_d501, the d481-d501 loop,
+  seat_code (bridge/src since 7a984963 = Atlas, Determinizer, LenientGameCopier, SearchPolicy; the 480c837d and 6e87e5d4 lists are the
+  same ten files; SearchPolicy numstat 8 0) all 1 by hand on the merged tree; every `lab-j182` glob moved to `25??`; runner check
+  clean; lab-j182 made empty 21:28 EST. Waiter running.
+- **Morning read for J182:** `lab-j182/report/`, `compare-j181.json`; by hand: no A6 failure in the checker sweep, `abandonedPlays`
+  if any unit re-ran, no `getDamageLKI` / `paperCard` in any errored stack, no bare exception, `phaseB.damageLkiLost` 0.
+- Painters: 8 of 10 pinG pairs done (plains-mountain painting).

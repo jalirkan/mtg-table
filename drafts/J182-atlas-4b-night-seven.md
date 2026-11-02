@@ -2,12 +2,12 @@ id: J182
 title: The move atlas, rung 4b, night seven -- J181's night carried onto the new main (D498: the determinizer keeps every card the seat may look at where it is and redeals only what it cannot see -- the shape that failed J181's s07; D499: a killed attempt's rows are abandoned, never audited -- J181's s13; D500: the fork carries the damage-this-turn history -- J181's s06) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j182, at deck seeds 2401-2413 (D447 with D482's list as D490, D492 and D494 leave it, the bands cycled as J166's) and game seeds 2501-2513; a validation draw made fresh at deck seeds 2601-2613 (game seeds 2701-2713 reserved); THE FIRST NIGHT OF D498'S POPULATION, pooled with nothing before it; J181's night read beside, by position, as information
 public_title: Move atlas 4b night seven: 13 new spines, D498-D500 lab fixes, a new population
 public_est: ~8 h to 12 h
-public_decides: None by itself; first night on the D498 determinizer, a new population of 13 spines
+public_decides: None by itself; first night on the D498 determinizer, a new population
 cpu: heavy
 cores: 7
 max_workers: 7
 mem_per_worker_gb: 2.7
-repos: mtg-table@PIN_SHA_D498 (origin/main: @@MERGE_LINE@@; the coordinator writes that merge's full sha here before posting; merged == 1, the commits that added D481-D500's decision files, D493's, D495's, D496's, D497's, D498's, D499's and D500's names, the seat's code and the deck code exactly as this file states them, checked by the pilot)
+repos: mtg-table@ac07876b97e052b3e0ddd530a1930173e998133c (origin/main: the merge of pc/d498, pc/d499, pc/d500 and pc/d501 (D498-D501) on 60177314 (D497's merge, on 7a984963, D496's); the coordinator writes that merge's full sha here before posting; merged == 1, the commits that added D481-D501's decision files, D493's, D495's, D496's, D497's, D498's, D499's, D500's and D501's names, the seat's code and the deck code exactly as this file states them, checked by the pilot)
 decides: nothing by itself. Rung 4b's seventh night, the fifth on D489's futility stop with the review's 150 cap, and **the FIRST of D498's population**. **What changed under the seat since J181:** the fork, in two places, and a reader. The random seat's POLICY is D488's, as J173's, J177's, J180's and J181's, the recorder is D496's and the copier's paper-card carry D497's, as J181's; **what changed is the redeal and the damage history on the fork** (D498, D500): `Determinizer` keeps every card the searching seat may look at where it is (a card revealed on top of the opponent's library stays on top; a revealed hand card stays in the hand) and redeals only what the seat cannot see, where before it pooled the opponent's whole hand and library and could deal a known top card into the hand, still marked lookable -- so a branch's redealt world now agrees with the seat's own log (J181's s07: 48 of decision 14's 150 branches showed a named card in a hand with no reveal record, and the checker failed 51 logs); and `LenientGameCopier` carries the game's damage-this-turn history onto the copy, so a `DamagedBy` property on a forked board reads it instead of dereferencing a null (J181's s06: 3 branches). D499 changes no play: a killed attempt's rows (a `begin` with no `end` whose key another worker played to its end) are abandoned and counted, never audited or read (J181's s13). `git diff 7a984963 <pin> -- bridge/src` is exactly the files `seat_code` lists, and `fixtures/cubelab/seat-identity.json` is unchanged since D486's regeneration (a pilot check, `seat_code`; `identity == 1` stays the real check). **Comparability, the rule this night follows:** D489 pools nights across a change to HOW MANY branches a decision gets, and says "A future change to the seat or to what it offers does" open a new population; D493 and D497 opened populations when the copier changed what a branch plays, and D498 changes the redealt world a branch plays in wherever the seat may look at an opponent's card. So **J182's labels and reads are D498's population's first night: pooled with nothing -- a new `pool`, `random-<band>-d498`, a new `randomSeat: "D498"`; never with J181's v6 rows (D497's population), J177's and J180's (D493's), J173's v5 rows (D488's) nor anything before them**; the contract stays v6 (J177's fields, unchanged). It measures, on J177's design: labels, confident labels and partial labels per spine and per night; the futility read (the controls: how many of the decisions the rule would have stopped end confident at the full n -- the first read of this population, J181's 0 of 13, J180's 0 of 14 and J177's 0 of 12 beside it as information, with the review's 3 of 77); the cap read (the share of the final confident set already confident at 50 and 100 branches); the sizing read (confident labels per worker-hour and per 7-worker 10-h night with its Poisson interval, beside J181's 0.464, J180's 0.551 and J177's 0.563 [their intervals in their `reads.json`] and the review's ~46 as information); the decisions branched a spine; the cuts' savings, the checks' share, the refused payments and D484-D488's counters as J173 reads them; C1 and agreement on the three Forge-map spines; **each spine beside J181's at the same position (other decks, the same seat policy, the same branching design, the fork changed): a candidate, never a verdict**; and, by hand at the morning read, the field signals of D497 (no `paperCard` in any errored branch's stack, no bare exception in any worker log), D498 (no A6 failure of the checker on any branch log: the morning read's redaction sweep), D499 (`abandonedPlays` named in `atlas.json` if any unit was re-run, and no id problem from a killed attempt's rows) and D500 (no `getDamageLKI` in any errored branch's stack)
 hypothesis: none to confirm about the maps. Registered expectations, as information: **the problem classes that failed J181 do not recur, J180's and J177's did not recur on J181, and J176's four stay away** -- a card the seat may look at stays where the seat knows it is on every fork and no branch log shows a full card in a hidden zone without a reveal record (D498: the determinizer's bench scenario fails on main's and passes on the pin's); a killed attempt's rows are abandoned and no id audit reads them (D499); a `DamagedBy` property on a forked board resolves (D500: the copier's bench scenario); a `CopyPermanent` effect choosing a token on a forked board resolves (D497), and every errored branch, if any, names its site in the worker log; a cascade's "cast it?" choice inside a held frame carries the engine's own `reveal` line and the checker accepts it (D496); no deck holds a Prepare card or Ob Nixilis, the Adversary (D492, D494; `deck_code`); a forced Plotted or Foretold cast from exile maps on the fork (D493); a target naming a spell copy on the stack passes (D495) -- so `atlas.problems == 0` is expected, though a random library deck can meet a tool gap no atlas has met (the check fails the night then, as it failed J181's on 9 across two faults, J180's and J177's on one each and J176's on 22); the rule reads ~105-155 decisions at 50 and stops about a quarter, a quarter of the futile ones played on as controls (J181: 153 read, 35 stopped, 13 controls, 0 partial rows confident; J180: 105, 29, 14, 0; J177: 121, 29, 12, 0); no option has its own forced cast refused in most of its branches and no lost-cast option (checks, J173's); 0 legacy null target records (a check); refused payments, `cardTargetShare` and the target records' complete share near J181's and J180's (read beside, not predicted); J181's yield, 23 confident of 80 labels, 0.464 confident labels a worker-hour on 49.6 worker-hours, J180's 0.551 on 43.6 and J177's 0.563 on 53.3 are other populations' and are read beside, never predicted; the walls ~8.5 h at 6 workers for all 13 at J181's pace (29,764 s of walls, 29,817 s from its first spine's start to its last's end; *Sizing*)
 rule: D451 (method; no outcome rule) with D458/D462/D466 (G5), D459, D465, D466, D467, D470, D471 (G6), D472, D476, D477, D478, D479, D480 (the cuts) and its follow-up (the schedule's plan-hash guard), D481, D482, D483, D484, D485, D486, D487, D488 (the seat's policy, unchanged since J173), D489 (the futility stop, J177's flags), D490, D492 and D494 (the engine-unplayable list: Chain of Smog, the four Prepare cards, Ob Nixilis, the Adversary), D491 (the rows check knows the viewer's born token), D493 (the copier carries the plotted flag and a public card's turn in its zone: the population J177 opened), D495 (the redaction checker accepts a spell copy on the stack) D496 (the seat's log records what the engine revealed to it; the checker accepts an option revealed in the step), D497 (the fork's copy gives a re-made token its original's paper card; every lab worker keeps a hot exception's stack), D498 (the determinizer keeps what the seat may look at in place: the population J182 opens), D499 (a killed attempt's rows are abandoned) and D500 (the fork carries the damage-this-turn history); D447 (the deck draw). Pre-registered here, before any J182 data: J177's label contract v6 and its reads (a)-(c) and the futility read (f) computed by var/lab-j182-local/bin/labels.py, the cap read by ncurve.py, the agreement reads (i)-(vi) by reads.py, the savings, the checks' share and what the saved time bought by cuts.py, the tool's counters, the refused and lost casts and D486-D488's counters by metrics.py, the comparison with J181 by compare.py, all exactly as written in the pilot and every definition J177's; the final checks J177's, unchanged: `refusedCastOptions == 0`, `lostCastOptions == 0` and `legacyNullTargetRecords == 0` over the 13 scanned spines, D489's four counters on every spine, `partialLabels == futileStopped`, no partial row confident, and `atlas.problems == 0`. A candidate of (iv) HOLDS on a spine only if its point is > 0 and its interval's low end is > 0, as D447 point 9 holds a census candidate; else NOT SHOWN. Every other difference is a candidate (D447 point 9). No read carries any other verdict
@@ -15,24 +15,24 @@ followup: morning-read
 est: ~9.5 h at 6 workers (range 6-12 h; sizing below): pilot ~40 min (J173's ~35 plus the readers' self-tests, the cap read on J171's night ~1 min); the 13 spines ~8.3 h at J181's pace (13 x ~38 min; J181's ran 5.8 to 97.0 min); the scan ~6 min; the report ~5 min. Disk ~11-15 GB on the lab data folder /home/justin-a/code/lab/data (J171's 13 spines: 12.4 GB)
 resumable: yes
 timeout: 3h
-progress: lines /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl of 64000
-metrics: branches = lines /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl
-metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"engineError\":true"
-metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"timedOut\":true"
-metrics: unavailable = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"unavailable\":\""
-metrics: trimmed_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"targetCountTrimmed\":"
-metrics: avoided_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"costTargetAvoided\":"
-metrics: modes_drawn_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"modesDrawn\":"
-metrics: retargeted_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/branches.jsonl "\"retargeted\":"
-metrics: futility_reads = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/schedule.jsonl "\"type\":\"futility\""
-metrics: futile_stopped_lines = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/schedule.jsonl "\"stopped\":true"
-metrics: futile_control_lines = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/schedule.jsonl "\"control\":true"
-metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/units.jsonl "\"ok\":false"
-metrics: failed_to_play = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/logs/*.log "AI failed to play"
-metrics: payfail = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/logs/*.log "Didn't find what to pay for"
-metrics: failed_to_target = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/logs/*.log "failed to target"
-metrics: branch_error_stacks = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/logs/*.log "branch error, stack:"
-metrics: big_frames = sh: python3 -c "import glob, os; print(sum(1 for f in glob.glob('/home/justin-a/code/lab/data/lab-j182/b-s??-*-21??/phaseB/frames/*.gz') if os.path.getsize(f) > 2e8))" 2>/dev/null || echo 0
+progress: lines /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl of 64000
+metrics: branches = lines /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl
+metrics: engine_errors = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"engineError\":true"
+metrics: branch_timeouts = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"timedOut\":true"
+metrics: unavailable = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"unavailable\":\""
+metrics: trimmed_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"targetCountTrimmed\":"
+metrics: avoided_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"costTargetAvoided\":"
+metrics: modes_drawn_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"modesDrawn\":"
+metrics: retargeted_rows = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/branches.jsonl "\"retargeted\":"
+metrics: futility_reads = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/schedule.jsonl "\"type\":\"futility\""
+metrics: futile_stopped_lines = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/schedule.jsonl "\"stopped\":true"
+metrics: futile_control_lines = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/schedule.jsonl "\"control\":true"
+metrics: unit_errors = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/units.jsonl "\"ok\":false"
+metrics: failed_to_play = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/logs/*.log "AI failed to play"
+metrics: payfail = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/logs/*.log "Didn't find what to pay for"
+metrics: failed_to_target = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/logs/*.log "failed to target"
+metrics: branch_error_stacks = count /home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/logs/*.log "branch error, stack:"
+metrics: big_frames = sh: python3 -c "import glob, os; print(sum(1 for f in glob.glob('/home/justin-a/code/lab/data/lab-j182/b-s??-*-25??/phaseB/frames/*.gz') if os.path.getsize(f) > 2e8))" 2>/dev/null || echo 0
 metrics: armed = sh: cat var/lab-j182-local/armed.txt 2>/dev/null || echo 0
 metrics: atlas = sh: python3 -I var/lab-j182-local/bin/metrics.py 2>/dev/null || echo '{"problems":-1}'
 metrics: data_free_gb = sh: python3 -c "import shutil; print(round(shutil.disk_usage('/home/justin-a/code/lab/data').free / 1e9, 1))" 2>/dev/null || echo 0
@@ -69,12 +69,12 @@ card in place; D493's and D497's precedent applies), so nothing of J182's is poo
 position, as information.
 
 **Before posting -- the coordinator, by hand (nothing in this file does them).**
-1. **The data folder, empty:** `/home/justin-a/code/lab/data/lab-j182` already exists (made @@FOLDER_TIME@@ EST, empty when this was
+1. **The data folder, empty:** `/home/justin-a/code/lab/data/lab-j182` already exists (made 2026-11-01 21:28 EST, empty when this was
    drafted). Check it is still empty (`ls -A` prints nothing); if it is gone, `mkdir` it. The pilot stops at its first lines if it is
    missing, and records once (`state`) that it holds nothing (or only this job's own pilot outputs, `decks/`, `validation/` and
    `pilot-smoke-j182/`, from an earlier J182 pilot); it draws only a folder that is absent and never creates, moves, cleans or deletes
    anything there; no block of this job has a `clean:` line.
-2. **The pin is written:** `PIN_SHA_D498`, the merge of `pc/d498`, `pc/d499` and `pc/d500` on origin/main (2026-11-01, gated once on the merged
+2. **The pin is written:** `ac07876b97e052b3e0ddd530a1930173e998133c`, the merge of `pc/d498`, `pc/d499` and `pc/d500` on origin/main (2026-11-01, gated once on the merged
    tree from a deleted `bridge/out`; the line is in the merge commit's message). `runner.sh check` would not catch a placeholder here; it
    is written by hand from `git rev-parse` of the pushed merge, and `grep -c PIN_SHA` on this file must print 0 before posting.
 3. **If the merge of D498, D499 and D500 renamed or changed anything this file reads, correct it before posting** (drafted against the
@@ -221,7 +221,7 @@ plan and the decks' sha256, no git sha), so a phase B resumed across a code chan
 pin the first `prepare` recorded, and nothing of J182's may be resumed on any other commit.
 
 **The abort lines read only this run's artefacts (the J152 lesson):** every abort that reads the atlas's files is gated on `armed == 1`,
-written by this pilot and removed by the Report block's last line; and every glob is under lab-j182's `b-s??-*-21??`, which only this
+written by this pilot and removed by the Report block's last line; and every glob is under lab-j182's `b-s??-*-25??`, which only this
 job writes.
 
 **Nothing beside it.** `cores: 7` of 8 reserves the box: post nothing heavy beside it. No `pilot_cores:`. **No `after:` line** (*Before
@@ -393,31 +393,37 @@ ls docs/decisions/D496-*.md >/dev/null 2>&1 && grep -q 'revealed' docs/decisions
 # D497 (the names this file reads: the decision file, the lint's rule and its tag, the copier's carry and its counter, the ai-bench
 # scenario and its deck, the worker flag; checked against the lane's b0cecfee; the coordinator corrects them if the merge renamed any)
 ls docs/decisions/D497-*.md >/dev/null 2>&1 && grep -q 'paperCard' docs/decisions/D497-*.md && grep -q 'forge-field-write' tools/lint-bridge.sh && grep -q 'forge-field-write' tools/lint-bridge-selftest.sh && grep -q '// ALLOW paperCard write: D497' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'private void carryPaperCard(' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'public int paperCardsCarried()' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'fork-token-copy' tools/ai-bench/AiBench.java && test -f tools/ai-bench/decks/fork-token-copy.dck && grep -q -- '-XX:-OmitStackTraceInFastThrow' tools/cubelab/engine.ts && echo 1 > var/lab-j182-local/has-d497.txt || echo 0 > var/lab-j182-local/has-d497.txt
-@@D498_NAMES@@
-@@D499_NAMES@@
-@@D500_NAMES@@
+# D498 (the determinizer keeps what the seat may look at; the names this file reads, checked against the merge ac07876b)
+ls docs/decisions/D498-*.md >/dev/null 2>&1 && grep -q 'mayPlayerLook' docs/decisions/D498-*.md && grep -q 'redealHidden(' bridge/src/mtgtable/ai/Determinizer.java && grep -q 'mayPlayerLook' bridge/src/mtgtable/ai/Determinizer.java && grep -q 'Determinizer.redealHidden' bridge/src/mtgtable/ai/Atlas.java && grep -q 'determinize-revealed' tools/ai-bench/AiBench.java && test -f tools/ai-bench/decks/determinize-revealed.dck && echo 1 > var/lab-j182-local/has-d498.txt || echo 0 > var/lab-j182-local/has-d498.txt
+# D499 (a game's rows are one play; a killed attempt's are abandoned)
+ls docs/decisions/D499-*.md >/dev/null 2>&1 && grep -q 'abandoned' docs/decisions/D499-*.md && grep -q 'abandonedPlays' tools/cubelab/atlas.ts && grep -q 'supersededPlays' tools/cubelab/atlas.ts && grep -q 'playedTwice' tools/cubelab/rowscheck.ts && grep -q 'orphanRows' tools/cubelab/rowscheck.ts && test -f web/test/cubelab-record-cake.test.ts && echo 1 > var/lab-j182-local/has-d499.txt || echo 0 > var/lab-j182-local/has-d499.txt
+# D500 (the fork carries the damage-this-turn history) and D501 (the checker's empty-hand proof admits A3's revealed top card)
+ls docs/decisions/D500-*.md >/dev/null 2>&1 && grep -q 'addGlobalDamageHistory' docs/decisions/D500-*.md && grep -q 'addGlobalDamageHistory' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'damageLkiLost()' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'search.damageLkiLost' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'damageLkiLost' tools/cubelab/atlas.ts && grep -q 'fork-damage-lki' tools/ai-bench/AiBench.java && test -f tools/ai-bench/decks/fork-damage-lki.dck && echo 1 > var/lab-j182-local/has-d500.txt || echo 0 > var/lab-j182-local/has-d500.txt
+ls docs/decisions/D501-*.md >/dev/null 2>&1 && grep -q 'revealedTopCard' docs/decisions/D501-*.md && grep -q 'revealedTopCard' tools/check-redaction.mjs && grep -q 'revealed top card (A3)' tools/check-redaction.mjs && echo 1 > var/lab-j182-local/has-d501.txt || echo 0 > var/lab-j182-local/has-d501.txt
 # the random seat's POLICY is J173's and J177's (D488's); the copier it forks on is D493's, as J177's; the recorder is D496's (`decides:`):
-# D495's merge (480c837d, J177's pin) is an ancestor of the pin, and since it bridge/src changed in exactly D496's six files (five of the
-# lane plus GameLog.java's javadoc from the review, comments only) and the
-# seat-identity golden not at all; since J173's pin (6e87e5d4, D488's merge) the golden is unchanged and bridge/src changed in exactly
-# D493's two files (LenientGameCopier.java, the carry pass; SearchPolicy.java, a self-test accessor, 5 lines in, none out) plus those six
+# D495's merge (480c837d, J177's pin) is an ancestor of the pin, and since it bridge/src changed in exactly ten files: D496's six (five of
+# the lane plus GameLog.java's javadoc from the review, comments only), D497's LenientGameCopier.java (also D500's damage pass), D498's
+# Determinizer.java and Atlas.java (the no-leak check redeals the same way) and D500's SearchPolicy.java (a counter into the search sink,
+# `search.damageLkiLost`, 3 lines in, none out) and the seat-identity golden not at all; since J173's pin (6e87e5d4, D488's merge) the
+# golden is unchanged and bridge/src changed in exactly those ten (SearchPolicy.java: D493's self-test accessor 5 lines plus D500's 3, 8 in,
+# none out)
 sc=0
-D496_FILES="bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java "
+D496_FILES="bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/Atlas.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/Determinizer.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java bridge/src/mtgtable/ai/SearchPolicy.java "
 if git merge-base --is-ancestor 480c837d7783d2fbe1a727143dc6069344dc9bf4 HEAD && git diff --quiet 480c837d7783d2fbe1a727143dc6069344dc9bf4 HEAD -- fixtures/cubelab/seat-identity.json && git diff --quiet 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- fixtures/cubelab/seat-identity.json; then
-  test "$(git diff --name-only 480c837d7783d2fbe1a727143dc6069344dc9bf4 HEAD -- bridge/src | LC_ALL=C sort | tr '\n' ' ')" = "$D496_FILES" && test "$(git diff --name-only 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src | LC_ALL=C sort | tr '\n' ' ')" = "bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java bridge/src/mtgtable/ai/SearchPolicy.java " && test "$(git diff --numstat 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src/mtgtable/ai/SearchPolicy.java | cut -f1,2 | tr '\t' ' ')" = "5 0" && test "$(git diff --name-only 7a984963e61cdfe98cadfcc45fa7690a61dc37f6 HEAD -- bridge/src | LC_ALL=C sort | tr '\n' ' ')" = "@@BRIDGE_DIFF@@" && sc=1
+  test "$(git diff --name-only 480c837d7783d2fbe1a727143dc6069344dc9bf4 HEAD -- bridge/src | LC_ALL=C sort | tr '\n' ' ')" = "$D496_FILES" && test "$(git diff --name-only 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src | LC_ALL=C sort | tr '\n' ' ')" = "bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/Atlas.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/Determinizer.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java bridge/src/mtgtable/ai/SearchPolicy.java " && test "$(git diff --numstat 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src/mtgtable/ai/SearchPolicy.java | cut -f1,2 | tr '\t' ' ')" = "8 0" && test "$(git diff --name-only 7a984963e61cdfe98cadfcc45fa7690a61dc37f6 HEAD -- bridge/src | LC_ALL=C sort | tr '\n' ' ')" = "bridge/src/mtgtable/ai/Atlas.java bridge/src/mtgtable/ai/Determinizer.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/SearchPolicy.java " && sc=1
 fi
 echo $sc > var/lab-j182-local/seat-code.txt
-echo "J182: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's and D500's, the determinizer D498's: $sc"
+echo "J182: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's and D500's, the determinizer D498's (bridge/src since 7a984963: Atlas, Determinizer, LenientGameCopier, SearchPolicy): $sc"
 # D481-D496 by decision id: the commit that added each decision's file is an ancestor of the pin (whatever sha the merge gave it)
 anc=1
-for x in D481 D482 D483 D484 D485 D486 D487 D488 D489 D490 D491 D492 D493 D494 D495 D496 D497 D498 D499 D500; do
+for x in D481 D482 D483 D484 D485 D486 D487 D488 D489 D490 D491 D492 D493 D494 D495 D496 D497 D498 D499 D500 D501; do
   f=$(git ls-tree -r --name-only HEAD docs/decisions/ | grep "^docs/decisions/$x-" | head -n 1 || true)
   c=""
   if [ -n "$f" ]; then c=$(git log --diff-filter=A --format=%H -n 1 HEAD -- "$f" || true); fi
   if [ -z "$c" ] || ! git merge-base --is-ancestor "$c" HEAD; then anc=0; fi
   echo "J182: $x: ${f:-no decision file} added by ${c:-no commit}"
 done
-echo $anc > var/lab-j182-local/has-d481-d500-commits.txt
+echo $anc > var/lab-j182-local/has-d481-d501-commits.txt
 # the seat-identity golden D486 regenerated: J171's three parts, unchanged (D488's gate: 12m, all 4 games the golden's, not regenerated)
 f486=$(git ls-tree -r --name-only HEAD docs/decisions/ | grep '^docs/decisions/D486-' | head -n 1 || true)
 c486=""
@@ -1867,7 +1873,7 @@ if len(sys.argv) > 1 and sys.argv[1] == '--scan':
     print(json.dumps({k: v for k, v in res.items() if k != 'byOption'}))
     sys.exit(0)
 D = sys.argv[1] if len(sys.argv) > 1 else '/home/justin-a/code/lab/data/lab-j182'
-G = sys.argv[2] if len(sys.argv) > 2 else 'b-s??-*-21??'
+G = sys.argv[2] if len(sys.argv) > 2 else 'b-s??-*-25??'
 L = 'var/lab-j182-local'
 CD = sys.argv[3] if len(sys.argv) > 3 else L + '/lost'
 # name: (band, deck seed, game seed, branchForge) -- J182's spine table (deck seeds 2401-2413, game seeds 2501-2513)
@@ -2302,7 +2308,7 @@ def side(D, LJ):
     by = {}
     tot = {'listed': 0, 'turns': 0, 'options': 0, 'branched': 0, 'labels': 0, 'confident': 0, 'capped': 0, 'rows': 0, 'wallSec': 0, 'workerSec': 0,
            'partial': 0, 'fullRows': 0}
-    for sp in sorted(glob.glob(D + '/b-s??-*-21??')):
+    for sp in sorted(glob.glob(D + '/b-s??-*-2???')):   # J182's folders end in 25??, J181's in 21??: one glob reads both
         name = os.path.basename(sp)
         s = name.split('-')[1]
         if only and s not in only:
@@ -2752,8 +2758,9 @@ metrics: has_d497 = sh: cat var/lab-j182-local/has-d497.txt 2>/dev/null || echo 
 metrics: has_d498 = sh: cat var/lab-j182-local/has-d498.txt 2>/dev/null || echo 0
 metrics: has_d499 = sh: cat var/lab-j182-local/has-d499.txt 2>/dev/null || echo 0
 metrics: has_d500 = sh: cat var/lab-j182-local/has-d500.txt 2>/dev/null || echo 0
+metrics: has_d501 = sh: cat var/lab-j182-local/has-d501.txt 2>/dev/null || echo 0
 metrics: seat_code = sh: cat var/lab-j182-local/seat-code.txt 2>/dev/null || echo 0
-metrics: d481_d500_commits = sh: cat var/lab-j182-local/has-d481-d500-commits.txt 2>/dev/null || echo 0
+metrics: d481_d501_commits = sh: cat var/lab-j182-local/has-d481-d501-commits.txt 2>/dev/null || echo 0
 metrics: golden = sh: cat var/lab-j182-local/golden.json 2>/dev/null || echo '{"descends":-1}'
 metrics: deck_code = sh: cat var/lab-j182-local/deck-code.txt 2>/dev/null || echo 0
 metrics: found = sh: cat var/lab-j182-local/found.json 2>/dev/null || echo '{"spineDraws":-1}'
@@ -2807,8 +2814,9 @@ check: has_d497 == 1
 check: has_d498 == 1
 check: has_d499 == 1
 check: has_d500 == 1
+check: has_d501 == 1
 check: seat_code == 1
-check: d481_d500_commits == 1
+check: d481_d501_commits == 1
 check: golden.descends == 1
 check: golden.changed == 1
 check: golden.note == 1
@@ -3082,7 +3090,7 @@ echo "$n $t0 $(date +%s) {workers}" >> $D/spine-times.txt
 # its atlas.json's mtime
 D=/home/justin-a/code/lab/data/lab-j182
 mkdir -p var/lab-j182-local/lost
-for d in $D/b-s??-*-21??; do
+for d in $D/b-s??-*-25??; do
   test -f $d/atlas.json || { echo "J182: $d: no atlas.json, not scanned"; continue; }
   python3 -I var/lab-j182-local/bin/metrics.py --scan $d var/lab-j182-local/lost {workers}
 done
@@ -3099,8 +3107,8 @@ args=""; largs=""; dirs=""; nargs=""
 # J181's night, read only, for the J181 columns (compare.py) and J181's sizing read (labels.py --j181): ANOTHER POPULATION, read beside,
 # never pooled; absent files read as null
 J6=/home/justin-a/code/lab/data/lab-j181
-# the night's 13 spines: b-s??-*-21?? matches no pilot folder; every row names the pin and its band's D498 pool (D498's population)
-for d in $D/b-s??-*-21??; do
+# the night's 13 spines: b-s??-*-25?? matches no pilot folder; every row names the pin and its band's D498 pool (D498's population)
+for d in $D/b-s??-*-25??; do
   n=$(basename "$d"); s=$(echo "$n" | cut -d- -f2); b=$(echo "$n" | cut -d- -f3); g=$(echo "$n" | cut -d- -f4)
   if [ -f "$d/atlas.json" ]; then
     cp "$d/atlas.json" "$D/report/$n.atlas.json"
@@ -3121,7 +3129,7 @@ python3 -I var/lab-j182-local/bin/metrics.py > $D/report/tool.json || echo "metr
 python3 -I var/lab-j182-local/bin/draws.py --report > $D/report/draws.json || echo "draws.py exited $?" >> $D/report/missing.txt
 # the validation draw (made fresh by this pilot, never branched), recorded for the job that will branch it
 python3 -I -c "import glob, json, os; D = '$D'; vs = sorted(glob.glob(D + '/validation/v*')); rec = json.load(open('var/lab-j182-local/draws-pilot.json')); rows = [{'set': os.path.basename(v).split('-')[0], 'band': os.path.basename(v).split('-')[1], 'pool': 'random-' + os.path.basename(v).split('-')[1], 'deckSeed': int(os.path.basename(v).split('-')[2]), 'reservedGameSeed': int(os.path.basename(v).split('-')[2]) + 100, 'decks': sorted(glob.glob(v + '/decks/*.dck')), 'split': 'validation', 'training': False} for v in vs]; print(json.dumps({'note': 'the 4b night-four validation draw, made by the J182 pilot into lab-j182 at deck seeds 2601-2613 (D447 with D482\'s list as D490, D492 and D494 leave it, --cross-band 0.10): deck files only, never branched; no job may train on these decks or use these seeds (game seeds 2701-2713 reserved) before the validation job that branches them', 'drawSha256': rec.get('validation'), 'sets': rows}, indent=1))" > $D/report/validation.json || echo "validation.json: failed" >> $D/report/missing.txt
-python3 -I -c "import glob, json, os; D = '$D'; out = {}; [out.__setitem__(os.path.basename(d), {k: json.load(open(d + '/plan.json')).get(k) for k in ('deckA', 'deckB', 'seed', 'branchRandom', 'branchForge', 'decisions', 'chunk', 'cuts')}) for d in sorted(glob.glob(D + '/b-s??-*-21??'))]; print(json.dumps({'note': 'all 13 spines branched by J182 at the pin, by D488s random seat policy on D498s determinizer, on new decks (deck seeds 2401-2413, game seeds 2501-2513), on J177s design (150 random branches, the futility stop at 50 with a 0.25 control share, 10 decisions): D498s population, NEW; never pooled with J181 (D497), J177 or J180 (D493), J173 (D488) nor J166-J172 (D486 or earlier seats); split by pool, randomSeat or sha', 'sha': '$SHA', 'spines': out}, indent=1))" > $D/report/spines.json || echo "spines.json: failed" >> $D/report/missing.txt
+python3 -I -c "import glob, json, os; D = '$D'; out = {}; [out.__setitem__(os.path.basename(d), {k: json.load(open(d + '/plan.json')).get(k) for k in ('deckA', 'deckB', 'seed', 'branchRandom', 'branchForge', 'decisions', 'chunk', 'cuts')}) for d in sorted(glob.glob(D + '/b-s??-*-25??'))]; print(json.dumps({'note': 'all 13 spines branched by J182 at the pin, by D488s random seat policy on D498s determinizer, on new decks (deck seeds 2401-2413, game seeds 2501-2513), on J177s design (150 random branches, the futility stop at 50 with a 0.25 control share, 10 decisions): D498s population, NEW; never pooled with J181 (D497), J177 or J180 (D493), J173 (D488) nor J166-J172 (D486 or earlier seats); split by pool, randomSeat or sha', 'sha': '$SHA', 'spines': out}, indent=1))" > $D/report/spines.json || echo "spines.json: failed" >> $D/report/missing.txt
 for f in exits.txt spine-times.txt; do cp $D/$f $D/report/$f || echo "$f: none" >> $D/report/missing.txt; done
 # disarm the abort gate: a re-post of this file starts disarmed until its own pilot
 rm -f var/lab-j182-local/armed.txt
@@ -3183,7 +3191,7 @@ abort: armed == 1 and engine_errors > 500
 abort: armed == 1 and big_frames >= 6
 abort: data_free_gb < 50
 `armed` is 1 only from this job's pilot to its Report block, so the first three cannot read another run's files; and every count
-reads `lab-j182/b-s??-*-21??`, which only this job writes. **`big_frames`** is J167's hung s05's signature (a frame log over 200
+reads `lab-j182/b-s??-*-25??`, which only this job writes. **`big_frames`** is J167's hung s05's signature (a frame log over 200
 MB, where a sound branch's is kilobytes); D484 makes it impossible, and if it fires a loop D484 does not cover is back. D493's re-run of
 the statics on nearly every copy is new code on every fork, so it is watched from the first spine like D488's fit was.
 `unit_errors == 0` means every unit of the 13 spines finished; `atlas.unitsShort` and `atlas.fullShort` as J169.

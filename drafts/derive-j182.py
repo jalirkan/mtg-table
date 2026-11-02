@@ -228,6 +228,15 @@ must('test "$(git diff --name-only 7a984963e61cdfe98cadfcc45fa7690a61dc37f6 HEAD
 must("echo \"J182: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's (D493's plus the paper-card carry): $sc\"",
      "echo \"J182: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's and D500's, the determinizer D498's: $sc\"")
 
+# ---------- 6b. the game-seed hundreds in the globs: J182's folders end in 25??, J181's in 21?? ----------
+must('lab-j182/b-s??-*-21??', 'lab-j182/b-s??-*-25??', 0)
+must("every glob is under lab-j182's `b-s??-*-21??`", "every glob is under lab-j182's `b-s??-*-25??`")
+must("G = sys.argv[2] if len(sys.argv) > 2 else 'b-s??-*-21??'", "G = sys.argv[2] if len(sys.argv) > 2 else 'b-s??-*-25??'")
+must("for d in $D/b-s??-*-21??; do", "for d in $D/b-s??-*-25??; do", 0)
+must("# the night's 13 spines: b-s??-*-21?? matches no pilot folder", "# the night's 13 spines: b-s??-*-25?? matches no pilot folder")
+must("for d in sorted(glob.glob(D + '/b-s??-*-21??'))]; print(json.dumps({'note': 'all 13 spines branched by J182", "for d in sorted(glob.glob(D + '/b-s??-*-25??'))]; print(json.dumps({'note': 'all 13 spines branched by J182")
+must("    for sp in sorted(glob.glob(D + '/b-s??-*-21??')):", "    for sp in sorted(glob.glob(D + '/b-s??-*-2???')):   # J182's folders end in 25??, J181's in 21??: one glob reads both")
+
 # ---------- 7. the header lines ----------
 lines = t.split('\n')
 
@@ -243,7 +252,7 @@ def setline(prefix, value):
 setline('id: ', 'J182')
 setline('title: ', "The move atlas, rung 4b, night seven -- J181's night carried onto the new main (D498: the determinizer keeps every card the seat may look at where it is and redeals only what it cannot see -- the shape that failed J181's s07; D499: a killed attempt's rows are abandoned, never audited -- J181's s13; D500: the fork carries the damage-this-turn history -- J181's s06) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j182, at deck seeds 2401-2413 (D447 with D482's list as D490, D492 and D494 leave it, the bands cycled as J166's) and game seeds 2501-2513; a validation draw made fresh at deck seeds 2601-2613 (game seeds 2701-2713 reserved); THE FIRST NIGHT OF D498'S POPULATION, pooled with nothing before it; J181's night read beside, by position, as information")
 setline('public_title: ', 'Move atlas 4b night seven: 13 new spines, D498-D500 lab fixes, a new population')
-setline('public_decides: ', 'None by itself; first night on the D498 determinizer, a new population of 13 spines')
+setline('public_decides: ', 'None by itself; first night on the D498 determinizer, a new population')
 setline('public_est: ', '~8 h to 12 h')
 setline('repos: ', 'mtg-table@%s (origin/main: @@MERGE_LINE@@; the coordinator writes that merge\'s full sha here before posting; merged == 1, the commits that added D481-D500\'s decision files, D493\'s, D495\'s, D496\'s, D497\'s, D498\'s, D499\'s and D500\'s names, the seat\'s code and the deck code exactly as this file states them, checked by the pilot)' % PIN)
 t = '\n'.join(lines)
@@ -339,6 +348,35 @@ must("- **J182 beside J180, by position** (`compare-j181.json`):", "- **J182 bes
 must("the confident share, mean regret at Forge's choice, capped share and wall; **labelled: different decks, the same seat policy and\n  design, the copier changed (D497), J180's s11 carrying the fork gap; a candidate, never a verdict** -- no difference is D497's by\n  itself.",
      "the confident share, mean regret at Forge's choice, capped share and wall; **labelled: different decks, the same seat policy and\n  design, the fork changed (D498, D500), J181's s07 carrying the redeal gap; a candidate, never a verdict** -- no difference is D498's by\n  itself.")
 must("(against J180's, and the ~7.5 h at 6 workers *Sizing* expected)", "(against J181's, and the ~8.3 h at 6 workers *Sizing* expected)")
+
+# ---------- 9. the merged tree's names (filled 2026-11-01 21:30 EST from pc/merge-d498-d501 = c6870381; the pin after the push) ----------
+BRIDGE = "bridge/src/mtgtable/ai/Atlas.java bridge/src/mtgtable/ai/Determinizer.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/SearchPolicy.java "
+TEN = "bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/Atlas.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/Determinizer.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java bridge/src/mtgtable/ai/SearchPolicy.java "
+must('@@BRIDGE_DIFF@@', BRIDGE)
+must('@@MERGE_LINE@@', "the merge of pc/d498, pc/d499, pc/d500 and pc/d501 (D498-D501) on 60177314 (D497's merge, on 7a984963, D496's)")
+must('D496_FILES="bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java "',
+     'D496_FILES="' + TEN + '"')
+must('= "bridge/src/mtgtable/GameLog.java bridge/src/mtgtable/SeatRecorder.java bridge/src/mtgtable/ai/DecisionClock.java bridge/src/mtgtable/ai/DecisionSelfTest.java bridge/src/mtgtable/ai/DecisionSink.java bridge/src/mtgtable/ai/LenientGameCopier.java bridge/src/mtgtable/ai/PolicyControllerAi.java bridge/src/mtgtable/ai/SearchPolicy.java " && test "$(git diff --numstat 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src/mtgtable/ai/SearchPolicy.java | cut -f1,2 | tr \'\\t\' \' \')" = "5 0"',
+     '= "' + TEN + '" && test "$(git diff --numstat 6e87e5d4a50e28649c9baa013f485da80a88aafd HEAD -- bridge/src/mtgtable/ai/SearchPolicy.java | cut -f1,2 | tr \'\\t\' \' \')" = "8 0"')
+must("# D495's merge (480c837d, J177's pin) is an ancestor of the pin, and since it bridge/src changed in exactly D496's six files (five of the\n# lane plus GameLog.java's javadoc from the review, comments only) and the\n# seat-identity golden not at all; since J173's pin (6e87e5d4, D488's merge) the golden is unchanged and bridge/src changed in exactly\n# D493's two files (LenientGameCopier.java, the carry pass; SearchPolicy.java, a self-test accessor, 5 lines in, none out) plus those six",
+     "# D495's merge (480c837d, J177's pin) is an ancestor of the pin, and since it bridge/src changed in exactly ten files: D496's six (five of\n# the lane plus GameLog.java's javadoc from the review, comments only), D497's LenientGameCopier.java (also D500's damage pass), D498's\n# Determinizer.java and Atlas.java (the no-leak check redeals the same way) and D500's SearchPolicy.java (a counter into the search sink,\n# `search.damageLkiLost`, 3 lines in, none out) and the seat-identity golden not at all; since J173's pin (6e87e5d4, D488's merge) the\n# golden is unchanged and bridge/src changed in exactly those ten (SearchPolicy.java: D493's self-test accessor 5 lines plus D500's 3, 8 in,\n# none out)")
+must("echo \"J182: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's and D500's, the determinizer D498's: $sc\"",
+     "echo \"J182: seat code: the policy J173's and J177's, the recorder D496's, the copier D497's and D500's, the determinizer D498's (bridge/src since 7a984963: Atlas, Determinizer, LenientGameCopier, SearchPolicy): $sc\"")
+HAS = {
+ '@@D498_NAMES@@': "# D498 (the determinizer keeps what the seat may look at; the names this file reads, checked against the merge c6870381)\nls docs/decisions/D498-*.md >/dev/null 2>&1 && grep -q 'mayPlayerLook' docs/decisions/D498-*.md && grep -q 'redealHidden(' bridge/src/mtgtable/ai/Determinizer.java && grep -q 'mayPlayerLook' bridge/src/mtgtable/ai/Determinizer.java && grep -q 'Determinizer.redealHidden' bridge/src/mtgtable/ai/Atlas.java && grep -q 'determinize-revealed' tools/ai-bench/AiBench.java && test -f tools/ai-bench/decks/determinize-revealed.dck && echo 1 > var/lab-j182-local/has-d498.txt || echo 0 > var/lab-j182-local/has-d498.txt",
+ '@@D499_NAMES@@': "# D499 (a game's rows are one play; a killed attempt's are abandoned)\nls docs/decisions/D499-*.md >/dev/null 2>&1 && grep -q 'abandoned' docs/decisions/D499-*.md && grep -q 'abandonedPlays' tools/cubelab/atlas.ts && grep -q 'supersededPlays' tools/cubelab/atlas.ts && grep -q 'playedTwice' tools/cubelab/rowscheck.ts && grep -q 'orphanRows' tools/cubelab/rowscheck.ts && test -f web/test/cubelab-record-cake.test.ts && echo 1 > var/lab-j182-local/has-d499.txt || echo 0 > var/lab-j182-local/has-d499.txt",
+ '@@D500_NAMES@@': "# D500 (the fork carries the damage-this-turn history) and D501 (the checker's empty-hand proof admits A3's revealed top card)\nls docs/decisions/D500-*.md >/dev/null 2>&1 && grep -q 'addGlobalDamageHistory' docs/decisions/D500-*.md && grep -q 'addGlobalDamageHistory' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'damageLkiLost()' bridge/src/mtgtable/ai/LenientGameCopier.java && grep -q 'search.damageLkiLost' bridge/src/mtgtable/ai/SearchPolicy.java && grep -q 'damageLkiLost' tools/cubelab/atlas.ts && grep -q 'fork-damage-lki' tools/ai-bench/AiBench.java && test -f tools/ai-bench/decks/fork-damage-lki.dck && echo 1 > var/lab-j182-local/has-d500.txt || echo 0 > var/lab-j182-local/has-d500.txt\nls docs/decisions/D501-*.md >/dev/null 2>&1 && grep -q 'revealedTopCard' docs/decisions/D501-*.md && grep -q 'revealedTopCard' tools/check-redaction.mjs && grep -q 'revealed top card (A3)' tools/check-redaction.mjs && echo 1 > var/lab-j182-local/has-d501.txt || echo 0 > var/lab-j182-local/has-d501.txt",
+}
+for k, v in HAS.items(): must(k, v)
+must('metrics: has_d500 = sh: cat var/lab-j182-local/has-d500.txt 2>/dev/null || echo 0',
+     'metrics: has_d500 = sh: cat var/lab-j182-local/has-d500.txt 2>/dev/null || echo 0\nmetrics: has_d501 = sh: cat var/lab-j182-local/has-d501.txt 2>/dev/null || echo 0')
+must('check: has_d500 == 1', 'check: has_d500 == 1\ncheck: has_d501 == 1')
+must('D497 D498 D499 D500; do', 'D497 D498 D499 D500 D501; do')
+must('has-d481-d500-commits', 'has-d481-d501-commits', 0)
+must('d481_d500_commits', 'd481_d501_commits', 0)
+must('D481-D500', 'D481-D501', 0)
+must("D497's, D498's, D499's and D500's names", "D497's, D498's, D499's, D500's and D501's names")
+must('@@FOLDER_TIME@@', '2026-11-01 21:28')
 
 if FAIL:
     print('\n'.join(FAIL)); sys.exit(1)
