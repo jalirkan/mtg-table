@@ -62,12 +62,32 @@ on that player's half. The steps run in order, and the first one that matches de
 5. **Three colours → the heaviest pair's picture, plus the third colour's element** (B5).
    - The heaviest pair is the two colours with the most weight. On a tie, the pair already showing stays. Failing
      that, the colours that arrived first win.
+     *(amended 2026-11-02: the pair is kept as the base. The pair showing stays while both its colours remain among
+     the three heaviest by weight -- fewer than three colours strictly outweigh each, so a tie at the edge of the top
+     three is not leaving it. It changes only when one of its colours leaves the top three, and then to the heaviest
+     pair among the top three, with the tie rule above. The first pair, with nothing showing, is still the heaviest.
+     So a third colour may outweigh the pair; it is then the element, fully in. Seen on the storyboard: Island, Swamp,
+     Mountain, Mountain redrew the swamp half as desert, and W U B R G twice then Forest, Island brought three
+     unrelated landscapes in three lands; both now keep their first pair. ForgeCoach spec 1.19 b.)*
    - The pair's own two weights set the pan.
    - **Stage** counts every coloured land on the half, so a growing third colour still grows the place.
    - The element sits over the picture, on the heavier colour's ground and clear of the transition. It fades in
      with the third colour's share and is graded to the base picture's `light.json` key.
+     *(amended 2026-11-02: where the picture shown has the third colour painted in, that picture; else its cut-out
+     element -- on a seam cell too, and on a phone its phone piece; else its own panel beside the pair. Never
+     nothing. "Clear of the transition" is the seam core: 0.07 of the picture's drawn width either side of it.
+     ForgeCoach spec 1.19 a.)*
 6. **Four or five colours → fold to three.** Keep the three heaviest (ties broken as in step 5), then run step 5.
    The other colours show nothing. One element at a time.
+   *(amended 2026-11-02: every colour visible -- no fold. The pair and the third are drawn as step 5 says, and
+   EVERY further colour is drawn as its cut-out element, stacked on the pair's grounds: the heavier pair colour's
+   ground first, then the lighter's, in weight order -- the heavier ground holds two (the third, painted in or cut
+   out, and the fourth) side by side, the heaviest at the half's outer edge; the lighter ground holds the fifth.
+   Each fades by its share (n × its weight over every coloured land, at most 1, n the colours on the half: three
+   colours give step 5's "an equal third is fully in"), none on the seam core, on a phone its phone piece. The
+   further colours still weigh nothing in the pair, the pan or a panel; their lands still count in the stage. The
+   caption names every element. Without the pair picture (the board's panels) the three kept colours keep their
+   panels and the rest stand on the pair's panels the same way. ForgeCoach spec 1.19 a.)*
 7. **A landmark land → its landmark on top** (B6) of whatever steps 2–6 drew, the empty table included.
    - It does not change the makeup.
    - One per card name; a second copy adds nothing.
@@ -79,6 +99,9 @@ on that player's half. The steps run in order, and the first one that matches de
      new heaviest pair) is a new makeup.
    - **Empty table → first picture** → the mist burns off: the prologue dissolves.
    - **A stage step and a makeup change at once** (a dual brings two colours) → one transition, the makeup's.
+   *(amended 2026-11-02: ForgeCoach's default pack is pack-v9.2, which carries batch 3's pieces -- five elements
+   with phone pieces, the W/U/B/G fronts, both veils and the empty table -- so steps 2, 5–8 draw them on every board,
+   with the whole-half flag and without. ForgeCoach spec 1.19 d.)*
 9. **Compose the two halves.** Each player's picture fills their own half. The opponent's is on top, upright: the
    far country. Matching the light is client work and costs no GPU:
    - The far half is hazed about 22% toward the centre mist, at contrast 0.86. This is concept-v1's `compose.py`.
@@ -95,6 +118,11 @@ on that player's half. The steps run in order, and the first one that matches de
 | T4 | + Plains | R ½, W 1½ | mountain+plains s1, panned to the plains (0.25) | — |
 | T8 | + Island | W 1½, U 1, R ½ | **island+plains** s2 (re-keyed: 2.5 outweighs 2.0) + red's fire element | blue's front |
 | T10 | + Tundra | W 2, U 1½, R ½ | island+plains s2 (4 lands), the pan eased toward the island (plains 0.60 → 0.57), + fire | — (the pan moves) |
+
+*(amended 2026-11-02, the pair kept as the base (step 5): at T8 the red is still among the three heaviest, so
+mountain+plains stays at s2 with blue's element on the plains' ground (fully in) and blue's front plays; at T10 the
+pan moves further to the plains (mountain 0.25 → 0.20) and the island stays the element, fully in. ForgeCoach spec
+1.19 b; its `pieces.test.ts` plays this table.)*
 
 ## B. The slot table
 
@@ -207,6 +235,14 @@ work on the conceptual aspect, making sure things work logically." Agreed princi
 5. **Stages evolve one half at a time.** A half shows its colour's canonical picture at the stage of that colour's own
    land count (mono thresholds); the seam is painted at three pair stages (the mono stages 2 / 4 / 6 on both edges) and
    is chosen by the total, as today's pair stage is. Adding one land changes one half's stage, never the other half.
+   *(amended 2026-11-02: no clamp. The seam grid is painted for halves at most one stage apart; until now a pair
+   further apart showed the lighter half raised to one stage below the heavier, so one Island beside five Forests was
+   drawn at stage 4 and grew with every Forest -- the storyboard's gap 4, against this rule. Now, when the exact
+   cell for the two stages is missing, each colour's own mono picture (its half picture at its own stage, the phone
+   picture on a phone) is drawn side by side where the cell's halves would be, at the pair's split, joined by the
+   plain mist seam, with no band picture; a third colour is its cut-out there (no painted picture exists for that pair
+   of stages); the caption says "island s1 | forest s5, no seam cell". A painted cell, when it exists, is always
+   preferred, so painting the missing cells later needs no code change. ForgeCoach spec 1.19 c.)*
 6. **Light stays inside the pictures.** The halves carry their own hour (light.json); the seam is painted at the later
    of the two hours and the shared horizon (LIGHT.md).
 7. **What is kept:** the mono ladder and its 1.7 transition frames unchanged; the pieces (the empty table, the veils,
