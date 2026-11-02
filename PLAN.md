@@ -17,7 +17,8 @@ commit.
 **The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D497
+said 371 across 42, three rows and one list behind its table) — D498
+(2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
@@ -414,6 +415,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 11 | open | The board's replay stops at a lab log's first `dir:"ai"` line: `reduce()` throws on `decision` (M55) and `reveal` (M78) | `web/src/transport/replay.ts` |
 | [Cube lab](#fu-cube-lab) | 12 | open | D497's paper-card carry: a copy of a token on a fork is proved on the bench only; the first night on the new bridge should branch it cleanly, with no bare exception in its worker logs | `docs/decisions/D497-fork-token-paper-card.md` |
 | [Cube lab](#fu-cube-lab) | 13 | open | The lint's reflection rules cannot see a name built at run time, a line opening with a comment marker, or an unbudgeted `getDeclaredMethod` / `getDeclaredConstructor` | `tools/lint-bridge.sh` |
+| [Cube lab](#fu-cube-lab) | 14 | open | D498's determinizer keeps a card the seat may look at where it is: proved on the bench and on a re-run of s07's decision 14; the first night on the new bridge should show no A6 failure | `docs/decisions/D498-determinizer-keeps-what-the-seat-sees.md` |
+| [Cube lab](#fu-cube-lab) | 15 | open | `check-redaction.mjs --empty-hand-ok`'s proof (D460) fails an empty-handed opponent beside a revealed top card that A3 accepts: "not one card was redacted" with nothing hidden shown (J181 s07 d13) | `tools/check-redaction.mjs` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9862,7 +9865,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -9963,6 +9966,25 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    - `getDeclaredMethod` / `getDeclaredConstructor` on a Forge class, which have no budget at all
      (`tools/cubelab/CubeLab.java:854-855` uses them).
    Closing them needs a parser (or a javap pass over `bridge/out`), not a grep.
+14. **D498's determinizer is proved on the bench and on a re-run of s07's decision 14, not yet on a night.**
+   (2026-11-01, D498.) `Determinizer` now keeps every hand and library card the searching seat may look at
+   (`Card.mayPlayerLook`) in its zone and at its index, and deals only the hidden ones into the slots they left; the
+   atlas's no-leak check redeals the same way. J181's s07 failed `atlas.problems == 0` on it: the opponent's Oracle of
+   Mul Daya revealed card 44 on top of its library, the old determinizer pooled it, and 48 of decision 14's 1,360 branch
+   logs showed it named in the opponent's hand (`tools/check-redaction.mjs`'s A6). Measured: the ai-bench
+   `determinize-revealed-*` scenarios (on `main`'s determinizer 5 of their 16 checks fail, 11 of 48 branch logs among
+   them) and decisions 13 and 14 of s07 replayed unit for unit through the atlas's own jobs (decision 14: the night's 48
+   failing logs exactly on `main`'s determinizer, 0 on this one). The first night on the new bridge should show no A6
+   failure. Atlas labels and search results from before and after D498 are not pooled (split by git sha; J182 opens
+   `random-<band>-d498`, the decision's *Comparability*).
+15. **`--empty-hand-ok`'s proof does not admit a revealed top card.** (2026-11-01, found by D498's replay; older than
+   D498.) An atlas branch whose opponent has an empty hand in every state, beside an Oracle of Mul Daya (or any
+   `REVEALS_OWN_TOP` permanent), fails `tools/check-redaction.mjs --empty-hand-ok` with "not one card was redacted":
+   D460's proof wants every opponent `library.cards` empty, and A3 (D315) rightly lists the revealed top card. Nothing
+   hidden is shown. J181's s07 decision 13 had 3 such logs (the night's other 3 of its 51 failures), D498's replay 7: the
+   random opponent casts Force of Vigor by exiling its other card before the first frame. It will fail a night's
+   `atlas.problems == 0` again whenever a deal meets it; the fix is the checker's (the proof admitting a one-card listing
+   A3 accepts as a revealed top), with a selftest case each way, and is not made here.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

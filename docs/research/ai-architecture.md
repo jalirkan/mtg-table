@@ -256,7 +256,10 @@ shuffled with the search's own random source and dealt back — as many to hand
 as the hand held. The AI's own library is shuffled the same way. The result
 depends only on the multiset, the hand size and the seed; the self-test plays
 two games that differ only in the hidden split and order and requires identical
-determinizations. Known limit: an opponent's face-down permanent or exiled card
+determinizations. Since D498 a card the AI may look at (`Card.mayPlayerLook`: a
+top card played revealed, a hand played revealed) is not pooled: it keeps its
+zone and index, and only the cards it cannot see are dealt into the slots they
+left. Known limit: an opponent's face-down permanent or exiled card
 keeps its real identity in the copy (counted, `search.oppFaceDownDecisions`).
 The search reads the real game only through the copier and the candidate
 generation, both on the game thread inside Forge's callback; it writes nothing

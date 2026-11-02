@@ -68,7 +68,8 @@ import mtgtable.SeatRecorder;
  * what the atlas seat cannot see redealt ({@link Determinizer}: the opponent's
  * hand and library pooled and dealt again, both libraries shuffled -- from the
  * multiset alone, so seat B's real hidden cards decide nothing in a branch and
- * reach no row of seat A's), then played to the end or to the turn cap (a draw)
+ * reach no row of seat A's; D498: a card the atlas seat may look at, a revealed
+ * top card, stays where it is), then played to the end or to the turn cap (a draw)
  * by the continuation: Forge's Default AI on both seats, or the random seat
  * ({@link ExploreMath.Config#randomSeat}) on both.  Branch {@code i} of every
  * option of a decision uses the same seed -- the same redeal, the same engine
@@ -81,9 +82,11 @@ import mtgtable.SeatRecorder;
  * for card, and the opponent's hand and library the same cards between them.
  * And, on request ({@link Unit#leakChecks}), the no-leak check: the branch is
  * played again after the opponent's real hand and library were dealt again in
- * the ORIGINAL game (as {@link RowsLeakCheck} does), and the atlas seat's state
- * at the fork, the result and the atlas seat's rows must not move; the negative
- * control, the atlas seat's own hand swapped with its library, must (its state
+ * the ORIGINAL game (as {@link RowsLeakCheck} does; D498: only the cards the
+ * atlas seat may not look at, through {@link Determinizer#redealHidden}), and
+ * the atlas seat's state at the fork, the result and the atlas seat's rows must
+ * not move; the negative control, the atlas seat's own hand swapped with its
+ * library, must (its state
  * at the fork reads its hand; a swap that changes no card's name cannot show).
  *
  * <p><b>A branch that throws</b> (D465): a {@code RuntimeException} or an
@@ -560,9 +563,6 @@ public final class Atlas {
                         hand.setCards(h0);
                         lib.setCards(l0);
                     });
-                    final List<Card> all = new ArrayList<>(h0);
-                    all.addAll(l0);
-                    Collections.shuffle(all, rng);
                     if (p == ai) {
                         // the control: a different hand for the atlas seat, from its library
                         final List<Card> fromLib = new ArrayList<>(l0);
@@ -574,8 +574,9 @@ public final class Atlas {
                         hand.setCards(newHand);
                         lib.setCards(newLib);
                     } else {
-                        hand.setCards(new ArrayList<>(all.subList(0, h0.size())));
-                        lib.setCards(new ArrayList<>(all.subList(h0.size(), all.size())));
+                        // D498: what the atlas seat may look at (a revealed top card) stays put, as the
+                        // Determinizer keeps it; moving it would be a public change, not a hidden one
+                        Determinizer.redealHidden(p, ai, true, rng);
                     }
                 }
             }
