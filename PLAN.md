@@ -17,8 +17,8 @@ commit.
 **The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D500
-(2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
+said 371 across 42, three rows and one list behind its table) — D501
+(2026-11-01) added the cube lab's 18 and closed its 15; D500 (2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
@@ -416,9 +416,10 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 12 | open | D497's paper-card carry: a copy of a token on a fork is proved on the bench only; the first night on the new bridge should branch it cleanly, with no bare exception in its worker logs | `docs/decisions/D497-fork-token-paper-card.md` |
 | [Cube lab](#fu-cube-lab) | 13 | open | The lint's reflection rules cannot see a name built at run time, a line opening with a comment marker, or an unbudgeted `getDeclaredMethod` / `getDeclaredConstructor` | `tools/lint-bridge.sh` |
 | [Cube lab](#fu-cube-lab) | 14 | open | D498's determinizer keeps a card the seat may look at where it is: proved on the bench and on a re-run of s07's decision 14; the first night on the new bridge should show no A6 failure | `docs/decisions/D498-determinizer-keeps-what-the-seat-sees.md` |
-| [Cube lab](#fu-cube-lab) | 15 | open | `check-redaction.mjs --empty-hand-ok`'s proof (D460) fails an empty-handed opponent beside a revealed top card that A3 accepts: "not one card was redacted" with nothing hidden shown (J181 s07 d13) | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 15 | closed | `check-redaction.mjs --empty-hand-ok`'s proof (D460) fails an empty-handed opponent beside a revealed top card that A3 accepts: "not one card was redacted" with nothing hidden shown (J181 s07 d13) | `tools/check-redaction.mjs` |
 | [Cube lab](#fu-cube-lab) | 16 | open | D499's rows check: two killed attempts of one branch with no finished play are still each read against the last attempt's logs, and the first night on it should report its abandoned plays with no id problem | `tools/cubelab/rowscheck.ts` |
 | [Cube lab](#fu-cube-lab) | 17 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
+| [Cube lab](#fu-cube-lab) | 18 | open | D501's empty-hand proof with a revealed library top: measured on Oracle of Mul Daya only (J181's three s07 logs); the other revealers rest on synthetic controls, and the top card named outside its state's library still refuses the proof | `docs/decisions/D501-empty-hand-proof-revealed-top.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9867,7 +9868,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -9986,7 +9987,8 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    hidden is shown. J181's s07 decision 13 had 3 such logs (the night's other 3 of its 51 failures), D498's replay 7: the
    random opponent casts Force of Vigor by exiling its other card before the first frame. It will fail a night's
    `atlas.problems == 0` again whenever a deal meets it; the fix is the checker's (the proof admitting a one-card listing
-   A3 accepts as a revealed top), with a selftest case each way, and is not made here.
+   A3 accepts as a revealed top), with a selftest case each way. **Closed by D501 at the same merge** (2026-11-01): the proof
+   admits the one library card A3 vouches for and nothing else; J181's three logs pass with a WARN.
 16. **D499's rows check is measured on J181's spine, not yet on a night, and leaves one case unordered.** (2026-11-01,
    D499.) A game is now one play, a `begin` and its `end` in one rows file. A killed attempt's unfinished play is left out
    of the id check when its key ended in another file, and counted (`checks.abandonedPlays`, `abandonedRows`). J181's
@@ -10015,6 +10017,16 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    could be refilled without reflection, but that changes what the AI reads), and on a fork a transformed double-faced
    card's view keeps its front face (the copy's Etching of Kumano is `Backside` and acts as Etching, but every branch
    frame names it *Kumano Faces Kakkazan*).
+18. **D501's empty-hand proof with a revealed library top is measured on one revealer.** (2026-11-01, D501.)
+   `check-redaction.mjs --empty-hand-ok` now accepts, beside an opponent hand empty in every state, the one
+   `library.cards` top card that rule A3 vouches for (a "play with the top card revealed" permanent of theirs), and
+   its WARN says the library listed only that card. Measured on J181's `b-s07-legacy-2185` (`d13-*-b7-seat0`, Oracle
+   of Mul Daya: FAIL on `main`, the D501 WARN here) and on synthetic controls for everything else: Courser of
+   Kruphix and the other `REVEALS_OWN_TOP` names, and `REVEALS_EVERY_TOP`'s every-player shape (Field of Dreams),
+   have met no empty hand on a night. The vouched card is skipped as an object in its own state's library only, so
+   the same card named in an `ask` body or an `ai` line still refuses the proof. If a night meets that shape, it
+   needs its own decision, not a wider skip. D498's re-run reported seven logs of the s07 shape. They should pass
+   once that lane's checker carries D501.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

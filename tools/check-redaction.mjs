@@ -173,16 +173,23 @@
  *     lists, at least two (a state that leaves the opponent out shows no hand of
  *     theirs, which proves nothing -- the #178 review);
  *   - "not one card was redacted": every state body shows every non-viewer seat's
- *     hand at count 0 (and no cards), every non-viewer library.cards is [], and no
- *     frame of any type lists a card in a hand or a library that the viewer does
- *     not own;
+ *     hand at count 0 (and no cards), every non-viewer library.cards is [] -- or
+ *     (D501) the one top card A3 itself vouches for (revealedTopCard: a "play with
+ *     the top card revealed" permanent of theirs, exactly one card), which is
+ *     public -- and no frame of any type lists any other card in a hand or a
+ *     library that the viewer does not own;
  *   - "the viewer never saw a named card": every state body shows the viewer's own
  *     hand at count 0.
  *
  * A broken canBeShownTo shows non-zero counts with full cards, and a non-zero
  * count with no stub fails the count check (and this proof) by itself, so both
  * still fail under the flag (check-redaction-selftest.mjs's negative controls).
- * Every leak rule is unchanged.  tools/cubelab's atlas passes it for its branch
+ * Every leak rule is unchanged.  D501 (J181's b-s07: Oracle of Mul Daya beside an
+ * empty hand) admitted the A3 top card and nothing else: the hand side is as
+ * strict as it was, a library card A3 does not vouch for (no revealer, the
+ * viewer's revealer, two cards) still spoils the proof, and so does the same top
+ * card named in any frame other than its own state's library.  The WARN then says
+ * the opponent's library listed only its revealed top card (A3).  tools/cubelab's atlas passes it for its branch
  * logs alone; phase A's games and the baseline are checked without it.
  * ---------------------------------------------------------------------------
  */
@@ -226,6 +233,18 @@ function revealedTopsOf(players) {
     }
   }
   return out;
+}
+
+/**
+ * A3's one exemption, as one predicate: the card of `p`'s `library.cards` that a
+ * top-revealing permanent vouches for -- `p` is not the viewer, the list is
+ * exactly one card, and `revealedTops` (revealedTopsOf, this same state) holds
+ * `p` -- or null.  A3's census and --empty-hand-ok's proof (D501) both ask it, so
+ * the proof can never accept a library listing A3 itself would not.
+ */
+function revealedTopCard(p, isViewer, revealedTops) {
+  const cards = p?.zones?.library?.cards;
+  return !isViewer && Array.isArray(cards) && cards.length === 1 && revealedTops.has(p?.id) ? cards[0] : null;
 }
 
 /**
@@ -478,16 +497,18 @@ const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray
  * or a library that `seat` does not own?  A card here is any object with a numeric
  * `id` and a `zone` of "hand" or "library"; its owner is `owner`, else (the
  * pre-P1 stub) `controller`.  A stub counts as much as a full card: either says
- * the opponent held something.
+ * the opponent held something.  `skip` holds the card objects (by identity, not
+ * id) a state's A3 vouches for (revealedTopCard, D501) -- nothing else is skipped.
  */
-function listsOthersHiddenCard(x, seat, depth = 0) {
+function listsOthersHiddenCard(x, seat, skip, depth = 0) {
   if (depth > 64 || x === null || typeof x !== 'object') return false;
-  if (Array.isArray(x)) return x.some((v) => listsOthersHiddenCard(v, seat, depth + 1));
+  if (skip.has(x)) return false;
+  if (Array.isArray(x)) return x.some((v) => listsOthersHiddenCard(v, seat, skip, depth + 1));
   if (num(x.id) && (x.zone === 'hand' || x.zone === 'library')) {
     const owner = num(x.owner) ? x.owner : x.controller;
     if (owner !== seat) return true;
   }
-  return Object.values(x).some((v) => listsOthersHiddenCard(v, seat, depth + 1));
+  return Object.values(x).some((v) => listsOthersHiddenCard(v, seat, skip, depth + 1));
 }
 const mapOf = (f) => (v) => plainObject(v) && Object.values(v).every(f);
 const oneOf = (...values) => (v) => values.includes(v);
@@ -1639,13 +1660,15 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    * --empty-hand-ok (D460): the first line that spoils each proof (null: none did).
    * opponentHand -- a non-viewer hand whose count is not 0 (or that lists a card);
    * opponentListed -- a non-viewer library.cards that is not [], or any frame that
-   * lists a card in a hand or library the viewer does not own; viewerHand -- the
+   * lists a card in a hand or library the viewer does not own, except a state's
+   * one library card A3 vouches for (revealedTopCard; D501) -- revealedTops counts
+   * the states that listed one; viewerHand -- the
    * viewer's own hand at a count other than 0.  seats -- every seat any state
    * lists, and the state listing the fewest of them (a state that leaves a seat
    * out proves nothing about that seat's hand: both proofs need every state to
    * list the viewer and every other seat, and at least one other).
    */
-  const emptyProof = { opponentHand: null, opponentListed: null, viewerHand: null };
+  const emptyProof = { opponentHand: null, opponentListed: null, viewerHand: null, revealedTops: 0 };
   const proofSeats = { all: new Set(), fewest: Infinity, fewestLine: null, viewerMissing: null };
   let sawState = false;
   const seat = header.seat;
@@ -2520,8 +2543,19 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       continue;
     }
     const dir = f.dir ?? 's2c';
-    if (emptyHandOk && emptyProof.opponentListed === null && listsOthersHiddenCard(f.body, seat)) {
-      emptyProof.opponentListed = lineNo;
+    if (emptyHandOk && emptyProof.opponentListed === null) {
+      // D501: in a state, the one library card A3 vouches for (a top card a
+      // permanent reveals) is public, so it does not spoil the proof; that exact
+      // object is skipped, and every other card -- in any frame -- still does.
+      const skip = new Set();
+      if (f.type === 'state' && Array.isArray(f.body.players)) {
+        const tops = revealedTopsOf(f.body.players);
+        f.body.players.forEach((p, pi) => {
+          const top = revealedTopCard(p, (p?.id === seat) || (seat === undefined && pi === 0), tops);
+          if (top !== null && typeof top === 'object') skip.add(top);
+        });
+      }
+      if (listsOthersHiddenCard(f.body, seat, skip)) emptyProof.opponentListed = lineNo;
     }
     if (dir === 'ai') {
       // M55 (D347): a recorder-only line, its own seq series, audited once the
@@ -2671,7 +2705,10 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
         } else {
           if (!handEmpty && emptyProof.opponentHand === null) emptyProof.opponentHand = lineNo;
           const libEmpty = Array.isArray(zones.library?.cards) && zones.library.cards.length === 0;
-          if (!libEmpty && emptyProof.opponentListed === null) emptyProof.opponentListed = lineNo;
+          // D501: one card that A3 vouches for is a public top card, not a listing.
+          const libTop = revealedTopCard(p, isViewer, revealedTops) !== null;
+          if (libTop) emptyProof.revealedTops++;
+          else if (!libEmpty && emptyProof.opponentListed === null) emptyProof.opponentListed = lineNo;
         }
       }
 
@@ -2693,7 +2730,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
           // owns" is not a reason to default to a warning nobody reads. It
           // FAILS, and a recording that really does exercise one of those
           // effects says so on the command line.
-          if (!isViewer && lib.cards.length === 1 && revealedTops.has(p.id)) {
+          if (revealedTopCard(p, isViewer, revealedTops) !== null) {
             // Their top card, revealed to everyone by a permanent they control
             // (REVEALS_OWN_TOP).  One card, and no A6 exemption: that stays the
             // viewer's own library's alone, below.
@@ -2988,8 +3025,14 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     : null;
   const opponentEmpty = !provable || seatsWhyNot !== null || emptyProof.opponentHand !== null || emptyProof.opponentListed !== null
     ? null
-    : `every one of the ${stats.state} state bodies shows each other seat's hand at count 0 and their ` +
-      `library.cards as [], and no frame lists a card in a hand or library the viewer does not own`;
+    : emptyProof.revealedTops > 0
+      // D501: a top card a permanent reveals (A3) is public; the hand side is unchanged.
+      ? `the opponent's hand was empty in every state and its library listed only its revealed top card (A3): ` +
+        `every one of the ${stats.state} state bodies shows each other seat's hand at count 0 and their ` +
+        `library.cards as [] or the one top card A3 vouches for (${emptyProof.revealedTops} of them, D501), and ` +
+        `no frame lists any other card in a hand or library the viewer does not own`
+      : `every one of the ${stats.state} state bodies shows each other seat's hand at count 0 and their ` +
+        `library.cards as [], and no frame lists a card in a hand or library the viewer does not own`;
   const opponentWhyNot = !emptyHandOk ? null
     : !provable ? 'no state body, or no numeric seat in the header'
     : seatsWhyNot !== null ? seatsWhyNot
@@ -3742,8 +3785,9 @@ function main() {
     console.error('                        1 a failure.');
     console.error('  --empty-hand-ok       "not one card was redacted" / "the viewer never saw a named');
     console.error('                        card" are WARNs where the file proves that hand empty in');
-    console.error('                        every state (count 0, no card listed anywhere; D460). For');
-    console.error('                        the move atlas\'s branch logs. Every leak rule still fails.');
+    console.error('                        every state (count 0, no card listed anywhere but a top');
+    console.error('                        card A3 vouches for; D460, D501). For the move atlas\'s');
+    console.error('                        branch logs. Every leak rule still fails.');
     process.exit(2);
   }
   if (preAmendment) {
