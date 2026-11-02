@@ -95,6 +95,19 @@ const REQUIRED = [
   ['a9-alt-appears-after-the-dig.jsonl', 'fail'],
   ['a9-opponent-morph-named.jsonl', 'fail'],
   ['a9-stolen-morph-named-for-its-owner.jsonl', 'fail'],
+  // D502 (J182 s06): hideaway's look goes to whoever has controlled the permanent
+  // that exiled the card -- an opponent's face-down exiled card may show its face
+  // from the state in which (or the one after which) the viewer took control of a
+  // permanent of that opponent's.  The probes: no change of control, the viewer's
+  // own permanent taken back, the alt two states after the change.
+  ['a9-hideaway-control-taken.jsonl', 'pass'],
+  ['a9-hideaway-alt-a-state-after-control-taken.jsonl', 'pass'],
+  ['a9-hideaway-no-control-change.jsonl', 'fail'],
+  ['a9-hideaway-viewer-own-permanent-taken-back.jsonl', 'fail'],
+  ['a9-hideaway-viewer-controlled-from-the-start.jsonl', 'fail'],
+  ['a9-hideaway-third-party-permanent.jsonl', 'fail'],
+  ['a9-hideaway-alt-in-a-graveyard.jsonl', 'fail'],
+  ['a9-hideaway-alt-two-states-after-control-taken.jsonl', 'fail'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -139,10 +152,28 @@ const REQUIRED = [
   ['stale-token-died-earlier.jsonl', 'pass'],
   ['stale-token-bounced-to-own-hand.jsonl', 'pass'],
   ['stale-token-bounced-to-the-opponent-hand.jsonl', 'fail'],
-  ['stale-token-of-the-opponent.jsonl', 'fail'],
+  ['stale-token-of-the-opponent.jsonl', 'pass'],   // a FAIL control until D503
   ['stale-token-then-exiled.jsonl', 'fail'],
   ['stale-nontoken-ghost.jsonl', 'fail'],
   ['stale-token-shown-only-after-the-window.jsonl', 'fail'],
+  // D503 (J182 s10): another seat's token that ceased to exist -- listed as that
+  // seat's own token on its battlefield in the window, its latest move from there
+  // into that seat's own graveyard or hand (or nowhere), never a stub nearby.  The
+  // controls: a nontoken card (listed nowhere after, or a stub at the decision), a
+  // token never listed, exile, a library, a token still a stub in its owner's hand.
+  ['ceased-opponent-token-source-choice.jsonl', 'pass'],
+  ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'pass'],
+  ['ceased-opponent-token-to-nowhere.jsonl', 'pass'],
+  ['ceased-opponent-nontoken-ghost.jsonl', 'fail'],
+  ['ceased-opponent-nontoken-a-stub.jsonl', 'fail'],
+  ['ceased-opponent-token-never-listed.jsonl', 'fail'],
+  ['ceased-opponent-token-then-exiled.jsonl', 'fail'],
+  ['ceased-opponent-token-into-a-library.jsonl', 'fail'],
+  ['ceased-opponent-token-shown-only-after-the-window.jsonl', 'fail'],
+  ['ceased-opponent-token-into-the-viewer-hand.jsonl', 'fail'],
+  ['ceased-opponent-token-exiled-then-to-graveyard.jsonl', 'fail'],
+  ['ceased-opponent-token-exiled-then-gone.jsonl', 'fail'],
+  ['ceased-opponent-token-still-a-hand-stub.jsonl', 'fail'],
   // D495: a spell copy on the stack -- never in a zone, its `cast` event after the
   // decision -- vouched for by a cast in the window by either seat (the stack is
   // public), and one that resolves into a token.  The controls: a cast too late,
@@ -180,6 +211,22 @@ const REQUIRED = [
   ['reveal-of-an-opponent-hand-stub.jsonl', 'fail'],
   ['reveal-moved-a-state-too-late.jsonl', 'fail'],
   ['reveal-of-a-peeked-library-card-that-never-moves.jsonl', 'fail'],
+  // D504 (J182 s04): an opponent's cast, entered between frames -- a stub of
+  // another seat's hand in the decision's state, moved from that hand onto the
+  // stack and cast in the window (a held batch).  The controls: into a library
+  // or exile with no cast, onto the stack with no cast, still a stub after the
+  // decision, the move and cast a state too late (and D481's
+  // m55-option-cast-from-the-opponent-hand: no stub, no cast).
+  ['m55-option-cast-from-the-opponent-hand-held.jsonl', 'pass'],
+  ['m55-option-opponent-hand-to-library-no-cast.jsonl', 'fail'],
+  ['m55-option-opponent-hand-to-exile-no-cast.jsonl', 'fail'],
+  ['m55-option-opponent-hand-to-stack-no-cast.jsonl', 'fail'],
+  ['m55-option-opponent-cast-still-a-stub-after.jsonl', 'fail'],
+  ['m55-option-opponent-hand-to-exile-with-a-cast.jsonl', 'fail'],
+  ['m55-option-opponent-cast-from-another-zone.jsonl', 'fail'],
+  ['m55-option-opponent-cast-never-a-stub.jsonl', 'fail'],
+  ['m55-option-opponent-cast-event-a-state-too-late.jsonl', 'fail'],
+  ['m55-option-opponent-cast-a-state-too-late.jsonl', 'fail'],
   // Amendment M57 (D358): play exploration's header and decision marks; the
   // planted leak is a mark whose Forge answer names the opponent's hand card.
   ['m57-explore-present.jsonl', 'pass'],
@@ -211,6 +258,23 @@ const REQUIRED = [
   ['m76-min-not-an-integer.jsonl', 'fail'],
   ['m76-no-target-elsewhere.jsonl', 'fail'],
 ];
+// D502-D504: a pass control of a new rule must pass BECAUSE of that rule -- its
+// count is on the stats line -- not because some older rule vouched for it.
+const COUNTED = [
+  ['a9-hideaway-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-a-state-after-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
+  ['ceased-opponent-token-source-choice.jsonl', 'ceased to exist, another seat\'s token=2'],
+  ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],
+  ['ceased-opponent-token-to-nowhere.jsonl', 'ceased to exist, another seat\'s token=2'],
+  ['m55-option-cast-from-the-opponent-hand-held.jsonl', 'entered between frames, an opponent\'s cast=2'],
+];
+for (const [file, line] of COUNTED) {
+  const { code, out } = check(file);
+  if (code !== 0 || !out.includes(line)) bad(`${file} must pass with ${JSON.stringify(line)} on its stats line`);
+  else console.log(`  ok    ${file} passes, counted (${line})`);
+}
+
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);
   if (entry === undefined) {

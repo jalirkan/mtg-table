@@ -108,6 +108,54 @@
     "why": "A9, D371: in play a face-down card's face is its CONTROLLER's -- the owner of a stolen morph does not see it"
   },
   {
+    "file": "a9-hideaway-control-taken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502: the viewer took control of the opponent's Watcher for Tomorrow, and the card it hid face down in their exile carries its alt from that state on -- hideaway's look goes to whoever has controlled the permanent; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-a-state-after-control-taken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D502: the alt appears in the state after the one that moved control (J182 b76: the look static re-applies after that snapshot) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-no-control-change.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the opponent's Watcher stays the opponent's -- with no change of control to the viewer, an alt on their exiled face-down card has no source"
+  },
+  {
+    "file": "a9-hideaway-viewer-own-permanent-taken-back.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the permanent that changed hands is the VIEWER's own (taken back from the opponent), not one of the exiled card's owner's -- it grants no look at the opponent's card"
+  },
+  {
+    "file": "a9-hideaway-viewer-controlled-from-the-start.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the viewer controls the opponent's Watcher in every state and the alt appears later with no change of control -- the log shows no taking of control, so nothing ties the alt to the look"
+  },
+  {
+    "file": "a9-hideaway-third-party-permanent.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the permanent the viewer took is owned by a third party (player 2), not by the exiled card's owner -- it grants no look at that card"
+  },
+  {
+    "file": "a9-hideaway-alt-in-a-graveyard.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: hideaway's look is a look at a card in EXILE -- a face-down card elsewhere outside play (a graveyard) gains nothing from the change of control"
+  },
+  {
+    "file": "a9-hideaway-alt-two-states-after-control-taken.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D502: the alt must come with the change of control or one state after it -- one appearing two states later has no source"
+  },
+  {
     "file": "own-hand-card-redacted.jsonl",
     "level": "fail",
     "expect": "has no name -- redaction is too aggressive (it is a redacted stub",
@@ -396,12 +444,6 @@
     "why": "D485: a stale target whose latest move is into the OPPONENT's hand is hidden -- not vouched for"
   },
   {
-    "file": "stale-token-of-the-opponent.jsonl",
-    "level": "fail",
-    "expect": "which its state frame does not show",
-    "why": "D485: only the viewer's OWN token is vouched for -- the opponent's token, dead in the opponent's graveyard, is not"
-  },
-  {
     "file": "stale-token-then-exiled.jsonl",
     "level": "fail",
     "expect": "which its state frame does not show",
@@ -418,6 +460,90 @@
     "level": "fail",
     "expect": "which its state frame does not show",
     "why": "D485: the listing as the viewer's own token must be in the window (up to the first state after the decision) -- one only later does not vouch"
+  },
+  {
+    "file": "stale-token-of-the-opponent.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D485, D503: the opponent's token, listed as its own on its battlefield and dead in its own graveyard, named by a target list -- a token on a battlefield is public whoever's it is (a D485 FAIL control until D503); counted, not a problem"
+  },
+  {
+    "file": "ceased-opponent-token-source-choice.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D503: J182 s10's shape -- the opponent's Goat Token, sacrificed into its own graveyard, offered by a choose-a-source choice (Eye for an Eye); counted, not a problem"
+  },
+  {
+    "file": "ceased-opponent-token-bounced-to-its-hand.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D503: the opponent's token returned to its owner's hand, where a token ceases to exist, and listed nowhere after -- counted, not a problem"
+  },
+  {
+    "file": "ceased-opponent-token-to-nowhere.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D503: the opponent's token whose one move goes straight off its battlefield to nowhere (to: null) -- counted, not a problem"
+  },
+  {
+    "file": "ceased-opponent-nontoken-ghost.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: only a TOKEN ceases to exist -- the opponent's nontoken card (token: false) last moved to its graveyard and listed nowhere is not vouched for"
+  },
+  {
+    "file": "ceased-opponent-nontoken-a-stub.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: the opponent's nontoken card moved battlefield -> graveyard and shown to the seat only as a stub at the decision -- a stub is never an option"
+  },
+  {
+    "file": "ceased-opponent-token-never-listed.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: a token id the window never lists on a battlefield is not vouched for by its move alone"
+  },
+  {
+    "file": "ceased-opponent-token-then-exiled.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: exile is never accepted (a card can go there face down) -- the opponent's token exiled is not vouched for"
+  },
+  {
+    "file": "ceased-opponent-token-into-a-library.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: a library is never accepted -- the opponent's token put into its library is not vouched for"
+  },
+  {
+    "file": "ceased-opponent-token-shown-only-after-the-window.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: the listing as that seat's own token must be in the window (up to the first state after the decision) -- one only later does not vouch"
+  },
+  {
+    "file": "ceased-opponent-token-into-the-viewer-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: the latest move must end in the token's OWN seat's graveyard or hand -- the opponent's token moved into the viewer's hand is not vouched for"
+  },
+  {
+    "file": "ceased-opponent-token-exiled-then-to-graveyard.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: the latest move must come off the token's battlefield -- exiled, then from exile into its graveyard, is not vouched for"
+  },
+  {
+    "file": "ceased-opponent-token-exiled-then-gone.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: a move to nowhere vouches only straight off the token's battlefield -- exiled, then gone from exile, is not vouched for"
+  },
+  {
+    "file": "ceased-opponent-token-still-a-hand-stub.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D503: the opponent's token bounced to its hand and still listed there as a stub at the decision -- a stub is never an option"
   },
   {
     "file": "stack-copy-cast-by-the-viewer.jsonl",
@@ -556,6 +682,66 @@
     "level": "fail",
     "expect": "which its state frame does not show",
     "why": "D496: a reveal alone does not vouch -- a library card revealed to the seat (a peek) that no zone event moves where the seat sees it is still a library card, and the bridge never offers one"
+  },
+  {
+    "file": "m55-option-cast-from-the-opponent-hand-held.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "D504: J182 s04's shape -- a target naming a stub of the opponent's hand in the decision's state, and the first state after the decision moves it from that hand onto the stack and casts it (a held batch); a cast spell is public; counted, not a problem"
+  },
+  {
+    "file": "m55-option-opponent-hand-to-library-no-cast.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: an opponent's hand card moved into its library, with no cast, is still hidden -- not vouched for"
+  },
+  {
+    "file": "m55-option-opponent-hand-to-exile-no-cast.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: an opponent's hand card moved into exile, with no cast, is not vouched for (a card can go there face down)"
+  },
+  {
+    "file": "m55-option-opponent-hand-to-stack-no-cast.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: an opponent's hand card moved onto the stack with no cast event naming it is not vouched for -- the cast is what makes it public"
+  },
+  {
+    "file": "m55-option-opponent-cast-still-a-stub-after.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: a cast event names it, but the state after the decision still lists it as a stub in the opponent's hand -- a stub is never an option"
+  },
+  {
+    "file": "m55-option-opponent-hand-to-exile-with-a-cast.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: the latest move must be onto the STACK -- an opponent's hand card moved into exile is not vouched for even with a cast event naming it (a cast event also names an ability's source card)"
+  },
+  {
+    "file": "m55-option-opponent-cast-from-another-zone.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: the move onto the stack must come from the hand the decision's state showed the stub in -- one from a graveyard (flashback's shape), cast, is not this rule's evidence"
+  },
+  {
+    "file": "m55-option-opponent-cast-never-a-stub.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: the decision's state must show the card as a stub in that hand -- an id it never listed, moved from the opponent's hand onto the stack and cast, is not evidenced as the hand card the batch held"
+  },
+  {
+    "file": "m55-option-opponent-cast-event-a-state-too-late.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: the cast must be in the window too -- a move onto the stack in the first state after the decision with its cast only in the second does not vouch"
+  },
+  {
+    "file": "m55-option-opponent-cast-a-state-too-late.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "D504: the move and the cast must be in the window (up to the first state after the decision) -- in the second state after it they do not vouch"
   },
   {
     "file": "m57-explore-present.jsonl",

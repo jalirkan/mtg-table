@@ -65,7 +65,10 @@
  *       permission (Gonti, Thief of Sanity, hideaway), admitted for an
  *       opponent's card only when the log shows how it was granted -- dug from
  *       a library into exile, alt and all, while the viewing seat's effect
- *       resolves -- and only while the card stays there (D371).
+ *       resolves -- and only while the card stays there (D371); or, for
+ *       hideaway's look ("any player who has controlled the permanent that
+ *       exiled this card"), an exiled card of an owner one of whose permanents
+ *       the viewing seat took control of in that frame or the one before (D502).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -1646,7 +1649,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     cardsChecked: 0, redacted: 0, faceDown: 0, stackCards: 0,
     viewerHandNamed: 0, opponentHandCards: 0, events: 0, shapeChecks: 0,
     texts: 0, textsConcealed: 0,
-    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, altByLook: 0, tokens: 0, asks: 0, promptsScanned: 0,
+    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, altByLook: 0, altByControl: 0, tokens: 0, asks: 0, promptsScanned: 0,
     everRevealed: 0, answers: 0, answerKinds: new Set(), unanswered: 0,
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
@@ -1757,6 +1760,13 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
   /** id -> the last zone other than a hand a card was serialised in (the hand diagnostic, D371). */
   const handLastSeen = new Map();
   let viewerStackBefore = false;
+  /**
+   * A9 / D502 -- id -> {owner, controller} of every battlefield card in the
+   * previous state frame, and the owners whose permanent the viewing seat took
+   * control of in the previous state frame (the hideaway look's evidence).
+   */
+  let battlefieldBefore = new Map();
+  let takenFromBefore = new Set();
   /** id -> was the last serialisation of this id concealed?  (A7) */
   const wasConcealed = new Map();
   /** Was an `ask` outstanding when this frame was written?  (A7) */
@@ -2624,7 +2634,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     }
     if (Array.isArray(f.body?.players)) {
       stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat), moves: zoneMoves(f.body), ownTokens: ownTokenIds(f.body, seat),
-        ...stackEvents(f.body), ...listedIds(f.body) });
+        seatTokens: seatTokenIds(f.body), handStubs: handStubIds(f.body), ...stackEvents(f.body), ...listedIds(f.body) });
       stateOrder.push(i - 1);
     }
     if (typeof f.body?.turn === 'number' && f.body.turn > stats.maxTurn) stats.maxTurn = f.body.turn;
@@ -2690,6 +2700,26 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       if (plainObject(ev) && ev.kind === 'zone' && ev.from?.zone === 'library' && ev.to?.zone === 'exile'
           && num(ev.cardId)) {
         dugToExile.add(ev.cardId);
+      }
+    }
+    // A9 / D502: the owners P (not the viewer) one of whose battlefield
+    // permanents changed controller from P to the viewing seat in this frame,
+    // read against the previous state frame.  Hideaway's look is granted to
+    // "any player who has controlled the permanent that exiled this card"
+    // (Forge's CardFactoryUtil hideaway static, MayLookAt$ EffectSourceController;
+    // CR 702.75a), so the seat that takes control of a Watcher for Tomorrow sees
+    // the card it hid.
+    const battlefieldNow = new Map();
+    const takenFromNow = new Set();
+    for (const p of players) {
+      for (const c of p?.zones?.battlefield?.cards ?? []) {
+        if (!num(c?.id)) continue;
+        battlefieldNow.set(c.id, { owner: c.owner, controller: c.controller });
+        const was = battlefieldBefore.get(c.id);
+        if (was && num(c.owner) && c.owner !== seat && was.owner === c.owner
+            && was.controller === c.owner && c.controller === seat) {
+          takenFromNow.add(c.owner);
+        }
       }
     }
     const nextGrants = new Set();
@@ -2815,6 +2845,11 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
               // FROM A LIBRARY with its alt in the same frame, while an effect the
               // viewing seat controls is resolving (on the stack in this frame or
               // the one before), and it keeps the alt only while it stays there.
+              // D502: or hideaway's look, granted to whoever has controlled the
+              // permanent that exiled the card -- the card, the owner's, in exile,
+              // gains its alt in a frame in which (or one frame after) a
+              // battlefield permanent of that owner's changed controller from the
+              // owner to the viewing seat, and keeps it only while it stays there.
               const inPlay = zname === 'battlefield' || zname === 'stack';
               const mine = owner === seat || c.controller === seat;
               if (inPlay && c.controller !== seat) {
@@ -2825,16 +2860,20 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
               } else if (!inPlay && !mine) {
                 const arrived = dugToExile.has(c.id) && zname === 'exile' && viewerEffect;
                 const stayed = lookGrants.has(c.id) && zname === 'exile';
-                if (arrived || stayed) {
+                const taken = !arrived && !stayed && zname === 'exile' && num(owner)
+                  && c.controller === owner && (takenFromNow.has(owner) || takenFromBefore.has(owner));
+                if (arrived || stayed || taken) {
                   nextGrants.add(c.id);
                   if (arrived) stats.altByLook++;
+                  if (taken) stats.altByControl++;
                 } else {
                   note(lineNo, `face-down card ${c.id} in ${zname} is owned and controlled by player ` +
                     `${c.controller}, not the viewing seat ${seat}, yet carries an "alt" block naming it ` +
                     `${JSON.stringify(c.alt?.name)} -- outside play only a look permission ` +
                     `(mayPlayerLook) shows a face-down card, and the only shape a log can show for ` +
                     `one is a card exiled from a library, alt and all, while the viewing seat's ` +
-                    `effect resolves (Gonti, Thief of Sanity), kept while it stays in exile (A9, D371)`);
+                    `effect resolves (Gonti, Thief of Sanity), or a hideaway card whose owner's permanent ` +
+                    `the viewing seat just took control of (D502), kept while it stays in exile (A9, D371)`);
                 }
               }
             }
@@ -2948,6 +2987,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 
     lookGrants = nextGrants;
     viewerStackBefore = viewerStackNow;
+    battlefieldBefore = battlefieldNow;
+    takenFromBefore = takenFromNow;
     for (const p of players) {
       for (const [zname, z] of Object.entries(p.zones ?? {})) {
         if (zname === 'hand') continue;
@@ -3158,7 +3199,12 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
 //       after the decision that records an event, and no state lists it as a
 //       stub or before that cast, every zone event moves it only among the
 //       stack, battlefields, graveyards or nowhere, no `unstacked` took it off
-//       before the decision -- counted apart);
+//       before the decision -- counted apart; D496: or revealed to the seat
+//       and then moved where it sees it; D503: or another seat's token, listed
+//       as its own on its battlefield in the window, last moved from there to
+//       its own graveyard or hand or nowhere, no stub nearby -- counted apart;
+//       D504: or another seat's hand stub in the decision's state that the
+//       window moves from that hand onto the stack and casts -- counted apart);
 //   D4  the answer is one of the options.
 
 const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|target:none|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
@@ -3326,6 +3372,49 @@ function ownTokenIds(body, seat) {
 function ceasedFromViewersBattlefield(e, seat, ownToken) {
   return ownToken && e?.from?.zone === 'battlefield' && e.from.player === seat
     && (e.to?.zone === 'graveyard' || e.to?.zone === 'hand') && e.to.player === seat;
+}
+
+/**
+ * D503: id -> seat for every token a state lists on a seat's OWN battlefield
+ * as that seat's own (`token: true`, controller and owner that seat) -- any
+ * seat's, the viewer's included.  A token on a battlefield is public, whoever's
+ * it is; the decision audit reads this for another seat's ceased token.
+ */
+function seatTokenIds(body) {
+  const ids = new Map();
+  for (const p of body.players ?? []) {
+    for (const c of p?.zones?.battlefield?.cards ?? []) {
+      if (c && c.hidden !== true && c.token === true && c.controller === p.id && c.owner === p.id && typeof c.id === 'number') ids.set(c.id, p.id);
+    }
+  }
+  return ids;
+}
+
+/**
+ * D503: another seat's token that CEASED TO EXIST -- the D485 shape for a token
+ * that is not the viewer's.  J182 s10: the opponent's Goat Token (103), listed on
+ * its battlefield, sacrificed into its owner's graveyard, then offered by Eye for
+ * an Eye's "choose a source" (a source of damage this turn, last known
+ * information).  Accepted only when a state in the window lists it as `tokenSeat`'s
+ * own token on `tokenSeat`'s battlefield (`tokenSeat` not the viewer: the viewer's
+ * own is D485's) and its latest move took it from that battlefield into that
+ * seat's own graveyard or hand, or nowhere (a `to: null` event straight off the
+ * battlefield).  Exile, a library and any other zone never.
+ */
+function ceasedFromSeatsBattlefield(latest, last, tokenSeat) {
+  if (tokenSeat === undefined) return false;
+  const fromIts = (e) => e?.from?.zone === 'battlefield' && e.from.player === tokenSeat;
+  if (last && last.to == null && fromIts(last)) return true;
+  return fromIts(latest) && (latest.to?.zone === 'graveyard' || latest.to?.zone === 'hand') && latest.to.player === tokenSeat;
+}
+
+/** D504: id -> player for every redacted stub a state lists in a player's hand. */
+function handStubIds(body) {
+  const ids = new Map();
+  for (const p of body.players ?? []) {
+    for (const c of p?.zones?.hand?.cards ?? []) if (c && c.hidden === true && typeof c.id === 'number') ids.set(c.id, p.id);
+  }
+  return ids;
 }
 
 /** The card ids (not player ids) a token names. */
@@ -3632,6 +3721,65 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
     const stubNearby = (id) => st.stubs.has(id) || (nx !== undefined && stateAt.get(nx).stubs.has(id));
     const revealedThenSeen = (id) => reveals.some((r) => r.index > b.frame && r.index < index && r.ids.has(id))
       && movedWhereSeen(id) && !stubNearby(id);
+    /*
+     * D503: ANOTHER SEAT'S TOKEN THAT CEASED TO EXIST.  D485 accepts the viewer's
+     * own; J182 s10 named the opponent's: its Goat Token (103), listed on its own
+     * battlefield (token, owner and controller player 1), sacrificed into its own
+     * graveyard, where a token ceases to exist, and then offered by the viewer's
+     * Eye for an Eye ("choose a source": a source of damage this turn, by last
+     * known information).  A token is public while it is on a battlefield,
+     * whoever's it is, and a token in a graveyard or a hand is gone before anyone
+     * can hide it.  Accepted, counted apart, when a state in the window (up to
+     * `after`) lists the id as that seat's own token on that seat's battlefield,
+     * its latest move took it from that battlefield into that seat's own
+     * graveyard or hand (or nowhere, a `to: null` straight off it), and neither
+     * the decision's state nor the next lists it as a stub.  A birth alone does
+     * not vouch for another seat's token (D481's control), and exile, a library
+     * or any other seat's zone never.  The bridge's own gate at decision time is
+     * Decisions.visible (D347), as for D481, D485, D495 and D496.
+     */
+    const othersTokenSeat = (id) => {
+      if (after === undefined) return undefined;
+      for (const k of stateOrder) {
+        if (k > after) break;
+        const s = stateAt.get(k).seatTokens?.get(id);
+        if (s !== undefined && s !== seat) return s;
+      }
+      return undefined;
+    };
+    /*
+     * D504: AN OPPONENT'S CAST, ENTERED BETWEEN FRAMES.  D481 accepts a card moved
+     * from the viewer's own hand onto the stack; J182 s04 named the opponent's:
+     * Kormus Bell (48) was a stub in player 1's hand in the decision's state (seq
+     * 415), player 1 cast it, and the viewer's Force of Negation (13) targeted it
+     * on the stack -- but the recorder held the batch (MidMove.hold, as in D481 and
+     * D496), so the cast landed in seq 416, the first state after the decision.
+     * A cast spell is public.  Accepted, counted apart, only when ALL of: the
+     * decision's own state lists the id as a stub in another seat's hand; its
+     * latest move in the window is from that hand onto the stack, in a state
+     * after the decision's state and no later than `after`; a `cast` event names
+     * it, by a player of the game, in that state or a later one up to `after`;
+     * and neither the state after the decision's state nor `after` lists it as a
+     * stub.  A move into a library or exile, a move with no cast, and a card
+     * still a stub after the decision never.  The bridge's own gate at decision
+     * time is Decisions.visible (D347).
+     */
+    const castFromOthersHand = (id) => {
+      if (after === undefined) return false;
+      const holder = st.handStubs?.get(id);
+      if (holder === undefined || holder === seat) return false;
+      if ((nx !== undefined && stateAt.get(nx).stubs.has(id)) || stateAt.get(after).stubs.has(id)) return false;
+      let lastAt;
+      let last;
+      for (const k of stateOrder) {
+        if (k > after) break;
+        for (const m of stateAt.get(k).moves) if (m.cardId === id && m.to != null) { lastAt = k; last = m; }
+      }
+      if (last === undefined || lastAt <= b.frame) return false;
+      if (!(last.from?.zone === 'hand' && last.from.player === holder && last.to.zone === 'stack')) return false;
+      return stateOrder.some((k) => k >= lastAt && k <= after
+        && stateAt.get(k).casts.some((e) => e.cardId === id && (players.size === 0 || players.has(e.controller))));
+    };
     for (const t of tokens) {
       for (const id of tokenCardIds(t)) {
         const moves = allowed.has(id) ? [] : windowMoves(id);
@@ -3651,6 +3799,10 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog, stats
           stats.stackCopies = (stats.stackCopies ?? 0) + 1;
         } else if (!allowed.has(id) && revealedThenSeen(id)) {
           stats.revealedThenSeen = (stats.revealedThenSeen ?? 0) + 1;
+        } else if (!allowed.has(id) && !stubNearby(id) && ceasedFromSeatsBattlefield(latest, moves.at(-1), othersTokenSeat(id))) {
+          stats.ceasedOthersToken = (stats.ceasedOthersToken ?? 0) + 1;
+        } else if (!allowed.has(id) && castFromOthersHand(id)) {
+          stats.castFromOthersHand = (stats.castFromOthersHand ?? 0) + 1;
         } else if (!allowed.has(id)) {
           bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
             'a stub\'s id, a library card or another seat\'s hidden card is never an option',
@@ -3827,7 +3979,7 @@ function main() {
     console.log(`      engine strings=${stats.texts} (stack[].text + events[].cast.text), `
       + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
     console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
-      + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
+      + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}${stats.altByControl ? ` (${stats.altByControl} an opponent's hideaway card, its exiling permanent's control taken by the viewer, D502)` : ''}  tokens=${stats.tokens}  `
       + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`
       + `${stats.damageRefusalsSeen ? `  assign_damage answers refused and re-asked=${stats.damageRefusalsSeen} (M67)` : ''}`
       + `${stats.answerRefusalsSeen ? `  answers refused and re-asked=${stats.answerRefusalsSeen} (M68)` : ''}`);
@@ -3868,6 +4020,14 @@ function main() {
     if (stats.revealedThenSeen > 0) {
       console.log(`      M55 decision ids revealed to the seat, then moved where it sees them=${stats.revealedThenSeen} (D496: a reveal line of the `
         + 'seat, after the decision\'s state frame and before the decision, names the id, and a zone event then moves it where the seat sees it)');
+    }
+    if (stats.ceasedOthersToken > 0) {
+      console.log(`      M55 decision ids that ceased to exist, another seat's token=${stats.ceasedOthersToken} (D503: listed as `
+        + 'that seat\'s own token on its battlefield in the window, last moved from there to its own graveyard or hand, or nowhere)');
+    }
+    if (stats.castFromOthersHand > 0) {
+      console.log(`      M55 decision ids entered between frames, an opponent's cast=${stats.castFromOthersHand} (D504: a stub in `
+        + 'another seat\'s hand in the decision\'s state, moved from that hand onto the stack and cast by the first state after the decision)');
     }
     if (stats.reveals > 0) {
       console.log(`      M78 reveal lines=${stats.reveals} (D496: exact key set {seat, cardIds, zone, owner}, the seat's own)`);

@@ -17,7 +17,8 @@ commit.
 **The index below lists 377 items still open across 43 follow-up lists** — 351
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D501
+said 371 across 42, three rows and one list behind its table) — D502–D504
+(2026-11-02) added the cube lab's 19, 20 and 21; D501
 (2026-11-01) added the cube lab's 18 and closed its 15; D500 (2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
@@ -420,6 +421,9 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 16 | open | D499's rows check: two killed attempts of one branch with no finished play are still each read against the last attempt's logs, and the first night on it should report its abandoned plays with no id problem | `tools/cubelab/rowscheck.ts` |
 | [Cube lab](#fu-cube-lab) | 17 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
 | [Cube lab](#fu-cube-lab) | 18 | open | D501's empty-hand proof with a revealed library top: measured on Oracle of Mul Daya only (J181's three s07 logs); the other revealers rest on synthetic controls, and the top card named outside its state's library still refuses the proof | `docs/decisions/D501-empty-hand-proof-revealed-top.md` |
+| [Cube lab](#fu-cube-lab) | 19 | open | D502's A9 hideaway admission: measured on J182's five s06 logs (Watcher for Tomorrow under Burglar's Plot); the alt one state after the change rests on one log (b76), and a look granted before a branch log begins still fails | `docs/decisions/D502-hideaway-look-after-control-change.md` |
+| [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
+| [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9868,7 +9872,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–21, 2026-11-02 (D502–D504)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -10027,6 +10031,23 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    the same card named in an `ask` body or an `ai` line still refuses the proof. If a night meets that shape, it
    needs its own decision, not a wider skip. D498's re-run reported seven logs of the s07 shape. They should pass
    once that lane's checker carries D501.
+19. **D502's hideaway admission in A9 is measured on one card's shape.** (2026-11-02, D502.) `check-redaction.mjs`'s A9
+   now admits an opponent's face-down exiled card whose `alt` appears in the state frame, or the one after, in which a
+   battlefield permanent of that owner's changed controller to the viewing seat. Measured on J182's five
+   `b-s06-peasant-2506` logs (Watcher for Tomorrow, exchanged by Burglar's Plot): FAIL on `main`, PASS here. The
+   one-frame lag rests on one log (`d1-random-o0-b76`). Two shapes still fail by design and would need their own
+   decision if a night meets them: a branch log forked after the viewer took control (no change in the log), and an
+   alt that appears two or more frames after the change.
+20. **D503's ceased token of another seat is measured on one ending.** (2026-11-02, D503.) The M55 audit accepts another
+   seat's token, listed as its own on its battlefield in the window, whose latest move took it into its owner's
+   graveyard or hand, or to nowhere. J182's five `b-s10-peasant-2510` logs (Goat Token 103, sacrificed, then offered by
+   Eye for an Eye) are all graveyard endings. The hand and to-nowhere endings rest on synthetic controls.
+   `stale-token-of-the-opponent`, a D485 FAIL control, is now a PASS control.
+21. **D504's opponent cast between frames is measured on one log.** (2026-11-02, D504.) The M55 audit accepts a stub of
+   another seat's hand in the decision's state that the window moves from that hand onto the stack and casts.
+   J182's `b-s04-powered-2504/.../d0-random-o1-b3-seat0` (Kormus Bell, countered by Force of Negation): FAIL on
+   `main`, PASS here. A card drawn and cast inside one held batch is never a stub in the decision's state, so it
+   still fails; if a night meets it, it needs its own decision.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 
