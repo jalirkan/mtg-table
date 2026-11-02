@@ -316,8 +316,12 @@ so "not one card was redacted" (or, from that seat, "the viewer never saw a
 named card") has nothing to find. The flag makes either one a WARN only where
 the file itself proves the hand in question was empty: hand count 0 in every
 state, every state listing every seat (D463), and for the opponent no `library.cards` entry and no card in a hand or
-library they own listed in any frame. A full opponent card, or a non-zero
-count with no stub, still fails under it, and every leak rule is unchanged;
+library they own listed in any frame — except the one top card rule A3 itself
+vouches for while they control a "play with the top card revealed" permanent
+(D501: J181's Oracle of Mul Daya beside an empty hand), which is public, and
+then the WARN says their library listed only its revealed top card (A3). A full
+opponent card, a non-zero count with no stub, or a library card A3 does not
+vouch for still fails under it, and every leak rule is unchanged;
 `check-redaction-selftest.mjs` holds both.
 
 An M55 decision may name an id no state frame lists when, as of the first state frame after the decision, the zone events show a token born onto the viewer's own battlefield and last there or in its graveyard, or a card moved from the viewer's own hand onto the stack with no stack instance — counted as *entered between frames*, never a problem; anything else stays a failure (D481).

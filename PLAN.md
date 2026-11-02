@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 377 items still open across 43 follow-up lists** — 351
+**The index below lists 378 items still open across 43 follow-up lists** — 352
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D497
+said 371 across 42, three rows and one list behind its table) — D501
+(2026-11-01) added the cube lab's 17; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
 (2026-11-01) added the cube lab's 10 and 11; D495
 (2026-10-31) added the cube lab's 9; D494 (2026-10-31) added the cube lab's 7 and 8; the
@@ -414,6 +415,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 11 | open | The board's replay stops at a lab log's first `dir:"ai"` line: `reduce()` throws on `decision` (M55) and `reveal` (M78) | `web/src/transport/replay.ts` |
 | [Cube lab](#fu-cube-lab) | 12 | open | D497's paper-card carry: a copy of a token on a fork is proved on the bench only; the first night on the new bridge should branch it cleanly, with no bare exception in its worker logs | `docs/decisions/D497-fork-token-paper-card.md` |
 | [Cube lab](#fu-cube-lab) | 13 | open | The lint's reflection rules cannot see a name built at run time, a line opening with a comment marker, or an unbudgeted `getDeclaredMethod` / `getDeclaredConstructor` | `tools/lint-bridge.sh` |
+| [Cube lab](#fu-cube-lab) | 17 | open | D501's empty-hand proof with a revealed library top: measured on Oracle of Mul Daya only (J181's three s07 logs); the other revealers rest on synthetic controls, and the top card named outside its state's library still refuses the proof | `docs/decisions/D501-empty-hand-proof-revealed-top.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9862,7 +9864,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 17, 2026-11-01 (D501)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -9963,6 +9965,16 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    - `getDeclaredMethod` / `getDeclaredConstructor` on a Forge class, which have no budget at all
      (`tools/cubelab/CubeLab.java:854-855` uses them).
    Closing them needs a parser (or a javap pass over `bridge/out`), not a grep.
+17. **D501's empty-hand proof with a revealed library top is measured on one revealer.** (2026-11-01, D501.)
+   `check-redaction.mjs --empty-hand-ok` now accepts, beside an opponent hand empty in every state, the one
+   `library.cards` top card that rule A3 vouches for (a "play with the top card revealed" permanent of theirs), and
+   its WARN says the library listed only that card. Measured on J181's `b-s07-legacy-2185` (`d13-*-b7-seat0`, Oracle
+   of Mul Daya: FAIL on `main`, the D501 WARN here) and on synthetic controls for everything else: Courser of
+   Kruphix and the other `REVEALS_OWN_TOP` names, and `REVEALS_EVERY_TOP`'s every-player shape (Field of Dreams),
+   have met no empty hand on a night. The vouched card is skipped as an object in its own state's library only, so
+   the same card named in an `ask` body or an `ai` line still refuses the proof. If a night meets that shape, it
+   needs its own decision, not a wider skip. D498's re-run reported seven logs of the s07 shape. They should pass
+   once that lane's checker carries D501.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

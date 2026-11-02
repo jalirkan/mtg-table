@@ -443,6 +443,8 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
 // under the flag, an emptied hand passes with a WARN, and a hand that is not
 // empty -- a full opponent card at count 1, a count of 1 with no stub, a listed
 // library card -- still fails, with the flag saying why it does not apply.
+// D501: a library listing only the top card A3 vouches for is not a listing;
+// the same shape with a hand card, or with no revealer of theirs, still fails.
 {
   const { checkFile } = await import('./check-redaction.mjs');
   const lead = (s) => console.log(`  ok    ${s}`);
@@ -534,6 +536,50 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
     if (!ok(NOTHING) || !ok(NAMED)) bad(`${name} under --empty-hand-ok: "${NOTHING}" and "${NAMED}" must both still FAIL, saying "${why}"; got ${r.problems.find((p) => p.includes(NOTHING)) ?? r.problems[0] ?? 'a pass'}`);
     else lead(`${name}: still a failure under --empty-hand-ok (${why})`);
   }
+  // D501 (J181's b-s07 spine): the opponent's hand empty in every state while
+  // they control Oracle of Mul Daya, so every state lists their library's top
+  // card -- one card A3 vouches for.  That is public, not hidden: a failure by
+  // default, a WARN under the flag that says so.  The controls: the same shape
+  // with a card in their hand (the last top card, drawn and served full), and one
+  // library card that no permanent of theirs vouches for (no revealer, or the
+  // revealer is the viewer's), and two cards under their revealer -- each still a
+  // failure, for its reason.
+  const revealer = (p, controller) => ({ ...oppCard, id: 9101, name: 'Oracle of Mul Daya', zone: 'battlefield', owner: controller, controller });
+  const topCard = (p) => ({ ...oppCard, id: 9102, zone: 'library', owner: p.id, controller: p.id });
+  const s07 = (p, v, i, { hand = () => ({ ...empty }), revealedBy = 'them', tops = 1 } = {}) => {
+    if (v) {
+      if (revealedBy === 'viewer') {
+        p.zones.battlefield.cards.push(revealer(p, seat));
+        p.zones.battlefield.count = p.zones.battlefield.cards.length;
+      }
+      return;
+    }
+    p.zones.hand = hand(i);
+    if (revealedBy === 'them') {
+      p.zones.battlefield.cards.push(revealer(p, p.id));
+      p.zones.battlefield.count = p.zones.battlefield.cards.length;
+    }
+    p.zones.library = { count: p.zones.library.count, cards: Array.from({ length: tops }, (_, k) => ({ ...topCard(p), id: 9102 + 10 * k })) };
+  };
+  {
+    const text = variant((p, v, i) => s07(p, v, i));
+    const t0 = run('opp-empty-top-revealed.jsonl', text, false);
+    const t1 = run('opp-empty-top-revealed.jsonl', text, true);
+    const TOP = 'its library listed only its revealed top card (A3)';
+    if (!has(t0, NOTHING)) bad('an opponent hand empty in every state beside a library top Oracle of Mul Daya reveals, WITHOUT the flag: "not one card was redacted" must still fail');
+    else if (t1.problems.length > 0 || !warns(t1, NOTHING) || !warns(t1, TOP)) bad(`the same file under --empty-hand-ok: want a pass with a WARN saying "${TOP}", got ${t1.problems[0] ?? t1.warnings.find((w) => w.includes(NOTHING)) ?? 'no warning'}`);
+    else if (t1.stats.revealedTops !== base.filter((f) => f.type === 'state').length) bad(`the same file: want A3 to vouch for the top card in every state, got ${t1.stats.revealedTops}`);
+    else lead('an opponent hand empty in every state, its library listing only the top card A3 vouches for: a failure by default, a WARN under --empty-hand-ok (D501)');
+  }
+  plant('opp-top-revealed-hand-card.jsonl', (p, v, i) => s07(p, v, i, {
+    hand: (j) => (j === firstState ? { count: 1, cards: [{ ...topCard(p), id: 9103, zone: 'hand' }] } : { ...empty }),
+  }), 'another seat\'s hand is not empty', 'is not marked hidden');
+  plant('opp-library-listed-no-revealer.jsonl', (p, v, i) => s07(p, v, i, { revealedBy: null }),
+    'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
+  plant('opp-library-listed-viewer-revealer.jsonl', (p, v, i) => s07(p, v, i, { revealedBy: 'viewer' }),
+    'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
+  plant('opp-top-revealed-two-cards.jsonl', (p, v, i) => s07(p, v, i, { tops: 2 }),
+    'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
   // and the twin: the viewer's hand at count 1 served as a stub
   {
     const r = run('viewer-count-1-stub.jsonl', variant((p, v, i) => {
