@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-02T07:48:23-05:00",
- "heartbeat": "2026-11-02T07:48:23-05:00",
+ "updated": "2026-11-02T07:52:59-05:00",
+ "heartbeat": "2026-11-02T07:52:59-05:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-11-02T07:34:41-05:00",
- "idleReason": "queue empty",
+ "idleReason": "job file needs fixing",
  "host": {
-  "load1": 0.14,
-  "memUsedGb": 4.4,
+  "load1": 0.64,
+  "memUsedGb": 4.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2372,
+  "swapUsedMb": 2370,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -19,7 +19,17 @@
  },
  "running": [],
  "queue": [],
- "waiting": [],
+ "waiting": [
+  {
+   "publicTitle": null,
+   "publicEst": "~9 h to 12 h",
+   "id": "J183",
+   "title": "The move atlas, rung 4b, night eight -- J182's night carried onto the new main (D502-D504: the redaction checker admits the three legitimate engine shapes that failed J182's s06, s10 and s04 -- an opponent's hideaway card shown to the seat that took control of the permanent that hid it, another seat's token that ceased to exist named by last known information, an opponent's spell cast from its hand inside a held batch; the bridge, the seat and the fork unchanged) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j183, at deck seeds 2414-2426 (D447 with D482's list as D490, D492 and D494 leave it, the bands cycled as J166's) and game seeds 2514-2526; a validation draw made fresh at deck seeds 2614-2626 (game seeds 2714-2726 reserved); THE SECOND NIGHT OF D498'S POPULATION, pooled with J182's; J182's night read beside, by position, as information",
+   "reason": "the job file needs fixing",
+   "est": "~10.5 h at 6 workers (range 7-12 h; sizing below): pilot ~10-40 min (J182's ran 10 min from its start to its first spine; J173's ~35 with the readers' self-tests); the 13 spines ~9.6 h at J182's pace (13 x ~44 min; J182's ran 11.8 to 85.5 min); the scan ~6 min; the report ~5 min. Disk ~11-15 GB on the lab data folder /home/justin-a/code/lab/data (J182's 13 spines: 11.0 GB)",
+   "detail": "the job file has errors: public_title: \"Move atlas 4b night eight: 13 new spines, D502-D504 checker fixes, the D498 population night two\" may hold only letters, digits, spaces and , : ; ( ) + % ~ # & - (80 at most)"
+  }
+ ],
  "finished": [
   {
    "publicTitle": "Move atlas 4b night seven: 13 new spines, D498-D500 lab fixes, a new population",
