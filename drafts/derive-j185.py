@@ -11,9 +11,7 @@ n184 = t.count('J184') + t.count('j184')
 t = t.replace('J184', 'J185').replace('j184', 'j185')
 assert 'J184' not in t and 'j184' not in t
 # the derivation note: this script, not derive-j184.py, wrote the file
-t = t.replace('`drafts/derive-j185.py` from its one argument', '`drafts/derive-j184.py` from its one argument, then `drafts/derive-j185.py`, the rename,')
-t = t.replace('`python3 drafts/derive-j185.py <the new 40-hex pin>` again', '`python3 drafts/derive-j184.py <the new 40-hex pin>` and then `python3 drafts/derive-j185.py` again')
-assert t.count('derive-j184.py') >= 3, t.count('derive-j184.py')
+t = t.replace('drafts/derive-j185.py', 'drafts/derive-j184.py (then drafts/derive-j185.py, the rename)')
 old = '4. **J183 has ended**'
 assert t.count(old) == 1
 t = t.replace(old, """4. **J184 was this file, posted at 20:20 EST and failed at 20:21 in its prepare step** (`fatal: Needed a single revision`: the pin
