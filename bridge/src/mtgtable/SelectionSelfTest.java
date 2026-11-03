@@ -34,6 +34,7 @@ import forge.game.GameState;
 import forge.game.GameType;
 import forge.game.Match;
 import forge.game.card.Card;
+import forge.game.card.CardFactory;
 import forge.game.combat.Combat;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
@@ -82,7 +83,12 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *       live on this engine); seat 0's {@code target} record lists the Bolt
  *       alone and counts the two ghosts in {@code hidden}.  Seat 0's own spell
  *       moved to the Stack zone mid-cast is not a candidate of its own
- *       targeting.</li>
+ *       targeting.  And a copy is no ghost: with the stack frozen (as
+ *       {@code resolveStack} freezes it), a copy of seat 0's Counterspell is
+ *       added the way Forge's AI plays copies, its instance on the frozen stack
+ *       where the stack's iterator does not look; the next copy's record still
+ *       lists it, hidden 0, with no {@code [ghost]} line -- and the same once
+ *       the stack is unfrozen.</li>
  * </ol>
  *
  * <p>Usage: {@code ./bridge/run.sh mtgtable.SelectionSelfTest}.  One JVM,
@@ -107,6 +113,7 @@ public final class SelectionSelfTest {
             players(true);
             declarations();
             ghosts();
+            copies();
         });
         System.out.println("SelectionSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -294,6 +301,91 @@ public final class SelectionSelfTest {
         } else {
             expect("ghosts: seat 0 holds a second Counterspell", false);
         }
+    }
+
+    /** D507, the review: a spell copy whose instance is on the frozen stack is listed, never a ghost. */
+    private static void copies() {
+        final Game g = newGame("selection-copies");
+        final GameState gs = new GameState();
+        gs.parse(List.of(
+                "turn=10",
+                "activeplayer=p1",
+                "activephase=" + PhaseType.MAIN1.name(),
+                "p0life=20",
+                "p1life=20",
+                "p0hand=Counterspell",
+                "p0battlefield=Island;Island;Island;Island",
+                "p0library=Island;Island;Island",
+                "p1hand=Lightning Bolt",
+                "p1battlefield=Mountain;Mountain",
+                "p1library=Mountain;Mountain;Mountain"));
+        gs.applyToGame(g);
+        g.getPhaseHandler().setPriority(g.getPlayers().get(1));
+        final Player me = g.getPlayers().get(0);
+        final Player opp = g.getPlayers().get(1);
+        final SpellAbility bolt = spell(opp, "Lightning Bolt");
+        final SpellAbility cs = spell(me, "Counterspell");
+        final boolean rb = bolt != null && ComputerUtil.handlePlayingSpellAbility(opp, bolt, sa -> {
+            sa.resetTargets();
+            sa.getTargets().add(me);
+        });
+        final boolean rc = rb && cs != null && ComputerUtil.handlePlayingSpellAbility(me, cs, sa -> {
+            sa.resetTargets();
+            sa.getTargets().add(g.getStack().peekAbility());
+        });
+        expect("copies: the Bolt and seat 0's Counterspell are on the stack", rc && g.getStack().size() == 2);
+        if (!rc) {
+            return;
+        }
+        g.getStack().freezeStack(null);   // MagicStack.resolveStack's first act
+        // a resolving effect's copy, played as PlayerControllerAi.orderAndPlaySimultaneousSa plays one
+        final SpellAbility c1 = CardFactory.copySpellAbilityAndPossiblyHost(cs, cs, me);
+        g.getStackZone().add(c1.getHostCard());
+        c1.resetTargets();
+        c1.getTargets().add(bolt);
+        g.getStack().add(c1);
+        final Card k1 = c1.getHostCard();
+        boolean iterated = false;
+        for (final SpellAbilityStackInstance si : g.getStack()) {
+            iterated |= si.getSourceCard().getId() == k1.getId();
+        }
+        expect("copies: copy 1 is a copied spell in the Stack zone, its instance on the frozen stack, not the stack's",
+                k1.isCopiedSpell() && k1.isInZone(ZoneType.Stack) && g.getStack().isFrozen() && !iterated
+                        && g.getStack().size() == 2);
+        final SpellAbility c2 = CardFactory.copySpellAbilityAndPossiblyHost(cs, cs, me);
+        g.getStackZone().add(c2.getHostCard());
+        c2.resetTargets();
+        c2.getTargets().add(bolt);
+        copyRecord("copies, frozen", g, c2, me, k1, bolt.getHostCard().getId());
+        g.getStack().unfreezeStack();
+        expect("copies: unfrozen, copy 1 is on the stack (3 items)", g.getStack().size() == 3);
+        copyRecord("copies, unfrozen", g, c2, me, k1, bolt.getHostCard().getId());
+    }
+
+    /** Copy 2's target record lists copy 1 and the Bolt, hides nothing and prints no {@code [ghost]} line. */
+    private static void copyRecord(final String tag, final Game g, final SpellAbility c2, final Player me,
+                                   final Card k1, final int boltId) {
+        final List<Integer> forge = new ArrayList<>();
+        for (final GameEntity e : c2.getTargetRestrictions().getAllCandidates(c2, false)) {
+            forge.add(e.getId());
+        }
+        expect(tag + ": Forge's candidates for copy 2 list copy 1 " + forge, forge.contains(k1.getId()));
+        final java.io.PrintStream err = System.err;
+        final java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        final List<Decision> recs;
+        System.setErr(new java.io.PrintStream(buf, true, java.nio.charset.StandardCharsets.UTF_8));
+        try {
+            recs = Decisions.targets(c2, me, "targets");
+        } finally {
+            System.setErr(err);
+        }
+        final Decision d = recs.size() == 1 ? recs.get(0) : null;
+        expect(tag + ": the record lists copy 1 and the Bolt, hidden 0 " + (d == null ? recs : d.options + " hidden "
+                + d.hidden), d != null && d.options.contains("target:" + k1.getId())
+                && d.options.contains("target:" + boltId) && d.hidden == 0);
+        final String printed = buf.toString(java.nio.charset.StandardCharsets.UTF_8);
+        expect(tag + ": no [ghost] line" + (printed.isEmpty() ? "" : " -- printed: " + printed.trim()),
+                !printed.contains("[ghost]"));
     }
 
     private static void twoOnFirstPart(final SpellAbility sa, final Card a, final Card b, final Card theirs) {

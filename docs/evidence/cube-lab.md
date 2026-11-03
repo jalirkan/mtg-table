@@ -260,5 +260,7 @@ holds a spell or ability of it.
 The worker logs' "failed to target" (312) and "Didn't find what to pay for" (416) lines are not ghost counts. They hold
 7 distinct ghosts between them, in 57 lines; D507 has the table. `node tools/check-redaction.mjs --empty-hand-ok` on
 `d15-random-o0-b101-seat0.jsonl.gz` still fails, as it should: the log is the old bridge's, and the checker is
-unchanged. The records the new bridge writes count the ghost in `hidden` (protocol M79). Proven in
-`mtgtable.SelectionSelfTest` (step 12l), both ways.
+unchanged. The records the new bridge writes count the ghost in `hidden` (protocol M79); a spell copy waiting on the
+frozen stack is still listed (the review's blocker, D495's shape). Proven in `mtgtable.SelectionSelfTest` (step 12l),
+both ways. D507 changes what the seat offers, so J184 opens a new population, `random-<band>-d507`; J182 and J183 stay
+D498's (D507's *Comparability*).

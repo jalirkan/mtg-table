@@ -49,9 +49,11 @@ read with `java -m jdk.jdeps/com.sun.tools.javap.Main -c -p -l` on the 2.0.14 fa
 
 1. **`forge.ai.ComputerUtil.handlePlayingSpellAbility(Player, SpellAbility, Consumer)`** (source lines 81–142 at the
    `forge-2.0.14` tag):
-   - **Offset 31 (line 83):** it reads the host's zone, `hz`, while the card is still in the hand.
-   - **Offset 121 (line 104):** `sa.setHostCard(game.getAction().moveToStack(source, sa))` moves the card into the
-     Stack zone **before** anything else.
+   - **Offset 31 (line 84 in the jar's line table):** it reads the host's zone, `hz`, while the card is still in the
+     hand.
+   - **Offset 121 (line 100 in the jar's line table; the tag's source has it at 104):**
+     `sa.setHostCard(game.getAction().moveToStack(source, sa))` moves the card into the Stack zone **before** anything
+     else.
    - **The early returns.** The charm check returns `false` at offset 166 (`CharmEffect.makeChoices`, line 112).
      `chooseTargets.accept(sa)` runs at offset 173 (line 115). Then `if (!sa.isTargetNumberValid()) return false`
      runs at offsets 179–186 (lines 116–117). Both returns leave the card in the Stack zone.
@@ -109,9 +111,31 @@ the game pool.
    - **The new function.** `Decisions.onStack(c)` iterates `game.getStack()`, the `MagicStack`, an
      `Iterable<SpellAbilityStackInstance>` on the jar (javap). It is true when an instance's `getSourceCard()` has
      `c`'s id. The test is by id because the fork's copier keeps ids.
-   - **What still counts.** Any instance counts, spell or ability. A copy of a spell is in the Stack zone with its own
-     instance (D495), so it stays visible. A resolving spell keeps its instance until `finishResolving` removes it
-     (`MagicStack.resolveStack`, which peeks and does not pop), so it is visible until it leaves the zone.
+   - **What still counts.** Any instance counts, spell or ability. A resolving spell keeps its instance until
+     `finishResolving` removes it (`MagicStack.resolveStack`, which peeks and does not pop), so it is visible until it
+     leaves the zone.
+   - **A copy of a spell is always visible** (`c.isCopiedSpell() || onStack(c)`; the skeptic review's blocker). The
+     `MagicStack`'s iterator walks the `stack` deque alone, never `frozenStack`, which is private (reading it would
+     need reflection, which the lint bans). `resolveStack` freezes the stack, and a resolving effect's copies are
+     played by `PlayerControllerAi.orderAndPlaySimultaneousSa`: each copy's card goes into the Stack zone, its targets
+     are chosen, then `add` puts its instance on the frozen stack. So while copy N+1 chooses targets, copy N is a Forge
+     candidate with no instance where `onStack` looks. Without the exception, D507's first form counted it hidden and
+     printed a false `[ghost]` line. That is D495's shape exactly (J176 s09: 48 logs, 56 records, 60 options listing a
+     copy), and an answered copy would have turned into a null answer the checker fails. The reviewer reproduced it
+     on the engine: candidates `[9, 1, 15]`, copy 15 not on the stack while frozen, the record
+     `[target:none, target:1, target:9]` with `hidden: 1`.
+     - **Why a copy is never a ghost, on the jar.** `MagicStack.add` skips `hasLegalTargeting` for a copy:
+       `isCopied` at offset 389, `ifne 459` at 392, past the refusal at 397–458. The AI's copy path,
+       `PlayerControllerAi.orderAndPlaySimultaneousSa` (offsets 73–170, lines 1292–1312), has no return between the
+       copy's move into the Stack zone (`moveToStack` at 113, or `getStackZone().add` at 133) and
+       `MagicStack.add` at 170. Its retargeting (`setupTargets`, 150) restores the old targets on failure, offset 159,
+       and does not return. The stack is unfrozen at the resolution's end (`finishResolving` → `unfreezeStack`), and
+       the copy's instance is then on the stack.
+     - **What else is frozen.** `add` freezes only what is not cast from a play effect (`isCastFromPlayEffect`, offset
+       577, with `IgnoreFreeze` at 567), so a spell a resolving effect casts (cascade, "cast it without paying") goes
+       straight onto the stack. During a cast's own payment (`freezeStack(sa)`, `ComputerUtil` offset 199) only
+       abilities are added, and their sources are not in the Stack zone. A copy is the one spell whose card waits in
+       the zone for a frozen instance.
    - **What is now hidden.** A card in the zone with no instance is hidden. That covers the ghost, and another seat's
      spell caught between its move and its `add`, which no frame shows either. Every other zone's rule is unchanged.
 2. **One gate, shared.** Every reader goes through `visible`, directly or through `entityToken`:
@@ -134,7 +158,7 @@ the game pool.
    `phaseB/logs/*.log`. It is one line per record per ghost. Under this bridge, J183's s09 frame logs would have
    printed 504 of them. The spine's own seat 0 records never named 49, so the spine replays add none there.
 
-**What it changes: the record, and nothing J183's branches played.**
+**What it changes: the record, and what the seat offers -- so J184 opens a new population.**
 - **The record.** Every record that listed a ghost now counts it in `hidden`. The scan below, run over the 22
   committed `fixtures/games/` recordings, finds no ghost cast in any of them.
 - **The checker's own reliance on the gate stands.** D481, D485, D495, D496, D503 and D504 rest on `visible` naming a
@@ -161,9 +185,22 @@ the game pool.
   - (b) `staleTargets` refilling a Stack part left with no target at all;
   - (c) a search seat with `targets=1`.
 
-  **J184 stays in D498's population** (`random-<band>-d498`). For every position J183 produced, this change is to the
-  record only. A night that meets (a), (b) or (c) will show it: a ghost in a target record now prints `[ghost]`, so
-  the metric counts the positions where a list shrank.
+- **A spell copy is unchanged** from D495's rule: listed, as before D507 (the copy exception above), in the record and
+  in every list the explorer and the search draw from.
+
+**Comparability.** D507 changes the gate in front of `Explorer.candidates`, `legalTargets`, `staleTargets`' fill and
+`SearchPolicy.targetVisible`. That is a change to what the seat offers, in the cases (a), (b) and (c) above, and
+**D489** opens a population on "a future change to the seat or to what it offers". **D497** rejected the argument
+that the test boards met none of it, and the same holds here: J183 meeting none of (a)–(c) does not make the next
+night's decks meet none. So:
+- **J184 opens a new population, `random-<band>-d507`**, with `randomSeat: "D507"` on its rows (labels.py's `--seat`).
+- **J182 and J183 stay D498's population's two nights** (`random-<band>-d498`), read as before. They are not pooled
+  with J184's labels. Split by `pool` (or `randomSeat`), as D498 says, never by `sha` alone.
+- **The label contract is unchanged:** the same fields and version, a new pool name and seat value.
+
+Where it changes something, the night can see it: each ghost a target record meets prints `[ghost]`, so
+`ghost_candidates` counts the positions where a list shrank. (b) and (c) are among them. A shrunken explorer list
+in (a) shows in the play's own target record too, because the record lists every candidate the gate passes.
 
 **The board (the human game, `play.sh`).** The human path is unchanged in this lane, and is follow-up 23. A human's
 targeting is Forge's `TargetSelection` (forge-gui, at the tag), not the seat's record:
@@ -187,14 +224,14 @@ targeting is Forge's `TargetSelection` (forge-gui, at the tag), not the seat's r
 **Considered and rejected.**
 - **Repairing the engine state** by moving the ghost back to its owner's hand (or graveyard) when the cast fails, as
   D466's `putBack` does for the random seat's refused payments. Rejected for this lane: it changes what a branch plays
-  (seat 1 keeps the card), so it would open a new population, and it touches Forge's AI path for a Forge seat, not
-  ours. It is follow-up 25.
+  in every game with a ghost (seat 1 keeps the card), far beyond (a)–(c), and it touches Forge's AI path for a Forge
+  seat, not ours. It is follow-up 25.
 - **Listing Knockout Maneuver as engine-unplayable** (`tools/cubelab/engine-unplayable.json`). Rejected: the fault is
   the AI's abort path for any spell, whatever targeting the AI leaves invalid. It is not the card. The scan below
   found ghosts from Batroc the Leaper too, through a different abort.
-- **Gating the record alone** and leaving the explorer and the search on the old rule. That would keep J184's play
-  paths byte for byte. It was rejected because the old rule lets those paths draw a card no frame shows (a target
-  that would be refused), and CLAUDE.md's hidden-information rule wants one gate.
+- **Gating the record alone** and leaving the explorer and the search on the old rule. That would keep the play paths
+  byte for byte and J184 in D498's population. It was rejected because the old rule lets those paths draw a card no
+  frame shows (a target that would be refused), and CLAUDE.md's hidden-information rule wants one gate.
 - **Teaching the checker that a ghost is admitted.** Rejected: nothing about a ghost is visible to the seat. A record
   that names one is wrong, and the checker is right to fail it.
 
@@ -241,15 +278,24 @@ branches). `[ghost]` counts something else: the target records that met a ghost,
 **Tests.**
 - **`./bridge/build.sh`** is green: the lint and its self-test, javac, and the build's self-tests. `DecisionSelfTest`
   has 227 checks, one new: `Decisions.ghostLine(49)`'s exact text.
-- **`mtgtable.SelectionSelfTest`** (gate step 12l) gains a `ghosts()` section, nine checks, on the reproduction's
-  position.
+- **`mtgtable.SelectionSelfTest`** (gate step 12l) gains two sections on the real engine: `ghosts()`, nine checks
+  on the reproduction's position, and `copies()`, nine checks for the review's blocker (below).
   - **The negative control.** Forge's candidates for Counterspell list both ghosts and the Bolt, so the fault is live
     on this engine.
   - **The checks.** The record lists `[target:<bolt>]` alone, counts `hidden == 2`, and answers the Bolt, complete.
   - **The positive control.** The Bolt, really on the stack, is still listed.
   - **The mid-cast check.** A spell mid-cast is no candidate of its own targeting.
-  - **Proven both ways.** 38 checks, 0 failures. With `visible`'s Stack case put back to `return true`, the same run
+  - **Proven both ways.** 47 checks, 0 failures. With `visible`'s Stack case put back to `return true`, the same run
     fails two: `the record lists the Bolt alone [target:11, target:12, target:13]` and `counts both ghosts hidden (0)`.
+  - **The copy case, `copies()`.** The Bolt and seat 0's Counterspell go on the stack through Forge's AI. Then the
+    stack is frozen (`freezeStack(null)`, as `resolveStack` does). Copy 1 of the Counterspell
+    (`CardFactory.copySpellAbilityAndPossiblyHost`) goes into the Stack zone and is `add`ed, as Forge's AI plays a
+    copy. Its instance is on the frozen stack: the stack's iterator does not see it, and the stack still holds 2.
+    - Copy 2's record lists copy 1 and the Bolt, `[target:1, target:9, target:15]`, with `hidden: 0` and no `[ghost]`
+      line (stderr captured).
+    - Unfrozen, the stack holds 3, and the record is the same.
+    - With the `isCopiedSpell()` exception removed, the frozen case fails two checks: `[target:1, target:9] hidden 1`,
+      and the printed `[ghost] card 15 …`.
 - **`node tools/decisions.mjs check`** passes.
 - **J183's own log still fails.** `node tools/check-redaction.mjs --empty-hand-ok` on
   `/home/justin-a/code/lab/data/lab-j183/b-s09-pauper-2522/phaseB/frames/d15-random-o0-b101-seat0.jsonl.gz` **still

@@ -114,7 +114,7 @@ public final class Decisions {
         final ZoneType z = c.getZone().getZoneType();
         switch (z) {
             case Stack:
-                return onStack(c);   // D507
+                return c.isCopiedSpell() || onStack(c);   // D507: a copy is never a ghost (onStack's comment)
             case Battlefield:
             case Graveyard:
             case Command:
@@ -138,6 +138,14 @@ public final class Decisions {
      * offers it to a part that targets a spell.  A spell still being cast (its card moved, its instance not yet
      * added) is not on the stack either; the spell's own targeting never offers it (rule 115.5,
      * {@code SpellAbility.canTarget}), and another seat's is a card no frame shows.
+     *
+     * <p>{@code MagicStack}'s iterator walks the stack alone, never its frozen part.  While a resolution freezes
+     * the stack, a copy of a spell made by the resolving effect has its card in the Stack zone and its instance
+     * on the frozen stack ({@code MagicStack.add}'s frozen branch) until the resolution ends -- and the next copy
+     * chooses its targets then (Forge's AI: {@code PlayerControllerAi.orderAndPlaySimultaneousSa}).  So
+     * {@link #visible} takes a copy as seen on its own: a copy cannot be a ghost, because {@code add} skips the
+     * targeting check for one ({@code isCopied}, offsets 388-392 on the jar) and the AI's copy path reaches
+     * {@code add} with no early return (offsets 73-170).  A spell cast from a play effect skips the freeze.
      */
     static boolean onStack(final Card c) {
         final Game g = c.getGame();
@@ -153,10 +161,10 @@ public final class Decisions {
         return false;
     }
 
-    /** D507: a card in the Stack zone the stack holds no spell or ability of ({@link #onStack}). */
+    /** D507: a card in the Stack zone, not a copy, that the stack holds no spell or ability of ({@link #onStack}). */
     static boolean ghost(final Object e) {
         return e instanceof Card && ((Card) e).getZone() != null && ((Card) e).getZone().is(ZoneType.Stack)
-                && !onStack((Card) e);
+                && !((Card) e).isCopiedSpell() && !onStack((Card) e);
     }
 
     /** D507: the worker log's line for a ghost left out of a target record; {@code [ghost]} is what the night counts. */
