@@ -149,6 +149,16 @@ const REQUIRED = [
   ['a9-hideaway-kept-grant-card-through-a-hand.jsonl', 'fail'],
   ['a9-hideaway-alt-after-the-host-left-never-taken.jsonl', 'fail'],
   ['a9-hideaway-alt-back-after-a-gap-without-a-retake.jsonl', 'fail'],
+  // D505's second part: the dig timed from its trigger's resolution, one dig per entry
+  ['a9-hideaway-dig-two-frames-after-the-entry.jsonl', 'pass'],
+  ['a9-hideaway-dig-three-frames-after-the-entry.jsonl', 'pass'],
+  ['a9-hideaway-dig-a-frame-before-its-resolution.jsonl', 'pass'],
+  ['a9-hideaway-flickered-host-two-cards.jsonl', 'pass'],
+  ['a9-hideaway-dig-with-no-resolution.jsonl', 'fail'],
+  ['a9-hideaway-two-digs-tied-to-one-entry.jsonl', 'fail'],
+  ['a9-hideaway-dig-after-the-resolution.jsonl', 'fail'],
+  ['a9-hideaway-dig-after-the-resolution-in-one-frame.jsonl', 'fail'],
+  ['a9-hideaway-dig-before-the-trigger-cast.jsonl', 'fail'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -312,6 +322,10 @@ const COUNTED = [
   ['a9-hideaway-alt-kept-after-control-returns.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-alt-kept-while-returned-then-retaken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-alt-kept-after-the-host-leaves.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-dig-two-frames-after-the-entry.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-dig-three-frames-after-the-entry.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-dig-a-frame-before-its-resolution.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-flickered-host-two-cards.jsonl', '(2 an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-source-choice.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],

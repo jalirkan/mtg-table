@@ -18,7 +18,7 @@ commit.
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
 said 371 across 42, three rows and one list behind its table) — D505
-(2026-11-02) added the cube lab's 23 and amended its 19; D502–D504
+(2026-11-02) added the cube lab's 23 and amended its 19 (both parts); D502–D504
 (2026-11-02) added the cube lab's 19, 20, 21 and 22; D501
 (2026-11-01) added the cube lab's 18 and closed its 15; D500 (2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
@@ -422,10 +422,10 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 16 | open | D499's rows check: two killed attempts of one branch with no finished play are still each read against the last attempt's logs, and the first night on it should report its abandoned plays with no id problem | `tools/cubelab/rowscheck.ts` |
 | [Cube lab](#fu-cube-lab) | 17 | open | D500 proved on the bench; the first night on the new bridge should show no getDamageLKI stack in any worker log | `docs/decisions/D500-fork-damage-lki.md` |
 | [Cube lab](#fu-cube-lab) | 18 | open | D501's empty-hand proof with a revealed library top: measured on Oracle of Mul Daya only (J181's three s07 logs); the other revealers rest on synthetic controls, and the top card named outside its state's library still refuses the proof | `docs/decisions/D501-empty-hand-proof-revealed-top.md` |
-| [Cube lab](#fu-cube-lab) | 19 | open | D502's A9 hideaway admission (tightened by three reviews: dug from the owner's library beside the taken permanent's entry and its hideaway trigger's cast, one dig a permanent, kept while the card does not move -- D505 dropped "only while the viewer holds it"): measured on J182's five s06 logs and 13 of J183's s11 logs; the one-frame lag at the take rests on one log (b76), and a branch log forked after the Watcher entered still fails | `docs/decisions/D502-hideaway-look-after-control-change.md` |
+| [Cube lab](#fu-cube-lab) | 19 | open | D502's A9 hideaway admission (tightened by three reviews: dug from the owner's library beside the taken permanent's entry and its hideaway trigger's cast, one dig a permanent, kept while the card does not move -- D505 dropped "only while the viewer holds it", timed the dig from its trigger's resolution and counted one dig per entry): measured on J182's five s06 logs and J183's 17 s11 logs; the one-frame lag at the take rests on one log (b76), and a branch log forked after the Watcher entered still fails | `docs/decisions/D502-hideaway-look-after-control-change.md` |
 | [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
-| [Cube lab](#fu-cube-lab) | 23 | open | D505's J183 read: 4 of s11's 17 hideaway logs still fail D502's admission -- a dig three or two frames after the Watcher's entry (the hideaway resolving over several snapshots), and a flickered Watcher whose second dig ties one id to two digs | `docs/decisions/D505-hideaway-look-kept-while-exiled.md` |
+| [Cube lab](#fu-cube-lab) | 23 | open | D505's second part (the dig tied by its hideaway trigger's resolution, one dig per entry) is measured on four J183 s11 logs and the J182/J183 s06 samples; its residual (a trigger that digs nothing, with another dig just before its `resolved`) and another ETB trigger resolving right after an unrelated dig stay admitted, and a host whose leave trigger resolves before its hideaway (seen 7 times in s11, the Watcher already gone) is untested by any take | `docs/decisions/D505-hideaway-look-kept-while-exiled.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
@@ -10053,8 +10053,17 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    consecutive frames, with no zone event naming it, whoever controls the Watcher afterwards and whether or not it
    is on the battlefield. That is CR 702.75a's "any player who has controlled", and Forge's
    `Card.mayLookFaceDownExile`, which keeps every player granted the look until the card moves. J183's
-   `b-s11-legacy-2524` had 17 seat-1 logs in this shape (the Watcher given back, or dead, with the alt kept). 13 pass
-   under D505, and the other 4 are follow-up 23. The grace frame at the Watcher's death is no longer a special case.
+   `b-s11-legacy-2524` had 17 seat-1 logs failing A9. In 13 the Watcher was given back, or died, with the alt kept.
+   The grace frame at the Watcher's death is no longer a special case.
+
+   **D505's second part replaced points 2–4.**
+   - The dig is tied to an *entry* of its host by the hideaway trigger's resolution. The trigger's `cast` comes in
+     the entry's frame or the next, before the dig. The `resolved` paired with it follows the dig in that frame, or
+     comes in the next.
+   - Ties are counted one dig per entry, not per id.
+
+   The other 4 J183 logs needed it: a dig two and three frames after the entry, and two flickered Watchers. All 17
+   pass, and the residual narrowed (follow-up 23).
 20. **D503's ceased token of another seat is measured on one ending.** (2026-11-02, D503.) The M55 audit accepts another
    seat's token, listed as its own on its battlefield in the window, whose latest move took it into its owner's
    graveyard or hand, or to nowhere. J182's five `b-s10-peasant-2510` logs (Goat Token 103, sacrificed, then offered by
@@ -10070,18 +10079,23 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    moved it out and back (exile -> library -> exile, or through a hand). Forge would forget the look on such a move.
    D502's hideaway grant now ends on any zone event of its card; the Gonti path does not, on `main` too. Left alone by
    the D502 lane: it is D371's rule, and no log has met it.
-23. **D505's J183 read leaves four hideaway logs failing D502's admission.** (2026-11-02, D505.) Of the 17 seat-1 logs
-   of J183's `b-s11-legacy-2524` that failed A9 at `3275af30`, D505's end rule passes 13. These 4 fail at the alt's
-   first frame, because D502's tie from card to Watcher does not hold:
-   - `d5-random-o0-b119`: the Watcher's entry and its trigger's `cast` at seq 140, and the dig at 143, three state
-     frames later, after the AI's hideaway choices;
-   - `d6-random-o0-b33`: entry at 546, the trigger's `cast` at 547, and the dig at 548;
-   - `d6-random-o0-b20` and `d6-random-o1-b147`: the Watcher flickered (battlefield -> exile -> battlefield under the
-     same id 2, in one frame), and its new hideaway dug a second card. The id is then tied to two digs (three in
-     `b20`), and D502's one-dig-per-host rule refuses both.
+23. **D505's second part, the hideaway dig tied by its trigger's resolution, is measured on four logs.** (2026-11-02,
+   D505.) Part one passed 13 of the 17 seat-1 logs of J183's `b-s11-legacy-2524`. The other 4 failed D502's
+   admission: `d5-random-o0-b119` and `d6-random-o0-b33` (the dig three and two frames after the entry) and
+   `d6-random-o0-b20` and `d6-random-o1-b147` (a flickered Watcher's second dig under one id).
 
-   Each needs its own decision: a window measured from the trigger's resolution rather than the entry, and ties
-   counted per entry rather than per id. Neither is widened by D505.
+   Part two ties a dig to one entry of its host. The trigger's `cast` comes in the entry's frame or the next, before
+   the dig, and the `resolved` paired with it comes after the dig, in that frame or the next. One dig counts per
+   entry. All 17 pass. A survey of 5,521 hideaway casts (J183 s11, J182 s06) set those two placings: 2,143 + 2,701
+   in the frame and 209 + 437 a frame early.
+
+   Still admitted by design:
+   - a trigger that digs nothing, with another dig of its owner's just before its `resolved`;
+   - another enters-the-battlefield trigger resolving right after an unrelated dig (only the engine text tells
+     them apart).
+
+   Never met under a take: a host whose leave trigger resolves before its hideaway trigger (7 in s11, the Watcher
+   already gone). Pairing takes the newest open trigger cast, so it should still tie.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

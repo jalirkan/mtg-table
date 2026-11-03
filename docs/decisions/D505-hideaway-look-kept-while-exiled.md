@@ -1,8 +1,10 @@
-## D505 — A9 keeps a hideaway card's look while the card stays in exile, whoever controls its permanent now (amends D502's end rule)
+## D505 — Hideaway's look: kept while exiled, and tied by the trigger's resolution (amends D502)
 
 *Branch `pc/d505-hideaway-look`, off main `3275af30` (D502–D504). D505 was reserved for this lane (`node tools/decisions.mjs
-next` gave D505). Amends **D502**'s "the grant ends" in rule A9 of `tools/check-redaction.mjs`. The bridge, the wire and
-the protocol are unchanged.*
+next` gave D505). Amends **D502** in rule A9 of `tools/check-redaction.mjs` in two parts: **part one**, the grant's end
+(it lasts while the card stays in exile); **part two**, the grant's start (the dig is tied to its host by the hideaway
+trigger's resolution and counted per entry of the host, not timed from the entry and counted per id). The bridge, the
+wire and the protocol are unchanged.*
 
 **2026-11-02**
 
@@ -14,7 +16,8 @@ the protocol are unchanged.*
 
 Every one is the card under a Watcher for Tomorrow (card 2, player 0's). Its text: "Hideaway 4. When Watcher for
 Tomorrow leaves the battlefield, put the exiled card into its owner's hand." Seat 1 took the Watcher from player 0, and
-the alt appeared in that frame, as D502 admits. What failed in 13 of the 17 is D502's end rule. That rule kept the
+the alt appeared in that frame. What failed in 13 of the 17 is D502's end rule (part one); the other 4 fail D502's
+admission (part two, below). That rule kept the
 grant only while the viewer still controlled THAT permanent, plus one frame of lag. In these logs the alt stays after
 control goes back to the owner, and after the Watcher leaves the battlefield, until the card moves.
 
@@ -73,14 +76,7 @@ card to its owner's hand (`ForgetOnMoved`), not because control ended. That log 
 `d13-random-o0-b148` can: there the Watcher dies, no leave trigger moves the card, and the alt stays to the end of the
 log.
 
-**The rule after.** D502's admission is unchanged. A grant needs all of these:
-- the dig from the owner's library into the owner's exile, in the host's entry frame or the next (never the log's first frame);
-- the host's trigger `cast`, in the dig's frame or the one before;
-- one dig per host, counted over every dig of the log;
-- the viewer's take of the host from its owner, in the alt's frame or the one before;
-- the viewer controlling the host in the frame the alt arrives.
-
-D505 changes only how long the grant lasts. Once made, it is **kept while the card stays in exile, in consecutive state
+**Part one: the rule after.** A grant is made as part two says. Once made, it is **kept while the card stays in exile, in consecutive state
 frames that carry its alt, with no zone event naming it**. The grant no longer ends when control goes back to the
 owner, passes to anyone else, or the host leaves the battlefield. Only a zone event naming the card ends it, or a
 frame in which the card is not in exile with its alt. The one-frame lag at the start stays (`b76`'s take).
@@ -105,21 +101,96 @@ each admission once, in the frame it arrives.
   never drops a look it keeps, so a gap means the grant is over.
 - An alt after the host left the battlefield, with no take ever (the new `-alt-after-the-host-left-never-taken`).
 
-**What J183 also shows, and D505 does not admit.** Four of the 17 logs still fail after this change. They fail D502's
-*admission*, not its end, so the J183 triage's "D502's start conditions all hold" is true of 13 logs, not 17. Each needs its
-own decision if it is to be admitted, and none is widened here:
-- **`d5-random-o0-b119-seat1`** (card 37, Echo of Eons). The Watcher enters with its hideaway trigger's `cast` at seq
-  140. The dig lands at seq 143, three state frames later, after the AI's choices. That is outside both D502 windows:
-  the dig in the entry frame or the next, and the trigger's cast in the dig's frame or the one before. The alt
-  appears at the take (seq 214), so its first frame fails (line 273).
-- **`d6-random-o0-b33-seat1`** (card 9, Archmage's Charm). Entry at seq 546, the trigger's `cast` at 547, the dig at
-  548: two frames after the entry. Point 2 fails.
-- **`d6-random-o0-b20-seat1`** (card 17) and **`d6-random-o1-b147-seat1`** (card 37). The Watcher is flickered
-  (battlefield → exile → battlefield, same id 2, in one frame). Its leave trigger and a fresh hideaway trigger dig a
-  second card. The log's id 2 is then tied to two digs (three in `b20`), so D502's one-dig-per-host rule refuses
-  both.
+## Part two: the dig tied by its trigger's resolution, one dig per entry
 
-This lane counts these four, and the cube lab's follow-up 23 records them.
+**Context.** Part one, as first committed (`e4a3ddaf`), passed 13 of the 17. The other 4 failed at the alt's first
+frame, because D502's tie from card to Watcher did not hold. The timelines, by state seq:
+- **`d5-random-o0-b119-seat1`** (card 37, Echo of Eons):
+  - 140: the Watcher enters, its spell `resolved`, and its hideaway trigger's `cast` (stack id 20761). Wan Shi Tong is
+    cast on top of it.
+  - 141–142: Wan Shi Tong and its trigger resolve.
+  - 143: the dig 37 library → exile, then `resolved` naming card 2.
+  - 214: seat 1 takes the Watcher, and the alt appears (line 273, `main`'s first complaint).
+  - 265: the Watcher is back under player 0, alt kept. 382: it is gone. 384: 37 exile → hand.
+
+  The dig is three state frames after the entry, outside D502's "entry frame or the next". The trigger's cast is
+  three frames before the dig, outside D502's "dig's frame or the one before".
+- **`d6-random-o0-b33-seat1`** (card 9, Archmage's Charm):
+  - 546: the Watcher's spell cast, its entry and `resolved`.
+  - 547: the hideaway trigger's `cast`.
+  - 548: the dig, then `resolved` naming card 2.
+  - 564: seat 1 takes it and the alt appears (line 704). The dig is two frames after the entry.
+- **`d6-random-o1-b147-seat1`** (card 37, Echo of Eons):
+  - 267: the Watcher enters with its trigger cast. 268: the dig of card 13, then `resolved`.
+  - 276: the Watcher is flickered (battlefield → exile → battlefield, the same id 2, in one frame). Its leave trigger
+    and a new hideaway trigger are cast, the dig of 37, then `resolved` 2. Later in the frame, 13 goes exile → hand and
+    the leave trigger's `resolved` 2.
+  - 288: seat 1 takes the Watcher and 37's alt appears (line 341).
+  - 333: the Watcher is gone. 334: 37 exile → hand.
+
+  Id 2 is tied to two digs (13 and 37), and D502's one-dig-per-host refused both.
+- **`d6-random-o0-b20-seat1`** (cards 17 and 9):
+  - 301–302: the Watcher enters and digs 37.
+  - 311–315: it is flickered and digs 10. Its leave trigger returns 37.
+  - 414: it is flickered again and digs 17 (`resolved` after the dig). At 416 its leave trigger returns 10.
+  - 473: seat 1 takes it, and 17's alt appears (line 587).
+  - 556: Phelia exiles the Watcher under seat 1, and 17 keeps its alt (part one).
+  - 564: it returns under player 0, a new entry, with its hideaway `cast`. 565: the dig of 9, then `resolved` 2.
+  - 595: seat 1 takes it again (Oko), and 9's alt appears beside 17's.
+  - 646: the Watcher dies. 647: its leave trigger returns 9, and 17 stays in exile with its alt to the end.
+
+  This one log shows both parts. Id 2 has five entries and five digs here.
+
+**What the logs show of a hideaway's resolution.** A survey script, kept outside the repo, read every hideaway trigger
+`cast` (its text begins "Hideaway") in the 8,350 logs of J183's `b-s11-legacy-2524` and the 8,750 of J182's
+`b-s06-peasant-2506`. It found 2,373 and 3,148 hideaway casts, and for each it measured three things.
+- **Entry to cast.** The trigger is cast in its host's entry frame or the next, every time (0 or 1 frame).
+- **Cast to resolution.** The trigger resolves from 0 to 10 state frames after its cast. Other spells and triggers
+  stack on top, and the AI's hideaway choice takes snapshots. No window from the entry can be both safe and tight.
+- **Where the dig sits.** The survey paired each trigger with the first `resolved` naming its host after its cast.
+  The dig landed in that `resolved`'s frame, before it in event order, in 2,143 of s11's 2,373 and 2,701 of s06's
+  3,148. It landed one state frame before it, when the snapshot was cut between the two, in 209 and 437. No dig was
+  near in 14 and 10: the trigger dug nothing, or the log ended.
+
+  The 7 others, all in s11, are a host whose leave trigger was cast and resolved before its hideaway trigger
+  (`d15-random-o1-b58`, `d0-random-o0-b21`, `d7-random-o1-b40`). So the first `resolved` was the leave trigger's.
+  The hideaway's own `resolved` still follows its dig in the same frame or the next. In every one of these the
+  Watcher had already left the battlefield, so no take can follow.
+
+Stack items carry an `id` equal to the cast's `stackId`, but they leave the listed stack a frame after `unstacked`.
+So the `resolved` event, not the stack, is the evidence used.
+
+**The rule after** (part two). A dig, the card's latest move from its owner P's library into P's exile, is the work of
+one **entry** E of a permanent W owned by P when all of these hold:
+1. **A trigger of E.** A `cast` event names W. W entered earlier in that frame's event order, or W is listed on the
+   battlefield in the previous state frame (the third review's definition, unchanged). W's latest entry is that frame
+   or the previous one. An entry is a zone event onto the battlefield, a flicker included, or W's first listing after a
+   state without it, never in the log's first state frame. A creature spell's own `cast` comes before its entry, so
+   it never counts. A `cast` of an old permanent (an activation, a later trigger) never counts either.
+2. **That trigger's resolution.** A `resolved` event naming W is paired with W's latest open trigger cast (the stack
+   resolves the newest first). A `resolved` with none open is nothing: a spell's own, or an activation's.
+3. **The dig between them.** The trigger was cast before the dig (by frame, then event order). Its `resolved` follows
+   the dig in event order in the dig's frame, or comes in the next state frame.
+4. **One dig per entry.** Counted over every dig of the log, a card that has since left exile included, exactly one
+   dig is tied to E. Ties are counted per entry (W and E's frame), not per id. A flicker is a new object with a new
+   hideaway, so `d6-random-o0-b20`'s five entries vouch for one card each. Two digs tied to one entry (another dig just
+   before the trigger's resolution) vouch for neither. Two hosts entering together tie each of their two resolutions
+   to both digs, so neither is admitted.
+
+The rest of D502's admission is unchanged: the viewer's take of W from P in the alt's frame or the one before, and the
+viewer controlling W in the frame the alt arrives. Part one's end rule is unchanged.
+
+**What part two closes.** D502's admitted residual, "a host whose trigger digs nothing, and another dig the next
+frame", now fails when the other dig comes after the trigger's `resolved`. That was its shape in the selftest
+(`-dig-after-the-resolution`, and `-dig-after-the-resolution-in-one-frame` for the same frame). It stays admitted
+only when the other dig lands just before the `resolved`, in its frame or the one before. The selftest keeps that
+shape as `-residual-trigger-digs-nothing-another-dig-next`, a PASS control.
+
+**Still admitted that the log cannot rule out.**
+- The residual above.
+- Another enters-the-battlefield trigger of a permanent (not hideaway) resolving right after an unrelated dig of its
+  owner's library, when that permanent is then stolen. The two triggers differ only in their `cast` text, an engine
+  string the checker does not read (D502's and D504's reason).
 
 **Rejected alternatives.**
 - **Ending the grant when the host leaves the battlefield, keeping it through a change of control.** This fails
@@ -128,33 +199,65 @@ This lane counts these four, and the cube lab's follow-up 23 records them.
 - **Keeping the grant across a frame without the alt.** Forge never drops the alt while the card stays in exile, so
   a gap followed by the alt again has no source the log shows. The mutant that keeps grants across gaps fails three
   controls.
-- **Widening the admission windows in the same decision.** The four start-shape logs need different arguments (a
-  hideaway that resolves over several snapshots, and a host re-entering as a new object under the same id). This lane
-  was scoped to the end rule.
+- **A wider window from the entry** (part two). The trigger resolves up to ten frames after its cast, so any window
+  wide enough would tie by timing alone. The resolution is evidence that names the host; a window is not.
+- **The trigger's stack item leaving the stack** as the evidence (part two). It leaves the listed stack a frame after
+  `unstacked`, after the dig and the `resolved`, so it would need a window of its own. The `resolved` is direct.
+- **Reading the `cast` text for "Hideaway"** (part two). It is an engine string. The checker does not read engine
+  strings to admit a shape (D502, D504).
+- **Ties per id** (part two). These fail every flicker: `d6-random-o0-b20` and `d6-random-o1-b147`, and the mutant
+  run below.
 
-**Tests.** `tools/check-redaction-selftest.mjs`, generated by `tools/make-negative-fixtures.mjs`, now has 211 controls
-(205 before). All are listed in `REQUIRED`, and every new PASS control is in `COUNTED`.
-- **Changed level:** `a9-hideaway-alt-kept-after-control-returns` is now PASS, where it was a FAIL. Its fixture bytes
-  are unchanged.
-- **Rebuilt so they still probe what they were written for:** `-lag-frame-then-an-unrelated-steal` (`n3`) and
-  `-lag-frame-then-a-steal-of-an-earlier-entry` (`n3b`). The alt drops in the frame the Watcher leaves, so the
-  Watcher's grant is over before the unrelated steal brings the alt back. Without the drop, D505 would keep the
-  Watcher's grant, and the control would pass for the wrong reason.
-- **New PASS:**
-  - `-alt-kept-while-returned-then-retaken` (`d0-…-b67`);
-  - `-alt-kept-after-the-host-leaves` (`d13-…-b148`, `d11-…-b100`).
-- **New FAIL:**
-  - `-alt-again-after-the-card-moved`;
-  - `-kept-grant-card-through-a-hand`;
-  - `-alt-after-the-host-left-never-taken`;
-  - `-alt-back-after-a-gap-without-a-retake`.
-- **Byte-identical:** every other control regenerated byte-identical.
+**Tests.** `tools/check-redaction-selftest.mjs`, generated by `tools/make-negative-fixtures.mjs`, now has 220 controls
+(205 on `main`). All are listed in `REQUIRED`, and every new PASS control is in `COUNTED`.
+- **Every hideaway fixture regenerated with a `resolved`** after its dig. That covers `withHideaway`'s and the spec
+  controls' trigger, and the host's own `resolved` where a probe has no trigger, so a probe still fails for its own
+  reason, not for a missing resolution. No control outside hideaway changed a byte.
+- **Part one.**
+  - `a9-hideaway-alt-kept-after-control-returns` is now PASS, where it was a FAIL.
+  - `-lag-frame-then-an-unrelated-steal` (`n3`) and `-lag-frame-then-a-steal-of-an-earlier-entry` (`n3b`) drop the
+    alt when the Watcher leaves. So the Watcher's grant is over before the unrelated steal brings the alt back.
+  - New PASS: `-alt-kept-while-returned-then-retaken` (`d0-…-b67`) and `-alt-kept-after-the-host-leaves`
+    (`d13-…-b148`, `d11-…-b100`).
+  - New FAIL: `-alt-again-after-the-card-moved`, `-kept-grant-card-through-a-hand`,
+    `-alt-after-the-host-left-never-taken` and `-alt-back-after-a-gap-without-a-retake`.
+- **Part two.**
+  - Reshaped, verdict kept:
+    - `-second-dig-beside-the-host-trigger` (FAIL): the second dig lands just before the trigger's `resolved`, so
+      both digs tie to the one entry.
+    - `-real-card-played-then-steal` (FAIL): the same, so its ties are still two.
+    - `-residual-trigger-digs-nothing-another-dig-next` (PASS): the other dig lands just before the `resolved`. That
+      is the residual's only remaining shape.
+  - New PASS:
+    - `-dig-two-frames-after-the-entry` (`d6-…-b33`);
+    - `-dig-three-frames-after-the-entry` (`d5-…-b119`);
+    - `-dig-a-frame-before-its-resolution` (the snapshot cut);
+    - `-flickered-host-two-cards` (`d6-…-b20`; counted twice).
+  - New FAIL:
+    - `-dig-with-no-resolution` (timing alone);
+    - `-two-digs-tied-to-one-entry`;
+    - `-dig-after-the-resolution` (D502's residual shape, now closed);
+    - `-dig-after-the-resolution-in-one-frame`;
+    - `-dig-before-the-trigger-cast`.
 
-**Mutants.** Four mutants, each in place against the whole selftest. Each failed it:
-- a held grant surviving a move (three controls);
-- grants kept across a frame without the alt (three);
-- D502's "only while the viewer holds it", with no grace (the PASS controls that keep a grant past a return or a death lose their count);
-- any face-down exiled card of the opponent's admitted as kept (the counted PASS controls lose their count).
+**Mutants.** Each was applied in place against the whole selftest, then restored.
+- **Part one:** four mutants, each failing the selftest:
+  - a held grant surviving a move;
+  - grants kept across a frame without the alt;
+  - D502's "only while the viewer holds it";
+  - any face-down exiled card of the opponent's admitted as kept.
+- **Part two:** eight mutants. Each failed the selftest:
+  - ties per id, not per entry (`-flickered-host-two-cards` loses its count);
+  - a trigger's cast counted as its own resolution (`-dig-with-no-resolution` passes);
+  - no next-frame resolution (`-dig-a-frame-before-its-resolution` fails);
+  - a resolution a frame before the dig accepted too (`-dig-after-the-resolution` passes, and the flicker control
+    loses its count);
+  - the cast-before-the-dig condition dropped (`-dig-before-the-trigger-cast` passes);
+  - the trigger cast's entry bound dropped (`-dig-beside-a-later-trigger-of-the-host` passes);
+  - any `resolved` of the host taken as a resolution (four probes pass);
+  - the `resolved` after the dig in event order no longer required, within one frame.
+
+  The last one survived the first run. `-dig-after-the-resolution-in-one-frame` was added for it, and it now fails.
 
 **Measured.** See *Evidence* below.
 
@@ -163,19 +266,16 @@ This lane counts these four, and the cube lab's follow-up 23 records them.
 All logs were read in place, through `--empty-hand-ok` (the atlas's flag), by `main`'s checker (`3275af30`) and this
 branch's, with `xargs -P 6`.
 
-| logs | count | `main` (`3275af30`) | this branch |
-|---|---:|---|---|
-| J183 `b-s11-legacy-2524`, every seat-1 log | 4,175 | 17 FAIL (all this A9 message) | 4 FAIL (the four above, each at the alt's first frame) |
-| J183 `b-s11-legacy-2524`, every seat-0 log | 4,175 | 0 FAIL | 0 FAIL |
-| J183 `b-s06-peasant-2519`, 200 logs of both seats (`shuf -n 200`, a fixed random source) | 200 | 0 FAIL | 0 FAIL |
-| J182 `b-s06-peasant-2506`, 200 logs of both seats, sampled the same way | 200 | 0 FAIL | 0 FAIL |
-| J182's five D502 logs (`d1-random-o0-b148`, `-b47`, `-b76`, `d1-random-o1-b148`, `d2-random-o3-b20`, seat 0) | 5 | PASS | PASS, `1 an opponent's hideaway card` each |
+| logs | count | `main` (`3275af30`) | part one (`e4a3ddaf`) | this branch (both parts) |
+|---|---:|---|---|---|
+| J183 `b-s11-legacy-2524`, every seat-1 log | 4,175 | 17 FAIL (all this A9 message) | 4 FAIL | 0 FAIL |
+| J183 `b-s11-legacy-2524`, every seat-0 log | 4,175 | 0 FAIL | 0 FAIL | 0 FAIL |
+| J183 `b-s06-peasant-2519`, 200 logs of both seats (`shuf -n 200`, a fixed random source) | 200 | 0 FAIL | 0 FAIL | 0 FAIL |
+| J182 `b-s06-peasant-2506`, 200 logs of both seats, sampled the same way | 200 | 0 FAIL | 0 FAIL | 0 FAIL |
+| J182's five D502 logs (`d1-random-o0-b148`, `-b47`, `-b76`, `d1-random-o1-b148`, `d2-random-o3-b20`, seat 0) | 5 | PASS | PASS | PASS, `1 an opponent's hideaway card` each |
 
-The 13 J183 logs that now pass each show `1 an opponent's hideaway card` on the stats line. They are:
-- `d0-random-o0-b67`, `d11-random-o3-b100`, `d11-random-o3-b31` and `d13-random-o0-b148`;
-- `d5-random-o1-b106` and `d5-random-o1-b26`;
-- `d6-random-o2-b17`, `d6-random-o2-b21`, `d6-random-o3-b17` and `d6-random-o3-b21`;
-- `d7-random-o0-b26`, `d7-random-o2-b37` and `d9-random-o2-b36`.
+All 17 J183 logs show the D502 count on their stats line. Sixteen show `1 an opponent's hideaway card`, and
+`d6-random-o0-b20` shows `2` (cards 17 and 9, two entries).
 
 `fixtures/games/*.jsonl` and `fixtures/synthetic/*.jsonl` (23 files, all PASS) print byte-for-byte what `main`'s checker
 prints.

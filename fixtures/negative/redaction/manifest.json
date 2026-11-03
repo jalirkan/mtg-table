@@ -297,7 +297,7 @@
     "file": "a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "A9, D502: STILL ADMITTED, the residual the log cannot rule out -- the Watcher's trigger digs nothing and another effect digs exactly one card the next frame; that card is the Watcher's only tie. Kept as a passing control so a change to it is seen"
+    "why": "A9, D502, D505: STILL ADMITTED, the residual the log cannot rule out -- the Watcher's trigger digs nothing and another effect digs exactly one card the next frame, just before the trigger's `resolved`; that card is the Watcher's only tie. Kept as a passing control so a change to it is seen"
   },
   {
     "file": "a9-hideaway-two-hosts-enter-together.jsonl",
@@ -340,6 +340,60 @@
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D505: taken, given back with the alt kept, then a frame without the alt, then the alt again with no new take -- a grant is kept only in consecutive frames, and Forge never drops a look it keeps"
+  },
+  {
+    "file": "a9-hideaway-dig-two-frames-after-the-entry.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d6-random-o0-b33): the Watcher enters, its hideaway trigger is cast the next frame and resolves the frame after, digging the card -- tied by the resolution, not by the entry; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-three-frames-after-the-entry.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d5-random-o0-b119): the Watcher enters with its trigger cast, two other frames pass with the trigger on the stack, and it resolves digging the card -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-a-frame-before-its-resolution.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the snapshot cuts between the dig and the trigger's `resolved`, which lands the next frame (203 of s11's and 434 of J182 s06's hideaway resolutions) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-flickered-host-two-cards.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d6-random-o0-b20): the Watcher digs C1, is flickered (a new entry under the same id) and its new hideaway digs C2; the viewer takes it and sees both -- one dig per entry, two entries; counted twice, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-with-no-resolution.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher enters with its trigger cast and a card is dug beside it, but no `resolved` of the Watcher's trigger follows -- timing alone ties nothing"
+  },
+  {
+    "file": "a9-hideaway-two-digs-tied-to-one-entry.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: two cards dug before one resolution of the Watcher's trigger -- one entry, two digs, so the Watcher vouches for neither"
+  },
+  {
+    "file": "a9-hideaway-dig-after-the-resolution.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher's trigger resolves digging nothing and another effect digs a card the next frame -- a dig after its trigger's resolution is not its (D502's residual shape, closed)"
+  },
+  {
+    "file": "a9-hideaway-dig-after-the-resolution-in-one-frame.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher's trigger resolves digging nothing and another effect digs a card later in the same frame -- a trigger's dig comes before its `resolved` in event order"
+  },
+  {
+    "file": "a9-hideaway-dig-before-the-trigger-cast.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: a card is dug after the Watcher enters but before its trigger is cast -- a trigger cannot dig before it exists"
   },
   {
     "file": "own-hand-card-redacted.jsonl",
