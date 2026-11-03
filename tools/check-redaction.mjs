@@ -1779,7 +1779,10 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
    *                      frame before, in its entry's frame or the next;
    *   resolutions        every `resolved` naming a permanent with an open
    *                      trigger cast, paired with its latest such cast (the
-   *                      stack's order): {host, entry, castFrame, castI, frame, i};
+   *                      stack's order), not fizzled and within RESOLVE_WITHIN
+   *                      of it: {host, entry, castFrame, castI, frame, i}; an
+   *                      `unstacked` with no `resolved` before it (a countered
+   *                      trigger) closes the newest open cast instead;
    *   exiledFromLibrary  card id -> its dig {card, frame, i, owner} when its
    *                      latest move into exile came from its owner's library
    *                      (any other move of it clears the entry);
@@ -1799,6 +1802,17 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
   let battlefieldBefore = new Map();
   const lastEntry = new Map();
   const openTriggers = new Map();
+  /** D505: permanents whose latest `resolved` has not met its `unstacked` yet (the pair may straddle a snapshot). */
+  const resolvedUnstacked = new Set();
+  /**
+   * D505: how many state frames after its cast a trigger may resolve and still
+   * be the one whose dig it vouches for, by where the cast sits: [cast in its
+   * permanent's entry frame, cast in the next].  The survey of 5,521 hideaway
+   * casts (J183 s11, J182 s06) saw at most 10 and at most 3; past them, a
+   * `resolved` is no evidence (an activation cast the frame after an entry and
+   * resolved late, the review's x7).
+   */
+  const RESOLVE_WITHIN = [10, 3];
   const resolutions = [];
   const exiledFromLibrary = new Map();
   /** D502: every library -> exile dig of the log, never removed (an entry's ties are counted over all of them). */
@@ -2790,10 +2804,22 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
             openTriggers.get(ev.cardId).push({ entry, frame: stateNo, i });
           }
         } else if (ev.kind === 'resolved') {
+          // Closes the permanent's newest open trigger cast.  It is that
+          // trigger's resolution only when it did not fizzle (a fizzled trigger
+          // dug nothing) and came within RESOLVE_WITHIN of the cast (D505).
+          resolvedUnstacked.add(ev.cardId);
           const t = openTriggers.get(ev.cardId)?.pop();
-          if (t !== undefined) {
+          if (t !== undefined && ev.fizzled !== true
+              && stateNo - t.frame <= RESOLVE_WITHIN[t.frame - t.entry]) {
             resolutions.push({ host: ev.cardId, entry: t.entry, castFrame: t.frame, castI: t.i, frame: stateNo, i });
           }
+        } else if (ev.kind === 'unstacked') {
+          // A resolution is `resolved N | unstacked N`; an `unstacked` with no
+          // `resolved` of N before it is a countered item (docs/protocol.md's
+          // event table), and it closes N's newest open trigger cast, which
+          // must never pair with a later `resolved` of N (the D505 review).
+          if (resolvedUnstacked.has(ev.cardId)) resolvedUnstacked.delete(ev.cardId);
+          else openTriggers.get(ev.cardId)?.pop();
         }
       });
     }

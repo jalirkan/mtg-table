@@ -425,7 +425,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 19 | open | D502's A9 hideaway admission (tightened by three reviews: dug from the owner's library beside the taken permanent's entry and its hideaway trigger's cast, one dig a permanent, kept while the card does not move -- D505 dropped "only while the viewer holds it", timed the dig from its trigger's resolution and counted one dig per entry): measured on J182's five s06 logs and J183's 17 s11 logs; the one-frame lag at the take rests on one log (b76), and a branch log forked after the Watcher entered still fails | `docs/decisions/D502-hideaway-look-after-control-change.md` |
 | [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
-| [Cube lab](#fu-cube-lab) | 23 | open | D505's second part (the dig tied by its hideaway trigger's resolution, one dig per entry) is measured on four J183 s11 logs and the J182/J183 s06 samples; its residual (a trigger that digs nothing, with another dig just before its `resolved`) and another ETB trigger resolving right after an unrelated dig stay admitted, and a host whose leave trigger resolves before its hideaway (seen 7 times in s11, the Watcher already gone) is untested by any take | `docs/decisions/D505-hideaway-look-kept-while-exiled.md` |
+| [Cube lab](#fu-cube-lab) | 23 | open | D505's second part (the dig tied by its hideaway trigger's resolution, one dig per entry; a countered trigger closed by its lone `unstacked`, a fizzled one ignored, the resolution within 10 frames of a cast in the entry's frame or 3 of one in the next) is measured on four J183 s11 logs and the J182/J183 s06 samples; still admitted: a trigger that digs nothing with another dig just before its `resolved`, another ETB trigger or an early activation resolving within the bound right after an unrelated dig; refused conservatively: the second of two hosts resolving in one frame (x3b) and a Watcher whose trigger resolves just after another trigger's dig (x6) | `docs/decisions/D505-hideaway-look-kept-while-exiled.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
@@ -10086,7 +10086,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
 
    Part two ties a dig to one entry of its host. The trigger's `cast` comes in the entry's frame or the next, before
    the dig, and the `resolved` paired with it comes after the dig, in that frame or the next. One dig counts per
-   entry. All 17 pass. A survey of 5,521 hideaway casts (J183 s11, J182 s06) set those two placings: 2,143 + 2,701
+   entry. All 17 pass. A survey of 5,521 hideaway casts (J183 s11, J182 s06) set those two placings: 2,147 + 2,701
    in the frame and 209 + 437 a frame early.
 
    Still admitted by design:
@@ -10094,8 +10094,22 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    - another enters-the-battlefield trigger resolving right after an unrelated dig (only the engine text tells
      them apart).
 
-   Never met under a take: a host whose leave trigger resolves before its hideaway trigger (7 in s11, the Watcher
-   already gone). Pairing takes the newest open trigger cast, so it should still tie.
+   The review of `f5fcf747` closed an admission hole. A countered trigger, `unstacked` with no `resolved`, stayed open,
+   and a later `resolved` of its host paired with it (`x1`, `x1b`, `x2`, `x8`). The fix:
+   - such an `unstacked` closes the cast;
+   - a fizzled `resolved` is no resolution;
+   - a trigger resolves within 10 state frames of a cast in the entry's frame, or 3 of one in the next. These are the
+     longest the survey saw (6 of s11's hideaway triggers were countered). The bound closes a late activation
+     (`x7`).
+
+   Admitted besides by design: an activation cast in the entry's frame or the next, resolving within that bound
+   right after an unrelated dig.
+
+   Refused, conservatively (false failures; no J182 or J183 log meets them):
+   - the second of two hosts whose triggers resolve in one frame (`x3b`);
+   - a Watcher whose trigger resolves just after another permanent's trigger dug a card in that frame (`x6`).
+
+   If a night meets either, it needs its own decision.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

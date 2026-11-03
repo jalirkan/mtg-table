@@ -145,17 +145,19 @@ frame, because D502's tie from card to Watcher did not hold. The timelines, by s
 `cast` (its text begins "Hideaway") in the 8,350 logs of J183's `b-s11-legacy-2524` and the 8,750 of J182's
 `b-s06-peasant-2506`. It found 2,373 and 3,148 hideaway casts, and for each it measured three things.
 - **Entry to cast.** The trigger is cast in its host's entry frame or the next, every time (0 or 1 frame).
-- **Cast to resolution.** The trigger resolves from 0 to 10 state frames after its cast. Other spells and triggers
-  stack on top, and the AI's hideaway choice takes snapshots. No window from the entry can be both safe and tight.
-- **Where the dig sits.** The survey paired each trigger with the first `resolved` naming its host after its cast.
-  The dig landed in that `resolved`'s frame, before it in event order, in 2,143 of s11's 2,373 and 2,701 of s06's
-  3,148. It landed one state frame before it, when the snapshot was cut between the two, in 209 and 437. No dig was
-  near in 14 and 10: the trigger dug nothing, or the log ended.
+- **Cast to resolution.** A trigger cast in its host's entry frame resolves 0 to 10 state frames later (10 once, in
+  J182 s06; 7 at most in s11). Other spells and triggers stack on top, and the AI's hideaway choice takes snapshots.
+  A trigger cast in the frame after the entry resolves 0 to 3 frames later (3 three times, in s11; 2 at most in
+  s06). No window from the entry alone can be both safe and tight.
+- **Where the dig sits.** The survey paired each `resolved` with its host's newest open trigger cast, as the checker
+  does: an `unstacked` with no `resolved` before it closes a countered cast. The dig landed in its `resolved`'s
+  frame, before it in event order, in 2,147 of s11's 2,373 and 2,701 of s06's 3,148. It landed one state frame
+  before, when the snapshot was cut between the two, in 209 and 437. No dig was near in 11 and 10: the trigger dug
+  nothing. Six of s11's hideaway triggers were countered (`unstacked` alone).
 
-  The 7 others, all in s11, are a host whose leave trigger was cast and resolved before its hideaway trigger
-  (`d15-random-o1-b58`, `d0-random-o0-b21`, `d7-random-o1-b40`). So the first `resolved` was the leave trigger's.
-  The hideaway's own `resolved` still follows its dig in the same frame or the next. In every one of these the
-  Watcher had already left the battlefield, so no take can follow.
+  Before the review, a naive pairing (the first `resolved` naming the host after the cast) showed 7 apparent
+  exceptions. These were hosts whose leave trigger resolved before their hideaway trigger (`d15-random-o1-b58`,
+  `d0-random-o0-b21`, `d7-random-o1-b40`). With the stack's pairing they are ordinary.
 
 Stack items carry an `id` equal to the cast's `stackId`, but they leave the listed stack a frame after `unstacked`.
 So the `resolved` event, not the stack, is the evidence used.
@@ -166,16 +168,28 @@ one **entry** E of a permanent W owned by P when all of these hold:
    battlefield in the previous state frame (the third review's definition, unchanged). W's latest entry is that frame
    or the previous one. An entry is a zone event onto the battlefield, a flicker included, or W's first listing after a
    state without it, never in the log's first state frame. A creature spell's own `cast` comes before its entry, so
-   it never counts. A `cast` of an old permanent (an activation, a later trigger) never counts either.
-2. **That trigger's resolution.** A `resolved` event naming W is paired with W's latest open trigger cast (the stack
-   resolves the newest first). A `resolved` with none open is nothing: a spell's own, or an activation's.
+   it never counts. A `cast` naming a permanent that entered earlier than the frame before is never counted: an
+   activation, a later trigger. A `cast` in the entry's frame or the next does count, whatever it is, even an
+   activation. Only its `cast` text tells them apart, so point 2's bound is what limits it.
+2. **That trigger's resolution.** A `resolved` event naming W closes W's newest open trigger cast (the stack resolves
+   the newest first). It is that trigger's resolution when it is not `fizzled` (a fizzled trigger dug nothing) and
+   comes within **RESOLVE_WITHIN** of the cast. That bound is 10 state frames for a cast in the entry's frame and 3
+   for one in the next, the survey's longest.
+   - A `resolved` with no cast open is nothing: a spell's own, or a late activation's.
+   - An `unstacked` naming W with no `resolved` of W before it closes W's newest open cast with no resolution. The
+     bridge writes `resolved N | unstacked N` for a resolution, and `unstacked` alone for a countered item. The pair
+     may straddle a snapshot.
 3. **The dig between them.** The trigger was cast before the dig (by frame, then event order). Its `resolved` follows
    the dig in event order in the dig's frame, or comes in the next state frame.
 4. **One dig per entry.** Counted over every dig of the log, a card that has since left exile included, exactly one
    dig is tied to E. Ties are counted per entry (W and E's frame), not per id. A flicker is a new object with a new
    hideaway, so `d6-random-o0-b20`'s five entries vouch for one card each. Two digs tied to one entry (another dig just
-   before the trigger's resolution) vouch for neither. Two hosts entering together tie each of their two resolutions
-   to both digs, so neither is admitted.
+   before the trigger's resolution) vouch for neither. Two hosts entering together are decided by the order of their
+   resolutions:
+   - **Both digs before both `resolved`s:** each entry is tied to both digs, and neither is admitted.
+   - **In real stack order** (dig, `resolved` B, dig, `resolved` W): B, which resolved first, is tied to its own dig
+     only, so B is admitted with its card (`-two-hosts-the-first-resolver-taken`). W's `resolved` follows both digs
+     in its frame, so W is tied to two and refused. That refusal is conservative.
 
 The rest of D502's admission is unchanged: the viewer's take of W from P in the alt's frame or the one before, and the
 viewer controlling W in the frame the alt arrives. Part one's end rule is unchanged.
@@ -188,9 +202,32 @@ shape as `-residual-trigger-digs-nothing-another-dig-next`, a PASS control.
 
 **Still admitted that the log cannot rule out.**
 - The residual above.
+- An activation of a permanent, cast in its entry's frame or the next, resolving within the bound right after an
+  unrelated dig of its owner's library, when that permanent is then stolen. Before the review the window was
+  unbounded (`x7`). The bound leaves this narrow case, and only the `cast` text could close it.
 - Another enters-the-battlefield trigger of a permanent (not hideaway) resolving right after an unrelated dig of its
   owner's library, when that permanent is then stolen. The two triggers differ only in their `cast` text, an engine
   string the checker does not read (D502's and D504's reason).
+
+**Refused, conservatively** (a false failure, recorded in PLAN.md's cube lab follow-up 23). These are a host's own
+card that the checker cannot tell from another dig beside its trigger's resolution:
+- **The second of two hosts that resolve in one frame** (the review's `x3b`).
+- **A Watcher whose trigger resolves just after another permanent's trigger dug a card in that frame** (`x6`).
+
+No J182 or J183 log meets either.
+
+**The review of part two** (`f5fcf747`) found one admission hole and five smaller things, all fixed here.
+- **A countered trigger stayed open.** The checker ignored `unstacked`. So a countered hideaway trigger's `cast`
+  stayed open forever, and any later `resolved` of its host paired with it: an activation, the leave trigger, a
+  reanimated spell's own. The unrelated dig just before that `resolved` became the entry's one dig. The review's
+  `x1`, `x1b`, `x2` and `x8` passed on `f5fcf747` and fail on `main`; they fail again now.
+- **An activation cast the frame after an entry counted, with no bound** (`x7`). It is now bounded, and point 1
+  says so.
+- **The two-hosts sentence was wrong** (`x3a`, `x3b`, `x6`), as corrected above.
+- **The survey's 203 and 434 in the fixture generator** are now 209 and 437, the figures this file uses.
+- **`tools/CLAUDE.md`'s "named again after a frame without its alt"** now says "with no new take". A new take
+  re-admits (`-alt-dropped-while-returned`).
+- **A fizzled `resolved` paired a dig.** It is ignored now (`-fizzled-trigger`).
 
 **Rejected alternatives.**
 - **Ending the grant when the host leaves the battlefield, keeping it through a change of control.** This fails
@@ -208,7 +245,7 @@ shape as `-residual-trigger-digs-nothing-another-dig-next`, a PASS control.
 - **Ties per id** (part two). These fail every flicker: `d6-random-o0-b20` and `d6-random-o1-b147`, and the mutant
   run below.
 
-**Tests.** `tools/check-redaction-selftest.mjs`, generated by `tools/make-negative-fixtures.mjs`, now has 220 controls
+**Tests.** `tools/check-redaction-selftest.mjs`, generated by `tools/make-negative-fixtures.mjs`, now has 232 controls
 (205 on `main`). All are listed in `REQUIRED`, and every new PASS control is in `COUNTED`.
 - **Every hideaway fixture regenerated with a `resolved`** after its dig. That covers `withHideaway`'s and the spec
   controls' trigger, and the host's own `resolved` where a probe has no trigger, so a probe still fails for its own
@@ -239,6 +276,23 @@ shape as `-residual-trigger-digs-nothing-another-dig-next`, a PASS control.
     - `-dig-after-the-resolution` (D502's residual shape, now closed);
     - `-dig-after-the-resolution-in-one-frame`;
     - `-dig-before-the-trigger-cast`.
+- **The review of part two.**
+  - New FAIL, the review's own fixtures, byte-identical to them:
+    - `-countered-trigger-then-an-activation` (`x1`);
+    - `-countered-trigger-take-much-later` (`x1b`);
+    - `-countered-first-entry-then-a-flicker` (`x2`);
+    - `-countered-trigger-host-dies-and-returns` (`x8`);
+    - `-activation-the-frame-after-the-entry-resolved-late` (`x7`).
+  - New FAIL, beside them: `-resolution-eleven-frames-after-the-cast` and `-fizzled-trigger`.
+  - New PASS:
+    - `-countered-first-entry-flicker-card-only` (`x2c`);
+    - `-two-hosts-the-first-resolver-taken` (`x3a`);
+    - `-resolution-ten-frames-after-the-cast`;
+    - `-cast-the-frame-after-the-entry-resolved-three-later`;
+    - `-resolved-and-unstacked-straddle-a-snapshot`.
+
+    In the straddle control, the newer trigger's `unstacked` lands a snapshot after its `resolved`, and must not
+    close the hideaway trigger beneath it.
 
 **Mutants.** Each was applied in place against the whole selftest, then restored.
 - **Part one:** four mutants, each failing the selftest:
@@ -258,6 +312,14 @@ shape as `-residual-trigger-digs-nothing-another-dig-next`, a PASS control.
   - the `resolved` after the dig in event order no longer required, within one frame.
 
   The last one survived the first run. `-dig-after-the-resolution-in-one-frame` was added for it, and it now fails.
+- **The review's fixes:** seven mutants. Each failed the selftest:
+  - `unstacked` ignored again (`x1`, `x1b`, `x2`, `x8` pass);
+  - every `unstacked` closing a cast, even one paired with a `resolved` (the straddle control loses its count);
+  - a fizzled `resolved` counted (`-fizzled-trigger` passes);
+  - no bound (`x7` and the eleven-frames probe pass);
+  - one bound of 10 for both placings (`x7` passes);
+  - a bound of 9 (the ten-frames control fails);
+  - a bound of 2 for a cast the frame after the entry. This survived until `-cast-the-frame-after-the-entry-resolved-three-later` was added, and that control now fails under it.
 
 **Measured.** See *Evidence* below.
 

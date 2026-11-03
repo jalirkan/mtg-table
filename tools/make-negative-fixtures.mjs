@@ -657,7 +657,7 @@ const hideawaySpec = (name, level, why, frames) => {
     [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]] },
       { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hDig(HC1), hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
   hideawaySpec('a9-hideaway-dig-a-frame-before-its-resolution.jsonl', 'pass',
-    'A9, D505: the snapshot cuts between the dig and the trigger\'s `resolved`, which lands the next frame (203 of s11\'s and 434 of J182 s06\'s hideaway resolutions) -- counted, not a problem',
+    'A9, D505: the snapshot cuts between the dig and the trigger\'s `resolved`, which lands the next frame (209 of s11\'s and 437 of J182 s06\'s hideaway resolutions) -- counted, not a problem',
     [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW)] }, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hDig(HC1)] },
       { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
   hideawaySpec('a9-hideaway-flickered-host-two-cards.jsonl', 'pass',
@@ -681,6 +681,71 @@ const hideawaySpec = (name, level, why, frames) => {
   hideawaySpec('a9-hideaway-dig-before-the-trigger-cast.jsonl', 'fail',
     'A9, D505: a card is dug after the Watcher enters but before its trigger is cast -- a trigger cannot dig before it exists',
     [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hDig(HC1), hCast(HW), hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  // The review of D505's second part (f5fcf747): a countered trigger is
+  // `unstacked` with no `resolved`, and must not stay open for a later
+  // `resolved` of its permanent; a fizzled trigger dug nothing; and a trigger
+  // resolves within RESOLVE_WITHIN of its cast (10 state frames from a cast in
+  // the entry's frame, 3 from one in the next), so an activation resolved late
+  // vouches for nothing.  The review's fixtures x1, x1b, x2, x2c, x3a, x7, x8.
+  const hUn = (id) => ({ kind: 'unstacked', cardId: id });
+  const hAct = (id) => ({ kind: 'cast', stackId: 9400 + (id % 100), cardId: id, controller: T, text: '' });
+  const hFizzle = (id) => ({ kind: 'resolved', cardId: id, fizzled: true });
+  hideawaySpec('a9-hideaway-countered-trigger-then-an-activation.jsonl', 'fail',
+    'A9, D505 (the review\'s x1): the Watcher\'s trigger is countered (`unstacked`, no `resolved`), and three frames later an unrelated dig and an activation of the Watcher resolve -- the countered cast is closed, so the activation\'s `resolved` vouches for nothing',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hUn(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]] },
+      { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hAct(HW), hDig(HC2), hRes(HW), hUn(HW)] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-countered-trigger-take-much-later.jsonl', 'fail',
+    'A9, D505 (the review\'s x1b): as the countered-trigger control, with the take three frames after the unrelated dig',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hUn(HW)] }, { bf: [[HW, T, T]] },
+      { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hAct(HW), hDig(HC2), hRes(HW), hUn(HW)] }, { bf: [[HW, T, T]], ex: [[HC2, T]] }, { bf: [[HW, T, T]], ex: [[HC2, T]] },
+      { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-countered-first-entry-then-a-flicker.jsonl', 'fail',
+    'A9, D505 (the review\'s x2): the first entry\'s trigger is countered, a flicker\'s trigger digs C1 properly, and later an unrelated dig C2 and an activation resolve -- C1 is the flicker\'s, C2 is nothing\'s',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hUn(HW)] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hMove(HW, 'battlefield', 'exile'), hMove(HW, 'exile', 'battlefield'), hCast(HW), hDig(HC1), hRes(HW), hUn(HW)] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hAct(HW), hDig(HC2), hRes(HW), hUn(HW)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true], [HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-countered-first-entry-flicker-card-only.jsonl', 'pass',
+    'A9, D505 (the review\'s x2c): the same log with only the flicker\'s card C1 showing its alt -- admitted, counted',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hUn(HW)] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hMove(HW, 'battlefield', 'exile'), hMove(HW, 'exile', 'battlefield'), hCast(HW), hDig(HC1), hRes(HW), hUn(HW)] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hAct(HW), hDig(HC2), hRes(HW), hUn(HW)] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true], [HC2, T]] }]);
+  hideawaySpec('a9-hideaway-countered-trigger-host-dies-and-returns.jsonl', 'fail',
+    'A9, D505 (the review\'s x8): the trigger is countered, the Watcher dies (an unrelated dig before a `resolved` of it), is reanimated (a new entry whose trigger digs C1), and is taken -- the alt on C2 has no source',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hUn(HW)] }, { bf: [[HW, T, T]] },
+      { ex: [[HC2, T]], ev: [hMove(HW, 'battlefield', 'graveyard'), hCast(HW), hDig(HC2), hRes(HW), hUn(HW)] }, { ex: [[HC2, T]] },
+      { bf: [[HW, T, T]], ex: [[HC2, T], [HC1, T]], ev: [hMove(HW, 'graveyard', 'battlefield'), hCast(HW), hDig(HC1), hRes(HW), hUn(HW)] },
+      { bf: [[HW, T, V]], ex: [[HC2, T, true], [HC1, T]] }]);
+  hideawaySpec('a9-hideaway-activation-the-frame-after-the-entry-resolved-late.jsonl', 'fail',
+    'A9, D505 (the review\'s x7): a permanent with no hideaway enters, an activation of it is cast the next frame and resolves four frames later right after an unrelated dig, and the viewer takes it -- past RESOLVE_WITHIN (3 from a cast the frame after the entry), no evidence',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]], ev: [hAct(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]] },
+      { bf: [[HW, T, T]], ex: [[HC2, T]], ev: [hDig(HC2), hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-resolution-eleven-frames-after-the-cast.jsonl', 'fail',
+    'A9, D505: the trigger cast in the entry\'s frame resolves eleven frames later after a dig -- past RESOLVE_WITHIN (10, the survey\'s longest)',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW)] }, ...Array.from({ length: 10 }, () => ({ bf: [[HW, T, T]] })),
+      { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hDig(HC1), hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-resolution-ten-frames-after-the-cast.jsonl', 'pass',
+    'A9, D505: the trigger cast in the entry\'s frame resolves ten frames later, digging the card (J182 s06\'s longest) -- counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW)] }, ...Array.from({ length: 9 }, () => ({ bf: [[HW, T, T]] })),
+      { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hDig(HC1), hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-cast-the-frame-after-the-entry-resolved-three-later.jsonl', 'pass',
+    'A9, D505: the trigger is cast the frame after the entry and resolves three frames later, digging the card (s11\'s longest for such a cast) -- counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW)] }, { bf: [[HW, T, T]], ev: [hCast(HW)] }, { bf: [[HW, T, T]] }, { bf: [[HW, T, T]] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hDig(HC1), hRes(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-fizzled-trigger.jsonl', 'fail',
+    'A9, D505 (the review): the trigger\'s `resolved` is fizzled -- a fizzled trigger dug nothing, so the dig beside it is not its',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1), hFizzle(HW), hUn(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-two-hosts-the-first-resolver-taken.jsonl', 'pass',
+    'A9, D505 (the review\'s x3a): the Watcher and another host enter together, the other resolves first digging C2, then the Watcher digging C1; the viewer takes the other host and sees C2 -- its only tie; counted, not a problem',
+    [{}, { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T], [HC2, T]], ev: [hEnter(HW), hEnter(HB), hCast(HW), hCast(HB), hDig(HC2), hRes(HB), hDig(HC1), hRes(HW)] },
+      { bf: [[HW, T, T], [HB, T, V]], ex: [[HC1, T], [HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl', 'pass',
+    'A9, D505: the Watcher has two triggers; the newer resolves, and its `unstacked` lands a snapshot later -- that `unstacked` is the resolved one\'s pair, not a counter, so the hideaway trigger stays open and its dig is tied; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hAct(HW)] }, { bf: [[HW, T, T]], ev: [hRes(HW)] },
+      { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hUn(HW), hDig(HC1), hRes(HW), hUn(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
 }
 
 // The other night-2 finding (D371): the viewer's own hand card as a stub.  It

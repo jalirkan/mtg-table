@@ -357,7 +357,7 @@
     "file": "a9-hideaway-dig-a-frame-before-its-resolution.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "A9, D505: the snapshot cuts between the dig and the trigger's `resolved`, which lands the next frame (203 of s11's and 434 of J182 s06's hideaway resolutions) -- counted, not a problem"
+    "why": "A9, D505: the snapshot cuts between the dig and the trigger's `resolved`, which lands the next frame (209 of s11's and 437 of J182 s06's hideaway resolutions) -- counted, not a problem"
   },
   {
     "file": "a9-hideaway-flickered-host-two-cards.jsonl",
@@ -394,6 +394,78 @@
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D505: a card is dug after the Watcher enters but before its trigger is cast -- a trigger cannot dig before it exists"
+  },
+  {
+    "file": "a9-hideaway-countered-trigger-then-an-activation.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x1): the Watcher's trigger is countered (`unstacked`, no `resolved`), and three frames later an unrelated dig and an activation of the Watcher resolve -- the countered cast is closed, so the activation's `resolved` vouches for nothing"
+  },
+  {
+    "file": "a9-hideaway-countered-trigger-take-much-later.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x1b): as the countered-trigger control, with the take three frames after the unrelated dig"
+  },
+  {
+    "file": "a9-hideaway-countered-first-entry-then-a-flicker.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x2): the first entry's trigger is countered, a flicker's trigger digs C1 properly, and later an unrelated dig C2 and an activation resolve -- C1 is the flicker's, C2 is nothing's"
+  },
+  {
+    "file": "a9-hideaway-countered-first-entry-flicker-card-only.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (the review's x2c): the same log with only the flicker's card C1 showing its alt -- admitted, counted"
+  },
+  {
+    "file": "a9-hideaway-countered-trigger-host-dies-and-returns.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x8): the trigger is countered, the Watcher dies (an unrelated dig before a `resolved` of it), is reanimated (a new entry whose trigger digs C1), and is taken -- the alt on C2 has no source"
+  },
+  {
+    "file": "a9-hideaway-activation-the-frame-after-the-entry-resolved-late.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x7): a permanent with no hideaway enters, an activation of it is cast the next frame and resolves four frames later right after an unrelated dig, and the viewer takes it -- past RESOLVE_WITHIN (3 from a cast the frame after the entry), no evidence"
+  },
+  {
+    "file": "a9-hideaway-resolution-eleven-frames-after-the-cast.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the trigger cast in the entry's frame resolves eleven frames later after a dig -- past RESOLVE_WITHIN (10, the survey's longest)"
+  },
+  {
+    "file": "a9-hideaway-resolution-ten-frames-after-the-cast.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the trigger cast in the entry's frame resolves ten frames later, digging the card (J182 s06's longest) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-cast-the-frame-after-the-entry-resolved-three-later.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the trigger is cast the frame after the entry and resolves three frames later, digging the card (s11's longest for such a cast) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-fizzled-trigger.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review): the trigger's `resolved` is fizzled -- a fizzled trigger dug nothing, so the dig beside it is not its"
+  },
+  {
+    "file": "a9-hideaway-two-hosts-the-first-resolver-taken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (the review's x3a): the Watcher and another host enter together, the other resolves first digging C2, then the Watcher digging C1; the viewer takes the other host and sees C2 -- its only tie; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the Watcher has two triggers; the newer resolves, and its `unstacked` lands a snapshot later -- that `unstacked` is the resolved one's pair, not a counter, so the hideaway trigger stays open and its dig is tied; counted, not a problem"
   },
   {
     "file": "own-hand-card-redacted.jsonl",

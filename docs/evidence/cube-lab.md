@@ -261,8 +261,10 @@ D505 has two parts:
 | J182's `b-s06-peasant-2506`, 200 logs sampled, and its five D502 logs | 205 | 0 FAIL | 0 FAIL | 0 FAIL |
 
 All runs used the atlas's `--empty-hand-ok`. `fixtures/games/` and `fixtures/synthetic/` check byte-for-byte as on
-`main`. The checker's self-test passes 220 controls (205 before).
+`main`. The checker's self-test passes 232 controls (205 before).
 
 A survey of every hideaway trigger in the s11 unit and J182's s06 unit set part two's window: 5,521 casts. The dig
-lands in its trigger's `resolved` frame, before it, in 4,844 of them, and one frame before it in 646. PLAN.md's cube
+lands in its trigger's `resolved` frame, before it, in 4,848 of them, and one frame before it in 646. The trigger
+resolves at most 10 state frames after a cast in its host's entry frame, and at most 3 after one in the next. Those
+two bounds are in the rule. A countered trigger (`unstacked` alone, 6 in s11) and a fizzled one tie nothing. PLAN.md's cube
 lab follow-up 23 holds what part two still admits.
