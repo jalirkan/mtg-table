@@ -1623,3 +1623,10 @@ excepted), prints a `[ghost]` worker-log line, and -- because the explorer and t
 random-<band>-d507. J184 posted to pc-jobs: night nine, 13 new spines at deck seeds 2427-2439, game 2527-2539, validation
 2627-2639/2727-2739, lab-j184 made empty; new metrics ghost_candidates and stack_overflows; J183's and J182's numbers beside as
 information. The runner's check: exit 0, lint clean. Drafts: drafts/derive-j184.py, drafts/J184-atlas-4b-night-nine.md.
+
+## 2026-11-02 21:05 EST -- J184 failed at prepare (my miss), J185 posted
+
+J184 failed in 14 s: `fatal: Needed a single revision` -- the pin 0a6cf5c1 was gated and merged here but not pushed to
+origin/main, which the runner's clone fetches. Pushed; lab-j184 (empty) removed; J185 is the same file on the same pin and
+seed block (unused: J184 drew nothing), posted with the reason written into its *Before posting* 4. Lesson, recorded: push
+main before posting a night that pins it.
