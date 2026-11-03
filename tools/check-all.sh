@@ -191,7 +191,9 @@
 #                                 engine boot); then SelectionSelfTest (D422,
 #                                 D423): input.selectable's player rule and a
 #                                 declaration's chosen blocks / attacks on real
-#                                 cards (a second engine boot)
+#                                 cards, and (D507) a target record that counts
+#                                 a card stranded in the Stack zone hidden (a
+#                                 second engine boot)
 #                                 Then 12m: tools/cubelab.sh seat-identity
 #                                 (D451, gated since D486's addendum) -- four
 #                                 fixed games (a Forge, a seeded search, a D358
@@ -2335,10 +2337,12 @@ s12k_facedown() {
 #      Duress the opponent, Leyline of Sanctity's hexproof, an Aura that enchants
 #      a player) and reads a declaration's blocks and attacks off a real Combat;
 #      it also fails if the InputSelectTargets fields InputPeek reads by name are
-#      gone from this engine.  The live half is tools/ws-select-probe.mjs (not in
+#      gone from this engine.  D507, in the same JVM: two Knockout Maneuvers
+#      stranded in the Stack zone by Forge's own AI cast path (nothing on the
+#      stack) are counted in a Counterspell target record's hidden, never listed.  The live half is tools/ws-select-probe.mjs (not in
 #      the gate: three real games, docs/evidence/select-probe.md).
 s12l_playable() {
-  printf '\n=== 12l. PlayableSelfTest and SelectionSelfTest -- state.playable and state.activatable: what the seat may play from its graveyard, exile, hand, and activate on the battlefield (D413, D420); input.selectable.playerIds and chosen (D422, D423) ===\n'
+  printf '\n=== 12l. PlayableSelfTest and SelectionSelfTest -- state.playable and state.activatable: what the seat may play from its graveyard, exile, hand, and activate on the battlefield (D413, D420); input.selectable.playerIds and chosen (D422, D423); a stranded stack-zone card never a target option (D507) ===\n'
   rc=0
   jvm ./bridge/run.sh mtgtable.PlayableSelfTest > var/check-all-playable.log 2>&1 || rc=$?
   grep -E '^(  ok|  FAIL|PlayableSelfTest)' var/check-all-playable.log || true
@@ -2351,7 +2355,7 @@ s12l_playable() {
   grep -E '^(  ok|  FAIL|SelectionSelfTest)' var/check-all-selection.log || true
   if [ "$rc" != "0" ]; then
     capped "$rc" && die "SelectionSelfTest did not finish within ${GAME_TIMEOUT}s"
-    die "SelectionSelfTest exited $rc: input.selectable.playerIds or chosen disagreed with Forge's own rule, or InputPeek cannot read InputSelectTargets on this engine (12l, D422, D423; log: var/check-all-selection.log)"
+    die "SelectionSelfTest exited $rc: input.selectable.playerIds or chosen disagreed with Forge's own rule, or InputPeek cannot read InputSelectTargets on this engine, or a target record listed a card in the Stack zone with nothing on the stack (12l, D422, D423, D507; log: var/check-all-selection.log)"
   fi
 }
 

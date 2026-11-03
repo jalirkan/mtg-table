@@ -137,6 +137,10 @@ public final class DecisionSelfTest {
         }
         check(badKind, "an unknown kind is refused");
 
+        // D507: the worker log's ghost line, which the night counts by its "[ghost]" prefix; an id, never a name
+        check(Decisions.ghostLine(49).equals(
+                "[ghost] card 49 in the stack zone with no stack instance left out of a target record (D507)"),
+                "D507: the ghost line");
         targetNone();
         searchWeek3();
         mullAndTargets();

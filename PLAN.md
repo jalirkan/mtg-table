@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 380 items still open across 43 follow-up lists** — 353
+**The index below lists 383 items still open across 43 follow-up lists** — 353
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D506
+said 371 across 42, three rows and one list behind its table) — D507
+(2026-11-02) added the cube lab's 26, 27 and 28; D506
 (2026-11-02) added the cube lab's 24 and 25; D505
 (2026-11-02) added the cube lab's 23 and amended its 19 (both parts); D502–D504
 (2026-11-02) added the cube lab's 19, 20, 21 and 22; D501
@@ -428,8 +429,11 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
 | [Cube lab](#fu-cube-lab) | 23 | open | D505's second part (the dig tied by its hideaway trigger's resolution, one dig per entry; a countered trigger closed by its lone `unstacked`, a fizzled one ignored, the resolution within 10 frames of a cast in the entry's frame or 3 of one in the next) is measured on four J183 s11 logs and the J182/J183 s06 samples; still admitted: a trigger that digs nothing with another dig just before its `resolved`, another ETB trigger or an early activation resolving within the bound right after an unrelated dig; refused conservatively: the second of two hosts resolving in one frame (x3b) and a Watcher whose trigger resolves just after another trigger's dig (x6) | `docs/decisions/D505-hideaway-look-kept-while-exiled.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
-| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) is listed on Old Man's measurement (D492's rule) though four spines played it cleanly; Willow Satyr and Aladdin carry the same `LoseControl` but cannot target themselves as printed: watched, not listed; Agatha's Soul Cauldron is a second route to the path for them (a holder of the ability may target itself) | `tools/cubelab/engine-unplayable.json` |
-| [Cube lab](#fu-cube-lab) | 24 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline, where Agatha's Soul Cauldron may still hold its ability) and why a recursion hangs instead of overflowing are not traced (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
+| [Cube lab](#fu-cube-lab) | 24 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) is listed on Old Man's measurement (D492's rule) though four spines played it cleanly; Willow Satyr and Aladdin carry the same `LoseControl` but cannot target themselves as printed: watched, not listed; Agatha's Soul Cauldron is a second route to the path for them (a holder of the ability may target itself) | `tools/cubelab/engine-unplayable.json` |
+| [Cube lab](#fu-cube-lab) | 25 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline, where Agatha's Soul Cauldron may still hold its ability) and why a recursion hangs instead of overflowing are not traced (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
+| [Cube lab](#fu-cube-lab) | 26 | open | D507's ghost on the board: a human's target choice over the Stack and another zone (30 scripts, e.g. Aether Gust) can offer a card stranded in the Stack zone as a full, named `ask` option, and `check-redaction.mjs` would not fail it | `bridge/src/mtgtable/WireGuiGame.java` |
+| [Cube lab](#fu-cube-lab) | 27 | open | D466's put-back misses a refused cast whose payment ran on a copy of the play (Multikicker: Batroc the Leaper): J183's s12 left 6 ghosts in the Stack zone | `bridge/src/mtgtable/ai/PolicyControllerAi.java` |
+| [Cube lab](#fu-cube-lab) | 28 | open | D507 hides a ghost from the record; the engine state is not repaired (the card stays out of its owner's game). Moving it back would change plays: a new population, the owner's call | `docs/decisions/D507-ghost-card-in-the-stack-zone.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9878,7 +9882,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504); 23, 2026-11-02 (D505); 24 and 25, 2026-11-02 (D506)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504); 23, 2026-11-02 (D505); 24 and 25, 2026-11-02 (D506); 26–28, 2026-11-02 (D507)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -10136,6 +10140,30 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    exile). Why a recursion hangs rather than overflows is not established. (The one NullPointerException is explained:
    Wan Shi Tong, Librarian held Old Man's ability through the Cauldron, and the static check reads `X` on it, its own
    `Count$xPaid`, with no player.) The next night without Old Man in a spine should show whether a hang remains.
+26. **D507's ghost can reach the board.** (2026-11-02, D507.) A card Forge's AI moved to the Stack zone and then
+   abandoned stays there with nothing on the stack (J183's s09: Knockout Maneuver, "failed to target"). D507 keeps it
+   out of the AI seat's target records. A human's targeting is Forge's `TargetSelection`. A part whose only zone is the
+   Stack walks the stack's instances (`chooseCardFromStack`), so no ghost is offered there. A part whose zones are the
+   Stack **and** another zone (30 scripts in `cardsfolder.zip`, e.g. Aether Gust, Brutal Expulsion, Commit // Memory)
+   lists every zone's valid cards and asks through `getGui().one(...)`, never `InputSelectTargets`, so InputPeek (D423)
+   never sees it. The ghost would arrive as an `ask` option, a full card with its name (`Snap.card`'s zone hint is the
+   card's own zone, Stack). Choosing it adds no target, and the dialog loops. `check-redaction.mjs` would not fail it:
+   P12 looks only at cards the last snapshot placed in an opponent's hand or library, and A6 counts an ask body as a
+   reveal. Not changed in D507's lane. The fix is the bridge's option list (or the engine repair, 25). Whether naming
+   a card its owner moved to the stack in public is a leak is part of the question.
+27. **D466's put-back misses a refusal paid on a copy.** (2026-11-02, found by D507's scan.) J183's
+   `b-s12-powered-2525` left Batroc the Leaper (card 30, seat 0's) in the Stack zone in 6 branch games. Each was the
+   random seat's own `cast:30`: "Didn't find what to pay for {1}", "AI failed to play Batroc the Leaper (30) [Stack]",
+   lands tapped, no `cast`, no put-back. Batroc has Multikicker, and `GameActionUtil.addExtraKeywordCost` hands
+   `ComputerUtil.handlePlayingSpellAbility` a copy of the play. The skip mark lands on the copy, and D466 reads
+   `refusedNow` off the original. The fix is to detect the refusal by the card (in the Stack zone with no stack
+   instance, D507's `onStack`) as well as by the mark. That changes plays: a new population.
+28. **A ghost stays out of its owner's game.** (2026-11-02, D507.) D507 changes only the record. Forge's AI abort
+   paths (`MagicStack.add` refusing a spell after its payment, `handlePlayingSpellAbility`'s early returns at the
+   target count and the charm) leave the card in the Stack zone for the rest of the game, and every later fork carries
+   it. Repairing it (back to the owner's hand, as D466 does for the random seat's refused payment) would change what
+   a branch plays and open a new population. It touches a Forge seat's play, not only ours. The owner's call. Its
+   reach, measured on J183 (D507's scan): 1 ghost in 13 spines, and 6 born in branches (24's).
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

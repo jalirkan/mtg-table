@@ -30,6 +30,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-11-02 — a card stranded in the stack zone is not a target option
+
+Forge's AI moves a spell's card into the Stack zone before it chooses the spell's targets and pays for it, and when the
+cast then fails -- `MagicStack.add` refusing it ("Couldn't add to stack, failed to target"), or the AI returning at an
+invalid target count or a modal spell with no mode -- nothing moves the card back. The card stays in the zone with no
+spell or ability of it on the stack, so no state frame shows it, and Forge's candidate list for "target spell" still
+offers it (J183, spine s09: 463 of 9,502 frame logs failed the M55 audit on `target:49`, the opponent's Knockout
+Maneuver, in seat 0's Mana Drain records). Decision **D507** (M79). Held by `mtgtable.SelectionSelfTest` (step 12l).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M79 | §8.2, M55, M75 | **A card in the Stack zone with no spell or ability on the stack counts in `hidden` and is never listed.** A `target` record's candidates (M55, M75) are the engine's; a candidate the seat cannot see is counted in `hidden`. From this amendment the bridge sees a card in the Stack zone only while the stack holds a spell or ability whose source is that card -- the same objects a state frame's `stack` and `stackCards` are made of -- or when the card is a copy of a spell, which the engine never strands (D495's copies are listed as before, including while a resolution holds the copy's instance on the frozen stack). A card the engine left in the zone with nothing on the stack (the ghost of a cast it abandoned after moving the card there) is counted in `hidden`, never written as `target:<id>`, and never an answer. The other zones' rule is unchanged, and so are the tokens, the keys and every other M55 / M75 rule: **no new field**. The bridge prints one line to the worker's stderr for each such candidate, `[ghost] card <id> in the stack zone with no stack instance left out of a target record (D507)` -- an id, never a name. `tools/check-redaction.mjs` is unchanged: a log written before this amendment that lists a ghost still fails its M55 audit. | D507 |
+
 ### 2026-11-01 — a seat's log records what the engine revealed to it
 
 A cascade asks "cast it without paying?" inside the resolution that revealed the card, and the recorder can hold

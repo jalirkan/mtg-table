@@ -25,21 +25,27 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import forge.ai.ComputerUtil;
 import forge.deck.Deck;
 import forge.game.Game;
+import forge.game.GameEntity;
 import forge.game.GameRules;
 import forge.game.GameState;
 import forge.game.GameType;
 import forge.game.Match;
 import forge.game.card.Card;
+import forge.game.card.CardFactory;
 import forge.game.combat.Combat;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.player.RegisteredPlayer;
 import forge.game.spellability.SpellAbility;
+import forge.game.spellability.SpellAbilityStackInstance;
 import forge.game.zone.ZoneType;
 import forge.model.FModel;
 
+import mtgtable.ai.Decision;
+import mtgtable.ai.Decisions;
 import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
@@ -66,6 +72,23 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *       seat 0 has declared (one row per pair, only its own blockers); the
  *       attacks seat 0 has declared, a player and a planeswalker as defender;
  *       the defending players {@code InputAttack} would take a click on.</li>
+ *   <li><b>D507: a ghost in the stack zone is never a target record's
+ *       option.</b>  Seat 1 casts Knockout Maneuver twice through Forge's own
+ *       AI path with J183's targets (two on its first part): once
+ *       {@code ComputerUtil.handlePlayingSpellAbility} returns at the target
+ *       count, once {@code MagicStack.add} refuses it ("failed to target") --
+ *       both leave the card in the Stack zone with nothing on the stack.  Then
+ *       it casts Lightning Bolt for real, and seat 0's Counterspell answers.
+ *       Forge's candidates list both ghosts (the negative control: the fault is
+ *       live on this engine); seat 0's {@code target} record lists the Bolt
+ *       alone and counts the two ghosts in {@code hidden}.  Seat 0's own spell
+ *       moved to the Stack zone mid-cast is not a candidate of its own
+ *       targeting.  And a copy is no ghost: with the stack frozen (as
+ *       {@code resolveStack} freezes it), a copy of seat 0's Counterspell is
+ *       added the way Forge's AI plays copies, its instance on the frozen stack
+ *       where the stack's iterator does not look; the next copy's record still
+ *       lists it, hidden 0, with no {@code [ghost]} line -- and the same once
+ *       the stack is unfrozen.</li>
  * </ol>
  *
  * <p>Usage: {@code ./bridge/run.sh mtgtable.SelectionSelfTest}.  One JVM,
@@ -89,6 +112,8 @@ public final class SelectionSelfTest {
             players(false);
             players(true);
             declarations();
+            ghosts();
+            copies();
         });
         System.out.println("SelectionSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -192,6 +217,211 @@ public final class SelectionSelfTest {
         expect("InputPeek.of(null) cannot say", InputPeek.of(null, me) == InputPeek.Facts.NONE);
     }
 
+    /** D507: a card the engine left in the Stack zone with nothing on the stack is counted hidden, never listed. */
+    private static void ghosts() {
+        final Game g = ghostPosition();
+        final Player me = g.getPlayers().get(0);
+        final Player opp = g.getPlayers().get(1);
+        final Card vis = only(named(opp, "Elvish Visionary"));
+        final Card bears = only(named(opp, "Grizzly Bears"));
+        final Card bugler = only(named(me, "Militia Bugler"));
+        final SpellAbility km1 = spell(opp, "Knockout Maneuver");
+        expect("ghosts: the position (Elvish Visionary, Grizzly Bears, Militia Bugler, two Knockout Maneuvers)",
+                vis != null && bears != null && bugler != null && km1 != null);
+        if (vis == null || bears == null || bugler == null || km1 == null) {
+            return;
+        }
+        // Forge's own AI cast, J183's targets: two on "target creature you control" -- it returns at the count
+        final boolean r1 = ComputerUtil.handlePlayingSpellAbility(opp, km1, sa -> twoOnFirstPart(sa, vis, bears, bugler));
+        final Card ghost1 = km1.getHostCard();
+        // the field's own path (J183's worker log): the tail after a payment, MagicStack.add refusing the spell
+        final SpellAbility km2 = spell(opp, "Knockout Maneuver");
+        Card ghost2 = null;
+        if (km2 != null) {
+            km2.setHostCard(g.getAction().moveToStack(km2.getHostCard(), km2));
+            twoOnFirstPart(km2, vis, bears, bugler);
+            g.getStack().freezeStack(km2);
+            g.getStack().addAndUnfreeze(km2);
+            ghost2 = km2.getHostCard();
+        }
+        expect("ghosts: the AI's cast returned false and both cards are in the Stack zone, the stack empty",
+                !r1 && ghost2 != null && ghost1.isInZone(ZoneType.Stack) && ghost2.isInZone(ZoneType.Stack)
+                        && g.getStack().isEmpty());
+        if (ghost2 == null) {
+            return;
+        }
+        final SpellAbility bolt = spell(opp, "Lightning Bolt");
+        final boolean rb = bolt != null && ComputerUtil.handlePlayingSpellAbility(opp, bolt, sa -> {
+            sa.resetTargets();
+            sa.getTargets().add(me);
+        });
+        expect("ghosts: Lightning Bolt is on the stack, the one item there", rb && g.getStack().size() == 1
+                && g.getStack().peekAbility().getHostCard().getId() == bolt.getHostCard().getId());
+        if (!rb) {
+            return;
+        }
+        final int boltId = bolt.getHostCard().getId();
+        final SpellAbility cs = spell(me, "Counterspell");
+        if (cs == null) {
+            expect("ghosts: seat 0 holds Counterspell", false);
+            return;
+        }
+        cs.resetTargets();
+        cs.getTargets().add(g.getStack().peekAbility());
+        final List<Integer> forge = new ArrayList<>();
+        for (final GameEntity e : cs.getTargetRestrictions().getAllCandidates(cs, false)) {
+            forge.add(e.getId());
+        }
+        expect("ghosts: Forge's candidates for Counterspell list both ghosts and the Bolt (the fault is live) " + forge,
+                forge.contains(ghost1.getId()) && forge.contains(ghost2.getId()) && forge.contains(boltId));
+        final List<Decision> recs = Decisions.targets(cs, me, "targets");
+        final Decision d = recs.size() == 1 ? recs.get(0) : null;
+        expect("ghosts: one target record " + recs.size(), d != null);
+        if (d == null) {
+            return;
+        }
+        expect("ghosts: the record lists the Bolt alone " + d.options, d.options.equals(List.of("target:" + boltId)));
+        expect("ghosts: the record counts both ghosts hidden (" + d.hidden + ")", d.hidden == 2);
+        expect("ghosts: the record answers the Bolt, complete", ("target:" + boltId).equals(d.chosen) && d.complete);
+        // seat 0's own spell mid-cast: its card in the Stack zone, its instance not yet added
+        final SpellAbility own = spell(me, "Counterspell");
+        if (own != null) {
+            own.setHostCard(g.getAction().moveToStack(own.getHostCard(), own));
+            final Card self = own.getHostCard();
+            boolean listsSelf = false;
+            for (final GameEntity e : own.getTargetRestrictions().getAllCandidates(own, false)) {
+                listsSelf |= e.getId() == self.getId();
+            }
+            boolean onStack = false;
+            for (final SpellAbilityStackInstance si : g.getStack()) {
+                onStack |= si.getSourceCard().getId() == self.getId();
+            }
+            expect("ghosts: a spell mid-cast (in the Stack zone, not on the stack) is no candidate of its own targeting",
+                    self.isInZone(ZoneType.Stack) && !onStack && !own.canTarget(self) && !listsSelf);
+        } else {
+            expect("ghosts: seat 0 holds a second Counterspell", false);
+        }
+    }
+
+    /** D507, the review: a spell copy whose instance is on the frozen stack is listed, never a ghost. */
+    private static void copies() {
+        final Game g = newGame("selection-copies");
+        final GameState gs = new GameState();
+        gs.parse(List.of(
+                "turn=10",
+                "activeplayer=p1",
+                "activephase=" + PhaseType.MAIN1.name(),
+                "p0life=20",
+                "p1life=20",
+                "p0hand=Counterspell",
+                "p0battlefield=Island;Island;Island;Island",
+                "p0library=Island;Island;Island",
+                "p1hand=Lightning Bolt",
+                "p1battlefield=Mountain;Mountain",
+                "p1library=Mountain;Mountain;Mountain"));
+        gs.applyToGame(g);
+        g.getPhaseHandler().setPriority(g.getPlayers().get(1));
+        final Player me = g.getPlayers().get(0);
+        final Player opp = g.getPlayers().get(1);
+        final SpellAbility bolt = spell(opp, "Lightning Bolt");
+        final SpellAbility cs = spell(me, "Counterspell");
+        final boolean rb = bolt != null && ComputerUtil.handlePlayingSpellAbility(opp, bolt, sa -> {
+            sa.resetTargets();
+            sa.getTargets().add(me);
+        });
+        final boolean rc = rb && cs != null && ComputerUtil.handlePlayingSpellAbility(me, cs, sa -> {
+            sa.resetTargets();
+            sa.getTargets().add(g.getStack().peekAbility());
+        });
+        expect("copies: the Bolt and seat 0's Counterspell are on the stack", rc && g.getStack().size() == 2);
+        if (!rc) {
+            return;
+        }
+        g.getStack().freezeStack(null);   // MagicStack.resolveStack's first act
+        // a resolving effect's copy, played as PlayerControllerAi.orderAndPlaySimultaneousSa plays one
+        final SpellAbility c1 = CardFactory.copySpellAbilityAndPossiblyHost(cs, cs, me);
+        g.getStackZone().add(c1.getHostCard());
+        c1.resetTargets();
+        c1.getTargets().add(bolt);
+        g.getStack().add(c1);
+        final Card k1 = c1.getHostCard();
+        boolean iterated = false;
+        for (final SpellAbilityStackInstance si : g.getStack()) {
+            iterated |= si.getSourceCard().getId() == k1.getId();
+        }
+        expect("copies: copy 1 is a copied spell in the Stack zone, its instance on the frozen stack, not the stack's",
+                k1.isCopiedSpell() && k1.isInZone(ZoneType.Stack) && g.getStack().isFrozen() && !iterated
+                        && g.getStack().size() == 2);
+        final SpellAbility c2 = CardFactory.copySpellAbilityAndPossiblyHost(cs, cs, me);
+        g.getStackZone().add(c2.getHostCard());
+        c2.resetTargets();
+        c2.getTargets().add(bolt);
+        copyRecord("copies, frozen", g, c2, me, k1, bolt.getHostCard().getId());
+        g.getStack().unfreezeStack();
+        expect("copies: unfrozen, copy 1 is on the stack (3 items)", g.getStack().size() == 3);
+        copyRecord("copies, unfrozen", g, c2, me, k1, bolt.getHostCard().getId());
+    }
+
+    /** Copy 2's target record lists copy 1 and the Bolt, hides nothing and prints no {@code [ghost]} line. */
+    private static void copyRecord(final String tag, final Game g, final SpellAbility c2, final Player me,
+                                   final Card k1, final int boltId) {
+        final List<Integer> forge = new ArrayList<>();
+        for (final GameEntity e : c2.getTargetRestrictions().getAllCandidates(c2, false)) {
+            forge.add(e.getId());
+        }
+        expect(tag + ": Forge's candidates for copy 2 list copy 1 " + forge, forge.contains(k1.getId()));
+        final java.io.PrintStream err = System.err;
+        final java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        final List<Decision> recs;
+        System.setErr(new java.io.PrintStream(buf, true, java.nio.charset.StandardCharsets.UTF_8));
+        try {
+            recs = Decisions.targets(c2, me, "targets");
+        } finally {
+            System.setErr(err);
+        }
+        final Decision d = recs.size() == 1 ? recs.get(0) : null;
+        expect(tag + ": the record lists copy 1 and the Bolt, hidden 0 " + (d == null ? recs : d.options + " hidden "
+                + d.hidden), d != null && d.options.contains("target:" + k1.getId())
+                && d.options.contains("target:" + boltId) && d.hidden == 0);
+        final String printed = buf.toString(java.nio.charset.StandardCharsets.UTF_8);
+        expect(tag + ": no [ghost] line" + (printed.isEmpty() ? "" : " -- printed: " + printed.trim()),
+                !printed.contains("[ghost]"));
+    }
+
+    private static void twoOnFirstPart(final SpellAbility sa, final Card a, final Card b, final Card theirs) {
+        sa.resetTargets();
+        sa.getTargets().add(a);
+        sa.getTargets().add(b);
+        if (sa.getSubAbility() != null) {
+            sa.getSubAbility().resetTargets();
+            sa.getSubAbility().getTargets().add(theirs);
+        }
+    }
+
+    private static Card only(final List<Card> cards) {
+        return cards.size() == 1 ? cards.get(0) : null;
+    }
+
+    private static Game ghostPosition() {
+        final Game game = newGame("selection-ghosts");
+        final GameState gs = new GameState();
+        gs.parse(List.of(
+                "turn=10",
+                "activeplayer=p1",
+                "activephase=" + PhaseType.MAIN1.name(),
+                "p0life=20",
+                "p1life=20",
+                "p0hand=Counterspell;Counterspell",
+                "p0battlefield=Militia Bugler;Island;Island;Island;Island",
+                "p0library=Island;Island;Island",
+                "p1hand=Knockout Maneuver;Knockout Maneuver;Lightning Bolt",
+                "p1battlefield=Elvish Visionary;Grizzly Bears;Forest;Forest;Forest;Mountain",
+                "p1library=Mountain;Mountain;Mountain"));
+        gs.applyToGame(game);
+        game.getPhaseHandler().setPriority(game.getPlayers().get(1));
+        return game;
+    }
+
     private static SpellAbility spell(final Player p, final String name) {
         for (final Card c : p.getCardsIn(ZoneType.Hand)) {
             if (name.equals(c.getName())) {
@@ -215,7 +445,7 @@ public final class SelectionSelfTest {
         return out;
     }
 
-    private static Game position(final boolean leyline) {
+    private static Game newGame(final String name) {
         final Deck dummy = new Deck("selection");
         dummy.getMain().add(FModel.getMagicDb().getCommonCards().getCard("Mountain"), 20);
         final List<RegisteredPlayer> regs = new ArrayList<>();
@@ -228,7 +458,11 @@ public final class SelectionSelfTest {
         final GameRules rules = new GameRules(GameType.Constructed);
         rules.setAppliedVariants(EnumSet.of(GameType.Constructed));
         rules.setGamesPerMatch(1);
-        final Game game = new Match(rules, regs, "selection-selftest").createGame();
+        return new Match(rules, regs, name).createGame();
+    }
+
+    private static Game position(final boolean leyline) {
+        final Game game = newGame("selection-selftest");
         final GameState gs = new GameState();
         gs.parse(List.of(
                 "turn=3",
