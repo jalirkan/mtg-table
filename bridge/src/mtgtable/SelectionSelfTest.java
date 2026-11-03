@@ -297,7 +297,8 @@ public final class SelectionSelfTest {
         if (d == null) {
             return;
         }
-        expect("ghosts: the record lists the Bolt alone " + d.options, d.options.equals(List.of("target:" + boltId)));
+        expect("ghosts: the record lists the Bolt, then option:hidden for the ghosts (D510) " + d.options,
+                d.options.equals(List.of("target:" + boltId, "option:hidden")));
         expect("ghosts: the record counts both ghosts hidden (" + d.hidden + ")", d.hidden == 2);
         expect("ghosts: the record answers the Bolt, complete", ("target:" + boltId).equals(d.chosen) && d.complete);
         // seat 0's own spell mid-cast: its card in the Stack zone, its instance not yet added
