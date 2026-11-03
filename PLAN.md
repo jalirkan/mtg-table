@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 377 items still open across 43 follow-up lists** — 351
+**The index below lists 379 items still open across 43 follow-up lists** — 353
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D502–D504
+said 371 across 42, three rows and one list behind its table) — D506
+(2026-11-02) added the cube lab's 23 and 24; D502–D504
 (2026-11-02) added the cube lab's 19, 20, 21 and 22; D501
 (2026-11-01) added the cube lab's 18 and closed its 15; D500 (2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
 (2026-11-01) added the cube lab's 12 and 13; D496
@@ -425,6 +426,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) can reach it; measured clean in four spines, watched, not listed | `tools/cubelab/engine-unplayable.json` |
+| [Cube lab](#fu-cube-lab) | 24 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline) and why a recursion hangs instead of overflowing are not traced, nor is the one NullPointerException in its StaticCommandCheck (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9873,7 +9876,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504); 23 and 24, 2026-11-02 (D506)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -10062,6 +10065,22 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    moved it out and back (exile -> library -> exile, or through a hand). Forge would forget the look on such a move.
    D502's hideaway grant now ends on any zone event of its card; the Gonti path does not, on `main` too. Left alone by
    the D502 lane: it is D371's rule, and no log has met it.
+23. **D506's recursion has a second pool card that can reach it.** (2026-11-02, D506.) Old Man of the Sea overflows
+   because `ControlGainEffect` puts a self-targeted lose-control command on the source's own change-controller list
+   (only `LeavesPlay` is guarded against `source == target`), and `controllerChangeZoneCorrection` runs that list
+   before it moves the card and clears it only after: the command re-enters the correction on the same card without
+   end. That needs `LoseControl` in a `GainControl`'s `LoseControl$` and a target that may be the source, not
+   `StaticCommandCheck`. Of the four pool cards whose script has that `LoseControl` (Aladdin, Old Man of the Sea,
+   Rubinia Soulsinger, Willow Satyr), Rubinia Soulsinger alone can also target itself as printed. It was dealt into
+   J176 s12, J181 s03 and J182 s07 and s08 (0 errors, no run of correction lines) and is listed only on a measurement of
+   its own: a spine where it targets itself and then changes controller.
+24. **J183's hangs are not all traced.** (2026-11-02, D506.) Nine units of `b-s11-legacy-2524` gave no answer for
+   1,800 s. Worker 1's log, which ran `d11-random-50`, ends in an unbroken run of 4,185 `Correcting zone for Old Man of
+   the Sea (4)` lines up to its restart; the other hangs left no frames and interleaved logs, and two units of
+   them, `d15-random-75` (twice, never finished) and `d15-random-100`, are at a decision after Old Man's death in the
+   baseline (it came back in 19 of d15's 625 finished branches). Why a recursion hangs rather than overflows is not
+   established, nor is the one NullPointerException in Old Man's `StaticCommandCheck` (its operand `X` evaluated with
+   no player, which needs the holder's `X` to read as something other than Old Man's `Count$CardPower`). The next night without Old Man in a spine should show whether a hang remains.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

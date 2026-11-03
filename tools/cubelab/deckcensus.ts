@@ -64,8 +64,9 @@
 //    A band's draw never deals a listed card: a card Forge's AI cannot finish a game with inside the
 //    atlas's branch budget (J166: Scute Swarm; J173: Chain of Smog, D490), or with whose effect on the
 //    board the fork throws (J176: the pool's four Prepare cards, D492; Ob Nixilis, the Adversary, whose
-//    casualty copy is a planeswalker token the fork cannot re-make, D494).  An engine limitation,
-//    measured, not a design judgement.
+//    casualty copy is a planeswalker token the fork cannot re-make, D494), or with which the engine's own
+//    step recurses until its stack overflows or the unit hangs (J183: Old Man of the Sea, D506).  An
+//    engine limitation, measured, not a design judgement.
 //    The listed card stays in every list, so the lists' sizes and q are unchanged; a pick that lands on
 //    it is REDRAWN from the same list (a uniform pick among the rest), a list of listed cards only counts
 //    as empty, and a listed fixer is passed over in its shuffled order.  So a deck none of whose
