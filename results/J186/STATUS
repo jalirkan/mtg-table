@@ -1,7 +1,8 @@
-running
+failed
+reason: aborted: armed == 1 and unit_errors > 20 (armed = 1, unit_errors = 29)
 runner: forgecoach-runner ac07876b
 started: 2026-11-03T06:19:03-05:00
-phase: stopping
+finished: 2026-11-03T16:37:17-05:00
 mtg-table: e557ded
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.29), budget 21.4 GB)
 peak_worker_rss_gb: 1.29
