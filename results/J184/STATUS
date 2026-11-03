@@ -1,5 +1,7 @@
-running
+failed
+reason: prepare: step prepare exited 128
 runner: forgecoach-runner ac07876b
 started: 2026-11-02T20:20:53-05:00
-phase: prepare
+finished: 2026-11-02T20:21:07-05:00
 workers: 1
+exit: 128
