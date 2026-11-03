@@ -536,7 +536,10 @@ public final class CubeLab {
             }
             final GameResult r;
             try {
-                r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger, turnCap);
+                // D511: a branch unit's replay plays the baseline's record path too (its decision records'
+                // enumeration moves Forge's AI memory), so that it is the baseline's game and not another one
+                final boolean replay = atlas != null && rec == null && num(atlas, "decision", -1) >= 0;
+                r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger, turnCap, replay);
             } finally {
                 SearchPolicy.observeHook(null);
             }
@@ -984,6 +987,18 @@ public final class CubeLab {
     static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
                                final boolean aOnPlay, final long gameSeed, final long timeoutMs,
                                final Recording rec, final boolean ledger, final int turnCap) throws Exception {
+        return playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec, ledger, turnCap, false);
+    }
+
+    /**
+     * {@link #playGame(Deck[], LobbyPlayer, LobbyPlayer, boolean, long, long, Recording, boolean, int)}, and
+     * with {@code replaySinks} (D511: an atlas unit's replay, which records nothing) every seat of ours gets a
+     * {@link ReplaySink}, as a recorded game's seats get their {@link SeatRecorder}.
+     */
+    static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
+                               final boolean aOnPlay, final long gameSeed, final long timeoutMs,
+                               final Recording rec, final boolean ledger, final int turnCap,
+                               final boolean replaySinks) throws Exception {
         final GameRules rules = new GameRules(GameType.Draft);
         rules.setAppliedVariants(EnumSet.of(GameType.Draft));
         rules.setGamesPerMatch(1);
@@ -1009,6 +1024,8 @@ public final class CubeLab {
                 recorders.add(SeatRecorder.attach(game, s, rec.out(s), rec.gameId, rec.gameSeed, jarSha(),
                         rec.seats, "lab", rec.lab, rec.playExplore));
             }
+        } else if (replaySinks) {
+            ReplaySink.attach(game);   // D511
         }
         final CountDownLatch done = new CountDownLatch(1);
         final Throwable[] fail = new Throwable[1];
@@ -1145,6 +1162,56 @@ public final class CubeLab {
                 result.firstTurn = "Drafter A".equals(n) ? "A" : "Drafter B".equals(n) ? "B" : n;
             }
         }
+    }
+
+    /**
+     * D511: the decision sink of an atlas unit's replay -- the baseline's record path, with nothing written.
+     *
+     * <p>The baseline is a recorded game: {@link SeatRecorder#attach} hands each seat's
+     * {@link PolicyControllerAi} its recorder as a {@code DecisionSink}, and with a sink set the controller
+     * builds a decision record after every answer.  Building one is not free of effects on the game.
+     * {@code Decisions.priority} asks Forge whether each play can be paid for
+     * ({@code ComputerUtilCost.canPayCost}), and Forge's mana payment reads AND WRITES the seat's
+     * {@code AiCardMemory}: {@code ComputerUtilMana.isManaSourceReserved} clears
+     * {@code HELD_MANA_SOURCES_FOR_DECLBLK} and its enemy twin at declare blockers and cleanup (and, past its
+     * {@code MyRandom.percentTrue}, {@code HELD_MANA_SOURCES_FOR_MAIN2} in the second main phase), and the
+     * payment itself keeps {@code PAYS_TAP_COST}.  {@code Decisions.quiet} puts {@code MyRandom} back; it does
+     * not put the memory back.  So the seats of a recorded game later reserve mana, draw from the real
+     * {@code MyRandom} and play as the seats of an unrecorded game do not: J186's s13 (seed 2552) is the same
+     * game recorded and unrecorded to turn 13, and at turn 14 seat B's Deceptive Landscape fetches the other
+     * Swamp, after which every listing differs.  A unit's replay recorded nothing before D511, so it was the
+     * unrecorded game, and the baseline the recorded one.
+     *
+     * <p>This sink makes the replay the recorded game: every seat of ours is handed one, so the controller
+     * builds every record the baseline built, from the same calls in the same order; nothing is written and
+     * nothing is read back.  {@link #mark} answers "no frame yet", which only the record's own fields read.
+     * The recorder's other half (its frames: the forwarder, the flushes, the snapshots) is left out on
+     * purpose: a recorded game with {@code MTGTABLE_DECISIONS=off} is the unrecorded game, draw for draw
+     * (D511's evidence), so the frames move nothing.  {@code MTGTABLE_DECISIONS=off} turns this sink off too,
+     * so a baseline recorded under it is still the replay's game.
+     */
+    static final class ReplaySink implements mtgtable.ai.DecisionSink {
+        private static final int[] NO_FRAME = {-1, -1};
+        private int n;
+
+        /** Every seat of ours in {@code game} gets one (game thread or before the game starts, as the recorders). */
+        static void attach(final Game game) {
+            if ("off".equals(System.getenv("MTGTABLE_DECISIONS"))) {
+                return;   // the baseline's recorders attach no sink under it either (SeatRecorder.attach)
+            }
+            for (final Player p : game.getPlayers()) {
+                if (p.getController() instanceof PolicyControllerAi) {
+                    ((PolicyControllerAi) p.getController()).setDecisionSink(new ReplaySink());
+                }
+            }
+        }
+
+        @Override public int[] mark() { return NO_FRAME.clone(); }
+        @Override public int write(final mtgtable.ai.Decision d, final int[] mark) { return n++; }
+        @Override public void forced(final String kind) { }
+        @Override public void cost(final long nanos) { }
+        @Override public void error(final String where, final RuntimeException e) { }
+        @Override public void reveal(final int[] cardIds, final String zone, final Integer owner) { }
     }
 
     /**

@@ -1346,7 +1346,7 @@ tools/cubelab.sh atlas ... --phase report     # atlas.json and atlas.md again fr
 tools/cubelab.sh atlas ... --branch-error-max 0.05   # D466: an option past 5% errored branch games is a problem (default 0.1)
 tools/cubelab.sh atlas ... --branch-capped-warn 0.5  # D478: an option past half its branch games capped is a warning (default 0.25)
 tools/cubelab.sh atlas ... --decisions 8 --min-options 3 --screen 25 --early-stop on --checks-parallel 7   # D480: the cut design (below)
-tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, G5 on a tax pair, G6 on a Crypt Rats pair, the checks on two workers, and the cut design on two short spines (engine)
+tools/cubelab.sh atlas-selftest               # a tiny atlas with every check asserted, G5 on a tax pair, G6 on a Crypt Rats pair, the checks on two workers, the cut design on two short spines, and a unit replayed past where a recorded game parts from an unrecorded one (D511) (engine)
 tools/cubelab.sh seat-identity                # the Forge, search and explore seats still play origin/main's games (~30 s, engine)
 ```
 

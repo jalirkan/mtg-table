@@ -1299,6 +1299,8 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
  * looped J158's branches (SELFTEST_G6) -- where X must be drawn, an X = 0-only offer left out, and no own
  * X play paid at 0.  D480: then the main folder reported again with --checks-parallel 2 (its checks must be the
  * serial run's), and a cuts leg -- two short spines with all five of the cut design's flags on (atlasSelftestCuts).
+ * D511: then a replay leg -- a unit past the turn where J186's s13 pair's unrecorded game leaves its recorded baseline
+ * must replay the baseline (atlasSelftestReplay).
  */
 /**
  * The self-test's folder: ABSOLUTE, so LAB_DATA_DIR never re-roots it (D450 moves only relative var/
@@ -1354,6 +1356,9 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   // D480: the cut design, all five on -- two short spines, the second with no Forge map; D489: the futility stop on both
   const cuts = await atlasSelftestCuts(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
   for (const x of cuts.fails) fails.push(`the cuts leg: ${x}`);
+  // D511: a unit's replay is the baseline's game -- on J186's s13 pair, whose unrecorded game leaves the recorded one at turn 14
+  const replay = await atlasSelftestReplay(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
+  for (const x of replay.fails) fails.push(`the replay leg: ${x}`);
   // D483: no baseline of any leg lists one play twice (every listing carries its options' play identities)
   const baselines = (fs.readdirSync(out, { recursive: true }) as string[]).filter((p) => path.basename(p) === 'baseline.json').map((p) => path.join(out, p));
   for (const b of baselines) {
@@ -1364,7 +1369,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   }
   want(baselines.length > 0, 'D483: the legs\' baseline listings were found');
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
-  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
+  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${replay.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
   return fails.length ? 1 : 0;
 }
 
@@ -1467,6 +1472,49 @@ async function atlasSelftestCuts(repo: string, out: string, jobs: string, say: (
  * of every decision at seed 4515, so the screen settled each one in turn and the leg never reached a checkpoint.
  */
 export const SELFTEST_CUTS = { deckA: 'tools/ai-bench/decks/sets/pauper-900000005-A.dck', deckB: 'tools/ai-bench/decks/sets/pauper-900000005-B.dck', seed: 464 } as const;
+
+/**
+ * D511: the replay leg's pair and seed: J186's spine s13 (the lab's census draw pauper-2452, seed 2552; the two decks are
+ * fixtures/cubelab/atlas-replay/, byte for byte the night's).  Its baseline is a recorded game, and the decision records'
+ * enumeration moves Forge's AI memory (D511), so before D511 the unit's unrecorded replay left the baseline at turn 14 --
+ * seat B's Deceptive Landscape fetched the other Swamp -- and every unit from d23 on failed "the replay diverged".
+ */
+export const SELFTEST_REPLAY = { deckA: 'fixtures/cubelab/atlas-replay/pauper-2452-A.dck', deckB: 'fixtures/cubelab/atlas-replay/pauper-2452-B.dck', seed: 2552 } as const;
+
+/** The first turn on which SELFTEST_REPLAY's unrecorded game is not its recorded one (D511's evidence: turn 14). */
+export const SELFTEST_REPLAY_SPLIT_TURN = 14;
+
+/**
+ * D511: phase B of SELFTEST_REPLAY's pair, one decision with three or more options (spread picking takes d30, turn 19), one
+ * random branch of each option, no Forge map.  What it holds: the decision branched lies past the turn the two games part
+ * (else the leg proves nothing), the unit's replay listed the baseline's options there (no "the replay diverged"), every
+ * option played its branch, and the atlas's own checks are clean.  Before D511 the unit failed twice and the leg with it.
+ */
+async function atlasSelftestReplay(repo: string, out: string, jobs: string, say: (s: string) => void): Promise<{ fails: string[]; summary: string }> {
+  const fails: string[] = [];
+  const want = (ok: boolean, what: string): void => { if (!ok) fails.push(what); };
+  const dir = path.join(out, 'replay');
+  const flags = new Map<string, string[]>([
+    ['deck-a', [SELFTEST_REPLAY.deckA]], ['deck-b', [SELFTEST_REPLAY.deckB]], ['seed', [String(SELFTEST_REPLAY.seed)]], ['phase', ['b']],
+    ['decisions', ['1']], ['min-options', ['3']], ['branch-random', ['1']], ['branch-forge', ['0']], ['chunk', ['1']], ['leak-checks', ['0']],
+    ['boot', ['200']], ['jobs', [jobs]], ['out', [dir]],
+  ]);
+  const rc = await atlasCommand(repo, flags, say);
+  const doc = JSON.parse(fs.readFileSync(path.join(dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[] } };
+  const B = path.join(dir, 'phaseB');
+  const listed = (JSON.parse(fs.readFileSync(path.join(B, 'baseline.json'), 'utf8')) as { decisions: DecisionListing[] }).decisions;
+  const units = readJsonl<UnitLine>(path.join(B, 'units.jsonl'));
+  const rows = readJsonl<BranchRow>(path.join(B, 'branches.jsonl'));
+  const u = units[0];
+  const at = u ? listed[u.d] : undefined;
+  want(rc === 0 && doc.checks.problems.length === 0, `the atlas's own checks: ${doc.checks.problems.join('; ') || `exit ${rc}`}`);
+  want(units.length === 1 && !!at && at.turn > SELFTEST_REPLAY_SPLIT_TURN,
+    `one unit, at a decision past turn ${SELFTEST_REPLAY_SPLIT_TURN} (${units.length} unit(s); ${u ? `d${u.d}, turn ${at?.turn}` : 'none'})`);
+  want(!!u && u.ok && u.error === null, `the unit's replay is the baseline's game (${u?.error ?? 'no unit line'})`);
+  want(!!at && rows.filter((r) => r.d === u?.d).length === at.tokens.length && rows.every((r) => !r.error),
+    `every option of the decision played its branch (${rows.length} row(s) for ${at?.tokens.length ?? '?'} option(s))`);
+  return { fails, summary: `replay ${u ? `d${u.d} (turn ${at?.turn}) ${u.ok ? 'replayed' : 'DIVERGED'}, ${rows.length} branch(es)` : 'no unit'}` };
+}
 
 /** D466 (#184's review): the G5 leg's pair, seed and rollouts (see atlasSelftest). */
 export const SELFTEST_G5 = { deckA: 'tools/ai-bench/decks/sets/fair-fight-900000005-A.dck', deckB: 'tools/ai-bench/decks/sets/fair-fight-900000005-B.dck', seed: 452, rollouts: 16 } as const;
