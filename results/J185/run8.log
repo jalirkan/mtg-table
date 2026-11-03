@@ -1,0 +1,51 @@
+==== J185 run8 started 2026-11-03T00:52:52-05:00 in unit lab-J185-run8, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (15 turns, winner A) lists 21 decision(s) of seat A; branching at 10: d0 (p, turn 1, 2 options), d5 (a, turn 5, 2 options), d8 (b, turn 8, 3 options), d10 (a, turn 9, 5 options), d11 (p, turn 11, 2 options), d12 (a, turn 11, 8 options), d15 (a, turn 13, 8 options), d18 (p, turn 13, 3 options), d19 (p, turn 15, 2 options), d20 (a, turn 15, 8 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d11-random-0: 50/50 branch game(s); 6696 branch games/h
+  [B 2/11] d0-random-0: 50/50 branch game(s); 8168 branch games/h
+  [B 3/12] d5-random-0: 50/50 branch game(s); 8196 branch games/h
+  [B 4/13] d13-random-0: 50/50 branch game(s); 8504 branch games/h
+  [B 5/14] d8-random-0: 75/75 branch game(s); 9378 branch games/h
+  [B 6/15] d10-random-0: 125/125 branch game(s); 9394 branch games/h
+  [B 7/16] d12-random-0: 200/200 branch game(s); 9448 branch games/h
+  [B 8/17] d13-random-25: 50/50 branch game(s); 9558 branch games/h
+  [B 9/17] d0-random-25: 50/50 branch game(s); 9594 branch games/h
+  [B 10/19] d14-random-0: 50/50 branch game(s); 10066 branch games/h
+  [B 11/20] d5-random-25: 50/50 branch game(s); 10052 branch games/h
+  [B 12/22] d16-random-0: 50/50 branch game(s); 10530 branch games/h
+  [B 13/23] d0-random-50: 50/50 branch game(s); 10667 branch games/h
+  [B 14/23] d8-random-25: 75/75 branch game(s); 10794 branch games/h
+  [B 15/23] d17-random-0: 50/50 branch game(s); 10790 branch games/h
+  [B 16/24] d15-random-0: 200/200 branch game(s); 10927 branch games/h
+  [B 17/25] d5-random-50: 50/50 branch game(s); 10668 branch games/h
+  [B 18/25] d12-random-25: 200/200 branch game(s); 10622 branch games/h
+  [B 19/27] d9-random-0: 50/50 branch game(s); 10657 branch games/h
+  [B 20/28] d5-random-75: 50/50 branch game(s); 10713 branch games/h
+  [B 21/30] d0-random-75: 50/50 branch game(s); 10744 branch games/h
+  [B 22/32] d18-random-0: 75/75 branch game(s); 10755 branch games/h
+  [B 23/33] d9-random-25: 50/50 branch game(s); 10779 branch games/h
+  [B 24/33] d7-random-0: 50/50 branch game(s); 10748 branch games/h
+  [B 25/34] d12-random-50: 150/150 branch game(s); 10753 branch games/h
+  [B 26/34] d0-random-100: 50/50 branch game(s); 10642 branch games/h
+  [B 27/34] d5-random-100: 50/50 branch game(s); 10608 branch games/h
+  [B 28/34] d0-random-125: 50/50 branch game(s); 10540 branch games/h
+  [B 29/34] d6-random-0: 50/50 branch game(s); 10644 branch games/h
+  [B 30/35] d7-random-25: 50/50 branch game(s); 10749 branch games/h
+  [B 31/35] d19-random-0: 50/50 branch game(s); 11074 branch games/h
+  [B 32/36] d5-random-125: 50/50 branch game(s); 11139 branch games/h
+  [B 33/36] d20-random-0: 200/200 branch game(s); 11257 branch games/h
+  [B 34/37] d6-random-25: 50/50 branch game(s); 10997 branch games/h
+  [B 35/37] d19-random-25: 50/50 branch game(s); 10925 branch games/h
+  [B 36/37] d12-random-75: 150/150 branch game(s); 10894 branch games/h
+  [B 37/39] d4-random-0: 50/50 branch game(s); 10805 branch games/h
+  [B 38/40] d12-random-100: 150/150 branch game(s); 10697 branch games/h
+  [B 39/40] d12-random-125: 150/150 branch game(s); 10665 branch games/h
+  [B 40/40] d4-random-25: 50/50 branch game(s); 10602 branch games/h
+  [B 41/42] d4-random-75: 50/50 branch game(s); 9995 branch games/h
+  [B 42/42] d4-random-50: 50/50 branch game(s); 9836 branch games/h
+  [B 43/44] d4-random-100: 50/50 branch game(s); 9358 branch games/h
+  [B 44/44] d4-random-125: 50/50 branch game(s); 9335 branch games/h
+atlas: the checks on 6 workers took 48 s
+atlas: /home/justin-a/code/lab/data/lab-j185/b-s08-powered-2534/atlas.json and atlas.md; phase A 0 game(s), phase B 3350 branch game(s) at 18 decision(s); checks: clean (79931 rows, 6702 frame logs, 18 leak check(s))
