@@ -10162,6 +10162,9 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    `ComputerUtil.handlePlayingSpellAbility` a copy of the play. The skip mark lands on the copy, and D466 reads
    `refusedNow` off the original. The fix is to detect the refusal by the card (in the Stack zone with no stack
    instance, D507's `onStack`) as well as by the mark. That changes plays: a new population.
+   *D510 (2026-11-03) fixed the record shape this ghost exposed in J186: a target record whose one candidate is a
+   ghost now lists and answers `option:hidden` instead of `options: []` and `chosen: null` (12 logs in s11). 27, the
+   ghost's cause, stays queued.*
 28. **A ghost stays out of its owner's game.** (2026-11-02, D507.) D507 changes only the record. Forge's AI abort
    paths (`MagicStack.add` refusing a spell after its payment, `handlePlayingSpellAbility`'s early returns at the
    target count and the charm) leave the card in the Stack zone for the rest of the game, and every later fork carries

@@ -531,8 +531,15 @@ public final class Decisions {
      * is an engine fault the play will meet ("failed to target"): it answers
      * {@code target:none} too, listed, with {@code min}, {@code complete: false}
      * and {@code why: NO_TARGET}.  A target the seat cannot see is not "none":
-     * the record is marked {@code complete: false}, and with no visible target
-     * it keeps its null answer, which the checker fails.
+     * the record is marked {@code complete: false}.  D510: and it is written as
+     * the entities path writes one ({@link #entities}): the candidates the seat
+     * cannot see ({@code d.hidden}, counted by the caller) are listed once, as
+     * {@code option:hidden} after the visible ones, and each unseen target of the
+     * answer is {@code option:hidden} -- never a null answer beside no options,
+     * which the checker fails (J186: a part whose one candidate was a ghost).  An
+     * unseen target not among the counted candidates (a spell on the stack, which
+     * Forge's candidate list leaves out) is counted in {@code hidden} too, so a
+     * record lists {@code option:hidden} exactly when it carries {@code hidden}.
      * Engine-free, for the self-test.
      */
     static void targetAnswer(final Decision d, final Set<String> opts, final List<String> chosen, final int unseen,
@@ -542,9 +549,9 @@ public final class Decisions {
         final boolean none = chosen.isEmpty() && unseen == 0;
         if (unseen > 0) {
             // D487 review: an answer the seat cannot see is not among the options it was shown, so the record is
-            // incomplete -- and an empty visible answer then writes chosen null beside complete:false, never the
-            // J171 legacy shape (which has no complete), so the audit fails it
+            // incomplete.  D510: it is listed and answered as option:hidden (below), never chosen null
             d.complete = false;
+            d.hidden = Math.max(d.hidden, unseen);
         }
         if (min <= 0 || none) {
             d.options.add(TARGET_NONE);
@@ -555,14 +562,24 @@ public final class Decisions {
             }
         }
         d.options.addAll(sorted);
+        if (d.hidden > 0) {
+            d.options.add(HIDDEN);   // D510: as the entities path lists one
+        }
+        final List<String> answer = new ArrayList<>(chosen);
+        for (int i = 0; i < unseen; i++) {
+            answer.add(HIDDEN);      // D510: an unseen target, never named by id and never left out
+        }
         if (none) {
             d.chosen = TARGET_NONE;
-        } else if (chosen.size() == 1) {
-            d.chosen = chosen.get(0);
+        } else if (answer.size() == 1) {
+            d.chosen = answer.get(0);
         } else {
-            d.chosenAll.addAll(chosen);
+            d.chosenAll.addAll(answer);
         }
     }
+
+    /** D510: a target or choice candidate in a zone the seat cannot see, counted in {@code hidden} and never named. */
+    static final String HIDDEN = "option:hidden";
 
     // ------------------------------------------------------------------
     // Combat

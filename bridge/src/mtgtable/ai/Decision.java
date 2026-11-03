@@ -44,15 +44,15 @@ import mtgtable.Json.JsonOut;
  *   priority  pass | cast:&lt;id&gt; | land:&lt;id&gt; | activate:&lt;id&gt;[#&lt;k&gt;]
  *   attack    attack:none | attack:&lt;ids ascending&gt;
  *   block     block:none | block:&lt;b&gt;&gt;&lt;a&gt;,...   (sorted by attacker, then blocker)
- *   target    target:&lt;id&gt; | target:p&lt;playerId&gt; | target:none   (none: a part left empty, D487)
+ *   target    target:&lt;id&gt; | target:p&lt;playerId&gt; | target:none | option:hidden   (none: a part left empty, D487; hidden: D510)
  *   choice    option:&lt;id&gt; | option:p&lt;playerId&gt; | option:hidden | yes | no
  *   mulligan  keep | mulligan
  * </pre>
  *
  * {@code activate:<id>#<k>} names the k-th non-mana activated ability of a card
  * that has more than one; a card with one is plain {@code activate:<id>}.  {@code option:hidden} is a card in a zone the seat
- * cannot see (a library search; a last-known copy of a card now in the other hand, D508): it is counted in
- * {@code hidden}, never named by id.
+ * cannot see (a library search; a last-known copy of a card now in the other hand, D508; a target candidate or
+ * answer the seat cannot see, D510): it is counted in {@code hidden}, never named by id.
  */
 public final class Decision {
 
@@ -73,7 +73,7 @@ public final class Decision {
     public boolean complete = true;
     /** Attack: the ids that could attack.  Block: every legal {@code b>a} pair.  Else empty. */
     public final List<String> atoms = new ArrayList<>();
-    /** Options in a zone the seat cannot see, counted and never named (choice only). */
+    /** Options in a zone the seat cannot see, counted and never named (choice and, since D510, target). */
     public int hidden;
     /**
      * D487 (M76): a target record that lists {@code target:none} carries its part's minimum number of targets --

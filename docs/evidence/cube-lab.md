@@ -349,3 +349,32 @@ those, as before). Proven in `mtgtable.SelectionSelfTest` (step 12l; 59 checks, 
 control among them: the snapshot's copy keeps the id and a Battlefield zone while `getCardState` finds the card in
 the hand). D508 changes what the seat records and offers, so J186 opens a new population, `random-<band>-d508`;
 J185 stays D507's one night (D508's *Comparability*). The board's own path for the same ask is follow-up 29.
+
+## 13. J186's empty target records (D510, 2026-11-03)
+
+The lab's atlas night J186 (2026-11-03, D508's population's first night) failed `tools/check-redaction.mjs` on 12 of
+12,652 frame logs in one unit, `b-s11-legacy-2550` (under `/home/justin-a/code/lab/data/lab-j186/`). Each failed on
+exactly one record: a seat-0 `target` record with `options: []`, `hidden: 1`, `complete: false` and `chosen: null`,
+which drew M55's three findings (no options, null is not a token, null is not among the options). In all twelve the
+parent is seat 0's random seat casting Reprieve (card 13, "return target spell to its owner's hand"). The part's
+one candidate was card 63, seat 1's Batroc the Leaper, stranded in the Stack zone by a refused Multikicker payment.
+That is D507's ghost, born of follow-up 27, which is queued under D509. D507's gate hid it, and Forge chose it. So
+the checker was right that the record was malformed, and the gate was right that the card was hidden. The defect
+was the target path's writer: unlike the entity path, it had no token for a card it could not see. Nothing leaked.
+
+| what | count |
+|---|---:|
+| frame logs in s11 (6,325 branch forks; 239,903 rows) | 12,652 |
+| of them failing the M55 audit | 12 (one record each, all seat 0's, `source: targets`, `by: forge`) |
+| `[ghost]` lines in s11's worker logs | 12, all card 63, one per record |
+| s11's other checks | 0 leaks in 20 leak checks, 0 fork problems, 11 branch errors (`IndexOutOfBoundsException`), 2 branches at the turn cap |
+| repeat-cap firings (D484's `the same <kind> decision`) in J180–J186's data | 0 |
+
+`node tools/check-redaction.mjs --empty-hand-ok` on `d13-random-o1-b149-seat0.jsonl.gz` fails with the three lines
+at line 305. With that record rewritten into D510's shape (`options: ["option:hidden"]`, `chosen: "option:hidden"`,
+every other line byte for byte) it passes, and so do the other eleven logs rewritten the same way. The checker needed
+no change. D510 makes `Decisions.targetAnswer` list `option:hidden` after the visible options when `hidden` is above
+0, and answer each unseen target with it (protocol M81). Held by `mtgtable.ai.DecisionSelfTest`: 233 checks, 8 of them
+D510's; with the old `Decisions.java` those 8 fail. It is record-only (D509, point 2): `tools/cubelab.sh
+seat-identity` matches the golden on all 4 games, `tools/ai-bench.sh --selftest` passes 320 of 320 and `tools/cubelab.sh
+atlas-selftest` is green. D510 sets out the argument from the callers. J186 stays in D508's population.
