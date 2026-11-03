@@ -191,9 +191,11 @@
 #                                 engine boot); then SelectionSelfTest (D422,
 #                                 D423): input.selectable's player rule and a
 #                                 declaration's chosen blocks / attacks on real
-#                                 cards, and (D507) a target record that counts
-#                                 a card stranded in the Stack zone hidden (a
-#                                 second engine boot)
+#                                 cards, (D507) a target record that counts
+#                                 a card stranded in the Stack zone hidden, and
+#                                 (D508) an entity record that counts a
+#                                 last-known copy of a card now in a hand
+#                                 hidden (a second engine boot)
 #                                 Then 12m: tools/cubelab.sh seat-identity
 #                                 (D451, gated since D486's addendum) -- four
 #                                 fixed games (a Forge, a seeded search, a D358
@@ -2339,7 +2341,11 @@ s12k_facedown() {
 #      it also fails if the InputSelectTargets fields InputPeek reads by name are
 #      gone from this engine.  D507, in the same JVM: two Knockout Maneuvers
 #      stranded in the Stack zone by Forge's own AI cast path (nothing on the
-#      stack) are counted in a Counterspell target record's hidden, never listed.  The live half is tools/ws-select-probe.mjs (not in
+#      stack) are counted in a Counterspell target record's hidden, never listed.
+#      D508, the same JVM: the last-state snapshot's copy of a Cavern Harpy that
+#      returned to its owner's hand is hidden in seat 1's entity record, while
+#      copies of cards now in the graveyard and in the seat's own hand are
+#      listed.  The live half is tools/ws-select-probe.mjs (not in
 #      the gate: three real games, docs/evidence/select-probe.md).
 s12l_playable() {
   printf '\n=== 12l. PlayableSelfTest and SelectionSelfTest -- state.playable and state.activatable: what the seat may play from its graveyard, exile, hand, and activate on the battlefield (D413, D420); input.selectable.playerIds and chosen (D422, D423); a stranded stack-zone card never a target option (D507) ===\n'

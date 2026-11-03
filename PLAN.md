@@ -14,7 +14,7 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 383 items still open across 43 follow-up lists** — 353
+**The index below lists 385 items still open across 43 follow-up lists** — 355
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
 said 371 across 42, three rows and one list behind its table) — D507
@@ -10164,6 +10164,19 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    it. Repairing it (back to the owner's hand, as D466 does for the random seat's refused payment) would change what
    a branch plays and open a new population. It touches a Forge seat's play, not only ours. The owner's call. Its
    reach, measured on J183 (D507's scan): 1 ghost in 13 spines, and 6 born in branches (24's).
+29. **D508's last-known copy can reach the board.** (2026-11-03, D508.) A human seat's `ChooseSource` ask (Circle of
+   Protection, and every "choose a source" effect) lists the objects the stack refers to, and a ChangesZone trigger
+   whose origin is the battlefield refers to the last-known copy of the card that left. The copy's `CardView` says
+   Battlefield (`Card.setZone` → `view.updateZone`), so `WireGuiGame`'s `option` → `Snap.card(o, cv, viewer)` would
+   write the card's name while the state shows its stub in the other hand. `Snap` works on views; the fix belongs in
+   `WireGuiGame`, which holds the game and can resolve the view's id to the card's current zone before `Snap` sees
+   it. Not seen on a recording yet: it needs an opponent's permanent bounced to hand with a leaves-the-battlefield
+   trigger on the stack at the moment of a source choice (J185's s13, one record in 11,402 logs).
+30. **The explorer's close call can swap onto a last-known copy.** (2026-11-03, D508.) `Explorer.entity`'s rival
+   must be a creature `isInZone(Battlefield)`, and a last-known copy answers that from its saved zone, so the swap can
+   hand Forge the copy of a creature now in a hand. Forge accepts it (it listed it), and the record answers
+   `option:hidden` under D508, so nothing leaks; but the seat then names a source that cannot deal damage. A `scorable`
+   that reads `Decisions.current` closes it, as a change to what the seat offers (D489: a population).
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 
