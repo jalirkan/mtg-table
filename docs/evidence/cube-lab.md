@@ -349,3 +349,36 @@ those, as before). Proven in `mtgtable.SelectionSelfTest` (step 12l; 59 checks, 
 control among them: the snapshot's copy keeps the id and a Battlefield zone while `getCardState` finds the card in
 the hand). D508 changes what the seat records and offers, so J186 opens a new population, `random-<band>-d508`;
 J185 stays D507's one night (D508's *Comparability*). The board's own path for the same ask is follow-up 29.
+
+## 13. J186's replay divergence (D511, 2026-11-03)
+
+The lab's atlas night J186 (2026-11-03, mtg-table at `e557dedf`, population `random-<band>-d508`'s first night) aborted
+on spine `b-s13-pauper-2552` (under `/home/justin-a/code/lab/data/lab-j186/`, read only): every unit at d23, d28, d33,
+d40, d49 and d55 failed both attempts with "the replay diverged" (29 unit errors), while d2, d13 and d17 played. The
+baseline is a recorded game (frames, rows, ledger) and a unit's replay is not; D347's decision records, which only a
+recorded seat builds, write Forge's `AiCardMemory` through its mana check, and the two games part. D511 gives the
+replay the baseline's record path (`CubeLab.ReplaySink`). Everything below ran on this PC, in the lane's worktree, with
+the lab's decks copied out (sha256 as `schedule.jsonl` records them) and the lab's folder untouched.
+
+| what | measured |
+|---|---|
+| the s13 baseline, rerun (`tools/cubelab.sh atlas … --seed 2552 --phase b`) | the lab's 62 decisions, tokens and identities, A won in 35 turns |
+| s13's game, listing only, by what the job carries | `record`: A, 35 turns, 62 decisions; `rows`, `ledger` or nothing: a draw at the cap, 41 turns, 70 |
+| the same with `-XX:hashCode=2` (every identity hash 1) | unchanged both ways: not D121's identity-hash order |
+| recorded with `MTGTABLE_DECISIONS=off` | the unrecorded game: the frames move nothing, the decision records do |
+| `MyRandom` draws, recorded / unrecorded (traced, a throwaway patch) | 4,151 / 5,588; the first that differs is draw 298, turn 8 MAIN2, `Game AI Eval` → `ComputerUtilMana.isManaSourceReserved` → `percentTrue`, in the recorded game only |
+| `AiCardMemory` changed inside `Decisions.quiet` by `Decisions.priority` (a throwaway patch) | from turn 5 (`PAYS_TAP_COST`); turn 8 declare blockers clears seat B's `HELD_MANA_SOURCES_FOR_DECLBLK` (card 69) |
+| the first turn whose end differs | 14: seat B's Deceptive Landscape fetches Swamp 46 (recorded) or 45 (unrecorded) |
+| the first listing that differs | d23: turn 17 priority (recorded), turn 16 block on Gurmag Angler (unrecorded) — J186's message |
+| D511's replay of d23, no branches, played to the end | the baseline's 62 decisions; its `MyRandom` trace the recorded game's, draw for draw |
+| D511's d23 with one branch of each option; `tools/cubelab.sh atlas --decisions 1 --min-options 3` (d30) | all four options played; d30 replays (it failed both attempts before) |
+| J186's 156 decisions with branch rows, 13 spines, replayed under D511 (branch 0 of every option, random continuation, the night's unit settings) | all 618 branches: the night's result, turns, steps, error and cap; rows: 577 of 594 field for field, the 17 others s04's d37/d41/d42, created objects' ids only, and `main`'s classes rerun differ from the night there too (15 of 19; D511's 8) |
+
+The duplicate `cast:35` at d20 (Dog Walker cast face up, and face down for its disguise cost; d21 `activate:35` turns it
+face up) is in both listings and is not the cause: a unit compares tokens and never feeds them. The self-test is
+`atlas-selftest`'s new replay leg (`atlasSelftestReplay`: the committed s13 pair, d30, one branch an option). What D511
+leaves is follow-up 32: the records still move the memory, so a recorded game is still not its unrecorded twin, and
+`census-replay --record full` against a rows-mode census game is the next place that can bite; and s04's late branch
+rows, whose created objects' ids move between reruns of the same classes. The comparison ran six workers at a load
+average of 10, and the s13 replay was the baseline's under it as idle. With D511: `atlas-selftest` OK (its replay
+leg: d30, turn 19, replayed, 3 branches); `seat-identity`: all 4 games the golden's; `./bridge/build.sh` green.
