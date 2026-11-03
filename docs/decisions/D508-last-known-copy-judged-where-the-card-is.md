@@ -71,26 +71,41 @@ protocol's rule for a card in another seat's hand is the stub, whatever the engi
 
       [lki] card <id> offered as a last-known copy of a card in a zone the seat cannot see, left out of a record (D508)
 
-  An id, never a name. The night counts the lines as **`lki_candidates`**. A last-known copy of a card now in a
-  public zone, or in the seat's own hand, is listed under the card's current zone and prints nothing.
-- Both callers are unchanged: `entityToken` (a `Card`, or a `SpellAbility`'s host) and
-  `SearchPolicy.targetVisible`.
+  An id, never a name. A night's job file can count the lines (J186's does, as **`lki_candidates`**, beside its
+  `ghost_candidates`). A last-known copy of a card now in a public zone, or in the seat's own hand, is listed under the
+  card's current zone and prints nothing. The line also fires for a stale instance the old gate already hid (an object
+  in a hidden zone that the game has since replaced), so its count is not the count of J185's shape alone.
+- **A spell or ability on the stack is judged on its host object, not the current card** (the review's fix):
+  `entityToken`'s `SpellAbility` branch calls `visibleAt(host)`, the zone rule over the object as it stands. That
+  mirrors the state frame: `Snap` writes every stack item's source into `stackCards` through the source view's own
+  `canBeShownTo`, so an item hosted by a last-known copy (a trigger from the battlefield) is named there, and one whose
+  host object moved to a hand is stubbed. The old gate judged the host the same way; without this the gate would have
+  hidden stack items the frame still names (173 such frames in J185's s13 and s01 logs: Yahenni in seat 1's hand with
+  its trigger on the stack, the Harpy's own trigger), a change beyond J185's shape. `ghost` reads the current card too,
+  so a stale Stack-zone object whose card moved on prints `[lki]`, not `[ghost]`. `SearchPolicy.targetVisible` is
+  unchanged (it calls `visible`).
 
-**Held by `mtgtable.SelectionSelfTest`** (step 12l; 55 checks, 10 of them this case, one engine boot shared with
+**Held by `mtgtable.SelectionSelfTest`** (step 12l; 59 checks, 12 of them this case, one engine boot shared with
 D507's). The negative control first: `Game.copyLastState()`'s copy of seat 0's Cavern Harpy keeps the Harpy's id
 and a Battlefield zone after `moveToHand` puts the card in seat 0's hand, and `getCardState` finds the hand card
 — the fault is live on this engine. Then seat 1's entity record over the divider, Grizzly Bears, the copy and the
 hand card lists `option:<bears>` and `option:hidden`, `hidden` 3, one `[lki]` line; a copy of Elvish Visionary now
 in the graveyard and a copy of seat 1's own Savannah Lions now in seat 1's hand are both listed, `hidden` 0; and
-from seat 0 the Harpy's copy is listed and the Lions' hidden.
+from seat 0 the Harpy's copy is listed and the Lions' hidden; the record's stderr is exactly one `[lki]` line, the
+Harpy's id; an ability hosted by the copy is listed by id (as `stackCards` names the copy) while one whose host object
+is now in seat 0's hand is hidden (as `stackCards` stubs it). With the gate reverted, the copy is `option:5` in two
+records, so the case fails.
 
 **What it changes: the record, and what the seat offers — so J186 opens a new population.**
 - **The record.** An entity or target candidate that is a last-known copy of a card in a hidden zone counts in
   `hidden`. J185's s13 had one such record in 11,402 logs; every other night's logs passed the M55 audit, so none
   of their records named one.
-- **The play paths.** Forge's target candidates (`getAllCandidates`, `getValidCardsToTarget`) are drawn from the
-  zones' own cards, never from last-known copies, so the explorer's target redraw, `staleTargets`' fill and the
-  search's target alternatives see the same lists as before. The explorer's entity close call (`Explorer.entity`)
+- **The play paths.** Forge's card target candidates (`getAllCandidates`, `getValidCardsToTarget`) are drawn from the
+  zones' own cards, never from last-known copies, and a spell or ability candidate is judged on its host object as
+  before, so the explorer's target redraw, `staleTargets`' fill and the search's target alternatives see the same
+  lists as before. The entity lists (`chooseSingleEntityForEffect`, `chooseCardsForEffect`) are where a last-known
+  copy reaches the seat, and there the record changes; the explorer's entity close call draws from Forge's list,
+  not the gate's (below). The explorer's entity close call (`Explorer.entity`)
   does not consult the gate: its rival must be a creature `isInZone(Battlefield)`, which a last-known copy answers
   from its saved zone. So no J185 draw or pick would have come out differently, and the only place a future night
   could differ is a close-call swap onto a last-known copy, whose record now answers `option:hidden` (follow-up 30).
@@ -99,7 +114,9 @@ from seat 0 the Harpy's copy is listed and the Lions' hidden.
   **J186 opens `random-<band>-d508`**, with `randomSeat: "D508"` on its rows; **J185 is D507's population's one
   night**, read on its own and pooled with nothing. The label contract stays v6.
 
-**The board (the human game).** Unchanged in this lane: follow-up 29. The same ask reaches a human seat through
+**The board (the human game).** Unchanged in this lane: follow-up 29, and follow-up 31 for the frame side the review
+measured (a state frame's `stackCards` names a card the same frame stubs in a hand when a stack item's source is a
+last-known copy; the seat's gate mirrors that frame on purpose). The same ask reaches a human seat through
 `WireGuiGame`'s `chooseSingleEntityForEffect` → an `ask` whose options go through `Snap.card(o, cv, viewer)` with
 `cv.getZone()` as the zone hint, and the copy's `CardView` says Battlefield (`Card.setZone` → `view.updateZone`),
 so the option would carry the Harpy's name while the state shows the stub. `Snap` works on views and cannot call

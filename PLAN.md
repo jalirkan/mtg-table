@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 385 items still open across 43 follow-up lists** — 355
+**The index below lists 386 items still open across 43 follow-up lists** — 356
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D507
+said 371 across 42, three rows and one list behind its table) — D508
+(2026-11-03) added the cube lab's 29, 30 and 31; D507
 (2026-11-02) added the cube lab's 26, 27 and 28; D506
 (2026-11-02) added the cube lab's 24 and 25; D505
 (2026-11-02) added the cube lab's 23 and amended its 19 (both parts); D502–D504
@@ -434,6 +435,9 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 26 | open | D507's ghost on the board: a human's target choice over the Stack and another zone (30 scripts, e.g. Aether Gust) can offer a card stranded in the Stack zone as a full, named `ask` option, and `check-redaction.mjs` would not fail it | `bridge/src/mtgtable/WireGuiGame.java` |
 | [Cube lab](#fu-cube-lab) | 27 | open | D466's put-back misses a refused cast whose payment ran on a copy of the play (Multikicker: Batroc the Leaper): J183's s12 left 6 ghosts in the Stack zone | `bridge/src/mtgtable/ai/PolicyControllerAi.java` |
 | [Cube lab](#fu-cube-lab) | 28 | open | D507 hides a ghost from the record; the engine state is not repaired (the card stays out of its owner's game). Moving it back would change plays: a new population, the owner's call | `docs/decisions/D507-ghost-card-in-the-stack-zone.md` |
+| [Cube lab](#fu-cube-lab) | 29 | open | D508's last-known copy on the board: a human's `ChooseSource` ask lists the objects the stack refers to, and the copy's view says Battlefield, so `Snap.card` would name a card the state stubs in the other hand | `bridge/src/mtgtable/WireGuiGame.java` |
+| [Cube lab](#fu-cube-lab) | 30 | open | The explorer's close call can swap onto a last-known copy (`scorable` reads `isInZone`, the copy's saved zone); the record answers `option:hidden`, nothing leaks, but the seat names a source that cannot deal damage | `bridge/src/mtgtable/ai/Explorer.java` |
+| [Cube lab](#fu-cube-lab) | 31 | open | A state frame's `stackCards` names a card the same frame stubs in a hand when a stack item's source is a last-known copy (173 frames in J185's s13 and s01); the seat's gate mirrors it on purpose | `bridge/src/mtgtable/Snap.java` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10177,6 +10181,15 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    hand Forge the copy of a creature now in a hand. Forge accepts it (it listed it), and the record answers
    `option:hidden` under D508, so nothing leaks; but the seat then names a source that cannot deal damage. A `scorable`
    that reads `Decisions.current` closes it, as a change to what the seat offers (D489: a population).
+31. **A state frame's `stackCards` can name a card the same frame stubs in a hand.** (2026-11-03, D508's review.)
+   `Snap` serialises every stack item's source through its own view's `canBeShownTo`, with the zone hint `stack`; an item
+   whose source is a last-known copy (a trigger from the battlefield, D508's shape) carries a view whose zone says
+   Battlefield, so the card is written by id and name in `stackCards` while the hand shows its stub. Measured on J185's
+   s13 and s01 frame logs (22,760 files): 173 frames, e.g. `b-s13…/d1-forge-o0-b10-seat0.jsonl.gz:235` (Yahenni, 80, in
+   seat 1's hand with its trigger on the stack) and `d1-random-o0-b141-seat1:430` (the Harpy's own trigger). The move was
+   public, so it is the same information as follow-up 29's, already on the wire; the seat's gate mirrors it on purpose
+   (a stack item is judged on its host object, D508). A fix belongs in `WireGuiGame` or `Snap`'s `stackCards`, with the
+   checker's `visibleIds` (which admits `stackCards`) changed in the same lane.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

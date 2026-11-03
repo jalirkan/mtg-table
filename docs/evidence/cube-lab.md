@@ -340,9 +340,12 @@ own zone the last-state snapshot had stamped Battlefield. The checker was right 
 | source choices at turn 24 MAIN1; the one with the Phantom's trigger on the stack | 3; 1 |
 | the night's other checks | all green: 0 engine errors, 0 branch timeouts, 0 `[ghost]` lines, 0 `StackOverflowError`, 5 `PumpEffect` IOOBEs (J182's shape) |
 
-`[lki]` lines the new bridge would print for s13's frame logs: 1, this record's. The record the new bridge writes
-counts the copy in `hidden` (protocol M80); a copy of a card now in the graveyard, or in the seat's own hand, is
-listed as that card. Proven in `mtgtable.SelectionSelfTest` (step 12l; 55 checks, 10 of them D508's, the negative
+Records of J185's shape in s13's frame logs: this one. How many `[lki]` lines the new bridge would print over the
+night is not measured (the line also fires for a stale instance the old gate already hid). The record the new bridge
+writes counts the copy in `hidden` (protocol M80); a copy of a card now in the graveyard, or in the seat's own hand, is
+listed as that card; a stack item is judged on its host object, as `stackCards` shows it (the review's fix: 173 of
+s13's and s01's 22,760 frames name a stack item's source the same frame stubs in a hand, and the gate keeps listing
+those, as before). Proven in `mtgtable.SelectionSelfTest` (step 12l; 59 checks, 12 of them D508's, the negative
 control among them: the snapshot's copy keeps the id and a Battlefield zone while `getCardState` finds the card in
 the hand). D508 changes what the seat records and offers, so J186 opens a new population, `random-<band>-d508`;
 J185 stays D507's one night (D508's *Comparability*). The board's own path for the same ask is follow-up 29.

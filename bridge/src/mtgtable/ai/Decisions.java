@@ -117,10 +117,17 @@ public final class Decisions {
      * {@code Zone.getLKICopy} → {@code setCards} stamps every copy with a Battlefield zone, so the copy's own
      * {@code getZone()} says public while the card is in a hand.  {@link #current} resolves the id to the card
      * the game holds now; a card in no zone at all (a token that ceased to exist, D503's shape) is judged by the
-     * object itself, as before.
+     * object itself, as before.  A spell or ability on the stack is judged through {@link #visibleAt} on its own
+     * host object, not the current card: the state frame's {@code stackCards} serialise the item's host with the
+     * zone hint {@code stack} (D508's review), so an item whose source has since moved to a hand stays listed as
+     * the frame lists it.
      */
-    static boolean visible(final Card c, final Player ai) {
-        final Card now = current(c);
+    public static boolean visible(final Card c, final Player ai) {
+        return visibleAt(current(c), ai);
+    }
+
+    /** D347's zone rule over the object handed in, as it stands ({@link #visible} resolves the card first; D508). */
+    static boolean visibleAt(final Card now, final Player ai) {
         if (now.getZone() == null) {
             return false;
         }
@@ -198,10 +205,17 @@ public final class Decisions {
         return false;
     }
 
-    /** D507: a card in the Stack zone, not a copy, that the stack holds no spell or ability of ({@link #onStack}). */
+    /**
+     * D507: a card in the Stack zone, not a copy, that the stack holds no spell or ability of ({@link #onStack}).
+     * D508: judged on the card the game holds, as {@link #visible} is, so a stale Stack-zone object whose card has
+     * moved on is a last-known copy ({@link #lastKnown}), not a ghost.
+     */
     static boolean ghost(final Object e) {
-        return e instanceof Card && ((Card) e).getZone() != null && ((Card) e).getZone().is(ZoneType.Stack)
-                && !((Card) e).isCopiedSpell() && !onStack((Card) e);
+        if (!(e instanceof Card)) {
+            return false;
+        }
+        final Card now = current((Card) e);
+        return now.getZone() != null && now.getZone().is(ZoneType.Stack) && !now.isCopiedSpell() && !onStack(now);
     }
 
     /** D507: the worker log's line for a ghost left out of a target record; {@code [ghost]} is what the night counts. */
@@ -210,7 +224,7 @@ public final class Decisions {
     }
 
     /** An entity as {@code <prefix>:<id>}, {@code <prefix>:p<id>}, or null when the seat cannot see it. */
-    static String entityToken(final String prefix, final Object e, final Player ai) {
+    public static String entityToken(final String prefix, final Object e, final Player ai) {
         if (e instanceof Player) {
             return prefix + ":p" + ((Player) e).getId();
         }
@@ -218,9 +232,9 @@ public final class Decisions {
             final Card c = (Card) e;
             return visible(c, ai) ? prefix + ":" + c.getId() : null;
         }
-        if (e instanceof SpellAbility) {   // a spell or ability on the stack: its source card
+        if (e instanceof SpellAbility) {   // a spell or ability on the stack: its source card, as stackCards shows it
             final Card h = ((SpellAbility) e).getHostCard();
-            return h != null && visible(h, ai) ? prefix + ":" + h.getId() : null;
+            return h != null && visibleAt(h, ai) ? prefix + ":" + h.getId() : null;   // D508: the host object's own zone
         }
         return null;
     }
