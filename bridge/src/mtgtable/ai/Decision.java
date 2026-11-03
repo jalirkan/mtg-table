@@ -51,7 +51,8 @@ import mtgtable.Json.JsonOut;
  *
  * {@code activate:<id>#<k>} names the k-th non-mana activated ability of a card
  * that has more than one; a card with one is plain {@code activate:<id>}.  {@code option:hidden} is a card in a zone the seat
- * cannot see (a library search): it is counted in {@code hidden}, never named by id.
+ * cannot see (a library search; a last-known copy of a card now in the other hand, D508): it is counted in
+ * {@code hidden}, never named by id.
  */
 public final class Decision {
 

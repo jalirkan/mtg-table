@@ -34,6 +34,7 @@ import forge.game.GameState;
 import forge.game.GameType;
 import forge.game.Match;
 import forge.game.card.Card;
+import forge.game.card.CardCollectionView;
 import forge.game.card.CardFactory;
 import forge.game.combat.Combat;
 import forge.game.phase.PhaseType;
@@ -89,6 +90,21 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *       where the stack's iterator does not look; the next copy's record still
  *       lists it, hidden 0, with no {@code [ghost]} line -- and the same once
  *       the stack is unfrozen.</li>
+ *   <li><b>D508: a last-known copy is judged where the card is now.</b>  The
+ *       game's last-state snapshot ({@code Game.copyLastState}, what
+ *       {@code GameAction.changeZone} reads a leaving permanent's LKI from on
+ *       this engine) holds a copy of seat 0's Cavern Harpy whose own zone says
+ *       Battlefield; the Harpy then returns to seat 0's hand (the negative
+ *       control: the copy keeps the id and the Battlefield zone while
+ *       {@code getCardState} finds the card in the hand -- the fault is live).
+ *       Seat 1's entity record over the divider, Grizzly Bears, the copy and
+ *       the hand card lists the Bears alone and counts three hidden, with one
+ *       {@code [lki]} line; a copy of a card that went to the graveyard is
+ *       listed; a copy of seat 1's own creature that returned to its own hand
+ *       is listed (its own hand is its own information).  A spell or ability is
+ *       judged on its host object, as the frame's {@code stackCards} are: one
+ *       hosted by the copy is listed by id, one whose host moved to the other
+ *       hand is hidden (the review's fix).</li>
  * </ol>
  *
  * <p>Usage: {@code ./bridge/run.sh mtgtable.SelectionSelfTest}.  One JVM,
@@ -114,6 +130,7 @@ public final class SelectionSelfTest {
             declarations();
             ghosts();
             copies();
+            lastKnown();
         });
         System.out.println("SelectionSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -360,6 +377,101 @@ public final class SelectionSelfTest {
         g.getStack().unfreezeStack();
         expect("copies: unfrozen, copy 1 is on the stack (3 items)", g.getStack().size() == 3);
         copyRecord("copies, unfrozen", g, c2, me, k1, bolt.getHostCard().getId());
+    }
+
+    /** D508: a last-known copy of a card that left the battlefield is judged where the game holds the card now. */
+    private static void lastKnown() {
+        final Game g = newGame("selection-last-known");
+        final GameState gs = new GameState();
+        gs.parse(List.of(
+                "turn=24",
+                "activeplayer=p0",
+                "activephase=" + PhaseType.MAIN1.name(),
+                "p0life=4",
+                "p1life=20",
+                "p0hand=Island",
+                "p0battlefield=Cavern Harpy;Grizzly Bears;Elvish Visionary;Island;Swamp",
+                "p0library=Island;Island;Island",
+                "p1hand=Plains",
+                "p1battlefield=Savannah Lions;Plains;Plains",
+                "p1library=Plains;Plains;Plains"));
+        gs.applyToGame(g);
+        final Player opp = g.getPlayers().get(0);   // the Harpy's owner
+        final Player me = g.getPlayers().get(1);    // the seat asked
+        final Card harpy = only(named(opp, "Cavern Harpy"));
+        final Card bears = only(named(opp, "Grizzly Bears"));
+        final Card vis = only(named(opp, "Elvish Visionary"));
+        final Card lions = only(named(me, "Savannah Lions"));
+        expect("last known: the position (Cavern Harpy, Grizzly Bears, Elvish Visionary, Savannah Lions)",
+                harpy != null && bears != null && vis != null && lions != null);
+        if (harpy == null || bears == null || vis == null || lions == null) {
+            return;
+        }
+        // what GameAction.changeZone reads a leaving permanent's LKI from (the jar: indexOf on getLastStateBattlefield)
+        g.copyLastState();
+        final CardCollectionView last = g.getLastStateBattlefield();
+        expect("last known: the snapshot holds the Harpy, the Visionary and the Lions",
+                last.indexOf(harpy) >= 0 && last.indexOf(vis) >= 0 && last.indexOf(lions) >= 0);
+        if (last.indexOf(harpy) < 0 || last.indexOf(vis) < 0 || last.indexOf(lions) < 0) {
+            return;
+        }
+        final Card lkiHarpy = last.get(last.indexOf(harpy));
+        final Card lkiVis = last.get(last.indexOf(vis));
+        final Card lkiLions = last.get(last.indexOf(lions));
+        final SpellAbility staleReturn = harpy.getSpellAbilities().isEmpty() ? null : harpy.getSpellAbilities().get(0);
+        final Card inHand = g.getAction().moveToHand(harpy, null);   // on this engine the same object, now in the hand
+        final Card inYard = g.getAction().moveTo(ZoneType.Graveyard, vis, null, null);
+        final Card ownHand = g.getAction().moveToHand(lions, null);
+        expect("last known: the copy keeps the Harpy's id and a Battlefield zone while the card is in its owner's hand "
+                + "(the fault is live)", lkiHarpy != harpy && lkiHarpy.getId() == harpy.getId()
+                && lkiHarpy.getZone() != null && lkiHarpy.getZone().is(ZoneType.Battlefield)
+                && inHand.isInZone(ZoneType.Hand) && inHand.getZone().getPlayer() == opp
+                && g.getCardState(lkiHarpy) == inHand);
+        expect("last known: Decisions.current resolves the copy to the hand card, and a card the game holds to itself",
+                Decisions.current(lkiHarpy) == inHand && Decisions.current(bears) == bears
+                        && Decisions.lastKnown(lkiHarpy) && !Decisions.lastKnown(bears));
+        final Card divider = new Card(-3, g);   // ChooseSourceEffect's "--OBJECTS REFERRED TO ON THE STACK:--"
+        divider.setName("--OBJECTS REFERRED TO ON THE STACK:--");
+        final java.io.PrintStream err = System.err;
+        final java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        final Decision d;
+        System.setErr(new java.io.PrintStream(buf, true, java.nio.charset.StandardCharsets.UTF_8));
+        try {
+            d = Decisions.entities(me, List.of(divider, bears, lkiHarpy, inHand), false, List.of(bears), "entity");
+        } finally {
+            System.setErr(err);
+        }
+        final String lines = buf.toString(java.nio.charset.StandardCharsets.UTF_8);
+        expect("last known: the record prints one [lki] line, the Harpy's id, and no [ghost] line: " + lines.trim(),
+                lines.trim().equals("[lki] card " + harpy.getId()
+                        + " offered as a last-known copy of a card in a zone the seat cannot see, left out of a record (D508)"));
+        expect("last known: seat 1's record lists the Bears alone, then option:hidden " + d.options,
+                d.options.equals(List.of("option:" + bears.getId(), "option:hidden")));
+        expect("last known: the divider, the copy and the hand card are hidden (" + d.hidden + ")", d.hidden == 3);
+        expect("last known: the record answers the Bears", ("option:" + bears.getId()).equals(d.chosen));
+        final Decision d2 = Decisions.entities(me, List.of(lkiVis, lkiLions), false, List.of(lkiVis), "entity");
+        expect("last known: a copy of a card now in the graveyard, and of the seat's own card now in its own hand, "
+                + "are listed by the card's current zone " + d2.options,
+                inYard.isInZone(ZoneType.Graveyard) && ownHand.isInZone(ZoneType.Hand)
+                        && d2.options.equals(List.of("option:" + vis.getId(), "option:" + lions.getId()))
+                        && d2.hidden == 0 && ("option:" + vis.getId()).equals(d2.chosen));
+        final Decision d3 = Decisions.entities(opp, List.of(lkiHarpy, lkiLions), false, List.of(lkiHarpy), "entity");
+        expect("last known: from the Harpy's owner, the Harpy's copy is listed and the Lions' is hidden " + d3.options,
+                d3.options.equals(List.of("option:" + harpy.getId(), "option:hidden")) && d3.hidden == 1);
+        // the review's fix: a spell or ability is judged on its host OBJECT, as the frame's stackCards are (Snap serialises
+        // an item's source through its own view's canBeShownTo): an ability hosted by the last-known copy (Forge's own
+        // triggers from the battlefield are) is listed by id, while one whose host object moved to seat 0's hand is hidden,
+        // as Snap stubs that host
+        final SpellAbility lkiAbility = lkiHarpy.getSpellAbilities().isEmpty() ? null : lkiHarpy.getSpellAbilities().get(0);
+        expect("last known: an ability hosted by the copy is listed by id (as stackCards shows the copy), though the copy "
+                + "itself is hidden as a card: " + (lkiAbility == null ? "no ability" : Decisions.entityToken("option", lkiAbility, me)),
+                lkiAbility != null && lkiAbility.getHostCard() == lkiHarpy && !Decisions.visible(lkiHarpy, me)
+                        && ("option:" + harpy.getId()).equals(Decisions.entityToken("option", lkiAbility, me)));
+        expect("last known: an ability whose host object is now in seat 0's hand is hidden, as stackCards stubs that host: "
+                + (staleReturn == null ? "no ability" : "zone " + harpy.getZone() + ", token "
+                + Decisions.entityToken("option", staleReturn, me)),
+                staleReturn != null && staleReturn.getHostCard() == harpy && harpy.getZone() != null
+                        && harpy.getZone().is(ZoneType.Hand) && Decisions.entityToken("option", staleReturn, me) == null);
     }
 
     /** Copy 2's target record lists copy 1 and the Bolt, hides nothing and prints no {@code [ghost]} line. */
