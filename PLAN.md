@@ -10191,6 +10191,13 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    (a stack item is judged on its host object, D508). A fix belongs in `WireGuiGame` or `Snap`'s `stackCards`, with the
    checker's `visibleIds` (which admits `stackCards`) changed in the same lane.
 
+**The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
+list that would change what the seat plays or offers (27, 28 — the owner's call — 30 and 31 today) waits on its
+lane, in `~/code/pc-results/study/seat-queue.md`, and lands with the others as one population boundary, under a
+decision of its own, when the owner and the PC session decide; the checker's admissions, the recorder, the cut
+design, the metrics, the engine-unplayable list and the board's fixes (29) still land between landings.
+`docs/decisions/D509-seat-frozen-between-landings.md`.
+
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 
 **Status: built, tested, run small and documented; the full gate was not run.**
