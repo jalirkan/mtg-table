@@ -2079,6 +2079,29 @@ m76Probe('m76-no-target-elsewhere.jsonl',
   'amendment M76 / D487: why NO_TARGET marks an empty mandatory part only -- not a min-0 part',
   'is not an empty mandatory target part', { why: 'NO_TARGET' });
 
+// Amendment M81 (D510): a target record lists a candidate the seat cannot see as `option:hidden` and answers an
+// unseen target with it -- alone (J186's all-hidden part, `hidden` 1) and in a chosen list beside a visible target.
+// No rule of its own (`option:hidden` is a token for every kind): a pass control that fails if a later token-per-kind
+// rule forgets the target path.
+{
+  const name = 'm81-target-option-hidden.jsonl';
+  const why = 'amendment M81 / D510: target records carrying option:hidden -- the one candidate hidden and chosen, and a visible target beside an unseen one in a chosen list';
+  const fs = slice();
+  const first = withTargetRecord(fs, { min: undefined, options: ['option:hidden'], hidden: 1, complete: false,
+    chosen: 'option:hidden' });
+  const at = fs.findIndex((f) => f.dir === 'ai' && f.type === 'decision');
+  const me = fs[first.frame].body.players.find((p) => p.id === header.seat);
+  const ids = me.zones.hand.cards.filter((c) => c.hidden !== true).map((c) => `target:${c.id}`).slice(0, 1);
+  const second = { ...first, n: 1, options: ['target:p1', ...ids, 'option:hidden'], chosen: ['target:p1', 'option:hidden'] };
+  fs.splice(at + 1, 0, { ...fs[at], seq: 2, body: second });
+  const sum = fs.find((f) => f.dir === 'ai' && f.type === 'decisions');
+  Object.assign(sum, { seq: 3 });
+  Object.assign(sum.body, { written: 2, searched: 0, byKind: { target: 2 }, byPolicy: { forge: 2 } });
+  write(name, fs);
+  manifest.push({ file: name, level: 'pass', expect: 'PASS', why });
+  console.log(`  PASS  ${name}  (option:hidden in two target records, no defect)`);
+}
+
 // Amendment M58 (D389): the search's prior in M55's search block -- `prior` per
 // option and `generated` -- a control that passes and one malformed probe.
 {

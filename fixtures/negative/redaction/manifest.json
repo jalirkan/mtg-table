@@ -1200,6 +1200,12 @@
     "why": "amendment M76 / D487: why NO_TARGET marks an empty mandatory part only -- not a min-0 part"
   },
   {
+    "file": "m81-target-option-hidden.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M81 / D510: target records carrying option:hidden -- the one candidate hidden and chosen, and a visible target beside an unseen one in a chosen list"
+  },
+  {
     "file": "m58-search-prior-present.jsonl",
     "level": "pass",
     "expect": "PASS",

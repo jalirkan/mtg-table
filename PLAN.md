@@ -14,10 +14,12 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 386 items still open across 43 follow-up lists** — 356
+**The index below lists 389 items still open across 43 follow-up lists** — 359
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D508
+said 371 across 42, three rows and one list behind its table) — D511
+(2026-11-03) added the cube lab's 34; D510
+(2026-11-03) added the cube lab's 32 and 33; D508
 (2026-11-03) added the cube lab's 29, 30 and 31; D507
 (2026-11-02) added the cube lab's 26, 27 and 28; D506
 (2026-11-02) added the cube lab's 24 and 25; D505
@@ -438,7 +440,9 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 29 | open | D508's last-known copy on the board: a human's `ChooseSource` ask lists the objects the stack refers to, and the copy's view says Battlefield, so `Snap.card` would name a card the state stubs in the other hand | `bridge/src/mtgtable/WireGuiGame.java` |
 | [Cube lab](#fu-cube-lab) | 30 | open | The explorer's close call can swap onto a last-known copy (`scorable` reads `isInZone`, the copy's saved zone); the record answers `option:hidden`, nothing leaks, but the seat names a source that cannot deal damage | `bridge/src/mtgtable/ai/Explorer.java` |
 | [Cube lab](#fu-cube-lab) | 31 | open | A state frame's `stackCards` names a card the same frame stubs in a hand when a stack item's source is a last-known copy (173 frames in J185's s13 and s01); the seat's gate mirrors it on purpose | `bridge/src/mtgtable/Snap.java` |
-| [Cube lab](#fu-cube-lab) | 32 | open | A recorded game is not its unrecorded twin: D347's records move Forge's `AiCardMemory` (D511 makes an atlas unit's replay the recorded game; census-replay's `--record full` against a rows-mode game is still exposed, unmeasured); the cause's fix changes branch play, for D509's queue; and s04's branch rows name created objects by ids that move between reruns | `bridge/src/mtgtable/ai/Decisions.java` |
+| [Cube lab](#fu-cube-lab) | 32 | open | The checker has no rule tying `option:hidden` to `hidden`: `option:hidden` with no `hidden`, a chosen list never checked against the options, `option:hidden` listed twice -- all pass; none leaks; a rule needs a sweep of the old logs first | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 33 | open | The entity path has the gap D510 closed on the target path: a hidden pick not in the list is written `option:hidden` without being counted or listed; one such pick fails "not among its options", a list of them passes silently | `bridge/src/mtgtable/ai/Decisions.java` |
+| [Cube lab](#fu-cube-lab) | 34 | open | A recorded game is not its unrecorded twin: D347's records move Forge's `AiCardMemory` (D511 makes an atlas unit's replay the recorded game; census-replay's `--record full` against a rows-mode game is still exposed, unmeasured); the cause's fix changes branch play, for D509's queue; and s04's branch rows name created objects by ids that move between reruns | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10163,6 +10167,9 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    `ComputerUtil.handlePlayingSpellAbility` a copy of the play. The skip mark lands on the copy, and D466 reads
    `refusedNow` off the original. The fix is to detect the refusal by the card (in the Stack zone with no stack
    instance, D507's `onStack`) as well as by the mark. That changes plays: a new population.
+   *D510 (2026-11-03) fixed the record shape this ghost exposed in J186: a target record whose one candidate is a
+   ghost now lists and answers `option:hidden` instead of `options: []` and `chosen: null` (12 logs in s11). 27, the
+   ghost's cause, stays queued.*
 28. **A ghost stays out of its owner's game.** (2026-11-02, D507.) D507 changes only the record. Forge's AI abort
    paths (`MagicStack.add` refusing a spell after its payment, `handlePlayingSpellAbility`'s early returns at the
    target count and the charm) leave the card in the Stack zone for the rest of the game, and every later fork carries
@@ -10191,7 +10198,19 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    public, so it is the same information as follow-up 29's, already on the wire; the seat's gate mirrors it on purpose
    (a stack item is judged on its host object, D508). A fix belongs in `WireGuiGame` or `Snap`'s `stackCards`, with the
    checker's `visibleIds` (which admits `stackCards`) changed in the same lane.
-32. **A recorded game is not its unrecorded twin.** (2026-11-03, D511.) D347's decision records ask Forge whether
+32. **The checker has no rule tying `option:hidden` to `hidden`.** (2026-11-03, D510's review.) A decision record
+   with `options: ["option:hidden"]` and no `hidden`, a `chosen` list (never checked against the options:
+   `check-redaction.mjs`'s chosen loop tests membership only for a single answer), or `option:hidden` listed twice
+   with `hidden` 0 all pass. None of them leaks (the token carries no id), so it is a shape gap, not a redaction one.
+   A rule (`option:hidden` listed exactly once when `hidden` > 0, and every element of a `chosen` list among the
+   options) needs a sweep of the old logs first: before D510 a target record could carry `hidden` with no
+   `option:hidden`, and an entity record can answer `option:hidden` without listing it (33).
+33. **The entity path has the gap D510 closed on the target path.** (2026-11-03, D510's review.)
+   `Decisions.entities` writes a pick it cannot see as `option:hidden` whether or not the pick was in `list`; one that
+   was not is neither counted in `hidden` nor listed. A single such pick fails the checker's "not among its options";
+   a list of picks passes silently (32). The fix is D510's for targets: count each unseen pick outside `list` and list
+   `option:hidden` when `hidden` > 0. Record-only, so it can land between landings (D509, point 2).
+34. **A recorded game is not its unrecorded twin.** (2026-11-03, D511.) D347's decision records ask Forge whether
    every play can be paid for, and Forge's mana check writes the seat's `AiCardMemory` (`isManaSourceReserved` clears
    the held-mana sets at declare blockers, cleanup and main 2; the payment keeps `PAYS_TAP_COST`); `Decisions.quiet`
    puts `MyRandom` back and not the memory, so "the record cannot steer the answer" holds for the answer it follows and
@@ -10204,12 +10223,14 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    branches play: a seat change, for D509's queue. And a second thing D511's measurement found, not D511's doing: on
    J186's s04 (powered) the branch rows of d37, d41 and d42 name the objects a branch creates by ids that move between
    reruns of the same classes (`attack:189` / `attack:191`; `main`'s classes differ from the night on 15 of 19 such
-   branches, D511's on 8); results, turns and steps hold. A copy starts from its game's `cardIdCounter`, so something in
+   branches, D511's on 8); results, turns and steps hold. The review's table, s04 d37 option 0: J186 itself
+   `attack:149`; `main`'s classes in a fresh JVM, twice, `attack:151`; the lane's classes `149` once and `151` in its
+   three other runs; result, turns and steps 1/32/130 in every one — the ids move between runs on both builds. A copy starts from its game's `cardIdCounter`, so something in
    the replay creates a varying number of cards (the `Game AI Eval` thread's token prototypes are a candidate);
    untraced. Rows are not labels, but a row's tokens are not reproducible there.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
-list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 32 today) waits on its
+list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
 lane, in `~/code/pc-results/study/seat-queue.md`, and lands with the others as one population boundary, under a
 decision of its own, when the owner and the PC session decide; the checker's admissions, the recorder, the cut
 design, the metrics, the engine-unplayable list and the board's fixes (29) still land between landings.

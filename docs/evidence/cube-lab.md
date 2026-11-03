@@ -350,7 +350,38 @@ control among them: the snapshot's copy keeps the id and a Battlefield zone whil
 the hand). D508 changes what the seat records and offers, so J186 opens a new population, `random-<band>-d508`;
 J185 stays D507's one night (D508's *Comparability*). The board's own path for the same ask is follow-up 29.
 
-## 13. J186's replay divergence (D511, 2026-11-03)
+## 13. J186's empty target records (D510, 2026-11-03)
+
+The lab's atlas night J186 (2026-11-03, D508's population's first night) failed `tools/check-redaction.mjs` on 12 of
+12,652 frame logs in one unit, `b-s11-legacy-2550` (under `/home/justin-a/code/lab/data/lab-j186/`). Each failed on
+exactly one record: a seat-0 `target` record with `options: []`, `hidden: 1`, `complete: false` and `chosen: null`,
+which drew M55's three findings (no options, null is not a token, null is not among the options). In all twelve the
+parent is seat 0's random seat casting Reprieve (card 13, "return target spell to its owner's hand"). The part's
+one candidate was card 63, seat 1's Batroc the Leaper, stranded in the Stack zone by a refused Multikicker payment.
+That is D507's ghost, born of follow-up 27, which is queued under D509. D507's gate hid it, and Forge chose it. So
+the checker was right that the record was malformed, and the gate was right that the card was hidden. The defect
+was the target path's writer: unlike the entity path, it had no token for a card it could not see. Nothing leaked.
+
+| what | count |
+|---|---:|
+| frame logs in s11 (6,325 branch forks; 239,903 rows) | 12,652 |
+| of them failing the M55 audit | 12 (one record each, all seat 0's, `source: targets`, `by: forge`) |
+| `[ghost]` lines in s11's worker logs | 12, all card 63, one per record |
+| s11's other checks | 0 leaks in 20 leak checks, 0 fork problems, 11 branch errors (`IndexOutOfBoundsException`), 2 branches at the turn cap |
+| repeat-cap firings (D484's `the same <kind> decision`) in J180–J186's data | 0 |
+
+`node tools/check-redaction.mjs --empty-hand-ok` on `d13-random-o1-b149-seat0.jsonl.gz` fails with the three lines
+at line 305. With that record rewritten into D510's shape (`options: ["option:hidden"]`, `chosen: "option:hidden"`,
+every other line byte for byte) it passes, and so do the other eleven logs rewritten the same way. The checker needed
+no change. D510 makes `Decisions.targetAnswer` list `option:hidden` after the visible options when `hidden` is above
+0, and answer each unseen target with it (protocol M81). `hidden` counts each hidden candidate and each unseen answer outside them, once (the review). Held by
+`mtgtable.ai.DecisionSelfTest`: 235 checks, 10 of them D510's; on the lane's first version, with the old
+`Decisions.java`, its 8 D510 checks failed. The checker's self-test gains a pass control,
+`m81-target-option-hidden.jsonl`. It is record-only (D509, point 2): `tools/cubelab.sh
+seat-identity` matches the golden on all 4 games, `tools/ai-bench.sh --selftest` passes 320 of 320 and `tools/cubelab.sh
+atlas-selftest` is green. D510 sets out the argument from the callers. J186 stays in D508's population.
+
+## 14. J186's replay divergence (D511, 2026-11-03)
 
 The lab's atlas night J186 (2026-11-03, mtg-table at `e557dedf`, population `random-<band>-d508`'s first night) aborted
 on spine `b-s13-pauper-2552` (under `/home/justin-a/code/lab/data/lab-j186/`, read only): every unit at d23, d28, d33,
@@ -377,7 +408,7 @@ the lab's decks copied out (sha256 as `schedule.jsonl` records them) and the lab
 The duplicate `cast:35` at d20 (Dog Walker cast face up, and face down for its disguise cost; d21 `activate:35` turns it
 face up) is in both listings and is not the cause: a unit compares tokens and never feeds them. The self-test is
 `atlas-selftest`'s new replay leg (`atlasSelftestReplay`: the committed s13 pair, d30, one branch an option). What D511
-leaves is follow-up 32: the records still move the memory, so a recorded game is still not its unrecorded twin, and
+leaves is follow-up 34: the records still move the memory, so a recorded game is still not its unrecorded twin, and
 `census-replay --record full` against a rows-mode census game is the next place that can bite; and s04's late branch
 rows, whose created objects' ids move between reruns of the same classes. The comparison ran six workers at a load
 average of 10, and the s13 replay was the baseline's under it as idle. With D511: `atlas-selftest` OK (its replay

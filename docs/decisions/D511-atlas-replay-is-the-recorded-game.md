@@ -35,7 +35,8 @@ each unit listed the same replay.
    (`CubeLab.java:505-506`, `rec` is null). Bisected on the s13 pair (seed 2552, one worker, listing only): `record`
    alone gives the baseline's game (A, 35 turns, 62 decisions); `rows` alone, `ledger` alone and none of them give
    another (a draw at the turn cap, 41 turns, 70 decisions). With `MTGTABLE_DECISIONS=off` the recorded game is the
-   unrecorded one. So the frames move nothing; the **decision records** (D347) do.
+   unrecorded one. So the **decision records** (D347) part the games; that run calls no `mark()`, so it says nothing of
+   the flushes a record's `mark()` drives, which point 2 of the Decision answers.
 2. **A recorded seat builds a decision record after every answer.** `SeatRecorder.attach` hands each seat's
    `PolicyControllerAi` its recorder as a `DecisionSink` (`bridge/src/mtgtable/SeatRecorder.java:210-216`), and with a
    sink set `chooseSpellAbilityToPlay` calls `Decisions.priority(player)` (`PolicyControllerAi.java:261`), which asks
@@ -79,8 +80,15 @@ check from a game that has parted invisibly; on J186 none did (below).
    recorded game's seats get their `SeatRecorder`. The sink is a `DecisionSink` that writes nothing: `mark` answers
    `{-1, -1}` (read only by the record's own fields), `write` counts, the rest are no-ops. The controller builds every
    record the baseline built, by the same calls in the same order, so the memory writes are the baseline's. The
-   recorder's frames are left out, because they move nothing (the bisection above). `MTGTABLE_DECISIONS=off` turns the
-   sink off too, as it turns the recorders' sinks off.
+   recorder's frames are left out. The evidence that they move nothing is the draw-for-draw trace in point 2 (a
+   sink-only replay is the recorded game, flushes and all), and the reason is that `Snap` through
+   `RecordMatch.SpectatorGui` only reads: the four-argument `Snap.state`, no playables, no `getAllPossibleAbilities`.
+   The baseline's rows and ledger are safe to leave out too: `DistillFeatures` imports nothing from `forge.ai` and calls
+   only `CombatUtil` predicates (reached from `SearchPolicy.stateFor` and `exportRow`, `SearchPolicy.java:2225`,
+   `:2307`, which return early with no rows folder), and the ledger is an event subscriber only. Another write of the
+   same family that `quiet` does not undo is `sa.setActivatingPlayer(ai)` in `Decisions.playable`
+   (`Decisions.java:377`); the sink replays it too, and it is not the cause measured here.
+   `MTGTABLE_DECISIONS=off` turns the sink off too, as it turns the recorders' sinks off.
 2. **Measured equal.** With the sink, the s13 unit replay at d23 (no branches, played to the end) lists the baseline's 62
    decisions, tokens, identities and turns, and its `MyRandom` trace is the recorded game's draw for draw (4,151
    draws, the same thread and caller each; only `CubeLab`'s own line numbers moved). With one branch of each option,
@@ -101,22 +109,32 @@ check from a game that has parted invisibly; on J186 none did (below).
    protocol amendment. `fixtures/cubelab/seat-identity.json`: unchanged — its four games are no atlas unit, and
    `ReplaySink` is attached only to one; `tools/cubelab.sh seat-identity` reports all four games the golden's.
 
-**D509: the argument that no J186 label changes.** D509 freezes `tools/cubelab/CubeLab.java` because it builds the
-seats and the units. D511 changes what a unit's replay is and nothing the seat does; a label changes only where a
+**D509: the argument that no J186 label changes.** This fix changes `tools/cubelab/CubeLab.java`, one of D509's frozen
+paths, and nothing else D509 freezes. It lands between landings under D509 point 1's written-argument clause, applied to
+`CubeLab.java` as point 1 applies it to `bridge/src`: the replay prefix of every unit that succeeded before was already
+the baseline's position (else its own listing at d would have differed and the unit would have failed, as s13's did);
+branch play after d is untouched (`Atlas.play` gives every seat of the copy a fresh `AtlasController`,
+`Atlas.java:773-778`, and the copy its own `SeatRecorder`s, `:810`; nothing under `bridge/src` copies `AiCardMemory`);
+the only units that change were unit errors; and `seat-identity` is unchanged. The next night's derivation must admit
+exactly this `CubeLab.java` diff in its `seat_code` check (the coordinator's, in `derive-j188`). D509 freezes
+`tools/cubelab/CubeLab.java` because it builds the seats and the units. D511 changes what a unit's replay is and nothing the seat does; a label changes only where a
 succeeded unit's old replay was not the baseline at its decision. Measured on J186 itself: every decision of every
 spine that has random branch rows (156 decisions over the 13 spines, s13's d2, d13 and d17 among them) was replayed with D511's classes and its branch 0 of every option played under the random continuation with
 the night's own unit settings (`cands` 8, `turnCap` 40, `branchTimeoutSec` 120, rows and frames recorded, one leak
 check); each branch's result, turns, steps, error and cap were compared with the night's `branches.jsonl` row, and
-its decision rows (both seats, every field but the wall time `ms`) with the night's `rows/`. **All 618 branches of
+its decision rows (both seats, every field but the wall time `ms`) with the night's `rows/`. The scope: the random
+continuation, branch 0 of every option; the Forge continuation (`branchForge`, 40 on J186) was not re-measured, at low
+risk, because the position at the fork is the same one and the rows there are identical. **All 618 branches of
 the 156 decisions have the night's result, turns, steps, error and cap; 577 of the 594 whose rows were compared have
 the night's rows field for field.** The other 17 are s04's (powered) d37, d41 and d42, and differ only in the ids of
 objects created during the branch (`attack:189` for the night's `attack:191`; one candidate vector besides), which is
 not D511's doing: the classes of `main`, rerun on those three decisions in a fresh worker, differ from the night on 15
 of their 19 branches' rows the same way, and D511's, in another fresh worker, on 8 — a branch copy starts from its
 game's card-id counter (`Game.cardIdCounter`, copied), and in that spine it is not the same from one run to the next
-(follow-up 32). The units
+(follow-up 34). The units
 that change are J186's s13 units from d23 on, which were unit errors and produced no rows and no labels. So D511 adds
-labels where there were errors and changes none, and J186's population `random-<band>-d508` is unchanged by it.
+labels where there were errors and changes none, and J186's population `random-<band>-d508` is unchanged by it. An
+atlas run resumed across this merge would mix the old and the new replay within one spine; start a spine on one build.
 
 **Rejected.**
 
@@ -124,7 +142,7 @@ labels where there were errors and changes none, and J186's population `random-<
   a recorded game the unrecorded one, the cleaner end state; but the records also run in every branch (each branch is
   recorded), and `quiet` is also the observe search's and the random seat's (`PolicyControllerAi.java:444`,
   `Explorer.java`), so it would change what branches play: a seat change, and a new population (D489, D509). It is
-  follow-up 32, for the queue.
+  follow-up 34, for the queue.
 - *Record the replay* (a `record` block in `unitJob` into a scratch folder). The same game, but it writes two gzipped
   frame logs per unit for nothing; the sink is the part that matters, measured.
 - *Feed the baseline's answers to the replay.* The baseline lists tokens, not Forge's answers, and a token is not an
