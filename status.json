@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-03T17:25:39-05:00",
- "heartbeat": "2026-11-03T17:25:39-05:00",
+ "updated": "2026-11-03T17:26:04-05:00",
+ "heartbeat": "2026-11-03T17:26:04-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 12.6,
-  "memUsedGb": 14.2,
+  "load1": 11.6,
+  "memUsedGb": 14.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4022,
+  "swapUsedMb": 4025,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-11-03T17:10:07-05:00",
-   "elapsed": 932,
+   "elapsed": 957,
    "done": 0,
    "total": 64000,
    "unit": "lines",
@@ -36,7 +36,7 @@
    "workersMax": 3,
    "cores": 7,
    "errors": 0,
-   "paused": true,
+   "paused": false,
    "dataUpdated": "2026-11-03T17:10:07-05:00",
    "memGb": 1.12,
    "live": {
@@ -115,6 +115,12 @@
      "kind": "pause",
      "workers": 1,
      "pressure": 0.5
+    },
+    {
+     "at": "2026-11-03T17:26:03-05:00",
+     "kind": "resume",
+     "workers": 1,
+     "pressure": 0
     }
    ],
    "detail": "lab-J187-pilot1"
