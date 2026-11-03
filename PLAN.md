@@ -426,8 +426,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
-| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) is listed on Old Man's measurement (D492's rule) though four spines played it cleanly; Willow Satyr and Aladdin carry the same `LoseControl` but cannot target themselves as printed: watched, not listed | `tools/cubelab/engine-unplayable.json` |
-| [Cube lab](#fu-cube-lab) | 24 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline) and why a recursion hangs instead of overflowing are not traced, nor is the one NullPointerException in its StaticCommandCheck (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
+| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) is listed on Old Man's measurement (D492's rule) though four spines played it cleanly; Willow Satyr and Aladdin carry the same `LoseControl` but cannot target themselves as printed: watched, not listed; Agatha's Soul Cauldron is a second route to the path for them (a holder of the ability may target itself) | `tools/cubelab/engine-unplayable.json` |
+| [Cube lab](#fu-cube-lab) | 24 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline, where Agatha's Soul Cauldron may still hold its ability) and why a recursion hangs instead of overflowing are not traced (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10074,16 +10074,20 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    Rubinia Soulsinger, Willow Satyr), Rubinia Soulsinger alone can also target itself as printed, so D492's rule lists
    it on Old Man of the Sea's J183 measurement, though it was dealt into J176 s12, J181 s03 and J182 s07 and s08 with 0
    errors and no run of correction lines (Old Man, too, played J176 s08 and J180 s08 cleanly before J183). What is open:
-   no spine has measured Rubinia itself, and Willow Satyr and Aladdin, which reach the path only after a change of type
-   in a game, are watched; the first spine where one of them targets itself and then changes controller is its
+   no spine has measured Rubinia itself, and Willow Satyr and Aladdin, which reach the path only after a change in a
+   game, are watched. There are two such changes: a change of type, and a holder of the ability through Agatha's Soul
+   Cauldron (creatures with a +1/+1 counter gain the activated abilities of creature cards it exiled): a legendary
+   holder of Willow Satyr's ability can target itself, as Tishana's Tidebinder holding Old Man's did in J183's
+   `d0-random-o1-b36`. The first spine where one of them targets itself and then changes controller is its
    measurement.
 24. **J183's hangs are not all traced.** (2026-11-02, D506.) Nine units of `b-s11-legacy-2524` gave no answer for
    1,800 s. Worker 1's log, which ran `d11-random-50`, ends in an unbroken run of 4,185 `Correcting zone for Old Man of
    the Sea (4)` lines up to its restart; the other hangs left no frames and interleaved logs, and two units of
    them, `d15-random-75` (twice, never finished) and `d15-random-100`, are at a decision after Old Man's death in the
-   baseline (it came back in 19 of d15's 625 finished branches). Why a recursion hangs rather than overflows is not
-   established, nor is the one NullPointerException in Old Man's `StaticCommandCheck` (its operand `X` evaluated with
-   no player, which needs the holder's `X` to read as something other than Old Man's `Count$CardPower`). The next night without Old Man in a spine should show whether a hang remains.
+   baseline (it came back in 19 of d15's 625 finished branches, and Agatha's Soul Cauldron may hold its ability from
+   exile). Why a recursion hangs rather than overflows is not established. (The one NullPointerException is explained:
+   Wan Shi Tong, Librarian held Old Man's ability through the Cauldron, and the static check reads `X` on it, its own
+   `Count$xPaid`, with no player.) The next night without Old Man in a spine should show whether a hang remains.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

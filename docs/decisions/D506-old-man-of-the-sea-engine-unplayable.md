@@ -1,7 +1,7 @@
 ## D506 — Old Man of the Sea and Rubinia Soulsinger join the engine-unplayable list: a self-targeted lose-control command recurses until the stack overflows, and the units hang (amends D482's rule)
 
 *Branch `pc/d506-old-man-of-the-sea`, on main `3275af30` (D502–D504's merge). D506 was reserved for this lane; D505 is
-another lane's, in flight, so `node tools/decisions.mjs next` prints D505 until that one merges. Applies **D482**'s rule (a
+another lane's, in flight (when this was written, `node tools/decisions.mjs next` printed D505). Applies **D482**'s rule (a
 card goes on the list with a measured stall, the card on the board) and **D492**'s class rule (a mechanic's own code path
 lists every pool card with it) to a third engine fault, and amends the list's rule sentence (its `about`) to name that
 fault's kind of measurement.*
@@ -17,12 +17,22 @@ seat A's deck `legacy-2424-00001` holds **Old Man of the Sea**; seat B's, `legac
   "forge.game.player.Player.getOpponents()" because "cc" is null*. No branch timed out (`timedOut` is false in every row).
   By decision: d0 9 of 300, d5 11 of 450, d6 23 of 600, d7 5 of 150, d11 11 of 700, d12 1 of 150, d13 11 of 750; d9, d14,
   d15 and d16 had none. No option had more than 10% of its branch games errored (the plan's `branchErrorMax`), so the atlas kept every value.
-- **Old Man of the Sea was on the battlefield at the last state frame of seat 0's log in 69 of the 71** (34 alone, 34
-  beside Preacher, 1 beside Tamiyo, Inquisitive Student). One (`d0-random-o1-b36`) shows Preacher and not Old Man, though
-  seat 1 had targeted Old Man at turns 24 and 28 of it; the NullPointerException's (`d13-random-o4-b43`) shows neither.
-- **The six worker logs hold 210,644 lines `Correcting zone for Old Man of the Sea (4)`** (next: Phyrexian Dragon Engine
-  7,246, Flitterwing Nuisance 1,550, Tishana's Tidebinder 1,326: seat A's creatures, which Old Man's activations and seat B's steals move). 66 of them are
-  unbroken runs of 1,210 to 11,744 lines; the lengths cluster at about 1,222 and about 5,860 (the longest, 11,744, is about two of the
+- **Old Man of the Sea's ability was on the battlefield in all 71.** Old Man itself was there at the last state frame of
+  seat 0's log in 69 (34 alone, 34 beside Preacher, 1 beside Tamiyo, Inquisitive Student). In the other two, Old Man was
+  in exile under **Agatha's Soul Cauldron** (deck 1: creatures its controller controls with a +1/+1 counter have every
+  activated ability of the creature cards it exiled), and a creature holding its ability through the Cauldron used it:
+  in `d0-random-o1-b36` Old Man dies at turn 30, the Cauldron exiles it at turn 33 (`target:4`), and Tishana's
+  Tidebinder (13, with a counter) activates the granted ability on itself (`activate:13` → `target:13`); seat 1's
+  Preacher activates at its upkeep at turn 34 and the engine stops, and worker 5's log holds an unbroken run of 1,222
+  `Correcting zone for Tishana's Tidebinder (13)` lines. In `d13-random-o4-b43` (the NullPointerException) Old Man is in
+  exile and Wan Shi Tong, Librarian (5, one counter) activates the granted ability at turn 27 (`activate:5#1` →
+  `target:43`).
+- **The six worker logs hold 210,644 lines that are exactly `Correcting zone for Old Man of the Sea (4)`**, and four more
+  of its prints merged into three other lines (`grep -c` counts 210,647 lines). Next, by exact line: Phyrexian Dragon
+  Engine 7,246, Tishana's Tidebinder 1,326 (1,222 of them the run above, Tidebinder holding Old Man's ability), Flitterwing
+  Nuisance 1,535; the others are seat A's creatures, which Old Man's activations and seat B's steals move. The Old Man
+  lines include 66 unbroken runs of 1,210 to 11,744 lines, one of which (4,185 lines, worker 1) ends at a hung worker's
+  restart rather than at an overflow; the lengths cluster at about 1,222 and about 5,860 (the longest, 11,744, is about two of the
   longer ones back to back), which is the depth a thread's stack reaches before it overflows, at one line a level.
 - **Nine units hung, in ten attempts** (`phaseB/units.jsonl`, `attemptErrors: ["no answer in 1800 s (hung)"]`) and were re-run from a fresh
   worker: d0-random-50, d0-random-75, d5-random-50, d5-random-75, d6-random-50, d6-random-125, d11-random-50,
@@ -31,8 +41,9 @@ seat A's deck `legacy-2424-00001` holds **Old Man of the Sea**; seat B's, `legac
   2026-11-02T20:22:38`). The other units' hangs are not traced: the logs interleave and the hung attempts left no frames.
   d15 is past Old Man's death in the baseline (it died at turn 13), but it returned to the battlefield in 19 of d15's 625
   finished branches.
-- The night's checks: `engine_errors - atlas.branchTimeoutsInStep <= 50` failed (71 and 1), `unit_errors == 0` failed (1),
-  `atlas.unitsShort == 0` failed (1). No other night's `atlas.md` under `/home/justin-a/code/lab/data/` names a
+- The night's checks: four failed. `engine_errors - atlas.branchTimeoutsInStep <= 50` (71 and 1), `unit_errors == 0` (1),
+  `atlas.unitsShort == 0` (1) and `atlas.problems == 0` (3, over the night: s11's unfinished unit and its 17 frame logs
+  that failed the redaction checker, and another spine's redaction failures in `run9.log`). No other night's `atlas.md` under `/home/justin-a/code/lab/data/` names a
   StackOverflowError. Old Man of the Sea was dealt into two earlier spines, J176 s08 (4,350 branches, 0 errors) and J180
   s08 (6 errors, none an overflow), whose logs hold 181 and 265 of its correction lines and no run.
 
@@ -52,7 +63,9 @@ TargetingPlayer$ Player.Opponent | TargetingPlayerControls$ True | LoseControl$ 
 1. `ValidTgts$ Creature.powerLEX` admits **Old Man of the Sea itself**: its power is not more than its own. Forge's AI
    never picks it; the atlas's random seat does, and when Old Man is the only creature with power at most its own it is
    the only legal target. In 69 of the 71 errored branches, one seat's log shows Old Man targeting itself earlier in the
-   game (a `target:4` choice, or an activation with no target choice logged while it was the only legal target). A
+   game (a `target:4` choice, or an activation with no target choice logged while it was the only legal target); in the
+   70th, `d0-random-o1-b36`, the self-target is Tishana's Tidebinder's, holding the ability through Agatha's Soul
+   Cauldron (above); the 71st is the NullPointerException, whose holder targeted another creature. A
    self-target alone does not overflow: 1,127 of the branches that finished cleanly have one too.
 2. `ControlGainEffect.resolve` builds one lose-control command per target and hangs it on the **source**: line 186 adds it
    to the source's leaves-play commands only when the source is not the target (`source != tgtC`, the one guard), but
@@ -74,17 +87,20 @@ TargetingPlayer$ Player.Opponent | TargetingPlayerControls$ True | LoseControl$ 
    the worker logs' 19 *Potentially dangerous stack overflow in ReservedStackAccess annotated method* warnings show, one per
    *Delayed* error).
 
-What this does not establish: whether the other hung units met this recursion, and why a recursion hung instead of
-overflowing (worker 1's ended mid-recursion and never printed again; a lock or a frozen tracker left held by the overflow
-is a guess, not a finding); and the
-NullPointerException, whose stack is `AbilityUtils.getCardListForXCount(3750)` ← `xCount(2863)` ← `calculateAmount(446,
+**The two branches without Old Man on the board** are the same fault through Agatha's Soul Cauldron, which gives Old
+Man's ability, and with it ControlGainEffect's commands, to another creature. In `d0-random-o1-b36` the holder,
+Tishana's Tidebinder, targets itself, and a change of its controller runs the recursion on it (its unbroken run of 1,222
+correction lines). The NullPointerException in `d13-random-o4-b43` has the stack `AbilityUtils.getCardListForXCount(3750)` ← `xCount(2863)` ← `calculateAmount(446,
 365)` ← `GameAction.checkStaticAbilities(1190, 1074, 1071)` ← `MagicStack.resolveStack(630)`. In the jar, line 1190 is
 the static-command check's right-hand side: `calculateAmount(card, "X", null)` on the card that holds the list, the
-`X` of Old Man's `GTX`. With no trait, `xCount` has no player (`cc` is null by construction), and the NullPointerException
-needs that count to fall through to the generic zone count at line 2863 instead of Old Man's own `Count$CardPower`,
-that is, a holder whose `X` no longer reads as Old Man's. Old Man's script is the only `StaticCommandCheck` in either
-deck, so the entry is its; what changed the holder (a copy, or a text or ability change) is not traced, and the branch's
-last frame shows neither Old Man nor Preacher. The measurement does not need either.
+`X` of Old Man's `GTX`. With no trait, `xCount` has no player (`cc` is null by construction). The holder here is Wan
+Shi Tong, Librarian, whose own `SVar:X:Count$xPaid` is what `X` reads on it; with no trait the `xPaid` branch does not
+apply and the count falls through to the generic zone count at line 2863, which needs the player. Old Man's own `X`,
+`Count$CardPower`, is answered before that line, so on Old Man itself the check does not throw.
+
+What this does not establish: whether the other hung units met this recursion, and why a recursion hung instead of
+overflowing (worker 1's ended mid-recursion and never printed again; a lock or a frozen tracker left held by the overflow
+is a guess, not a finding). The measurement does not need either.
 
 **Decision.**
 
@@ -92,15 +108,18 @@ last frame shows neither Old Man nor Preacher. The measurement does not need eit
    mechanism above as its `why` and the paths as its `evidence`. It is the measurement point 2 names: D482's stall in its unit form — units that gave no answer
    for 1,800 s, the form Scute Swarm's 14 unit kills took, seven of the nine at the decisions whose branches overflowed
    and one of them ending inside the recursion — and the same recursion's other end, 70 branch games whose engine step
-   overflowed with the card on the battlefield. The recursion is inside one engine step: the branch deadline (D467/D484)
+   overflowed with the card's ability on the battlefield (on Old Man in 69, through the Cauldron in one). The recursion is inside one engine step: the branch deadline (D467/D484)
    is read between steps and on events, and no branch row records it firing.
 2. **The list's rule names this kind of measurement** (amends D482 point 2 and D492 point 1). The `about` of
    `tools/cubelab/engine-unplayable.json` admitted a measured stall (branches timed out inside one engine step) or a
    measured fork crash; J183's fault is neither literally — no branch row timed out, 70 overflowed inside the step and
    nine units hung. It now reads: *… or a measured overflow or hang of the engine inside one step with the card's effect
-   on the board (D506: Old Man of the Sea's recursion) …*. The rule stays written once, in that `about`;
-   `deckcensus.ts`'s parse error and its doc comment, and `docs/guides/cube-lab.md`'s list paragraph, name the three
-   kinds and point at it.
+   on the board (D506: Old Man of the Sea's recursion) …*. The `about` also says now whose games the
+   engine cannot finish (the lab's seats, Forge's AI or the atlas's random seat: only the random seat makes Old Man's
+   self-target, since Forge's `ControlGainAi` draws its candidates from the opponents' creatures), and its class clause
+   covers a fault of any of the kinds (a stall, a crash, an overflow or a hang), as Rubinia's listing needs. The rule
+   stays written once, in that `about`: `deckcensus.ts`'s header, its doc comment and parse error, and
+   `docs/guides/cube-lab.md`'s list paragraph point at it and no longer restate it.
 3. **The code path is the mechanic, so D492's class rule lists Rubinia Soulsinger on Old Man's measurement.** The
    recursion does not need `StaticCommandCheck`: it needs `LoseControl` in a `GainControl`'s `LoseControl$` (the
    change-controller command left on the source) and a target that may be the source itself. Of the 33,617 files in
@@ -113,13 +132,22 @@ last frame shows neither Old Man nor Preacher. The measurement does not need eit
    Old Man of the Sea played J176 s08 and J180 s08 cleanly before J183: the fault needs the self-target and the later
    change of controller in one game, which a clean spine does not rule out. (Of the two scripts in all of Forge that
    carry `StaticCommandCheck` with `GainControl`, Old Man of the Sea and Rootwater Matriarch, only Old Man is in the pool;
-   Rootwater Matriarch's `LoseControl$` is `StaticCommandCheck` alone, with no change-controller command.)
+   Rootwater Matriarch's `LoseControl$` is `StaticCommandCheck` alone, with no change-controller command.) This is
+   D492's case and not D490's, though Old Man's fault also needs a seat's choice: D490 left Chain of Vapor and its
+   siblings to their own measurements because each loop is the AI's choice on that card's own text, while here the
+   fault is one engine path (ControlGainEffect's unguarded `LoseControl` and `controllerChangeZoneCorrection`'s
+   re-entry), the card's name plays no part in it, and Rubinia's printed target admits Rubinia exactly as Old Man's
+   admits Old Man.
 4. **Watched, not listed.** **Willow Satyr** (`ValidTgts$ Creature.Legendary`; it is not legendary) and **Aladdin**
    (`ValidTgts$ Artifact`; it is a creature) carry the same `LoseControl` but cannot target themselves as printed, only
-   after a change of type in a game; neither is listed without a measurement of its own. **Preacher** is
+   after a change of type in a game, or when their ability is held by another creature (Agatha's Soul Cauldron gives
+   an exiled creature card's activated abilities to its controller's creatures with a +1/+1 counter, and a legendary
+   holder of Willow Satyr's ability may target itself, as Tishana's Tidebinder did with Old Man's). Both are a change in
+   a game, not the card's printed text (D494 point 3's line), so neither is listed without a measurement of its own.
+   **Preacher** is
    not listed: its `LoseControl$` is `Untap,LeavesPlay`, with no change-controller command, and it targets a creature its
    opponent controls; it was measured only beside Old Man (it sat beside it in 34 of the 69 branches, and may be one of the cards that
-   moved it), and one errored branch's last frame shows it without Old Man. Oko, Thief of Crowns, which moved Old Man in the two traced branches,
+   moved it); the errored branch whose last frame shows it without Old Man is the Cauldron's (above). Oko, Thief of Crowns, which moved Old Man in the two traced branches,
    is a trigger of the fault, not its owner. None of these is a judgement of the card, and none is a bias toward or
    against anyone's decks or cubes.
 
