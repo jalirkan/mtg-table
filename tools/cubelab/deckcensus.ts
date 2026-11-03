@@ -61,11 +61,10 @@
 // drawn as one uniform pool (MIN_BAND_POOL); its cross-band neighbour is then peasant.
 //
 // 5. THE ENGINE-UNPLAYABLE LIST (D482; tools/cubelab/engine-unplayable.json, `--unplayable <file|none>`).
-//    A band's draw never deals a listed card: a card Forge's AI cannot finish a game with inside the
-//    atlas's branch budget (J166: Scute Swarm; J173: Chain of Smog, D490), or with whose effect on the
-//    board the fork throws (J176: the pool's four Prepare cards, D492; Ob Nixilis, the Adversary, whose
-//    casualty copy is a planeswalker token the fork cannot re-make, D494).  An engine limitation,
-//    measured, not a design judgement.
+//    A band's draw never deals a listed card.  What lists a card is the file's own `about` (D482, amended
+//    by D492 and D506); the entries are J166's Scute Swarm, J173's Chain of Smog (D490), J176's four
+//    Prepare cards (D492) and Ob Nixilis, the Adversary (D494), and J183's Old Man of the Sea with
+//    Rubinia Soulsinger (D506).  An engine limitation, measured, not a design judgement.
 //    The listed card stays in every list, so the lists' sizes and q are unchanged; a pick that lands on
 //    it is REDRAWN from the same list (a uniform pick among the rest), a list of listed cards only counts
 //    as empty, and a listed fixer is passed over in its shuffled order.  So a deck none of whose
@@ -718,14 +717,14 @@ export const ENGINE_UNPLAYABLE_FILE = 'tools/cubelab/engine-unplayable.json';
 export interface UnplayableEntry { since: string; why: string; evidence: string }
 export interface EngineUnplayable { file: string; sha: string; cards: Map<string, UnplayableEntry> }
 
-/** The list's JSON: `{ cards: { <name>: { since, why, evidence } } }`, each field a non-empty string (a card goes on it only with a measured stall or fork crash, D482/D492). */
+/** The list's JSON: `{ cards: { <name>: { since, why, evidence } } }`, each field a non-empty string (what lists a card is the file's own `about`, D482/D492/D506). */
 export function parseEngineUnplayable(text: string, file: string): EngineUnplayable {
   const j = JSON.parse(text) as { cards?: Record<string, Partial<UnplayableEntry>> };
   if (!j || typeof j.cards !== 'object' || j.cards === null || Array.isArray(j.cards)) throw new Error(`decks: ${file} wants { "cards": { <name>: { since, why, evidence } } } (D482)`);
   const cards = new Map<string, UnplayableEntry>();
   for (const [name, e] of Object.entries(j.cards)) {
     for (const k of ['since', 'why', 'evidence'] as const) {
-      if (typeof e?.[k] !== 'string' || !(e[k] as string).trim()) throw new Error(`decks: ${file}: ${name} has no ${k} (D482/D492: a card is listed only with a measured stall or fork crash, its job, its reason and its evidence)`);
+      if (typeof e?.[k] !== 'string' || !(e[k] as string).trim()) throw new Error(`decks: ${file}: ${name} has no ${k} (D482: a card is listed only on a measurement, as the file's own about says, with its job, its reason and its evidence)`);
     }
     cards.set(name, { since: e.since as string, why: e.why as string, evidence: e.evidence as string });
   }

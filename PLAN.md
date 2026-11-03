@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 377 items still open across 43 follow-up lists** — 351
+**The index below lists 380 items still open across 43 follow-up lists** — 353
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D505
+said 371 across 42, three rows and one list behind its table) — D506
+(2026-11-02) added the cube lab's 24 and 25; D505
 (2026-11-02) added the cube lab's 23 and amended its 19 (both parts); D502–D504
 (2026-11-02) added the cube lab's 19, 20, 21 and 22; D501
 (2026-11-01) added the cube lab's 18 and closed its 15; D500 (2026-11-01) added the cube lab's 17; D499 (2026-11-01) added the cube lab's 16; D498 (2026-11-01) added the cube lab's 14 and 15; D497
@@ -427,6 +428,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
 | [Cube lab](#fu-cube-lab) | 23 | open | D505's second part (the dig tied by its hideaway trigger's resolution, one dig per entry; a countered trigger closed by its lone `unstacked`, a fizzled one ignored, the resolution within 10 frames of a cast in the entry's frame or 3 of one in the next) is measured on four J183 s11 logs and the J182/J183 s06 samples; still admitted: a trigger that digs nothing with another dig just before its `resolved`, another ETB trigger or an early activation resolving within the bound right after an unrelated dig; refused conservatively: the second of two hosts resolving in one frame (x3b) and a Watcher whose trigger resolves just after another trigger's dig (x6) | `docs/decisions/D505-hideaway-look-kept-while-exiled.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) is listed on Old Man's measurement (D492's rule) though four spines played it cleanly; Willow Satyr and Aladdin carry the same `LoseControl` but cannot target themselves as printed: watched, not listed; Agatha's Soul Cauldron is a second route to the path for them (a holder of the ability may target itself) | `tools/cubelab/engine-unplayable.json` |
+| [Cube lab](#fu-cube-lab) | 24 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline, where Agatha's Soul Cauldron may still hold its ability) and why a recursion hangs instead of overflowing are not traced (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -9875,7 +9878,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   revealed top card (follow-up 1).
 
 <a id="fu-cube-lab"></a>
-### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504); 23, 2026-11-02 (D505)
+### The cube lab's follow-ups — six, 2026-10-03; 7 and 8, 2026-10-31 (D494); 9, 2026-10-31 (D495); 10 and 11, 2026-11-01 (D496); 12 and 13, 2026-11-01 (D497); 14 and 15, 2026-11-01 (D498); 16, 2026-11-01 (D499); 18, 2026-11-01 (D501); 19–22, 2026-11-02 (D502–D504); 23, 2026-11-02 (D505); 24 and 25, 2026-11-02 (D506)
 
 1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
    `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
@@ -10110,6 +10113,29 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    - a Watcher whose trigger resolves just after another permanent's trigger dug a card in that frame (`x6`).
 
    If a night meets either, it needs its own decision.
+24. **D506's recursion has a second pool card that can reach it, listed on Old Man's measurement.** (2026-11-02, D506.) Old Man of the Sea overflows
+   because `ControlGainEffect` puts a self-targeted lose-control command on the source's own change-controller list
+   (only `LeavesPlay` is guarded against `source == target`), and `controllerChangeZoneCorrection` runs that list
+   before it moves the card and clears it only after: the command re-enters the correction on the same card without
+   end. That needs `LoseControl` in a `GainControl`'s `LoseControl$` and a target that may be the source, not
+   `StaticCommandCheck`. Of the four pool cards whose script has that `LoseControl` (Aladdin, Old Man of the Sea,
+   Rubinia Soulsinger, Willow Satyr), Rubinia Soulsinger alone can also target itself as printed, so D492's rule lists
+   it on Old Man of the Sea's J183 measurement, though it was dealt into J176 s12, J181 s03 and J182 s07 and s08 with 0
+   errors and no run of correction lines (Old Man, too, played J176 s08 and J180 s08 cleanly before J183). What is open:
+   no spine has measured Rubinia itself, and Willow Satyr and Aladdin, which reach the path only after a change in a
+   game, are watched. There are two such changes: a change of type, and a holder of the ability through Agatha's Soul
+   Cauldron (creatures with a +1/+1 counter gain the activated abilities of creature cards it exiled): a legendary
+   holder of Willow Satyr's ability can target itself, as Tishana's Tidebinder holding Old Man's did in J183's
+   `d0-random-o1-b36`. The first spine where one of them targets itself and then changes controller is its
+   measurement.
+25. **J183's hangs are not all traced.** (2026-11-02, D506.) Nine units of `b-s11-legacy-2524` gave no answer for
+   1,800 s. Worker 1's log, which ran `d11-random-50`, ends in an unbroken run of 4,185 `Correcting zone for Old Man of
+   the Sea (4)` lines up to its restart; the other hangs left no frames and interleaved logs, and two units of
+   them, `d15-random-75` (twice, never finished) and `d15-random-100`, are at a decision after Old Man's death in the
+   baseline (it came back in 19 of d15's 625 finished branches, and Agatha's Soul Cauldron may hold its ability from
+   exile). Why a recursion hangs rather than overflows is not established. (The one NullPointerException is explained:
+   Wan Shi Tong, Librarian held Old Man's ability through the Cauldron, and the static check reads `X` on it, its own
+   `Count$xPaid`, with no player.) The next night without Old Man in a spine should show whether a hang remains.
 
 ## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
 

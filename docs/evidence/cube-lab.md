@@ -268,3 +268,29 @@ lands in its trigger's `resolved` frame, before it, in 4,848 of them, and one fr
 resolves at most 10 state frames after a cast in its host's entry frame, and at most 3 after one in the next. Those
 two bounds are in the rule. A countered trigger (`unstacked` alone, 6 in s11) and a fizzled one tie nothing. PLAN.md's cube
 lab follow-up 23 holds what part two still admits.
+## 10. J183's overflow: Old Man of the Sea (D506, 2026-11-02)
+
+The lab's atlas night J183 (mtg-table `3275af30`) failed three checks on one spine, `b-s11-legacy-2524` (legacy, spine
+seed 2524; decks `s11-legacy-2424`, Old Man of the Sea in deck 1, Preacher and Oko, Thief of Crowns in deck 2), under
+`/home/justin-a/code/lab/data/lab-j183/`:
+
+| measure | value |
+|---|---|
+| branch games | 4,175, all on the random seat, 0 timed out |
+| errored (`turns: 0`) | 71: 51 StackOverflowError, 19 *Delayed* StackOverflowError (ReservedStackAccess), 1 NullPointerException in `checkStaticAbilities` |
+| errored by decision | d0 9/300, d5 11/450, d6 23/600, d7 5/150, d11 11/700, d12 1/150, d13 11/750; d9, d14–d16 none |
+| Old Man's ability on the battlefield | 71 of 71: Old Man itself at the last state of seat 0's log in 69 (34 alone, 34 with Preacher, 1 with Tamiyo, Inquisitive Student); in 2 it is in exile under Agatha's Soul Cauldron and a creature holding its ability used it (Tishana's Tidebinder, on itself; Wan Shi Tong, Librarian, the NullPointerException) |
+| Old Man (or its holder) targeted itself earlier in the branch (either seat's log) | 70 of 71 errored (69 Old Man, 1 Tidebinder); 1,127 of the 4,104 clean branches had Old Man do so too |
+| `Correcting zone for Old Man of the Sea (4)` lines, six worker logs | 210,644 exact lines (210,647 by `grep -c`); 66 unbroken runs of 1,210–11,744, clustered at ~1,222 and ~5,860, one of them (4,185, worker 1) ending at a hung worker's restart |
+| units hung 1,800 s (`units.jsonl`) | 9 units, 10 attempts: `d15-random-75` hung on both of its attempts and never finished (`atlas.unitsShort` 1) |
+| checks failed (`pc-results/results/J183/checks.txt`) | four: `engine_errors - atlas.branchTimeoutsInStep <= 50` (71, 1); `unit_errors == 0` (1); `atlas.unitsShort == 0` (1); `atlas.problems == 0` (3 over the night) |
+
+One branch traced end to end, `d7-random-o2-b47`: Old Man's only legal target at turn 9 is itself; at turn 14 seat 1's
+Oko, Thief of Crowns −5 exchanges a Golem token for it, and the engine stops. The cause in the pinned jar is D506's (a
+self-targeted change-controller command that re-enters `controllerChangeZoneCorrection` on the same card before its list
+is cleared). Earlier spines with Old Man (J176 s08, J180 s08) and with Rubinia Soulsinger (J176 s12, J181 s03, J182 s07
+and s08) had no overflow; Rubinia, whose script takes the same path, is listed on Old Man's measurement (D492's rule).
+
+The draw on the new list: J183's 13 spine and 13 validation pairs redrawn from their seeds give 51 of 52 decks
+byte-identical; `s11-legacy-2424` deck 1 changes from its eleventh spell pick (Old Man of the Sea, 1 skip), 15 of its 40
+cards by copies. Rubinia Soulsinger is in none of the 52 and takes 0 skips.

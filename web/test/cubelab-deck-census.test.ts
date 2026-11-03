@@ -671,11 +671,13 @@ test('the engine-unplayable list (D482): the committed file, its shape, every ca
   const u = loadEngineUnplayable(REPO, undefined);
   assert.ok(u, 'the committed list loads');
   assert.equal(u.file, ENGINE_UNPLAYABLE_FILE);
-  assert.deepEqual([...u.cards.keys()], ['Scute Swarm', 'Chain of Smog', 'Emeritus of Abundance', 'Elite Interceptor', 'Emeritus of Ideation', 'Studious First-Year', 'Ob Nixilis, the Adversary'], 'the list: J166\'s Scute Swarm (D482), J173\'s Chain of Smog (D490), J176\'s four Prepare cards (D492) and J176\'s Ob Nixilis, the Adversary (D494)');
+  assert.deepEqual([...u.cards.keys()], ['Scute Swarm', 'Chain of Smog', 'Emeritus of Abundance', 'Elite Interceptor', 'Emeritus of Ideation', 'Studious First-Year', 'Ob Nixilis, the Adversary', 'Old Man of the Sea', 'Rubinia Soulsinger'], 'the list: J166\'s Scute Swarm (D482), J173\'s Chain of Smog (D490), J176\'s four Prepare cards (D492), J176\'s Ob Nixilis, the Adversary (D494) and J183\'s Old Man of the Sea with Rubinia Soulsinger on its measurement (D506)');
   assert.equal(u.cards.get('Scute Swarm')?.since, 'J166');
   assert.equal(u.cards.get('Chain of Smog')?.since, 'J173');
   assert.equal(u.cards.get('Studious First-Year')?.since, 'J176');
   assert.equal(u.cards.get('Ob Nixilis, the Adversary')?.since, 'J176');
+  assert.equal(u.cards.get('Old Man of the Sea')?.since, 'J183');
+  assert.equal(u.cards.get('Rubinia Soulsinger')?.since, 'J183');
   for (const n of u.cards.keys()) assert.ok(byName.has(n), `${n} is a library card`);
   assert.equal(loadEngineUnplayable(REPO, 'none'), null);
   assert.throws(() => parseEngineUnplayable('{"cards":{"X":{"since":"J1","why":"w"}}}', 't.json'), /X has no evidence/);
@@ -730,9 +732,9 @@ test('decks writes the list it applied and its skips; --unplayable none is D447\
       return said;
     };
     const said = run('d');
-    assert.match(said.join('\n'), /engine-unplayable \(D482\) tools\/cubelab\/engine-unplayable\.json: Scute Swarm \(1 skip\(s\)\), Chain of Smog \(0 skip\(s\)\), Emeritus of Abundance \(0 skip\(s\)\), Elite Interceptor \(0 skip\(s\)\), Emeritus of Ideation \(0 skip\(s\)\), Studious First-Year \(0 skip\(s\)\), Ob Nixilis, the Adversary \(0 skip\(s\)\), 1 deck\(s\) with a skip/);
+    assert.match(said.join('\n'), /engine-unplayable \(D482\) tools\/cubelab\/engine-unplayable\.json: Scute Swarm \(1 skip\(s\)\), Chain of Smog \(0 skip\(s\)\), Emeritus of Abundance \(0 skip\(s\)\), Elite Interceptor \(0 skip\(s\)\), Emeritus of Ideation \(0 skip\(s\)\), Studious First-Year \(0 skip\(s\)\), Ob Nixilis, the Adversary \(0 skip\(s\)\), Old Man of the Sea \(0 skip\(s\)\), Rubinia Soulsinger \(0 skip\(s\)\), 1 deck\(s\) with a skip/);
     const m = JSON.parse(readFileSync(join(dir, 'd', 'decks.json'), 'utf8')) as { engineUnplayable: { decision: string; cards: string[]; skips: number; skipsByCard: Record<string, number>; decksWithSkip: number; notInLibrary: string[] }; rules: Record<string, string> };
-    assert.deepEqual(m.engineUnplayable, { ...m.engineUnplayable, decision: 'D482', cards: ['Scute Swarm', 'Chain of Smog', 'Emeritus of Abundance', 'Elite Interceptor', 'Emeritus of Ideation', 'Studious First-Year', 'Ob Nixilis, the Adversary'], skips: 1, skipsByCard: { 'Scute Swarm': 1, 'Chain of Smog': 0, 'Emeritus of Abundance': 0, 'Elite Interceptor': 0, 'Emeritus of Ideation': 0, 'Studious First-Year': 0, 'Ob Nixilis, the Adversary': 0 }, decksWithSkip: 1, notInLibrary: [] });
+    assert.deepEqual(m.engineUnplayable, { ...m.engineUnplayable, decision: 'D482', cards: ['Scute Swarm', 'Chain of Smog', 'Emeritus of Abundance', 'Elite Interceptor', 'Emeritus of Ideation', 'Studious First-Year', 'Ob Nixilis, the Adversary', 'Old Man of the Sea', 'Rubinia Soulsinger'], skips: 1, skipsByCard: { 'Scute Swarm': 1, 'Chain of Smog': 0, 'Emeritus of Abundance': 0, 'Elite Interceptor': 0, 'Emeritus of Ideation': 0, 'Studious First-Year': 0, 'Ob Nixilis, the Adversary': 0, 'Old Man of the Sea': 0, 'Rubinia Soulsinger': 0 }, decksWithSkip: 1, notInLibrary: [] });
     assert.match(m.rules.engineUnplayable as string, /never dealt/);
     const rows = readFileSync(join(dir, 'd', 'decks.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l) as DeckRecord);
     assert.deepEqual(rows.map((r) => r.engineSkips ?? null), [{ 'Scute Swarm': 1 }, null]);
