@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-03T17:38:05-05:00
+- time: 2026-11-03T17:42:43-05:00
 - runner: ac07876b, up since 2026-11-01T21:41:21-05:00
-- running: J187 commands 1/15, 137/64000 lines, 303.4/h, ETA 2026-11-12T12:06:29-05:00, 6 worker(s), 7 core(s)
+- running: J187 commands 1/15, 542/64000 lines, 3653.7/h, ETA 2026-11-04T11:04:48-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 25.03; memory 17.7/30.5 GB, swap 3969 MB, pressure 0% (lab budget 23.4 GB)
+- load: 15.21; memory 15.4/30.5 GB, swap 3957 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J186 failed at 2026-11-03T16:37:17-05:00
