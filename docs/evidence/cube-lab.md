@@ -374,7 +374,9 @@ was the target path's writer: unlike the entity path, it had no token for a card
 at line 305. With that record rewritten into D510's shape (`options: ["option:hidden"]`, `chosen: "option:hidden"`,
 every other line byte for byte) it passes, and so do the other eleven logs rewritten the same way. The checker needed
 no change. D510 makes `Decisions.targetAnswer` list `option:hidden` after the visible options when `hidden` is above
-0, and answer each unseen target with it (protocol M81). Held by `mtgtable.ai.DecisionSelfTest`: 233 checks, 8 of them
-D510's; with the old `Decisions.java` those 8 fail. It is record-only (D509, point 2): `tools/cubelab.sh
+0, and answer each unseen target with it (protocol M81). `hidden` counts each hidden candidate and each unseen answer outside them, once (the review). Held by
+`mtgtable.ai.DecisionSelfTest`: 235 checks, 10 of them D510's; on the lane's first version, with the old
+`Decisions.java`, its 8 D510 checks failed. The checker's self-test gains a pass control,
+`m81-target-option-hidden.jsonl`. It is record-only (D509, point 2): `tools/cubelab.sh
 seat-identity` matches the golden on all 4 games, `tools/ai-bench.sh --selftest` passes 320 of 320 and `tools/cubelab.sh
 atlas-selftest` is green. D510 sets out the argument from the callers. J186 stays in D508's population.

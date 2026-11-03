@@ -2,7 +2,9 @@
 
 *Branch `pc/d510-all-hidden-targets`, off main `43043fe5` (D509's merge). D510 was reserved for this lane
 (`node tools/decisions.mjs next` printed it). A record-only fix under D509: the argument that it changes no play and
-no listing is below, with its evidence. The checker is unchanged.*
+no listing is below, with its evidence. The checker is unchanged; its self-test gains a pass control. Revised after
+the skeptic's review ("merge after fixes"): the exact `hidden` count, the repeat-cap argument, the control, two new
+follow-ups.*
 
 **2026-11-03**
 
@@ -48,21 +50,28 @@ and writes a hidden pick as `option:hidden`. The target path never got the same 
 - **Answer.** Each unseen target of the answer is `option:hidden`, after the visible ones. One target in all goes
   in `chosen` as a token; several go in a list. An answer of only unseen targets is never null. A part left empty is
   still `target:none` (D487), whatever its hidden candidates.
-- **`hidden` counts an unseen answer.** `d.hidden = max(d.hidden, unseen)`. An unseen target outside Forge's
-  candidate list (a spell on the stack, which `getAllCandidates` leaves out and `targets0` adds from the answer)
-  therefore still lists `option:hidden`. A record lists `option:hidden` exactly when it carries `hidden`.
-- **`complete: false`** beside an unseen answer, as D487 said. A hidden candidate that was not chosen does not mark
-  the record incomplete, as before.
+- **`hidden` counts exactly.** M75 defined a target record's `hidden` as the number of candidates the part may
+  target that the seat cannot see (`getAllCandidates`, each judged by `entityToken`). D510 extends it by the unseen
+  targets of the answer that are **not** among those candidates: a spell on the stack, which `getAllCandidates`
+  leaves out and `targets0` meets only in the answer. `targets0` keeps the hidden candidates, and for each unseen
+  target asks whether it is one of them (the same object, or the same card or player by id, `Decisions.among`); one
+  that is not adds one to `hidden` (`targetAnswer`'s `unseenOutside`). An unseen target that is a hidden candidate
+  is counted once. So every hidden object the part offered or took is counted once, and a record lists
+  `option:hidden` exactly when `hidden` is above 0. (The review: the first version's `max(hidden, unseen)` was a
+  lower bound, 1 for a hidden candidate not chosen beside an unseen stack spell chosen, which are 2.)
+- **`complete: false`** beside an unseen answer, as D487 said, and now for a narrower reason: `option:hidden` cannot
+  say whether the unseen answer was one of the counted candidates or a target outside the engine's list. A hidden
+  candidate that was not chosen does not mark the record incomplete, as before.
 
 So J186's record becomes `options: ["option:hidden"], hidden: 1, complete: false, chosen: "option:hidden"`. It
 passes the checker as it is: `option:hidden` is in `DECISION_TOKEN` for every kind, and no rule ties a token's verb
 to the record's kind. `Decision.TOKEN`, `check-redaction.mjs` and the token grammar are unchanged. Only
 `Decision`'s javadoc names `option:hidden` beside the target tokens. **No new field.**
 
-**Held by `mtgtable.ai.DecisionSelfTest`** (`bridge/build.sh`; 227 → 233 checks). `targetAnswer` is package-private in
+**Held by `mtgtable.ai.DecisionSelfTest`** (`bridge/build.sh`; 227 → 235 checks). `targetAnswer` is package-private in
 `mtgtable.ai`, so its engine-free cases live beside D487's in that self-test, not in `SelectionSelfTest`, which is
 in `mtgtable` and boots the engine. Two of D487's checks asserted the null answer and now assert `option:hidden`
-(min 1 and min 0). Six are new:
+(min 1 and min 0). Eight are new:
 
 - J186's record: no visible candidate, one hidden, the one target unseen.
 - All hidden, none chosen, minimum 0: `target:none` with the hidden candidate listed, and the record complete.
@@ -70,9 +79,19 @@ in `mtgtable` and boots the engine. Two of D487's checks asserted the null answe
 - A visible target and an unseen one: `chosen` is `[target:p1, option:hidden]`.
 - An unseen answer outside the candidates: counted, so listed.
 - Two hidden candidates and a visible pick: listed once, `hidden` 2, complete.
+- A hidden candidate not chosen and an unseen stack spell chosen: `hidden` 2, `option:hidden` listed once.
+- An unseen answer that is the hidden candidate: `hidden` 1, not counted twice.
 
-The negative control: with `Decisions.java` reverted to `43043fe5`, the self-test fails 8 of its 233 checks,
-these eight.
+`Decisions.among` itself needs game objects and is not in the engine-free self-test. The negative control, run on
+the lane's first version (the eight checks then, before the review's two count checks and the six-argument
+`targetAnswer`): with `Decisions.java` reverted to `43043fe5`, the self-test failed 8 of its 233 checks, those
+eight.
+
+**The checker's control.** `fixtures/negative/redaction/m81-target-option-hidden.jsonl` (generated by
+`tools/make-negative-fixtures.mjs`, listed as passing in `tools/check-redaction-selftest.mjs`) carries two target
+records, J186's shape (`options: ["option:hidden"]`, `hidden: 1`, `chosen: "option:hidden"`) and a visible target
+beside an unseen one (`chosen: ["target:p1", "option:hidden"]`). No checker rule is new, so the control holds the
+path open: a later rule that ties a token's verb to the record's kind fails it.
 
 **On the real data.** The checker passes all twelve J186 logs once each record is rewritten into this shape (a scratch
 script that rewrites the one record per log and touches no other line; not committed).
@@ -93,18 +112,24 @@ listing (`Atlas.Hook.decision`) reads `SearchPolicy.Cand`s, never a record. Two 
 neither changes anything that is played:
 
 - **`Decision.forced()`** (`options.size() + hidden <= 1 && complete`) decides whether a record is written or only
-  counted. For a target record it gives the same answer as before. Adding `option:hidden` needs `hidden > 0`. When
+  counted. For a target record it gives the same answer as before. `hidden` grows only beside an unseen answer,
+  which makes the record incomplete, so never forced. Adding `option:hidden` needs `hidden > 0`. When
   the record also lists another option, the sum was already at least 2. When `option:hidden` is its only option, it
   had no option before, so an unseen answer had made it incomplete (a record with no option cannot be complete:
   `target:none` is listed for every empty part). Either way it was not forced before and is not forced now.
 - **D484's repeat cap** (`DecisionClock.repeated`, through `AtlasController.setDecisionSink` in a branch that
   records frames) keys each written record on its options, `hidden`, `chosen` and `chosenAll`. That key is the one
   path from a record back into a branch's play: the 1,000th identical record in a row at one `stateSeq` ends the
-  branch as a timeout. The new record is a one-to-one function of what the old one held plus the unseen count.
-  So two records the old bridge wrote differently are still different, and the cap can never fire where it did not
-  fire before. Two records the old bridge wrote alike come out different only when their parts differed in that
-  count alone. Not one cap firing appears in J180–J186's logs: no `the same <kind> decision` line under any
-  night's data.
+  branch as a timeout. The change moves the key both ways, in narrow cases. **Splits:** two records the old bridge
+  wrote alike now differ when their parts differed only in how many targets of the answer were unseen (the old
+  record dropped them); there the cap fires less. **Merges:** two records the old bridge wrote differently now come
+  out alike only when they differ in whether an unseen answer was a counted candidate. With the same visible
+  candidates `[target:67]` and one unseen target chosen, A (no hidden candidate; the target a stack spell outside
+  Forge's list) was `hidden` 0 and B (one hidden candidate, chosen) was `hidden: 1`; both are now `options
+  [target:67, option:hidden]`, `hidden: 1`, `chosen: option:hidden` (the review's counterexample). For the cap to fire
+  there, the same part would have to alternate between A and B a thousand times at one `stateSeq` with no state
+  frame between, and nothing else in those records could differ. No firing of the cap appears in J180–J186's data:
+  there is no `the same <kind> decision` line under any of those nights.
 
 Unchanged: `fixtures/cubelab/seat-identity.json` (`tools/cubelab.sh seat-identity`: all 4 games the golden's, the
 same digests), the bench (`tools/ai-bench.sh --selftest`: 320 checks, 0 failures), `tools/cubelab.sh atlas-selftest`,
@@ -120,7 +145,15 @@ the recorder lands between landings).
 - The checker. Logs written before this decision keep failing on the old shape, as they should. The legacy J171
   shape (M76's `LEGACY_NULL_TARGET_BEFORE`) is untouched.
 - The board: a human seat's ask goes through `WireGuiGame` and `Snap`, never `Decisions`.
-- The entity path.
+- The entity path, apart from its two `option:hidden` literals, which are now the `HIDDEN` constant (the gap it has
+  is follow-up 33).
+- What a record means. One record shape that already passed does change: one visible target beside an unseen one
+  used to write `chosen: "target:p1"` (the unseen one dropped) and now writes `["target:p1", "option:hidden"]`, so
+  `tools/ml/policy_data.py`'s `chosenIndex` becomes a list for those records (`search_errors.norm_token` joins lists;
+  nothing breaks).
+
+**Follow-ups** (PLAN.md's cube-lab list): **32**, the checker has no rule tying `option:hidden` to `hidden`; **33**,
+the entity path's hidden pick outside its list.
 
 **Rejected.**
 
@@ -132,5 +165,6 @@ the recorder lands between landings).
   kind, and the checker admits it today.
 - *Dropping the record when every candidate is hidden.* Forge did make a choice there, so the decision happened.
   Leaving it out would also break the records' `parent` chain from the priority record that cast the spell.
+- *`hidden = max(hidden, unseen)`* (this lane's first version): a lower bound, not a count.
 - *Fixing the ghost instead.* The ghost is one way to reach this shape. Any part whose only candidates the seat
   cannot see reaches it too, and the ghost's fix changes plays: it is follow-up 27, queued under D509.

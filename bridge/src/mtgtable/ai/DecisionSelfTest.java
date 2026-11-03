@@ -178,7 +178,8 @@ public final class DecisionSelfTest {
                 }
             }
             d.hidden = a.length > 4 ? (Integer) a[4] : 0;   // D510: the candidates targets0 counted and could not name
-            Decisions.targetAnswer(d, opts, chosen, (Integer) a[2], (Integer) a[3]);
+            final int outside = a.length > 5 ? (Integer) a[5] : 0;   // D510: unseen answers outside those candidates
+            Decisions.targetAnswer(d, opts, chosen, (Integer) a[2], outside, (Integer) a[3]);
             return d;
         };
         // "up to one target creature" (The Wandering Emperor's +1), Forge chose none
@@ -208,13 +209,13 @@ public final class DecisionSelfTest {
         check("target:67".equals(pm.get("chosen")) && !pm.containsKey("min") && !plain.options.contains("target:none"),
                 "min 1, a target taken: as before D487 (no none, no min)");
         // an answer the seat cannot see is not "none" -- and, D510, not null: option:hidden, listed and chosen
-        final Decision unseen = part.apply(new Object[] {List.of("target:5", "target:67"), List.of(), 1, 1});
+        final Decision unseen = part.apply(new Object[] {List.of("target:5", "target:67"), List.of(), 1, 1, 1});
         final Map<?, ?> un = (Map<?, ?>) Json.parse(unseen.toJson(1, 23, 141, 123));
         check("option:hidden".equals(un.get("chosen")) && java.util.Arrays.equals((Object[]) un.get("options"),
                         new Object[] {"target:5", "target:67", "option:hidden"}) && Long.valueOf(1).equals(un.get("hidden"))
                         && Boolean.FALSE.equals(un.get("complete")) && !un.containsKey("min") && !un.containsKey("why"),
                 "a target the seat cannot see (min 1): option:hidden listed last and chosen, hidden 1, complete:false (D510)");
-        final Decision unseen0 = part.apply(new Object[] {List.of("target:5"), List.of(), 1, 0});
+        final Decision unseen0 = part.apply(new Object[] {List.of("target:5"), List.of(), 1, 0, 1});
         final Map<?, ?> u0 = (Map<?, ?>) Json.parse(unseen0.toJson(1, 24, 141, 123));
         check("option:hidden".equals(u0.get("chosen")) && java.util.Arrays.equals((Object[]) u0.get("options"),
                         new Object[] {"target:none", "target:5", "option:hidden"}) && Boolean.FALSE.equals(u0.get("complete"))
@@ -248,10 +249,19 @@ public final class DecisionSelfTest {
                         && two.options.equals(List.of("target:p1", "target:67", "option:hidden")) && !two.complete,
                 "D510: a visible and an unseen target: chosen [target:p1, option:hidden]");
         // an unseen answer Forge's candidate list did not hold (a spell on the stack): counted, so listed
-        final Decision stack = part.apply(new Object[] {List.of("target:67"), List.of(), 1, 1, 0});
+        final Decision stack = part.apply(new Object[] {List.of("target:67"), List.of(), 1, 1, 0, 1});
         check(stack.hidden == 1 && stack.options.equals(List.of("target:67", "option:hidden"))
                         && "option:hidden".equals(stack.chosen) && !stack.complete,
                 "D510: an unseen answer outside the candidates is counted in hidden, so option:hidden is listed");
+        // the count is exact (the review): a hidden candidate not chosen and an unseen stack spell chosen are two
+        final Decision both = part.apply(new Object[] {List.of("target:67"), List.of(), 1, 1, 1, 1});
+        check(both.hidden == 2 && both.options.equals(List.of("target:67", "option:hidden"))
+                        && "option:hidden".equals(both.chosen) && !both.complete,
+                "D510: one hidden candidate and one unseen answer outside the candidates: hidden 2, option:hidden once");
+        // an unseen answer that IS the counted hidden candidate is not counted twice
+        final Decision same = part.apply(new Object[] {List.of("target:67"), List.of(), 1, 1, 1, 0});
+        check(same.hidden == 1 && "option:hidden".equals(same.chosen),
+                "D510: an unseen answer among the hidden candidates adds nothing to hidden");
         // a hidden candidate not chosen: listed, and the record stays complete (D487 marks only an unseen ANSWER)
         final Decision passed = part.apply(new Object[] {List.of("target:67"), List.of("target:67"), 0, 1, 2});
         check("target:67".equals(passed.chosen) && passed.options.equals(List.of("target:67", "option:hidden"))
