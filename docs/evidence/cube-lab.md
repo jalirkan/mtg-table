@@ -238,3 +238,27 @@ logs, under `/home/justin-a/code/lab/data/lab-j182/`, checked with the atlas's `
 All 11 pass without the flag too. `fixtures/games/` and `fixtures/synthetic/` check byte-for-byte as on `main`. The
 checker's self-test passes 205 controls (149 before). The rest of J182's spines were not re-run here.
 
+## 9. J183's checker failures (D507, 2026-11-02)
+
+The lab's atlas night J183 (2026-11-02, mtg-table at `3275af30`) failed `tools/check-redaction.mjs` on 463 branch
+frame logs in one unit, `b-s09-pauper-2522` (under `/home/justin-a/code/lab/data/lab-j183/`). Every one failed on
+`target:49` in seat 0's Mana Drain target record. Card 49, the opponent's Knockout Maneuver, was a **ghost**: Forge's
+AI had moved it into the Stack zone at turn 10 and abandoned the cast ("Couldn't add to stack, failed to target"),
+leaving it in the zone with nothing on the stack, where no state frame shows it. Here the checker was right and the
+bridge was wrong: `Decisions.visible` called every Stack-zone card public. D507 makes it see one only while the stack
+holds a spell or ability of it.
+
+| what | count |
+|---|---:|
+| branch logs naming `target:49` | 464 (505 records, all seat 0's Mana Drain, `by: forge`; none answers 49) |
+| of them failing | 463 (504 records); the 464th, `d11-random-o0-b131`, forked before turn 10 and cast the card for real |
+| ghost casts in the 13 spines | 1 (this one) |
+| ghost casts born in branches, a 1-in-5 sample of seat-0 logs (11,785) | 3, all s12's Batroc the Leaper (a refused Multikicker payment, follow-up 24) |
+| the same, every s12 branch log (8,450) | 6 |
+| `[ghost]` lines the new bridge would print for s09's frame logs | 504 |
+
+The worker logs' "failed to target" (312) and "Didn't find what to pay for" (416) lines are not ghost counts. They hold
+7 distinct ghosts between them, in 57 lines; D507 has the table. `node tools/check-redaction.mjs --empty-hand-ok` on
+`d15-random-o0-b101-seat0.jsonl.gz` still fails, as it should: the log is the old bridge's, and the checker is
+unchanged. The records the new bridge writes count the ghost in `hidden` (protocol M79). Proven in
+`mtgtable.SelectionSelfTest` (step 12l), both ways.

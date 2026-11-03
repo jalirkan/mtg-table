@@ -37,6 +37,7 @@ import forge.game.combat.CombatUtil;
 import forge.game.phase.PhaseHandler;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
+import forge.game.spellability.SpellAbilityStackInstance;
 import forge.game.spellability.TargetRestrictions;
 import forge.game.zone.ZoneType;
 
@@ -100,16 +101,22 @@ public final class Decisions {
         return "activate:" + host.getId() + (count > 1 && k >= 0 ? "#" + k : "");
     }
 
-    /** Whether {@code ai} sees {@code c}'s identity where it is now (the redaction's own zones). */
+    /**
+     * Whether {@code ai} sees {@code c}'s identity where it is now (the redaction's own zones).  D507: a card in
+     * the Stack zone is seen only while the stack holds a spell or ability of it ({@link #onStack}) -- the state
+     * frame's stack is the stack's items ({@code Snap}'s {@code stackBottomFirst}), so a card in the zone with
+     * none is a card no frame shows: the ghost of a cast Forge's AI abandoned after moving the card there.
+     */
     static boolean visible(final Card c, final Player ai) {
         if (c.getZone() == null) {
             return false;
         }
         final ZoneType z = c.getZone().getZoneType();
         switch (z) {
+            case Stack:
+                return onStack(c);   // D507
             case Battlefield:
             case Graveyard:
-            case Stack:
             case Command:
                 return true;      // public zones (a face-down card is listed by id there too)
             case Hand:
@@ -119,6 +126,42 @@ public final class Decisions {
             default:
                 return false;     // libraries, sideboards, ante, the void
         }
+    }
+
+    /**
+     * D507: whether the game's stack holds a spell or ability whose source card is {@code c} (by id: a fork's
+     * copier keeps ids).  False for a card in the Stack zone that the stack holds nothing of -- a ghost:
+     * {@code ComputerUtil.handlePlayingSpellAbility} moves a spell's card to the Stack zone before its targets
+     * and payment, and when {@code MagicStack.add} then refuses the spell ("Couldn't add to stack, failed to
+     * target") or the AI returns early (an invalid target count, a modal spell with no mode), nothing moves the
+     * card back.  It is in {@code game.getCardsIn(ZoneType.Stack)}, so {@code TargetRestrictions.getAllCandidates}
+     * offers it to a part that targets a spell.  A spell still being cast (its card moved, its instance not yet
+     * added) is not on the stack either; the spell's own targeting never offers it (rule 115.5,
+     * {@code SpellAbility.canTarget}), and another seat's is a card no frame shows.
+     */
+    static boolean onStack(final Card c) {
+        final Game g = c.getGame();
+        if (g == null) {
+            return false;
+        }
+        for (final SpellAbilityStackInstance si : g.getStack()) {
+            final Card src = si.getSourceCard();
+            if (src != null && src.getId() == c.getId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** D507: a card in the Stack zone the stack holds no spell or ability of ({@link #onStack}). */
+    static boolean ghost(final Object e) {
+        return e instanceof Card && ((Card) e).getZone() != null && ((Card) e).getZone().is(ZoneType.Stack)
+                && !onStack((Card) e);
+    }
+
+    /** D507: the worker log's line for a ghost left out of a target record; {@code [ghost]} is what the night counts. */
+    static String ghostLine(final int id) {
+        return "[ghost] card " + id + " in the stack zone with no stack instance left out of a target record (D507)";
     }
 
     /** An entity as {@code <prefix>:<id>}, {@code <prefix>:p<id>}, or null when the seat cannot see it. */
@@ -389,6 +432,9 @@ public final class Decisions {
                     final String t = entityToken("target", e, ai);
                     if (t == null) {
                         d.hidden++;
+                        if (ghost(e)) {
+                            System.err.println(ghostLine(e.getId()));   // D507: the night's ghost_candidates
+                        }
                     } else {
                         opts.add(t);
                     }
