@@ -175,9 +175,9 @@
   },
   {
     "file": "a9-hideaway-alt-kept-after-control-returns.jsonl",
-    "level": "fail",
-    "expect": "only a look permission",
-    "why": "A9, D502: the look follows the Watcher's CURRENT controller -- the alt still on the card two states after the Watcher went back to the opponent has no source"
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d5-random-o0-b119): the Watcher goes back to the opponent and the alt stays on the card for as long as it stays in exile -- the look is any player's who has controlled the Watcher (CR 702.75a); counted, not a problem"
   },
   {
     "file": "a9-hideaway-alt-after-control-already-returned.jsonl",
@@ -243,13 +243,13 @@
     "file": "a9-hideaway-lag-frame-then-an-unrelated-steal.jsonl",
     "level": "fail",
     "expect": "only a look permission",
-    "why": "A9, D502 (second review): the Watcher leaves in its lag frame while the viewer steals a creature that was there before the log -- that creature dug nothing, and the alt on after the lag has no source"
+    "why": "A9, D502 (second review), D505: the Watcher leaves and the alt drops in the frame the viewer steals a creature that was there before the log, then comes back -- that creature dug nothing, and an alt back after a gap has no source"
   },
   {
     "file": "a9-hideaway-lag-frame-then-a-steal-of-an-earlier-entry.jsonl",
     "level": "fail",
     "expect": "only a look permission",
-    "why": "A9, D502 (second review): the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger"
+    "why": "A9, D502 (second review), D505: the same with the stolen creature entering by a zone event well before the dig -- its entry is not beside the dig, and it has no hideaway trigger"
   },
   {
     "file": "a9-hideaway-unrelated-dig-after-an-entry-with-no-trigger.jsonl",
@@ -297,13 +297,175 @@
     "file": "a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "A9, D502: STILL ADMITTED, the residual the log cannot rule out -- the Watcher's trigger digs nothing and another effect digs exactly one card the next frame; that card is the Watcher's only tie. Kept as a passing control so a change to it is seen"
+    "why": "A9, D502, D505: STILL ADMITTED, the residual the log cannot rule out -- the Watcher's trigger digs nothing and another effect digs exactly one card the next frame, just before the trigger's `resolved`; that card is the Watcher's only tie. Kept as a passing control so a change to it is seen"
   },
   {
     "file": "a9-hideaway-two-hosts-enter-together.jsonl",
     "level": "fail",
     "expect": "only a look permission",
     "why": "A9, D502: the Watcher and Mosswort Bridge enter in one frame and each trigger digs a card -- timing cannot say which card is the Watcher's, so stealing it vouches for neither"
+  },
+  {
+    "file": "a9-hideaway-alt-kept-while-returned-then-retaken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d0-random-o0-b67): the viewer takes the Watcher, the opponent has it back for three frames with the alt still on the card, and the viewer takes it again -- counted once, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-kept-after-the-host-leaves.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d13-random-o0-b148 and d11-random-o3-b100): the Watcher dies under the viewer's control and the alt stays on the card for three more frames, until its leave trigger moves the card to its owner's hand -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-again-after-the-card-moved.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher leaves, its trigger moves the card to its owner's hand, and the card is exiled face down again carrying its alt with no new take -- the grant ended with the move"
+  },
+  {
+    "file": "a9-hideaway-kept-grant-card-through-a-hand.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher is back with the opponent and the grant kept, and the card goes exile -> hand -> exile in one frame -- the move ends a kept grant as it ends a held one"
+  },
+  {
+    "file": "a9-hideaway-alt-after-the-host-left-never-taken.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher leaves the battlefield without the viewer ever having controlled it, and the alt appears -- no take, no look"
+  },
+  {
+    "file": "a9-hideaway-alt-back-after-a-gap-without-a-retake.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: taken, given back with the alt kept, then a frame without the alt, then the alt again with no new take -- a grant is kept only in consecutive frames, and Forge never drops a look it keeps"
+  },
+  {
+    "file": "a9-hideaway-dig-two-frames-after-the-entry.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d6-random-o0-b33): the Watcher enters, its hideaway trigger is cast the next frame and resolves the frame after, digging the card -- tied by the resolution, not by the entry; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-three-frames-after-the-entry.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d5-random-o0-b119): the Watcher enters with its trigger cast, two other frames pass with the trigger on the stack, and it resolves digging the card -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-a-frame-before-its-resolution.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the snapshot cuts between the dig and the trigger's `resolved`, which lands the next frame (209 of s11's and 437 of J182 s06's hideaway resolutions) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-flickered-host-two-cards.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (J183 s11, d6-random-o0-b20): the Watcher digs C1, is flickered (a new entry under the same id) and its new hideaway digs C2; the viewer takes it and sees both -- one dig per entry, two entries; counted twice, not a problem"
+  },
+  {
+    "file": "a9-hideaway-dig-with-no-resolution.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher enters with its trigger cast and a card is dug beside it, but no `resolved` of the Watcher's trigger follows -- timing alone ties nothing"
+  },
+  {
+    "file": "a9-hideaway-two-digs-tied-to-one-entry.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: two cards dug before one resolution of the Watcher's trigger -- one entry, two digs, so the Watcher vouches for neither"
+  },
+  {
+    "file": "a9-hideaway-dig-after-the-resolution.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher's trigger resolves digging nothing and another effect digs a card the next frame -- a dig after its trigger's resolution is not its (D502's residual shape, closed)"
+  },
+  {
+    "file": "a9-hideaway-dig-after-the-resolution-in-one-frame.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the Watcher's trigger resolves digging nothing and another effect digs a card later in the same frame -- a trigger's dig comes before its `resolved` in event order"
+  },
+  {
+    "file": "a9-hideaway-dig-before-the-trigger-cast.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: a card is dug after the Watcher enters but before its trigger is cast -- a trigger cannot dig before it exists"
+  },
+  {
+    "file": "a9-hideaway-countered-trigger-then-an-activation.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x1): the Watcher's trigger is countered (`unstacked`, no `resolved`), and three frames later an unrelated dig and an activation of the Watcher resolve -- the countered cast is closed, so the activation's `resolved` vouches for nothing"
+  },
+  {
+    "file": "a9-hideaway-countered-trigger-take-much-later.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x1b): as the countered-trigger control, with the take three frames after the unrelated dig"
+  },
+  {
+    "file": "a9-hideaway-countered-first-entry-then-a-flicker.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x2): the first entry's trigger is countered, a flicker's trigger digs C1 properly, and later an unrelated dig C2 and an activation resolve -- C1 is the flicker's, C2 is nothing's"
+  },
+  {
+    "file": "a9-hideaway-countered-first-entry-flicker-card-only.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (the review's x2c): the same log with only the flicker's card C1 showing its alt -- admitted, counted"
+  },
+  {
+    "file": "a9-hideaway-countered-trigger-host-dies-and-returns.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x8): the trigger is countered, the Watcher dies (an unrelated dig before a `resolved` of it), is reanimated (a new entry whose trigger digs C1), and is taken -- the alt on C2 has no source"
+  },
+  {
+    "file": "a9-hideaway-activation-the-frame-after-the-entry-resolved-late.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review's x7): a permanent with no hideaway enters, an activation of it is cast the next frame and resolves four frames later right after an unrelated dig, and the viewer takes it -- past RESOLVE_WITHIN (3 from a cast the frame after the entry), no evidence"
+  },
+  {
+    "file": "a9-hideaway-resolution-eleven-frames-after-the-cast.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505: the trigger cast in the entry's frame resolves eleven frames later after a dig -- past RESOLVE_WITHIN (10, the survey's longest)"
+  },
+  {
+    "file": "a9-hideaway-resolution-ten-frames-after-the-cast.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the trigger cast in the entry's frame resolves ten frames later, digging the card (J182 s06's longest) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-cast-the-frame-after-the-entry-resolved-three-later.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the trigger is cast the frame after the entry and resolves three frames later, digging the card (s11's longest for such a cast) -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-fizzled-trigger.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D505 (the review): the trigger's `resolved` is fizzled -- a fizzled trigger dug nothing, so the dig beside it is not its"
+  },
+  {
+    "file": "a9-hideaway-two-hosts-the-first-resolver-taken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505 (the review's x3a): the Watcher and another host enter together, the other resolves first digging C2, then the Watcher digging C1; the viewer takes the other host and sees C2 -- its only tie; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D505: the Watcher has two triggers; the newer resolves, and its `unstacked` lands a snapshot later -- that `unstacked` is the resolved one's pair, not a counter, so the hideaway trigger stays open and its dig is tied; counted, not a problem"
   },
   {
     "file": "own-hand-card-redacted.jsonl",

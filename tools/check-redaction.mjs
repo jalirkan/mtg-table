@@ -66,11 +66,13 @@
  *       opponent's card only when the log shows how it was granted -- dug from
  *       a library into exile, alt and all, while the viewing seat's effect
  *       resolves -- and only while the card stays there (D371); or, for
- *       hideaway's look (the CURRENT controller of the permanent that exiled
- *       it), a card dug from its owner's library beside that permanent's entry
- *       and its hideaway trigger's cast (one dig a permanent, ever), from the
- *       frame the viewer took the permanent (or the next) and only while the
- *       viewer holds it and the card does not move, plus one frame of lag (D502).
+ *       hideaway's look (any player who has controlled the permanent that
+ *       exiled it), a card dug from its owner's library by a trigger of one
+ *       entry of that permanent -- cast after the entry, resolved right after
+ *       the dig (D505) -- the only dig tied to that entry, from the frame the
+ *       viewer took the permanent (or the next) (D502), and kept while the card
+ *       stays in exile and no zone event names it, whoever holds the permanent
+ *       now and whether or not it is still on the battlefield (D505).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -1763,36 +1765,57 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
   const handLastSeen = new Map();
   let viewerStackBefore = false;
   /**
-   * A9 / D502 -- hideaway's look, and the evidence a log holds for it:
+   * A9 / D502, D505 -- hideaway's look, and the evidence a log holds for it:
    *   stateNo            this state frame's index among the state frames;
    *   battlefieldBefore  id -> {owner, controller} of every battlefield card in
    *                      the previous state frame;
-   *   enteredAt          permanent id -> the state frames it entered the
-   *                      battlefield in (its latest zone event onto one, and its
-   *                      latest first listing on one after a state without it);
-   *   exiledFromLibrary  card id -> {frame, owner, casters} when its latest move
-   *                      into exile came from its owner's library (any other
-   *                      move of it clears the entry); `casters` the card ids a
-   *                      `cast` event named in that frame or the one before
-   *                      (the hideaway trigger's own cast names its host);
-   *   castsBefore        the card ids the previous state frame's `cast` events
-   *                      named, a trigger's only (after the permanent's entry
-   *                      in event order, or the permanent listed before);
+   *   lastEntry          permanent id -> the state frame of its latest entry
+   *                      onto the battlefield: a zone event onto one (a flicker
+   *                      included), or its first listing on one after a state
+   *                      without it (never the log's first state frame);
+   *   openTriggers       permanent id -> its trigger casts not yet resolved,
+   *                      each {entry, frame, i}: a `cast` naming the permanent
+   *                      after its entry in event order, or with it listed the
+   *                      frame before, in its entry's frame or the next;
+   *   resolutions        every `resolved` naming a permanent with an open
+   *                      trigger cast, paired with its latest such cast (the
+   *                      stack's order), not fizzled and within RESOLVE_WITHIN
+   *                      of it: {host, entry, castFrame, castI, frame, i}; an
+   *                      `unstacked` with no `resolved` before it (a countered
+   *                      trigger) closes the newest open cast instead;
+   *   exiledFromLibrary  card id -> its dig {card, frame, i, owner} when its
+   *                      latest move into exile came from its owner's library
+   *                      (any other move of it clears the entry);
    *   digLog             every such dig of the log, kept when its card moves;
    *   takenAt            permanent id -> the state frame its controller changed
    *                      from its owner (not the viewer) to the viewing seat;
-   *   hideawayGrants     card id -> {host, holds}: the taken permanent whose look
-   *                      it shows, and whether the viewer controls it on the
-   *                      battlefield in that frame; kept while the card stays in
-   *                      exile and the viewer controls THAT permanent, and one
-   *                      frame after (the static's lag), never two.
+   *   hideawayGrants     card id -> the taken permanent whose look it shows;
+   *                      kept while the card stays in exile, carrying its alt,
+   *                      in consecutive state frames with no zone event naming
+   *                      it -- whoever controls that permanent now, and whether
+   *                      or not it is still on the battlefield (D505: Forge's
+   *                      look at a face-down exiled card is never taken back
+   *                      while the card stays there, as CR 702.75a's "has
+   *                      controlled" says).
    */
   let stateNo = -1;
   let battlefieldBefore = new Map();
-  const enteredAt = new Map();
+  const lastEntry = new Map();
+  const openTriggers = new Map();
+  /** D505: permanents whose latest `resolved` has not met its `unstacked` yet (the pair may straddle a snapshot). */
+  const resolvedUnstacked = new Set();
+  /**
+   * D505: how many state frames after its cast a trigger may resolve and still
+   * be the one whose dig it vouches for, by where the cast sits: [cast in its
+   * permanent's entry frame, cast in the next].  The survey of 5,521 hideaway
+   * casts (J183 s11, J182 s06) saw at most 10 and at most 3; past them, a
+   * `resolved` is no evidence (an activation cast the frame after an entry and
+   * resolved late, the review's x7).
+   */
+  const RESOLVE_WITHIN = [10, 3];
+  const resolutions = [];
   const exiledFromLibrary = new Map();
-  let castsBefore = new Set();
-  /** D502: every library -> exile dig of the log, never removed (a host's ties are counted over all of them). */
+  /** D502: every library -> exile dig of the log, never removed (an entry's ties are counted over all of them). */
   const digLog = [];
   const takenAt = new Map();
   let hideawayGrants = new Map();
@@ -2731,44 +2754,74 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
         dugToExile.add(ev.cardId);
       }
     }
-    // A9 / D502: hideaway's look.  Forge grants it with a static on an Effect
-    // (CardFactoryUtil's hideaway, MayLookAt$ EffectSourceController, CR
-    // 702.75a): the CURRENT controller of the permanent that exiled the card may
-    // look at it.  The log ties the card to that permanent by time -- the
-    // hideaway trigger digs it from its owner's library into exile in the state
-    // frame the permanent entered the battlefield, or the next -- and shows the
-    // look move with the permanent's controller.  This frame's evidence first.
+    // A9 / D502, D505: hideaway's look.  Forge grants it with a static on an
+    // Effect (CardFactoryUtil's hideaway, MayLookAt$ EffectSourceController, CR
+    // 702.75a): the permanent's current controller is granted the look, and
+    // Card.addMayLookAt adds every player it grants while the card is face down
+    // in exile to mayLookFaceDownExile, which nothing removes -- so "any player
+    // who has controlled the permanent" keeps it until the card moves (D505).
+    // The log ties the card to that permanent by evidence: the permanent's
+    // entry, its trigger's `cast` (in that entry's frame or the next), and that
+    // trigger's `resolved`, which follows the dig in event order in the dig's
+    // frame or comes in the next (D505: the dig is timed from the trigger's
+    // resolution, not the entry).  The look arrives with the viewer's taking of
+    // the permanent.  This frame's evidence first.
     stateNo++;
-    // A TRIGGER's cast: one naming a permanent that a zone event of this frame
-    // put onto the battlefield EARLIER in event order, or that the previous
-    // state frame already listed there.  A creature spell's own cast names the
-    // same card before it enters, so it never counts (the third review).
-    const castsNow = new Set();
+    // One pass in event order.  A TRIGGER's cast names a permanent that a zone
+    // event of this frame put onto the battlefield EARLIER in event order, or
+    // that the previous state frame already listed there, and whose latest
+    // entry is this frame or the previous one.  A creature spell's own cast
+    // names the same card before it enters, so it never counts (the third
+    // review of D502).  A `resolved` naming a permanent pairs with its latest
+    // open trigger cast -- the stack resolves the newest first -- and a
+    // `resolved` with none open (a spell's own, an activation's) is nothing.
+    // Every card a zone event names is in movedNow: a held grant ends on any
+    // move of its card, and on nothing else (ForgetOnMoved$ Exile; D505).
+    const movedNow = new Set();
     {
       const enteredSoFar = new Set();
-      for (const ev of body.events ?? []) {
-        if (!plainObject(ev) || !num(ev.cardId)) continue;
-        if (ev.kind === 'zone' && ev.to?.zone === 'battlefield') enteredSoFar.add(ev.cardId);
-        if (ev.kind === 'cast' && (enteredSoFar.has(ev.cardId) || battlefieldBefore.has(ev.cardId))) castsNow.add(ev.cardId);
-      }
-    }
-    // every card a zone event names in this frame: a held grant ends on any move
-    // of its card (Forge's hideaway effect is ForgetOnMoved$ Exile)
-    const movedNow = new Set();
-    for (const ev of body.events ?? []) {
-      if (!plainObject(ev) || ev.kind !== 'zone' || !num(ev.cardId)) continue;
-      movedNow.add(ev.cardId);
-      if (ev.to?.zone === 'battlefield') {
-        enteredAt.set(ev.cardId, { ...(enteredAt.get(ev.cardId) ?? {}), event: stateNo });
-      }
-      if (ev.to?.zone === 'exile' && ev.from?.zone === 'library' && num(ev.from.player)
-          && ev.to.player === ev.from.player) {
-        const dug = { frame: stateNo, owner: ev.from.player, casters: new Set([...castsNow, ...castsBefore]) };
-        exiledFromLibrary.set(ev.cardId, dug);
-        digLog.push(dug);
-      } else {
-        exiledFromLibrary.delete(ev.cardId);
-      }
+      (body.events ?? []).forEach((ev, i) => {
+        if (!plainObject(ev) || !num(ev.cardId)) return;
+        if (ev.kind === 'zone') {
+          movedNow.add(ev.cardId);
+          if (ev.to?.zone === 'battlefield') {
+            enteredSoFar.add(ev.cardId);
+            lastEntry.set(ev.cardId, stateNo);
+          }
+          if (ev.to?.zone === 'exile' && ev.from?.zone === 'library' && num(ev.from.player)
+              && ev.to.player === ev.from.player) {
+            const dug = { card: ev.cardId, frame: stateNo, i, owner: ev.from.player };
+            exiledFromLibrary.set(ev.cardId, dug);
+            digLog.push(dug);
+          } else {
+            exiledFromLibrary.delete(ev.cardId);
+          }
+        } else if (ev.kind === 'cast') {
+          const entry = lastEntry.get(ev.cardId);
+          if ((enteredSoFar.has(ev.cardId) || battlefieldBefore.has(ev.cardId))
+              && entry !== undefined && entry >= stateNo - 1) {
+            if (!openTriggers.has(ev.cardId)) openTriggers.set(ev.cardId, []);
+            openTriggers.get(ev.cardId).push({ entry, frame: stateNo, i });
+          }
+        } else if (ev.kind === 'resolved') {
+          // Closes the permanent's newest open trigger cast.  It is that
+          // trigger's resolution only when it did not fizzle (a fizzled trigger
+          // dug nothing) and came within RESOLVE_WITHIN of the cast (D505).
+          resolvedUnstacked.add(ev.cardId);
+          const t = openTriggers.get(ev.cardId)?.pop();
+          if (t !== undefined && ev.fizzled !== true
+              && stateNo - t.frame <= RESOLVE_WITHIN[t.frame - t.entry]) {
+            resolutions.push({ host: ev.cardId, entry: t.entry, castFrame: t.frame, castI: t.i, frame: stateNo, i });
+          }
+        } else if (ev.kind === 'unstacked') {
+          // A resolution is `resolved N | unstacked N`; an `unstacked` with no
+          // `resolved` of N before it is a countered item (docs/protocol.md's
+          // event table), and it closes N's newest open trigger cast, which
+          // must never pair with a later `resolved` of N (the D505 review).
+          if (resolvedUnstacked.has(ev.cardId)) resolvedUnstacked.delete(ev.cardId);
+          else openTriggers.get(ev.cardId)?.pop();
+        }
+      });
     }
     const battlefieldNow = new Map();
     for (const p of players) {
@@ -2778,7 +2831,7 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
         const was = battlefieldBefore.get(c.id);
         // Not in the log's first state frame: a branch log forks mid-game, and
         // what its first frame lists was there before the log began.
-        if (!was && stateNo > 0) enteredAt.set(c.id, { ...(enteredAt.get(c.id) ?? {}), listed: stateNo });
+        if (!was && stateNo > 0 && !(lastEntry.get(c.id) >= stateNo)) lastEntry.set(c.id, stateNo);
         if (was && num(c.owner) && c.owner !== seat && was.owner === c.owner
             && was.controller === c.owner && c.controller === seat) {
           takenAt.set(c.id, stateNo);
@@ -2788,15 +2841,24 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     /** Does the viewer control permanent `w` on the battlefield in this frame? */
     const viewerHolds = (w) => battlefieldNow.get(w)?.controller === seat;
     /**
+     * Is dig `x` of `owner`'s the work of the trigger whose resolution is `r`?
+     * The trigger was cast before the dig (in frame, then in event order), and
+     * it resolved after the dig in the dig's frame, or in the next state frame
+     * (the snapshot cut between the dig and its `resolved`).  J182's and J183's
+     * hideaway resolutions show exactly those two placings (D505).
+     */
+    const digOf = (x, r, owner) => x.owner === owner
+      && (r.castFrame < x.frame || (r.castFrame === x.frame && r.castI < x.i))
+      && ((r.frame === x.frame && r.i > x.i) || r.frame === x.frame + 1);
+    /**
      * The permanent whose hideaway look shows exiled card `id` (owned by
      * `owner`) to the viewer, newly, in this frame -- or undefined.  It is owned
      * by `owner`, the viewer took control of it from `owner` in this frame or the
      * previous one (b76: the static re-applies a snapshot later), the viewer
      * still controls it, and the card's latest move into exile came from
-     * `owner`'s library in the frame the permanent entered the battlefield or
-     * the next, with a `cast` event naming the permanent -- its hideaway
-     * trigger -- in the dig's frame or the one before, and no other card in
-     * exile is tied to that permanent the same way.
+     * `owner`'s library as the dig of one of the permanent's entries -- a
+     * trigger of that entry cast before it and resolved right after it (digOf)
+     * -- and no other dig of the log is tied to that same entry.
      */
     const hideawayHost = (id, owner) => {
       const ex = exiledFromLibrary.get(id);
@@ -2804,19 +2866,21 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
       for (const [w, at] of takenAt) {
         if (at !== stateNo && at !== stateNo - 1) continue;
         if (battlefieldNow.get(w)?.owner !== owner || !viewerHolds(w)) continue;
-        const e = enteredAt.get(w) ?? {};
-        const tied = (x) => x.owner === owner && x.casters.has(w)
-          && [e.event, e.listed].some((k) => k !== undefined && (x.frame === k || x.frame === k + 1));
-        if (!tied(ex)) continue;
-        // A hideaway trigger exiles ONE card: a permanent tied by timing and
-        // trigger to two digs (two hosts entering together, or another dig
-        // beside its trigger) cannot say which is its own, and vouches for none.
-        // Every dig ever recorded counts, whether or not its card is still in
-        // exile: a host's real card played from exile must not leave an
-        // unrelated dig as its only tie (the third review).
-        let ties = 0;
-        for (const x of digLog) if (tied(x)) ties++;
-        if (ties === 1) return w;
+        const mine = resolutions.filter((r) => r.host === w);
+        for (const entry of new Set(mine.filter((r) => digOf(ex, r, owner)).map((r) => r.entry))) {
+          // A hideaway trigger exiles ONE card: an entry tied to two digs (two
+          // hosts entering together, or another dig beside its trigger's
+          // resolution) cannot say which is its own, and vouches for none.
+          // Every dig ever recorded counts, whether or not its card is still in
+          // exile: a host's real card played from exile must not leave an
+          // unrelated dig as its only tie (the third review of D502).  Ties are
+          // counted per ENTRY, not per id: a flickered host is a new object
+          // with a new hideaway and a new card (D505, J183 s11 d6).
+          const ofEntry = mine.filter((r) => r.entry === entry);
+          let ties = 0;
+          for (const x of digLog) if (ofEntry.some((r) => digOf(x, r, owner))) ties++;
+          if (ties === 1) return w;
+        }
       }
       return undefined;
     };
@@ -2945,10 +3009,12 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
               // viewing seat controls is resolving (on the stack in this frame or
               // the one before), and it keeps the alt only while it stays there.
               // D502: or hideaway's look (hideawayHost above): the card, dug from
-              // its owner's library into exile beside a permanent's entry, gains
+              // its owner's library into exile by a trigger of one of a
+              // permanent's entries (cast after it, resolved right after the
+              // dig, D505), gains
               // its alt when the viewer takes THAT permanent from its owner (or a
-              // frame later), and keeps it only while it stays in exile and the
-              // viewer still controls that permanent.
+              // frame later), and keeps it while it stays in exile, whoever
+              // controls that permanent afterwards (D505).
               const inPlay = zname === 'battlefield' || zname === 'stack';
               const mine = owner === seat || c.controller === seat;
               if (inPlay && c.controller !== seat) {
@@ -2959,22 +3025,22 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
               } else if (!inPlay && !mine) {
                 const arrived = dugToExile.has(c.id) && zname === 'exile' && viewerEffect;
                 const stayed = lookGrants.has(c.id) && zname === 'exile';
-                // A grant held in the previous frame is kept while the viewer still
-                // controls its permanent, and for ONE frame after it stops (J182
-                // b76: the Watcher dies at seq 245 and the alt is still there in
-                // that snapshot, the static not yet re-applied -- the same lag as
-                // at the start); a second frame without it ends the grant.
+                // A grant held in the previous frame is kept while its card stays
+                // in exile and no zone event names it -- control of its permanent
+                // going back to the owner, or the permanent leaving the
+                // battlefield, does not end it (D505, J183 s11: Forge's
+                // mayLookFaceDownExile keeps every player that has had the look
+                // until the card moves, CR 702.75a's "has controlled").
                 const held = hideawayGrants.get(c.id);
                 const host = !arrived && !stayed && zname === 'exile' && num(owner) && c.controller === owner
-                  ? (held !== undefined && !movedNow.has(c.id) && (viewerHolds(held.host) || held.holds)
-                    ? held.host : hideawayHost(c.id, owner))
+                  ? (held !== undefined && !movedNow.has(c.id) ? held : hideawayHost(c.id, owner))
                   : undefined;
                 if (arrived || stayed) {
                   nextGrants.add(c.id);
                   if (arrived) stats.altByLook++;
                 } else if (host !== undefined) {
                   if (!hideawayGrants.has(c.id)) stats.altByControl++;
-                  nextHideaway.set(c.id, { host, holds: viewerHolds(host) });
+                  nextHideaway.set(c.id, host);
                 } else {
                   note(lineNo, `face-down card ${c.id} in ${zname} is owned and controlled by player ` +
                     `${c.controller}, not the viewing seat ${seat}, yet carries an "alt" block naming it ` +
@@ -2982,8 +3048,8 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
                     `(mayPlayerLook) shows a face-down card, and the only shape a log can show for ` +
                     `one is a card exiled from a library, alt and all, while the viewing seat's ` +
                     `effect resolves (Gonti, Thief of Sanity), kept while it stays in exile, or a card dug ` +
-                    `from its owner's library beside a permanent's entry while the viewing seat controls ` +
-                    `the permanent it took (hideaway, D502) (A9, D371)`);
+                    `from its owner's library by a permanent's trigger (cast after its entry, resolved right after the dig), from the frame the viewing seat took ` +
+                    `that permanent, kept while it stays in exile (hideaway, D502, D505) (A9, D371)`);
                 }
               }
             }
@@ -3099,7 +3165,6 @@ export function checkFile(path, { preAmendment = false, opponentLibraryOk = fals
     viewerStackBefore = viewerStackNow;
     battlefieldBefore = battlefieldNow;
     hideawayGrants = nextHideaway;
-    castsBefore = castsNow;
     for (const p of players) {
       for (const [zname, z] of Object.entries(p.zones ?? {})) {
         if (zname === 'hand') continue;

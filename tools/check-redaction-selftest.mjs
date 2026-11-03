@@ -95,15 +95,15 @@ const REQUIRED = [
   ['a9-alt-appears-after-the-dig.jsonl', 'fail'],
   ['a9-opponent-morph-named.jsonl', 'fail'],
   ['a9-stolen-morph-named-for-its-owner.jsonl', 'fail'],
-  // D502 (J182 s06): hideaway's look follows the CURRENT controller of the
+  // D502 (J182 s06): hideaway's look is granted to the current controller of the
   // permanent that exiled the card -- an opponent's face-down card dug from their
   // library into exile beside a permanent's entry may show its face from the
-  // state in which (or the one after which) the viewer took that permanent, for
-  // as long as the viewer holds it (and one state after).  The probes: no change
-  // of control, control from the start, the viewer's own permanent, a third
-  // owner's, outside exile, the alt two states late, a foretold card and a hand
-  // card under an unrelated steal (the review of f3a3091b), control returned, and a card
-  // of another hideaway host.
+  // state in which (or the one after which) the viewer took that permanent, and
+  // (D505, J183 s11) for as long as it stays in exile, whoever holds the
+  // permanent afterwards.  The probes: no change of control, control from the
+  // start, the viewer's own permanent, a third owner's, outside exile, the alt
+  // two states late, a foretold card and a hand card under an unrelated steal
+  // (the review of f3a3091b), and a card of another hideaway host.
   ['a9-hideaway-control-taken.jsonl', 'pass'],
   ['a9-hideaway-alt-a-state-after-control-taken.jsonl', 'pass'],
   ['a9-hideaway-alt-a-state-after-the-host-leaves.jsonl', 'pass'],
@@ -115,7 +115,7 @@ const REQUIRED = [
   ['a9-hideaway-alt-two-states-after-control-taken.jsonl', 'fail'],
   ['a9-hideaway-foretold-card-under-a-stolen-creature.jsonl', 'fail'],
   ['a9-hideaway-hand-card-exiled-with-its-alt-at-the-steal.jsonl', 'fail'],
-  ['a9-hideaway-alt-kept-after-control-returns.jsonl', 'fail'],
+  ['a9-hideaway-alt-kept-after-control-returns.jsonl', 'pass'],
   ['a9-hideaway-alt-after-control-already-returned.jsonl', 'fail'],
   ['a9-hideaway-card-re-exiled-from-a-hand.jsonl', 'fail'],
   ['a9-hideaway-dug-from-another-library.jsonl', 'fail'],
@@ -141,6 +141,37 @@ const REQUIRED = [
   ['a9-hideaway-held-grant-card-through-a-hand.jsonl', 'fail'],
   ['a9-hideaway-card-re-dug-under-a-new-host.jsonl', 'pass'],
   ['a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl', 'pass'],
+  // D505 (J183 s11): a grant is kept after control returns and after its host
+  // leaves the battlefield; a move, a gap in the alt or no take still fail
+  ['a9-hideaway-alt-kept-while-returned-then-retaken.jsonl', 'pass'],
+  ['a9-hideaway-alt-kept-after-the-host-leaves.jsonl', 'pass'],
+  ['a9-hideaway-alt-again-after-the-card-moved.jsonl', 'fail'],
+  ['a9-hideaway-kept-grant-card-through-a-hand.jsonl', 'fail'],
+  ['a9-hideaway-alt-after-the-host-left-never-taken.jsonl', 'fail'],
+  ['a9-hideaway-alt-back-after-a-gap-without-a-retake.jsonl', 'fail'],
+  // D505's second part: the dig timed from its trigger's resolution, one dig per entry
+  ['a9-hideaway-dig-two-frames-after-the-entry.jsonl', 'pass'],
+  ['a9-hideaway-dig-three-frames-after-the-entry.jsonl', 'pass'],
+  ['a9-hideaway-dig-a-frame-before-its-resolution.jsonl', 'pass'],
+  ['a9-hideaway-flickered-host-two-cards.jsonl', 'pass'],
+  ['a9-hideaway-dig-with-no-resolution.jsonl', 'fail'],
+  ['a9-hideaway-two-digs-tied-to-one-entry.jsonl', 'fail'],
+  ['a9-hideaway-dig-after-the-resolution.jsonl', 'fail'],
+  ['a9-hideaway-dig-after-the-resolution-in-one-frame.jsonl', 'fail'],
+  ['a9-hideaway-dig-before-the-trigger-cast.jsonl', 'fail'],
+  // the review of f5fcf747: a countered trigger closes, a fizzled one digs nothing, a bounded wait
+  ['a9-hideaway-countered-trigger-then-an-activation.jsonl', 'fail'],
+  ['a9-hideaway-countered-trigger-take-much-later.jsonl', 'fail'],
+  ['a9-hideaway-countered-first-entry-then-a-flicker.jsonl', 'fail'],
+  ['a9-hideaway-countered-first-entry-flicker-card-only.jsonl', 'pass'],
+  ['a9-hideaway-countered-trigger-host-dies-and-returns.jsonl', 'fail'],
+  ['a9-hideaway-activation-the-frame-after-the-entry-resolved-late.jsonl', 'fail'],
+  ['a9-hideaway-resolution-eleven-frames-after-the-cast.jsonl', 'fail'],
+  ['a9-hideaway-resolution-ten-frames-after-the-cast.jsonl', 'pass'],
+  ['a9-hideaway-cast-the-frame-after-the-entry-resolved-three-later.jsonl', 'pass'],
+  ['a9-hideaway-fizzled-trigger.jsonl', 'fail'],
+  ['a9-hideaway-two-hosts-the-first-resolver-taken.jsonl', 'pass'],
+  ['a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl', 'pass'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -291,7 +322,7 @@ const REQUIRED = [
   ['m76-min-not-an-integer.jsonl', 'fail'],
   ['m76-no-target-elsewhere.jsonl', 'fail'],
 ];
-// D502-D504: a pass control of a new rule must pass BECAUSE of that rule -- its
+// D502-D505: a pass control of a new rule must pass BECAUSE of that rule -- its
 // count is on the stats line -- not because some older rule vouched for it.
 const COUNTED = [
   ['a9-hideaway-control-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
@@ -301,6 +332,18 @@ const COUNTED = [
   ['a9-hideaway-alt-dropped-while-returned.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-card-re-dug-under-a-new-host.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-residual-trigger-digs-nothing-another-dig-next.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-kept-after-control-returns.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-kept-while-returned-then-retaken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-kept-after-the-host-leaves.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-dig-two-frames-after-the-entry.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-dig-three-frames-after-the-entry.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-dig-a-frame-before-its-resolution.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-flickered-host-two-cards.jsonl', '(2 an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-countered-first-entry-flicker-card-only.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-resolution-ten-frames-after-the-cast.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-cast-the-frame-after-the-entry-resolved-three-later.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-two-hosts-the-first-resolver-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-source-choice.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],
