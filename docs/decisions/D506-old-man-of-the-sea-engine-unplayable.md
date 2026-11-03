@@ -1,9 +1,10 @@
-## D506 — Old Man of the Sea joins the engine-unplayable list: a self-targeted lose-control command recurses until the stack overflows, and the units hang (D482's rule)
+## D506 — Old Man of the Sea and Rubinia Soulsinger join the engine-unplayable list: a self-targeted lose-control command recurses until the stack overflows, and the units hang (amends D482's rule)
 
 *Branch `pc/d506-old-man-of-the-sea`, on main `3275af30` (D502–D504's merge). D506 was reserved for this lane; D505 is
 another lane's, in flight, so `node tools/decisions.mjs next` prints D505 until that one merges. Applies **D482**'s rule (a
 card goes on the list with a measured stall, the card on the board) and **D492**'s class rule (a mechanic's own code path
-lists every pool card with it) to a third engine fault.*
+lists every pool card with it) to a third engine fault, and amends the list's rule sentence (its `about`) to name that
+fault's kind of measurement.*
 
 **2026-11-02**
 
@@ -88,22 +89,34 @@ last frame shows neither Old Man nor Preacher. The measurement does not need eit
 **Decision.**
 
 1. **Old Man of the Sea goes on `tools/cubelab/engine-unplayable.json`**, `since: "J183"`, with the measurement and the
-   mechanism above as its `why` and the paths as its `evidence`. It is D482's measured stall — units that gave no answer
+   mechanism above as its `why` and the paths as its `evidence`. It is the measurement point 2 names: D482's stall in its unit form — units that gave no answer
    for 1,800 s, the form Scute Swarm's 14 unit kills took, seven of the nine at the decisions whose branches overflowed
    and one of them ending inside the recursion — and the same recursion's other end, 70 branch games whose engine step
    overflowed with the card on the battlefield. The recursion is inside one engine step: the branch deadline (D467/D484)
    is read between steps and on events, and no branch row records it firing.
-2. **It is the only pool card with its shape.** Of the 33,617 files in `cardsfolder.zip`, two carry both `GainControl`
-   and `StaticCommandCheck`: Old Man of the Sea and Rootwater Matriarch (`LoseControl$ StaticCommandCheck` alone, on
-   whether the creature is enchanted, and no change-controller command). Of the pool's 1,592 cards
-   (`cubes/library/library-pool.tsv`), Old Man is the only one of the two.
-3. **Watched, not listed.** The recursion itself does not need `StaticCommandCheck`: it needs `LoseControl` in a
-   `GainControl`'s `LoseControl$` (the change-controller command on the source) and a target that may be the source. 26
-   scripts carry that `LoseControl`; four are in the pool. **Rubinia Soulsinger** (`ValidTgts$ Creature | LoseControl$
-   Untap,LeavesPlay,LoseControl`) can target itself as printed, so it can reach the same recursion; it was dealt into four
-   atlas spines (J176 s12, J181 s03, J182 s07 and s08: 2,725 to 4,800 branches each, 0 errors, 119 to 266 of its
-   correction lines and no run) and is not listed without a measurement of its own. **Willow Satyr** (legendary creatures)
-   and **Aladdin** (artifacts) cannot target themselves as printed, only by a change of type in a game. **Preacher** is
+2. **The list's rule names this kind of measurement** (amends D482 point 2 and D492 point 1). The `about` of
+   `tools/cubelab/engine-unplayable.json` admitted a measured stall (branches timed out inside one engine step) or a
+   measured fork crash; J183's fault is neither literally — no branch row timed out, 70 overflowed inside the step and
+   nine units hung. It now reads: *… or a measured overflow or hang of the engine inside one step with the card's effect
+   on the board (D506: Old Man of the Sea's recursion) …*. The rule stays written once, in that `about`;
+   `deckcensus.ts`'s parse error and its doc comment, and `docs/guides/cube-lab.md`'s list paragraph, name the three
+   kinds and point at it.
+3. **The code path is the mechanic, so D492's class rule lists Rubinia Soulsinger on Old Man's measurement.** The
+   recursion does not need `StaticCommandCheck`: it needs `LoseControl` in a `GainControl`'s `LoseControl$` (the
+   change-controller command left on the source) and a target that may be the source itself. Of the 33,617 files in
+   `cardsfolder.zip`, 26 carry that `LoseControl`; four are in the pool's 1,592 cards (`cubes/library/library-pool.tsv`):
+   Aladdin, Old Man of the Sea, Rubinia Soulsinger and Willow Satyr. **Rubinia Soulsinger** (`A:AB$ GainControl | Cost$
+   T | ValidTgts$ Creature | LoseControl$ Untap,LeavesPlay,LoseControl`, and it too may choose not to untap) can target
+   itself as printed, so a self-target followed by a change of its controller runs the same recursion: it goes on the
+   list, `since: "J183"`, its `why` naming the measurement as Old Man's. It played four earlier atlas spines (J176 s12,
+   J181 s03, J182 s07 and s08: 2,725 to 4,800 branches each, 0 errors, 119 to 266 of its correction lines and no run), as
+   Old Man of the Sea played J176 s08 and J180 s08 cleanly before J183: the fault needs the self-target and the later
+   change of controller in one game, which a clean spine does not rule out. (Of the two scripts in all of Forge that
+   carry `StaticCommandCheck` with `GainControl`, Old Man of the Sea and Rootwater Matriarch, only Old Man is in the pool;
+   Rootwater Matriarch's `LoseControl$` is `StaticCommandCheck` alone, with no change-controller command.)
+4. **Watched, not listed.** **Willow Satyr** (`ValidTgts$ Creature.Legendary`; it is not legendary) and **Aladdin**
+   (`ValidTgts$ Artifact`; it is a creature) carry the same `LoseControl` but cannot target themselves as printed, only
+   after a change of type in a game; neither is listed without a measurement of its own. **Preacher** is
    not listed: its `LoseControl$` is `Untap,LeavesPlay`, with no change-controller command, and it targets a creature its
    opponent controls; it was measured only beside Old Man (it sat beside it in 34 of the 69 branches, and may be one of the cards that
    moved it), and one errored branch's last frame shows it without Old Man. Oko, Thief of Crowns, which moved Old Man in the two traced branches,
@@ -118,18 +131,19 @@ the lighter, measured fix; an official Forge release that guards the self-target
 takes the card off only with a measured clean spine.
 
 **The draw, measured** (as D490, D492 and D494). J183's 13 spine pairs and 13 validation pairs redrawn from their seeds
-(`tools/cubelab.sh decks --band <b> --count 2 --seed <s> --cross-band 0.10`) on this list: **51 of the 52 decks
-byte-identical** to the decks J183 played; the one that held Old Man of the Sea, `s11-legacy-2424` deck 1 (its eleventh
+(`tools/cubelab.sh decks --band <b> --count 2 --seed <s> --cross-band 0.10`) on this list (all nine cards): **51 of the 52 decks
+byte-identical** to the decks J183 played (no J183 deck held Rubinia Soulsinger, and no pick landed on it: 0 skips in
+every folder); the one that held Old Man of the Sea, `s11-legacy-2424` deck 1 (its eleventh
 spell pick), is redrawn from that pick on: 34 lines of the `.dck` differ (17 out, 17 in), 15 of its 40 cards by copies.
-The draw's summary line names it: `Old Man of the Sea (1 skip(s))`, and the deck's `decks.jsonl` row carries
+The draw's summary line names both: `Old Man of the Sea (1 skip(s)), Rubinia Soulsinger (0 skip(s))`, and the deck's `decks.jsonl` row carries
 `engineSkips: {"Emeritus of Ideation": 2, "Old Man of the Sea": 1}`.
 
 **What it changes.** The band census's draw alone (D482 point 3): the next job's decks. J183's decks are drawn and stay;
 `decks --cube`, the drafts, the evolve loop and the board never read the list, and a deck that already holds the card
-plays as it always did. **What it does not change:** the night's other spines, the atlas, the branch deadline, the
+plays as it always did. The list's `about` gains its third admitted measurement (point 2). **What it does not change:** the night's other spines, the atlas, the branch deadline, the
 seats' policies, and the 17 frame logs J183's s11 failed `tools/check-redaction.mjs` on, which are another question.
 
-**Tests.** `web/test/cubelab-deck-census.test.ts`: the committed list is exactly the eight, in the file's order, every one a
+**Tests.** `web/test/cubelab-deck-census.test.ts`: the committed list is exactly the nine, in the file's order, every one a
 library card, `since` as recorded; `decks` reports each with its skips. `docs/guides/cube-lab.md` and `deckcensus.ts`'s
-header name the eighth card; `docs/evidence/cube-lab.md` §9 is the measurement in a table; PLAN.md's cube lab
-follow-ups 23 (Rubinia Soulsinger, watched) and 24 (the untraced hangs and the NullPointerException) are what is left.
+header name the two new cards; `docs/evidence/cube-lab.md` §9 is the measurement in a table; PLAN.md's cube lab
+follow-ups 23 (Rubinia Soulsinger listed on this measurement, Willow Satyr and Aladdin watched) and 24 (the untraced hangs and the NullPointerException) are what is left.

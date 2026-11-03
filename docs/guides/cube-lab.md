@@ -1186,7 +1186,7 @@ only on the census, the flags, the seed and i.
 
 **The engine-unplayable list** ([D482](../decisions/D482-census-engine-unplayable-list.md)). `decks --band`
 never deals a card listed in `tools/cubelab/engine-unplayable.json`. A card is listed when Forge's AI cannot
-finish its games inside the atlas's branch budget, or with whose effect on the board the fork throws. Today that is eight cards: Scute
+finish its games inside the atlas's branch budget, or with whose effect on the board the fork throws or the engine overflows or hangs inside one step. Today that is nine cards: Scute
 Swarm, whose token boards stalled the AI's combat prediction for 1,000–1,300 s inside one event-free engine step in J166;
 Chain of Smog, which two Forge AIs copy at each other without end (J173, [D490](../decisions/D490-chain-of-smog-engine-unplayable.md));
 and the pool's four Prepare cards (Emeritus of Abundance, Elite Interceptor, Emeritus of Ideation, Studious First-Year), whose
@@ -1194,9 +1194,10 @@ prepared-spell effect makes every fork throw in 2.0.14 (J176, [D492](../decision
 and Ob Nixilis, the Adversary, whose casualty copy is a token planeswalker with a keyword, which the fork's token remake cannot
 build (J176, [D494](../decisions/D494-planeswalker-token-copy-engine-unplayable.md));
 and Old Man of the Sea, which the random seat may point at itself, after which a change of its controller runs its own
-lose-control command into an endless recursion: the stack overflows or the unit hangs (J183, [D506](../decisions/D506-old-man-of-the-sea-engine-unplayable.md)). This is an
+lose-control command into an endless recursion: the stack overflows or the unit hangs (J183, [D506](../decisions/D506-old-man-of-the-sea-engine-unplayable.md)),
+with Rubinia Soulsinger, whose script takes the same path, on that measurement. This is an
 engine limitation, not a judgement about the card or anyone's decks, and a card goes on the list only with
-a measured stall or a measured fork crash and its evidence (`since`, `why`, `evidence` per card); a mechanic's
+a measured stall, a measured fork crash or a measured overflow or hang inside one step, and its evidence (`since`, `why`, `evidence` per card); a mechanic's
 crash lists every pool card of that script form on the one measurement (D492). A pick that lands on a listed card
 is made again from the same list. So a deck none of whose picks landed on a listed card is byte for byte the deck it was (its `.dck`
 and its `decks.jsonl` row, which `census-play`'s `plan.json` hashes), and a deck with such a pick changes from

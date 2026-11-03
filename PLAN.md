@@ -426,7 +426,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 20 | open | D503's ceased token of another seat: measured on J182's five s10 logs (a sacrificed Goat Token); the hand and to-nowhere endings rest on synthetic controls | `docs/decisions/D503-another-seats-ceased-token.md` |
 | [Cube lab](#fu-cube-lab) | 21 | open | D504's opponent cast between frames: measured on one J182 s04 log (Kormus Bell under Force of Negation); a card drawn and cast inside one held batch (never a stub) still fails | `docs/decisions/D504-opponent-cast-entered-between-frames.md` |
 | [Cube lab](#fu-cube-lab) | 22 | open | D371's Gonti look path (A9's `stayed`) keeps an alt through a card that leaves exile and comes back within one frame; D502's hideaway grant ends on any move (ForgetOnMoved), Gonti's does not yet | `tools/check-redaction.mjs` |
-| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) can reach it; measured clean in four spines, watched, not listed | `tools/cubelab/engine-unplayable.json` |
+| [Cube lab](#fu-cube-lab) | 23 | open | D506's recursion is not Old Man of the Sea's alone: Rubinia Soulsinger (a `GainControl` with `LoseControl` in its `LoseControl$` and a target that may be itself) is listed on Old Man's measurement (D492's rule) though four spines played it cleanly; Willow Satyr and Aladdin carry the same `LoseControl` but cannot target themselves as printed: watched, not listed | `tools/cubelab/engine-unplayable.json` |
 | [Cube lab](#fu-cube-lab) | 24 | open | J183's nine hung units: one worker log ends mid-recursion in Old Man of the Sea's correction lines, the other eight units (two of them at d15, past its death in the baseline) and why a recursion hangs instead of overflowing are not traced, nor is the one NullPointerException in its StaticCommandCheck (D506) | `docs/decisions/D506-old-man-of-the-sea-engine-unplayable.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
@@ -10065,15 +10065,18 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    moved it out and back (exile -> library -> exile, or through a hand). Forge would forget the look on such a move.
    D502's hideaway grant now ends on any zone event of its card; the Gonti path does not, on `main` too. Left alone by
    the D502 lane: it is D371's rule, and no log has met it.
-23. **D506's recursion has a second pool card that can reach it.** (2026-11-02, D506.) Old Man of the Sea overflows
+23. **D506's recursion has a second pool card that can reach it, listed on Old Man's measurement.** (2026-11-02, D506.) Old Man of the Sea overflows
    because `ControlGainEffect` puts a self-targeted lose-control command on the source's own change-controller list
    (only `LeavesPlay` is guarded against `source == target`), and `controllerChangeZoneCorrection` runs that list
    before it moves the card and clears it only after: the command re-enters the correction on the same card without
    end. That needs `LoseControl` in a `GainControl`'s `LoseControl$` and a target that may be the source, not
    `StaticCommandCheck`. Of the four pool cards whose script has that `LoseControl` (Aladdin, Old Man of the Sea,
-   Rubinia Soulsinger, Willow Satyr), Rubinia Soulsinger alone can also target itself as printed. It was dealt into
-   J176 s12, J181 s03 and J182 s07 and s08 (0 errors, no run of correction lines) and is listed only on a measurement of
-   its own: a spine where it targets itself and then changes controller.
+   Rubinia Soulsinger, Willow Satyr), Rubinia Soulsinger alone can also target itself as printed, so D492's rule lists
+   it on Old Man of the Sea's J183 measurement, though it was dealt into J176 s12, J181 s03 and J182 s07 and s08 with 0
+   errors and no run of correction lines (Old Man, too, played J176 s08 and J180 s08 cleanly before J183). What is open:
+   no spine has measured Rubinia itself, and Willow Satyr and Aladdin, which reach the path only after a change of type
+   in a game, are watched; the first spine where one of them targets itself and then changes controller is its
+   measurement.
 24. **J183's hangs are not all traced.** (2026-11-02, D506.) Nine units of `b-s11-legacy-2524` gave no answer for
    1,800 s. Worker 1's log, which ran `d11-random-50`, ends in an unbroken run of 4,185 `Correcting zone for Old Man of
    the Sea (4)` lines up to its restart; the other hangs left no frames and interleaved logs, and two units of

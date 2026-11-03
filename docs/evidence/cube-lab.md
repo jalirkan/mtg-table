@@ -260,8 +260,8 @@ One branch traced end to end, `d7-random-o2-b47`: Old Man's only legal target at
 Oko, Thief of Crowns −5 exchanges a Golem token for it, and the engine stops. The cause in the pinned jar is D506's (a
 self-targeted change-controller command that re-enters `controllerChangeZoneCorrection` on the same card before its list
 is cleared). Earlier spines with Old Man (J176 s08, J180 s08) and with Rubinia Soulsinger (J176 s12, J181 s03, J182 s07
-and s08) had no overflow.
+and s08) had no overflow; Rubinia, whose script takes the same path, is listed on Old Man's measurement (D492's rule).
 
 The draw on the new list: J183's 13 spine and 13 validation pairs redrawn from their seeds give 51 of 52 decks
 byte-identical; `s11-legacy-2424` deck 1 changes from its eleventh spell pick (Old Man of the Sea, 1 skip), 15 of its 40
-cards by copies.
+cards by copies. Rubinia Soulsinger is in none of the 52 and takes 0 skips.
