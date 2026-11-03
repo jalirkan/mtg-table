@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-03T17:15:13-05:00",
- "heartbeat": "2026-11-03T17:15:13-05:00",
+ "updated": "2026-11-03T17:16:48-05:00",
+ "heartbeat": "2026-11-03T17:16:48-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 17.49,
-  "memUsedGb": 14.3,
+  "load1": 19.33,
+  "memUsedGb": 15.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4298,
-  "pressure": 3.89,
+  "swapUsedMb": 6771,
+  "pressure": 7.71,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-11-03T17:10:07-05:00",
-   "elapsed": 306,
+   "elapsed": 400,
    "done": 0,
    "total": 64000,
    "unit": "lines",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
+   "workers": 2,
    "workersMax": 3,
    "cores": 7,
    "errors": 0,
    "paused": false,
    "dataUpdated": "2026-11-03T17:10:07-05:00",
-   "memGb": 2.07,
+   "memGb": 2.19,
    "live": {
     "branches": 0,
     "atlas.spinesDone": 0,
@@ -97,7 +97,14 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
+   "pressureEvents": [
+    {
+     "at": "2026-11-03T17:16:43-05:00",
+     "kind": "drop",
+     "workers": 2,
+     "pressure": 7.7
+    }
+   ],
    "detail": "lab-J187-pilot1"
   }
  ],
