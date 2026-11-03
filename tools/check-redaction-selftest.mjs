@@ -321,6 +321,10 @@ const REQUIRED = [
   ['m76-min-negative.jsonl', 'fail'],
   ['m76-min-not-an-integer.jsonl', 'fail'],
   ['m76-no-target-elsewhere.jsonl', 'fail'],
+  // Amendment M81 (D510): a target record lists a candidate the seat cannot see as option:hidden and answers an unseen
+  // target with it -- alone (J186's all-hidden part) and in a chosen list beside a visible target.  No rule of its own
+  // (option:hidden is a token for every kind); this control fails if a token-per-kind rule ever forgets the target path.
+  ['m81-target-option-hidden.jsonl', 'pass'],
 ];
 // D502-D505: a pass control of a new rule must pass BECAUSE of that rule -- its
 // count is on the stats line -- not because some older rule vouched for it.

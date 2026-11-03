@@ -476,6 +476,7 @@ public final class Decisions {
             d.source = source;
             d.explore = marks == null ? null : marks.get(s);
             final Set<String> opts = new LinkedHashSet<>();
+            final List<GameEntity> hiddenCands = new ArrayList<>();   // D510: to tell an unseen answer outside them
             final TargetRestrictions tr = s.getTargetRestrictions();
             // D487: the part's minimum and maximum (TargetMin$ / TargetMax$, which may be SVars: Tear Asunder's
             // X and Y are 0 or 1 on whether it was kicked).  Unknown (no restrictions): one, as a plain target.
@@ -491,6 +492,7 @@ public final class Decisions {
                     final String t = entityToken("target", e, ai);
                     if (t == null) {
                         d.hidden++;
+                        hiddenCands.add(e);
                         if (ghost(e)) {
                             System.err.println(ghostLine(e.getId()));   // D507: the night's ghost_candidates
                         } else if (lastKnown(e)) {
@@ -503,6 +505,7 @@ public final class Decisions {
             }
             final List<String> chosen = new ArrayList<>();
             int unseen = 0;
+            int unseenOutside = 0;
             for (final GameObject t : s.getTargets()) {
                 final String tok = entityToken("target", t, ai);
                 if (tok != null) {
@@ -512,12 +515,26 @@ public final class Decisions {
                     }
                 } else {
                     unseen++;
+                    if (!among(t, hiddenCands)) {
+                        unseenOutside++;   // D510: a target Forge's candidate list left out (a spell on the stack)
+                    }
                 }
             }
-            targetAnswer(d, opts, chosen, unseen, min);
+            targetAnswer(d, opts, chosen, unseen, unseenOutside, min);
             out.add(d);
         }
         return out;
+    }
+
+    /** D510: {@code t} is one of {@code cands} -- the same object, or the same card or player by id. */
+    private static boolean among(final GameObject t, final List<GameEntity> cands) {
+        for (final GameEntity e : cands) {
+            if (e == t || e instanceof Card && t instanceof Card && e.getId() == ((Card) t).getId()
+                    || e instanceof Player && t instanceof Player && e.getId() == ((Player) t).getId()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -531,21 +548,29 @@ public final class Decisions {
      * is an engine fault the play will meet ("failed to target"): it answers
      * {@code target:none} too, listed, with {@code min}, {@code complete: false}
      * and {@code why: NO_TARGET}.  A target the seat cannot see is not "none":
-     * the record is marked {@code complete: false}, and with no visible target
-     * it keeps its null answer, which the checker fails.
+     * the record is marked {@code complete: false}.  D510: and it is written as
+     * the entities path writes one ({@link #entities}): the candidates the seat
+     * cannot see ({@code d.hidden}, counted by the caller) are listed once, as
+     * {@code option:hidden} after the visible ones, and each unseen target of the
+     * answer is {@code option:hidden} -- never a null answer beside no options,
+     * which the checker fails (J186: a part whose one candidate was a ghost).
+     * {@code hidden} counts exactly: the hidden candidates plus each unseen target
+     * of the answer that is not among them ({@code unseenOutside}: a spell on the
+     * stack, which Forge's candidate list leaves out), so a record lists
+     * {@code option:hidden} exactly when it carries {@code hidden}.
      * Engine-free, for the self-test.
      */
     static void targetAnswer(final Decision d, final Set<String> opts, final List<String> chosen, final int unseen,
-                             final int min) {
+                             final int unseenOutside, final int min) {
         final List<String> sorted = new ArrayList<>(opts);
         sorted.sort(Decisions::byId);
         final boolean none = chosen.isEmpty() && unseen == 0;
         if (unseen > 0) {
-            // D487 review: an answer the seat cannot see is not among the options it was shown, so the record is
-            // incomplete -- and an empty visible answer then writes chosen null beside complete:false, never the
-            // J171 legacy shape (which has no complete), so the audit fails it
+            // D487 review: the record is incomplete -- option:hidden (D510, below) cannot say whether the unseen
+            // answer was one of the counted candidates or a target outside the engine's list (a spell on the stack)
             d.complete = false;
         }
+        d.hidden += unseenOutside;   // D510: every hidden object the part offered or took, counted once
         if (min <= 0 || none) {
             d.options.add(TARGET_NONE);
             d.min = Math.max(min, 0);
@@ -555,14 +580,24 @@ public final class Decisions {
             }
         }
         d.options.addAll(sorted);
+        if (d.hidden > 0) {
+            d.options.add(HIDDEN);   // D510: as the entities path lists one
+        }
+        final List<String> answer = new ArrayList<>(chosen);
+        for (int i = 0; i < unseen; i++) {
+            answer.add(HIDDEN);      // D510: an unseen target, never named by id and never left out
+        }
         if (none) {
             d.chosen = TARGET_NONE;
-        } else if (chosen.size() == 1) {
-            d.chosen = chosen.get(0);
+        } else if (answer.size() == 1) {
+            d.chosen = answer.get(0);
         } else {
-            d.chosenAll.addAll(chosen);
+            d.chosenAll.addAll(answer);
         }
     }
+
+    /** D510: a target or choice candidate in a zone the seat cannot see, counted in {@code hidden} and never named. */
+    static final String HIDDEN = "option:hidden";
 
     // ------------------------------------------------------------------
     // Combat
@@ -776,7 +811,7 @@ public final class Decisions {
         }
         d.options.addAll(opts);
         if (d.hidden > 0) {
-            d.options.add("option:hidden");
+            d.options.add(HIDDEN);
         }
         final List<String> chosen = new ArrayList<>();
         if (picked != null) {
@@ -785,7 +820,7 @@ public final class Decisions {
                     continue;
                 }
                 final String t = entityToken("option", e, ai);
-                chosen.add(t == null ? "option:hidden" : t);
+                chosen.add(t == null ? HIDDEN : t);
             }
         }
         if (chosen.isEmpty()) {
