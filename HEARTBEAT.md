@@ -1630,3 +1630,19 @@ J184 failed in 14 s: `fatal: Needed a single revision` -- the pin 0a6cf5c1 was g
 origin/main, which the runner's clone fetches. Pushed; lab-j184 (empty) removed; J185 is the same file on the same pin and
 seed block (unused: J184 drew nothing), posted with the reason written into its *Before posting* 4. Lesson, recorded: push
 main before posting a night that pins it.
+
+## 2026-11-03 06:35 EST -- J185 read, D508 merged and pushed, J186 posted
+
+J185 (D507 population, night one, pin 0a6cf5c1) finished 05:29 EST: 187 branched, 88 labels, 20 confident, 31,902 s of
+walls at 6 workers, one check failed -- `atlas.problems` 1: s13's one frame log of 11,402 named `option:37`, seat 0's
+bounced Cavern Harpy (a stub in its hand), in seat 1's Circle of Protection: Blue source choice while Luminous Phantom's
+leave trigger on it was on the stack. Forge lists the trigger's last-known copy under "objects referred to on the stack",
+and its last-state snapshot stamps the copy with a Battlefield zone; the seat's gate read that zone. Everything else was
+clean (0 ghosts, 0 overflows, 0 hung units, 0 engine errors; s12's five PumpEffect IOOBEs and 21 AI-eval timeouts are the
+engine's known shapes). **D508** (lane, skeptic review, full gate 60 jobs 636.1 s, main `e557dedf`, pushed): the gate
+resolves a candidate to the card the game holds (`Game.getCardState`), judges a stack item on its host object as the
+frame's `stackCards` does (the review's catch: 173 J185 frames name a stack item's source the same frame stubs in a hand),
+prints `[lki]` per hidden copy, SelectionSelfTest 59 checks; protocol M80; cube-lab follow-ups 29-31. **J186** (night
+ten, D508 population night one, seeds 2440-2452 / 2540-2552 / 2640-2652 / 2740-2752, compares J185 by position, new
+metric `lki_candidates`) derived by `drafts/derive-j186.py e557dedf…` (every expectation ok, runner check 0), posted on
+pc-jobs `ac5ec889`, lab-j186 made empty, running since 06:33 EST.
