@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-11-03T10:41:54-05:00",
- "heartbeat": "2026-11-03T10:41:54-05:00",
+ "updated": "2026-11-03T10:42:26-05:00",
+ "heartbeat": "2026-11-03T10:42:26-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.82,
-  "memUsedGb": 11.3,
+  "load1": 6.65,
+  "memUsedGb": 11.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 2314,
   "pressure": 0,
@@ -26,13 +26,13 @@
    "cpu": "heavy",
    "phase": "commands 4/15",
    "started": "2026-11-03T06:19:03-05:00",
-   "elapsed": 15771,
+   "elapsed": 15803,
    "done": 19790,
    "total": 64000,
    "unit": "lines",
    "ratePerHour": 2634,
-   "eta": "2026-11-04T03:28:57-05:00",
-   "workers": 5,
+   "eta": "2026-11-04T03:29:29-05:00",
+   "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 20,
@@ -104,6 +104,12 @@
      "kind": "drop",
      "workers": 5,
      "pressure": 0.2
+    },
+    {
+     "at": "2026-11-03T10:42:26-05:00",
+     "kind": "raise",
+     "workers": 6,
+     "pressure": 0
     }
    ],
    "detail": "lab-J186-run4"
