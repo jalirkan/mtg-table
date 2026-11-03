@@ -1607,3 +1607,19 @@ above is the corrected one. No job is posted until D484 is merged and the s05 re
   defaults to pairs-v7.1, the pairs manifest cap 256 KB -> 1 MB (the 1.18 manifest, 493 KB, was refused on the live look), the
   writer names the manifest after its tag (pairs-v7 said "pairs-v6 draft"). Justin's phone showed the built-in scene: the pack switch or
   its load, not the pack.
+
+## 2026-11-02 20:40 EST -- J183 read, three fixes merged, J184 posted
+
+J183 (night eight, D498's population night two) finished 18:30 EST and FAILED four checks on two of its thirteen spines; eleven
+were clean. Three faults, three decisions, each through a lane, a skeptic review and the full gate on the merged tree
+(main 0a6cf5c1, check-all OK, 60 jobs, 637.5 s): D505 -- the checker's hideaway rule was too strict at both ends (the look is
+any past controller's until the card moves, CR 702.75a, and the dig is tied by its trigger's resolution, one per entry; s11's
+17 seat-1 logs pass, 232 controls); D506 -- Old Man of the Sea (and Rubinia Soulsinger on D492's class rule) join the
+engine-unplayable list: the random seat targets Old Man with its own ability and a later change of its controller recurses in
+controllerChangeZoneCorrection (70 StackOverflowErrors, 9 units hung 1,800 s, 210,644 "Correcting zone" lines); D507 -- Forge's
+AI stranded Knockout Maneuver in the Stack zone after a failed cast at turn 10 of s09's spine, and every later Mana Drain
+target record named the ghost (463 logs): the seat's visibility gate now needs a stack instance (a spell copy on a frozen stack
+excepted), prints a `[ghost]` worker-log line, and -- because the explorer and the search share that gate -- J184 OPENS population
+random-<band>-d507. J184 posted to pc-jobs: night nine, 13 new spines at deck seeds 2427-2439, game 2527-2539, validation
+2627-2639/2727-2739, lab-j184 made empty; new metrics ghost_candidates and stack_overflows; J183's and J182's numbers beside as
+information. The runner's check: exit 0, lint clean. Drafts: drafts/derive-j184.py, drafts/J184-atlas-4b-night-nine.md.
