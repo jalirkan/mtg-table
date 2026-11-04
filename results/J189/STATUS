@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: draws.newDraws13 == 13 (draws.newDraws13 = 0); draws.newValidation == 1 (draws.newValidation = 0)
 runner: forgecoach-runner ac07876b
 started: 2026-11-04T11:02:40-05:00
-phase: pilot 1/1
+finished: 2026-11-04T11:13:06-05:00
 mtg-table: fe063f9
 workers: 3
+peak_worker_rss_gb: 1.27
