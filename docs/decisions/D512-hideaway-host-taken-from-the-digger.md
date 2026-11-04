@@ -153,6 +153,13 @@ the cure without "under W" (a take of W at N+1 tied to the card admits it under 
 the owner no longer being checked admits one shape more, the one this decision is for: a host the viewer owns, whose
 entry's trigger was the opponent's and dug the opponent's library, taken back from the opponent. The take is from the
 opponent, the dig the opponent's and the trigger the opponent's in every admitted case.
+Two more things the review of this decision named (2026-11-04). Ownership playing no part extends every one of
+D505's residuals -- a trigger's resolution right after an unrelated dig, a card dug at an earlier entry of a host that
+re-enters -- to hosts the viewer owns; the review built opponent-owned mirrors of each and main's checker admits those
+already, so the extension is the rule's own consistency, not a new hole. And the one-frame lead asks for a viewer aura's
+`attach` onto the host, which the wire cannot tell from a pump aura: a +1/+1 aura the viewer attaches in frame N while
+another effect takes the host in N+1 satisfies the lead, at the cost of one frame of early alt on a host the viewer takes
+the next frame anyway.
 
 **docs/protocol.md** needs no change: the wire shape is unchanged, and its *Face-down cards and `alt`* section says
 only that hideaway is a look permission like Gonti's, for the seat's own card.
