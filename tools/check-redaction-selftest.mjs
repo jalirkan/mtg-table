@@ -109,7 +109,7 @@ const REQUIRED = [
   ['a9-hideaway-alt-a-state-after-the-host-leaves.jsonl', 'pass'],
   ['a9-hideaway-no-control-change.jsonl', 'fail'],
   ['a9-hideaway-viewer-controlled-from-the-start.jsonl', 'fail'],
-  ['a9-hideaway-viewer-own-permanent-taken-back.jsonl', 'fail'],
+  ['a9-hideaway-viewer-own-permanent-taken-back.jsonl', 'pass'],   // D512: was 'fail' (D502's theory, J187's engine evidence)
   ['a9-hideaway-third-party-permanent.jsonl', 'fail'],
   ['a9-hideaway-alt-in-a-graveyard.jsonl', 'fail'],
   ['a9-hideaway-alt-two-states-after-control-taken.jsonl', 'fail'],
@@ -172,6 +172,22 @@ const REQUIRED = [
   ['a9-hideaway-fizzled-trigger.jsonl', 'fail'],
   ['a9-hideaway-two-hosts-the-first-resolver-taken.jsonl', 'pass'],
   ['a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl', 'pass'],
+  // D512 (J187 s06): the host's owner is irrelevant -- the viewer takes it FROM
+  // the player whose library the card was dug from, by that player's trigger --
+  // and the alt may lead the listed take by one frame while the viewer's aura
+  // attaching to the host resolves (d21), decided by the next state frame.
+  ['a9-hideaway-own-permanent-reanimated-by-the-opponent-taken-back.jsonl', 'pass'],
+  ['a9-hideaway-alt-a-frame-before-the-take-while-the-aura-resolves.jsonl', 'pass'],
+  ['a9-hideaway-alt-a-frame-before-the-opponent-own-watcher-taken.jsonl', 'pass'],
+  ['a9-hideaway-own-permanent-taken-back-from-a-third-party.jsonl', 'fail'],
+  ['a9-hideaway-own-permanent-unrelated-dig-beside-the-viewer-trigger.jsonl', 'fail'],
+  ['a9-hideaway-alt-two-frames-before-the-take.jsonl', 'fail'],
+  ['a9-hideaway-alt-before-a-take-that-never-comes.jsonl', 'fail'],
+  ['a9-hideaway-alt-before-a-take-the-log-ends-first.jsonl', 'fail'],
+  ['a9-hideaway-alt-ahead-of-the-take-with-no-attach.jsonl', 'fail'],
+  ['a9-hideaway-alt-ahead-of-the-take-the-opponent-aura.jsonl', 'fail'],
+  ['a9-hideaway-alt-ahead-of-the-take-aura-onto-another-permanent.jsonl', 'fail'],
+  ['a9-hideaway-alt-ahead-of-the-take-another-host-taken.jsonl', 'fail'],
   // ... and the opposite direction: the viewer's own hand served as a stub.
   ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
@@ -346,6 +362,10 @@ const COUNTED = [
   ['a9-hideaway-countered-first-entry-flicker-card-only.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-resolution-ten-frames-after-the-cast.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-cast-the-frame-after-the-entry-resolved-three-later.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-viewer-own-permanent-taken-back.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-own-permanent-reanimated-by-the-opponent-taken-back.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-a-frame-before-the-take-while-the-aura-resolves.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
+  ['a9-hideaway-alt-a-frame-before-the-opponent-own-watcher-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-two-hosts-the-first-resolver-taken.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['a9-hideaway-resolved-and-unstacked-straddle-a-snapshot.jsonl', 'an opponent\'s hideaway card, its exiling permanent\'s control taken by the viewer, D502'],
   ['stale-token-of-the-opponent.jsonl', 'ceased to exist, another seat\'s token=2'],
@@ -563,6 +583,22 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
   else if (ra5.problems.length > 0 || ra5.undecided.length === 0) bad(`a decision whose reveal comes after it, cut after that reveal: --partial should hold it undecided, got problems=${ra5.problems.length} undecided=${ra5.undecided.length}`);
   else if (ra6.problems.length === 0) bad('the same once the next state is in the prefix: --partial should fail it (a reveal after the decision vouches for nothing)');
   else lead('D496 reveal: cut before the next state, undecided; with its zone events, a pass; a reveal after the decision waits, then fails');
+
+  // D512: an alt one frame ahead of its listed take waits for the next state
+  // frame.  Cut at the frame of the aura's attach, --partial holds it undecided
+  // (and a whole check of that prefix fails it); with the take's frame it
+  // passes; with a frame that lists no take it fails.
+  const ld = `${DIR}/a9-hideaway-alt-a-frame-before-the-take-while-the-aura-resolves.jsonl`;
+  const nv = `${DIR}/a9-hideaway-alt-before-a-take-that-never-comes.jsonl`;
+  const ld6 = checkFile('ld.jsonl', { partial: true, text: cut(ld, 6) });
+  const ld6full = checkFile('ld.jsonl', { text: cut(ld, 6) });
+  const ld7 = checkFile('ld.jsonl', { partial: true, text: cut(ld, 7) });
+  const nv7 = checkFile('nv.jsonl', { partial: true, text: cut(nv, 7) });
+  if (ld6.problems.length > 0 || ld6.undecided.length === 0 || ld6.decidedBytes !== Buffer.byteLength(cut(ld, 5))) bad(`an alt ahead of its take, cut at the attach's frame: --partial should hold it undecided, got problems=${ld6.problems.length} undecided=${ld6.undecided.length} decided=${ld6.decidedBytes}`);
+  else if (ld6full.problems.length === 0) bad('the same prefix checked whole should fail (no frame lists the take)');
+  else if (ld7.problems.length > 0 || ld7.undecided.length > 0) bad(`the same once the take's frame is in the prefix: --partial should pass it, got problems=${ld7.problems.length} undecided=${ld7.undecided.length}`);
+  else if (!nv7.problems.some((x) => x.includes(':6: ') && x.includes('only a look permission'))) bad('an alt ahead of a take the next frame does not list: --partial should fail the attach\'s frame');
+  else lead('D512 lead: cut at the attach, undecided (a whole check fails it); with the take, a pass; with no take the next frame, a failure');
 
   // No prefix of a healthy recording fails --partial.
   const t0 = Date.now();
