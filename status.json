@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-03T23:56:21-05:00",
- "heartbeat": "2026-11-03T23:56:21-05:00",
+ "updated": "2026-11-03T23:59:01-05:00",
+ "heartbeat": "2026-11-03T23:59:01-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.2,
-  "memUsedGb": 9.9,
+  "load1": 5.16,
+  "memUsedGb": 10.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4403,
+  "swapUsedMb": 4116,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,21 +26,21 @@
    "cpu": "heavy",
    "phase": "commands 8/15",
    "started": "2026-11-03T17:10:07-05:00",
-   "elapsed": 24374,
-   "done": 35815,
+   "elapsed": 24534,
+   "done": 36005,
    "total": 64000,
    "unit": "lines",
-   "ratePerHour": 10042.8,
-   "eta": "2026-11-04T02:44:45-05:00",
-   "workers": 5,
+   "ratePerHour": 9691,
+   "eta": "2026-11-04T02:52:21-05:00",
+   "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 0,
    "paused": false,
-   "dataUpdated": "2026-11-03T23:55:38-05:00",
-   "memGb": 4.86,
+   "dataUpdated": "2026-11-03T23:58:51-05:00",
+   "memGb": 4.89,
    "live": {
-    "branches": 35814,
+    "branches": 36004,
     "atlas.spinesDone": 7,
     "atlas.labels": -1,
     "atlas.confident": -1,
@@ -67,7 +67,7 @@
     "atlas.branchErroredOptions": 0,
     "atlas.branchErrorStacks": 118,
     "atlas.branchRestarted": 32,
-    "atlas.branchRows": 35815,
+    "atlas.branchRows": 36004,
     "atlas.branchTimeouts": 0,
     "atlas.branchTimeoutsInStep": 0,
     "atlas.branchUnavailable": 0,
@@ -99,12 +99,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [
-    {
-     "at": "2026-11-03T17:16:43-05:00",
-     "kind": "drop",
-     "workers": 2,
-     "pressure": 7.7
-    },
     {
      "at": "2026-11-03T17:18:14-05:00",
      "kind": "drop",
@@ -218,6 +212,12 @@
      "kind": "drop",
      "workers": 5,
      "pressure": 0.1
+    },
+    {
+     "at": "2026-11-03T23:59:01-05:00",
+     "kind": "raise",
+     "workers": 6,
+     "pressure": 0
     }
    ],
    "detail": "lab-J187-run8"
