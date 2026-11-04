@@ -1,0 +1,1537 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s11-legacy-2476/decks/legacy-2476-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s11-legacy-2476/decks/legacy-2476-00002.dck",
+    "seed": 2576,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 12,
+      "first": "A",
+      "decisionsListed": 16
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 1,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 55,
+              "draws": 0,
+              "losses": 95,
+              "mean": 0.3667,
+              "lo": 0.2938,
+              "hi": 0.4462
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Hangarback Walker",
+            "random": {
+              "n": 150,
+              "wins": 56,
+              "draws": 0,
+              "losses": 94,
+              "mean": 0.3733,
+              "lo": 0.3,
+              "hi": 0.453
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0067,
+          "regretLo": 0,
+          "regretHi": 0.0867,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "fill",
+        "screened": false,
+        "screenMean": 0.36,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:14",
+            "label": "Verdant Catacombs: {T}, Pay 1 life, Sacrifice CARDNAME: Sear",
+            "random": {
+              "n": 150,
+              "wins": 58,
+              "draws": 3,
+              "losses": 89,
+              "mean": 0.3967,
+              "lo": 0.3219,
+              "hi": 0.4766
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 56,
+              "draws": 2,
+              "losses": 92,
+              "mean": 0.38,
+              "lo": 0.3062,
+              "hi": 0.4598
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:22",
+            "label": "Hangarback Walker",
+            "random": {
+              "n": 150,
+              "wins": 53,
+              "draws": 0,
+              "losses": 97,
+              "mean": 0.3533,
+              "lo": 0.2814,
+              "hi": 0.4326
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Stormchaser's Talent",
+            "random": {
+              "n": 150,
+              "wins": 53,
+              "draws": 0,
+              "losses": 97,
+              "mean": 0.3533,
+              "lo": 0.2814,
+              "hi": 0.4326
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0867,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.355,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 0,
+              "losses": 105,
+              "mean": 0.3,
+              "lo": 0.2324,
+              "hi": 0.3776
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Hangarback Walker",
+            "random": {
+              "n": 150,
+              "wins": 59,
+              "draws": 1,
+              "losses": 90,
+              "mean": 0.3967,
+              "lo": 0.3219,
+              "hi": 0.4766
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Stormchaser's Talent",
+            "random": {
+              "n": 150,
+              "wins": 47,
+              "draws": 0,
+              "losses": 103,
+              "mean": 0.3133,
+              "lo": 0.2445,
+              "hi": 0.3914
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0967,
+          "regretLo": 0.0067,
+          "regretHi": 0.1801,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3067,
+        "futilityGap": 0.08
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:38",
+            "label": "Stormchaser's Talent",
+            "random": {
+              "n": 150,
+              "wins": 54,
+              "draws": 0,
+              "losses": 96,
+              "mean": 0.36,
+              "lo": 0.2876,
+              "hi": 0.4394
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 52,
+              "draws": 0,
+              "losses": 98,
+              "mean": 0.3467,
+              "lo": 0.2752,
+              "hi": 0.4258
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:22",
+            "label": "Hangarback Walker",
+            "random": {
+              "n": 150,
+              "wins": 55,
+              "draws": 0,
+              "losses": 95,
+              "mean": 0.3667,
+              "lo": 0.2938,
+              "hi": 0.4462
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0067,
+          "regretLo": 0,
+          "regretHi": 0.1133,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4,
+        "futilityGap": 0.08
+      },
+      {
+        "d": 9,
+        "kind": "b",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 150,
+              "wins": 16,
+              "draws": 0,
+              "losses": 134,
+              "mean": 0.1067,
+              "lo": 0.0667,
+              "hi": 0.1662
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:86>56",
+            "label": "block Otter Token>Emmara, Soul of the Accord",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "block:22>56",
+            "label": "block Hangarback Walker>Emmara, Soul of the Accord",
+            "random": {
+              "n": 150,
+              "wins": 23,
+              "draws": 0,
+              "losses": 127,
+              "mean": 0.1533,
+              "lo": 0.1044,
+              "hi": 0.2196
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0467,
+          "regretLo": 0,
+          "regretHi": 0.1133,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.1467,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.08
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:22,86",
+            "label": "attack Otter Token+Hangarback Walker",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:86",
+            "label": "attack Otter Token",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:22",
+            "label": "attack Hangarback Walker",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.22,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 11,
+        "kind": "b",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 148,
+              "wins": 1,
+              "draws": 0,
+              "losses": 147,
+              "mean": 0.0068,
+              "lo": 0.0012,
+              "hi": 0.0373
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:86>56",
+            "label": "block Otter Token>Emmara, Soul of the Accord",
+            "random": {
+              "n": 48,
+              "wins": 1,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.0208,
+              "lo": 0.0037,
+              "hi": 0.109
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "block:22>56",
+            "label": "block Hangarback Walker>Emmara, Soul of the Accord",
+            "random": {
+              "n": 148,
+              "wins": 31,
+              "draws": 1,
+              "losses": 116,
+              "mean": 0.2128,
+              "lo": 0.1546,
+              "hi": 0.2856
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 148,
+          "regret": 0.2061,
+          "regretLo": 0.1419,
+          "regretHi": 0.2703,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.0972,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.2292
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 149,
+              "wins": 10,
+              "draws": 0,
+              "losses": 139,
+              "mean": 0.0671,
+              "lo": 0.0369,
+              "hi": 0.1191
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:22,86",
+            "label": "attack Otter Token+Hangarback Walker",
+            "random": {
+              "n": 149,
+              "wins": 21,
+              "draws": 0,
+              "losses": 128,
+              "mean": 0.1409,
+              "lo": 0.0941,
+              "hi": 0.2059
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:86",
+            "label": "attack Otter Token",
+            "random": {
+              "n": 100,
+              "wins": 9,
+              "draws": 0,
+              "losses": 91,
+              "mean": 0.09,
+              "lo": 0.0481,
+              "hi": 0.1623
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "attack:22",
+            "label": "attack Hangarback Walker",
+            "random": {
+              "n": 149,
+              "wins": 19,
+              "draws": 0,
+              "losses": 130,
+              "mean": 0.1275,
+              "lo": 0.0832,
+              "hi": 0.1906
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 149,
+          "regret": 0.0738,
+          "regretLo": 0.0201,
+          "regretHi": 0.1409,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.13,
+        "forgeOptions": [
+          0,
+          1,
+          3
+        ],
+        "futilityGap": 0.1
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:33",
+            "label": "Vendilion Clique",
+            "random": {
+              "n": 150,
+              "wins": 7,
+              "draws": 0,
+              "losses": 143,
+              "mean": 0.0467,
+              "lo": 0.0228,
+              "hi": 0.0932
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 8,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.0533,
+              "lo": 0.0273,
+              "hi": 0.1017
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0067,
+          "regretLo": 0,
+          "regretHi": 0.0533,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 15,
+        "screened": false,
+        "screenMean": 0.08,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:22",
+            "label": "attack Hangarback Walker",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "fill",
+        "screened": false,
+        "screenMean": 0.1,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 15,
+        "kind": "b",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:22>43,33>49",
+            "label": "block Vendilion Clique>Badgermole Cub, Hangarback Walker>Sedge Troll",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:22>43",
+            "label": "block Hangarback Walker>Sedge Troll",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:33>49",
+            "label": "block Vendilion Clique>Badgermole Cub",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 11,
+      "branchedInFull": 8,
+      "fill": 2,
+      "optionsByDecision": {
+        "d0": 2,
+        "d2": 4,
+        "d3": 3,
+        "d4": 3,
+        "d9": 3,
+        "d10": 4,
+        "d11": 3,
+        "d12": 4,
+        "d14": 2,
+        "d15": 4,
+        "d13": 2
+      },
+      "meanOptions": 3.09,
+      "screened": [
+        {
+          "d": 15,
+          "mean": 0,
+          "replacedBy": 13
+        }
+      ],
+      "stopped": [
+        {
+          "d": 9,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 11,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 2,
+          "at": 100
+        }
+      ],
+      "stoppedOptions": 3,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 3,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.2292,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0.1,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 600,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 3750,
+    "branchErrors": 3,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 7,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 4672,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 131316,
+    "gamesIdChecked": 3751,
+    "frameLogs": 7502,
+    "frameLogsFailed": 0,
+    "redactionMs": 70076,
+    "forks": 3750,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 11,
+    "guardrails": {
+      "logs": 7500,
+      "priorityDecisions": 502664,
+      "landOffered": 38877,
+      "landTaken": 38877,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 6478,
+      "refusedCast": 207,
+      "noRepeatRefused": 120,
+      "xDrawn": 2679,
+      "zeroXLeftOut": 50858,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3750,
+      "errored": 3,
+      "threshold": 0.1,
+      "byError": [
+        {
+          "error": "IndexOutOfBoundsException: Index # out of bounds for length #",
+          "n": 3
+        }
+      ],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3750,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3750,
+      "errored": 7,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 7
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 146582
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4960,
+      "units": 53,
+      "branchGames": 3750,
+      "ms": 3420522,
+      "workers": 6
+    },
+    "wallMs": 3425482,
+    "jobs": 6
+  }
+}

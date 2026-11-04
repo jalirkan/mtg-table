@@ -1,0 +1,1773 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s05-pauper-2470/decks/pauper-2470-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s05-pauper-2470/decks/pauper-2470-00002.dck",
+    "seed": 2570,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 17,
+      "first": "A",
+      "decisionsListed": 22
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:40#0",
+            "label": "Tranquil Landscape: {T}, Sacrifice CARDNAME: Search your lib",
+            "random": {
+              "n": 150,
+              "wins": 67,
+              "draws": 0,
+              "losses": 83,
+              "mean": 0.4467,
+              "lo": 0.3694,
+              "hi": 0.5266
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 58,
+              "draws": 0,
+              "losses": 92,
+              "mean": 0.3867,
+              "lo": 0.3125,
+              "hi": 0.4665
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:5",
+            "label": "Gloom",
+            "random": {
+              "n": 150,
+              "wins": 65,
+              "draws": 0,
+              "losses": 85,
+              "mean": 0.4333,
+              "lo": 0.3567,
+              "hi": 0.5133
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 150,
+              "wins": 71,
+              "draws": 1,
+              "losses": 78,
+              "mean": 0.4767,
+              "lo": 0.3983,
+              "hi": 0.5562
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.03,
+          "regretLo": 0,
+          "regretHi": 0.1333,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.42,
+        "futilityGap": 0.06
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 56,
+              "draws": 0,
+              "losses": 94,
+              "mean": 0.3733,
+              "lo": 0.3,
+              "hi": 0.453
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:16",
+            "label": "Tundra Wolves",
+            "random": {
+              "n": 150,
+              "wins": 58,
+              "draws": 1,
+              "losses": 91,
+              "mean": 0.39,
+              "lo": 0.3156,
+              "hi": 0.4699
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:5",
+            "label": "Gloom",
+            "random": {
+              "n": 150,
+              "wins": 68,
+              "draws": 0,
+              "losses": 82,
+              "mean": 0.4533,
+              "lo": 0.3758,
+              "hi": 0.5332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 150,
+              "wins": 58,
+              "draws": 0,
+              "losses": 92,
+              "mean": 0.3867,
+              "lo": 0.3125,
+              "hi": 0.4665
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:27",
+            "label": "Circle of Protection: Blue",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.26,
+              "lo": 0.1587,
+              "hi": 0.3955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "cast:18",
+            "label": "Unwilling Ingredient",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.08,
+          "regretLo": 0,
+          "regretHi": 0.18,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3167,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "futilityGap": 0.18
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Gloom",
+            "random": {
+              "n": 150,
+              "wins": 61,
+              "draws": 0,
+              "losses": 89,
+              "mean": 0.4067,
+              "lo": 0.3313,
+              "hi": 0.4867
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 64,
+              "draws": 0,
+              "losses": 86,
+              "mean": 0.4267,
+              "lo": 0.3503,
+              "hi": 0.5067
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:16",
+            "label": "Tundra Wolves",
+            "random": {
+              "n": 150,
+              "wins": 66,
+              "draws": 0,
+              "losses": 84,
+              "mean": 0.44,
+              "lo": 0.363,
+              "hi": 0.52
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:27",
+            "label": "Circle of Protection: Blue",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 1,
+              "losses": 35,
+              "mean": 0.29,
+              "lo": 0.1829,
+              "hi": 0.4271
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:18",
+            "label": "Unwilling Ingredient",
+            "random": {
+              "n": 100,
+              "wins": 33,
+              "draws": 0,
+              "losses": 67,
+              "mean": 0.33,
+              "lo": 0.2456,
+              "hi": 0.4269
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 150,
+              "wins": 66,
+              "draws": 0,
+              "losses": 84,
+              "mean": 0.44,
+              "lo": 0.363,
+              "hi": 0.52
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0333,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4033,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          5
+        ],
+        "futilityGap": 0.12
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:18",
+            "label": "Unwilling Ingredient",
+            "random": {
+              "n": 150,
+              "wins": 73,
+              "draws": 1,
+              "losses": 76,
+              "mean": 0.49,
+              "lo": 0.4113,
+              "hi": 0.5692
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 72,
+              "draws": 1,
+              "losses": 77,
+              "mean": 0.4833,
+              "lo": 0.4048,
+              "hi": 0.5627
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 150,
+              "wins": 73,
+              "draws": 0,
+              "losses": 77,
+              "mean": 0.4867,
+              "lo": 0.408,
+              "hi": 0.566
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.11,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.48,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:17",
+            "label": "attack Nezumi Road Captain",
+            "random": {
+              "n": 150,
+              "wins": 77,
+              "draws": 0,
+              "losses": 73,
+              "mean": 0.5133,
+              "lo": 0.434,
+              "hi": 0.592
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 1,
+              "losses": 28,
+              "mean": 0.43,
+              "lo": 0.3027,
+              "hi": 0.5673
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:17,18",
+            "label": "attack Nezumi Road Captain+Unwilling Ingredient",
+            "random": {
+              "n": 150,
+              "wins": 73,
+              "draws": 1,
+              "losses": 76,
+              "mean": 0.49,
+              "lo": 0.4113,
+              "hi": 0.5692
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0734,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4533,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:25",
+            "label": "Evolving Wilds: {T}, Sacrifice CARDNAME: Search your library",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.54,
+              "lo": 0.404,
+              "hi": 0.6703
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 20,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.4,
+              "lo": 0.2761,
+              "hi": 0.5382
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:12",
+            "label": "Unholy Strength",
+            "random": {
+              "n": 50,
+              "wins": 23,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.46,
+              "lo": 0.3297,
+              "hi": 0.596
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 50,
+              "wins": 23,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.46,
+              "lo": 0.3297,
+              "hi": 0.596
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.48,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:12",
+            "label": "Unholy Strength",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.42,
+              "lo": 0.2938,
+              "hi": 0.5577
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.36,
+              "lo": 0.2414,
+              "hi": 0.4986
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.42,
+              "lo": 0.2938,
+              "hi": 0.5577
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.2,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.44,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:16",
+            "label": "Tundra Wolves",
+            "random": {
+              "n": 150,
+              "wins": 92,
+              "draws": 0,
+              "losses": 58,
+              "mean": 0.6133,
+              "lo": 0.5335,
+              "hi": 0.6875
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:19",
+            "label": "Blood Fountain",
+            "random": {
+              "n": 150,
+              "wins": 90,
+              "draws": 0,
+              "losses": 60,
+              "mean": 0.6,
+              "lo": 0.52,
+              "hi": 0.675
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 150,
+              "wins": 98,
+              "draws": 0,
+              "losses": 52,
+              "mean": 0.6533,
+              "lo": 0.5742,
+              "hi": 0.7248
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.1467,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.56,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ],
+        "futilityGap": 0.08
+      },
+      {
+        "d": 20,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:31",
+            "label": "Gonti, Lord of Luxury",
+            "random": {
+              "n": 150,
+              "wins": 122,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.8133,
+              "lo": 0.7434,
+              "hi": 0.8676
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 28,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.56,
+              "lo": 0.4231,
+              "hi": 0.6884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:14",
+            "label": "Village Rites",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:27",
+            "label": "Circle of Protection: Blue",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.63,
+              "lo": 0.4914,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:34",
+            "label": "Seeker of the Way",
+            "random": {
+              "n": 150,
+              "wins": 121,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.8067,
+              "lo": 0.7361,
+              "hi": 0.8619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:19",
+            "label": "Blood Fountain",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.66,
+              "lo": 0.5215,
+              "hi": 0.7756
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.73,
+        "forgeOptions": [
+          0,
+          4
+        ],
+        "futilityGap": 0.06
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:16,17",
+            "label": "attack Tundra Wolves+Nezumi Road Captain",
+            "random": {
+              "n": 150,
+              "wins": 143,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.9533,
+              "lo": 0.9068,
+              "hi": 0.9772
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 100,
+              "wins": 78,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.78,
+              "lo": 0.6893,
+              "hi": 0.85
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "attack:17",
+            "label": "attack Nezumi Road Captain",
+            "random": {
+              "n": 50,
+              "wins": 42,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.84,
+              "lo": 0.7149,
+              "hi": 0.9166
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:16",
+            "label": "attack Tundra Wolves",
+            "random": {
+              "n": 100,
+              "wins": 81,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.81,
+              "lo": 0.7222,
+              "hi": 0.8749
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.87,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 10,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 4,
+        "d5": 6,
+        "d7": 6,
+        "d10": 3,
+        "d12": 3,
+        "d14": 4,
+        "d15": 3,
+        "d19": 4,
+        "d20": 6,
+        "d21": 4
+      },
+      "meanOptions": 4.3,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 5,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 12,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 20,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 20,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 20,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 20,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 21,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 3,
+          "at": 100
+        }
+      ],
+      "stoppedOptions": 13,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0.18,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 7,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 15,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 20,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 21,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 700,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 4600,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 8,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 3479,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 8,
+    "rows": 206123,
+    "gamesIdChecked": 4601,
+    "frameLogs": 9202,
+    "frameLogsFailed": 0,
+    "redactionMs": 106343,
+    "forks": 4600,
+    "forkProblems": 0,
+    "leakChecks": 10,
+    "leaks": 0,
+    "leakControlsMoved": 10,
+    "guardrails": {
+      "logs": 9200,
+      "priorityDecisions": 647121,
+      "landOffered": 45441,
+      "landTaken": 45441,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 994,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 4474,
+      "zeroXLeftOut": 90619,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4600,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4600,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4600,
+      "errored": 8,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 8
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 191440
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4914,
+      "units": 52,
+      "branchGames": 4600,
+      "ms": 3119681,
+      "workers": 6
+    },
+    "wallMs": 3124595,
+    "jobs": 6
+  }
+}

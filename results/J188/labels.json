@@ -1,0 +1,2155 @@
+{
+ "contract": "mtg-table rung-4b label v6 (J177)",
+ "training": true,
+ "pools": {
+  "random-pauper-d508": [
+   "s01",
+   "s05",
+   "s09",
+   "s13"
+  ],
+  "random-peasant-d508": [
+   "s02",
+   "s06",
+   "s10"
+  ],
+  "random-legacy-d508": [
+   "s03",
+   "s07",
+   "s11"
+  ],
+  "random-powered-d508": [
+   "s04",
+   "s08",
+   "s12"
+  ]
+ },
+ "branched": 168,
+ "labels": 85,
+ "screenedRows": 43,
+ "rowsUnmatched": 0,
+ "confident": 24,
+ "confidentQ": 24,
+ "confidentForge": 0,
+ "trainingRows": 168,
+ "partialLabels": 40,
+ "futilityControls": 10,
+ "branchedInFullRows": 85,
+ "confidentPartial": 0,
+ "futilityRead": 125,
+ "byListing": {
+  "pre-D483": {
+   "spines": [],
+   "rows": 0,
+   "labels": 0,
+   "confident": 0,
+   "tokenTwice": 0
+  },
+  "D483": {
+   "spines": [
+    "s01",
+    "s02",
+    "s03",
+    "s04",
+    "s05",
+    "s06",
+    "s07",
+    "s08",
+    "s09",
+    "s10",
+    "s11",
+    "s12",
+    "s13"
+   ],
+   "rows": 168,
+   "labels": 85,
+   "confident": 24,
+   "tokenTwice": 0
+  }
+ },
+ "biasedRows": 0,
+ "lostCastVoid": 0,
+ "lostCastVoidList": [],
+ "lostCastOptionRows": [],
+ "refusedCastVoid": 0,
+ "refusedCastVoidList": [],
+ "refusedCastOptionRows": [],
+ "byRandomSeat": {
+  "D508": {
+   "spines": [
+    "s01",
+    "s02",
+    "s03",
+    "s04",
+    "s05",
+    "s06",
+    "s07",
+    "s08",
+    "s09",
+    "s10",
+    "s11",
+    "s12",
+    "s13"
+   ],
+   "rows": 168,
+   "labels": 85,
+   "confident": 24
+  }
+ },
+ "bySpine": {
+  "s01": {
+   "pool": "random-pauper-d508",
+   "deckSeed": 2466,
+   "gameSeed": 2566,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s01-pauper-2566",
+   "forgeMap": true,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s01-pauper-2466/decks/pauper-2466-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s01-pauper-2466/decks/pauper-2466-00002.dck",
+   "baseline": {
+    "turns": 17,
+    "winner": "A",
+    "listed": 21
+   },
+   "branchedInFull": 8,
+   "screened": 5,
+   "fill": 0,
+   "stoppedOptions": 9,
+   "meanOptions": 4.67,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 2,
+   "lostCastBranches": 2,
+   "scanV5": true,
+   "casts": 104244,
+   "refusedCast": 3,
+   "refusedCastShare": 3e-05,
+   "castsRefused": 3,
+   "refusedCastBranches": 3,
+   "rows": 15,
+   "labels": 8,
+   "screenedRows": 5,
+   "partialLabels": 2,
+   "futilityControls": 1,
+   "branchedInFullRows": 8,
+   "decisionsBranched": 10,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": 0,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 1
+    },
+    "a": {
+     "labels": 3,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.1533,
+   "regretMean": 0.0342,
+   "confidentList": [
+    "d2 p t7 k4 cast:1 -> o1, 10.7 [4.7, 21.3]"
+   ]
+  },
+  "s02": {
+   "pool": "random-peasant-d508",
+   "deckSeed": 2467,
+   "gameSeed": 2567,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s02-peasant-2567",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s02-peasant-2467/decks/peasant-2467-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s02-peasant-2467/decks/peasant-2467-00002.dck",
+   "baseline": {
+    "turns": 14,
+    "winner": "A",
+    "listed": 14
+   },
+   "branchedInFull": 7,
+   "screened": 1,
+   "fill": 4,
+   "stoppedOptions": 2,
+   "meanOptions": 3.18,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 37,
+   "lostCastBranches": 32,
+   "scanV5": true,
+   "casts": 32400,
+   "refusedCast": 227,
+   "refusedCastShare": 0.00701,
+   "castsRefused": 227,
+   "refusedCastBranches": 188,
+   "rows": 11,
+   "labels": 7,
+   "screenedRows": 1,
+   "partialLabels": 3,
+   "futilityControls": 2,
+   "branchedInFullRows": 7,
+   "decisionsBranched": 10,
+   "inQ": 7,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 4,
+     "confident": 1
+    },
+    "a": {
+     "labels": 1,
+     "confident": 0
+    },
+    "b": {
+     "labels": 2,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.0867,
+   "regretMean": 0.0224,
+   "confidentList": [
+    "d0 p t2 k3 cast:6 -> o2, 9.7 [1.3, 19.7]"
+   ]
+  },
+  "s03": {
+   "pool": "random-legacy-d508",
+   "deckSeed": 2468,
+   "gameSeed": 2568,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s03-legacy-2568",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s03-legacy-2468/decks/legacy-2468-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s03-legacy-2468/decks/legacy-2468-00002.dck",
+   "baseline": {
+    "turns": 16,
+    "winner": "B",
+    "listed": 17
+   },
+   "branchedInFull": 4,
+   "screened": 1,
+   "fill": 0,
+   "stoppedOptions": 4,
+   "meanOptions": 3.64,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 19781,
+   "refusedCast": 1,
+   "refusedCastShare": 5e-05,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 11,
+   "labels": 4,
+   "screenedRows": 1,
+   "partialLabels": 6,
+   "futilityControls": 1,
+   "branchedInFullRows": 4,
+   "decisionsBranched": 10,
+   "inQ": 4,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 3,
+     "confident": 0
+    },
+    "a": {
+     "labels": 1,
+     "confident": 1
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.1542,
+   "regretMean": 0.2117,
+   "confidentList": [
+    "d14 a t15 k4 attack:none -> o1, 79.3 [72.7, 85.3]"
+   ]
+  },
+  "s04": {
+   "pool": "random-powered-d508",
+   "deckSeed": 2469,
+   "gameSeed": 2569,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s04-powered-2569",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s04-powered-2469/decks/powered-2469-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s04-powered-2469/decks/powered-2469-00002.dck",
+   "baseline": {
+    "turns": 16,
+    "winner": "A",
+    "listed": 16
+   },
+   "branchedInFull": 6,
+   "screened": 3,
+   "fill": 2,
+   "stoppedOptions": 2,
+   "meanOptions": 3.69,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 79,
+   "lostCastBranches": 74,
+   "scanV5": true,
+   "casts": 24141,
+   "refusedCast": 213,
+   "refusedCastShare": 0.00882,
+   "castsRefused": 198,
+   "refusedCastBranches": 145,
+   "rows": 13,
+   "labels": 6,
+   "screenedRows": 3,
+   "partialLabels": 4,
+   "futilityControls": 0,
+   "branchedInFullRows": 6,
+   "decisionsBranched": 10,
+   "inQ": 6,
+   "decided": 0,
+   "settled": 0,
+   "confident": 2,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 2
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 1,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.08,
+   "regretMean": 0.0556,
+   "confidentList": [
+    "d0 p t4 k2 pass -> o1, 7.7 [0.7, 15.0]",
+    "d9 p t12 k3 cast:25 -> o2, 14.3 [4.7, 24.0]"
+   ]
+  },
+  "s05": {
+   "pool": "random-pauper-d508",
+   "deckSeed": 2470,
+   "gameSeed": 2570,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s05-pauper-2570",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s05-pauper-2470/decks/pauper-2470-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s05-pauper-2470/decks/pauper-2470-00002.dck",
+   "baseline": {
+    "turns": 17,
+    "winner": "A",
+    "listed": 22
+   },
+   "branchedInFull": 8,
+   "screened": 0,
+   "fill": 0,
+   "stoppedOptions": 13,
+   "meanOptions": 4.3,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 96507,
+   "refusedCast": 0,
+   "refusedCastShare": 0.0,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 10,
+   "labels": 8,
+   "screenedRows": 0,
+   "partialLabels": 2,
+   "futilityControls": 1,
+   "branchedInFullRows": 8,
+   "decisionsBranched": 10,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 0,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 6,
+     "confident": 0
+    },
+    "a": {
+     "labels": 2,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.1617,
+   "regretMean": 0.0229,
+   "confidentList": []
+  },
+  "s06": {
+   "pool": "random-peasant-d508",
+   "deckSeed": 2471,
+   "gameSeed": 2571,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s06-peasant-2571",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s06-peasant-2471/decks/peasant-2471-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s06-peasant-2471/decks/peasant-2471-00002.dck",
+   "baseline": {
+    "turns": 10,
+    "winner": "A",
+    "listed": 11
+   },
+   "branchedInFull": 5,
+   "screened": 4,
+   "fill": 4,
+   "stoppedOptions": 0,
+   "meanOptions": 3,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 30539,
+   "refusedCast": 56,
+   "refusedCastShare": 0.00183,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 11,
+   "labels": 5,
+   "screenedRows": 4,
+   "partialLabels": 2,
+   "futilityControls": 1,
+   "branchedInFullRows": 5,
+   "decisionsBranched": 7,
+   "inQ": 5,
+   "decided": 0,
+   "settled": 0,
+   "confident": 2,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 2
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.0533,
+   "regretMean": 0.046,
+   "confidentList": [
+    "d3 p t4 k2 cast:4 -> o1, 10.0 [2.0, 17.3]",
+    "d4 p t6 k4 cast:14 -> o2, 8.7 [3.3, 16.7]"
+   ]
+  },
+  "s07": {
+   "pool": "random-legacy-d508",
+   "deckSeed": 2472,
+   "gameSeed": 2572,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s07-legacy-2572",
+   "forgeMap": true,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s07-legacy-2472/decks/legacy-2472-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s07-legacy-2472/decks/legacy-2472-00002.dck",
+   "baseline": {
+    "turns": 17,
+    "winner": "A",
+    "listed": 17
+   },
+   "branchedInFull": 6,
+   "screened": 8,
+   "fill": 0,
+   "stoppedOptions": 2,
+   "meanOptions": 3.71,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 10,
+   "lostCastBranches": 10,
+   "scanV5": true,
+   "casts": 44058,
+   "refusedCast": 42,
+   "refusedCastShare": 0.00095,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 17,
+   "labels": 6,
+   "screenedRows": 8,
+   "partialLabels": 3,
+   "futilityControls": 2,
+   "branchedInFullRows": 6,
+   "decisionsBranched": 9,
+   "inQ": 6,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": 0,
+   "byKind": {
+    "p": {
+     "labels": 4,
+     "confident": 1
+    },
+    "a": {
+     "labels": 1,
+     "confident": 0
+    },
+    "b": {
+     "labels": 1,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.0869,
+   "regretMean": 0.0267,
+   "confidentList": [
+    "d0 p t7 k5 pass -> o3, 10.7 [4.7, 20.7]"
+   ]
+  },
+  "s08": {
+   "pool": "random-powered-d508",
+   "deckSeed": 2473,
+   "gameSeed": 2573,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s08-powered-2573",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s08-powered-2473/decks/powered-2473-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s08-powered-2473/decks/powered-2473-00002.dck",
+   "baseline": {
+    "turns": 16,
+    "winner": "A",
+    "listed": 24
+   },
+   "branchedInFull": 7,
+   "screened": 9,
+   "fill": 0,
+   "stoppedOptions": 3,
+   "meanOptions": 3.58,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 10,
+   "lostCastBranches": 9,
+   "scanV5": true,
+   "casts": 39143,
+   "refusedCast": 38,
+   "refusedCastShare": 0.00097,
+   "castsRefused": 33,
+   "refusedCastBranches": 27,
+   "rows": 19,
+   "labels": 7,
+   "screenedRows": 9,
+   "partialLabels": 3,
+   "futilityControls": 1,
+   "branchedInFullRows": 7,
+   "decisionsBranched": 10,
+   "inQ": 7,
+   "decided": 0,
+   "settled": 0,
+   "confident": 2,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 7,
+     "confident": 2
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.08,
+   "regretMean": 0.0548,
+   "confidentList": [
+    "d3 p t6 k3 pass -> o2, 8.0 [1.3, 16.0]",
+    "d5 p t6 k5 cast:22 -> o3, 10.0 [4.7, 18.7]"
+   ]
+  },
+  "s09": {
+   "pool": "random-pauper-d508",
+   "deckSeed": 2474,
+   "gameSeed": 2574,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s09-pauper-2574",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s09-pauper-2474/decks/pauper-2474-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s09-pauper-2474/decks/pauper-2474-00002.dck",
+   "baseline": {
+    "turns": 18,
+    "winner": "B",
+    "listed": 20
+   },
+   "branchedInFull": 6,
+   "screened": 7,
+   "fill": 0,
+   "stoppedOptions": 5,
+   "meanOptions": 3.35,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 70269,
+   "refusedCast": 0,
+   "refusedCastShare": 0.0,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 17,
+   "labels": 6,
+   "screenedRows": 7,
+   "partialLabels": 4,
+   "futilityControls": 0,
+   "branchedInFullRows": 6,
+   "decisionsBranched": 10,
+   "inQ": 6,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 6,
+     "confident": 1
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.0834,
+   "regretMean": 0.0356,
+   "confidentList": [
+    "d9 p t13 k4 cast:29 -> o1, 11.0 [3.3, 19.7]"
+   ]
+  },
+  "s10": {
+   "pool": "random-peasant-d508",
+   "deckSeed": 2475,
+   "gameSeed": 2575,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s10-peasant-2575",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s10-peasant-2475/decks/peasant-2475-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s10-peasant-2475/decks/peasant-2475-00002.dck",
+   "baseline": {
+    "turns": 23,
+    "winner": "B",
+    "listed": 40
+   },
+   "branchedInFull": 8,
+   "screened": 2,
+   "fill": 0,
+   "stoppedOptions": 14,
+   "meanOptions": 4.67,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 36731,
+   "refusedCast": 0,
+   "refusedCastShare": 0.0,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 12,
+   "labels": 8,
+   "screenedRows": 2,
+   "partialLabels": 2,
+   "futilityControls": 0,
+   "branchedInFullRows": 8,
+   "decisionsBranched": 10,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 5,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 7,
+     "confident": 5
+    },
+    "a": {
+     "labels": 1,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.2034,
+   "regretMean": 0.1304,
+   "confidentList": [
+    "d6 p t8 k4 pass -> o2, 11.3 [1.3, 21.3]",
+    "d14 p t12 k5 pass -> o1, 30.7 [21.3, 40.0]",
+    "d18 p t14 k5 pass -> o2, 13.3 [4.7, 21.3]",
+    "d36 p t22 k6 pass -> o2, 12.7 [5.3, 21.3]",
+    "d38 p t22 k6 cast:37 -> o3, 18.7 [12.7, 25.3]"
+   ]
+  },
+  "s11": {
+   "pool": "random-legacy-d508",
+   "deckSeed": 2476,
+   "gameSeed": 2576,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s11-legacy-2576",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s11-legacy-2476/decks/legacy-2476-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s11-legacy-2476/decks/legacy-2476-00002.dck",
+   "baseline": {
+    "turns": 12,
+    "winner": "B",
+    "listed": 16
+   },
+   "branchedInFull": 8,
+   "screened": 1,
+   "fill": 2,
+   "stoppedOptions": 3,
+   "meanOptions": 3.09,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 39244,
+   "refusedCast": 207,
+   "refusedCastShare": 0.00527,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 11,
+   "labels": 8,
+   "screenedRows": 1,
+   "partialLabels": 2,
+   "futilityControls": 1,
+   "branchedInFullRows": 8,
+   "decisionsBranched": 10,
+   "inQ": 8,
+   "decided": 0,
+   "settled": 0,
+   "confident": 3,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 1
+    },
+    "a": {
+     "labels": 1,
+     "confident": 1
+    },
+    "b": {
+     "labels": 2,
+     "confident": 1
+    }
+   },
+   "gapMedian": 0.0586,
+   "regretMean": 0.0554,
+   "confidentList": [
+    "d3 p t3 k3 pass -> o1, 9.7 [0.7, 18.0]",
+    "d11 b t8 k3 block:none -> o2, 20.6 [14.2, 27.0]",
+    "d12 a t9 k4 attack:none -> o1, 7.4 [2.0, 14.1]"
+   ]
+  },
+  "s12": {
+   "pool": "random-powered-d508",
+   "deckSeed": 2477,
+   "gameSeed": 2577,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s12-powered-2577",
+   "forgeMap": false,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s12-powered-2477/decks/powered-2477-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s12-powered-2477/decks/powered-2477-00002.dck",
+   "baseline": {
+    "turns": 15,
+    "winner": "B",
+    "listed": 20
+   },
+   "branchedInFull": 7,
+   "screened": 0,
+   "fill": 4,
+   "stoppedOptions": 4,
+   "meanOptions": 3.5,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 23918,
+   "refusedCast": 0,
+   "refusedCastShare": 0.0,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 10,
+   "labels": 7,
+   "screenedRows": 0,
+   "partialLabels": 3,
+   "futilityControls": 0,
+   "branchedInFullRows": 7,
+   "decisionsBranched": 10,
+   "inQ": 7,
+   "decided": 0,
+   "settled": 0,
+   "confident": 4,
+   "confidentForge": null,
+   "byKind": {
+    "p": {
+     "labels": 3,
+     "confident": 1
+    },
+    "a": {
+     "labels": 2,
+     "confident": 1
+    },
+    "b": {
+     "labels": 2,
+     "confident": 2
+    }
+   },
+   "gapMedian": 0.0567,
+   "regretMean": 0.0619,
+   "confidentList": [
+    "d4 b t5 k2 block:none -> o1, 8.7 [0.7, 18.0]",
+    "d8 p t8 k3 pass -> o1, 10.0 [4.7, 16.7]",
+    "d12 b t9 k7 block:82>43,18>59,24>59 -> o5, 18.7 [12.0, 26.0]",
+    "d17 a t12 k5 attack:none -> o2, 5.3 [2.3, 11.0]"
+   ]
+  },
+  "s13": {
+   "pool": "random-pauper-d508",
+   "deckSeed": 2478,
+   "gameSeed": 2578,
+   "sha": "fe063f94",
+   "listing": "D483",
+   "folder": "b-s13-pauper-2578",
+   "forgeMap": true,
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s13-pauper-2478/decks/pauper-2478-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s13-pauper-2478/decks/pauper-2478-00002.dck",
+   "baseline": {
+    "turns": 14,
+    "winner": "B",
+    "listed": 11
+   },
+   "branchedInFull": 5,
+   "screened": 2,
+   "fill": 6,
+   "stoppedOptions": 0,
+   "meanOptions": 2.36,
+   "randomSeat": "D508",
+   "biased": null,
+   "lostScanned": true,
+   "lostCasts": 0,
+   "lostCastBranches": 0,
+   "scanV5": true,
+   "casts": 56302,
+   "refusedCast": 0,
+   "refusedCastShare": 0.0,
+   "castsRefused": 0,
+   "refusedCastBranches": 0,
+   "rows": 11,
+   "labels": 5,
+   "screenedRows": 2,
+   "partialLabels": 4,
+   "futilityControls": 0,
+   "branchedInFullRows": 5,
+   "decisionsBranched": 9,
+   "inQ": 5,
+   "decided": 0,
+   "settled": 0,
+   "confident": 1,
+   "confidentForge": 0,
+   "byKind": {
+    "p": {
+     "labels": 5,
+     "confident": 1
+    },
+    "a": {
+     "labels": 0,
+     "confident": 0
+    },
+    "b": {
+     "labels": 0,
+     "confident": 0
+    }
+   },
+   "gapMedian": 0.0233,
+   "regretMean": 0.032,
+   "confidentList": [
+    "d6 p t9 k2 cast:22 -> o1, 10.7 [2.3, 18.7]"
+   ]
+  }
+ },
+ "byPool": {
+  "random-pauper-d508": {
+   "spines": 4,
+   "labels": 27,
+   "confident": 3
+  },
+  "random-peasant-d508": {
+   "spines": 3,
+   "labels": 20,
+   "confident": 8
+  },
+  "random-legacy-d508": {
+   "spines": 3,
+   "labels": 18,
+   "confident": 5
+  },
+  "random-powered-d508": {
+   "spines": 3,
+   "labels": 20,
+   "confident": 8
+  }
+ },
+ "a_confidentShare": {
+  "n": 85,
+  "point": 0.2824,
+  "interval": [
+   0.1263,
+   0.4737
+  ],
+  "byPool": {
+   "random-legacy-d508": {
+    "n": 18,
+    "point": 0.2778,
+    "interval": [
+     0.0625,
+     0.5
+    ]
+   },
+   "random-pauper-d508": {
+    "n": 27,
+    "point": 0.1111,
+    "interval": [
+     0.0,
+     0.28
+    ]
+   },
+   "random-peasant-d508": {
+    "n": 20,
+    "point": 0.4,
+    "interval": [
+     0.0952,
+     0.7143
+    ]
+   },
+   "random-powered-d508": {
+    "n": 20,
+    "point": 0.4,
+    "interval": [
+     0.15,
+     0.6667
+    ]
+   }
+  },
+  "bySpine": {
+   "s03": {
+    "n": 4,
+    "point": 0.25,
+    "interval": [
+     0.0,
+     0.75
+    ]
+   },
+   "s07": {
+    "n": 6,
+    "point": 0.1667,
+    "interval": [
+     0.0,
+     0.5
+    ]
+   },
+   "s11": {
+    "n": 8,
+    "point": 0.375,
+    "interval": [
+     0.125,
+     0.75
+    ]
+   },
+   "s01": {
+    "n": 8,
+    "point": 0.125,
+    "interval": [
+     0.0,
+     0.375
+    ]
+   },
+   "s05": {
+    "n": 8,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "s09": {
+    "n": 6,
+    "point": 0.1667,
+    "interval": [
+     0.0,
+     0.5
+    ]
+   },
+   "s13": {
+    "n": 5,
+    "point": 0.2,
+    "interval": [
+     0.0,
+     0.6
+    ]
+   },
+   "s02": {
+    "n": 7,
+    "point": 0.1429,
+    "interval": [
+     0.0,
+     0.4286
+    ]
+   },
+   "s06": {
+    "n": 5,
+    "point": 0.4,
+    "interval": [
+     0.0,
+     0.8
+    ]
+   },
+   "s10": {
+    "n": 8,
+    "point": 0.625,
+    "interval": [
+     0.25,
+     0.875
+    ]
+   },
+   "s04": {
+    "n": 6,
+    "point": 0.3333,
+    "interval": [
+     0.0,
+     0.6667
+    ]
+   },
+   "s08": {
+    "n": 7,
+    "point": 0.2857,
+    "interval": [
+     0.0,
+     0.5714
+    ]
+   },
+   "s12": {
+    "n": 7,
+    "point": 0.5714,
+    "interval": [
+     0.1429,
+     0.8571
+    ]
+   }
+  }
+ },
+ "a_confidentShareByKind": {
+  "p": {
+   "n": 65,
+   "point": 0.2769,
+   "interval": [
+    0.1111,
+    0.4928
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 12,
+     "point": 0.1667,
+     "interval": [
+      0.0,
+      0.4167
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 22,
+     "point": 0.1364,
+     "interval": [
+      0.0,
+      0.3333
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 16,
+     "point": 0.5,
+     "interval": [
+      0.1538,
+      0.7778
+     ]
+    },
+    "random-powered-d508": {
+     "n": 15,
+     "point": 0.3333,
+     "interval": [
+      0.0909,
+      0.6
+     ]
+    }
+   }
+  },
+  "a": {
+   "n": 12,
+   "point": 0.25,
+   "interval": [
+    0.0,
+    0.7143
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 3,
+     "point": 0.6667,
+     "interval": [
+      0.0,
+      1.0
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 5,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 2,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-powered-d508": {
+     "n": 2,
+     "point": 0.5,
+     "interval": [
+      0.0,
+      1.0
+     ]
+    }
+   }
+  },
+  "b": {
+   "n": 8,
+   "point": 0.375,
+   "interval": [
+    0.0,
+    0.8571
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 3,
+     "point": 0.3333,
+     "interval": [
+      0.0,
+      1.0
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 2,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-powered-d508": {
+     "n": 3,
+     "point": 0.6667,
+     "interval": [
+      0.0,
+      1.0
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareByK": {
+  "2": {
+   "n": 21,
+   "point": 0.1905,
+   "interval": [
+    0.0,
+    0.4375
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 4,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 3,
+     "point": 0.3333,
+     "interval": [
+      0.0,
+      0.8333
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 8,
+     "point": 0.125,
+     "interval": [
+      0.0,
+      0.5
+     ]
+    },
+    "random-powered-d508": {
+     "n": 6,
+     "point": 0.3333,
+     "interval": [
+      0.0,
+      0.7143
+     ]
+    }
+   }
+  },
+  "3-4": {
+   "n": 44,
+   "point": 0.2727,
+   "interval": [
+    0.1091,
+    0.4857
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 11,
+     "point": 0.3636,
+     "interval": [
+      0.0,
+      0.6364
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 16,
+     "point": 0.125,
+     "interval": [
+      0.0,
+      0.3333
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 7,
+     "point": 0.4286,
+     "interval": [
+      0.1111,
+      1.0
+     ]
+    },
+    "random-powered-d508": {
+     "n": 10,
+     "point": 0.3,
+     "interval": [
+      0.0667,
+      0.7
+     ]
+    }
+   }
+  },
+  "5-6": {
+   "n": 19,
+   "point": 0.3684,
+   "interval": [
+    0.0,
+    0.875
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 3,
+     "point": 0.3333,
+     "interval": [
+      0.0,
+      0.8333
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 8,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 5,
+     "point": 0.8,
+     "interval": [
+      0.4,
+      1.0
+     ]
+    },
+    "random-powered-d508": {
+     "n": 3,
+     "point": 0.6667,
+     "interval": [
+      0.0,
+      1.0
+     ]
+    }
+   }
+  },
+  "7-8": {
+   "n": 1,
+   "point": 1.0,
+   "interval": [
+    1.0,
+    1.0
+   ],
+   "byPool": {
+    "random-legacy-d508": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-pauper-d508": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-peasant-d508": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "random-powered-d508": {
+     "n": 1,
+     "point": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    }
+   }
+  }
+ },
+ "a_confidentShareQ": {
+  "n": 85,
+  "point": 0.2824,
+  "interval": [
+   0.1263,
+   0.4737
+  ],
+  "byPool": {
+   "random-legacy-d508": {
+    "n": 18,
+    "point": 0.2778,
+    "interval": [
+     0.0625,
+     0.5
+    ]
+   },
+   "random-pauper-d508": {
+    "n": 27,
+    "point": 0.1111,
+    "interval": [
+     0.0,
+     0.28
+    ]
+   },
+   "random-peasant-d508": {
+    "n": 20,
+    "point": 0.4,
+    "interval": [
+     0.0952,
+     0.7143
+    ]
+   },
+   "random-powered-d508": {
+    "n": 20,
+    "point": 0.4,
+    "interval": [
+     0.15,
+     0.6667
+    ]
+   }
+  }
+ },
+ "b_gapMedian": {
+  "random-pauper-d508": 0.1067,
+  "random-peasant-d508": 0.0983,
+  "random-legacy-d508": 0.0852,
+  "random-powered-d508": 0.0784
+ },
+ "b_gapMean": {
+  "n": 85,
+  "point": 0.1155,
+  "interval": [
+   0.0816,
+   0.1614
+  ],
+  "byPool": {
+   "random-legacy-d508": {
+    "n": 18,
+    "point": 0.127,
+    "interval": [
+     0.0592,
+     0.2997
+    ]
+   },
+   "random-pauper-d508": {
+    "n": 27,
+    "point": 0.1088,
+    "interval": [
+     0.0588,
+     0.1471
+    ]
+   },
+   "random-peasant-d508": {
+    "n": 20,
+    "point": 0.1423,
+    "interval": [
+     0.0647,
+     0.2145
+    ]
+   },
+   "random-powered-d508": {
+    "n": 20,
+    "point": 0.0872,
+    "interval": [
+     0.0578,
+     0.124
+    ]
+   }
+  }
+ },
+ "b_regretMean": {
+  "n": 85,
+  "point": 0.0572,
+  "interval": [
+   0.0315,
+   0.0999
+  ],
+  "byPool": {
+   "random-legacy-d508": {
+    "n": 18,
+    "point": 0.0806,
+    "interval": [
+     0.0177,
+     0.2435
+    ]
+   },
+   "random-pauper-d508": {
+    "n": 27,
+    "point": 0.0307,
+    "interval": [
+     0.0178,
+     0.046
+    ]
+   },
+   "random-peasant-d508": {
+    "n": 20,
+    "point": 0.0715,
+    "interval": [
+     0.0178,
+     0.1333
+    ]
+   },
+   "random-powered-d508": {
+    "n": 20,
+    "point": 0.0575,
+    "interval": [
+     0.0372,
+     0.081
+    ]
+   }
+  }
+ },
+ "b_settledShare": {
+  "n": 85,
+  "point": 0.0,
+  "interval": [
+   0.0,
+   0.0
+  ],
+  "byPool": {
+   "random-legacy-d508": {
+    "n": 18,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "random-pauper-d508": {
+    "n": 27,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "random-peasant-d508": {
+    "n": 20,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   },
+   "random-powered-d508": {
+    "n": 20,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "c_sizing7": {
+  "bySpine": {
+   "s01": {
+    "wallSec": 4366,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 1,
+    "wallSecAt7": 3742,
+    "workerHours": 7.28,
+    "labelsPer10hNight": 66,
+    "confidentPer10hNight": 8,
+    "labelsPer7Worker10hNight": 77,
+    "confidentPer7Worker10hNight": 9.6,
+    "confidentPer7Poisson95": [
+     0.2,
+     53.6
+    ],
+    "confidentPerWorkerHour": 0.1374,
+    "confidentPerWorkerHourPoisson95": [
+     0.0035,
+     0.7657
+    ]
+   },
+   "s02": {
+    "wallSec": 1012,
+    "spinesTimed": 1,
+    "labels": 7,
+    "confident": 1,
+    "wallSecAt7": 867,
+    "workerHours": 1.69,
+    "labelsPer10hNight": 249,
+    "confidentPer10hNight": 36,
+    "labelsPer7Worker10hNight": 291,
+    "confidentPer7Worker10hNight": 41.5,
+    "confidentPer7Poisson95": [
+     1.1,
+     231.2
+    ],
+    "confidentPerWorkerHour": 0.5929,
+    "confidentPerWorkerHourPoisson95": [
+     0.015,
+     3.3033
+    ]
+   },
+   "s03": {
+    "wallSec": 924,
+    "spinesTimed": 1,
+    "labels": 4,
+    "confident": 1,
+    "wallSecAt7": 792,
+    "workerHours": 1.54,
+    "labelsPer10hNight": 156,
+    "confidentPer10hNight": 39,
+    "labelsPer7Worker10hNight": 182,
+    "confidentPer7Worker10hNight": 45.5,
+    "confidentPer7Poisson95": [
+     1.2,
+     253.3
+    ],
+    "confidentPerWorkerHour": 0.6494,
+    "confidentPerWorkerHourPoisson95": [
+     0.0164,
+     3.618
+    ]
+   },
+   "s04": {
+    "wallSec": 1144,
+    "spinesTimed": 1,
+    "labels": 6,
+    "confident": 2,
+    "wallSecAt7": 981,
+    "workerHours": 1.91,
+    "labelsPer10hNight": 189,
+    "confidentPer10hNight": 63,
+    "labelsPer7Worker10hNight": 220,
+    "confidentPer7Worker10hNight": 73.4,
+    "confidentPer7Poisson95": [
+     8.9,
+     265.2
+    ],
+    "confidentPerWorkerHour": 1.049,
+    "confidentPerWorkerHourPoisson95": [
+     0.127,
+     3.7892
+    ]
+   },
+   "s05": {
+    "wallSec": 3282,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 0,
+    "wallSecAt7": 2813,
+    "workerHours": 5.47,
+    "labelsPer10hNight": 88,
+    "confidentPer10hNight": 0,
+    "labelsPer7Worker10hNight": 102,
+    "confidentPer7Worker10hNight": 0.0,
+    "confidentPer7Poisson95": [
+     0.0,
+     47.2
+    ],
+    "confidentPerWorkerHour": 0.0,
+    "confidentPerWorkerHourPoisson95": [
+     0.0,
+     0.6744
+    ]
+   },
+   "s06": {
+    "wallSec": 732,
+    "spinesTimed": 1,
+    "labels": 5,
+    "confident": 2,
+    "wallSecAt7": 627,
+    "workerHours": 1.22,
+    "labelsPer10hNight": 246,
+    "confidentPer10hNight": 98,
+    "labelsPer7Worker10hNight": 287,
+    "confidentPer7Worker10hNight": 114.8,
+    "confidentPer7Poisson95": [
+     13.9,
+     414.5
+    ],
+    "confidentPerWorkerHour": 1.6393,
+    "confidentPerWorkerHourPoisson95": [
+     0.1985,
+     5.9219
+    ]
+   },
+   "s07": {
+    "wallSec": 1544,
+    "spinesTimed": 1,
+    "labels": 6,
+    "confident": 1,
+    "wallSecAt7": 1323,
+    "workerHours": 2.57,
+    "labelsPer10hNight": 140,
+    "confidentPer10hNight": 23,
+    "labelsPer7Worker10hNight": 163,
+    "confidentPer7Worker10hNight": 27.2,
+    "confidentPer7Poisson95": [
+     0.7,
+     151.6
+    ],
+    "confidentPerWorkerHour": 0.3886,
+    "confidentPerWorkerHourPoisson95": [
+     0.0098,
+     2.1651
+    ]
+   },
+   "s08": {
+    "wallSec": 1913,
+    "spinesTimed": 1,
+    "labels": 7,
+    "confident": 2,
+    "wallSecAt7": 1640,
+    "workerHours": 3.19,
+    "labelsPer10hNight": 132,
+    "confidentPer10hNight": 38,
+    "labelsPer7Worker10hNight": 154,
+    "confidentPer7Worker10hNight": 43.9,
+    "confidentPer7Poisson95": [
+     5.3,
+     158.6
+    ],
+    "confidentPerWorkerHour": 0.6273,
+    "confidentPerWorkerHourPoisson95": [
+     0.076,
+     2.266
+    ]
+   },
+   "s09": {
+    "wallSec": 2437,
+    "spinesTimed": 1,
+    "labels": 6,
+    "confident": 1,
+    "wallSecAt7": 2089,
+    "workerHours": 4.06,
+    "labelsPer10hNight": 89,
+    "confidentPer10hNight": 15,
+    "labelsPer7Worker10hNight": 103,
+    "confidentPer7Worker10hNight": 17.2,
+    "confidentPer7Poisson95": [
+     0.4,
+     96.0
+    ],
+    "confidentPerWorkerHour": 0.2462,
+    "confidentPerWorkerHourPoisson95": [
+     0.0062,
+     1.3718
+    ]
+   },
+   "s10": {
+    "wallSec": 1983,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 5,
+    "wallSecAt7": 1700,
+    "workerHours": 3.31,
+    "labelsPer10hNight": 145,
+    "confidentPer10hNight": 91,
+    "labelsPer7Worker10hNight": 169,
+    "confidentPer7Worker10hNight": 105.9,
+    "confidentPer7Poisson95": [
+     34.4,
+     247.1
+    ],
+    "confidentPerWorkerHour": 1.5129,
+    "confidentPerWorkerHourPoisson95": [
+     0.4912,
+     3.5305
+    ]
+   },
+   "s11": {
+    "wallSec": 3529,
+    "spinesTimed": 1,
+    "labels": 8,
+    "confident": 3,
+    "wallSecAt7": 3025,
+    "workerHours": 5.88,
+    "labelsPer10hNight": 82,
+    "confidentPer10hNight": 31,
+    "labelsPer7Worker10hNight": 95,
+    "confidentPer7Worker10hNight": 35.7,
+    "confidentPer7Poisson95": [
+     7.4,
+     104.3
+    ],
+    "confidentPerWorkerHour": 0.5101,
+    "confidentPerWorkerHourPoisson95": [
+     0.1052,
+     1.4906
+    ]
+   },
+   "s12": {
+    "wallSec": 1220,
+    "spinesTimed": 1,
+    "labels": 7,
+    "confident": 4,
+    "wallSecAt7": 1046,
+    "workerHours": 2.03,
+    "labelsPer10hNight": 207,
+    "confidentPer10hNight": 118,
+    "labelsPer7Worker10hNight": 241,
+    "confidentPer7Worker10hNight": 137.7,
+    "confidentPer7Poisson95": [
+     37.5,
+     352.6
+    ],
+    "confidentPerWorkerHour": 1.9672,
+    "confidentPerWorkerHourPoisson95": [
+     0.536,
+     5.0368
+    ]
+   },
+   "s13": {
+    "wallSec": 1971,
+    "spinesTimed": 1,
+    "labels": 5,
+    "confident": 1,
+    "wallSecAt7": 1689,
+    "workerHours": 3.29,
+    "labelsPer10hNight": 91,
+    "confidentPer10hNight": 18,
+    "labelsPer7Worker10hNight": 107,
+    "confidentPer7Worker10hNight": 21.3,
+    "confidentPer7Poisson95": [
+     0.5,
+     118.7
+    ],
+    "confidentPerWorkerHour": 0.3044,
+    "confidentPerWorkerHourPoisson95": [
+     0.0077,
+     1.6961
+    ]
+   }
+  },
+  "byPool": {
+   "random-pauper-d508": {
+    "wallSec": 12056,
+    "spinesTimed": 4,
+    "labels": 27,
+    "confident": 3,
+    "wallSecAt7": 10334,
+    "workerHours": 20.09,
+    "labelsPer10hNight": 81,
+    "confidentPer10hNight": 9,
+    "labelsPer7Worker10hNight": 94,
+    "confidentPer7Worker10hNight": 10.5,
+    "confidentPer7Poisson95": [
+     2.2,
+     30.5
+    ],
+    "confidentPerWorkerHour": 0.1493,
+    "confidentPerWorkerHourPoisson95": [
+     0.0308,
+     0.4363
+    ]
+   },
+   "random-peasant-d508": {
+    "wallSec": 3727,
+    "spinesTimed": 3,
+    "labels": 20,
+    "confident": 8,
+    "wallSecAt7": 3195,
+    "workerHours": 6.21,
+    "labelsPer10hNight": 193,
+    "confidentPer10hNight": 77,
+    "labelsPer7Worker10hNight": 225,
+    "confidentPer7Worker10hNight": 90.2,
+    "confidentPer7Poisson95": [
+     38.9,
+     177.6
+    ],
+    "confidentPerWorkerHour": 1.2879,
+    "confidentPerWorkerHourPoisson95": [
+     0.556,
+     2.5377
+    ]
+   },
+   "random-legacy-d508": {
+    "wallSec": 5997,
+    "spinesTimed": 3,
+    "labels": 18,
+    "confident": 5,
+    "wallSecAt7": 5140,
+    "workerHours": 10.0,
+    "labelsPer10hNight": 108,
+    "confidentPer10hNight": 30,
+    "labelsPer7Worker10hNight": 126,
+    "confidentPer7Worker10hNight": 35.0,
+    "confidentPer7Poisson95": [
+     11.4,
+     81.7
+    ],
+    "confidentPerWorkerHour": 0.5003,
+    "confidentPerWorkerHourPoisson95": [
+     0.1624,
+     1.1674
+    ]
+   },
+   "random-powered-d508": {
+    "wallSec": 4277,
+    "spinesTimed": 3,
+    "labels": 20,
+    "confident": 8,
+    "wallSecAt7": 3666,
+    "workerHours": 7.13,
+    "labelsPer10hNight": 168,
+    "confidentPer10hNight": 67,
+    "labelsPer7Worker10hNight": 196,
+    "confidentPer7Worker10hNight": 78.6,
+    "confidentPer7Poisson95": [
+     33.9,
+     154.8
+    ],
+    "confidentPerWorkerHour": 1.1223,
+    "confidentPerWorkerHourPoisson95": [
+     0.4845,
+     2.2113
+    ]
+   }
+  },
+  "asRun": {
+   "wallSec": 26057,
+   "spinesTimed": 13,
+   "labels": 85,
+   "confident": 24,
+   "wallSecAt7": 22335,
+   "workerHours": 43.43,
+   "labelsPer10hNight": 117,
+   "confidentPer10hNight": 33,
+   "labelsPer7Worker10hNight": 137,
+   "confidentPer7Worker10hNight": 38.7,
+   "confidentPer7Poisson95": [
+    24.8,
+    57.6
+   ],
+   "confidentPerWorkerHour": 0.5526,
+   "confidentPerWorkerHourPoisson95": [
+    0.3541,
+    0.8223
+   ]
+  }
+ },
+ "c_sizingRead": {
+  "confidentPer7Worker10hNight": 38.7,
+  "confident": 24,
+  "labelsPer7Worker10hNight": 137,
+  "poisson95": [
+   24.8,
+   57.6
+  ],
+  "confidentPerWorkerHour": 0.5526,
+  "confidentPerWorkerHourPoisson95": [
+   0.3541,
+   0.8223
+  ],
+  "readThis": "confidentPerWorkerHour and confidentPer7Worker10hNight are the yield to compare across nights; the confident share over complete rows is not (D489: the stopped futile decisions are not in it)",
+  "review": {
+   "confidentPer7Worker10hNight": 45.6,
+   "interval": [
+    41.0,
+    50.8
+   ],
+   "base": 32.8,
+   "gain": [
+    1.39,
+    1.25,
+    1.55
+   ],
+   "note": "the atlas review of 2026-10-27, section 5: the cap and the futility stop re-scored on 29 spines (no controls; ~43-44 with a quarter of the futile decisions played on: its hours x 0.675 / 0.71); another mix of decks and seats; as information"
+  },
+  "expectation": "as information, no verdict: J187 (THE SAME POPULATION: D508's second night, the same seat and design, other decks) below as its own report read it; J186 (its first night, aborted before its Report) by hand in the job file; J185 (D507), J183 and J182 (D498), J181 (D497), J173 (D488, 200 branches) and J171 (D486, 28.9 [19.2, 41.8]) other populations; the review ~46 [41, 51]",
+  "j187": {
+   "labels": 83,
+   "confident": 28,
+   "confidentShare": 0.3373,
+   "confidentPer7Worker10hNight": 37.8,
+   "poisson95": [
+    25.2,
+    54.7
+   ],
+   "workerHours": 51.78,
+   "confidentPerWorkerHour": 0.5407,
+   "spines": 13,
+   "contract": "mtg-table rung-4b label v6 (J177)",
+   "pools": [
+    "random-legacy-d508",
+    "random-pauper-d508",
+    "random-peasant-d508",
+    "random-powered-d508"
+   ],
+   "futilityRead": {
+    "controls": 10,
+    "controlsConfident": 0,
+    "stopped": 47,
+    "read": 130
+   },
+   "population": "D508 (the same population, its second night): pooled with this night and J186 under the same pool names; its futilityRead is the pooled futility read's second input, J186's by-hand one the first (D508, D509, Comparability)"
+  }
+ },
+ "f_futilityRead": {
+  "read": 125,
+  "futile": 50,
+  "stopped": 40,
+  "controls": 10,
+  "controlsComplete": 10,
+  "controlsConfident": 0,
+  "controlConfidentShare": 0.0,
+  "controlConfidentShare95": [
+   0.0,
+   0.3085
+  ],
+  "labelsLostEstimate": 0.0,
+  "labelsLostEstimate95": [
+   0.0,
+   12.34
+  ],
+  "controlList": [
+   "s01 d9 k4 gap 0 -> not confident",
+   "s02 d3 k2 gap 0 -> not confident",
+   "s02 d12 k2 gap 0 -> not confident",
+   "s03 d6 k3 gap 0 -> not confident",
+   "s05 d21 k4 gap 0 -> not confident",
+   "s06 d2 k2 gap 0 -> not confident",
+   "s07 d3 k2 gap 0 -> not confident",
+   "s07 d4 k2 gap 0 -> not confident",
+   "s08 d12 k4 gap 0 -> not confident",
+   "s11 d2 k4 gap 0 -> not confident"
+  ],
+  "stoppedList": [
+   "s01 d6 k4 gap 0",
+   "s01 d11 k3 gap 0",
+   "s02 d7 k5 gap 0",
+   "s02 d9 k5 gap 0",
+   "s02 d11 k2 gap 0",
+   "s03 d1 k3 gap 0",
+   "s03 d3 k3 gap 0",
+   "s03 d5 k3 gap 0",
+   "s03 d8 k4 gap 0",
+   "s03 d9 k4 gap 0",
+   "s03 d12 k4 gap 0",
+   "s04 d2 k3 gap 0",
+   "s04 d6 k2 gap 0",
+   "s04 d10 k4 gap 0",
+   "s04 d11 k2 gap 0",
+   "s05 d14 k4 gap 0",
+   "s05 d15 k3 gap 0",
+   "s06 d5 k4 gap 0",
+   "s06 d7 k4 gap 0",
+   "s07 d1 k4 gap 0",
+   "s07 d6 k4 gap 0",
+   "s07 d10 k3 gap 0",
+   "s08 d6 k3 gap 0",
+   "s08 d11 k2 gap 0",
+   "s08 d13 k3 gap 0",
+   "s09 d5 k4 gap 0",
+   "s09 d6 k3 gap 0",
+   "s09 d7 k4 gap 0",
+   "s09 d11 k2 gap 0",
+   "s10 d24 k5 gap 0",
+   "s10 d32 k3 gap 0",
+   "s11 d10 k4 gap 0",
+   "s11 d14 k2 gap 0",
+   "s12 d9 k4 gap 0",
+   "s12 d11 k2 gap 0",
+   "s12 d19 k2 gap 0",
+   "s13 d0 k3 gap 0",
+   "s13 d3 k3 gap 0",
+   "s13 d5 k2 gap 0",
+   "s13 d8 k2 gap 0"
+  ],
+  "review": {
+   "confident": 3,
+   "of": 77,
+   "share": 0.039,
+   "note": "the atlas review of 2026-10-27, section 1: o0 leading or tied at 50 branches -> 3 of 77 confident at the full n (200), on 29 spines of three seats; read after the fact, not on controls"
+  },
+  "pooledInputs": {
+   "controls": 10,
+   "controlsConfident": 0,
+   "stopped": 40,
+   "read": 125
+  },
+  "partial": true,
+  "note": "one night of a read pooled across nights: add pooledInputs to later nights' before reading the share; no verdict"
+ },
+ "c_sizingReadUnbiased": {
+  "wallSec": 26057,
+  "spinesTimed": 13,
+  "labels": 85,
+  "confident": 24,
+  "wallSecAt7": 22335,
+  "workerHours": 43.43,
+  "labelsPer10hNight": 117,
+  "confidentPer10hNight": 33,
+  "labelsPer7Worker10hNight": 137,
+  "confidentPer7Worker10hNight": 38.7,
+  "confidentPer7Poisson95": [
+   24.8,
+   57.6
+  ],
+  "confidentPerWorkerHour": 0.5526,
+  "confidentPerWorkerHourPoisson95": [
+   0.3541,
+   0.8223
+  ],
+  "spines": [
+   "s01",
+   "s02",
+   "s03",
+   "s04",
+   "s05",
+   "s06",
+   "s07",
+   "s08",
+   "s09",
+   "s10",
+   "s11",
+   "s12",
+   "s13"
+  ],
+  "left": [],
+  "note": "the sizing read over the spines not marked biased (--biased=); J188 marks none, so it is the as-run read"
+ },
+ "d486Rows": {
+  "modesDrawn": 0,
+  "modesDrawnBranches": 0,
+  "retargeted": 1120,
+  "rowsWithModesDrawn": 0
+ },
+ "d488Rows": {
+  "targetCountTrimmed": 1741,
+  "costTargetAvoided": 649,
+  "targetCountTrimmedBranches": 1732,
+  "costTargetAvoidedBranches": 637,
+  "rowsWithTrimmed": 20,
+  "rowsWithAvoided": 42,
+  "refusedCastBranches": 363
+ },
+ "voidLabels": 0,
+ "voidList": [],
+ "sameGameNotBlock": []
+}

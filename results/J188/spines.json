@@ -1,0 +1,357 @@
+{
+ "note": "all 13 spines branched by J188 at the pin, by D488s random seat policy on D498s determinizer behind D508s gate (a candidate judged where the game holds the card), the seat frozen since J186s pin (D509; D510s record and D511s replay landed between landings), on new decks (deck seeds 2466-2478, game seeds 2566-2578), on J177s design (150 random branches, the futility stop at 50 with a 0.25 control share, 10 decisions): D508s population, its third night, pooled with J186 (its first, twelve spines) and J187 (its second, thirteen); never with J185 (D507), J183 or J182 (D498), J181 (D497), J177 or J180 (D493), J173 (D488) nor J166-J172 (D486 or earlier seats); split by pool or randomSeat, never by sha alone",
+ "sha": "fe063f94",
+ "spines": {
+  "b-s01-pauper-2566": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s01-pauper-2466/decks/pauper-2466-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s01-pauper-2466/decks/pauper-2466-00002.dck",
+   "seed": 2566,
+   "branchRandom": 150,
+   "branchForge": 40,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s02-peasant-2567": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s02-peasant-2467/decks/peasant-2467-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s02-peasant-2467/decks/peasant-2467-00002.dck",
+   "seed": 2567,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s03-legacy-2568": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s03-legacy-2468/decks/legacy-2468-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s03-legacy-2468/decks/legacy-2468-00002.dck",
+   "seed": 2568,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s04-powered-2569": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s04-powered-2469/decks/powered-2469-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s04-powered-2469/decks/powered-2469-00002.dck",
+   "seed": 2569,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s05-pauper-2570": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s05-pauper-2470/decks/pauper-2470-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s05-pauper-2470/decks/pauper-2470-00002.dck",
+   "seed": 2570,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s06-peasant-2571": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s06-peasant-2471/decks/peasant-2471-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s06-peasant-2471/decks/peasant-2471-00002.dck",
+   "seed": 2571,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s07-legacy-2572": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s07-legacy-2472/decks/legacy-2472-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s07-legacy-2472/decks/legacy-2472-00002.dck",
+   "seed": 2572,
+   "branchRandom": 150,
+   "branchForge": 40,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s08-powered-2573": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s08-powered-2473/decks/powered-2473-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s08-powered-2473/decks/powered-2473-00002.dck",
+   "seed": 2573,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s09-pauper-2574": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s09-pauper-2474/decks/pauper-2474-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s09-pauper-2474/decks/pauper-2474-00002.dck",
+   "seed": 2574,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s10-peasant-2575": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s10-peasant-2475/decks/peasant-2475-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s10-peasant-2475/decks/peasant-2475-00002.dck",
+   "seed": 2575,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s11-legacy-2576": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s11-legacy-2476/decks/legacy-2476-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s11-legacy-2476/decks/legacy-2476-00002.dck",
+   "seed": 2576,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s12-powered-2577": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s12-powered-2477/decks/powered-2477-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s12-powered-2477/decks/powered-2477-00002.dck",
+   "seed": 2577,
+   "branchRandom": 150,
+   "branchForge": 0,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  },
+  "b-s13-pauper-2578": {
+   "deckA": "/home/justin-a/code/lab/data/lab-j188/decks/s13-pauper-2478/decks/pauper-2478-00001.dck",
+   "deckB": "/home/justin-a/code/lab/data/lab-j188/decks/s13-pauper-2478/decks/pauper-2478-00002.dck",
+   "seed": 2578,
+   "branchRandom": 150,
+   "branchForge": 40,
+   "decisions": 10,
+   "chunk": 25,
+   "cuts": {
+    "earlyStop": [
+     50,
+     100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+     "at": 0,
+     "tie": 0,
+     "sample": 0.25
+    },
+    "screenBounds": [
+     0.04,
+     0.96
+    ],
+    "decision": "D480"
+   }
+  }
+ }
+}
