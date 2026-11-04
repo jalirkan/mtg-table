@@ -139,15 +139,21 @@
   },
   {
     "file": "a9-hideaway-viewer-own-permanent-taken-back.jsonl",
-    "level": "fail",
-    "expect": "only a look permission",
-    "why": "A9, D502: the permanent that changed hands is the VIEWER's own (taken back from the opponent), not one of the exiled card's owner's -- it grants no look at the opponent's card"
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D512 (J187 s06, d14-random-o0-b48): the Watcher is the VIEWER's own, controlled by the opponent when it entered -- its trigger the opponent's, its dig from the opponent's library -- and the viewer takes it back; the look goes to whoever controls the Watcher, whoever owns it (D502 refused this on a theory the engine contradicts); counted, not a problem"
   },
   {
     "file": "a9-hideaway-third-party-permanent.jsonl",
     "level": "fail",
     "expect": "only a look permission",
-    "why": "A9, D502: the permanent the viewer took is owned by a third party (player 2), not by the exiled card's owner -- it grants no look at that card"
+    "why": "A9, D502, D512: the viewer took the permanent from a third party (player 2), not from the player whose library the card was dug from -- the log shows no take from that player, so nothing ties the alt to the look"
+  },
+  {
+    "file": "a9-hideaway-own-permanent-taken-back-from-a-third-party.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the viewer's own Watcher, taken back from a third party (player 2), while the card was dug from the opponent's library by the opponent's trigger -- the take is not from the card's owner, so the owner no longer being checked opens nothing"
   },
   {
     "file": "a9-hideaway-alt-in-a-graveyard.jsonl",
@@ -466,6 +472,72 @@
     "level": "pass",
     "expect": "PASS",
     "why": "A9, D505: the Watcher has two triggers; the newer resolves, and its `unstacked` lands a snapshot later -- that `unstacked` is the resolved one's pair, not a counter, so the hideaway trigger stays open and its dig is tied; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-own-permanent-reanimated-by-the-opponent-taken-back.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D512 (J187 s06, d14-random-o0-b48): the opponent reanimates the viewer's Watcher, its trigger digs the opponent's card, and the viewer's Control Magic resolves and takes the Watcher back in one frame, the alt with it -- counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-a-frame-before-the-take-while-the-aura-resolves.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D512 (J187 s06, d21-random-o1-b58): the snapshot is cut inside Control Magic's resolution -- the aura still on the stack, its attach onto the Watcher in the frame, the alt on the card, the Watcher still listed under the opponent -- and the next frame lists the take; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-alt-a-frame-before-the-opponent-own-watcher-taken.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D512: the same lead with the opponent's own Watcher (D502's shape) -- the attach of the viewer's resolving aura, the alt, and the take listed the next frame; counted, not a problem"
+  },
+  {
+    "file": "a9-hideaway-own-permanent-unrelated-dig-beside-the-viewer-trigger.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the viewer's own Watcher enters under the VIEWER and its trigger (the viewer's) resolves right after a dig of the opponent's library; the opponent takes the Watcher and the viewer takes it back -- a trigger of the viewer's digs the viewer's library, so the opponent's card is not its, and the owner no longer being checked must not admit it"
+  },
+  {
+    "file": "a9-hideaway-alt-two-frames-before-the-take.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the alt arrives a frame before the aura's attach and two before the listed take -- the lead is one frame, with the attach in it"
+  },
+  {
+    "file": "a9-hideaway-alt-before-a-take-that-never-comes.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the viewer's aura attaches to the Watcher with the alt on the card, and the next frame still lists the Watcher under the opponent (the aura countered) -- an alt ahead of a take is admitted only when the take is listed the next frame"
+  },
+  {
+    "file": "a9-hideaway-alt-before-a-take-the-log-ends-first.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the frame of the aura's attach, with the alt on the card, is the log's last state frame -- no frame lists the take, and a whole log decides it as a failure"
+  },
+  {
+    "file": "a9-hideaway-alt-ahead-of-the-take-with-no-attach.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the alt a frame ahead of the listed take with the viewer's spell on the stack but no attach event onto the Watcher -- nothing in the frame shows the take beginning (a take by another kind of effect would need its own decision)"
+  },
+  {
+    "file": "a9-hideaway-alt-ahead-of-the-take-the-opponent-aura.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the aura attaching to the Watcher in the alt's frame is a stack item of the OPPONENT's -- not the viewer's effect taking it"
+  },
+  {
+    "file": "a9-hideaway-alt-ahead-of-the-take-aura-onto-another-permanent.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: the viewer's aura attaches to another of the opponent's creatures in the alt's frame, and the Watcher is taken the next frame -- the attach is not onto the card's host, so the frame shows no take of it beginning"
+  },
+  {
+    "file": "a9-hideaway-alt-ahead-of-the-take-another-host-taken.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D512: two hosts entered together and both resolved right after the one dig, so each vouches for the card; the viewer's aura attaches to the Watcher in the alt's frame, but the next frame lists the take of the OTHER host -- the lead is decided by the take of the permanent the aura attached to, not of any host"
   },
   {
     "file": "own-hand-card-redacted.jsonl",

@@ -413,3 +413,30 @@ leaves is follow-up 34: the records still move the memory, so a recorded game is
 rows, whose created objects' ids move between reruns of the same classes. The comparison ran six workers at a load
 average of 10, and the s13 replay was the baseline's under it as idle. With D511: `atlas-selftest` OK (its replay
 leg: d30, turn 19, replayed, 3 branches); `seat-identity`: all 4 games the golden's; `./bridge/build.sh` green.
+
+## 15. J187's hideaway host taken back (D512, 2026-11-04)
+
+Lab night J187 (the atlas, spine `b-s06-peasant-2558`, under `/home/justin-a/code/lab/data/lab-j187/`, read only)
+failed `tools/check-redaction.mjs` (`main`, `42e7a87f`) on two seat-1 branch frame logs, `d14-random-o0-b48` (from line
+121) and `d21-random-o1-b58` (from line 468), both rule A9's hideaway message on card 29 (Bog Wraith). The Watcher for
+Tomorrow that dug it (42) was seat 1's own: player 0 reanimated it, its trigger (player 0's) dug from player 0's
+library, and seat 1's Control Magic took it back. In `d21` the alt led the listed take by one state frame, the snapshot
+cut inside the aura's resolution (its `attach` in the frame, its stack item still listed). D512 drops the host's owner
+from A9's hideaway rule (the take must be from the dug card's owner, and the tying trigger that player's), and admits
+one frame of lead on the attach, decided by the next state frame. All sweeps below used the atlas's `--empty-hand-ok`,
+six workers, on this PC.
+
+| logs | count | `main` (`42e7a87f`) | this branch |
+|---|---:|---|---|
+| J187 `b-s06-peasant-2558`, every log, both seats | 9,850 | 2 FAIL (`d14-…-b48-seat1`, `d21-…-b58-seat1`) | 0 FAIL |
+| J183 `b-s11-legacy-2524`, every log, both seats (D505's 17 included) | 8,350 | not re-run (D505's: 0 FAIL) | 0 FAIL |
+| J182 `b-s06-peasant-2506`, every log, both seats (D502's five included) | 8,750 | not re-run (D505 sampled 200: 0 FAIL) | 0 FAIL |
+
+The two J187 logs pass with `1 an opponent's hideaway card` each. The J182 and J183 rows re-check that the tie D512
+adds (the hideaway trigger's `controller` is the digging player) holds on every hideaway the earlier nights admitted.
+`fixtures/games/` and `fixtures/synthetic/` (23 files, all PASS) print byte-for-byte what `main`'s checker prints. The
+self-test has 245 controls (233 before): `a9-hideaway-viewer-own-permanent-taken-back` flips to PASS (byte-identical
+file), and 12 are new (3 PASS, 9 FAIL), with a `--partial` check of the lead cut at its attach. Nine mutants of the new
+rule each fail it; two narrower ones survive because each half of the lead's cure implies the other (D512).
+`npm --prefix web test`: `node --test` 1,869 tests, 1,858 pass, 11 skipped, 0 fail (`claude-md.test.ts` included);
+vitest 161 passed. `node tools/decisions.mjs check` OK. PLAN.md's cube lab follow-up 35 holds what is still refused.

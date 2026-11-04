@@ -371,13 +371,13 @@ probe('a9-stolen-morph-named-for-its-owner.jsonl',
 // entry and the alt with the change of control; the dig a state after the entry
 // and the alt a state after the change (b76); the alt one state after the Watcher
 // left (b76 again, at its death).  The probes: no change of control, control held
-// from the start, the viewer's own permanent taken back, a third owner's
-// permanent, a face-down card outside exile, the alt two states after the change,
+// from the start, a permanent taken from a third player, a face-down card outside exile, the alt two states after the change,
 // a foretold card (hand -> exile) under an unrelated stolen creature, a hand card
 // exiled face down with its alt at the steal, and a card dug beside another
 // hideaway host's entry (Mosswort Bridge) while the Watcher is the one stolen.
 // D505 turned one probe into a control: the alt kept two states after control
-// returns.
+// returns.  D512 turned another: the viewer's own permanent taken back from the
+// opponent, whose trigger dug the card (J187 s06).
 /** A hideaway trigger on the stack: a `cast` event naming its host (its text "" as a copy's; the checker reads only the id). */
 const hideawayCast = (host, controller) => ({ kind: 'cast', stackId: 9200 + (host % 100), cardId: host, controller, text: '' });
 /** The opponent's seat (themOf, which is declared further down). */
@@ -468,12 +468,15 @@ hideawayProbe('a9-hideaway-no-control-change.jsonl',
 hideawayProbe('a9-hideaway-viewer-controlled-from-the-start.jsonl',
   'A9, D502: the viewer controls the opponent\'s Watcher in every state and the alt appears later with no change of control -- the log shows no taking of control, so nothing ties the alt to the look',
   3, { from: header.seat, changeAt: null });
-hideawayProbe('a9-hideaway-viewer-own-permanent-taken-back.jsonl',
-  'A9, D502: the permanent that changed hands is the VIEWER\'s own (taken back from the opponent), not one of the exiled card\'s owner\'s -- it grants no look at the opponent\'s card',
+hideawayPass('a9-hideaway-viewer-own-permanent-taken-back.jsonl',
+  'A9, D512 (J187 s06, d14-random-o0-b48): the Watcher is the VIEWER\'s own, controlled by the opponent when it entered -- its trigger the opponent\'s, its dig from the opponent\'s library -- and the viewer takes it back; the look goes to whoever controls the Watcher, whoever owns it (D502 refused this on a theory the engine contradicts); counted, not a problem',
   3, { owner: header.seat });
 hideawayProbe('a9-hideaway-third-party-permanent.jsonl',
-  'A9, D502: the permanent the viewer took is owned by a third party (player 2), not by the exiled card\'s owner -- it grants no look at that card',
+  'A9, D502, D512: the viewer took the permanent from a third party (player 2), not from the player whose library the card was dug from -- the log shows no take from that player, so nothing ties the alt to the look',
   3, { owner: 2, from: 2 });
+hideawayProbe('a9-hideaway-own-permanent-taken-back-from-a-third-party.jsonl',
+  'A9, D512: the viewer\'s own Watcher, taken back from a third party (player 2), while the card was dug from the opponent\'s library by the opponent\'s trigger -- the take is not from the card\'s owner, so the owner no longer being checked opens nothing',
+  3, { owner: header.seat, from: 2 });
 hideawayProbe('a9-hideaway-alt-in-a-graveyard.jsonl',
   'A9, D502: hideaway\'s look is a look at a card in EXILE -- a face-down card elsewhere outside play (a graveyard) gains nothing from the change of control',
   3, { hidIn: 'graveyard' });
@@ -524,6 +527,7 @@ const hideawaySpec = (name, level, why, frames) => {
   frames.forEach((fr, i) => {
     const st = sts[i];
     st.body.events.push(...(fr.ev ?? []));
+    st.body.stack.push(...(fr.st ?? []));
     for (const [id, owner, ctl] of fr.bf ?? []) {
       putCard(st.body.players.find((p) => p.id === ctl), 'battlefield', Object.assign(structuredClone(firstFull(fs).card), {
         id, name: id === HW ? 'Watcher for Tomorrow' : 'Grizzly Bears', setCode: 'MH2', manaCost: '{1}{G}', types: 'Creature',
@@ -746,6 +750,75 @@ const hideawaySpec = (name, level, why, frames) => {
     'A9, D505: the Watcher has two triggers; the newer resolves, and its `unstacked` lands a snapshot later -- that `unstacked` is the resolved one\'s pair, not a counter, so the hideaway trigger stays open and its dig is tied; counted, not a problem',
     [{}, { bf: [[HW, T, T]], ev: [hEnter(HW), hCast(HW), hAct(HW)] }, { bf: [[HW, T, T]], ev: [hRes(HW)] },
       { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hUn(HW), hDig(HC1), hRes(HW), hUn(HW)] }, { bf: [[HW, T, V]], ex: [[HC1, T, true]] }]);
+
+  // D512 (J187 s06, d14-random-o0-b48 and d21-random-o1-b58): the Watcher is the
+  // VIEWER's own.  The opponent reanimates it from the viewer's graveyard, its
+  // hideaway trigger (the opponent's) digs a card of the OPPONENT's library, and
+  // the viewer's Control Magic takes it back -- the look goes to whoever controls
+  // the Watcher, so the card carries its alt.  In d21 the snapshot is cut inside
+  // the aura's resolution: its `attach` onto the Watcher is in the frame, the
+  // alt is already on the card, and the Watcher is listed under the opponent's
+  // control until the next frame.  One frame of lead, with the attach of the
+  // viewer's resolving aura as its evidence and the listed take as its proof.
+  const HA = 90044;   // the viewer's Control Magic
+  const reanimate = { kind: 'zone', cardId: HW, from: { zone: 'graveyard', player: V }, to: { zone: 'battlefield', player: T } };
+  const aura = (by = V) => ({ id: 9244, sourceCardId: HA, controller: by, text: '', targetCardIds: [HW], targetPlayerIds: [] });
+  const attach = (to = HW) => ({ kind: 'attach', cardId: HA, to: { kind: 'card', id: to } });
+  const auraDone = [hRes(HA), hUn(HA)];
+  const dug = { bf: [[HW, V, T]], ex: [[HC1, T]], ev: [reanimate, hCast(HW), hDig(HC1), hRes(HW)] };
+  hideawaySpec('a9-hideaway-own-permanent-reanimated-by-the-opponent-taken-back.jsonl', 'pass',
+    'A9, D512 (J187 s06, d14-random-o0-b48): the opponent reanimates the viewer\'s Watcher, its trigger digs the opponent\'s card, and the viewer\'s Control Magic resolves and takes the Watcher back in one frame, the alt with it -- counted, not a problem',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T]], st: [aura()] },
+      { bf: [[HW, V, V]], ex: [[HC1, T, true]], ev: [attach(), ...auraDone] }, { bf: [[HW, V, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-a-frame-before-the-take-while-the-aura-resolves.jsonl', 'pass',
+    'A9, D512 (J187 s06, d21-random-o1-b58): the snapshot is cut inside Control Magic\'s resolution -- the aura still on the stack, its attach onto the Watcher in the frame, the alt on the card, the Watcher still listed under the opponent -- and the next frame lists the take; counted, not a problem',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T]] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach()] },
+      { bf: [[HW, V, V]], ex: [[HC1, T, true]], ev: auraDone }, { bf: [[HW, V, V]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-a-frame-before-the-opponent-own-watcher-taken.jsonl', 'pass',
+    'A9, D512: the same lead with the opponent\'s own Watcher (D502\'s shape) -- the attach of the viewer\'s resolving aura, the alt, and the take listed the next frame; counted, not a problem',
+    [{}, { bf: [[HW, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hCast(HW), hDig(HC1), hRes(HW)] },
+      { bf: [[HW, T, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach()] },
+      { bf: [[HW, T, V]], ex: [[HC1, T, true]], ev: auraDone }]);
+  hideawaySpec('a9-hideaway-own-permanent-unrelated-dig-beside-the-viewer-trigger.jsonl', 'fail',
+    'A9, D512: the viewer\'s own Watcher enters under the VIEWER and its trigger (the viewer\'s) resolves right after a dig of the opponent\'s library; the opponent takes the Watcher and the viewer takes it back -- a trigger of the viewer\'s digs the viewer\'s library, so the opponent\'s card is not its, and the owner no longer being checked must not admit it',
+    [{}, { bf: [[HW, V, V]], ex: [[HC2, T]], ev: [{ kind: 'zone', cardId: HW, from: { zone: 'stack', player: null }, to: { zone: 'battlefield', player: V } },
+      hideawayCast(HW, V), hDig(HC2), hRes(HW)] },
+      { bf: [[HW, V, T]], ex: [[HC2, T]] }, { bf: [[HW, V, V]], ex: [[HC2, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-two-frames-before-the-take.jsonl', 'fail',
+    'A9, D512: the alt arrives a frame before the aura\'s attach and two before the listed take -- the lead is one frame, with the attach in it',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T, true]] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach()] },
+      { bf: [[HW, V, V]], ex: [[HC1, T, true]], ev: auraDone }]);
+  hideawaySpec('a9-hideaway-alt-before-a-take-that-never-comes.jsonl', 'fail',
+    'A9, D512: the viewer\'s aura attaches to the Watcher with the alt on the card, and the next frame still lists the Watcher under the opponent (the aura countered) -- an alt ahead of a take is admitted only when the take is listed the next frame',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T]] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach()] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], ev: [hUn(HA)] }, { bf: [[HW, V, T]], ex: [[HC1, T, true]] }]);
+  hideawaySpec('a9-hideaway-alt-before-a-take-the-log-ends-first.jsonl', 'fail',
+    'A9, D512: the frame of the aura\'s attach, with the alt on the card, is the log\'s last state frame -- no frame lists the take, and a whole log decides it as a failure',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T]] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach()] }]);
+  hideawaySpec('a9-hideaway-alt-ahead-of-the-take-with-no-attach.jsonl', 'fail',
+    'A9, D512: the alt a frame ahead of the listed take with the viewer\'s spell on the stack but no attach event onto the Watcher -- nothing in the frame shows the take beginning (a take by another kind of effect would need its own decision)',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T]] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], st: [aura()] },
+      { bf: [[HW, V, V]], ex: [[HC1, T, true]], ev: auraDone }]);
+  hideawaySpec('a9-hideaway-alt-ahead-of-the-take-the-opponent-aura.jsonl', 'fail',
+    'A9, D512: the aura attaching to the Watcher in the alt\'s frame is a stack item of the OPPONENT\'s -- not the viewer\'s effect taking it',
+    [{}, dug, { bf: [[HW, V, T]], ex: [[HC1, T]] },
+      { bf: [[HW, V, T]], ex: [[HC1, T, true]], st: [aura(T)], ev: [attach()] },
+      { bf: [[HW, V, V]], ex: [[HC1, T, true]], ev: auraDone }]);
+  hideawaySpec('a9-hideaway-alt-ahead-of-the-take-aura-onto-another-permanent.jsonl', 'fail',
+    'A9, D512: the viewer\'s aura attaches to another of the opponent\'s creatures in the alt\'s frame, and the Watcher is taken the next frame -- the attach is not onto the card\'s host, so the frame shows no take of it beginning',
+    [{}, { ...dug, bf: [[HW, V, T], [HB, T, T]] }, { bf: [[HW, V, T], [HB, T, T]], ex: [[HC1, T]] },
+      { bf: [[HW, V, T], [HB, T, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach(HB)] },
+      { bf: [[HW, V, V], [HB, T, T]], ex: [[HC1, T, true]], ev: auraDone }]);
+  hideawaySpec('a9-hideaway-alt-ahead-of-the-take-another-host-taken.jsonl', 'fail',
+    'A9, D512: two hosts entered together and both resolved right after the one dig, so each vouches for the card; the viewer\'s aura attaches to the Watcher in the alt\'s frame, but the next frame lists the take of the OTHER host -- the lead is decided by the take of the permanent the aura attached to, not of any host',
+    [{}, { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T]], ev: [hEnter(HW), hEnter(HB), hCast(HW), hCast(HB), hDig(HC1), hRes(HB), hRes(HW)] },
+      { bf: [[HW, T, T], [HB, T, T]], ex: [[HC1, T, true]], st: [aura()], ev: [attach()] },
+      { bf: [[HW, T, T], [HB, T, V]], ex: [[HC1, T, true]], ev: [hUn(HA)] }]);
 }
 
 // The other night-2 finding (D371): the viewer's own hand card as a stub.  It

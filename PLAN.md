@@ -17,7 +17,8 @@ commit.
 **The index below lists 389 items still open across 43 follow-up lists** — 359
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D511
+said 371 across 42, three rows and one list behind its table) — D512
+(2026-11-04) added the cube lab's 35; D511
 (2026-11-03) added the cube lab's 34; D510
 (2026-11-03) added the cube lab's 32 and 33; D508
 (2026-11-03) added the cube lab's 29, 30 and 31; D507
@@ -443,6 +444,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 32 | open | The checker has no rule tying `option:hidden` to `hidden`: `option:hidden` with no `hidden`, a chosen list never checked against the options, `option:hidden` listed twice -- all pass; none leaks; a rule needs a sweep of the old logs first | `tools/check-redaction.mjs` |
 | [Cube lab](#fu-cube-lab) | 33 | open | The entity path has the gap D510 closed on the target path: a hidden pick not in the list is written `option:hidden` without being counted or listed; one such pick fails "not among its options", a list of them passes silently | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Cube lab](#fu-cube-lab) | 34 | open | A recorded game is not its unrecorded twin: D347's records move Forge's `AiCardMemory` (D511 makes an atlas unit's replay the recorded game; census-replay's `--record full` against a rows-mode game is still exposed, unmeasured); the cause's fix changes branch play, for D509's queue; and s04's branch rows name created objects by ids that move between reruns | `bridge/src/mtgtable/ai/Decisions.java` |
+| [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10228,6 +10230,21 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    three other runs; result, turns and steps 1/32/130 in every one — the ids move between runs on both builds. A copy starts from its game's `cardIdCounter`, so something in
    the replay creates a varying number of cards (the `Game AI Eval` thread's token prototypes are a candidate);
    untraced. Rows are not labels, but a row's tokens are not reproducible there.
+35. **D512's hideaway host is the digger's, whoever owns it, and the alt may lead the take by a frame: two logs.**
+   (2026-11-04, D512.) Lab night J187 (the atlas, spine `b-s06-peasant-2558`) failed two seat-1 branch frame logs on
+   rule A9's hideaway shape, `d14-random-o0-b48` (from line 121) and `d21-random-o1-b58` (from line 468), both card 29
+   (Bog Wraith). The Watcher for Tomorrow (42) was **seat 1's own**: player 0 reanimated it, its hideaway trigger (player
+   0's) dug 29 from player 0's library, and seat 1's Control Magic took the Watcher back; Forge showed seat 1 the card,
+   as `MayLookAt$ EffectSourceController` and CR 702.75a say. D502 had refused a host owned by the viewer on a theory
+   (its rejected list, and the FAIL fixture `a9-hideaway-viewer-own-permanent-taken-back`). D512 drops the host's owner
+   from the rule: the viewer must take the host **from** the dug card's owner, and the trigger whose resolution ties the
+   dig must be that player's (the `cast`'s `controller`, "your library"). In `d21` the snapshot was cut inside the aura's
+   resolution, so the alt led the listed take by one frame; D512 admits that one frame when the frame carries the
+   `attach` onto the host of the viewer's stack item still on the stack, and holds the complaint until the next state
+   frame lists the take (undecided under `--partial` until then). The fixture flips to PASS; 12 new controls (3 PASS,
+   9 FAIL). Both logs pass; J187's s06 (9,850 logs) fails none, J183's s11 and J182's s06 neither. Still failing by
+   design: a take by an effect that attaches nothing (a Threaten, an exchange) cut by a snapshot the same way, and a
+   lead of two frames. Each needs its own decision if a night shows one.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
