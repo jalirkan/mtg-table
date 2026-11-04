@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-11-04T12:20:52-05:00",
- "heartbeat": "2026-11-04T12:20:52-05:00",
+ "updated": "2026-11-04T12:21:14-05:00",
+ "heartbeat": "2026-11-04T12:21:14-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.24,
+  "load1": 8.05,
   "memUsedGb": 10.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 4427,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/15",
    "started": "2026-11-04T11:23:52-05:00",
-   "elapsed": 3420,
+   "elapsed": 3442,
    "done": 4620,
    "total": 64000,
    "unit": "lines",
    "ratePerHour": 5525.4,
-   "eta": "2026-11-04T23:05:40-05:00",
-   "workers": 5,
+   "eta": "2026-11-04T23:06:02-05:00",
+   "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 1,
    "paused": false,
    "dataUpdated": "2026-11-04T12:20:19-05:00",
-   "memGb": 5.6,
+   "memGb": 5.59,
    "live": {
     "branches": 4620,
     "atlas.spinesDone": 0,
@@ -115,6 +115,12 @@
      "at": "2026-11-04T12:16:10-05:00",
      "kind": "raise",
      "workers": 5,
+     "pressure": 0
+    },
+    {
+     "at": "2026-11-04T12:21:14-05:00",
+     "kind": "raise",
+     "workers": 6,
      "pressure": 0
     }
    ],
