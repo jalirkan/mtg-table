@@ -2,3 +2,4 @@
 {"at":"2026-11-04T05:46:28-05:00","kind":"raise","workers":6,"pressure":0,"why":"some avg10 0.0%, swap-in 2/s, job 5.1/21.4 GB"}
 {"at":"2026-11-04T08:02:52-05:00","kind":"drop","workers":5,"pressure":5.7,"why":"some avg10 5.7%, swap-in 4760/s, job 7.2/21.4 GB"}
 {"at":"2026-11-04T08:14:25-05:00","kind":"raise","workers":6,"pressure":0,"why":"some avg10 0.0%, swap-in 6/s, job 4.5/21.4 GB"}
+{"at":"2026-11-04T09:28:27-05:00","kind":"drop","workers":5,"pressure":1.8,"why":"some avg10 1.8%, swap-in 3885/s, job 6.2/21.4 GB"}
