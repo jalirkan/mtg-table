@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-04T10:41:40-05:00",
- "heartbeat": "2026-11-04T10:41:40-05:00",
+ "updated": "2026-11-04T10:42:08-05:00",
+ "heartbeat": "2026-11-04T10:42:08-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.96,
-  "memUsedGb": 8.7,
+  "load1": 6.98,
+  "memUsedGb": 6.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3598,
+  "swapUsedMb": 3580,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J188",
    "title": "The move atlas, rung 4b, night twelve -- J187's night carried onto the same seat (D509: the atlas seat frozen between landings; the pin fe063f94 adds to J187's 43043fe5 D510 (the target record writes a target the seat cannot see as `option:hidden`: record-only), D511 (an atlas unit's replay records into a sink that writes nothing, so it is the recorded baseline's game: CubeLab.java only) and D512 (the redaction checker admits J187's s06 hideaway shape), `seat_code` admitting exactly D510's and D511's numstat since J186's pin) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j188, at deck seeds 2466-2478 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 2566-2578; a validation draw made fresh at deck seeds 2666-2678 (game seeds 2766-2778 reserved); THE THIRD NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines and J187's thirteen; J187's night read beside, by position",
    "cpu": "heavy",
-   "phase": "commands 13/15",
+   "phase": "commands 14/15",
    "started": "2026-11-04T03:16:31-05:00",
-   "elapsed": 26708,
+   "elapsed": 26737,
    "done": 53435,
    "total": 64000,
    "unit": "lines",
-   "ratePerHour": 5623.1,
-   "eta": "2026-11-04T12:34:23-05:00",
+   "ratePerHour": 5418.5,
+   "eta": "2026-11-04T12:39:07-05:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 5,
    "paused": false,
    "dataUpdated": "2026-11-04T10:40:46-05:00",
-   "memGb": 3.2,
+   "memGb": 0,
    "live": {
     "branches": 53435,
     "atlas.spinesDone": 12,
@@ -136,7 +136,7 @@
      "pressure": 0.2
     }
    ],
-   "detail": "lab-J188-run13"
+   "detail": "lab-J188-run14"
   }
  ],
  "queue": [],
