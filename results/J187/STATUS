@@ -3,7 +3,7 @@ runner: forgecoach-runner ac07876b
 started: 2026-11-03T17:10:07-05:00
 phase: commands 10/15
 mtg-table: 43043fe
-workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.64), budget 21.4 GB)
+workers: 5 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.64), budget 21.4 GB)
 peak_worker_rss_gb: 1.64
 blocks_done: run1 exit 0 at 2026-11-03T18:29:16-05:00, run2 exit 0 at 2026-11-03T19:18:51-05:00, run3 exit 0 at 2026-11-03T20:35:06-05:00, run4 exit 0 at 2026-11-03T20:59:19-05:00, run5 exit 0 at 2026-11-03T22:03:49-05:00, run6 exit 0 at 2026-11-03T23:06:41-05:00, run7 exit 0 at 2026-11-03T23:39:23-05:00, run8 exit 0 at 2026-11-04T00:00:19-05:00, run9 exit 0 at 2026-11-04T00:37:41-05:00
 pressure-1: 2026-11-03T17:16:43-05:00 drop to 2 worker(s): some avg10 7.7%, swap-in 9184/s, job 2.2/21.4 GB
@@ -27,3 +27,4 @@ pressure-18: 2026-11-03T23:21:46-05:00 raise to 5 worker(s): some avg10 0.0%, sw
 pressure-19: 2026-11-03T23:32:56-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 13/s, job 5.0/21.4 GB
 pressure-20: 2026-11-03T23:51:41-05:00 drop to 5 worker(s): some avg10 0.1%, swap-in 3429/s, job 6.1/21.4 GB
 pressure-21: 2026-11-03T23:59:01-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 10/s, job 4.9/21.4 GB
+pressure-22: 2026-11-04T00:50:04-05:00 drop to 5 worker(s): some avg10 0.2%, swap-in 25133/s, job 5.9/21.4 GB
