@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-04T00:37:29-05:00",
- "heartbeat": "2026-11-04T00:37:29-05:00",
+ "updated": "2026-11-04T00:37:41-05:00",
+ "heartbeat": "2026-11-04T00:37:41-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.38,
-  "memUsedGb": 22.1,
+  "load1": 7.31,
+  "memUsedGb": 19.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3574,
+  "swapUsedMb": 3561,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J187",
    "title": "The move atlas, rung 4b, night eleven -- J186's night carried onto the same seat (D509: the atlas seat frozen between landings; the pin 43043fe5 adds D509's docs to J186's e557dedf, `bridge/src` byte-identical; J186's two seat faults, the all-hidden target record and the replay divergence, wait in D509's queue as D510 and D511) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j187, at deck seeds 2453-2465 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 2553-2565; a validation draw made fresh at deck seeds 2653-2665 (game seeds 2753-2765 reserved); THE SECOND NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines; J186's night read beside, by position",
    "cpu": "heavy",
-   "phase": "commands 9/15",
+   "phase": "commands 10/15",
    "started": "2026-11-03T17:10:07-05:00",
-   "elapsed": 26842,
+   "elapsed": 26854,
    "done": 38705,
    "total": 64000,
    "unit": "lines",
    "ratePerHour": 4563.6,
-   "eta": "2026-11-04T06:10:03-05:00",
+   "eta": "2026-11-04T06:10:15-05:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 0,
    "paused": false,
    "dataUpdated": "2026-11-04T00:36:46-05:00",
-   "memGb": 3.66,
+   "memGb": 0,
    "live": {
     "branches": 38705,
     "atlas.spinesDone": 8,
@@ -220,7 +220,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J187-run9"
+   "detail": "lab-J187-run10"
   }
  ],
  "queue": [],
