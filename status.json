@@ -1,52 +1,44 @@
 {
  "schema": 1,
- "updated": "2026-11-04T02:15:14-05:00",
- "heartbeat": "2026-11-04T02:15:14-05:00",
+ "updated": "2026-11-04T02:15:39-05:00",
+ "heartbeat": "2026-11-04T02:15:39-05:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-11-04T02:15:39-05:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 5.5,
+  "load1": 3.89,
   "memUsedGb": 4.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 3418,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Move atlas 4b night eleven: 13 new spines, D508 population night two",
    "publicEst": "~9 h to 13 h",
    "id": "J187",
    "title": "The move atlas, rung 4b, night eleven -- J186's night carried onto the same seat (D509: the atlas seat frozen between landings; the pin 43043fe5 adds D509's docs to J186's e557dedf, `bridge/src` byte-identical; J186's two seat faults, the all-hidden target record and the replay divergence, wait in D509's queue as D510 and D511) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j187, at deck seeds 2453-2465 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 2553-2565; a validation draw made fresh at deck seeds 2653-2665 (game seeds 2753-2765 reserved); THE SECOND NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines; J186's night read beside, by position",
-   "cpu": "heavy",
-   "phase": "commands 15/15",
-   "started": "2026-11-03T17:10:07-05:00",
-   "elapsed": 32707,
-   "done": 55210,
-   "total": 64000,
-   "unit": "lines",
-   "ratePerHour": 13278.6,
-   "eta": "2026-11-04T02:54:57-05:00",
-   "workers": 6,
-   "workersMax": 6,
-   "cores": 1,
-   "errors": 0,
-   "paused": false,
-   "dataUpdated": "2026-11-04T02:12:01-05:00",
-   "memGb": 0,
-   "live": {
+   "status": "failed",
+   "finished": "2026-11-04T02:15:39-05:00",
+   "headline": "branches 55210 · atlas.spinesDone 13 · atlas.labels 83 · atlas.confident 28 · atlas.partialLabels 47 · atlas.futileStopped 47 · atlas.futileControls 10 · atlas.confidentPerWorkerHour 0.541 · atlas.confidentPer7Worker10hNight 37.8 · atlas.refusedCastShare 0.003 · atlas.refusedCastOptions 1 · atlas.failedToPlay 806 · atlas.cardTargetShare 0.167 · atlas.lostCastOptions 1 · atlas.legacyNullTargetRecords 0 · atlas.timeoutShare 0 · atlas.problems 2",
+   "numbers": {
     "branches": 55210,
     "atlas.spinesDone": 13,
-    "atlas.labels": -1,
-    "atlas.confident": -1,
-    "atlas.partialLabels": -1,
+    "atlas.labels": 83,
+    "atlas.confident": 28,
+    "atlas.partialLabels": 47,
     "atlas.futileStopped": 47,
     "atlas.futileControls": 10,
+    "atlas.confidentPerWorkerHour": 0.5407,
+    "atlas.confidentPer7Worker10hNight": 37.8,
     "atlas.refusedCastShare": 0.00333,
     "atlas.refusedCastOptions": 1,
     "atlas.failedToPlay": 806,
@@ -54,180 +46,10 @@
     "atlas.lostCastOptions": 1,
     "atlas.legacyNullTargetRecords": 0,
     "atlas.timeoutShare": 0,
-    "atlas.problems": 2,
-    "armed": 1,
-    "atlas.atlasCostTargetAvoided": 0,
-    "atlas.atlases": 13,
-    "atlas.atlasNoRepeatRefused": 726,
-    "atlas.atlasRefusedCast": 1992,
-    "atlas.atlasTargetCountTrimmed": 0,
-    "atlas.avoidedSpines": 8,
-    "atlas.branchCapped": 2271,
-    "atlas.branchedInFull": 83,
-    "atlas.branchedRows": -1,
-    "atlas.branchErrored": 118,
-    "atlas.branchErroredOptions": 0,
-    "atlas.branchErrorStacks": 118,
-    "atlas.branchRestarted": 32,
-    "atlas.branchRows": 55210,
-    "atlas.branchTimeouts": 0,
-    "atlas.branchTimeoutsInStep": 0,
-    "atlas.branchUnavailable": 0,
-    "atlas.cappedOptionsOverWarn": 11,
-    "atlas.cardTargetOffered": 529685,
-    "atlas.cardTargetSpines": 13,
-    "atlas.casts": 599035,
-    "atlas.castsRefused": 704,
-    "atlas.castsRefusedForced": 150,
-    "atlas.castsRefusedShare": 0.00118
+    "atlas.problems": 2
    },
-   "liveHeadline": [
-    "branches",
-    "atlas.spinesDone",
-    "atlas.labels",
-    "atlas.confident",
-    "atlas.partialLabels",
-    "atlas.futileStopped",
-    "atlas.futileControls",
-    "atlas.refusedCastShare",
-    "atlas.refusedCastOptions",
-    "atlas.failedToPlay",
-    "atlas.cardTargetShare",
-    "atlas.lostCastOptions",
-    "atlas.legacyNullTargetRecords",
-    "atlas.timeoutShare",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-03T17:26:03-05:00",
-     "kind": "resume",
-     "workers": 1,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T17:31:28-05:00",
-     "kind": "raise",
-     "workers": 2,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T20:00:30-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 5.6
-    },
-    {
-     "at": "2026-11-03T20:01:37-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-11-03T20:02:44-05:00",
-     "kind": "drop",
-     "workers": 3,
-     "pressure": 0.3
-    },
-    {
-     "at": "2026-11-03T20:07:49-05:00",
-     "kind": "raise",
-     "workers": 4,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T20:12:57-05:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0.4
-    },
-    {
-     "at": "2026-11-03T20:14:38-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 3.1
-    },
-    {
-     "at": "2026-11-03T20:49:47-05:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T20:54:50-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T22:08:31-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 2.6
-    },
-    {
-     "at": "2026-11-03T22:13:34-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T23:07:38-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 2.4
-    },
-    {
-     "at": "2026-11-03T23:13:44-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0.6
-    },
-    {
-     "at": "2026-11-03T23:21:46-05:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T23:32:56-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-03T23:51:41-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-11-03T23:59:01-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T00:50:04-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.2
-    },
-    {
-     "at": "2026-11-04T01:00:26-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J187-run15"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "detail": "check: atlas.problems == 0 (atlas.problems = 2); atlas.refusedCastOptions == 0 (atlas.refusedCastOptions = 1); atlas.lostCastOptions == 0 (atlas.lostCastOptions = 1)"
+  },
   {
    "publicTitle": "Move atlas 4b night ten: 13 new spines, D508 population night one",
    "publicEst": "~8 h to 12 h",
@@ -1083,23 +905,6 @@
    "headline": "",
    "numbers": {},
    "detail": "pilot: step pilot3 exited 1"
-  },
-  {
-   "publicTitle": "Leak report from my own games",
-   "publicEst": "~1-2 h",
-   "id": "J132",
-   "title": "A3, the leak report: Justin's recurring mistakes in his own recorded games. Every decision of his seat that the post-game review covers (main-phase plays, attacks, blocks, targets) is graded by coach-grade.sh review in pool mode (D348), put into one kind by what he chose and what he saw, and judged by a rule written before grading (D438): a mistake is a regret interval above zero; a leak is at least 5 mistakes in at least 3 games with a mean regret whose 95% interval is above zero; everything else \"not shown\"",
-   "status": "done",
-   "finished": "2026-10-16T05:33:09-04:00",
-   "headline": "lk.leaks 0 · lk.gamesGraded 7 · lk.decisions 103 · lk.mistakes 5 · inv.decisions 153 · rs.failed 0",
-   "numbers": {
-    "lk.leaks": 0,
-    "lk.gamesGraded": 7,
-    "lk.decisions": 103,
-    "lk.mistakes": 5,
-    "inv.decisions": 153,
-    "rs.failed": 0
-   }
   }
  ],
  "runner": {
