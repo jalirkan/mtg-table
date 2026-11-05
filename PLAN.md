@@ -17,7 +17,8 @@ commit.
 **The index below lists 389 items still open across 43 follow-up lists** — 359
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D513
+said 371 across 42, three rows and one list behind its table) — D514
+(2026-11-05) added the cube lab's 37; D513
 (2026-11-05) added the cube lab's 36; D512
 (2026-11-04) added the cube lab's 35; D511
 (2026-11-03) added the cube lab's 34; D510
@@ -447,6 +448,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 34 | open | A recorded game is not its unrecorded twin: D347's records move Forge's `AiCardMemory` (D511 makes an atlas unit's replay the recorded game; census-replay's `--record full` against a rows-mode game is still exposed, unmeasured); the cause's fix changes branch play, for D509's queue; and s04's branch rows name created objects by ids that move between reruns | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
 | [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
+| [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000` and `-ms6000` (search-v2, only the budget changed) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10278,6 +10280,19 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    viewer's Oracle listed in both battlefields beside one opponent library card passes on the branch and fails on
    `main` (lines 4 and 5). Hard to reach (D352's mid-move valve would have to give up inside a battlefield-to-battlefield
    move); a cross-zone id-uniqueness check is the follow-up.
+
+37. **D514's compute-curve arms are registered and wait on their night.**
+   (2026-11-05, D514.) `search-v2-ms3000` (`24df578ecda3`) and `search-v2-ms6000` (`47f6efc97360`) in
+   `tools/ai-ladder/players.json` are search-v2 (`search-v1-anytime`, `cdd55e02a89c`) with `budgetMs` 3000 and 6000
+   and every other param its own; `maxRounds` 12, the racing, the step cap and the step clock are kept, not scaled.
+   For measurement only: the live seat stays search-v2 at 1.5 s. The night that uses them is the compute-curve night,
+   the play-AI review's (`~/code/pc-results/study/play-ai-review-2026-11-05.md`) §5 rows 1 and 2, not yet posted
+   (the first job after J193): search-v2 vs forge-default (the re-anchor), search-v2-ms6000 vs search-v2 and
+   search-v2-ms3000 vs search-v2, 1,200 games each on the confirm set, about 11 h on 7 workers, read on D514's
+   pre-registered rule (COMPUTE PAYS, DOES NOT PAY, or a 4,800-game confirmation). **Open before the night:** D514's
+   pilot found the budget mostly unspent: 4× the budget bought 1.41× the time a decision and 1.15× the rollouts,
+   because the race and `maxRounds` 12 end most decisions first. Whether the night runs the arms as registered or
+   adds arms that also lift `maxRounds` is the owner's call (D514's residuals).
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its

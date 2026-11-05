@@ -145,6 +145,7 @@ public final class DecisionSelfTest {
         searchWeek3();
         mullAndTargets();
         evalLeafOnly();
+        budgetOnly();
         explore();
         randomSeat();
 
@@ -433,6 +434,46 @@ public final class DecisionSelfTest {
         // The default stays the hand leaf: the live seat (search-v2) and parse's defaults name no model.
         check(SearchConfig.parseLive("").leafModel == null && SearchConfig.defaults().leafModel == null
                 && !SearchConfig.LIVE_DEFAULTS.contains("leaf"), "the live seat's leaf stays hand");
+    }
+
+    /**
+     * D514: the compute-curve arms {@code search-v2-ms3000} and {@code -ms6000}
+     * are search-v2 with ONE field changed, {@code budgetMs}.  Every other public
+     * field of the parsed config equals search-v2's (by reflection, as
+     * {@link #evalLeafOnly} does), so the budget's companions -- {@code maxRounds}
+     * 12, {@code minRounds} 2, the mulligan's own {@code mullMs} -- stay what
+     * search-v2 plays with, and the live seat's default budget stays 1500.
+     */
+    private static void budgetOnly() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        for (final int ms : new int[] {3000, 6000}) {
+            final String armText = v2Text.replace("ms=1500,", "ms=" + ms + ",");
+            final SearchConfig arm = SearchConfig.parse(armText);
+            check(arm.budgetMs == ms && arm.anytime && arm.maxRounds == 12 && arm.minRounds == 2 && arm.mullMs == v2.mullMs,
+                    "ms=" + ms + " is the arm's budget; the round caps and mullms are search-v2's");
+            check(arm.toString().equals(v2.toString().replace("ms=1500,", "ms=" + ms + ",")),
+                    "the text is search-v2's with ms changed: " + arm);
+            int compared = 0;
+            final List<String> differ = new ArrayList<>();
+            for (final java.lang.reflect.Field f : SearchConfig.class.getFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                    continue;
+                }
+                compared++;
+                try {
+                    if (!java.util.Objects.equals(f.get(v2), f.get(arm))) {
+                        differ.add(f.getName());
+                    }
+                } catch (final IllegalAccessException e) {
+                    differ.add(f.getName() + "?");
+                }
+            }
+            check(compared >= 25 && differ.equals(List.of("budgetMs")),
+                    "ms=" + ms + ": of " + compared + " config fields only budgetMs differs: " + differ);
+        }
+        check(SearchConfig.parseLive("").budgetMs == 1500 && !SearchConfig.LIVE_DEFAULTS.contains("ms="),
+                "the live seat's budget stays 1500 ms");
     }
 
     private static double[] rpDiff(final List<double[]> leaves, final int k) {

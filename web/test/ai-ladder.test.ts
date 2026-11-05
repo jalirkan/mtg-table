@@ -771,6 +771,28 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
   assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v2) does not turn them on');
 });
 
+test('D514: search-v2-ms3000 and -ms6000 are search-v2 (search-v1-anytime) with only the budget changed', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as { players: { name: string; kind: string; params: Record<string, unknown> }[] };
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  for (const [name, ms, hash] of [['search-v2-ms3000', 3000, '24df578ecda3'], ['search-v2-ms6000', 6000, '47f6efc97360']] as const) {
+    const p = by.get(name);
+    assert.ok(p?.cfg, `${name} is registered and playable`);
+    const pr = raw.players.find((x) => x.name === name)!;
+    assert.equal(pr.kind, v2raw.kind);
+    assert.deepEqual(pr.params, { ...v2raw.params, budgetMs: ms }, `${name}'s params are search-v2's but budgetMs`);
+    assert.deepEqual({ ...p!.resolved, budgetMs: 1500 }, v2.resolved, 'every resolved param but the budget is search-v2\'s');
+    assert.equal(p!.cfg, v2.cfg!.replace(/:ms=1500,/, `:ms=${ms},`), 'the seat config differs in ms= alone');
+    assert.notEqual(p!.cfg, v2.cfg);
+    assert.equal(p!.hash, hash, `${name}'s config hash (D514)`);
+  }
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+  // The budget's round-based companions are the kind's defaults, unscaled (D514 keeps them).
+  assert.match(v2.cfg!, /,maxrounds=12,/);
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
