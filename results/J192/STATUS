@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: compare_self == 1 (compare_self = 0)
 runner: forgecoach-runner ac07876b
 started: 2026-11-05T10:46:20-05:00
-phase: pilot 1/1
+finished: 2026-11-05T10:56:36-05:00
 mtg-table: 1d0d18f
 workers: 3
+peak_worker_rss_gb: 1.31
