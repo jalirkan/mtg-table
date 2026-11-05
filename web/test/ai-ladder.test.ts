@@ -772,7 +772,7 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
 });
 
 test('D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled', () => {
-  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as { players: { name: string; kind: string; params: Record<string, unknown> }[] };
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as { version: 1; players: { name: string; kind: string; params: Record<string, unknown> }[] };
   const reg = players(raw, REPO);
   const by = new Map(reg.map((x) => [x.name, x]));
   const v2 = by.get('search-v1-anytime')!;
