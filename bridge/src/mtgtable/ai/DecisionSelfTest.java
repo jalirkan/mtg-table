@@ -145,6 +145,7 @@ public final class DecisionSelfTest {
         searchWeek3();
         mullAndTargets();
         evalLeafOnly();
+        budgetAndRoundsOnly();
         explore();
         randomSeat();
 
@@ -433,6 +434,51 @@ public final class DecisionSelfTest {
         // The default stays the hand leaf: the live seat (search-v2) and parse's defaults name no model.
         check(SearchConfig.parseLive("").leafModel == null && SearchConfig.defaults().leafModel == null
                 && !SearchConfig.LIVE_DEFAULTS.contains("leaf"), "the live seat's leaf stays hand");
+    }
+
+    /**
+     * D514: the compute-curve arms {@code search-v2-ms3000-r24} and
+     * {@code -ms6000-r48} are search-v2 with TWO fields changed, together: the
+     * budget {@code budgetMs} and the round cap {@code maxRounds}, both scaled by
+     * the same factor (12 rounds at 1500 ms), so that only how much the search
+     * thinks changes.  Every other public field of the parsed config equals
+     * search-v2's (by reflection, as {@link #evalLeafOnly} does): the 2 minimum
+     * rounds, the mulligan's own {@code mullMs}, and any field added later.  The
+     * live seat's budget and cap stay 1500 ms and 12.
+     */
+    private static void budgetAndRoundsOnly() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        for (final int x : new int[] {2, 4}) {
+            final int ms = 1500 * x;
+            final int rounds = 12 * x;
+            final String armText = v2Text.replace("ms=1500,", "ms=" + ms + ",").replace("maxrounds=12,", "maxrounds=" + rounds + ",");
+            final SearchConfig arm = SearchConfig.parse(armText);
+            check(arm.budgetMs == ms && arm.maxRounds == rounds && arm.anytime && arm.minRounds == 2 && arm.mullMs == v2.mullMs,
+                    "x" + x + ": ms=" + ms + " and maxrounds=" + rounds + "; minRounds and mullms are search-v2's");
+            check(arm.toString().equals(v2.toString().replace("ms=1500,", "ms=" + ms + ",").replace("maxrounds=12,", "maxrounds=" + rounds + ",")),
+                    "the text is search-v2's with ms and maxrounds changed: " + arm);
+            int compared = 0;
+            final List<String> differ = new ArrayList<>();
+            for (final java.lang.reflect.Field f : SearchConfig.class.getFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                    continue;
+                }
+                compared++;
+                try {
+                    if (!java.util.Objects.equals(f.get(v2), f.get(arm))) {
+                        differ.add(f.getName());
+                    }
+                } catch (final IllegalAccessException e) {
+                    differ.add(f.getName() + "?");
+                }
+            }
+            check(compared >= 25 && new java.util.TreeSet<>(differ).equals(new java.util.TreeSet<>(List.of("budgetMs", "maxRounds"))),
+                    "x" + x + ": of " + compared + " config fields only budgetMs and maxRounds differ: " + differ);
+        }
+        final SearchConfig live = SearchConfig.parseLive("");
+        check(live.budgetMs == 1500 && live.maxRounds == 12 && !SearchConfig.LIVE_DEFAULTS.contains("ms=")
+                && !SearchConfig.LIVE_DEFAULTS.contains("maxrounds"), "the live seat stays 1500 ms and 12 rounds");
     }
 
     private static double[] rpDiff(final List<double[]> leaves, final int k) {

@@ -33,7 +33,7 @@ import { decide } from '../../tools/ai-ladder/league.ts';
 import { joinLog, type ExpLine } from '../../tools/ai-ladder/experiments.ts';
 import { split } from '../../tools/ai-ladder/decksets.ts';
 import { bootstrap, expected, fit, solve } from '../../tools/ai-ladder/rating.ts';
-import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Player } from '../../tools/ai-ladder/registry.ts';
+import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Player, type Registry } from '../../tools/ai-ladder/registry.ts';
 import { buildLadder, renderHtml } from '../../tools/ai-ladder/report.ts';
 import { appendResults, blockKey, fromBench, hashIndex, outcomes, readResults, type GameRecord, type Outcome } from '../../tools/ai-ladder/results.ts';
 import { batchPairs, choose, hostBase, mkey, type SchedPlayer, type SchedState } from '../../tools/ai-ladder/schedule.ts';
@@ -769,6 +769,29 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
   assert.equal(Number(/MULL_MS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullMs!.default);
   assert.equal(Number(/MULL_TURNS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullTurns!.default);
   assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v2) does not turn them on');
+});
+
+test('D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  assert.equal(v2.resolved.budgetMs, 1500);
+  assert.equal(v2.resolved.maxRounds, 12);
+  for (const [name, x, hash] of [['search-v2-ms3000-r24', 2, '994bf685f6b9'], ['search-v2-ms6000-r48', 4, '6bab8ca5e273']] as const) {
+    const ms = 1500 * x, rounds = 12 * x;
+    const p = by.get(name);
+    assert.ok(p?.cfg, `${name} is registered and playable`);
+    const pr = raw.players.find((y) => y.name === name)!;
+    assert.equal(pr.kind, v2raw.kind);
+    assert.deepEqual(pr.params, { ...v2raw.params, budgetMs: ms, maxRounds: rounds }, `${name}'s params are search-v2's but budgetMs and maxRounds`);
+    assert.deepEqual({ ...p!.resolved, budgetMs: 1500, maxRounds: 12 }, v2.resolved, "every other resolved param is search-v2's");
+    assert.equal(p!.cfg, v2.cfg!.replace(/:ms=1500,/, `:ms=${ms},`).replace(/,maxrounds=12,/, `,maxrounds=${rounds},`), 'the seat config differs in ms= and maxrounds= alone');
+    assert.equal(p!.hash, hash, `${name}'s config hash (D514)`);
+  }
+  for (const gone of ['search-v2-ms3000', 'search-v2-ms6000']) assert.ok(!by.has(gone), `${gone} (the budget-only arm) is not registered`);
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
