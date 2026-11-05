@@ -1,0 +1,73 @@
+==== J190 run9 started 2026-11-04T17:51:48-05:00 in unit lab-J190-run9, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (35 turns, winner B) lists 51 decision(s) of seat A; branching at 10: d0 (p, turn 2, 4 options), d5 (p, turn 4, 4 options), d9 (p, turn 8, 5 options), d12 (p, turn 10, 4 options), d19 (a, turn 12, 8 options), d26 (b, turn 17, 5 options), d33 (a, turn 22, 8 options), d37 (a, turn 24, 6 options), d42 (a, turn 28, 8 options), d50 (a, turn 34, 4 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d26-random-0: 125/125 branch game(s); 4452 branch games/h
+  [B 2/11] d0-random-0: 100/100 branch game(s); 4761 branch games/h
+  [B 3/12] d12-random-0: 100/100 branch game(s); 4748 branch games/h
+  [B 4/13] d5-random-0: 100/100 branch game(s); 4766 branch games/h
+  [B 5/14] d19-random-0: 200/200 branch game(s); 4796 branch games/h
+  [B 6/15] d26-random-25: 125/125 branch game(s); 4871 branch games/h
+  [B 7/15] d9-random-0: 125/125 branch game(s); 4877 branch games/h
+  [B 8/16] d0-random-25: 100/100 branch game(s); 5023 branch games/h
+  [B 9/18] d12-random-25: 100/100 branch game(s); 5017 branch games/h
+  [B 10/18] d5-random-25: 100/100 branch game(s); 5015 branch games/h
+  [B 11/20] d33-random-0: 200/200 branch game(s); 5030 branch games/h
+  [B 12/21] d19-random-25: 200/200 branch game(s); 5047 branch games/h
+  [B 13/23] d9-random-25: 125/125 branch game(s); 5091 branch games/h
+  [B 14/25] d35-random-0: 150/150 branch game(s); 5089 branch games/h
+  [B 15/26] d0-random-75: 75/75 branch game(s); 5102 branch games/h
+  [B 16/26] d0-random-50: 75/75 branch game(s); 5151 branch games/h
+  [B 17/28] d36-random-0: 75/75 branch game(s); 5150 branch games/h
+  [B 18/29] d5-random-50: 100/100 branch game(s); 5155 branch games/h
+  [B 19/29] d38-random-0: 75/75 branch game(s); 5174 branch games/h
+  [B 20/30] d19-random-50: 175/175 branch game(s); 5203 branch games/h
+  [B 21/30] d0-random-100: 50/50 branch game(s); 5202 branch games/h
+  [B 22/30] d0-random-125: 50/50 branch game(s); 5190 branch games/h
+  [B 23/30] d9-random-50: 125/125 branch game(s); 5259 branch games/h
+  [B 24/30] d40-random-0: 200/200 branch game(s); 5250 branch games/h
+  [B 25/31] d9-random-75: 125/125 branch game(s); 5290 branch games/h
+  [B 26/33] d37-random-0: 150/150 branch game(s); 5337 branch games/h
+  [B 27/34] d19-random-75: 175/175 branch game(s); 5346 branch games/h
+  [B 28/36] d5-random-75: 100/100 branch game(s); 5360 branch games/h
+  [B 29/38] d40-random-25: 200/200 branch game(s); 5435 branch games/h
+  [B 30/40] d19-random-100: 150/150 branch game(s); 5460 branch games/h
+  [B 31/40] d40-random-50: 75/75 branch game(s); 5487 branch games/h
+  [B 32/40] d40-random-75: 75/75 branch game(s); 5479 branch games/h
+  [B 33/42] d42-random-0: 200/200 branch game(s); 5476 branch games/h
+  [B 34/43] d5-random-100: 100/100 branch game(s); 5474 branch games/h
+  [B 35/43] d9-random-100: 125/125 branch game(s); 5481 branch games/h
+  [B 36/43] d41-random-0: 200/200 branch game(s); 5483 branch games/h
+  [B 37/44] d40-random-100: 50/50 branch game(s); 5514 branch games/h
+  [B 38/44] d40-random-125: 50/50 branch game(s); 5506 branch games/h
+  [B 39/44] d50-random-0: 100/100 branch game(s); 5564 branch games/h
+  [B 40/45] d5-random-125: 100/100 branch game(s); 5606 branch games/h
+  [B 41/45] d19-random-125: 150/150 branch game(s); 5610 branch games/h
+  [B 42/45] d50-random-25: 100/100 branch game(s); 5602 branch games/h
+  [B 43/47] d50-random-50: 100/100 branch game(s); 5684 branch games/h
+  [B 44/47] d50-random-75: 100/100 branch game(s); 5684 branch games/h
+  [B 45/49] d41-random-25: 200/200 branch game(s); 5692 branch games/h
+  [B 46/51] d9-random-125: 125/125 branch game(s); 5754 branch games/h
+  [B 47/51] d42-random-25: 200/200 branch game(s); 5759 branch games/h
+  [B 48/53] d50-random-125: 100/100 branch game(s); 5772 branch games/h
+  [B 49/53] d50-random-100: 100/100 branch game(s); 5772 branch games/h
+  [B 50/53] d41-random-50: 75/75 branch game(s); 5746 branch games/h
+  [B 51/53] d41-random-75: 75/75 branch game(s); 5737 branch games/h
+  [B 52/55] d41-random-125: 50/50 branch game(s); 5707 branch games/h
+  [B 53/55] d41-random-100: 50/50 branch game(s); 5706 branch games/h
+  [B 54/55] d42-random-75: 200/200 branch game(s); 5472 branch games/h
+  [B 55/55] d42-random-50: 200/200 branch game(s); 5445 branch games/h
+  [B 56/57] d42-random-125: 175/175 branch game(s); 5191 branch games/h
+  [B 57/57] d42-random-100: 175/175 branch game(s); 5163 branch games/h
+atlas: the checks on 6 workers took 220 s
+atlas: /home/justin-a/code/lab/data/lab-j190/b-s09-pauper-2925/atlas.json and atlas.md; phase A 0 game(s), phase B 7000 branch game(s) at 15 decision(s); checks: clean (258229 rows, 14002 frame logs, 15 leak check(s))
+  atlas warning: d41 option 5 `attack:1,19,39` (attack Luminous Phantom+Mesa Pegasus+Icatian Scout): 42 of 150 branch game(s) were capped (random 42 of 150): 42 x ended at the turn cap
+  atlas warning: d42 option 0 `attack:19,39` (attack Mesa Pegasus+Icatian Scout): 89 of 150 branch game(s) were capped (random 89 of 150): 89 x ended at the turn cap
+  atlas warning: d42 option 1 `attack:none` (attack none): 44 of 100 branch game(s) were capped (random 44 of 100): 44 x ended at the turn cap
+  atlas warning: d42 option 2 `attack:1,10,12,19,39` (attack Mesa Pegasus+Icatian Scout+Savannah Lions+Luminous Phantom+Repentant Blacksmith): 91 of 150 branch game(s) were capped (random 91 of 150): 91 x ended at the turn cap
+  atlas warning: d42 option 3 `attack:39` (attack Icatian Scout): 94 of 150 branch game(s) were capped (random 94 of 150): 94 x ended at the turn cap
+  atlas warning: d42 option 4 `attack:19` (attack Mesa Pegasus): 78 of 150 branch game(s) were capped (random 78 of 150): 78 x ended at the turn cap
+  atlas warning: d42 option 5 `attack:10,19,39` (attack Mesa Pegasus+Icatian Scout+Savannah Lions): 92 of 150 branch game(s) were capped (random 92 of 150): 92 x ended at the turn cap
+  atlas warning: d42 option 6 `attack:1,19,39` (attack Mesa Pegasus+Icatian Scout+Luminous Phantom): 79 of 150 branch game(s) were capped (random 79 of 150): 79 x ended at the turn cap
+  atlas warning: d42 option 7 `attack:12,19,39` (attack Mesa Pegasus+Icatian Scout+Repentant Blacksmith): 93 of 150 branch game(s) were capped (random 93 of 150): 93 x ended at the turn cap
