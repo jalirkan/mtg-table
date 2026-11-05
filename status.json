@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-05T05:34:27-05:00",
- "heartbeat": "2026-11-05T05:34:27-05:00",
+ "updated": "2026-11-05T05:37:21-05:00",
+ "heartbeat": "2026-11-05T05:37:21-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.05,
-  "memUsedGb": 6.2,
+  "load1": 7.67,
+  "memUsedGb": 4.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4206,
+  "swapUsedMb": 4195,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J191",
    "title": "The move atlas, rung 4b, night fourteen -- J190's night carried onto the same seat and the same pin (D509: the atlas seat frozen between landings; the pin fe063f94 is J188's and J190's, nothing merged since, so D510's target record (`option:hidden`: record-only), D511's replay (a sink that writes nothing: CubeLab.java only) and D512's checker admission are J190's, and `seat_code` admits exactly D510's and D511's numstat since J186's pin, J190's line byte for byte) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j191, at deck seeds 2901-2913 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 3001-3013; a validation draw made fresh at deck seeds 3101-3113 (game seeds 3201-3213 reserved); THE FIFTH NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines, J187's thirteen, J188's thirteen and J190's thirteen; J190's night read beside, by position; one new information line, `atlas_mapsa_ise` (the seat queue's row 8 candidate, found on J190's s12)",
    "cpu": "heavy",
-   "phase": "commands 7/15",
+   "phase": "commands 8/15",
    "started": "2026-11-04T22:27:41-05:00",
-   "elapsed": 25606,
+   "elapsed": 25780,
    "done": 34650,
    "total": 64000,
    "unit": "lines",
-   "ratePerHour": 2967,
-   "eta": "2026-11-05T15:27:59-05:00",
+   "ratePerHour": 2761.6,
+   "eta": "2026-11-05T16:15:01-05:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 1,
    "paused": false,
    "dataUpdated": "2026-11-05T05:33:23-05:00",
-   "memGb": 3.25,
+   "memGb": 0,
    "live": {
     "branches": 34650,
     "atlas.spinesDone": 6,
@@ -160,7 +160,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J191-run7"
+   "detail": "lab-J191-run8"
   }
  ],
  "queue": [],
