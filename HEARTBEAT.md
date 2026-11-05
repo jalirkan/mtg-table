@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-05T00:44:16-05:00
+- time: 2026-11-05T00:48:52-05:00
 - runner: ac07876b, up since 2026-11-01T21:41:21-05:00
-- running: J191 commands 2/15, 10738/64000 lines, 9775/h, ETA 2026-11-05T06:11:12-05:00, 6 worker(s), 7 core(s)
+- running: J191 commands 3/15, 11080/64000 lines, 9778.5/h, ETA 2026-11-05T06:13:35-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.5; memory 10.7/30.5 GB, swap 5232 MB, pressure 0% (lab budget 23.4 GB)
+- load: 6.92; memory 4.9/30.5 GB, swap 4972 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J190 done at 2026-11-04T22:01:12-05:00: branches 61450 · atlas.spinesDone 13 · atlas.labels 86 · atlas.confident 17 · atlas.partialLabels 38 · atlas.futileStopped 38 · atlas.futileControls 14 · atlas.confidentPerWorkerHour 0.273 · atlas.confidentPer7Worker10hNight 19.1 · atlas.refusedCastShare 0.007 · atlas.refusedCastOptions 0 · atlas.failedToPlay 3289 · atlas.cardTargetShare 0.191 · atlas.lostCastOptions 0 · atlas.legacyNullTargetRecords 0 · atlas.timeoutShare 0 · atlas.problems 0
