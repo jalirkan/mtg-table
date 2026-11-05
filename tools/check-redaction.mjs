@@ -249,8 +249,9 @@ const REVEALS_EVERY_TOP = new Set(['Field of Dreams', 'Lantern of Insight', 'Wiz
  * snapshot cut between the two lists the opponent's Oracle of Mul Daya in their
  * zone under the viewer's control, beside the opponent's top card that the
  * static last revealed -- public, and the zone's player's.  "Either the zone's
- * player or the controller" is rejected: in the only frame where they differ,
- * the controller's top is not yet revealed.
+ * player or the controller" is rejected: outside a tracker freeze (which D399
+ * holds) the only frame where they differ is that one, and in it the
+ * controller's top is not yet revealed.
  */
 function revealedTopsOf(players) {
   const out = new Set();
