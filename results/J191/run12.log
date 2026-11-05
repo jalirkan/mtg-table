@@ -1,0 +1,47 @@
+==== J191 run12 started 2026-11-05T07:07:30-05:00 in unit lab-J191-run12, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (20 turns, winner B) lists 18 decision(s) of seat A; branching at 10: d1 (p, turn 3, 4 options), d2 (p, turn 3, 4 options), d5 (p, turn 5, 4 options), d6 (p, turn 7, 4 options), d8 (p, turn 7, 4 options), d11 (p, turn 9, 4 options), d12 (p, turn 11, 4 options), d13 (a, turn 11, 3 options), d15 (p, turn 11, 3 options), d16 (p, turn 13, 3 options)
+atlas phase B: the cut design (D480): decisions with 3+ options first; the screen at 25 branches (settled at <= 0.04 or >= 0.96, replaced); early stopping at 50/100 (option 0 never stops; the Forge map on the options still running); the futility stop at 50 (D489: option 0 best or within 0; 0.25 of those played on as controls); checkpoints 25/50/100/150
+atlas phase B: 10 unit(s) to play now (more as each checkpoint is passed) (0 done), chunks of 25 branches, on 6 worker(s)
+  [B 1/10] d2-random-0: 100/100 branch game(s); 5887 branch games/h
+  [B 2/11] d6-random-0: 100/100 branch game(s); 5890 branch games/h
+  [B 3/12] d8-random-0: 100/100 branch game(s); 5950 branch games/h
+  [B 4/13] d5-random-0: 100/100 branch game(s); 5949 branch games/h
+  [B 5/14] d1-random-0: 100/100 branch game(s); 5952 branch games/h
+  [B 6/15] d11-random-0: 100/100 branch game(s); 6018 branch games/h
+  [B 7/16] d5-random-25: 100/100 branch game(s); 6410 branch games/h
+  [B 8/16] d2-random-25: 100/100 branch game(s); 6417 branch games/h
+  [B 9/16] d6-random-25: 100/100 branch game(s); 6423 branch games/h
+  [B 10/18] d1-random-25: 100/100 branch game(s); 6408 branch games/h
+  [B 11/20] d8-random-25: 100/100 branch game(s); 6462 branch games/h
+  [B 12/20] d11-random-25: 100/100 branch game(s); 6557 branch games/h
+  [B 13/22] d1-random-50: 75/75 branch game(s); 6623 branch games/h
+  [B 14/22] d13-random-0: 75/75 branch game(s); 6630 branch games/h
+  [B 15/23] d12-random-0: 100/100 branch game(s); 6695 branch games/h
+  [B 16/24] d1-random-75: 75/75 branch game(s); 6690 branch games/h
+  [B 17/26] d11-random-50: 50/50 branch game(s); 6698 branch games/h
+  [B 18/26] d6-random-50: 100/100 branch game(s); 6691 branch games/h
+  [B 19/26] d11-random-75: 50/50 branch game(s); 6734 branch games/h
+  [B 20/28] d13-random-25: 75/75 branch game(s); 6759 branch games/h
+  [B 21/28] d1-random-100: 75/75 branch game(s); 6766 branch games/h
+  [B 22/28] d1-random-125: 75/75 branch game(s); 6791 branch games/h
+  [B 23/28] d11-random-100: 50/50 branch game(s); 6777 branch games/h
+  [B 24/28] d12-random-25: 100/100 branch game(s); 6784 branch games/h
+  [B 25/30] d11-random-125: 50/50 branch game(s); 6796 branch games/h
+  [B 26/30] d6-random-75: 100/100 branch game(s); 6800 branch games/h
+  [B 27/32] d15-random-0: 75/75 branch game(s); 6836 branch games/h
+  [B 28/33] d16-random-0: 75/75 branch game(s); 6882 branch games/h
+  [B 29/34] d12-random-75: 100/100 branch game(s); 6905 branch games/h
+  [B 30/34] d12-random-50: 100/100 branch game(s); 6901 branch games/h
+  [B 31/36] d15-random-25: 75/75 branch game(s); 6904 branch games/h
+  [B 32/36] d6-random-125: 100/100 branch game(s); 6898 branch games/h
+  [B 33/36] d6-random-100: 100/100 branch game(s); 6859 branch games/h
+  [B 34/36] d16-random-25: 75/75 branch game(s); 6817 branch games/h
+  [B 35/38] d12-random-125: 100/100 branch game(s); 6768 branch games/h
+  [B 36/38] d16-random-50: 75/75 branch game(s); 6767 branch games/h
+  [B 37/38] d16-random-75: 75/75 branch game(s); 6742 branch games/h
+  [B 38/40] d12-random-100: 100/100 branch game(s); 6731 branch games/h
+  [B 39/40] d16-random-125: 75/75 branch game(s); 6450 branch games/h
+  [B 40/40] d16-random-100: 75/75 branch game(s); 6443 branch games/h
+atlas: the checks on 6 workers took 75 s
+atlas: /home/justin-a/code/lab/data/lab-j191/b-s12-powered-3012/atlas.json and atlas.md; phase A 0 game(s), phase B 3450 branch game(s) at 10 decision(s); checks: clean (131233 rows, 6902 frame logs, 10 leak check(s))
