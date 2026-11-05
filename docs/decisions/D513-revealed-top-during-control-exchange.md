@@ -58,8 +58,19 @@ On the pinned jar, `resolveStack`'s bytecode constructs `GameEventSpellResolved`
 `GameAction.checkStaticAbilities()` and `finishResolving`, in that order; the three-argument `checkStaticAbilities`
 invokes `Tracker.freeze`, `StaticEffects.clearStaticEffects`, the layers, `controllerChangeZoneCorrection` and
 `Tracker.unfreeze`, in that order; `ControlExchangeEffect.resolve` invokes `addTempController` twice; and
-`addTempController` invokes `CardView.updateController`. The frame itself says it was cut before the freeze: card 45 is
-still listed, and `PlayerMayLook` ignores the freeze (D399), so a frame cut after `clearStaticEffects` would have lost it.
+`addTempController` invokes `CardView.updateController`.
+
+**Which properties move inside the freeze.** At the tag, `TrackableProperty.java` marks `PlayerMayLook` (line 89) and
+`Battlefield` (line 189) `FreezeMode.IgnoresFreeze`, while `Controller` (line 23) respects the freeze. So inside
+`checkStaticAbilities` a cut would see the reveal and the zone listing move as they happen: after `clearStaticEffects`
+the reveal of player 1's top is gone; after the layers re-apply it is on the **field's** player's top (the Oracle's
+`YouCtrl` now reads the new controller); only after `controllerChangeZoneCorrection` does the battlefield listing move.
+A frame cut between the layers and the zone correction would show the old zone, the new field, and the reveal already on
+the field's player's top -- the one window where the zone's player is the wrong reading. **The J191 frames are outside
+the freeze**, and the frames say so themselves: card 45 is still listed in player 1's library (so the cut came before
+`clearStaticEffects`), and the viewer's own `library.cards` is `[]` (so it did not come after the layers re-applied,
+which would have revealed the viewer's top, as line 502 shows). They were cut after the field moved and before the
+freeze.
 
 **Not a leak.** In the cut frame the engine's permission on card 45 is still the one the Oracle granted while player 1
 controlled it: the statics were last computed before the exchange, and are recomputed together with the zone correction.
@@ -76,23 +87,24 @@ the viewer's top (which needs no voucher) and not player 1's, and player 1's one
 player, whatever the card's `controller` field says. `REVEALS_EVERY_TOP` is unchanged (every player's top, whoever
 controls it). D501's `revealedTopCard` is unchanged in form -- `p` not the viewer, exactly one card, `revealedTopsOf`
 holds `p` -- and so is the `--empty-hand-ok` proof; both now read the zone's player through `revealedTopsOf`. A3's
-message, its census and its stats line are unchanged.
+message, its census and its stats line are unchanged. The reading is the engine's in every frame cut outside a tracker
+freeze, which D399 holds; the frames D399's hold can miss are a residual (below).
 
 **Why the zone's player.** Forge recomputes the "top card revealed" grant and moves a permanent between battlefields in
-the same `checkStaticAbilities` pass, inside one tracker freeze, and D399 holds every flush inside a freeze. So in every
-frame the bridge writes, the grant was computed against the controller the permanent had when it was last placed in its
-zone. A one-shot change of control (an exchange's `addTempController`) moves the `controller` field at once and the
-grant and the zone together later: between the two, the zone's player is the player whose top the engine is revealing,
+the same `checkStaticAbilities` pass, inside one tracker freeze. **The argument rests on D399**, which holds every flush
+inside a freeze: in every frame cut outside a tracker freeze, which D399 holds, the grant was computed against the
+controller the permanent had when it was last placed in its zone. A one-shot change of control (an exchange's
+`addTempController`) moves the `controller` field at once and the grant and the zone together later: between the two, the zone's player is the player whose top the engine is revealing,
 and the field names a player whose top is not revealed yet.
 
 **Rejected.**
-- **Either the zone's player or the controller.** In the only frame where the two differ, the controller's top is not
-  revealed: the grant still rests on the zone's player. "Either" would vouch for one card of the controller's library in
+- **Either the zone's player or the controller.** In the only frame outside a tracker freeze (which D399 holds) where
+  the two differ, the controller's top is not revealed: the grant still rests on the zone's player. "Either" would vouch for one card of the controller's library in
   that frame, which is exactly the one-card dump A3 exists to catch. The control
   `a3-revealer-in-the-viewer-zone-controlled-by-the-opponent` pins it: the viewer's own Oracle, still listed on the
   viewer's battlefield as the opponent's exchange resolves, its field already the opponent's, and the opponent's
-  library listing a card. An engine cut there lists nothing of the opponent's library (the grant is still on the
-  viewer's top), so a listed card is a leak, and only the zone reading fails it.
+  library listing a card. An engine cut there, outside a freeze, lists nothing of the opponent's library (the grant is
+  still on the viewer's top), so a listed card is a leak, and only the zone reading fails it.
 - **The controller field alone (as before).** It refused J191's two frames, which are public.
 - **Admitting the lag frame by its evidence** (an exchange's stack item and `resolved` in the frame, the field ahead of
   the zone), D512-style. The zone reading needs no window, no evidence and no deferral, and it is right outside the lag
@@ -109,6 +121,13 @@ and the field names a player whose top is not revealed yet.
 - A census of s08's state frames: a top-revealing permanent is listed in 74,223 of them (1,030 logs), and its
   `controller` field names another player than its zone's in exactly two, the two above; in both, the zone's player's
   library lists one card and the controller's none.
+- A census of all thirteen J191 spines (every `phaseB/frames/*.jsonl.gz` of `lab-j191/b-s??-*-3???`, 114,550 branch
+  logs, 26,892,017 state frames, read only): a `REVEALS_OWN_TOP` or `REVEALS_EVERY_TOP` permanent is listed face up on a
+  battlefield in 210,799 state frames of 2,520 logs (all `REVEALS_OWN_TOP`; no `REVEALS_EVERY_TOP` card appears), and its
+  zone's player differs from its `controller` field in exactly two, `b121:501` and `b5:261`, both s08. The 26 baseline
+  logs (13,072 state frames) list no top-revealing permanent. Every other spine's `atlas.json` reads
+  `frameLogsFailed: 0`. (The review's census counted 3,709 logs because it counted a log that names a revealer anywhere
+  in its text; the frame counts agree.)
 - D512's three corpora (J187 s06, J183 s11, J182 s06; 26,950 logs) under `--empty-hand-ok`: 0 failures on either
   checker. None lists a top-revealing permanent, so they re-check only that nothing else moved.
 - `fixtures/games/` and `fixtures/synthetic/` (23 files): every one PASS, and each prints byte-for-byte what `main`'s
@@ -135,18 +154,37 @@ and the field names a player whose top is not revealed yet.
 - **A gain-control effect moves the zone in the effect, not in the pass.** `ControlGainEffect` (a Threaten, an Act of
   Treason, Control Magic's one-shot cousins) calls `controllerChangeZoneCorrection` itself (`ControlGainEffect.java:236`
   at the tag), before `resolveStack` re-applies the statics. A snapshot cut on that `resolved` would list the taken
-  Oracle under its new controller's battlefield with the old controller's top card still public. If the viewer takes
-  the opponent's Oracle that way, that frame fails A3 under either reading: the frame-after control's shape, which is
-  refused here as it was. If the opponent takes the viewer's Oracle that way, the zone reading vouches for the
-  opponent's top in a frame where the engine has not revealed it yet: a one-card window the log cannot rule out, of the
-  same kind as A3's every vouch (the checker cannot see the engine's permission). Neither has been seen; each needs its
-  own decision if a night shows one.
+  Oracle under its new controller's battlefield with the old controller's top card still public. After
+  `ControlGainEffect.java:236` the zone and the field agree, so the two readings agree too. If the viewer takes the
+  opponent's Oracle that way, that frame fails A3 under either reading: the frame-after control's shape, which is refused
+  here as it was. If the opponent takes the viewer's Oracle that way, either reading vouches for the opponent's top in a
+  frame where the engine has not revealed it yet: a one-card window the log cannot rule out, which the old rule had too
+  (it is not new with D513), of the same kind as A3's every vouch (the checker cannot see the engine's permission).
+  Neither has been seen; each needs its own decision if a night shows one.
+- **D399's hold is not absolute.** The zone reading is right only outside a tracker freeze. D399 keeps frames cut inside
+  `checkStaticAbilities` off the wire, but its valve gives up after `MidMove.MAX_HELD_FROZEN = 256` held flushes in a row
+  (`MidMove.java:111`, checked at `:144`), and a live seat's `ask` builds its frame at once (`WireGuiGame.ask` →
+  `flushState`, D399's point 3). A frame cut there between the layers and the zone correction shows the old zone, the
+  new field and the reveal on the field's player's top: the zone reading would then accept a one-card listing of the
+  zone's player's library in a viewer-takes frame if the bridge leaked it, and fail a correct mirror frame (the
+  opponent's take of the viewer's revealer, the opponent's top already public). Neither has been seen (the census above
+  finds no such frame); PLAN's cube-lab follow-up 36 holds it.
+- **The rule needs no evidence of an exchange, and no bound on how long the mismatch lasts.** A revealer whose zone and
+  field disagree in any frame, for any number of frames, vouches for the zone's player's top. The review built two
+  fixtures (a mismatch held across states, and a single mismatched frame with no exchange on the stack) that pass here
+  and fail on `main`. A cheap bound: accept a mismatch only when the next state frame resolves it (the revealer listed
+  under its field's player, or the field back to the zone's). Follow-up 36.
+- **The checker has no rule that a card id appears in one zone only.** The review's fixture lists the viewer's Oracle in
+  both battlefields beside one opponent library card: it passes here (the copy in the opponent's zone vouches for their
+  top) and fails on `main` (lines 4 and 5). Reaching it needs D352's mid-move valve to give up inside a battlefield-to-battlefield
+  move. A cross-zone id-uniqueness check is the follow-up (36).
 - **What flushed at the `resolved` event is not established.** In both logs 19 ms of wall time and eight events separate
   the cut frame from the one before it (neither of the forwarder's thresholds, 50 events or 500 ms), and no decision
   record lies between the cut frame and the next. The reading does not depend on it: the frame was cut before the freeze
-  (card 45 is listed) and after the field moved.
+  (card 45 is listed and the viewer's library is `[]`) and after the field moved.
 
-**J191's night.** The check failed on the checker, not on a leak: s08's data stands, and so do the other twelve spines',
+**J191's night.** The check failed on the checker, not on a leak: s08's data stands. The other twelve spines'
+`atlas.json` files read `frameLogsFailed: 0`, and the census above finds the zone/field mismatch in no frame of theirs,
 so J192 pools J191's thirteen spines.
 
 **docs/protocol.md** needs no change: the wire shape is unchanged.

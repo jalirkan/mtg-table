@@ -446,7 +446,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 33 | open | The entity path has the gap D510 closed on the target path: a hidden pick not in the list is written `option:hidden` without being counted or listed; one such pick fails "not among its options", a list of them passes silently | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Cube lab](#fu-cube-lab) | 34 | open | A recorded game is not its unrecorded twin: D347's records move Forge's `AiCardMemory` (D511 makes an atlas unit's replay the recorded game; census-replay's `--record full` against a rows-mode game is still exposed, unmeasured); the cause's fix changes branch play, for D509's queue; and s04's branch rows name created objects by ids that move between reruns | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
-| [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; a gain-control effect that moves the zone in the effect (a Threaten), cut on its `resolved`, still fails, and its mirror is a one-frame vouch the log cannot rule out | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
+| [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10262,8 +10262,22 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    failing by design: a gain-control effect (`ControlGainEffect`, a Threaten) moves the zone in the effect, before the
    statics re-apply, so a frame cut on its `resolved` lists the taken Oracle under the viewer beside the opponent's
    still-public top, which A3 refuses under either reading; and in the mirror (the opponent takes the viewer's Oracle that
-   way) the zone reading vouches for the opponent's top one frame before the engine reveals it, a window the log cannot
-   rule out. Each needs its own decision if a night shows one.
+   way) either reading vouches for the opponent's top one frame before the engine reveals it, a window the log cannot
+   rule out and not new with D513 (after `ControlGainEffect.java:236` the zone and the field agree). Each needs its own
+   decision if a night shows one. Three more, from D513's review (2026-11-05), to record, not to build now:
+   (a) **the reading rests on D399.** `PlayerMayLook` and `Battlefield` ignore the tracker freeze and `Controller`
+   respects it (`TrackableProperty.java:89, 189, 23` at the tag), so a frame cut inside `checkStaticAbilities` after the
+   layers re-apply and before `controllerChangeZoneCorrection` shows the old zone, the new field and the reveal on the
+   field's player's top: there the zone reading would accept a leaked one-card listing in a viewer-takes frame and fail
+   a correct mirror frame. D399 holds such flushes, but its valve gives up after `MidMove.MAX_HELD_FROZEN = 256`
+   (`MidMove.java:111`, `:144`) and a live `ask` builds its frame at once; none seen (the census of J191's 114,550
+   branch logs finds the mismatch only in s08's two frames, both outside the freeze). (b) **The mismatch is admitted
+   with no evidence of an exchange and no bound on its duration**: the review's fixtures (a mismatch held across six
+   states; a single mismatched frame with no exchange) pass on the branch and fail on `main`. A cheap bound accepts a
+   mismatch only when the next state frame resolves it. (c) **No rule that a card id appears in one zone only**: the
+   viewer's Oracle listed in both battlefields beside one opponent library card passes on the branch and fails on
+   `main` (lines 4 and 5). Hard to reach (D352's mid-move valve would have to give up inside a battlefield-to-battlefield
+   move); a cross-zone id-uniqueness check is the follow-up.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its

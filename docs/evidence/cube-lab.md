@@ -465,7 +465,16 @@ The two J191 logs pass with 97 and 95 states counted as `an opponent's top card 
 every state frame (a `REVEALS_OWN_TOP` card listed in one player's battlefield with a `controller` field naming the
 other): s08 has a top-revealing permanent in 74,223 state frames of 1,030 logs, and the field and the zone disagree in
 exactly two, the two failing frames; in both the zone's player's library lists one card and the controller's (the
-viewer's) lists none. D512's three corpora list no top-revealing permanent at all, so they re-check only that nothing
+viewer's) lists none, which also places both cuts outside `checkStaticAbilities`' tracker freeze (before
+`clearStaticEffects`, which would have dropped card 45, and not after the layers re-applied, which would have revealed the
+viewer's top). The same census over all thirteen J191 spines (every `phaseB/frames/*.jsonl.gz` of
+`lab-j191/b-s??-*-3???`, read only): 114,550 branch logs, 26,892,017 state frames; a top-revealing permanent (all
+`REVEALS_OWN_TOP`, no `REVEALS_EVERY_TOP` card appears) is listed in 210,799 state frames of 2,520 logs, and the zone and
+the field disagree in exactly the same two frames. The 26 baseline logs (13,072 state frames) list none, and every other
+spine's `atlas.json` reads `frameLogsFailed: 0`, so J191's thirteen spines stand on measurement. (The review counted
+3,709 logs by a revealer's name anywhere in a log's text; the frame counts agree.) The zone reading rests on D399's
+hold, which is not absolute (its 256-flush valve, a live `ask`'s immediate frame): decision D513's residuals and
+follow-up 36. D512's three corpora list no top-revealing permanent at all, so they re-check only that nothing
 else moved. `fixtures/games/` and `fixtures/synthetic/` (23 files, all PASS) print byte-for-byte what `main`'s checker
 prints. The self-test has 249 controls (245 before), every existing file byte-identical: 4 new (1 PASS, counted; 3
 FAIL), and the D501 block's s07 shape cut inside the exchange (a WARN under `--empty-hand-ok`) with its two-card twin
