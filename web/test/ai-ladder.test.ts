@@ -33,7 +33,7 @@ import { decide } from '../../tools/ai-ladder/league.ts';
 import { joinLog, type ExpLine } from '../../tools/ai-ladder/experiments.ts';
 import { split } from '../../tools/ai-ladder/decksets.ts';
 import { bootstrap, expected, fit, solve } from '../../tools/ai-ladder/rating.ts';
-import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Player } from '../../tools/ai-ladder/registry.ts';
+import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Player, type Registry } from '../../tools/ai-ladder/registry.ts';
 import { buildLadder, renderHtml } from '../../tools/ai-ladder/report.ts';
 import { appendResults, blockKey, fromBench, hashIndex, outcomes, readResults, type GameRecord, type Outcome } from '../../tools/ai-ladder/results.ts';
 import { batchPairs, choose, hostBase, mkey, type SchedPlayer, type SchedState } from '../../tools/ai-ladder/schedule.ts';
@@ -772,7 +772,7 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
 });
 
 test('D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytime) with only the budget and the round cap scaled', () => {
-  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as { version: 1; players: { name: string; kind: string; params: Record<string, unknown> }[] };
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
   const reg = players(raw, REPO);
   const by = new Map(reg.map((x) => [x.name, x]));
   const v2 = by.get('search-v1-anytime')!;
