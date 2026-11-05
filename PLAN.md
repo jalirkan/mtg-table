@@ -10287,7 +10287,7 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    `maxRounds` scaled together, 3000 ms and 24 rounds and 6000 ms and 48, every other param its own (the 2 minimum
    rounds, the race, the step cap, the step clock). A budget alone was mostly unspent: D514's first pilot found 4×
    the clock bought 1.41× the time a decision and about 15% more rollouts, because the round cap and the race end
-   most decisions first. The scaled arms' pilot played 1.76× and 3.07× search-v2's rollouts. For measurement only:
+   most decisions first. The scaled arms' pilot played 1.75× and 3.07× search-v2's rollouts. For measurement only:
    the live seat stays search-v2 at 1.5 s. The night that uses them is the compute-curve night, the play-AI review's
    (`~/code/pc-results/study/play-ai-review-2026-11-05.md`) §5 rows 1 and 2, not yet posted (the first job after
    J193): search-v2 vs forge-default (the re-anchor), search-v2-ms6000-r48 vs search-v2 and search-v2-ms3000-r24 vs

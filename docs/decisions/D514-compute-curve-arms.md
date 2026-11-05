@@ -49,8 +49,9 @@ second limit. A production model needs to be fast but we can experiment for test
    comes first, so scaling one without the other leaves the other binding (the first pilot, below). Every other
    limit beside them stays search-v2's:
    - **`minRounds` 2** (`rounds=2`) and the **anytime race**, from round 3 at z 2 (`Anytime.RACE_FROM`, `RACE_Z`),
-     which ends a decision once only Forge's answer is left: counted in rounds and intervals, so they mean the same
-     thing at any budget. `Anytime.pruneToBudget` prunes the candidates to what the time left can carry, so it
+     which ends a decision once only Forge's answer is left: counted in rounds and intervals, with no correction for
+     the repeated looks, so with 48 rounds the chance of retiring a truly better alternative is higher than with 12
+     (the census: 54% of r48's decisions race-ended, search-v2's 45%). `Anytime.pruneToBudget` prunes the candidates to what the time left can carry, so it
      follows the budget by design;
    - **each rollout's step cap, 20,000 engine steps**, and its step clock **2 s past the deadline**
      (`STEP_GRACE_NS`, D468): a guard against a step that never ends, not a share of the budget;
@@ -136,9 +137,10 @@ second limit. A production model needs to be fast but we can experiment for test
   | ms6000-r48 vs search-v2 | search-v2-ms6000-r48 | **2,486.5** | 44.8 | 19.64 |
   |  | search-v1-anytime | **828.7** | 14.6 | 5.81 |
 
-  ×2 and ×4 bought 1.84× and 3.00× the time a decision and **1.76× and 3.07× the rollouts**. The games took longer:
+  ×2 and ×4 bought 1.84× and 3.00× the time a decision and **1.75× and 3.07× the rollouts** (24.36 / 13.94 and 44.8 / 14.6). The games took longer:
   ms3000-r24's four 33–77 s (224 s in all) and ms6000-r48's 61–119 s (344 s), against 177–190 s for the same four
-  deals at search-v2's compute.
+  deals in the budget-only pilots, where one side already spent 1.34–1.41× search-v2's time; against a true search-v2
+  mirror the stretch is about 1.45× and 2.2×.
 - **How decisions end: a census.** The pilots' counters are sums, and no counter says why a decision stopped. Each
   searched decision's record (D347: `rounds`, `timedOut`, `fallback`) does, so the same four deals were played again
   per arm through `AiBench play` directly with `--record-all` (the same seat configs, pairs file and `--seed
@@ -174,9 +176,10 @@ second limit. A production model needs to be fast but we can experiment for test
   side's rollouts a decision from the match line's counters, so the verdict is read against the compute actually
   spent.
 - **The arms' games take longer.** In the pilots, ms3000-r24's four games took about 1.2× and ms6000-r48's about
-  1.9× as long as the same deals at search-v2's compute, under the review's 2.5× estimate for a 6 s side; its §5
+  1.9× as long as the same deals in the budget-only pilots, whose one side already thought 1.34–1.41× longer; against
+  a true search-v2 mirror that is about 1.45× and 2.2×, near the review's 2.5× estimate for a 6 s side, so its §5
   costs (about 5.5 h for ms6000's 1,200 games and 3.3 h for ms3000's on 7 workers, about 11 h with the re-anchor)
-  stand as an upper bound. The longest pilot game was 119 s, inside the ladder's 300 s per-game timeout
+  are an estimate, not an upper bound; the night's per-match caps are sized for about 3.5×. The longest pilot game was 119 s, inside the ladder's 300 s per-game timeout
   (`--game-timeout`); a long game at ×4 could come nearer it, and the match line counts timeouts.
 - **Nothing counts a decision's ending on the match line.** The census reads it from recorded games; the
   ladder's counters (`search.rounds`, `search.rollouts`, `search.anytime.retired`) are sums. A counter per ending
