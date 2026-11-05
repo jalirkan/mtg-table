@@ -1,0 +1,1786 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s02-peasant-2818/decks/peasant-2818-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s02-peasant-2818/decks/peasant-2818-00002.dck",
+    "seed": 2918,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 16,
+      "first": "A",
+      "decisionsListed": 20
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 115,
+              "draws": 2,
+              "losses": 33,
+              "mean": 0.7733,
+              "lo": 0.7,
+              "hi": 0.833
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:1",
+            "label": "Path to the World Tree",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 1,
+              "losses": 25,
+              "mean": 0.83,
+              "lo": 0.7618,
+              "hi": 0.8817
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Lifeforce",
+            "random": {
+              "n": 50,
+              "wins": 37,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.74,
+              "lo": 0.6045,
+              "hi": 0.8413
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0567,
+          "regretLo": 0,
+          "regretHi": 0.1333,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8667,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.09
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Path to the World Tree",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 4,
+              "losses": 33,
+              "mean": 0.7667,
+              "lo": 0.6928,
+              "hi": 0.8272
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 108,
+              "draws": 1,
+              "losses": 41,
+              "mean": 0.7233,
+              "lo": 0.6468,
+              "hi": 0.7887
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Lifeforce",
+            "random": {
+              "n": 150,
+              "wins": 116,
+              "draws": 3,
+              "losses": 31,
+              "mean": 0.7833,
+              "lo": 0.7108,
+              "hi": 0.8417
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0167,
+          "regretLo": 0,
+          "regretHi": 0.1033,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8,
+        "futilityGap": 0.16
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:2",
+            "label": "Kitchen Finks",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 1,
+              "losses": 10,
+              "mean": 0.79,
+              "lo": 0.6586,
+              "hi": 0.8801
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 1,
+              "losses": 20,
+              "mean": 0.59,
+              "lo": 0.452,
+              "hi": 0.7151
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Lifeforce",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:4",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 1,
+              "losses": 10,
+              "mean": 0.79,
+              "lo": 0.6586,
+              "hi": 0.8801
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.72,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "The Last Ronin's Technique",
+            "random": {
+              "n": 150,
+              "wins": 119,
+              "draws": 1,
+              "losses": 30,
+              "mean": 0.7967,
+              "lo": 0.7252,
+              "hi": 0.8533
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 120,
+              "draws": 4,
+              "losses": 26,
+              "mean": 0.8133,
+              "lo": 0.7434,
+              "hi": 0.8676
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Lifeforce",
+            "random": {
+              "n": 150,
+              "wins": 111,
+              "draws": 1,
+              "losses": 38,
+              "mean": 0.7433,
+              "lo": 0.668,
+              "hi": 0.8065
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:7",
+            "label": "Polukranos, World Eater",
+            "random": {
+              "n": 150,
+              "wins": 111,
+              "draws": 4,
+              "losses": 35,
+              "mean": 0.7533,
+              "lo": 0.6786,
+              "hi": 0.8154
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:4",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 1,
+              "losses": 36,
+              "mean": 0.7567,
+              "lo": 0.6821,
+              "hi": 0.8184
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0167,
+          "regretLo": 0,
+          "regretHi": 0.0967,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.716,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 7,
+        "kind": "a",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 90,
+              "draws": 1,
+              "losses": 59,
+              "mean": 0.6033,
+              "lo": 0.5234,
+              "hi": 0.6781
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:2,82,83,84",
+            "label": "attack Kitchen Finks+Ninja Turtle Spirit Token+Ninja Turtle Spirit Token+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 4,
+              "losses": 42,
+              "mean": 0.7067,
+              "lo": 0.6294,
+              "hi": 0.7736
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:2",
+            "label": "attack Kitchen Finks",
+            "random": {
+              "n": 150,
+              "wins": 98,
+              "draws": 1,
+              "losses": 51,
+              "mean": 0.6567,
+              "lo": 0.5776,
+              "hi": 0.7279
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:82",
+            "label": "attack Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 90,
+              "draws": 1,
+              "losses": 59,
+              "mean": 0.6033,
+              "lo": 0.5234,
+              "hi": 0.6781
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:83",
+            "label": "attack Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 90,
+              "draws": 1,
+              "losses": 59,
+              "mean": 0.6033,
+              "lo": 0.5234,
+              "hi": 0.6781
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:84",
+            "label": "attack Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 92,
+              "draws": 1,
+              "losses": 57,
+              "mean": 0.6167,
+              "lo": 0.5369,
+              "hi": 0.6906
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1033,
+          "regretLo": 0.0133,
+          "regretHi": 0.2,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6467,
+        "futilityGap": 0.03
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:7",
+            "label": "Polukranos, World Eater",
+            "random": {
+              "n": 50,
+              "wins": 34,
+              "draws": 1,
+              "losses": 15,
+              "mean": 0.69,
+              "lo": 0.5522,
+              "hi": 0.8007
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 1,
+              "losses": 25,
+              "mean": 0.49,
+              "lo": 0.3572,
+              "hi": 0.6242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Lifeforce",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 1,
+              "losses": 22,
+              "mean": 0.55,
+              "lo": 0.4135,
+              "hi": 0.6794
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:4",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.66,
+              "lo": 0.5215,
+              "hi": 0.7756
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.63,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:35",
+            "label": "Instill Energy",
+            "random": {
+              "n": 150,
+              "wins": 99,
+              "draws": 1,
+              "losses": 50,
+              "mean": 0.6633,
+              "lo": 0.5845,
+              "hi": 0.734
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 101,
+              "draws": 1,
+              "losses": 48,
+              "mean": 0.6767,
+              "lo": 0.5982,
+              "hi": 0.7463
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Lifeforce",
+            "random": {
+              "n": 150,
+              "wins": 99,
+              "draws": 3,
+              "losses": 48,
+              "mean": 0.67,
+              "lo": 0.5913,
+              "hi": 0.7402
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0133,
+          "regretLo": 0,
+          "regretHi": 0.1233,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7,
+        "futilityGap": 0.12
+      },
+      {
+        "d": 15,
+        "kind": "a",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:7",
+            "label": "attack Polukranos, World Eater",
+            "random": {
+              "n": 150,
+              "wins": 114,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.76,
+              "lo": 0.6857,
+              "hi": 0.8213
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.6,
+              "lo": 0.4618,
+              "hi": 0.7239
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:2,7,82,83,84",
+            "label": "attack Polukranos, World Eater+Kitchen Finks+Ninja Turtle Spirit Token+Ninja Turtle Spirit Token+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 121,
+              "draws": 2,
+              "losses": 27,
+              "mean": 0.8133,
+              "lo": 0.7434,
+              "hi": 0.8676
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:2,7",
+            "label": "attack Polukranos, World Eater+Kitchen Finks",
+            "random": {
+              "n": 150,
+              "wins": 117,
+              "draws": 2,
+              "losses": 31,
+              "mean": 0.7867,
+              "lo": 0.7144,
+              "hi": 0.8446
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:7,82",
+            "label": "attack Polukranos, World Eater+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.76,
+              "lo": 0.6857,
+              "hi": 0.8213
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:7,83",
+            "label": "attack Polukranos, World Eater+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.76,
+              "lo": 0.6857,
+              "hi": 0.8213
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:7,84",
+            "label": "attack Polukranos, World Eater+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.76,
+              "lo": 0.6857,
+              "hi": 0.8213
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0533,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8371,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "futilityGap": 0.11
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Snarl Song",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 3,
+              "losses": 22,
+              "mean": 0.8433,
+              "lo": 0.7767,
+              "hi": 0.8928
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 2,
+              "losses": 17,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 4,
+              "losses": 19,
+              "mean": 0.58,
+              "lo": 0.4423,
+              "hi": 0.7062
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6133,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 19,
+        "kind": "a",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:7",
+            "label": "attack Polukranos, World Eater",
+            "random": {
+              "n": 150,
+              "wins": 128,
+              "draws": 1,
+              "losses": 21,
+              "mean": 0.8567,
+              "lo": 0.7917,
+              "hi": 0.9038
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 1,
+              "losses": 19,
+              "mean": 0.61,
+              "lo": 0.4716,
+              "hi": 0.7327
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:2,7,82,83,84",
+            "label": "attack Polukranos, World Eater+Kitchen Finks+Ninja Turtle Spirit Token+Ninja Turtle Spirit Token+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 150,
+              "wins": 150,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.975,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:2,7",
+            "label": "attack Polukranos, World Eater+Kitchen Finks",
+            "random": {
+              "n": 100,
+              "wins": 95,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.95,
+              "lo": 0.8882,
+              "hi": 0.9785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 4,
+            "token": "attack:7,82",
+            "label": "attack Polukranos, World Eater+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:7,83",
+            "label": "attack Polukranos, World Eater+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:7,84",
+            "label": "attack Polukranos, World Eater+Ninja Turtle Spirit Token",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1433,
+          "regretLo": 0.09,
+          "regretHi": 0.2,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8629,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.18
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 10,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d1": 3,
+        "d3": 4,
+        "d4": 5,
+        "d7": 6,
+        "d8": 4,
+        "d13": 3,
+        "d15": 7,
+        "d18": 3,
+        "d19": 7
+      },
+      "meanOptions": 4.5,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 0,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 18,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 18,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 19,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 6,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 9,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.09,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0.16,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 3,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 7,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 15,
+          "at": 50,
+          "gap": 0.11,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 18,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0.18,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 800,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 5100,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 39,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 1687,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 162461,
+    "gamesIdChecked": 5101,
+    "frameLogs": 10202,
+    "frameLogsFailed": 0,
+    "redactionMs": 65195,
+    "forks": 5100,
+    "forkProblems": 0,
+    "leakChecks": 10,
+    "leaks": 0,
+    "leakControlsMoved": 10,
+    "guardrails": {
+      "logs": 10200,
+      "priorityDecisions": 529670,
+      "landOffered": 32392,
+      "landTaken": 32392,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 4878,
+      "refusedCast": 461,
+      "noRepeatRefused": 392,
+      "xDrawn": 23357,
+      "zeroXLeftOut": 417818,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5100,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5100,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5100,
+      "errored": 39,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 39
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 100442
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5477,
+      "units": 52,
+      "branchGames": 5100,
+      "ms": 1660756,
+      "workers": 6
+    },
+    "wallMs": 1666234,
+    "jobs": 6
+  }
+}

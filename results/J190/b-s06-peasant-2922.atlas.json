@@ -1,0 +1,2238 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s06-peasant-2822/decks/peasant-2822-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s06-peasant-2822/decks/peasant-2822-00002.dck",
+    "seed": 2922,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 36,
+      "first": "A",
+      "decisionsListed": 44
+    },
+    "decisions": [
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 93,
+              "draws": 2,
+              "losses": 55,
+              "mean": 0.6267,
+              "lo": 0.547,
+              "hi": 0.7
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:39",
+            "label": "Spider Spawning",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0.6667,
+              "lo": 0.5879,
+              "hi": 0.7371
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Clockwork Avian",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0.6667,
+              "lo": 0.5879,
+              "hi": 0.7371
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.1434,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6867,
+        "futilityGap": 0.09
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 34,
+              "draws": 1,
+              "losses": 15,
+              "mean": 0.69,
+              "lo": 0.5522,
+              "hi": 0.8007
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:39",
+            "label": "Spider Spawning",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.6,
+              "lo": 0.4618,
+              "hi": 0.7239
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Oketra's Monument",
+            "random": {
+              "n": 50,
+              "wins": 32,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6533,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 13,
+        "kind": "a",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:18",
+            "label": "attack Clockwork Avian",
+            "random": {
+              "n": 150,
+              "wins": 117,
+              "draws": 1,
+              "losses": 32,
+              "mean": 0.7833,
+              "lo": 0.7108,
+              "hi": 0.8417
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 112,
+              "draws": 1,
+              "losses": 37,
+              "mean": 0.75,
+              "lo": 0.675,
+              "hi": 0.8125
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:18,131",
+            "label": "attack Clockwork Avian+Spider Token",
+            "random": {
+              "n": 150,
+              "wins": 112,
+              "draws": 1,
+              "losses": 37,
+              "mean": 0.75,
+              "lo": 0.675,
+              "hi": 0.8125
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0667,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.76,
+        "futilityGap": 0.12
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 95,
+              "draws": 0,
+              "losses": 55,
+              "mean": 0.6333,
+              "lo": 0.5538,
+              "hi": 0.7062
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:10",
+            "label": "Serra Angel",
+            "random": {
+              "n": 150,
+              "wins": 107,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.7133,
+              "lo": 0.6364,
+              "hi": 0.7797
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Oketra's Monument",
+            "random": {
+              "n": 150,
+              "wins": 87,
+              "draws": 0,
+              "losses": 63,
+              "mean": 0.58,
+              "lo": 0.5,
+              "hi": 0.656
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Hero of the Dunes",
+            "random": {
+              "n": 100,
+              "wins": 54,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.54,
+              "lo": 0.4426,
+              "hi": 0.6344
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.08,
+          "regretLo": 0,
+          "regretHi": 0.1668,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.63,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ],
+        "futilityGap": 0.02
+      },
+      {
+        "d": 20,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 105,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.7,
+              "lo": 0.6224,
+              "hi": 0.7676
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Oketra's Monument",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0.6667,
+              "lo": 0.5879,
+              "hi": 0.7371
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Hero of the Dunes",
+            "random": {
+              "n": 150,
+              "wins": 98,
+              "draws": 0,
+              "losses": 52,
+              "mean": 0.6533,
+              "lo": 0.5742,
+              "hi": 0.7248
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:35",
+            "label": "Aladdin",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 1,
+              "losses": 49,
+              "mean": 0.67,
+              "lo": 0.5913,
+              "hi": 0.7402
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.69,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 22,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Hero of the Dunes",
+            "random": {
+              "n": 50,
+              "wins": 40,
+              "draws": 1,
+              "losses": 9,
+              "mean": 0.81,
+              "lo": 0.6808,
+              "hi": 0.895
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 34,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.68,
+              "lo": 0.5419,
+              "hi": 0.7924
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Oketra's Monument",
+            "random": {
+              "n": 50,
+              "wins": 35,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.7,
+              "lo": 0.5625,
+              "hi": 0.809
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:35",
+            "label": "Aladdin",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.54,
+              "lo": 0.404,
+              "hi": 0.6703
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0702,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.69,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 29,
+        "kind": "a",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:10",
+            "label": "attack Serra Angel",
+            "random": {
+              "n": 150,
+              "wins": 122,
+              "draws": 5,
+              "losses": 23,
+              "mean": 0.83,
+              "lo": 0.7618,
+              "hi": 0.8817
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.8267,
+              "lo": 0.7581,
+              "hi": 0.8789
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:10,21,131,143,146,153,156",
+            "label": "attack Serra Angel+Spider Token+Spider Token+Construct Token+Hero of the Dunes+Construct Token+Warrior Token",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 2,
+              "losses": 23,
+              "mean": 0.84,
+              "lo": 0.773,
+              "hi": 0.8901
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:10,131",
+            "label": "attack Serra Angel+Spider Token",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 2,
+              "losses": 24,
+              "mean": 0.8333,
+              "lo": 0.7655,
+              "hi": 0.8845
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:10,143",
+            "label": "attack Serra Angel+Spider Token",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 2,
+              "losses": 24,
+              "mean": 0.8333,
+              "lo": 0.7655,
+              "hi": 0.8845
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:10,146",
+            "label": "attack Serra Angel+Construct Token",
+            "random": {
+              "n": 150,
+              "wins": 119,
+              "draws": 4,
+              "losses": 27,
+              "mean": 0.8067,
+              "lo": 0.7361,
+              "hi": 0.8619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:10,21",
+            "label": "attack Serra Angel+Hero of the Dunes",
+            "random": {
+              "n": 50,
+              "wins": 34,
+              "draws": 1,
+              "losses": 15,
+              "mean": 0.69,
+              "lo": 0.5522,
+              "hi": 0.8007
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "attack:10,153",
+            "label": "attack Serra Angel+Construct Token",
+            "random": {
+              "n": 150,
+              "wins": 123,
+              "draws": 5,
+              "losses": 22,
+              "mean": 0.8367,
+              "lo": 0.7692,
+              "hi": 0.8873
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8275,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7
+        ],
+        "futilityGap": 0.09
+      },
+      {
+        "d": 33,
+        "kind": "a",
+        "turn": 27,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 64,
+              "draws": 6,
+              "losses": 80,
+              "mean": 0.4467,
+              "lo": 0.3694,
+              "hi": 0.5266
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:10,18,21,26,56,67,131,143,146,153,156,163",
+            "label": "attack Spider Token+Spider Token+Construct Token+Serra Angel+Hero of the Dunes+Construct Token+Warrior Token+Clockwork Avian+Pizza Face, Gastromancer+Warrior Token+Descendant of Storms+Bomat Courier",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 1,
+              "losses": 20,
+              "mean": 0.8633,
+              "lo": 0.7992,
+              "hi": 0.9093
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:131",
+            "label": "attack Spider Token",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 3,
+              "losses": 29,
+              "mean": 0.39,
+              "lo": 0.2673,
+              "hi": 0.5284
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:143",
+            "label": "attack Spider Token",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 3,
+              "losses": 29,
+              "mean": 0.39,
+              "lo": 0.2673,
+              "hi": 0.5284
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:146",
+            "label": "attack Construct Token",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 2,
+              "losses": 26,
+              "mean": 0.46,
+              "lo": 0.3297,
+              "hi": 0.596
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:10",
+            "label": "attack Serra Angel",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 2,
+              "losses": 34,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:21",
+            "label": "attack Hero of the Dunes",
+            "random": {
+              "n": 50,
+              "wins": 19,
+              "draws": 2,
+              "losses": 29,
+              "mean": 0.4,
+              "lo": 0.2761,
+              "hi": 0.5382
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "attack:153",
+            "label": "attack Construct Token",
+            "random": {
+              "n": 50,
+              "wins": 17,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.34,
+              "lo": 0.2244,
+              "hi": 0.4785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.4167,
+          "regretLo": 0.3133,
+          "regretHi": 0.5033,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3825,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.38
+      },
+      {
+        "d": 38,
+        "kind": "b",
+        "turn": 32,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:146>73",
+            "label": "block Construct Token>Spinewoods Armadillo",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.84,
+              "lo": 0.773,
+              "hi": 0.8901
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "block:131>73,146>73",
+            "label": "block Construct Token>Spinewoods Armadillo, Spider Token>Spinewoods Armadillo",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "block:143>73,146>73",
+            "label": "block Construct Token>Spinewoods Armadillo, Spider Token>Spinewoods Armadillo",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "block:21>73,146>73",
+            "label": "block Construct Token>Spinewoods Armadillo, Hero of the Dunes>Spinewoods Armadillo",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 0,
+              "losses": 21,
+              "mean": 0.86,
+              "lo": 0.7954,
+              "hi": 0.9066
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:146>73,153>73",
+            "label": "block Construct Token>Spinewoods Armadillo, Construct Token>Spinewoods Armadillo",
+            "random": {
+              "n": 150,
+              "wins": 117,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.78,
+              "lo": 0.7072,
+              "hi": 0.8388
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "block:146>73,156>73",
+            "label": "block Construct Token>Spinewoods Armadillo, Warrior Token>Spinewoods Armadillo",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.76,
+              "lo": 0.6259,
+              "hi": 0.857
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "block:67>73,146>73",
+            "label": "block Construct Token>Spinewoods Armadillo, Pizza Face, Gastromancer>Spinewoods Armadillo",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 4
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.63,
+        "forgeOptions": [
+          0,
+          4,
+          5
+        ],
+        "futilityGap": 0.04
+      },
+      {
+        "d": 40,
+        "kind": "a",
+        "turn": 33,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 139,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.9267,
+              "lo": 0.8735,
+              "hi": 0.9586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:21,26,56,67,131,143,153,156,163,168,189",
+            "label": "attack Spider Token+Spider Token+Hero of the Dunes+Construct Token+Warrior Token+Pizza Face, Gastromancer+Warrior Token+Descendant of Storms+Bomat Courier+Soldier Token+Robot Token",
+            "random": {
+              "n": 100,
+              "wins": 69,
+              "draws": 0,
+              "losses": 31,
+              "mean": 0.69,
+              "lo": 0.5937,
+              "hi": 0.7722
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "attack:131",
+            "label": "attack Spider Token",
+            "random": {
+              "n": 150,
+              "wins": 131,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.8733,
+              "lo": 0.8106,
+              "hi": 0.9174
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:143",
+            "label": "attack Spider Token",
+            "random": {
+              "n": 150,
+              "wins": 131,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.8733,
+              "lo": 0.8106,
+              "hi": 0.9174
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:21",
+            "label": "attack Hero of the Dunes",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 0,
+              "losses": 21,
+              "mean": 0.86,
+              "lo": 0.7954,
+              "hi": 0.9066
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:153",
+            "label": "attack Construct Token",
+            "random": {
+              "n": 150,
+              "wins": 132,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.88,
+              "lo": 0.8183,
+              "hi": 0.9227
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:156",
+            "label": "attack Warrior Token",
+            "random": {
+              "n": 150,
+              "wins": 133,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.8867,
+              "lo": 0.826,
+              "hi": 0.928
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:67",
+            "label": "attack Pizza Face, Gastromancer",
+            "random": {
+              "n": 150,
+              "wins": 128,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.8533,
+              "lo": 0.7879,
+              "hi": 0.9011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0268,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 42,
+        "screened": false,
+        "screenMean": 0.875,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 42,
+        "kind": "a",
+        "turn": 35,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:21,26,56,67,131,143,153,156,163,168,189",
+            "label": "attack Spider Token+Spider Token+Hero of the Dunes+Construct Token+Warrior Token+Pizza Face, Gastromancer+Warrior Token+Descendant of Storms+Bomat Courier+Soldier Token+Robot Token",
+            "random": {
+              "n": 25,
+              "wins": 21,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.84,
+              "lo": 0.6535,
+              "hi": 0.936
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:131",
+            "label": "attack Spider Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:143",
+            "label": "attack Spider Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:21",
+            "label": "attack Hero of the Dunes",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:153",
+            "label": "attack Construct Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:156",
+            "label": "attack Warrior Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:67",
+            "label": "attack Pizza Face, Gastromancer",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.98
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 11,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d6": 3,
+        "d8": 3,
+        "d13": 3,
+        "d17": 4,
+        "d20": 4,
+        "d22": 4,
+        "d29": 8,
+        "d33": 8,
+        "d38": 8,
+        "d42": 8,
+        "d40": 8
+      },
+      "meanOptions": 5.55,
+      "screened": [
+        {
+          "d": 42,
+          "mean": 0.98,
+          "replacedBy": 40
+        }
+      ],
+      "stopped": [
+        {
+          "d": 17,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 29,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 33,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 38,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 38,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 38,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 38,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 38,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 1,
+          "at": 100
+        }
+      ],
+      "stoppedOptions": 14,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0.09,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 20,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 22,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 29,
+          "at": 50,
+          "gap": 0.09,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 33,
+          "at": 50,
+          "gap": 0.38,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 38,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 40,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 700,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 6150,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 41,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2929,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 8,
+    "rows": 146347,
+    "gamesIdChecked": 6151,
+    "frameLogs": 12302,
+    "frameLogsFailed": 0,
+    "redactionMs": 82544,
+    "forks": 6150,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 10,
+    "guardrails": {
+      "logs": 12300,
+      "priorityDecisions": 429491,
+      "landOffered": 21310,
+      "landTaken": 21310,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 120,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 8514,
+      "zeroXLeftOut": 2194,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6150,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6150,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6150,
+      "errored": 41,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 41
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 2,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 123871
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 22049,
+      "units": 53,
+      "branchGames": 6150,
+      "ms": 3625192,
+      "workers": 6
+    },
+    "wallMs": 3647241,
+    "jobs": 6
+  }
+}

@@ -1,0 +1,2569 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s07-legacy-2823/decks/legacy-2823-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s07-legacy-2823/decks/legacy-2823-00002.dck",
+    "seed": 2923,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 40,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 16,
+      "first": "B",
+      "decisionsListed": 21
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 80,
+              "draws": 1,
+              "losses": 69,
+              "mean": 0.5367,
+              "lo": 0.4569,
+              "hi": 0.6146
+            },
+            "forge": {
+              "n": 40,
+              "wins": 17,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.425,
+              "lo": 0.2851,
+              "hi": 0.578
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:17",
+            "label": "Lotus Cobra",
+            "random": {
+              "n": 150,
+              "wins": 80,
+              "draws": 3,
+              "losses": 67,
+              "mean": 0.5433,
+              "lo": 0.4635,
+              "hi": 0.621
+            },
+            "forge": {
+              "n": 40,
+              "wins": 18,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.45,
+              "lo": 0.3071,
+              "hi": 0.6017
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:6",
+            "label": "Thing in the Ice",
+            "random": {
+              "n": 150,
+              "wins": 82,
+              "draws": 4,
+              "losses": 64,
+              "mean": 0.56,
+              "lo": 0.48,
+              "hi": 0.637
+            },
+            "forge": {
+              "n": 40,
+              "wins": 18,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.45,
+              "lo": 0.3071,
+              "hi": 0.6017
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0233,
+          "regretLo": 0,
+          "regretHi": 0.1267,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.175,
+          "best": 1
+        },
+        "rho": 0.866,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5867,
+        "futilityGap": 0.01
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:17",
+            "label": "Lotus Cobra",
+            "random": {
+              "n": 150,
+              "wins": 80,
+              "draws": 2,
+              "losses": 68,
+              "mean": 0.54,
+              "lo": 0.4602,
+              "hi": 0.6178
+            },
+            "forge": {
+              "n": 40,
+              "wins": 14,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.35,
+              "lo": 0.2213,
+              "hi": 0.5049
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 68,
+              "draws": 6,
+              "losses": 76,
+              "mean": 0.4733,
+              "lo": 0.3951,
+              "hi": 0.5529
+            },
+            "forge": {
+              "n": 40,
+              "wins": 8,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.2,
+              "lo": 0.105,
+              "hi": 0.3476
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:6",
+            "label": "Thing in the Ice",
+            "random": {
+              "n": 150,
+              "wins": 77,
+              "draws": 3,
+              "losses": 70,
+              "mean": 0.5233,
+              "lo": 0.4438,
+              "hi": 0.6017
+            },
+            "forge": {
+              "n": 40,
+              "wins": 15,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.375,
+              "lo": 0.2422,
+              "hi": 0.5297
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0733,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.125,
+          "best": 2
+        },
+        "rho": 0.5,
+        "rhoLo": -0.866,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.62,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:14",
+            "label": "Mox Ruby",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 9,
+              "losses": 41,
+              "mean": 0.6967,
+              "lo": 0.6189,
+              "hi": 0.7646
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 3,
+              "losses": 21,
+              "mean": 0.55,
+              "lo": 0.4135,
+              "hi": 0.6794
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0037,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 20,
+        "screened": false,
+        "screenMean": 0.65,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 2,
+              "losses": 44,
+              "mean": 0.7,
+              "lo": 0.6224,
+              "hi": 0.7676
+            },
+            "forge": {
+              "n": 40,
+              "wins": 24,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.6,
+              "lo": 0.446,
+              "hi": 0.7365
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:1",
+            "label": "Garruk Wildspeaker",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 2,
+              "losses": 44,
+              "mean": 0.7,
+              "lo": 0.6224,
+              "hi": 0.7676
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0733,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.175,
+          "best": 1
+        },
+        "rho": null,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 18,
+        "screened": false,
+        "screenMean": 0.69,
+        "futilityGap": 0.05
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Garruk Wildspeaker",
+            "random": {
+              "n": 50,
+              "wins": 34,
+              "draws": 1,
+              "losses": 15,
+              "mean": 0.69,
+              "lo": 0.5522,
+              "hi": 0.8007
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 2,
+              "losses": 18,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 19,
+        "screened": false,
+        "screenMean": 0.66,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:1#1",
+            "label": "Garruk Wildspeaker: -1: Create a 3/3 green Beast creature to",
+            "random": {
+              "n": 50,
+              "wins": 35,
+              "draws": 1,
+              "losses": 14,
+              "mean": 0.71,
+              "lo": 0.5729,
+              "hi": 0.8171
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "activate:1#0",
+            "label": "Garruk Wildspeaker: +1: Untap two target lands.",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.63,
+              "lo": 0.4914,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6667,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:1#1",
+            "label": "Garruk Wildspeaker: -1: Create a 3/3 green Beast creature to",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 2,
+              "losses": 24,
+              "mean": 0.8333,
+              "lo": 0.7655,
+              "hi": 0.8845
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 1,
+              "losses": 4,
+              "mean": 0.8875,
+              "lo": 0.754,
+              "hi": 0.9531
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.76,
+              "lo": 0.6857,
+              "hi": 0.8213
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:26",
+            "label": "Marionette Master",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 3,
+              "losses": 22,
+              "mean": 0.8433,
+              "lo": 0.7767,
+              "hi": 0.8928
+            },
+            "forge": {
+              "n": 40,
+              "wins": 33,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.825,
+              "lo": 0.6805,
+              "hi": 0.9125
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.0375,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 1
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 0,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.84,
+        "futilityGap": 0.03
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 117,
+              "draws": 5,
+              "losses": 28,
+              "mean": 0.7967,
+              "lo": 0.7252,
+              "hi": 0.8533
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:26",
+            "label": "Marionette Master",
+            "random": {
+              "n": 150,
+              "wins": 110,
+              "draws": 3,
+              "losses": 37,
+              "mean": 0.7433,
+              "lo": 0.668,
+              "hi": 0.8065
+            },
+            "forge": {
+              "n": 40,
+              "wins": 32,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.8,
+              "lo": 0.6524,
+              "hi": 0.895
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.01,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.025,
+          "best": 0
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 15,
+        "screened": false,
+        "screenMean": 0.78,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:154",
+            "label": "attack Beast Token",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 2,
+              "losses": 10,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 3,
+              "losses": 14,
+              "mean": 0.69,
+              "lo": 0.5522,
+              "hi": 0.8007
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.01,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 13,
+        "screened": false,
+        "screenMean": 0.7,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:26",
+            "label": "Marionette Master",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 35,
+              "draws": 2,
+              "losses": 13,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 12,
+        "screened": false,
+        "screenMean": 0.79,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:4",
+            "label": "Paradox Surveyor",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 17,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 13,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:26,154,172,185,186,187",
+            "label": "attack Servo Token+Beast Token+Marionette Master+Servo Token+Servo Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:26,154,172,186,187",
+            "label": "attack Beast Token+Marionette Master+Servo Token+Servo Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:26,172,185,186,187",
+            "label": "attack Servo Token+Marionette Master+Servo Token+Servo Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:154,172,185,186,187",
+            "label": "attack Servo Token+Beast Token+Servo Token+Servo Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:26,154,172,185,187",
+            "label": "attack Servo Token+Beast Token+Marionette Master+Servo Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:26,154,172,185,186",
+            "label": "attack Servo Token+Beast Token+Marionette Master+Servo Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:26,154,185,186,187",
+            "label": "attack Servo Token+Beast Token+Marionette Master+Servo Token+Servo Token",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.9975
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:1#0",
+            "label": "Garruk Wildspeaker: +1: Untap two target lands.",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Paradox Surveyor",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "activate:1#1",
+            "label": "Garruk Wildspeaker: -1: Create a 3/3 green Beast creature to",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:1#1",
+            "label": "Garruk Wildspeaker: -1: Create a 3/3 green Beast creature to",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Paradox Surveyor",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "activate:1#0",
+            "label": "Garruk Wildspeaker: +1: Untap two target lands.",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 16,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:4",
+            "label": "Paradox Surveyor",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 14,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:13",
+            "label": "March of the Multitudes",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 16,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:1#1",
+            "label": "Garruk Wildspeaker: -1: Create a 3/3 green Beast creature to",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:27",
+            "label": "Dakkon Blackblade",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:15",
+            "label": "Talrand, Sky Summoner",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:40",
+            "label": "Echo of Eons",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:27",
+            "label": "Dakkon Blackblade",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:15",
+            "label": "Talrand, Sky Summoner",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:40",
+            "label": "Echo of Eons",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 20,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:4,26,172,185,186,187,223,235,236,237,238",
+            "label": "attack Paradox Surveyor+Servo Token+Marionette Master+Servo Token+Servo Token+Soldier Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:26,172,185,186,187,223,235,236,237,238",
+            "label": "attack Servo Token+Marionette Master+Servo Token+Servo Token+Soldier Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:4,26,172,186,187,223,235,236,237,238",
+            "label": "attack Paradox Surveyor+Marionette Master+Servo Token+Servo Token+Soldier Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:4,172,185,186,187,223,235,236,237,238",
+            "label": "attack Paradox Surveyor+Servo Token+Servo Token+Servo Token+Soldier Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:4,26,172,185,187,223,235,236,237,238",
+            "label": "attack Paradox Surveyor+Servo Token+Marionette Master+Servo Token+Soldier Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:4,26,172,185,186,223,235,236,237,238",
+            "label": "attack Paradox Surveyor+Servo Token+Marionette Master+Servo Token+Soldier Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:4,26,172,185,186,187,223,236,237,238",
+            "label": "attack Paradox Surveyor+Servo Token+Marionette Master+Servo Token+Servo Token+Beast Token+Soldier Token+Soldier Token+Soldier Token+Beast Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      }
+    ],
+    "agreement": {
+      "decisions": 6,
+      "meanRho": 0.3415,
+      "meanRhoInterval": [
+        -0.5335,
+        0.933
+      ],
+      "sameBest": 2,
+      "sameBestInterval": [
+        0.0968,
+        0.7
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 19,
+      "branchedInFull": 6,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d1": 3,
+        "d7": 3,
+        "d8": 3,
+        "d13": 8,
+        "d14": 4,
+        "d15": 4,
+        "d18": 5,
+        "d19": 4,
+        "d20": 8,
+        "d16": 2,
+        "d17": 2,
+        "d12": 2,
+        "d11": 2,
+        "d10": 2,
+        "d9": 2,
+        "d6": 2,
+        "d5": 2,
+        "d4": 2
+      },
+      "meanOptions": 3.32,
+      "screened": [
+        {
+          "d": 13,
+          "mean": 0.9975,
+          "replacedBy": 10
+        },
+        {
+          "d": 14,
+          "mean": 1,
+          "replacedBy": 16
+        },
+        {
+          "d": 15,
+          "mean": 1,
+          "replacedBy": 9
+        },
+        {
+          "d": 18,
+          "mean": 1,
+          "replacedBy": 5
+        },
+        {
+          "d": 19,
+          "mean": 1,
+          "replacedBy": 6
+        },
+        {
+          "d": 20,
+          "mean": 1,
+          "replacedBy": 4
+        },
+        {
+          "d": 16,
+          "mean": 1,
+          "replacedBy": 17
+        },
+        {
+          "d": 17,
+          "mean": 1,
+          "replacedBy": 12
+        },
+        {
+          "d": 12,
+          "mean": 1,
+          "replacedBy": 11
+        }
+      ],
+      "stopped": [
+        {
+          "d": 4,
+          "o": 1,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 1,
+      "labels": 6,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.01,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 7,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 4,
+      "futileControls": 3,
+      "futileBranchGamesSaved": 1260,
+      "partialLabels": 4
+    },
+    "disagreeMost": [
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 12,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          0
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 1
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 4,
+        "rho": 0.5,
+        "rhoInterval": [
+          -0.866,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 0,
+        "bestForge": 2
+      },
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 4,
+        "rho": 0.866,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 1
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 12,
+        "rho": 1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 0,
+        "bestForge": 0
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 10,
+        "rho": null,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 0,
+        "bestForge": 1
+      }
+    ],
+    "branchGames": 4135,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 63,
+    "cappedForge": 1,
+    "meanBranchMs": {
+      "random": 3969,
+      "forge": 3657
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 161415,
+    "gamesIdChecked": 4136,
+    "frameLogs": 8272,
+    "frameLogsFailed": 0,
+    "redactionMs": 65269,
+    "forks": 4135,
+    "forkProblems": 0,
+    "leakChecks": 25,
+    "leaks": 0,
+    "leakControlsMoved": 25,
+    "guardrails": {
+      "logs": 7150,
+      "priorityDecisions": 240132,
+      "landOffered": 27415,
+      "landTaken": 27415,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 754,
+      "refusedCast": 4,
+      "noRepeatRefused": 2,
+      "xDrawn": 3641,
+      "zeroXLeftOut": 523137,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4135,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4135,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4135,
+      "errored": 64,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 64
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 125817
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5004,
+      "units": 65,
+      "branchGames": 4135,
+      "ms": 3087130,
+      "workers": 6
+    },
+    "wallMs": 3092135,
+    "jobs": 6
+  }
+}

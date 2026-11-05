@@ -1,0 +1,1777 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s03-legacy-2819/decks/legacy-2819-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s03-legacy-2819/decks/legacy-2819-00002.dck",
+    "seed": 2919,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 24,
+      "first": "B",
+      "decisionsListed": 24
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 90,
+              "draws": 20,
+              "losses": 40,
+              "mean": 0.6667,
+              "lo": 0.5879,
+              "hi": 0.7371
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 13,
+              "losses": 33,
+              "mean": 0.7367,
+              "lo": 0.6609,
+              "hi": 0.8006
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Scavenging Ooze",
+            "random": {
+              "n": 150,
+              "wins": 93,
+              "draws": 24,
+              "losses": 33,
+              "mean": 0.7,
+              "lo": 0.6224,
+              "hi": 0.7676
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 150,
+              "wins": 89,
+              "draws": 31,
+              "losses": 30,
+              "mean": 0.6967,
+              "lo": 0.6189,
+              "hi": 0.7646
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:2",
+            "label": "Lovestruck Beast — Heart's Desire",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 19,
+              "losses": 31,
+              "mean": 0.73,
+              "lo": 0.6539,
+              "hi": 0.7946
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.07,
+          "regretLo": 0.01,
+          "regretHi": 0.17,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.74,
+        "futilityGap": 0.09
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:40",
+            "label": "Scavenging Ooze",
+            "random": {
+              "n": 50,
+              "wins": 25,
+              "draws": 16,
+              "losses": 9,
+              "mean": 0.66,
+              "lo": 0.5215,
+              "hi": 0.7756
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 7,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.5114,
+              "hi": 0.7671
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 7,
+              "losses": 17,
+              "mean": 0.59,
+              "lo": 0.452,
+              "hi": 0.7151
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 5,
+              "losses": 16,
+              "mean": 0.63,
+              "lo": 0.4914,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:2",
+            "label": "Lovestruck Beast — Heart's Desire",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 7,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.5114,
+              "hi": 0.7671
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.17,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.58,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 75,
+              "draws": 29,
+              "losses": 46,
+              "mean": 0.5967,
+              "lo": 0.5167,
+              "hi": 0.6718
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 150,
+              "wins": 97,
+              "draws": 13,
+              "losses": 40,
+              "mean": 0.69,
+              "lo": 0.612,
+              "hi": 0.7585
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 100,
+              "wins": 55,
+              "draws": 13,
+              "losses": 32,
+              "mean": 0.615,
+              "lo": 0.5171,
+              "hi": 0.7044
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:2",
+            "label": "Lovestruck Beast",
+            "random": {
+              "n": 150,
+              "wins": 94,
+              "draws": 15,
+              "losses": 41,
+              "mean": 0.6767,
+              "lo": 0.5982,
+              "hi": 0.7463
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:2",
+            "label": "Lovestruck Beast — Heart's Desire",
+            "random": {
+              "n": 150,
+              "wins": 91,
+              "draws": 24,
+              "losses": 35,
+              "mean": 0.6867,
+              "lo": 0.6086,
+              "hi": 0.7555
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0933,
+          "regretLo": 0.0333,
+          "regretHi": 0.1967,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.696,
+        "forgeOptions": [
+          0,
+          1,
+          3,
+          4
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:2",
+            "label": "Lovestruck Beast",
+            "random": {
+              "n": 50,
+              "wins": 28,
+              "draws": 13,
+              "losses": 9,
+              "mean": 0.69,
+              "lo": 0.5522,
+              "hi": 0.8007
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 7,
+              "losses": 17,
+              "mean": 0.59,
+              "lo": 0.452,
+              "hi": 0.7151
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 8,
+              "losses": 12,
+              "mean": 0.68,
+              "lo": 0.5419,
+              "hi": 0.7924
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 9,
+              "losses": 17,
+              "mean": 0.57,
+              "lo": 0.4327,
+              "hi": 0.6973
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:2",
+            "label": "Lovestruck Beast — Heart's Desire",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 10,
+              "losses": 13,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.684,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 13,
+              "losses": 7,
+              "mean": 0.73,
+              "lo": 0.5939,
+              "hi": 0.8333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 9,
+              "losses": 14,
+              "mean": 0.63,
+              "lo": 0.4914,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 15,
+              "losses": 13,
+              "mean": 0.59,
+              "lo": 0.452,
+              "hi": 0.7151
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:7",
+            "label": "Nevinyrral's Disk",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 12,
+              "losses": 12,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.66,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 97,
+              "draws": 29,
+              "losses": 24,
+              "mean": 0.7433,
+              "lo": 0.668,
+              "hi": 0.8065
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 150,
+              "wins": 93,
+              "draws": 33,
+              "losses": 24,
+              "mean": 0.73,
+              "lo": 0.6539,
+              "hi": 0.7946
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 150,
+              "wins": 89,
+              "draws": 38,
+              "losses": 23,
+              "mean": 0.72,
+              "lo": 0.6433,
+              "hi": 0.7857
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Fanatic of Rhonas",
+            "random": {
+              "n": 150,
+              "wins": 99,
+              "draws": 27,
+              "losses": 24,
+              "mean": 0.75,
+              "lo": 0.675,
+              "hi": 0.8125
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0067,
+          "regretLo": 0,
+          "regretHi": 0.0933,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.755,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:14",
+            "label": "Fanatic of Rhonas",
+            "random": {
+              "n": 150,
+              "wins": 102,
+              "draws": 29,
+              "losses": 19,
+              "mean": 0.7767,
+              "lo": 0.7036,
+              "hi": 0.8359
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 8,
+              "losses": 11,
+              "mean": 0.7,
+              "lo": 0.5625,
+              "hi": 0.809
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 150,
+              "wins": 95,
+              "draws": 25,
+              "losses": 30,
+              "mean": 0.7167,
+              "lo": 0.6398,
+              "hi": 0.7827
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 150,
+              "wins": 93,
+              "draws": 40,
+              "losses": 17,
+              "mean": 0.7533,
+              "lo": 0.6786,
+              "hi": 0.8154
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0641,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.825,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ],
+        "futilityGap": 0.02
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:18",
+            "label": "Agatha's Soul Cauldron",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 3,
+              "losses": 6,
+              "mean": 0.85,
+              "lo": 0.7264,
+              "hi": 0.9236
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 37,
+              "draws": 4,
+              "losses": 9,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 11,
+              "losses": 6,
+              "mean": 0.77,
+              "lo": 0.6367,
+              "hi": 0.8648
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7467,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 9,
+              "losses": 15,
+              "mean": 0.87,
+              "lo": 0.8068,
+              "hi": 0.9147
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:10",
+            "label": "Winter Orb",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 4,
+              "losses": 21,
+              "mean": 0.8467,
+              "lo": 0.7804,
+              "hi": 0.8956
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:12",
+            "label": "Carnage Tyrant",
+            "random": {
+              "n": 150,
+              "wins": 130,
+              "draws": 5,
+              "losses": 15,
+              "mean": 0.8833,
+              "lo": 0.8221,
+              "hi": 0.9254
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0133,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8467,
+        "futilityGap": 0.05
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:11",
+            "label": "Endurance",
+            "random": {
+              "n": 150,
+              "wins": 103,
+              "draws": 23,
+              "losses": 24,
+              "mean": 0.7633,
+              "lo": 0.6893,
+              "hi": 0.8242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 123,
+              "draws": 13,
+              "losses": 14,
+              "mean": 0.8633,
+              "lo": 0.7992,
+              "hi": 0.9093
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Endurance",
+            "random": {
+              "n": 150,
+              "wins": 140,
+              "draws": 5,
+              "losses": 5,
+              "mean": 0.95,
+              "lo": 0.9025,
+              "hi": 0.975
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1867,
+          "regretLo": 0.1266,
+          "regretHi": 0.2433,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8,
+        "futilityGap": 0.27
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 10,
+      "branchedInFull": 6,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 5,
+        "d1": 5,
+        "d2": 5,
+        "d4": 5,
+        "d5": 4,
+        "d8": 4,
+        "d9": 4,
+        "d10": 3,
+        "d11": 3,
+        "d14": 3
+      },
+      "meanOptions": 4.1,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 2,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 9,
+          "o": 1,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 2,
+      "labels": 6,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.09,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0.27,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 4,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 1700,
+      "partialLabels": 4
+    },
+    "disagreeMost": [],
+    "branchGames": 4300,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 645,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 6888,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 187202,
+    "gamesIdChecked": 4301,
+    "frameLogs": 8602,
+    "frameLogsFailed": 0,
+    "redactionMs": 124290,
+    "forks": 4300,
+    "forkProblems": 0,
+    "leakChecks": 10,
+    "leaks": 0,
+    "leakControlsMoved": 10,
+    "guardrails": {
+      "logs": 8600,
+      "priorityDecisions": 863534,
+      "landOffered": 50563,
+      "landTaken": 50563,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 780,
+      "refusedCast": 2132,
+      "noRepeatRefused": 2246,
+      "xDrawn": 1364,
+      "zeroXLeftOut": 39786,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4300,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4300,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4300,
+      "errored": 645,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 645
+        }
+      ],
+      "options": [
+        {
+          "d": 1,
+          "o": 0,
+          "token": "cast:40",
+          "label": "Scavenging Ooze",
+          "branches": 50,
+          "errored": 16,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 16
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 16
+            }
+          ]
+        },
+        {
+          "d": 4,
+          "o": 0,
+          "token": "cast:2",
+          "label": "Lovestruck Beast",
+          "branches": 50,
+          "errored": 13,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 13
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 13
+            }
+          ]
+        },
+        {
+          "d": 5,
+          "o": 0,
+          "token": "pass",
+          "label": "pass",
+          "branches": 50,
+          "errored": 13,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 13
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 13
+            }
+          ]
+        },
+        {
+          "d": 5,
+          "o": 2,
+          "token": "cast:10",
+          "label": "Winter Orb",
+          "branches": 50,
+          "errored": 15,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 15
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 15
+            }
+          ]
+        },
+        {
+          "d": 8,
+          "o": 2,
+          "token": "cast:10",
+          "label": "Winter Orb",
+          "branches": 150,
+          "errored": 38,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 38
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 38
+            }
+          ]
+        },
+        {
+          "d": 9,
+          "o": 3,
+          "token": "cast:10",
+          "label": "Winter Orb",
+          "branches": 150,
+          "errored": 40,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 40
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 40
+            }
+          ]
+        }
+      ],
+      "notDrawn": 0
+    },
+    "warnings": [
+      "d1 option 0 `cast:40` (Scavenging Ooze): 16 of 50 branch game(s) were capped (random 16 of 50): 16 x ended at the turn cap",
+      "d4 option 0 `cast:2` (Lovestruck Beast): 13 of 50 branch game(s) were capped (random 13 of 50): 13 x ended at the turn cap",
+      "d5 option 0 `pass` (pass): 13 of 50 branch game(s) were capped (random 13 of 50): 13 x ended at the turn cap",
+      "d5 option 2 `cast:10` (Winter Orb): 15 of 50 branch game(s) were capped (random 15 of 50): 15 x ended at the turn cap",
+      "d8 option 2 `cast:10` (Winter Orb): 38 of 150 branch game(s) were capped (random 38 of 150): 38 x ended at the turn cap",
+      "d9 option 3 `cast:10` (Winter Orb): 40 of 150 branch game(s) were capped (random 40 of 150): 40 x ended at the turn cap"
+    ],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 224786
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5520,
+      "units": 44,
+      "branchGames": 4300,
+      "ms": 5593250,
+      "workers": 6
+    },
+    "wallMs": 5598771,
+    "jobs": 6
+  }
+}

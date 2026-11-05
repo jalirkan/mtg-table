@@ -1,0 +1,13 @@
+b-s01-pauper-2917 0
+b-s02-peasant-2918 0
+b-s03-legacy-2919 0
+b-s04-powered-2920 0
+b-s05-pauper-2921 0
+b-s06-peasant-2922 0
+b-s07-legacy-2923 0
+b-s08-powered-2924 0
+b-s09-pauper-2925 0
+b-s10-peasant-2926 0
+b-s11-legacy-2927 0
+b-s12-powered-2928 0
+b-s13-pauper-2929 0

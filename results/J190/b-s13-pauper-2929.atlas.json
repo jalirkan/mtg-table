@@ -1,0 +1,1908 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s13-pauper-2829/decks/pauper-2829-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s13-pauper-2829/decks/pauper-2829-00002.dck",
+    "seed": 2929,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 40,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 18,
+      "first": "B",
+      "decisionsListed": 24
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 2,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:15#0",
+            "label": "Foreboding Landscape: {T}, Sacrifice CARDNAME: Search your l",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 3,
+              "losses": 9,
+              "mean": 0.79,
+              "lo": 0.6586,
+              "hi": 0.8801
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 2,
+              "losses": 18,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Candy Trail",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 2,
+              "losses": 10,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.18,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.78,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:33#0",
+            "label": "Bountiful Landscape: {T}, Sacrifice CARDNAME: Search your li",
+            "random": {
+              "n": 150,
+              "wins": 108,
+              "draws": 8,
+              "losses": 34,
+              "mean": 0.7467,
+              "lo": 0.6715,
+              "hi": 0.8095
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 119,
+              "draws": 5,
+              "losses": 26,
+              "mean": 0.81,
+              "lo": 0.7398,
+              "hi": 0.8647
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Candy Trail",
+            "random": {
+              "n": 150,
+              "wins": 112,
+              "draws": 3,
+              "losses": 35,
+              "mean": 0.7567,
+              "lo": 0.6821,
+              "hi": 0.8184
+            },
+            "forge": {
+              "n": 40,
+              "wins": 34,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.85,
+              "lo": 0.7093,
+              "hi": 0.9294
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0633,
+          "regretLo": 0,
+          "regretHi": 0.1367,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 1
+        },
+        "rho": 0.5,
+        "rhoLo": -0.866,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7467,
+        "futilityGap": 0.12
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Elvish Visionary",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 6,
+              "losses": 31,
+              "mean": 0.7733,
+              "lo": 0.7,
+              "hi": 0.833
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 115,
+              "draws": 12,
+              "losses": 23,
+              "mean": 0.8067,
+              "lo": 0.7361,
+              "hi": 0.8619
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 114,
+              "draws": 10,
+              "losses": 26,
+              "mean": 0.7933,
+              "lo": 0.7216,
+              "hi": 0.8504
+            },
+            "forge": {
+              "n": 40,
+              "wins": 36,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7695,
+              "hi": 0.9604
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0333,
+          "regretLo": 0,
+          "regretHi": 0.1133,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.86,
+        "futilityGap": 0.09
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:6#0",
+            "label": "Sheltering Landscape: {T}, Sacrifice CARDNAME: Search your l",
+            "random": {
+              "n": 150,
+              "wins": 115,
+              "draws": 4,
+              "losses": 31,
+              "mean": 0.78,
+              "lo": 0.7072,
+              "hi": 0.8388
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 121,
+              "draws": 5,
+              "losses": 24,
+              "mean": 0.8233,
+              "lo": 0.7545,
+              "hi": 0.8761
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:22",
+            "label": "Bog Wraith",
+            "random": {
+              "n": 150,
+              "wins": 118,
+              "draws": 3,
+              "losses": 29,
+              "mean": 0.7967,
+              "lo": 0.7252,
+              "hi": 0.8533
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:40",
+            "label": "Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 6,
+              "losses": 31,
+              "mean": 0.7733,
+              "lo": 0.7,
+              "hi": 0.833
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0433,
+          "regretLo": 0,
+          "regretHi": 0.1333,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.125,
+          "best": 3
+        },
+        "rho": -0.8,
+        "rhoLo": -1,
+        "rhoHi": 0.7746,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.73,
+        "futilityGap": 0.01
+      },
+      {
+        "d": 11,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:21,40,87",
+            "label": "attack Elvish Visionary+Robot Token+Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 1,
+              "losses": 25,
+              "mean": 0.83,
+              "lo": 0.7618,
+              "hi": 0.8817
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 116,
+              "draws": 9,
+              "losses": 25,
+              "mean": 0.8033,
+              "lo": 0.7325,
+              "hi": 0.859
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:40,87",
+            "label": "attack Robot Token+Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 2,
+              "losses": 22,
+              "mean": 0.8467,
+              "lo": 0.7804,
+              "hi": 0.8956
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:21,40",
+            "label": "attack Elvish Visionary+Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 3,
+              "losses": 22,
+              "mean": 0.8433,
+              "lo": 0.7767,
+              "hi": 0.8928
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:21,87",
+            "label": "attack Elvish Visionary+Robot Token",
+            "random": {
+              "n": 150,
+              "wins": 123,
+              "draws": 4,
+              "losses": 23,
+              "mean": 0.8333,
+              "lo": 0.7655,
+              "hi": 0.8845
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0167,
+          "regretLo": 0,
+          "regretHi": 0.0733,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.708,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:19",
+            "label": "Phantom Monster",
+            "random": {
+              "n": 150,
+              "wins": 118,
+              "draws": 3,
+              "losses": 29,
+              "mean": 0.7967,
+              "lo": 0.7252,
+              "hi": 0.8533
+            },
+            "forge": {
+              "n": 40,
+              "wins": 35,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.875,
+              "lo": 0.7389,
+              "hi": 0.9454
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 3,
+              "losses": 18,
+              "mean": 0.87,
+              "lo": 0.8068,
+              "hi": 0.9147
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:22",
+            "label": "Bog Wraith",
+            "random": {
+              "n": 150,
+              "wins": 122,
+              "draws": 3,
+              "losses": 25,
+              "mean": 0.8233,
+              "lo": 0.7545,
+              "hi": 0.8761
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:16",
+            "label": "Opt",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.8333,
+              "lo": 0.7655,
+              "hi": 0.8845
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0733,
+          "regretLo": 0.01,
+          "regretHi": 0.15,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.125,
+          "regretLo": 0.025,
+          "regretHi": 0.225,
+          "best": 1
+        },
+        "rho": 0.9487,
+        "rhoLo": -0.2582,
+        "rhoHi": 0.9487,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.805,
+        "futilityGap": 0.03
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 2,
+              "losses": 3,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Bog Wraith",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 1,
+              "losses": 5,
+              "mean": 0.89,
+              "lo": 0.7741,
+              "hi": 0.9503
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:34",
+            "label": "Cloudkin Seer",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 20,
+        "screened": false,
+        "screenMean": 0.8533,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:40,87",
+            "label": "attack Robot Token+Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 130,
+              "draws": 2,
+              "losses": 18,
+              "mean": 0.8733,
+              "lo": 0.8106,
+              "hi": 0.9174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 130,
+              "draws": 2,
+              "losses": 18,
+              "mean": 0.8733,
+              "lo": 0.8106,
+              "hi": 0.9174
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:40",
+            "label": "attack Mechanized Ninja Cavalry",
+            "random": {
+              "n": 150,
+              "wins": 125,
+              "draws": 3,
+              "losses": 22,
+              "mean": 0.8433,
+              "lo": 0.7767,
+              "hi": 0.8928
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:87",
+            "label": "attack Robot Token",
+            "random": {
+              "n": 150,
+              "wins": 131,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.8767,
+              "lo": 0.8145,
+              "hi": 0.9201
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0033,
+          "regretLo": 0,
+          "regretHi": 0.0533,
+          "best": 3
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.855,
+        "futilityGap": 0.05
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:22",
+            "label": "Bog Wraith",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 1,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.8514,
+              "hi": 0.9844
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 1,
+              "losses": 6,
+              "mean": 0.87,
+              "lo": 0.75,
+              "hi": 0.9372
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:34",
+            "label": "Cloudkin Seer",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 1,
+              "losses": 5,
+              "mean": 0.89,
+              "lo": 0.7741,
+              "hi": 0.9503
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.03,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.88,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 17,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:22,87",
+            "label": "attack Bog Wraith+Robot Token",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 1,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.8514,
+              "hi": 0.9844
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 2,
+              "losses": 4,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:87",
+            "label": "attack Robot Token",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 1,
+              "losses": 4,
+              "mean": 0.91,
+              "lo": 0.7989,
+              "hi": 0.9626
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:22",
+            "label": "attack Bog Wraith",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 2,
+              "losses": 3,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.03,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 23,
+        "screened": false,
+        "screenMean": 0.945,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 20,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:22,34,87",
+            "label": "attack Cloudkin Seer+Bog Wraith+Robot Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:22,87",
+            "label": "attack Bog Wraith+Robot Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:34,87",
+            "label": "attack Cloudkin Seer+Robot Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:22,34",
+            "label": "attack Cloudkin Seer+Bog Wraith",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 23,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:8,22,34,87",
+            "label": "attack Cloudkin Seer+Bog Wraith+Robot Token+Clockwork Beast",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:8,22,87",
+            "label": "attack Bog Wraith+Robot Token+Clockwork Beast",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:8,34,87",
+            "label": "attack Cloudkin Seer+Robot Token+Clockwork Beast",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:8,22,34",
+            "label": "attack Cloudkin Seer+Bog Wraith+Clockwork Beast",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:22,34,87",
+            "label": "attack Cloudkin Seer+Bog Wraith+Robot Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      }
+    ],
+    "agreement": {
+      "decisions": 6,
+      "meanRho": -0.0878,
+      "meanRhoInterval": [
+        -0.9,
+        0.7244
+      ],
+      "sameBest": 2,
+      "sameBestInterval": [
+        0.0968,
+        0.7
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 12,
+      "branchedInFull": 6,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d1": 3,
+        "d5": 3,
+        "d6": 4,
+        "d11": 5,
+        "d12": 4,
+        "d14": 4,
+        "d15": 3,
+        "d20": 5,
+        "d23": 6,
+        "d17": 4,
+        "d13": 3
+      },
+      "meanOptions": 3.92,
+      "screened": [
+        {
+          "d": 20,
+          "mean": 1,
+          "replacedBy": 13
+        },
+        {
+          "d": 23,
+          "mean": 1,
+          "replacedBy": 17
+        }
+      ],
+      "stopped": [],
+      "stoppedOptions": 0,
+      "labels": 6,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0.09,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0.01,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 15,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        }
+      ],
+      "futileStopped": 4,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 1820,
+      "partialLabels": 4
+    },
+    "disagreeMost": [
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 6,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 8,
+        "rho": -0.8,
+        "rhoInterval": [
+          -1,
+          0.7746
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 3
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 4,
+        "rho": 0.5,
+        "rhoInterval": [
+          -0.866,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 1,
+        "bestForge": 1
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 10,
+        "rho": 0.9487,
+        "rhoInterval": [
+          -0.2582,
+          0.9487
+        ],
+        "sameBest": true,
+        "bestRandom": 1,
+        "bestForge": 1
+      },
+      {
+        "d": 11,
+        "kind": "a",
+        "turn": 10,
+        "rho": null,
+        "rhoInterval": [
+          null,
+          null
+        ],
+        "sameBest": false,
+        "bestRandom": 2,
+        "bestForge": 0
+      }
+    ],
+    "branchGames": 5295,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 117,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2184,
+      "forge": 924
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 214428,
+    "gamesIdChecked": 5296,
+    "frameLogs": 10592,
+    "frameLogsFailed": 0,
+    "redactionMs": 90406,
+    "forks": 5295,
+    "forkProblems": 0,
+    "leakChecks": 18,
+    "leaks": 0,
+    "leakControlsMoved": 18,
+    "guardrails": {
+      "logs": 8750,
+      "priorityDecisions": 511368,
+      "landOffered": 40469,
+      "landTaken": 40469,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 421,
+      "refusedCast": 21,
+      "noRepeatRefused": 3,
+      "xDrawn": 1658,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5295,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5295,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5295,
+      "errored": 117,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 117
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 144707
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4076,
+      "units": 58,
+      "branchGames": 5295,
+      "ms": 1836995,
+      "workers": 6
+    },
+    "wallMs": 1841071,
+    "jobs": 6
+  }
+}

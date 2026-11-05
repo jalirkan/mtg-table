@@ -1,185 +1,54 @@
 {
  "schema": 1,
- "updated": "2026-11-04T22:00:46-05:00",
- "heartbeat": "2026-11-04T22:00:46-05:00",
+ "updated": "2026-11-04T22:01:12-05:00",
+ "heartbeat": "2026-11-04T22:01:12-05:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-11-04T22:01:12-05:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 6.58,
+  "load1": 5.01,
   "memUsedGb": 5.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4363,
+  "swapUsedMb": 4362,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Move atlas 4b night thirteen: 13 new spines, D508 population night four",
    "publicEst": "~8 h to 13 h",
    "id": "J190",
    "title": "The move atlas, rung 4b, night thirteen -- J188's night carried onto the same seat and the same pin (D509: the atlas seat frozen between landings; the pin fe063f94 is J188's, nothing merged since, so D510's target record (`option:hidden`: record-only), D511's replay (a sink that writes nothing: CubeLab.java only) and D512's checker admission are J188's, and `seat_code` admits exactly D510's and D511's numstat since J186's pin, J188's line byte for byte) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j190, at deck seeds 2817-2829 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 2917-2929; a validation draw made fresh at deck seeds 3017-3029 (game seeds 3117-3129 reserved); THE FOURTH NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines, J187's thirteen and J188's thirteen; J188's night read beside, by position",
-   "cpu": "heavy",
-   "phase": "commands 15/15",
-   "started": "2026-11-04T11:23:52-05:00",
-   "elapsed": 38214,
-   "done": 61450,
-   "total": 64000,
-   "unit": "lines",
-   "ratePerHour": 9399.4,
-   "eta": "2026-11-04T22:17:03-05:00",
-   "workers": 6,
-   "workersMax": 6,
-   "cores": 1,
-   "errors": 8,
-   "paused": false,
-   "dataUpdated": "2026-11-04T21:55:32-05:00",
-   "memGb": 0,
-   "live": {
+   "status": "done",
+   "finished": "2026-11-04T22:01:12-05:00",
+   "headline": "branches 61450 · atlas.spinesDone 13 · atlas.labels 86 · atlas.confident 17 · atlas.partialLabels 38 · atlas.futileStopped 38 · atlas.futileControls 14 · atlas.confidentPerWorkerHour 0.273 · atlas.confidentPer7Worker10hNight 19.1 · atlas.refusedCastShare 0.007 · atlas.refusedCastOptions 0 · atlas.failedToPlay 3289 · atlas.cardTargetShare 0.191 · atlas.lostCastOptions 0 · atlas.legacyNullTargetRecords 0 · atlas.timeoutShare 0 · atlas.problems 0",
+   "numbers": {
     "branches": 61450,
     "atlas.spinesDone": 13,
-    "atlas.labels": -1,
-    "atlas.confident": -1,
-    "atlas.partialLabels": -1,
+    "atlas.labels": 86,
+    "atlas.confident": 17,
+    "atlas.partialLabels": 38,
     "atlas.futileStopped": 38,
     "atlas.futileControls": 14,
-    "atlas.refusedCastShare": 0.0096,
+    "atlas.confidentPerWorkerHour": 0.2732,
+    "atlas.confidentPer7Worker10hNight": 19.1,
+    "atlas.refusedCastShare": 0.00741,
     "atlas.refusedCastOptions": 0,
     "atlas.failedToPlay": 3289,
-    "atlas.cardTargetShare": 0.2326,
+    "atlas.cardTargetShare": 0.1913,
     "atlas.lostCastOptions": 0,
     "atlas.legacyNullTargetRecords": 0,
     "atlas.timeoutShare": 0.00013,
-    "atlas.problems": 0,
-    "armed": 1,
-    "atlas_hook_ioobe": 0,
-    "atlas.atlasCostTargetAvoided": 0,
-    "atlas.atlases": 13,
-    "atlas.atlasNoRepeatRefused": 5015,
-    "atlas.atlasRefusedCast": 5431,
-    "atlas.atlasTargetCountTrimmed": 0,
-    "atlas.avoidedSpines": 8,
-    "atlas.branchCapped": 3364,
-    "atlas.branchedInFull": 86,
-    "atlas.branchedRows": -1,
-    "atlas.branchErrored": 8,
-    "atlas.branchErroredOptions": 0,
-    "atlas.branchErrorStacks": 1,
-    "atlas.branchRestarted": 0,
-    "atlas.branchRows": 61450,
-    "atlas.branchTimeouts": 8,
-    "atlas.branchTimeoutsInStep": 8,
-    "atlas.branchUnavailable": 0,
-    "atlas.cappedOptionsOverWarn": 17,
-    "atlas.cardTargetOffered": 591201,
-    "atlas.cardTargetSpines": 9,
-    "atlas.casts": 484678,
-    "atlas.castsRefused": 2287,
-    "atlas.castsRefusedForced": 0
-   },
-   "liveHeadline": [
-    "branches",
-    "atlas.spinesDone",
-    "atlas.labels",
-    "atlas.confident",
-    "atlas.partialLabels",
-    "atlas.futileStopped",
-    "atlas.futileControls",
-    "atlas.refusedCastShare",
-    "atlas.refusedCastOptions",
-    "atlas.failedToPlay",
-    "atlas.cardTargetShare",
-    "atlas.lostCastOptions",
-    "atlas.legacyNullTargetRecords",
-    "atlas.timeoutShare",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-04T12:09:01-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 1.6
-    },
-    {
-     "at": "2026-11-04T12:11:06-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T12:16:10-05:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T12:21:14-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T14:26:07-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 4
-    },
-    {
-     "at": "2026-11-04T14:31:07-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T15:03:05-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 1.9
-    },
-    {
-     "at": "2026-11-04T15:08:08-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T16:25:58-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.9
-    },
-    {
-     "at": "2026-11-04T16:31:57-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-04T19:19:08-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 3.3
-    },
-    {
-     "at": "2026-11-04T19:26:43-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J190-run15"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+    "atlas.problems": 0
+   }
+  },
   {
    "publicTitle": "Move atlas 4b night thirteen: 13 new spines, D508 population night four",
    "publicEst": "~8 h to 13 h",
@@ -1051,28 +920,6 @@
     "fin.pop.synergy.m.flatness.est": 0.078437,
     "sw.swaps": 5,
     "all.engine_error_rate": 0.0014
-   }
-  },
-  {
-   "publicTitle": "Which drafter drafts best: Forge ranks, human picks, Sonnet vs the lab drafter",
-   "publicEst": "~2 h (the Sonnet arm, only when approved, ~1 h more)",
-   "id": "J134",
-   "title": "Which drafter drafts best? Three challengers each against the cube lab's own drafter, mirrored seats on the same seeds, the lab builder for both, Forge Default piloting both decks, best of 3: Forge's ranks (FL, D439) on Vintage 180, Synergy and Evan's Twobert, 600 drafts a cube; the human-pick model (HL, D416) on Vintage and Synergy, 300 drafts a cube (J114's replication); Claude Sonnet (LL, D439) on Vintage, 100 drafts, ONLY with Justin's spend approval (LAB_LLM_SPEND_OK=1), otherwise skipped",
-   "status": "done",
-   "finished": "2026-10-16T12:34:25-04:00",
-   "headline": "jr.fl_vintage_rate 0.538 · jr.fl_vintage_code 0 · jr.fl_synergy_rate 0.528 · jr.fl_synergy_code 0 · jr.fl_twobert_rate 0.495 · jr.fl_twobert_code 0 · jr.hl_vintage_rate 0.513 · jr.hl_vintage_code 0 · jr.hl_synergy_rate 0.542 · jr.hl_synergy_code 0 · jr.ll_ran 0",
-   "numbers": {
-    "jr.fl_vintage_rate": 0.5376,
-    "jr.fl_vintage_code": 0,
-    "jr.fl_synergy_rate": 0.5275,
-    "jr.fl_synergy_code": 0,
-    "jr.fl_twobert_rate": 0.495,
-    "jr.fl_twobert_code": 0,
-    "jr.hl_vintage_rate": 0.5133,
-    "jr.hl_vintage_code": 0,
-    "jr.hl_synergy_rate": 0.5418,
-    "jr.hl_synergy_code": 0,
-    "jr.ll_ran": 0
    }
   }
  ],

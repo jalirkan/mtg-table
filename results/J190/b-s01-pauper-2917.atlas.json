@@ -1,0 +1,2733 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s01-pauper-2817/decks/pauper-2817-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s01-pauper-2817/decks/pauper-2817-00002.dck",
+    "seed": 2917,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 40,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 16,
+      "first": "B",
+      "decisionsListed": 20
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:19",
+            "label": "Farseek",
+            "random": {
+              "n": 150,
+              "wins": 132,
+              "draws": 3,
+              "losses": 15,
+              "mean": 0.89,
+              "lo": 0.8299,
+              "hi": 0.9307
+            },
+            "forge": {
+              "n": 40,
+              "wins": 27,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.675,
+              "lo": 0.5202,
+              "hi": 0.7992
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 128,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.8533,
+              "lo": 0.7879,
+              "hi": 0.9011
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Grizzly Bears",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 3,
+              "losses": 18,
+              "mean": 0.87,
+              "lo": 0.8068,
+              "hi": 0.9147
+            },
+            "forge": {
+              "n": 40,
+              "wins": 26,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.65,
+              "lo": 0.4951,
+              "hi": 0.7787
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 150,
+              "wins": 130,
+              "draws": 3,
+              "losses": 17,
+              "mean": 0.8767,
+              "lo": 0.8145,
+              "hi": 0.9201
+            },
+            "forge": {
+              "n": 40,
+              "wins": 21,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.5375,
+              "lo": 0.3866,
+              "hi": 0.6818
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0533,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "rho": 0.3162,
+        "rhoLo": -0.9487,
+        "rhoHi": 0.9487,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.855,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:17",
+            "label": "Ash Barrens: Basic landcycling {1} ({1}, Discard this card: ",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 19,
+        "screened": false,
+        "screenMean": 0.88,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 124,
+              "draws": 3,
+              "losses": 23,
+              "mean": 0.8367,
+              "lo": 0.7692,
+              "hi": 0.8873
+            },
+            "forge": {
+              "n": 39,
+              "wins": 31,
+              "draws": 1,
+              "losses": 7,
+              "mean": 0.8077,
+              "lo": 0.6589,
+              "hi": 0.9013
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:11",
+            "label": "Grizzly Bears",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 1,
+              "losses": 22,
+              "mean": 0.85,
+              "lo": 0.7842,
+              "hi": 0.8984
+            },
+            "forge": {
+              "n": 39,
+              "wins": 30,
+              "draws": 1,
+              "losses": 8,
+              "mean": 0.7821,
+              "lo": 0.6306,
+              "hi": 0.8829
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.8467,
+              "lo": 0.7804,
+              "hi": 0.8956
+            },
+            "forge": {
+              "n": 39,
+              "wins": 30,
+              "draws": 1,
+              "losses": 8,
+              "mean": 0.7821,
+              "lo": 0.6306,
+              "hi": 0.8829
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Vraska, Swarm's Eminence",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 1,
+              "losses": 22,
+              "mean": 0.85,
+              "lo": 0.7842,
+              "hi": 0.8984
+            },
+            "forge": {
+              "n": 39,
+              "wins": 35,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.8974,
+              "lo": 0.7642,
+              "hi": 0.9594
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 150,
+              "wins": 134,
+              "draws": 1,
+              "losses": 15,
+              "mean": 0.8967,
+              "lo": 0.8377,
+              "hi": 0.9359
+            },
+            "forge": {
+              "n": 39,
+              "wins": 29,
+              "draws": 0,
+              "losses": 10,
+              "mean": 0.7436,
+              "lo": 0.5892,
+              "hi": 0.8543
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.06,
+          "regretLo": 0,
+          "regretHi": 0.13,
+          "best": 4
+        },
+        "forge": {
+          "branches": 39,
+          "regret": 0.0897,
+          "regretLo": 0,
+          "regretHi": 0.2051,
+          "best": 3
+        },
+        "rho": -0.5,
+        "rhoLo": -0.9493,
+        "rhoHi": 0.8208,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.872,
+        "futilityGap": 0.05
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:14",
+            "label": "Vraska, Swarm's Eminence",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.94,
+              "lo": 0.8378,
+              "hi": 0.9794
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Grizzly Bears",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.896,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:14",
+            "label": "Vraska, Swarm's Eminence: -2: Create a 1/1 black Assassin cr",
+            "random": {
+              "n": 150,
+              "wins": 133,
+              "draws": 1,
+              "losses": 16,
+              "mean": 0.89,
+              "lo": 0.8299,
+              "hi": 0.9307
+            },
+            "forge": {
+              "n": 39,
+              "wins": 28,
+              "draws": 1,
+              "losses": 10,
+              "mean": 0.7308,
+              "lo": 0.5757,
+              "hi": 0.8445
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 136,
+              "draws": 1,
+              "losses": 13,
+              "mean": 0.91,
+              "lo": 0.8534,
+              "hi": 0.9461
+            },
+            "forge": {
+              "n": 39,
+              "wins": 20,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.5256,
+              "lo": 0.3738,
+              "hi": 0.6729
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.0833,
+          "best": 1
+        },
+        "forge": {
+          "branches": 39,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": -1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 9,
+        "screened": false,
+        "screenMean": 0.9,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:14",
+            "label": "Vraska, Swarm's Eminence: -2: Create a 1/1 black Assassin cr",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 4,
+              "losses": 17,
+              "mean": 0.8733,
+              "lo": 0.8106,
+              "hi": 0.9174
+            },
+            "forge": {
+              "n": 38,
+              "wins": 32,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.8421,
+              "lo": 0.6958,
+              "hi": 0.9256
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 77,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.77,
+              "lo": 0.6785,
+              "hi": 0.8416
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Grizzly Bears",
+            "random": {
+              "n": 150,
+              "wins": 130,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.8667,
+              "lo": 0.803,
+              "hi": 0.912
+            },
+            "forge": {
+              "n": 38,
+              "wins": 32,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.8421,
+              "lo": 0.6958,
+              "hi": 0.9256
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 1,
+              "losses": 23,
+              "mean": 0.8433,
+              "lo": 0.7767,
+              "hi": 0.8928
+            },
+            "forge": {
+              "n": 38,
+              "wins": 31,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.8158,
+              "lo": 0.6658,
+              "hi": 0.9078
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 150,
+              "wins": 131,
+              "draws": 1,
+              "losses": 18,
+              "mean": 0.8767,
+              "lo": 0.8145,
+              "hi": 0.9201
+            },
+            "forge": {
+              "n": 38,
+              "wins": 32,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.8421,
+              "lo": 0.6958,
+              "hi": 0.9256
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0033,
+          "regretLo": 0,
+          "regretHi": 0.0668,
+          "best": 4
+        },
+        "forge": {
+          "branches": 38,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1316,
+          "best": 0
+        },
+        "rho": 0.7746,
+        "rhoLo": -0.8944,
+        "rhoHi": 0.9487,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.812,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "futilityGap": 0.06
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:11",
+            "label": "Grizzly Bears",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 1,
+              "losses": 5,
+              "mean": 0.89,
+              "lo": 0.7741,
+              "hi": 0.9503
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 1,
+              "losses": 5,
+              "mean": 0.89,
+              "lo": 0.7741,
+              "hi": 0.9503
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:84",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 16,
+        "screened": true,
+        "screenMean": 0.98
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:11",
+            "label": "Grizzly Bears",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 1,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.8514,
+              "hi": 0.9844
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.82,
+              "lo": 0.692,
+              "hi": 0.9023
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 1,
+              "losses": 6,
+              "mean": 0.87,
+              "lo": 0.75,
+              "hi": 0.9372
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.03,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 14,
+        "screened": false,
+        "screenMean": 0.845,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Wyluli Wolf",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 3,
+              "losses": 20,
+              "mean": 0.8567,
+              "lo": 0.7917,
+              "hi": 0.9038
+            },
+            "forge": {
+              "n": 40,
+              "wins": 32,
+              "draws": 1,
+              "losses": 7,
+              "mean": 0.8125,
+              "lo": 0.6664,
+              "hi": 0.9039
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 2,
+              "losses": 22,
+              "mean": 0.8467,
+              "lo": 0.7804,
+              "hi": 0.8956
+            },
+            "forge": {
+              "n": 40,
+              "wins": 27,
+              "draws": 0,
+              "losses": 13,
+              "mean": 0.675,
+              "lo": 0.5202,
+              "hi": 0.7992
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 150,
+              "wins": 135,
+              "draws": 1,
+              "losses": 14,
+              "mean": 0.9033,
+              "lo": 0.8455,
+              "hi": 0.941
+            },
+            "forge": {
+              "n": 40,
+              "wins": 34,
+              "draws": 1,
+              "losses": 5,
+              "mean": 0.8625,
+              "lo": 0.724,
+              "hi": 0.9375
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0467,
+          "regretLo": 0,
+          "regretHi": 0.1167,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.1625,
+          "best": 2
+        },
+        "rho": 1,
+        "rhoLo": -0.5,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9333,
+        "futilityGap": 0.05
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Spirited Companion",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 1,
+              "losses": 3,
+              "mean": 0.93,
+              "lo": 0.8246,
+              "hi": 0.9741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 2,
+              "losses": 3,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.09,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 13,
+        "screened": false,
+        "screenMean": 0.88,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.98,
+              "lo": 0.8342,
+              "hi": 0.9979
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:25",
+            "label": "Aerie Auxiliary",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 18,
+        "screened": true,
+        "screenMean": 0.99
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:11,84,88",
+            "label": "attack Assassin Token+Assassin Token+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 23,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.92,
+              "lo": 0.7503,
+              "hi": 0.9778
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:1,11,21,84,88",
+            "label": "attack Assassin Token+Assassin Token+Grizzly Bears+Wyluli Wolf+Spirited Companion",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:11,88",
+            "label": "attack Assassin Token+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:11,84",
+            "label": "attack Assassin Token+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:84,88",
+            "label": "attack Assassin Token+Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 23,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.92,
+              "lo": 0.7503,
+              "hi": 0.9778
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:11,21,84,88",
+            "label": "attack Assassin Token+Assassin Token+Grizzly Bears+Wyluli Wolf",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1,11,84,88",
+            "label": "attack Assassin Token+Assassin Token+Grizzly Bears+Spirited Companion",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.965
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:25",
+            "label": "Aerie Auxiliary",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:26",
+            "label": "Momentary Blink",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:11,25,84,88",
+            "label": "attack Assassin Token+Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:1,11,21,25,84,88",
+            "label": "attack Assassin Token+Assassin Token+Aerie Auxiliary+Grizzly Bears+Wyluli Wolf+Spirited Companion",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:11,25,88",
+            "label": "attack Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:11,25,84",
+            "label": "attack Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:11,84,88",
+            "label": "attack Assassin Token+Assassin Token+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:25,84,88",
+            "label": "attack Assassin Token+Assassin Token+Aerie Auxiliary",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:11,21,25,84,88",
+            "label": "attack Assassin Token+Assassin Token+Aerie Auxiliary+Grizzly Bears+Wyluli Wolf",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.121,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.99
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:26",
+            "label": "Momentary Blink",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 15,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Tundra Wolves",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 17,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 19,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:1,11,21,25,84,88",
+            "label": "attack Spirited Companion+Assassin Token+Wyluli Wolf+Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:11,21,25,84,88",
+            "label": "attack Assassin Token+Wyluli Wolf+Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:1,11,21,25,88",
+            "label": "attack Spirited Companion+Wyluli Wolf+Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:1,11,25,84,88",
+            "label": "attack Spirited Companion+Assassin Token+Assassin Token+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:1,11,21,25,84",
+            "label": "attack Spirited Companion+Assassin Token+Wyluli Wolf+Aerie Auxiliary+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:1,11,21,84,88",
+            "label": "attack Spirited Companion+Assassin Token+Wyluli Wolf+Assassin Token+Grizzly Bears",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1,21,25,84,88",
+            "label": "attack Spirited Companion+Assassin Token+Wyluli Wolf+Assassin Token+Aerie Auxiliary",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      }
+    ],
+    "agreement": {
+      "decisions": 5,
+      "meanRho": 0.1182,
+      "meanRhoInterval": [
+        -0.5451,
+        0.728
+      ],
+      "sameBest": 2,
+      "sameBestInterval": [
+        0.1176,
+        0.7693
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 18,
+      "branchedInFull": 5,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 4,
+        "d4": 5,
+        "d5": 5,
+        "d7": 5,
+        "d8": 4,
+        "d11": 3,
+        "d14": 8,
+        "d15": 3,
+        "d16": 8,
+        "d19": 8,
+        "d10": 4,
+        "d17": 2,
+        "d18": 2,
+        "d13": 2,
+        "d12": 2,
+        "d9": 2,
+        "d6": 2,
+        "d3": 2
+      },
+      "meanOptions": 3.94,
+      "screened": [
+        {
+          "d": 14,
+          "mean": 0.965,
+          "replacedBy": 10
+        },
+        {
+          "d": 15,
+          "mean": 1,
+          "replacedBy": 17
+        },
+        {
+          "d": 16,
+          "mean": 0.99,
+          "replacedBy": 9
+        },
+        {
+          "d": 19,
+          "mean": 1,
+          "replacedBy": 3
+        },
+        {
+          "d": 17,
+          "mean": 1,
+          "replacedBy": 18
+        },
+        {
+          "d": 18,
+          "mean": 1,
+          "replacedBy": 13
+        },
+        {
+          "d": 13,
+          "mean": 0.99,
+          "replacedBy": 12
+        },
+        {
+          "d": 9,
+          "mean": 0.98,
+          "replacedBy": 6
+        }
+      ],
+      "stopped": [
+        {
+          "d": 7,
+          "o": 1,
+          "at": 100
+        }
+      ],
+      "stoppedOptions": 1,
+      "labels": 5,
+      "futility": [
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 7,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 3,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        }
+      ],
+      "futileStopped": 5,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 2380,
+      "partialLabels": 5
+    },
+    "disagreeMost": [
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 8,
+        "rho": -1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 8,
+        "rho": -0.5,
+        "rhoInterval": [
+          -0.9493,
+          0.8208
+        ],
+        "sameBest": false,
+        "bestRandom": 4,
+        "bestForge": 3
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 6,
+        "rho": 0.3162,
+        "rhoInterval": [
+          -0.9487,
+          0.9487
+        ],
+        "sameBest": true,
+        "bestRandom": 0,
+        "bestForge": 0
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 10,
+        "rho": 0.7746,
+        "rhoInterval": [
+          -0.8944,
+          0.9487
+        ],
+        "sameBest": false,
+        "bestRandom": 4,
+        "bestForge": 0
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 10,
+        "rho": 1,
+        "rhoInterval": [
+          -0.5,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 2,
+        "bestForge": 2
+      }
+    ],
+    "branchGames": 5245,
+    "branchErrors": 7,
+    "branchEngineErrors": 7,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 22,
+    "cappedForge": 9,
+    "meanBranchMs": {
+      "random": 2531,
+      "forge": 7908
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 9,
+    "rows": 241225,
+    "gamesIdChecked": 5246,
+    "frameLogs": 10492,
+    "frameLogsFailed": 0,
+    "redactionMs": 84884,
+    "forks": 5245,
+    "forkProblems": 0,
+    "leakChecks": 23,
+    "leaks": 0,
+    "leakControlsMoved": 23,
+    "guardrails": {
+      "logs": 9050,
+      "priorityDecisions": 427529,
+      "landOffered": 37144,
+      "landTaken": 37144,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 7171,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5245,
+      "errored": 7,
+      "threshold": 0.1,
+      "byError": [
+        {
+          "error": "BranchTimeout: the branch's deadline passed inside one engine step (# events into its play) at turn # COMBAT_BEGIN, step #",
+          "n": 2
+        },
+        {
+          "error": "BranchTimeout: the branch's deadline passed inside one engine step (# events into its play) at turn # COMBAT_DECLARE_ATTACKERS, step #",
+          "n": 2
+        },
+        {
+          "error": "BranchTimeout: the branch's deadline passed inside one engine step (# events into its play) at turn # MAIN#, step #",
+          "n": 2
+        },
+        {
+          "error": "BranchTimeout: the branch's deadline passed inside one engine step (# events into its play) at turn # DRAW, step #",
+          "n": 1
+        }
+      ],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5245,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5245,
+      "errored": 31,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 31
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 142910
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4020,
+      "units": 58,
+      "branchGames": 5245,
+      "ms": 3385800,
+      "workers": 6
+    },
+    "wallMs": 3389820,
+    "jobs": 6
+  }
+}

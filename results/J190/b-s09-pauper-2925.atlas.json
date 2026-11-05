@@ -1,0 +1,3132 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s09-pauper-2825/decks/pauper-2825-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s09-pauper-2825/decks/pauper-2825-00002.dck",
+    "seed": 2925,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 35,
+      "first": "B",
+      "decisionsListed": 51
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 2,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:11",
+            "label": "Lotus Petal",
+            "random": {
+              "n": 150,
+              "wins": 39,
+              "draws": 22,
+              "losses": 89,
+              "mean": 0.3333,
+              "lo": 0.2629,
+              "hi": 0.4121
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 26,
+              "draws": 6,
+              "losses": 68,
+              "mean": 0.29,
+              "lo": 0.2101,
+              "hi": 0.3854
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Icatian Scout",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Lunarch Veteran",
+            "random": {
+              "n": 150,
+              "wins": 56,
+              "draws": 17,
+              "losses": 77,
+              "mean": 0.43,
+              "lo": 0.3535,
+              "hi": 0.51
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0967,
+          "regretLo": 0.0099,
+          "regretHi": 0.18,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4,
+        "forgeOptions": [
+          0,
+          3
+        ],
+        "futilityGap": 0.11
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:12",
+            "label": "Repentant Blacksmith",
+            "random": {
+              "n": 150,
+              "wins": 41,
+              "draws": 30,
+              "losses": 79,
+              "mean": 0.3733,
+              "lo": 0.3,
+              "hi": 0.453
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 24,
+              "losses": 81,
+              "mean": 0.38,
+              "lo": 0.3062,
+              "hi": 0.4598
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 43,
+              "draws": 13,
+              "losses": 94,
+              "mean": 0.33,
+              "lo": 0.2598,
+              "hi": 0.4087
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:1",
+            "label": "Lunarch Veteran",
+            "random": {
+              "n": 150,
+              "wins": 53,
+              "draws": 14,
+              "losses": 83,
+              "mean": 0.4,
+              "lo": 0.325,
+              "hi": 0.48
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0267,
+          "regretLo": 0,
+          "regretHi": 0.1233,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.38,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 41,
+              "draws": 23,
+              "losses": 86,
+              "mean": 0.35,
+              "lo": 0.2783,
+              "hi": 0.4292
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:39",
+            "label": "Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 32,
+              "losses": 81,
+              "mean": 0.3533,
+              "lo": 0.2814,
+              "hi": 0.4326
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Lunarch Veteran",
+            "random": {
+              "n": 150,
+              "wins": 48,
+              "draws": 14,
+              "losses": 88,
+              "mean": 0.3667,
+              "lo": 0.2938,
+              "hi": 0.4462
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:12",
+            "label": "Repentant Blacksmith",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 23,
+              "losses": 82,
+              "mean": 0.3767,
+              "lo": 0.3031,
+              "hi": 0.4564
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:13",
+            "label": "Novice Inspector",
+            "random": {
+              "n": 150,
+              "wins": 47,
+              "draws": 18,
+              "losses": 85,
+              "mean": 0.3733,
+              "lo": 0.3,
+              "hi": 0.453
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0267,
+          "regretLo": 0,
+          "regretHi": 0.1233,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.44,
+        "futilityGap": 0.13
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 10,
+              "losses": 27,
+              "mean": 0.36,
+              "lo": 0.2414,
+              "hi": 0.4986
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:39",
+            "label": "Icatian Scout",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 5,
+              "losses": 32,
+              "mean": 0.31,
+              "lo": 0.1993,
+              "hi": 0.4478
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Lunarch Veteran",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 8,
+              "losses": 31,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:13",
+            "label": "Novice Inspector",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 8,
+              "losses": 33,
+              "mean": 0.26,
+              "lo": 0.1587,
+              "hi": 0.3955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.11,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.33,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 19,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:1,12,13,19,22,39",
+            "label": "attack Lunarch Veteran+Mesa Pegasus+Shepherd of the Flock+Icatian Scout+Repentant Blacksmith+Novice Inspector",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 10,
+              "losses": 27,
+              "mean": 0.7867,
+              "lo": 0.7144,
+              "hi": 0.8446
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 23,
+              "draws": 8,
+              "losses": 19,
+              "mean": 0.54,
+              "lo": 0.404,
+              "hi": 0.6703
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:12,13,19,22,39",
+            "label": "attack Mesa Pegasus+Shepherd of the Flock+Icatian Scout+Repentant Blacksmith+Novice Inspector",
+            "random": {
+              "n": 150,
+              "wins": 108,
+              "draws": 10,
+              "losses": 32,
+              "mean": 0.7533,
+              "lo": 0.6786,
+              "hi": 0.8154
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:1,12,13,22,39",
+            "label": "attack Lunarch Veteran+Shepherd of the Flock+Icatian Scout+Repentant Blacksmith+Novice Inspector",
+            "random": {
+              "n": 150,
+              "wins": 108,
+              "draws": 11,
+              "losses": 31,
+              "mean": 0.7567,
+              "lo": 0.6821,
+              "hi": 0.8184
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:1,12,13,19,39",
+            "label": "attack Lunarch Veteran+Mesa Pegasus+Icatian Scout+Repentant Blacksmith+Novice Inspector",
+            "random": {
+              "n": 100,
+              "wins": 58,
+              "draws": 10,
+              "losses": 32,
+              "mean": 0.63,
+              "lo": 0.5322,
+              "hi": 0.7182
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "attack:1,12,13,19,22",
+            "label": "attack Lunarch Veteran+Mesa Pegasus+Shepherd of the Flock+Repentant Blacksmith+Novice Inspector",
+            "random": {
+              "n": 150,
+              "wins": 109,
+              "draws": 7,
+              "losses": 34,
+              "mean": 0.75,
+              "lo": 0.675,
+              "hi": 0.8125
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:1,13,19,22,39",
+            "label": "attack Lunarch Veteran+Mesa Pegasus+Shepherd of the Flock+Icatian Scout+Novice Inspector",
+            "random": {
+              "n": 150,
+              "wins": 107,
+              "draws": 11,
+              "losses": 32,
+              "mean": 0.75,
+              "lo": 0.675,
+              "hi": 0.8125
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1,12,19,22,39",
+            "label": "attack Lunarch Veteran+Mesa Pegasus+Shepherd of the Flock+Icatian Scout+Repentant Blacksmith",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 13,
+              "losses": 24,
+              "mean": 0.7967,
+              "lo": 0.7252,
+              "hi": 0.8533
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.09,
+          "best": 7
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7525,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          5,
+          6,
+          7
+        ],
+        "futilityGap": 0.06
+      },
+      {
+        "d": 26,
+        "kind": "b",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.44,
+              "lo": 0.3116,
+              "hi": 0.5769
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:13>42",
+            "label": "block Novice Inspector>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 2,
+              "losses": 30,
+              "mean": 0.38,
+              "lo": 0.2586,
+              "hi": 0.5185
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:1>42",
+            "label": "block Lunarch Veteran>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 17,
+              "draws": 1,
+              "losses": 32,
+              "mean": 0.35,
+              "lo": 0.2329,
+              "hi": 0.4886
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:10>42",
+            "label": "block Savannah Lions>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 15,
+              "draws": 1,
+              "losses": 34,
+              "mean": 0.31,
+              "lo": 0.1993,
+              "hi": 0.4478
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:18>42",
+            "label": "block Farrel's Zealot>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 15,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.412,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 33,
+        "kind": "a",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:10,13,18,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Novice Inspector+Savannah Lions+Farrel's Zealot",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:39",
+            "label": "attack Icatian Scout",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 2,
+              "losses": 23,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:19",
+            "label": "attack Mesa Pegasus",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:13,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Novice Inspector",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 1,
+              "losses": 23,
+              "mean": 0.06,
+              "lo": 0.014,
+              "hi": 0.2232
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:10,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Savannah Lions",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:18,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Farrel's Zealot",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 1,
+              "losses": 23,
+              "mean": 0.06,
+              "lo": 0.014,
+              "hi": 0.2232
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.0375
+      },
+      {
+        "d": 35,
+        "kind": "b",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:13>42",
+            "label": "block Novice Inspector>Tolarian Terror",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:13>42,1>55",
+            "label": "block Novice Inspector>Tolarian Terror, Luminous Phantom>Ghost Ship",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:10>42,13>42",
+            "label": "block Novice Inspector>Tolarian Terror, Savannah Lions>Tolarian Terror",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:13>42,18>42",
+            "label": "block Novice Inspector>Tolarian Terror, Farrel's Zealot>Tolarian Terror",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:1>42,13>42",
+            "label": "block Novice Inspector>Tolarian Terror, Luminous Phantom>Tolarian Terror",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "replaces",
+        "replaces": 33,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 36,
+        "kind": "p",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:18",
+            "label": "Farrel's Zealot",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Cathar Commando",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 35,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 37,
+        "kind": "a",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:19",
+            "label": "attack Mesa Pegasus",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:1,10,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Savannah Lions+Luminous Phantom",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 2,
+              "losses": 23,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:10,19",
+            "label": "attack Mesa Pegasus+Savannah Lions",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:1,19",
+            "label": "attack Mesa Pegasus+Luminous Phantom",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.0167
+      },
+      {
+        "d": 38,
+        "kind": "p",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:18",
+            "label": "Farrel's Zealot",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Cathar Commando",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 36,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 40,
+        "kind": "b",
+        "turn": 25,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:4>42,18>42",
+            "label": "block Cathar Commando>Tolarian Terror, Farrel's Zealot>Tolarian Terror",
+            "random": {
+              "n": 150,
+              "wins": 2,
+              "draws": 15,
+              "losses": 133,
+              "mean": 0.0633,
+              "lo": 0.0342,
+              "hi": 0.1142
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "block:18>42",
+            "label": "block Farrel's Zealot>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 1,
+              "losses": 49,
+              "mean": 0.01,
+              "lo": 0.001,
+              "hi": 0.0889
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "block:4>42",
+            "label": "block Cathar Commando>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 2,
+              "losses": 48,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "block:4>42,18>42,1>55",
+            "label": "block Cathar Commando>Tolarian Terror, Farrel's Zealot>Tolarian Terror, Luminous Phantom>Ghost Ship",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 2,
+              "losses": 48,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "block:4>42,18>42,39>42",
+            "label": "block Cathar Commando>Tolarian Terror, Farrel's Zealot>Tolarian Terror, Icatian Scout>Tolarian Terror",
+            "random": {
+              "n": 150,
+              "wins": 2,
+              "draws": 23,
+              "losses": 125,
+              "mean": 0.09,
+              "lo": 0.0539,
+              "hi": 0.1466
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "block:4>42,10>42,18>42",
+            "label": "block Cathar Commando>Tolarian Terror, Farrel's Zealot>Tolarian Terror, Savannah Lions>Tolarian Terror",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 2,
+              "losses": 48,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "block:1>42,4>42,18>42",
+            "label": "block Cathar Commando>Tolarian Terror, Farrel's Zealot>Tolarian Terror, Luminous Phantom>Tolarian Terror",
+            "random": {
+              "n": 100,
+              "wins": 1,
+              "draws": 2,
+              "losses": 97,
+              "mean": 0.02,
+              "lo": 0.0055,
+              "hi": 0.07
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0267,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 38,
+        "screened": false,
+        "screenMean": 0.0475,
+        "forgeOptions": [
+          0,
+          5
+        ],
+        "futilityGap": 0.02
+      },
+      {
+        "d": 41,
+        "kind": "a",
+        "turn": 26,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:1,19",
+            "label": "attack Luminous Phantom+Mesa Pegasus",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 24,
+              "losses": 123,
+              "mean": 0.1,
+              "lo": 0.0615,
+              "hi": 0.1584
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 10,
+              "losses": 38,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:1,10,12,19,39",
+            "label": "attack Luminous Phantom+Mesa Pegasus+Icatian Scout+Savannah Lions+Repentant Blacksmith",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 8,
+              "losses": 39,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Mesa Pegasus",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 6,
+              "losses": 42,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:1",
+            "label": "attack Luminous Phantom",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 7,
+              "losses": 42,
+              "mean": 0.09,
+              "lo": 0.0374,
+              "hi": 0.2011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:1,19,39",
+            "label": "attack Luminous Phantom+Mesa Pegasus+Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 11,
+              "draws": 42,
+              "losses": 97,
+              "mean": 0.2133,
+              "lo": 0.1554,
+              "hi": 0.2856
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:1,10,19",
+            "label": "attack Luminous Phantom+Mesa Pegasus+Savannah Lions",
+            "random": {
+              "n": 100,
+              "wins": 4,
+              "draws": 15,
+              "losses": 81,
+              "mean": 0.115,
+              "lo": 0.0663,
+              "hi": 0.1922
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 7,
+            "token": "attack:1,12,19",
+            "label": "attack Luminous Phantom+Mesa Pegasus+Repentant Blacksmith",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 10,
+              "losses": 39,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1133,
+          "regretLo": 0.0567,
+          "regretHi": 0.1701,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 37,
+        "screened": false,
+        "screenMean": 0.1425,
+        "forgeOptions": [
+          0,
+          5
+        ],
+        "futilityGap": 0.13
+      },
+      {
+        "d": 42,
+        "kind": "a",
+        "turn": 28,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 11,
+              "draws": 89,
+              "losses": 50,
+              "mean": 0.37,
+              "lo": 0.2969,
+              "hi": 0.4496
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 100,
+              "wins": 11,
+              "draws": 44,
+              "losses": 45,
+              "mean": 0.33,
+              "lo": 0.2456,
+              "hi": 0.4269
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "attack:1,10,12,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Savannah Lions+Luminous Phantom+Repentant Blacksmith",
+            "random": {
+              "n": 150,
+              "wins": 12,
+              "draws": 91,
+              "losses": 47,
+              "mean": 0.3833,
+              "lo": 0.3094,
+              "hi": 0.4631
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:39",
+            "label": "attack Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 12,
+              "draws": 94,
+              "losses": 44,
+              "mean": 0.3933,
+              "lo": 0.3188,
+              "hi": 0.4732
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:19",
+            "label": "attack Mesa Pegasus",
+            "random": {
+              "n": 150,
+              "wins": 13,
+              "draws": 78,
+              "losses": 59,
+              "mean": 0.3467,
+              "lo": 0.2752,
+              "hi": 0.4258
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:10,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Savannah Lions",
+            "random": {
+              "n": 150,
+              "wins": 14,
+              "draws": 92,
+              "losses": 44,
+              "mean": 0.4,
+              "lo": 0.325,
+              "hi": 0.48
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:1,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Luminous Phantom",
+            "random": {
+              "n": 150,
+              "wins": 14,
+              "draws": 79,
+              "losses": 57,
+              "mean": 0.3567,
+              "lo": 0.2845,
+              "hi": 0.436
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:12,19,39",
+            "label": "attack Mesa Pegasus+Icatian Scout+Repentant Blacksmith",
+            "random": {
+              "n": 150,
+              "wins": 13,
+              "draws": 93,
+              "losses": 44,
+              "mean": 0.3967,
+              "lo": 0.3219,
+              "hi": 0.4766
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.03,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.405,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "futilityGap": 0.05
+      },
+      {
+        "d": 50,
+        "kind": "a",
+        "turn": 34,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,39",
+            "label": "attack Iron Hills Blacksmith+Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 6,
+              "draws": 30,
+              "losses": 114,
+              "mean": 0.14,
+              "lo": 0.0934,
+              "hi": 0.2046
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 4,
+              "draws": 24,
+              "losses": 122,
+              "mean": 0.1067,
+              "lo": 0.0667,
+              "hi": 0.1662
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:39",
+            "label": "attack Icatian Scout",
+            "random": {
+              "n": 150,
+              "wins": 5,
+              "draws": 34,
+              "losses": 111,
+              "mean": 0.1467,
+              "lo": 0.0989,
+              "hi": 0.2121
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:6",
+            "label": "attack Iron Hills Blacksmith",
+            "random": {
+              "n": 150,
+              "wins": 4,
+              "draws": 35,
+              "losses": 111,
+              "mean": 0.1433,
+              "lo": 0.0962,
+              "hi": 0.2083
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0067,
+          "regretLo": 0,
+          "regretHi": 0.0467,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.11,
+        "futilityGap": 0.01
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 15,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 4,
+        "d5": 4,
+        "d9": 5,
+        "d12": 4,
+        "d19": 8,
+        "d26": 5,
+        "d33": 8,
+        "d37": 6,
+        "d42": 8,
+        "d50": 4,
+        "d35": 6,
+        "d36": 3,
+        "d38": 3,
+        "d40": 8,
+        "d41": 8
+      },
+      "meanOptions": 5.6,
+      "screened": [
+        {
+          "d": 33,
+          "mean": 0.0375,
+          "replacedBy": 35
+        },
+        {
+          "d": 37,
+          "mean": 0.0167,
+          "replacedBy": 41
+        },
+        {
+          "d": 35,
+          "mean": 0,
+          "replacedBy": 36
+        },
+        {
+          "d": 36,
+          "mean": 0,
+          "replacedBy": 38
+        },
+        {
+          "d": 38,
+          "mean": 0,
+          "replacedBy": 40
+        }
+      ],
+      "stopped": [
+        {
+          "d": 0,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 0,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 42,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 40,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 7,
+          "at": 100
+        },
+        {
+          "d": 41,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 6,
+          "at": 100
+        },
+        {
+          "d": 41,
+          "o": 7,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 17,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.11,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0.13,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 26,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 42,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 50,
+          "at": 50,
+          "gap": 0.01,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 40,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 41,
+          "at": 50,
+          "gap": 0.13,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 900,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 7000,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 1313,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 3490,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 258229,
+    "gamesIdChecked": 7001,
+    "frameLogs": 14002,
+    "frameLogsFailed": 0,
+    "redactionMs": 147257,
+    "forks": 7000,
+    "forkProblems": 0,
+    "leakChecks": 15,
+    "leaks": 0,
+    "leakControlsMoved": 15,
+    "guardrails": {
+      "logs": 14000,
+      "priorityDecisions": 894035,
+      "landOffered": 59966,
+      "landTaken": 59966,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 19004,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 7000,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 7000,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 7000,
+      "errored": 1313,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 1313
+        }
+      ],
+      "options": [
+        {
+          "d": 41,
+          "o": 5,
+          "token": "attack:1,19,39",
+          "label": "attack Luminous Phantom+Mesa Pegasus+Icatian Scout",
+          "branches": 150,
+          "errored": 42,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 42
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 42
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 0,
+          "token": "attack:19,39",
+          "label": "attack Mesa Pegasus+Icatian Scout",
+          "branches": 150,
+          "errored": 89,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 89
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 89
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 1,
+          "token": "attack:none",
+          "label": "attack none",
+          "branches": 100,
+          "errored": 44,
+          "byContinuation": {
+            "random": {
+              "branches": 100,
+              "errored": 44
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 44
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 2,
+          "token": "attack:1,10,12,19,39",
+          "label": "attack Mesa Pegasus+Icatian Scout+Savannah Lions+Luminous Phantom+Repentant Blacksmith",
+          "branches": 150,
+          "errored": 91,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 91
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 91
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 3,
+          "token": "attack:39",
+          "label": "attack Icatian Scout",
+          "branches": 150,
+          "errored": 94,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 94
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 94
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 4,
+          "token": "attack:19",
+          "label": "attack Mesa Pegasus",
+          "branches": 150,
+          "errored": 78,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 78
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 78
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 5,
+          "token": "attack:10,19,39",
+          "label": "attack Mesa Pegasus+Icatian Scout+Savannah Lions",
+          "branches": 150,
+          "errored": 92,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 92
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 92
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 6,
+          "token": "attack:1,19,39",
+          "label": "attack Mesa Pegasus+Icatian Scout+Luminous Phantom",
+          "branches": 150,
+          "errored": 79,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 79
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 79
+            }
+          ]
+        },
+        {
+          "d": 42,
+          "o": 7,
+          "token": "attack:12,19,39",
+          "label": "attack Mesa Pegasus+Icatian Scout+Repentant Blacksmith",
+          "branches": 150,
+          "errored": 93,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 93
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 93
+            }
+          ]
+        }
+      ],
+      "notDrawn": 0
+    },
+    "warnings": [
+      "d41 option 5 `attack:1,19,39` (attack Luminous Phantom+Mesa Pegasus+Icatian Scout): 42 of 150 branch game(s) were capped (random 42 of 150): 42 x ended at the turn cap",
+      "d42 option 0 `attack:19,39` (attack Mesa Pegasus+Icatian Scout): 89 of 150 branch game(s) were capped (random 89 of 150): 89 x ended at the turn cap",
+      "d42 option 1 `attack:none` (attack none): 44 of 100 branch game(s) were capped (random 44 of 100): 44 x ended at the turn cap",
+      "d42 option 2 `attack:1,10,12,19,39` (attack Mesa Pegasus+Icatian Scout+Savannah Lions+Luminous Phantom+Repentant Blacksmith): 91 of 150 branch game(s) were capped (random 91 of 150): 91 x ended at the turn cap",
+      "d42 option 3 `attack:39` (attack Icatian Scout): 94 of 150 branch game(s) were capped (random 94 of 150): 94 x ended at the turn cap",
+      "d42 option 4 `attack:19` (attack Mesa Pegasus): 78 of 150 branch game(s) were capped (random 78 of 150): 78 x ended at the turn cap",
+      "d42 option 5 `attack:10,19,39` (attack Mesa Pegasus+Icatian Scout+Savannah Lions): 92 of 150 branch game(s) were capped (random 92 of 150): 92 x ended at the turn cap",
+      "d42 option 6 `attack:1,19,39` (attack Mesa Pegasus+Icatian Scout+Luminous Phantom): 79 of 150 branch game(s) were capped (random 79 of 150): 79 x ended at the turn cap",
+      "d42 option 7 `attack:12,19,39` (attack Mesa Pegasus+Icatian Scout+Repentant Blacksmith): 93 of 150 branch game(s) were capped (random 93 of 150): 93 x ended at the turn cap"
+    ],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 180701
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 9593,
+      "units": 57,
+      "branchGames": 7000,
+      "ms": 4881030,
+      "workers": 6
+    },
+    "wallMs": 4890623,
+    "jobs": 6
+  }
+}

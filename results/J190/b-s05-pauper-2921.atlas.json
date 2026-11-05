@@ -1,0 +1,2239 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s05-pauper-2821/decks/pauper-2821-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s05-pauper-2821/decks/pauper-2821-00002.dck",
+    "seed": 2921,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 24,
+      "first": "B",
+      "decisionsListed": 36
+    },
+    "decisions": [
+      {
+        "d": 5,
+        "kind": "a",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,19",
+            "label": "attack Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Ornithopter",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.015
+      },
+      {
+        "d": 7,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,19",
+            "label": "attack Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Ornithopter",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 2,
+              "losses": 21,
+              "mean": 0.12,
+              "lo": 0.0417,
+              "hi": 0.2996
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.1,
+          "regretLo": 0,
+          "regretHi": 0.2205,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.035
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,19",
+            "label": "attack Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Ornithopter",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 5,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,19",
+            "label": "attack Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Ornithopter",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Prodigal Sorcerer",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.08,
+          "regretLo": 0,
+          "regretHi": 0.2,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.03
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 7,
+              "losses": 140,
+              "mean": 0.0433,
+              "lo": 0.0206,
+              "hi": 0.0889
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,19",
+            "label": "attack Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 1,
+              "losses": 47,
+              "mean": 0.05,
+              "lo": 0.0156,
+              "hi": 0.1486
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Ornithopter",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 2,
+              "losses": 48,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Prodigal Sorcerer",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 13,
+              "losses": 134,
+              "mean": 0.0633,
+              "lo": 0.0342,
+              "hi": 0.1142
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.0767,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.05,
+        "forgeOptions": [
+          0,
+          3
+        ],
+        "futilityGap": 0.05
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 7,
+              "losses": 40,
+              "mean": 0.13,
+              "lo": 0.0628,
+              "hi": 0.25
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,19",
+            "label": "attack Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 4,
+              "losses": 43,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3",
+            "label": "attack Ornithopter",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 4,
+              "losses": 46,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:19",
+            "label": "attack Prodigal Sorcerer",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 4,
+              "losses": 46,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.09,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 7,
+        "screened": false,
+        "screenMean": 0.065,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:5",
+            "label": "attack Ardent Elementalist",
+            "random": {
+              "n": 150,
+              "wins": 24,
+              "draws": 13,
+              "losses": 113,
+              "mean": 0.2033,
+              "lo": 0.1467,
+              "hi": 0.2748
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 16,
+              "draws": 17,
+              "losses": 117,
+              "mean": 0.1633,
+              "lo": 0.1127,
+              "hi": 0.2308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3,5,19",
+            "label": "attack Ardent Elementalist+Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 150,
+              "wins": 18,
+              "draws": 13,
+              "losses": 119,
+              "mean": 0.1633,
+              "lo": 0.1127,
+              "hi": 0.2308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,5",
+            "label": "attack Ardent Elementalist+Ornithopter",
+            "random": {
+              "n": 150,
+              "wins": 23,
+              "draws": 15,
+              "losses": 112,
+              "mean": 0.2033,
+              "lo": 0.1467,
+              "hi": 0.2748
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:5,19",
+            "label": "attack Ardent Elementalist+Prodigal Sorcerer",
+            "random": {
+              "n": 150,
+              "wins": 24,
+              "draws": 17,
+              "losses": 109,
+              "mean": 0.2167,
+              "lo": 0.1583,
+              "hi": 0.2892
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0133,
+          "regretLo": 0,
+          "regretHi": 0.11,
+          "best": 4
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.232,
+        "futilityGap": 0.07
+      },
+      {
+        "d": 26,
+        "kind": "p",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:13",
+            "label": "Stress Dream",
+            "random": {
+              "n": 50,
+              "wins": 19,
+              "draws": 11,
+              "losses": 20,
+              "mean": 0.49,
+              "lo": 0.3572,
+              "hi": 0.6242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 5,
+              "losses": 32,
+              "mean": 0.31,
+              "lo": 0.1993,
+              "hi": 0.4478
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Dandân",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 4,
+              "losses": 35,
+              "mean": 0.26,
+              "lo": 0.1587,
+              "hi": 0.3955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3067,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 27,
+        "kind": "p",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:11",
+            "label": "Dandân",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 38,
+              "losses": 75,
+              "mean": 0.3733,
+              "lo": 0.3,
+              "hi": 0.453
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 47,
+              "draws": 26,
+              "losses": 77,
+              "mean": 0.4,
+              "lo": 0.325,
+              "hi": 0.48
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:7",
+            "label": "Think Twice",
+            "random": {
+              "n": 150,
+              "wins": 48,
+              "draws": 31,
+              "losses": 71,
+              "mean": 0.4233,
+              "lo": 0.3471,
+              "hi": 0.5033
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.05,
+          "regretLo": 0,
+          "regretHi": 0.1401,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 12,
+        "screened": false,
+        "screenMean": 0.4133,
+        "futilityGap": 0.03
+      },
+      {
+        "d": 29,
+        "kind": "a",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:5,11",
+            "label": "attack Ardent Elementalist+Dandân",
+            "random": {
+              "n": 150,
+              "wins": 93,
+              "draws": 15,
+              "losses": 42,
+              "mean": 0.67,
+              "lo": 0.5913,
+              "hi": 0.7402
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 7,
+              "losses": 25,
+              "mean": 0.43,
+              "lo": 0.3027,
+              "hi": 0.5673
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:3,5,11,19",
+            "label": "attack Ardent Elementalist+Dandân+Ornithopter+Prodigal Sorcerer",
+            "random": {
+              "n": 150,
+              "wins": 99,
+              "draws": 15,
+              "losses": 36,
+              "mean": 0.71,
+              "lo": 0.6329,
+              "hi": 0.7767
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:11",
+            "label": "attack Dandân",
+            "random": {
+              "n": 50,
+              "wins": 20,
+              "draws": 8,
+              "losses": 22,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:5",
+            "label": "attack Ardent Elementalist",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 3,
+              "losses": 26,
+              "mean": 0.45,
+              "lo": 0.3206,
+              "hi": 0.5865
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:3,5,11",
+            "label": "attack Ardent Elementalist+Dandân+Ornithopter",
+            "random": {
+              "n": 150,
+              "wins": 95,
+              "draws": 15,
+              "losses": 40,
+              "mean": 0.6833,
+              "lo": 0.6051,
+              "hi": 0.7524
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:5,11,19",
+            "label": "attack Ardent Elementalist+Dandân+Prodigal Sorcerer",
+            "random": {
+              "n": 150,
+              "wins": 99,
+              "draws": 15,
+              "losses": 36,
+              "mean": 0.71,
+              "lo": 0.6329,
+              "hi": 0.7767
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.1267,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5857,
+        "forgeOptions": [
+          0,
+          2,
+          5,
+          6
+        ],
+        "futilityGap": 0.07
+      },
+      {
+        "d": 30,
+        "kind": "p",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:7",
+            "label": "Think Twice",
+            "random": {
+              "n": 150,
+              "wins": 91,
+              "draws": 17,
+              "losses": 42,
+              "mean": 0.6633,
+              "lo": 0.5845,
+              "hi": 0.734
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 95,
+              "draws": 10,
+              "losses": 45,
+              "mean": 0.6667,
+              "lo": 0.5879,
+              "hi": 0.7371
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:35",
+            "label": "Thought Scour",
+            "random": {
+              "n": 150,
+              "wins": 107,
+              "draws": 12,
+              "losses": 31,
+              "mean": 0.7533,
+              "lo": 0.6786,
+              "hi": 0.8154
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.09,
+          "regretLo": 0,
+          "regretHi": 0.1833,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6533,
+        "futilityGap": 0.14
+      },
+      {
+        "d": 31,
+        "kind": "p",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:7",
+            "label": "Think Twice",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 6,
+              "losses": 15,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 26,
+              "draws": 10,
+              "losses": 14,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:35",
+            "label": "Thought Scour",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 11,
+              "losses": 15,
+              "mean": 0.59,
+              "lo": 0.452,
+              "hi": 0.7151
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.15,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 9,
+        "screened": false,
+        "screenMean": 0.6467,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 33,
+        "kind": "p",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:18",
+            "label": "Boomerang Basics",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 20,
+              "losses": 26,
+              "mean": 0.76,
+              "lo": 0.6857,
+              "hi": 0.8213
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 21,
+              "losses": 25,
+              "mean": 0.7633,
+              "lo": 0.6893,
+              "hi": 0.8242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Lórien Revealed",
+            "random": {
+              "n": 150,
+              "wins": 98,
+              "draws": 3,
+              "losses": 49,
+              "mean": 0.6633,
+              "lo": 0.5845,
+              "hi": 0.734
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0033,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6467,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 35,
+        "kind": "a",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:5,11,19",
+            "label": "attack Prodigal Sorcerer+Ardent Elementalist+Dandân",
+            "random": {
+              "n": 50,
+              "wins": 48,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.96,
+              "lo": 0.8654,
+              "hi": 0.989
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 13,
+              "losses": 13,
+              "mean": 0.61,
+              "lo": 0.4716,
+              "hi": 0.7327
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3,5,11,19",
+            "label": "attack Prodigal Sorcerer+Ardent Elementalist+Dandân+Ornithopter",
+            "random": {
+              "n": 50,
+              "wins": 48,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.96,
+              "lo": 0.8654,
+              "hi": 0.989
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:5,11",
+            "label": "attack Ardent Elementalist+Dandân",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 5,
+              "losses": 4,
+              "mean": 0.87,
+              "lo": 0.75,
+              "hi": 0.9372
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:11,19",
+            "label": "attack Prodigal Sorcerer+Dandân",
+            "random": {
+              "n": 50,
+              "wins": 42,
+              "draws": 4,
+              "losses": 4,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:5,19",
+            "label": "attack Prodigal Sorcerer+Ardent Elementalist",
+            "random": {
+              "n": 50,
+              "wins": 42,
+              "draws": 4,
+              "losses": 4,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.03,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9067,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 14,
+      "branchedInFull": 6,
+      "fill": 0,
+      "optionsByDecision": {
+        "d5": 4,
+        "d7": 4,
+        "d12": 4,
+        "d16": 4,
+        "d25": 5,
+        "d26": 3,
+        "d29": 7,
+        "d30": 3,
+        "d33": 3,
+        "d35": 6,
+        "d9": 4,
+        "d21": 4,
+        "d27": 3,
+        "d31": 3
+      },
+      "meanOptions": 4.07,
+      "screened": [
+        {
+          "d": 5,
+          "mean": 0.015,
+          "replacedBy": 9
+        },
+        {
+          "d": 7,
+          "mean": 0.035,
+          "replacedBy": 21
+        },
+        {
+          "d": 12,
+          "mean": 0.03,
+          "replacedBy": 27
+        },
+        {
+          "d": 9,
+          "mean": 0,
+          "replacedBy": 31
+        }
+      ],
+      "stopped": [
+        {
+          "d": 16,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 16,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 29,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 29,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 29,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 5,
+      "labels": 6,
+      "futility": [
+        {
+          "d": 16,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 25,
+          "at": 50,
+          "gap": 0.07,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 26,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 29,
+          "at": 50,
+          "gap": 0.07,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 30,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 33,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 35,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 21,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 27,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 31,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        }
+      ],
+      "futileStopped": 4,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 1600,
+      "partialLabels": 4
+    },
+    "disagreeMost": [],
+    "branchGames": 4450,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 452,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2063,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 133064,
+    "gamesIdChecked": 4451,
+    "frameLogs": 8902,
+    "frameLogsFailed": 0,
+    "redactionMs": 75931,
+    "forks": 4450,
+    "forkProblems": 0,
+    "leakChecks": 14,
+    "leaks": 0,
+    "leakControlsMoved": 14,
+    "guardrails": {
+      "logs": 8900,
+      "priorityDecisions": 304061,
+      "landOffered": 28423,
+      "landTaken": 28423,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 3690,
+      "refusedCast": 2022,
+      "noRepeatRefused": 1743,
+      "xDrawn": 830,
+      "zeroXLeftOut": 1299,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4450,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4450,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4450,
+      "errored": 452,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 452
+        }
+      ],
+      "options": [
+        {
+          "d": 27,
+          "o": 0,
+          "token": "cast:11",
+          "label": "Dandân",
+          "branches": 150,
+          "errored": 38,
+          "byContinuation": {
+            "random": {
+              "branches": 150,
+              "errored": 38
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 38
+            }
+          ]
+        },
+        {
+          "d": 35,
+          "o": 1,
+          "token": "attack:none",
+          "label": "attack none",
+          "branches": 50,
+          "errored": 13,
+          "byContinuation": {
+            "random": {
+              "branches": 50,
+              "errored": 13
+            }
+          },
+          "errors": [
+            {
+              "error": "ended at the turn cap",
+              "n": 13
+            }
+          ]
+        }
+      ],
+      "notDrawn": 0
+    },
+    "warnings": [
+      "d27 option 0 `cast:11` (Dandân): 38 of 150 branch game(s) were capped (random 38 of 150): 38 x ended at the turn cap",
+      "d35 option 1 `attack:none` (attack none): 13 of 50 branch game(s) were capped (random 13 of 50): 13 x ended at the turn cap"
+    ],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 133623
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5168,
+      "units": 48,
+      "branchGames": 4450,
+      "ms": 1639048,
+      "workers": 6
+    },
+    "wallMs": 1644216,
+    "jobs": 6
+  }
+}

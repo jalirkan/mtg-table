@@ -1,0 +1,299 @@
+{
+ "definitions": "see the header of this script",
+ "n": [
+  50,
+  100,
+  150
+ ],
+ "review": {
+  "final": 65.4,
+  "atN": {
+   "50": {
+    "expected": 43.4,
+    "kept": 35.0
+   },
+   "100": {
+    "expected": 50.0,
+    "kept": 44.6
+   },
+   "150": {
+    "expected": 64.8,
+    "kept": 57.0
+   },
+   "200": {
+    "expected": 65.4,
+    "kept": 65.4
+   }
+  },
+  "note": "study/atlas-review-2026-10-27/report/ncurve.md, seat \"all\": a 200-branch design; \"at 150, 88% of the final confident set is already confident\" (section 2)"
+ },
+ "bySpine": {
+  "s01": {
+   "final": 0,
+   "complete": 5,
+   "atN": {
+    "50": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "150": {
+     "expected": 0.6,
+     "kept": 0.0
+    }
+   },
+   "selfAgree": 4
+  },
+  "s02": {
+   "final": 2,
+   "complete": 8,
+   "atN": {
+    "50": {
+     "expected": 4.0,
+     "kept": 1.0
+    },
+    "100": {
+     "expected": 1.4,
+     "kept": 1.0
+    },
+    "150": {
+     "expected": 2.0,
+     "kept": 2.0
+    }
+   },
+   "selfAgree": 8
+  },
+  "s03": {
+   "final": 3,
+   "complete": 6,
+   "atN": {
+    "50": {
+     "expected": 2.2,
+     "kept": 2.2
+    },
+    "100": {
+     "expected": 2.8,
+     "kept": 2.8
+    },
+    "150": {
+     "expected": 3.0,
+     "kept": 3.0
+    }
+   },
+   "selfAgree": 6
+  },
+  "s04": {
+   "final": 0,
+   "complete": 8,
+   "atN": {
+    "50": {
+     "expected": 2.0,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "150": {
+     "expected": 0.0,
+     "kept": 0.0
+    }
+   },
+   "selfAgree": 8
+  },
+  "s05": {
+   "final": 0,
+   "complete": 6,
+   "atN": {
+    "50": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "150": {
+     "expected": 0.0,
+     "kept": 0.0
+    }
+   },
+   "selfAgree": 6
+  },
+  "s06": {
+   "final": 1,
+   "complete": 8,
+   "atN": {
+    "50": {
+     "expected": 1.0,
+     "kept": 1.0
+    },
+    "100": {
+     "expected": 2.0,
+     "kept": 1.0
+    },
+    "150": {
+     "expected": 1.0,
+     "kept": 1.0
+    }
+   },
+   "selfAgree": 8
+  },
+  "s07": {
+   "final": 0,
+   "complete": 6,
+   "atN": {
+    "50": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "150": {
+     "expected": 0.0,
+     "kept": 0.0
+    }
+   },
+   "selfAgree": 6
+  },
+  "s08": {
+   "final": 2,
+   "complete": 3,
+   "atN": {
+    "50": {
+     "expected": 1.0,
+     "kept": 1.0
+    },
+    "100": {
+     "expected": 1.0,
+     "kept": 1.0
+    },
+    "150": {
+     "expected": 2.0,
+     "kept": 2.0
+    }
+   },
+   "selfAgree": 3
+  },
+  "s09": {
+   "final": 2,
+   "complete": 8,
+   "atN": {
+    "50": {
+     "expected": 2.0,
+     "kept": 1.0
+    },
+    "100": {
+     "expected": 2.0,
+     "kept": 2.0
+    },
+    "150": {
+     "expected": 2.0,
+     "kept": 2.0
+    }
+   },
+   "selfAgree": 8
+  },
+  "s10": {
+   "final": 4,
+   "complete": 10,
+   "atN": {
+    "50": {
+     "expected": 2.0,
+     "kept": 2.0
+    },
+    "100": {
+     "expected": 2.2,
+     "kept": 2.0
+    },
+    "150": {
+     "expected": 4.0,
+     "kept": 4.0
+    }
+   },
+   "selfAgree": 10
+  },
+  "s11": {
+   "final": 1,
+   "complete": 7,
+   "atN": {
+    "50": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "150": {
+     "expected": 1.4,
+     "kept": 1.0
+    }
+   },
+   "selfAgree": 7
+  },
+  "s12": {
+   "final": 1,
+   "complete": 5,
+   "atN": {
+    "50": {
+     "expected": 0.0,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 1.0,
+     "kept": 1.0
+    },
+    "150": {
+     "expected": 1.0,
+     "kept": 1.0
+    }
+   },
+   "selfAgree": 5
+  },
+  "s13": {
+   "final": 1,
+   "complete": 6,
+   "atN": {
+    "50": {
+     "expected": 1.6,
+     "kept": 0.0
+    },
+    "100": {
+     "expected": 1.0,
+     "kept": 0.0
+    },
+    "150": {
+     "expected": 1.0,
+     "kept": 1.0
+    }
+   },
+   "selfAgree": 6
+  }
+ },
+ "final": 17,
+ "complete": 86,
+ "atN": {
+  "50": {
+   "expected": 15.8,
+   "kept": 8.2,
+   "keptShare": 0.4824
+  },
+  "100": {
+   "expected": 13.4,
+   "kept": 10.8,
+   "keptShare": 0.6353
+  },
+  "150": {
+   "expected": 18.0,
+   "kept": 17.0,
+   "keptShare": 1.0
+  }
+ },
+ "selfAgree": 85
+}

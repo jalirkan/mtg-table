@@ -1,0 +1,1003 @@
+{
+ "spines": {
+  "s01": {
+   "pool": "random-pauper-d508",
+   "forgeMap": true
+  },
+  "s02": {
+   "pool": "random-peasant-d508",
+   "forgeMap": false
+  },
+  "s03": {
+   "pool": "random-legacy-d508",
+   "forgeMap": false
+  },
+  "s04": {
+   "pool": "random-powered-d508",
+   "forgeMap": false
+  },
+  "s05": {
+   "pool": "random-pauper-d508",
+   "forgeMap": false
+  },
+  "s06": {
+   "pool": "random-peasant-d508",
+   "forgeMap": false
+  },
+  "s07": {
+   "pool": "random-legacy-d508",
+   "forgeMap": true
+  },
+  "s08": {
+   "pool": "random-powered-d508",
+   "forgeMap": false
+  },
+  "s09": {
+   "pool": "random-pauper-d508",
+   "forgeMap": false
+  },
+  "s10": {
+   "pool": "random-peasant-d508",
+   "forgeMap": false
+  },
+  "s11": {
+   "pool": "random-legacy-d508",
+   "forgeMap": false
+  },
+  "s12": {
+   "pool": "random-powered-d508",
+   "forgeMap": false
+  },
+  "s13": {
+   "pool": "random-pauper-d508",
+   "forgeMap": true
+  }
+ },
+ "forgeSpines": [
+  "s01",
+  "s07",
+  "s13"
+ ],
+ "definitions": "see the header of this script",
+ "decisions": 176,
+ "complete": 86,
+ "decided": 0,
+ "Q": 86,
+ "screened": 52,
+ "i_sameBest": {
+  "n": 17,
+  "point": 0.3529,
+  "interval": [
+   0.1176,
+   0.5882
+  ],
+  "bySpine": {
+   "s01": {
+    "n": 5,
+    "point": 0.4,
+    "interval": [
+     0.0,
+     0.8
+    ]
+   },
+   "s07": {
+    "n": 6,
+    "point": 0.3333,
+    "interval": [
+     0.0,
+     0.6667
+    ]
+   },
+   "s13": {
+    "n": 6,
+    "point": 0.3333,
+    "interval": [
+     0.0,
+     0.6667
+    ]
+   }
+  }
+ },
+ "ii_rho": {
+  "n": 13,
+  "point": 0.1235,
+  "interval": [
+   -0.3406,
+   0.6997
+  ],
+  "bySpine": {
+   "s01": {
+    "n": 5,
+    "point": 0.1182,
+    "interval": [
+     -0.5451,
+     0.7731
+    ]
+   },
+   "s07": {
+    "n": 4,
+    "point": 0.3415,
+    "interval": [
+     -0.5335,
+     0.933
+    ]
+   },
+   "s13": {
+    "n": 4,
+    "point": -0.0878,
+    "interval": [
+     -0.9,
+     0.7244
+    ]
+   }
+  },
+  "twoOption": 2
+ },
+ "iii_regret": {
+  "p": {
+   "random": {
+    "n": 15,
+    "point": 0.0251,
+    "interval": [
+     0.0025,
+     0.05
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 5,
+      "point": 0.026,
+      "interval": [
+       0.0053,
+       0.0467
+      ]
+     },
+     "s07": {
+      "n": 6,
+      "point": 0.0056,
+      "interval": [
+       0.0,
+       0.0133
+      ]
+     },
+     "s13": {
+      "n": 4,
+      "point": 0.0533,
+      "interval": [
+       0.0383,
+       0.0683
+      ]
+     }
+    },
+    "clearOfZero": 1
+   },
+   "forge": {
+    "n": 15,
+    "point": 0.0318,
+    "interval": [
+     0.0142,
+     0.0558
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 5,
+      "point": 0.0279,
+      "interval": [
+       0.0,
+       0.0638
+      ]
+     },
+     "s07": {
+      "n": 6,
+      "point": 0.0229,
+      "interval": [
+       0.0083,
+       0.0375
+      ]
+     },
+     "s13": {
+      "n": 4,
+      "point": 0.05,
+      "interval": [
+       0.0125,
+       0.1
+      ]
+     }
+    },
+    "clearOfZero": 1
+   }
+  },
+  "a": {
+   "random": {
+    "n": 2,
+    "point": 0.01,
+    "interval": [
+     0.0033,
+     0.0167
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s07": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s13": {
+      "n": 2,
+      "point": 0.01,
+      "interval": [
+       0.0033,
+       0.0167
+      ]
+     }
+    },
+    "clearOfZero": 0
+   },
+   "forge": {
+    "n": 2,
+    "point": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s07": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s13": {
+      "n": 2,
+      "point": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  },
+  "b": {
+   "random": {
+    "n": 0,
+    "point": null,
+    "interval": [
+     null,
+     null
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s07": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s13": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   },
+   "forge": {
+    "n": 0,
+    "point": null,
+    "interval": [
+     null,
+     null
+    ],
+    "bySpine": {
+     "s01": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s07": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     },
+     "s13": {
+      "n": 0,
+      "point": null,
+      "interval": [
+       null,
+       null
+      ]
+     }
+    },
+    "clearOfZero": 0
+   }
+  }
+ },
+ "iv_bySpine": {
+  "s01": {
+   "C1_castNow": {
+    "random": {
+     "n": 5,
+     "point": 0.0316,
+     "interval": [
+      -0.0002,
+      0.0672
+     ]
+    },
+    "verdict": "NOT SHOWN",
+    "forgeMap": {
+     "n": 4,
+     "point": 0.083,
+     "interval": [
+      -0.0178,
+      0.1839
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "forgeMap": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "verdict": null
+   }
+  },
+  "s07": {
+   "C1_castNow": {
+    "random": {
+     "n": 6,
+     "point": 0.0408,
+     "interval": [
+      -0.0103,
+      0.0905
+     ]
+    },
+    "verdict": "NOT SHOWN",
+    "forgeMap": {
+     "n": 5,
+     "point": 0.0187,
+     "interval": [
+      -0.0525,
+      0.0937
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "forgeMap": {
+     "n": 0,
+     "point": null,
+     "interval": [
+      null,
+      null
+     ]
+    },
+    "verdict": null
+   }
+  },
+  "s13": {
+   "C1_castNow": {
+    "random": {
+     "n": 4,
+     "point": -0.0435,
+     "interval": [
+      -0.0553,
+      -0.0306
+     ]
+    },
+    "verdict": "NOT SHOWN",
+    "forgeMap": {
+     "n": 4,
+     "point": -0.0115,
+     "interval": [
+      -0.0667,
+      0.0438
+     ]
+    }
+   },
+   "C2_dontAttack": {
+    "random": {
+     "n": 2,
+     "point": -0.0133,
+     "interval": [
+      -0.0267,
+      0.0
+     ]
+    },
+    "forgeMap": {
+     "n": 2,
+     "point": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "verdict": null
+   }
+  }
+ },
+ "iv_pooledForgeSpines": {
+  "C1_castNow": {
+   "random": {
+    "n": 15,
+    "point": 0.0153,
+    "interval": [
+     -0.0287,
+     0.0651
+    ]
+   },
+   "forgeMap": {
+    "n": 13,
+    "point": 0.0292,
+    "interval": [
+     -0.0275,
+     0.0931
+    ]
+   },
+   "verdict": null
+  }
+ },
+ "iv_information_noForgeSpines": {
+  "C1_castNow_random": {
+   "n": 42,
+   "point": 0.0064,
+   "interval": [
+    -0.0133,
+    0.0216
+   ],
+   "bySpine": {
+    "s02": {
+     "n": 5,
+     "point": 0.0148,
+     "interval": [
+      -0.0222,
+      0.0517
+     ]
+    },
+    "s03": {
+     "n": 6,
+     "point": 0.0245,
+     "interval": [
+      0.0015,
+      0.0507
+     ]
+    },
+    "s04": {
+     "n": 5,
+     "point": 0.0205,
+     "interval": [
+      -0.0095,
+      0.0474
+     ]
+    },
+    "s05": {
+     "n": 3,
+     "point": -0.0039,
+     "interval": [
+      -0.0516,
+      0.0416
+     ]
+    },
+    "s06": {
+     "n": 3,
+     "point": -0.0063,
+     "interval": [
+      -0.0367,
+      0.04
+     ]
+    },
+    "s08": {
+     "n": 2,
+     "point": 0.0076,
+     "interval": [
+      -0.0122,
+      0.0275
+     ]
+    },
+    "s09": {
+     "n": 3,
+     "point": 0.021,
+     "interval": [
+      -0.0122,
+      0.0578
+     ]
+    },
+    "s10": {
+     "n": 6,
+     "point": 0.0164,
+     "interval": [
+      -0.0096,
+      0.0383
+     ]
+    },
+    "s11": {
+     "n": 4,
+     "point": -0.038,
+     "interval": [
+      -0.0756,
+      -0.0004
+     ]
+    },
+    "s12": {
+     "n": 5,
+     "point": -0.01,
+     "interval": [
+      -0.0613,
+      0.0486
+     ]
+    }
+   }
+  },
+  "verdict": null
+ },
+ "v_guardrails": {
+  "bySpine": {
+   "s01": {
+    "logs": 9050,
+    "priorityDecisions": 427529,
+    "landOffered": 37144,
+    "landTaken": 37144,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 7171,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 0,
+    "zeroXLeftOut": 0,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s02": {
+    "logs": 10200,
+    "priorityDecisions": 529670,
+    "landOffered": 32392,
+    "landTaken": 32392,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 4878,
+    "refusedCast": 461,
+    "noRepeatRefused": 392,
+    "xDrawn": 23357,
+    "zeroXLeftOut": 417818,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s03": {
+    "logs": 8600,
+    "priorityDecisions": 863534,
+    "landOffered": 50563,
+    "landTaken": 50563,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 780,
+    "refusedCast": 2132,
+    "noRepeatRefused": 2246,
+    "xDrawn": 1364,
+    "zeroXLeftOut": 39786,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s04": {
+    "logs": 7850,
+    "priorityDecisions": 191459,
+    "landOffered": 30555,
+    "landTaken": 30555,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 1104,
+    "refusedCast": 1,
+    "noRepeatRefused": 0,
+    "xDrawn": 2049,
+    "zeroXLeftOut": 22308,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s05": {
+    "logs": 8900,
+    "priorityDecisions": 304061,
+    "landOffered": 28423,
+    "landTaken": 28423,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 3690,
+    "refusedCast": 2022,
+    "noRepeatRefused": 1743,
+    "xDrawn": 830,
+    "zeroXLeftOut": 1299,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s06": {
+    "logs": 12300,
+    "priorityDecisions": 429491,
+    "landOffered": 21310,
+    "landTaken": 21310,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 120,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 8514,
+    "zeroXLeftOut": 2194,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s07": {
+    "logs": 7150,
+    "priorityDecisions": 240132,
+    "landOffered": 27415,
+    "landTaken": 27415,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 754,
+    "refusedCast": 4,
+    "noRepeatRefused": 2,
+    "xDrawn": 3641,
+    "zeroXLeftOut": 523137,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s08": {
+    "logs": 4900,
+    "priorityDecisions": 86251,
+    "landOffered": 13613,
+    "landTaken": 13613,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 1126,
+    "refusedCast": 33,
+    "noRepeatRefused": 17,
+    "xDrawn": 0,
+    "zeroXLeftOut": 0,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s09": {
+    "logs": 14000,
+    "priorityDecisions": 894035,
+    "landOffered": 59966,
+    "landTaken": 59966,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 19004,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 0,
+    "zeroXLeftOut": 0,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s10": {
+    "logs": 12400,
+    "priorityDecisions": 420640,
+    "landOffered": 45323,
+    "landTaken": 45323,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 0,
+    "refusedCast": 0,
+    "noRepeatRefused": 0,
+    "xDrawn": 822,
+    "zeroXLeftOut": 8053,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s11": {
+    "logs": 7750,
+    "priorityDecisions": 207880,
+    "landOffered": 38437,
+    "landTaken": 38437,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 1149,
+    "refusedCast": 716,
+    "noRepeatRefused": 592,
+    "xDrawn": 901,
+    "zeroXLeftOut": 15678,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s12": {
+    "logs": 6650,
+    "priorityDecisions": 355794,
+    "landOffered": 34832,
+    "landTaken": 34832,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 2194,
+    "refusedCast": 41,
+    "noRepeatRefused": 20,
+    "xDrawn": 1381,
+    "zeroXLeftOut": 110680,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "s13": {
+    "logs": 8750,
+    "priorityDecisions": 511368,
+    "landOffered": 40469,
+    "landTaken": 40469,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 421,
+    "refusedCast": 21,
+    "noRepeatRefused": 3,
+    "xDrawn": 1658,
+    "zeroXLeftOut": 0,
+    "zeroX": 0,
+    "forgePayCap": 0
+   }
+  },
+  "byPool": {
+   "random-pauper-d508": {
+    "logs": 40700,
+    "priorityDecisions": 2136993,
+    "landOffered": 166002,
+    "landTaken": 166002,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 30286,
+    "refusedCast": 2043,
+    "noRepeatRefused": 1746,
+    "xDrawn": 2488,
+    "zeroXLeftOut": 1299,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "random-peasant-d508": {
+    "logs": 34900,
+    "priorityDecisions": 1379801,
+    "landOffered": 99025,
+    "landTaken": 99025,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 4998,
+    "refusedCast": 461,
+    "noRepeatRefused": 392,
+    "xDrawn": 32693,
+    "zeroXLeftOut": 428065,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "random-legacy-d508": {
+    "logs": 23500,
+    "priorityDecisions": 1311546,
+    "landOffered": 116415,
+    "landTaken": 116415,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 2683,
+    "refusedCast": 2852,
+    "noRepeatRefused": 2840,
+    "xDrawn": 5906,
+    "zeroXLeftOut": 578601,
+    "zeroX": 0,
+    "forgePayCap": 0
+   },
+   "random-powered-d508": {
+    "logs": 19400,
+    "priorityDecisions": 633504,
+    "landOffered": 79000,
+    "landTaken": 79000,
+    "mulligans": 0,
+    "kept": 0,
+    "violations": 0,
+    "noRepeatNoOp": 4424,
+    "refusedCast": 75,
+    "noRepeatRefused": 37,
+    "xDrawn": 3430,
+    "zeroXLeftOut": 132988,
+    "zeroX": 0,
+    "forgePayCap": 0
+   }
+  },
+  "total": {
+   "logs": 118500,
+   "priorityDecisions": 5461844,
+   "landOffered": 460442,
+   "landTaken": 460442,
+   "mulligans": 0,
+   "kept": 0,
+   "violations": 0,
+   "noRepeatNoOp": 42391,
+   "refusedCast": 5431,
+   "noRepeatRefused": 5015,
+   "xDrawn": 44517,
+   "zeroXLeftOut": 1140953,
+   "zeroX": 0,
+   "forgePayCap": 0
+  }
+ },
+ "vi_bySpine": {
+  "s01": {
+   "optionsPerDecision": 3.6,
+   "branchGamesPerLabel": 871,
+   "secRandomBranch": 2.53,
+   "secForgeBranch": 7.91,
+   "workerSecPerLabel": 2963,
+   "labelsPer7WorkerHour": 8.5,
+   "labelsPer10hNightAt7": 85
+  },
+  "s02": {
+   "optionsPerDecision": 4.5,
+   "branchGamesPerLabel": 638,
+   "secRandomBranch": 1.69,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1075,
+   "labelsPer7WorkerHour": 23.4,
+   "labelsPer10hNightAt7": 234
+  },
+  "s03": {
+   "optionsPerDecision": 4.1,
+   "branchGamesPerLabel": 717,
+   "secRandomBranch": 6.89,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 4936,
+   "labelsPer7WorkerHour": 5.1,
+   "labelsPer10hNightAt7": 51
+  },
+  "s04": {
+   "optionsPerDecision": 2.8,
+   "branchGamesPerLabel": 419,
+   "secRandomBranch": 2.52,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1057,
+   "labelsPer7WorkerHour": 23.8,
+   "labelsPer10hNightAt7": 238
+  },
+  "s05": {
+   "optionsPerDecision": 4.1,
+   "branchGamesPerLabel": 675,
+   "secRandomBranch": 2.06,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1393,
+   "labelsPer7WorkerHour": 18.1,
+   "labelsPer10hNightAt7": 181
+  },
+  "s06": {
+   "optionsPerDecision": 5.3,
+   "branchGamesPerLabel": 744,
+   "secRandomBranch": 2.93,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 2178,
+   "labelsPer7WorkerHour": 11.6,
+   "labelsPer10hNightAt7": 116
+  },
+  "s07": {
+   "optionsPerDecision": 2.4,
+   "branchGamesPerLabel": 527,
+   "secRandomBranch": 3.97,
+   "secForgeBranch": 3.66,
+   "workerSecPerLabel": 2061,
+   "labelsPer7WorkerHour": 12.2,
+   "labelsPer10hNightAt7": 122
+  },
+  "s08": {
+   "optionsPerDecision": 3.75,
+   "branchGamesPerLabel": 599,
+   "secRandomBranch": 1.48,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 887,
+   "labelsPer7WorkerHour": 28.4,
+   "labelsPer10hNightAt7": 284
+  },
+  "s09": {
+   "optionsPerDecision": 5.8,
+   "branchGamesPerLabel": 794,
+   "secRandomBranch": 3.49,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 2770,
+   "labelsPer7WorkerHour": 9.1,
+   "labelsPer10hNightAt7": 91
+  },
+  "s10": {
+   "optionsPerDecision": 4.7,
+   "branchGamesPerLabel": 605,
+   "secRandomBranch": 2.2,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1332,
+   "labelsPer7WorkerHour": 18.9,
+   "labelsPer10hNightAt7": 189
+  },
+  "s11": {
+   "optionsPerDecision": 3.2,
+   "branchGamesPerLabel": 536,
+   "secRandomBranch": 4.21,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 2258,
+   "labelsPer7WorkerHour": 11.2,
+   "labelsPer10hNightAt7": 112
+  },
+  "s12": {
+   "optionsPerDecision": 2.5,
+   "branchGamesPerLabel": 490,
+   "secRandomBranch": 2.95,
+   "secForgeBranch": null,
+   "workerSecPerLabel": 1445,
+   "labelsPer7WorkerHour": 17.4,
+   "labelsPer10hNightAt7": 174
+  },
+  "s13": {
+   "optionsPerDecision": 3.6,
+   "branchGamesPerLabel": 837,
+   "secRandomBranch": 2.18,
+   "secForgeBranch": 0.92,
+   "workerSecPerLabel": 1634,
+   "labelsPer7WorkerHour": 15.4,
+   "labelsPer10hNightAt7": 154
+  }
+ }
+}

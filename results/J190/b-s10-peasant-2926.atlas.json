@@ -1,0 +1,2027 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s10-peasant-2826/decks/peasant-2826-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s10-peasant-2826/decks/peasant-2826-00002.dck",
+    "seed": 2926,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 24,
+      "first": "A",
+      "decisionsListed": 33
+    },
+    "decisions": [
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 8,
+              "losses": 97,
+              "mean": 0.3267,
+              "lo": 0.2568,
+              "hi": 0.4052
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 39,
+              "draws": 3,
+              "losses": 108,
+              "mean": 0.27,
+              "lo": 0.2054,
+              "hi": 0.3461
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Prized Amalgam",
+            "random": {
+              "n": 150,
+              "wins": 48,
+              "draws": 4,
+              "losses": 98,
+              "mean": 0.3333,
+              "lo": 0.2629,
+              "hi": 0.4121
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:37",
+            "label": "Ulvenwald Mysteries",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 3,
+              "losses": 110,
+              "mean": 0.2567,
+              "lo": 0.1935,
+              "hi": 0.332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:34",
+            "label": "Nishoba Brawler",
+            "random": {
+              "n": 150,
+              "wins": 40,
+              "draws": 4,
+              "losses": 106,
+              "mean": 0.28,
+              "lo": 0.2143,
+              "hi": 0.3567
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0067,
+          "regretLo": 0,
+          "regretHi": 0.1034,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.26,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 33,
+              "draws": 4,
+              "losses": 113,
+              "mean": 0.2333,
+              "lo": 0.1728,
+              "hi": 0.3072
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 2,
+              "losses": 37,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Prized Amalgam",
+            "random": {
+              "n": 150,
+              "wins": 50,
+              "draws": 11,
+              "losses": 89,
+              "mean": 0.37,
+              "lo": 0.2969,
+              "hi": 0.4496
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:37",
+            "label": "Ulvenwald Mysteries",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 3,
+              "losses": 35,
+              "mean": 0.27,
+              "lo": 0.1667,
+              "hi": 0.4061
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:17",
+            "label": "Tough Cookie",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1367,
+          "regretLo": 0.0667,
+          "regretHi": 0.22,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.288,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.18
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 36,
+              "draws": 5,
+              "losses": 109,
+              "mean": 0.2567,
+              "lo": 0.1935,
+              "hi": 0.332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 39,
+              "draws": 10,
+              "losses": 101,
+              "mean": 0.2933,
+              "lo": 0.2264,
+              "hi": 0.3706
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:37",
+            "label": "Ulvenwald Mysteries",
+            "random": {
+              "n": 150,
+              "wins": 38,
+              "draws": 2,
+              "losses": 110,
+              "mean": 0.26,
+              "lo": 0.1964,
+              "hi": 0.3356
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:17",
+            "label": "Tough Cookie",
+            "random": {
+              "n": 150,
+              "wins": 38,
+              "draws": 6,
+              "losses": 106,
+              "mean": 0.2733,
+              "lo": 0.2083,
+              "hi": 0.3496
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:39",
+            "label": "Summon: Fenrir",
+            "random": {
+              "n": 150,
+              "wins": 40,
+              "draws": 7,
+              "losses": 103,
+              "mean": 0.29,
+              "lo": 0.2233,
+              "hi": 0.3671
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0367,
+          "regretLo": 0,
+          "regretHi": 0.1233,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.272,
+        "futilityGap": 0.06
+      },
+      {
+        "d": 11,
+        "kind": "b",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:1>47",
+            "label": "block Prized Amalgam>Glóin the Mighty",
+            "random": {
+              "n": 150,
+              "wins": 16,
+              "draws": 4,
+              "losses": 130,
+              "mean": 0.12,
+              "lo": 0.0773,
+              "hi": 0.1817
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 100,
+              "wins": 6,
+              "draws": 3,
+              "losses": 91,
+              "mean": 0.075,
+              "lo": 0.0377,
+              "hi": 0.1438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "block:1>47,34>59",
+            "label": "block Prized Amalgam>Glóin the Mighty, Nishoba Brawler>Gitaxian Spellstalker",
+            "random": {
+              "n": 150,
+              "wins": 16,
+              "draws": 2,
+              "losses": 132,
+              "mean": 0.1133,
+              "lo": 0.072,
+              "hi": 0.174
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:1>47,34>47",
+            "label": "block Prized Amalgam>Glóin the Mighty, Nishoba Brawler>Glóin the Mighty",
+            "random": {
+              "n": 150,
+              "wins": 19,
+              "draws": 7,
+              "losses": 124,
+              "mean": 0.15,
+              "lo": 0.1016,
+              "hi": 0.2158
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.03,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.125,
+        "forgeOptions": [
+          0,
+          2,
+          3
+        ],
+        "futilityGap": 0.05
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 25,
+              "draws": 11,
+              "losses": 114,
+              "mean": 0.2033,
+              "lo": 0.1467,
+              "hi": 0.2748
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 36,
+              "draws": 7,
+              "losses": 107,
+              "mean": 0.2633,
+              "lo": 0.1994,
+              "hi": 0.3391
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:37",
+            "label": "Ulvenwald Mysteries",
+            "random": {
+              "n": 150,
+              "wins": 32,
+              "draws": 7,
+              "losses": 111,
+              "mean": 0.2367,
+              "lo": 0.1758,
+              "hi": 0.3107
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:33",
+            "label": "Pizza Face, Gastromancer",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 2,
+              "losses": 42,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:17",
+            "label": "Tough Cookie",
+            "random": {
+              "n": 150,
+              "wins": 27,
+              "draws": 12,
+              "losses": 111,
+              "mean": 0.22,
+              "lo": 0.1612,
+              "hi": 0.2928
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:34",
+            "label": "Nishoba Brawler",
+            "random": {
+              "n": 150,
+              "wins": 29,
+              "draws": 11,
+              "losses": 110,
+              "mean": 0.23,
+              "lo": 0.1699,
+              "hi": 0.3036
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.06,
+          "regretLo": 0,
+          "regretHi": 0.1433,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2167,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          4,
+          5
+        ],
+        "futilityGap": 0.04
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:17",
+            "label": "Tough Cookie",
+            "random": {
+              "n": 150,
+              "wins": 25,
+              "draws": 11,
+              "losses": 114,
+              "mean": 0.2033,
+              "lo": 0.1467,
+              "hi": 0.2748
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 27,
+              "draws": 12,
+              "losses": 111,
+              "mean": 0.22,
+              "lo": 0.1612,
+              "hi": 0.2928
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 34,
+              "draws": 12,
+              "losses": 104,
+              "mean": 0.2667,
+              "lo": 0.2024,
+              "hi": 0.3426
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:37",
+            "label": "Ulvenwald Mysteries",
+            "random": {
+              "n": 150,
+              "wins": 31,
+              "draws": 16,
+              "losses": 103,
+              "mean": 0.26,
+              "lo": 0.1964,
+              "hi": 0.3356
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0633,
+          "regretLo": 0.0067,
+          "regretHi": 0.1501,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.27,
+        "futilityGap": 0.03
+      },
+      {
+        "d": 21,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 11,
+              "losses": 102,
+              "mean": 0.2833,
+              "lo": 0.2173,
+              "hi": 0.3602
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:37",
+            "label": "Ulvenwald Mysteries",
+            "random": {
+              "n": 100,
+              "wins": 28,
+              "draws": 3,
+              "losses": 69,
+              "mean": 0.295,
+              "lo": 0.2145,
+              "hi": 0.3906
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "cast:33",
+            "label": "Pizza Face, Gastromancer",
+            "random": {
+              "n": 150,
+              "wins": 53,
+              "draws": 9,
+              "losses": 88,
+              "mean": 0.3833,
+              "lo": 0.3094,
+              "hi": 0.4631
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1,
+          "regretLo": 0.0133,
+          "regretHi": 0.1833,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.32,
+        "forgeOptions": [
+          0,
+          3
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 116,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.7733,
+              "lo": 0.7,
+              "hi": 0.833
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:12,33",
+            "label": "attack Throat Slitter+Pizza Face, Gastromancer",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 2,
+              "losses": 48,
+              "mean": 0.6733,
+              "lo": 0.5948,
+              "hi": 0.7432
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:12",
+            "label": "attack Throat Slitter",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 2,
+              "losses": 17,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:33",
+            "label": "attack Pizza Face, Gastromancer",
+            "random": {
+              "n": 50,
+              "wins": 32,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0221,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.695,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 28,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 99,
+              "draws": 1,
+              "losses": 50,
+              "mean": 0.6633,
+              "lo": 0.5845,
+              "hi": 0.734
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:12,13,33",
+            "label": "attack Throat Slitter+Pizza Face, Gastromancer+Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 106,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.7067,
+              "lo": 0.6294,
+              "hi": 0.7736
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:12",
+            "label": "attack Throat Slitter",
+            "random": {
+              "n": 150,
+              "wins": 98,
+              "draws": 3,
+              "losses": 49,
+              "mean": 0.6633,
+              "lo": 0.5845,
+              "hi": 0.734
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:33",
+            "label": "attack Pizza Face, Gastromancer",
+            "random": {
+              "n": 150,
+              "wins": 104,
+              "draws": 3,
+              "losses": 43,
+              "mean": 0.7033,
+              "lo": 0.6259,
+              "hi": 0.7706
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 103,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.6867,
+              "lo": 0.6086,
+              "hi": 0.7555
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0433,
+          "regretLo": 0,
+          "regretHi": 0.1568,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.704,
+        "futilityGap": 0.1
+      },
+      {
+        "d": 29,
+        "kind": "a",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 51,
+              "draws": 0,
+              "losses": 99,
+              "mean": 0.34,
+              "lo": 0.269,
+              "hi": 0.419
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:12,13,33",
+            "label": "attack Throat Slitter+Pizza Face, Gastromancer+Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 90,
+              "draws": 0,
+              "losses": 60,
+              "mean": 0.6,
+              "lo": 0.52,
+              "hi": 0.675
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:12",
+            "label": "attack Throat Slitter",
+            "random": {
+              "n": 150,
+              "wins": 76,
+              "draws": 0,
+              "losses": 74,
+              "mean": 0.5067,
+              "lo": 0.4275,
+              "hi": 0.5855
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:33",
+            "label": "attack Pizza Face, Gastromancer",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.26,
+          "regretLo": 0.1467,
+          "regretHi": 0.3667,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 32,
+        "screened": false,
+        "screenMean": 0.432,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ],
+        "futilityGap": 0.38
+      },
+      {
+        "d": 32,
+        "kind": "b",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:4>49,33>50,12>53,13>53",
+            "label": "block Thought-Stalker Warlock>Inti, Seneschal of the Sun, Pizza Face, Gastromancer>Casey Jones, Jury-Rig Justiciar, Risen Reef>Circuit Mender, Throat Slitter>Circuit Mender",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:33>50,12>53,13>53",
+            "label": "block Pizza Face, Gastromancer>Casey Jones, Jury-Rig Justiciar, Risen Reef>Circuit Mender, Throat Slitter>Circuit Mender",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:4>49,12>53,13>53",
+            "label": "block Thought-Stalker Warlock>Inti, Seneschal of the Sun, Risen Reef>Circuit Mender, Throat Slitter>Circuit Mender",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:4>49,33>50,12>53",
+            "label": "block Thought-Stalker Warlock>Inti, Seneschal of the Sun, Pizza Face, Gastromancer>Casey Jones, Jury-Rig Justiciar, Throat Slitter>Circuit Mender",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:4>49,33>50,13>53",
+            "label": "block Thought-Stalker Warlock>Inti, Seneschal of the Sun, Pizza Face, Gastromancer>Casey Jones, Jury-Rig Justiciar, Risen Reef>Circuit Mender",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 11,
+      "branchedInFull": 10,
+      "fill": 0,
+      "optionsByDecision": {
+        "d3": 5,
+        "d5": 5,
+        "d8": 5,
+        "d11": 4,
+        "d14": 6,
+        "d17": 4,
+        "d21": 4,
+        "d25": 4,
+        "d28": 5,
+        "d32": 6,
+        "d29": 5
+      },
+      "meanOptions": 4.82,
+      "screened": [
+        {
+          "d": 32,
+          "mean": 0,
+          "replacedBy": 29
+        }
+      ],
+      "stopped": [
+        {
+          "d": 5,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 11,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 14,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 25,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 25,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 29,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 29,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 11,
+      "labels": 10,
+      "futility": [
+        {
+          "d": 3,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0.18,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 21,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 25,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 28,
+          "at": 50,
+          "gap": 0.1,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 29,
+          "at": 50,
+          "gap": 0.38,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 0,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 0,
+      "partialLabels": 0
+    },
+    "disagreeMost": [],
+    "branchGames": 6200,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 212,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2202,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 8,
+    "rows": 217122,
+    "gamesIdChecked": 6201,
+    "frameLogs": 12402,
+    "frameLogsFailed": 0,
+    "redactionMs": 101095,
+    "forks": 6200,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 11,
+    "guardrails": {
+      "logs": 12400,
+      "priorityDecisions": 420640,
+      "landOffered": 45323,
+      "landTaken": 45323,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 0,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 822,
+      "zeroXLeftOut": 8053,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6200,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6200,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6200,
+      "errored": 212,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 212
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 128285
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5866,
+      "units": 61,
+      "branchGames": 6200,
+      "ms": 2610754,
+      "workers": 6
+    },
+    "wallMs": 2616620,
+    "jobs": 6
+  }
+}

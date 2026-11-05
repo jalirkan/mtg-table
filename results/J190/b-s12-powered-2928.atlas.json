@@ -1,0 +1,2397 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j190/decks/s12-powered-2828/decks/powered-2828-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j190/decks/s12-powered-2828/decks/powered-2828-00002.dck",
+    "seed": 2928,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 18,
+      "first": "A",
+      "decisionsListed": 18
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 49,
+              "draws": 14,
+              "losses": 87,
+              "mean": 0.3733,
+              "lo": 0.3,
+              "hi": 0.453
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:20",
+            "label": "Inti, Seneschal of the Sun",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0399,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 15,
+        "screened": false,
+        "screenMean": 0.33,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:20",
+            "label": "Inti, Seneschal of the Sun",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 3,
+              "losses": 31,
+              "mean": 0.35,
+              "lo": 0.2329,
+              "hi": 0.4886
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 3,
+              "losses": 31,
+              "mean": 0.35,
+              "lo": 0.2329,
+              "hi": 0.4886
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.17,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 17,
+        "screened": false,
+        "screenMean": 0.44,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 31,
+              "draws": 10,
+              "losses": 109,
+              "mean": 0.24,
+              "lo": 0.1787,
+              "hi": 0.3143
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:20",
+            "label": "Inti, Seneschal of the Sun",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 10,
+              "losses": 95,
+              "mean": 0.3333,
+              "lo": 0.2629,
+              "hi": 0.4121
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0933,
+          "regretLo": 0.0066,
+          "regretHi": 0.18,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 14,
+        "screened": false,
+        "screenMean": 0.31,
+        "futilityGap": 0.13
+      },
+      {
+        "d": 3,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:20",
+            "label": "Inti, Seneschal of the Sun",
+            "random": {
+              "n": 150,
+              "wins": 38,
+              "draws": 8,
+              "losses": 104,
+              "mean": 0.28,
+              "lo": 0.2143,
+              "hi": 0.3567
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 38,
+              "draws": 20,
+              "losses": 92,
+              "mean": 0.32,
+              "lo": 0.2506,
+              "hi": 0.3983
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.11,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 13,
+        "screened": false,
+        "screenMean": 0.25,
+        "futilityGap": 0.09
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 6,
+              "losses": 34,
+              "mean": 0.26,
+              "lo": 0.1587,
+              "hi": 0.3955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:4",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 8,
+              "losses": 36,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Sage of the Skies",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 5,
+              "losses": 38,
+              "mean": 0.19,
+              "lo": 0.105,
+              "hi": 0.3192
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.09,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2067,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Sage of the Skies",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 5,
+              "losses": 33,
+              "mean": 0.29,
+              "lo": 0.1829,
+              "hi": 0.4271
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 1,
+              "losses": 38,
+              "mean": 0.23,
+              "lo": 0.1352,
+              "hi": 0.3633
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 2,
+              "losses": 42,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.1733,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:7",
+            "label": "Marsh Flats: {T}, Pay 1 life, Sacrifice CARDNAME: Search you",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 2,
+              "losses": 23,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Prismari Command",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:3",
+            "label": "Sedge Troll",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:22",
+            "label": "Mystic Forge",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0.02,
+          "regretHi": 0.16,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.0233
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 9,
+              "losses": 138,
+              "mean": 0.05,
+              "lo": 0.025,
+              "hi": 0.0975
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:4",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 150,
+              "wins": 1,
+              "draws": 13,
+              "losses": 136,
+              "mean": 0.05,
+              "lo": 0.025,
+              "hi": 0.0975
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Prismari Command",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 6,
+              "losses": 141,
+              "mean": 0.04,
+              "lo": 0.0185,
+              "hi": 0.0845
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:3",
+            "label": "Sedge Troll",
+            "random": {
+              "n": 150,
+              "wins": 2,
+              "draws": 3,
+              "losses": 145,
+              "mean": 0.0233,
+              "lo": 0.0086,
+              "hi": 0.0619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:22",
+            "label": "Mystic Forge",
+            "random": {
+              "n": 150,
+              "wins": 2,
+              "draws": 6,
+              "losses": 142,
+              "mean": 0.0333,
+              "lo": 0.0143,
+              "hi": 0.0757
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.04,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.056,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 8,
+        "kind": "a",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 2,
+              "losses": 45,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1",
+            "label": "attack Sage of the Skies",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 2,
+              "losses": 47,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.04,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 6,
+        "screened": false,
+        "screenMean": 0.05,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Sedge Troll",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 3,
+              "losses": 22,
+              "mean": 0.06,
+              "lo": 0.014,
+              "hi": 0.2232
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 2,
+              "losses": 23,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Prismari Command",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 3,
+              "losses": 22,
+              "mean": 0.06,
+              "lo": 0.014,
+              "hi": 0.2232
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:22",
+            "label": "Mystic Forge",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.036
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:4",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 7,
+              "losses": 140,
+              "mean": 0.0433,
+              "lo": 0.0206,
+              "hi": 0.0889
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 3,
+              "draws": 6,
+              "losses": 141,
+              "mean": 0.04,
+              "lo": 0.0185,
+              "hi": 0.0845
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0333,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 9,
+        "screened": false,
+        "screenMean": 0.06,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 11,
+        "kind": "b",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:1>75",
+            "label": "block Sage of the Skies>Wan Shi Tong, All-Knowing",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:4>75",
+            "label": "block Shi'ar Soldier>Wan Shi Tong, All-Knowing",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 1,
+              "losses": 23,
+              "mean": 0.06,
+              "lo": 0.014,
+              "hi": 0.2232
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:1>43",
+            "label": "block Sage of the Skies>Brazen Borrower",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:4>43",
+            "label": "block Shi'ar Soldier>Brazen Borrower",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.06,
+          "regretLo": 0.04,
+          "regretHi": 0.16,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 12,
+        "screened": true,
+        "screenMean": 0.032
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:15",
+            "label": "Verdant Catacombs: {T}, Pay 1 life, Sacrifice CARDNAME: Sear",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Prismari Command",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:22",
+            "label": "Mystic Forge",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.005
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:38",
+            "label": "Prismari Command",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:22",
+            "label": "Mystic Forge",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.02
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,3,4",
+            "label": "attack Sage of the Skies+Sedge Troll+Shi'ar Soldier",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:1",
+            "label": "attack Sage of the Skies",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 1,
+              "losses": 24,
+              "mean": 0.02,
+              "lo": 0.0021,
+              "hi": 0.1658
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3",
+            "label": "attack Sedge Troll",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:4",
+            "label": "attack Shi'ar Soldier",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.008
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:22",
+            "label": "Mystic Forge",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Prismari Command",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 2,
+              "losses": 22,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.08,
+          "regretLo": 0,
+          "regretHi": 0.18,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.0267
+      },
+      {
+        "d": 16,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:12",
+            "label": "Shadowspear (may play)",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 1,
+              "losses": 48,
+              "mean": 0.03,
+              "lo": 0.007,
+              "hi": 0.1201
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.05,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 11,
+        "screened": false,
+        "screenMean": 0.05,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 17,
+        "kind": "b",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:3>65,4>75",
+            "label": "block Sedge Troll>Venser, Shaper Savant, Shi'ar Soldier>Wan Shi Tong, All-Knowing",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:4>75",
+            "label": "block Shi'ar Soldier>Wan Shi Tong, All-Knowing",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:3>65",
+            "label": "block Sedge Troll>Venser, Shaper Savant",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 18,
+      "branchedInFull": 5,
+      "fill": 0,
+      "optionsByDecision": {
+        "d4": 3,
+        "d5": 3,
+        "d6": 6,
+        "d7": 5,
+        "d9": 5,
+        "d12": 4,
+        "d13": 3,
+        "d14": 5,
+        "d15": 3,
+        "d17": 4,
+        "d11": 5,
+        "d8": 2,
+        "d10": 2,
+        "d16": 2,
+        "d3": 2,
+        "d2": 2,
+        "d1": 2,
+        "d0": 2
+      },
+      "meanOptions": 3.33,
+      "screened": [
+        {
+          "d": 6,
+          "mean": 0.0233,
+          "replacedBy": 8
+        },
+        {
+          "d": 9,
+          "mean": 0.036,
+          "replacedBy": 10
+        },
+        {
+          "d": 12,
+          "mean": 0.005,
+          "replacedBy": 11
+        },
+        {
+          "d": 13,
+          "mean": 0.02,
+          "replacedBy": 3
+        },
+        {
+          "d": 14,
+          "mean": 0.008,
+          "replacedBy": 2
+        },
+        {
+          "d": 15,
+          "mean": 0.0267,
+          "replacedBy": 0
+        },
+        {
+          "d": 17,
+          "mean": 0,
+          "replacedBy": 1
+        },
+        {
+          "d": 11,
+          "mean": 0.032,
+          "replacedBy": 16
+        }
+      ],
+      "stopped": [
+        {
+          "d": 0,
+          "o": 1,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 1,
+      "labels": 5,
+      "futility": [
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 7,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 16,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 3,
+          "at": 50,
+          "gap": 0.09,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.13,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 5,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 1200,
+      "partialLabels": 5
+    },
+    "disagreeMost": [],
+    "branchGames": 3325,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 174,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2949,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 94745,
+    "gamesIdChecked": 3326,
+    "frameLogs": 6652,
+    "frameLogsFailed": 0,
+    "redactionMs": 56209,
+    "forks": 3325,
+    "forkProblems": 0,
+    "leakChecks": 18,
+    "leaks": 0,
+    "leakControlsMoved": 18,
+    "guardrails": {
+      "logs": 6650,
+      "priorityDecisions": 355794,
+      "landOffered": 34832,
+      "landTaken": 34832,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 2194,
+      "refusedCast": 41,
+      "noRepeatRefused": 20,
+      "xDrawn": 1381,
+      "zeroXLeftOut": 110680,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3325,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3325,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3325,
+      "errored": 174,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 174
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 128823
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5751,
+      "units": 48,
+      "branchGames": 3325,
+      "ms": 1745343,
+      "workers": 6
+    },
+    "wallMs": 1751096,
+    "jobs": 6
+  }
+}
