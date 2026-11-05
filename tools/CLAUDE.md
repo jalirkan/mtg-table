@@ -317,8 +317,10 @@ named card") has nothing to find. The flag makes either one a WARN only where
 the file itself proves the hand in question was empty: hand count 0 in every
 state, every state listing every seat (D463), and for the opponent no `library.cards` entry and no card in a hand or
 library they own listed in any frame — except the one top card rule A3 itself
-vouches for while they control a "play with the top card revealed" permanent
-(D501: J181's Oracle of Mul Daya beside an empty hand), which is public, and
+vouches for while a "play with the top card revealed" permanent is listed on
+their battlefield (D501: J181's Oracle of Mul Daya beside an empty hand; D513:
+the zone's player, not the card's `controller` field, which leads the listing by
+a frame while a control exchange resolves), which is public, and
 then the WARN says their library listed only its revealed top card (A3). A full
 opponent card, a non-zero count with no stub, or a library card A3 does not
 vouch for still fails under it, and every leak rule is unchanged;

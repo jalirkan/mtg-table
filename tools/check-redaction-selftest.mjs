@@ -86,6 +86,15 @@ const REQUIRED = [
   ['a3-revealed-top-under-courser.jsonl', 'pass'],
   ['a3-revealed-top-two-cards.jsonl', 'fail'],
   ['a3-revealed-top-look-is-private.jsonl', 'fail'],
+  // D513 (J191 s08): a revealer vouches for the top card of the player whose
+  // battlefield lists it, not of its `controller` field, which leads the listing
+  // by a frame while a control exchange resolves; two cards, a revealer already
+  // on the viewer's side, and the mirror (the viewer's Oracle under the
+  // opponent's control field) still fail.
+  ['a3-revealed-top-during-a-control-exchange.jsonl', 'pass'],
+  ['a3-two-cards-during-a-control-exchange.jsonl', 'fail'],
+  ['a3-revealed-top-the-frame-after-the-exchange.jsonl', 'fail'],
+  ['a3-revealer-in-the-viewer-zone-controlled-by-the-opponent.jsonl', 'fail'],
   // D371 (A9): an opponent's face-down card in exile may show its face to the
   // seat whose effect dug it there with a look permission (Gonti, Thief of
   // Sanity) -- and in no other shape; in play, the face is the controller's.
@@ -373,6 +382,8 @@ const COUNTED = [
   ['ceased-opponent-token-bounced-to-its-hand.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['ceased-opponent-token-to-nowhere.jsonl', 'ceased to exist, another seat\'s token=2'],
   ['m55-option-cast-from-the-opponent-hand-held.jsonl', 'entered between frames, an opponent\'s cast=2'],
+  // D513: both frames that list the opponent's top card count it, the cut frame included
+  ['a3-revealed-top-during-a-control-exchange.jsonl', '(2 an opponent\'s top card revealed by a permanent, A3)'],
 ];
 for (const [file, line] of COUNTED) {
   const { code, out } = check(file);
@@ -765,6 +776,28 @@ for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-h
     'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
   plant('opp-top-revealed-two-cards.jsonl', (p, v, i) => s07(p, v, i, { tops: 2 }),
     'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
+  // D513 (J191 s08): the last state is cut as the viewer's exchange of the Oracle
+  // resolves -- still listed on their battlefield, its controller field already
+  // the viewer's, their top card still listed.  The zone's player is whose top it
+  // vouches for: the same pass with the TOP warning, and two cards in that frame
+  // still spoil the proof.
+  {
+    const lastState = base.map((f) => f.type).lastIndexOf('state');
+    const cut = (p, v, i, opts) => {
+      s07(p, v, i, opts);
+      if (!v && i === lastState) p.zones.battlefield.cards.find((c) => c.id === 9101).controller = seat;
+    };
+    const text = variant((p, v, i) => cut(p, v, i));
+    const c1 = run('opp-empty-top-revealed-exchange-cut.jsonl', text, true);
+    const TOP = 'its library listed only its revealed top card (A3)';
+    if (c1.problems.length > 0 || !warns(c1, NOTHING) || !warns(c1, TOP)) bad(`the s07 shape with its last state cut inside a control exchange, under --empty-hand-ok: want a pass with a WARN saying "${TOP}", got ${c1.problems[0] ?? 'no warning'}`);
+    else if (c1.stats.revealedTops !== base.filter((f) => f.type === 'state').length) bad(`the same file: want A3 to vouch for the top card in every state, the cut one included, got ${c1.stats.revealedTops}`);
+    else lead('the s07 shape, its last state cut inside a control exchange (the Oracle on their battlefield, the viewer its controller): a WARN under --empty-hand-ok (D513)');
+  }
+  plant('opp-top-revealed-two-cards-exchange-cut.jsonl', (p, v, i) => {
+    s07(p, v, i, { tops: 2 });
+    if (!v) p.zones.battlefield.cards.find((c) => c.id === 9101).controller = seat;
+  }, 'a card of another seat\'s hand or library is listed', 'full card(s) in library.cards');
   // and the twin: the viewer's hand at count 1 served as a stub
   {
     const r = run('viewer-count-1-stub.jsonl', variant((p, v, i) => {

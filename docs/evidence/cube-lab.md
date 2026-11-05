@@ -440,3 +440,45 @@ file), and 12 are new (3 PASS, 9 FAIL), with a `--partial` check of the lead cut
 rule each fail it; two narrower ones survive because each half of the lead's cure implies the other (D512).
 `npm --prefix web test`: `node --test` 1,869 tests, 1,858 pass, 11 skipped, 0 fail (`claude-md.test.ts` included);
 vitest 161 passed. `node tools/decisions.mjs check` OK. PLAN.md's cube lab follow-up 35 holds what is still refused.
+
+## 16. J191's revealed top card during a control exchange (D513, 2026-11-05)
+
+Lab night J191 (the atlas, spine `b-s08-powered-3008`, under `/home/justin-a/code/lab/data/lab-j191/`, read only)
+failed its `atlas.problems == 0` check: `tools/check-redaction.mjs` (`main`, `fe063f94`) failed two seat-0 branch frame
+logs, `d7-random-o1-b121` (line 501) and `d7-random-o1-b5` (line 261), both rule A3's "1 full card(s) in
+library.cards" for player 1. Player 1 controlled Oracle of Mul Daya, so its top card was public; seat 0's Oko, Thief of
+Crowns (−5) was exchanging control of the Oracle, and the snapshot was cut on the ability's `resolved`, after Forge set
+the controllers and before `checkStaticAbilities` moved the cards between battlefields and the reveal with them. The
+Oracle was listed under player 1 with `controller 0`, beside player 1's top card. D513 has a top-revealing permanent
+vouch for the top card of the player whose battlefield lists it. All sweeps below used the atlas's own flags (a branch
+log with `--empty-hand-ok`, D460; a baseline log without), six workers, on this PC.
+
+| logs | count | `main` (`fe063f94`) | this branch |
+|---|---:|---|---|
+| J191 `b-s08-powered-3008` branch logs, both seats | 6,800 | 2 FAIL (`d7-…-b121-seat0`, `d7-…-b5-seat0`) | 0 FAIL |
+| J191 `b-s08-powered-3008` baseline logs | 2 | 0 FAIL (the atlas's own run) | 0 FAIL |
+| J187 `b-s06-peasant-2558`, every log (D512's two included) | 9,850 | 0 FAIL | 0 FAIL |
+| J183 `b-s11-legacy-2524`, every log | 8,350 | 0 FAIL | 0 FAIL |
+| J182 `b-s06-peasant-2506`, every log | 8,750 | 0 FAIL | 0 FAIL |
+
+The two J191 logs pass with 97 and 95 states counted as `an opponent's top card revealed by a permanent, A3`. A census of
+every state frame (a `REVEALS_OWN_TOP` card listed in one player's battlefield with a `controller` field naming the
+other): s08 has a top-revealing permanent in 74,223 state frames of 1,030 logs, and the field and the zone disagree in
+exactly two, the two failing frames; in both the zone's player's library lists one card and the controller's (the
+viewer's) lists none, which also places both cuts outside `checkStaticAbilities`' tracker freeze (before
+`clearStaticEffects`, which would have dropped card 45, and not after the layers re-applied, which would have revealed the
+viewer's top). The same census over all thirteen J191 spines (every `phaseB/frames/*.jsonl.gz` of
+`lab-j191/b-s??-*-3???`, read only): 114,550 branch logs, 26,892,017 state frames; a top-revealing permanent (all
+`REVEALS_OWN_TOP`, no `REVEALS_EVERY_TOP` card appears) is listed in 210,799 state frames of 2,520 logs, and the zone and
+the field disagree in exactly the same two frames. The 26 baseline logs (13,072 state frames) list none, and every other
+spine's `atlas.json` reads `frameLogsFailed: 0`, so J191's thirteen spines stand on measurement. (The review counted
+3,709 logs by a revealer's name anywhere in a log's text; the frame counts agree.) The zone reading rests on D399's
+hold, which is not absolute (its 256-flush valve, a live `ask`'s immediate frame): decision D513's residuals and
+follow-up 36. D512's three corpora list no top-revealing permanent at all, so they re-check only that nothing
+else moved. `fixtures/games/` and `fixtures/synthetic/` (23 files, all PASS) print byte-for-byte what `main`'s checker
+prints. The self-test has 249 controls (245 before), every existing file byte-identical: 4 new (1 PASS, counted; 3
+FAIL), and the D501 block's s07 shape cut inside the exchange (a WARN under `--empty-hand-ok`) with its two-card twin
+(a failure). The mutant that restores the `controller` field fails 9 of its checks (control 1 fails, control 4 passes);
+the "either" mutant fails 3 (control 4 passes). `npm --prefix web test`: `node --test` 1,869 tests, 1,858 pass, 11
+skipped, 0 fail (`claude-md.test.ts` included); vitest 161 passed. `node tools/decisions.mjs check` OK. PLAN.md's cube
+lab follow-up 36 holds what is still refused.

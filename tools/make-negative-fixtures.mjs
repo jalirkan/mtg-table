@@ -264,6 +264,77 @@ probe('a3-revealed-top-look-is-private.jsonl',
   'NOT the viewing seat',
   (fs) => withRevealer(fs, 1, 'Experimental Frenzy'));
 
+// D513 (J191 s08, d7-random-o1-b121 and -b5, seat 0): the viewer's Oko, Thief of
+// Crowns exchanges control of the opponent's Oracle of Mul Daya and a creature of
+// its own.  Forge sets both controllers as the ability resolves
+// (ControlExchangeEffect -> Card.addTempController, which updates the view at
+// once) and moves the cards between battlefields only in the
+// checkStaticAbilities that follows (controllerChangeZoneCorrection), the same
+// pass that re-applies the Oracle's reveal.  A snapshot cut on the `resolved`
+// event lists the Oracle in the opponent's zone under the viewer's control, and
+// the opponent's top card the static last revealed.  A revealer vouches for the
+// top card of the player whose battlefield lists it, never for its `controller`
+// field's: each frame below is [the Oracle's zone, its owner, its controller],
+// the opponent's listed top cards, the viewer's own listed top, the exchange on
+// the stack (whose), and the frame's events.
+{
+  const [ORACLE, OKO, TOP, VTOP] = [90050, 90051, 90053, 90055];
+  const a3Spec = (name, level, why, frames) => {
+    const fs = longSlice(frames.length);
+    const sts = statesOf(fs);
+    const V = header.seat;
+    const T = sts[0].body.players.find((p) => !isViewerSeat(p)).id;
+    const who = (x) => (x === 'V' ? V : T);
+    const named = firstViewerNamed(fs).card;
+    frames.forEach((fr, i) => {
+      const players = sts[i].body.players;
+      const of = (id) => players.find((p) => p.id === id);
+      if (fr.oracle) {
+        const [zoneOf, owner, ctl] = fr.oracle.map(who);
+        const z = of(zoneOf).zones.battlefield;
+        z.cards.push(Object.assign(structuredClone(firstFull(fs).card), {
+          id: ORACLE, name: 'Oracle of Mul Daya', setCode: 'WWK', manaCost: '{3}{G}', types: 'Creature - Elf Shaman',
+          power: '2', toughness: '2', faceDown: false, token: false, alt: null, attachedToId: null, attachmentIds: [],
+          owner, controller: ctl, zone: 'battlefield', abilities: [] }));
+        z.count = z.cards.length;
+      }
+      of(T).zones.library.cards = Array.from({ length: fr.tops ?? 0 }, (_, k) => Object.assign(structuredClone(named),
+        { id: TOP + 10 * k, zone: 'library', owner: T, controller: T }));
+      of(V).zones.library.cards = fr.vtop ? [Object.assign(structuredClone(named), { id: VTOP, zone: 'library', owner: V, controller: V })] : [];
+      if (fr.exchange) {
+        const by = who(fr.exchange);
+        sts[i].body.stack.push({ id: 9513, sourceCardId: OKO, controller: by, text: '', targetCardIds: [ORACLE], targetPlayerIds: [] });
+        sts[i].body.events.push({ kind: 'cast', stackId: 9513, cardId: OKO, controller: by, text: '' },
+          { kind: 'resolved', cardId: OKO, fizzled: false });
+      }
+      if (fr.unstacked) sts[i].body.events.push({ kind: 'unstacked', cardId: OKO });
+    });
+    const bytes = write(name, fs);
+    manifest.push({ file: name, level, expect: level === 'pass' ? 'PASS' : 'NOT the viewing seat', why });
+    console.log(`  ${level === 'pass' ? 'PASS' : 'FAIL'}  ${name}  (${bytes} bytes)  ${why.split(' -- ')[0]}`);
+  };
+  a3Spec('a3-revealed-top-during-a-control-exchange.jsonl', 'pass',
+    'A3, D513 (J191 s08, d7-random-o1-b121 line 501): the snapshot is cut as Oko\'s exchange resolves -- the opponent\'s Oracle of Mul Daya still listed on their battlefield with the viewer already its controller, the exchange still on the stack, and the opponent\'s top card still listed, as the frame before; the next frame lists the Oracle under the viewer and the opponent\'s library as a bare count.  The Oracle\'s reveal was last applied while the opponent controlled it, and Forge moves the card and re-applies it in one pass -- the zone\'s player is whose top it vouches for; counted, not a problem',
+    [{ oracle: ['T', 'T', 'T'], tops: 1 },
+      { oracle: ['T', 'T', 'V'], tops: 1, exchange: 'V' },
+      { oracle: ['V', 'T', 'V'], tops: 0, vtop: true, unstacked: true }]);
+  a3Spec('a3-two-cards-during-a-control-exchange.jsonl', 'fail',
+    'A3, D513: the same cut frame listing TWO cards of the opponent\'s library -- the Oracle reveals one card, whichever frame the exchange is cut in',
+    [{ oracle: ['T', 'T', 'T'], tops: 1 },
+      { oracle: ['T', 'T', 'V'], tops: 2, exchange: 'V' },
+      { oracle: ['V', 'T', 'V'], tops: 0, vtop: true, unstacked: true }]);
+  a3Spec('a3-revealed-top-the-frame-after-the-exchange.jsonl', 'fail',
+    'A3, D513 (D501\'s viewer-revealer shape): the Oracle already listed on the viewer\'s battlefield under the viewer while the opponent\'s library still lists a card -- a revealer on the viewer\'s battlefield vouches for the viewer\'s top only',
+    [{ oracle: ['T', 'T', 'T'], tops: 1 },
+      { oracle: ['T', 'T', 'V'], tops: 1, exchange: 'V' },
+      { oracle: ['V', 'T', 'V'], tops: 1, vtop: true, unstacked: true }]);
+  a3Spec('a3-revealer-in-the-viewer-zone-controlled-by-the-opponent.jsonl', 'fail',
+    'A3, D513: the mirror -- the viewer\'s own Oracle, still listed on the viewer\'s battlefield as the opponent\'s exchange resolves, its controller field already the opponent, and the opponent\'s library listing a card.  The reveal still rests on the viewer\'s top in that frame, so an engine cut there lists nothing of the opponent\'s library; the zone\'s player, not "either", is whose top the Oracle vouches for',
+    [{ oracle: ['V', 'V', 'V'], vtop: true },
+      { oracle: ['V', 'V', 'T'], tops: 1, vtop: true, exchange: 'T' },
+      { oracle: ['T', 'V', 'T'], tops: 1, unstacked: true }]);
+}
+
 // D371 (the lab's night-2 A9 finding): who may see a face-down card's face.
 // Forge's canFaceDownBeShownTo is mayPlayerLook(viewer) first, then "in play
 // and you control it".  Gonti, Lord of Luxury and Thief of Sanity exile an

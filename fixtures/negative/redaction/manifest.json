@@ -72,6 +72,30 @@
     "why": "A3, D315: Experimental Frenzy says \"you may look\" -- private, even though Forge scripts it MayLookAt$ Player"
   },
   {
+    "file": "a3-revealed-top-during-a-control-exchange.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A3, D513 (J191 s08, d7-random-o1-b121 line 501): the snapshot is cut as Oko's exchange resolves -- the opponent's Oracle of Mul Daya still listed on their battlefield with the viewer already its controller, the exchange still on the stack, and the opponent's top card still listed, as the frame before; the next frame lists the Oracle under the viewer and the opponent's library as a bare count.  The Oracle's reveal was last applied while the opponent controlled it, and Forge moves the card and re-applies it in one pass -- the zone's player is whose top it vouches for; counted, not a problem"
+  },
+  {
+    "file": "a3-two-cards-during-a-control-exchange.jsonl",
+    "level": "fail",
+    "expect": "NOT the viewing seat",
+    "why": "A3, D513: the same cut frame listing TWO cards of the opponent's library -- the Oracle reveals one card, whichever frame the exchange is cut in"
+  },
+  {
+    "file": "a3-revealed-top-the-frame-after-the-exchange.jsonl",
+    "level": "fail",
+    "expect": "NOT the viewing seat",
+    "why": "A3, D513 (D501's viewer-revealer shape): the Oracle already listed on the viewer's battlefield under the viewer while the opponent's library still lists a card -- a revealer on the viewer's battlefield vouches for the viewer's top only"
+  },
+  {
+    "file": "a3-revealer-in-the-viewer-zone-controlled-by-the-opponent.jsonl",
+    "level": "fail",
+    "expect": "NOT the viewing seat",
+    "why": "A3, D513: the mirror -- the viewer's own Oracle, still listed on the viewer's battlefield as the opponent's exchange resolves, its controller field already the opponent, and the opponent's library listing a card.  The reveal still rests on the viewer's top in that frame, so an engine cut there lists nothing of the opponent's library; the zone's player, not \"either\", is whose top the Oracle vouches for"
+  },
+  {
     "file": "a9-look-permission-under-gonti.jsonl",
     "level": "pass",
     "expect": "PASS",
