@@ -223,6 +223,8 @@ search vs Forge at about 600 games an hour, search vs search at about 550 (46 s 
 | 6 | The built, never-matched knobs: `rollout=outlets` (D390) and `rank=prior` (D389) | one night for both | fixed 1,200 each | — | both NOT SHOWN closes the knob track |
 | 7 | Evaluator v3 over nights 1–5, **for the win-chance strip only** | ~1 night of CPU | D364's `eval_compare` against v2 on the same pairs; `human_eval` at 30 games | — | not better on compare |
 
+*Note, 2026-11-05 (D514): the arms as played are `search-v2-ms3000-r24` and `search-v2-ms6000-r48`, the budget AND the 12-round cap scaled together. The budget alone bought 1.41× the time and ~15% more rollouts, because the race and the round cap end most decisions before the deadline (D514's pilot and census); the scaled arms play 1.75× and 3.07× search-v2's rollouts. The rule above is unchanged and applies to the r48 arm.*
+
 **The atlas meanwhile: pause it.** Its question ("what would we gain from random play?") is answered:
 
 - the random map does not stand in for the Forge map;
