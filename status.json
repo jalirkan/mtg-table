@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-05T18:06:43-05:00",
- "heartbeat": "2026-11-05T18:06:43-05:00",
+ "updated": "2026-11-05T18:07:40-05:00",
+ "heartbeat": "2026-11-05T18:07:40-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.44,
-  "memUsedGb": 8.2,
+  "load1": 8.32,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4455,
+  "swapUsedMb": 4445,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J193",
    "title": "The move atlas, rung 4b, night fifteen -- J191's night carried onto D513's merge (D509: the atlas seat frozen between landings; the pin 1d0d18f3 is D513's merge on J188's, J190's and J191's pin fe063f94, and D513 changed the redaction checker, its fixtures and docs only, so the seat, its record (D510's `option:hidden`), its replay (D511's sink that writes nothing) and its determinizer are J191's byte for byte, and `seat_code` admits exactly D510's and D511's numstat since J186's pin, J191's line byte for byte) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j193, at deck seeds 3685-3697 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 3785-3797; a validation draw made fresh at deck seeds 3885-3897 (game seeds 3985-3997 reserved); THE SIXTH NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines, J187's thirteen, J188's thirteen, J190's thirteen and J191's thirteen (J191 failed its last check on the checker's misread, which D513 admits; its data stands); J191's night read beside, by position; D479's `exileLinksLost`, first non-zero on J191, read per spine as information",
    "cpu": "heavy",
-   "phase": "commands 9/15",
+   "phase": "commands 10/15",
    "started": "2026-11-05T11:02:12-05:00",
-   "elapsed": 25471,
+   "elapsed": 25528,
    "done": 39535,
    "total": 64000,
    "unit": "lines",
-   "ratePerHour": 9360.8,
-   "eta": "2026-11-05T20:43:32-05:00",
+   "ratePerHour": 9093.4,
+   "eta": "2026-11-05T20:49:05-05:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 1,
    "paused": false,
    "dataUpdated": "2026-11-05T18:06:10-05:00",
-   "memGb": 3.7,
+   "memGb": 0,
    "live": {
     "branches": 39535,
     "atlas.spinesDone": 8,
@@ -148,7 +148,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J193-run9"
+   "detail": "lab-J193-run10"
   }
  ],
  "queue": [
