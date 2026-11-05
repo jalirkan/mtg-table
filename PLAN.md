@@ -17,7 +17,8 @@ commit.
 **The index below lists 389 items still open across 43 follow-up lists** — 359
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D512
+said 371 across 42, three rows and one list behind its table) — D513
+(2026-11-05) added the cube lab's 36; D512
 (2026-11-04) added the cube lab's 35; D511
 (2026-11-03) added the cube lab's 34; D510
 (2026-11-03) added the cube lab's 32 and 33; D508
@@ -445,6 +446,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 33 | open | The entity path has the gap D510 closed on the target path: a hidden pick not in the list is written `option:hidden` without being counted or listed; one such pick fails "not among its options", a list of them passes silently | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Cube lab](#fu-cube-lab) | 34 | open | A recorded game is not its unrecorded twin: D347's records move Forge's `AiCardMemory` (D511 makes an atlas unit's replay the recorded game; census-replay's `--record full` against a rows-mode game is still exposed, unmeasured); the cause's fix changes branch play, for D509's queue; and s04's branch rows name created objects by ids that move between reruns | `bridge/src/mtgtable/ai/Decisions.java` |
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
+| [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; a gain-control effect that moves the zone in the effect (a Threaten), cut on its `resolved`, still fails, and its mirror is a one-frame vouch the log cannot rule out | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10245,6 +10247,23 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    9 FAIL). Both logs pass; J187's s06 (9,850 logs) fails none, J183's s11 and J182's s06 neither. Still failing by
    design: a take by an effect that attaches nothing (a Threaten, an exchange) cut by a snapshot the same way, and a
    lead of two frames. Each needs its own decision if a night shows one.
+36. **D513's revealed top card is the zone's player's, not the `controller` field's: two logs.**
+   (2026-11-05, D513.) Lab night J191 (the atlas, spine `b-s08-powered-3008`) failed two seat-0 branch frame logs on
+   rule A3, `d7-random-o1-b121` (line 501) and `d7-random-o1-b5` (line 261): player 1's one listed library card, its top
+   card under its Oracle of Mul Daya. Seat 0's Oko, Thief of Crowns (−5) was exchanging control of the Oracle, and the
+   snapshot was cut on the ability's `resolved`: Forge's `ControlExchangeEffect` had set both controllers
+   (`Card.addTempController`, which updates the view at once), but the cards change battlefields, and the Oracle's
+   reveal moves, only in the `checkStaticAbilities` that follows (`controllerChangeZoneCorrection`, at the end of the
+   same pass). So the Oracle was listed under player 1 with `controller 0` beside player 1's still-public top card, and
+   `revealedTopsOf` vouched for the controller's top instead. D513 reads the zone's player; "either" is rejected (it
+   would vouch for the controller's top, not yet revealed in that frame). 4 new controls (1 PASS, 3 FAIL) and the D501
+   block's cut variant. Both logs pass; s08's 6,800 branch logs fail none (`main` fails the two), and the shape is in
+   exactly those two frames of the spine's 74,223 with a top-revealing permanent. J191's thirteen spines stand. Still
+   failing by design: a gain-control effect (`ControlGainEffect`, a Threaten) moves the zone in the effect, before the
+   statics re-apply, so a frame cut on its `resolved` lists the taken Oracle under the viewer beside the opponent's
+   still-public top, which A3 refuses under either reading; and in the mirror (the opponent takes the viewer's Oracle that
+   way) the zone reading vouches for the opponent's top one frame before the engine reveals it, a window the log cannot
+   rule out. Each needs its own decision if a night shows one.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its

@@ -28,9 +28,11 @@
  *       half-redacted third shape cannot sneak in unnoticed.
  *   A3  `library` is {count, cards}; `cards` holds no stub, never exceeds
  *       `count`, and is WARNED about when it is non-empty for a seat other than
- *       the viewer -- except ONE card while that player controls a "play with
- *       the top card of your library revealed" permanent (REVEALS_OWN_TOP,
- *       D315: Courser of Kruphix is in the owner's cubes).
+ *       the viewer -- except ONE card while a "play with the top card of your
+ *       library revealed" permanent is listed on that player's battlefield
+ *       (REVEALS_OWN_TOP, D315: Courser of Kruphix is in the owner's cubes).
+ *       The zone's player, not the card's `controller` field, which leads the
+ *       listing by a frame while a control exchange resolves (D513).
  *   A4  every card in a non-viewer's hand is a stub, unless its id was already
  *       revealed (A6), and `hand.cards.length === hand.count`.
  *   A5  no name-bearing key anywhere under `state.events`.
@@ -184,8 +186,9 @@
  *   - "not one card was redacted": every state body shows every non-viewer seat's
  *     hand at count 0 (and no cards), every non-viewer library.cards is [] -- or
  *     (D501) the one top card A3 itself vouches for (revealedTopCard: a "play with
- *     the top card revealed" permanent of theirs, exactly one card), which is
- *     public -- and no frame of any type lists any other card in a hand or a
+ *     the top card revealed" permanent listed on their battlefield -- D513: the
+ *     zone's player, whatever its controller field says -- exactly one card), which
+ *     is public -- and no frame of any type lists any other card in a hand or a
  *     library that the viewer does not own;
  *   - "the viewer never saw a named card": every state body shows the viewer's own
  *     hand at count 0.
@@ -216,7 +219,9 @@ const PROTOCOL_VERSION = 1;
  * revealed."  While a player controls one of these face up on the battlefield,
  * the top card of THEIR library is public, Forge's `canBeShownTo` says so, and
  * the bridge rightly sends it -- so an opponent's `library.cards` of exactly ONE
- * card is not a leak.  The names are every card script in the pinned 2.0.14 jar
+ * card is not a leak.  "Controls" is read off the battlefield the permanent is
+ * listed on, not its `controller` field (D513, revealedTopsOf below).  The names
+ * are every card script in the pinned 2.0.14 jar
  * whose static is `Affected$ Card.TopLibrary+YouCtrl | ... | MayLookAt$ Player`
  * with that Oracle text (Courser of Kruphix is in the owner's cubes).  Experimental
  * Frenzy carries the same static in Forge but its Oracle text is "You may look":
@@ -231,14 +236,29 @@ const REVEALS_OWN_TOP = new Set([
 /** ...and "Players play with the top card of their libraries revealed": every player's top, whoever controls it. */
 const REVEALS_EVERY_TOP = new Set(['Field of Dreams', 'Lantern of Insight', 'Wizened Snitches']);
 
-/** The player ids whose library top is public in this state body (REVEALS_OWN_TOP / REVEALS_EVERY_TOP). */
+/**
+ * The player ids whose library top is public in this state body (REVEALS_OWN_TOP / REVEALS_EVERY_TOP).
+ *
+ * A REVEALS_OWN_TOP permanent listed in player q's battlefield vouches for q's
+ * top card -- the ZONE's player, not the card's `controller` field (D513, J191
+ * s08).  The field can lead the listing by a frame: Oko, Thief of Crowns'
+ * exchange sets both controllers as it resolves (Card.addTempController, which
+ * updates the view at once), and Forge moves the cards between battlefields and
+ * re-applies the "top card revealed" static only in the checkStaticAbilities
+ * that follows (controllerChangeZoneCorrection, at the end of the same pass).  A
+ * snapshot cut between the two lists the opponent's Oracle of Mul Daya in their
+ * zone under the viewer's control, beside the opponent's top card that the
+ * static last revealed -- public, and the zone's player's.  "Either the zone's
+ * player or the controller" is rejected: in the only frame where they differ,
+ * the controller's top is not yet revealed.
+ */
 function revealedTopsOf(players) {
   const out = new Set();
   for (const q of players) {
     for (const c of q?.zones?.battlefield?.cards ?? []) {
       if (!c || c.hidden === true || c.faceDown === true || typeof c.name !== 'string') continue;
       if (REVEALS_EVERY_TOP.has(c.name)) for (const r of players) out.add(r?.id);
-      if (REVEALS_OWN_TOP.has(c.name)) out.add(typeof c.controller === 'number' ? c.controller : q.id);
+      if (REVEALS_OWN_TOP.has(c.name)) out.add(q?.id);
     }
   }
   return out;
