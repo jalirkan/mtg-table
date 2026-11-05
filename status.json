@@ -1,185 +1,55 @@
 {
  "schema": 1,
- "updated": "2026-11-05T09:19:53-05:00",
- "heartbeat": "2026-11-05T09:19:53-05:00",
+ "updated": "2026-11-05T09:20:18-05:00",
+ "heartbeat": "2026-11-05T09:20:18-05:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-11-05T09:20:18-05:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 6.68,
+  "load1": 5.08,
   "memUsedGb": 5.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4409,
+  "swapUsedMb": 4408,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Move atlas 4b night fourteen: 13 new spines, D508 population night five",
    "publicEst": "~8 h to 13 h",
    "id": "J191",
    "title": "The move atlas, rung 4b, night fourteen -- J190's night carried onto the same seat and the same pin (D509: the atlas seat frozen between landings; the pin fe063f94 is J188's and J190's, nothing merged since, so D510's target record (`option:hidden`: record-only), D511's replay (a sink that writes nothing: CubeLab.java only) and D512's checker admission are J190's, and `seat_code` admits exactly D510's and D511's numstat since J186's pin, J190's line byte for byte) on J177's design, unchanged (D489's futility stop at the 50-branch checkpoint with a 0.25 control share, `--futility 0 --futility-tie 0 --futility-sample 0.25`; the 150 cap, `--branch-random 150 --early-stop 50,100`; `--decisions 10`; the Forge map on s01, s07 and s13; chunk 25); 13 NEW spines (breadth over depth) drawn by the pilot into a NEW data folder, lab-j191, at deck seeds 2901-2913 (D447 with D482's list as D490, D492, D494 and D506 leave it, the bands cycled as J166's) and game seeds 3001-3013; a validation draw made fresh at deck seeds 3101-3113 (game seeds 3201-3213 reserved); THE FIFTH NIGHT OF D508'S POPULATION, pooled with J186's twelve finished spines, J187's thirteen, J188's thirteen and J190's thirteen; J190's night read beside, by position; one new information line, `atlas_mapsa_ise` (the seat queue's row 8 candidate, found on J190's s12)",
-   "cpu": "heavy",
-   "phase": "commands 15/15",
-   "started": "2026-11-04T22:27:41-05:00",
-   "elapsed": 39132,
-   "done": 57275,
-   "total": 64000,
-   "unit": "lines",
-   "ratePerHour": 1142.1,
-   "eta": "2026-11-05T15:13:11-05:00",
-   "workers": 6,
-   "workersMax": 6,
-   "cores": 1,
-   "errors": 1,
-   "paused": false,
-   "dataUpdated": "2026-11-05T09:12:02-05:00",
-   "memGb": 0,
-   "live": {
+   "status": "failed",
+   "finished": "2026-11-05T09:20:18-05:00",
+   "headline": "branches 57275 · atlas.spinesDone 13 · atlas.labels 88 · atlas.confident 25 · atlas.partialLabels 33 · atlas.futileStopped 33 · atlas.futileControls 13 · atlas.confidentPerWorkerHour 0.393 · atlas.confidentPer7Worker10hNight 27.5 · atlas.refusedCastShare 0.005 · atlas.refusedCastOptions 0 · atlas.failedToPlay 3114 · atlas.cardTargetShare 0.175 · atlas.lostCastOptions 0 · atlas.legacyNullTargetRecords 0 · atlas.timeoutShare 0 · atlas.problems 1",
+   "numbers": {
     "branches": 57275,
     "atlas.spinesDone": 13,
-    "atlas.labels": -1,
-    "atlas.confident": -1,
-    "atlas.partialLabels": -1,
+    "atlas.labels": 88,
+    "atlas.confident": 25,
+    "atlas.partialLabels": 33,
     "atlas.futileStopped": 33,
     "atlas.futileControls": 13,
-    "atlas.refusedCastShare": 0.00549,
+    "atlas.confidentPerWorkerHour": 0.3925,
+    "atlas.confidentPer7Worker10hNight": 27.5,
+    "atlas.refusedCastShare": 0.00461,
     "atlas.refusedCastOptions": 0,
     "atlas.failedToPlay": 3114,
-    "atlas.cardTargetShare": 0.1982,
+    "atlas.cardTargetShare": 0.1751,
     "atlas.lostCastOptions": 0,
     "atlas.legacyNullTargetRecords": 0,
     "atlas.timeoutShare": 0.00002,
-    "atlas.problems": 1,
-    "armed": 1,
-    "atlas_hook_ioobe": 0,
-    "atlas_mapsa_ise": 0,
-    "atlas.atlasCostTargetAvoided": 0,
-    "atlas.atlases": 13,
-    "atlas.atlasNoRepeatRefused": 1507,
-    "atlas.atlasRefusedCast": 3094,
-    "atlas.atlasTargetCountTrimmed": 0,
-    "atlas.avoidedSpines": 6,
-    "atlas.branchCapped": 4157,
-    "atlas.branchedInFull": 88,
-    "atlas.branchedRows": -1,
-    "atlas.branchErrored": 82,
-    "atlas.branchErroredOptions": 0,
-    "atlas.branchErrorStacks": 81,
-    "atlas.branchRestarted": 0,
-    "atlas.branchRows": 57275,
-    "atlas.branchTimeouts": 1,
-    "atlas.branchTimeoutsInStep": 1,
-    "atlas.branchUnavailable": 0,
-    "atlas.cappedOptionsOverWarn": 27,
-    "atlas.cardTargetOffered": 535871,
-    "atlas.cardTargetSpines": 12,
-    "atlas.casts": 563308,
-    "atlas.castsRefused": 23
+    "atlas.problems": 1
    },
-   "liveHeadline": [
-    "branches",
-    "atlas.spinesDone",
-    "atlas.labels",
-    "atlas.confident",
-    "atlas.partialLabels",
-    "atlas.futileStopped",
-    "atlas.futileControls",
-    "atlas.refusedCastShare",
-    "atlas.refusedCastOptions",
-    "atlas.failedToPlay",
-    "atlas.cardTargetShare",
-    "atlas.lostCastOptions",
-    "atlas.legacyNullTargetRecords",
-    "atlas.timeoutShare",
-    "atlas.problems"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-04T22:45:07-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 1.4
-    },
-    {
-     "at": "2026-11-04T22:51:01-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-05T00:17:43-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 3.7
-    },
-    {
-     "at": "2026-11-05T00:25:45-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-05T02:11:55-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-05T02:30:10-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-05T02:57:30-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.4
-    },
-    {
-     "at": "2026-11-05T03:10:40-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-05T03:43:00-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 11.3
-    },
-    {
-     "at": "2026-11-05T03:52:10-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-05T08:43:25-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 2.1
-    },
-    {
-     "at": "2026-11-05T08:49:02-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J191-run15"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "detail": "check: atlas.problems == 0 (atlas.problems = 1)"
+  },
   {
    "publicTitle": "Move atlas 4b night thirteen: 13 new spines, D508 population night four",
    "publicEst": "~8 h to 13 h",
@@ -1058,27 +928,6 @@
     "vv.spread.v3.hi": 0.350671,
     "vv.verdict.low_pairs": 0,
     "all.engine_error_rate": 0.0013
-   }
-  },
-  {
-   "publicTitle": "Best 180 from the whole library: four candidate cubes compared",
-   "publicEst": "~5-7 h",
-   "id": "J136",
-   "title": "The best 180 out of the whole library -- four candidate cubes (Omega, library hits by lab rating, a seeded random control, ForgeCoach's Synergy v2) compared on D439's measures: 400 grid drafts each on one seed block (836,000,001-836,000,400), then each evolved 2 generations x 200 drafts from the 1,592-card library pool (Omega with its own notes; the others cut the Power Nine, Sol Ring and Library of Alexandria wherever present and never add Omega's other 43 design exclusions; exploration on), then the four evolved cubes compared on a fresh block (836,100,001-836,100,400); best of three, Default vs Default, unrecorded; no verdict rule",
-   "status": "done",
-   "finished": "2026-10-16T14:47:37-04:00",
-   "headline": "base.pop.omega.m.flatness.est 0 · base.pop.hits.m.flatness.est 0 · base.pop.random.m.flatness.est 0 · base.pop.synergy.m.flatness.est 0.081 · fin.pop.omega.m.flatness.est 0 · fin.pop.hits.m.flatness.est 0 · fin.pop.random.m.flatness.est 0.022 · fin.pop.synergy.m.flatness.est 0.078 · sw.swaps 5 · all.engine_error_rate 0.001",
-   "numbers": {
-    "base.pop.omega.m.flatness.est": 0,
-    "base.pop.hits.m.flatness.est": 0,
-    "base.pop.random.m.flatness.est": 0,
-    "base.pop.synergy.m.flatness.est": 0.080567,
-    "fin.pop.omega.m.flatness.est": 0,
-    "fin.pop.hits.m.flatness.est": 0,
-    "fin.pop.random.m.flatness.est": 0.021674,
-    "fin.pop.synergy.m.flatness.est": 0.078437,
-    "sw.swaps": 5,
-    "all.engine_error_rate": 0.0014
    }
   }
  ],
