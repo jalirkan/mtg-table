@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-06T01:46:12-05:00",
- "heartbeat": "2026-11-06T01:46:12-05:00",
+ "updated": "2026-11-06T01:46:28-05:00",
+ "heartbeat": "2026-11-06T01:46:28-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.08,
-  "memUsedGb": 7.5,
+  "load1": 2.76,
+  "memUsedGb": 5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4665,
+  "swapUsedMb": 4629,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J194",
    "title": "The compute curve: three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) in one night: (a) search-v1-anytime (search-v2, today's main) vs forge-default, the re-anchor; (b) search-v2-ms6000-r48 vs search-v2, the rule's match; (c) search-v2-ms3000-r24 vs search-v2, read beside; the two new players are search-v2 with the wall-clock budget and the round cap raised together, 2x and 4x (D514)",
    "cpu": "heavy",
-   "phase": "commands 2/4",
+   "phase": "commands 3/4",
    "started": "2026-11-05T20:29:50-05:00",
-   "elapsed": 18982,
+   "elapsed": 18998,
    "done": 2384,
    "total": 3600,
    "unit": "games",
    "ratePerHour": 289.1,
-   "eta": "2026-11-06T05:58:32-05:00",
+   "eta": "2026-11-06T05:58:48-05:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-06T01:44:49-05:00",
-   "memGb": 2.45,
+   "memGb": 0,
    "live": {
     "cma.played": 1200,
     "cma.score": 0.6233,
@@ -116,7 +116,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J194-run2"
+   "detail": "lab-J194-run3"
   }
  ],
  "queue": [],
