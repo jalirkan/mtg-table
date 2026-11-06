@@ -1,0 +1,18 @@
+==== J194 pilot3 started 2026-11-05T20:31:19-05:00 in unit lab-J194-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+ok   a clear gain is PAYS: COMPUTE PAYS: search-v2-ms6000-r48's lower end 0.512 is above 0.5 and its point 20.9 Elo is at least +15
+ok   a point of exactly +15 with the lower end above 0.5 is PAYS: COMPUTE PAYS: search-v2-ms6000-r48's lower end 0.501 is above 0.5 and its point 15 Elo is at least +15
+ok   a lower end above 0.5 but a point of +14.9 is INCONCLUSIVE: INCONCLUSIVE: lower end 0.501, point 14.9 Elo, upper end 29.8 Elo; confirm with 4,800 games
+ok   a lower end of exactly 0.5 is not PAYS: INCONCLUSIVE: lower end 0.5, point 18 Elo, upper end 36 Elo; confirm with 4,800 games
+ok   an upper end of +19.9 Elo is DOES NOT PAY: COMPUTE DOES NOT PAY: search-v2-ms6000-r48's upper end 19.9 Elo is below +20
+ok   an upper end of exactly +20 Elo is INCONCLUSIVE: INCONCLUSIVE: lower end 0.49, point 3.5 Elo, upper end 20 Elo; confirm with 4,800 games
+ok   a loss is DOES NOT PAY: COMPUTE DOES NOT PAY: search-v2-ms6000-r48's upper end -10.4 Elo is below +20
+ok   a stopped (b) gives no verdict: INCOMPLETE (b): no verdict
+ok   1,199 games of (b) is not complete: INCOMPLETE (b): no verdict
+ok   61 errors and timeouts in (b) is not complete: INCOMPLETE (b): no verdict
+ok   60 errors and timeouts in (b) is complete: COMPUTE PAYS: search-v2-ms6000-r48's lower end 0.512 is above 0.5 and its point 20.9 Elo is at least +15
+ok   (c) in (b)'s file is not (b): NOT THIS MATCH (b): no verdict
+ok   the budget-only arm search-v2-ms6000 (D514, replaced) is not (b): NOT THIS MATCH (b): no verdict
+ok   no (b) file gives no verdict: NO MATCH (b): no verdict
+ok   (a) and (c) missing change nothing in (b)'s verdict: COMPUTE PAYS: search-v2-ms6000-r48's lower end 0.512 is above 0.5 and its point 20.9 Elo is at least +15
+ok   (a) and (c) are read as complete or not, deciding nothing: COMPUTE PAYS: search-v2-ms6000-r48's lower end 0.512 is above 0.5 and its point 20.9 Elo is at least +15
+{"selftest":1,"cases":16,"passed":16,"ok":1}
