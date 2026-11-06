@@ -59,9 +59,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **nineteen** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **10i**, **10j**, **10k**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
-added by **M6**, 10h by **D291**, 10i by **D402**, 10j and 10k by **D428**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **twenty-five** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **10i**, **10j**, **10k**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g**, **12h**, 12i, 12j, 12k, 12l, 12m and **12n**; 9d and 10g
+added by **M6**, 10h by **D291**, 10i by **D402**, 10j and 10k by **D428**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 12i–12m by D352, D355, D371, D413 and D486's addendum (each one's header in `check-all.sh` says what it holds), 12n by **D515**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -215,7 +215,10 @@ four legal lab decks, a winner per game, turn 1 where it was forced; about 30 s,
 its worker homes under the job's own) → **12h**, `python3 -m unittest discover -s tools/ml/tests` (**D305**:
 the ML dataset's encoder over every committed recording with the hidden zones
 scrambled, which must change no feature; the numpy half is skipped, and says
-so, where numpy is missing; about thirty seconds) → `npm run build && npm test`.
+so, where numpy is missing; about thirty seconds) → **12n**, `python3 -m unittest discover -s
+tools/atlas/tests` (**D515**: the move atlas's `labels.py` and `compare.py` over `fixtures/atlas/night`
+against golden counts, a release built from it clean and byte-identical twice, and the release's scrub check
+failing on each planted machine path, name and rules text; about a second) → `npm run build && npm test`.
 `SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes.
 **The gate's ports are not the live ones:** `WSPORT` defaults to **9644**, so a
 parallel gate's step 10 takes 9644..9654 and 9662, clear of 8642..8646 (the
@@ -254,8 +257,8 @@ and its eight self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
 to carry `jdk.compiler` and `jdk.jdeps`, and a Temurin JRE image is not built
 to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, the
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
-`wire-drift-selftest.mjs`, 12b's catalog check, 12f's coach helper and 12h's
-standard-library half; not 12e, whose card index only
+`wire-drift-selftest.mjs`, 12b's catalog check, 12f's coach helper, 12h's
+standard-library half and 12n's atlas tests; not 12e, whose card index only
 the network build makes — D183) and `ml` (12h in full: the `tools/ml` suite with
 numpy and zstandard in a venv, failing if one of their tests skips — D383). **It is the one place anything
 downloads the engine, and the pin still holds there**: the bridge job fetches
@@ -454,6 +457,13 @@ are rules:
    change in both repositories or not at all: a field may be added, while a
    renamed, removed or redefined one is schema 2 and a change on ForgeCoach's
    side in the same breath. `fixtures/cubelab/mini/meta.golden.json` holds it.
+
+The move atlas's second half, from a finished spine folder to label rows, the night's reads and the public
+dataset, is `tools/atlas/` (D515): the eleven scripts the atlas nights wrote into their job files, moved
+byte for byte but for their paths and their scan stamp, then `release.py` and `make_fixture.py`, each header
+the script's manual. `docs/guides/move-atlas.md` is the guide (the method cited, one spine on another
+machine, the label row's field dictionary, the release), and gate step 12n runs its tests over
+`fixtures/atlas/`.
 
 ## The narrator
 
