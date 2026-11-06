@@ -10710,7 +10710,7 @@ would.
 ## The move atlas goes public — the label pipeline in the repository, and dataset v1 (2026-11-06, D515)
 
 **Status: built and verified; the full gate green on `cc52d3b3`** (530.9 s, 61 jobs at `GATE_JOBS=4`; 12n 0.6 s); not merged, not pushed. Branch `pc/d515-publish-atlas`, off `main`'s
-`72302c69`; D515 (D516–D518 reserved and unused). The owner, 2026-11-06: *"Yes, we should publish the generator
+`72302c69`; D515 (the reservation of D516–D518 is released at the merge; the next lane may take D516). The owner, 2026-11-06: *"Yes, we should publish the generator
 too"* and *"Sure, let's follow your recommendations"*: the atlas's label pipeline moves into this repository, a
 first dataset release is built as one file with a README, and this repository alone goes public (`pc-results`,
 `pc-jobs` and ForgeCoach stay private). He flips the repository and uploads the dataset; nothing here does either.
@@ -10732,23 +10732,24 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
   `ncurve.json`, `reads.json`, `cuts.json`, `compare-j191.json` and `tool.json` come back byte for byte; J187's,
   J188's, J190's and J191's rows too, with their own scan stamps; J186's rows (153, 81, 21) equal its own
   `labels.py`'s.
-- **Dataset v1**: `var/release/move-atlas-v1.zip`, 8,900,834 bytes, 311 files: 1,003 label rows (508 labels, 154
+- **Dataset v1**: `var/release/move-atlas-v1.zip`, 8,901,601 bytes, 311 files (rebuilt after the review): 1,003 label rows (508 labels, 154
   confident) from 77 spines of the six nights, 338,895 branch rows, 154 decks; D509 point 4's units left out (J186
   s11 d13–d16, J187 s03 d23/d25/d27/d29: 8 rows); rules text dropped (a play identity's ninth field, an ability's
   text in its label), every path relative, CC BY 4.0 with the attribution line, the Fan Content Policy notice.
 - **The fixture**: `fixtures/atlas/night/`, J193's s07 cut to three branches an option; 12n holds `labels.py`,
   `compare.py`, a release built twice to the same bytes, and the scrub check's plants.
 - **The public-repo check**: 93 tracked files name `justin-a` (77 dated history; the rest the owner's machine
-  convention, example paths and tests); no secret in the tree or its history; 206 commits on `main` authored with
-  the owner's address; `.claude/` untracked but not ignored. D515 has the classification.
+  convention, example paths and tests); the owner's first name in 88; no secret in the tree or its history;
+  206 commits on `main` authored with the owner's personal address (17 as committer too); `.claude/` untracked but not ignored. D515 has the classification.
 
 <a id="fu-move-atlas"></a>
 ### The move atlas release's follow-ups — eight, 2026-11-06 (D515)
 
 1. **The owner's: flip the repository public, upload the zip and list it** (Kaggle, Hugging Face or neither), with
    the title, description and attribution he wants; `release.py`'s `ATTRIBUTION` holds the default line.
-2. **The owner's: the history's author email.** 206 commits on `main` are authored as `jalirkan@gmail.com`; public
-   history shows it. Accept it, or rewrite the history before the flip.
+2. **The owner's: the history's author email.** 206 commits on `main` are authored with his personal address, and
+   17 carry it as committer too; public history shows it. Accept it, or rewrite both fields to his GitHub noreply
+   form before the flip.
 3. **The owner's: this PC's paths in tracked files.** Hard rule 9 and the engine's path in `CLAUDE.md` (and its
    manifest), `NOTICE`, `config.json` (`forgeJar`, `labArchiveRoot`), `PLAN.md`'s worktree paths, four guides'
    examples, `engine-unplayable.json`'s evidence strings, one test's default lab folder. None is a secret; each

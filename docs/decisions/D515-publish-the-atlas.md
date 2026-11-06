@@ -1,7 +1,8 @@
 ## D515 — The move atlas goes public: its label pipeline moves into the repository as `tools/atlas/`, a first dataset release is built from D508's six nights, scrubbed of paths and rules text, under CC BY 4.0, and the repository is checked for going public
 
 *Branch `pc/d515-publish-atlas`, off main `72302c69` (D514's merge). D515–D518 were reserved for this lane
-(`node tools/decisions.mjs next` gave D515); only D515 is used, and D516–D518 stay unused. Nothing under
+(`node tools/decisions.mjs next` gave D515); only D515 is used, and the reservation of D516–D518 is released at the
+merge: nothing records a reservation, `decisions.mjs next` already prints D516, and the next lane may take it. Nothing under
 `bridge/src`, `tools/cubelab/`, `forge-home/` or `fixtures/cubelab/` changes, so it is free under D509: the seat,
 its record and the atlas's engine half are as they were.*
 
@@ -58,17 +59,23 @@ uploads the dataset himself.
    "Bonecrusher Giant — Stomp", or "(may play)"). atlas.json's warnings and problems have each raw label replaced.
    Every absolute path becomes relative. **Card names stay**: the Fan Content Policy allows them; Wizards' text does
    not ship.
-4. **The check** that ends every build, and the zip is not written when it finds anything: no file holds `/home/`,
-   `justin` in any case, or `CARDNAME` (Forge's placeholder in rules text); no identity in `labels.jsonl` or an
+4. **The check** that ends every build, and the zip is not written when it finds anything: no file holds an
+   absolute path of the shapes a machine's paths take (`/home/`, `/mnt/`, `/tmp/`, `/var/`, `/Users/`, `/root/`,
+   `/media/`, `/srv/` after a space, quote, bracket, `=` or `:`) or a Windows drive path, the owner's name in any
+   case, a `@gmail.` address, the building machine's host name (read when the check runs), `CARDNAME` (Forge's
+   placeholder in rules text) or a mana or tap symbol (`{T}`, `{2}{W}`: zero in v1); `relative()` refuses an
+   absolute path outside a night's folder, so none is written in the first place; no identity in `labels.jsonl` or an
    atlas file has a ninth field; an activate option's label is its identity's name, and in `branches/` the label
    the atlas file gives the same decision and option; every row's decks are in the release. `release.py --check
    <folder>` runs it alone, and `tools/atlas/tests` plants each case.
-5. **The licences.** The data, CC BY 4.0, attributed as *"mtg-table move atlas, https://github.com/jalirkan/mtg-table"*;
-   the generator, GPL-3.0-or-later, as the whole repository (hard rule 7); and the Wizards of the Coast Fan Content
+5. **The licences.** The measurements and their compilation, by the mtg-table contributors, CC BY 4.0, attributed
+   as *"mtg-table move atlas, https://github.com/jalirkan/mtg-table"*; card names and any other Wizards of the
+   Coast material are not licensed by the release and appear under the Fan Content Policy. The generator, GPL-3.0-or-later, as the whole repository (hard rule 7); and the Wizards of the Coast Fan Content
    Policy's notice: card names and Magic are Wizards' property, the dataset is unofficial Fan Content, not
    approved or endorsed by Wizards. The engine is named with its pin: Forge 2.0.14,
    `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9` — every baseline frame log of the six
-   nights carries this jar's sha256, checked one spine a night.
+   nights carries this jar's sha256: all 156 (both seats of 78 baseline games, J186's unfinished s13 among them),
+   read header by header; the branch frame logs were not each read.
 6. **The seat's configuration.** The atlas plays no search seat: option 0 is Forge's Default AI's choice in the
    baseline, and the branches are played by the random seat (D488's policy, D498's redeal, D508's gate) or by Forge
    on both sides. The ladder's search-v2 hash `cdd55e02a89c` is a ladder player's (D514) and **does not apply**; the
@@ -125,11 +132,15 @@ uploads the dataset himself.
   rows byte for byte J186's own `labels.py`'s.
 - **The deck draw reproduces**: `tools/cubelab.sh decks --band legacy --count 2 --seed 3691 --cross-band 0.10` at
   this branch gives J193's s07 draw (`drawsha.py` 1686096d…57cf, both decks' sha256 equal).
-- **The release**, built at `6a131387` (the commit that added `release.py`): `var/release/move-atlas-v1.zip`,
-  **8,900,834 bytes** (sha256 `fbd46816d1a1e97c7371bac432a257522c0d8256120c462f9662fffea139891d`), 311 files and
-  112,534,537 bytes unpacked: **1,003 label rows**, 508 complete labels, **154 confident**, 222 partial, 74
+- **The release**, rebuilt after the review at `0e17ac2c` (the commit that last changed `release.py`):
+  `var/release/move-atlas-v1.zip`, **8,901,601 bytes** (sha256
+  `c87407533d4398cbdf69f73389ec545f339b05dbc7b23a3a02c2b23af010cf4b`), 311 files and 112,591,236 bytes unpacked
+  (310 data files, 112,537,744 bytes, plus `MANIFEST.json`); its data files are byte for byte the first build's
+  (`6a131387`: 8,900,834 bytes), only README and MANIFEST changed: **1,003 label rows**, 508 complete labels, **154 confident**, 222 partial, 74
   futility controls (1 confident), 273 screened; 77 spines (12 + 13 × 5); 154 decks; **338,895 branch rows**
-  (342,964 on disk, less 3,825 of the excluded decisions and 244 of J186's unfinished s13); 8 rows left out. By
+  (342,964 on disk, less 3,825 of the excluded decisions and 244 of J186's unfinished s13), 249 of them errored
+  (210 `IndexOutOfBoundsException`, 4 `NullPointerException`, 35 `BranchTimeout`, those also `timedOut`), each with
+  a placeholder `result` 0 and `score` 0.5 the README tells a consumer to skip; 8 rows left out. By
   night: J186 149 rows / 77 labels / 19 confident; J187 159 / 83 / 28; J188 168 / 85 / 24; J190 176 / 86 / 17;
   J191 171 / 88 / 25; J193 180 / 89 / 41. The scrub check finds nothing, and a grep of the folder for `var/`,
   `lab-j1`, `{T}`, `Sacrifice` and `until end of turn` finds nothing either.
@@ -160,10 +171,20 @@ uploads the dataset himself.
   redacts it), that file's own redaction pattern, two test tokens (`coach-helper-selftest.mjs`,
   `match-launcher-selftest.mjs`) and a fixture file name; the earlier prose and card-name hits are the same. No key,
   certificate or credentials file is tracked or was ever committed (every path in the history checked).
-- **The history's author email.** 206 commits on `main` are authored as `jalirkan@gmail.com` (the rest as
-  `27876133+jalirkan@users.noreply.github.com`, `noreply@anthropic.com` and the runner's `runner@localhost` on
-  lab branches); once the repository is public, the address is in its history. Accepting that or rewriting the
-  history is the owner's call.
+- **The history's author email.** 206 commits on `main` are authored with the owner's personal address, and 17 of
+  them (`git log 72302c69 --format=%ce`) carry it as committer too; the rest use his GitHub noreply form
+  (`27876133+jalirkan@users.noreply.github.com`), `noreply@anthropic.com`, GitHub's own committer, or the runner's
+  `runner@localhost` on lab branches. Once the repository is public, the personal address is in its history.
+  Accepting that, or rewriting both fields to the noreply form, is the owner's call.
+- **The owner's first name: 88 tracked files** (`git grep -il 'justin[^-]'`, on this branch before this paragraph,
+  which makes this file the 89th): `docs/decisions/` 22 and `DECISIONS.md`,
+  `tools/runner/` 12 and `tools/runner.sh`, `cubes/` 11 (e.g. `cubes/pauper-cube-180.md:3`, "for … and a
+  friend"), `web/test/` 6, `tools/cubelab/` 6, `tools/ml/` 2, `tools/llm-seat/` 2, `fixtures/cards/` 2,
+  `docs/guides/` 2, this lane's two (`tools/atlas/release.py`'s check pattern and its test's plant), and one each in
+  `decks/fra-rw-aggro.txt` (line 1), `docs/cloudflare.md` (line 252), `PLAN.md`, `tools/README.md`, `docs/protocol.md`,
+  `docs/llm-seat.md`, `docs/draft-room.md`, `docs/research/`, `docs/evidence/`, `scripts/tunnel/`, `tools/ai-ladder/`
+  and eight tools scripts (the coach helper, three bug-report files, four self-tests). An inventory, not edited: a first
+  name in a hobby project's docs is the owner's to keep or not. The machine's name is in no tracked file.
 - **`.claude/` is untracked** (no file under it has ever been committed) **but not ignored**: a `git add -A` in
   the main checkout would add it. `/personal/` is ignored (anchored, D190), and no `*.jar` is tracked.
 
