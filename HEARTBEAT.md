@@ -1740,3 +1740,7 @@ The public-repo check: no secrets; 93 tracked files name the machine's home path
 commits his gmail as author (17 as committer); .claude/ untracked but not ignored -- all the owner's call, listed in D515.
 NOT done, by design: the repo is still private; nothing uploaded. 17lands: public datasets CC BY 4.0 (verified in the
 browser), KHM..FRA plus a Powered Cube set with replays; one seat's view; evaluator data, never move labels.
+
+## 2026-11-06 11:20 EST -- D516 merged
+
+main f6a5a732 (pushed): the repository made ready to be public. config.json's forgeJar is ~/forge/<jar>, seven readers expand a leading ~/; home paths out of every tracked file (tools/public-check.sh, gate step 2c + CI, derives the banned name from $HOME); README 158 lines, docs/handbook.md the old one; CONTRIBUTING, SECURITY, CITATION.cff; the release zip rebuilt with LICENSE.md, CITATION.cff and a dataset-card header (sha256 0f7d83c6...9a6c11; data byte-identical to D515's). Gate OK 651.8 s, 62 jobs. The owner flips the repo and uploads. No lab night running; the live seat unchanged.
