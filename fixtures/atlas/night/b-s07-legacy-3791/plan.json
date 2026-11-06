@@ -1,0 +1,37 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "deckA": "decks/s07-legacy-3691/decks/legacy-3691-00001.dck",
+  "deckB": "decks/s07-legacy-3691/decks/legacy-3691-00002.dck",
+  "seed": 3791,
+  "turnCap": 40,
+  "options": 8,
+  "rollouts": 10000,
+  "branchRandom": 150,
+  "branchForge": 40,
+  "decisions": 10,
+  "chunk": 25,
+  "branchTimeoutSec": 120,
+  "unitTimeoutMin": 30,
+  "branchErrorMax": 0.1,
+  "branchCappedWarn": 0.25,
+  "cuts": {
+    "earlyStop": [
+      50,
+      100
+    ],
+    "screen": 25,
+    "minOptions": 3,
+    "futility": {
+      "at": 0,
+      "tie": 0,
+      "sample": 0.25
+    },
+    "screenBounds": [
+      0.04,
+      0.96
+    ],
+    "decision": "D480"
+  },
+  "pairRule": null
+}

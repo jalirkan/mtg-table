@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 389 items still open across 43 follow-up lists** — 359
+**The index below lists 397 items still open across 44 follow-up lists** — 367
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D514
+said 371 across 42, three rows and one list behind its table) — D515
+(2026-11-06) added the move atlas release's list of eight; D514
 (2026-11-05) added the cube lab's 37; D513
 (2026-11-05) added the cube lab's 36; D512
 (2026-11-04) added the cube lab's 35; D511
@@ -449,6 +450,14 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
 | [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000-r24` and `-ms6000-r48` (search-v2 with the budget and the round cap scaled together, ×2 and ×4) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
+| [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution he wants | `tools/atlas/release.py` |
+| [Move atlas release](#fu-move-atlas) | 2 | open | The owner's: 206 commits on `main` are authored with his email address, which a public history shows | — |
+| [Move atlas release](#fu-move-atlas) | 3 | open | The owner's: this PC's paths in tracked files (hard rule 9, `NOTICE`, `config.json`, guides' examples, `engine-unplayable.json`'s evidence) | `CLAUDE.md` |
+| [Move atlas release](#fu-move-atlas) | 4 | open | `.claude/` is untracked but not ignored; a `git add -A` would commit it | `.gitignore` |
+| [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
+| [Move atlas release](#fu-move-atlas) | 6 | open | The frame logs are not in v1; shipping them needs a scrub of their own | `tools/atlas/release.py` |
+| [Move atlas release](#fu-move-atlas) | 7 | open | The next atlas job runs `tools/atlas/` at its pin; the pilot scripts and `metrics.py`'s spine table carry J193's seeds | `tools/atlas/metrics.py` |
+| [Move atlas release](#fu-move-atlas) | 8 | open | No test holds `tools/README.md`'s table to the files under `tools/` | `tools/README.md` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -10697,6 +10706,64 @@ would.
    both chairs' logs, `check-redaction.mjs` PASS on both, and `encode.py
    --run-dir` 317 rows over 337 slots — the 328 cards of the two cubes' union
    plus the basics and the three specials, each shared card once.
+
+## The move atlas goes public — the label pipeline in the repository, and dataset v1 (2026-11-06, D515)
+
+**Status: built and verified; the full gate green on `cc52d3b3`** (530.9 s, 61 jobs at `GATE_JOBS=4`; 12n 0.6 s); not merged, not pushed. Branch `pc/d515-publish-atlas`, off `main`'s
+`72302c69`; D515 (the reservation of D516–D518 is released at the merge; the next lane may take D516). The owner, 2026-11-06: *"Yes, we should publish the generator
+too"* and *"Sure, let's follow your recommendations"*: the atlas's label pipeline moves into this repository, a
+first dataset release is built as one file with a README, and this repository alone goes public (`pc-results`,
+`pc-jobs` and ForgeCoach stay private). He flips the repository and uploads the dataset; nothing here does either.
+`docs/guides/move-atlas.md` is the manual; `docs/decisions/D515-publish-the-atlas.md` the decision, its
+evidence and the public-repo check.
+
+```bash
+python3 -I tools/atlas/labels.py NAME:POOL:DECKSEED:GAMESEED:SHA:DIR ... --out=labels.jsonl --training=1
+python3 -I tools/atlas/release.py --out var/release/move-atlas-v1 --night J186=... --labels J186=... --night J187=... ...
+python3 -I tools/atlas/release.py --check var/release/move-atlas-v1   # the scrub check alone
+python3 -m unittest discover -s tools/atlas/tests                     # gate step 12n, CI; ~0.5 s
+```
+
+- **`tools/atlas/`**: the eleven scripts J193's job file wrote as heredocs (identical to the runner clone's
+  copies), each with the GPL header and a docstring; their code byte for byte J193's but for the lab machine's
+  paths (`ATLAS_DATA`, `ATLAS_LOCAL`) and the scan stamp (`ATLAS_SCAN_STAMP`); `release.py`; `make_fixture.py`.
+- **Fidelity**: J171's self-comparison on `lab-j170` (`selfMatch` 13, 13 spines, `selfMatchNight` 1) and every
+  reader self-check of J193's pilot pass; J193's `labels.jsonl` (180 rows, 89 labels, 41 confident), `labels.json`,
+  `ncurve.json`, `reads.json`, `cuts.json`, `compare-j191.json` and `tool.json` come back byte for byte; J187's,
+  J188's, J190's and J191's rows too, with their own scan stamps; J186's rows (153, 81, 21) equal its own
+  `labels.py`'s.
+- **Dataset v1**: `var/release/move-atlas-v1.zip`, 8,901,601 bytes, 311 files (rebuilt after the review): 1,003 label rows (508 labels, 154
+  confident) from 77 spines of the six nights, 338,895 branch rows, 154 decks; D509 point 4's units left out (J186
+  s11 d13–d16, J187 s03 d23/d25/d27/d29: 8 rows); rules text dropped (a play identity's ninth field, an ability's
+  text in its label), every path relative, CC BY 4.0 with the attribution line, the Fan Content Policy notice.
+- **The fixture**: `fixtures/atlas/night/`, J193's s07 cut to three branches an option; 12n holds `labels.py`,
+  `compare.py`, a release built twice to the same bytes, and the scrub check's plants.
+- **The public-repo check**: 93 tracked files name `justin-a` (77 dated history; the rest the owner's machine
+  convention, example paths and tests); the owner's first name in 88; no secret in the tree or its history;
+  206 commits on `main` authored with the owner's personal address (17 as committer too); `.claude/` untracked but not ignored. D515 has the classification.
+
+<a id="fu-move-atlas"></a>
+### The move atlas release's follow-ups — eight, 2026-11-06 (D515)
+
+1. **The owner's: flip the repository public, upload the zip and list it** (Kaggle, Hugging Face or neither), with
+   the title, description and attribution he wants; `release.py`'s `ATTRIBUTION` holds the default line.
+2. **The owner's: the history's author email.** 206 commits on `main` are authored with his personal address, and
+   17 carry it as committer too; public history shows it. Accept it, or rewrite both fields to his GitHub noreply
+   form before the flip.
+3. **The owner's: this PC's paths in tracked files.** Hard rule 9 and the engine's path in `CLAUDE.md` (and its
+   manifest), `NOTICE`, `config.json` (`forgeJar`, `labArchiveRoot`), `PLAN.md`'s worktree paths, four guides'
+   examples, `engine-unplayable.json`'s evidence strings, one test's default lab folder. None is a secret; each
+   tells a reader where this PC keeps things. Leave them, or generalise the convention (`$REPO`, `$FORGE_JAR`).
+4. **`.claude/` is untracked but not ignored**: a `git add -A` in the main checkout would commit the session's
+   folder. Add `/.claude/` to `.gitignore`, unless the owner wants its settings shared.
+5. **J186's refused- and lost-cast fields are null** (its frame-log scan never ran): `metrics.py --scan` over its
+   twelve spines fills them for a v2.
+6. **The frame logs are not in v1** (about a gigabyte a spine, and their state frames carry rules text): a v2 that
+   ships them needs a scrub of its own.
+7. **The next atlas job runs `tools/atlas/` at its pin** instead of heredocs; the five pilot scripts and
+   `metrics.py`'s spine table carry J193's seeds and are edited in the repository for it, a commit a night.
+8. **No test holds `tools/README.md`'s table to the files under `tools/`**; this lane added `tools/atlas/`'s rows by
+   hand.
 
 ## Deferred — out of scope for M0–M7
 
