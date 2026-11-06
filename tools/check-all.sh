@@ -204,6 +204,13 @@
 #                                 decision record of both seats; after 12g,
 #                                 which compiles the lab's classes (~11 s, one
 #                                 worker)
+#                                 Then 12n: the move atlas's label pipeline
+#                                 (D515, tools/atlas/tests) -- labels.py and
+#                                 compare.py over fixtures/atlas/night against
+#                                 golden counts, a release built from it clean
+#                                 and deterministic, and the scrub check failing
+#                                 on each planted path, name and rules text
+#                                 (~1 s; python3, no engine)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -2386,6 +2393,21 @@ s12m_seatid() {
     || die "cubelab.sh seat-identity (12m: a seat's records or play differ from fixtures/cubelab/seat-identity.json -- diff $out/<game>.identity.txt against a run of the previous tree, classify every line, and regenerate with --write only when every difference is one the change's decision names; D451, D486)"
 }
 
+# 12n. D515: tools/atlas/, the move atlas's label pipeline moved out of the lab's job
+#      files, and the dataset release built from it.  Its tests read only
+#      fixtures/atlas/night (J193's s07, trimmed and scrubbed by make_fixture.py):
+#      labels.py and compare.py give the fixture's golden counts, a release built
+#      from it passes the scrub check and zips the same bytes twice, and the
+#      check fails on each thing it exists to catch (a machine path, a name, a
+#      rules-text identity field, an ability's text in a label, Forge's CARDNAME).
+#      Standard library only, no engine, about a second.
+s12n_atlas() {
+  printf '\n=== 12n. tools/atlas tests -- the move atlas labels, a release from the fixture, the scrub check (D515) ===\n'
+  command -v python3 >/dev/null || die "python3 not found (12n: tools/atlas needs Python 3)"
+  python3 -m unittest discover -s tools/atlas/tests 2>&1 \
+    || die "tools/atlas tests (12n: labels.py or compare.py moved off the fixture's goldens, or the release's scrub check let a path, a name or rules text through; D515)"
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -2532,6 +2554,7 @@ job 12j-timeout   12 both     s12j_timeout      "$PRE"
 job 12k-facedown  12 both     s12k_facedown     "$PRE"
 job 12l-playable  12 both     s12l_playable     "$PRE"
 job 12m-seatid    12 both     s12m_seatid       "12g-cubelab"
+job 12n-atlas     12 both     s12n_atlas        "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
@@ -2554,7 +2577,7 @@ fi
 # and nothing waits for the ten-games rows, and the build is right behind them
 # because `node --test` waits for it too; Smoke is early because 9c and 9e
 # wait for it.  Anything not named runs after, in table order.
-PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach 12h-ml"
+PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach 12h-ml 12n-atlas"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
 PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 10i-table 10j-adversary 10k-costs 08-console 12c-crash 12g-cubelab"

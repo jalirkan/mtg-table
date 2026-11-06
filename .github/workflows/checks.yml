@@ -245,6 +245,10 @@ jobs:
       # its standard-library half runs (line flattening, offsets, resets); the rest says skipped.
       - name: tools/lab tests (the lab warehouse)
         run: python3 -m unittest discover -s tools/lab/tests
+      # Step 12n (D515): the move atlas's label pipeline over fixtures/atlas, a release built
+      # from it, and the release's scrub check against planted paths, names and rules text.
+      - name: tools/atlas tests (the move atlas labels and release)
+        run: python3 -m unittest discover -s tools/atlas/tests
 
   # D383: the tools/ml suite WITH numpy and zstandard.  The redaction job above runs only its
   # standard-library half, so every numpy test -- the datasets, training, the gates, evaluator v2 --
