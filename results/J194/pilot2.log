@@ -1,0 +1,6 @@
+==== J194 pilot2 started 2026-11-05T20:31:06-05:00 in unit lab-J194-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+forge-default              forge    3ed453ffef1c  ai-bench "Default"  [anchor]
+search-v1-anytime          search   cdd55e02a89c  ai-bench "Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1"
+search-v2-ms3000-r24       search   994bf685f6b9  ai-bench "Default+outlets+search:ms=3000,cands=6,turns=0,rounds=2,margin=20,maxrounds=24,what=pab,seed=0,anytime=1"
+search-v2-ms6000-r48       search   6bab8ca5e273  ai-bench "Default+outlets+search:ms=6000,cands=6,turns=0,rounds=2,margin=20,maxrounds=48,what=pab,seed=0,anytime=1"
+{"present":1,"v1_hash_ok":1,"forge_ok":1,"r24_only_ms_and_cap":1,"r48_only_ms_and_cap":1,"hashes":{"search-v1-anytime":"cdd55e02a89c","search-v2-ms3000-r24":"994bf685f6b9","search-v2-ms6000-r48":"6bab8ca5e273","forge-default":"3ed453ffef1c"},"cfgs":{"search-v1-anytime":"Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1","search-v2-ms3000-r24":"Default+outlets+search:ms=3000,cands=6,turns=0,rounds=2,margin=20,maxrounds=24,what=pab,seed=0,anytime=1","search-v2-ms6000-r48":"Default+outlets+search:ms=6000,cands=6,turns=0,rounds=2,margin=20,maxrounds=48,what=pab,seed=0,anytime=1"},"ok":1}

@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-11-05T20:31:06-05:00",
- "heartbeat": "2026-11-05T20:31:06-05:00",
+ "updated": "2026-11-05T20:31:20-05:00",
+ "heartbeat": "2026-11-05T20:31:20-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.22,
-  "memUsedGb": 5.1,
+  "load1": 3.5,
+  "memUsedGb": 4.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 4752,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J194",
    "title": "The compute curve: three fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) in one night: (a) search-v1-anytime (search-v2, today's main) vs forge-default, the re-anchor; (b) search-v2-ms6000-r48 vs search-v2, the rule's match; (c) search-v2-ms3000-r24 vs search-v2, read beside; the two new players are search-v2 with the wall-clock budget and the round cap raised together, 2x and 4x (D514)",
    "cpu": "heavy",
-   "phase": "pilot 2/4",
+   "phase": "pilot 3/4",
    "started": "2026-11-05T20:29:50-05:00",
-   "elapsed": 76,
+   "elapsed": 90,
    "done": 0,
    "total": 3600,
    "unit": "games",
@@ -99,7 +99,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J194-pilot2"
+   "detail": "lab-J194-pilot3"
   }
  ],
  "queue": [],
