@@ -270,7 +270,7 @@ Five, and the thesis is one sentence: **the workshop is the arena pointed at one
 card: it draws with the arena's code and decides nothing the arena would not.**
 `#workshop` (`web/src/workshop/`) is the card viewer the user asked for on
 2026-09-27, to see the figures and how they act. It is a page that builds its own
-boards and has no transport. README's *Arena mode → The workshop* is how to use
+boards and has no transport. `docs/handbook.md`'s *Arena mode → The workshop* is how to use
 it, `docs/evidence/workshop.md` is what was measured, and PLAN.md's *The
 workshop* has the status, **the rebase-onto-slice-4 checklist and how it went**,
 and the follow-ups (seven closed by the reconciliation, five new). **D102–D104
@@ -429,7 +429,7 @@ Five, and the thesis is one sentence: **the story is the narrator's text beside
 the replay's cursor — one narrator, one cursor, and nothing on the page the log
 did not show its seat.** `#story` (`web/src/story/`) is the other half of watching
 two AIs play: the arena shows what happened, the story says it in words, turn by
-turn, with the moment on screen highlighted. README's *Reading a game back* and
+turn, with the moment on screen highlighted. `docs/handbook.md`'s *Reading a game back* and
 *Spectate* say how to use it, `docs/evidence/story.md` is what was measured, and
 PLAN.md's *The story page* has the status and the follow-ups — the first of them
 a story panel INSIDE the arena, with its mount point named, which this branch left

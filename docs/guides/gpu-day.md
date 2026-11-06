@@ -430,9 +430,9 @@ frame times, draw calls or depth timings:
 - `personal-tier.md`, `status-layer.md`, `villain-identity.md`,
   `relief-window.md` and `gpu-pass.md` (the whole arena, 2026-09-29).
 
-`spectate.md` names the card only as the machine. README's slice-1 cost table
+`spectate.md` names the card only as the machine. The handbook's slice-1 cost table
 and its bloom note are 1080 numbers too. Do not edit any of them: the day's
-numbers go into a new, dated evidence file, and a sentence in README can point
+numbers go into a new, dated evidence file, and a sentence in the handbook can point
 to it. SwiftShader's numbers (`m7-arena.md` and the rest) do not change at all,
 because the CPU draws them.
 

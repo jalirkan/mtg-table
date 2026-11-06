@@ -34,3 +34,7 @@ forge-home/forge.profile.properties
 # `personal/` would also hide tools/personal/, the committed pipeline
 # (web/test/personal-tier.test.ts holds both halves).
 /personal/
+
+# --- Claude Code's local settings (D516): per-machine permissions and session state, never shared.
+# Anchored: only the checkout's own .claude/ folder.
+/.claude/

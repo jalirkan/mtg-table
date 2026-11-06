@@ -83,7 +83,7 @@ jobs:
     timeout-minutes: 15
     env:
       # The one engine this repo is built, gated and recorded against (CLAUDE.md,
-      # "Environment"; README, "Getting the engine").  The asset is Forge's own
+      # "Environment"; docs/handbook.md, "Getting the engine").  The asset is Forge's own
       # desktop distribution on the tagged forge-2.0.14 release -- the archive
       # the local install was unpacked from -- never the rolling daily-snapshots
       # build (D109, D110).  Its sha256 is the digest GitHub reports for the

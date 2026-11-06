@@ -725,7 +725,7 @@ function useReducedMotion(): boolean {
  * words that the arena *never calls `fetch`*: the whole seam is that this
  * renderer is handed a `ClientState` and asks the network for nothing. One dev
  * convenience is not worth the first exception to that. The iteration loop is
- * `window.__mtgArena` instead (see the dev handle below, and README's arena
+ * `window.__mtgArena` instead (see the dev handle below, and docs/handbook.md's arena
  * section, which carries the two-line recipe), and editing `cues.json` is a hot
  * reload away — Vite re-imports it and this `useMemo` re-validates it.
  */

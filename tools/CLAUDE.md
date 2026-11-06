@@ -248,7 +248,7 @@ exposed to.
 
 **CI runs the gate's engine-free half, and only that**
 (`.github/workflows/checks.yml`, on every push to `main` and every pull request;
-README's *Continuous integration*). Four jobs on `ubuntu-latest`: **`web`**
+`docs/handbook.md`'s *Continuous integration*). Four jobs on `ubuntu-latest`: **`web`**
 (`npm ci`, `npm --prefix web run build`, `npm --prefix web test` on Node 24 —
 hermetic because `MTGTABLE_WS_LOGS` is unset and `web/public/art.json` is absent,
 and every reader of it already falls back to the empty index), **`bridge`**

@@ -579,7 +579,8 @@ used twice; anything that resolves a `D<n>` looks in both places.
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
 | `DECISIONS.md`, `docs/decisions/` | Every load-bearing decision, dated, with the alternatives rejected: D1–D378 in `DECISIONS.md`, D379 on a file each under `docs/decisions/` (*Decision numbers*); the older blocks include the anchor resolver's D275, the GPU pass's D270–D273, the play-distance audit's D265–D267, the portrait standee's D260–D264, the arena caption's D255–D256, the sound cues' D250–D252, the arena polish's D240–D241, more villain identity's D230–D233, the relief window's D225–D228, villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D198 (a lane keeps the numbers it reserved, D200). |
-| `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
+| `README.md` | The front door: what it is, the quickstart, the move atlas dataset, the **NON-GOALS** list and the licence (**D516**); `CONTRIBUTING.md`, `SECURITY.md` and `CITATION.cff` beside it. |
+| `docs/handbook.md` | **The long form** (the README until D516): running it, every mode and flag, the arena, the card library, the cube lab, the repo layout. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
 new dated decision under `docs/decisions/` — do not silently edit an old one.
