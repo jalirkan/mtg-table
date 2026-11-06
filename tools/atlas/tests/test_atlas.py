@@ -15,6 +15,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -107,7 +108,7 @@ class Pipeline(unittest.TestCase):
         for dp, _, fs in os.walk(os.path.join(ROOT, 'fixtures', 'atlas')):
             for f in fs:
                 data = slurp(os.path.join(dp, f), 'rb')
-                for b in R.BANNED:
+                for b in R.banned():
                     self.assertIsNone(b.search(data), '%s holds %s' % (f, b.pattern))
         base = json.loads(slurp(os.path.join(NIGHT, SPINE, 'phaseB', 'baseline.json')))
         for x in base['decisions']:
@@ -168,15 +169,23 @@ class Pipeline(unittest.TestCase):
         plant_row(raw_label)
         expect(r'activate label')
 
-        def home(rows):
-            rows[0]['frameLog'] = '/home/someone/lab/' + rows[0]['frameLog']
-        plant_row(home)
-        expect(r"holds '/home/'")
-
-        def name(rows):
-            rows[0]['pool'] = 'Justin'
-        plant_row(name)
-        expect(r"holds 'Justin'")
+        def field(key, value):
+            def f(rows):
+                rows[0][key] = value
+            return f
+        # an absolute path of each shape a machine's paths take, a Windows drive, a mail address, a mana symbol
+        for value, pattern in (('/home/someone/lab/x.gz', r"holds '\"/home/'"), ('/mnt/e/forgecoach-archive', r"holds '\"/mnt/'"),
+                               ('see /tmp/x', r"holds ' /tmp/'"), ('(/var/lib/x)', r"holds '\(/var/'"),
+                               ('/Users/someone/x', r"holds '\"/Users/'"), ('/root/x', r"holds '\"/root/'"),
+                               ('/media/usb/x', r"holds '\"/media/'"), ('/srv/lab/x', r"holds '\"/srv/'"),
+                               ('C:\\Users\\x', r"holds 'C:"), ('someone@gmail.com', r"holds '@gmail\.'"),
+                               ('Justin', r"holds 'Justin'"), ('pay {2}{W}', r"holds '\{2\}'"), ('{T}: add', r"holds '\{T\}'")):
+            plant_row(field('frameLog', value))
+            expect(pattern)
+        host = socket.gethostname()
+        if len(host) >= 6 and host.lower() != 'localhost':
+            plant_row(field('pool', 'built on ' + host))
+            expect(r'holds ' + re.escape(repr(host)))
 
         b = [json.loads(x) for x in clean_branches.splitlines()]
         x = next(r for r in b if r['token'].startswith('activate'))
@@ -191,6 +200,13 @@ class Pipeline(unittest.TestCase):
             rows[0]['deckA'] = 'decks/J193/nowhere.dck'
         plant_row(deck)
         expect(r'is not in the release')
+
+    def test_relative_refuses_a_foreign_absolute_path(self):
+        self.assertEqual(R.relative('/data/night/b-s01/x.gz', '/data/night'), 'b-s01/x.gz')
+        self.assertEqual(R.relative('b-s01/x.gz', '/data/night'), 'b-s01/x.gz')
+        for p in ('/mnt/e/forgecoach-archive', '/data/nightly/x', 'C:\\lab\\x', 'D:/lab/x'):
+            with self.assertRaises(ValueError):
+                R.relative(p, '/data/night')
 
     def test_scrub_identity(self):
         self.assertEqual(R.scrub_identity('Thieving Skydiver|spell|Original|-|-|-|-|Kicker1|Thieving Skydiver - Creature 2 / 1'),

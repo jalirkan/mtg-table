@@ -201,8 +201,10 @@ python3 -I tools/atlas/release.py --out var/release/move-atlas-v1 \
 
 The scrub keeps card names and drops card text: the ninth field of a play identity (Forge's description of the
 play, which renders the rules text) and an activated ability's text in its label. The check that ends the build
-fails on a path from the machine that made it, on Forge's `CARDNAME` placeholder, on an identity with a ninth
-field, and on an activate label that is not its card's name; `python3 -I tools/atlas/release.py --check <folder>`
+fails on an absolute path of a home, mount or temp folder or a Windows drive, on the owner's name, a mail address,
+the building machine's host name, Forge's `CARDNAME` placeholder or a mana symbol, on an identity with a ninth
+field, and on an activate label that is not its card's name (and an absolute path outside a night's folder stops
+the build before anything is written); `python3 -I tools/atlas/release.py --check <folder>`
 runs it alone.
 
 ## The fixture and the tests

@@ -20,7 +20,8 @@ ATLAS_SCAN_STAMP names the stamp --scan writes and the main mode wants (default 
 
 Moved into the repository from the lab's J193 job file (D515): byte for byte but for the data folder, which was a
 path on the lab machine and is now argument 1 or $ATLAS_DATA, the job folder, now $ATLAS_LOCAL, and the scan
-stamp, now $ATLAS_SCAN_STAMP. The comment block below is the job's.
+stamp, now $ATLAS_SCAN_STAMP; and in the job's comment block below one line, which named J177's data folder by
+its path on the lab machine, now says "the lab's lab-j177 data folder". The comment block is otherwise the job's.
 """
 # J193's metrics (drafts/J193-atlas-4b-night-fifteen.md): J177's metrics.py for a NEW data folder, lab-j193, where all 13 spines are
 # J193's, branched at the pin by D488's random seat policy on D493's copier behind D508's gate, on J177's design; registered before

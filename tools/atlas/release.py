@@ -34,8 +34,11 @@ THE SCRUB (every row and file):
   - a path: `deckA`/`deckB` become decks/<night>/<deck folder>/<file>.dck, `branchesFile` and `atlas` the
     release's own files, and `frameLog`, `rows.file` and `branchFrames` (not in the release) paths relative to the
     night's data folder; atlas.json's absolute paths the same.
-THE CHECK (`check`, run before the zip is written; the build fails on any finding): no file holds "/home/" or
-"justin" (any case) or "CARDNAME" (Forge's rules-text placeholder); no identity has a ninth field; an `activate:`
+THE CHECK (`check`, run before the zip is written; the build fails on any finding): no file holds an absolute
+path of the shapes a machine's paths take (/home/, /mnt/, /tmp/, /var/, /Users/, /root/, /media/, /srv/ after a
+space, quote, bracket, `=` or `:`, or a Windows drive path), the owner's name or a mail address of his provider,
+"CARDNAME" (Forge's rules-text placeholder), a mana or tap symbol, or the building machine's host name; and
+relative() refuses an absolute path it cannot make relative, so none is written. No identity has a ninth field; an `activate:`
 option's label is its identity's name in labels.jsonl and atlas.json, and in branches/ the label atlas.json gives
 the same decision and option; every row's decks are in the release.
 
@@ -49,9 +52,11 @@ import hashlib
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import zipfile
+from datetime import datetime, timezone
 
 CONTRACT = 'mtg-table rung-4b label v6 (J177)'
 # D509 point 4: the units a reader pooling D508's population leaves out, by the job files' names. J186's s11
@@ -69,6 +74,7 @@ ENGINE = {'name': 'Forge', 'version': '2.0.14 (Implementation-Version 2.0.14-SNA
 ZIP_TIME = (2026, 11, 6, 0, 0, 0)
 IDENTITY_FIELDS = 8
 GUIDE = 'docs/guides/move-atlas.md'
+GITHUB_BLOB = 'https://github.com/jalirkan/mtg-table/blob/main'
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 
 
@@ -109,10 +115,27 @@ def deck_path(night, p):
 
 
 def relative(p, root):
-    """an absolute path under the night's data folder -> relative to it"""
+    """an absolute path under the night's data folder -> relative to it; any other absolute path stops the build"""
     if isinstance(p, str) and p.startswith(root + '/'):
         return p[len(root) + 1:]
+    if isinstance(p, str) and (p.startswith('/') or re.match(r'^[A-Za-z]:[\\/]', p)):
+        raise ValueError('an absolute path outside the night folder %s: %r' % (root, p))
     return p
+
+
+def slurp(p, mode='r'):
+    with open(p, mode) as f:
+        return f.read()
+
+
+def load(p):
+    with open(p) as f:
+        return json.load(f)
+
+
+def lines_of(p):
+    with open(p) as f:
+        return f.read().splitlines()
 
 
 def dumps_line(x):
@@ -125,9 +148,9 @@ class Spine:
     def __init__(self, night, root, folder):
         self.night, self.root, self.folder = night, root, folder
         self.dir = os.path.join(root, folder)
-        self.plan = json.load(open(os.path.join(self.dir, 'plan.json')))
+        self.plan = load(os.path.join(self.dir, 'plan.json'))
         self.ident, self.tokens, self.raw = {}, {}, {}
-        for x in json.load(open(os.path.join(self.dir, 'phaseB', 'baseline.json')))['decisions']:
+        for x in load(os.path.join(self.dir, 'phaseB', 'baseline.json'))['decisions']:
             ids = x.get('identities') or []
             for o, tok in enumerate(x.get('tokens') or []):
                 idt = ids[o] if o < len(ids) else None
@@ -206,20 +229,28 @@ def spine_key(folder):
 def read_status(path):
     st = {}
     try:
-        lines = open(os.path.join(path, 'STATUS')).read().splitlines()
+        lines = lines_of(os.path.join(path, 'STATUS'))
     except OSError:
         return None
     st['status'] = lines[0].strip() if lines else None
     for line in lines[1:]:
         k, _, v = line.partition(':')
         if k.strip() in ('reason', 'started', 'finished', 'mtg-table'):
-            st[k.strip()] = v.strip()
+            st[k.strip()] = utc(v.strip()) if k.strip() in ('started', 'finished') else v.strip()
     return st
+
+
+def utc(stamp):
+    """an ISO time with an offset -> UTC, 'Z' (the runner writes the PC's local offset)"""
+    try:
+        return datetime.fromisoformat(stamp).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        return stamp
 
 
 def guide_fields():
     """the field dictionary of docs/guides/move-atlas.md, between its two markers"""
-    s = open(os.path.join(REPO, GUIDE)).read()
+    s = slurp(os.path.join(REPO, GUIDE))
     a, b = s.index('<!-- fields -->'), s.index('<!-- /fields -->')
     return s[a + len('<!-- fields -->'):b].strip('\n')
 
@@ -244,7 +275,7 @@ def build(args):
     results_of = dict(x.split('=', 1) for x in args.results or [])
     os.makedirs(out)
     counts = {'rows': 0, 'labels': 0, 'confident': 0, 'partial': 0, 'futilityControls': 0, 'spines': 0, 'decks': 0,
-              'branchRows': 0, 'excludedRows': 0, 'excludedBranchRows': 0, 'nights': {}}
+              'branchRows': 0, 'erroredBranchRows': 0, 'excludedRows': 0, 'excludedBranchRows': 0, 'nights': {}}
     rows_out = open(os.path.join(out, 'labels.jsonl'), 'w')
     for night, root in nights:
         spines = {}
@@ -252,12 +283,12 @@ def build(args):
             if re.match(r'^b-s\d\d-', f) and os.path.exists(os.path.join(root, f, 'atlas.json')):
                 spines[f] = Spine(night, root, f)
         nc = {'spines': len(spines), 'rows': 0, 'labels': 0, 'confident': 0, 'partial': 0, 'futilityControls': 0,
-              'branchRows': 0, 'excludedRows': 0, 'excludedBranchRows': 0, 'decks': 0,
+              'branchRows': 0, 'erroredBranchRows': 0, 'excludedRows': 0, 'excludedBranchRows': 0, 'decks': 0,
               'pins': [], 'status': read_status(results_of[night]) if night in results_of else None,
               'excluded': {s: list(ds) for s, ds in EXCLUDE.get(night, {}).items()}}
         lf = labels_of.get(night) or os.path.join(root, 'report', 'labels.jsonl')
         decks = set()
-        for line in open(lf):
+        for line in lines_of(lf):
             row = json.loads(line)
             if row.get('contract') != CONTRACT:
                 sys.exit('release.py: %s: a row of another contract: %r' % (lf, row.get('contract')))
@@ -283,13 +314,13 @@ def build(args):
             for k in ('deckA', 'deckB'):
                 decks.add((sp.plan[k], deck_path(night, sp.plan[k])))
             os.makedirs(os.path.join(out, 'atlas', night), exist_ok=True)
-            doc = scrub_atlas(sp, json.load(open(os.path.join(sp.dir, 'atlas.json'))))
+            doc = scrub_atlas(sp, load(os.path.join(sp.dir, 'atlas.json')))
             with open(os.path.join(out, 'atlas', night, folder + '.atlas.json'), 'w') as f:
                 json.dump(doc, f, indent=1, ensure_ascii=False)
                 f.write('\n')
             os.makedirs(os.path.join(out, 'branches', night), exist_ok=True)
             with open(os.path.join(out, 'branches', night, folder + '.branches.jsonl'), 'w') as f:
-                for line in open(os.path.join(sp.dir, 'phaseB', 'branches.jsonl')):
+                for line in lines_of(os.path.join(sp.dir, 'phaseB', 'branches.jsonl')):
                     if not line.strip():
                         continue
                     b = json.loads(line)
@@ -299,24 +330,26 @@ def build(args):
                     b['label'] = sp.label(b['d'], b['o'], b['token'], b['label'])
                     f.write(dumps_line(b))
                     nc['branchRows'] += 1
+                    nc['erroredBranchRows'] += 1 if (b.get('error') or b.get('unavailable')) else 0
         for src, dst in sorted(decks, key=lambda x: x[1]):
             src = src if os.path.isabs(src) else os.path.join(root, src)   # a fixture names its decks from its night folder
             p = os.path.join(out, dst)
             os.makedirs(os.path.dirname(p), exist_ok=True)
-            data = open(src, 'rb').read()
+            data = slurp(src, 'rb')
             if os.path.exists(p):
-                if open(p, 'rb').read() != data:
+                if slurp(p, 'rb') != data:
                     sys.exit('release.py: two different decks named %s' % dst)
                 continue
-            open(p, 'wb').write(data)
+            with open(p, 'wb') as f:
+                f.write(data)
             nc['decks'] += 1
         counts['nights'][night] = nc
         for k in ('rows', 'labels', 'confident', 'partial', 'futilityControls', 'spines', 'decks', 'branchRows',
-                  'excludedRows', 'excludedBranchRows'):
+                  'erroredBranchRows', 'excludedRows', 'excludedBranchRows'):
             counts[k] += nc[k]
     rows_out.close()
     commit = args.source_commit or git_head()
-    readme = README.format(**readme_fields(args.version, counts, commit, nights))
+    readme = link_decisions(README.format(**readme_fields(args.version, counts, commit, nights)))
     with open(os.path.join(out, 'README.md'), 'w') as f:
         f.write(readme)
     files = {}
@@ -347,6 +380,19 @@ def build(args):
                                  for n, v in counts['nights'].items()}}, indent=1))
 
 
+def link_decisions(text):
+    """every bare D<n> outside a code span and not already a link's text -> a link to its decision on GitHub"""
+    files = {f.split('-', 1)[0]: f for f in os.listdir(os.path.join(REPO, 'docs', 'decisions')) if re.match(r'^D\d+-.*\.md$', f)}
+
+    def one(m):
+        f = files.get(m.group(1))
+        return '[%s](%s/docs/decisions/%s)' % (m.group(1), GITHUB_BLOB, f) if f else m.group(1)
+    parts = text.split('`')
+    for i in range(0, len(parts), 2):
+        parts[i] = re.sub(r'(?<![\[\w/-])(D\d{3,})(?![\w\]-])', one, parts[i])
+    return '`'.join(parts)
+
+
 def write_zip(out):
     top = os.path.basename(out)
     names = []
@@ -359,7 +405,7 @@ def write_zip(out):
             zi = zipfile.ZipInfo(top + '/' + n, date_time=ZIP_TIME)
             zi.compress_type = zipfile.ZIP_DEFLATED
             zi.external_attr = 0o644 << 16
-            z.writestr(zi, open(os.path.join(out, n), 'rb').read())
+            z.writestr(zi, slurp(os.path.join(out, n), 'rb'))
     os.replace(tmp, out + '.zip')
 
 
@@ -370,7 +416,19 @@ def git_head():
         return None
 
 
-BANNED = (re.compile(rb'/home/'), re.compile(rb'justin', re.I), re.compile(rb'CARDNAME'))
+# What no released byte may hold: an absolute path of a Unix home, mount or temp folder (the shapes a lab machine's
+# paths take) or a Windows drive path; the owner's name or a mail address of his provider; Forge's rules-text
+# placeholder; a mana or tap symbol (rules text: zero in v1); and, in banned(), the building machine's own name.
+BANNED = (re.compile(rb'(^|[\s"\'(=:])/(home|mnt|tmp|var|Users|root|media|srv)/', re.M), re.compile(rb'[A-Za-z]:\\'),
+          re.compile(rb'justin', re.I), re.compile(rb'@gmail\.', re.I), re.compile(rb'CARDNAME'),
+          re.compile(rb'\{[0-9WUBRGCXSTQ/]+\}'))
+
+
+def banned():
+    """BANNED and this machine's host name, read when the check runs (at build time, the building machine's)"""
+    host = socket.gethostname()
+    extra = (re.compile(re.escape(host.encode()), re.I),) if len(host) >= 6 and host.lower() != 'localhost' else ()
+    return BANNED + extra
 
 
 def check(out):
@@ -380,8 +438,8 @@ def check(out):
         for f in sorted(fs):
             p = os.path.join(dp, f)
             rel = os.path.relpath(p, out)
-            data = open(p, 'rb').read()
-            for b in BANNED:
+            data = slurp(p, 'rb')
+            for b in banned():
                 m = b.search(data)
                 if m:
                     problems.append('%s: holds %r at byte %d' % (rel, m.group(0).decode('utf-8', 'replace'), m.start()))
@@ -389,7 +447,7 @@ def check(out):
     for dp, _, fs in os.walk(os.path.join(out, 'atlas')):
         for f in sorted(fs):
             rel = os.path.relpath(os.path.join(dp, f), out).replace(os.sep, '/')
-            doc = json.load(open(os.path.join(dp, f)))
+            doc = load(os.path.join(dp, f))
             night = os.path.basename(dp)
             for x in (doc.get('phaseB') or {}).get('decisions') or []:
                 for o in x.get('options') or []:
@@ -398,13 +456,13 @@ def check(out):
     for dp, _, fs in os.walk(os.path.join(out, 'branches')):
         for f in sorted(fs):
             night, folder = os.path.basename(dp), f[:-len('.branches.jsonl')]
-            for n, line in enumerate(open(os.path.join(dp, f)), 1):
+            for n, line in enumerate(lines_of(os.path.join(dp, f)), 1):
                 b = json.loads(line)
                 if str(b.get('token', '')).startswith('activate') and b.get('label') != atlas_labels.get((night, folder, b.get('d'), b.get('o'))):
                     problems.append('branches/%s/%s line %d: label %r is not the atlas option\'s' % (night, f, n, b.get('label')))
     lf = os.path.join(out, 'labels.jsonl')
     if os.path.exists(lf):
-        for n, line in enumerate(open(lf), 1):
+        for n, line in enumerate(lines_of(lf), 1):
             r = json.loads(line)
             for o in r.get('options') or []:
                 problems.extend(option_problems('labels.jsonl line %d o%s' % (n, o.get('o')), o))
@@ -435,6 +493,7 @@ def readme_fields(version, counts, commit, nights):
     return {'version': version, 'commit': commit or '(not a git checkout)', 'rows': counts['rows'], 'labels': counts['labels'],
             'confident': counts['confident'], 'partial': counts['partial'], 'controls': counts['futilityControls'],
             'spines': counts['spines'], 'decks': counts['decks'], 'branchRows': counts['branchRows'],
+            'erroredBranchRows': counts['erroredBranchRows'],
             'excludedRows': counts['excludedRows'], 'excludedBranchRows': counts['excludedBranchRows'],
             'nights': len(nights), 'nightNames': ', '.join(n for n, _ in nights), 'nightTable': '\n'.join(rows),
             'jarSha': ENGINE['jarSha256'], 'attribution': ATTRIBUTION, 'fields': guide_fields(),
@@ -477,7 +536,7 @@ pool. Each spine is a new pair of decks drawn at random (D447's census draw) fro
 | path | what |
 |---|---|
 | `labels.jsonl` | one row per branched decision ({rows} rows); the field dictionary is below |
-| `branches/<night>/<spine>.branches.jsonl` | every branch game's outcome, one line a game: the decision `d`, the map `c` (`random` or `forge`), the option `o`, its `token` and `label`, the branch index `i` and its `seed`, the `result` for seat A (1 win, 0 draw, -1 loss) and its `score`, whether the turn cap ended it (`capped`) or the clock (`timedOut`), its length (`turns`, `steps`, `ms`, `bytes` of frame log), `standIns`, an `error` text when the branch errored, `forkProblems` (empty: the fork was the baseline's position), the unit `key`, and, when non-zero, the random seats' counters (`modesDrawn`, `retargeted`, `targetCountTrimmed`, `costTargetAvoided`, `chooseSourceGuard`, `exileLinksLost`, `restarts`, `engineError`, `leakSame`, `controlMoved`). No game text. |
+| `branches/<night>/<spine>.branches.jsonl` | every branch game's outcome, one line a game: the decision `d`, the map `c` (`random` or `forge`), the option `o`, its `token` and `label`, the branch index `i` and its `seed`, the `result` for seat A (1 win, 0 draw, -1 loss) and its `score`, whether the turn cap ended it (`capped`) or the clock (`timedOut`), its length (`turns`, `steps`, `ms`, `bytes` of frame log), `standIns`, an `error` text when the branch errored (such a row still carries a placeholder `result` 0 and `score` 0.5: skip it, as below), `forkProblems` (empty: the fork was the baseline's position), the unit `key`, and, when non-zero, the random seats' counters (`modesDrawn`, `retargeted`, `targetCountTrimmed`, `costTargetAvoided`, `chooseSourceGuard`, `exileLinksLost`, `restarts`, `engineError`, `leakSame`, `controlMoved`). No game text. |
 | `atlas/<night>/<spine>.atlas.json` | the generator's summary of the spine: the plan, every decision's option values under both maps, the agreement between the maps, the schedule (what the cuts and the futility stop did), the checks it passed, timings. Each option of `phaseB.decisions` carries its play `identity` |
 | `decks/<night>/<deck folder>/*.dck` | the {decks} decks the spines played, in Forge's `.dck` format |
 | `MANIFEST.json` | sha256 and bytes of every file, the counts, the exclusions, the source commit |
@@ -487,6 +546,8 @@ rows. The rows' `frameLog`, `rows.file` and `branchFrames` name where they sit r
 anyone can make them again (*How it was made*).
 
 ## The nights
+
+A night is named by its lab job's id (J186 … J193: the lab runner's job numbers, one a night).
 
 | night | pin | spines | rows | labels | confident | branch games | runner status | excluded |
 |---|---|---|---|---|---|---|---|---|
@@ -513,7 +574,8 @@ still describe the whole spine as it ran.
   from `tools/atlas/labels.py` (label contract v6). `docs/guides/move-atlas.md` in the repository is the manual,
   with the exact commands to make a spine of your own.
 - **Engine:** Forge 2.0.14 (`forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, sha256 `{jarSha}`), headless, as
-  the rules engine and the AI. Every frame log of every night names this jar.
+  the rules engine and the AI. Every baseline frame log of the six nights (156: both seats of 78 baseline games,
+  J186's unfinished s13 among them) names this jar; the branch logs were not each read.
 - **The seat:** the atlas plays no search seat; option 0 is Forge's Default AI's choice in the baseline game, and the
   branches are played by the random seat (D488's policy, D498's redeal, D508's gate), frozen for the whole
   population (D509). No ladder player or search configuration applies.
@@ -530,12 +592,21 @@ still describe the whole spine as it ran.
   separate question (the Forge map is there to ask it).
 - The random map's values are biased toward options that help in chaotic games; compare the Forge map where it
   exists. Draws at the 40-turn cap score a half.
-- Some branch games errored inside the engine (the `error` field); they carry no result and count in no value.
+- **Skip the errored branch rows.** {erroredBranchRows} branch games errored inside the engine or ran out of time (a
+  non-null `error`; the time-outs also `timedOut: true`). Each still carries a placeholder `result` 0 and `score`
+  0.5, and the generator leaves it out of every value: a consumer averaging `score` from `branches/` must skip
+  the rows with an `error` (or `timedOut`, or `unavailable`), as `atlas.json` and `labels.jsonl` already do.
+- **What a model of seat A may use.** At each decision the branches redealt the cards seat A could not see from
+  the cards it could not rule out, seat B's real remaining deck among them: the values assume the opponent's list
+  is known. `deckB`'s full list is more than seat A knew at the decision; a model of seat A's choice that should
+  not know it must not read `deckB`.
 
 ## Licence
 
-- **The data** (every file in this release): [Creative Commons Attribution 4.0 International
-  (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). Attribute it as: *{attribution}*.
+- **The data:** the measurements and their compilation, by the mtg-table contributors, are licensed [Creative
+  Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). Attribute them
+  as: *{attribution}*. Card names and any other Wizards of the Coast material are not licensed by this release;
+  they appear under the Fan Content Policy.
 - **The generator** (the mtg-table repository): GPL-3.0-or-later.
 - **Wizards of the Coast:** card names and Magic: The Gathering are the property of Wizards of the Coast. This
   dataset is unofficial Fan Content permitted under the [Fan Content
