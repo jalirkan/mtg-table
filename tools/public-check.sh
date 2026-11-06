@@ -9,7 +9,8 @@
 # never personal/, never an untracked or ignored file, never a binary) is searched for
 #
 #   /home/          an absolute home-folder path: write ~/ or $HOME, or a repo-relative path
-#   the home-folder name of the owner's machine (BANNED below) -- the same thing without its slash
+#   the home folder's own name, read from $HOME at run time (PUBLIC_CHECK_USER overrides it; CI bans its
+#                   runner's) -- the same thing without its slash; this script spells no name
 #   @gmail.         a personal mail address (the commit history's author field is the owner's to keep, D516;
 #                   a file's text is not)
 #   the host name of the machine running the check, read with `hostname` at run time, when it is at least six
@@ -32,22 +33,25 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# The owner's machine's home-folder name: banned on its own (a path spelled with it but without /home/,
-# a scratchpad folder that embeds it).
-BANNED_FIXED=('/home/' 'justin-a' '@gmail.')
+# The home folder's name, banned on its own (a path spelled with it but without /home/, a scratchpad
+# folder that embeds it): read from $HOME here, never written in this file, so that the check itself
+# names no one. PUBLIC_CHECK_USER overrides it (the selftest, a run on another account).
+BANNED_FIXED=('/home/' '@gmail.')
 
 # path <TAB> reason.  Repo-relative paths, never a bare file name.
 ALLOW=(
-  "tools/public-check.sh	this file: it names what it bans"
-  "web/test/lab-runner.test.ts	planted leaks: the lab runner's public status must scrub a home path, the owner's home-folder name and his name, and these fixtures are the proof that it does"
+  "tools/public-check.sh	this file: it spells the path and address shapes it bans"
+  "web/test/lab-runner.test.ts	planted leaks: the lab runner's public status must scrub a home path, the owner's home-folder name and the owner's name, and these fixtures are the proof that it does"
   "tools/atlas/tests/test_atlas.py	planted leaks: the dataset release's scrub check must fail on a home path and a personal address, and these plants are the proof that it does"
 )
 
 # check DIR -- print every hit as file:line:text, return 1 when there is one
 check() {
-  local dir="$1" host spec
+  local dir="$1" host spec user
   local -a args=() excl=()
   for spec in "${BANNED_FIXED[@]}"; do args+=(-e "$spec"); done
+  user="${PUBLIC_CHECK_USER:-$(basename "${HOME:-/}")}"
+  if [ "${#user}" -ge 4 ] && [ "$user" != "root" ]; then args+=(-e "$user"); fi
   for spec in "${ALLOW[@]}"; do excl+=(":(exclude)${spec%%	*}"); done
   excl+=(':(exclude)var/' ':(exclude)personal/')
   local hits=0 out
@@ -70,7 +74,7 @@ selftest() {
   git -C "$s" add -A
   if ! check "$s" >/dev/null; then echo "SELFTEST FAIL: a clean tree (~/, \$HOME, /mnt/e/) was flagged"; fails=1; fi
   printf 'see /home/someone/x\n' > "$s/docs/a.md"
-  printf 'the folder justin-a\n' > "$s/docs/b.md"
+  printf 'the folder test-user-7\n' > "$s/docs/b.md"
   printf 'mail someone@gmail.com\n' > "$s/docs/c.md"
   printf 'built on Test-Host-Name-7\n' > "$s/docs/d.md"
   printf 'planted /home/x\n' > "$s/web/test/lab-runner.test.ts"     # an allowed path: quiet
@@ -78,7 +82,7 @@ selftest() {
   printf '\0/home/binary\n' > "$s/img/x.jpg"                         # a binary is never read
   git -C "$s" add docs web img
   git -C "$s" add -f var/untracked-anyway.txt
-  out="$(PUBLIC_CHECK_HOST=test-host-name-7 check "$s" || true)"
+  out="$(PUBLIC_CHECK_HOST=test-host-name-7 PUBLIC_CHECK_USER=test-user-7 check "$s" || true)"
   for f in docs/a.md:1 docs/b.md:1 docs/c.md:1 docs/d.md:1; do
     case "$out" in *"$f:"*) ;; *) echo "SELFTEST FAIL: no hit for $f"; fails=1 ;; esac
   done

@@ -49,8 +49,8 @@ a label is *confident* when that interval lies above zero.
 
 Release **v1** holds **1,003 decision rows** (508 complete labels, **154 confident**, 222 partial) from **77
 games** between random 40-card decks, with **338,895 branch games** behind them and the 154 decks they played,
-from six lab nights of one frozen seat population ([D508](docs/decisions/D508-last-known-copy-judged-where-the-card-is.md),
-[D509](docs/decisions/D509-seat-frozen-between-landings.md)). It is scrubbed: card names stay, card rules text and
+from six lab nights of one seat population, frozen between them
+([D509](docs/decisions/D509-seat-frozen-between-landings.md)). It is scrubbed: card names stay, card rules text and
 every machine path do not, and a check fails the build otherwise.
 
 - **What it is and how to make it again:** [`docs/guides/move-atlas.md`](docs/guides/move-atlas.md) (the pipeline,

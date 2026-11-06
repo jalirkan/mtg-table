@@ -14,7 +14,7 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 397 items still open across 44 follow-up lists** — 366
+**The index below lists 396 items still open across 44 follow-up lists** — 365
 open, 19 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
 said 371 across 42, three rows and one list behind its table) — D516
@@ -452,13 +452,12 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
 | [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000-r24` and `-ms6000-r48` (search-v2 with the budget and the round cap scaled together, ×2 and ×4) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
-| [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution he wants | `tools/atlas/release.py` |
-| [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with his email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
+| [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
+| [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
 | [Move atlas release](#fu-move-atlas) | 6 | open | The frame logs are not in v1; shipping them needs a scrub of their own | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 7 | open | The next atlas job runs `tools/atlas/` at its pin; the pilot scripts and `metrics.py`'s spine table carry J193's seeds | `tools/atlas/metrics.py` |
 | [Move atlas release](#fu-move-atlas) | 8 | open | No test holds `tools/README.md`'s table to the files under `tools/` | `tools/README.md` |
-| [Move atlas release](#fu-move-atlas) | 9 | open | The balance-model v2 test's lab half now runs only when `CUBELAB_LAB_DATA` and `CUBELAB_LAB_FACTS` are exported; nothing on this PC exports them yet | `web/test/cubelab-balance-model-v2.test.ts` |
 | [Move atlas release](#fu-move-atlas) | 10 | open | `engine-unplayable.json`'s evidence strings changed (D516): `tools/atlas/deckcode.py`'s registered blob and its J171/J176 comparisons are J193's, so the next atlas pilot registers the new blob | `tools/atlas/deckcode.py` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
@@ -10715,7 +10714,7 @@ would.
 `72302c69`; D515 (the reservation of D516–D518 is released at the merge; the next lane may take D516). The owner, 2026-11-06: *"Yes, we should publish the generator
 too"* and *"Sure, let's follow your recommendations"*: the atlas's label pipeline moves into this repository, a
 first dataset release is built as one file with a README, and this repository alone goes public (`pc-results`,
-`pc-jobs` and ForgeCoach stay private). He flips the repository and uploads the dataset; nothing here does either.
+`pc-jobs` and ForgeCoach stay private). The owner flips the repository and uploads the dataset; nothing here does either.
 `docs/guides/move-atlas.md` is the manual; `docs/decisions/D515-publish-the-atlas.md` the decision, its
 evidence and the public-repo check.
 
@@ -10748,10 +10747,10 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
 ### The move atlas release's follow-ups — eight, 2026-11-06 (D515)
 
 1. **The owner's: flip the repository public, upload the zip and list it** (Kaggle, Hugging Face or neither), with
-   the title, description and attribution he wants; `release.py`'s `ATTRIBUTION` holds the default line.
-2. **The owner's: the history's author email.** 206 commits on `main` are authored with his personal address, and
-   17 carry it as committer too; public history shows it. Accept it, or rewrite both fields to his GitHub noreply
-   form before the flip. *Accepted 2026-11-06 (D516): the owner accepts his address on the history, which is not
+   the title, description and attribution the owner wants; `release.py`'s `ATTRIBUTION` holds the default line.
+2. **The owner's: the history's author email.** 206 commits on `main` are authored with the owner's personal address, and
+   17 carry it as committer too; public history shows it. Accept it, or rewrite both fields to the owner's GitHub noreply
+   form before the flip. *Accepted 2026-11-06 (D516): the owner accepts that address on the history, which is not
    rewritten.*
 3. ~~**The owner's: this PC's paths in tracked files.**~~ *Closed 2026-11-06 by D516*: every live one is
    machine-neutral (`~/`, `$HOME`, the repo root), the dated history's home-folder paths became `~/`, and
@@ -10769,10 +10768,10 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
    `metrics.py`'s spine table carry J193's seeds and are edited in the repository for it, a commit a night.
 8. **No test holds `tools/README.md`'s table to the files under `tools/`**; this lane added `tools/atlas/`'s rows by
    hand.
-9. **(D516) The balance-model v2 test's lab half runs only when its lab data is exported.** It had this PC's lab
-   folders as defaults; it now reads `CUBELAB_LAB_DATA` and `CUBELAB_LAB_FACTS` from the environment alone and
-   skips without them. It ran green with both exported (7 of 7, 43 s), but nothing on this PC exports them, so the
-   gate skips it: the owner's shell profile is the place, if he wants it run.
+9. ~~**(D516) The balance-model v2 test's lab half runs only when its lab data is exported.**~~ *Closed at the
+   lane's review, 2026-11-06*: it had this PC's lab folders as absolute defaults; it now reads `CUBELAB_LAB_DATA`
+   and `CUBELAB_LAB_FACTS`, else the lab's conventional place under the home folder (`~/code/lab/`), and skips
+   when the files are absent — so this PC's gate still runs it (7 of 7) and the file names no machine.
 10. **(D516) `tools/atlas/deckcode.py` is J193's check**: `engine-unplayable.json`'s evidence strings were rewritten
     (no card, no `since`, no `why` beyond one path changed, so every draw is unchanged), which moves the file's blob
     and its sha12 in a draw's `decks.json`; the script's `UP_BLOB` and its "J171's entry unchanged" comparison are
@@ -10783,8 +10782,8 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
 **Status: built and verified; the full gate: green on `e0281b6c` (`rm -rf bridge/out && GATE_JOBS=2 WSPORT=9900 ./tools/check-all.sh`: `check-all OK`, 62 jobs, wall 974.4 s, job seconds 1926.4 s, load average 1.03 at the start, 84.73 at most, 8.26 at the end; run `20261106-103014-3628241`)**; not merged, not pushed. Branch `pc/d516-public-ready`,
 off `main`'s `5ccc464b` (D515's merge); D516. The owner, 2026-11-06, on reading D515's public-repo check: *"Yeah
 that all seems okay. If you want, we can fix the file paths and organization to something more suitable. This is
-basically contributing to the public so let's make it feel official and trustworthy."* He accepts his address on
-the history and his first name in the docs; only this repository goes public, and he flips it and uploads the
+basically contributing to the public so let's make it feel official and trustworthy."* The owner accepts the address on
+the history and the first name in the docs; only this repository goes public, and the owner flips it and uploads the
 dataset. `docs/decisions/D516-public-ready.md` is the decision and its evidence.
 
 - **Paths**: `config.json`'s `forgeJar` is `~/forge/<jar>`; seven readers expand a leading `~/` (config.sh,

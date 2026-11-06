@@ -10,8 +10,8 @@ reading of one key, and nothing the seat plays changes (D509): the engine-unplay
 tracked files, the history's author email, and `.claude/` untracked but not ignored. The owner read the check and
 answered, 2026-11-06: *"Yeah that all seems okay. If you want, we can fix the file paths and organization to
 something more suitable. This is basically contributing to the public so let's make it feel official and
-trustworthy."* He accepts his address as author and committer on the history and his first name in the docs. Only
-this repository goes public; `pc-results`, `pc-jobs`, ForgeCoach and the lab runner's data stay private. He flips
+trustworthy."* The owner accepts the owner's address as author and committer on the history and the owner's first name in the docs. Only
+this repository goes public; `pc-results`, `pc-jobs`, ForgeCoach and the lab runner's data stay private. The owner flips
 the repository and uploads the dataset himself.
 
 **Decision.**
@@ -27,8 +27,8 @@ the repository and uploads the dataset himself.
    `~/.forge` and *this repository's checkout* — the same meaning on any machine. `NOTICE`, `.gitignore`,
    `tools/javap-seam-diff.sh` and the tunnel's example config say `~/`; `tools/runner/PC-JOBS-README.md` says what
    the runner really rewrites (the checkout path, `$HOME/code/<repo>` written out, or its `--home-<repo>` flag).
-   The balance-model v2 test reads its lab data from `CUBELAB_LAB_DATA` and `CUBELAB_LAB_FACTS` only, and skips
-   without them. `tools/cubelab/engine-unplayable.json`'s evidence names *lab data lab-jNNN/…* and *pc-results
+   The balance-model v2 test reads its lab data from `CUBELAB_LAB_DATA` and `CUBELAB_LAB_FACTS`, else from `~/code/lab/` under
+   the home folder (a conventional place, not a machine's), and skips when the files are absent. `tools/cubelab/engine-unplayable.json`'s evidence names *lab data lab-jNNN/…* and *pc-results
    (private) results/JNNN/…*; its cards, `since` and reasons are unchanged, so every deck draw is unchanged.
 2. **The dated history is respelled, mechanically.** In `docs/` (evidence, decisions, research, guides and the
    rest), `PLAN.md` and `DECISIONS.md`, the owner's home folder's absolute path became `~/` and nothing else changed;
@@ -70,9 +70,9 @@ the repository and uploads the dataset himself.
 
 **What deliberately did not change.**
 
-- **The commit history.** The owner accepts his address as author and committer; nothing is rewritten (D515's
+- **The commit history.** The owner accepts that address as author and committer; nothing is rewritten (D515's
   follow-up 2, accepted).
-- **His first name** in the docs and tools (D515's inventory: 88 files). It is his to keep, and he keeps it.
+- **The owner's first name** in the docs and tools (D515's inventory: 88 files). It is the owner's to keep, and it stays.
 - **The code directories.** `bridge/`, `web/`, `tools/`, `scripts/`, `docs/`, `decks/`, `cubes/`, `fixtures/`,
   `forge-home/` and `notebooks/` stay where they are: every document links into them, and moving them buys a
   stranger nothing a README does not.

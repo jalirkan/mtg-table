@@ -1,7 +1,7 @@
 # Contributing to mtg-table
 
 mtg-table is a hobby project with one owner. Issues and pull requests are welcome, and they are read, but there is
-no support promise and no schedule: the owner reviews and merges, on his own time, and decides what fits. A change
+no support promise and no schedule: the owner reviews and merges, in the owner's own time, and decides what fits. A change
 that crosses one of the lines below will not be merged however good it is.
 
 ## How a change lands
