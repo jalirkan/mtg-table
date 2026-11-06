@@ -20,7 +20,11 @@ WRITES <out>/ (refused when it exists) and, unless --no-zip, <out>.zip beside it
     branches/<night>/<spine>.branches.jsonl   each spine's phaseB/branches.jsonl, minus EXCLUDE's decisions
     atlas/<night>/<spine>.atlas.json      each spine's atlas.json
     decks/<night>/<deck folder>/<file>.dck    the two decks each spine played
-    README.md, MANIFEST.json              what the data is, the counts, sha256 and bytes per file
+    README.md, MANIFEST.json              what the data is, the counts, sha256 and bytes per file; the README opens
+                                          with a YAML front matter Hugging Face reads as the dataset card (D516)
+    LICENSE.md, CITATION.cff              the licences (CC BY 4.0 on the measurements; Wizards' material not
+                                          licensed) and the dataset's citation, the repository's CITATION.cff's
+                                          first reference (D516; tests/test_atlas.py holds the two together)
 
 THE SCRUB (every row and file):
   - a play's IDENTITY is SearchPolicy.playIdentity's nine `|`-separated fields: the card's name, spell or ability,
@@ -72,6 +76,9 @@ ENGINE = {'name': 'Forge', 'version': '2.0.14 (Implementation-Version 2.0.14-SNA
           'jar': 'forge-gui-desktop-2.0.14-jar-with-dependencies.jar',
           'jarSha256': '3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9'}
 ZIP_TIME = (2026, 11, 6, 0, 0, 0)
+RELEASE_DATE = '2026-11-06'   # the CITATION.cff's date-released (D516); a v2 sets its own
+REPO_URL = 'https://github.com/jalirkan/mtg-table'
+CC_BY = 'https://creativecommons.org/licenses/by/4.0/'
 IDENTITY_FIELDS = 8
 GUIDE = 'docs/guides/move-atlas.md'
 GITHUB_BLOB = 'https://github.com/jalirkan/mtg-table/blob/main'
@@ -352,6 +359,10 @@ def build(args):
     readme = link_decisions(README.format(**readme_fields(args.version, counts, commit, nights)))
     with open(os.path.join(out, 'README.md'), 'w') as f:
         f.write(readme)
+    with open(os.path.join(out, 'LICENSE.md'), 'w') as f:
+        f.write(LICENSE.format(version=args.version, attribution=ATTRIBUTION, cc_by=CC_BY, repo=REPO_URL))
+    with open(os.path.join(out, 'CITATION.cff'), 'w') as f:
+        f.write(citation(args.version))
     files = {}
     for dp, _, fs in os.walk(out):
         for f in fs:
@@ -501,7 +512,81 @@ def readme_fields(version, counts, commit, nights):
                                     for n, v in EXCLUDE.items() if n in counts['nights'])}
 
 
-README = '''# mtg-table move atlas, {version}
+def citation(version):
+    """the release's CITATION.cff: the dataset block of the repository's CITATION.cff, as the top-level citation"""
+    return CITATION.format(version=version, date=RELEASE_DATE, attribution=ATTRIBUTION, repo=REPO_URL)
+
+
+CITATION = '''# The move atlas's citation file (Citation File Format 1.2.0): the same dataset block as the first reference
+# of the repository's own CITATION.cff.
+cff-version: 1.2.0
+message: "If you use this dataset, please cite it as below and attribute it as: {attribution}"
+type: dataset
+title: mtg-table move atlas
+version: {version}
+date-released: "{date}"
+authors:
+  - name: mtg-table contributors
+license: CC-BY-4.0
+url: "{repo}"
+repository-code: "{repo}"
+abstract: >-
+  What each option of a Magic: The Gathering decision was worth, measured by forking the real game at that
+  decision with the Forge engine and playing the rest out many times, at random and with Forge's AI. Card
+  names and other Wizards of the Coast material are not licensed by the dataset; they appear under the Fan
+  Content Policy.
+keywords:
+  - magic-the-gathering
+  - game-ai
+  - decision-labels
+  - forge
+'''
+
+LICENSE = '''# Licence: mtg-table move atlas, {version}
+
+## The measurements: CC BY 4.0
+
+The measurements in this release and their compilation (`labels.jsonl`, `branches/`, `atlas/`, and the counts in
+`README.md` and `MANIFEST.json`), by the mtg-table contributors, are licensed under the **Creative Commons
+Attribution 4.0 International** licence (CC BY 4.0): {cc_by}
+
+You may share and adapt them for any purpose, commercial included, provided you give appropriate credit, link to
+the licence and indicate if changes were made. The credit to give:
+
+> {attribution}
+
+The licence's full legal code is linked from the page above; it, not this summary, is the licence.
+
+## Not licensed by this release: Wizards of the Coast's material
+
+Card names, the card lists in `decks/` and Magic: The Gathering itself are the property of Wizards of the Coast.
+They are **not** licensed by this release: they appear in it as unofficial Fan Content permitted under the
+Fan Content Policy (https://company.wizards.com/en/legal/fancontentpolicy). Not approved/endorsed by Wizards.
+Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC. No card rules
+text and no card images are included.
+
+## The generator: GPL-3.0-or-later
+
+The code that made this release (the mtg-table repository, {repo},
+whose `tools/atlas/` builds it and whose `tools/cubelab.sh atlas` plays the games) is licensed GPL-3.0-or-later. The Forge engine it runs is GPL-3.0,
+used unmodified; neither is part of this release.
+'''
+
+README = '''---
+license: cc-by-4.0
+pretty_name: mtg-table move atlas
+size_categories:
+- 1K<n<10K
+language:
+- en
+tags:
+- magic-the-gathering
+- game-ai
+- decision-labels
+- forge
+---
+
+# mtg-table move atlas, {version}
 
 What each option of a Magic: The Gathering decision was worth, measured by playing the rest of the game out many
 times from that exact position: **{rows} decision rows** ({labels} complete labels, **{confident} confident**, {partial}
@@ -540,6 +625,8 @@ pool. Each spine is a new pair of decks drawn at random (D447's census draw) fro
 | `atlas/<night>/<spine>.atlas.json` | the generator's summary of the spine: the plan, every decision's option values under both maps, the agreement between the maps, the schedule (what the cuts and the futility stop did), the checks it passed, timings. Each option of `phaseB.decisions` carries its play `identity` |
 | `decks/<night>/<deck folder>/*.dck` | the {decks} decks the spines played, in Forge's `.dck` format |
 | `MANIFEST.json` | sha256 and bytes of every file, the counts, the exclusions, the source commit |
+| `LICENSE.md` | the licences: CC BY 4.0 on the measurements, what is not licensed, the generator's |
+| `CITATION.cff` | how to cite the dataset (Citation File Format 1.2.0) |
 
 **Not in this release:** the frame logs (every game's full record, about 1 GB a spine) and the per-decision state
 rows. The rows' `frameLog`, `rows.file` and `branchFrames` name where they sit relative to a night's data folder;
@@ -606,7 +693,7 @@ still describe the whole spine as it ran.
 - **The data:** the measurements and their compilation, by the mtg-table contributors, are licensed [Creative
   Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). Attribute them
   as: *{attribution}*. Card names and any other Wizards of the Coast material are not licensed by this release;
-  they appear under the Fan Content Policy.
+  they appear under the Fan Content Policy. `LICENSE.md` is the licence file; `CITATION.cff` is how to cite it.
 - **The generator** (the mtg-table repository): GPL-3.0-or-later.
 - **Wizards of the Coast:** card names and Magic: The Gathering are the property of Wizards of the Coast. This
   dataset is unofficial Fan Content permitted under the [Fan Content
