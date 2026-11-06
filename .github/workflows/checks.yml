@@ -185,6 +185,10 @@ jobs:
         run: node tools/decisions.mjs check
       - name: decisions-selftest.mjs
         run: node tools/decisions-selftest.mjs
+      # Gate step 2c (D516): no tracked file names a home folder, the machine's host
+      # name (here, the runner's own) or a personal address; then its planted controls.
+      - name: public-check.sh
+        run: ./tools/public-check.sh && ./tools/public-check.sh --selftest
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs
