@@ -1,0 +1,853 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s06-peasant-3690/decks/peasant-3690-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s06-peasant-3690/decks/peasant-3690-00002.dck",
+    "seed": 3790,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 12,
+      "first": "A",
+      "decisionsListed": 7
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Fact or Fiction",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "fill",
+        "screened": true,
+        "screenMean": 0.04
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:3",
+            "label": "Staunch Crewmate",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "fill",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Staunch Crewmate",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "fill",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 3,
+        "kind": "b",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:3>90",
+            "label": "block Staunch Crewmate>Devil Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "fill",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:7",
+            "label": "Glamer Gifter",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "fill",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:12",
+            "label": "Sink into Stupor",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:19",
+            "label": "Boomerang Basics",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 6,
+        "kind": "b",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:7>55",
+            "label": "block Glamer Gifter>Battlesong Berserker",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "fill",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 7,
+      "branchedInFull": 0,
+      "fill": 6,
+      "optionsByDecision": {
+        "d0": 2,
+        "d1": 2,
+        "d2": 2,
+        "d3": 2,
+        "d4": 2,
+        "d5": 3,
+        "d6": 2
+      },
+      "meanOptions": 2.14,
+      "screened": [
+        {
+          "d": 0,
+          "mean": 0.04,
+          "replacedBy": null
+        },
+        {
+          "d": 1,
+          "mean": 0,
+          "replacedBy": null
+        },
+        {
+          "d": 2,
+          "mean": 0,
+          "replacedBy": null
+        },
+        {
+          "d": 3,
+          "mean": 0,
+          "replacedBy": null
+        },
+        {
+          "d": 4,
+          "mean": 0,
+          "replacedBy": null
+        },
+        {
+          "d": 5,
+          "mean": 0,
+          "replacedBy": null
+        },
+        {
+          "d": 6,
+          "mean": 0,
+          "replacedBy": null
+        }
+      ],
+      "stopped": [],
+      "stoppedOptions": 0,
+      "labels": 0,
+      "futility": [],
+      "futileStopped": 0,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 0,
+      "partialLabels": 0
+    },
+    "disagreeMost": [],
+    "branchGames": 375,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 0,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 999,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 5818,
+    "gamesIdChecked": 376,
+    "frameLogs": 752,
+    "frameLogsFailed": 0,
+    "redactionMs": 4297,
+    "forks": 375,
+    "forkProblems": 0,
+    "leakChecks": 7,
+    "leaks": 0,
+    "leakControlsMoved": 7,
+    "guardrails": {
+      "logs": 750,
+      "priorityDecisions": 10389,
+      "landOffered": 1374,
+      "landTaken": 1374,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 163,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 13,
+      "zeroXLeftOut": 539,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 375,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 375,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 375,
+      "errored": 0,
+      "threshold": 0.25,
+      "byError": [],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 49132
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 3717,
+      "units": 7,
+      "branchGames": 375,
+      "ms": 172899,
+      "workers": 6
+    },
+    "wallMs": 176616,
+    "jobs": 6
+  }
+}

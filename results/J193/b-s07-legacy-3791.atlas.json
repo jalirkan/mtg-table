@@ -1,0 +1,2318 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s07-legacy-3691/decks/legacy-3691-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s07-legacy-3691/decks/legacy-3691-00002.dck",
+    "seed": 3791,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 40,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 26,
+      "first": "B",
+      "decisionsListed": 42
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:6",
+            "label": "Green Sun's Zenith",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 0,
+              "losses": 105,
+              "mean": 0.3,
+              "lo": 0.2324,
+              "hi": 0.3776
+            },
+            "forge": {
+              "n": 40,
+              "wins": 20,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.5,
+              "lo": 0.352,
+              "hi": 0.648
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 8,
+              "draws": 0,
+              "losses": 42,
+              "mean": 0.16,
+              "lo": 0.0834,
+              "hi": 0.2851
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:32",
+            "label": "Pest Infestation",
+            "random": {
+              "n": 150,
+              "wins": 94,
+              "draws": 1,
+              "losses": 55,
+              "mean": 0.63,
+              "lo": 0.5504,
+              "hi": 0.7031
+            },
+            "forge": {
+              "n": 40,
+              "wins": 25,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.625,
+              "lo": 0.4703,
+              "hi": 0.7578
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:14",
+            "label": "Iron-Shield Elf",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:4",
+            "label": "Evolved Sleeper",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.26,
+              "lo": 0.1587,
+              "hi": 0.3955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.33,
+          "regretLo": 0.2267,
+          "regretHi": 0.4367,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.125,
+          "regretLo": 0,
+          "regretHi": 0.325,
+          "best": 2
+        },
+        "rho": 1,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.308,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.33
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:32",
+            "label": "Pest Infestation",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:4",
+            "label": "Evolved Sleeper",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:17",
+            "label": "Ledger Shredder",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.82,
+              "lo": 0.692,
+              "hi": 0.9023
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.04,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.78,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 106,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.7067,
+              "lo": 0.6294,
+              "hi": 0.7736
+            },
+            "forge": {
+              "n": 39,
+              "wins": 37,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.9487,
+              "lo": 0.8311,
+              "hi": 0.9858
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:17",
+            "label": "Ledger Shredder",
+            "random": {
+              "n": 150,
+              "wins": 115,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.7667,
+              "lo": 0.6928,
+              "hi": 0.8272
+            },
+            "forge": {
+              "n": 39,
+              "wins": 33,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.8462,
+              "lo": 0.7027,
+              "hi": 0.9275
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:40",
+            "label": "Gravecrawler",
+            "random": {
+              "n": 150,
+              "wins": 113,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.7533,
+              "lo": 0.6786,
+              "hi": 0.8154
+            },
+            "forge": {
+              "n": 39,
+              "wins": 23,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.5897,
+              "lo": 0.4342,
+              "hi": 0.7292
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.06,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 1
+        },
+        "forge": {
+          "branches": 39,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": -0.5,
+        "rhoLo": -1,
+        "rhoHi": 0.866,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8267,
+        "futilityGap": 0.14
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:40",
+            "label": "Gravecrawler",
+            "random": {
+              "n": 150,
+              "wins": 121,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.8067,
+              "lo": 0.7361,
+              "hi": 0.8619
+            },
+            "forge": {
+              "n": 40,
+              "wins": 29,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.725,
+              "lo": 0.5717,
+              "hi": 0.8389
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 111,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.74,
+              "lo": 0.6644,
+              "hi": 0.8036
+            },
+            "forge": {
+              "n": 40,
+              "wins": 30,
+              "draws": 0,
+              "losses": 10,
+              "mean": 0.75,
+              "lo": 0.5981,
+              "hi": 0.8581
+            }
+          },
+          {
+            "o": 2,
+            "token": "activate:67",
+            "label": "Wishclaw Talisman: {1}, {T}, Remove a wish counter from CARD",
+            "random": {
+              "n": 150,
+              "wins": 116,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.7733,
+              "lo": 0.7,
+              "hi": 0.833
+            },
+            "forge": {
+              "n": 40,
+              "wins": 33,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.825,
+              "lo": 0.6805,
+              "hi": 0.9125
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0733,
+          "best": 0
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.1,
+          "regretLo": 0,
+          "regretHi": 0.2756,
+          "best": 2
+        },
+        "rho": -0.5,
+        "rhoLo": -1,
+        "rhoHi": 1,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7867,
+        "futilityGap": 0.02
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 122,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.8133,
+              "lo": 0.7434,
+              "hi": 0.8676
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:22",
+            "label": "Jace, Wielder of Mysteries",
+            "random": {
+              "n": 150,
+              "wins": 147,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.98,
+              "lo": 0.9429,
+              "hi": 0.9932
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Carnage Tyrant",
+            "random": {
+              "n": 150,
+              "wins": 145,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9667,
+              "lo": 0.9243,
+              "hi": 0.9857
+            },
+            "forge": {
+              "n": 40,
+              "wins": 39,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.975,
+              "lo": 0.8712,
+              "hi": 0.9956
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1667,
+          "regretLo": 0.1067,
+          "regretHi": 0.2333,
+          "best": 1
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.025,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 1
+        },
+        "rho": 0.866,
+        "rhoLo": 0,
+        "rhoHi": 0.866,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.88,
+        "futilityGap": 0.24
+      },
+      {
+        "d": 23,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:17",
+            "label": "attack Ledger Shredder",
+            "random": {
+              "n": 150,
+              "wins": 142,
+              "draws": 0,
+              "losses": 8,
+              "mean": 0.9467,
+              "lo": 0.8983,
+              "hi": 0.9727
+            },
+            "forge": {
+              "n": 40,
+              "wins": 37,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.925,
+              "lo": 0.8014,
+              "hi": 0.9742
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 100,
+              "wins": 95,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.95,
+              "lo": 0.8882,
+              "hi": 0.9785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "attack:4,9,17,21,40,84,91,92",
+            "label": "attack Ledger Shredder+Hero Token+Pest Token+Pest Token+Evolved Sleeper+Gravecrawler+Exhibition Tidecaller+Carnage Tyrant",
+            "random": {
+              "n": 150,
+              "wins": 150,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.975,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:17,84",
+            "label": "attack Ledger Shredder+Hero Token",
+            "random": {
+              "n": 100,
+              "wins": 96,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.96,
+              "lo": 0.9016,
+              "hi": 0.9843
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 4,
+            "token": "attack:17,91",
+            "label": "attack Ledger Shredder+Pest Token",
+            "random": {
+              "n": 100,
+              "wins": 93,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.93,
+              "lo": 0.8625,
+              "hi": 0.9657
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "attack:17,92",
+            "label": "attack Ledger Shredder+Pest Token",
+            "random": {
+              "n": 100,
+              "wins": 93,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.93,
+              "lo": 0.8625,
+              "hi": 0.9657
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 6,
+            "token": "attack:4,17",
+            "label": "attack Ledger Shredder+Evolved Sleeper",
+            "random": {
+              "n": 150,
+              "wins": 146,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9733,
+              "lo": 0.9334,
+              "hi": 0.9896
+            },
+            "forge": {
+              "n": 40,
+              "wins": 38,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.95,
+              "lo": 0.835,
+              "hi": 0.9862
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:17,40",
+            "label": "attack Ledger Shredder+Gravecrawler",
+            "random": {
+              "n": 100,
+              "wins": 96,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.96,
+              "lo": 0.9016,
+              "hi": 0.9843
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0533,
+          "regretLo": 0.02,
+          "regretHi": 0.0867,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0.075,
+          "regretLo": 0,
+          "regretHi": 0.175,
+          "best": 2
+        },
+        "rho": 1,
+        "rhoLo": 0.5,
+        "rhoHi": 1,
+        "sameBest": true,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.95,
+        "forgeOptions": [
+          0,
+          2,
+          6
+        ],
+        "futilityGap": 0.1
+      },
+      {
+        "d": 27,
+        "kind": "p",
+        "turn": 20,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:22",
+            "label": "Jace, Wielder of Mysteries",
+            "random": {
+              "n": 50,
+              "wins": 49,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.98,
+              "lo": 0.895,
+              "hi": 0.9965
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 49,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.98,
+              "lo": 0.895,
+              "hi": 0.9965
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "activate:18",
+            "label": "Zagoth Triome: Cycling {3} ({3}, Discard this card: Draw a c",
+            "random": {
+              "n": 50,
+              "wins": 48,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.96,
+              "lo": 0.8654,
+              "hi": 0.989
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9467,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 32,
+        "kind": "p",
+        "turn": 22,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:22#0",
+            "label": "Jace, Wielder of Mysteries: +1: Target player mills two card",
+            "random": {
+              "n": 150,
+              "wins": 139,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.9267,
+              "lo": 0.8735,
+              "hi": 0.9586
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 89,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.89,
+              "lo": 0.8137,
+              "hi": 0.9375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:35",
+            "label": "Abhorrent Oculus",
+            "random": {
+              "n": 150,
+              "wins": 147,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.98,
+              "lo": 0.9429,
+              "hi": 0.9932
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0533,
+          "regretLo": 0.0067,
+          "regretHi": 0.1,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9467,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.08
+      },
+      {
+        "d": 36,
+        "kind": "a",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:35",
+            "label": "attack Abhorrent Oculus",
+            "random": {
+              "n": 150,
+              "wins": 130,
+              "draws": 0,
+              "losses": 20,
+              "mean": 0.8667,
+              "lo": 0.803,
+              "hi": 0.912
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 43,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.86,
+              "lo": 0.7381,
+              "hi": 0.9305
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:4,9,15,17,21,35,40,84,91,92,100,103",
+            "label": "attack Abhorrent Oculus+Hero Token+Pest Token+Pest Token+Evolved Sleeper+Ledger Shredder+Gravecrawler+Exhibition Tidecaller+Carnage Tyrant+Beast Token+Beast Token+Rampaging Baloths",
+            "random": {
+              "n": 150,
+              "wins": 150,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.975,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:35,84",
+            "label": "attack Abhorrent Oculus+Hero Token",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:35,91",
+            "label": "attack Abhorrent Oculus+Pest Token",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:35,92",
+            "label": "attack Abhorrent Oculus+Pest Token",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:4,35",
+            "label": "attack Abhorrent Oculus+Evolved Sleeper",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "attack:17,35",
+            "label": "attack Abhorrent Oculus+Ledger Shredder",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1333,
+          "regretLo": 0.0867,
+          "regretHi": 0.1933,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 39,
+        "screened": false,
+        "screenMean": 0.9,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.18
+      },
+      {
+        "d": 37,
+        "kind": "p",
+        "turn": 24,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:22#0",
+            "label": "Jace, Wielder of Mysteries: +1: Target player mills two card",
+            "random": {
+              "n": 150,
+              "wins": 134,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.8933,
+              "lo": 0.8338,
+              "hi": 0.9333
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.82,
+              "lo": 0.692,
+              "hi": 0.9023
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:6",
+            "label": "Green Sun's Zenith",
+            "random": {
+              "n": 150,
+              "wins": 150,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.975,
+              "hi": 1
+            },
+            "forge": {
+              "n": 40,
+              "wins": 40,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.9124,
+              "hi": 1
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1067,
+          "regretLo": 0.06,
+          "regretHi": 0.16,
+          "best": 2
+        },
+        "forge": {
+          "branches": 40,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": false,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.92,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.04
+      },
+      {
+        "d": 39,
+        "kind": "p",
+        "turn": 26,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:36",
+            "label": "Demonic Hordes",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:6",
+            "label": "Green Sun's Zenith",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:2",
+            "label": "Hedron Crab",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 40,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 40,
+        "kind": "p",
+        "turn": 26,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:6",
+            "label": "Green Sun's Zenith",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:2",
+            "label": "Hedron Crab",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 41,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 41,
+        "kind": "a",
+        "turn": 26,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:4,15,17,21,35,39,40,84,91,92,100,103,106",
+            "label": "attack Abhorrent Oculus+Evolved Sleeper+Beast Token+Beast Token++Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:4,9,15,17,21,35,39,40,84,91,92,100,103,106",
+            "label": "attack Abhorrent Oculus+Evolved Sleeper+Beast Token+Beast Token++Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token+Exhibition Tidecaller",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:4,15,17,21,39,40,84,91,92,100,103,106",
+            "label": "attack Evolved Sleeper+Beast Token+Beast Token++Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:15,17,21,35,39,40,84,91,92,100,103,106",
+            "label": "attack Abhorrent Oculus+Beast Token+Beast Token++Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:4,15,17,21,35,39,40,84,91,92,103,106",
+            "label": "attack Abhorrent Oculus+Evolved Sleeper+Beast Token++Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:4,15,17,21,35,39,40,84,91,92,100,106",
+            "label": "attack Abhorrent Oculus+Evolved Sleeper+Beast Token++Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:4,15,17,21,35,40,84,91,92,100,103,106",
+            "label": "attack Abhorrent Oculus+Evolved Sleeper+Beast Token+Beast Token+Gravecrawler+Beast Token+Rampaging Baloths+Ledger Shredder+Hero Token+Carnage Tyrant+Pest Token+Pest Token",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      }
+    ],
+    "agreement": {
+      "decisions": 8,
+      "meanRho": 0.3732,
+      "meanRhoInterval": [
+        -0.2268,
+        0.9732
+      ],
+      "sameBest": 3,
+      "sameBestInterval": [
+        0.1368,
+        0.6943
+      ]
+    },
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 13,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 5,
+        "d6": 4,
+        "d10": 3,
+        "d13": 3,
+        "d19": 3,
+        "d23": 8,
+        "d27": 3,
+        "d32": 3,
+        "d37": 3,
+        "d41": 8,
+        "d40": 3,
+        "d39": 4,
+        "d36": 8
+      },
+      "meanOptions": 4.46,
+      "screened": [
+        {
+          "d": 41,
+          "mean": 1,
+          "replacedBy": 40
+        },
+        {
+          "d": 40,
+          "mean": 1,
+          "replacedBy": 39
+        },
+        {
+          "d": 39,
+          "mean": 1,
+          "replacedBy": 36
+        }
+      ],
+      "stopped": [
+        {
+          "d": 2,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 2,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 23,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 23,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 23,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 23,
+          "o": 5,
+          "at": 100
+        },
+        {
+          "d": 23,
+          "o": 7,
+          "at": 100
+        },
+        {
+          "d": 32,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 37,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 36,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 36,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 36,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 36,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 36,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 36,
+          "o": 7,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 16,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.33,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0.24,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 23,
+          "at": 50,
+          "gap": 0.1,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 27,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 32,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 37,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 36,
+          "at": 50,
+          "gap": 0.18,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 980,
+      "partialLabels": 2
+    },
+    "disagreeMost": [
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 12,
+        "rho": -0.5,
+        "rhoInterval": [
+          -1,
+          0.866
+        ],
+        "sameBest": false,
+        "bestRandom": 1,
+        "bestForge": 0
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 12,
+        "rho": -0.5,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": false,
+        "bestRandom": 0,
+        "bestForge": 2
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 16,
+        "rho": 0.866,
+        "rhoInterval": [
+          0,
+          0.866
+        ],
+        "sameBest": true,
+        "bestRandom": 1,
+        "bestForge": 1
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 8,
+        "rho": 1,
+        "rhoInterval": [
+          -1,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 2,
+        "bestForge": 2
+      },
+      {
+        "d": 23,
+        "kind": "a",
+        "turn": 18,
+        "rho": 1,
+        "rhoInterval": [
+          0.5,
+          1
+        ],
+        "sameBest": true,
+        "bestRandom": 2,
+        "bestForge": 2
+      }
+    ],
+    "branchGames": 5625,
+    "branchErrors": 1,
+    "branchEngineErrors": 1,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 1,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 4365,
+      "forge": 11196
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 113961,
+    "gamesIdChecked": 5626,
+    "frameLogs": 11252,
+    "frameLogsFailed": 0,
+    "redactionMs": 64584,
+    "forks": 5625,
+    "forkProblems": 0,
+    "leakChecks": 21,
+    "leaks": 0,
+    "leakControlsMoved": 21,
+    "guardrails": {
+      "logs": 9650,
+      "priorityDecisions": 197092,
+      "landOffered": 18609,
+      "landTaken": 18609,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 1744,
+      "refusedCast": 255,
+      "noRepeatRefused": 151,
+      "xDrawn": 437,
+      "zeroXLeftOut": 13861,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5625,
+      "errored": 1,
+      "threshold": 0.1,
+      "byError": [
+        {
+          "error": "BranchTimeout: the branch's deadline passed inside one engine step (# events into its play) at turn # COMBAT_BEGIN, step #",
+          "n": 1
+        }
+      ],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5625,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5625,
+      "errored": 1,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 1
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 126805
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 42428,
+      "units": 71,
+      "branchGames": 5625,
+      "ms": 7002581,
+      "workers": 6
+    },
+    "wallMs": 7045009,
+    "jobs": 6
+  }
+}

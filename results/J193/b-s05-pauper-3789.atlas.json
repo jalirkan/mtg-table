@@ -1,0 +1,1945 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s05-pauper-3689/decks/pauper-3689-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s05-pauper-3689/decks/pauper-3689-00002.dck",
+    "seed": 3789,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 14,
+      "first": "B",
+      "decisionsListed": 19
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 52,
+              "draws": 18,
+              "losses": 80,
+              "mean": 0.4067,
+              "lo": 0.3313,
+              "hi": 0.4867
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:3",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 150,
+              "wins": 44,
+              "draws": 21,
+              "losses": 85,
+              "mean": 0.3633,
+              "lo": 0.2907,
+              "hi": 0.4428
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Perilous Myr",
+            "random": {
+              "n": 150,
+              "wins": 46,
+              "draws": 16,
+              "losses": 88,
+              "mean": 0.36,
+              "lo": 0.2876,
+              "hi": 0.4394
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.44,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 4,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 150,
+              "wins": 50,
+              "draws": 19,
+              "losses": 81,
+              "mean": 0.3967,
+              "lo": 0.3219,
+              "hi": 0.4766
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 44,
+              "draws": 14,
+              "losses": 92,
+              "mean": 0.34,
+              "lo": 0.269,
+              "hi": 0.419
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Perilous Myr",
+            "random": {
+              "n": 150,
+              "wins": 54,
+              "draws": 11,
+              "losses": 85,
+              "mean": 0.3967,
+              "lo": 0.3219,
+              "hi": 0.4766
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0901,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5133,
+        "futilityGap": 0.05
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:17",
+            "label": "Harrow",
+            "random": {
+              "n": 50,
+              "wins": 25,
+              "draws": 4,
+              "losses": 21,
+              "mean": 0.54,
+              "lo": 0.404,
+              "hi": 0.6703
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 20,
+              "draws": 4,
+              "losses": 26,
+              "mean": 0.44,
+              "lo": 0.3116,
+              "hi": 0.5769
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Perilous Myr",
+            "random": {
+              "n": 50,
+              "wins": 23,
+              "draws": 5,
+              "losses": 22,
+              "mean": 0.51,
+              "lo": 0.3758,
+              "hi": 0.6428
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:36",
+            "label": "Coruscation Mage",
+            "random": {
+              "n": 50,
+              "wins": 20,
+              "draws": 8,
+              "losses": 22,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.13,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.47,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 8,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:36",
+            "label": "Coruscation Mage",
+            "random": {
+              "n": 150,
+              "wins": 57,
+              "draws": 13,
+              "losses": 80,
+              "mean": 0.4233,
+              "lo": 0.3471,
+              "hi": 0.5033
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 63,
+              "draws": 24,
+              "losses": 63,
+              "mean": 0.5,
+              "lo": 0.421,
+              "hi": 0.579
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Perilous Myr",
+            "random": {
+              "n": 100,
+              "wins": 34,
+              "draws": 11,
+              "losses": 55,
+              "mean": 0.395,
+              "lo": 0.3048,
+              "hi": 0.493
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0767,
+          "regretLo": 0,
+          "regretHi": 0.1667,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4267,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.11
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 71,
+              "draws": 13,
+              "losses": 66,
+              "mean": 0.5167,
+              "lo": 0.4373,
+              "hi": 0.5952
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:10",
+            "label": "Perilous Myr",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 5,
+              "losses": 24,
+              "mean": 0.47,
+              "lo": 0.3388,
+              "hi": 0.6055
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:7",
+            "label": "Beetleback Chief",
+            "random": {
+              "n": 150,
+              "wins": 93,
+              "draws": 11,
+              "losses": 46,
+              "mean": 0.6567,
+              "lo": 0.5776,
+              "hi": 0.7279
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.14,
+          "regretLo": 0.0467,
+          "regretHi": 0.2367,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5333,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 10,
+        "kind": "a",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,9,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Icatian Javelineers",
+            "random": {
+              "n": 150,
+              "wins": 68,
+              "draws": 6,
+              "losses": 76,
+              "mean": 0.4733,
+              "lo": 0.3951,
+              "hi": 0.5529
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 68,
+              "draws": 12,
+              "losses": 70,
+              "mean": 0.4933,
+              "lo": 0.4145,
+              "hi": 0.5725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:9,36",
+            "label": "attack Coruscation Mage+Icatian Javelineers",
+            "random": {
+              "n": 150,
+              "wins": 77,
+              "draws": 10,
+              "losses": 63,
+              "mean": 0.5467,
+              "lo": 0.4668,
+              "hi": 0.6242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,9",
+            "label": "attack Scryb Sprites+Icatian Javelineers",
+            "random": {
+              "n": 150,
+              "wins": 72,
+              "draws": 15,
+              "losses": 63,
+              "mean": 0.53,
+              "lo": 0.4504,
+              "hi": 0.6081
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:3,36",
+            "label": "attack Scryb Sprites+Coruscation Mage",
+            "random": {
+              "n": 150,
+              "wins": 66,
+              "draws": 10,
+              "losses": 74,
+              "mean": 0.4733,
+              "lo": 0.3951,
+              "hi": 0.5529
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0733,
+          "regretLo": 0.0133,
+          "regretHi": 0.17,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.556,
+        "futilityGap": 0.12
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:7",
+            "label": "Beetleback Chief",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 1,
+              "losses": 10,
+              "mean": 0.79,
+              "lo": 0.6586,
+              "hi": 0.8801
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 30,
+              "draws": 3,
+              "losses": 17,
+              "mean": 0.63,
+              "lo": 0.4914,
+              "hi": 0.75
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:10",
+            "label": "Perilous Myr",
+            "random": {
+              "n": 50,
+              "wins": 27,
+              "draws": 3,
+              "losses": 20,
+              "mean": 0.57,
+              "lo": 0.4327,
+              "hi": 0.6973
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.01,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6067,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 12,
+        "kind": "b",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:84>79,85>79",
+            "label": "block Goblin Token>Yahenni, Undying Partisan, Goblin Token>Yahenni, Undying Partisan",
+            "random": {
+              "n": 150,
+              "wins": 102,
+              "draws": 3,
+              "losses": 45,
+              "mean": 0.69,
+              "lo": 0.612,
+              "hi": 0.7585
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 150,
+              "wins": 133,
+              "draws": 2,
+              "losses": 15,
+              "mean": 0.8933,
+              "lo": 0.8338,
+              "hi": 0.9333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:84>79",
+            "label": "block Goblin Token>Yahenni, Undying Partisan",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 1,
+              "losses": 13,
+              "mean": 0.73,
+              "lo": 0.5939,
+              "hi": 0.8333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "block:85>79",
+            "label": "block Goblin Token>Yahenni, Undying Partisan",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 2,
+              "losses": 10,
+              "mean": 0.78,
+              "lo": 0.6476,
+              "hi": 0.8725
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "block:7>79,84>79,85>79",
+            "label": "block Goblin Token>Yahenni, Undying Partisan, Goblin Token>Yahenni, Undying Partisan, Beetleback Chief>Yahenni, Undying Partisan",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 2,
+              "losses": 19,
+              "mean": 0.6,
+              "lo": 0.4618,
+              "hi": 0.7239
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.2033,
+          "regretLo": 0.12,
+          "regretHi": 0.2834,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 18,
+        "screened": false,
+        "screenMean": 0.772,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.22
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,7,9,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Beetleback Chief+Icatian Javelineers",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 1,
+              "losses": 22,
+              "mean": 0.85,
+              "lo": 0.7842,
+              "hi": 0.8984
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 1,
+              "losses": 20,
+              "mean": 0.59,
+              "lo": 0.452,
+              "hi": 0.7151
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:7,9,36",
+            "label": "attack Coruscation Mage+Beetleback Chief+Icatian Javelineers",
+            "random": {
+              "n": 150,
+              "wins": 128,
+              "draws": 2,
+              "losses": 20,
+              "mean": 0.86,
+              "lo": 0.7954,
+              "hi": 0.9066
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,7,9",
+            "label": "attack Scryb Sprites+Beetleback Chief+Icatian Javelineers",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 1,
+              "losses": 16,
+              "mean": 0.67,
+              "lo": 0.5317,
+              "hi": 0.7841
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:3,9,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Icatian Javelineers",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:3,7,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Beetleback Chief",
+            "random": {
+              "n": 150,
+              "wins": 128,
+              "draws": 2,
+              "losses": 20,
+              "mean": 0.86,
+              "lo": 0.7954,
+              "hi": 0.9066
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.01,
+          "regretLo": 0,
+          "regretHi": 0.0767,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.71,
+        "forgeOptions": [
+          0,
+          2,
+          5
+        ],
+        "futilityGap": 0.13
+      },
+      {
+        "d": 17,
+        "kind": "a",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3",
+            "label": "attack Scryb Sprites",
+            "random": {
+              "n": 150,
+              "wins": 135,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.9,
+              "lo": 0.8416,
+              "hi": 0.9385
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 42,
+              "draws": 1,
+              "losses": 7,
+              "mean": 0.85,
+              "lo": 0.7264,
+              "hi": 0.9236
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:3,7,9,10,36",
+            "label": "attack Scryb Sprites+Icatian Javelineers+Coruscation Mage+Beetleback Chief+Perilous Myr",
+            "random": {
+              "n": 150,
+              "wins": 149,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.9967,
+              "lo": 0.9689,
+              "hi": 0.9997
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,9",
+            "label": "attack Scryb Sprites+Icatian Javelineers",
+            "random": {
+              "n": 100,
+              "wins": 96,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.96,
+              "lo": 0.9016,
+              "hi": 0.9843
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 4,
+            "token": "attack:3,36",
+            "label": "attack Scryb Sprites+Coruscation Mage",
+            "random": {
+              "n": 100,
+              "wins": 95,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.95,
+              "lo": 0.8882,
+              "hi": 0.9785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "attack:3,7",
+            "label": "attack Scryb Sprites+Beetleback Chief",
+            "random": {
+              "n": 100,
+              "wins": 96,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.96,
+              "lo": 0.9016,
+              "hi": 0.9843
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 6,
+            "token": "attack:3,10",
+            "label": "attack Scryb Sprites+Perilous Myr",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 1,
+              "losses": 4,
+              "mean": 0.91,
+              "lo": 0.7989,
+              "hi": 0.9626
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0967,
+          "regretLo": 0.05,
+          "regretHi": 0.1533,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9143,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.12
+      },
+      {
+        "d": 18,
+        "kind": "a",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,7,9,10,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Beetleback Chief+Icatian Javelineers+Perilous Myr",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:7,9,10,36",
+            "label": "attack Coruscation Mage+Beetleback Chief+Icatian Javelineers+Perilous Myr",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,7,9,10",
+            "label": "attack Scryb Sprites+Beetleback Chief+Icatian Javelineers+Perilous Myr",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:3,9,10,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Icatian Javelineers+Perilous Myr",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:3,7,10,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Beetleback Chief+Perilous Myr",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:3,7,9,36",
+            "label": "attack Scryb Sprites+Coruscation Mage+Beetleback Chief+Icatian Javelineers",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 7,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.9943
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 11,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 3,
+        "d4": 3,
+        "d5": 4,
+        "d8": 3,
+        "d9": 3,
+        "d10": 5,
+        "d11": 3,
+        "d14": 6,
+        "d17": 7,
+        "d18": 7,
+        "d12": 5
+      },
+      "meanOptions": 4.45,
+      "screened": [
+        {
+          "d": 18,
+          "mean": 0.9943,
+          "replacedBy": 12
+        }
+      ],
+      "stopped": [
+        {
+          "d": 8,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 9,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 14,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 14,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 14,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 17,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 17,
+          "o": 5,
+          "at": 100
+        },
+        {
+          "d": 17,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 13,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.05,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 8,
+          "at": 50,
+          "gap": 0.11,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0.13,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0.22,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 700,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 4675,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 277,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 1826,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 8,
+    "rows": 181736,
+    "gamesIdChecked": 4676,
+    "frameLogs": 9352,
+    "frameLogsFailed": 0,
+    "redactionMs": 79065,
+    "forks": 4675,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 11,
+    "guardrails": {
+      "logs": 9350,
+      "priorityDecisions": 375629,
+      "landOffered": 41613,
+      "landTaken": 41613,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 5293,
+      "refusedCast": 20,
+      "noRepeatRefused": 9,
+      "xDrawn": 595,
+      "zeroXLeftOut": 4178,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4675,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4675,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4675,
+      "errored": 277,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 277
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 129554
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4867,
+      "units": 53,
+      "branchGames": 4675,
+      "ms": 1676926,
+      "workers": 6
+    },
+    "wallMs": 1681793,
+    "jobs": 6
+  }
+}

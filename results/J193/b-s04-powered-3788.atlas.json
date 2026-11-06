@@ -1,0 +1,2816 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s04-powered-3688/decks/powered-3688-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s04-powered-3688/decks/powered-3688-00002.dck",
+    "seed": 3788,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 23,
+      "first": "A",
+      "decisionsListed": 29
+    },
+    "decisions": [
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 101,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.6733,
+              "lo": 0.5948,
+              "hi": 0.7432
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:2",
+            "label": "Crusade",
+            "random": {
+              "n": 150,
+              "wins": 107,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.7133,
+              "lo": 0.6364,
+              "hi": 0.7797
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:36",
+            "label": "Welcoming Vampire",
+            "random": {
+              "n": 150,
+              "wins": 102,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.68,
+              "lo": 0.6017,
+              "hi": 0.7494
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.1533,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.64,
+        "futilityGap": 0.22
+      },
+      {
+        "d": 9,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 53,
+              "draws": 0,
+              "losses": 97,
+              "mean": 0.3533,
+              "lo": 0.2814,
+              "hi": 0.4326
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:30",
+            "label": "Wistfulness",
+            "random": {
+              "n": 150,
+              "wins": 67,
+              "draws": 0,
+              "losses": 83,
+              "mean": 0.4467,
+              "lo": 0.3694,
+              "hi": 0.5266
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:30",
+            "label": "Wistfulness",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0933,
+          "regretLo": 0,
+          "regretHi": 0.1933,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 23,
+        "screened": false,
+        "screenMean": 0.32,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.18
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:30",
+            "label": "Wistfulness",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 0,
+              "losses": 32,
+              "mean": 0.36,
+              "lo": 0.2414,
+              "hi": 0.4986
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 0,
+              "losses": 39,
+              "mean": 0.22,
+              "lo": 0.1275,
+              "hi": 0.3524
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:30",
+            "label": "Wistfulness",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.02,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2933,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 0,
+              "losses": 37,
+              "mean": 0.26,
+              "lo": 0.1587,
+              "hi": 0.3955
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:30,36",
+            "label": "attack Welcoming Vampire+Wistfulness",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:36",
+            "label": "attack Welcoming Vampire",
+            "random": {
+              "n": 50,
+              "wins": 8,
+              "draws": 0,
+              "losses": 42,
+              "mean": 0.16,
+              "lo": 0.0834,
+              "hi": 0.2851
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:30",
+            "label": "attack Wistfulness",
+            "random": {
+              "n": 50,
+              "wins": 10,
+              "draws": 0,
+              "losses": 40,
+              "mean": 0.2,
+              "lo": 0.1124,
+              "hi": 0.3304
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.23,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Kaldra Compleat",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0.6667,
+              "lo": 0.5879,
+              "hi": 0.7371
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 26,
+        "screened": false,
+        "screenMean": 0.54,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:128",
+            "label": "attack Phyrexian Germ Token",
+            "random": {
+              "n": 150,
+              "wins": 121,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.8067,
+              "lo": 0.7361,
+              "hi": 0.8619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 25,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0.5,
+              "lo": 0.3664,
+              "hi": 0.6336
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:30,36,128",
+            "label": "attack Phyrexian Germ Token+Welcoming Vampire+Wistfulness",
+            "random": {
+              "n": 150,
+              "wins": 115,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.7667,
+              "lo": 0.6928,
+              "hi": 0.8272
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:36,128",
+            "label": "attack Phyrexian Germ Token+Welcoming Vampire",
+            "random": {
+              "n": 150,
+              "wins": 123,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.82,
+              "lo": 0.7508,
+              "hi": 0.8732
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:30,128",
+            "label": "attack Phyrexian Germ Token+Wistfulness",
+            "random": {
+              "n": 150,
+              "wins": 123,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.82,
+              "lo": 0.7508,
+              "hi": 0.8732
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0133,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "replaces",
+        "replaces": 27,
+        "screened": false,
+        "screenMean": 0.776,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "futilityGap": 0.02
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 120,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.8,
+              "lo": 0.7289,
+              "hi": 0.8562
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:20",
+            "label": "Ursine Monstrosity",
+            "random": {
+              "n": 150,
+              "wins": 141,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.94,
+              "lo": 0.8899,
+              "hi": 0.9681
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.14,
+          "regretLo": 0.0667,
+          "regretHi": 0.2133,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 28,
+        "screened": false,
+        "screenMean": 0.86,
+        "futilityGap": 0.12
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:128",
+            "label": "attack Phyrexian Germ Token",
+            "random": {
+              "n": 150,
+              "wins": 121,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.8067,
+              "lo": 0.7361,
+              "hi": 0.8619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 32,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.64,
+              "lo": 0.5014,
+              "hi": 0.7586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:30,36,128",
+            "label": "attack Phyrexian Germ Token+Welcoming Vampire+Wistfulness",
+            "random": {
+              "n": 150,
+              "wins": 135,
+              "draws": 0,
+              "losses": 15,
+              "mean": 0.9,
+              "lo": 0.8416,
+              "hi": 0.9385
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:36,128",
+            "label": "attack Phyrexian Germ Token+Welcoming Vampire",
+            "random": {
+              "n": 150,
+              "wins": 123,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.82,
+              "lo": 0.7508,
+              "hi": 0.8732
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:30,128",
+            "label": "attack Phyrexian Germ Token+Wistfulness",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 0,
+              "losses": 21,
+              "mean": 0.86,
+              "lo": 0.7954,
+              "hi": 0.9066
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0933,
+          "regretLo": 0.0333,
+          "regretHi": 0.16,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.76,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "futilityGap": 0.1
+      },
+      {
+        "d": 17,
+        "kind": "p",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:20",
+            "label": "Ursine Monstrosity",
+            "random": {
+              "n": 150,
+              "wins": 138,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.92,
+              "lo": 0.8654,
+              "hi": 0.9536
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 71,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.71,
+              "lo": 0.6146,
+              "hi": 0.7899
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 20,
+        "screened": false,
+        "screenMean": 0.8,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:15",
+            "label": "Biotech Specialist",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:38",
+            "label": "Grizzly Fate",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.9733
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:143",
+            "label": "Lander Token: {2}, {T}, Sacrifice CARDNAME: Search your libr",
+            "random": {
+              "n": 150,
+              "wins": 143,
+              "draws": 0,
+              "losses": 7,
+              "mean": 0.9533,
+              "lo": 0.9068,
+              "hi": 0.9772
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 94,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.94,
+              "lo": 0.8752,
+              "hi": 0.9722
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Jayemdae Tome",
+            "random": {
+              "n": 150,
+              "wins": 147,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.98,
+              "lo": 0.9429,
+              "hi": 0.9932
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0267,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 18,
+        "screened": false,
+        "screenMean": 0.9467,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.04
+      },
+      {
+        "d": 20,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:24",
+            "label": "Jayemdae Tome",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 22,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:20,30,36,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity+Welcoming Vampire+Wistfulness",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:20",
+            "label": "attack Ursine Monstrosity",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:20,36,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity+Welcoming Vampire",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:20,30,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity+Wistfulness",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 22,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:24",
+            "label": "Jayemdae Tome",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 25,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 23,
+        "kind": "p",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:38",
+            "label": "Grizzly Fate",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Torsten, Founder of Benalia",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.9867
+      },
+      {
+        "d": 24,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20,30,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity+Wistfulness",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:15,20,30,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity+Wistfulness+Biotech Specialist",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:20,30",
+            "label": "attack Ursine Monstrosity+Wistfulness",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:20,128",
+            "label": "attack Phyrexian Germ Token+Ursine Monstrosity",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": true,
+        "screenMean": 0.98
+      },
+      {
+        "d": 25,
+        "kind": "p",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Torsten, Founder of Benalia",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "activate:24",
+            "label": "Jayemdae Tome: {4}, {T}: Draw a card.",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Grizzly Fate",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.98
+      },
+      {
+        "d": 26,
+        "kind": "p",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Phlage, Titan of Fire's Fury",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Eidolon of the Great Revel",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:7",
+            "label": "Brimaz, King of Oreskos",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.99
+      },
+      {
+        "d": 27,
+        "kind": "p",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:26",
+            "label": "Omnath, Locus of Rage",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Eidolon of the Great Revel",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:38",
+            "label": "Grizzly Fate",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:7",
+            "label": "Brimaz, King of Oreskos",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:1",
+            "label": "Phlage, Titan of Fire's Fury",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 6,
+        "why": "replaces",
+        "replaces": 24,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 28,
+        "kind": "a",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:3,6,13,15,16,17,20,21,25,28,33,34,128",
+            "label": "attack Phyrexian Germ Token+Plains+Plains+Sunbaked Canyon+Swamp+Restless Prairie+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,6,13,15,16,17,20,21,25,28,33,34",
+            "label": "attack Plains+Plains+Sunbaked Canyon+Swamp+Restless Prairie+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:3,6,13,15,16,17,20,21,25,28,34,128",
+            "label": "attack Phyrexian Germ Token+Plains+Sunbaked Canyon+Swamp+Restless Prairie+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3,6,13,15,16,17,20,21,25,28,33,128",
+            "label": "attack Phyrexian Germ Token+Plains+Sunbaked Canyon+Swamp+Restless Prairie+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:6,13,15,16,17,20,21,25,28,33,34,128",
+            "label": "attack Phyrexian Germ Token+Plains+Plains+Swamp+Restless Prairie+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:3,13,15,16,17,20,21,25,28,33,34,128",
+            "label": "attack Phyrexian Germ Token+Plains+Plains+Sunbaked Canyon+Restless Prairie+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:3,6,15,16,17,20,21,25,28,33,34,128",
+            "label": "attack Phyrexian Germ Token+Plains+Plains+Sunbaked Canyon+Swamp+Biotech Specialist+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:3,6,13,16,17,20,21,25,28,33,34,128",
+            "label": "attack Phyrexian Germ Token+Plains+Plains+Sunbaked Canyon+Swamp+Restless Prairie+Blood Crypt+Blightstep Pathway+Ursine Monstrosity+Torsten, Founder of Benalia+Watery Grave+Forest",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 1
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 20,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d1": 3,
+        "d11": 3,
+        "d12": 4,
+        "d16": 5,
+        "d18": 3,
+        "d21": 5,
+        "d23": 3,
+        "d25": 4,
+        "d26": 4,
+        "d28": 8,
+        "d19": 3,
+        "d24": 4,
+        "d27": 6,
+        "d14": 5,
+        "d9": 3,
+        "d22": 2,
+        "d20": 2,
+        "d17": 2,
+        "d15": 2,
+        "d13": 2
+      },
+      "meanOptions": 3.65,
+      "screened": [
+        {
+          "d": 18,
+          "mean": 0.9733,
+          "replacedBy": 19
+        },
+        {
+          "d": 21,
+          "mean": 1,
+          "replacedBy": 24
+        },
+        {
+          "d": 23,
+          "mean": 0.9867,
+          "replacedBy": 9
+        },
+        {
+          "d": 25,
+          "mean": 0.98,
+          "replacedBy": 22
+        },
+        {
+          "d": 26,
+          "mean": 0.99,
+          "replacedBy": 13
+        },
+        {
+          "d": 28,
+          "mean": 1,
+          "replacedBy": 15
+        },
+        {
+          "d": 24,
+          "mean": 0.98,
+          "replacedBy": 27
+        },
+        {
+          "d": 27,
+          "mean": 1,
+          "replacedBy": 14
+        },
+        {
+          "d": 22,
+          "mean": 1,
+          "replacedBy": 20
+        },
+        {
+          "d": 20,
+          "mean": 1,
+          "replacedBy": 17
+        }
+      ],
+      "stopped": [
+        {
+          "d": 16,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 19,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 14,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 9,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 13,
+          "o": 1,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 6,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0.22,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 16,
+          "at": 50,
+          "gap": 0.1,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0.18,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 15,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 2,
+      "futileBranchGamesSaved": 700,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 4625,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 0,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 1826,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 9,
+    "rows": 77942,
+    "gamesIdChecked": 4626,
+    "frameLogs": 9252,
+    "frameLogsFailed": 0,
+    "redactionMs": 48464,
+    "forks": 4625,
+    "forkProblems": 0,
+    "leakChecks": 20,
+    "leaks": 0,
+    "leakControlsMoved": 20,
+    "guardrails": {
+      "logs": 9250,
+      "priorityDecisions": 132244,
+      "landOffered": 20333,
+      "landTaken": 20333,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 158,
+      "refusedCast": 28,
+      "noRepeatRefused": 19,
+      "xDrawn": 1506,
+      "zeroXLeftOut": 37707,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 4625,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 4625,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 4625,
+      "errored": 0,
+      "threshold": 0.25,
+      "byError": [],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 64638
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 8206,
+      "units": 62,
+      "branchGames": 4625,
+      "ms": 1826958,
+      "workers": 6
+    },
+    "wallMs": 1835165,
+    "jobs": 6
+  }
+}

@@ -1,0 +1,4080 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s02-peasant-3686/decks/peasant-3686-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s02-peasant-3686/decks/peasant-3686-00002.dck",
+    "seed": 3786,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 39,
+      "first": "A",
+      "decisionsListed": 53
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:33",
+            "label": "Instill Energy",
+            "random": {
+              "n": 50,
+              "wins": 8,
+              "draws": 0,
+              "losses": 42,
+              "mean": 0.16,
+              "lo": 0.0834,
+              "hi": 0.2851
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:17",
+            "label": "Vraska, Swarm's Eminence",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:5",
+            "label": "Political Triumph",
+            "random": {
+              "n": 50,
+              "wins": 8,
+              "draws": 0,
+              "losses": 42,
+              "mean": 0.16,
+              "lo": 0.0834,
+              "hi": 0.2851
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.1,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:17",
+            "label": "Vraska, Swarm's Eminence",
+            "random": {
+              "n": 50,
+              "wins": 20,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.4,
+              "lo": 0.2761,
+              "hi": 0.5382
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 5,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:14",
+            "label": "Scolding Administrator",
+            "random": {
+              "n": 50,
+              "wins": 17,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.34,
+              "lo": 0.2244,
+              "hi": 0.4785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.1,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.34,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 44,
+              "draws": 0,
+              "losses": 106,
+              "mean": 0.2933,
+              "lo": 0.2264,
+              "hi": 0.3706
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:83,88",
+            "label": "attack Goblin Army Token+Assassin Token",
+            "random": {
+              "n": 150,
+              "wins": 59,
+              "draws": 0,
+              "losses": 91,
+              "mean": 0.3933,
+              "lo": 0.3188,
+              "hi": 0.4732
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 50,
+              "wins": 15,
+              "draws": 0,
+              "losses": 35,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 150,
+              "wins": 75,
+              "draws": 0,
+              "losses": 75,
+              "mean": 0.5,
+              "lo": 0.421,
+              "hi": 0.579
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.2067,
+          "regretLo": 0.1067,
+          "regretHi": 0.3133,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.42,
+        "forgeOptions": [
+          0,
+          1,
+          3
+        ],
+        "futilityGap": 0.18
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:13",
+            "label": "Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 69,
+              "draws": 0,
+              "losses": 81,
+              "mean": 0.46,
+              "lo": 0.3822,
+              "hi": 0.5398
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 36,
+              "draws": 0,
+              "losses": 64,
+              "mean": 0.36,
+              "lo": 0.2727,
+              "hi": 0.4576
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "The Rack",
+            "random": {
+              "n": 150,
+              "wins": 61,
+              "draws": 1,
+              "losses": 88,
+              "mean": 0.41,
+              "lo": 0.3345,
+              "hi": 0.49
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0433,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3867,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 17,
+              "draws": 0,
+              "losses": 133,
+              "mean": 0.1133,
+              "lo": 0.072,
+              "hi": 0.174
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:13,14,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef",
+            "random": {
+              "n": 150,
+              "wins": 62,
+              "draws": 0,
+              "losses": 88,
+              "mean": 0.4133,
+              "lo": 0.3377,
+              "hi": 0.4933
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 150,
+              "wins": 61,
+              "draws": 0,
+              "losses": 89,
+              "mean": 0.4067,
+              "lo": 0.3313,
+              "hi": 0.4867
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 150,
+              "wins": 61,
+              "draws": 0,
+              "losses": 89,
+              "mean": 0.4067,
+              "lo": 0.3313,
+              "hi": 0.4867
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.3,
+          "regretLo": 0.2467,
+          "regretHi": 0.4,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "replaces",
+        "replaces": 48,
+        "screened": false,
+        "screenMean": 0.2571,
+        "forgeOptions": [
+          0,
+          1,
+          3,
+          4
+        ],
+        "futilityGap": 0.34
+      },
+      {
+        "d": 22,
+        "kind": "p",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:15",
+            "label": "Overlord of the Balemurk",
+            "random": {
+              "n": 150,
+              "wins": 12,
+              "draws": 0,
+              "losses": 138,
+              "mean": 0.08,
+              "lo": 0.0464,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 20,
+              "draws": 0,
+              "losses": 130,
+              "mean": 0.1333,
+              "lo": 0.088,
+              "hi": 0.197
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 150,
+              "wins": 17,
+              "draws": 0,
+              "losses": 133,
+              "mean": 0.1133,
+              "lo": 0.072,
+              "hi": 0.174
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0533,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.0667,
+        "futilityGap": 0.1
+      },
+      {
+        "d": 25,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 9,
+              "draws": 0,
+              "losses": 141,
+              "mean": 0.06,
+              "lo": 0.0319,
+              "hi": 0.1101
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,13,14,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 0,
+              "losses": 113,
+              "mean": 0.2467,
+              "lo": 0.1846,
+              "hi": 0.3214
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 100,
+              "wins": 5,
+              "draws": 0,
+              "losses": 95,
+              "mean": 0.05,
+              "lo": 0.0215,
+              "hi": 0.1118
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 150,
+              "wins": 25,
+              "draws": 0,
+              "losses": 125,
+              "mean": 0.1667,
+              "lo": 0.1155,
+              "hi": 0.2345
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 150,
+              "wins": 25,
+              "draws": 0,
+              "losses": 125,
+              "mean": 0.1667,
+              "lo": 0.1155,
+              "hi": 0.2345
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 100,
+              "wins": 3,
+              "draws": 1,
+              "losses": 96,
+              "mean": 0.035,
+              "lo": 0.0129,
+              "hi": 0.0915
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1867,
+          "regretLo": 0.1067,
+          "regretHi": 0.2733,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 28,
+        "screened": false,
+        "screenMean": 0.085,
+        "forgeOptions": [
+          0,
+          1,
+          3,
+          4
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 28,
+        "kind": "a",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,13,14,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 3
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 42,
+        "screened": true,
+        "screenMean": 0.01
+      },
+      {
+        "d": 32,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,13,14,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian+Witherbloom Apprentice",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.08,
+          "regretLo": 0.04,
+          "regretHi": 0.2,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.025
+      },
+      {
+        "d": 35,
+        "kind": "p",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:32#2",
+            "label": "Kaito, Bane of Nightmares: -2: Tap target creature. Put two ",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:11",
+            "label": "Iron-Shield Elf",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 32,
+        "screened": true,
+        "screenMean": 0.04
+      },
+      {
+        "d": 37,
+        "kind": "a",
+        "turn": 23,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,13,14,32,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Kaito, Bane of Nightmares",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 6
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 35,
+        "screened": true,
+        "screenMean": 0.005
+      },
+      {
+        "d": 38,
+        "kind": "p",
+        "turn": 25,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:32#2",
+            "label": "Kaito, Bane of Nightmares: -2: Tap target creature. Put two ",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Vampire Gourmand",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.08,
+          "regretLo": 0,
+          "regretHi": 0.2,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.0267
+      },
+      {
+        "d": 40,
+        "kind": "a",
+        "turn": 25,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 0,
+              "draws": 0,
+              "losses": 150,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.025
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,11,13,14,15,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Overlord of the Balemurk+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf",
+            "random": {
+              "n": 150,
+              "wins": 80,
+              "draws": 0,
+              "losses": 70,
+              "mean": 0.5333,
+              "lo": 0.4537,
+              "hi": 0.6113
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "attack:15",
+            "label": "attack Overlord of the Balemurk",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.5333,
+          "regretLo": 0.46,
+          "regretHi": 0.6067,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 38,
+        "screened": false,
+        "screenMean": 0.055,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.54
+      },
+      {
+        "d": 41,
+        "kind": "a",
+        "turn": 27,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 0,
+              "draws": 0,
+              "losses": 150,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.025
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,11,13,14,15,21,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Overlord of the Balemurk+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf+Vampire Gourmand",
+            "random": {
+              "n": 150,
+              "wins": 102,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.68,
+              "lo": 0.6017,
+              "hi": 0.7494
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "attack:15",
+            "label": "attack Overlord of the Balemurk",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.68,
+          "regretLo": 0.6067,
+          "regretHi": 0.7533,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.115,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.8
+      },
+      {
+        "d": 42,
+        "kind": "p",
+        "turn": 27,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:37#1",
+            "label": "Shattered Landscape: Cycling {R}{W}{B} ({R}{W}{B}, Discard t",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "activate:39#1",
+            "label": "Tranquil Landscape: Cycling {G}{W}{U} ({G}{W}{U}, Discard th",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 37,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 45,
+        "kind": "a",
+        "turn": 29,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 0,
+              "draws": 0,
+              "losses": 150,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.025
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,11,13,14,15,21,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Overlord of the Balemurk+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf+Vampire Gourmand",
+            "random": {
+              "n": 150,
+              "wins": 63,
+              "draws": 0,
+              "losses": 87,
+              "mean": 0.42,
+              "lo": 0.344,
+              "hi": 0.5
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 7,
+            "token": "attack:15",
+            "label": "attack Overlord of the Balemurk",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.42,
+          "regretLo": 0.3467,
+          "regretHi": 0.5002,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 46,
+        "screened": false,
+        "screenMean": 0.07,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.4
+      },
+      {
+        "d": 46,
+        "kind": "a",
+        "turn": 31,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,6,11,13,14,15,21,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Overlord of the Balemurk+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf+Vampire Gourmand+Glamer Gifter",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:15",
+            "label": "attack Overlord of the Balemurk",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 48,
+        "kind": "a",
+        "turn": 33,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,6,11,13,14,21,34,83,88,92",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf+Vampire Gourmand+Glamer Gifter",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 51,
+        "screened": true,
+        "screenMean": 0.005
+      },
+      {
+        "d": 51,
+        "kind": "a",
+        "turn": 35,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,6,11,13,14,21,34,83,88,92,220",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf+Vampire Gourmand+Glamer Gifter+Reliquary Dragon",
+            "random": {
+              "n": 25,
+              "wins": 8,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.32,
+              "lo": 0.1721,
+              "hi": 0.5159
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.32,
+          "regretLo": 0.159,
+          "regretHi": 0.52,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "replaces",
+        "replaces": 52,
+        "screened": true,
+        "screenMean": 0.04
+      },
+      {
+        "d": 52,
+        "kind": "a",
+        "turn": 37,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:1,6,11,13,14,21,34,83,88,92,220",
+            "label": "attack Goblin Army Token+Assassin Token+Assassin Token+Scolding Administrator+Risen Reef+Lita, Little Orphan Amphibian+Witherbloom Apprentice+Iron-Shield Elf+Vampire Gourmand+Glamer Gifter+Reliquary Dragon",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:83",
+            "label": "attack Goblin Army Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:88",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:92",
+            "label": "attack Assassin Token",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:14",
+            "label": "attack Scolding Administrator",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "attack:13",
+            "label": "attack Risen Reef",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "attack:1",
+            "label": "attack Lita, Little Orphan Amphibian",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 20,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 4,
+        "d12": 4,
+        "d16": 4,
+        "d18": 3,
+        "d22": 3,
+        "d32": 8,
+        "d38": 3,
+        "d41": 8,
+        "d46": 8,
+        "d52": 8,
+        "d35": 3,
+        "d37": 8,
+        "d40": 8,
+        "d51": 8,
+        "d42": 3,
+        "d48": 8,
+        "d45": 8,
+        "d28": 8,
+        "d25": 8,
+        "d21": 7
+      },
+      "meanOptions": 6.1,
+      "screened": [
+        {
+          "d": 32,
+          "mean": 0.025,
+          "replacedBy": 35
+        },
+        {
+          "d": 38,
+          "mean": 0.0267,
+          "replacedBy": 40
+        },
+        {
+          "d": 46,
+          "mean": 0,
+          "replacedBy": 45
+        },
+        {
+          "d": 52,
+          "mean": 0,
+          "replacedBy": 51
+        },
+        {
+          "d": 35,
+          "mean": 0.04,
+          "replacedBy": 37
+        },
+        {
+          "d": 37,
+          "mean": 0.005,
+          "replacedBy": 42
+        },
+        {
+          "d": 51,
+          "mean": 0.04,
+          "replacedBy": 48
+        },
+        {
+          "d": 42,
+          "mean": 0,
+          "replacedBy": 28
+        },
+        {
+          "d": 48,
+          "mean": 0.005,
+          "replacedBy": 21
+        },
+        {
+          "d": 28,
+          "mean": 0.01,
+          "replacedBy": 25
+        }
+      ],
+      "stopped": [
+        {
+          "d": 16,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 18,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 41,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 41,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 40,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 6,
+          "at": 50
+        },
+        {
+          "d": 45,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 25,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 25,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 25,
+          "o": 6,
+          "at": 100
+        },
+        {
+          "d": 25,
+          "o": 7,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 21,
+          "o": 6,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 27,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 16,
+          "at": 50,
+          "gap": 0.18,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 18,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 22,
+          "at": 50,
+          "gap": 0.1,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 41,
+          "at": 50,
+          "gap": 0.8,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 40,
+          "at": 50,
+          "gap": 0.54,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 45,
+          "at": 50,
+          "gap": 0.4,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 25,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 21,
+          "at": 50,
+          "gap": 0.34,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 800,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 6825,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 2,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2141,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 132260,
+    "gamesIdChecked": 6826,
+    "frameLogs": 13652,
+    "frameLogsFailed": 0,
+    "redactionMs": 93484,
+    "forks": 6825,
+    "forkProblems": 0,
+    "leakChecks": 20,
+    "leaks": 0,
+    "leakControlsMoved": 20,
+    "guardrails": {
+      "logs": 13650,
+      "priorityDecisions": 205524,
+      "landOffered": 22424,
+      "landTaken": 22424,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 389,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 6825,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 6825,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 6825,
+      "errored": 2,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 2
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 50,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 76114
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 32829,
+      "units": 62,
+      "branchGames": 6825,
+      "ms": 3307015,
+      "workers": 6
+    },
+    "wallMs": 3339844,
+    "jobs": 6
+  }
+}

@@ -1,0 +1,2091 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s09-pauper-3693/decks/pauper-3693-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s09-pauper-3693/decks/pauper-3693-00002.dck",
+    "seed": 3793,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 19,
+      "first": "B",
+      "decisionsListed": 37
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 2,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:9#0",
+            "label": "Twisted Landscape: {T}, Sacrifice CARDNAME: Search your libr",
+            "random": {
+              "n": 150,
+              "wins": 72,
+              "draws": 14,
+              "losses": 64,
+              "mean": 0.5267,
+              "lo": 0.4471,
+              "hi": 0.6049
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 82,
+              "draws": 20,
+              "losses": 48,
+              "mean": 0.6133,
+              "lo": 0.5335,
+              "hi": 0.6875
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:34",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 150,
+              "wins": 72,
+              "draws": 22,
+              "losses": 56,
+              "mean": 0.5533,
+              "lo": 0.4734,
+              "hi": 0.6306
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0867,
+          "regretLo": 0,
+          "regretHi": 0.18,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6133,
+        "futilityGap": 0.06
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 6,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:29#0",
+            "label": "Bountiful Landscape: {T}, Sacrifice CARDNAME: Search your li",
+            "random": {
+              "n": 150,
+              "wins": 89,
+              "draws": 18,
+              "losses": 43,
+              "mean": 0.6533,
+              "lo": 0.5742,
+              "hi": 0.7248
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 82,
+              "draws": 11,
+              "losses": 57,
+              "mean": 0.5833,
+              "lo": 0.5033,
+              "hi": 0.6592
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:19",
+            "label": "Myr Sire",
+            "random": {
+              "n": 150,
+              "wins": 78,
+              "draws": 11,
+              "losses": 61,
+              "mean": 0.5567,
+              "lo": 0.4767,
+              "hi": 0.6338
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0334,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6533,
+        "futilityGap": 0.08
+      },
+      {
+        "d": 14,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:12",
+            "label": "Trumpeting Herd",
+            "random": {
+              "n": 150,
+              "wins": 47,
+              "draws": 12,
+              "losses": 91,
+              "mean": 0.3533,
+              "lo": 0.2814,
+              "hi": 0.4326
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 34,
+              "draws": 2,
+              "losses": 114,
+              "mean": 0.2333,
+              "lo": 0.1728,
+              "hi": 0.3072
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:34",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 5,
+              "losses": 108,
+              "mean": 0.2633,
+              "lo": 0.1994,
+              "hi": 0.3391
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0167,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2933,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 16,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Immolation",
+            "random": {
+              "n": 150,
+              "wins": 38,
+              "draws": 6,
+              "losses": 106,
+              "mean": 0.2733,
+              "lo": 0.2083,
+              "hi": 0.3496
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 42,
+              "draws": 4,
+              "losses": 104,
+              "mean": 0.2933,
+              "lo": 0.2264,
+              "hi": 0.3706
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:23",
+            "label": "Colossal Skyturtle",
+            "random": {
+              "n": 150,
+              "wins": 72,
+              "draws": 0,
+              "losses": 78,
+              "mean": 0.48,
+              "lo": 0.4016,
+              "hi": 0.5594
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:3",
+            "label": "Paradox Surveyor",
+            "random": {
+              "n": 50,
+              "wins": 11,
+              "draws": 5,
+              "losses": 34,
+              "mean": 0.27,
+              "lo": 0.1667,
+              "hi": 0.4061
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:34",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 100,
+              "wins": 30,
+              "draws": 2,
+              "losses": 68,
+              "mean": 0.31,
+              "lo": 0.2278,
+              "hi": 0.4063
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 5,
+            "token": "cast:4",
+            "label": "Argothian Pixies",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.2067,
+          "regretLo": 0.1099,
+          "regretHi": 0.3067,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2733,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ],
+        "futilityGap": 0.25
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:3",
+            "label": "Paradox Surveyor",
+            "random": {
+              "n": 150,
+              "wins": 47,
+              "draws": 3,
+              "losses": 100,
+              "mean": 0.3233,
+              "lo": 0.2537,
+              "hi": 0.4018
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 35,
+              "draws": 8,
+              "losses": 107,
+              "mean": 0.26,
+              "lo": 0.1964,
+              "hi": 0.3356
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:34",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 150,
+              "wins": 42,
+              "draws": 5,
+              "losses": 103,
+              "mean": 0.2967,
+              "lo": 0.2294,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:4",
+            "label": "Argothian Pixies",
+            "random": {
+              "n": 150,
+              "wins": 33,
+              "draws": 5,
+              "losses": 112,
+              "mean": 0.2367,
+              "lo": 0.1758,
+              "hi": 0.3107
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.07,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.16,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 22,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 11,
+              "draws": 0,
+              "losses": 139,
+              "mean": 0.0733,
+              "lo": 0.0414,
+              "hi": 0.1265
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:23",
+            "label": "Colossal Skyturtle",
+            "random": {
+              "n": 150,
+              "wins": 32,
+              "draws": 1,
+              "losses": 117,
+              "mean": 0.2167,
+              "lo": 0.1583,
+              "hi": 0.2892
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:17",
+            "label": "Earth Elemental",
+            "random": {
+              "n": 150,
+              "wins": 22,
+              "draws": 5,
+              "losses": 123,
+              "mean": 0.1633,
+              "lo": 0.1127,
+              "hi": 0.2308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:4",
+            "label": "Argothian Pixies",
+            "random": {
+              "n": 50,
+              "wins": 5,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:34",
+            "label": "Sensei's Divining Top",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1433,
+          "regretLo": 0.07,
+          "regretHi": 0.2233,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.16,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ],
+        "futilityGap": 0.2
+      },
+      {
+        "d": 26,
+        "kind": "b",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:3>46,23>46,119>46",
+            "label": "block Phyrexian Myr Token>Spinewoods Paladin, Paradox Surveyor>Spinewoods Paladin, Colossal Skyturtle>Spinewoods Paladin",
+            "random": {
+              "n": 150,
+              "wins": 29,
+              "draws": 5,
+              "losses": 116,
+              "mean": 0.21,
+              "lo": 0.1525,
+              "hi": 0.282
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "block:3>46,23>46",
+            "label": "block Paradox Surveyor>Spinewoods Paladin, Colossal Skyturtle>Spinewoods Paladin",
+            "random": {
+              "n": 150,
+              "wins": 30,
+              "draws": 5,
+              "losses": 115,
+              "mean": 0.2167,
+              "lo": 0.1583,
+              "hi": 0.2892
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:23>46,119>46",
+            "label": "block Phyrexian Myr Token>Spinewoods Paladin, Colossal Skyturtle>Spinewoods Paladin",
+            "random": {
+              "n": 150,
+              "wins": 29,
+              "draws": 5,
+              "losses": 116,
+              "mean": 0.21,
+              "lo": 0.1525,
+              "hi": 0.282
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:3>46,119>46",
+            "label": "block Phyrexian Myr Token>Spinewoods Paladin, Paradox Surveyor>Spinewoods Paladin",
+            "random": {
+              "n": 150,
+              "wins": 42,
+              "draws": 1,
+              "losses": 107,
+              "mean": 0.2833,
+              "lo": 0.2173,
+              "hi": 0.3602
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0733,
+          "regretLo": 0.0033,
+          "regretHi": 0.1567,
+          "best": 4
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.224,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "futilityGap": 0.03
+      },
+      {
+        "d": 28,
+        "kind": "a",
+        "turn": 16,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,16,119",
+            "label": "attack Llanowar Visionary+Paradox Surveyor+Phyrexian Myr Token",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:16",
+            "label": "attack Llanowar Visionary",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3",
+            "label": "attack Paradox Surveyor",
+            "random": {
+              "n": 50,
+              "wins": 5,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:119",
+            "label": "attack Phyrexian Myr Token",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.08,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 32,
+        "kind": "a",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 8,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.0533,
+              "lo": 0.0273,
+              "hi": 0.1017
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:3,4,16,17,119",
+            "label": "attack Llanowar Visionary+Paradox Surveyor+Phyrexian Myr Token+Earth Elemental+Argothian Pixies",
+            "random": {
+              "n": 150,
+              "wins": 7,
+              "draws": 0,
+              "losses": 143,
+              "mean": 0.0467,
+              "lo": 0.0228,
+              "hi": 0.0932
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:16",
+            "label": "attack Llanowar Visionary",
+            "random": {
+              "n": 150,
+              "wins": 8,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.0533,
+              "lo": 0.0273,
+              "hi": 0.1017
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:3",
+            "label": "attack Paradox Surveyor",
+            "random": {
+              "n": 150,
+              "wins": 5,
+              "draws": 0,
+              "losses": 145,
+              "mean": 0.0333,
+              "lo": 0.0143,
+              "hi": 0.0757
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:119",
+            "label": "attack Phyrexian Myr Token",
+            "random": {
+              "n": 150,
+              "wins": 8,
+              "draws": 0,
+              "losses": 142,
+              "mean": 0.0533,
+              "lo": 0.0273,
+              "hi": 0.1017
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:17",
+            "label": "attack Earth Elemental",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 1,
+              "losses": 49,
+              "mean": 0.01,
+              "lo": 0.001,
+              "hi": 0.0889
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 6,
+            "token": "attack:4",
+            "label": "attack Argothian Pixies",
+            "random": {
+              "n": 150,
+              "wins": 10,
+              "draws": 0,
+              "losses": 140,
+              "mean": 0.0667,
+              "lo": 0.0366,
+              "hi": 0.1184
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0133,
+          "regretLo": 0,
+          "regretHi": 0.0733,
+          "best": 6
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 7,
+        "why": "replaces",
+        "replaces": 33,
+        "screened": false,
+        "screenMean": 0.0457,
+        "forgeOptions": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6
+        ],
+        "futilityGap": 0.06
+      },
+      {
+        "d": 33,
+        "kind": "p",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:38#1",
+            "label": "Perilous Landscape: Cycling {U}{R}{W} ({U}{R}{W}, Discard th",
+            "random": {
+              "n": 25,
+              "wins": 1,
+              "draws": 0,
+              "losses": 24,
+              "mean": 0.04,
+              "lo": 0.0071,
+              "hi": 0.1954
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 25,
+              "wins": 2,
+              "draws": 0,
+              "losses": 23,
+              "mean": 0.08,
+              "lo": 0.0222,
+              "hi": 0.2497
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 3,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.04
+      },
+      {
+        "d": 34,
+        "kind": "p",
+        "turn": 18,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:28",
+            "label": "Werebear",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:8",
+            "label": "Scryb Sprites",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 36,
+        "screened": false,
+        "screenMean": 0.08,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 36,
+        "kind": "b",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:8>41,119>57",
+            "label": "block Phyrexian Myr Token>Porcelain Legionnaire, Scryb Sprites>Exorcist",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:8>41",
+            "label": "block Scryb Sprites>Exorcist",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:119>57",
+            "label": "block Phyrexian Myr Token>Porcelain Legionnaire",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "block:8>41,17>57,119>57",
+            "label": "block Phyrexian Myr Token>Porcelain Legionnaire, Scryb Sprites>Exorcist, Earth Elemental>Porcelain Legionnaire",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "block:8>41,4>57,119>57",
+            "label": "block Phyrexian Myr Token>Porcelain Legionnaire, Scryb Sprites>Exorcist, Argothian Pixies>Porcelain Legionnaire",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 6,
+            "token": "block:8>41,28>57,119>57",
+            "label": "block Phyrexian Myr Token>Porcelain Legionnaire, Scryb Sprites>Exorcist, Werebear>Porcelain Legionnaire",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 7,
+            "token": "block:8>41,17>41,119>57",
+            "label": "block Phyrexian Myr Token>Porcelain Legionnaire, Scryb Sprites>Exorcist, Earth Elemental>Exorcist",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 8,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 12,
+      "branchedInFull": 8,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d4": 3,
+        "d14": 3,
+        "d16": 6,
+        "d19": 4,
+        "d22": 5,
+        "d26": 5,
+        "d28": 5,
+        "d33": 3,
+        "d36": 8,
+        "d34": 3,
+        "d32": 7
+      },
+      "meanOptions": 4.58,
+      "screened": [
+        {
+          "d": 33,
+          "mean": 0.04,
+          "replacedBy": 32
+        },
+        {
+          "d": 36,
+          "mean": 0,
+          "replacedBy": 34
+        }
+      ],
+      "stopped": [
+        {
+          "d": 16,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 16,
+          "o": 4,
+          "at": 100
+        },
+        {
+          "d": 16,
+          "o": 5,
+          "at": 50
+        },
+        {
+          "d": 22,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 22,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 26,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 32,
+          "o": 5,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 7,
+      "labels": 8,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 16,
+          "at": 50,
+          "gap": 0.25,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 22,
+          "at": 50,
+          "gap": 0.2,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 26,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 28,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 34,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 32,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 2,
+      "futileControls": 2,
+      "futileBranchGamesSaved": 800,
+      "partialLabels": 2
+    },
+    "disagreeMost": [],
+    "branchGames": 5425,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 173,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 2178,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 198157,
+    "gamesIdChecked": 5426,
+    "frameLogs": 10852,
+    "frameLogsFailed": 0,
+    "redactionMs": 74259,
+    "forks": 5425,
+    "forkProblems": 0,
+    "leakChecks": 12,
+    "leaks": 0,
+    "leakControlsMoved": 12,
+    "guardrails": {
+      "logs": 10850,
+      "priorityDecisions": 353843,
+      "landOffered": 38071,
+      "landTaken": 38071,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 1598,
+      "refusedCast": 3,
+      "noRepeatRefused": 1,
+      "xDrawn": 2478,
+      "zeroXLeftOut": 53520,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 5425,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 5425,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 5425,
+      "errored": 173,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 173
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 28,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 114052
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 6174,
+      "units": 54,
+      "branchGames": 5425,
+      "ms": 2187664,
+      "workers": 6
+    },
+    "wallMs": 2193838,
+    "jobs": 6
+  }
+}

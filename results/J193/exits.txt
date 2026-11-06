@@ -1,0 +1,13 @@
+b-s01-pauper-3785 0
+b-s02-peasant-3786 0
+b-s03-legacy-3787 0
+b-s04-powered-3788 0
+b-s05-pauper-3789 0
+b-s06-peasant-3790 0
+b-s07-legacy-3791 0
+b-s08-powered-3792 0
+b-s09-pauper-3793 0
+b-s10-peasant-3794 0
+b-s11-legacy-3795 0
+b-s12-powered-3796 0
+b-s13-pauper-3797 0

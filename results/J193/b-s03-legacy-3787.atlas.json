@@ -1,0 +1,1710 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s03-legacy-3687/decks/legacy-3687-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s03-legacy-3687/decks/legacy-3687-00002.dck",
+    "seed": 3787,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 15,
+      "first": "B",
+      "decisionsListed": 13
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:10",
+            "label": "Bloodstained Mire: {T}, Pay 1 life, Sacrifice CARDNAME: Sear",
+            "random": {
+              "n": 150,
+              "wins": 31,
+              "draws": 0,
+              "losses": 119,
+              "mean": 0.2067,
+              "lo": 0.1496,
+              "hi": 0.2784
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 35,
+              "draws": 0,
+              "losses": 115,
+              "mean": 0.2333,
+              "lo": 0.1728,
+              "hi": 0.3072
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:1",
+            "label": "Uro, Titan of Nature's Wrath",
+            "random": {
+              "n": 150,
+              "wins": 45,
+              "draws": 0,
+              "losses": 105,
+              "mean": 0.3,
+              "lo": 0.2324,
+              "hi": 0.3776
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 100,
+              "wins": 14,
+              "draws": 1,
+              "losses": 85,
+              "mean": 0.145,
+              "lo": 0.0891,
+              "hi": 0.2271
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0933,
+          "regretLo": 0,
+          "regretHi": 0.1867,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.175,
+        "forgeOptions": [
+          0,
+          1,
+          2
+        ],
+        "futilityGap": 0.08
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 44,
+              "draws": 0,
+              "losses": 106,
+              "mean": 0.2933,
+              "lo": 0.2264,
+              "hi": 0.3706
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:1",
+            "label": "Uro, Titan of Nature's Wrath",
+            "random": {
+              "n": 150,
+              "wins": 42,
+              "draws": 0,
+              "losses": 108,
+              "mean": 0.28,
+              "lo": 0.2143,
+              "hi": 0.3567
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0733,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.12,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.02
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 8,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:1",
+            "label": "Uro, Titan of Nature's Wrath",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 6,
+              "draws": 0,
+              "losses": 44,
+              "mean": 0.12,
+              "lo": 0.0562,
+              "hi": 0.238
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0405,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2533,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 10,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:32",
+            "label": "Master of the Hunt",
+            "random": {
+              "n": 150,
+              "wins": 26,
+              "draws": 0,
+              "losses": 124,
+              "mean": 0.1733,
+              "lo": 0.1211,
+              "hi": 0.2419
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Ouroboroid",
+            "random": {
+              "n": 150,
+              "wins": 65,
+              "draws": 0,
+              "losses": 85,
+              "mean": 0.4333,
+              "lo": 0.3567,
+              "hi": 0.5133
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:37",
+            "label": "Deathrite Shaman",
+            "random": {
+              "n": 50,
+              "wins": 5,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.26,
+          "regretLo": 0.1667,
+          "regretHi": 0.36,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.192,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.22
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:31",
+            "label": "Scalding Tarn: {T}, Pay 1 life, Sacrifice CARDNAME: Search y",
+            "random": {
+              "n": 150,
+              "wins": 29,
+              "draws": 0,
+              "losses": 121,
+              "mean": 0.1933,
+              "lo": 0.1381,
+              "hi": 0.2639
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Ouroboroid",
+            "random": {
+              "n": 150,
+              "wins": 91,
+              "draws": 0,
+              "losses": 59,
+              "mean": 0.6067,
+              "lo": 0.5268,
+              "hi": 0.6812
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "cast:37",
+            "label": "Deathrite Shaman",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.4133,
+          "regretLo": 0.3133,
+          "regretHi": 0.5067,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.224,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.4
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 21,
+              "draws": 0,
+              "losses": 129,
+              "mean": 0.14,
+              "lo": 0.0934,
+              "hi": 0.2046
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:24",
+            "label": "Ouroboroid",
+            "random": {
+              "n": 150,
+              "wins": 71,
+              "draws": 0,
+              "losses": 79,
+              "mean": 0.4733,
+              "lo": 0.3951,
+              "hi": 0.5529
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 2,
+              "draws": 0,
+              "losses": 48,
+              "mean": 0.04,
+              "lo": 0.011,
+              "hi": 0.1346
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:37",
+            "label": "Deathrite Shaman",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.3333,
+          "regretLo": 0.2467,
+          "regretHi": 0.4267,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.2,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.26
+      },
+      {
+        "d": 7,
+        "kind": "p",
+        "turn": 12,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:37",
+            "label": "Deathrite Shaman",
+            "random": {
+              "n": 150,
+              "wins": 25,
+              "draws": 0,
+              "losses": 125,
+              "mean": 0.1667,
+              "lo": 0.1155,
+              "hi": 0.2345
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:24",
+            "label": "Ouroboroid",
+            "random": {
+              "n": 150,
+              "wins": 55,
+              "draws": 0,
+              "losses": 95,
+              "mean": 0.3667,
+              "lo": 0.2938,
+              "hi": 0.4462
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.2,
+          "regretLo": 0.1067,
+          "regretHi": 0.2867,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.14,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 9,
+        "kind": "b",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 50,
+              "wins": 33,
+              "draws": 0,
+              "losses": 17,
+              "mean": 0.66,
+              "lo": 0.5215,
+              "hi": 0.7756
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:37>55",
+            "label": "block Deathrite Shaman>Orgg",
+            "random": {
+              "n": 50,
+              "wins": 31,
+              "draws": 0,
+              "losses": 19,
+              "mean": 0.62,
+              "lo": 0.4815,
+              "hi": 0.7414
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:24>55",
+            "label": "block Ouroboroid>Orgg",
+            "random": {
+              "n": 50,
+              "wins": 4,
+              "draws": 0,
+              "losses": 46,
+              "mean": 0.08,
+              "lo": 0.0315,
+              "hi": 0.1884
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4667,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:5",
+            "label": "Marsh Flats: {T}, Pay 1 life, Sacrifice CARDNAME: Search you",
+            "random": {
+              "n": 50,
+              "wins": 44,
+              "draws": 0,
+              "losses": 6,
+              "mean": 0.88,
+              "lo": 0.762,
+              "hi": 0.9438
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 0,
+              "losses": 9,
+              "mean": 0.82,
+              "lo": 0.692,
+              "hi": 0.9023
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 50,
+              "wins": 29,
+              "draws": 0,
+              "losses": 21,
+              "mean": 0.58,
+              "lo": 0.4423,
+              "hi": 0.7062
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:18",
+            "label": "Iron Man Armor",
+            "random": {
+              "n": 150,
+              "wins": 87,
+              "draws": 0,
+              "losses": 63,
+              "mean": 0.58,
+              "lo": 0.5,
+              "hi": 0.656
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:3",
+            "label": "Reveillark",
+            "random": {
+              "n": 150,
+              "wins": 132,
+              "draws": 0,
+              "losses": 18,
+              "mean": 0.88,
+              "lo": 0.8183,
+              "hi": 0.9227
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:3",
+            "label": "Reveillark",
+            "random": {
+              "n": 150,
+              "wins": 134,
+              "draws": 0,
+              "losses": 16,
+              "mean": 0.8933,
+              "lo": 0.8338,
+              "hi": 0.9333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "cast:22",
+            "label": "Knight of Autumn",
+            "random": {
+              "n": 150,
+              "wins": 128,
+              "draws": 0,
+              "losses": 22,
+              "mean": 0.8533,
+              "lo": 0.7879,
+              "hi": 0.9011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "cast:1",
+            "label": "Uro, Titan of Nature's Wrath",
+            "random": {
+              "n": 150,
+              "wins": 139,
+              "draws": 0,
+              "losses": 11,
+              "mean": 0.9267,
+              "lo": 0.8735,
+              "hi": 0.9586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.3467,
+          "regretLo": 0.26,
+          "regretHi": 0.4333,
+          "best": 5
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8867,
+        "forgeOptions": [
+          0,
+          2,
+          3,
+          4,
+          5
+        ],
+        "futilityGap": 0.38
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 10,
+      "branchedInFull": 7,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 4,
+        "d1": 3,
+        "d2": 3,
+        "d4": 5,
+        "d5": 5,
+        "d6": 4,
+        "d7": 4,
+        "d9": 3,
+        "d10": 3,
+        "d11": 6
+      },
+      "meanOptions": 4,
+      "screened": [],
+      "stopped": [
+        {
+          "d": 0,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 1,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 4,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 4,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 4,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 5,
+          "o": 4,
+          "at": 50
+        },
+        {
+          "d": 6,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 6,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 7,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 11,
+          "o": 1,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 13,
+      "labels": 7,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.08,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.22,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0.4,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0.26,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 7,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.38,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        }
+      ],
+      "futileStopped": 3,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 900,
+      "partialLabels": 3
+    },
+    "disagreeMost": [],
+    "branchGames": 3850,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 1,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 1607,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 80086,
+    "gamesIdChecked": 3851,
+    "frameLogs": 7702,
+    "frameLogsFailed": 0,
+    "redactionMs": 36286,
+    "forks": 3850,
+    "forkProblems": 0,
+    "leakChecks": 10,
+    "leaks": 0,
+    "leakControlsMoved": 10,
+    "guardrails": {
+      "logs": 7700,
+      "priorityDecisions": 173445,
+      "landOffered": 17881,
+      "landTaken": 17881,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 2219,
+      "refusedCast": 0,
+      "noRepeatRefused": 0,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3850,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3850,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3850,
+      "errored": 1,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 1
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 73696
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4546,
+      "units": 48,
+      "branchGames": 3850,
+      "ms": 1244093,
+      "workers": 6
+    },
+    "wallMs": 1248639,
+    "jobs": 6
+  }
+}

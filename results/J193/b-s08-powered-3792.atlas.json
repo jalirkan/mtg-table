@@ -1,0 +1,1800 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s08-powered-3692/decks/powered-3692-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s08-powered-3692/decks/powered-3692-00002.dck",
+    "seed": 3792,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 17,
+      "first": "A",
+      "decisionsListed": 19
+    },
+    "decisions": [
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:5",
+            "label": "Time Vault",
+            "random": {
+              "n": 150,
+              "wins": 54,
+              "draws": 16,
+              "losses": 80,
+              "mean": 0.4133,
+              "lo": 0.3377,
+              "hi": 0.4933
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 66,
+              "draws": 13,
+              "losses": 71,
+              "mean": 0.4833,
+              "lo": 0.4048,
+              "hi": 0.5627
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 150,
+              "wins": 75,
+              "draws": 14,
+              "losses": 61,
+              "mean": 0.5467,
+              "lo": 0.4668,
+              "hi": 0.6242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 150,
+              "wins": 56,
+              "draws": 15,
+              "losses": 79,
+              "mean": 0.4233,
+              "lo": 0.3471,
+              "hi": 0.5033
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1333,
+          "regretLo": 0.0266,
+          "regretHi": 0.2467,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.45,
+        "futilityGap": 0.21
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:22",
+            "label": "Flame of Anor",
+            "random": {
+              "n": 150,
+              "wins": 27,
+              "draws": 24,
+              "losses": 99,
+              "mean": 0.26,
+              "lo": 0.1964,
+              "hi": 0.3356
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 6,
+              "losses": 32,
+              "mean": 0.3,
+              "lo": 0.191,
+              "hi": 0.4375
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 150,
+              "wins": 76,
+              "draws": 12,
+              "losses": 62,
+              "mean": 0.5467,
+              "lo": 0.4668,
+              "hi": 0.6242
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 50,
+              "wins": 13,
+              "draws": 2,
+              "losses": 35,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.2867,
+          "regretLo": 0.1933,
+          "regretHi": 0.3868,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.375,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.32
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:6",
+            "label": "Broadside Bombardiers",
+            "random": {
+              "n": 150,
+              "wins": 37,
+              "draws": 10,
+              "losses": 103,
+              "mean": 0.28,
+              "lo": 0.2143,
+              "hi": 0.3567
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 100,
+              "wins": 16,
+              "draws": 8,
+              "losses": 76,
+              "mean": 0.2,
+              "lo": 0.1334,
+              "hi": 0.2888
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 150,
+              "wins": 55,
+              "draws": 5,
+              "losses": 90,
+              "mean": 0.3833,
+              "lo": 0.3094,
+              "hi": 0.4631
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 100,
+              "wins": 15,
+              "draws": 2,
+              "losses": 83,
+              "mean": 0.16,
+              "lo": 0.101,
+              "hi": 0.2442
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1033,
+          "regretLo": 0.0133,
+          "regretHi": 0.1801,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.24,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.01
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,9",
+            "label": "attack Broadside Bombardiers+Restless Spire",
+            "random": {
+              "n": 50,
+              "wins": 23,
+              "draws": 0,
+              "losses": 27,
+              "mean": 0.46,
+              "lo": 0.3297,
+              "hi": 0.596
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 0,
+              "losses": 34,
+              "mean": 0.32,
+              "lo": 0.2076,
+              "hi": 0.4581
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:9",
+            "label": "attack Restless Spire",
+            "random": {
+              "n": 50,
+              "wins": 15,
+              "draws": 5,
+              "losses": 30,
+              "mean": 0.35,
+              "lo": 0.2329,
+              "hi": 0.4886
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:6",
+            "label": "attack Broadside Bombardiers",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 6,
+              "losses": 30,
+              "mean": 0.34,
+              "lo": 0.2244,
+              "hi": 0.4785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.335,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 10,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 7,
+              "losses": 21,
+              "mean": 0.51,
+              "lo": 0.3758,
+              "hi": 0.6428
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 50,
+              "wins": 18,
+              "draws": 1,
+              "losses": 31,
+              "mean": 0.37,
+              "lo": 0.25,
+              "hi": 0.5086
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 50,
+              "wins": 17,
+              "draws": 2,
+              "losses": 31,
+              "mean": 0.36,
+              "lo": 0.2414,
+              "hi": 0.4986
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:16",
+            "label": "Murktide Regent",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 3,
+              "losses": 25,
+              "mean": 0.47,
+              "lo": 0.3388,
+              "hi": 0.6055
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.405,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 12,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:16",
+            "label": "Murktide Regent",
+            "random": {
+              "n": 150,
+              "wins": 94,
+              "draws": 2,
+              "losses": 54,
+              "mean": 0.6333,
+              "lo": 0.5538,
+              "hi": 0.7062
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 4,
+              "losses": 24,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 50,
+              "wins": 16,
+              "draws": 3,
+              "losses": 31,
+              "mean": 0.35,
+              "lo": 0.2329,
+              "hi": 0.4886
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 3,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 1,
+              "losses": 35,
+              "mean": 0.29,
+              "lo": 0.1829,
+              "hi": 0.4271
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.485,
+        "forgeOptions": [
+          0
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 23,
+              "draws": 1,
+              "losses": 26,
+              "mean": 0.47,
+              "lo": 0.3388,
+              "hi": 0.6055
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 3,
+              "losses": 26,
+              "mean": 0.45,
+              "lo": 0.3206,
+              "hi": 0.5865
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 0,
+              "losses": 38,
+              "mean": 0.24,
+              "lo": 0.143,
+              "hi": 0.3741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 14,
+        "kind": "a",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:16",
+            "label": "attack Murktide Regent",
+            "random": {
+              "n": 50,
+              "wins": 24,
+              "draws": 0,
+              "losses": 26,
+              "mean": 0.48,
+              "lo": 0.348,
+              "hi": 0.6149
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 3,
+              "losses": 33,
+              "mean": 0.31,
+              "lo": 0.1993,
+              "hi": 0.4478
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:6,16",
+            "label": "attack Murktide Regent+Broadside Bombardiers",
+            "random": {
+              "n": 50,
+              "wins": 12,
+              "draws": 4,
+              "losses": 34,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.01,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "replaces",
+        "replaces": 18,
+        "screened": false,
+        "screenMean": 0.32,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:21",
+            "label": "Jace, Vryn's Prodigy",
+            "random": {
+              "n": 150,
+              "wins": 73,
+              "draws": 3,
+              "losses": 74,
+              "mean": 0.4967,
+              "lo": 0.4177,
+              "hi": 0.5758
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 87,
+              "draws": 4,
+              "losses": 59,
+              "mean": 0.5933,
+              "lo": 0.5133,
+              "hi": 0.6687
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:39",
+            "label": "Smuggler's Copter",
+            "random": {
+              "n": 100,
+              "wins": 48,
+              "draws": 0,
+              "losses": 52,
+              "mean": 0.48,
+              "lo": 0.3846,
+              "hi": 0.5768
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0967,
+          "regretLo": 0,
+          "regretHi": 0.1933,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.11
+      },
+      {
+        "d": 17,
+        "kind": "a",
+        "turn": 15,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:16,39",
+            "label": "attack Murktide Regent+Smuggler's Copter",
+            "random": {
+              "n": 150,
+              "wins": 138,
+              "draws": 1,
+              "losses": 11,
+              "mean": 0.9233,
+              "lo": 0.8694,
+              "hi": 0.9561
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 20,
+              "draws": 0,
+              "losses": 30,
+              "mean": 0.4,
+              "lo": 0.2761,
+              "hi": 0.5382
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:16,21,39",
+            "label": "attack Murktide Regent+Smuggler's Copter+Jace, Vryn's Prodigy",
+            "random": {
+              "n": 150,
+              "wins": 141,
+              "draws": 1,
+              "losses": 8,
+              "mean": 0.9433,
+              "lo": 0.8941,
+              "hi": 0.9704
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:39",
+            "label": "attack Smuggler's Copter",
+            "random": {
+              "n": 50,
+              "wins": 36,
+              "draws": 0,
+              "losses": 14,
+              "mean": 0.72,
+              "lo": 0.5833,
+              "hi": 0.8253
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:16",
+            "label": "attack Murktide Regent",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.76,
+              "lo": 0.6259,
+              "hi": 0.857
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.02,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.708,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 18,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:16,21,39",
+            "label": "attack Murktide Regent+Jace, Vryn's Prodigy+Smuggler's Copter",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 23,
+              "draws": 0,
+              "losses": 2,
+              "mean": 0.92,
+              "lo": 0.7503,
+              "hi": 0.9778
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:21,39",
+            "label": "attack Jace, Vryn's Prodigy+Smuggler's Copter",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:16,39",
+            "label": "attack Murktide Regent+Smuggler's Copter",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:16,21",
+            "label": "attack Murktide Regent+Jace, Vryn's Prodigy",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.976
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 11,
+      "branchedInFull": 6,
+      "fill": 0,
+      "optionsByDecision": {
+        "d2": 4,
+        "d4": 4,
+        "d6": 4,
+        "d9": 4,
+        "d10": 4,
+        "d12": 4,
+        "d13": 3,
+        "d15": 3,
+        "d17": 5,
+        "d18": 5,
+        "d14": 3
+      },
+      "meanOptions": 3.91,
+      "screened": [
+        {
+          "d": 18,
+          "mean": 0.976,
+          "replacedBy": 14
+        }
+      ],
+      "stopped": [
+        {
+          "d": 4,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 4,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 6,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 6,
+          "o": 3,
+          "at": 100
+        },
+        {
+          "d": 12,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 2,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 17,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 17,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 11,
+      "labels": 6,
+      "futility": [
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.21,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0.32,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0.01,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 10,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 15,
+          "at": 50,
+          "gap": 0.11,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 14,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        }
+      ],
+      "futileStopped": 4,
+      "futileControls": 2,
+      "futileBranchGamesSaved": 1400,
+      "partialLabels": 4
+    },
+    "disagreeMost": [],
+    "branchGames": 3475,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 20,
+    "cappedRandom": 181,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 5106,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 8,
+    "rows": 124808,
+    "gamesIdChecked": 3476,
+    "frameLogs": 6952,
+    "frameLogsFailed": 0,
+    "redactionMs": 80627,
+    "forks": 3475,
+    "forkProblems": 0,
+    "leakChecks": 11,
+    "leaks": 0,
+    "leakControlsMoved": 9,
+    "guardrails": {
+      "logs": 6950,
+      "priorityDecisions": 490580,
+      "landOffered": 35986,
+      "landTaken": 35986,
+      "mulligans": 40,
+      "kept": 40,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 3109,
+      "refusedCast": 514,
+      "noRepeatRefused": 261,
+      "xDrawn": 3009,
+      "zeroXLeftOut": 270728,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3475,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3475,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3475,
+      "errored": 181,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 181
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 181473
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 4767,
+      "units": 45,
+      "branchGames": 3475,
+      "ms": 3435687,
+      "workers": 6
+    },
+    "wallMs": 3440455,
+    "jobs": 6
+  }
+}

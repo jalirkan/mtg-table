@@ -1,0 +1,1774 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s10-peasant-3694/decks/peasant-3694-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s10-peasant-3694/decks/peasant-3694-00002.dck",
+    "seed": 3794,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "A",
+      "turns": 21,
+      "first": "A",
+      "decisionsListed": 22
+    },
+    "decisions": [
+      {
+        "d": 0,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 119,
+              "draws": 5,
+              "losses": 26,
+              "mean": 0.81,
+              "lo": 0.7398,
+              "hi": 0.8647
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:8",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 100,
+              "wins": 71,
+              "draws": 5,
+              "losses": 24,
+              "mean": 0.735,
+              "lo": 0.641,
+              "hi": 0.8116
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "cast:12",
+            "label": "Life of Toshiro Umezawa",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 3,
+              "losses": 20,
+              "mean": 0.8567,
+              "lo": 0.7917,
+              "hi": 0.9038
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0467,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.7867,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.12
+      },
+      {
+        "d": 1,
+        "kind": "p",
+        "turn": 3,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:8",
+            "label": "Shi'ar Soldier",
+            "random": {
+              "n": 150,
+              "wins": 100,
+              "draws": 7,
+              "losses": 43,
+              "mean": 0.69,
+              "lo": 0.612,
+              "hi": 0.7585
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 115,
+              "draws": 8,
+              "losses": 27,
+              "mean": 0.7933,
+              "lo": 0.7216,
+              "hi": 0.8504
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:12",
+            "label": "Life of Toshiro Umezawa",
+            "random": {
+              "n": 150,
+              "wins": 114,
+              "draws": 3,
+              "losses": 33,
+              "mean": 0.77,
+              "lo": 0.6964,
+              "hi": 0.8301
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.1033,
+          "regretLo": 0.0267,
+          "regretHi": 0.1933,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.84,
+        "futilityGap": 0.11
+      },
+      {
+        "d": 2,
+        "kind": "p",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 87,
+              "draws": 13,
+              "losses": 50,
+              "mean": 0.6233,
+              "lo": 0.5436,
+              "hi": 0.6969
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:12",
+            "label": "Life of Toshiro Umezawa",
+            "random": {
+              "n": 150,
+              "wins": 97,
+              "draws": 13,
+              "losses": 40,
+              "mean": 0.69,
+              "lo": 0.612,
+              "hi": 0.7585
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Drown in the Loch",
+            "random": {
+              "n": 150,
+              "wins": 87,
+              "draws": 11,
+              "losses": 52,
+              "mean": 0.6167,
+              "lo": 0.5369,
+              "hi": 0.6906
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0667,
+          "regretLo": 0,
+          "regretHi": 0.16,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.6067,
+        "futilityGap": 0.13
+      },
+      {
+        "d": 4,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 41,
+              "draws": 1,
+              "losses": 8,
+              "mean": 0.83,
+              "lo": 0.7034,
+              "hi": 0.9095
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:6",
+            "label": "Vinereap Mentor",
+            "random": {
+              "n": 50,
+              "wins": 38,
+              "draws": 0,
+              "losses": 12,
+              "mean": 0.76,
+              "lo": 0.6259,
+              "hi": 0.857
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:12",
+            "label": "Life of Toshiro Umezawa",
+            "random": {
+              "n": 50,
+              "wins": 39,
+              "draws": 3,
+              "losses": 8,
+              "mean": 0.81,
+              "lo": 0.6808,
+              "hi": 0.895
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:25",
+            "label": "Drown in the Loch",
+            "random": {
+              "n": 50,
+              "wins": 40,
+              "draws": 1,
+              "losses": 9,
+              "mean": 0.81,
+              "lo": 0.6808,
+              "hi": 0.895
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.865,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 5,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:6",
+            "label": "Vinereap Mentor",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 45,
+              "draws": 0,
+              "losses": 5,
+              "mean": 0.9,
+              "lo": 0.7864,
+              "hi": 0.9565
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:12",
+            "label": "Life of Toshiro Umezawa",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "cast:25",
+            "label": "Drown in the Loch",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.12,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.94,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 6,
+        "kind": "p",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:12",
+            "label": "Life of Toshiro Umezawa",
+            "random": {
+              "n": 150,
+              "wins": 129,
+              "draws": 2,
+              "losses": 19,
+              "mean": 0.8667,
+              "lo": 0.803,
+              "hi": 0.912
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 2,
+              "losses": 21,
+              "mean": 0.8533,
+              "lo": 0.7879,
+              "hi": 0.9011
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:25",
+            "label": "Drown in the Loch",
+            "random": {
+              "n": 150,
+              "wins": 126,
+              "draws": 1,
+              "losses": 23,
+              "mean": 0.8433,
+              "lo": 0.7767,
+              "hi": 0.8928
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0668,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.8933,
+        "futilityGap": 0,
+        "futilityControl": true
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:8",
+            "label": "attack Shi'ar Soldier",
+            "random": {
+              "n": 150,
+              "wins": 97,
+              "draws": 9,
+              "losses": 44,
+              "mean": 0.6767,
+              "lo": 0.5982,
+              "hi": 0.7463
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 100,
+              "wins": 47,
+              "draws": 8,
+              "losses": 45,
+              "mean": 0.51,
+              "lo": 0.4135,
+              "hi": 0.6058
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          },
+          {
+            "o": 2,
+            "token": "attack:6,8",
+            "label": "attack Shi'ar Soldier+Vinereap Mentor",
+            "random": {
+              "n": 150,
+              "wins": 89,
+              "draws": 11,
+              "losses": 50,
+              "mean": 0.63,
+              "lo": 0.5504,
+              "hi": 0.7031
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0433,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.5467,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.03
+      },
+      {
+        "d": 16,
+        "kind": "a",
+        "turn": 17,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,38",
+            "label": "attack Vinereap Mentor+Quirion Dryad",
+            "random": {
+              "n": 150,
+              "wins": 131,
+              "draws": 3,
+              "losses": 16,
+              "mean": 0.8833,
+              "lo": 0.8221,
+              "hi": 0.9254
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 5,
+              "losses": 18,
+              "mean": 0.8633,
+              "lo": 0.7992,
+              "hi": 0.9093
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:6,26,38",
+            "label": "attack Vinereap Mentor+Quirion Dryad+Prodigal Sorcerer",
+            "random": {
+              "n": 150,
+              "wins": 137,
+              "draws": 4,
+              "losses": 9,
+              "mean": 0.9267,
+              "lo": 0.8735,
+              "hi": 0.9586
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:38",
+            "label": "attack Quirion Dryad",
+            "random": {
+              "n": 150,
+              "wins": 133,
+              "draws": 2,
+              "losses": 15,
+              "mean": 0.8933,
+              "lo": 0.8338,
+              "hi": 0.9333
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:6",
+            "label": "attack Vinereap Mentor",
+            "random": {
+              "n": 150,
+              "wins": 127,
+              "draws": 6,
+              "losses": 17,
+              "mean": 0.8667,
+              "lo": 0.803,
+              "hi": 0.912
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0433,
+          "regretLo": 0,
+          "regretHi": 0.1033,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.92,
+        "futilityGap": 0.01
+      },
+      {
+        "d": 18,
+        "kind": "a",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,36,38",
+            "label": "attack Reclamation Sage+Vinereap Mentor+Quirion Dryad",
+            "random": {
+              "n": 50,
+              "wins": 49,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.99,
+              "lo": 0.9111,
+              "hi": 0.999
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.92,
+              "lo": 0.8116,
+              "hi": 0.9685
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:6,26,36,38",
+            "label": "attack Reclamation Sage+Vinereap Mentor+Quirion Dryad+Prodigal Sorcerer",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.94,
+              "lo": 0.8378,
+              "hi": 0.9794
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:6,38",
+            "label": "attack Vinereap Mentor+Quirion Dryad",
+            "random": {
+              "n": 50,
+              "wins": 46,
+              "draws": 1,
+              "losses": 3,
+              "mean": 0.93,
+              "lo": 0.8246,
+              "hi": 0.9741
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:36,38",
+            "label": "attack Reclamation Sage+Quirion Dryad",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 2,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8654,
+              "hi": 0.989
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 5,
+            "token": "attack:6,36",
+            "label": "attack Reclamation Sage+Vinereap Mentor",
+            "random": {
+              "n": 50,
+              "wins": 49,
+              "draws": 1,
+              "losses": 0,
+              "mean": 0.99,
+              "lo": 0.9111,
+              "hi": 0.999
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0102,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 6,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.9567,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 19,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:22",
+            "label": "Mirkwood Pathmaker",
+            "random": {
+              "n": 50,
+              "wins": 48,
+              "draws": 1,
+              "losses": 1,
+              "mean": 0.97,
+              "lo": 0.8799,
+              "hi": 0.993
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 47,
+              "draws": 0,
+              "losses": 3,
+              "mean": 0.94,
+              "lo": 0.8378,
+              "hi": 0.9794
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.02,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 20,
+        "screened": false,
+        "screenMean": 0.93,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 20,
+        "kind": "p",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:37",
+            "label": "Faerie Vandal",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": true,
+        "screenMean": 1
+      },
+      {
+        "d": 21,
+        "kind": "a",
+        "turn": 21,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:6,36,38",
+            "label": "attack Reclamation Sage+Vinereap Mentor+Quirion Dryad",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 25,
+              "wins": 24,
+              "draws": 0,
+              "losses": 1,
+              "mean": 0.96,
+              "lo": 0.8046,
+              "hi": 0.9929
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:6,38",
+            "label": "attack Vinereap Mentor+Quirion Dryad",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:36,38",
+            "label": "attack Reclamation Sage+Quirion Dryad",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 4,
+            "token": "attack:6,36",
+            "label": "attack Reclamation Sage+Vinereap Mentor",
+            "random": {
+              "n": 25,
+              "wins": 25,
+              "draws": 0,
+              "losses": 0,
+              "mean": 1,
+              "lo": 0.8668,
+              "hi": 1
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 5,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0.992
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 12,
+      "branchedInFull": 6,
+      "fill": 0,
+      "optionsByDecision": {
+        "d0": 3,
+        "d1": 3,
+        "d2": 3,
+        "d4": 4,
+        "d5": 4,
+        "d6": 3,
+        "d9": 3,
+        "d16": 5,
+        "d18": 6,
+        "d21": 5,
+        "d20": 2,
+        "d19": 2
+      },
+      "meanOptions": 3.58,
+      "screened": [
+        {
+          "d": 21,
+          "mean": 0.992,
+          "replacedBy": 20
+        },
+        {
+          "d": 20,
+          "mean": 1,
+          "replacedBy": 19
+        }
+      ],
+      "stopped": [
+        {
+          "d": 0,
+          "o": 1,
+          "at": 100
+        },
+        {
+          "d": 9,
+          "o": 1,
+          "at": 100
+        }
+      ],
+      "stoppedOptions": 2,
+      "labels": 6,
+      "futility": [
+        {
+          "d": 0,
+          "at": 50,
+          "gap": 0.12,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 1,
+          "at": 50,
+          "gap": 0.11,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 2,
+          "at": 50,
+          "gap": 0.13,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 4,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 5,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": true,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0.03,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 16,
+          "at": 50,
+          "gap": 0.01,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 18,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        }
+      ],
+      "futileStopped": 4,
+      "futileControls": 1,
+      "futileBranchGamesSaved": 1600,
+      "partialLabels": 4
+    },
+    "disagreeMost": [],
+    "branchGames": 3875,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 132,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 3810,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 172263,
+    "gamesIdChecked": 3876,
+    "frameLogs": 7752,
+    "frameLogsFailed": 0,
+    "redactionMs": 89019,
+    "forks": 3875,
+    "forkProblems": 0,
+    "leakChecks": 12,
+    "leaks": 0,
+    "leakControlsMoved": 10,
+    "guardrails": {
+      "logs": 7750,
+      "priorityDecisions": 387491,
+      "landOffered": 45372,
+      "landTaken": 45372,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 2421,
+      "refusedCast": 1,
+      "noRepeatRefused": 0,
+      "xDrawn": 0,
+      "zeroXLeftOut": 0,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3875,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3875,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3875,
+      "errored": 132,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 132
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 1,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 170681
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5362,
+      "units": 46,
+      "branchGames": 3875,
+      "ms": 2760831,
+      "workers": 6
+    },
+    "wallMs": 2766193,
+    "jobs": 6
+  }
+}

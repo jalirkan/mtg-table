@@ -1,0 +1,1706 @@
+{
+  "v": 1,
+  "decision": "D451",
+  "plan": {
+    "v": 1,
+    "decision": "D451",
+    "deckA": "/home/justin-a/code/lab/data/lab-j193/decks/s12-powered-3696/decks/powered-3696-00001.dck",
+    "deckB": "/home/justin-a/code/lab/data/lab-j193/decks/s12-powered-3696/decks/powered-3696-00002.dck",
+    "seed": 3796,
+    "turnCap": 40,
+    "options": 8,
+    "rollouts": 10000,
+    "branchRandom": 150,
+    "branchForge": 0,
+    "decisions": 10,
+    "chunk": 25,
+    "branchTimeoutSec": 120,
+    "unitTimeoutMin": 30,
+    "branchErrorMax": 0.1,
+    "branchCappedWarn": 0.25,
+    "cuts": {
+      "earlyStop": [
+        50,
+        100
+      ],
+      "screen": 25,
+      "minOptions": 3,
+      "futility": {
+        "at": 0,
+        "tie": 0,
+        "sample": 0.25
+      },
+      "screenBounds": [
+        0.04,
+        0.96
+      ],
+      "decision": "D480"
+    },
+    "pairRule": null
+  },
+  "phaseA": {
+    "games": 0,
+    "played": 0,
+    "engineErrors": 0,
+    "gameErrors": 0,
+    "aWins": 0,
+    "bWins": 0,
+    "draws": 0,
+    "drawsByCap": 0,
+    "aScore": null,
+    "aScoreInterval": [
+      null,
+      null
+    ],
+    "aDecisiveRate": null,
+    "firstPlayerWins": 0,
+    "turns": {
+      "mean": null,
+      "p10": null,
+      "median": null,
+      "p90": null,
+      "max": null
+    },
+    "halfWidthNow": null,
+    "perGameVariance": 0,
+    "rolloutsForPlusMinus2": null,
+    "rolloutsForPlusMinus2Worst": 2401,
+    "guardrails": {}
+  },
+  "phaseB": {
+    "baseline": {
+      "winner": "B",
+      "turns": 14,
+      "first": "A",
+      "decisionsListed": 23
+    },
+    "decisions": [
+      {
+        "d": 6,
+        "kind": "a",
+        "turn": 5,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20",
+            "label": "attack Flitterwing Nuisance",
+            "random": {
+              "n": 150,
+              "wins": 83,
+              "draws": 0,
+              "losses": 67,
+              "mean": 0.5533,
+              "lo": 0.4734,
+              "hi": 0.6306
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 150,
+              "wins": 83,
+              "draws": 0,
+              "losses": 67,
+              "mean": 0.5533,
+              "lo": 0.4734,
+              "hi": 0.6306
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0867,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "fill",
+        "screened": false,
+        "screenMean": 0.48,
+        "futilityGap": 0.04
+      },
+      {
+        "d": 9,
+        "kind": "a",
+        "turn": 7,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20",
+            "label": "attack Flitterwing Nuisance",
+            "random": {
+              "n": 50,
+              "wins": 21,
+              "draws": 0,
+              "losses": 29,
+              "mean": 0.42,
+              "lo": 0.2938,
+              "hi": 0.5577
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 17,
+              "draws": 0,
+              "losses": 33,
+              "mean": 0.34,
+              "lo": 0.2244,
+              "hi": 0.4785
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:20,24",
+            "label": "attack Flitterwing Nuisance+Sentinel of the Nameless City",
+            "random": {
+              "n": 50,
+              "wins": 14,
+              "draws": 0,
+              "losses": 36,
+              "mean": 0.28,
+              "lo": 0.1747,
+              "hi": 0.4167
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.4133,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 11,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 29,
+              "draws": 0,
+              "losses": 121,
+              "mean": 0.1933,
+              "lo": 0.1381,
+              "hi": 0.2639
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "cast:15",
+            "label": "Manabarbs",
+            "random": {
+              "n": 150,
+              "wins": 20,
+              "draws": 0,
+              "losses": 130,
+              "mean": 0.1333,
+              "lo": 0.088,
+              "hi": 0.197
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:33",
+            "label": "Tracker",
+            "random": {
+              "n": 150,
+              "wins": 35,
+              "draws": 0,
+              "losses": 115,
+              "mean": 0.2333,
+              "lo": 0.1728,
+              "hi": 0.3072
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.04,
+          "regretLo": 0,
+          "regretHi": 0.1267,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.1067,
+        "futilityGap": 0.06
+      },
+      {
+        "d": 12,
+        "kind": "a",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20,24",
+            "label": "attack Flitterwing Nuisance+Sentinel of the Nameless City",
+            "random": {
+              "n": 150,
+              "wins": 49,
+              "draws": 0,
+              "losses": 101,
+              "mean": 0.3267,
+              "lo": 0.2568,
+              "hi": 0.4052
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:24",
+            "label": "attack Sentinel of the Nameless City",
+            "random": {
+              "n": 150,
+              "wins": 58,
+              "draws": 0,
+              "losses": 92,
+              "mean": 0.3867,
+              "lo": 0.3125,
+              "hi": 0.4665
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:20",
+            "label": "attack Flitterwing Nuisance",
+            "random": {
+              "n": 50,
+              "wins": 9,
+              "draws": 0,
+              "losses": 41,
+              "mean": 0.18,
+              "lo": 0.0977,
+              "hi": 0.308
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.06,
+          "regretLo": 0,
+          "regretHi": 0.14,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.25,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.14
+      },
+      {
+        "d": 13,
+        "kind": "p",
+        "turn": 9,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:15",
+            "label": "Manabarbs",
+            "random": {
+              "n": 150,
+              "wins": 39,
+              "draws": 0,
+              "losses": 111,
+              "mean": 0.26,
+              "lo": 0.1964,
+              "hi": 0.3356
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 49,
+              "draws": 0,
+              "losses": 101,
+              "mean": 0.3267,
+              "lo": 0.2568,
+              "hi": 0.4052
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:33",
+            "label": "Tracker",
+            "random": {
+              "n": 150,
+              "wins": 60,
+              "draws": 0,
+              "losses": 90,
+              "mean": 0.4,
+              "lo": 0.325,
+              "hi": 0.48
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "activate:87",
+            "label": "Map Token: {1}, {T}, Sacrifice this token: Target creature y",
+            "random": {
+              "n": 150,
+              "wins": 59,
+              "draws": 1,
+              "losses": 90,
+              "mean": 0.3967,
+              "lo": 0.3219,
+              "hi": 0.4766
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.14,
+          "regretLo": 0.0733,
+          "regretHi": 0.2467,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.26,
+        "futilityGap": 0.26
+      },
+      {
+        "d": 15,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:87",
+            "label": "Map Token: {1}, {T}, Sacrifice this token: Target creature y",
+            "random": {
+              "n": 150,
+              "wins": 21,
+              "draws": 0,
+              "losses": 129,
+              "mean": 0.14,
+              "lo": 0.0934,
+              "hi": 0.2046
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 17,
+              "draws": 0,
+              "losses": 133,
+              "mean": 0.1133,
+              "lo": 0.072,
+              "hi": 0.174
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "cast:33",
+            "label": "Tracker",
+            "random": {
+              "n": 100,
+              "wins": 8,
+              "draws": 0,
+              "losses": 92,
+              "mean": 0.08,
+              "lo": 0.0411,
+              "hi": 0.15
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 100
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.0467,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.12,
+        "forgeOptions": [
+          0,
+          1
+        ],
+        "futilityGap": 0.02
+      },
+      {
+        "d": 17,
+        "kind": "a",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:20,24",
+            "label": "attack Flitterwing Nuisance+Sentinel of the Nameless City",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "attack:24",
+            "label": "attack Sentinel of the Nameless City",
+            "random": {
+              "n": 50,
+              "wins": 5,
+              "draws": 0,
+              "losses": 45,
+              "mean": 0.1,
+              "lo": 0.0435,
+              "hi": 0.2136
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:20",
+            "label": "attack Flitterwing Nuisance",
+            "random": {
+              "n": 50,
+              "wins": 3,
+              "draws": 0,
+              "losses": 47,
+              "mean": 0.06,
+              "lo": 0.0206,
+              "hi": 0.1622
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.06,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 4,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.06,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 18,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "cast:33",
+            "label": "Tracker",
+            "random": {
+              "n": 150,
+              "wins": 29,
+              "draws": 0,
+              "losses": 121,
+              "mean": 0.1933,
+              "lo": 0.1381,
+              "hi": 0.2639
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 150,
+              "wins": 43,
+              "draws": 0,
+              "losses": 107,
+              "mean": 0.2867,
+              "lo": 0.2203,
+              "hi": 0.3636
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "activate:94",
+            "label": "Map Token: {1}, {T}, Sacrifice this token: Target creature y",
+            "random": {
+              "n": 150,
+              "wins": 38,
+              "draws": 0,
+              "losses": 112,
+              "mean": 0.2533,
+              "lo": 0.1905,
+              "hi": 0.3285
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.0933,
+          "regretLo": 0.04,
+          "regretHi": 0.1533,
+          "best": 1
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 3,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.3067,
+        "futilityGap": 0.1
+      },
+      {
+        "d": 19,
+        "kind": "p",
+        "turn": 11,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:94",
+            "label": "Map Token: {1}, {T}, Sacrifice this token: Target creature y",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 50,
+              "wins": 7,
+              "draws": 0,
+              "losses": 43,
+              "mean": 0.14,
+              "lo": 0.0695,
+              "hi": 0.2619
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 50,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0.08,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": false,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 21,
+        "screened": false,
+        "screenMean": 0.12,
+        "futilityGap": 0,
+        "partial": true,
+        "stoppedAt": 50,
+        "stopWhy": "futile"
+      },
+      {
+        "d": 20,
+        "kind": "a",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "attack:24",
+            "label": "attack Sentinel of the Nameless City",
+            "random": {
+              "n": 150,
+              "wins": 5,
+              "draws": 0,
+              "losses": 145,
+              "mean": 0.0333,
+              "lo": 0.0143,
+              "hi": 0.0757
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "attack:none",
+            "label": "attack none",
+            "random": {
+              "n": 50,
+              "wins": 1,
+              "draws": 0,
+              "losses": 49,
+              "mean": 0.02,
+              "lo": 0.0035,
+              "hi": 0.105
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 2,
+            "token": "attack:20,24,33",
+            "label": "attack Sentinel of the Nameless City+Flitterwing Nuisance+Tracker",
+            "random": {
+              "n": 150,
+              "wins": 146,
+              "draws": 0,
+              "losses": 4,
+              "mean": 0.9733,
+              "lo": 0.9334,
+              "hi": 0.9896
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "attack:20,24",
+            "label": "attack Sentinel of the Nameless City+Flitterwing Nuisance",
+            "random": {
+              "n": 50,
+              "wins": 0,
+              "draws": 0,
+              "losses": 50,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.0713
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          },
+          {
+            "o": 4,
+            "token": "attack:24,33",
+            "label": "attack Sentinel of the Nameless City+Tracker",
+            "random": {
+              "n": 50,
+              "wins": 22,
+              "draws": 0,
+              "losses": 28,
+              "mean": 0.44,
+              "lo": 0.3116,
+              "hi": 0.5769
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            },
+            "stoppedAt": 50
+          }
+        ],
+        "random": {
+          "branches": 150,
+          "regret": 0.94,
+          "regretLo": 0.9,
+          "regretHi": 0.9733,
+          "best": 2
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": true,
+        "decided": false,
+        "settled": false,
+        "k": 5,
+        "why": "spread",
+        "screened": false,
+        "screenMean": 0.288,
+        "forgeOptions": [
+          0,
+          2
+        ],
+        "futilityGap": 0.98
+      },
+      {
+        "d": 21,
+        "kind": "p",
+        "turn": 13,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "activate:106",
+            "label": "Map Token: {1}, {T}, Sacrifice this token: Target creature y",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "pass",
+            "label": "pass",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 2,
+        "why": "replaces",
+        "replaces": 22,
+        "screened": true,
+        "screenMean": 0
+      },
+      {
+        "d": 22,
+        "kind": "b",
+        "turn": 14,
+        "chosen": 0,
+        "options": [
+          {
+            "o": 0,
+            "token": "block:33>51,20>57",
+            "label": "block Tracker>Siege-Gang Commander, Flitterwing Nuisance>Pelt Collector",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 1,
+            "token": "block:none",
+            "label": "block none",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 2,
+            "token": "block:20>57",
+            "label": "block Flitterwing Nuisance>Pelt Collector",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          },
+          {
+            "o": 3,
+            "token": "block:33>51",
+            "label": "block Tracker>Siege-Gang Commander",
+            "random": {
+              "n": 25,
+              "wins": 0,
+              "draws": 0,
+              "losses": 25,
+              "mean": 0,
+              "lo": 0,
+              "hi": 0.1332
+            },
+            "forge": {
+              "n": 0,
+              "wins": 0,
+              "draws": 0,
+              "losses": 0,
+              "mean": null,
+              "lo": null,
+              "hi": null
+            }
+          }
+        ],
+        "random": {
+          "branches": 25,
+          "regret": 0,
+          "regretLo": 0,
+          "regretHi": 0,
+          "best": 0
+        },
+        "forge": {
+          "branches": 0,
+          "regret": null,
+          "regretLo": null,
+          "regretHi": null,
+          "best": null
+        },
+        "rho": null,
+        "rhoLo": null,
+        "rhoHi": null,
+        "sameBest": null,
+        "complete": false,
+        "decided": false,
+        "settled": true,
+        "k": 4,
+        "why": "spread",
+        "screened": true,
+        "screenMean": 0
+      }
+    ],
+    "agreement": {
+      "decisions": 0,
+      "meanRho": null,
+      "meanRhoInterval": [
+        null,
+        null
+      ],
+      "sameBest": 0,
+      "sameBestInterval": [
+        null,
+        null
+      ],
+      "forgeMap": false
+    },
+    "forgeMap": false,
+    "schedule": {
+      "cuts": {
+        "earlyStop": [
+          50,
+          100
+        ],
+        "screen": 25,
+        "minOptions": 3,
+        "futility": {
+          "at": 0,
+          "tie": 0,
+          "sample": 0.25
+        }
+      },
+      "decisions": 10,
+      "picked": 12,
+      "branchedInFull": 7,
+      "fill": 1,
+      "optionsByDecision": {
+        "d6": 2,
+        "d9": 3,
+        "d11": 3,
+        "d12": 4,
+        "d13": 4,
+        "d15": 3,
+        "d17": 4,
+        "d18": 3,
+        "d20": 5,
+        "d22": 4,
+        "d21": 2,
+        "d19": 2
+      },
+      "meanOptions": 3.25,
+      "screened": [
+        {
+          "d": 22,
+          "mean": 0,
+          "replacedBy": 21
+        },
+        {
+          "d": 21,
+          "mean": 0,
+          "replacedBy": 19
+        }
+      ],
+      "stopped": [
+        {
+          "d": 12,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 12,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 15,
+          "o": 2,
+          "at": 100
+        },
+        {
+          "d": 20,
+          "o": 1,
+          "at": 50
+        },
+        {
+          "d": 20,
+          "o": 3,
+          "at": 50
+        },
+        {
+          "d": 20,
+          "o": 4,
+          "at": 50
+        }
+      ],
+      "stoppedOptions": 6,
+      "labels": 7,
+      "futility": [
+        {
+          "d": 6,
+          "at": 50,
+          "gap": 0.04,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 9,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 11,
+          "at": 50,
+          "gap": 0.06,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 12,
+          "at": 50,
+          "gap": 0.14,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 13,
+          "at": 50,
+          "gap": 0.26,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 15,
+          "at": 50,
+          "gap": 0.02,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 17,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        },
+        {
+          "d": 18,
+          "at": 50,
+          "gap": 0.1,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 20,
+          "at": 50,
+          "gap": 0.98,
+          "futile": false,
+          "control": false,
+          "stopped": false
+        },
+        {
+          "d": 19,
+          "at": 50,
+          "gap": 0,
+          "futile": true,
+          "control": false,
+          "stopped": true
+        }
+      ],
+      "futileStopped": 3,
+      "futileControls": 0,
+      "futileBranchGamesSaved": 900,
+      "partialLabels": 3
+    },
+    "disagreeMost": [],
+    "branchGames": 3650,
+    "branchErrors": 0,
+    "branchEngineErrors": 0,
+    "branchUnavailable": 0,
+    "branchRestarted": 0,
+    "cappedRandom": 1,
+    "cappedForge": 0,
+    "meanBranchMs": {
+      "random": 858,
+      "forge": null
+    },
+    "standInsMax": 0,
+    "effectSourceNull": {
+      "branches": 0,
+      "cards": 0
+    },
+    "exileLinksLost": {
+      "branches": 0,
+      "links": 0
+    },
+    "damageLkiLost": {
+      "branches": 0,
+      "instances": 0
+    }
+  },
+  "checks": {
+    "rowsFiles": 7,
+    "rows": 55643,
+    "gamesIdChecked": 3651,
+    "frameLogs": 7302,
+    "frameLogsFailed": 0,
+    "redactionMs": 21277,
+    "forks": 3650,
+    "forkProblems": 0,
+    "leakChecks": 12,
+    "leaks": 0,
+    "leakControlsMoved": 12,
+    "guardrails": {
+      "logs": 7300,
+      "priorityDecisions": 133625,
+      "landOffered": 12195,
+      "landTaken": 12195,
+      "mulligans": 0,
+      "kept": 0,
+      "violations": 0,
+      "violationsBy": {
+        "G1": 0,
+        "G4": 0,
+        "G6": 0
+      },
+      "noRepeatNoOp": 2632,
+      "refusedCast": 3313,
+      "noRepeatRefused": 959,
+      "xDrawn": 465,
+      "zeroXLeftOut": 8742,
+      "zeroX": 0,
+      "forgePayCap": 0
+    },
+    "branchErrors": {
+      "branches": 3650,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "optionUnavailable": {
+      "branches": 3650,
+      "errored": 0,
+      "threshold": 0.1,
+      "byError": [],
+      "options": []
+    },
+    "branchCapped": {
+      "branches": 3650,
+      "errored": 1,
+      "threshold": 0.25,
+      "byError": [
+        {
+          "error": "ended at the turn cap",
+          "n": 1
+        }
+      ],
+      "options": [],
+      "notDrawn": 0
+    },
+    "warnings": [],
+    "unreadableFrameLogs": [],
+    "idChecksSkipped": [],
+    "abandonedPlays": 0,
+    "abandonedRows": 0,
+    "abandoned": [],
+    "playedTwice": [],
+    "supersededPlays": 0,
+    "supersededRows": 0,
+    "orphanRows": 0,
+    "copiesRetainedMax": 2,
+    "problems": []
+  },
+  "sizes": {
+    "phaseAFramesPerGame": null,
+    "branchFramesPerGame": 47190
+  },
+  "timing": {
+    "phaseB": {
+      "baselineMs": 5375,
+      "units": 50,
+      "branchGames": 3650,
+      "ms": 594933,
+      "workers": 6
+    },
+    "wallMs": 600308,
+    "jobs": 6
+  }
+}
