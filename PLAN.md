@@ -10780,7 +10780,7 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
 
 ## Public-ready — machine-neutral paths, the front door, the dataset's licence and citation, the public check (2026-11-06, D516)
 
-**Status: built and verified; the full gate: GATE_LINE_PENDING**; not merged, not pushed. Branch `pc/d516-public-ready`,
+**Status: built and verified; the full gate: green on `e0281b6c` (`rm -rf bridge/out && GATE_JOBS=2 WSPORT=9900 ./tools/check-all.sh`: `check-all OK`, 62 jobs, wall 974.4 s, job seconds 1926.4 s, load average 1.03 at the start, 84.73 at most, 8.26 at the end; run `20261106-103014-3628241`)**; not merged, not pushed. Branch `pc/d516-public-ready`,
 off `main`'s `5ccc464b` (D515's merge); D516. The owner, 2026-11-06, on reading D515's public-repo check: *"Yeah
 that all seems okay. If you want, we can fix the file paths and organization to something more suitable. This is
 basically contributing to the public so let's make it feel official and trustworthy."* He accepts his address on

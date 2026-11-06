@@ -107,4 +107,4 @@ the repository and uploads the dataset himself.
   Against D515's zip (`c8740753…`): its 311 entries are all present, every data file byte for byte the same; README
   and MANIFEST changed, `LICENSE.md` and `CITATION.cff` are new. The scrub check finds nothing; the counts are
   D515's (1,003 rows, 508 labels, 154 confident, 77 spines, 338,895 branch rows, 154 decks).
-- **The gate**: recorded in the lane's last commit message and in `PLAN.md`'s lane entry.
+- **The gate**: green on `e0281b6c` (`rm -rf bridge/out && GATE_JOBS=2 WSPORT=9900 ./tools/check-all.sh`: `check-all OK`, 62 jobs, wall 974.4 s, job seconds 1926.4 s, load average 1.03 at the start, 84.73 at most, 8.26 at the end; run `20261106-103014-3628241`).
