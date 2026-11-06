@@ -10794,7 +10794,7 @@ dataset. `docs/decisions/D516-public-ready.md` is the decision and its evidence.
   `PC-JOBS-README.md`, the balance-model test (environment only), `engine-unplayable.json`'s evidence; the dated
   history respelled `~/` mechanically. The home-folder name is left in two tracked files, both on the check's
   allow list.
-- **The front door**: `README.md` (160 lines: what it is, two pictures, the quickstart, the dataset, *How this is
+- **The front door**: `README.md` (about 160 lines: what it is, the quickstart, the dataset, *How this is
   built*, NON-GOALS, where to read next, the licence); the old README whole as `docs/handbook.md`;
   `CONTRIBUTING.md`, `SECURITY.md`, `CITATION.cff`; `/.claude/` ignored.
 - **The release**: a dataset card's front matter, `LICENSE.md` and `CITATION.cff` inside it;

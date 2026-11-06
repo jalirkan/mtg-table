@@ -37,9 +37,7 @@ the repository and uploads the dataset himself.
    and report 04's home-folder placeholder became `~/`; `docs/evidence/d487-null-targets.py`'s `ZIP` expands its `~/`; D515's
    inventory sentence and PLAN's copy of it name *the owner's home folder* instead of spelling it (its counts are
    history and stand), and two of D515's lines name *a home folder* and *a Gmail address* rather than the strings.
-3. **The front door.** `README.md` is now 160 lines for a stranger: what this is, two pictures
-   (`docs/images/arena.jpg`, the arena mid-game of the Doom Legion replay, and `docs/images/board.jpg`, the 2D
-   board at the same moment), the quickstart, *The move atlas dataset* (what it is, v1's counts, the licence split,
+3. **The front door.** `README.md` is now 160 lines for a stranger: what this is, the quickstart, *The move atlas dataset* (what it is, v1's counts, the licence split,
    the guide, and where the zip will be once the owner uploads it), *How this is built* (kept: Claude writes the
    code under the owner's review, which a reader should know), the full NON-GOALS list (still binding: `CLAUDE.md`'s
    *Scope*), where to read next and the licence. The old README moved **whole** to `docs/handbook.md` with every
@@ -78,6 +76,12 @@ the repository and uploads the dataset himself.
   stranger nothing a README does not.
 
 **Rejected.**
+
+- **Two screenshots in the README** (the arena and the board, mid-game). Shot, and rejected at the merge gate by the
+  personal tier's negative control (`web/test/personal-tier.test.ts`): a committed picture of a game carries
+  Scryfall's card art, which the repository never stores (D90, CONTRIBUTING), and, with the personal tier on, a
+  likeness model; shot again with the tier off and no art, the table is a field of black text frames that
+  misrepresents the client. The README says so and points at a replay instead.
 
 - **Expanding `~` everywhere a path is read** (`~user`, a `~` mid-path, every config key). One key needs it, and
   the shell's own expansion rules differ from Node's, Python's and Java's; one leading form, written the same way in

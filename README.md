@@ -9,12 +9,10 @@ leaves the engine), and the board renders it. A button is enabled only when the 
 is judged by the engine. The wire protocol, [`docs/protocol.md`](docs/protocol.md), is the real specification:
 the Java emitter and the TypeScript reducer are both written against it.
 
-![The 3D arena: a game in progress, the comic look, mid-game of the Doom Legion replay](docs/images/arena.jpg)
-
-![The 2D board at the same moment of the same game: both battlefields, the hand, the stack and the phase strip](docs/images/board.jpg)
-
-The same frame stream drives both: the 2D board and the 3D arena are two renderers, and `V` switches between them
-mid-game.
+There are two renderers over the same frame stream: a 2D board and a 3D arena in a comic look, and `V` switches
+between them mid-game. No screenshot is committed: card art comes from Scryfall at run time and is never stored in
+the repository, and a picture of a game would carry it. Run a replay (`npm --prefix web run dev`, then
+`/?replay=games/g1.jsonl#arena`) to see it.
 
 ## Quickstart
 
