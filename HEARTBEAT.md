@@ -1722,3 +1722,21 @@ pc-jobs `ac5ec889`, lab-j186 made empty, running since 06:33 EST.
 - (c) beside it, deciding nothing: search-v2-ms3000-r24 (3 s / 24) vs search-v2: 0.494 [0.481, 0.507], -4.1 Elo [-13.1, +5.0]; 1,489 ms a decision, 28.5 rollouts = 1.73x. (c)'s Elo over (b)'s -2.41: no curve at all between 1x, 1.7x and 3.1x the rollouts.
 - WHAT IT MEANS: the review's working hypothesis (section 3a: "the search is noise-limited at 2-3 rollouts a candidate") is falsified at this design: three times the samples of the same rollouts, at the same 1.5 s race and cap scaled, change nothing measurable (+-10 Elo). The search's whole gain over Forge (+87) comes from the first few rollouts; what limits it is what a rollout tells (the rollout policy, Forge Default on both sides to the end of the turn, and the leaf it reads), not how many are played. Under the review's kill column, DOES NOT PAY closes #4 (parallel rollouts) and #5's ordering arm (the per-option prior); neither lane is started. What the review leaves open: #3 the coaching number (the owner's games), #6 the two built, never-matched knobs (rollout=outlets D390, rank=prior D389; one night), #7 evaluator v3 for the win-chance strip; and a question this night raises on its own: if 3x buys nothing, does 1/2x or 1/4x cost anything -- a downward curve (0.75 s / 6 rounds, 0.375 s / 3 rounds vs search-v2) would say whether the live seat can be faster for free, which is the production constraint the owner named.
 - The live seat stays search-v2 at 1.5 s / 12 rounds. Nothing is posted: the next step is the owner's call, talked through first (the review's section 6).
+
+## 2026-11-06 09:15 EST -- D515 merged: the move atlas is publishable (main 5ccc464b, PUSHED)
+
+Justin, 2026-11-06: "Yes, we should publish the generator too" / "Sure, let's follow your recommendations". Lane
+pc/d515-publish-atlas, skeptic-reviewed (7 FIX items, all landed), gate on the merged tree OK: 61 jobs, wall 648.4 s
+(GATE_JOBS=3), run var/check-all/20261106-085820-3328437. What landed: tools/atlas/ = the eleven label scripts that lived
+only as heredocs in the job files (byte-faithful: J193's rows and every read reproduce exactly; lab-j170's self-comparison
+13/13/1; J187/J188/J190/J191 byte for byte with their scan stamps), a lab-free fixture test as gate step 12n,
+tools/atlas/release.py and dataset v1: 1,003 label rows (508 labels, 154 confident, 222 partial) from D508's six nights
+(J186, J187, J188, J190, J191, J193 minus D509 pt 4's exclusions: J186 s11 d13-d16, J187 s03 d23/25/27/29), 338,895 branch
+rows (249 errored, placeholder scores, documented), 154 decks, 77 atlas.json; scrubbed (no rules text, no path, no name,
+no host; the check fails the build otherwise); README + MANIFEST; 8,901,601 bytes, sha256 c874 0753 ... f010 cf4b.
+Licence: the measurements CC BY 4.0 (attribution "mtg-table move atlas, https://github.com/jalirkan/mtg-table"), the
+generator GPL-3.0-or-later, Wizards' material under the Fan Content Policy. docs/guides/move-atlas.md is the manual.
+The public-repo check: no secrets; 93 tracked files name the machine's home path, 88 the owner's first name, 206
+commits his gmail as author (17 as committer); .claude/ untracked but not ignored -- all the owner's call, listed in D515.
+NOT done, by design: the repo is still private; nothing uploaded. 17lands: public datasets CC BY 4.0 (verified in the
+browser), KHM..FRA plus a Powered Cube set with replays; one seat's view; evaluator data, never move labels.
