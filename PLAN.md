@@ -10709,7 +10709,7 @@ would.
 
 ## The move atlas goes public — the label pipeline in the repository, and dataset v1 (2026-11-06, D515)
 
-**Status: built and verified; the full gate GATE_STATUS.** Branch `pc/d515-publish-atlas`, off `main`'s
+**Status: built and verified; the full gate green on `cc52d3b3`** (530.9 s, 61 jobs at `GATE_JOBS=4`; 12n 0.6 s); not merged, not pushed. Branch `pc/d515-publish-atlas`, off `main`'s
 `72302c69`; D515 (D516–D518 reserved and unused). The owner, 2026-11-06: *"Yes, we should publish the generator
 too"* and *"Sure, let's follow your recommendations"*: the atlas's label pipeline moves into this repository, a
 first dataset release is built as one file with a README, and this repository alone goes public (`pc-results`,

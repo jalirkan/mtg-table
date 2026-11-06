@@ -136,7 +136,7 @@ uploads the dataset himself.
 - **The fixture**: `labels.py` over it gives 13 rows, 8 labels, 6 confident, 2 partial, 3 screened, every key but
   the paths, the options' scrub and the branch-row sums equal to J193's own s07 rows; the tests run in about half a
   second.
-- **The gate**: GATE_LINE
+- **The gate**: `rm -rf bridge/out && ./tools/check-all.sh` at `cc52d3b3` (this file's commit but this line), green: `check-all OK`, `wall 530.9 s for 61 jobs whose seconds sum to 1881.8 s; load average (1 min) 1.64 at the start, 13.72 at most, 3.92 at the end`, `GATE_JOBS=4`, run `20261106-083240-3102164`; 12n took 0.6 s.
 
 **The public-repo check** (2026-11-06, on `72302c69` plus this branch; read, mostly not edited).
 
