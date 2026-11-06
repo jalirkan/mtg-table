@@ -1,6 +1,6 @@
 ## Polish 1 — the skeptics' nine minors (2026-09-28)
 
-Worked in the worktree `/home/justin-a/code/mtg-table-t2u` on branch `polish-1`,
+Worked in the worktree `~/code/mtg-table-t2u` on branch `polish-1`,
 from `main` at `f6bad35`. Nine minors the skeptics of the undo race, the story
 page, the narrator, spectating and gate speed left behind; each is fixed with a
 test or a negative control that fails without the fix, except item 8, whose file

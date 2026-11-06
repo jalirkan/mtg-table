@@ -15,7 +15,7 @@ Exit status 0. Full transcript: `var/smoke.log` (gitignored).
 ## Gate: the jar carries everything we link
 
 ```
-forge jar: /home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+forge jar: ~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9  forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 forge jar OK
 ```
@@ -35,7 +35,7 @@ $ FORGE_JAR=.../gdx-particle-editor.jar ./tools/check-forge.sh
 ## Build
 
 ```
-compiling 3 file(s) -> /home/justin-a/code/mtg-table/bridge/out
+compiling 3 file(s) -> ~/code/mtg-table/bridge/out
 build OK
 ```
 
@@ -50,13 +50,13 @@ The first four lines of the run, printed straight out of `ForgeConstants` after
 `GuiBase.setInterface(new HeadlessGuiBase(...))`:
 
 ```
-ASSETS_DIR    = /home/justin-a/code/mtg-table/forge-home/
-PROFILE_FILE  = /home/justin-a/code/mtg-table/forge-home/forge.profile.properties
-RES_DIR       = /home/justin-a/code/mtg-table/forge-home/res/
-USER_DIR      = /home/justin-a/code/mtg-table/var/forge/
-CACHE_DIR     = /home/justin-a/code/mtg-table/var/cache/
-DECKS_DIR     = /home/justin-a/code/mtg-table/var/forge/decks/constructed/
-LOG_FILE      = /home/justin-a/code/mtg-table/var/forge/forge.log
+ASSETS_DIR    = ~/code/mtg-table/forge-home/
+PROFILE_FILE  = ~/code/mtg-table/forge-home/forge.profile.properties
+RES_DIR       = ~/code/mtg-table/forge-home/res/
+USER_DIR      = ~/code/mtg-table/var/forge/
+CACHE_DIR     = ~/code/mtg-table/var/cache/
+DECKS_DIR     = ~/code/mtg-table/var/forge/decks/constructed/
+LOG_FILE      = ~/code/mtg-table/var/forge/forge.log
 headless      = true      DISPLAY = null
 ```
 

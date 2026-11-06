@@ -12,10 +12,10 @@ bridge: the log now carries the engine's own evidence instead of the checker inf
 with 1: in spine `b-s02-peasant-2141`, **two of 7,750 branch frame logs failed `tools/check-redaction.mjs`**, each on one
 message:
 
-- `/home/justin-a/code/lab/data/lab-j177/b-s02-peasant-2141/phaseB/frames/d9-random-o2-b94-seat1.jsonl.gz` line 74:
+- `~/code/lab/data/lab-j177/b-s02-peasant-2141/phaseB/frames/d9-random-o2-b94-seat1.jsonl.gz` line 74:
   `decision 15 names card 59 (option:59), which its state frame does not show seat 1 -- a stub's id, a library card or
   another seat's hidden card is never an option (M55, D347)`
-- `/home/justin-a/code/lab/data/lab-j177/b-s02-peasant-2141/phaseB/frames/d0-random-o0-b24-seat1.jsonl.gz` line 528: the
+- `~/code/lab/data/lab-j177/b-s02-peasant-2141/phaseB/frames/d0-random-o0-b24-seat1.jsonl.gz` line 528: the
   same, decision 88, card 59.
 
 Both are a **cascade**. In the first: state seq 57 (line 72, turn 15 MAIN1) lists seat 1's hand as card 56, Bloodbraid Elf,
@@ -39,7 +39,7 @@ could not see it when the option was offered"; `m55-option-cast-from-the-viewer-
 any move through a library or exile. In the other eight logs of that spine whose decisions name `option:59`, a state frame
 happened to be cut while 59 sat in exile, so D3 vouched and they passed; the difference is the recorder's clock, not the
 game. The race is rare: **3,218 cascade logs, 2 failures** -- 3,218 of that spine's 7,750 branch frame logs
-(`/home/justin-a/code/lab/data/lab-j177/b-s02-peasant-2141/phaseB/frames/`) carry a cascade trigger (a `cast` event
+(`~/code/lab/data/lab-j177/b-s02-peasant-2141/phaseB/frames/`) carry a cascade trigger (a `cast` event
 whose text starts `Cascade - `), no other J177 spine has any, and no `Discover N - ` cast appears anywhere (counted by
 the coordinator from the data, read only). In the other 3,216 the recorder's clock happened to cut a frame while the
 card sat in exile (so D3 vouched for it), or no decision named a card no frame showed.
@@ -198,7 +198,7 @@ the atlas does, running `tools/check-redaction.mjs` from its own checkout (`tool
   accepts nothing on an old log.
 
 - **Every J177 branch log, both checkers** (`main`'s at `480c837d` and this branch's with the #224 review's guards, frozen copies, over
-  `/home/justin-a/code/lab/data/lab-j177/b-s*/phaseB/frames/*.jsonl.gz`, read only, with `--empty-hand-ok`):
+  `~/code/lab/data/lab-j177/b-s*/phaseB/frames/*.jsonl.gz`, read only, with `--empty-hand-ok`):
 
 | spine | logs | `main` fails | this branch fails | chunk outputs that differ | ids revealed, then moved where seen | reveal lines |
 |---|---:|---:|---:|---:|---:|---:|

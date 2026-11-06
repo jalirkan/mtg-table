@@ -5,7 +5,7 @@ live page and quote it) or explicitly marked **guess / inference**.
 
 Forge source citations are paths relative to the sparse checkout at
 `…/scratchpad/forge-src` (full prefix:
-`/tmp/claude-1000/-home-justin-a--config-Claude-scratch-workspaces-889ad522-c1ff-402b-8b23-6ae666c9b9a2-dcfb1aed-ebb2-456c-9dd7-5ecedf00d397-scratch-2026-09-11-0947cb/8723af12-0157-421e-988a-473182e5a3f1/scratchpad/forge-src`).
+`<the research session's scratchpad>/forge-src`).
 
 ---
 
@@ -353,7 +353,7 @@ Forge's wiki has a Network Play page and a Docker page but **no** headless-serve
 - `docs/Card-Images.md` — "**You DO NOT need images to play forge** … Due to charges in Forges
   hosting and **scryfall terms** you can **no longer predownload card images**. Turn on auto download
   in forge to download card images when first viewed." Images live in the user's cache
-  (`/home/<user>/.cache/forge/` on Linux), named `Card Name#.border.ext`, optionally under an
+  (`~/.cache/forge/` on Linux), named `Card Name#.border.ext`, optionally under an
   edition-code subfolder. **Forge ships no card images.**
 - Forge already talks to Scryfall itself: `forge-gui/src/main/java/forge/gui/download/ScryfallBulkDataSync.java:26-29`
   (`https://api.scryfall.com/bulk-data`) and `…/CdnUuidCache.java`, with a comment at
@@ -381,7 +381,7 @@ Forge's wiki has a Network Play page and a Docker page but **no** headless-serve
 - Practical mechanics: build the bridge as a Maven module that declares `forge-core`, `forge-game`,
   `forge-ai`, `forge-gui` as dependencies (mirroring `manabrew/forge-harness/pom.xml`), or —
   simpler with no Maven installed — compile against the installed fat jar
-  `/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar` on the classpath.
+  `~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar` on the classpath.
   *Either way the resulting program is a GPLv3 derivative; the classpath trick changes nothing legally.*
 
 ### 5.3 (b) A separate TypeScript front-end over a socket

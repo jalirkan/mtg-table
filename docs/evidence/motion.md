@@ -2,7 +2,7 @@
 
 Report 15's Lane MOTION ([`docs/research/15-art-direction.md`](../research/15-art-direction.md)
 §5 and §9.2): a comic's motion vocabulary for the arena's cues, with the cue
-engine's rules unchanged. Built in the worktree `/home/justin-a/code/mtg-table-t2m`,
+engine's rules unchanged. Built in the worktree `~/code/mtg-table-t2m`,
 branch `motion`, from `c81f674` (`main` at `a092d3a` plus the art-direction
 report and its `?look=comic` spike), **and merged onto Lane LOOK's `4c76785`** (the
 merge section, first below). Decisions **D147–D155**, written as D130–D138 in the

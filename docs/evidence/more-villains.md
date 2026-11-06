@@ -1,7 +1,7 @@
 # More villains — evidence
 
 Built 2026-09-28 on branch `more-villains` (the worktree
-`/home/justin-a/code/mtg-table-t2p`, off `main`'s `a092d3a`), against the 2.0.14
+`~/code/mtg-table-t2p`, off `main`'s `a092d3a`), against the 2.0.14
 jar (`forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, sha256 `3c0a7c38…e5dd9`),
 Node v24.20.0, with the card library copied read-only from the main checkout's
 `var/cards/` (91 MB) rather than rebuilt from Scryfall. The user's request, of

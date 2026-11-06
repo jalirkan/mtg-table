@@ -1,7 +1,7 @@
 ## The 2026-09-27 hardening pass — seven small defects, each at its cause
 
 The small-defect backlog from PLAN.md's follow-up lists, worked in the worktree
-`/home/justin-a/code/mtg-table-t2j` on branch `hardening`, from `main` at
+`~/code/mtg-table-t2j` on branch `hardening`, from `main` at
 `bf0392b`. Match setup's `a092d3a` landed on `main` while this was open, and the
 branch was rebased onto it the same night (§8). Its first verification round
 found step 6 blind to the stack, and five smaller things; all six were fixed,
@@ -379,13 +379,13 @@ records.
 
 ### The user's Forge install
 
-`/home/justin-a/forge` (22,128 entries, listed with size and mtime) and
-`/home/justin-a/.forge` (27 entries; sha1 of every file) were fingerprinted
+`~/forge` (22,128 entries, listed with size and mtime) and
+`~/.forge` (27 entries; sha1 of every file) were fingerprinted
 before any work and again after the gate.
 
-**Unchanged.** Every one of the 22,128 entries of `/home/justin-a/forge` has the
+**Unchanged.** Every one of the 22,128 entries of `~/forge` has the
 same size and mtime. All 7 files under `~/.forge` have the same sha1, and its 27
-entries the same listing. The main checkout `/home/justin-a/code/mtg-table` was
+entries the same listing. The main checkout `~/code/mtg-table` was
 not written (`git status` clean).
 
 ---
@@ -553,11 +553,11 @@ Measured after the fix, in the same page:
     ws-log candidates `MTGTABLE_WS_LOGS` does not name), plus **96 vitest in 7
     files**.
 
-**The user's Forge install.** `/home/justin-a/forge` and
-`/home/justin-a/.forge` were fingerprinted before the rebase and again after the
+**The user's Forge install.** `~/forge` and
+`~/.forge` were fingerprinted before the rebase and again after the
 gate: 21,374 files and links with size and mtime, and a sha1 of each of the 7
 files under `~/.forge`. **Unchanged**: both listings are identical, and so are
-the sha1s. The main checkout `/home/justin-a/code/mtg-table` was not written
+the sha1s. The main checkout `~/code/mtg-table` was not written
 (`git status` clean). It had moved on to `aead79d` during the run — the
 engine-upgrade lane landed on `main`, after `a092d3a` — so this branch is one
 rebase behind `main` again.
@@ -845,9 +845,9 @@ says **current** on the rebased tree.
 
 #### 9.8 The user's Forge install
 
-`/home/justin-a/forge` (22,128 entries with size and mtime) and
-`/home/justin-a/.forge` (27 entries, and a sha1 of each of its 7 files) were
+`~/forge` (22,128 entries with size and mtime) and
+`~/.forge` (27 entries, and a sha1 of each of its 7 files) were
 fingerprinted before the rebase and again after the gate and the two loaded
 recordings. **Unchanged**: every listing and every sha1 is identical. The main
-checkout `/home/justin-a/code/mtg-table` was not written. It is still at
+checkout `~/code/mtg-table` was not written. It is still at
 `aead79d` and `git status` is clean.

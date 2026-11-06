@@ -28,7 +28,7 @@
 # refuses a tunnel that was pointed at it by mistake.
 
 tunnel: <TUNNEL-UUID>
-credentials-file: /home/justin-a/.cloudflared/<TUNNEL-UUID>.json
+credentials-file: ~/.cloudflared/<TUNNEL-UUID>.json
 
 # cloudflared itself checks the Cloudflare Access token on every request before
 # anything reaches 127.0.0.1 (the Cf-Access-Jwt-Assertion check of

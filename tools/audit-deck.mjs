@@ -54,6 +54,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -91,7 +92,9 @@ const opts = { overlays: [], decks: [], config: path.join(REPO, 'config.json'),
 
 // ---------------------------------------------------------------- engine
 const cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
-const forgeJar = path.resolve(path.dirname(opts.config), process.env.FORGE_JAR || cfg.forgeJar);
+// D516: config.json's forgeJar may start with ~/ (the home directory; only that form is expanded).
+const cfgJar = typeof cfg.forgeJar === 'string' && cfg.forgeJar.startsWith('~/') ? path.join(os.homedir(), cfg.forgeJar.slice(2)) : cfg.forgeJar;
+const forgeJar = path.resolve(path.dirname(opts.config), process.env.FORGE_JAR || cfgJar);
 if (!fs.existsSync(forgeJar)) usage(`Forge jar not found: ${forgeJar}`);
 // res/ sits beside the jar -- the same derivation as tools/make-forge-home.sh.
 const forgeRes = path.join(path.dirname(forgeJar), 'res');

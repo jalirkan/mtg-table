@@ -804,7 +804,7 @@ game.
 
 # M7 evidence — the arena, evenings E5 and E6
 
-Run 2026-09-13, on branch `m7` in the worktree `/home/justin-a/code/mtg-table-m7`,
+Run 2026-09-13, on branch `m7` in the worktree `~/code/mtg-table-m7`,
 against report 09 §§7–12 and `docs/ideas/arena-mode.md`'s cue table. Ports 8660
 (bridge) and 5180/5182 (web), never the user's 8642/5173.
 

@@ -320,7 +320,7 @@ tracks' work in the tree). This track's additions:
 ## Identity (T9 and T10) — every card reads as itself: traits, props, the swarm, the giant, the carrier
 
 *Appended 2026-09-27 by the identity builder. Worktree
-`/home/justin-a/code/mtg-table-t2c`, branch `tier2-slice3`, nothing committed.
+`~/code/mtg-table-t2c`, branch `tier2-slice3`, nothing committed.
 Files: `web/src/arena/figures/traits.json`, `traits.ts`, `props.ts` (new),
 `pose.ts`, `validate.ts`, `figures.json`; `web/src/arena/scene/props.ts` (new),
 `FigureLayer.tsx`, `discs.ts`; `web/src/arena/layout.ts` (one constant,
@@ -935,7 +935,7 @@ skipped and 79 vitest inside it, all ten games of 9c, 9d and 10a–10g, and
 
 ## Status — the documentation pass
 
-*Appended 2026-09-27. Same worktree (`/home/justin-a/code/mtg-table-t2c`) and
+*Appended 2026-09-27. Same worktree (`~/code/mtg-table-t2c`) and
 branch (`tier2-slice3`, from `5891444`), **nothing committed**. This pass changed
 no code, no data file under `web/src/`, no test, no fixture and no asset.*
 

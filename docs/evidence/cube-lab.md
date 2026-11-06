@@ -154,7 +154,7 @@ the rest.
 
 The three `--record 3` games, `frames/draft-{1,2,3}-g1.jsonl` (16 MB together),
 were read by ForgeCoach's own parser — a Node script importing
-`/home/user/ForgeCoach/src/log.ts` (`readLogBytes`) and `src/decisions.ts`
+`~/ForgeCoach/src/log.ts` (`readLogBytes`) and `src/decisions.ts`
 (`extractDecisions`):
 
 ```
@@ -226,7 +226,7 @@ wall-clock overhead on the owner's PC is a PC job.
 
 The lab's atlas night J182 (2026-11-01) failed `tools/check-redaction.mjs` on 11 branch frame logs in 3 units. In
 every one, the engine and the bridge were right, and the checker's admitted shapes were too narrow. These are the
-logs, under `/home/justin-a/code/lab/data/lab-j182/`, checked with the atlas's `--empty-hand-ok`:
+logs, under `~/code/lab/data/lab-j182/`, checked with the atlas's `--empty-hand-ok`:
 
 | unit | logs | shape | decision | `main` (`ac07876b`) | `pc/d502-checker-shapes` |
 |---|---:|---|---|---|---|
@@ -242,7 +242,7 @@ checker's self-test passes 205 controls (149 before). The rest of J182's spines 
 ## 9. J183's hideaway failures (D505, 2026-11-02)
 
 Lab night J183 failed `tools/check-redaction.mjs` (`3275af30`, with D502) on 17 seat-1 branch frame logs. All 17 are in
-`/home/justin-a/code/lab/data/lab-j183/b-s11-legacy-2524/phaseB/frames/`, and all fail with rule A9's hideaway
+`~/code/lab/data/lab-j183/b-s11-legacy-2524/phaseB/frames/`, and all fail with rule A9's hideaway
 message. Each is the card under a Watcher for Tomorrow that seat 1 took from player 0.
 
 D505 has two parts:
@@ -272,7 +272,7 @@ lab follow-up 23 holds what part two still admits.
 
 The lab's atlas night J183 (mtg-table `3275af30`) failed three checks on one spine, `b-s11-legacy-2524` (legacy, spine
 seed 2524; decks `s11-legacy-2424`, Old Man of the Sea in deck 1, Preacher and Oko, Thief of Crowns in deck 2), under
-`/home/justin-a/code/lab/data/lab-j183/`:
+`~/code/lab/data/lab-j183/`:
 
 | measure | value |
 |---|---|
@@ -297,7 +297,7 @@ cards by copies. Rubinia Soulsinger is in none of the 52 and takes 0 skips.
 ## 11. J183's checker failures (D507, 2026-11-02)
 
 The lab's atlas night J183 (2026-11-02, mtg-table at `3275af30`) failed `tools/check-redaction.mjs` on 463 branch
-frame logs in one unit, `b-s09-pauper-2522` (under `/home/justin-a/code/lab/data/lab-j183/`). Every one failed on
+frame logs in one unit, `b-s09-pauper-2522` (under `~/code/lab/data/lab-j183/`). Every one failed on
 `target:49` in seat 0's Mana Drain target record. Card 49, the opponent's Knockout Maneuver, was a **ghost**: Forge's
 AI had moved it into the Stack zone at turn 10 and abandoned the cast ("Couldn't add to stack, failed to target"),
 leaving it in the zone with nothing on the stack, where no state frame shows it. Here the checker was right and the
@@ -325,7 +325,7 @@ D498's (D507's *Comparability*).
 
 The lab's atlas night J185 (2026-11-03, mtg-table at `0a6cf5c1`, D507's population's first night) failed
 `tools/check-redaction.mjs` on one branch frame log of 11,402 in one unit, `b-s13-pauper-2539` (under
-`/home/justin-a/code/lab/data/lab-j185/`): `d1-random-o0-b78-seat1`, decision 73, `option:37` in seat 1's entity
+`~/code/lab/data/lab-j185/`): `d1-random-o0-b78-seat1`, decision 73, `option:37` in seat 1's entity
 record of a Circle of Protection: Blue source choice. Card 37, seat 0's Cavern Harpy, was in seat 0's hand (the
 stub), one frame after its own enters trigger had returned it there; Luminous Phantom's trigger on that leave was on
 the stack, and Forge listed the Harpy under "objects referred to on the stack" as the trigger's last-known copy, whose
@@ -353,7 +353,7 @@ J185 stays D507's one night (D508's *Comparability*). The board's own path for t
 ## 13. J186's empty target records (D510, 2026-11-03)
 
 The lab's atlas night J186 (2026-11-03, D508's population's first night) failed `tools/check-redaction.mjs` on 12 of
-12,652 frame logs in one unit, `b-s11-legacy-2550` (under `/home/justin-a/code/lab/data/lab-j186/`). Each failed on
+12,652 frame logs in one unit, `b-s11-legacy-2550` (under `~/code/lab/data/lab-j186/`). Each failed on
 exactly one record: a seat-0 `target` record with `options: []`, `hidden: 1`, `complete: false` and `chosen: null`,
 which drew M55's three findings (no options, null is not a token, null is not among the options). In all twelve the
 parent is seat 0's random seat casting Reprieve (card 13, "return target spell to its owner's hand"). The part's
@@ -384,7 +384,7 @@ atlas-selftest` is green. D510 sets out the argument from the callers. J186 stay
 ## 14. J186's replay divergence (D511, 2026-11-03)
 
 The lab's atlas night J186 (2026-11-03, mtg-table at `e557dedf`, population `random-<band>-d508`'s first night) aborted
-on spine `b-s13-pauper-2552` (under `/home/justin-a/code/lab/data/lab-j186/`, read only): every unit at d23, d28, d33,
+on spine `b-s13-pauper-2552` (under `~/code/lab/data/lab-j186/`, read only): every unit at d23, d28, d33,
 d40, d49 and d55 failed both attempts with "the replay diverged" (29 unit errors), while d2, d13 and d17 played. The
 baseline is a recorded game (frames, rows, ledger) and a unit's replay is not; D347's decision records, which only a
 recorded seat builds, write Forge's `AiCardMemory` through its mana check, and the two games part. D511 gives the
@@ -416,7 +416,7 @@ leg: d30, turn 19, replayed, 3 branches); `seat-identity`: all 4 games the golde
 
 ## 15. J187's hideaway host taken back (D512, 2026-11-04)
 
-Lab night J187 (the atlas, spine `b-s06-peasant-2558`, under `/home/justin-a/code/lab/data/lab-j187/`, read only)
+Lab night J187 (the atlas, spine `b-s06-peasant-2558`, under `~/code/lab/data/lab-j187/`, read only)
 failed `tools/check-redaction.mjs` (`main`, `42e7a87f`) on two seat-1 branch frame logs, `d14-random-o0-b48` (from line
 121) and `d21-random-o1-b58` (from line 468), both rule A9's hideaway message on card 29 (Bog Wraith). The Watcher for
 Tomorrow that dug it (42) was seat 1's own: player 0 reanimated it, its trigger (player 0's) dug from player 0's
@@ -443,7 +443,7 @@ vitest 161 passed. `node tools/decisions.mjs check` OK. PLAN.md's cube lab follo
 
 ## 16. J191's revealed top card during a control exchange (D513, 2026-11-05)
 
-Lab night J191 (the atlas, spine `b-s08-powered-3008`, under `/home/justin-a/code/lab/data/lab-j191/`, read only)
+Lab night J191 (the atlas, spine `b-s08-powered-3008`, under `~/code/lab/data/lab-j191/`, read only)
 failed its `atlas.problems == 0` check: `tools/check-redaction.mjs` (`main`, `fe063f94`) failed two seat-0 branch frame
 logs, `d7-random-o1-b121` (line 501) and `d7-random-o1-b5` (line 261), both rule A3's "1 full card(s) in
 library.cards" for player 1. Player 1 controlled Oracle of Mul Daya, so its top card was public; seat 0's Oko, Thief of

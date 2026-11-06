@@ -35,7 +35,7 @@ THE SCRUB (every row and file):
     release's own files, and `frameLog`, `rows.file` and `branchFrames` (not in the release) paths relative to the
     night's data folder; atlas.json's absolute paths the same.
 THE CHECK (`check`, run before the zip is written; the build fails on any finding): no file holds an absolute
-path of the shapes a machine's paths take (/home/, /mnt/, /tmp/, /var/, /Users/, /root/, /media/, /srv/ after a
+path of the shapes a machine's paths take (a home folder, /mnt/, /tmp/, /var/, /Users/, /root/, /media/, /srv/ after a
 space, quote, bracket, `=` or `:`, or a Windows drive path), the owner's name or a mail address of his provider,
 "CARDNAME" (Forge's rules-text placeholder), a mana or tap symbol, or the building machine's host name; and
 relative() refuses an absolute path it cannot make relative, so none is written. No identity has a ninth field; an `activate:`

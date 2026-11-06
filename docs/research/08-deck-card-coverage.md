@@ -4,7 +4,7 @@ Status: verification report, 2026-09-11. Scope: the 28 distinct cards in
 `decks/pacho-shield.dck` / `.txt` (40 cards total).
 
 Method. For each card: extract Forge's script from
-`/home/justin-a/forge/res/cardsfolder/cardsfolder.zip`, fetch the official Oracle
+`~/forge/res/cardsfolder/cardsfolder.zip`, fetch the official Oracle
 text from `https://api.scryfall.com/cards/named?exact=<name>` (2 req/s,
 `User-Agent: mtg-table/0.1 (local hobby client)`, `Accept: application/json`), and
 diff mana cost, type line, P/T, keyword lines and ability definitions
@@ -71,7 +71,7 @@ that do not exist in MSH: Peggy Carter (MSC 523), Nick Fury Spymaster (603),
 Strategic Intervention (609), Quantum Reduction (635), Wasp (646),
 Ant-Man Reformed Rogue (739), Ant-Man's Air Force (759), Robotics Mastery (786),
 Thriving Heath (580), Thriving Isle (581). Verified against
-`/home/justin-a/forge/res/editions/Marvel Super Heroes.txt` and
+`~/forge/res/editions/Marvel Super Heroes.txt` and
 `… Commander.txt`: each of those ten appears in the MSC edition file and **zero
 times** in the MSH one, and every collector number in Forge's edition files
 matches Scryfall exactly. This confirms report 03's MSH/MSC split independently
@@ -146,7 +146,7 @@ Because `USER_DIR` is redirected by `forge-home/forge.profile.properties`, the
 override path for this repo is:
 
 ```
-/home/justin-a/code/mtg-table/var/forge/custom/cards/a_i_m_scientists.txt
+~/code/mtg-table/var/forge/custom/cards/a_i_m_scientists.txt
 ```
 
 Four facts that make this usable, all read from source (**not executed** — `var/`
@@ -288,7 +288,7 @@ deck has a `CostTapType`.
 ### Hero / Villain
 
 Both are **plain creature types**, registered in
-`/home/justin-a/forge/res/lists/TypeLists.txt` under `[CreatureTypes]`
+`~/forge/res/lists/TypeLists.txt` under `[CreatureTypes]`
 (`Hero:Heroes` line 143, `Villain:Villains` line 329; also `Inhuman` 156,
 `Scientist` 264, `Spy` 301, `Robot` 254, `Insect` 159, `Rogue` 255). No keyword,
 no special handling, nothing to add. Three places in the deck touch them:
@@ -417,7 +417,7 @@ the 28 cards guarantee will fire, so they are not speculative.
 ## 7. Reproducing this
 
 ```bash
-Z=/home/justin-a/forge/res/cardsfolder/cardsfolder.zip
+Z=~/forge/res/cardsfolder/cardsfolder.zip
 unzip -p $Z a/a_i_m_scientists.txt          # the mismatch
 unzip -p $Z q/quantum_reduction.txt         # the warned-about card (it is fine)
 unzip -p $Z h/helicarrier_strike.txt        # the other Teamwork card
@@ -590,10 +590,10 @@ cast after the swap is `docs/evidence/match-setup.md` §D.6.
 ```bash
 node tools/check-deck.mjs decks/doom-legion.dck --scryfall      # static + Scryfall + engine
 node tools/check-deck.mjs decks/pacho-shield.dck --no-engine --scryfall --stock   # must FAIL on Trample
-Z=/home/justin-a/forge/res/cardsfolder/cardsfolder.zip
+Z=~/forge/res/cardsfolder/cardsfolder.zip
 unzip -p $Z k/kang_prime.txt                                    # the cut card's DigUntil
 unzip -p $Z d/doom_reigns_supreme.txt                           # the Plan
-J=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+J=~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 java -m jdk.jdeps/com.sun.tools.javap.Main -cp $J -c -p forge.game.ability.effects.DigUntilEffect \
   | grep 'GameAction.reveal'
 ```

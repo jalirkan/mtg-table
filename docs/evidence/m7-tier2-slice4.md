@@ -306,7 +306,7 @@ always pair), and the live page rebuilt both duelists on the next update.
 ## Bodies — proportioned people in costumes (the bodies track)
 
 *Appended 2026-09-27 by the bodies track of Tier 2 slice 4. Worktree
-`/home/justin-a/code/mtg-table-t2d`, branch `tier2-slice4`, nothing committed.
+`~/code/mtg-table-t2d`, branch `tier2-slice4`, nothing committed.
 Files: `tools/build-figures.mjs`, `tools/assets-manifest.json`,
 `web/public/models/figures.glb`, `web/src/arena/figures/{models.json (generated),
 figures.json, traits.json, traits.ts, validate.ts, props.ts, pose.ts}`,
@@ -683,7 +683,7 @@ track shares the tree; see *Not done*).
 ## Status — the verification pass and the documentation pass
 
 *Appended 2026-09-27 by slice 4's documentation pass. It changed no code. Branch
-`tier2-slice4` (from `0368a90`), worktree `/home/justin-a/code/mtg-table-t2d`;
+`tier2-slice4` (from `0368a90`), worktree `~/code/mtg-table-t2d`;
 nothing committed.*
 
 **The verification pass: passed, eleven findings, all minor, none fixed in

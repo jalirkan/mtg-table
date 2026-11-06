@@ -1,7 +1,7 @@
 # M7 Tier 2 — the manifestation stage: T0, T1, T2
 
 *What was actually run, on 2026-09-13, in the worktree
-`/home/justin-a/code/mtg-table-t2` on branch `tier2-slice1`, against
+`~/code/mtg-table-t2` on branch `tier2-slice1`, against
 [`../research/13-arena-tier2-plan.md`](../research/13-arena-tier2-plan.md)'s
 evenings **T0**, **T1** and **T2** (§11) and its sections §3, §8, §9 and §10.
 Every number below is a measurement; every one that is a lower bound says so.*
@@ -1714,7 +1714,7 @@ stands; it edits no code and re-measures nothing that §1–§23 measured.*
 
 **T0–T7 are done, and an independent verification pass returned `passed`** with
 ten findings, all minor. Nothing is committed: the work is branch
-`tier2-slice1` in `/home/justin-a/code/mtg-table-t2`, and the user commits.
+`tier2-slice1` in `~/code/mtg-table-t2`, and the user commits.
 
 ### 24.1 Where each verification finding went
 
@@ -1793,7 +1793,7 @@ Documentation only — no file under `web/src/`, `web/test/`, `tools/` or
 ### 24.4 `./tools/check-all.sh`, once
 
 ```
-WSPORT=8661 ./tools/check-all.sh      # in /home/justin-a/code/mtg-table-t2
+WSPORT=8661 ./tools/check-all.sh      # in ~/code/mtg-table-t2
 START 2026-09-27T01:17:17-04:00
 check-all OK
 CHECK-ALL EXIT=0 WALL=727s END 2026-09-27T01:29:24-04:00

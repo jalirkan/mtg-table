@@ -21,7 +21,7 @@ admission (part two, below). That rule kept the
 grant only while the viewer still controlled THAT permanent, plus one frame of lag. In these logs the alt stays after
 control goes back to the owner, and after the Watcher leaves the battlefield, until the card moves.
 
-The logs are under `/home/justin-a/code/lab/data/lab-j183/b-s11-legacy-2524/phaseB/frames/`. Each timeline below lists
+The logs are under `~/code/lab/data/lab-j183/b-s11-legacy-2524/phaseB/frames/`. Each timeline below lists
 state seq → the card's zone and alt, and the Watcher's controller:
 
 - **`d0-random-o0-b67-seat1`** (card 13, Tishana's Tidebinder):

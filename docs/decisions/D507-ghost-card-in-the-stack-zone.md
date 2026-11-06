@@ -12,7 +12,7 @@ and D506 are two other lanes'; `node tools/decisions.mjs next` printed D505). Am
     decision N names card 49 (target:49), which its state frame does not show seat 0 -- a stub's id, a library card
     or another seat's hidden card is never an option (M55, D347)
 
-Evidence, read only: `/home/justin-a/code/lab/data/lab-j183/b-s09-pauper-2522/` (`atlas.json`'s `checks`;
+Evidence, read only: `~/code/lab/data/lab-j183/b-s09-pauper-2522/` (`atlas.json`'s `checks`;
 `phaseB/frames/`, `phaseB/baseline/frames/`, `phaseB/logs/`).
 
 - **The records.** 464 branch logs name `target:49`, in 505 records. Every one is seat 0's `target` record of Mana Drain
@@ -298,7 +298,7 @@ branches). `[ghost]` counts something else: the target records that met a ghost,
       and the printed `[ghost] card 15 …`.
 - **`node tools/decisions.mjs check`** passes.
 - **J183's own log still fails.** `node tools/check-redaction.mjs --empty-hand-ok` on
-  `/home/justin-a/code/lab/data/lab-j183/b-s09-pauper-2522/phaseB/frames/d15-random-o0-b101-seat0.jsonl.gz` **still
+  `~/code/lab/data/lab-j183/b-s09-pauper-2522/phaseB/frames/d15-random-o0-b101-seat0.jsonl.gz` **still
   FAILS**, with J183's message on decision 57. That is right: the log is what the old bridge wrote, and the checker
   is unchanged. The fix is for the logs the new seat writes, whose records count the ghost in `hidden`. J183's 463 are
   not re-run here. A night on this bridge with the same spine would show no `target:49` and 504 `[ghost]` lines.

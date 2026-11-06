@@ -151,7 +151,8 @@ jobs:
           # A different hash is a different engine, whatever its file is called.
           echo "$FORGE_JAR_SHA256  $jar" | sha256sum -c -
           # Hard rule 9: every script reads the jar from $FORGE_JAR or
-          # config.json's forgeJar; config.json keeps the local path untouched.
+          # config.json's forgeJar; FORGE_JAR wins, so config.json's machine-neutral
+          # default (~/forge/..., D516) is left untouched here.
           echo "FORGE_JAR=$jar" >> "$GITHUB_ENV"
       - name: tools/check-forge.sh
         run: ./tools/check-forge.sh

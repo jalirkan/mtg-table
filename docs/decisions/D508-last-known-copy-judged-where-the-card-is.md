@@ -12,7 +12,7 @@ card the game holds under its id before its zone is read. D507's Stack rule is u
     d1-random-o0-b78-seat1.jsonl.gz:409: decision 73 names card 37 (option:37), which its state frame does not show
     seat 1 -- a stub's id, a library card or another seat's hidden card is never an option (M55, D347)
 
-Evidence, read only: `/home/justin-a/code/lab/data/lab-j185/b-s13-pauper-2539/` (`atlas.json`'s `checks`;
+Evidence, read only: `~/code/lab/data/lab-j185/b-s13-pauper-2539/` (`atlas.json`'s `checks`;
 `phaseB/frames/`, `phaseB/logs/`). Every other check of the night passed: no engine error, no branch timeout, no
 `[ghost]` line, no `StackOverflowError`, no hung unit, the five known `PumpEffect` `IndexOutOfBoundsException`s.
 

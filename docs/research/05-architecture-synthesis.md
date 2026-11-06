@@ -12,7 +12,7 @@ first-class milestone, and `check-forge.sh`). Everything below is the merged pla
 
 ## 0. Claims re-verified in this session
 
-Re-run against `/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`
+Re-run against `~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`
 (39,383,858 bytes), so the plan does not rest on a report alone:
 
 | Claim | Result |
@@ -26,7 +26,7 @@ Re-run against `/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependenc
 | Abstract surface left by `AbstractGuiGame` | **36 method names** (mechanically diffed with `javap`, list below). |
 | `javap` usable with no JDK | **YES** — `java -m jdk.jdeps/com.sun.tools.javap.Main` works on the JRE. |
 | Toolchain | OpenJDK **21.0.12 JRE only**, Node **v24.20.0**, no `javac`/`javap`/`mvn`/`gradle` binaries. |
-| Repo state | `/home/justin-a/code/mtg-table` — **zero commits**, `decks/pacho-shield.dck` + `.txt` present. |
+| Repo state | `~/code/mtg-table` — **zero commits**, `decks/pacho-shield.dck` + `.txt` present. |
 
 The 36 unimplemented members (name-level; some are overloads):
 
@@ -43,7 +43,7 @@ showPromptMessage sideboard tempShowZones updateButtons updateShards
 Regenerate this list at any time with:
 
 ```bash
-J=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+J=~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 jp(){ java -m jdk.jdeps/com.sun.tools.javap.Main -cp "$J" "$1" \
       | grep ';' | sed -E 's/^\s+//;s/.*\b([a-zA-Z0-9_]+)\(.*/\1/' | sort -u; }
 comm -23 <(jp forge.gui.interfaces.IGuiGame) <(jp forge.gamemodes.match.AbstractGuiGame)
@@ -82,7 +82,7 @@ comm -23 <(jp forge.gui.interfaces.IGuiGame) <(jp forge.gamemodes.match.Abstract
 | `bridge/` | Java 21, GPL-3.0-or-later | The only Java. Links Forge: hosts the engine, implements `IGuiBase` + `AbstractGuiGame`, redacts, serializes, logs, serves `/ws`. ~7 files, ~1400 lines. |
 | `web/` | TypeScript + React + Vite | The SPA. Pure function of the frame stream. Two transports. |
 | `tools/fetch-art.ts` | TypeScript, run by bare `node` (Node 24 strips types) | Deck file → `web/public/art.json`. This *is* the v1 card library. |
-| `forge-home/` | config + symlink | `res -> /home/justin-a/forge/res` plus `forge.profile.properties` redirecting Forge's `userDir`/`cacheDir` into `var/`. |
+| `forge-home/` | config + symlink | `res -> ~/forge/res` plus `forge.profile.properties` redirecting Forge's `userDir`/`cacheDir` into `var/`. |
 
 No npm runtime dependencies outside `web/` (React, Vite). The Java side has **zero**
 dependencies beyond the jar already on disk.
@@ -457,7 +457,7 @@ mtg-table/
   fixtures/games/*.jsonl     committed recorded AI-vs-AI games
 
   forge-home/
-    res -> /home/justin-a/forge/res
+    res -> ~/forge/res
     forge.profile.properties   userDir=<abs>/var/forge  cacheDir=<abs>/var/cache
 
   var/                       gitignored (Forge writes 24 profile dirs, prefs, logs;
@@ -486,7 +486,7 @@ and read the path from `config.json` / `$FORGE_JAR`.
 
 ```bash
 # tools/check-forge.sh — runs before every build
-FORGE_JAR=${FORGE_JAR:-/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar}
+FORGE_JAR=${FORGE_JAR:-~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar}
 [ -f "$FORGE_JAR" ] || { echo "FORGE_JAR not found: $FORGE_JAR"; exit 1; }
 sha256sum "$FORGE_JAR"
 for c in forge.gui.interfaces.IGuiGame \
@@ -550,7 +550,7 @@ Measured: `FModel.initialize` 2,033 ms, 95,126 printings, AI-vs-AI game 3.6–4.
 
 ### Forge's own files are never written
 
-`forge-home/res` is a symlink to `/home/justin-a/forge/res`;
+`forge-home/res` is a symlink to `~/forge/res`;
 `forge-home/forge.profile.properties` sets `userDir`/`cacheDir` under `var/`. Decks are
 loaded with `DeckSerializer.fromFile` and **never** through
 `FModel.getDecks().getConstructed()` — that path runs `DeckStorage.adjustFileLocation`
@@ -731,33 +731,33 @@ engine-level seeded replay; bug-report zips.
 
 ## 10. Next working session — concrete task list
 
-1. **Commit the skeleton.** Create `/home/justin-a/code/mtg-table/LICENSE`
-   (GPL-3.0-or-later full text), `/home/justin-a/code/mtg-table/NOTICE` (Card-Forge/forge
+1. **Commit the skeleton.** Create `~/code/mtg-table/LICENSE`
+   (GPL-3.0-or-later full text), `~/code/mtg-table/NOTICE` (Card-Forge/forge
    GPLv3 + link, Scryfall, WotC Fan Content Policy disclaimer),
-   `/home/justin-a/code/mtg-table/.gitignore` (`bridge/out/`, `var/`, `web/node_modules/`,
+   `~/code/mtg-table/.gitignore` (`bridge/out/`, `var/`, `web/node_modules/`,
    `web/dist/`, `web/public/art.json`, `*.jar`), and
-   `/home/justin-a/code/mtg-table/README.md` whose **second section is a hard NON-GOALS
+   `~/code/mtg-table/README.md` whose **second section is a hard NON-GOALS
    list**: no multiplayer, no deck builder, no card-library package, no accounts, no
    packaging, no deltas, localhost only. Then `git add -A && git commit` — the repo has
    zero commits today.
 
-2. **`/home/justin-a/code/mtg-table/config.json`**:
-   `{"forgeJar":"/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar",
+2. **`~/code/mtg-table/config.json`**:
+   `{"forgeJar":"~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar",
    "forgeHome":"forge-home","deck":"decks/pacho-shield.dck","wsPort":8642,"webPort":5173,
    "scryfallUserAgent":"mtg-table/0.1 (+https://github.com/<you>/mtg-table)"}`.
    Never hardcode the jar path anywhere else.
 
-3. **`/home/justin-a/code/mtg-table/tools/check-forge.sh`** exactly as in §6 (the
+3. **`~/code/mtg-table/tools/check-forge.sh`** exactly as in §6 (the
    eight-class assertion list; all eight verified present today). Make it executable
    and run it — `forge jar OK` is the gate for everything below.
 
-4. **`/home/justin-a/code/mtg-table/tools/make-forge-home.sh`** (idempotent):
+4. **`~/code/mtg-table/tools/make-forge-home.sh`** (idempotent):
    `mkdir -p forge-home var/forge var/cache`,
-   `ln -sfn /home/justin-a/forge/res forge-home/res`, and write
+   `ln -sfn ~/forge/res forge-home/res`, and write
    `forge-home/forge.profile.properties` with **absolute**
-   `userDir=/home/justin-a/code/mtg-table/var/forge/` and
-   `cacheDir=/home/justin-a/code/mtg-table/var/cache/`. It must never write inside
-   `/home/justin-a/forge` or `/home/justin-a/.forge`. Run it.
+   `userDir=~/code/mtg-table/var/forge/` and
+   `cacheDir=~/code/mtg-table/var/cache/`. It must never write inside
+   `~/forge` or `~/.forge`. Run it.
 
 5. **`bridge/build.sh` and `bridge/run.sh`** exactly as in §6 — compile with
    `java -m jdk.compiler/com.sun.tools.javac.Main`, **never** `--release`; run with

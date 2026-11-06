@@ -285,7 +285,7 @@ page with `&follow=1`; the dev route is in no chunk at all.
 
 ## H. The user's Forge install
 
-`/home/justin-a/forge` and `/home/justin-a/.forge` were fingerprinted before the
+`~/forge` and `~/.forge` were fingerprinted before the
 first command of this branch and after the gate — `sha1sum` of every file (21,374)
 and `find -printf '%p %s %T@ %y'` of every entry (22,155: path, size, mtime,
 type). **Both identical.** Every JVM here reads `forge-home/res`, the symlink into

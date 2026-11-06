@@ -14,7 +14,7 @@ IllegalStateException: no Murderous Rider - Creature 2 / 3 by Swift End (25) [ma
 IllegalStateException: no Murderous Rider - Creature 2 / 3 by Swift End (25) by Swift End (25) [may play] on the copy's Murderous Rider (25)
 ```
 
-Every other option of those decisions played. A grep of every `branches.jsonl` under `/home/justin-a/code/lab/data`
+Every other option of those decisions played. A grep of every `branches.jsonl` under `~/code/lab/data`
 finds this error in J162 only.
 
 **What it was.** Replayed alone: one unit, d11, Forge's continuation, branch 0, from J162's `plan.json` and

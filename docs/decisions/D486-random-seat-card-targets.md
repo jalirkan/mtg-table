@@ -143,7 +143,7 @@ redraw and close call, **D347**'s target records, and **D312**'s `SearchPolicy.m
     without the modes' targets (1); no cast-time hook (1); no re-draw of Forge's unfixable modes (1); `modesCastable`
     always true (2). None survives.
 - **The s05 reproduction** (the command below, decks
-  `/home/justin-a/code/lab/data/lab-j166/decks/s05-pauper-2005/decks/pauper-2005-0000{1,2}.dck`), run on D485
+  `~/code/lab/data/lab-j166/decks/s05-pauper-2005/decks/pauper-2005-0000{1,2}.dck`), run on D485
   (`f6c950b0`, in the D485 worktree, `var/d486-s05-before`) and on this branch (`var/d486-s05`):
   `CUBELAB_HOME_ROOT=var/d486-homes timeout 1200 tools/cubelab.sh atlas --deck-a … --deck-b … --seed 2105 --phase b
   --decisions 2 --min-options 3 --screen 5 --early-stop 5,10,15 --branch-random 25 --branch-forge 0 --chunk 5

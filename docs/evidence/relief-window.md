@@ -74,7 +74,7 @@ utilisation when the day began):
 ## 2. `relief.mjs --all` — every card
 
 ```
-node tools/personal/relief.mjs --all --likeness /home/justin-a/code/mtg-table/var/likeness
+node tools/personal/relief.mjs --all --likeness ~/code/mtg-table/var/likeness
 relief: 158 card(s), 5 current, 153 to compute
   scryfall file: 120 request(s), at most 11 in any second, smallest gap 99 ms, statuses {"200":120}
   model    depth-anything/Depth-Anything-V2-Small-hf on cuda (NVIDIA GeForce GTX 1080): import 2.235 s, load 0.106 s
@@ -377,7 +377,7 @@ screenshots.
 +24,574 and +0). The inspect view's alone; the arena draws none of it.
 
 **Every card, again** (`node tools/personal/relief.mjs --all --force --likeness
-/home/justin-a/code/mtg-table/var/likeness`, `var/relief/fix1/relief-all.log`):
+~/code/mtg-table/var/likeness`, `var/relief/fix1/relief-all.log`):
 
 ```
 relief: 158 card(s), 0 current, 158 to compute (personal tier, D225 — never committed)
@@ -401,7 +401,7 @@ relief: 158 computed, 0 failed — images 37 from the card library, 121 kept, 0 
   11,399,200 B (JPEGs, 37–127 KB, median 70 KB), the kept images 10,608,134 B,
   `index.json` 172,172 B. Per map the cut cells are a median 18% of the painting
   (0.3–35%) and the filled texels 33% (9–67%). `git status` shows none of it.
-- **The venv**: `find /home/justin-a/code/mtg-table/var/likeness -newer <marker>`
+- **The venv**: `find ~/code/mtg-table/var/likeness -newer <marker>`
   printed nothing after any run of the fix pass (four markers). Every picture
   script ran the venv's python with `-B` and `PYTHONDONTWRITEBYTECODE=1`.
 

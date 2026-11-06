@@ -1,6 +1,6 @@
 # Card library — evidence
 
-Built 2026-09-27 in the `card-library` worktree (`/home/justin-a/code/mtg-table-t2g`,
+Built 2026-09-27 in the `card-library` worktree (`~/code/mtg-table-t2g`,
 based on `main` at `0368a90`), on the user's request to expedite PLAN.md's
 deferred list — whose entry reads *"the SQLite (`node:sqlite`) + FTS5 card
 library, the `oracle_cards` bulk stream, a local image cache … report 03 is the

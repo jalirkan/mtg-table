@@ -35,7 +35,7 @@ How it is used:
   * Forge is a compile-time and runtime dependency only. The bridge in bridge/
     compiles against, and runs on, a Forge jar that is already installed on the
     user's machine (default:
-    /home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar).
+    ~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar).
     The jar path is read from config.json or the FORGE_JAR environment variable.
   * This repository NEVER redistributes Forge. The Forge jar, Forge's res/ tree,
     Forge's cardsfolder card scripts, Forge's editions files and Forge's skin art

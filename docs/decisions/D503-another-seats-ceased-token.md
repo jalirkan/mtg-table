@@ -7,7 +7,7 @@
 **2026-11-02**
 
 **Context.** Of J182's 11 failing branch logs (see **D502**), five failed on the M55 decision audit. All five are in
-spine `b-s10-peasant-2510`, under `/home/justin-a/code/lab/data/lab-j182/b-s10-peasant-2510/phaseB/frames/`:
+spine `b-s10-peasant-2510`, under `~/code/lab/data/lab-j182/b-s10-peasant-2510/phaseB/frames/`:
 `d10-random-o0-b15`, `d10-random-o0-b53`, `d10-random-o0-b89`, `d12-random-o0-b5` and `d12-random-o1-b5` (each
 `-seat0.jsonl.gz`). All five show the same message:
 

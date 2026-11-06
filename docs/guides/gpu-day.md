@@ -9,7 +9,7 @@ This is the day's guide, in order. Two labels on every step:
 - **[you, sudo]** — a step you type yourself. It asks for your password, and
   Claude never types one.
 - **[no sudo]** — anyone may run it. Run it from the main checkout,
-  `/home/justin-a/code/mtg-table`, unless the step says otherwise.
+  `~/code/mtg-table`, unless the step says otherwise.
 
 **What the GPU is used for here, and what it is not.** Forge, the bridge, the
 gate and the game itself run on the CPU. `./tools/check-all.sh` runs no GPU code,
@@ -55,7 +55,7 @@ the old path, so every pip command below is `$PY -m pip`, never `pip`.
 `var/gpu-day/`, which is gitignored like the rest of `var/`.
 
 ```bash
-cd /home/justin-a/code/mtg-table
+cd ~/code/mtg-table
 mkdir -p var/gpu-day
 nvidia-smi                                   > var/gpu-day/before-nvidia-smi.txt
 nvidia-smi --query-gpu=name,memory.total,driver_version,vbios_version,pci.device_id,power.limit \
@@ -74,7 +74,7 @@ Every later venv step assumes these variables are set; set them again in any new
 terminal.
 
 ```bash
-cd /home/justin-a/code/mtg-table
+cd ~/code/mtg-table
 export LIKENESS=$PWD/var/likeness
 export PIP_CACHE_DIR=$LIKENESS/cache/pip PIP_DISABLE_PIP_VERSION_CHECK=1 PYTHONNOUSERSITE=1 \
        XDG_CACHE_HOME=$LIKENESS/cache/xdg TORCH_HOME=$LIKENESS/cache/torch HF_HOME=$LIKENESS/cache/hf \
@@ -315,8 +315,8 @@ checkout. One symlink puts them back together without copying 13 GiB. Then
 work from `mtg-table-t2k`'s root, where `env.sh` expects to be sourced.
 
 ```bash
-ln -s /home/justin-a/code/mtg-table/var/likeness /home/justin-a/code/mtg-table-t2k/var/likeness
-cd /home/justin-a/code/mtg-table-t2k && source tools/likeness/env.sh
+ln -s ~/code/mtg-table/var/likeness ~/code/mtg-table-t2k/var/likeness
+cd ~/code/mtg-table-t2k && source tools/likeness/env.sh
 ./tools/likeness/run_all.sh --dry-run
 ```
 

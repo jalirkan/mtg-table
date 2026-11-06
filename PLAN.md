@@ -573,7 +573,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 dev-server **tools** rather than a milestone: a local SQLite + FTS5 index of every
 card under `tools/card-library/`, an image cache, and a `#cards` browser. Built,
 reviewed twice and fixed, and committed on `main` as `754f504` (worktree
-`/home/justin-a/code/mtg-table-t2g`, branch `card-library`). Nothing on the wire
+`~/code/mtg-table-t2g`, branch `card-library`). Nothing on the wire
 or in `bridge/` moved, and the board gained one link (`▦ cards`, beside the arena
 toggle) and nothing else. *The card library and the card browser*, just above
 *Deferred*, has the status, the commands and the follow-ups.
@@ -2763,7 +2763,7 @@ minor).** Evidence:
 [`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md), in three parts (T0–T2,
 T3–T4, T5–T7) plus a status section. **The user committed it on `main` as
 `4f84613`**; it was built on branch `tier2-slice1` in the worktree
-`/home/justin-a/code/mtg-table-t2`, and slice 2 branches from that commit.
+`~/code/mtg-table-t2`, and slice 2 branches from that commit.
 The user's nine Tier 2 decisions are recorded as **D53–D62**, and the builders'
 own as **D56, D57, D59, D60, D63**. The spec is report 13; the asset landscape it
 rests on is [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md).
@@ -3120,7 +3120,7 @@ a stated cost.
 ### Slice 2 — T8 (the humanoids, the retarget, the death) and the camera views, 2026-09-27
 
 **Status: built in two tracks, verified twice, fixed twice, and documented** — in
-the worktree `/home/justin-a/code/mtg-table-t2b`, branch `tier2-slice2`,
+the worktree `~/code/mtg-table-t2b`, branch `tier2-slice2`,
 **nothing committed** — since **committed by the user on `main` as `5891444`**,
 which slice 3 branches from. The first verification pass found one major (every death
 blinked) and six minors; the second found one major and three minors, the major a
@@ -3333,7 +3333,7 @@ library of archetypes" quietly becomes "a model per card" (report 13 §12).
 
 **Status: built in two tracks (identity — T9/T10; cues and attachments —
 T11/T12), verified twice, fixed twice, and documented** — in the worktree
-`/home/justin-a/code/mtg-table-t2c`, branch `tier2-slice3` (from `5891444`),
+`~/code/mtg-table-t2c`, branch `tier2-slice3` (from `5891444`),
 **nothing committed**. The first verification pass found three majors and five
 minors, the second four majors and five minors; every one has a fix in the tree,
 **but the second pass's fixes have not been through a third, independent
@@ -3637,7 +3637,7 @@ rung — which is why none of it is Tier 3.
 
 **Status: built in two tracks (the bodies and the costume; the duelists — T13),
 verified once (verdict: passed; eleven findings, all minor, none fixed in code),
-and documented** — in the worktree `/home/justin-a/code/mtg-table-t2d`, branch
+and documented** — in the worktree `~/code/mtg-table-t2d`, branch
 `tier2-slice4` (from `0368a90`), **nothing committed**. The user committed slice
 3 as `0368a90`, played it, and said *"the game looks generally improved. The
 avatars are still pretty generic."* Slice 4 took both readings of "avatars". The
@@ -4082,7 +4082,7 @@ and it needs a decision of its own before it becomes work — **question 14** in
 ## The card library and the card browser — off the plan, 2026-09-27 (D90–D94)
 
 **Status: built, reviewed twice, every finding fixed, documented; not
-committed** — in the worktree `/home/justin-a/code/mtg-table-t2g`, branch
+committed** — in the worktree `~/code/mtg-table-t2g`, branch
 `card-library` (from `0368a90`). It is the deferred list's *"SQLite + FTS5 card
 library, the `oracle_cards` bulk stream, a local image cache"*, brought forward on
 the user's request of 2026-09-27 — *"expedite some of these"* — **without** the
@@ -4219,7 +4219,7 @@ node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdo
 
 **Status: built, reviewed, every workshop finding fixed, documented, and
 rebased onto Tier 2 slice 4 and reconciled with it (2026-09-27).** It is in the
-worktree `/home/justin-a/code/mtg-table-t2e`, branch `workshop`, from `0368a90`,
+worktree `~/code/mtg-table-t2e`, branch `workshop`, from `0368a90`,
 moved onto `754f504` (the card library) by its fix pass, then rebased onto
 `main`'s `23e26b3` (slice 4) as two commits: the workshop itself, re-applied with
 the docs merged, and **the reconciliation** — the costume row, the links with
@@ -4700,7 +4700,7 @@ declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
 ## Engine and sets — Forge 2.0.14 stays; Reality Fracture waits for an official release (2026-09-27, D109–D112)
 
 **Status: preparation only; committed on its branch, and on `main` since `aead79d`** —
-worktree `/home/justin-a/code/mtg-table-t2h`, branch `engine-upgrade` (cut from
+worktree `~/code/mtg-table-t2h`, branch `engine-upgrade` (cut from
 `754f504`, rebased onto `main`'s `a092d3a` on 2026-09-27: Tier 2 slice 4, the
 workshop and match setup underneath it).
 **Nothing about how the game runs changed**: `bridge/`, `config.json`,
@@ -10738,7 +10738,7 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
   text in its label), every path relative, CC BY 4.0 with the attribution line, the Fan Content Policy notice.
 - **The fixture**: `fixtures/atlas/night/`, J193's s07 cut to three branches an option; 12n holds `labels.py`,
   `compare.py`, a release built twice to the same bytes, and the scrub check's plants.
-- **The public-repo check**: 93 tracked files name `justin-a` (77 dated history; the rest the owner's machine
+- **The public-repo check**: 93 tracked files name the owner's home folder (77 dated history; the rest the owner's machine
   convention, example paths and tests); the owner's first name in 88; no secret in the tree or its history;
   206 commits on `main` authored with the owner's personal address (17 as committer too); `.claude/` untracked but not ignored. D515 has the classification.
 

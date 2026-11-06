@@ -20,7 +20,7 @@ installed JRE still carries the `jdk.compiler` module.
 On this machine, **verified end to end**:
 
 ```bash
-FORGE_JAR=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+FORGE_JAR=~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 
 # compile (no javac binary needed — the JRE ships the compiler module)
 java -m jdk.compiler/com.sun.tools.javac.Main -cp "$FORGE_JAR" -d out src/mtgtable/*.java
@@ -50,7 +50,7 @@ before anything touches `ForgeConstants`**.
 
 ## 1. The fat jar as a dependency — VERIFIED
 
-`/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`
+`~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`
 — 39 383 858 bytes, **24 668 entries**, 85 138 924 bytes uncompressed.
 
 ### 1.1 It contains everything
@@ -145,7 +145,7 @@ If we ever do use a build tool, this is a `system`-scoped dependency:
   <artifactId>forge-gui-desktop</artifactId>
   <version>2.0.14</version>
   <scope>system</scope>
-  <systemPath>/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar</systemPath>
+  <systemPath>~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar</systemPath>
 </dependency>
 ```
 
@@ -231,7 +231,7 @@ Forge's own release workflow does exactly this, so copy it
 (`.github/workflows/maven-publish.yml`, "Install old maven (3.8.1)"):
 
 ```bash
-cd /home/justin-a/code/mtg-table/tools
+cd ~/code/mtg-table/tools
 curl -fLO https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
 tar xf apache-maven-3.9.9-bin.tar.gz
 export MAVEN_HOME=$PWD/apache-maven-3.9.9
@@ -266,7 +266,7 @@ miglayout/freemarker/jlayer/imageio entirely.
 **Caveat for our sparse checkout:** `forge-gui/res` is excluded from the checkout at
 `…/scratchpad/forge-src` (there is no `forge-gui/res` directory). `ForgeConstants.RES_DIR` and the
 release packaging both need it. A from-source build needs a full clone. We do not need one, because
-`/home/justin-a/forge/res` already holds the released resources.
+`~/forge/res` already holds the released resources.
 
 **Build time — GUESS.** `.github/workflows/test-build.yaml` runs `mvn -U -B clean test` on a
 GitHub `ubuntu-latest` runner (2 vCPU) for Java 17 and 21, under Xvfb; `maven-publish.yml` uses
@@ -381,7 +381,7 @@ care about the cwd.
 (`forge-gui/src/main/java/forge/localinstance/properties/ForgeProfileProperties.java:59-81`) then
 reads `PROFILE_FILE` if it is readable, and falls back to platform defaults
 (lines 158-204): on Linux `userDir = $HOME/.forge`, `cacheDir = $HOME/.cache/forge`. Recognised keys
-(the file `/home/justin-a/forge/forge.profile.properties.example` documents all of them):
+(the file `~/forge/forge.profile.properties.example` documents all of them):
 
 ```
 userDir=              # default $HOME/.forge
@@ -402,7 +402,7 @@ Two ways to steer this for mtg-table, both verified working:
 1. **Write a `forge.profile.properties` next to `res/`** (what I did for the test runs):
    `assetsDir/forge.profile.properties` containing `userDir=…` and `cacheDir=…`.
 2. **Return a different `getAssetsDir()`** and keep a whole mtg-table-owned Forge home, with
-   `res` symlinked to `/home/justin-a/forge/res`. Also verified — the symlink works fine.
+   `res` symlinked to `~/forge/res`. Also verified — the symlink works fine.
 
 ### 3.3 What `FModel.initialize` actually does — `forge-gui/src/main/java/forge/model/FModel.java:161-284`
 
@@ -594,7 +594,7 @@ not match its `Name=` metadata is **renamed to the metadata name and moved up on
 `<user>/decks/constructed/Pacho SHIELD.dck` became `<user>/decks/Pacho SHIELD (Marvel Super Heroes).dck`
 on every run, after which loading it by filename failed. An unparseable `.dck` is **deleted**.
 
-The user's real file `/home/justin-a/.forge/decks/constructed/Pacho SHIELD.dck` is untouched (I never
+The user's real file `~/.forge/decks/constructed/Pacho SHIELD.dck` is untouched (I never
 pointed a run at `~/.forge`), but it *would* be hit, because its filename is `Pacho SHIELD.dck` while
 its `Name=` is `Pacho SHIELD (Marvel Super Heroes)`.
 
@@ -625,7 +625,7 @@ public final class HeadlessAiVsAi {
         System.setProperty("java.awt.headless", "true");
 
         // 1. GUI interface FIRST - ForgeConstants' static init calls GuiBase.getInterface().
-        GuiBase.setInterface(new HeadlessGuiBase(args[0]));   // args[0] = forge home, e.g. /home/justin-a/forge/
+        GuiBase.setInterface(new HeadlessGuiBase(args[0]));   // args[0] = forge home, e.g. ~/forge/
 
         // 2. Preferences, card DB, decks, AI profiles.
         FModel.initialize(null, null);
@@ -825,7 +825,7 @@ real remote path does.
 ### 4.8 Command lines
 
 ```bash
-FORGE=/home/justin-a/forge
+FORGE=~/forge
 JAR=$FORGE/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 
 # compile
@@ -837,7 +837,7 @@ java -Xmx4096m \
      -Dio.netty.tryReflectionSetAccessible=true \
      -Dfile.encoding=UTF-8 \
      -cp "out:$JAR" \
-     mtgtable.Server /home/justin-a/forge/ "Pacho SHIELD.dck"
+     mtgtable.Server ~/forge/ "Pacho SHIELD.dck"
 ```
 
 `forge.sh` uses exactly `-Xmx4096m -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8`
@@ -855,14 +855,14 @@ Verified working (this is what all the runs above used):
 
 ```
 <mtg-table-forge-home>/
-  res -> /home/justin-a/forge/res          # symlink; read-only, 33k card scripts + editions
+  res -> ~/forge/res          # symlink; read-only, 33k card scripts + editions
   forge.profile.properties                 # userDir=<mtg-table>/data   cacheDir=<mtg-table>/cache
 <mtg-table>/data/                          # FModel creates 24 profile dirs here
 <mtg-table>/data/decks/constructed/*.dck   # copies of the user's decks
-<mtg-table>/cache/pics/cards/              # can be symlinked to /home/justin-a/.cache/forge/pics/cards
+<mtg-table>/cache/pics/cards/              # can be symlinked to ~/.cache/forge/pics/cards
 ```
 
-This keeps `/home/justin-a/forge` and `/home/justin-a/.forge` untouched, which matters because of
+This keeps `~/forge` and `~/.forge` untouched, which matters because of
 the deck-renaming behaviour in §4.3 and because `FModel.initialize` writes prefs and logs.
 
 ---

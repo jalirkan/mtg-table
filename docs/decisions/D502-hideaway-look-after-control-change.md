@@ -8,7 +8,7 @@ wire and the protocol are unchanged.*
 
 **Context.** J182 (the lab's atlas night, 2026-11-01) ran its branch frame logs through `tools/check-redaction.mjs`, and
 11 logs failed, in three shapes (this decision, **D503** and **D504**). This decision covers five of them, all in spine
-`b-s06-peasant-2506`, under `/home/justin-a/code/lab/data/lab-j182/b-s06-peasant-2506/phaseB/frames/`:
+`b-s06-peasant-2506`, under `~/code/lab/data/lab-j182/b-s06-peasant-2506/phaseB/frames/`:
 `d1-random-o0-b148`, `d1-random-o0-b47`, `d1-random-o0-b76`, `d1-random-o1-b148` and `d2-random-o3-b20` (each
 `-seat0.jsonl.gz`). Each failed A9 on every state frame from one line on, with this message:
 

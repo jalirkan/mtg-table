@@ -38,7 +38,7 @@ sha256 `3c0a7c385b9207e593fe149255e00d1cd7e5568…` (from the session headers),
 ```
 $ ./bridge/build.sh
 bridge lint OK (16 file(s))
-compiling 16 file(s) -> /home/justin-a/code/mtg-table/bridge/out
+compiling 16 file(s) -> ~/code/mtg-table/bridge/out
 JsonSelfTest: 38 check(s), 0 failure(s)
 build OK
 ```
@@ -437,7 +437,7 @@ before: 623069ab09002e8e379de41a0a4a4a24b1f87d4e  (~/.forge)
         31dee7cff78667dc13f52c0cf3aa8c13b9ac05dc  (~/forge, depth 2)
 after:  623069ab09002e8e379de41a0a4a4a24b1f87d4e
         31dee7cff78667dc13f52c0cf3aa8c13b9ac05dc
-$ find /home/justin-a/.forge /home/justin-a/forge -newermt "2026-09-11 20:46:41"
+$ find ~/.forge ~/forge -newermt "2026-09-11 20:46:41"
 (no output)
 ```
 

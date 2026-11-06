@@ -8,7 +8,7 @@ through the real cue engine, with the queue's own pause / step / skip / speed;
 tune its `traits.json` row and its `cues.json` params live; and read how many
 pixels each prop gets from the table view on both seats.
 
-Built in the worktree `/home/justin-a/code/mtg-table-t2e`, branch `workshop`, from
+Built in the worktree `~/code/mtg-table-t2e`, branch `workshop`, from
 `main` at `0368a90`, and moved onto `main` at **`754f504`** (the card library and
 `#cards`) by the fix pass below — the working tree re-applied over the new base,
 with `useView.ts`, `main.tsx`, `styles.css` and `hooks-order.test.ts` merged by

@@ -1,6 +1,6 @@
 ## The personal tier, phase 1 — the folder, the manifest, the pipeline, and Doctor Doom through it (2026-09-28)
 
-Worked in the worktree `/home/justin-a/code/mtg-table-t2x` on branch
+Worked in the worktree `~/code/mtg-table-t2x` on branch
 `personal-tier`, from `main` at `a08c15f`, and rebased onto `main`'s `f2c934d`
 in fix pass 3 (§15). Decisions **D190** (the tier and its two-tier rule),
 **D191** (the pipeline's rules), **D192** (fix pass 1: how `check.mjs` judges a
@@ -22,7 +22,7 @@ read from the main checkout's `var/personal/models/doctor-doom/` and copied —
 never moved or modified (the two sha256 sums were compared).
 
 ```bash
-node tools/personal/import.mjs /home/justin-a/code/mtg-table/var/personal/models/doctor-doom/doctor_doom.zip doctor-doom
+node tools/personal/import.mjs ~/code/mtg-table/var/personal/models/doctor-doom/doctor_doom.zip doctor-doom
 node tools/personal/prepare.mjs doctor-doom --budget 6000 --pose t --card "Doctor Doom" --seat opp
 node tools/personal/check.mjs doctor-doom
 ```
@@ -852,7 +852,7 @@ this lane's open ones.
 
 ## The personal tier, phase 2 — the loader, the other seven models, the workshop (2026-09-28)
 
-Worked in the worktree `/home/justin-a/code/mtg-table-t2p2` on branch
+Worked in the worktree `~/code/mtg-table-t2p2` on branch
 `personal-tier-2`, from `main` at `096c952`. Decisions **D194** (the pipeline's
 phase 2: the baked clip set, the paint step, `--joints`, the verdict file),
 **D195** (the loader: the dev-server index, THE lookup, the dressed pose, the

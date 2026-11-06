@@ -29,7 +29,7 @@ uploads the dataset himself.
    code is J193's byte for byte** but for what named the lab machine and one constant: the data folder (argument 1
    or `ATLAS_DATA`), the job folder (`ATLAS_LOCAL`, defaulting to the old repo-relative `var/lab-j193-local`) and
    the scan caches' stamp (`ATLAS_SCAN_STAMP`, default `J193 v5`, so an older night's caches can be read). No
-   `/home/` path is left. A later atlas job runs these at its pin instead of writing heredocs; the five pilot
+   home-folder path is left. A later atlas job runs these at its pin instead of writing heredocs; the five pilot
    scripts and `metrics.py`'s spine table carry J193's seeds and are edited per night, as they were.
 2. **The dataset, v1** (`tools/atlas/release.py`), one folder and its zip under `var/release/` (gitignored):
    - `labels.jsonl`: every label row of the six nights, J186's made again with `labels.py` exactly as its report
@@ -60,9 +60,9 @@ uploads the dataset himself.
    Every absolute path becomes relative. **Card names stay**: the Fan Content Policy allows them; Wizards' text does
    not ship.
 4. **The check** that ends every build, and the zip is not written when it finds anything: no file holds an
-   absolute path of the shapes a machine's paths take (`/home/`, `/mnt/`, `/tmp/`, `/var/`, `/Users/`, `/root/`,
+   absolute path of the shapes a machine's paths take (a home folder, `/mnt/`, `/tmp/`, `/var/`, `/Users/`, `/root/`,
    `/media/`, `/srv/` after a space, quote, bracket, `=` or `:`) or a Windows drive path, the owner's name in any
-   case, a `@gmail.` address, the building machine's host name (read when the check runs), `CARDNAME` (Forge's
+   case, a Gmail address, the building machine's host name (read when the check runs), `CARDNAME` (Forge's
    placeholder in rules text) or a mana or tap symbol (`{T}`, `{2}{W}`: zero in v1); `relative()` refuses an
    absolute path outside a night's folder, so none is written in the first place; no identity in `labels.jsonl` or an
    atlas file has a ninth field; an activate option's label is its identity's name, and in `branches/` the label
@@ -151,7 +151,7 @@ uploads the dataset himself.
 
 **The public-repo check** (2026-11-06, on `72302c69` plus this branch; read, mostly not edited).
 
-- **`git grep -l "justin-a"`: 93 tracked files.** 77 are history — `docs/evidence/` (35), `docs/decisions/` (30)
+- **`git grep -l` for the owner's home folder's name: 93 tracked files.** 77 are history — `docs/evidence/` (35), `docs/decisions/` (30)
   and `docs/research/` (12) — dated records of what ran where, left as they are. The rest:
   - **the owner's machine convention, a follow-up for him**: `CLAUDE.md` (hard rule 9's working directory and the
     engine's path) and `docs/claude-md-rules.txt` (its manifest), `NOTICE` (the jar's path), `.gitignore` (a

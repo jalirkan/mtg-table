@@ -17,7 +17,7 @@ both attempts with the same message, e.g.
 
 29 unit errors tripped the night's abort. The check is `Atlas.Hook.decision` (`bridge/src/mtgtable/ai/Atlas.java:436`):
 a unit's `expect` is the baseline's token list at the branched decision. Evidence, read only:
-`/home/justin-a/code/lab/data/lab-j186/b-s13-pauper-2552/` (`plan.json`, `phaseB/baseline.json`, `units.jsonl`,
+`~/code/lab/data/lab-j186/b-s13-pauper-2552/` (`plan.json`, `phaseB/baseline.json`, `units.jsonl`,
 `branches.jsonl`, `rows/`); the two decks are committed as `fixtures/cubelab/atlas-replay/pauper-2452-{A,B}.dck`, byte for
 byte the night's (sha256 `e13a7223…` and `67d193a8…`, as `schedule.jsonl` records them).
 

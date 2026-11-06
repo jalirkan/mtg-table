@@ -263,7 +263,7 @@ This is also why `RecordMatch` runs the match inside
 
 ## 8. Nothing of the user's was touched
 
-`/home/justin-a/forge` and `/home/justin-a/.forge` have **no file modified**
+`~/forge` and `~/.forge` have **no file modified**
 after the M0 baseline; every Forge write went to `var/forge` and `var/cache`
 via `forge-home/forge.profile.properties`. Decks are loaded with
 `DeckSerializer.fromFile` only — `bridge/build.sh` still refuses to compile if

@@ -64,7 +64,7 @@ and the copy's stand-ins, on every branch of the unit: `[The Monarch@Command?, W
 did not hand B the monarch again. The NPE was never silent: an affected branch errored where it would have used
 the stand-in, and until then nothing reads the field (`getMonarchSet` only for the monarch, `removeMonarchEffect`
 only on a change of hands). It is in J161 alone. A grep for it over every `branches.jsonl` under
-`/home/justin-a/code/lab/data` finds these 2 rows of 96 and no others.
+`~/code/lab/data` finds these 2 rows of 96 and no others.
 
 **Decision.**
 

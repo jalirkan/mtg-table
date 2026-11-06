@@ -36,9 +36,9 @@ casualty. Its script is `K:Casualty:X:NonLegendary$ True | SetLoyalty$ Casualty`
 **token** planeswalker: in the baseline's seat-0 log, id 97, *Ob Nixilis, the Adversary*, `Planeswalker - Nixilis` (not
 legendary), loyalty 3, `keywords: ["CASUALTY"]`, `token: true`, on the battlefield in that log's state frames from
 `seq` 106 (line 116, turn 7) to `seq` 177 (line 207, turn 10), and gone from the next state frame (line 208, turn 10). The errored decisions are exactly the ones taken while it was there. Evidence:
-`/home/justin-a/code/lab/data/lab-j176/b-s07-legacy-2133/` (`atlas.md` and `atlas.json`: 12 PROBLEMS, d3–d6;
+`~/code/lab/data/lab-j176/b-s07-legacy-2133/` (`atlas.md` and `atlas.json`: 12 PROBLEMS, d3–d6;
 `phaseB/branches.jsonl`; `phaseB/logs/worker-*.log`; `phaseB/baseline/frames/baseline-seat0.jsonl.gz`); the deck
-`/home/justin-a/code/lab/data/lab-j176/decks/s07-legacy-2033/decks/legacy-2033-00002.dck`.
+`~/code/lab/data/lab-j176/decks/s07-legacy-2033/decks/legacy-2033-00002.dck`.
 
 **The exact cause** (the pinned jar, `javap -c -l`; the 2.0.15 source checkout at `579d0a84c` reads the same):
 

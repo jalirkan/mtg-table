@@ -37,6 +37,7 @@
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { parseLibraryPool, type LibraryCard, type MetaCards } from './library-candidates.ts';
@@ -261,6 +262,7 @@ export function defaultEditionsDir(repo: string): string {
   let jar = process.env.FORGE_JAR;
   if (!jar) jar = (JSON.parse(fs.readFileSync(path.join(repo, 'config.json'), 'utf8')) as { forgeJar?: string }).forgeJar;
   if (!jar) throw new Error('census: no FORGE_JAR and no forgeJar in config.json; pass --editions <Forge res/editions>');
+  if (jar.startsWith('~/')) jar = path.join(os.homedir(), jar.slice(2));   // D516: config.json's leading ~/ only
   return path.join(path.dirname(jar), 'res', 'editions');
 }
 

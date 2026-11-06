@@ -1,7 +1,7 @@
 # Match setup evidence
 
 Status: evidence for the match-setup work, 2026-09-27, in the `match-setup`
-worktree (`/home/justin-a/code/mtg-table-t2f`, based on main `0368a90`), against
+worktree (`~/code/mtg-table-t2f`, based on main `0368a90`), against
 the 2.0.14 jar (`forge-gui-desktop-2.0.14-jar-with-dependencies.jar`). Every
 number below was measured, and the command that produced it is next to it.
 

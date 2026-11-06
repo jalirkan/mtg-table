@@ -22,6 +22,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { parseCube } from '../cubelab/cube.ts';
 import { buildLeaks, reportMd, rowsOf, strictShape, verify, type Row, type Tally } from './report.ts';
@@ -184,7 +185,8 @@ function config(): Obj {
 }
 
 function forgeJar(): string {
-  const j = process.env.FORGE_JAR ?? String(config().forgeJar ?? '');
+  let j = process.env.FORGE_JAR ?? String(config().forgeJar ?? '');
+  if (j.startsWith('~/')) j = join(homedir(), j.slice(2));   // D516: config.json's leading ~/ only
   if (!j || !existsSync(j)) throw new Error(`FORGE_JAR not found: ${j}`);
   return j;
 }

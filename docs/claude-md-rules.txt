@@ -16,7 +16,7 @@
 8. **Hidden information: exactly one card-serialisation function,** and exactly
 - **A library carries `count` plus only the cards `canBeShownTo` allows** (a
 **A personal model is a statement about what a card is, too** (**D190**): it
-9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
+9. **Every script must run from the repo root as its working directory** and
 10. **The lints are part of the build.** `tools/lint-bridge.sh` runs from
 **and `tools/`** (**D182** — `tools/audit-deck/AuditDeck.java` boots the same
 - **1. what destroys the user's data** — `FModel.getDecks()` renames and
@@ -37,9 +37,9 @@
 - **set immediately after** `initialize`:
 **never `save()`**. Decision **D13**: with the pref on, a scry 1 ships the
 - **Never pass `--release`** — a JRE image has no `ct.sym`. Plain output is Java
-- **The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.** Fat jar
+- **The engine: Forge 2.0.14 at `~/forge`, and only that.** Fat jar
 - **How it was obtained:** it is the user's own install, Forge's `.tar.bz2`
-- **How it is pinned:** `config.json`'s `forgeJar` names it by absolute path
+- **How it is pinned:** `config.json`'s `forgeJar` names it by path, `~/` for the home directory
 - **What may replace it (D109, D110):** only an asset of a **tagged official
 - **`~/forge` and `~/.forge` stay untouched, always** — before a switch, after
 - **Reality Fracture (FRA) is not in this engine.** Its edition file lists 43
@@ -287,7 +287,7 @@ span: Licence is GPL-3.0-or-later for the whole repo.
 span: Hidden information: exactly one card-serialisation function,
 span: A library carries `count` plus only the cards `canBeShownTo` allows
 span: A personal model is a statement about what a card is, too
-span: Every script must run from `/home/justin-a/code/mtg-table` as its working directory
+span: Every script must run from the repo root as its working directory
 span: Never hardcode the jar path in Java.
 span: The lints are part of the build.
 span: `./tools/lint-bridge.sh --list-rules` is the list of what it rejects
@@ -314,7 +314,7 @@ span: set immediately after
 span: OpenJDK 21 JRE only — there is no `javac` binary.
 span: Never pass `--release`
 span: Do not install them.
-span: The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.
+span: The engine: Forge 2.0.14 at `~/forge`, and only that.
 span: 39,383,858 bytes, sha256 `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`
 span: How it was obtained:
 span: The one exception is CI
@@ -342,7 +342,7 @@ span: `hello_ok.match` only when asked
 span: M7 adds `--arena`, and it is one URL fragment.
 span: Since Tier 2's slice 2
 span: The gate, in one paragraph.
-span: Never write, move or rename anything under `/home/justin-a/forge` or `/home/justin-a/.forge`
+span: Never write, move or rename anything under `~/forge` or `~/.forge`
 span: Claude commits on branches and merges to `main` when the full gate is green; the user owns pushes beyond that, releases and anything public
 span: A branch per lane, in a worktree of its own
 span: A skeptic before a merge

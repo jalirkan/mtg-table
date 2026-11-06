@@ -136,9 +136,9 @@ code; if you think one is wrong, say so in prose first.
    `web/src/arena/personal.ts`'s one lookup enforces that, and a corpus sweep
    with a hostile overlay holds it (**D195**; `web/src/arena/CLAUDE.md`'s *The
    personal tier*).
-9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
-   directory** and must read the jar path from
-   `/home/justin-a/code/mtg-table/config.json` or the `FORGE_JAR` env var. **Never
+9. **Every script must run from the repo root as its working directory** and
+   must read the jar path from `config.json` at the repo root (its `forgeJar`; a
+   leading `~/` is the home directory) or the `FORGE_JAR` env var. **Never
    hardcode the jar path in Java.**
 10. **The lints are part of the build.** `tools/lint-bridge.sh` runs from
     `bridge/build.sh` and fails it. It greps every `*.java` under `bridge/src`
@@ -280,11 +280,11 @@ code; if you think one is wrong, say so in prose first.
 - Node v24.20.0, npm 11. Node 24 runs `.ts` files directly via type stripping, so
   `tools/fetch-art.ts` needs no build step.
 - No sudo.
-- **The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.** Fat jar
+- **The engine: Forge 2.0.14 at `~/forge`, and only that.** Fat jar
   `forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, **39,383,858 bytes, sha256
   `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`**, manifest
   `Implementation-Version: 2.0.14-SNAPSHOT-08.08`, `build.txt`
-  `2026-08-08 22:49:26`; resources `/home/justin-a/forge/res`, beside the jar,
+  `2026-08-08 22:49:26`; resources `~/forge/res`, beside the jar,
   which is where `tools/make-forge-home.sh` derives them from.
   - **How it was obtained:** it is the user's own install, Forge's `.tar.bz2`
     distribution extracted as-is. Locally this repo never downloads, copies or
@@ -292,8 +292,8 @@ code; if you think one is wrong, say so in prose first.
     (**D202**): its `bridge` job fetches this same build from Forge's tagged
     `forge-2.0.14` release, checks it against the pin and caches the jar alone —
     `tools/CLAUDE.md`'s *CI runs the gate's engine-free half*.
-  - **How it is pinned:** `config.json`'s `forgeJar` names it by absolute path
-    (`FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
+  - **How it is pinned:** `config.json`'s `forgeJar` names it by path, `~/` for the home directory
+    (**D516**; `FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
     prints its sha256 — **it must print the one above** — and every recording's
     session header carries it as `forgeJarSha256` (all 22 committed
     `fixtures/games/` recordings name this build). CI's `bridge` job asserts the
@@ -484,11 +484,11 @@ is `docs/evidence/gate-history.md`.
 
 ## Never write outside this repo
 
-Write only under `/home/justin-a/code/mtg-table`. **Never write, move or rename
-anything under `/home/justin-a/forge` or `/home/justin-a/.forge`** — that is the
+Write only under this repository's checkout. **Never write, move or rename
+anything under `~/forge` or `~/.forge`** — that is the
 user's real Forge install and their real decks. Forge's profile is redirected into
 `var/` by `forge-home/forge.profile.properties` (absolute `userDir` and
-`cacheDir`); `forge-home/res` is a symlink to `/home/justin-a/forge/res`.
+`cacheDir`); `forge-home/res` is a symlink to `~/forge/res`.
 
 `FModel.initialize` creates Forge's whole profile tree (decks, quest, gauntlet,
 preferences, the picture cache). It must create it in `var/`.

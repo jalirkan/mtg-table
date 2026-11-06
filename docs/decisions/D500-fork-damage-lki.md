@@ -24,7 +24,7 @@ java.lang.NullPointerException: Cannot invoke "org.apache.commons.lang3.tuple.Pa
   at mtgtable.ai.Atlas.play(Atlas.java:820)
 ```
 
-Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/branches.jsonl`, `phaseB/logs/worker-2.log`,
+Evidence: `~/code/lab/data/lab-j181/b-s06-peasant-2184/` (`phaseB/branches.jsonl`, `phaseB/logs/worker-2.log`,
 `phaseB/frames/d19-random-*`, `phaseB/baseline/frames/`, `plan.json` and its two decks), read only.
 
 **The exact cause** (the pinned jar, `javap -p -c`; the 2.0.15 source checkout at `579d0a84c` reads the same):

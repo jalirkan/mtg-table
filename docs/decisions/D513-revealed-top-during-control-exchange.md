@@ -9,7 +9,7 @@ bridge, the wire and the protocol are unchanged. A checker admission, so it land
 
 **Context.** Lab night J191 (spine `b-s08-powered-3008`, population `random-<band>-d508`'s fifth night) failed its
 `atlas.problems == 0` check on two branch frame logs, both seat 0, both under the atlas's `--empty-hand-ok`:
-`/home/justin-a/code/lab/data/lab-j191/b-s08-powered-3008/phaseB/frames/d7-random-o1-b121-seat0.jsonl.gz` (line 501)
+`~/code/lab/data/lab-j191/b-s08-powered-3008/phaseB/frames/d7-random-o1-b121-seat0.jsonl.gz` (line 501)
 and `.../d7-random-o1-b5-seat0.jsonl.gz` (line 261). The spine's other 6,798 branch logs and its two baseline logs
 passed. Both complaints read:
 

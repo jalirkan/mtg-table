@@ -6,10 +6,10 @@ Forge's answer, **D486**'s card targets and **D358**'s single-target redraw. Pro
 
 **2026-10-26**
 
-**Context.** J171's read of the first D486 night (J170's data, `/home/justin-a/code/lab/data/lab-j170`) counted 645
+**Context.** J171's read of the first D486 night (J170's data, `~/code/lab/data/lab-j170`) counted 645
 "lost casts" in 423 branches, new with D486: Fireball on s09 (545), and on s13 Bone Shards 36, Vicious Offering 28,
 Candy Grapple 4 and Disfigure 1 (69). A lost cast is J168's `strand.py` made generic
-(`/home/justin-a/code/lab/mtg-table/var/lab-j171-local/bin/metrics.py`): a zone event `{hand, caster}` → `{stack, null}`
+(`~/code/lab/mtg-table/var/lab-j171-local/bin/metrics.py`): a zone event `{hand, caster}` → `{stack, null}`
 after which no state frame lists the card on the stack, no event moves it off the stack and no `cast` event names it.
 
 **What those 614 casts were: refused payments, not strands.** Every one of them -- all 545 on s09 and all 69 on s13 --
@@ -178,9 +178,9 @@ before D488 are not pooled with those after it: the split is the git sha and the
 - **The reproductions** (`CUBELAB_HOME_ROOT=var/d488-homes timeout 1500 tools/cubelab.sh atlas --deck-a <deck 1> --deck-b
   <deck 2> --seed <2109|2113> --phase b --decisions 2 --min-options 3 --screen 5 --early-stop 5,10,15 --branch-random 25
   --branch-forge 0 --chunk 5 --checks-parallel 1 --unit-timeout 10 --jobs 4 --out …`, the decks
-  `/home/justin-a/code/lab/data/lab-j170/decks/s09-pauper-2009/decks/pauper-2009-0000{1,2}.dck` and
+  `~/code/lab/data/lab-j170/decks/s09-pauper-2009/decks/pauper-2009-0000{1,2}.dck` and
   `.../s13-pauper-2013/decks/pauper-2013-0000{1,2}.dck`), each run on origin/main `f2b4e9c2` (a detached worktree,
-  `/home/justin-a/code/mtg-table-d488-before`, carrying only point 4's logging; removed after the runs, its outputs with it) and on this branch. "Lost" is
+  `~/code/mtg-table-d488-before`, carrying only point 4's logging; removed after the runs, its outputs with it) and on this branch. "Lost" is
   `metrics.py`'s definition (`classify2.py` in the lane's scratchpad applies it to every frame log and says where each card
   went next); "refused" is the worker logs' `AI failed to play` lines.
 

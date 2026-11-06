@@ -29,7 +29,7 @@ implicit null check thrown hot at one compiled site (`-XX:+OmitStackTraceInFastT
 its ArrayIndexOutOfBounds. They are taken as the same site: they are the same decisions of the same game, and nothing
 else in those logs throws. Both decks of the spine hold Fable of the Mirror-Breaker; the branches' last state frames
 (`phaseB/frames/d18-random-o0-b22-seat0.jsonl.gz`) show both seats with Reflection of Kiki-Jiki, its back face, beside
-Goblin Shaman tokens, Satyr tokens and a Treasure. Evidence: `/home/justin-a/code/lab/data/lab-j180/b-s11-legacy-2176/`
+Goblin Shaman tokens, Satyr tokens and a Treasure. Evidence: `~/code/lab/data/lab-j180/b-s11-legacy-2176/`
 (`phaseB/branches.jsonl`, every errored row with its seed; `phaseB/logs/worker-*.log`; `phaseB/frames/`), read only.
 
 **The exact cause** (the pinned jar, `javap -p -c -l`; the 2.0.15 source checkout at `579d0a84c` reads the same):

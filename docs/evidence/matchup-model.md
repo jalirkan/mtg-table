@@ -33,8 +33,8 @@ tools/cubelab.sh run --bridge pauper,vintage --drafts 4 --games 1 --jobs 1 --see
 ## 2. The model, on every decisive game on disk
 
 ```bash
-python3 tools/ml/matchup.py train var/mm/bridge-smoke var/mm/qsmoke var/cubelab/mm /home/user/mtg-table/var/cubelab/runs \
-    --out var/mm/m5 --facts var/cubelab/facts /home/user/mtg-table/var/cubelab/facts --boot 20 --holdout-cubes all --embed 8
+python3 tools/ml/matchup.py train var/mm/bridge-smoke var/mm/qsmoke var/cubelab/mm ~/mtg-table/var/cubelab/runs \
+    --out var/mm/m5 --facts var/cubelab/facts ~/mtg-table/var/cubelab/facts --boot 20 --holdout-cubes all --embed 8
 ```
 
 7 min 52 s. The data: the cube lab's earlier runs in the main checkout

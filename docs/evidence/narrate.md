@@ -12,7 +12,7 @@ its rebase onto spectating's `a5c8e39`, where the engine and sets' D109–D112, 
 hardening pass's D113–D115 and its 12b and 12c, more villains' D116–D117 and
 spectating's D118–D122 had landed first — §8.)
 
-Built on 2026-09-28 in the worktree `/home/justin-a/code/mtg-table-t2q`, branch
+Built on 2026-09-28 in the worktree `~/code/mtg-table-t2q`, branch
 `narrate`, from `main` at `a092d3a`. Every number below was measured there, and
 the command that produced it is beside it.
 
@@ -417,7 +417,7 @@ and 94 vitest in 6 files** inside the gate, where `MTGTABLE_WS_LOGS` names step
 10's logs; **870 / 870 and 94** standalone. This branch touches nothing under
 `web/`, `bridge/` or `fixtures/games/`, so those are `main`'s counts.
 
-`/home/justin-a/forge` (22,128 paths) and `/home/justin-a/.forge` (27 paths;
+`~/forge` (22,128 paths) and `~/.forge` (27 paths;
 `decks/constructed/` holds no file) were fingerprinted — paths, sizes and mtimes
 — before this branch's first JVM and after the gate: **unchanged**.
 
@@ -485,7 +485,7 @@ and auto sessions, 9d's two games, 9e, and step 10's nine client logs, each
 paired with the bridge's own log of that game). Inside the gate the web step counted **903 `node
 --test`, 895 pass, 0 fail, 8 skipped, and 98 vitest in 7 files**.
 
-`/home/justin-a/forge` (22,128 paths) and `/home/justin-a/.forge` (27 paths)
+`~/forge` (22,128 paths) and `~/.forge` (27 paths)
 were fingerprinted — the jar's sha256, every file's sha1 under `~/.forge`, and
 paths, sizes and mtimes of both trees — before the rebase and after the gate:
 **unchanged**.

@@ -10,7 +10,7 @@ between landings (**D509**, point 1).*
 
 **Context.** Lab night J187 (spine `b-s06-peasant-2558`, population `random-<band>-d508`'s second night) ran its branch
 frame logs through the checker, and two failed rule A9's hideaway shape, both seat 1:
-`/home/justin-a/code/lab/data/lab-j187/b-s06-peasant-2558/phaseB/frames/d14-random-o0-b48-seat1.jsonl.gz` (from line
+`~/code/lab/data/lab-j187/b-s06-peasant-2558/phaseB/frames/d14-random-o0-b48-seat1.jsonl.gz` (from line
 121) and `.../d21-random-o1-b58-seat1.jsonl.gz` (from line 468). Every complaint is card 29:
 
     face-down card 29 in exile is owned and controlled by player 0, not the viewing seat 1, yet carries an "alt" block

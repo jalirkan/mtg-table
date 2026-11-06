@@ -228,7 +228,7 @@ would have to be overlaid too, replacing stock FRA with a `CUSTOM_SET`; 2.0.14's
 throws on some of the new statics; and "builds" is not a rules review. The snapshot
 plays the exact deck cleanly. So nothing is merged, and the day's checklist is short:
 
-1. Install the official release beside the old one (never over `/home/justin-a/forge`),
+1. Install the official release beside the old one (never over `~/forge`),
    port and build the bridge against it (spike B's patch), and point `config.json`'s
    `forgeJar` at it.
 2. `./tools/make-forge-home.sh` (res is derived from the jar), then
@@ -289,7 +289,7 @@ exactly as they were while spike A worked here:
 
 | | 2.0.14 (installed) | 2.0.15-SNAPSHOT (daily) |
 |---|---|---|
-| path | `/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar` | `<scratchpad>/forge-snap/forge-gui-desktop-2.0.15-SNAPSHOT-jar-with-dependencies.jar` |
+| path | `~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar` | `<scratchpad>/forge-snap/forge-gui-desktop-2.0.15-SNAPSHOT-jar-with-dependencies.jar` |
 | manifest `Implementation-Version` | `2.0.14-SNAPSHOT-08.08` | `2.0.15-SNAPSHOT-09.27` (`build.txt`: 2026-09-27 18:24:12) |
 | bytes | 39,383,858 | 31,498,557 |
 | sha256 | `3c0a7c38…8e5dd9` | `70f756bcfd0d26d0dbe7aea0b0c519fec96a8d886f7aecdbe608de0db62f4229` |
@@ -303,7 +303,7 @@ files already there were left alone. `tools/make-forge-home.sh` derives `res/`
 from the jar's directory and needed no change. With
 `FORGE_JAR=<snapshot jar>`, `forge-home/res` in the `repo` copy resolved to
 `<scratchpad>/forge-snap/res` (checked with `readlink -f`), and in `orig` to
-`/home/justin-a/forge/res`. The snapshot's card database holds **97,109
+`~/forge/res`. The snapshot's card database holds **97,109
 printings, 33,507 unique** (2.0.14: 95,126 and 33,137).
 
 `tools/check-forge.sh` pins no size and no sha. It prints the sha256 and asserts
@@ -738,7 +738,7 @@ At the start of this pass `git status` showed only untracked additions and
 `git diff --stat` was empty: spike A worked in throwaway homes under `var/`, and
 spike B in private copies under the session scratchpad. `var/forge/custom/cards/`
 (the real game's overlay) held exactly one file, `a_i_m_scientists.txt`, and
-`forge-home/res` still resolved to `/home/justin-a/forge/res`. No card script had
+`forge-home/res` still resolved to `~/forge/res`. No card script had
 been hand-written, so there was nothing to move to a drafts folder, and none was
 created.
 
