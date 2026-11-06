@@ -1,0 +1,15 @@
+==== J194 pilot4 started 2026-11-05T20:31:33-05:00 in unit lab-J194-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+match search-v2-ms3000-r24 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-ms3000-r24 vs search-v1-anytime (match:j194-pilot:20261106T013134-2979459, seed 865900000, 1 pair(s))
+  done   w0 search-v2-ms3000-r24 2-2 search-v1-anytime (0 draws) in 97 s
+  4 decisive games (2 pairs): search-v2-ms3000-r24 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-ms3000-r24 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-ms3000-r24: 72 decisions searched in 4 games, 11 changed Forge's answer (15.3%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-ms3000-r24 by kind: p 7/45, a 3/20, b 1/7
+search-v2-ms3000-r24 time per decision: 803.736 ms (p+a+b); by kind p 920.927, a 582.093, b 683.627
+search-v1-anytime: 72 decisions searched in 4 games, 12 changed Forge's answer (16.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 8/44, a 3/20, b 1/8
+search-v1-anytime time per decision: 462.348 ms (p+a+b); by kind p 510.645, a 364.702, b 440.835
+{"run":"20261106T013134-2979459","a":"search-v2-ms3000-r24","b":"search-v1-anytime","aRolloutsPerDecision":31.36,"bRolloutsPerDecision":19.11,"aRoundsPerDecision":13.18,"bRoundsPerDecision":7.47,"aDecisions":72,"bDecisions":72,"games":4,"ratio":1.641}
