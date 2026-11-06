@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -239,11 +239,15 @@ test('every committed v2 cube is a clean 180 on the plan, -nopower holds no powe
   }
 });
 
-const LAB_DATA = process.env.CUBELAB_LAB_DATA ?? '/home/justin-a/code/lab/data';
-const LAB_FACTS = process.env.CUBELAB_LAB_FACTS ?? '/home/justin-a/code/lab/mtg-table/var/cubelab/facts/32653ed2fcd7d8d2.json';
+// The recorded census (lab-j144), J145's balance and the facts file are lab data, not committed: the
+// test reads them from CUBELAB_LAB_DATA and CUBELAB_LAB_FACTS, else from the lab's conventional place
+// under the home folder (`~/code/lab/`: a convention, not a machine's path; D516), and skips when the
+// files are absent.
+const LAB_DATA = process.env.CUBELAB_LAB_DATA ?? join(homedir(), 'code', 'lab', 'data');
+const LAB_FACTS = process.env.CUBELAB_LAB_FACTS ?? join(homedir(), 'code', 'lab', 'mtg-table', 'var', 'cubelab', 'facts', '32653ed2fcd7d8d2.json');
 const haveLab = existsSync(join(LAB_DATA, 'lab-j144', 'out', 'census-games.jsonl.gz')) && existsSync(join(LAB_DATA, 'lab-j145', 'out', 'balance.json')) && existsSync(LAB_FACTS);
 
-test('v1 regenerates its committed cubes byte for byte (no --night: D473\'s path, untouched by v2)', { skip: haveLab ? false : 'the recorded census, J145 and the facts are not on this machine' }, () => {
+test('v1 regenerates its committed cubes byte for byte (no --night: D473\'s path, untouched by v2)', { skip: haveLab ? false : 'CUBELAB_LAB_DATA and CUBELAB_LAB_FACTS do not name the recorded census, J145 and the facts' }, () => {
   const out = mkdtempSync(join(tmpdir(), 'bm-v1-'));
   try {
     const f = new Map<string, string[]>([['census', [join(LAB_DATA, 'lab-j144')]], ['omega', [join(LAB_DATA, 'lab-j145')]], ['facts', [LAB_FACTS]], ['out', [out]], ['cubes-out', [join(out, 'cubes')]]]);

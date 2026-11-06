@@ -111,10 +111,10 @@ test('clockText, and the restart reason ends with it', () => {
 });
 
 test('the user unit: ExecStartPre waits for NTP with the daemon\'s own options, the start timeout covers the wait, After=time-sync.target', () => {
-  const u = serviceUnit({ runnerDir: '/home/j/code/lab/runner', node: '/usr/bin', args: ['--lab-root /home/j/code/lab', '--http-port 8645'] });
-  assert.match(u, /^ExecStartPre=\/home\/j\/code\/lab\/runner\/tools\/runner\.sh wait-clock --lab-root \/home\/j\/code\/lab --http-port 8645 --max-wait-s 600$/m);
+  const u = serviceUnit({ runnerDir: '/srv/lab/runner', node: '/usr/bin', args: ['--lab-root /srv/lab', '--http-port 8645'] });
+  assert.match(u, /^ExecStartPre=\/srv\/lab\/runner\/tools\/runner\.sh wait-clock --lab-root \/srv\/lab --http-port 8645 --max-wait-s 600$/m);
   assert.match(u, /^TimeoutStartSec=660$/m);
-  assert.match(u, /^ExecStart=\/home\/j\/code\/lab\/runner\/tools\/runner\.sh daemon --lab-root \/home\/j\/code\/lab --http-port 8645$/m);
+  assert.match(u, /^ExecStart=\/srv\/lab\/runner\/tools\/runner\.sh daemon --lab-root \/srv\/lab --http-port 8645$/m);
   assert.match(u, /\[Unit\][\s\S]*^After=time-sync\.target$[\s\S]*\[Service\]/m);
   assert.match(u, /cannot order\s+(#\s+)?after the system's time-sync\.target/);
   assert.ok(u.indexOf('ExecStartPre=') < u.indexOf('ExecStart='), 'the wait before the daemon');

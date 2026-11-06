@@ -7,7 +7,7 @@ unchanged.*
 **2026-11-02**
 
 **Context.** The eleventh of J182's failing branch logs (see **D502**) is
-`/home/justin-a/code/lab/data/lab-j182/b-s04-powered-2504/phaseB/frames/d0-random-o1-b3-seat0.jsonl.gz`. It failed with:
+`~/code/lab/data/lab-j182/b-s04-powered-2504/phaseB/frames/d0-random-o1-b3-seat0.jsonl.gz`. It failed with:
 
     decision 93 names card 48 (target:48), which its state frame does not show seat 0 -- a stub's id, a library card
     or another seat's hidden card is never an option (M55, D347)

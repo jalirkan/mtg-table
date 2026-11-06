@@ -191,7 +191,7 @@ machine, and the search budgets by the clock — a game in the browser at the sa
 time would slow both), `JOBS` about half the cores:
 
 ```bash
-cd /home/justin-a/code/mtg-table && ./bridge/build.sh && ./tools/ai-bench.sh --selftest && \
+cd ~/code/mtg-table && ./bridge/build.sh && ./tools/ai-bench.sh --selftest && \
 JOBS=4 S=31 && B=tools/ai-bench.sh && \
 $B play --pairs tools/ai-bench/pairs-cube.txt --games 40 --seed $S --jobs $JOBS --run night-cube-control --a Default --b Default && \
 $B play --pairs tools/ai-bench/pairs-cube.txt --games 40 --seed $S --jobs $JOBS --run night-cube-search --a Default+search --b Default && \

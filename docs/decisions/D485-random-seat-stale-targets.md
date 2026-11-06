@@ -8,7 +8,7 @@ file). Protocol amendment **M74**.*
 **2026-10-25**
 
 **Context.** J168 (2026-10-25), a read-only diagnosis of 18 `check-redaction.mjs` failures on spines s06 and s10 of J166
-(`/home/justin-a/code/lab/data/lab-j166/b-s06-peasant-2106`, `b-s10-peasant-2110`). Every flagged id was a **stale
+(`~/code/lab/data/lab-j166/b-s06-peasant-2106`, `b-s10-peasant-2110`). Every flagged id was a **stale
 target**: the viewer's own token that had stopped existing turns before (died into its own graveyard, or bounced to its
 own hand) and still sat in Forge's target list for the viewer's own Troll Negotiations. Examples:
 `b-s10-peasant-2110/phaseB/frames/d22-random-o0-b25-seat1.jsonl.gz:126` (decision 39, `target:131`, the viewer's Spider
@@ -189,7 +189,7 @@ targeting); the Forge map is unchanged.
 - **The s10 reproduction** (`CUBELAB_HOME_ROOT=var/d485-homes timeout 900 tools/cubelab.sh atlas --deck-a <s10 deck 1>
   --deck-b <s10 deck 2> --seed 2110 --phase b --decisions 2 --min-options 3 --screen 5 --early-stop 5,10,15
   --branch-random 25 --branch-forge 0 --chunk 5 --checks-parallel 1 --unit-timeout 10 --jobs 2 --out var/d485-s10`, the
-  decks `/home/justin-a/code/lab/data/lab-j166/decks/s10-peasant-2010/decks/peasant-2010-0000{1,2}.dck`), run on this
+  decks `~/code/lab/data/lab-j166/decks/s10-peasant-2010/decks/peasant-2010-0000{1,2}.dck`), run on this
   branch and, the same command, on origin/main `26a8db00` in a scratch worktree:
   - **Before** (origin/main): 215 branch games at d2, d44 and d45 in 280 s, checks clean; the worker logs hold **22
     `failed to target` lines** (Troll Negotiations 21, Tear Asunder 1).

@@ -173,12 +173,19 @@ public final class Config {
     /**
      * The Forge fat jar.  The {@code FORGE_JAR} environment variable wins over
      * config.json, matching {@code tools/config.sh}, so a one-off run against a
-     * different engine build needs no edit.
+     * different engine build needs no edit.  In config.json a LEADING
+     * {@code ~/} is the home directory ({@code user.home}) and nothing else is
+     * expanded (D516: the committed default is {@code ~/forge/<jar>}, so the
+     * file names no one's machine).
      */
     public File forgeJar() {
         final String env = System.getenv("FORGE_JAR");
         if (env != null && !env.isEmpty()) {
             return new File(env).getAbsoluteFile();
+        }
+        final String v = str("forgeJar");
+        if (v.startsWith("~/")) {
+            return new File(System.getProperty("user.home"), v.substring(2)).getAbsoluteFile();
         }
         return path("forgeJar");
     }

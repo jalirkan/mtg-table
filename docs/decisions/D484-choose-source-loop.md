@@ -7,12 +7,12 @@ no event at all "still reaches the unit's watchdog; none has been seen". J167 sa
 **2026-10-25**
 
 **Context.** J167 (2026-10-25): spine s05, pauper, decks
-`/home/justin-a/code/lab/data/lab-j166/decks/s05-pauper-2005/decks/pauper-2005-0000{1,2}.dck`, seed 2105, hung **every**
+`~/code/lab/data/lab-j166/decks/s05-pauper-2005/decks/pauper-2005-0000{1,2}.dck`, seed 2105, hung **every**
 unit of phase B. Deck B holds Circle of Protection: Green and deck A holds Lifeforce. The diagnosis took thread dumps
 (`var/j167-s04-diag/dumps-b/` in the main checkout) and reproduced it alone (`var/j167-s04-diag/b-s05`, whose log reads
 `worker 0: no answer in 600 s (hung) during d0-random-0`). J167's own evidence is
-`/home/justin-a/code/pc-results/results/J167/run3.log` and
-`/home/justin-a/code/lab/data/lab-j166/b-s05-pauper-2105/phaseB/`.
+`~/code/pc-results/results/J167/run3.log` and
+`~/code/lab/data/lab-j166/b-s05-pauper-2105/phaseB/`.
 
 **What loops** (Forge 2.0.14's source, read as prose, every call checked against the pinned jar with `javap`):
 

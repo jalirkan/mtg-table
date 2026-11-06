@@ -18,7 +18,11 @@
 #                                 tools/lint-bridge-selftest.sh -- every rule the
 #                                 lint declares FIRES on a snippet planted in a
 #                                 scratch copy, and a rule with no case fails
-#                                 (D180; ~1 s)
+#                                 (D180; ~1 s).  Then 2c: tools/public-check.sh --
+#                                 no tracked file names a home folder, this
+#                                 machine's host name or a personal address, and
+#                                 its selftest's plants each caught (D516; well
+#                                 under a second, no engine)
 #   3. bridge/build.sh            javac + the six self-tests (build.sh re-runs 2b and 2)
 #   4. mtgtable.Smoke             boots the engine, proves the prefs and the card overlay
 #   5. mtgtable.RecordMatch       a FRESH recording into var/, not a committed fixture
@@ -286,9 +290,10 @@
 # (every dependency passed) in a fixed priority order whenever fewer than
 # GATE_JOBS are running.  The order constraints are dependencies, not luck:
 #
-#   - check-forge, lint (with 2b, the lint's self-test, beside it) and build
-#     (steps 1-3) run first and alone -- every job
-#     depends on them;
+#   - check-forge, lint (with 2b, the lint's self-test, and 2c, the public
+#     check, beside it) and build (steps 1-3) run first and alone -- every job
+#     but 2c depends on them (2c needs no build, and the build does not wait
+#     for it);
 #   - step 6 depends on step 5 (it compares RecordMatch's fresh recording);
 #     6b's comparison on both of 6b's recordings; 9c's report on its fourteen
 #     rows;
@@ -545,6 +550,17 @@ s02_lint() {
 s02b_lintself() {
   printf '\n=== 2b. lint-bridge-selftest.sh -- every lint rule fires (D180) ===\n'
   ./tools/lint-bridge-selftest.sh || die "lint-bridge-selftest.sh (a lint rule did not fire on the code it exists for, or has no case)"
+}
+
+# 2c. D516: the repository is public.  tools/public-check.sh greps every tracked
+#     text file for a home-folder path, the owner's home-folder name, a personal
+#     mail address and this machine's host name (its ALLOW list, three paths with
+#     their reasons, is the exception), then plants each in a scratch repository
+#     under var/ and requires a hit.  No engine, no build; well under a second.
+s02c_public() {
+  printf '\n=== 2c. public-check.sh -- no tracked file names a home folder, this machine or a personal address (D516) ===\n'
+  ./tools/public-check.sh || die "public-check.sh (a tracked file names a home folder, this machine or a personal address: write ~/ or \$HOME, or reword; D516)"
+  ./tools/public-check.sh --selftest || die "public-check.sh --selftest (a planted home path, name, address or host name was not caught; D516)"
 }
 
 s03_build() {
@@ -2494,6 +2510,7 @@ PRE="03-build"                       # every pool job waits for the build
 job 01-forge      1  both     s01_forge
 job 02-lint       2  both     s02_lint          "01-forge"
 job 02b-lintself  2  both     s02b_lintself     "01-forge"
+job 02c-public    2  both     s02c_public       "01-forge"
 job 03-build      3  both     s03_build         "02-lint 02b-lintself"
 job 04-smoke      4  both     s04_smoke         "$PRE"
 job 05-record     5  both     s05_record        "$PRE"

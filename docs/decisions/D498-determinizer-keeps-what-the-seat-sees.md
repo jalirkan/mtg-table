@@ -26,7 +26,7 @@ library: the engine lets seat A look at it, and seat A's log lists it in the opp
 revealed-top rule (`baseline/frames/baseline-seat0.jsonl.gz`). A passing branch log
 (`frames/d14-random-o0-b0-seat0.jsonl.gz`) shows card 44 still the one card listed in that library; a failing one
 (`frames/d14-random-o0-b8-seat0.jsonl.gz`) shows it full and named in the opponent's two-card hand, and the library
-listing nothing. Evidence: `/home/justin-a/code/lab/data/lab-j181/b-s07-legacy-2185/` (`atlas.json`'s
+listing nothing. Evidence: `~/code/lab/data/lab-j181/b-s07-legacy-2185/` (`atlas.json`'s
 `checks.frameLogsFailed`; `phaseB/frames/`), read only.
 
 **The cause.** `Determinizer.determinize` (D312) pooled the opponent's whole hand and library, put the pool in a

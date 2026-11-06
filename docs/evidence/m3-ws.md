@@ -85,7 +85,7 @@ None bumps `v`; none changes a byte of any M1 or M2 recording.
 ```
 $ ./bridge/build.sh
 bridge lint OK (20 file(s))
-compiling 20 file(s) -> /home/justin-a/code/mtg-table/bridge/out
+compiling 20 file(s) -> ~/code/mtg-table/bridge/out
 JsonSelfTest: 38 check(s), 0 failure(s)
 AskSelfTest: 62 check(s), 0 failure(s)
 GameLogSelfTest: 35 check(s), 0 failure(s)

@@ -799,8 +799,8 @@ would pick for the card's VFX.
 
 A sibling agent ran the personal-only likeness experiment on this machine this
 evening, **on the user's approval in chat** for a personal-only side
-measurement. The evidence is `/home/justin-a/code/mtg-table-t2k/docs/evidence/likeness-experiment.md`
-and its scripts are `/home/justin-a/code/mtg-table-t2k/tools/likeness/README.md`
+measurement. The evidence is `~/code/mtg-table-t2k/docs/evidence/likeness-experiment.md`
+and its scripts are `~/code/mtg-table-t2k/tools/likeness/README.md`
 (branch `likeness`). Nothing from it is committed. The numbers below are
 **theirs, measured**, cited and not re-run.
 

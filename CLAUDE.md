@@ -136,9 +136,9 @@ code; if you think one is wrong, say so in prose first.
    `web/src/arena/personal.ts`'s one lookup enforces that, and a corpus sweep
    with a hostile overlay holds it (**D195**; `web/src/arena/CLAUDE.md`'s *The
    personal tier*).
-9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
-   directory** and must read the jar path from
-   `/home/justin-a/code/mtg-table/config.json` or the `FORGE_JAR` env var. **Never
+9. **Every script must run from the repo root as its working directory** and
+   must read the jar path from `config.json` at the repo root (its `forgeJar`; a
+   leading `~/` is the home directory) or the `FORGE_JAR` env var. **Never
    hardcode the jar path in Java.**
 10. **The lints are part of the build.** `tools/lint-bridge.sh` runs from
     `bridge/build.sh` and fails it. It greps every `*.java` under `bridge/src`
@@ -280,11 +280,11 @@ code; if you think one is wrong, say so in prose first.
 - Node v24.20.0, npm 11. Node 24 runs `.ts` files directly via type stripping, so
   `tools/fetch-art.ts` needs no build step.
 - No sudo.
-- **The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.** Fat jar
+- **The engine: Forge 2.0.14 at `~/forge`, and only that.** Fat jar
   `forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, **39,383,858 bytes, sha256
   `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`**, manifest
   `Implementation-Version: 2.0.14-SNAPSHOT-08.08`, `build.txt`
-  `2026-08-08 22:49:26`; resources `/home/justin-a/forge/res`, beside the jar,
+  `2026-08-08 22:49:26`; resources `~/forge/res`, beside the jar,
   which is where `tools/make-forge-home.sh` derives them from.
   - **How it was obtained:** it is the user's own install, Forge's `.tar.bz2`
     distribution extracted as-is. Locally this repo never downloads, copies or
@@ -292,8 +292,8 @@ code; if you think one is wrong, say so in prose first.
     (**D202**): its `bridge` job fetches this same build from Forge's tagged
     `forge-2.0.14` release, checks it against the pin and caches the jar alone —
     `tools/CLAUDE.md`'s *CI runs the gate's engine-free half*.
-  - **How it is pinned:** `config.json`'s `forgeJar` names it by absolute path
-    (`FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
+  - **How it is pinned:** `config.json`'s `forgeJar` names it by path, `~/` for the home directory
+    (**D516**; `FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
     prints its sha256 — **it must print the one above** — and every recording's
     session header carries it as `forgeJarSha256` (all 22 committed
     `fixtures/games/` recordings name this build). CI's `bridge` job asserts the
@@ -458,11 +458,11 @@ ladder off); `?stats=1`, `?grid=1` and `?glinfo=1` are the debug flags, and
 
 **The gate, in one paragraph.** `./tools/check-all.sh` is what you run before
 saying you are done: every check the repo has — the lint and its self-test, the
-build, the recordings and the drift checks, the ten-games rows, the nine socket
+public check, the build, the recordings and the drift checks, the ten-games rows, the nine socket
 servers, redaction, the selftests, the deck check and the web build and tests —
-as **61 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
+as **62 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
 desktop), each after the jobs it depends on; `GATE_JOBS=1` is the serial gate,
-the same checks as 45 jobs one after another (D291 added the 49th and 33rd, 10h,
+the same checks as 46 jobs one after another (D291 added the 49th and 33rd, 10h,
 about 25 s of job time, D292 the 50th and 34th, 12f, about 7 s, D296 the
 51st and 35th, 12g, the cube lab's smoke run, about 30 s, D305 the 52nd and
 36th, 12h, about 30 s, D402 the 53rd and 37th, 10i, a table of two, about
@@ -471,7 +471,8 @@ adversarial seat and the cost probe, four real games and two, about three
 minutes each unloaded and five under load; 12i–12m, four engine self-tests and
 the seat identity, were never added to this count, and D515's recount from
 `check-all.sh`'s job table makes its 12n, the move atlas's tests, about a
-second, the 61st and 45th; to the timings below). From a deleted `bridge/out` it
+second, the 61st and 45th, and D516 its 2c, the public check, well under a
+second, the 62nd and 46th; to the timings below). From a deleted `bridge/out` it
 takes about **four minutes** at `GATE_JOBS=4` (239.0 s and 240.5 s on
 `102fb1f`; 259.2 s on the docs block's `502ad9d`, whose code is `102fb1f`'s),
 about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
@@ -484,11 +485,11 @@ is `docs/evidence/gate-history.md`.
 
 ## Never write outside this repo
 
-Write only under `/home/justin-a/code/mtg-table`. **Never write, move or rename
-anything under `/home/justin-a/forge` or `/home/justin-a/.forge`** — that is the
+Write only under this repository's checkout. **Never write, move or rename
+anything under `~/forge` or `~/.forge`** — that is the
 user's real Forge install and their real decks. Forge's profile is redirected into
 `var/` by `forge-home/forge.profile.properties` (absolute `userDir` and
-`cacheDir`); `forge-home/res` is a symlink to `/home/justin-a/forge/res`.
+`cacheDir`); `forge-home/res` is a symlink to `~/forge/res`.
 
 `FModel.initialize` creates Forge's whole profile tree (decks, quest, gauntlet,
 preferences, the picture cache). It must create it in `var/`.
@@ -579,7 +580,8 @@ used twice; anything that resolves a `D<n>` looks in both places.
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
 | `DECISIONS.md`, `docs/decisions/` | Every load-bearing decision, dated, with the alternatives rejected: D1–D378 in `DECISIONS.md`, D379 on a file each under `docs/decisions/` (*Decision numbers*); the older blocks include the anchor resolver's D275, the GPU pass's D270–D273, the play-distance audit's D265–D267, the portrait standee's D260–D264, the arena caption's D255–D256, the sound cues' D250–D252, the arena polish's D240–D241, more villain identity's D230–D233, the relief window's D225–D228, villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D198 (a lane keeps the numbers it reserved, D200). |
-| `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
+| `README.md` | The front door: what it is, the quickstart, the move atlas dataset, the **NON-GOALS** list and the licence (**D516**); `CONTRIBUTING.md`, `SECURITY.md` and `CITATION.cff` beside it. |
+| `docs/handbook.md` | **The long form** (the README until D516): running it, every mode and flag, the arena, the card library, the cube lab, the repo layout. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
 new dated decision under `docs/decisions/` — do not silently edit an old one.

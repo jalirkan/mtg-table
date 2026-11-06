@@ -127,7 +127,7 @@ a permanent that exiled something). Only its face and timestamps are taken from 
   also now keeps every exile link. **Search-v2 results from before and after D479 are not pooled.** Split them by the
   experiment log's git sha (`docs/guides/ai-ladder.md`'s *A code change is not a config change*).
 - **The atlas: maps change only where the fork's copy held an effect card or a linked exile.** Read-only, over every
-  phase-B spine under `/home/justin-a/code/lab/data`: the first state frame of each decision's fork (branch 0 of
+  phase-B spine under `~/code/lab/data`: the first state frame of each decision's fork (branch 0 of
   option 0, seat 0's log; the command zone is public). **75 of 313 decisions, 71,777 of 245,566 branch games (29%),
   forked with an effect card in a command zone**:
 

@@ -20,7 +20,7 @@ text of the `pc-jobs` branch's README. `tools/runner/jobs/` has worked examples.
 ## Install (once, on the PC)
 
 ```bash
-cd /home/justin-a/code/mtg-table            # any checkout of a commit that has tools/runner.sh
+cd ~/code/mtg-table            # any checkout of a commit that has tools/runner.sh
 ./tools/runner.sh install --dry-run         # what it would write and run
 ./tools/runner.sh install                   # [--ref main] [--reserve-gb 7] [--public-status on|off] [--http-port 8645] [--public-every-s 60] [--public-heartbeat-s 120]
 sudo loginctl enable-linger $USER           # ONCE, by Justin: the service keeps running with nobody logged in
@@ -66,7 +66,7 @@ above and `rm -rf ~/code/lab/runner`. Running jobs are units of their own:
 Justin's checkouts (`~/code/mtg-table`, `~/code/ForgeCoach`) are never checked out, built
 or written. They are only the reference the clones borrow objects from
 (`--reference-if-able … --dissociate`), and the remote URL. When a job's commands name
-`/home/justin-a/code/<repo>` or `~/code/<repo>`, the runner rewrites the path to the lab
+`~/code/<repo>` or `~/code/<repo>`, the runner rewrites the path to the lab
 clone. So a lab run's data (`var/ai-bench/…`, `var/cubelab/…`) is under
 `~/code/lab/mtg-table/var/`, not in Justin's checkout.
 

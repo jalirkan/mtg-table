@@ -78,6 +78,7 @@
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { BANDS, parseCensus, recordedInputs, type Band } from './census.ts';
@@ -672,6 +673,7 @@ export function defaultScriptsZip(repo: string): string {
   let jar = process.env.FORGE_JAR;
   if (!jar) { try { jar = (JSON.parse(fs.readFileSync(path.join(repo, 'config.json'), 'utf8')) as { forgeJar?: string }).forgeJar; } catch { /* none */ } }
   if (!jar) throw new Error('decks: no FORGE_JAR and no forgeJar in config.json; pass --scripts <Forge res/cardsfolder/cardsfolder.zip>');
+  if (jar.startsWith('~/')) jar = path.join(os.homedir(), jar.slice(2));   // D516: config.json's leading ~/ only
   return path.join(path.dirname(jar), 'res', 'cardsfolder', 'cardsfolder.zip');
 }
 

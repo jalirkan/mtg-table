@@ -17,14 +17,14 @@ target records, (b) shown to the seat by the record's or the cast's state frame,
 null), and lists any target outside the options.  `scripts` prints each card's TargetMin$ / TargetMax$ (and the SVars
 they name) from the pinned engine's cardsfolder.zip -- read only.
 
-J171 (D487): s02 s04 s08 s09 s10 of /home/justin-a/code/lab/data/lab-j170 gave 4,717 records in 4,501 logs; Tear
+J171 (D487): s02 s04 s08 s09 s10 of ~/code/lab/data/lab-j170 gave 4,717 records in 4,501 logs; Tear
 Asunder 4,616 (3,959 with both halves written, 656 with the other half a one-candidate record, 1 fizzled), 101
 "up to" planeswalker abilities; 0 targets outside the options.
 """
 import gzip, json, os, re, sys, zipfile, collections
 from multiprocessing import Pool
 
-ZIP = '/home/justin-a/forge/res/cardsfolder/cardsfolder.zip'
+ZIP = os.path.expanduser('~/forge/res/cardsfolder/cardsfolder.zip')
 
 def visible(body, seat):
     ids = set()

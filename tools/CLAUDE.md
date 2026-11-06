@@ -17,7 +17,7 @@ streamed to the console as it runs — the old log's lines, but **not** its byte
 every job runs under `2>&1 | tee`, so `die`'s stderr arrives on stdout (PLAN.md's
 gate-speed follow-up 5), 10g prints three new `was played` lines (D134), and the
 timing table follows `check-all OK`. A job starts once every job it depends on
-has passed, and the dependencies ARE the ordering rules: check-forge, lint (with 2b, its self-test) and build first and
+has passed, and the dependencies ARE the ordering rules: check-forge, lint (with 2b, its self-test, and 2c, the public check) and build first and
 alone; step 6 after step 5's recording; 6b's comparison after its two
 recordings; 9c's report after its fourteen rows (`tools/ten-games.sh --run-row
 N`, each row a job of the gate's own pool with all its assertions;
@@ -59,15 +59,18 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **twenty-five** lettered sub-steps — **2b**, **6b**,
+is **thirteen numbered steps** (plus **twenty-six** lettered sub-steps — **2b**, **2c**, **6b**,
 9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **10i**, **10j**, **10k**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g**, **12h**, 12i, 12j, 12k, 12l, 12m and **12n**; 9d and 10g
-added by **M6**, 10h by **D291**, 10i by **D402**, 10j and 10k by **D428**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 12i–12m by D352, D355, D371, D413 and D486's addendum (each one's header in `check-all.sh` says what it holds), 12n by **D515**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+added by **M6**, 10h by **D291**, 10i by **D402**, 10j and 10k by **D428**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 12i–12m by D352, D355, D371, D413 and D486's addendum (each one's header in `check-all.sh` says what it holds), 12n by **D515**, 2c by **D516**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
 → **2b**, the lint's self-test (`tools/lint-bridge-selftest.sh`, **D180**: every
 rule the lint declares fires on a planted snippet, and a rule with no case
-fails; about a second) → build → `Smoke` → a fresh `RecordMatch` into `var/` → **step 6, the value-level
+fails; about a second) → **2c**, the public check (`tools/public-check.sh`, **D516**: no
+tracked text file names a home folder, the owner's home-folder name, a personal mail address or this
+machine's host name, but the three paths its ALLOW list names with their reasons, and its selftest
+catches each planted; well under a second, and the build does not wait for it) → build → `Smoke` → a fresh `RecordMatch` into `var/` → **step 6, the value-level
 drift check** (`tools/wire-drift.mjs` against `fixtures/games/g1.jsonl`: the same
 non-state frames, event stream, phase walk and final board, every board cut at a
 turn, phase or outcome event (`priority` and mid-game `combat` among it), and the
@@ -248,7 +251,7 @@ exposed to.
 
 **CI runs the gate's engine-free half, and only that**
 (`.github/workflows/checks.yml`, on every push to `main` and every pull request;
-README's *Continuous integration*). Four jobs on `ubuntu-latest`: **`web`**
+`docs/handbook.md`'s *Continuous integration*). Four jobs on `ubuntu-latest`: **`web`**
 (`npm ci`, `npm --prefix web run build`, `npm --prefix web test` on Node 24 —
 hermetic because `MTGTABLE_WS_LOGS` is unset and `web/public/art.json` is absent,
 and every reader of it already falls back to the empty index), **`bridge`**
@@ -257,7 +260,7 @@ and its eight self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
 to carry `jdk.compiler` and `jdk.jdeps`, and a Temurin JRE image is not built
 to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, the
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
-`wire-drift-selftest.mjs`, 12b's catalog check, 12f's coach helper, 12h's
+`wire-drift-selftest.mjs`, 12b's catalog check, 2c's public check, 12f's coach helper, 12h's
 standard-library half and 12n's atlas tests; not 12e, whose card index only
 the network build makes — D183) and `ml` (12h in full: the `tools/ml` suite with
 numpy and zstandard in a venv, failing if one of their tests skips — D383). **It is the one place anything

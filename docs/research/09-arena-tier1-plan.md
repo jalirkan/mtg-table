@@ -13,7 +13,7 @@ Everything in §1 was verified live today against `registry.npmjs.org`,
 measured by building real bundles in a scratch project. Everything in §2 onwards
 is design; where a design point rests on a verified fact the citation is inline.
 Forge claims are cited as `javap` output against
-`/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`.
+`~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`.
 
 **This document writes no code and touches nothing under `web/`, `bridge/`,
 `tools/`, `fixtures/` or `var/`.** Those belong to the M0–M6 workflow.

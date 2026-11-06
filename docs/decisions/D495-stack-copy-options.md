@@ -113,7 +113,7 @@ to the whole log (`cast-a-step-too-late`), guard 2 alone (`hand-stub-cast-in-the
 guards 2 and 3 had only one control between them, which removing either alone did not flip.)
 
 **Measured.** Both checkers, `main`'s (`9c4737e9`) and this branch's, over every branch frame log of J176's thirteen
-spines (`/home/justin-a/code/lab/data/lab-j176/b-s*/phaseB/frames/*.jsonl.gz`, read only), with the atlas's own
+spines (`~/code/lab/data/lab-j176/b-s*/phaseB/frames/*.jsonl.gz`, read only), with the atlas's own
 `--empty-hand-ok` (D460), 91,590 logs in all:
 
 | spine | logs | `main` fails | this branch fails | spell copies accepted (logs) |

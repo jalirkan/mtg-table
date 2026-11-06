@@ -1530,7 +1530,7 @@ cards and its makeup, the opponent's deck antisymmetric — and generates cubes 
 predicted to win evenly when the lab drafter drafts them and Forge plays them. No engine; about 50 s.
 
 ```bash
-tools/cubelab.sh balance-model --census /home/justin-a/code/lab/data/lab-j144 --omega /home/justin-a/code/lab/data/lab-j145 \
+tools/cubelab.sh balance-model --census ~/code/lab/data/lab-j144 --omega ~/code/lab/data/lab-j145 \
     --facts var/cubelab/facts/<library facts>.json --out var/balance-model/j144-j145 --cubes-out cubes/library/balanced
 # the same cubes without the census's powered band (the first night measures both):
 tools/cubelab.sh balance-model ... --out var/balance-model/j144-j145-nopower --cubes-out cubes/library/balanced \
@@ -1579,7 +1579,7 @@ tools/cubelab.sh balance-model ... --out var/balance-model/j144-j145-nopower --c
 Give `balance-model` measured nights and it runs v2 (without one it is v1, byte for byte):
 
 ```bash
-D=/home/justin-a/code/lab/data
+D=~/code/lab/data
 tools/cubelab.sh balance-model --census $D/lab-j144 --omega $D/lab-j145 --night $D/lab-j159 --night $D/lab-j160/report \
     --facts var/cubelab/facts/<library facts>.json --out var/balance-model/v2 --cubes-out cubes/library/balanced/v2
 # and the same with --exclude cubes/library/powered-exclude.txt --suffix -nopower

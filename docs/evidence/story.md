@@ -10,7 +10,7 @@ D150–D154 in the `story` branch's reserved range; renumbered at merge); PLAN.m
 *The story page* has the status and follow-ups, CLAUDE.md *The story page — the
 conventions D124–D128 added* the rules.
 
-Built on 2026-09-28 in the worktree `/home/justin-a/code/mtg-table-t2r`, branch
+Built on 2026-09-28 in the worktree `~/code/mtg-table-t2r`, branch
 `story`, from `main` at `4408283`. Every number below was measured there, and the
 command that produced it is beside it.
 
@@ -237,9 +237,9 @@ game thread. `bridge/` is untouched by this branch; the second run passed with
 
 ## 8. The user's Forge install
 
-`/home/justin-a/forge` (22,128 paths, the jar's sha256
+`~/forge` (22,128 paths, the jar's sha256
 `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`) and
-`/home/justin-a/.forge` (27 paths, 7 files, every file's sha1) were fingerprinted
+`~/.forge` (27 paths, 7 files, every file's sha1) were fingerprinted
 — paths, sizes and mtimes of both trees — before this branch's first command and
 after the second gate run: **unchanged** (`var/story/*-before.txt` and
 `*-after.txt`).

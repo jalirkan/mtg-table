@@ -303,10 +303,10 @@ body, projected upward (A1).
   skipped) and 157 vitest in 9 files** both times. The documents' gate lines and
   this section were written after the runs; no code, test or CLAUDE.md changed
   after them.
-- **The user's Forge install**: `/home/justin-a/forge`'s jar (sha256
+- **The user's Forge install**: `~/forge`'s jar (sha256
   `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`), every path,
-  size and mtime under `/home/justin-a/forge`, and the sha1 of every file of
-  `/home/justin-a/.forge` (7 files) were fingerprinted before the worktree was
+  size and mtime under `~/forge`, and the sha1 of every file of
+  `~/.forge` (7 files) were fingerprinted before the worktree was
   made and after the second gate run: **unchanged**.
 - **The commit's attribution line** is the session's (`Claude Opus 5.5`), not the
   brief's (`Claude Fable 5.1`), as villain identity's was: the brief is a
@@ -457,8 +457,8 @@ session's, as the audit's did.
 - **The gate** from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`:
   **`check-all OK`**, **274.8 s** wall, 48 jobs whose seconds sum to 1,029.1 s, the load average 9.01 at the start, 13.13 at most, 10.56 at the end; inside it `node --test` **1,209 (1,198 pass, 0 fail, 11 skipped)** and 157 vitest in 9 files; the fix pass added no step and no job (run `var/check-all/20260929-115717-1129016/`). This section's gate and Forge lines, the histories' and PLAN.md's, and README's paragraph on the prompt were written after the run; no code, test or CLAUDE.md changed after it (no test reads README.md) (`var/check-all-audit-fix.log`).
 - **The user's Forge install**: the `~/forge` jar's sha256, every path, size and
-  mtime under `/home/justin-a/forge`, and the sha1 of every file of
-  `/home/justin-a/.forge` were fingerprinted before the fix pass and after its
+  mtime under `~/forge`, and the sha1 of every file of
+  `~/.forge` were fingerprinted before the fix pass and after its
   gate (`var/fix/forge-{before,after}.txt`): **unchanged** (jar `3c0a7c38…8e5dd9`; the two files compare equal byte for byte).
 
 ## §11 Fix pass 2 — rebased onto `8ddd286`, and what a second verifier found (D265 point 2 and D267 amended)
@@ -668,8 +668,8 @@ the splice restored and the suite run again (`var/audit-fix3/drv/controls.py`,
   `PLAN.md`'s and `DECISIONS.md`'s gate lines were written after the run; no code,
   test or `CLAUDE.md` changed after it.
 - **The user's Forge install**: the `~/forge` jar's sha256, every path, size and
-  mtime under `/home/justin-a/forge`, and the sha1 of every file of
-  `/home/justin-a/.forge`, fingerprinted before the rebase and after the gate:
+  mtime under `~/forge`, and the sha1 of every file of
+  `~/.forge`, fingerprinted before the rebase and after the gate:
   **unchanged** (jar `3c0a7c38…8e5dd9`).
 
 ## §12 Fix pass 3 — the director's shot, the credit's cap, the notice's tooltip, and every key pressed (D265 amended)
@@ -875,7 +875,7 @@ their teeth are checked in the suite itself.
   test or `CLAUDE.md` changed after it. The dev server (port 5240) and the live
   seat's bridge (9345) were stopped by their PIDs before the run.
 - **The user's Forge install**: the `~/forge` jar's sha256, every path, size and
-  mtime under `/home/justin-a/forge`, and the sha1 of every file (and every path,
-  size and mtime) of `/home/justin-a/.forge`, fingerprinted before this pass and
+  mtime under `~/forge`, and the sha1 of every file (and every path,
+  size and mtime) of `~/.forge`, fingerprinted before this pass and
   after its gate (`var/audit-fix4/forge-{before,after}.txt`): **unchanged**, the
   two files equal byte for byte (jar `3c0a7c38…8e5dd9`).

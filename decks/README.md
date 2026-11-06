@@ -249,7 +249,7 @@ Supreme paying off the turn Doctor Doom arrives with his Doombots). Every
 creature it names, and both tokens, reads as itself in the arena and the
 workshop — Doom's iron mask under a green hood, HYDRA in green and yellow, the
 Kangs' blue masks. `docs/evidence/villain-identity.md` is what was measured, and
-README's *Villain identity* is what each one looks like.
+`docs/handbook.md`'s *Villain identity* is what each one looks like.
 
 ### What was checked (details: report 08 §8, `docs/evidence/match-setup.md`)
 
@@ -383,7 +383,7 @@ the Masters of Evil's seat against Pacho's deck, seed 33 — chosen by a census 
 300 seeds for the most names face up (22 of 27; no seed showed all 27) and the
 most creatures on the table (14 of 17). Every creature reads as itself in the
 arena and the workshop — the team as Zemo's squad, MACH-1's red lenses, Radioactive
-Man's glow (README's *More villain identity*; `docs/evidence/more-villain-identity.md`).
+Man's glow (`docs/handbook.md`'s *More villain identity*; `docs/evidence/more-villain-identity.md`).
 
 ## `hulk-family.dck` — Hulk Family
 
@@ -439,7 +439,7 @@ redaction gate has never been shown.
 the Hulk family's seat against Pacho's deck, seed 261 — all 24 names face up, 13 of
 its 18 creatures on the table (Rick Jones mills five of its own Hulks). The Hulks
 are gamma bodies — green, red, grey-olive, the biggest people on the table
-(README's *More villain identity*).
+(`docs/handbook.md`'s *More villain identity*).
 
 ## `wakanda.dck` — Wakanda
 
@@ -481,7 +481,7 @@ AI's library while they are still in it — Kang Prime's problem.
 Wakanda's seat against Pacho's deck, seed 232 — all 24 names face up, 15 of its 17
 creatures on the table, a 48-card table on its last turns. The Black Panthers wear
 the panther's mask and cowl, and the Dora Milaje carry the spear, the kit's one new
-kind for these decks (README's *More villain identity*).
+kind for these decks (`docs/handbook.md`'s *More villain identity*).
 
 ---
 

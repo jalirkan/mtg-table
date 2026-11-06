@@ -115,7 +115,7 @@ The real game is never touched: it restarts through Forge's own loop.
 **Comparability.**
 - **The atlas: maps change only where a branch reached a restart.** Those branches errored before and now play, so
   they enter their option's value. In J162 these are the 62 modern7 branches. A grep of every `branches.jsonl` under
-  `/home/justin-a/code/lab/data` finds the phase-null message in that spine only (a message-less NPE there is the same
+  `~/code/lab/data` finds the phase-null message in that spine only (a message-less NPE there is the same
   fault once the JVM drops the text). Every other branch is unchanged: the replays' other options match J162's rows to
   the step.
 - **The search:** a rollout that reaches a Karn restart used to error and now plays, so search answers can change in

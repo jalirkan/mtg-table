@@ -1,0 +1,38 @@
+# mtg-table's citation file (Citation File Format 1.2.0). GitHub's "Cite this repository" reads the
+# top block, the software. The move atlas dataset is the first entry under `references`; the same block is
+# the CITATION.cff inside the dataset's release (tools/atlas/release.py writes it; keep the two the same).
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below. If you use the move atlas dataset, cite the dataset (the first reference)."
+type: software
+title: mtg-table
+authors:
+  - name: mtg-table contributors
+repository-code: "https://github.com/jalirkan/mtg-table"
+url: "https://github.com/jalirkan/mtg-table"
+license: GPL-3.0-or-later
+abstract: >-
+  A local, single-player browser client for Magic: The Gathering that runs the open-source Forge engine
+  headless as its rules engine and AI opponent, with a TypeScript/React board talking JSON over a loopback
+  WebSocket and no rules logic in the client; and the move atlas, which measures what each option of a
+  decision is worth by playing the game out from the exact position.
+keywords:
+  - magic-the-gathering
+  - forge
+  - game-ai
+references:
+  # The move atlas dataset, v1.
+  - type: dataset
+    title: mtg-table move atlas
+    version: v1
+    date-released: "2026-11-06"
+    authors:
+      - name: mtg-table contributors
+    license: CC-BY-4.0
+    url: "https://github.com/jalirkan/mtg-table"
+    repository-code: "https://github.com/jalirkan/mtg-table"
+    notes: "Attribute as: mtg-table move atlas, https://github.com/jalirkan/mtg-table. Card names and other Wizards of the Coast material are not licensed by the dataset; they appear under the Fan Content Policy."
+    keywords:
+      - magic-the-gathering
+      - game-ai
+      - decision-labels
+      - forge

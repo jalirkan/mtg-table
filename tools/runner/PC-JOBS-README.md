@@ -46,7 +46,8 @@ The runner checks every 10 seconds and fetches both branches every minute.
    build; every mtg-table copy but the first — `-light` and each `-laneK` — has its `var/`
    a link to `mtg-table/var`, so every job's outputs and data are in one place, D392),
    never in Justin's checkouts, and builds (`bridge/build.sh`; `npm ci` when ForgeCoach's lock file
-   changed). A job's literal `/home/justin-a/code/<repo>` paths are rewritten to the lab
+   changed). A job's literal checkout paths (`$HOME/code/<repo>` written out in full, or
+   whatever `--home-mtg-table` / `--home-forgecoach` name) are rewritten to the lab
    clones. Then it pushes a STATUS of `running`.
 5. **Pilot first, always.** The `## Pilot` blocks run, then the pilot's `check:` lines are
    evaluated **mechanically**. Any check false or unknown: `failed`, reason `pilot: …`, the
@@ -277,8 +278,8 @@ what the PC session's summary.md should say
 ~~~
 
 **Paths.** A block may name the repos as `{mtg-table}` and `{ForgeCoach}`. Justin's
-checkout paths are rewritten to the lab clones, whether written as
-`/home/justin-a/code/<repo>`, `~/code/<repo>`, `$HOME/code/<repo>` or
+checkout paths are rewritten to the lab clones, whether written as the absolute path
+(`$HOME/code/<repo>` expanded, or the runner's `--home-<repo>` flag), `~/code/<repo>`, `$HOME/code/<repo>` or
 `${HOME}/code/<repo>`. A block that still reaches `~/code` or Justin's checkouts after that
 rewrite (a quoted split, another repo) is refused, and the job fails without running it.
 

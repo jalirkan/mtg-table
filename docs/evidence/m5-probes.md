@@ -6,7 +6,7 @@ had no engine evidence** (`confirm`, `options`, `text`, `assign_amount`,
 (`useMana`, `clickAbility`), and the tooling for PLAN.md M5's exit criterion.
 
 Everything below was run in the `m5` worktree against the 2.0.14 jar
-(`/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`), from
+(`~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`), from
 a clean `bridge/out`.
 
 ---

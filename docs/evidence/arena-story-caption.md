@@ -11,7 +11,7 @@ arena as plain data; the live seat records its game off the socket) and **D256**
 status and the follow-ups. It closes the story page's follow-up 1 by another road
 than the one that follow-up drew (D255, *Rejected*).
 
-Built on 2026-09-29 in the worktree `/home/justin-a/code/mtg-table-t2c`, branch
+Built on 2026-09-29 in the worktree `~/code/mtg-table-t2c`, branch
 `arena-story-caption`, from `main` at `24ba603`. Every number in §1–§11 was
 measured there, and the command that produced it is beside it. The branch was
 then rebased onto `main`'s `2c7ed8e` (more villain identity and the sound cues);
@@ -288,10 +288,10 @@ relief's three Python-step tests were skipped, as the gate says when
 
 ## 11. The user's Forge install
 
-`/home/justin-a/forge`'s jar (sha256
+`~/forge`'s jar (sha256
 `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`), the top of
-`/home/justin-a/forge` (names, sizes, mtimes) and every file of
-`/home/justin-a/.forge` (7 files: sha1, sizes and mtimes) were fingerprinted before
+`~/forge` (names, sizes, mtimes) and every file of
+`~/.forge` (7 files: sha1, sizes and mtimes) were fingerprinted before
 this branch's first command and after the second gate run: **unchanged** (`diff` of the two fingerprints: empty).
 
 ## 12. The rebase onto `2c7ed8e` (more villain identity and the sound cues)
@@ -395,8 +395,8 @@ skipped) and 157 vitest in 9 files** both times. The documents' gate lines and
 this section were written after the runs; no code, test or CLAUDE.md changed
 after them.
 
-**The user's Forge install**: `/home/justin-a/forge`'s jar (sha256
+**The user's Forge install**: `~/forge`'s jar (sha256
 `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`), every path,
-size and mtime under `/home/justin-a/forge`, and every file of
-`/home/justin-a/.forge` (7 files: sha1, sizes and mtimes) were fingerprinted
+size and mtime under `~/forge`, and every file of
+`~/.forge` (7 files: sha1, sizes and mtimes) were fingerprinted
 before the rebase's first command and after the second gate run: **unchanged**.

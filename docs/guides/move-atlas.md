@@ -179,7 +179,9 @@ many labels were already confident at 50 and 100 branches.
 
 `tools/atlas/release.py` builds the public release: one folder and its zip under `var/release/`, every label row of
 the population's six nights but the excluded units, each spine's branch rows and `atlas.json`, the decks, a README
-and a manifest. Its header has the layout, the scrub and the check; [D515](../decisions/D515-publish-the-atlas.md)
+(which opens with the YAML front matter Hugging Face reads as a dataset card), a manifest, `LICENSE.md` and
+`CITATION.cff` (the dataset's citation, the same block as the first reference of the repository's own
+`CITATION.cff`; [D516](../decisions/D516-public-ready.md)). Its header has the layout, the scrub and the check; [D515](../decisions/D515-publish-the-atlas.md)
 has the decision, the licences and what stays the owner's. v1 was built with:
 
 ```bash

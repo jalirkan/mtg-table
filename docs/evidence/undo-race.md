@@ -1,6 +1,6 @@
 ## The undo race — `undo` waits for a parked engine (2026-09-28, D136, amendment M48)
 
-Worked in the worktree `/home/justin-a/code/mtg-table-t2t` on branch
+Worked in the worktree `~/code/mtg-table-t2t` on branch
 `undo-race`, from `main` at `4408283`, and rebased onto the gate-speed lane's
 `6b35054` (§10). The decision is **D136** — written as D170 on the lane's
 instruction and renumbered at merge, after the story page's D124–D128 and the
@@ -307,8 +307,8 @@ other worktrees.
 
 ### 9. The user's Forge install
 
-`/home/justin-a/forge` (22,128 paths; the jar's sha256 still `3c0a7c38…8e5dd9`)
-and `/home/justin-a/.forge` (27 paths, 7 files, every file's sha1) were
+`~/forge` (22,128 paths; the jar's sha256 still `3c0a7c38…8e5dd9`)
+and `~/.forge` (27 paths, 7 files, every file's sha1) were
 fingerprinted — paths, sizes and mtimes — before this lane's first command and
 after the gate: **unchanged**.
 
@@ -370,6 +370,6 @@ seat before it ended the game` and `concedes = 0 at once, 1 deferred`, with
 `over` last. The race depends on load and was not forced here, so this closes it
 by mechanism. The follow-up is marked closed in PLAN.md.
 
-`/home/justin-a/forge` (22,128 paths, the jar's sha256 still `3c0a7c38…8e5dd9`)
-and `/home/justin-a/.forge` (7 files) were fingerprinted again before the rebase
+`~/forge` (22,128 paths, the jar's sha256 still `3c0a7c38…8e5dd9`)
+and `~/.forge` (7 files) were fingerprinted again before the rebase
 and after the serial run: **unchanged**.

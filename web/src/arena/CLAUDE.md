@@ -376,7 +376,7 @@ every piece of that data is a pose.** The user's verdict on slice 2 was
 (T9–T12) answered it without a model per card. **D75–D81** are the decisions
 (**D82–D87** its second verification pass's, **D88–D89** written up by its
 documentation pass), `docs/evidence/m7-tier2-slice3.md` is what was measured,
-PLAN.md's *Slice 3* has the status and the fourteen follow-ups, and README's *Tier
+PLAN.md's *Slice 3* has the status and the fourteen follow-ups, and `docs/handbook.md`'s *Tier
 2, slice 3 — every card reads as itself* is how to give a card its identity.
 
 1. **Identity is `figures/traits.json`, validated like `cues.json`** (**D75**).
@@ -481,7 +481,7 @@ bodies, a costume palette and a full duelist per seat — no model per card, no
 texture, no second program. **D95–D101** are the decisions (**D90–D94** are
 `main`'s card library, which landed on `main` first),
 `docs/evidence/m7-tier2-slice4.md` is what was measured, PLAN.md's *Slice 4* has
-the status and the follow-ups, and README's *Tier 2, slice 4 — people in
+the status and the follow-ups, and `docs/handbook.md`'s *Tier 2, slice 4 — people in
 costumes, and a duelist at each end* is how to dress a card and change a
 duelist.
 
@@ -722,7 +722,7 @@ it.** Report 15's Lane MOTION (`docs/research/15-art-direction.md` §5, §9.2) g
 the cues impact stars, lettering, ink splats, halftone dots, speed lines, the
 hologram-to-ink summon, impact shakes and on twos, on branch `motion`
 (**D147–D155**; `docs/evidence/motion.md` is what was measured, its merge section
-first). README's *The comic motion lane* is how to give a card a word, and PLAN.md's
+first). `docs/handbook.md`'s *The comic motion lane* is how to give a card a word, and PLAN.md's
 *The comic motion lane* has the status and the follow-ups. **D147–D155 were
 written as D130–D138** in the lane's reserved range and renumbered contiguously
 when the branch was rebased onto Lane LOOK's merged tip `4c76785` (2026-09-28), the
@@ -1253,7 +1253,7 @@ act — and the workshop's ▣ arena link comes back to the same frame.
 ## Sound — the conventions D250–D252 added
 
 Four, and the thesis is one sentence: **a sound is a cue param, timed by the queue
-and played by the one loop, and a concealed card sounds like any card.** README's
+and played by the one loop, and a concealed card sounds like any card.** `docs/handbook.md`'s
 *Sound* is how to use it, `docs/evidence/sound-cues.md` what was measured, PLAN.md's
 *Sound cues* the status and the follow-ups.
 

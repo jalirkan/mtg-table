@@ -8,7 +8,7 @@ Basis: `docs/research/05-architecture-synthesis.md` (the spec), `docs/protocol.m
 (the wire contract), `CLAUDE.md` (the nine hard rules).
 
 **Evidence convention.** `jar:` = `javap` against
-`/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`
+`~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`
 (authoritative — this is what we compile and run against). `src:` = the
 2.0.15-SNAPSHOT source checkout at
 `<scratch>/forge-src/…`, cited `file:line`, used **only** to learn call sites and
@@ -272,7 +272,7 @@ correct (synthesis §2.4), and they all arrive on the EDT where R1 forbids a wal
 
 ### 3.4 Deck-specific evidence for the "Fires?" column
 
-Extracted from `/home/justin-a/forge/res/cardsfolder/cardsfolder.zip`:
+Extracted from `~/forge/res/cardsfolder/cardsfolder.zip`:
 
 - `t/thriving_heath.txt`, `t/thriving_isle.txt` — `K:ETBReplacement:Other:ChooseColor`
   → `PlayerController.chooseColor` → `PCH:1975 chooseColorCommon` →

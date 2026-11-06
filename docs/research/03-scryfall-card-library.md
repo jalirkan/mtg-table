@@ -5,7 +5,7 @@ response or a file read during this session; everything marked "guess" is my inf
 
 Forge source citations are relative to the sparse checkout at
 `…/scratchpad/forge-src` (the full path is
-`/tmp/claude-1000/-home-justin-a--config-Claude-scratch-workspaces-889ad522-c1ff-402b-8b23-6ae666c9b9a2-dcfb1aed-ebb2-456c-9dd7-5ecedf00d397-scratch-2026-09-11-0947cb/8723af12-0157-421e-988a-473182e5a3f1/scratchpad/forge-src`).
+`<the research session's scratchpad>/forge-src`).
 
 ---
 
@@ -489,7 +489,7 @@ Prefetch cost: 28 distinct cards × ~75 KB (`normal`) ≈ **2 MB**. Both sets in
 
 ### 3.1 Card script format — `res/cardsfolder/cardsfolder.zip`
 
-Read with `unzip -p /home/justin-a/forge/res/cardsfolder/cardsfolder.zip p/peggy_carter_secret_agent.txt`.
+Read with `unzip -p ~/forge/res/cardsfolder/cardsfolder.zip p/peggy_carter_secret_agent.txt`.
 Entries are `<first letter>/<snake_case name>.txt`; the name is lowercased with all
 non-alphanumerics collapsed to `_` (`S.H.I.E.L.D. Helicarrier` → `s_h_i_e_l_d_helicarrier.txt`;
 `Agent Phil Coulson` → `a/agent_phil_coulson.txt`). The zip is 16.4 MB.
@@ -570,7 +570,7 @@ ScryfallCode=MSH
 `forge-core/src/main/java/forge/card/CardEdition.java:760`:
 `res.scryfallCode = metadata.get("ScryfallCode", res.code);` — and is lowercased on read at
 line 374: `public String getScryfallCode() { return scryfallCode.toLowerCase(); }`.
-`/home/justin-a/forge/res/editions/Marvel Super Heroes Commander.txt` has `Code=MSC`,
+`~/forge/res/editions/Marvel Super Heroes Commander.txt` has `Code=MSC`,
 `ScryfallCode=MSC`, `Type=Commander`.
 
 Card lines live in sections enumerated by `EditionSectionWithCollectorNumbers`
@@ -674,8 +674,8 @@ i.e. `FireIce`, not `Fire // Ice`. Another reason not to build on Forge's pictur
 > … Set JSON: `{"cn": {"lang": "uuid" | ["front","back"] | {"miss": timestamp}}}`
 
 Directory constant: `CACHE_CDN_UUID_DIR = CACHE_DIR + "cdn_uuid" + PATH_SEPARATOR`
-(`ForgeConstants.java:243`) → on this machine `/home/justin-a/.cache/forge/cdn_uuid/`. **It does
-not exist yet** — the user has never run an image download; `/home/justin-a/.cache/forge` contains
+(`ForgeConstants.java:243`) → on this machine `~/.cache/forge/cdn_uuid/`. **It does
+not exist yet** — the user has never run an image download; `~/.cache/forge` contains
 only `db/` and `pics/` (verified).
 
 Populated two ways:
@@ -697,12 +697,12 @@ two sets we care about (§1.6). Treat it as an opportunistic warm start.
 
 ### 3.6 Forge's picture cache — **not** worth reusing as our image store
 
-Location: `/home/justin-a/.cache/forge/pics/cards/` (`ForgeConstants.java:236`,
+Location: `~/.cache/forge/pics/cards/` (`ForgeConstants.java:236`,
 `CACHE_CARD_PICS_DIR = ForgeProfileProperties.getCardPicsDir()`). Currently near-empty: the whole
 `pics/` tree is 3.3 MB / 114 files, and `pics/cards/` holds exactly one file (verified):
 
 ```
-/home/justin-a/.cache/forge/pics/cards/SLD/'Tis But a Scratch!.fullborder.jpg
+~/.cache/forge/pics/cards/SLD/'Tis But a Scratch!.fullborder.jpg
 ```
 
 Naming comes from `ImageUtil.getImageRelativePath()`
@@ -729,7 +729,7 @@ Forge also tries its own mirror first for non-art-crop images —
 
 ### 3.7 The `.dck` format — the user's actual deck file
 
-`/home/justin-a/.forge/decks/constructed/Pacho SHIELD.dck` (verified, read in full):
+`~/.forge/decks/constructed/Pacho SHIELD.dck` (verified, read in full):
 
 ```
 [metadata]

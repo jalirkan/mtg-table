@@ -16,9 +16,9 @@ StepClock is read between steps and on the copy's events, so it cannot see the s
 ends it, and a resumed unit replays the same seed into the same stall. The numbers: 134 of the spine's 135 timed-out branches
 had Scute Swarm on the battlefield at their last state (124 with 40 or more copies); 14 unit kills on 3 branches, then the
 budget ran out; the three other spines of the night (pauper, peasant, legacy) had none. Evidence:
-`/home/justin-a/code/lab/data/lab-j166/b-s04-powered-2104/phaseB/` (`branches.jsonl`, `units.jsonl`, `logs/worker-*.log`,
+`~/code/lab/data/lab-j166/b-s04-powered-2104/phaseB/` (`branches.jsonl`, `units.jsonl`, `logs/worker-*.log`,
 `frames/d0-random-o4-b29-seat0.jsonl.gz`, `frames/d6-random-o0-b84-seat0.jsonl.gz`) and
-`/home/justin-a/code/pc-results/results/J166/run4.log`.
+`~/code/pc-results/results/J166/run4.log`.
 
 **Decision.** A committed list, `tools/cubelab/engine-unplayable.json`, of cards the band census's draw never deals.
 
@@ -56,7 +56,7 @@ budget ran out; the three other spines of the night (pauper, peasant, legacy) ha
 7. **The flag.** `--unplayable <file|none>` on `decks --band`: the committed file by default; `none` is D447's draw
    without a list, which regenerates J166's s04 decks as they were.
 
-**What it changes, measured.** All fourteen of J166's deck folders (`/home/justin-a/code/lab/data/lab-j166/decks/`, the
+**What it changes, measured.** All fourteen of J166's deck folders (`~/code/lab/data/lab-j166/decks/`, the
 pilot `p-powered-2099` and spines s01–s13) were regenerated with the list. Thirteen are byte-identical in their `.dck`
 files and `decks.jsonl`, and their `decks.json` differ only by the two D482 keys: s01 (pauper 2001), s02 (peasant 2002)
 and s03 (legacy 2003) among them. Only s04 changes, and only its deck 1. Scute Swarm was its third spell; the first two

@@ -3,7 +3,7 @@
 Research note for **mtg-table**. Everything below was read out of the Forge source checkout at
 
 ```
-/tmp/claude-1000/-home-justin-a--config-Claude-scratch-workspaces-889ad522-c1ff-402b-8b23-6ae666c9b9a2-dcfb1aed-ebb2-456c-9dd7-5ecedf00d397-scratch-2026-09-11-0947cb/8723af12-0157-421e-988a-473182e5a3f1/scratchpad/forge-src
+<the research session's scratchpad>/forge-src
 ```
 
 referred to below as `$FORGE_SRC`. All `path:line` citations are relative to `$FORGE_SRC` and were
@@ -789,7 +789,7 @@ Alternative, if `HostedMatch`'s dependencies on `FModel` preferences / `SoundSys
   personal project; it just means mtg-table should ship as GPLv3 if it is ever published. The browser
   front-end talking JSON over a socket is a weaker coupling, but the Java side is unambiguous.
 - Dependency: the simplest path is to put the three module jars (or the fat jar at
-  `/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`) on the classpath as a
+  `~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`) on the classpath as a
   system-scoped dependency and compile against them. The fat jar's `ProtocolMethod` and `IGuiGame`
   match this source checkout (verified in §4.2), so the source is a valid reference.
 - Netty is already inside the fat jar (Forge's own netplay uses it), so a WebSocket endpoint can be

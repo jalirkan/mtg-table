@@ -1,6 +1,6 @@
 ## Gate speed — `tools/check-all.sh` in parallel (2026-09-28, D129–D135)
 
-The gate-speed lane, worked in the worktree `/home/justin-a/code/mtg-table-t2s`
+The gate-speed lane, worked in the worktree `~/code/mtg-table-t2s`
 on branch `gate-speed`, from `main` at `4408283` (the narrator). The ask: the
 gate in well under half its time with every assertion intact, a `GATE_JOBS`
 knob, a log per step and a timing table, the order that matters kept as
@@ -209,7 +209,7 @@ summary lines:
 
 ```text
 [Fatal Error] constructed.xml:1:1: Premature end of file.
-org.xml.sax.SAXParseException; systemId: file:/home/justin-a/code/mtg-table-t2s/var/forge/achievements/constructed.xml; lineNumber: 1; columnNumber: 1; Premature end of file.
+org.xml.sax.SAXParseException; systemId: file:~/code/mtg-table-t2s/var/forge/achievements/constructed.xml; lineNumber: 1; columnNumber: 1; Premature end of file.
 ```
 
 (Those are the only two runs counted: a step's JVM log keeps its name from run to

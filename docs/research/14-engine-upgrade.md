@@ -72,7 +72,7 @@ cards, but it must land before any engine switch):
        release that still keeps FRA under `upcoming/`).
 5. [ ] **Is the seam still the one the saved port was written for?**
        ```bash
-       ./tools/javap-seam-diff.sh /home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar \
+       ./tools/javap-seam-diff.sh ~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar \
            <release jar> > var/javap-release.txt
        diff <(sed 1,3d docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt) \
             <(sed 1,3d var/javap-release.txt)
@@ -294,7 +294,7 @@ They are not guessed here.
 
 1. Read `tools/forge-engine.json`. Refuse any target that does not resolve under
    `$REPO_ROOT/var/forge-engine/`. It also refuses any path under
-   `/home/justin-a/forge` or `~/.forge`, as a guard, not a hope.
+   `~/forge` or `~/.forge`, as a guard, not a hope.
 2. If `.verified` exists and the jar's sha256 still matches, exit 0 (idempotent).
 3. Download with `curl -fL` into `var/forge-engine/<version>.part/`, check
    `archiveBytes` and `archiveSha256`, extract only the jar and `res/`, check

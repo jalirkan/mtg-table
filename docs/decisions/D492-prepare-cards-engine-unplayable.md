@@ -24,11 +24,11 @@ Remembered | AffectedZone$ Exile`. In the live game the effect's source is the c
 (`GameCopier.makeCopy`) sets an effect's source only for cards on the battlefield, so the copied command-zone effect has
 none: `EffectSourceController` finds no root, `getDefinedPlayers` is empty, and line 900 throws — in every fork, for as
 long as the effect lives, because in a two-player game nothing else empties that list. J171's s05
-(`/home/justin-a/code/lab/data/lab-j170/b-s05-pauper-2105/`) held Elite Interceptor, which also enters prepared: it entered
+(`~/code/lab/data/lab-j170/b-s05-pauper-2105/`) held Elite Interceptor, which also enters prepared: it entered
 at turn 5 and died the same turn, before the spine's first fork at turn 6, and 0 of 6,325 branches erred. The crash needs the
 prepared copy's effect alive when a branch forks; Emeritus of Abundance survived to one. Evidence:
-`/home/justin-a/code/lab/data/lab-j176/b-s03-legacy-2129/phaseB/` (`branches.jsonl`, `logs/worker-*.log`,
-`baseline/frames/baseline-seat1.jsonl.gz`), `/home/justin-a/code/pc-results/results/J176/run3.log`, the jar's
+`~/code/lab/data/lab-j176/b-s03-legacy-2129/phaseB/` (`branches.jsonl`, `logs/worker-*.log`,
+`baseline/frames/baseline-seat1.jsonl.gz`), `~/code/pc-results/results/J176/run3.log`, the jar's
 `forge/game/staticability/StaticAbilityContinuous.class` and `forge/game/ability/effects/AlterAttributeEffect.class`.
 
 **Decision.**

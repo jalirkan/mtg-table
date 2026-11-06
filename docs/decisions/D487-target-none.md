@@ -7,7 +7,7 @@ next` gave D487. Amends **D347**'s target records and the M55 audit in `tools/ch
 **2026-10-26**
 
 **Context.** J171, the first night on D486's seat: five spines' atlases report a redaction PROBLEM -- 4,501 frame logs
-(s09 2,361, s02 1,212, s10 829, s04 61, s08 38; `/home/justin-a/code/lab/data/lab-j170/b-s*/`) fail the M55 audit with
+(s09 2,361, s02 1,212, s10 829, s04 61, s08 38; `~/code/lab/data/lab-j170/b-s*/`) fail the M55 audit with
 "decision N chose null, which is not among its options" and "chosen null is not a token". Every failing record is a
 `target` record of Forge's own answer (`by: "forge"`, `source: "targets"`) whose `chosen` is null, beside options that
 now list cards, e.g. `b-s09-pauper-2109/phaseB/frames/d0-random-o0-b100-seat1.jsonl.gz` line 145. `Decisions.targets`

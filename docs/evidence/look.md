@@ -12,7 +12,7 @@ reserved range, renumbered at merge onto `f6bad35`); the brief is
 ### At merge — rebased onto `f6bad35` (read this first)
 
 The first stage of the art-direction merge pass, 2026-09-28, in the lane's own
-worktree (`/home/justin-a/code/mtg-table-t2l`, branch `look`). `git rebase
+worktree (`~/code/mtg-table-t2l`, branch `look`). `git rebase
 f6bad35` replayed five commits — report 15 and its `?look=comic` spike
 (`c81f674`, which had never been on `main`) and the lane's four — over what
 `main` gained since `a092d3a`: the hardening pass, more villains, spectating,
@@ -312,7 +312,7 @@ both trees lists nothing.
 
 ### The first round
 
-Built in the worktree `/home/justin-a/code/mtg-table-t2l`, branch `look`, from
+Built in the worktree `~/code/mtg-table-t2l`, branch `look`, from
 `c81f674` (`main` at `a092d3a` plus report 15 and its `?look=comic` spike), on
 2026-09-28. Three builders worked the lane in turn: the first two were stopped by
 a usage limit, and each one's uncommitted work was read and kept by the next. The

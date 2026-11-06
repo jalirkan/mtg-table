@@ -4,7 +4,7 @@ Report 15's **Lane BODIES** (§9.3; decisions **D156–D165**, written as
 D140–D149 in the lane's reserved range and renumbered contiguously at merge —
 *At merge*, just below, is the merge; §1–§9 are the lane's own record, and their
 decision numbers were renumbered with it). Built in the
-worktree `/home/justin-a/code/mtg-table-t2n`, branch `bodies`, off **`c81f674`**
+worktree `~/code/mtg-table-t2n`, branch `bodies`, off **`c81f674`**
 — `main`'s `a092d3a` plus report 15 and its `?look=comic` spike — on 2026-09-27
 and 2026-09-28, beside lanes LOOK and MOTION, whose files this lane did not
 touch (report 15 §9.4's table). The first builder was cut off by a usage limit

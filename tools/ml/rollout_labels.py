@@ -461,6 +461,8 @@ def code_version() -> dict[str, Any]:
     if not jar and os.path.isfile("config.json"):
         with open("config.json", encoding="utf-8") as f:
             jar = json.load(f).get("forgeJar")
+        if isinstance(jar, str) and jar.startswith("~/"):   # D516: config.json's leading ~/ only
+            jar = os.path.join(os.path.expanduser("~"), jar[2:])
     out["forgeJarSha256"] = _sha_file(jar)
     return out
 

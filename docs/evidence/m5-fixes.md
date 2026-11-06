@@ -1,6 +1,6 @@
 # M5 fixes — the three dead ends a verification pass found, and what closed them
 
-2026-09-12. Worktree `/home/justin-a/code/mtg-table-m5` (branch `m5`), ports
+2026-09-12. Worktree `~/code/mtg-table-m5` (branch `m5`), ports
 8660/8661 and 5180 only. Amendments **M28–M31** in `docs/protocol.md` come from
 this pass.
 

@@ -137,6 +137,27 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(set(man['files']), {os.path.relpath(os.path.join(dp, f), out1).replace(os.sep, '/')
                                              for dp, _, fs in os.walk(out1) for f in fs} - {'MANIFEST.json'})
         self.assertIn(R.ATTRIBUTION, slurp(os.path.join(out1, 'README.md')))
+        # D516: the dataset card's front matter, the licence file and the citation are in the release and the manifest
+        for f in ('README.md', 'LICENSE.md', 'CITATION.cff'):
+            self.assertTrue(os.path.isfile(os.path.join(out1, f)), f)
+            self.assertIn(f, man['files'])
+        readme = slurp(os.path.join(out1, 'README.md'))
+        self.assertTrue(readme.startswith('---\nlicense: cc-by-4.0\n'), readme[:80])
+        self.assertIn('\n---\n\n# mtg-table move atlas, ', readme)
+        lic = slurp(os.path.join(out1, 'LICENSE.md'))
+        for want in (R.ATTRIBUTION, R.CC_BY, 'Fan Content Policy', 'GPL-3.0-or-later', 'not** licensed'):
+            self.assertIn(want, lic)
+        cff = slurp(os.path.join(out1, 'CITATION.cff'))
+        self.assertIn('type: dataset\ntitle: mtg-table move atlas\n', cff)
+        # the repository's CITATION.cff carries the same dataset as its first reference: the same title, licence,
+        # release date and attribution (the two are written by hand and by release.py; this holds them together)
+        repo_cff = slurp(os.path.join(ROOT, 'CITATION.cff'))
+        ref = repo_cff[repo_cff.index('references:'):]
+        for want in ('title: mtg-table move atlas', 'license: CC-BY-4.0', 'date-released: "%s"' % R.RELEASE_DATE,
+                     'version: v1', R.ATTRIBUTION):
+            self.assertIn(want, ref)
+        self.assertIn('license: CC-BY-4.0', cff)
+        self.assertIn('date-released: "%s"' % R.RELEASE_DATE, cff)
 
     def test_check_catches_each_plant(self):
         out = os.path.join(self.tmp, 'plant', 'move-atlas-test')

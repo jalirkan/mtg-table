@@ -18,7 +18,7 @@ same, and the two copy the spell at each other 150-odd times in the last 400 fra
 *Target player discards two cards. That player may copy this spell and may choose a new target for that copy.* Nothing
 in Forge's AI declines the copy, so with an AI in both seats the chain is unbounded; D467's StepClock is read between
 steps and on events, and D484's DecisionClock ends the branch at 120 s, which is what every one of the 494 cost. A
-branch that does not time out in this spine takes 1.3 s (mean; median 0.85 s). Evidence: `/home/justin-a/code/lab/data/lab-j173/b-s06-peasant-2119/phaseB/`
+branch that does not time out in this spine takes 1.3 s (mean; median 0.85 s). Evidence: `~/code/lab/data/lab-j173/b-s06-peasant-2119/phaseB/`
 (`branches.jsonl`; `frames/d5-random-o0-b0-seat0.jsonl.gz`, its last state's stack and its `ai`/`decision` frames),
 and the runner's journal (`journalctl --user`, 2026-10-27 04:54 EDT): *J173: failed (timeout: step run6 ran past
 10800 s)*; the job's `STATUS` in pc-results was last published at run4 and does not show the end. J174, drafted before this was known, had drawn the card into three of its thirteen spines (s02, s03, s10); it was

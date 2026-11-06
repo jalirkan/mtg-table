@@ -14,10 +14,12 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 397 items still open across 44 follow-up lists** — 367
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted, recounted
+**The index below lists 396 items still open across 44 follow-up lists** — 365
+open, 19 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D515
+said 371 across 42, three rows and one list behind its table) — D516
+(2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
+added its 9 and 10; D515
 (2026-11-06) added the move atlas release's list of eight; D514
 (2026-11-05) added the cube lab's 37; D513
 (2026-11-05) added the cube lab's 36; D512
@@ -53,7 +55,7 @@ lane had counted 314 across 33, which missed more villain identity's list), wher
 the four paragraphs it replaced, one per merging lane, had each counted a
 different tree. Each list's
 own entries say what is closed. **Of the 41 questions only the owner can settle,
-5 are answered** and 36 stand on the default this plan assumes. (Two stale
+6 are answered** (the 7th, public or private, by D515 and D516) and 35 stand on the default this plan assumes. (Two stale
 paragraphs that counted 393 and 394 items across 32 lists, left here by more
 villain identity's rebase, were removed at the same recount.)
 
@@ -450,14 +452,13 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
 | [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000-r24` and `-ms6000-r48` (search-v2 with the budget and the round cap scaled together, ×2 and ×4) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
-| [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution he wants | `tools/atlas/release.py` |
-| [Move atlas release](#fu-move-atlas) | 2 | open | The owner's: 206 commits on `main` are authored with his email address, which a public history shows | — |
-| [Move atlas release](#fu-move-atlas) | 3 | open | The owner's: this PC's paths in tracked files (hard rule 9, `NOTICE`, `config.json`, guides' examples, `engine-unplayable.json`'s evidence) | `CLAUDE.md` |
-| [Move atlas release](#fu-move-atlas) | 4 | open | `.claude/` is untracked but not ignored; a `git add -A` would commit it | `.gitignore` |
+| [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
+| [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
 | [Move atlas release](#fu-move-atlas) | 6 | open | The frame logs are not in v1; shipping them needs a scrub of their own | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 7 | open | The next atlas job runs `tools/atlas/` at its pin; the pilot scripts and `metrics.py`'s spine table carry J193's seeds | `tools/atlas/metrics.py` |
 | [Move atlas release](#fu-move-atlas) | 8 | open | No test holds `tools/README.md`'s table to the files under `tools/` | `tools/README.md` |
+| [Move atlas release](#fu-move-atlas) | 10 | open | `engine-unplayable.json`'s evidence strings changed (D516): `tools/atlas/deckcode.py`'s registered blob and its J171/J176 comparisons are J193's, so the next atlas pilot registers the new blob | `tools/atlas/deckcode.py` |
 | [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
 | [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
 | [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
@@ -486,7 +487,7 @@ villain identity's rebase, were removed at the same recount.)
 | [4](#owner-questions) | Ever rewrite `~/.forge`'s `Pacho SHIELD.dck` in place to add `\|MSC`? | open — the plan runs on its default |
 | [5](#owner-questions) | Card images hot-linked from Scryfall, or proxied through our own origin? | open — the plan runs on its default |
 | [6](#owner-questions) | Install a JDK? | open — the plan runs on its default |
-| [7](#owner-questions) | GitHub: a public repo or a private one? | open — the plan runs on its default |
+| [7](#owner-questions) | GitHub: a public repo or a private one? | answered (public: D515, D516) |
 | [8](#owner-questions) | Is losing to the Forge AI acceptable, or does a profile picker come forward? | answered (came forward) |
 | [9](#owner-questions) | Forge's floating-mana warning on in real games? | answered |
 | [10](#owner-questions) | Report 13 §13's first six questions (art direction, card-art models, the GPU, breathing, duelists, lights) | answered |
@@ -573,7 +574,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 dev-server **tools** rather than a milestone: a local SQLite + FTS5 index of every
 card under `tools/card-library/`, an image cache, and a `#cards` browser. Built,
 reviewed twice and fixed, and committed on `main` as `754f504` (worktree
-`/home/justin-a/code/mtg-table-t2g`, branch `card-library`). Nothing on the wire
+`~/code/mtg-table-t2g`, branch `card-library`). Nothing on the wire
 or in `bridge/` moved, and the board gained one link (`▦ cards`, beside the arena
 toggle) and nothing else. *The card library and the card browser*, just above
 *Deferred*, has the status, the commands and the follow-ups.
@@ -2763,7 +2764,7 @@ minor).** Evidence:
 [`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md), in three parts (T0–T2,
 T3–T4, T5–T7) plus a status section. **The user committed it on `main` as
 `4f84613`**; it was built on branch `tier2-slice1` in the worktree
-`/home/justin-a/code/mtg-table-t2`, and slice 2 branches from that commit.
+`~/code/mtg-table-t2`, and slice 2 branches from that commit.
 The user's nine Tier 2 decisions are recorded as **D53–D62**, and the builders'
 own as **D56, D57, D59, D60, D63**. The spec is report 13; the asset landscape it
 rests on is [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md).
@@ -3120,7 +3121,7 @@ a stated cost.
 ### Slice 2 — T8 (the humanoids, the retarget, the death) and the camera views, 2026-09-27
 
 **Status: built in two tracks, verified twice, fixed twice, and documented** — in
-the worktree `/home/justin-a/code/mtg-table-t2b`, branch `tier2-slice2`,
+the worktree `~/code/mtg-table-t2b`, branch `tier2-slice2`,
 **nothing committed** — since **committed by the user on `main` as `5891444`**,
 which slice 3 branches from. The first verification pass found one major (every death
 blinked) and six minors; the second found one major and three minors, the major a
@@ -3333,7 +3334,7 @@ library of archetypes" quietly becomes "a model per card" (report 13 §12).
 
 **Status: built in two tracks (identity — T9/T10; cues and attachments —
 T11/T12), verified twice, fixed twice, and documented** — in the worktree
-`/home/justin-a/code/mtg-table-t2c`, branch `tier2-slice3` (from `5891444`),
+`~/code/mtg-table-t2c`, branch `tier2-slice3` (from `5891444`),
 **nothing committed**. The first verification pass found three majors and five
 minors, the second four majors and five minors; every one has a fix in the tree,
 **but the second pass's fixes have not been through a third, independent
@@ -3637,7 +3638,7 @@ rung — which is why none of it is Tier 3.
 
 **Status: built in two tracks (the bodies and the costume; the duelists — T13),
 verified once (verdict: passed; eleven findings, all minor, none fixed in code),
-and documented** — in the worktree `/home/justin-a/code/mtg-table-t2d`, branch
+and documented** — in the worktree `~/code/mtg-table-t2d`, branch
 `tier2-slice4` (from `0368a90`), **nothing committed**. The user committed slice
 3 as `0368a90`, played it, and said *"the game looks generally improved. The
 avatars are still pretty generic."* Slice 4 took both readings of "avatars". The
@@ -4082,7 +4083,7 @@ and it needs a decision of its own before it becomes work — **question 14** in
 ## The card library and the card browser — off the plan, 2026-09-27 (D90–D94)
 
 **Status: built, reviewed twice, every finding fixed, documented; not
-committed** — in the worktree `/home/justin-a/code/mtg-table-t2g`, branch
+committed** — in the worktree `~/code/mtg-table-t2g`, branch
 `card-library` (from `0368a90`). It is the deferred list's *"SQLite + FTS5 card
 library, the `oracle_cards` bulk stream, a local image cache"*, brought forward on
 the user's request of 2026-09-27 — *"expedite some of these"* — **without** the
@@ -4219,7 +4220,7 @@ node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdo
 
 **Status: built, reviewed, every workshop finding fixed, documented, and
 rebased onto Tier 2 slice 4 and reconciled with it (2026-09-27).** It is in the
-worktree `/home/justin-a/code/mtg-table-t2e`, branch `workshop`, from `0368a90`,
+worktree `~/code/mtg-table-t2e`, branch `workshop`, from `0368a90`,
 moved onto `754f504` (the card library) by its fix pass, then rebased onto
 `main`'s `23e26b3` (slice 4) as two commits: the workshop itself, re-applied with
 the docs merged, and **the reconciliation** — the costume row, the links with
@@ -4700,7 +4701,7 @@ declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
 ## Engine and sets — Forge 2.0.14 stays; Reality Fracture waits for an official release (2026-09-27, D109–D112)
 
 **Status: preparation only; committed on its branch, and on `main` since `aead79d`** —
-worktree `/home/justin-a/code/mtg-table-t2h`, branch `engine-upgrade` (cut from
+worktree `~/code/mtg-table-t2h`, branch `engine-upgrade` (cut from
 `754f504`, rebased onto `main`'s `a092d3a` on 2026-09-27: Tier 2 slice 4, the
 workshop and match setup underneath it).
 **Nothing about how the game runs changed**: `bridge/`, `config.json`,
@@ -10713,7 +10714,7 @@ would.
 `72302c69`; D515 (the reservation of D516–D518 is released at the merge; the next lane may take D516). The owner, 2026-11-06: *"Yes, we should publish the generator
 too"* and *"Sure, let's follow your recommendations"*: the atlas's label pipeline moves into this repository, a
 first dataset release is built as one file with a README, and this repository alone goes public (`pc-results`,
-`pc-jobs` and ForgeCoach stay private). He flips the repository and uploads the dataset; nothing here does either.
+`pc-jobs` and ForgeCoach stay private). The owner flips the repository and uploads the dataset; nothing here does either.
 `docs/guides/move-atlas.md` is the manual; `docs/decisions/D515-publish-the-atlas.md` the decision, its
 evidence and the public-repo check.
 
@@ -10738,7 +10739,7 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
   text in its label), every path relative, CC BY 4.0 with the attribution line, the Fan Content Policy notice.
 - **The fixture**: `fixtures/atlas/night/`, J193's s07 cut to three branches an option; 12n holds `labels.py`,
   `compare.py`, a release built twice to the same bytes, and the scrub check's plants.
-- **The public-repo check**: 93 tracked files name `justin-a` (77 dated history; the rest the owner's machine
+- **The public-repo check**: 93 tracked files name the owner's home folder (77 dated history; the rest the owner's machine
   convention, example paths and tests); the owner's first name in 88; no secret in the tree or its history;
   206 commits on `main` authored with the owner's personal address (17 as committer too); `.claude/` untracked but not ignored. D515 has the classification.
 
@@ -10746,15 +10747,18 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
 ### The move atlas release's follow-ups — eight, 2026-11-06 (D515)
 
 1. **The owner's: flip the repository public, upload the zip and list it** (Kaggle, Hugging Face or neither), with
-   the title, description and attribution he wants; `release.py`'s `ATTRIBUTION` holds the default line.
-2. **The owner's: the history's author email.** 206 commits on `main` are authored with his personal address, and
-   17 carry it as committer too; public history shows it. Accept it, or rewrite both fields to his GitHub noreply
-   form before the flip.
-3. **The owner's: this PC's paths in tracked files.** Hard rule 9 and the engine's path in `CLAUDE.md` (and its
+   the title, description and attribution the owner wants; `release.py`'s `ATTRIBUTION` holds the default line.
+2. **The owner's: the history's author email.** 206 commits on `main` are authored with the owner's personal address, and
+   17 carry it as committer too; public history shows it. Accept it, or rewrite both fields to the owner's GitHub noreply
+   form before the flip. *Accepted 2026-11-06 (D516): the owner accepts that address on the history, which is not
+   rewritten.*
+3. ~~**The owner's: this PC's paths in tracked files.**~~ *Closed 2026-11-06 by D516*: every live one is
+   machine-neutral (`~/`, `$HOME`, the repo root), the dated history's home-folder paths became `~/`, and
+   `tools/public-check.sh` (gate step 2c, CI) keeps it so. Hard rule 9 and the engine's path in `CLAUDE.md` (and its
    manifest), `NOTICE`, `config.json` (`forgeJar`, `labArchiveRoot`), `PLAN.md`'s worktree paths, four guides'
    examples, `engine-unplayable.json`'s evidence strings, one test's default lab folder. None is a secret; each
    tells a reader where this PC keeps things. Leave them, or generalise the convention (`$REPO`, `$FORGE_JAR`).
-4. **`.claude/` is untracked but not ignored**: a `git add -A` in the main checkout would commit the session's
+4. ~~**`.claude/` is untracked but not ignored**~~ *(closed 2026-11-06 by D516: `/.claude/` is in `.gitignore`)*: a `git add -A` in the main checkout would commit the session's
    folder. Add `/.claude/` to `.gitignore`, unless the owner wants its settings shared.
 5. **J186's refused- and lost-cast fields are null** (its frame-log scan never ran): `metrics.py --scan` over its
    twelve spines fills them for a v2.
@@ -10764,6 +10768,43 @@ python3 -m unittest discover -s tools/atlas/tests                     # gate ste
    `metrics.py`'s spine table carry J193's seeds and are edited in the repository for it, a commit a night.
 8. **No test holds `tools/README.md`'s table to the files under `tools/`**; this lane added `tools/atlas/`'s rows by
    hand.
+9. ~~**(D516) The balance-model v2 test's lab half runs only when its lab data is exported.**~~ *Closed at the
+   lane's review, 2026-11-06*: it had this PC's lab folders as absolute defaults; it now reads `CUBELAB_LAB_DATA`
+   and `CUBELAB_LAB_FACTS`, else the lab's conventional place under the home folder (`~/code/lab/`), and skips
+   when the files are absent — so this PC's gate still runs it (7 of 7) and the file names no machine.
+10. **(D516) `tools/atlas/deckcode.py` is J193's check**: `engine-unplayable.json`'s evidence strings were rewritten
+    (no card, no `since`, no `why` beyond one path changed, so every draw is unchanged), which moves the file's blob
+    and its sha12 in a draw's `decks.json`; the script's `UP_BLOB` and its "J171's entry unchanged" comparison are
+    J193's. The next atlas pilot registers the new blob and compares the lists by card, as follow-up 7 edits it.
+
+## Public-ready — machine-neutral paths, the front door, the dataset's licence and citation, the public check (2026-11-06, D516)
+
+**Status: built and verified; the full gate: green on `e0281b6c` (`rm -rf bridge/out && GATE_JOBS=2 WSPORT=9900 ./tools/check-all.sh`: `check-all OK`, 62 jobs, wall 974.4 s, job seconds 1926.4 s, load average 1.03 at the start, 84.73 at most, 8.26 at the end; run `20261106-103014-3628241`)**; not merged, not pushed. Branch `pc/d516-public-ready`,
+off `main`'s `5ccc464b` (D515's merge); D516. The owner, 2026-11-06, on reading D515's public-repo check: *"Yeah
+that all seems okay. If you want, we can fix the file paths and organization to something more suitable. This is
+basically contributing to the public so let's make it feel official and trustworthy."* The owner accepts the address on
+the history and the first name in the docs; only this repository goes public, and the owner flips it and uploads the
+dataset. `docs/decisions/D516-public-ready.md` is the decision and its evidence.
+
+- **Paths**: `config.json`'s `forgeJar` is `~/forge/<jar>`; seven readers expand a leading `~/` (config.sh,
+  `Config.forgeJar()`, audit-deck, census, deckcensus, leaks, rollout_labels), `FORGE_JAR` still wins;
+  `web/test/forge-jar-path.test.ts`. Proven with no `FORGE_JAR`: check-forge's sha256, the build, Smoke through
+  `run.sh` and by a direct `java` call. `CLAUDE.md` (hard rule 9, *Environment*, *Never write outside this repo*;
+  the manifest regenerated), `NOTICE`, `.gitignore`, the tunnel example, `javap-seam-diff.sh`,
+  `PC-JOBS-README.md`, the balance-model test (environment only), `engine-unplayable.json`'s evidence; the dated
+  history respelled `~/` mechanically. The home-folder name is left in two tracked files, both on the check's
+  allow list.
+- **The front door**: `README.md` (about 160 lines: what it is, the quickstart, the dataset, *How this is
+  built*, NON-GOALS, where to read next, the licence); the old README whole as `docs/handbook.md`;
+  `CONTRIBUTING.md`, `SECURITY.md`, `CITATION.cff`; `/.claude/` ignored.
+- **The release**: a dataset card's front matter, `LICENSE.md` and `CITATION.cff` inside it;
+  `var/release/move-atlas-v1.zip` rebuilt, 8,903,513 bytes, sha256 `0f7d83c6…9a6c11`, its data files byte for byte
+  D515's.
+- **The public check**: `tools/public-check.sh` and its selftest, gate step 2c (62 jobs, 46 serially) and CI's
+  `redaction` job.
+
+Its follow-ups are the move atlas release's 9 and 10 ([the list](#fu-move-atlas)); it closed that list's 3 and 4
+and marked its 2 accepted, and answered the owner's question 7 (public).
 
 ## Deferred — out of scope for M0–M7
 
@@ -10823,7 +10864,7 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 4 | Should anything ever rewrite `~/.forge/decks/constructed/Pacho SHIELD.dck` in place to add the missing `\|MSC` suffixes? | **Never rewrite it. Write a copy.** |
 | 5 | Card images hot-linked from `cards.scryfall.io`, or proxied through our own origin with a 302 (the way Endstep does)? | **Hot-link in v1.** Unchanged for the board. The card browser (2026-09-27) serves the user's own image cache from the dev server's origin and hot-links on a miss — never a proxy (**D92**). |
 | 6 | Install a JDK? Not needed for this plan, but it would bring `jar`, `jshell`, a debugger and Maven. Unpack Temurin 21 into `tools/jdk/` (no sudo) or `apt install openjdk-21-jdk` (sudo)? | **No JDK. The JRE's `jdk.compiler` / `jdk.jdeps` modules suffice.** |
-| 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | Undecided — **NOTICE is written to publication quality anyway**, so either answer works. |
+| 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | **ANSWERED 2026-11-06: public** — this repository alone (`pc-results`, `pc-jobs` and ForgeCoach stay private); the owner flips it. D515 checked it for going public; on reading that check the owner said *"Yeah that all seems okay. If you want, we can fix the file paths and organization to something more suitable. This is basically contributing to the public so let's make it feel official and trustworthy."* and D516 made it so (machine-neutral paths, a short README and the handbook, CONTRIBUTING, SECURITY, CITATION, the public check as gate step 2c). |
 | 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **The picker CAME FORWARD on 2026-09-27**, when the user asked for deferred work to be expedited: match setup (amendment **M44**) picks the AI's deck and its Forge profile (`--ai-deck`, `--ai-profile`, `config.json`'s `match` block). **It is not a difficulty setting** (**D107**) — Forge has none, and in same-seed pairs against the automated seat Cautious and Reckless were not measurably different (`docs/evidence/match-setup.md` §P). Whether losing to the AI is acceptable is unchanged: nothing here makes it weaker. |
 | 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **ANSWERED BY M6: ON.** `config.json` `"manaLostPrompt": true`, set in memory only (never `save()`), overridable with `--mana-lost-prompt` / `--no-mana-lost-prompt` (amendment M40). `confirm` therefore occurs in ordinary games; nothing else moved. Raise it again if the prompt turns out to be a nuisance. |
 | 10 | **New, Tier 2.** Report 13 §13's first six questions — art direction, models from card art, the GPU, idle breathing, duelists, lights. | **ANSWERED by the user before T0**, as nine decisions, recorded as **D53–D62**: stylised low-poly CC0 figures under a holographic, unlit treatment; figures at their card with the card plane kept; **no** AI-generated models from card art; **no** Mixamo; procedural slab lands; bloom on if the bench allows (it did, on the GTX 1080); breathing only while something else animates; silhouette busts, avatars deferred; mana motes to the controller's casting anchor. **One of the nine has since been superseded**: "silhouette busts, avatars deferred" (**D62**) by slice 4's full duelists (**D99**), on the workflow's reading of the user's verdict on slice 3 — the busts are kept as the fallback, and whether the duelists were wanted is slice 4's follow-up 1. |

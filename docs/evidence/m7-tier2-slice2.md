@@ -4,7 +4,7 @@ Each track of the slice appends its own section below.
 
 ## Camera views (T8's camera track) — five views, spectator mode, the auto director
 
-*Appended 2026-09-27 by the camera builder. Worktree `/home/justin-a/code/mtg-table-t2b`,
+*Appended 2026-09-27 by the camera builder. Worktree `~/code/mtg-table-t2b`,
 branch `tier2-slice2`, nothing committed. Files: `web/src/arena/camera.ts`,
 `Arena.tsx`, `DecisionLayer.tsx` (the switcher), `scene/CueRunner.tsx` (the camera
 tick only), `web/src/keys.ts`, `web/src/styles.css`, and the tests
@@ -361,7 +361,7 @@ behaviour a user could see:
 
 ## Figures (T8's figure track) — three humanoids on one rig, the retarget experiment, and a death that is seen
 
-*Appended 2026-09-27 by the figures builder. Worktree `/home/justin-a/code/mtg-table-t2b`,
+*Appended 2026-09-27 by the figures builder. Worktree `~/code/mtg-table-t2b`,
 branch `tier2-slice2`, nothing committed. Files: `tools/build-figures.mjs`,
 `tools/assets-manifest.json`, `web/public/models/figures.glb` (rebuilt),
 `web/src/arena/figures/{figures.json, models.json, types.ts, validate.ts, pose.ts,
@@ -981,7 +981,7 @@ the step-out, the corpus no-blink timeline at two paces), `camera.test.ts` +1 an
 on-card disc order over the corpus), `liveness.test.ts` +2 and two rewritten (the URL
 allow-list replacing the hostname denylist; the departure clause now also holds
 `deathPending`, `stepDeparture` and the layout-effect intake; the on-card pass; the
-frame-loop allocation scan). `~/.forge` and `/home/justin-a/forge` (depth 2) hashed the
+frame-loop allocation scan). `~/.forge` and `~/forge` (depth 2) hashed the
 same before and after; every process this pass started — Vite on 5180, Chromium on
 CDP 9379, bridges on 8661 and 8663 — was stopped by PID.
 
@@ -1151,7 +1151,7 @@ rm -rf bridge/out && WSPORT=8665 ./tools/check-all.sh → check-all OK, exit 0, 
 
 New tests in this pass: `replay-cues.test.ts` +2 (the idle gap, the late frame),
 `liveness.test.ts` +1 (the loop mode), and `clips.test.ts`'s no-blink timeline's
-third pace. `~/.forge`, `/home/justin-a/forge` (depth 2) and the main checkout's
+third pace. `~/.forge`, `~/forge` (depth 2) and the main checkout's
 file list fingerprinted the same before and after; every process this pass started
 — Vite on 5180, the Chromium instances on CDP 9395–9399 (closed with
 `Browser.close`), the bridges on 8660, 8661 and 8662 — was stopped by PID or exited
@@ -1245,7 +1245,7 @@ WSPORT=8666 ./tools/check-all.sh   (bridge/out NOT deleted first; build.sh recom
 
 It ran while this pass edited documentation files only, none of which any step
 reads (`grep` of `tools/` and `web/test/` for the edited files' names finds only
-comments). Nothing under `/home/justin-a/forge` or `/home/justin-a/.forge` was
+comments). Nothing under `~/forge` or `~/.forge` was
 modified during the run (`find -newermt` at depth 4: nothing), and no process,
 port in 8660–8669 or port 5180 was left behind.
 

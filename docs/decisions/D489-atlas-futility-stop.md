@@ -154,7 +154,7 @@ atlas.md says what the rule did, and marks each partial label and each control.
   The share of their branch rows not played goes from **32.4% to 55.5%**.
 
 **Measured.**
-- **The s06 replay** (`node docs/evidence/d489-futility-replay.mjs /home/justin-a/code/lab/data/lab-j170/b-s06-peasant-2106`;
+- **The s06 replay** (`node docs/evidence/d489-futility-replay.mjs ~/code/lab/data/lab-j170/b-s06-peasant-2106`;
   J171's spine, the D486 seat, read only). The script hands the spine's own `schedule.jsonl` to `AtlasSchedule` as a
   resumed atlas's, with every unit done. Every recorded verdict is replayed, and the script refuses to go on if any other
   verdict is re-decided. Only the futility read is new. The spine: 23 listed, 14 picked, 6 screened, 8 read at 50.

@@ -83,7 +83,7 @@ jobs:
     timeout-minutes: 15
     env:
       # The one engine this repo is built, gated and recorded against (CLAUDE.md,
-      # "Environment"; README, "Getting the engine").  The asset is Forge's own
+      # "Environment"; docs/handbook.md, "Getting the engine").  The asset is Forge's own
       # desktop distribution on the tagged forge-2.0.14 release -- the archive
       # the local install was unpacked from -- never the rolling daily-snapshots
       # build (D109, D110).  Its sha256 is the digest GitHub reports for the
@@ -151,7 +151,8 @@ jobs:
           # A different hash is a different engine, whatever its file is called.
           echo "$FORGE_JAR_SHA256  $jar" | sha256sum -c -
           # Hard rule 9: every script reads the jar from $FORGE_JAR or
-          # config.json's forgeJar; config.json keeps the local path untouched.
+          # config.json's forgeJar; FORGE_JAR wins, so config.json's machine-neutral
+          # default (~/forge/..., D516) is left untouched here.
           echo "FORGE_JAR=$jar" >> "$GITHUB_ENV"
       - name: tools/check-forge.sh
         run: ./tools/check-forge.sh
@@ -184,6 +185,10 @@ jobs:
         run: node tools/decisions.mjs check
       - name: decisions-selftest.mjs
         run: node tools/decisions-selftest.mjs
+      # Gate step 2c (D516): no tracked file names a home folder, the machine's host
+      # name (here, the runner's own) or a personal address; then its planted controls.
+      - name: public-check.sh
+        run: ./tools/public-check.sh && ./tools/public-check.sh --selftest
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs

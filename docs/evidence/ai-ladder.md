@@ -94,7 +94,7 @@ cpu: heavy
 repos: mtg-table@c/ai-ladder
 est: ~4 h on the 9700X (about 26,000 games)
 ## Pilot
-cd /home/justin-a/code/mtg-table && ./bridge/build.sh
+cd ~/code/mtg-table && ./bridge/build.sh
 ./tools/ai-ladder.sh list            # must print pairs-dev.txt and pairs-confirm.txt "present"
 ./tools/ai-ladder.sh run --hours 0.2 --jobs 7 --max-games 280 \
     --players forge-default,forge-reckless,policy-outlet \
@@ -135,7 +135,7 @@ after: J-L1
 repos: mtg-table@c/ai-ladder
 est: ~45 min tune (about 2,000 games) + 4 h league
 ## Pilot
-cd /home/justin-a/code/mtg-table && ./bridge/build.sh
+cd ~/code/mtg-table && ./bridge/build.sh
 mkdir -p var/ai-ladder var/ai-ladder-pilot
 cp tools/ai-ladder/players.json var/ai-ladder/players.json
 cp tools/ai-ladder/players.json var/ai-ladder-pilot/players.json
@@ -177,7 +177,7 @@ after: J-L1
 repos: mtg-table@c/ai-ladder
 est: 1-3 h (a +55 Elo edge decides in about 300 games; a search game costs several plain ones)
 ## Pilot
-cd /home/justin-a/code/mtg-table && ./bridge/build.sh
+cd ~/code/mtg-table && ./bridge/build.sh
 ./tools/ai-ladder.sh sprt search-v1-fixed3 forge-default --max-games 16 --batch-pairs 1 --jobs 2 \
     --dir var/ai-ladder-pilot --experiments var/ai-ladder-pilot/experiments.jsonl
 ./tools/ai-ladder.sh check --dir var/ai-ladder-pilot --min-games 16

@@ -79,7 +79,7 @@ banner and keeps the replay controls alive. Keep `<Board>` inside it.
 ## 0. What was verified for this document
 
 Nothing below is inferred. `[jar]` = `javap` against
-`/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`;
+`~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar`;
 `[src]` = the 2.0.15-SNAPSHOT checkout, read as prose per `CLAUDE.md`;
 `[live]` = an HTTP request made today; `[probe]` = run on this machine today.
 

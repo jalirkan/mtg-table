@@ -43,14 +43,14 @@ seat A's deck `legacy-2424-00001` holds **Old Man of the Sea**; seat B's, `legac
   finished branches.
 - The night's checks: four failed. `engine_errors - atlas.branchTimeoutsInStep <= 50` (71 and 1), `unit_errors == 0` (1),
   `atlas.unitsShort == 0` (1) and `atlas.problems == 0` (3, over the night: s11's unfinished unit and its 17 frame logs
-  that failed the redaction checker, and another spine's redaction failures in `run9.log`). No other night's `atlas.md` under `/home/justin-a/code/lab/data/` names a
+  that failed the redaction checker, and another spine's redaction failures in `run9.log`). No other night's `atlas.md` under `~/code/lab/data/` names a
   StackOverflowError. Old Man of the Sea was dealt into two earlier spines, J176 s08 (4,350 branches, 0 errors) and J180
   s08 (6 errors, none an overflow), whose logs hold 181 and 265 of its correction lines and no run.
 
-Evidence: `/home/justin-a/code/lab/data/lab-j183/b-s11-legacy-2524/` (`atlas.md`; `phaseB/branches.jsonl`,
-`phaseB/units.jsonl`, `phaseB/logs/worker-*.log`, `phaseB/frames/`), `/home/justin-a/code/pc-results/results/J183/`
+Evidence: `~/code/lab/data/lab-j183/b-s11-legacy-2524/` (`atlas.md`; `phaseB/branches.jsonl`,
+`phaseB/units.jsonl`, `phaseB/logs/worker-*.log`, `phaseB/frames/`), `~/code/pc-results/results/J183/`
 (`run11.log`, `checks.txt`, `STATUS`), and the decks
-`/home/justin-a/code/lab/data/lab-j183/decks/s11-legacy-2424/decks/legacy-2424-00001.dck` and `-00002.dck`.
+`~/code/lab/data/lab-j183/decks/s11-legacy-2424/decks/legacy-2424-00001.dck` and `-00002.dck`.
 
 **The scripts** (`cardsfolder.zip`): Old Man of the Sea's is
 `A:AB$ GainControl | Cost$ T | ValidTgts$ Creature.powerLEX | LoseControl$ Untap,LeavesPlay,LoseControl,StaticCommandCheck |

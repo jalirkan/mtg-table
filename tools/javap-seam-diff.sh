@@ -26,7 +26,7 @@
 # On the day, compare its output against the snapshot's, which is saved beside
 # the port it justified:
 #
-#   ./tools/javap-seam-diff.sh /home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar \
+#   ./tools/javap-seam-diff.sh ~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar \
 #       <release jar> > var/javap-release.txt
 #   diff <(sed 1,3d docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt) \
 #        <(sed 1,3d var/javap-release.txt)

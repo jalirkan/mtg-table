@@ -1108,7 +1108,7 @@ checkout and the jar we compile against. Never guess. Ask the jar:
 
 ```bash
 java -m jdk.jdeps/com.sun.tools.javap.Main \
-  -cp /home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar \
+  -cp ~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar \
   forge.game.card.CardView
 ```
 
@@ -1116,7 +1116,7 @@ That prints every member of the class as it exists *in the bytecode we link
 against*. It's a lot of output, so pipe it:
 
 ```bash
-export FORGE_JAR=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+export FORGE_JAR=~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 jp() { java -m jdk.jdeps/com.sun.tools.javap.Main -cp "$FORGE_JAR" "$@"; }
 
 jp forge.game.card.CardView | grep -i canBeShownTo
@@ -1294,7 +1294,7 @@ in the repo has to change?
 **Step 1 — find the method.**
 
 ```bash
-export FORGE_JAR=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+export FORGE_JAR=~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 java -m jdk.jdeps/com.sun.tools.javap.Main -cp "$FORGE_JAR" \
   'forge.game.card.CardView$CardStateView' | grep -i rarity
 #   public forge.card.CardRarity getRarity();

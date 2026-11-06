@@ -1,6 +1,6 @@
 ## Guards — the lint proves itself, counts the hops, reads `tools/`, and the AI decks meet their specs (2026-09-28)
 
-Worked in the worktree `/home/justin-a/code/mtg-table-t2w` on branch `guards`,
+Worked in the worktree `~/code/mtg-table-t2w` on branch `guards`,
 from `main` at `b9af15d`. The structure review of 2026-09-28 found the repo's
 mechanical guards weaker than their prose: two lint rules that could not fire,
 nothing that proved any rule could, hard rule 3's "exactly three hops" held by

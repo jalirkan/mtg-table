@@ -12,7 +12,7 @@ spec and its amendments A1–A8), [`docs/research/06-hidden-information-audit.md
 §4 (the text channels), `CLAUDE.md` (the nine hard rules).
 
 **Evidence convention**, identical to report 07. `jar:` = `javap` against
-`/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar` —
+`~/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar` —
 authoritative, this is what we compile and run against. `src:` = the
 2.0.15-SNAPSHOT source checkout at `<scratch>/forge-src/…`, cited `file:line`,
 used **only** for call sites and intent (CLAUDE.md: "treat forge-src as prose").
@@ -878,7 +878,7 @@ deferred"). This section is so that the deferral is a decision rather than a
 gap.
 
 **There are four profiles, and they are text files.**
-`/home/justin-a/forge/res/ai/{Cautious,Default,Experimental,Reckless}.ai`,
+`~/forge/res/ai/{Cautious,Default,Experimental,Reckless}.ai`,
 326–333 lines each, `KEY=VALUE` with comments — e.g. `MULLIGAN_THRESHOLD=4`,
 `PLAY_AGGRO=false`, `CHANCE_TO_ATTACK_INTO_TRADE=0` in `Default.ai:1-20`.
 122 keys are defined by the `AiProps` enum (jar).

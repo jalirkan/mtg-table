@@ -8,7 +8,10 @@
 #
 # It sets REPO_ROOT (absolute) and exports FORGE_JAR.  The jar path comes from
 # $FORGE_JAR if that is already set in the environment, otherwise from the
-# "forgeJar" key of <repo>/config.json.  The jar path is NEVER hardcoded in Java.
+# "forgeJar" key of <repo>/config.json, where a LEADING `~/` is the home
+# directory ($HOME; D516 -- the committed default is ~/forge/<jar>, so the file
+# names no one's machine) and nothing else is expanded.  The jar path is NEVER
+# hardcoded in Java.
 
 # Absolute path of the repo root, derived from this file's own location, so the
 # scripts work from any working directory (they are documented as being run from
@@ -42,6 +45,10 @@ if [ -z "${FORGE_JAR:-}" ]; then
     echo "could not read forgeJar from $CONFIG_JSON" >&2
     exit 1
   }
+  # D516: a leading ~/ in config.json is $HOME (only that form: not ~user, not a ~ inside the path).
+  case "$FORGE_JAR" in
+    "~/"*) FORGE_JAR="$HOME/${FORGE_JAR#"~/"}" ;;
+  esac
 fi
 export FORGE_JAR
 

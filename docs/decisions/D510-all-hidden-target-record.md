@@ -11,7 +11,7 @@ follow-ups.*
 **Context.** Lab night J186 (D508's population's first night, `random-<band>-d508`) failed `atlas.problems == 0` in
 one unit, `b-s11-legacy-2550` (legacy band, spine seed 2550): 12 of its 12,652 frame logs failed
 `tools/check-redaction.mjs`, each on exactly one record, all of the same shape (evidence, read only:
-`/home/justin-a/code/lab/data/lab-j186/b-s11-legacy-2550/`, `atlas.json`'s `checks` and `phaseB/frames/`,
+`~/code/lab/data/lab-j186/b-s11-legacy-2550/`, `atlas.json`'s `checks` and `phaseB/frames/`,
 `phaseB/logs/`). The first, `phaseB/frames/d13-random-o1-b149-seat0.jsonl.gz` line 305:
 
     {"v":1,"seq":66,"t":…,"dir":"ai","type":"decision","body":{"seat":0,"n":65,"kind":"target","frame":301,
