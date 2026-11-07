@@ -146,6 +146,7 @@ public final class DecisionSelfTest {
         mullAndTargets();
         evalLeafOnly();
         budgetAndRoundsOnly();
+        knobAndCurveArms();
         explore();
         randomSeat();
 
@@ -479,6 +480,70 @@ public final class DecisionSelfTest {
         final SearchConfig live = SearchConfig.parseLive("");
         check(live.budgetMs == 1500 && live.maxRounds == 12 && !SearchConfig.LIVE_DEFAULTS.contains("ms=")
                 && !SearchConfig.LIVE_DEFAULTS.contains("maxrounds"), "the live seat stays 1500 ms and 12 rounds");
+    }
+
+    /**
+     * D517: four more arms of search-v2, each differing from it in only the
+     * fields its name says.  The two knob arms add one switch:
+     * {@code search-v2-routlets} D390's {@code rollout=outlets} (the field
+     * {@code rollout}), {@code search-v2-ranked} D389's {@code rank=prior,gen=24}
+     * (the field {@code rankPrior}; {@code generate} is already 24 when ranking
+     * is off, {@code max(24, cands)}, so it must stay 24 and not differ).  The
+     * two downward arms scale the budget and the round cap together, as D514's
+     * do: {@code search-v2-ms750-r6} (x0.5) and {@code -ms375-r3} (x0.25), whose
+     * cap of 3 still clears the 2 minimum rounds the constructor demands.  Every
+     * other public field equals search-v2's (by reflection, so a field added
+     * later is held too); the live seat stays 1500 ms and 12 rounds with
+     * neither switch.
+     */
+    private static void knobAndCurveArms() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig routlets = SearchConfig.parse(v2Text + ",rollout=outlets");
+        check("outlets".equals(routlets.rollout) && "default".equals(v2.rollout), "routlets: rollout=outlets, search-v2's is default");
+        check(routlets.toString().equals(v2.toString() + ",rollout=outlets"), "routlets: the text is search-v2's plus rollout=outlets: " + routlets);
+        configOnly("routlets", v2, routlets, List.of("rollout"));
+        final SearchConfig ranked = SearchConfig.parse(v2Text + ",rank=prior,gen=24");
+        check(ranked.rankPrior && ranked.generate == 24 && !v2.rankPrior && v2.generate == 24 && "leaf".equals(ranked.prior),
+                "ranked: rank=prior, gen=24 (search-v2's unused generate is 24 too), the leaf prior");
+        check(ranked.toString().equals(v2.toString() + ",rank=prior,gen=24"), "ranked: the text is search-v2's plus rank=prior,gen=24: " + ranked);
+        configOnly("ranked", v2, ranked, List.of("rankPrior"));
+        for (final int[] arm : new int[][] {{750, 6}, {375, 3}}) {
+            final int ms = arm[0];
+            final int rounds = arm[1];
+            final String armText = v2Text.replace("ms=1500,", "ms=" + ms + ",").replace("maxrounds=12,", "maxrounds=" + rounds + ",");
+            final SearchConfig c = SearchConfig.parse(armText);
+            check(c.budgetMs == ms && c.maxRounds == rounds && c.anytime && c.minRounds == 2 && c.minRounds <= c.maxRounds && c.mullMs == v2.mullMs,
+                    "ms" + ms + ": ms=" + ms + " and maxrounds=" + rounds + " parse; minRounds 2 <= the cap, mullms search-v2's");
+            check(c.toString().equals(v2.toString().replace("ms=1500,", "ms=" + ms + ",").replace("maxrounds=12,", "maxrounds=" + rounds + ",")),
+                    "ms" + ms + ": the text is search-v2's with ms and maxrounds changed: " + c);
+            configOnly("ms" + ms, v2, c, List.of("budgetMs", "maxRounds"));
+        }
+        final SearchConfig live = SearchConfig.parseLive("");
+        check(live.budgetMs == 1500 && live.maxRounds == 12 && "default".equals(live.rollout) && !live.rankPrior
+                && !SearchConfig.LIVE_DEFAULTS.contains("rollout") && !SearchConfig.LIVE_DEFAULTS.contains("rank"),
+                "the live seat stays 1500 ms and 12 rounds, plain-Forge rollouts, candidates in order");
+    }
+
+    /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */
+    private static void configOnly(final String what, final SearchConfig a, final SearchConfig b, final List<String> only) {
+        int compared = 0;
+        final List<String> differ = new ArrayList<>();
+        for (final java.lang.reflect.Field f : SearchConfig.class.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                continue;
+            }
+            compared++;
+            try {
+                if (!java.util.Objects.equals(f.get(a), f.get(b))) {
+                    differ.add(f.getName());
+                }
+            } catch (final IllegalAccessException e) {
+                differ.add(f.getName() + "?");
+            }
+        }
+        check(compared >= 25 && new java.util.TreeSet<>(differ).equals(new java.util.TreeSet<>(only)),
+                what + ": of " + compared + " config fields only " + only + " differ: " + differ);
     }
 
     private static double[] rpDiff(final List<double[]> leaves, final int k) {

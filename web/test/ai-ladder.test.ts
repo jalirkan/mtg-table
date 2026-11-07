@@ -794,6 +794,44 @@ test('D514: search-v2-ms3000-r24 and -ms6000-r48 are search-v2 (search-v1-anytim
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D517: search-v2-routlets and -ranked are search-v2 (search-v1-anytime) plus one knob; -ms750-r6 and -ms375-r3 scale its budget and round cap down', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  assert.equal(v2.resolved.budgetMs, 1500);
+  assert.equal(v2.resolved.maxRounds, 12);
+  const arms = [
+    ['search-v2-routlets', { rollout: 'outlets' }, ',rollout=outlets', 'b704d57245a1'],
+    ['search-v2-ranked', { rank: 'prior', gen: 24 }, ',rank=prior,gen=24', 'bbbaad18882c'],
+  ] as const;
+  for (const [name, knob, suffix, hash] of arms) {
+    const p = by.get(name);
+    assert.ok(p?.cfg, `${name} is registered and playable`);
+    const pr = raw.players.find((y) => y.name === name)!;
+    assert.equal(pr.kind, v2raw.kind);
+    assert.deepEqual(pr.params, { ...v2raw.params, ...knob }, `${name}'s params are search-v2's plus ${Object.keys(knob).join(' and ')}`);
+    const rest: Record<string, unknown> = { ...p!.resolved };
+    for (const k of Object.keys(knob)) delete rest[k];
+    assert.deepEqual(rest, v2.resolved, "every other resolved param is search-v2's");
+    assert.equal(p!.cfg, v2.cfg + suffix, `the seat config is search-v2's with ${suffix.slice(1)} added`);
+    assert.equal(p!.hash, hash, `${name}'s config hash (D517)`);
+  }
+  for (const [name, ms, rounds, hash] of [['search-v2-ms750-r6', 750, 6, 'ef6def992355'], ['search-v2-ms375-r3', 375, 3, 'c2f054d190cf']] as const) {
+    const p = by.get(name);
+    assert.ok(p?.cfg, `${name} is registered and playable`);
+    const pr = raw.players.find((y) => y.name === name)!;
+    assert.equal(pr.kind, v2raw.kind);
+    assert.deepEqual(pr.params, { ...v2raw.params, budgetMs: ms, maxRounds: rounds }, `${name}'s params are search-v2's but budgetMs and maxRounds`);
+    assert.ok(rounds >= Number(v2.resolved.rounds), 'the round cap is at least the 2 minimum rounds (SearchConfig rejects maxrounds < rounds)');
+    assert.deepEqual({ ...p!.resolved, budgetMs: 1500, maxRounds: 12 }, v2.resolved, "every other resolved param is search-v2's");
+    assert.equal(p!.cfg, v2.cfg!.replace(/:ms=1500,/, `:ms=${ms},`).replace(/,maxrounds=12,/, `,maxrounds=${rounds},`), 'the seat config differs in ms= and maxrounds= alone');
+    assert.equal(p!.hash, hash, `${name}'s config hash (D517)`);
+  }
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
