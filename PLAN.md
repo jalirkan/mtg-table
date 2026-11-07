@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 396 items still open across 44 follow-up lists** — 365
+**The index below lists 397 items still open across 44 follow-up lists** — 366
 open, 19 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D516
+said 371 across 42, three rows and one list behind its table) — D517
+(2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
 added its 9 and 10; D515
 (2026-11-06) added the move atlas release's list of eight; D514
@@ -452,6 +453,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 35 | open | D512's A9 hideaway look follows the take from the digging player, whoever owns the host (J187 s06: the viewer's own Watcher reanimated by the opponent, taken back by Control Magic), and may lead the listed take by one frame on the evidence of the viewer's resolving aura's `attach`: measured on two logs; a take that attaches nothing, cut the same way, still fails | `docs/decisions/D512-hideaway-host-taken-from-the-digger.md` |
 | [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000-r24` and `-ms6000-r48` (search-v2 with the budget and the round cap scaled together, ×2 and ×4) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
+| [Cube lab](#fu-cube-lab) | 38 | open | D517's knob and curve arms `search-v2-routlets` (+ `rollout=outlets`), `search-v2-ranked` (+ `rank=prior,gen=24`), `search-v2-ms750-r6` and `-ms375-r3` (search-v2's budget and round cap ×0.5 and ×0.25) are registered and unplayed: J195 plays each against search-v1-anytime, 1,200 games on the confirm set, on D517's own pre-registered rule (the knobs judged SHOWN / NOT SHOWN / INCONCLUSIVE, a routlets NOT SHOWN only at 3% exposure, about half J194's base rate; the lower curve read, no verdict); no counter says whether the outlet policy acts inside a rollout (`rc.counts()` is discarded): a bridge change for a later pin | `docs/decisions/D517-knob-and-curve-arms.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10304,6 +10306,27 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    search-v2, 1,200 games each on the confirm set, read on D514's pre-registered rule (COMPUTE PAYS, DOES NOT PAY,
    or a 4,800-game confirmation), where the review's "ms6000" is `search-v2-ms6000-r48`. Its write-up should report
    the arms' rollouts a decision against search-v2's, since the race keeps them under 2× and 4×.
+
+38. **D517's knob and curve arms are registered and wait on J195.**
+   (2026-11-07, D517.) Four players in `tools/ai-ladder/players.json`, each search-v2 (`search-v1-anytime`,
+   `cdd55e02a89c`) with only the named change: `search-v2-routlets` (`b704d57245a1`, D390's `rollout=outlets`) and
+   `search-v2-ranked` (`bbbaad18882c`, D389's `rank=prior,gen=24`), the review's §5 row 6, "the built, never-matched
+   knobs"; and `search-v2-ms750-r6` (`ef6def992355`) and `search-v2-ms375-r3` (`c2f054d190cf`), the budget and the round
+   cap scaled down together as D514's arms scale them up. The pilot: both knob arms ran with no extra fallbacks;
+   ranking ran on 3 of 96 decisions at about 237 ms each; in the routlets games neither seat recorded any
+   `opportunity.*` or `policy.*` key, so the pilot measured nothing about the outlet policy; the downward arms played
+   0.60× and 0.39× search-v2's rollouts (9.5 and 6.1 a decision), the 375 ms arm deciding 16% of its decisions on
+   fewer than the 2 minimum rounds. For measurement only: the live seat stays search-v2 at 1.5 s. J195 plays each
+   against search-v1-anytime, 1,200 games on the confirm set, on D517's own pre-registered rule, which J195 quotes:
+   the knobs SHOWN, NOT SHOWN, or a 4,800-game confirmation (both NOT SHOWN closes the knob track, but a routlets NOT
+   SHOWN counts only if the arm's seat recorded an `opportunity.*` key in at least 3% of the games, about half of
+   J194's base rate of 5.3–6.0%; below that it is NOT SHOWN, UNEXPOSED and the knob stays open; at that exposure the
+   knob can act in about one game in seventeen, so a NOT SHOWN closes the track for this deck set only); the downward arms read as the curve's lower half with no verdict
+   ("indistinguishable from search-v2" when the interval contains 0, "at most 10 Elo weaker" when its lower end is
+   above −10, else the interval itself). **Open beside it: the rollout-level counter.** `RolloutController.Outlets`
+   counts `policy.*` / `opportunity.*` into the copy's own map and `SearchPolicy` never reads `rc.counts()` back, so
+   no counter says how often the outlet policy acts inside a rollout; about five lines after `playout` harvesting
+   them into the sink would. A bridge change, so a later pin, never J195's (D517's Residuals).
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
