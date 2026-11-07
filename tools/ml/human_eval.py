@@ -7,10 +7,18 @@ several, and their mean) on `var/ml/human/` -- the owner's own games against
 Forge's AI, collected by human_collect.py, never trained on (D347) -- beside
 D305's baselines.
 
-    python3 tools/ml/human_eval.py                                   # the served model, its training data's baselines
+    python3 tools/ml/human_eval.py                                   # the model the strip serves (below), its baselines
     python3 tools/ml/human_eval.py --model var/ml/models/night-1-eval.json --baselines var/ml/data/night-1
         [--model B.json ...]                # several: each is scored, and their mean P is `eval` (an ensemble)
         [--human DIR] [--report out.json] [--resamples 2000]
+
+WHICH MODEL (D518).  Without --model, the one the coach helper's win chance
+serves, in eval-runner.mjs's chooseEvalModel order: config.json's
+`coach.evalModel` (read from $MTG_TABLE_CONFIG, else the repo root's
+config.json, as the helper reads it), else the night-1 ensemble manifest, else
+night-1-eval.json -- each looked up in this checkout, then the lab clone.  A
+configured model that is found nowhere is an error, never the default instead.
+A manifest, a directory or a comma list is its member models (an ensemble).
 
 THE ROWS are D305's decision rows (encode.py's `encode_game`, as dataset.py
 builds them) from the viewing seat of each human game -- the human's own seat.
@@ -67,6 +75,7 @@ except ImportError:  # pragma: no cover
 
 REPO = HC.REPO
 DEFAULT_MODEL = os.path.join("var", "ml", "models", "night-1-eval.json")   # eval-runner.mjs's DEFAULT_EVAL_MODEL
+DEFAULT_ENSEMBLE = os.path.join("var", "ml", "models", "night-1-ensemble.json")   # its DEFAULT_EVAL_ENSEMBLE (D368)
 DESCRIPTIVE_UNDER = 30
 
 # ---------------------------------------------------------------- the pre-registered rule (D369)
@@ -100,6 +109,60 @@ def find_file(rel: str, repo: str = REPO) -> str | None:
         if os.path.exists(p):
             return p
     return None
+
+
+class ModelChoiceError(Exception):
+    pass
+
+
+def configured_model(repo: str = REPO, env=None) -> str | None:
+    """config.json's `coach.evalModel` (D518): $MTG_TABLE_CONFIG, else <repo>/config.json, as coach-helper.mjs's
+    readConfig reads it; None when absent or null.  A value that is not a non-empty string is an error."""
+    env = os.environ if env is None else env
+    f = env.get("MTG_TABLE_CONFIG") or os.path.join(repo, "config.json")
+    try:
+        with open(f, encoding="utf-8") as fh:
+            c = json.load(fh)
+    except FileNotFoundError:
+        return None
+    coach = c.get("coach") or {}
+    if not isinstance(coach, dict):
+        raise ModelChoiceError(f'"coach" in {f} is not an object')
+    v = coach.get("evalModel")
+    if v is None:
+        return None
+    if not isinstance(v, str) or not [p for p in v.split(",") if p.strip()]:
+        raise ModelChoiceError(f'"coach.evalModel" in {f} is not a model path (or null for the default)')
+    return v
+
+
+def _expand(found: str) -> list[str]:
+    import eval_serve as S   # a manifest or a directory is its members (D368)
+    return S.model_paths(found)
+
+
+def served_models(flags: list[str], repo: str = REPO, env=None) -> tuple[list[str], str]:
+    """The models to score and what named them (D518), in eval-runner.mjs's chooseEvalModel order: --model, else
+    config.json's coach.evalModel, else the night-1 ensemble, else night-1-eval.json.  A flag or a configured path
+    found nowhere raises ModelChoiceError; it never falls back to the default."""
+    def find_all(spec: str, what: str) -> list[str]:
+        out = []
+        for part in [p.strip() for p in spec.split(",") if p.strip()]:
+            p = find_file(part, repo)
+            if not p:
+                raise ModelChoiceError(f"no model at {part} ({what}; looked in {repo} and {lab_root(repo)})")
+            out += _expand(p)
+        return out
+    if flags:
+        return [m for f in flags for m in find_all(f, "--model")], "--model"
+    conf = configured_model(repo, env)
+    if conf:
+        return find_all(conf, "config.json coach.evalModel"), "config.json coach.evalModel"
+    for d in (DEFAULT_ENSEMBLE, DEFAULT_MODEL):
+        p = find_file(d, repo)
+        if p:
+            return _expand(p), "default"
+    raise ModelChoiceError(f"no model: pass --model, set config.json coach.evalModel, or put one at {DEFAULT_MODEL}")
 
 
 # ---------------------------------------------------------------- the human games
@@ -327,8 +390,10 @@ def format_report(rep: dict[str, Any]) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--model", action="append", default=[],
-                    help=f"an evaluator (train_eval.py --out); repeat for an ensemble. Default {DEFAULT_MODEL}, "
-                         "in this checkout or the lab clone ($MTGTABLE_LAB_ROOT, else ../lab/mtg-table)")
+                    help="an evaluator (train_eval.py --out), a manifest or a directory; repeat for an ensemble. "
+                         "Default: the model the win chance serves -- config.json coach.evalModel, else "
+                         f"{DEFAULT_ENSEMBLE}, else {DEFAULT_MODEL} -- in this checkout or the lab clone "
+                         "($MTGTABLE_LAB_ROOT, else ../lab/mtg-table) (D518)")
     ap.add_argument("--baselines", help="the dataset the model was trained on, for prior / life / core "
                                         "(default: the model's training.data, in this checkout or the lab clone)")
     ap.add_argument("--human", default=None, help=f"the human games (default <repo>/{HC.DEFAULT_OUT})")
@@ -338,13 +403,12 @@ def main(argv: list[str] | None = None) -> int:
     if np is None:
         print("human_eval: needs numpy", file=sys.stderr)
         return 2
-    models = []
-    for m in a.model or [DEFAULT_MODEL]:
-        p = find_file(m)
-        if not p:
-            print(f"human_eval: no model at {m} (looked in {REPO} and {lab_root()})", file=sys.stderr)
-            return 2
-        models.append(p)
+    try:
+        models, named_by = served_models(a.model)
+    except Exception as e:   # ModelChoiceError, or eval_serve's ModelError on a bad manifest
+        print(f"human_eval: {e}", file=sys.stderr)
+        return 2
+    print(f"human_eval: {len(models)} model(s), named by {named_by}: {', '.join(models)}")
     base = a.baselines
     if base is None:
         with open(models[0], encoding="utf-8") as f:

@@ -26,7 +26,7 @@ import shutil
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
@@ -372,6 +372,73 @@ class CollectTest(unittest.TestCase):
         n = len(HUMAN_FIXTURES)
         self.assertTrue(lines[0].startswith(f"human test set: {n} games (0 won, {n} lost), {n} new"), lines[0])
         self.assertTrue(lines[1].startswith(f"human test set: {n} games (0 won, {n} lost) --"), lines[1])
+
+
+def mock_stderr():
+    return redirect_stderr(io.StringIO())
+
+
+class ServedModelTest(unittest.TestCase):
+    """D518: human_eval's default model is the one the win chance serves, in eval-runner.mjs's chooseEvalModel
+    order -- --model, then config.json's coach.evalModel, then the night-1 ensemble, then night-1-eval.json, each in
+    this checkout and then the lab clone; a configured model found nowhere is an error, never the default."""
+
+    def setUp(self):
+        from unittest import mock
+        self.tmp = tempfile.mkdtemp(prefix="served-")
+        self.repo = os.path.join(self.tmp, "code", "mtg-table")
+        self.lab = os.path.join(self.tmp, "code", "lab", "mtg-table")
+        for r in (self.repo, self.lab):
+            os.makedirs(os.path.join(r, "var", "ml", "models"))
+        self.env = mock.patch.dict(os.environ, {}, clear=False)
+        self.env.start()
+        os.environ.pop("MTGTABLE_LAB_ROOT", None)
+        self.cfg = os.path.join(self.tmp, "config.json")
+
+    def tearDown(self):
+        self.env.stop()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def put(self, root, rel, obj=None):
+        p = os.path.join(root, rel)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(obj if obj is not None else {"model": rel}, f)
+        return p
+
+    def choose(self, flags=(), evalModel="absent"):
+        import human_eval as H
+        c = {"coach": {"autoReview": False}}
+        if evalModel != "absent":
+            c["coach"]["evalModel"] = evalModel
+        with open(self.cfg, "w", encoding="utf-8") as f:
+            json.dump(c, f)
+        return H.served_models(list(flags), self.repo, {"MTG_TABLE_CONFIG": self.cfg})
+
+    def test_flag_then_config_then_default(self):
+        import human_eval as H
+        with self.assertRaises(H.ModelChoiceError):                       # nothing anywhere
+            self.choose()
+        single = self.put(self.lab, H.DEFAULT_MODEL)
+        self.assertEqual(self.choose(), ([single], "default"))            # the single model, in the lab clone
+        members = [self.put(self.lab, f"var/ml/models/night-1-eval-s{i}.json") for i in (1, 2)]
+        self.put(self.lab, H.DEFAULT_ENSEMBLE, {"format": "mtgtable-position-eval-ensemble", "formatVersion": 1,
+                                                "models": [os.path.basename(m) for m in members]})
+        self.assertEqual(self.choose(evalModel=None), (members, "default"))   # D368: the ensemble first, as served
+        v3 = self.put(self.repo, "var/ml/models/eval-v3.json")
+        self.assertEqual(self.choose(evalModel="var/ml/models/eval-v3.json"),
+                         ([v3], "config.json coach.evalModel"))
+        other = self.put(self.lab, "var/ml/models/eval-other.json")
+        self.assertEqual(self.choose(["var/ml/models/eval-other.json"], "var/ml/models/eval-v3.json"),
+                         ([other], "--model"))                              # the flag wins
+        with self.assertRaises(H.ModelChoiceError):                       # configured but nowhere: an error
+            self.choose(evalModel="var/ml/models/not-there.json")
+        for bad in (5, "", " , "):
+            with self.assertRaises(H.ModelChoiceError):
+                self.choose(evalModel=bad)
+        with redirect_stdout(io.StringIO()), mock_stderr():               # the CLI says so and exits 2
+            os.environ["MTG_TABLE_CONFIG"] = self.cfg
+            self.assertEqual(H.main(["--human", self.tmp]), 2)
 
 
 @unittest.skipIf(np is None, "numpy is not installed: human_eval.py skipped")

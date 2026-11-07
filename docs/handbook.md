@@ -642,6 +642,25 @@ that means for you:
 Your browser may ask once whether ForgeCoach may reach devices on your local
 network: that is the github.io page calling `127.0.0.1`, and it is this helper.
 
+**Which model the win chance serves** (**D361**, **D368**, **D518**). ForgeCoach's
+win-chance strip asks the same helper (`POST /eval`), which answers from a learned
+evaluator on this PC. The model is named in one of three places, the first that
+says anything winning:
+
+1. `--eval-model <path>` on `play.sh` or `node tools/coach-helper.mjs`;
+2. `config.json`'s **`coach.evalModel`** — `null` in the committed file;
+3. the default: `var/ml/models/night-1-ensemble.json` (v1 and four more seeds, D368)
+   when it exists, else `var/ml/models/night-1-eval.json`.
+
+Each may be one export, a comma list, a folder or an ensemble manifest, and a
+relative path is looked up in this checkout first, then in the lab clone
+(`../lab/mtg-table`, D369). A name that is found nowhere turns the strip off and
+says so; it never falls back to the default. The helper's log line `COACH EVAL`
+names the model and which of the three chose it. The strip's model is not the
+search AI's leaf: that one is a ladder player's param (`leaf=eval:<model>`), held
+to D354's gates. A new strip model is registered by a decision that sets
+`coach.evalModel` (D518 built the key, and leaves it `null`).
+
 **Playing the decks you drafted** (**D303**). ForgeCoach's cube draft builds
 both decks in the browser, and its **Play this match** button sends them to the
 same helper (`POST /match`). The helper writes them as `.dck` files under

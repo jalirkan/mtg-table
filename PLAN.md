@@ -17,7 +17,8 @@ commit.
 **The index below lists 397 items still open across 44 follow-up lists** — 366
 open, 19 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D517
+said 371 across 42, three rows and one list behind its table) — D518
+(2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
 added its 9 and 10; D515
@@ -454,6 +455,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 36 | open | D513's A3 reads a top-revealing permanent's zone, not its `controller` field, which leads the listing by a frame while an exchange resolves (J191 s08: Oko's −5 on the opponent's Oracle of Mul Daya): measured on two logs; the reading rests on D399's hold (its 256-flush valve and a live `ask` can cut inside the freeze); the mismatch is admitted with no exchange evidence and no bound (next-frame bound proposed); no cross-zone id-uniqueness rule; a Threaten cut on its `resolved` still fails, and its mirror is a one-frame vouch under either reading | `docs/decisions/D513-revealed-top-during-control-exchange.md` |
 | [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000-r24` and `-ms6000-r48` (search-v2 with the budget and the round cap scaled together, ×2 and ×4) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
 | [Cube lab](#fu-cube-lab) | 38 | open | D517's knob and curve arms `search-v2-routlets` (+ `rollout=outlets`), `search-v2-ranked` (+ `rank=prior,gen=24`), `search-v2-ms750-r6` and `-ms375-r3` (search-v2's budget and round cap ×0.5 and ×0.25) are registered and unplayed: J195 plays each against search-v1-anytime, 1,200 games on the confirm set, on D517's own pre-registered rule (the knobs judged SHOWN / NOT SHOWN / INCONCLUSIVE, a routlets NOT SHOWN only at 3% exposure, about half J194's base rate; the lower curve read, no verdict); no counter says whether the outlet policy acts inside a rollout (`rc.counts()` is discarded): a bridge change for a later pin | `docs/decisions/D517-knob-and-curve-arms.md` |
+| [Cube lab](#fu-cube-lab) | 39 | open | D518's evaluator v3 tooling is built and unused: `dataset_merge.py` (row for row, every game's split kept; `--allow-shared-seeds` for the 5,237 seed numbers nights 4–5 share with nights 1–3, which keep their names), `train_eval.py --load-subsample F` (a fixed share of each train and val game's rows, test whole) and `config.json` `coach.evalModel` (null: the night-1 ensemble; `human_eval.py`'s default follows the same order); J196 (whose draft carries these names and the flag) fits v2's configuration once at `--load-subsample 0.5`, stopping at 17 GB, over nights 1–5 and reads D364's `eval_compare` on v2's own test pairs: BETTER registers v3 for the strip only (a decision sets `coach.evalModel`), else killed | `docs/decisions/D518-eval-v3-tooling.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10327,6 +10329,23 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    counts `policy.*` / `opportunity.*` into the copy's own map and `SearchPolicy` never reads `rc.counts()` back, so
    no counter says how often the outlet policy acts inside a rollout; about five lines after `playout` harvesting
    them into the sink would. A bridge change, so a later pin, never J195's (D517's Residuals).
+
+39. **D518's evaluator v3 tooling is built and waits on J196.**
+   (2026-11-07, D518.) The play-AI review's §5 row 7 (evaluator v3 over nights 1–5, for the win-chance strip only)
+   needed three things v2's pipeline lacked. `tools/ml/dataset_merge.py` joins encoded datasets row for row (the
+   first source's shards byte for byte, the later ones' with `game` moved up, stats.json summed and written last,
+   `merge.json` with every source's sha256s), refuses a game in two sources and any game whose split would change, and
+   refuses a deck pair named in two sources unless `--allow-shared-seeds`, with which the pair keeps its name and its
+   split (nights 4–5 share 5,237 seed numbers with nights 1–3, never a `(key, seed)` draft; v2's own dataset already
+   joins 4,488 across its nights; the brief's "keep pairing within the source night" was rejected, D518's Rejected).
+   `train_eval.py --load-subsample F` holds ceil(F × c) rows of every train and val game, chosen at load from a start
+   hashed from the game's `game_key` and the seed, test whole, F = 1 bit for bit today's path. `config.json`'s
+   `coach.evalModel` names the strip's model (`--eval-model` wins; null, committed, keeps the night-1 ensemble).
+   Nothing was trained. **Waits on J196** (pc-jobs `drafts/J196-eval-v3.md`): its merge line carries
+   `--allow-shared-seeds` (required), its pilot samples need 20 or more seed numbers each, then one plain fit of v2's winning
+   configuration with `--load-subsample` and D364's rule on v2's own test pairs: BETTER → a follow-up registers v3
+   for the strip only (a decision sets `coach.evalModel`; never the search leaf), not shown better → killed.
+   `human_eval` is not its gate (D369's first check is read once, at 30 games, on whatever the strip serves then).
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its

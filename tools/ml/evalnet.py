@@ -275,7 +275,7 @@ SPLITS = ("train", "val", "test")
 
 def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS, chunk: int = 8192,
                 n_states: int = N_STATES, rows_to_end: bool = False, turns_to_end: bool = False,
-                compact: bool = False) -> dict[str, Rows]:
+                compact: bool = False, keep: dict[str, Any] | None = None) -> dict[str, Rows]:
     """The rows of the shards named `prefixes` (in that order, each prefix's
     shards sorted), sent to a split each: the shard's own prefix, or
     `split_of_game[row's game]` (games.jsonl order) when that is given -- a
@@ -296,7 +296,11 @@ def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS
     --compact) holds the board as a PackedBoard (int8 where a column's values
     all fit), counts in int8 when they fit and row pointers in int32: about
     0.35 KB a row instead of 0.62; the first pass then also reads X, for the
-    columns' ranges."""
+    columns' ranges.  `keep` (D518, train_eval.py --load-subsample) drops rows
+    of the splits it names before anything is allocated: a row of game g at
+    position i of its game (rows - 1 - rows_to_end) is loaded only when
+    keep["mask"][keep["offset"][g] + i] is set; both passes read the shard's
+    `rows_to_end` for it.  Without it, every row as before."""
     files = [f for p in prefixes for f in sorted(f for f in os.listdir(data)
                                                  if f.startswith(p + "-") and f.endswith(".npz"))]
     if split_of_game is None:
@@ -307,17 +311,31 @@ def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS
         sog = np.array([names.index(s) if s else -1 for s in split_of_game], np.int8)
     code = {s: i for i, s in enumerate(names)}
 
-    def dest(f, game):
+    kcodes = None
+    if keep is not None:
+        kcodes = np.array(sorted(code[s] for s in keep["splits"] if s in code), np.int8)
+
+    def dest(f, game, rte=None):
         if sog is None:
-            return np.full(len(game), code[f.rsplit("-", 1)[0]], np.int8)
-        return sog[game]
+            d = np.full(len(game), code[f.rsplit("-", 1)[0]], np.int8)
+        else:
+            d = sog[game]
+        if kcodes is not None and len(kcodes):
+            # D518: a row of a sampled split is loaded only when the game's share keeps its position
+            g = game.astype(np.int64)
+            pos = keep["rows"][g] - 1 - rte.astype(np.int64)
+            if len(pos) and (pos.min() < 0 or (pos >= keep["rows"][g]).any()):
+                raise ValueError(f"{f}: rows_to_end disagrees with games.jsonl's rows (--load-subsample)")
+            drop = np.isin(d, kcodes) & ~keep["mask"][keep["offset"][g] + pos]
+            d = np.where(drop, np.int8(-1), d).astype(np.int8)
+        return d
 
     n = np.zeros(len(names), np.int64)
     lo = hi = None
     cmax = 0
     for f in files:
         with np.load(os.path.join(data, f)) as z:
-            d = dest(f, z["game"])
+            d = dest(f, z["game"], z["rows_to_end"] if keep is not None else None)
             n += np.bincount(d[d >= 0], minlength=len(names))
             if compact:
                 X = z["X"]
@@ -336,7 +354,7 @@ def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS
     for f in files:
         with np.load(os.path.join(data, f)) as z:
             X, y, turn, game = z["X"], z["y"], z["turn"], z["game"]
-            rte = z["rows_to_end"] if rows_to_end else None
+            rte = z["rows_to_end"] if rows_to_end or keep is not None else None
             tte = z["turns_to_end"] if turns_to_end else None
         if not out:
             bd, cd, sd = _dtypes(X, card_offset, n_states)
@@ -354,7 +372,7 @@ def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS
                        **({"rte": np.empty(int(n[k]), np.int16)} if rows_to_end else {}),
                        **({"tte": np.empty(int(n[k]), np.int16)} if turns_to_end else {})}
                    for k in range(len(names))}
-        d = dest(f, game)
+        d = dest(f, game, rte)
         for i in range(0, len(X), chunk):
             Xc, dc = X[i:i + chunk], d[i:i + chunk]
             for k in np.unique(dc).tolist():

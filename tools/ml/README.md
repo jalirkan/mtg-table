@@ -339,6 +339,45 @@ python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/ni
   (1 - w) outcome + w p; validation and test always score against the outcome. The
   producer is `rollout_labels.py` with `tools/coach-grade.sh rollout` (D382, below).
 
+## Evaluator v3's tooling: one dataset over more nights, and a share of each game's rows (D518)
+
+v3 is v2's model fitted over queue nights 1-5 for the win-chance strip (J196). Two
+things stood between it and v2's pipeline, and D518 built them; neither changes a
+model or a default.
+
+```bash
+# nights 4-5 encoded alone over night 1's vocabulary, then joined to v2's own dataset
+python3 tools/ml/dataset.py --queue-root var/cubelab/queue --nights 4,5 --vocab-from var/ml/data/night-1 \
+    --out var/ml/data/nights-4-5 --shard-rows 5000 --jobs 6
+python3 tools/ml/dataset_merge.py var/ml/data/nights-1-3 var/ml/data/nights-4-5 --out var/ml/data/nights-1-5 \
+    --allow-shared-seeds --jobs 6
+python3 tools/ml/split_audit.py var/ml/data/nights-1-5 --reference var/ml/data/nights-1-3
+# half of every train and val game's rows held, test whole; each epoch a half of those
+python3 tools/ml/train_eval.py var/ml/data/nights-1-5 --split-by pair --compact --fast --load-subsample 0.5 --subsample 0.5 ...
+```
+
+- **`dataset_merge.py SRC SRC ... --out DIR`** writes dataset.py's own format: the
+  first source's shards byte for byte, each later source's with only its `game`
+  column moved up, games.jsonl in source order with `index` renumbered, the sums in
+  stats.json (written last) and `merge.json`, the sources' and the output's sha256s.
+  It refuses two schemas, a game in two sources, a source whose shards do not hold
+  what its stats say, a game whose recorded `split` is not dataset.py's hash of its
+  group, and any game whose train_eval pair split would change -- so a test row of a
+  source stays a test row. A deck
+  pair named in two sources (for a lab game, a seed number both use) is refused
+  unless `--allow-shared-seeds`; with it the pair keeps its name and is one split
+  group, as one dataset.py run over every night would make it (nights 1-3 already
+  join 4,488 seed numbers across their three nights).
+- **`train_eval.py --load-subsample F`** holds ceil(F x c) of every c-row game's rows
+  in train and val, chosen while the shards are read (nothing is allocated for the
+  rest) by a systematic draw from a start hashed from the game's `game_key` and
+  `--seed` -- so a game keeps the same rows in any dataset that holds it. Test is
+  never sampled; every game stays present. `F = 1` is the default path, bit for
+  bit. It is the memory fix `--subsample` is not: `--subsample` draws each epoch's
+  rows after the whole split is in memory. Reported as `loadSubsample` (share,
+  seed, rows in the data and rows held per split) in the report and the model's
+  `training` block. Not with `--cv` or `--curve`.
+
 ### Rollout labels (D382)
 
 `rollout_labels.py plan` samples training rows, stratified by cube and turn and at most
@@ -385,6 +424,8 @@ number leaves the process.
 ```bash
 ./scripts/play.sh --engine-only                       # loads var/ml/models/night-1-eval.json when it exists
 ./scripts/play.sh --engine-only --eval-model var/ml/models/<other>.json
+# D518: or name it in config.json, "coach": {"evalModel": "var/ml/models/<other>.json"} (the flag still wins;
+# null, the committed value, keeps the default: night-1-ensemble.json, else night-1-eval.json)
 curl -s http://127.0.0.1:8643/health                  # ... "eval":1,"evalModel":"<sha12>","evalSchema":"<schemaId>"
 grep EVAL var/play/coach.log                          # why it is off, when it is
 python3 tools/ml/eval_serve.py --model var/ml/models/night-1-eval.json --log var/games/<id>/frames.jsonl

@@ -74,7 +74,8 @@
 #   ./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json   # D361: the win chance's model
 #                                                # (that path is the default when it exists; --no-eval: none;
 #                                                # D368: a,b,c / a directory / a manifest is an ensemble, and
-#                                                # var/ml/models/night-1-ensemble.json is preferred when it exists)
+#                                                # var/ml/models/night-1-ensemble.json is preferred when it exists;
+#                                                # D518: config.json coach.evalModel names it when no flag does)
 #   ./scripts/play.sh --engine-only --idle-exit-after 60   # give up 60 min after the engine sleeps (D308)
 #   ./scripts/play.sh --no-human-collect    # do not copy finished games into var/ml/human/ (D369, below)
 #   ./scripts/play.sh --no-auto-review      # no automatic engine review of finished games (D385; config.json coach.autoReview)

@@ -12,13 +12,23 @@ directory, compare it with D305's baselines, and export it for Java (D316).
         [--grid] [--time-budget SECONDS] [--grid-log grid.jsonl]
         [--cv K] [--report report.json] [--dry-load]
         [--search sha [--configs N] [--eta 3] [--min-epochs 2] [--finalists 3] [--jobs J]]
-        [--curve 0.25,0.5,1.0] [--train-fraction F] [--fast]
+        [--curve 0.25,0.5,1.0] [--train-fraction F] [--fast] [--load-subsample F]
 
 D364 (all opt-in; without them every number is what it was): `--search sha`
 is successive halving over GRID's space (eval_search.py's header), `--curve`
 a learning curve over nested shares of the training pairs, `--train-fraction`
 trains on one such share, `--fast` trains in float32 (evalnet.Fast32), and
 `--jobs` trains configurations at once in forked workers.
+
+D518 (opt-in): `--load-subsample F` holds only ceil(F x c) of every c-row
+game's rows in the train and val splits, chosen when the shards are read --
+before any array is allocated -- by a systematic draw from a start that is a
+hash of the game's `game_key` and `--seed`, so the same game keeps the same
+rows in every dataset that holds it (a merged one included) and every game is
+still present.  Test is never sampled.  It is the memory fix for a dataset
+too large to hold (five queue nights, ~45 M rows): `--subsample` draws each
+epoch's share only after the whole split is in memory.  F = 1 is the default
+path, bit for bit.
 
 The model is evalnet.py's (its header says what and why).  It trains on the
 `train` split and stops early on the `val` split's log-loss (patience epochs
@@ -513,14 +523,16 @@ def fit(tr, va, names, hp, vocab_size, backend, seed=0, log=None, deadline=None,
 # ---------------------------------------------------------------- the runs
 
 def load_data(data: str, split_by: str = "dataset", train_fraction: float = 1.0, rows_to_end: bool = False,
-              turns_to_end: bool = False, compact: bool = False):
+              turns_to_end: bool = False, compact: bool = False, load_subsample: float = 1.0, seed: int = 0):
     """The schema, the board names and the three splits.  A re-split (pair,
     game, holdout:) sends each row to its split as the shards are read
     (evalnet.load_splits): no copy of the whole corpus is ever concatenated
     and taken apart, and the rows of a split are in the order they always were
     (dataset.py's train, val, test shards, in turn).  `train_fraction` < 1
     keeps only the training pairs `in_fraction` keeps (D364); the dropped
-    games are never loaded, and val and test are untouched."""
+    games are never loaded, and val and test are untouched.  `load_subsample`
+    < 1 holds only `load_keep`'s rows of each train and val game (D518); test
+    is untouched."""
     import evalnet as N
     schema = N.read_schema(data)
     reserved_warning(data)
@@ -532,9 +544,47 @@ def load_data(data: str, split_by: str = "dataset", train_fraction: float = 1.0,
         sog = fraction_splits(games, base, train_fraction)
     else:
         sog = None if split_by == "dataset" else game_splits(read_games(data), split_by)
+    keep = load_keep(read_games(data), load_subsample, seed) if load_subsample < 1.0 else None
     splits = N.load_splits(data, off, sog, n_states=N.n_states_of(schema), rows_to_end=rows_to_end,
-                           turns_to_end=turns_to_end, compact=compact)
+                           turns_to_end=turns_to_end, compact=compact, keep=keep)
     return schema, names, {s: splits[s] for s in ("train", "val", "test")}
+
+
+# ---------------------------------------------------------------- a share of each game's rows, at load (D518)
+
+LOAD_SUBSAMPLE_SALT = "load-v1"
+LOAD_SUBSAMPLE_SPLITS = ("train", "val")   # test is never sampled
+_R = 1 << 20                               # the start's resolution: an integer in [0, 2^20)
+
+
+def load_start(game_key: str, seed: int) -> int:
+    """A game's systematic-draw start, in units of 2^-20 of a step: a hash of its game_key and the seed alone,
+    so it does not depend on the game's index or on the other games of the dataset."""
+    return int(hashlib.sha256(f"{LOAD_SUBSAMPLE_SALT}|{seed}|{game_key}".encode()).hexdigest()[:5], 16)
+
+
+def load_keep(games: list[dict[str, Any]], f: float, seed: int = 0, chunk: int = 20_000) -> dict[str, Any]:
+    """--load-subsample f (D518): which rows of every game a load holds.  A game of c rows keeps m = ceil(f x c)
+    of them, positions floor((u + j) c / m) for j < m, u = load_start / 2^20 -- the systematic draw of
+    EpochTrainer.epoch_rows, from a fixed start instead of a fresh one, in integers so it is exact.  Returns
+    `offset` (each game's first row in `mask`), `rows` (games.jsonl's), `mask` (one bool a row) and the splits it
+    applies to, for evalnet.load_splits."""
+    rows = np.array([int(g["rows"]) for g in games], np.int64)
+    offset = np.zeros(len(games), np.int64)
+    if len(games):
+        np.cumsum(rows[:-1], out=offset[1:])
+    mask = np.zeros(int(rows.sum()), bool)
+    m_all = np.ceil(rows * f).astype(np.int64)
+    for a in range(0, len(games), chunk):          # a chunk of games at a time: the index arrays stay small
+        b = min(len(games), a + chunk)
+        c, m = rows[a:b], m_all[a:b]
+        u = np.array([load_start(g["game_key"], seed) for g in games[a:b]], np.int64)
+        gi = np.repeat(np.arange(b - a), m)
+        j = np.arange(len(gi), dtype=np.int64) - np.repeat(np.cumsum(m) - m, m)
+        pos = ((u[gi] + j * _R) * c[gi]) // (m[gi] * _R)
+        mask[offset[a:b][gi] + pos] = True
+    return {"offset": offset, "rows": rows, "mask": mask, "splits": LOAD_SUBSAMPLE_SPLITS,
+            "share": f, "seed": seed}
 
 
 # ---------------------------------------------------------------- soft labels (D364)
@@ -877,8 +927,15 @@ def run_train(a, hp, log) -> dict[str, Any]:
     soft_path = getattr(a, "soft_labels", None)
     opts = opts_of(a)
     weight_by = opts["weight_by"]
+    lsub = float(getattr(a, "load_subsample", 1.0) or 1.0)
     schema, names, splits = load_data(a.data, a.split_by, frac, rows_to_end=bool(soft_path),
-                                      turns_to_end=opts["aux"] > 0, compact=bool(getattr(a, "compact", False)))
+                                      turns_to_end=opts["aux"] > 0, compact=bool(getattr(a, "compact", False)),
+                                      load_subsample=lsub, seed=a.seed)
+    lsub_info = load_subsample_info(a.data, splits, lsub, a.seed) if lsub < 1.0 else None
+    if lsub_info:
+        log(f"load share (D518): {lsub:g} of each game's rows held in train and val, seed {a.seed}; rows held / in the "
+            f"dataset: train {lsub_info['rowsHeld']['train']}/{lsub_info['rowsInData']['train']}, val "
+            f"{lsub_info['rowsHeld']['val']}/{lsub_info['rowsInData']['val']}; test whole")
     soft_info = None
     if soft_path:
         soft_info = apply_soft_labels(splits, read_soft_labels(soft_path, len(read_games(a.data))),
@@ -895,7 +952,10 @@ def run_train(a, hp, log) -> dict[str, Any]:
     backend = pick_backend(a.backend)
     summary = split_summary(a.data, splits)
     if a.dry_load:
-        return dry_load(a, schema, names, splits, summary, mem, log)
+        out = dry_load(a, schema, names, splits, summary, mem, log)
+        if lsub_info:
+            out["loadSubsample"] = lsub_info
+        return out
     log(summary_line(a.split_by, summary))
     log(f"train_eval: schema {schema['schemaId']}, {schema['nFeatures']} features, vocab {len(schema['vocab']['cards'])}; "
         f"rows train/val/test {len(tr)}/{len(va)}/{len(te)}; games "
@@ -943,6 +1003,8 @@ def run_train(a, hp, log) -> dict[str, Any]:
         report["softLabels"] = soft_info
     if opts["subsample"] < 1.0:
         report["subsample"] = opts["subsample"]
+    if lsub_info:
+        report["loadSubsample"] = lsub_info
     if opts["aux"] > 0:
         report["auxTurnsToEnd"] = aux_report(net, splits, opts["aux"])
         log(f"auxiliary turns_to_end head (weight {opts['aux']:g}): test MAE {report['auxTurnsToEnd']['testMAE']:.2f} "
@@ -970,6 +1032,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
                          **({"trainFraction": frac} if frac < 1.0 else {}),
                          **({"weightBy": weight_by} if weight_by else {}),
                          **({"subsample": opts["subsample"]} if opts["subsample"] < 1.0 else {}),
+                         **({"loadSubsample": lsub_info} if lsub_info else {}),
                          **({"auxTurnsToEnd": report["auxTurnsToEnd"]} if opts["aux"] > 0 else {}),
                          **({"softLabels": soft_info} if soft_info else {}),
                          "metrics": {m: {s: report["models"][m][s].get("all") for s in ("val", "test")}
@@ -977,6 +1040,21 @@ def run_train(a, hp, log) -> dict[str, Any]:
         N.save_model(a.out, model)
         log(f"saved {a.out} ({os.path.getsize(a.out)} bytes)")
     return report
+
+
+def load_subsample_info(data: str, splits: dict[str, Any], f: float, seed: int) -> dict[str, Any]:
+    """The report's `loadSubsample` block (D518): the share, the seed, and per split the rows the dataset holds and
+    the rows loaded, with the games present (every game of a sampled split keeps at least one row)."""
+    games = read_games(data)
+    in_data = {s: 0 for s in ("train", "val", "test")}
+    present = {s: set(np.unique(r.game).tolist()) for s, r in splits.items()}
+    for i, g in enumerate(games):
+        for s in in_data:
+            if i in present[s]:
+                in_data[s] += int(g["rows"])
+    return {"share": f, "seed": seed, "splits": list(LOAD_SUBSAMPLE_SPLITS), "salt": LOAD_SUBSAMPLE_SALT,
+            "rowsInData": in_data, "rowsHeld": {s: len(r) for s, r in splits.items()},
+            "games": {s: len(present[s]) for s in in_data}}
 
 
 def dry_load(a, schema, names, splits, summary, mem, log) -> dict[str, Any]:
@@ -1211,6 +1289,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--compact", action="store_true",
                     help="hold the rows in about 0.35 KB instead of 0.62 (board columns that fit in int8 as int8, "
                          "int8 counts, int32 row pointers); the same numbers (D364)")
+    ap.add_argument("--load-subsample", type=float, default=1.0, metavar="F",
+                    help="hold only ceil(F x a game's rows) of every train and val game, chosen at load by a hash of "
+                         "the game and --seed (the same rows in any dataset holding the game); test is never sampled; "
+                         "1 (default) is the full load (D518)")
     ap.add_argument("--subsample", type=float, default=1.0,
                     help="each epoch trains on ceil(s x a game's rows) of every game, drawn afresh (e.g. 0.125): "
                          "an epoch costs s of a pass, so a search fits more configurations (D364)")
@@ -1259,6 +1341,10 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("train_eval: --cv takes none of D364's training options")
     if not 0 < a.train_fraction <= 1:
         raise SystemExit("train_eval: --train-fraction is a share in (0, 1]")
+    if not 0 < a.load_subsample <= 1:
+        raise SystemExit("train_eval: --load-subsample is a share in (0, 1]")
+    if a.load_subsample < 1 and (a.cv or a.curve):
+        raise SystemExit("train_eval: --load-subsample is for a plain fit, --search or --dry-load; drop --cv and --curve")
     if a.curve and (a.cv or a.grid or a.search or a.train_fraction < 1 or a.out):
         raise SystemExit("train_eval: --curve trains one configuration on its own shares; drop --cv, --grid, "
                          "--search, --train-fraction and --out")
