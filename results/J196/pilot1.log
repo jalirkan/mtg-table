@@ -1,0 +1,383 @@
+==== J196 pilot1 started 2026-11-07T18:36:00-05:00 in unit lab-J196-pilot1, 3 worker(s), 6 core(s), BLAS/OpenMP threads 6, lane 2
+.............dataset: 110 rows, 1 games, 1/2 files
+dataset: 147 rows, 1 games, 1/6 files
+.WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+memory: load: rss 2.35 GB, peak 2.35 GB
+split by pair: train 1568 rows / 14 games / 10 groups; val 80 rows / 1 games / 1 groups; test 913 rows / 7 games / 1 groups; groups are deck-name groups; test rows from a deck seen in training, by card multiset: 0 (913 test rows' decks unknown: not checked)
+train_eval: schema 263c742d8d869e27, 1008 features, vocab 45; rows train/val/test 1568/80/913; games 14/1/7; backend numpy
+....................s................WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpsuht1_3v/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpjvqrhp06/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+WARNING: /tmp/tmpjvqrhp06/data was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks
+memory: load: rss 2.52 GB, peak 2.53 GB
+split by pair: train 1568 rows / 14 games / 10 groups; val 80 rows / 1 games / 1 groups; test 913 rows / 7 games / 1 groups; groups are deck-name groups; test rows from a deck seen in training, by card multiset: 0 (913 test rows' decks unknown: not checked)
+train_eval: schema 263c742d8d869e27, 1008 features, vocab 45; rows train/val/test 1568/80/913; games 14/1/7; backend numpy
+model: hidden [4], card dim 2, 935 parameters, 175 board columns; best epoch 1 of 3 (0.0 s), val logloss 0.7270
+memory: fit: rss 2.52 GB, peak 2.53 GB
+memory: baselines: rss 2.52 GB, peak 2.53 GB
+memory: score: rss 2.52 GB, peak 2.53 GB
+rows {'train': 1568, 'val': 80, 'test': 913}; games {'train': 14, 'val': 1, 'test': 7}
+
+val:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all             80  0.000   0.8760  0.341  0.584
+  prior  turn 1-4        16  0.000   0.8760  0.341  0.584
+  prior  turn 5-8        19  0.000   0.8760  0.341  0.584
+  prior  turn 9-12       18  0.000   0.8760  0.341  0.584
+  prior  turn 13-16      17  0.000   0.8760  0.341  0.584
+  prior  turn 17+        10  0.000   0.8760  0.341  0.584
+  life   all             80  0.650   0.4370  0.138  0.334
+  life   turn 1-4        16  0.000   0.7122  0.260  0.509
+  life   turn 5-8        19  0.526   0.6050  0.207  0.451
+  life   turn 9-12       18  0.833   0.4279  0.129  0.333
+  life   turn 13-16      17  1.000   0.1809  0.029  0.164
+  life   turn 17+        10  1.000   0.1291  0.015  0.121
+  core   all             80  0.688   0.4797  0.175  0.318
+  core   turn 1-4        16  0.000   1.1279  0.456  0.673
+  core   turn 5-8        19  0.526   0.7958  0.301  0.532
+  core   turn 9-12       18  1.000   0.2479  0.054  0.215
+  core   turn 13-16      17  1.000   0.0374  0.002  0.036
+  core   turn 17+        10  1.000   0.0108  0.000  0.011
+  eval   all             80  0.037   0.7270  0.267  0.516
+  eval   turn 1-4        16  0.000   0.7803  0.293  0.542
+  eval   turn 5-8        19  0.000   0.7432  0.275  0.524
+  eval   turn 9-12       18  0.000   0.7054  0.256  0.506
+  eval   turn 13-16      17  0.059   0.6993  0.253  0.503
+  eval   turn 17+        10  0.200   0.6971  0.252  0.502
+  reliability (eval, val): bin rows predicted observed
+    0.4-0.5      77  0.483  1.000
+    0.5-0.6       3  0.504  1.000
+
+test:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all            913  1.000   0.5386  0.173  0.416
+  prior  turn 1-4       291  1.000   0.5386  0.173  0.416
+  prior  turn 5-8       278  1.000   0.5386  0.173  0.416
+  prior  turn 9-12      188  1.000   0.5386  0.173  0.416
+  prior  turn 13-16      98  1.000   0.5386  0.173  0.416
+  prior  turn 17+        58  1.000   0.5386  0.173  0.416
+  life   all            913  0.991   0.5210  0.176  0.389
+  life   turn 1-4       291  1.000   0.6745  0.241  0.491
+  life   turn 5-8       278  0.971   0.6036  0.206  0.448
+  life   turn 9-12      188  1.000   0.3024  0.081  0.247
+  life   turn 13-16      98  1.000   0.2528  0.076  0.198
+  life   turn 17+        58  1.000   0.5170  0.176  0.385
+  core   all            913  0.936   0.2028  0.055  0.139
+  core   turn 1-4       291  0.990   0.1214  0.020  0.109
+  core   turn 5-8       278  0.957   0.1550  0.039  0.118
+  core   turn 9-12      188  0.947   0.1692  0.048  0.117
+  core   turn 13-16      98  0.898   0.2450  0.078  0.156
+  core   turn 17+        58  0.603   0.8781  0.297  0.436
+  eval   all            913  0.999   0.6447  0.226  0.475
+  eval   turn 1-4       291  1.000   0.6376  0.222  0.471
+  eval   turn 5-8       278  1.000   0.6411  0.224  0.473
+  eval   turn 9-12      188  1.000   0.6570  0.232  0.481
+  eval   turn 13-16      98  0.990   0.6515  0.229  0.478
+  eval   turn 17+        58  1.000   0.6471  0.227  0.476
+  reliability (eval, test): bin rows predicted observed
+    0.3-0.4      11  0.392  0.000
+    0.4-0.5     901  0.476  0.000
+    0.5-0.6       1  0.500  0.000
+held out (D364): train 1568 rows / 14 games / 10 pairs; val 80 rows / 1 games / 1 pairs; test 913 rows / 7 games / 1 pairs
+  test residuals: within-game correlation 0.293 (design effect 40.0, effective n 23 of 913 rows); within-pair nan (design effect nan, effective n nan)
+  test all (913 rows, 7 games, 1 pairs; 95% over pairs): prior 0.5386 [0.5386, 0.5386] by game 0.5386; life 0.5210 [0.5210, 0.5210] by game 0.5174; core 0.2028 [0.2028, 0.2028] by game 0.1953; eval 0.6447 [0.6447, 0.6447] by game 0.6420
+verdict (test): eval log-loss 0.6447 vs best baseline core 0.2028 -- the evaluator LOSES to a baseline: more games (more pairs), not a bigger model; do not use it at the search's leaves yet
+saved /tmp/tmpciz_ap6s/m.json (34937 bytes)
+.....{"testPairs": 1, "testLogs": 7, "listed": 7, "out": "/tmp/tmpciz_ap6s/heldout.txt"}
+test split (pair): 913 rows, 1 deck pairs; reserved decks dropped: True
+A  decision rows: eval 0.6447  core 0.2028  core-eval -0.4420 [-0.4420, -0.4420]
+B  turn-end positions (35 of 1 games; scale 500 from flag): eval 0.2231  leaf 0.7003  leaf-eval +0.4772 [+0.4772, +0.4772]
+C  calibration: ECE 0.4749, worst bin (>= 200 rows) off by 0.476
+gate 1 (fit): FAIL -- A: core - eval log-loss -0.4420 [-0.4420, -0.4420] does not exclude 0 from above; C: ECE 0.4749 > 0.03; C: bins off by more than 0.05: 0.4-0.5; D: 1 held-out pairs < 50 (underpowered); D: 35 turn-end positions < 2000 (underpowered)
+gate_regret_grade truth: 3 request(s), 0 already answered, 3 to go on 2 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[1/3] ok1 spell ok 4 playouts  ms
+[2/3] ok2 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=12 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=13 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+[3/3] die spell error  playouts  ms
+{"mode": "truth", "answered": 3, "of": 3, "status": {"ok": 2, "error": 1}, "workerErrors": []}
+gate_regret_grade truth: 1 request(s), 0 already answered, 1 to go on 1 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=7 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+[1/1] hang spell error  playouts  ms
+{"mode": "truth", "answered": 1, "of": 1, "status": {"error": 1}, "workerErrors": []}
+..gate_regret_grade rank: 1 request(s), 0 already answered, 1 to go on 1 JVM(s); serve --playouts 3 --initial 3 --no-race --horizon 0 --budget-ms 0 --timeout-ms 20000 --cap 12 --seed 1 --leaf-scale 500 {"leaf": "eval:/tmp/tmp2c_tzskt/m.json"}
+[1/1] r0 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"mode": "rank", "answered": 1, "of": 1, "status": {"ok": 1}, "workerErrors": []}
+usage: python3 -m unittest [-h] --requests REQUESTS --out OUT [--jobs JOBS]
+                           [--leaf LEAF] [--rounds ROUNDS] [--name NAME]
+                           [--timeout-s TIMEOUT_S] [--retry-errors]
+                           [--allow-version-change] [--repo REPO]
+                           {truth,rank}
+python3 -m unittest: error: --rounds is the rule's 3 (primary) or 12 (secondary)
+.gate_regret_grade truth: 6 request(s), 0 already answered, 6 to go on 2 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[1/6] r0 spell ok 4 playouts  ms
+[2/6] r1 spell ok 4 playouts  ms
+[3/6] r3 spell ok 4 playouts  ms
+[4/6] r2 spell ok 4 playouts  ms
+[5/6] r5 spell ok 4 playouts  ms
+[6/6] r4 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=10 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=13 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=7 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"mode": "truth", "answered": 6, "of": 6, "status": {"ok": 6}, "workerErrors": []}
+gate_regret_grade truth: 8 request(s), 6 already answered, 2 to go on 2 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[7/8] r7 spell ok 4 playouts  ms
+[8/8] r6 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=8 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=11 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table-lane2/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=9 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"mode": "truth", "answered": 8, "of": 8, "status": {"ok": 8}, "workerErrors": []}
+.................
+----------------------------------------------------------------------
+Ran 76 tests in 54.213s
+
+OK (skipped=1)
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.1327  eval 0.0000  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.2016  eval 0.0000  agree 0%
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): PASS
+reading: PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.1327  eval 0.0000  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.2016  eval 0.0000  agree 0%
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): PASS
+reading: PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.0000  eval 0.0000  forge 0.0997  (picks agree 100%)
+  attack n 100  hand 0.0000  eval 0.0000  agree 100%
+  block  n 100  hand 0.0000  eval 0.0000  agree 100%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.0000 [+0.0000, +0.0000] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0000 at 80% power (sd of the paired difference 0.0000)
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = +0.0000 is not above 0
+reading: FAIL: a mean regret gain of 0.015 or more is ruled out (interval ends at +0.0000)
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 150 of 150 decisions; unscored {}
+mean regret: hand 0.1335  eval 0.0000  forge 0.1006  (picks agree 33%)
+  attack n  50  hand 0.2022  eval 0.0000  agree 0%
+  block  n  50  hand 0.1984  eval 0.0000  agree 0%
+  spell  n  50  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1335 [+0.1178, +0.1485] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0221 at 80% power (sd of the paired difference 0.0964)
+gate 2 (regret): FAIL -- 150 scored decisions < 240 (underpowered)
+reading: FAIL, underpowered: 150 scored decisions < 240; not 'no gain'
+WARNING: no version stamp (<file>.meta.json) for eval: not graded by gate_regret_grade.py
+WARNING: no version stamp (<file>.meta.json) for eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.1327  eval 0.0000  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.2016  eval 0.0000  agree 0%
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): PASS
+reading: PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.0000  eval 0.1327  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.0000  eval 0.2016  agree 0%
+  block  n 100  hand 0.0000  eval 0.1966  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: -0.1327 [-0.1434, -0.1217] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = -0.1327 is not above 0
+reading: FAIL: a mean regret gain of 0.015 or more is ruled out (interval ends at -0.1217)
+search-v1-fixed3-eval-68163cb8b844
+search-v1-fixed3-eval-68163cb8b844
+{"result": "H1", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): PASS
+{"result": "H0", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): FAIL -- result H0
+{"result": "inconclusive", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): FAIL -- result inconclusive
+{"result": "stopped", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): NO VERDICT -- the SPRT is stopped
+{"result": "H1", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): NO VERDICT -- the last SPRT of this pair used other elo0/elo1/alpha/beta than the rule's
+dataset: 140 rows, 1 games, 1/120 files
+dataset: 20816 rows from 120 games, 12670 features (schema 82815752c2f5e346, vocab 731 slots)
+  play exploration (D358): 18 game(s) played with exploration kept (--play-explore include)
+  train:  17282 rows,  100 games (50 groups); games won/lost/drawn 50/50/0; rows +1/-1/0 8733/8549/0
+  val  :   1917 rows,   10 games (5 groups); games won/lost/drawn 5/5/0; rows +1/-1/0 950/967/0
+  test :   1617 rows,   10 games (5 groups); games won/lost/drawn 5/5/0; rows +1/-1/0 818/799/0
+dataset: 67 rows, 1 games, 1/120 files
+dataset: 19395 rows from 120 games, 12670 features (schema 82815752c2f5e346, vocab 731 slots)
+  play exploration (D358): 18 game(s) played with exploration kept (--play-explore include)
+  train:  16637 rows,  100 games (50 groups); games won/lost/drawn 50/50/0; rows +1/-1/0 8592/8045/0
+  val  :    695 rows,    6 games (3 groups); games won/lost/drawn 3/3/0; rows +1/-1/0 383/312/0
+  test :   2063 rows,   14 games (7 groups); games won/lost/drawn 7/7/0; rows +1/-1/0 1098/965/0
+merge: 6 shard(s) of var/ml/gates/pilot-v3/d13 copied; rewriting 6 of the later source(s) with 3 job(s)
+dataset: 40211 rows from 240 games, 12670 features (schema 82815752c2f5e346, vocab 731 slots)
+  play exploration (D358): 36 game(s) played with exploration kept (--play-explore include)
+  train:  33919 rows,  200 games (98 groups); games won/lost/drawn 100/100/0; rows +1/-1/0 17325/16594/0
+  val  :   2612 rows,   16 games (8 groups); games won/lost/drawn 8/8/0; rows +1/-1/0 1333/1279/0
+  test :   3680 rows,   24 games (12 groups); games won/lost/drawn 12/12/0; rows +1/-1/0 1916/1764/0
+merge: 2 sources -> var/ml/gates/pilot-v3/d15: 40211 rows, 240 games; deck pairs named in two sources 2; games whose split moved 0
+split audit (pair): 240 games; pairs per split {'train': 85, 'test': 10, 'val': 23}; pairs / drafts / decks in two splits: 0 / 0 / 0
+  reference var/ml/gates/pilot-v3/d13: 120 games, missing 0, moved 0; its 8 test pairs: 8 are DATA test pairs; DATA test pairs it trained on: 0; new games 120, new test pairs 2
+split audit: PASS
+load share (D518): 0.5 of each game's rows held in train and val, seed 0; rows held / in the dataset: train 14713/29345, val 3524/7027; test whole
+memory: load: rss 0.08 GB, peak 0.36 GB
+memory: standardise: rss 0.27 GB, peak 0.36 GB
+memory: one batch: rss 0.28 GB, peak 0.36 GB
+memory: baselines (1 epoch): rss 0.28 GB, peak 0.36 GB
+memory: score: rss 0.29 GB, peak 0.36 GB
+dry-load: 22076 rows (train/val/test 14713/3524/3839); peak RSS 0.36 GB
+load share (D518): 0.5 of each game's rows held in train and val, seed 0; rows held / in the dataset: train 14713/29345, val 3524/7027; test whole
+memory: load: rss 0.08 GB, peak 0.36 GB
+split by pair: train 14713 rows / 174 games / 85 groups; val 3524 rows / 46 games / 23 groups; test 3839 rows / 20 games / 10 groups; groups are seed groups (lab deck names are `cubelab <seed> A|B`: one seed number across cubes); test rows from a deck seen in training, by card multiset: 0
+train_eval: schema 82815752c2f5e346, 12670 features, vocab 731; rows train/val/test 14713/3524/3839; games 174/46/20; backend numpy; float32 (--fast)
+model: hidden [16], card dim 8, 11465 parameters, 213 board columns; best epoch 3 of 3 (0.1 s), val logloss 0.6165
+memory: fit: rss 0.28 GB, peak 0.36 GB
+memory: baselines: rss 0.28 GB, peak 0.36 GB
+auxiliary turns_to_end head (weight 0.1): test MAE 6.56 turns against 6.44 for the training mean
+memory: score: rss 0.29 GB, peak 0.36 GB
+rows {'train': 14713, 'val': 3524, 'test': 3839}; games {'train': 174, 'val': 46, 'test': 20}
+
+val:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all           3524  0.514   0.6928  0.250  0.006
+  prior  turn 1-4       587  0.520   0.6926  0.250  0.011
+  prior  turn 5-8       713  0.508   0.6930  0.250  0.001
+  prior  turn 9-12      777  0.506   0.6931  0.250  0.003
+  prior  turn 13-16     712  0.518   0.6927  0.250  0.009
+  prior  turn 17+       735  0.522   0.6925  0.250  0.014
+  life   all           3524  0.688   0.5470  0.188  0.024
+  life   turn 1-4       587  0.549   0.6875  0.247  0.045
+  life   turn 5-8       713  0.609   0.6585  0.232  0.039
+  life   turn 9-12      777  0.640   0.6096  0.211  0.064
+  life   turn 13-16     712  0.676   0.5474  0.189  0.101
+  life   turn 17+       735  0.937   0.2598  0.074  0.147
+  core   all           3524  0.691   0.5140  0.178  0.045
+  core   turn 1-4       587  0.520   0.6749  0.241  0.074
+  core   turn 5-8       713  0.589   0.6836  0.241  0.063
+  core   turn 9-12      777  0.671   0.5923  0.207  0.071
+  core   turn 13-16     712  0.722   0.4714  0.162  0.083
+  core   turn 17+       735  0.918   0.1795  0.053  0.058
+  eval   all           3524  0.668   0.6165  0.214  0.095
+  eval   turn 1-4       587  0.542   0.6850  0.246  0.039
+  eval   turn 5-8       713  0.494   0.6875  0.247  0.062
+  eval   turn 9-12      777  0.686   0.6287  0.219  0.122
+  eval   turn 13-16     712  0.712   0.6121  0.211  0.132
+  eval   turn 17+       735  0.875   0.4841  0.152  0.232
+  reliability (eval, val): bin rows predicted observed
+    0.0-0.1       1  0.083  0.000
+    0.1-0.2       5  0.135  0.000
+    0.2-0.3      26  0.268  0.000
+    0.3-0.4     239  0.362  0.025
+    0.4-0.5    1483  0.463  0.405
+    0.5-0.6    1149  0.541  0.560
+    0.6-0.7     432  0.647  0.873
+    0.7-0.8     142  0.743  0.979
+    0.8-0.9      37  0.837  0.973
+    0.9-1.0      10  0.935  1.000
+
+test:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all           3839  0.528   0.6923  0.250  0.019
+  prior  turn 1-4       506  0.520   0.6926  0.250  0.011
+  prior  turn 5-8       588  0.527   0.6923  0.250  0.018
+  prior  turn 9-12      733  0.529   0.6923  0.250  0.020
+  prior  turn 13-16     648  0.534   0.6921  0.249  0.025
+  prior  turn 17+      1364  0.529   0.6923  0.250  0.020
+  life   all           3839  0.480   1.0897  0.363  0.274
+  life   turn 1-4       506  0.542   0.6864  0.247  0.031
+  life   turn 5-8       588  0.592   0.6418  0.226  0.035
+  life   turn 9-12      733  0.720   0.5159  0.174  0.088
+  life   turn 13-16     648  0.531   0.8000  0.287  0.256
+  life   turn 17+      1364  0.256   1.8785  0.602  0.664
+  core   all           3839  0.573   0.8032  0.279  0.186
+  core   turn 1-4       506  0.534   0.6990  0.253  0.037
+  core   turn 5-8       588  0.619   0.6101  0.213  0.085
+  core   turn 9-12      733  0.730   0.4853  0.167  0.112
+  core   turn 13-16     648  0.634   0.8056  0.266  0.223
+  core   turn 17+      1364  0.454   1.0948  0.383  0.375
+  eval   all           3839  0.642   0.6187  0.216  0.057
+  eval   turn 1-4       506  0.524   0.6877  0.247  0.042
+  eval   turn 5-8       588  0.607   0.6795  0.243  0.076
+  eval   turn 9-12      733  0.707   0.6196  0.215  0.140
+  eval   turn 13-16     648  0.542   0.6647  0.238  0.087
+  eval   turn 17+      1364  0.715   0.5445  0.184  0.108
+  reliability (eval, test): bin rows predicted observed
+    0.0-0.1       7  0.059  0.000
+    0.1-0.2      19  0.166  0.000
+    0.2-0.3      83  0.266  0.000
+    0.3-0.4     182  0.367  0.060
+    0.4-0.5    1563  0.465  0.446
+    0.5-0.6    1156  0.540  0.584
+    0.6-0.7     456  0.644  0.638
+    0.7-0.8     222  0.742  0.919
+    0.8-0.9      66  0.840  0.985
+    0.9-1.0      85  0.939  1.000
+held out (D364): train 14713 rows / 174 games / 85 pairs; val 3524 rows / 46 games / 23 pairs; test 3839 rows / 20 games / 10 pairs
+  test residuals: within-game correlation 0.958 (design effect 232.3, effective n 16 of 3839 rows); within-pair 0.012 (design effect 6.6, effective n 578)
+  test all (3839 rows, 20 games, 10 pairs; 95% over pairs): prior 0.6923 [0.6911, 0.6934] by game 0.6933; life 1.0897 [0.4560, 1.5842] by game 0.7924; core 0.8032 [0.4104, 1.1087] by game 0.6613; eval 0.6187 [0.5498, 0.6877] by game 0.6230
+  test plain (2903 rows, 16 games, 8 pairs; 95% over pairs): prior 0.6929 [0.6916, 0.6939] by game 0.6933; life 0.9812 [0.3750, 1.6275] by game 0.7305; core 0.7545 [0.3537, 1.1397] by game 0.6480; eval 0.6052 [0.5315, 0.6939] by game 0.6207
+  test exploring (936 rows, 4 games, 2 pairs; 95% over pairs): prior 0.6906 [0.6903, 0.6914] by game 0.6933; life 1.4263 [0.3086, 1.7676] by game 1.0400; core 0.9542 [0.2344, 1.1741] by game 0.7144; eval 0.6607 [0.5501, 0.6944] by game 0.6325
+verdict (test): eval log-loss 0.6187 vs best baseline prior 0.6923 -- the evaluator wins
+saved var/ml/gates/pilot-v3/m.json (238622 bytes)
+all      : 1968 rows, 12 games (effective n 12), 6 pairs; old 0.4777 new 0.6512; old - new -0.1735 [-0.3486, +0.0829]; ECE old 0.0918 new 0.0783
+reference: 1968 rows, 12 games (effective n 12), 6 pairs; old 0.4777 new 0.6512; old - new -0.1735 [-0.3486, +0.0829]; ECE old 0.0918 new 0.0783
+new      : no rows
+exploring: 936 rows, 4 games (effective n 3), 2 pairs; old 0.8735 new 0.6607; old - new +0.2128 [-0.0407, +0.2903]; ECE old 0.3292 new 0.0964
+compare: the new model is not shown better than the old one on gate 1's test pairs (D364's rule)
