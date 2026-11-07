@@ -1,0 +1,57 @@
+==== J195 pilot4 started 2026-11-07T10:14:44-05:00 in unit lab-J195-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-routlets vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-routlets vs search-v1-anytime (match:j195-pilot:20261107T151445-2074739, seed 451900000, 1 pair(s))
+  done   w0 search-v2-routlets 1-3 search-v1-anytime (0 draws) in 138 s
+  4 decisive games (2 pairs): search-v2-routlets scores 25.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-routlets scores 25.0% [95% 0.0%, 74.0%] = -191 Elo [-Infinity, +182] against search-v1-anytime
+search-v2-routlets: 91 decisions searched in 4 games, 16 changed Forge's answer (17.6%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-routlets by kind: p 10/61, a 4/23, b 2/7
+search-v2-routlets time per decision: 679.423 ms (p+a+b); by kind p 665.983, a 669.239, b 830.009
+search-v1-anytime: 102 decisions searched in 4 games, 10 changed Forge's answer (9.8%); budget fallbacks 1 = 1.0% [95% 0.0%, 2.7%]; other fallbacks {}
+search-v1-anytime by kind: p 7/68, a 1/25, b 2/9
+search-v1-anytime time per decision: 673.416 ms (p+a+b); by kind p 699.142, a 595.638, b 695.095
+{"run":"20261107T151445-2074739","a":"search-v2-routlets","b":"search-v1-anytime","aRolloutsPerDecision":19.14,"bRolloutsPerDecision":16.9,"aRoundsPerDecision":7.03,"bRoundsPerDecision":6.45,"aDecisions":91,"bDecisions":102,"aRanked":0,"bRanked":0,"aPriorPlayouts":0,"aPriorCut":0,"aPriorTimedOut":0,"aRankedShare":0,"aExposedGames":0,"bExposedGames":0,"aPolicyGames":0,"bPolicyGames":0,"aTouchedGames":0,"games":4,"aExposure":0,"bExposure":0,"aTouchedShare":0,"ratio":1.133}
+match search-v2-ranked vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-ranked vs search-v1-anytime (match:j195-pilot:20261107T151703-2123184, seed 451900000, 1 pair(s))
+  done   w0 search-v2-ranked 2-2 search-v1-anytime (0 draws) in 140 s
+  4 decisive games (2 pairs): search-v2-ranked scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-ranked scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-ranked: 94 decisions searched in 4 games, 18 changed Forge's answer (19.1%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-ranked by kind: p 9/61, a 5/25, b 4/8
+search-v2-ranked time per decision: 695.525 ms (p+a+b); by kind p 663.858, a 693.154, b 944.388
+search-v1-anytime: 97 decisions searched in 4 games, 18 changed Forge's answer (18.6%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 11/64, a 4/25, b 3/8
+search-v1-anytime time per decision: 687.714 ms (p+a+b); by kind p 656.376, a 701.801, b 894.402
+{"run":"20261107T151703-2123184","a":"search-v2-ranked","b":"search-v1-anytime","aRolloutsPerDecision":17.21,"bRolloutsPerDecision":17.44,"aRoundsPerDecision":6.5,"bRoundsPerDecision":6.53,"aDecisions":94,"bDecisions":97,"aRanked":7,"bRanked":0,"aPriorPlayouts":62,"aPriorCut":32,"aPriorTimedOut":2,"aRankedShare":0.0745,"aExposedGames":0,"bExposedGames":0,"aPolicyGames":0,"bPolicyGames":0,"aTouchedGames":2,"games":4,"aExposure":0,"bExposure":0,"aTouchedShare":0.5,"ratio":0.987}
+match search-v2-ms750-r6 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-ms750-r6 vs search-v1-anytime (match:j195-pilot:20261107T151923-2171200, seed 451900000, 1 pair(s))
+  done   w0 search-v2-ms750-r6 3-1 search-v1-anytime (0 draws) in 128 s
+  4 decisive games (2 pairs): search-v2-ms750-r6 scores 75.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-ms750-r6 scores 75.0% [95% 26.0%, 100.0%] = +191 Elo [-182, Infinity] against search-v1-anytime
+search-v2-ms750-r6: 112 decisions searched in 4 games, 16 changed Forge's answer (14.3%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-ms750-r6 by kind: p 10/75, a 3/27, b 3/10
+search-v2-ms750-r6 time per decision: 435.854 ms (p+a+b); by kind p 407.365, a 494.516, b 491.131
+search-v1-anytime: 99 decisions searched in 4 games, 20 changed Forge's answer (20.2%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 10/64, a 7/26, b 3/9
+search-v1-anytime time per decision: 720.874 ms (p+a+b); by kind p 681.611, a 753.775, b 905.027
+{"run":"20261107T151923-2171200","a":"search-v2-ms750-r6","b":"search-v1-anytime","aRolloutsPerDecision":10.59,"bRolloutsPerDecision":17.48,"aRoundsPerDecision":3.55,"bRoundsPerDecision":6.7,"aDecisions":112,"bDecisions":99,"aRanked":0,"bRanked":0,"aPriorPlayouts":0,"aPriorCut":0,"aPriorTimedOut":0,"aRankedShare":0,"aExposedGames":0,"bExposedGames":0,"aPolicyGames":0,"bPolicyGames":0,"aTouchedGames":0,"games":4,"aExposure":0,"bExposure":0,"aTouchedShare":0,"ratio":0.606}
+match search-v2-ms375-r3 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-ms375-r3 vs search-v1-anytime (match:j195-pilot:20261107T152131-2212670, seed 451900000, 1 pair(s))
+  done   w0 search-v2-ms375-r3 2-2 search-v1-anytime (0 draws) in 101 s
+  4 decisive games (2 pairs): search-v2-ms375-r3 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-ms375-r3 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-ms375-r3: 94 decisions searched in 4 games, 19 changed Forge's answer (20.2%); budget fallbacks 3 = 3.2% [95% 0.0%, 8.6%]; other fallbacks {}
+search-v2-ms375-r3 by kind: p 14/64, a 4/23, b 1/7
+search-v2-ms375-r3 time per decision: 264.007 ms (p+a+b); by kind p 260.771, a 268.416, b 279.111
+search-v1-anytime: 99 decisions searched in 4 games, 12 changed Forge's answer (12.1%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 9/64, a 1/25, b 2/10
+search-v1-anytime time per decision: 688.86 ms (p+a+b); by kind p 718.559, a 569.818, b 796.388
+{"run":"20261107T152131-2212670","a":"search-v2-ms375-r3","b":"search-v1-anytime","aRolloutsPerDecision":6.78,"bRolloutsPerDecision":16.03,"aRoundsPerDecision":2.23,"bRoundsPerDecision":5.86,"aDecisions":94,"bDecisions":99,"aRanked":0,"bRanked":0,"aPriorPlayouts":0,"aPriorCut":0,"aPriorTimedOut":0,"aRankedShare":0,"aExposedGames":0,"bExposedGames":0,"aPolicyGames":0,"bPolicyGames":0,"aTouchedGames":0,"games":4,"aExposure":0,"bExposure":0,"aTouchedShare":0,"ratio":0.423}
