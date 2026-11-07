@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-11-07T10:14:16-05:00",
- "heartbeat": "2026-11-07T10:14:16-05:00",
+ "updated": "2026-11-07T10:14:30-05:00",
+ "heartbeat": "2026-11-07T10:14:30-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.95,
-  "memUsedGb": 7.8,
+  "load1": 4.29,
+  "memUsedGb": 7.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 4615,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J195",
    "title": "The knobs and the curve's lower half: four fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule) in one night, each against search-v1-anytime (search-v2): (a) search-v2-routlets, D390's rollout=outlets under the anytime search, and (b) search-v2-ranked, D389's rank=prior,gen=24, the two built, never-matched knobs (the review's §5 row 6), each with a verdict; (c) search-v2-ms750-r6 and (d) search-v2-ms375-r3, search-v2 with the wall-clock budget and the round cap lowered together, x0.5 and x0.25, read beside J194's upper half, no verdict (D517)",
    "cpu": "heavy",
-   "phase": "pilot 2/4",
+   "phase": "pilot 3/4",
    "started": "2026-11-07T10:12:56-05:00",
-   "elapsed": 80,
+   "elapsed": 94,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -114,7 +114,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J195-pilot2"
+   "detail": "lab-J195-pilot3"
   }
  ],
  "queue": [],
