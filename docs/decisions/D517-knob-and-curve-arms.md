@@ -67,22 +67,43 @@ the wire and the protocol are unchanged, so it is free under D509.*
 4. **The live seat stays search-v2 at 1.5 s and 12 rounds, plain-Forge rollouts, candidates in order**
    (`SearchConfig.LIVE_DEFAULTS` is still `anytime=1`). Whatever J195 finds, these four names are measurements; a
    change to the live seat is a separate decision (and under D509, a seat-queue row).
-5. **The pre-registered rules for the night that uses them, J195** (copied here word for word, with the downward
-   arms' reading as amended before commit, below):
+5. **The pre-registered rules for the night that uses them, J195.** The thresholds below are **this decision's own**,
+   written on 2026-11-07 before any rated game of these arms. The review's §5 row 6 asks only for "fixed 1,200
+   each" and says both NOT SHOWN closes the knob track; it sets no thresholds. They take the shape of row 2's
+   compute-curve rule (D514), with **+15 Elo as the NOT SHOWN bar instead of row 2's +20**, by choice: a knob costs
+   nothing to adopt, so the night is asked to rule out a smaller effect than compute had to show. **J195's job
+   quotes this file word for word**, not the other way round.
 
    For `search-v2-routlets` and `search-v2-ranked`, each a fixed D398 match of 1,200 games on the confirm set against
    `search-v1-anytime`: SHOWN if the arm's lower end is above 0.5 and its point is at least +15 Elo; NOT SHOWN if its
    upper end is below +15 Elo; otherwise INCONCLUSIVE, confirm with 4,800 games; both NOT SHOWN closes the knob track
-   (the review's §5 row 6). For the two downward arms, the same matches, no verdict: the curve's lower half, read as
-   how much strength the live 1.5 s buys over 0.75 s and 0.375 s, and whether the live seat could be faster at no
-   measured cost, in two descriptive readings, still no verdict: (1) "indistinguishable from search-v2" when the
-   arm's interval contains 0; (2) "at most 10 Elo weaker" when its LOWER end is above −10 Elo — the bar a later,
-   separate live-seat decision would cite. Any change to the live seat is a separate decision.
+   (the review's §5 row 6).
+
+   *The routlets exposure reading.* For the routlets match, also report its **exposure**: the share of the match's
+   games in which the arm's seat recorded any `opportunity.*` key in its batch-line stats (`aStats.counts` or
+   `bStats.counts`, whichever is the arm's). That is the outer seat's counter, so it is a proxy for how often the
+   rollouts met a sacrifice-outlet decision, which no counter measures (Residuals). A routlets NOT SHOWN closes its
+   half of the knob track **only if the exposure is at least 20% of games**. Below 20% the reading is **NOT SHOWN,
+   UNEXPOSED**: the match could not have shown the knob, and the knob stays open until a rollout-level counter exists
+   (cube-lab follow-up 38). SHOWN and INCONCLUSIVE are read as above at any exposure.
+
+   For the two downward arms, the same matches, no verdict: the curve's lower half, read as how much strength the
+   live 1.5 s buys over 0.75 s and 0.375 s, and whether the live seat could be faster at no measured cost, in two
+   descriptive readings, still no verdict: (1) "indistinguishable from search-v2" when the arm's interval contains
+   0; (2) "at most 10 Elo weaker" when its LOWER end is above −10 Elo — the bar a later, separate live-seat decision
+   would cite. When neither holds, the write-up reports the interval itself, "weaker than search-v2 by [lo, hi] Elo",
+   and no verdict. Any change to the live seat is a separate decision.
+
+   *How strict the second reading is.* A 1,200-game search-vs-search interval is about ±11 Elo (half-widths of past
+   1,200-game match lines in `~/code/lab/pc-results`: evalleaf 13.4, mull 11.6, targets 9.6, ms6000-r48 8.5, whand50
+   10.3). With the lower end at −10, "at most 10 Elo weaker" needs a point above about +1. A truly equal arm earns it
+   about 43% of the time, an arm 5 Elo weaker about 14%: at 1,200 games it fires rarely, and only for an arm about as
+   strong as search-v2.
 
    *Amended before commit (2026-11-07):* the first draft's descriptive line, "not measurably weaker" when the upper
-   end is above −10 Elo, was too loose: a 1,200-game search-vs-search interval is about ±9 Elo, so an arm 20 Elo
-   weaker would pass it about a third of the time. The two readings above replace it; everything else is as
-   registered.
+   end is above −10 Elo, was too loose: at about ±11 Elo, an arm 20 Elo weaker would pass it about 43% of the time.
+   The two readings above replace it; everything else is as registered. The interval width, the source of the
+   thresholds and the exposure reading were added at the lane's review, still before any rated game.
 
 **Rejected.**
 
@@ -136,8 +157,9 @@ the wire and the protocol are unchanged, so it is free under D509.*
   |  | search-v1-anytime | 95 | **661.6** | 15.80 | 6.46 | unmappable 1 |
 
   - **The knob arms cost almost nothing and fall back no more than search-v2.** Routlets took 1.07× search-v2's time
-    a decision for the same rollouts (1.00×), in line with D390's +0.7% a rollout; nothing counts whether the outlet
-    policy acted inside a rollout (Residuals). Ranked took 1.03× and 0.99× the rollouts: the prior ran on **3 of 96**
+    a decision for the same rollouts (1.00×), and that difference is machine noise: in all four games **neither seat
+    recorded any `opportunity.*` or `policy.*` key** and `outletsInHandAtEnd` was 0, so the pilot measured nothing
+    about the outlet policy (Residuals). Ranked took 1.03× and 0.99× the rollouts: the prior ran on **3 of 96**
     decisions (3.1%; D389's smoke 7.7%), scored 17 candidates and cut 4, at about **237 ms a ranking** (711 ms in
     all; D389: 393 ms), and one of the three hit the 30% share (`search.prior.timedOut` 1). Ranking's time comes out
     of the same 1.5 s, so the decisions it touches roll out less, and those it does not are search-v2's.
@@ -147,19 +169,26 @@ the wire and the protocol are unchanged, so it is free under D509.*
     fewer than the 2 minimum rounds (`search.anytime.short`; 750 ms: 5 of 99; search-v2: 0 or 1), one fell back to
     Forge with no alternative scored, and it changed Forge's answer slightly more often (12.8% against 10.5%) on less
     evidence. It measures a much noisier search, which is the point of a curve's low end.
-  - Game times: routlets' four 24–46 s (144 s), ranked's 20–43 s (136 s), ms750-r6's 19–38 s (123 s), ms375-r3's
-    14–36 s (96 s), against 177–190 s for the same deals in D514's budget-only pilots. Search-v2 itself thought 650–700
+  - Game times: routlets' four 24–46 s, ranked's 20–43 s, ms750-r6's 19–38 s, ms375-r3's 14–36 s; summed game times
+    141.1, 133.7, 119.1 and 93.4 s (the batches' wall times, between their start stamps, 144, 136, 123 and 96 s),
+    against 177–190 s summed for the same deals in D514's budget-only pilots. Search-v2 itself thought 650–700
     ms a decision here against 720–830 in D514's pilots: a lighter machine, which is the wall-clock arms'
     machine-dependence (D388), and why each pilot reads its arm against the search-v2 in the same batch.
 
 **Residuals.**
 
-- **Nothing counts the outlet policy acting inside a rollout.** `RolloutController.Outlets` is seated when
-  `rollout=outlets` (`SearchPolicy.playout`, `lim.outletsUs`), but no counter says how often its `OutletPolicy`
-  overrode Forge in a copy, so the pilot cannot say whether the arm differed from search-v2 in these four games. A
-  counter (`search.rollout.outletActs`) beside the others would let J195 report it; until then a NOT SHOWN cannot be
-  told from "rarely acted" without a recording.
-- **Ranking touches few decisions,** about 3–8% (the pilot, D389's smoke). A 1,200-game match's ±15 Elo can resolve
+- **Nothing counts the outlet policy acting inside a rollout, and the pilot never met it.**
+  `RolloutController.Outlets` (`RolloutController.java`, D390) extends `PolicyControllerAi`, which counts
+  `policy.<why>` and `opportunity.<why>` into the copy's own map; `SearchPolicy` never reads that map back
+  (`rc.counts()`), so every rollout-level count is discarded with the copy. In the four routlets pilot games neither
+  seat recorded an `opportunity.*` or `policy.*` key even at the outer seat, and no outlet was in hand at the end: the
+  pilot says nothing about the policy, only that the arm runs. On the confirm set, about 28 of its 60 decks carry a
+  sacrifice-outlet card, usually one copy (a read-only scan of Forge's `cardsfolder.zip` at the lane's review, an
+  approximation), so exposure in J195 will be partial. The exposure reading (Decision 5) is the night's guard; the
+  fix is a counter: about five lines after `playout` in `SearchPolicy` harvesting `rc.counts()` into the sink (as
+  `search.rollout.<key>`). That is a bridge change, so it lands at a later pin, never in J195's (cube-lab follow-up
+  38).
+- **Ranking touches few decisions,** about 3–8% (the pilot, D389's smoke). A 1,200-game match's about ±11 Elo can resolve
   only an effect concentrated there of several times that size per touched decision; NOT SHOWN for `search-v2-ranked`
   is "no effect this large", not "no effect".
 - **The 375 ms arm decides about one decision in six on fewer than two rounds.** A J195 reading of it is a reading of
