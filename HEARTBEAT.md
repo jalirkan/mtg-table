@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-07T18:35:32-05:00
+- time: 2026-11-07T18:35:46-05:00
 - runner: ac07876b, up since 2026-11-01T21:41:21-05:00
-- running: J195 commands 5/5, 4784/4800 games, 790.9/h, ETA 2026-11-07T18:36:45-05:00, 7 worker(s), 1 core(s); J196 prepare, 1 worker(s), 6 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.25; memory 5.7/30.5 GB, swap 4368 MB, pressure 0% (lab budget 23.4 GB)
+- running: J196 prepare, 1 worker(s), 6 core(s)
+- cores: 6 of 8 in use (the running jobs' widths; 16 threads)
+- load: 5.89; memory 5.9/30.5 GB, swap 4368 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J194 done at 2026-11-06T04:29:18-05:00: cma.played 1200 · cma.score 0.623 · cma.lo 0.602 · cma.hi 0.644 · cma.elo 87.5 · cma.aSearch.msPerDecision 930.434 · cmb.played 1200 · cmb.score 0.502 · cmb.lo 0.49 · cmb.hi 0.515 · cmb.elo 1.7 · cmb.aSearch.msPerDecision 2655.39 · cmb.bSearch.msPerDecision 836.059 · cmc.played 1200 · cmc.score 0.494 · cmc.lo 0.481 · cmc.hi 0.507 · cmc.elo -4.1 · cmc.aSearch.msPerDecision 1488.797 · cmc.bSearch.msPerDecision 852.209 · rob.ratio 3.138 · roc.ratio 1.731 · v.pays 0 · v.doesNotPay 1 · v.inconclusive 0
+- last finished: J195 done at 2026-11-07T18:35:46-05:00: cma.played 1200 · cma.score 0.51 · cma.lo 0.496 · cma.hi 0.524 · cma.elo 6.9 · cma.aSearch.msPerDecision 984.443 · cma.bSearch.msPerDecision 977.505 · cmb.played 1200 · cmb.score 0.483 · cmb.lo 0.469 · cmb.hi 0.496 · cmb.elo -12.2 · cmb.aSearch.msPerDecision 904.264 · cmb.bSearch.msPerDecision 905.542 · cmc.played 1200 · cmc.score 0.493 · cmc.lo 0.48 · cmc.hi 0.507 · cmc.elo -4.6 · cmc.aSearch.msPerDecision 534.972 · cmc.bSearch.msPerDecision 927.53 · cmd.played 1200 · cmd.score 0.479 · cmd.lo 0.463 · cmd.hi 0.496 · cmd.elo -14.5 · cmd.aSearch.msPerDecision 314.204 · cmd.bSearch.msPerDecision 933.479 · roa.ratio 0.995 · rob.ratio 0.994 · rob.aRankedShare 0.049 · rob.aTouchedShare 0.413 · roc.ratio 0.601 · rod.ratio 0.364 · v.a.shown 0 · v.a.notShown 0 · v.a.inconclusive 1 · v.a.unexposed 0 · v.a.exposure.share 0.062 · roa.aExposedGames 74 · roa.aPolicyGames 74 · v.b.shown 0 · v.b.notShown 1 · v.b.inconclusive 0 · v.knobTrackClosed 0 · v.c.indistinguishable 1 · v.c.atMost10Weaker 0 · v.d.indistinguishable 0 · v.d.atMost10Weaker 0
 
 ## Messages
+
+- FOLLOW-UP READY [J195@2026-11-07T18:35:46-05:00] (the runner, for the cloud session): J195 is done; write and post the template morning-read. It decides: two things, apart. THE KNOBS (matches a and b, the play-AI review of 2026-11-05, §5 row 6): each arm is SHOWN, NOT SHOWN or INCONCLUSIVE on its own match; both NOT SHOWN closes the knob track, unless (a) is NOT SHOWN, UNEXPOSED (its exposure under 3% of games, 36 of 1,200: the policy had no chance at all), which keeps the knob open until a rollout-level counter exists; an INCONCLUSIVE arm gets a 4,800-game confirmation against search-v2 before anything else is said about it; a SHOWN arm is a measured gain over search-v2 at 1,200 games, and folding it into the live seat is a separate decision with its own evidence, never this job's. THE CURVE (matches c and d): no verdict; how much strength the live 1.5 s buys over 0.75 s and 0.375 s, read beside J194's 3 s and 6 s, so the whole curve from x0.25 to x4 is on the same 600 deals. It never decides the live seat, which stays search-v2 at 1.5 s and 12 rounds (D514's point 3; the owner: "a production model needs to be fast but we can experiment for testing"). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J194@2026-11-06T04:29:18-05:00] (the runner, for the cloud session): J194 is done; write and post the template morning-read. It decides: which lanes come next for the play AI (the play-AI review of 2026-11-05, §5): COMPUTE PAYS opens parallel rollouts or a faster copy (row 4) and a learned prior from per-option values (row 5); COMPUTE DOES NOT PAY closes both and points the work at the rollout policy instead; INCONCLUSIVE posts a 4,800-game confirmation of search-v2-ms6000-r48 against search-v2 first. It never decides the live seat, which stays search-v2 at 1.5 s (the owner: "a production model needs to be fast but we can experiment for testing"). Ledger: LEDGER.md. Delete this line once posted.
 
