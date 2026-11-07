@@ -83,9 +83,17 @@ the wire and the protocol are unchanged, so it is free under D509.*
    games in which the arm's seat recorded any `opportunity.*` key in its batch-line stats (`aStats.counts` or
    `bStats.counts`, whichever is the arm's). That is the outer seat's counter, so it is a proxy for how often the
    rollouts met a sacrifice-outlet decision, which no counter measures (Residuals). A routlets NOT SHOWN closes its
-   half of the knob track **only if the exposure is at least 20% of games**. Below 20% the reading is **NOT SHOWN,
-   UNEXPOSED**: the match could not have shown the knob, and the knob stays open until a rollout-level counter exists
-   (cube-lab follow-up 38). SHOWN and INCONCLUSIVE are read as above at any exposure.
+   half of the knob track only if exposure is at least 3% of games (36 of 1,200, about half of J194's measured base
+   rate of 5.3–6.0%); below that the reading is NOT SHOWN, UNEXPOSED and the knob stays open until a rollout-level
+   counter exists (cube-lab follow-up 38). SHOWN and INCONCLUSIVE are read as above at any exposure.
+
+   *The basis.* On J194's real 1,200-game matches, search-v2's seat, which runs the same outer outlet policy as the
+   routlets arm (`outlets: on` in both), recorded an `opportunity.*` key in only **5.3–6.0% of games**: 72 of 1,200
+   against Forge; 65 and 71 on the two sides of the ×4 match; 64 and 72 in the ×2 match; every exposed game also
+   had its `policy.*` key. So the bar's job is to catch "the policy had no chance at all" (the pilot's zero), not to
+   demand high exposure. At this deck set's exposure the knob can act in roughly one game in seventeen, so any
+   effect it has is diluted by that much, and a NOT SHOWN closes the track for this deck set, not for an
+   outlet-heavy one (a different question, a different deck set, not planned).
 
    For the two downward arms, the same matches, no verdict: the curve's lower half, read as how much strength the
    live 1.5 s buys over 0.75 s and 0.375 s, and whether the live seat could be faster at no measured cost, in two
@@ -103,7 +111,9 @@ the wire and the protocol are unchanged, so it is free under D509.*
    *Amended before commit (2026-11-07):* the first draft's descriptive line, "not measurably weaker" when the upper
    end is above −10 Elo, was too loose: at about ±11 Elo, an arm 20 Elo weaker would pass it about 43% of the time.
    The two readings above replace it; everything else is as registered. The interval width, the source of the
-   thresholds and the exposure reading were added at the lane's review, still before any rated game.
+   thresholds and the exposure reading were added at the lane's review, still before any rated game. The exposure bar, first
+   written as 20% of games, was set at 3% at the same review, on J194's base rate (above): 20% was unreachable on
+   this deck set.
 
 **Rejected.**
 
