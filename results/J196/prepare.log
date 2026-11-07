@@ -1,0 +1,135 @@
+==== J196 prepare started 2026-11-07T18:35:32-05:00 in unit lab-J196-prepare, 1 worker(s), 6 core(s), BLAS/OpenMP threads 6, lane 2
+lab: mtg-table at 310ba71b657b93d4ce755fcd17aeb6b85d003ac4
+lint-bridge-selftest OK: 33 rules, 79 firing cases (each fired its own rule and no other), 93 checks
+bridge lint OK (94 file(s) under bridge/src, 3 under tools/; 33 rules)
+compiling 94 file(s) -> /home/justin-a/code/lab/mtg-table-lane2/bridge/out
+/home/justin-a/code/lab/mtg-table-lane2/bridge/src/mtgtable/ai/LenientGameCopier.java:531: warning: [deprecation] copyCopiableCharacteristics(Card,SpellAbility,SpellAbility) in CardCopyService has been deprecated
+                    new CardCopyService(o).copyCopiableCharacteristics(out, null, null);
+                                          ^
+1 warning
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 270 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table-lane2/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 274 frame(s) lost the race and were dropped
+OverRaceSelfTest: 3698 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:56194): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:56210): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:56226 (1 watching)
+WS CONNECT /127.0.0.1:56238 (connection #1)
+WS REFUSED /127.0.0.1:56244: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:56260 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:56260 (1 watching)
+WS DISCONNECT /127.0.0.1:56238 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:56272 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:56272 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:56280 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:36900 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:36900: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 32 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:54400: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:54408: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:54416: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:54426: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:54450: no valid pairing token
+WS SITE REFUSED /127.0.0.1:54584: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54594: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54606: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54612: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54628: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54640: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54644: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54646: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54662: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54676: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:54690: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:54702: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:54714: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:54720: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:54734: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:54740 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:54740 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:54748 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:54748 (0 watching)
+WS CONNECT /127.0.0.1:54754 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:54754 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:54770): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:54784): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:54800 (1 watching)
+WS CONNECT /127.0.0.1:55550 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:55550 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:55556 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:55556 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:40507 (/127.0.0.1:55572): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:53074: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:52538: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:52542: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:52558: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:52572: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:52574 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:52574 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:52590): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:45819 (/127.0.0.1:52606): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33718: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33726: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33742: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33758: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33762: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33764: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33770: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33774: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33786: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33802: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33806: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33814: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:33828: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:33836: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:35268: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35278: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35284: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:35318)
+TABLE SEAT 1 upgrade from /127.0.0.1:35324
+WS CONNECT /127.0.0.1:35324 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:35338
+WS SEAT 1 TAKEN OVER by /127.0.0.1:35338 (the older connection /127.0.0.1:35324 is closed 4002)
+WS CONNECT /127.0.0.1:35338 (connection #2)
+WS DISCONNECT /127.0.0.1:35338 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:35348
+WS CONNECT /127.0.0.1:35348 (connection #1)
+WS DISCONNECT /127.0.0.1:35348 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:35362: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35364: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35376: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35378: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35388: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35396: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35402: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35412: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35418: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:35424: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:35446
+WS CONNECT /127.0.0.1:35446 (connection #2)
+WS DISCONNECT /127.0.0.1:35446 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+WS CONNECT /127.0.0.1:58240 (connection #1)
+WS DISCONNECT /127.0.0.1:58240 -- cancelling 0 pending ask(s)
+WS CONNECT /127.0.0.1:58250 (connection #2)
+WS DISCONNECT /127.0.0.1:58250 -- cancelling 0 pending ask(s)
+StalledGameSelfTest: 156 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 6.6 us + predict 3.7 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 132 check(s), 0 failure(s)
+grade utf8 probe: UTF-8 stdout under LC_ALL=C
+decision selftest: 255 check(s), 0 failure(s)
+distill selftest: 38 check(s), 0 failure(s)
+build OK
