@@ -19,6 +19,12 @@
 // (~/code/mtg-table -> ~/code/lab/mtg-table).  The ensemble default is searched
 // in both places before the single model's.
 //
+// WHICH MODEL (D518).  `--eval-model` wins; else config.json's `coach.evalModel`
+// (a path, a comma list, a directory or a manifest, looked up as the flag is);
+// else the defaults above.  `coach.evalModel` is null in the committed config, so
+// the strip serves the night-1 ensemble until a decision registers another model
+// there.  chooseEvalModel says which of the three named it.
+//
 // AN ENSEMBLE (D368).  --eval-model may name several exports of one schema
 // (seeds of one training config): `a.json,b.json`, a directory, or an
 // `ensemble.json` manifest (tools/ml/eval_serve.py's header).  The answer's `p`
@@ -145,6 +151,18 @@ export function resolveEvalModel(repoRoot, flag, env = process.env) {
     if (p) return p;
   }
   return null;
+}
+
+/**
+ * The win chance's model and where its name came from (D518): the flag, else config.json's
+ * `coach.evalModel`, else the defaults (resolveEvalModel's).  -> { model, from }, `from` one of
+ * '--eval-model', 'config.json coach.evalModel', 'default', or null when there is no model.
+ */
+export function chooseEvalModel(repoRoot, flag, configured, env = process.env) {
+  if (flag) return { model: resolveEvalModel(repoRoot, flag, env), from: '--eval-model' };
+  if (configured) return { model: resolveEvalModel(repoRoot, configured, env), from: 'config.json coach.evalModel' };
+  const model = resolveEvalModel(repoRoot, undefined, env);
+  return { model, from: model ? 'default' : null };
 }
 
 /** The Python that runs eval_serve.py: the flag, else the repo's venv when present, else python3. */

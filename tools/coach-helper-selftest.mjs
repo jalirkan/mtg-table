@@ -237,6 +237,13 @@ try {
   check('ok with the CLI there', r.status === 200 && json(r.body)?.ok === true && json(r.body)?.helper === 1
     && json(r.body)?.claude === '9.9.9 (Claude Code)' && JSON.stringify(json(r.body)?.models) === '["opus","sonnet","haiku"]', r.body);
   check('config.json coach.autoReview false: /health says "autoReview": 0 (D385)', json(r.body)?.autoReview === 0, r.body);
+  // D518: config.json coach.evalModel names the win chance's model; one that is not a path is refused at start
+  writeFileSync(join(DIR, 'config-bad-eval.json'), JSON.stringify({ coach: { autoReview: false, evalModel: 5 } }));
+  const bad = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', '0'], { env: { ...BASE_ENV, PATH: FAKE_PATH, MTG_TABLE_CONFIG: join(DIR, 'config-bad-eval.json') }, stdio: ['ignore', 'pipe', 'pipe'] });
+  let badLog = '';
+  bad.stderr.on('data', (d) => { badLog += d; });
+  const badCode = await new Promise((res) => bad.on('exit', res));
+  check('config.json coach.evalModel that is not a path: refused at start, exit 2 (D518)', badCode === 2 && /coach\.evalModel/.test(badLog), badLog);
   check('/health advertises "thinking": off, low, default (D346)', JSON.stringify(json(r.body)?.thinking) === '["off","low","default"]', r.body);
 
   const hMissing = await startHelper([], { PATH: NODE_ONLY });

@@ -31,7 +31,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join, resolve } from 'node:path';
-import { createEvalRunner, validateEval, MAX_EVAL_BODY, resolveEvalModel, labRoot, DEFAULT_EVAL_MODEL, DEFAULT_EVAL_ENSEMBLE } from './eval-runner.mjs';
+import { createEvalRunner, validateEval, MAX_EVAL_BODY, resolveEvalModel, chooseEvalModel, labRoot, DEFAULT_EVAL_MODEL, DEFAULT_EVAL_ENSEMBLE } from './eval-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
 
 const REL = 'var/eval-runner-selftest';
@@ -134,6 +134,20 @@ console.log('eval-runner-selftest: part 1, a fake evaluator');
   check(resolveEvalModel(home, undefined, env) === join(home, DEFAULT_EVAL_ENSEMBLE), 'D368: the ensemble in both places: this checkout\'s wins');
   check(resolveEvalModel(home, 'var/ml/models/eval-abc.json, var/ml/models/missing.json', env)
     === [join(lab, 'var/ml/models/eval-abc.json'), join(home, 'var/ml/models/missing.json')].join(','), 'D368: each path of a comma list is looked up on its own');
+  // D518: which model the strip serves -- the flag, else config.json's coach.evalModel, else the defaults.
+  const v3 = 'var/ml/models/eval-v3.json';
+  writeFileSync(join(lab, v3), '{}');
+  const flagged = chooseEvalModel(home, 'var/ml/models/eval-abc.json', v3, env);
+  check(flagged.model === join(lab, 'var/ml/models/eval-abc.json') && flagged.from === '--eval-model', 'D518: --eval-model wins over config.json coach.evalModel');
+  const configured = chooseEvalModel(home, undefined, v3, env);
+  check(configured.model === join(lab, v3) && configured.from === 'config.json coach.evalModel', 'D518: no flag: config.json coach.evalModel, looked up as a flag is (here the lab clone\'s)');
+  const byDefault = chooseEvalModel(home, undefined, null, env);
+  check(byDefault.model === join(home, DEFAULT_EVAL_ENSEMBLE) && byDefault.from === 'default', 'D518: no flag and coach.evalModel null: the default, the night-1 ensemble');
+  check(chooseEvalModel(home, '', '', env).from === 'default', 'D518: an empty flag or key is no choice: the default');
+  const missing = chooseEvalModel(home, undefined, 'var/ml/models/not-there.json', env);
+  check(missing.model === join(home, 'var/ml/models/not-there.json') && missing.from === 'config.json coach.evalModel', 'D518: a configured model that is nowhere stays as given (reported missing), never the default instead');
+  const none = chooseEvalModel(join(DIR, 'empty-home'), undefined, null, { MTGTABLE_LAB_ROOT: join(DIR, 'empty-lab') });
+  check(none.model === null && none.from === null, 'D518: no model anywhere: none, named by nothing');
 }
 
 check(!validateEval(null).req && !validateEval([]).req, 'validate: a body that is not an object is refused');

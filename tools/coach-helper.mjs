@@ -72,8 +72,8 @@
 //
 //   POST /eval    -- THE WIN CHANCE (D361): the learned position evaluator's
 //                 P(the viewing seat wins) for one state ForgeCoach shows, from a model
-//                 on this machine (--eval-model; default var/ml/models/night-1-eval.json
-//                 when it exists).  tools/eval-runner.mjs's header is that contract;
+//                 on this machine (--eval-model, else config.json `coach.evalModel` (D518),
+//                 else var/ml/models/night-1-eval.json when it exists).  tools/eval-runner.mjs's header is that contract;
 //                 /health carries "eval": 1 (and "evalModel", "evalSchema") only once
 //                 the model has loaded and passed its schema checks, else "eval": 0.
 //                 D368: --eval-model may name an ensemble (a,b,c / a directory / a
@@ -263,7 +263,7 @@ import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld, gameLog, readLogText } from './review-runner.mjs';
 import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
 import { MAX_HINT_BODY, createHintRunner } from './hint-runner.mjs';
-import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
+import { MAX_EVAL_BODY, chooseEvalModel, createEvalRunner, resolveEvalPython } from './eval-runner.mjs';
 import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
 import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
 import { DEFAULT_WATCH_LLM_CAP, MAX_WATCH_BODY, createWatchRunner } from './watch-runner.mjs';
@@ -533,9 +533,12 @@ function readConfig() {
   // D443: one watch's cap for an llm: drafter (dollars at list price, model calls); the fallback stop is 25%.
   const watchMaxUsd = coach.watchMaxUsd ?? DEFAULT_WATCH_LLM_CAP.maxUsd;
   if (typeof watchMaxUsd !== 'number' || !(watchMaxUsd > 0) || watchMaxUsd > 50) throw new Error(`"coach.watchMaxUsd" in ${file} is not dollars above 0 and at most 50`);
+  // D518: the win chance's model, config.json `coach.evalModel` (null: the defaults); --eval-model wins.
+  const evalModel = coach.evalModel ?? null;
+  if (evalModel !== null && (typeof evalModel !== 'string' || !evalModel.trim())) throw new Error(`"coach.evalModel" in ${file} is not a model path (or null for the default)`);
   const watchMaxCalls = coach.watchMaxCalls ?? DEFAULT_WATCH_LLM_CAP.maxCalls;
   if (!Number.isInteger(watchMaxCalls) || watchMaxCalls < 1 || watchMaxCalls > 1000) throw new Error(`"coach.watchMaxCalls" in ${file} is not a whole number of calls 1..1000`);
-  return { file, autoReview, watchLlmCap: { maxUsd: watchMaxUsd, maxCalls: watchMaxCalls, maxFallbackRate: DEFAULT_WATCH_LLM_CAP.maxFallbackRate }, coachPort: c.coachPort, wsPort: c.wsPort, roomPort: c.roomPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
+  return { file, autoReview, evalModel, watchLlmCap: { maxUsd: watchMaxUsd, maxCalls: watchMaxCalls, maxFallbackRate: DEFAULT_WATCH_LLM_CAP.maxFallbackRate }, coachPort: c.coachPort, wsPort: c.wsPort, roomPort: c.roomPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
 }
 
 function parseArgs(argv) {
@@ -1237,11 +1240,12 @@ async function main() {
   let evaluator = null;
   if (a.eval) {
     if (a.evalSchema !== undefined && !/^[0-9a-f]{16}$/.test(a.evalSchema)) { console.error('coach-helper: --eval-schema is a schemaId, 16 hex digits'); process.exit(2); }
+    const chosen = chooseEvalModel(cfg.repoRoot, a.evalModel, cfg.evalModel);   // D518: flag > config > default
     evaluator = createEvalRunner({
-      repoRoot: cfg.repoRoot, model: resolveEvalModel(cfg.repoRoot, a.evalModel), python: resolveEvalPython(cfg.repoRoot, a.evalPython),
+      repoRoot: cfg.repoRoot, model: chosen.model, python: resolveEvalPython(cfg.repoRoot, a.evalPython),
       expectSchema: a.evalSchema ?? null, cube: a.evalCube ?? null, log: (s) => console.log(`COACH ${s}`),
     });
-    void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
+    void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}${chosen.from ? ` (named by ${chosen.from})` : ''}`));
   }
   // D411: bug reports from the board, var/bugs/ (the helper's POST /bug, the room listener's POST /room/<id>/bug).
   let bugs = null;
