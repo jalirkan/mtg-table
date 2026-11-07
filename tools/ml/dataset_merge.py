@@ -41,10 +41,14 @@ REFUSED (exit 2, nothing written as complete):
     nights-1-3 already joins 4,488 seed numbers across its three nights).  The merge
     never renames a pair, because a pair's split is a hash of its name (D364 §1);
   - a source whose shards do not hold the rows its stats.json and games.jsonl say;
-  - a game whose split in the merge is not its split in its source -- by dataset.py's own
-    `split` field AND by train_eval.py's pair split (`--split-by pair`, D317).  From 20
-    pairs on that split is a hash of the pair alone, so it cannot move; below 20 a source
-    is split by rank and could, and the merge refuses rather than move a held-out game.
+  - a game whose split could differ between the merge and its source, by either of the two
+    splits a trainer reads.  dataset.py's own `split` field is carried over unchanged, so it is
+    checked against what it must be: dataset.py's split_of(split_group, weights, salt), with
+    the sources' (equal) weights and salt; a game whose recorded split is not that hash (a
+    hand-edited or foreign games.jsonl) is refused, `human` games aside.  train_eval.py's pair
+    split (`--split-by pair`, D317) is recomputed over the merge and over each source: from
+    20 pairs on it is a hash of the pair alone, so it cannot move; below 20 a source is split
+    by rank and could, and the merge refuses rather than move a held-out game.
     A test row of a source therefore stays a test row, and a training or validation row
     never becomes one.
 
@@ -185,9 +189,14 @@ def shared(srcs: list[str], games: list[list[dict]]) -> dict[str, Any]:
     return {"duplicateGames": sorted(set(dup_keys)), "sharedPairs": sorted(both)}
 
 
-def split_check(srcs: list[str], games: list[list[dict]], merged: list[dict]) -> dict[str, Any]:
-    """Every game's split in the merge against its split in its source: dataset.py's field and the pair split."""
+def split_check(srcs: list[str], games: list[list[dict]], merged: list[dict], stats0: dict[str, Any]) -> dict[str, Any]:
+    """Every game's split in the merge against its source's: train_eval's pair split recomputed over both, and
+    dataset.py's recorded `split` against dataset.py's own rule, split_of(split_group, weights, salt)."""
+    import dataset as D
     import train_eval as T
+    sw = stats0.get("split") or {}
+    weights = tuple(int(sw.get(k, 0)) for k in D.SPLITS)
+    salt = str(stats0.get("salt") or "")
     msp = T.game_splits(merged, "pair")
     moved = Counter()
     pos = 0
@@ -196,9 +205,10 @@ def split_check(srcs: list[str], games: list[list[dict]], merged: list[dict]) ->
         for g, a in zip(gs, ssp):
             b = msp[pos]
             if a != b:
-                moved[f"{a}->{b}"] += 1
-            if merged[pos]["split"] != g["split"]:
-                moved[f"dataset {g['split']}->{merged[pos]['split']}"] += 1
+                moved[f"pair {a}->{b}"] += 1
+            rec = g["split"]
+            if rec != "human" and sum(weights) > 0 and D.split_of(g["split_group"], weights, salt) != rec:
+                moved[f"recorded split {rec} is not dataset.py's hash"] += 1
             pos += 1
     return {"splitBy": ["dataset", "pair"], "gamesMoved": sum(moved.values()), "moves": dict(moved),
             "pairSplitGames": dict(Counter(msp))}
@@ -225,10 +235,12 @@ def merge(srcs: list[str], out: str, allow_shared_seeds: bool = False, jobs: int
     merged = []
     for off, gs in zip(offsets, games):
         merged += [dict(g, index=off + i) for i, g in enumerate(gs)]
-    sc = split_check(srcs, games, merged)
+    sc = split_check(srcs, games, merged, stats[0])
     if sc["gamesMoved"]:
-        raise Refused(f"{sc['gamesMoved']} game(s) would change split in the merge ({sc['moves']}): a source with fewer "
-                      "than 20 deck pairs is split by rank, not by hash -- merge larger datasets")
+        raise Refused(f"{sc['gamesMoved']} game(s) whose split could change in the merge ({sc['moves']}): a pair move "
+                      "means a source with fewer than 20 deck pairs (split by rank, not by hash) -- merge larger "
+                      "datasets; a recorded split that is not dataset.py's hash means a games.jsonl dataset.py did not "
+                      "write")
 
     os.makedirs(out, exist_ok=True)
     for fn in os.listdir(out):   # a re-run replaces a partial merge's files (as dataset.py's rebuild does)

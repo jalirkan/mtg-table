@@ -353,7 +353,7 @@ python3 tools/ml/dataset_merge.py var/ml/data/nights-1-3 var/ml/data/nights-4-5 
     --allow-shared-seeds --jobs 6
 python3 tools/ml/split_audit.py var/ml/data/nights-1-5 --reference var/ml/data/nights-1-3
 # half of every train and val game's rows held, test whole; each epoch a half of those
-python3 tools/ml/train_eval.py var/ml/data/nights-1-5 --compact --fast --load-subsample 0.5 --subsample 0.5 ...
+python3 tools/ml/train_eval.py var/ml/data/nights-1-5 --split-by pair --compact --fast --load-subsample 0.5 --subsample 0.5 ...
 ```
 
 - **`dataset_merge.py SRC SRC ... --out DIR`** writes dataset.py's own format: the
@@ -361,8 +361,9 @@ python3 tools/ml/train_eval.py var/ml/data/nights-1-5 --compact --fast --load-su
   column moved up, games.jsonl in source order with `index` renumbered, the sums in
   stats.json (written last) and `merge.json`, the sources' and the output's sha256s.
   It refuses two schemas, a game in two sources, a source whose shards do not hold
-  what its stats say, and any game whose split would change -- dataset.py's `split`
-  or train_eval's pair split -- so a test row of a source stays a test row. A deck
+  what its stats say, a game whose recorded `split` is not dataset.py's hash of its
+  group, and any game whose train_eval pair split would change -- so a test row of a
+  source stays a test row. A deck
   pair named in two sources (for a lab game, a seed number both use) is refused
   unless `--allow-shared-seeds`; with it the pair keeps its name and is one split
   group, as one dataset.py run over every night would make it (nights 1-3 already

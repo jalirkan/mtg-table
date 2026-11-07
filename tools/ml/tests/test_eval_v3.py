@@ -253,7 +253,16 @@ class EvalV3ToolingTest(unittest.TestCase):
         # a source of fewer than 20 pairs is split by rank: its games would move in the merge
         small = write_dataset(os.path.join(self.tmp, "small"), self.base, self.features,
                               night_spec(7, ["normal/y"], range(500, 506)))
-        self.assertIn("change split", self.refused([self.a, small], "r-small"))
+        self.assertRegex(self.refused([self.a, small], "r-small"), r"pair (train|val|test)->")
+        # a game whose recorded split is not dataset.py's hash of its group (a hand-edited games.jsonl)
+        planted = os.path.join(self.tmp, "planted")
+        shutil.copytree(self.c, planted)
+        gp = A.read_games(planted)
+        gp[3]["split"] = {"train": "test", "val": "train", "test": "train"}[gp[3]["split"]]
+        with open(os.path.join(planted, "games.jsonl"), "w", encoding="utf-8") as f:
+            for g in gp:
+                f.write(json.dumps(g) + "\n")
+        self.assertIn("is not dataset.py's hash", self.refused([self.a, planted], "r-planted"))
         # a damaged source: its stats.json says more rows than its shards hold
         bad = os.path.join(self.tmp, "bad")
         shutil.copytree(self.c, bad)

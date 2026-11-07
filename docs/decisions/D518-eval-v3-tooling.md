@@ -52,10 +52,14 @@ J194 closed the search leaf. The J196 study found the pipeline lacks three thing
 
    It **refuses** (exit 2, no stats.json): features.json that differ, or another schemaId, vocabulary, phases,
    groupBy, split weights, salt or exploration mode; a game (`game_key`) in two sources, always; a source whose
-   shards do not hold the rows its stats.json and games.jsonl say, split by split; and **any game whose split would
-   change** — dataset.py's `split` field or train_eval's pair split (`--split-by pair`, D317). From 20 pairs on the
-   pair split is a hash of the pair's name alone (`assign_pairs`), so it cannot move; below 20 a source is split by
-   rank and could, and the merge refuses rather than move a held-out game. So a test row of any source is a test row
+   shards do not hold the rows its stats.json and games.jsonl say, split by split; and **any game whose split could
+   change**, by either split a trainer reads. train_eval's pair split (`--split-by pair`, D317) is recomputed over
+   the merge and over each source: from 20 pairs on it is a hash of the pair's name alone (`assign_pairs`), so it
+   cannot move; below 20 a source is split by rank and could, and the merge refuses rather than move a held-out
+   game. dataset.py's own `split` field is carried over unchanged, so it is checked against the rule that must
+   have written it, `dataset.split_of(split_group, weights, salt)` with the sources' (equal) weights and salt; a
+   recorded split that is not that hash (a hand-edited or foreign games.jsonl) is refused, `human` games aside.
+   (All 119,816 games of v2's nights-1-3 pass that check.) So a test row of any source is a test row
    of the merge, and no training or validation row of one source becomes a test row: v2's 916 test pairs stay
    exactly v2's held-out pairs inside the five-night dataset.
 2. **What the merge does about pairs.** A pair's name is `cubelab <seed> A|cubelab <seed> B` in every cube (D364
@@ -90,16 +94,21 @@ J194 closed the search leaf. The J196 study found the pipeline lacks three thing
    clone, D369), and one found nowhere is reported missing, never replaced by the default. `coach` is the helper's
    block (`autoReview`, the watch caps); `match` is play.sh's and the helper never reads it. The committed value is
    **`null`**, so nothing changes until a decision registers a model there. `COACH EVAL` logs which of the three
-   named it; `docs/handbook.md` (*Which model the win chance serves*) and `tools/ml/README.md` say where it is named.
+   named it. **`human_eval.py` follows the same order** when it is given no `--model` (`served_models`): config.json's
+   `coach.evalModel` (from `$MTG_TABLE_CONFIG`, else the repo root's config.json, as the helper reads it), else the
+   night-1 ensemble, else night-1-eval.json, a manifest or directory read as its members. Before D518 its default
+   was night-1-eval.json alone, while its usage line called it "the served model" and D369's FIRST_CHECK names
+   "the evaluator play.sh serves": it now is that model, so FIRST_CHECK reads v3 if v3 is registered by then. A
+   configured model found nowhere is an error (exit 2), never the default instead; `docs/handbook.md` (*Which model the win chance serves*) and `tools/ml/README.md` say where it is named.
 
 **What J196 then does** (its draft, updated to these names). Encode nights 4–5 over night 1's vocabulary
 (`dataset.py --queue-root var/cubelab/queue --nights 4,5 --vocab-from var/ml/data/night-1`); merge
 (`dataset_merge.py var/ml/data/nights-1-3 var/ml/data/nights-4-5 --out var/ml/data/nights-1-5
---allow-shared-seeds --jobs 6` — **the flag is required**, the draft's command lacks it and would be refused);
-`split_audit.py --reference var/ml/data/nights-1-3`; a dry load picks the largest of F = 0.5 and 0.33 that peaks
-under 17 GB; then **one plain fit of v2's winning configuration** (hidden 128, card dim 8, l2 1e-3, card_l2 1e-3,
+--allow-shared-seeds --jobs 6`; the flag is required, and the draft carries it);
+`split_audit.py --reference var/ml/data/nights-1-3`; one dry load at F = 0.5, which stops the job if it peaks at
+17 GB or more (the share is then re-chosen in a new job, never inside this one); then **one plain fit of v2's winning configuration** (hidden 128, card dim 8, l2 1e-3, card_l2 1e-3,
 dropout 0.1, lr 1e-3, batch 4096, `--fast --compact --aux-turns 0.1`, `--seed 0`, early stopping on its own
-validation split), with `--load-subsample F --subsample 0.25/F`, and no search. It is judged by D364's rule
+validation split), with `--load-subsample 0.5 --subsample 0.5`, and no search. It is judged by D364's rule
 unchanged: `eval_compare.py var/ml/data/nights-1-3 --model <v3> --against <v2> --reference var/ml/data/nights-1-3`,
 both models on exactly v2's held-out test rows (873 plain pairs). **BETTER** (log-loss(v2) − log-loss(v3) > 0 with
 the lower end of its 95% interval above 0) → v3 is registered **for the strip only**, by a follow-up that copies it
@@ -165,6 +174,11 @@ strip serves then.
   - **the CLI**: `--load-subsample 1` writes the same report numbers and the same model file (but its date) as no
     flag, with no `loadSubsample` key; at 0.5 the report and the model carry it, test rows and every split's game
     count are unchanged; `--dry-load` reports the held rows; 0, 1.5, and with `--cv` or `--curve`, are refused.
+- `tools/ml/tests/test_human.py`'s `ServedModelTest` (12h): nothing anywhere is an error; the single default in
+  the lab clone; with the ensemble present, its members (D368's order); a configured model in this checkout; the
+  flag over the key; a configured model found nowhere, a number, an empty string and `" , "` are errors; the CLI
+  exits 2 on them. `test_eval_v3.py` also plants a game whose recorded split is not dataset.py's hash and sees the
+  merge refuse it.
 - `tools/eval-runner-selftest.mjs` (12f, 63 checks, 6 of them new): `--eval-model` wins over `coach.evalModel`; without the flag
   the key is used and found in the lab clone; with the key null the night-1 ensemble; an empty flag or key is no
   choice; a configured model found nowhere stays as given, never the default; nothing anywhere is none.
@@ -193,12 +207,16 @@ strip serves then.
   for its dry loads is low by about a factor of three.
 - On this tree: `./bridge/build.sh` (unchanged code) `build OK`; `npm --prefix web test` node 1,864 pass, 0 fail,
   vitest 161 passed; gate 12h alone (`python3 -m unittest discover -s tools/ml/tests`) 298 tests OK, 3 skipped,
-  454 s; the 12f selftests above; `tools/public-check.sh` and `node tools/decisions.mjs check` OK. The full gate
+  454 s, and after the review's fixup (one test more) 299 OK, 3 skipped, 194 s at `nice 10`; the 12f selftests above; `tools/public-check.sh` and `node tools/decisions.mjs check` OK. The full gate
   was not run (the lane's brief).
 
 **Residuals.**
 
-- J196's draft must take these names and the `--allow-shared-seeds` flag, and its pilot's 60-folder samples must
+- In the helper, a `coach.evalModel` of `","` passes `readConfig`'s trim check and resolves to an empty model (the
+  win chance then says it has none); `human_eval.py` refuses it. And a bad key exits the helper even under
+  `--no-eval`, as the other `coach` keys do. Low; noted, not fixed.
+
+- J196's draft carries these names and `--allow-shared-seeds`; its pilot's 60-folder samples must still
   hold at least 20 distinct seed numbers each, or the merge refuses (the split would be by rank).
 - The five-night comparison (report only) still joins nights 4–5's shared-seed games to v2's test pairs by name;
   J196 says so beside that line.
