@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-07T16:48:09-05:00
+- time: 2026-11-07T16:52:42-05:00
 - runner: ac07876b, up since 2026-11-01T21:41:21-05:00
-- running: J195 commands 3/5, 3432/4800 games, 724.9/h, ETA 2026-11-07T18:41:22-05:00, 6 worker(s), 7 core(s)
+- running: J195 commands 3/5, 3480/4800 games, 690.3/h, ETA 2026-11-07T18:47:26-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 13.18; memory 15.3/30.5 GB, swap 4868 MB, pressure 0.95% (lab budget 23.4 GB)
+- load: 10.04; memory 12/30.5 GB, swap 4784 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J196
 - waiting: nothing
 - last finished: J194 done at 2026-11-06T04:29:18-05:00: cma.played 1200 · cma.score 0.623 · cma.lo 0.602 · cma.hi 0.644 · cma.elo 87.5 · cma.aSearch.msPerDecision 930.434 · cmb.played 1200 · cmb.score 0.502 · cmb.lo 0.49 · cmb.hi 0.515 · cmb.elo 1.7 · cmb.aSearch.msPerDecision 2655.39 · cmb.bSearch.msPerDecision 836.059 · cmc.played 1200 · cmc.score 0.494 · cmc.lo 0.481 · cmc.hi 0.507 · cmc.elo -4.1 · cmc.aSearch.msPerDecision 1488.797 · cmc.bSearch.msPerDecision 852.209 · rob.ratio 3.138 · roc.ratio 1.731 · v.pays 0 · v.doesNotPay 1 · v.inconclusive 0
