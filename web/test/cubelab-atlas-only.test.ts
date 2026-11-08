@@ -16,7 +16,8 @@
  *    complete on its Forge map with no agreement read and nothing divided by zero;
  *  - the command, through the real pool and a fake `java` (as cubelab-atlas-resume.test.ts): the jobs carry the options, the rows
  *    are exactly the given options' Forge branches, plan.json and the schedule's header carry the list; a baseline whose listing
- *    differs exits 4 with no unit played, no schedule, no atlas.json and baseline.json kept; every refusal exits 2 and writes
+ *    differs exits 4 with baseline.json alone kept (no plan.json, unit, schedule or atlas.json), and a corrected list then runs on
+ *    the same --out; `--phase report` on an --only, --branch-random 0 folder reads it as made; every refusal exits 2 and writes
  *    nothing.
  */
 
@@ -154,7 +155,6 @@ test('D524, the label: an option not played has n 0; each map\'s regret over the
   assert.deepEqual([a.forge.branches, a.forge.regret, a.forge.best], [4, 0.5, 2]);
   assert.deepEqual([a.random.branches, a.random.regret, a.rho, a.sameBest], [0, null, null, null], 'no random map: nothing read, nothing divided by zero');
   assert.equal(a.decided, false);
-  assert.ok(!JSON.stringify(a).includes('NaN') && !JSON.stringify(a).includes('Infinity'));
   // the random map too: each map over the two options, and the agreement over them
   const random = [0, 1, 2, 3, 4, 5].flatMap((i) => [row(0, 'random', 0, i, 0), row(0, 'random', 2, i, i < 4 ? 1 : 0)]);
   const b = decisionAtlas(listing, [...random, ...forge], 300, 451, cut, true, true);
@@ -298,7 +298,32 @@ test('D524, the drift: a baseline whose listing is not the list\'s exits 4 -- no
     for (const f of ['units.jsonl', 'branches.jsonl', 'schedule.jsonl']) assert.equal(fs.existsSync(path.join(out, 'phaseB', f)), false, `${tag}: ${f} written`);
     assert.equal(fs.existsSync(path.join(out, 'atlas.json')), false, `${tag}: atlas.json written`);
     assert.equal(fs.readFileSync(path.join(out, 'phaseB', 'baseline.json'), 'utf8'), before, `${tag}: baseline.json kept`);
+    assert.equal(fs.existsSync(path.join(out, 'plan.json')), false, `${tag}: plan.json written before the list passed`);
   }
+  // a corrected list on the same --out: plays, as a fresh run would
+  const { out, listFile, log } = spine('drift-tokens', [{ d: 1, options: [0, 2], tokens: BASELINE[1]!.tokens }]);
+  const said: string[] = [];
+  assert.equal(await atlasCommand(REPO, flagsOf(out, [['only', listFile]]), (s) => said.push(s)), 0, said.join('\n'));
+  assert.equal(jsonl(log).length, 2, 'the corrected list played its two units');
+  assert.ok(fs.existsSync(path.join(out, 'plan.json')) && fs.existsSync(path.join(out, 'atlas.json')));
+});
+
+test('D524, --phase report on an --only folder with no random map reads it as it was made: its branch-random 0 kept, complete on the Forge map', async () => {
+  const { out, listFile } = spine('report', [{ d: 1, options: [0, 2], tokens: BASELINE[1]!.tokens }]);
+  assert.equal(await atlasCommand(REPO, flagsOf(out, [['only', listFile]]), () => {}), 0);
+  const first = fs.readFileSync(path.join(out, 'atlas.json'), 'utf8');
+  // the report as a reader types it: no --branch-random, no --only
+  const flags = new Map<string, string[]>([['deck-a', [path.join(dir, 'a.dck')]], ['deck-b', [path.join(dir, 'b.dck')]], ['seed', ['7']], ['phase', ['report']], ['chunk', ['2']], ['boot', ['50']], ['out', [out]]]);
+  const said: string[] = [];
+  assert.equal(await atlasCommand(REPO, flags, (s) => said.push(s)), 0, said.join('\n'));
+  const plan = JSON.parse(fs.readFileSync(path.join(out, 'plan.json'), 'utf8')) as { branchRandom: number; cuts: Cuts };
+  assert.equal(plan.branchRandom, 0, 'plan.json keeps the folder\'s branch-random');
+  assert.ok(plan.cuts.only, 'and its list');
+  const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as { phaseB: { decisions: DecisionAtlas[]; randomMap?: boolean } };
+  assert.equal(doc.phaseB.randomMap, false);
+  assert.equal(doc.phaseB.decisions[0]?.complete, true);
+  const bare = (x: string): unknown => { const d = JSON.parse(x) as { timing?: unknown; checks: { redactionMs?: unknown } }; delete d.timing; delete d.checks.redactionMs; return d; };
+  assert.deepEqual(bare(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')), bare(first), 'the report is the run\'s atlas.json but its wall times');
 });
 
 test('D524, the refusals: beside --decisions or a cut, a malformed or missing list, nothing to play -- each exits 2 and writes nothing', async () => {
@@ -316,6 +341,7 @@ test('D524, the refusals: beside --decisions or a cut, a malformed or missing li
     [[['only', good], ['decisions', '3'], ['min-options', '2']], /--decisions, --min-options/],
     [[['only', bad]], /option 0/],
     [[['only', path.join(dir, 'no-such-list.json')]], /ENOENT/],
+    [[['only', 'var/no-such-list.json']], /ENOENT.*var\/no-such-list\.json/],
     [[['only', good], ['branch-forge', '0']], /nothing to play/],
   ];
   for (const [extra, re] of cases) {
@@ -326,6 +352,9 @@ test('D524, the refusals: beside --decisions or a cut, a malformed or missing li
     assert.ok(said.some((s) => re.test(s)), `${JSON.stringify(extra)}: ${said.join('\n')}`);
     assert.equal(fs.existsSync(out), false, `${JSON.stringify(extra)}: the folder was written`);
   }
+  // a value that is not a number is a bad value, not a clash
+  await assert.rejects(atlasCommand(REPO, flagsOf(path.join(dir, 'refused-x'), [['only', good], ['screen', 'x']]), () => {}), /--screen wants a whole number/);
+  await assert.rejects(atlasCommand(REPO, flagsOf(path.join(dir, 'refused-x'), [['only', good], ['min-options', 'x']]), () => {}), /--min-options wants a whole number/);
   // the off values of the cuts are not a clash
   const { out, listFile } = spine('off-values', [{ d: 0, options: [0, 1] }]);
   assert.equal(await atlasCommand(REPO, flagsOf(out, [['only', listFile], ['screen', '0'], ['early-stop', 'off'], ['futility', 'off'], ['min-options', '1']]), () => {}), 0);

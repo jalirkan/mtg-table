@@ -30,7 +30,8 @@ the cube-lab guide and this file; nothing under `bridge/src`, `tools/cubelab/Cub
    two or more distinct option indices, **option 0 among them** (an addition to the draft's wording: the atlas's regret
    is against option 0, D480 never stops it, and every J200 entry has it); `tokens` the listing the caller expects at
    `d` (optional; J200 gives it everywhere). `parseOnly` (`atlascuts.ts`) refuses anything else and keeps the list
-   normalised — entries by `d`, options ascending, keys in that order — with the sha256 of that JSON.
+   normalised — entries by `d`, options ascending, keys in that order — with the sha256 of that JSON. The file is read
+   through `labPath(…, 'read')`, so a `var/...` path is re-rooted on `LAB_DATA_DIR` when the file is there, as `--ladder` is.
 2. **What phase B plays.** Exactly the list's decisions, each a `pick` with `why: "only"` and its `options` in
    `phaseB/schedule.jsonl`; every unit of a decision carries its sorted options (also when they are all of its options),
    which is the job's `atlas.options` and the bridge's `Atlas.Unit.options`; on whichever maps `--branch-random` and
@@ -38,8 +39,9 @@ the cube-lab guide and this file; nothing under `bridge/src`, `tools/cubelab/Cub
    Nothing is decided after a pick: no barrier, no checkpoint, no replacement.
 3. **The baseline is checked before any unit** (`checkOnly`): each `d` listed, each option below the listing's option
    count there, and the tokens, when given, the listing's token for token. Otherwise the atlas **exits 4**, one line a
-   failing `d` naming both token lists, with no unit played, no `schedule.jsonl`, no atlas.json, and `baseline.json`
-   kept for the caller to read the drift. This is D511's guarantee, checked: a unit's replay is the recorded game, so a
+   failing `d` naming both token lists, with no unit played and `baseline.json` alone kept for the caller to read the
+   drift: plan.json, too, is written only once the list has passed, so a corrected list runs on the same `--out`
+   (the review's finding 3). This is D511's guarantee, checked: a unit's replay is the recorded game, so a
    baseline that lists other tokens at `d` is another game, and each unit's own `expect` check would fail it later,
    unit by unit, after the workers had booted.
 4. **Refused, exit 2** (written, nothing created): beside `--decisions` (any value), `--screen` other than 0,
@@ -48,7 +50,9 @@ the cube-lab guide and this file; nothing under `bridge/src`, `tools/cubelab/Cub
    builds `Cuts` by hand. It is a measurement of given options, not a schedule.
 5. **The record.** The list lives in `Cuts.only`, so plan.json carries it as `cuts.only` (its entries and sha256) and
    the schedule header's plan carries it under `cuts`; a resume under another list is refused twice over (plan.json's
-   `cuts` key, the schedule's plan hash), and `--phase report` reads the folder's own list. With the flag absent
+   `cuts` key, the schedule's plan hash), and `--phase report` reads the folder's own list and, when no
+   `--branch-random` is given, the folder's own random-branch count (`keepRandom`, beside D480's `keepForge`; only on an
+   `--only` folder, so a folder made without the flag reports as it always has — the review's finding 1). With the flag absent
    neither key exists, so a schedule hashes as before (the test holds D480's `cuts` key for key).
 6. **The label.** An option not given has `n` 0. Each map's regret and the agreement are over the given options (the
    decision's `only`, written in place of `forgeOptions`). With `--branch-random 0` under `--only` there is no random
@@ -69,7 +73,9 @@ No population boundary.
 
 **Measured.**
 
-- **Without `--only`, byte for byte (the proof).** `tools/cubelab.sh atlas-selftest --jobs 3` was run in this worktree
+- **Without `--only`, byte for byte.** What is kept is the engine-free regression (the schedule test's `plain` block,
+  the plan-hash test's D480 `cuts` key for key, and the four atlas test files unchanged); the 429-file comparison below
+  was run once, from scripts not committed. `tools/cubelab.sh atlas-selftest --jobs 3` was run in this worktree
   on the untouched tree (`45615036`'s code; 12 min 46 s, OK) and again with the lane's code (18 min 0 s, OK), and the
   two `var/cubelab/atlas-selftest/` folders compared file by file over everything the first run wrote (429 files and
   rows folders, every leg: the main spine's phases A and B, the G5 and G6 legs, the three cuts legs with their
@@ -98,8 +104,11 @@ No population boundary.
   (changed by a list and by another list, D480's `cuts` key for key without one, another list refused on resume); the
   label (`n` 0, each map over the given options, complete with no random map, no NaN); and `atlasCommand` end to end
   through the real pool with a fake `java` — the jobs carry `[0, 2]`, the rows, plan.json, the schedule, atlas.json and
-  atlas.md as above, a rerun plays nothing, another list is refused; three drifts exit 4 writing nothing but plan.json;
-  ten refusals exit 2 creating no folder. The four existing atlas test files pass unchanged (56 tests with this one and
+  atlas.md as above, a rerun plays nothing, another list is refused; three drifts exit 4 writing nothing but
+  `baseline.json`, and a corrected list then plays on the same `--out`; `--phase report` on the folder keeps its
+  `--branch-random 0` (complete, `randomMap: false`, the run's atlas.json but its wall times); eleven refusals exit 2
+  creating no folder, and a `--screen x` or `--min-options x` beside the list is refused as a bad value, not a clash.
+  After the skeptic's review (a follow-up commit) the file holds 9 tests. The four existing atlas test files pass unchanged (56 tests with this one and
   the redaction file); `tsc --noEmit` clean; `./bridge/build.sh` OK; `npm --prefix web test` green.
 
 **Rejected.**
@@ -122,3 +131,7 @@ No population boundary.
 - `--phase both` (the default) still plays phase A first; J200 passes `--phase b`.
 - A list naming every option of a decision is no restriction for the label (`only` is not written) but its units still
   carry the options.
+- `--phase report` on a folder made without `--only` still takes `--branch-random` from the flag (default 200), as it
+  did before this lane: a report of a spine run at another count re-reads it with that count (its checkpoints checked
+  against it, D489's `futileBranchGamesSaved` computed from it). `keepRandom` is limited to `--only` folders to keep
+  the byte-for-byte claim; widening it to every folder is a separate, small change.

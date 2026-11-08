@@ -352,7 +352,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
     const clash = onlyClash(f);
     if (clash) { say(`atlas: --only ${clash}`); return 2; }
     try {
-      only = parseOnly(fs.readFileSync(path.resolve(repo, onlyArg), 'utf8'));
+      only = parseOnly(fs.readFileSync(labPath(repo, onlyArg, 'read'), 'utf8'));   // a var/ path re-rooted like --ladder (D450)
     } catch (e) {
       say(`atlas: --only ${onlyArg}: ${(e as Error).message}`);
       return 2;
@@ -369,12 +369,15 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
   let pairTable: PairRow[] = [];
   let ladderGames = 0;
   const planFile0 = path.join(out, 'plan.json');
-  const prior = fs.existsSync(planFile0) ? JSON.parse(fs.readFileSync(planFile0, 'utf8')) as { deckA: string; deckB: string; pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null; branchForge?: number; cuts?: Cuts } : null;
+  const prior = fs.existsSync(planFile0) ? JSON.parse(fs.readFileSync(planFile0, 'utf8')) as { deckA: string; deckB: string; pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null; branchForge?: number; branchRandom?: number; cuts?: Cuts } : null;
   // D480: `--phase report` on a folder reads it as it was made -- its Forge map and its cuts -- unless the flags say otherwise,
   // so a spine run with --branch-forge 0 or the cuts is not re-read as one missing its Forge map, or refused for other cuts
   const reportOnly = one(f, 'phase') === 'report' && prior !== null;
   const keepForge = reportOnly && one(f, 'branch-forge') === undefined && typeof prior?.branchForge === 'number';
   const priorCuts = reportOnly ? prior?.cuts : undefined;
+  // D524: and an --only folder's random map too, so a --branch-random 0 spine is not re-read as one missing its random map
+  // (only there: a folder made without --only reports as it always has)
+  const keepRandom = reportOnly && !!priorCuts?.only && one(f, 'branch-random') === undefined && typeof prior?.branchRandom === 'number';
   if (one(f, 'pair') === 'auto' && prior?.pairRule) {
     // a resumed atlas keeps the pair its plan chose: the ladder keeps growing, and the rule read today may differ
     if (deckA || deckB) throw new Error('atlas: --pair auto chooses the decks; leave out --deck-a / --deck-b');
@@ -392,7 +395,7 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
   const decisionsArg = one(f, 'decisions') ?? 'all';
   const o: AtlasOptions = {
     deckA: path.resolve(repo, deckA), deckB: path.resolve(repo, deckB), seed: int('seed', NaN), turnCap: int('turn-cap', 40, 1),
-    rollouts: int('rollouts', 10000), branchRandom: int('branch-random', 200), branchForge: keepForge ? prior?.branchForge as number : int('branch-forge', 40),
+    rollouts: int('rollouts', 10000), branchRandom: keepRandom ? prior?.branchRandom as number : int('branch-random', 200), branchForge: keepForge ? prior?.branchForge as number : int('branch-forge', 40),
     decisions: decisionsArg === 'all' ? 'all' : int('decisions', 0, 1), options: int('options', 8, 2), chunk: int('chunk', 25, 1),
     leakChecks: int('leak-checks', 1), branchTimeoutSec: int('branch-timeout', 120, 10), boot: int('boot', 1000), pair,
     unitTimeoutMin: int('unit-timeout', UNIT_TIMEOUT_MIN_DEFAULT, 1),
@@ -433,12 +436,16 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
     const diff = keys.filter((k) => JSON.stringify(was[k]) !== JSON.stringify((plan as Record<string, unknown>)[k]));
     if (diff.length) throw new Error(`atlas: ${outArg} holds another atlas (${diff.join(', ')} differ); use another --out`);
   }
-  fs.writeFileSync(planFile, `${JSON.stringify(plan, null, 2)}\n`);
+  const writePlan = (): void => fs.writeFileSync(planFile, `${JSON.stringify(plan, null, 2)}\n`);
+  // D524: under --only, plan.json is written once the baseline's listing has passed the list, so a drifted list leaves
+  // baseline.json alone behind and a corrected list can be run on the same --out
+  const deferPlan = !!o.cuts?.only && (phase === 'b' || phase === 'both');
+  if (!deferPlan) writePlan();
   const t0 = Date.now();
   const timing: Record<string, unknown> = {};
   if (phase === 'a' || phase === 'both') timing.phaseA = await phaseA(repo, o, out, jobs, say);
   try {
-    if (phase === 'b' || phase === 'both') timing.phaseB = await phaseB(repo, o, out, jobs, say);
+    if (phase === 'b' || phase === 'both') timing.phaseB = await phaseB(repo, o, out, jobs, say, deferPlan ? writePlan : undefined);
   } catch (e) {
     if (!(e instanceof OnlyMismatch)) throw e;
     // D524: the baseline is not the game the list was written on -- no unit played, no atlas.json, baseline.json kept
@@ -454,10 +461,11 @@ export function onlyClash(f: Map<string, string[]>): string | null {
   const v = (k: string): string | undefined => one(f, k);
   const given = [
     ...(v('decisions') !== undefined ? ['--decisions'] : []),
-    ...(v('screen') !== undefined && Number(v('screen')) !== 0 ? ['--screen'] : []),
+    // a value that is not a number is not a clash: the flag's own parse refuses it as a bad value
+    ...(v('screen') !== undefined && Number.isFinite(Number(v('screen'))) && Number(v('screen')) !== 0 ? ['--screen'] : []),
     ...(v('early-stop') !== undefined && v('early-stop') !== 'off' ? ['--early-stop'] : []),
     ...(v('futility') !== undefined && v('futility') !== 'off' ? ['--futility'] : []),
-    ...(v('min-options') !== undefined && Number(v('min-options')) !== 1 ? ['--min-options'] : []),
+    ...(v('min-options') !== undefined && Number.isFinite(Number(v('min-options'))) && Number(v('min-options')) !== 1 ? ['--min-options'] : []),
   ];
   return given.length ? `does not combine with ${given.join(', ')}: it measures the options given at the decisions given, so nothing picks or cuts them` : null;
 }
@@ -558,7 +566,7 @@ export function openSchedule(file: string, want: ScheduleHeader, say: (s: string
   return scheduleEvents(lines);
 }
 
-async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, say: (s: string) => void): Promise<Record<string, unknown>> {
+async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, say: (s: string) => void, listChecked?: () => void): Promise<Record<string, unknown>> {
   const B = path.join(out, 'phaseB');
   fs.mkdirSync(B, { recursive: true });
   const env = engineEnv(repo, ATLAS_WORKER_XMX);
@@ -581,6 +589,7 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
   if (cuts.only) {
     const bad = checkOnly(cuts.only, all);
     if (bad.length) throw new OnlyMismatch(bad);
+    listChecked?.();   // D524: plan.json, deferred until now
   }
   const branchesFile = path.join(B, 'branches.jsonl');
   const unitsFile = path.join(B, 'units.jsonl');

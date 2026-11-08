@@ -1536,7 +1536,7 @@ tools/cubelab.sh atlas --deck-a <A.dck> --deck-b <B.dck> --seed <spine seed> --p
     --branch-random 0 --branch-forge 40 --chunk 5 --only var/only-s01.json --out var/<spine>
 ```
 
-- **The file** is a JSON array of `{d, options, tokens?}`: `d` an index into the baseline's listing, `options` two or
+- **The file** (a `var/...` path is re-rooted on `LAB_DATA_DIR` when the file is there, like `--ladder`) is a JSON array of `{d, options, tokens?}`: `d` an index into the baseline's listing, `options` two or
   more distinct option indices with **option 0 among them** (the regret is against it), `tokens` (optional, and what a
   job should always give) the listing it expects at `d`. The atlas keeps it normalised (entries by `d`, options
   ascending) with the sha256 of that JSON.
@@ -1546,12 +1546,14 @@ tools/cubelab.sh atlas --deck-a <A.dck> --deck-b <B.dck> --seed <spine seed> --p
   atlas.json says `randomMap: false` and makes no agreement read. An option not given has `n` 0, and each map's regret
   is over the given options (`only` on the decision).
 - **Before any unit** the baseline's listing is checked: each `d` listed, each option below its count there, the tokens
-  the listing's token for token. A mismatch **exits 4**, naming each `d` and both token lists, with no unit played, no
-  `schedule.jsonl`, no atlas.json and `baseline.json` kept: the baseline is not the game the list was written on (D511).
+  the listing's token for token. A mismatch **exits 4**, naming each `d` and both token lists, with no unit played and
+  `baseline.json` alone kept (plan.json is written only once the list has passed, so a corrected list runs on the same
+  `--out`): the baseline is not the game the list was written on (D511).
 - **Refused (exit 2)** beside `--decisions`, `--screen`, `--early-stop`, `--futility` or `--min-options` above 1 (their
   off values are not a clash), and with both maps at 0; so is a malformed or missing file.
 - **The record:** plan.json's `cuts.only` and the schedule header's plan hash carry the list and its sha256, so a
-  resume under another list is refused. Without the flag nothing changes, byte for byte.
+  resume under another list is refused. `--phase report` on such a folder reads its own list and, with no
+  `--branch-random` given, its own random-branch count. Without the flag nothing changes, byte for byte.
 
 ## The library card model and the balanced-cube generator (D473)
 
