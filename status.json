@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-08T08:54:08-05:00",
- "heartbeat": "2026-11-08T08:54:08-05:00",
+ "updated": "2026-11-08T08:56:19-05:00",
+ "heartbeat": "2026-11-08T08:56:19-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 17.31,
-  "memUsedGb": 22.1,
+  "load1": 12.58,
+  "memUsedGb": 23.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 6978,
-  "pressure": 0.27,
+  "swapUsedMb": 5150,
+  "pressure": 0.62,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-08T00:20:32-05:00",
-   "elapsed": 30816,
-   "done": 4384,
+   "elapsed": 30947,
+   "done": 4400,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 541.6,
-   "eta": "2026-11-08T09:40:13-05:00",
-   "workers": 6,
+   "ratePerHour": 524.1,
+   "eta": "2026-11-08T09:42:07-05:00",
+   "workers": 5,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-08T08:52:21-05:00",
-   "memGb": 8.7,
+   "dataUpdated": "2026-11-08T08:55:39-05:00",
+   "memGb": 7.36,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -59,17 +59,17 @@
     "bs.j195Blocks": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 30773,
+    "elapsed_s": 30906,
     "j197_err": 1,
-    "j197_games": 4384,
+    "j197_games": 4400,
     "peak_worker_rss_gb": 1.29,
-    "pressure_events": 22,
+    "pressure_events": 23,
     "ro.games": 0,
     "ro.games_per_h": 0,
     "v.complete": 0,
     "v.exposure.exposedGames": 0,
     "v.written": 0,
-    "workers": 7
+    "workers": 6
    },
    "liveHeadline": [
     "cm.played",
@@ -89,12 +89,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [
-    {
-     "at": "2026-11-08T03:05:57-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
     {
      "at": "2026-11-08T03:18:26-05:00",
      "kind": "drop",
@@ -208,6 +202,12 @@
      "kind": "drop",
      "workers": 6,
      "pressure": 0.3
+    },
+    {
+     "at": "2026-11-08T08:56:19-05:00",
+     "kind": "drop",
+     "workers": 5,
+     "pressure": 0.6
     }
    ],
    "detail": "lab-J197-run1"
