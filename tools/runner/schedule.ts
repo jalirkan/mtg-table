@@ -35,13 +35,38 @@
 // running jobs end.  A job whose `after:` is not done does not stop the queue
 // (it cannot run anyway).  Someone else's running job has an unknown width: it
 // fills the machine.  Without `machine` in the input, the old rule: one heavy.
+//
+// D519, THE WHOLE MACHINE.  The core budget is all threads but two by default (budget.ts),
+// so two 7-wide jobs run side by side on the 16-thread PC.  Three more rules:
+//   - MEMORY RETRIES FIRST.  A job stopped for memory (STATUS `waiting`, reason `memory: …`)
+//     is taken before every other open job, whatever its id: it has sunk cost, and a
+//     newer job must never start in front of it (J196's retry was queued behind a 9.5-hour
+//     match).  Its `retry_after:` is a one-minute settle now, not 15 minutes.
+//   - ACTUAL MEMORY.  With `memory` in the input, a heavy job is admitted only when its
+//     need fits in the host's MemAvailable less the reserve and less what the running jobs
+//     have reserved but not yet touched (`headroomGb`): memory outside the lab (a GPU
+//     painter, the browser) counts.  Light jobs are exempt (their 2 GB is inside the lab's
+//     reserve).  A job that does not fit is blocked `memory` (a retry) or `memory-wait`.
+//   - THE CARVE-OUT.  Such a job keeps its cores and memory reserved inside the budgets, so
+//     a later job starts only BESIDE it, in what it would not use anyway; when the outside
+//     memory goes, it fits.  (A job that does not fit the budgets stops the queue, as above.)
+//   A job's need is its header's (width, reservation), or what the runner knows better
+//   (`needs`): a retry's is the step it resumes at, with its measured peaks.
 
 import type { JobFile } from './jobfile.ts';
 import { DEFAULT_PEAK_GB } from './sizing.ts';
 import { retryHolds } from './clock.ts';
 
-/** A memory stop's `retry_after:` is this far ahead of the stop (runner.ts `memoryStop`); D461 reads it back against it. */
+/**
+ * The furthest ahead a memory stop's `retry_after:` is ever written: D461 reads one further ahead as
+ * a clock that went backwards.  Runners before D519 wrote 15 minutes; D519 writes MEMORY_SETTLE_MS.
+ */
 export const MEMORY_RETRY_MS = 15 * 60_000;
+/** D519: a memory stop's `retry_after:`: the freed memory shows in MemAvailable; then the memory check decides. */
+export const MEMORY_SETTLE_MS = 60_000;
+
+/** A job stopped for memory and waiting to be retried (D519: it goes first). */
+export const isMemoryRetry = (s: Status | null | undefined): boolean => !!s && s.state === 'waiting' && /^memory:/.test(s.fields.reason ?? '');
 
 export type State = 'waiting' | 'running' | 'done' | 'failed' | 'skipped';
 export const STATES: State[] = ['waiting', 'running', 'done', 'failed', 'skipped'];
@@ -87,8 +112,21 @@ export interface Blocked {
   est: string;
   cpu: 'heavy' | 'light';
   /** A short code the public page may show. */
-  code: 'after' | 'heavy-busy' | 'light-busy' | 'cores' | 'playing' | 'paused' | 'needs-check' | 'memory' | 'invalid' | 'queued';
+  code: 'after' | 'heavy-busy' | 'light-busy' | 'cores' | 'playing' | 'paused' | 'needs-check' | 'memory' | 'memory-wait' | 'invalid' | 'queued';
   reason: string;
+  /** D519, a job waiting on actual memory: what it needs and what was free for it (GB). */
+  needGb?: number;
+  freeGb?: number;
+}
+
+/** D519: the host's actual memory, for admission. */
+export interface ActualMemory {
+  /** MemAvailable (GB). */
+  availGb: number;
+  /** Kept free whatever the declarations say (AVAIL_RESERVE_GB). */
+  reserveGb: number;
+  /** What the running heavy jobs have reserved and not yet touched (their holding less their RSS). */
+  headroomGb: number;
 }
 
 /** What a running job holds: its width now (cores) and its memory reservation (GB). */
@@ -121,6 +159,10 @@ export interface ScheduleInput {
   paused: boolean;
   /** D401: admissions held (tools/runner/holds.ts, `play.sh --pause-lab`): no job starts, running ones carry on. The words why, or null. */
   held?: string | null;
+  /** D519: what a job needs when the runner knows better than its header (a retry: the step it resumes at, measured). */
+  needs?: Map<string, Holding>;
+  /** D519: present: a heavy job starts only when its need fits in the host's actual free memory. */
+  memory?: ActualMemory;
   now: number;
 }
 
@@ -140,7 +182,7 @@ export function idOrder(a: string, b: string): number {
 }
 
 /**
- * The jobs to start now (at most one heavy and one light), and why each other
+ * The jobs to start now (heavy ones while they fit, one light), and why each other
  * open job waits.  Pure.
  */
 export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Blocked[] } {
@@ -167,18 +209,31 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
   }
   /** The first open heavy job that could run but did not fit: nothing after it starts beside (order, starvation). */
   let firstUnfit: string | null = null;
-  for (const job of [...inp.jobs].sort((a, b) => idOrder(a.id, b.id))) {
+  /** D519: a job waiting on actual memory holds its cores and memory inside the budgets (the carve-out). */
+  let carved = false;
+  /** D519: the memory the jobs admitted in this pass will take (their units are not running yet). */
+  let pendingGb = 0;
+  // D519: memory retries first (sunk cost), then id order.
+  const order = [...inp.jobs].sort((a, b) => Number(isMemoryRetry(inp.statuses.get(b.id))) - Number(isMemoryRetry(inp.statuses.get(a.id))) || idOrder(a.id, b.id));
+  for (const job of order) {
     const st = inp.statuses.get(job.id);
     if (st && st.state !== 'waiting') continue;
     if (running.has(job.id)) continue;
-    const b = (code: Blocked['code'], reason: string): void => {
-      blocked.push({ id: job.id, title: job.title, est: job.est, cpu: job.cpu, code, reason });
+    const b = (code: Blocked['code'], reason: string, extra: Partial<Blocked> = {}): void => {
+      blocked.push({ id: job.id, title: job.title, est: job.est, cpu: job.cpu, code, reason, ...extra });
     };
     if (job.errors.length) { b('invalid', `the job file has errors: ${job.errors[0]}`); continue; }
     if (st && /^(check|human)/i.test(st.fields.needs ?? '')) { b('needs-check', st.fields.reason ?? 'needs a human/Claude check'); continue; }
+    const retrying = isMemoryRetry(st);
     // D461: a wall time, read defensively: further ahead than the runner ever writes, the clock went backwards: due.
     const retry = st?.fields.retry_after ? Date.parse(st.fields.retry_after) : NaN;
-    if (retryHolds(retry, inp.now, MEMORY_RETRY_MS + 60_000)) { b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`); continue; }
+    const needOf = (mb: MachineBudget): Holding => inp.needs?.get(job.id) ?? { cores: widthOf(job, mb), memGb: reservationOf(job, widthOf(job, mb)) };
+    if (retryHolds(retry, inp.now, MEMORY_RETRY_MS + 60_000)) {
+      // D519: a heavy memory retry settling for its minute already holds its place: nothing newer starts in front of it.
+      if (retrying && job.cpu === 'heavy' && m) { const n = needOf(m); used.cores += n.cores; used.memGb += n.memGb; carved = true; }
+      b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`);
+      continue;
+    }
     const notDone = job.after.filter((a) => inp.statuses.get(a)?.state !== 'done');
     if (notDone.length) { b('after', `after ${notDone.join(', ')}`); continue; }
     if (inp.paused) { b('paused', 'the runner is paused'); continue; }
@@ -186,20 +241,34 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     if (inp.held) { b('playing', inp.held); continue; }
     if (job.cpu === 'heavy') {
       if (inp.playing) { b('playing', 'Justin is playing'); continue; }
-      if (busy('heavy')) {
+      const need = m ? needOf(m) : null;
+      if (busy('heavy') || carved) {
         if (!m || !m.coSchedule || used.cores === Infinity) { b('heavy-busy', 'a heavy job is running'); continue; }
         if (firstUnfit) { b('heavy-busy', `after ${firstUnfit}, which waits for the machine first`); continue; }
-        const w = widthOf(job, m);
-        const mem = reservationOf(job, w);
+        const { cores: w, memGb: mem } = need as Holding;
         const why = m.memoryBackoff ? 'a running job is in memory backoff'
           : used.cores + w > m.cores ? `needs ${w} core(s); ${Math.max(0, m.cores - used.cores)} of ${m.cores} free`
             : used.memGb + mem > m.memGb ? `needs ${round1(mem)} GB; ${round1(Math.max(0, m.memGb - used.memGb))} of ${m.memGb} GB free` : null;
-        if (why) { firstUnfit = job.id; b('cores', why); continue; }
+        // A memory retry that the budgets cannot hold beside the running jobs still says what it needs (its alert).
+        if (why) { firstUnfit = job.id; b('cores', why, retrying ? { needGb: round1(mem), freeGb: round1(Math.max(0, m.memGb - used.memGb)) } : {}); continue; }
       }
-      if (m) {
-        const w = widthOf(job, m);
-        used.cores += w;
-        used.memGb += reservationOf(job, w);
+      if (m && need) {
+        if (inp.memory) {
+          const mem = inp.memory;
+          const want = round1(Math.min(need.memGb, m.memGb));
+          const free = round1(mem.availGb - mem.reserveGb - mem.headroomGb - pendingGb);
+          if (want > free) {
+            // The carve-out: its cores and memory stay reserved, so a later job starts only beside it.
+            used.cores += need.cores;
+            used.memGb += need.memGb;
+            carved = true;
+            b(retrying ? 'memory' : 'memory-wait', `${retrying ? `${st?.fields.reason}; ` : ''}waits for memory: needs ${want} GB; ${Math.max(0, free)} GB free (${round1(mem.availGb)} GB available, less ${mem.reserveGb} GB kept free${mem.headroomGb + pendingGb > 0 ? ` and ${round1(mem.headroomGb + pendingGb)} GB the running jobs have reserved` : ''})`, { needGb: want, freeGb: Math.max(0, free) });
+            continue;
+          }
+          pendingGb += want;
+        }
+        used.cores += need.cores;
+        used.memGb += need.memGb;
       }
     } else if (busy('light')) { b('light-busy', 'a light job is running'); continue; }
     start.push(job);

@@ -19,16 +19,20 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 The runner checks every 10 seconds and fetches both branches every minute.
 
 1. **Find work.** A job is open when `pc-results` has no `results/<id>/STATUS`, or its
-   STATUS is `waiting`. Open jobs are taken in id order. A job whose `after:` jobs aren't
+   STATUS is `waiting`. Open jobs are taken in id order, but a job stopped for memory goes
+   first (D519). A job whose `after:` jobs aren't
    all `done` waits. A `waiting` job with `needs: check`, or with a `retry_after:` still in
    the future, waits too.
 2. **Heavy jobs share the cores; they never crowd each other.** Every `cpu: heavy` job has a
    **width**: the cores it keeps busy (`cores:`, else `max_workers`, else 7). The core budget
-   is the machine's physical cores (8 on the 9700X; `--cores N` on the runner). A heavy job
+   is all the machine's threads but two (14 of 16 on the 9700X: `whole`, the default; `shared`
+   is the physical cores, 8; `tools/runner.sh budget`, D519). A heavy job
    starts beside running heavy jobs only when the widths, its own included, fit in the
    budget, their memory fits the lab's heavy budget (width × the per-worker peak:
-   `mem_per_worker_gb`, measured, or 2.5 GB), no running job is backing off for memory, and
-   Justin is not at the table. A running job's width is its current block's (a `cores:` line
+   `mem_per_worker_gb`, measured, or 2.5 GB; after 10 minutes of the real run the measured
+   peak × 1.15 replaces a declaration), its need fits in the host's actual MemAvailable less
+   2 GB (memory outside the lab counts; every step is held to the same check), no running
+   job is backing off for memory, and Justin is not at the table. A running job's width is its current block's (a `cores:` line
    before a block, below), so a wide job with a single-process step makes room while that
    step runs. **Order is kept:** the first open heavy job that could run but does not fit
    stops the queue; nothing after it starts beside the others, so a wide job is never
@@ -67,7 +71,9 @@ The runner checks every 10 seconds and fetches both branches every minute.
    machine's RAM minus a 7 GB reserve for the OS, the desktop, the Claude app and the
    runner), `Nice=10` and `KillMode=control-group`. Under memory pressure the runner first
    drops workers and then pauses new games, through the pool control file. Past the hard
-   line it stops the job: `waiting`, reason `memory: …`, `retry_after:` 15 minutes later,
+   line it stops the job: `waiting`, reason `memory: …`, `retry_after:` one minute later
+   (D519: it is then retried first, as soon as its step fits the actual free memory, and
+   nothing newer starts in front of it; `status.json` says `degraded` with `alerts` meanwhile),
    `workers_cap:` one fewer. The retry skips a pilot that passed and every `## Commands`
    block that finished: it starts at the block that was stopped (`blocks_done:` in STATUS;
    see *Blocks and `clean:`* below). A step that exits 137 or 9 because the kernel's OOM

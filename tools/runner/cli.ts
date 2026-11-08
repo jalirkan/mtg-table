@@ -16,6 +16,9 @@
 //   hold    [--pid N] [--by S]   D401: admit no new job while process N lives (default: the calling shell);
 //                         running jobs carry on untouched.  `scripts/play.sh --pause-lab` does this
 //   release [--pid N]     give that hold back (a hold whose process is gone holds nothing anyway)
+//   budget  [whole|shared|default] [--cores N] [--mem-gb N]   D519: show or set the core and memory budgets
+//                         (<state>/budget.json, read by the daemon every tick: no restart).  whole: all threads
+//                         but 2 (the default); shared: the physical cores (the budget before D519)
 //   logs    [J###] [-n N] [-f]   the current step's log
 //   approve J###          after an old-format pilot: let the runner run the commands (STATUS approved)
 //   check   <job.md> [--metrics m.json] [--jobs-dir DIR] [--var DIR] [--no-lint]
@@ -29,7 +32,8 @@
 //
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
 //   --home-mtg-table DIR --home-forgecoach DIR (Justin's checkouts, ~/code/<repo>)
-//   --reserve-gb N (7)  --cores N (the physical cores: the core budget heavy jobs side by side share)
+//   --reserve-gb N (7)  --cores N (the core budget heavy jobs side by side share; budget.json wins; default all threads but 2)
+//   --avail-reserve-gb N (2: a step starts only when its expected peak fits in MemAvailable less this)
 //   --co-schedule on|off (on: a heavy job may start beside narrow running ones)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
 //   --public-every-s N (60: the public copy when it changed, at most)  --public-heartbeat-s N (120: unchanged)
 //   --bridge-port N (8642)  --dry-run (once/daemon: same as plan)  --no-push (write nothing to git remotes)
@@ -53,6 +57,8 @@ import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
 import { serveStatus, STATUS_HOST } from './serve.ts';
 import { budget, DEFAULT_BUDGET, DESKTOP_DROPIN, SERVICE, serviceUnit, SLICE, sliceUnit } from './sizing.ts';
+import { AVAIL_RESERVE_GB, budgetText, clearBudgetFile, readBudgetFile, resolveBudget, writeBudgetFile, type BudgetFile } from './budget.ts';
+import { readMeminfo } from './sys.ts';
 import { isoLocal, type StatusDoc } from './statusjson.ts';
 import { dryRunSys, realSys } from './sys.ts';
 
@@ -101,6 +107,7 @@ function config(f: Map<string, string>): RunnerConfig {
     bridgePort: Number(f.get('bridge-port') ?? 8642),
     budget: { ...DEFAULT_BUDGET, reserveGb: Number(f.get('reserve-gb') ?? DEFAULT_BUDGET.reserveGb) },
     cores: Number(f.get('cores')) > 0 ? Math.floor(Number(f.get('cores'))) : null,
+    availReserveGb: Number(f.get('avail-reserve-gb')) >= 0 && f.has('avail-reserve-gb') ? Number(f.get('avail-reserve-gb')) : AVAIL_RESERVE_GB,
     coSchedule: (f.get('co-schedule') ?? 'on') !== 'off',
     publicStatus: (f.get('public-status') ?? 'on') !== 'off',
     publicEveryMs: seconds(f.get('public-every-s')) ?? DEFAULT_CONFIG.publicEveryMs,
@@ -181,7 +188,7 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
   const b = budget(m, cfg.budget);
   const node = path.dirname(process.execPath);
   const args = [`--lab-root ${cfg.labRoot}`, `--reserve-gb ${cfg.budget.reserveGb}`, `--public-status ${cfg.publicStatus ? 'on' : 'off'}`,
-    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s', 'cores', 'co-schedule'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
+    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s', 'cores', 'co-schedule', 'avail-reserve-gb'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
     ...(cfg.homeRepos.ForgeCoach ? [`--home-forgecoach ${cfg.homeRepos.ForgeCoach}`] : [])];
   write(path.join(unitDir, SLICE), sliceUnit(b));
   write(path.join(unitDir, SERVICE), serviceUnit({ runnerDir, node, args }));
@@ -218,7 +225,8 @@ function printStatus(cfg: RunnerConfig): number {
   const d = readStatus(cfg);
   if (!d) { console.log(`no ${path.join(cfg.stateDir, 'status.json')} yet (is the runner running? systemctl --user status ${SERVICE})`); return 1; }
   const age = Math.round((Date.now() - Date.parse(d.updated)) / 1000);
-  console.log(`updated ${d.updated} (${age} s ago)${d.paused ? '  PAUSED' : ''}`);
+  console.log(`updated ${d.updated} (${age} s ago)${d.paused ? '  PAUSED' : ''}${d.state === 'degraded' ? '  DEGRADED: a job waits on memory' : ''}`);
+  for (const a of d.alerts ?? []) console.log(`ALERT: ${a.text}${a.detail ? ` (${a.detail})` : ''}`);
   const holds = activeHolds(cfg.stateDir);
   if (holds.length) console.log(`HELD: ${holdReason(holds)} (D401)`);
   console.log(`host: load ${d.host.load1}, cores ${d.host.coresUsed ?? '?'}/${d.host.coresTotal ?? '?'} in use, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
@@ -229,6 +237,45 @@ function printStatus(cfg: RunnerConfig): number {
   for (const q of d.queue) console.log(`queued  ${q.id} ${q.title} (${q.cpu}${q.est ? `, ${q.est}` : ''})`);
   for (const w of d.waiting) console.log(`waiting ${w.id} ${w.title}: ${w.detail ?? w.reason}`);
   for (const x of d.finished.slice(0, 8)) console.log(`${x.status.padEnd(7)} ${x.id} ${x.finished} ${x.headline}${x.detail ? ` (${x.detail})` : ''}`);
+  return 0;
+}
+
+/**
+ * D519: `tools/runner.sh budget`: show the core and memory budgets, or set them in <state>/budget.json,
+ * which the daemon reads every tick.  The memory budget may only be lowered here: raising it means a
+ * bigger slice, which is `install --reserve-gb`.
+ */
+function budgetCmd(cfg: RunnerConfig, pos: string[], f: Map<string, string>): number {
+  const m = realSys().machine();
+  const b = budget(m, cfg.budget);
+  let file = readBudgetFile(cfg.stateDir);
+  const by = f.get('by') ?? os.userInfo().username;
+  const what = pos[0];
+  const set = (next: BudgetFile): void => { writeBudgetFile(cfg.stateDir, { ...next, setAt: isoLocal(Date.now()), by }); file = readBudgetFile(cfg.stateDir); };
+  if (what && !['whole', 'shared', 'default', 'show'].includes(what)) throw new Error(`budget [whole|shared|default] [--cores N] [--mem-gb N] (got ${what})`);
+  if (what === 'default') { console.log(clearBudgetFile(cfg.stateDir) ? 'budget.json removed: the --cores flag, else whole.' : 'no budget.json: already the default.'); file = null; }
+  else if (what === 'whole' || what === 'shared') set({ mode: what, memGb: file?.memGb ?? null });
+  if (f.has('cores')) {
+    const n = Number(f.get('cores'));
+    if (!Number.isInteger(n) || n < 1 || n > m.threads) throw new Error(`--cores must be 1..${m.threads} (got ${f.get('cores')})`);
+    set({ mode: 'custom', cores: n, memGb: file?.memGb ?? null });
+  }
+  if (f.has('mem-gb')) {
+    const v = f.get('mem-gb');
+    const n = Number(v);
+    if (v === 'default') set({ ...(file ?? { mode: 'whole' }), memGb: null });
+    else if (!Number.isFinite(n) || n <= 0) throw new Error(`--mem-gb must be a number of GB, or default (got ${v})`);
+    else if (n > b.heavyGb) throw new Error(`--mem-gb ${n} is more than the lab's ${b.heavyGb} GB for heavy jobs; the slice (MemoryMax ${b.labGb} G) is the hard stop: tools/runner.sh install --reserve-gb N rewrites it`);
+    else set({ ...(file ?? { mode: 'whole' }), memGb: n });
+  }
+  const r = resolveBudget({ file, flagCores: cfg.cores, machine: m, heavyGb: b.heavyGb });
+  const mi = (() => { try { return readMeminfo(fs.readFileSync('/proc/meminfo', 'utf8')); } catch { return null; } })();
+  console.log(budgetText({ r, file, machine: m, labGb: b.labGb, heavyGb: b.heavyGb, reserveGb: cfg.budget.reserveGb, availGb: mi ? mi.availGb : null, availReserveGb: cfg.availReserveGb ?? AVAIL_RESERVE_GB, daemonCores: readStatus(cfg)?.host.coresTotal ?? null }));
+  // The daemon reads budget.json only from D519 on: an older installed runner ignores it.
+  const installed = path.resolve(cfg.stateDir, '..', '..');
+  if (fs.existsSync(path.join(installed, 'tools', 'runner')) && !fs.existsSync(path.join(installed, 'tools', 'runner', 'budget.ts'))) {
+    console.log(`note: the installed runner (${installed}) predates budget.json and ignores it -- run tools/runner.sh install to update it.`);
+  }
   return 0;
 }
 
@@ -334,6 +381,7 @@ async function main(): Promise<number> {
       return 0;
     }
     case 'logs': return logs(cfg, pos[0], f);
+    case 'budget': return budgetCmd(cfg, pos, f);
     case 'install': return install(cfg, f);
     case 'approve': return approve(cfg, pos[0] ?? '', f);
     case 'check': {
@@ -389,7 +437,7 @@ async function main(): Promise<number> {
       return 0;
     }
     default:
-      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(3, 30).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(3, 39).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
       return 2;
   }
 }

@@ -7,7 +7,8 @@
 // HEARTBEAT.md to pc-results (private), and pushes a SANITISED copy to the
 // orphan branch `lab-status` of the PUBLIC jalirkan/ForgeCoach.  Schema 1:
 //
-//   { schema: 1, updated, heartbeat, paused, state (running|idle), idleSince, idleReason,
+//   { schema: 1, updated, heartbeat, paused, state (running|idle|degraded), idleSince, idleReason,
+//     alerts: [ { at, id, kind (memory-stop|memory-retry|memory-wait), needGb, availGb, text } ] (D519),
 //     host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus, budgetGb,
 //             coresUsed, coresTotal (the running jobs' widths out of the core budget, D337 amended) },
 //     running: [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
@@ -103,7 +104,25 @@ export interface QueueItem extends Publicly { id: string; title: string; cpu: 'h
 export interface WaitingItem extends Publicly { id: string; title: string; reason: string; est: string; detail?: string }
 export interface FinishedItem extends Publicly { id: string; title: string; status: 'done' | 'failed' | 'skipped'; finished: string | null; headline: string; numbers: Record<string, number>; detail?: string }
 
-export type RunState = 'running' | 'idle';
+/** D519: `degraded` while any job waits on memory (a memory stop's retry, or a step the host's free memory cannot hold yet). */
+export type RunState = 'running' | 'idle' | 'degraded';
+
+/**
+ * D519: a line a watcher reads first.  `memory-stop`: a job was stopped for memory (availGb: MemAvailable then);
+ * `memory-retry`: it was retried; `memory-wait`: a job waits on memory now, since `at` (needGb: its step's
+ * expected peak; availGb: what was free for it).  `text` is made from the fields (`alertText`), never copied;
+ * `detail` (the stop's reason) is private.
+ */
+export interface Alert { at: string; id: string; kind: 'memory-stop' | 'memory-retry' | 'memory-wait'; needGb: number | null; availGb: number | null; text: string; detail?: string }
+const ALERT_KINDS = new Set(['memory-stop', 'memory-retry', 'memory-wait']);
+export const ALERTS_MAX = 20;
+
+/** An alert's words, from its fields alone. */
+export function alertText(a: Pick<Alert, 'at' | 'id' | 'kind' | 'needGb' | 'availGb'>): string {
+  if (a.kind === 'memory-stop') return `${a.id} was stopped for memory at ${a.at}${a.availGb !== null ? ` (${a.availGb} GB available then)` : ''}; it is retried first, as soon as its step fits`;
+  if (a.kind === 'memory-retry') return `${a.id} was retried at ${a.at} after a memory stop`;
+  return `${a.id} waits for memory since ${a.at}${a.needGb !== null ? `: needs ${a.needGb} GB` : ''}${a.availGb !== null ? `, ${a.availGb} GB free for it` : ''}`;
+}
 
 export interface StatusDoc {
   schema: 1;
@@ -117,6 +136,8 @@ export interface StatusDoc {
   idleSince?: string | null;
   /** Why nothing runs (idleReasonOf; null while running). */
   idleReason?: string | null;
+  /** D519: memory stops, retries and waits, newest first. */
+  alerts?: Alert[];
   host: { load1: number; memUsedGb: number; memTotalGb: number; swapUsedMb: number; pressure: number; cpus: number; budgetGb: number; coresUsed?: number; coresTotal?: number };
   running: RunningJob[];
   queue: QueueItem[];
@@ -163,6 +184,7 @@ export const REASONS: Record<string, string> = {
   paused: 'the runner is paused',
   'needs-check': 'pilot done; needs a check',
   memory: 'stopped for memory; will retry',
+  'memory-wait': 'waiting for memory',
   invalid: 'the job file needs fixing',
   queued: 'queued',
 };
@@ -183,7 +205,7 @@ export function idleReasonOf(blocked: Array<{ code: string; reason: string }>, p
   const has = (c: string) => blocked.find((b) => b.code === c);
   if (has('playing')) return 'Justin playing';
   if (has('paused')) return 'paused';
-  if (has('memory')) return 'memory backoff';
+  if (has('memory') || has('memory-wait')) return 'memory backoff';
   const after = has('after');
   const dep = after && /\b(J\d{3,5})\b/.exec(after.reason)?.[1];
   if (dep) return `blocked after ${dep}`;
@@ -273,15 +295,23 @@ export function sanitise(doc: StatusDoc): StatusDoc {
     const n = numbers(f.numbers);
     return [{ id: fid, title: pubTitle(f, fid), status: f.status, finished: iso(f.finished), headline: headlineOf(n), numbers: n }];
   });
-  const state: RunState = doc.state === 'idle' || doc.state === 'running' ? doc.state : running.length ? 'running' : 'idle';
+  const state: RunState = doc.state === 'idle' || doc.state === 'running' || doc.state === 'degraded' ? doc.state : running.length ? 'running' : 'idle';
+  const alerts = (Array.isArray(doc.alerts) ? doc.alerts : []).slice(0, ALERTS_MAX).flatMap((a): Alert[] => {
+    const aid = id(a?.id), at = iso(a?.at);
+    if (!aid || !at || !ALERT_KINDS.has(a.kind)) return [];
+    const x = { at, id: aid, kind: a.kind, needGb: num(a.needGb), availGb: num(a.availGb) };
+    return [{ ...x, text: alertText(x) }];
+  });
+  const idle = state === 'idle' || (state === 'degraded' && !running.length);
   return {
     schema: 1,
     updated: iso(doc.updated) ?? '',
     heartbeat: iso(doc.heartbeat) ?? iso(doc.updated) ?? '',
     paused: doc.paused === true,
     state,
-    idleSince: state === 'idle' ? iso(doc.idleSince) : null,
-    idleReason: state === 'idle' ? publicIdleReason(doc.idleReason) : null,
+    idleSince: idle ? iso(doc.idleSince) : null,
+    idleReason: idle ? publicIdleReason(doc.idleReason) : null,
+    alerts,
     host: {
       load1: num(h.load1) ?? 0, memUsedGb: num(h.memUsedGb) ?? 0, memTotalGb: num(h.memTotalGb) ?? 0,
       swapUsedMb: num(h.swapUsedMb) ?? 0, pressure: num(h.pressure) ?? 0, cpus: num(h.cpus) ?? 0, budgetGb: num(h.budgetGb) ?? 0,

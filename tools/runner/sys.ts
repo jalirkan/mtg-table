@@ -71,6 +71,8 @@ export interface Sys {
   runInSlice(command: string, cwd: string, timeoutMs: number): Run;
   /** Peak resident set (VmHWM, GB) of every java process in the unit's cgroup now. */
   unitJavaPeaksGb(unit: string): number[];
+  /** D519: the summed resident set (VmRSS, GB) of every process in the unit's cgroup now (page cache not counted); null when unknown. */
+  unitRssGb?(unit: string): number | null;
   /**
    * What systemd says about an OOM kill in an ended unit (D365), or null: its `Result=oom-kill` while it is
    * still loaded, else a line of its journal since `sinceMs` saying a process was killed by the OOM killer.
@@ -214,6 +216,13 @@ export function realSys(): Sys {
         if (kb) out.push(kb / 1048576);
       }
       return out;
+    },
+    unitRssGb(unit) {
+      const pids = cgroupPids(unit);
+      if (pids === null) return null;
+      let kb = 0;
+      for (const pid of pids) kb += Number(/^VmRSS:\s+(\d+)/m.exec(readOr(`/proc/${pid}/status`))?.[1] ?? 0);
+      return kb / 1048576;
     },
     unitOomEvidence(unit, sinceMs) {
       if (systemctlShow(unit, ['Result'])?.Result === 'oom-kill') return 'systemd: Result=oom-kill';
