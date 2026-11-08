@@ -1,0 +1,122 @@
+{
+ "rule": {
+  "subset": "reference",
+  "boots": 2000,
+  "seed": 20261004,
+  "ci": 0.95,
+  "better": "logloss(old) - logloss(new) > 0 with the interval's lower end > 0"
+ },
+ "data": "var/ml/data/nights-1-3",
+ "splitBy": "pair",
+ "newModel": "var/ml/models/nights-1-5-eval.json",
+ "oldModel": "var/ml/models/nights-1-3-eval.json",
+ "newSha12": "0144482f0bfc",
+ "oldSha12": "dcdae3745b84",
+ "reference": "var/ml/data/nights-1-3",
+ "testPairsTrainedOn": {
+  "new": 0,
+  "old": 0
+ },
+ "exploringIncluded": false,
+ "exploringTestRows": 119179,
+ "subsets": {
+  "all": {
+   "rows": 1925816,
+   "pairs": 873,
+   "games": 11821,
+   "effectiveN": {
+    "groups": 11821,
+    "meanRows": 190.95,
+    "rho": 0.7807,
+    "designEffect": 149.31,
+    "nEff": 12898.4
+   },
+   "old": {
+    "logloss": 0.49117921455422053,
+    "lo": 0.482595273948126,
+    "hi": 0.5000133938392843,
+    "brier": 0.16510785153845772,
+    "ece": 0.0063150592037299795
+   },
+   "new": {
+    "logloss": 0.48564343192193893,
+    "lo": 0.4778028535224327,
+    "hi": 0.49350521726147384,
+    "brier": 0.16281878014242376,
+    "ece": 0.009007967904285338
+   },
+   "oldMinusNew": {
+    "estimate": 0.005535782632281406,
+    "lo": 0.0033664408145351143,
+    "hi": 0.007555728687401848
+   }
+  },
+  "reference": {
+   "rows": 1925816,
+   "pairs": 873,
+   "games": 11821,
+   "effectiveN": {
+    "groups": 11821,
+    "meanRows": 190.95,
+    "rho": 0.7807,
+    "designEffect": 149.31,
+    "nEff": 12898.4
+   },
+   "old": {
+    "logloss": 0.49117921455422053,
+    "lo": 0.482595273948126,
+    "hi": 0.5000133938392843,
+    "brier": 0.16510785153845772,
+    "ece": 0.0063150592037299795
+   },
+   "new": {
+    "logloss": 0.48564343192193893,
+    "lo": 0.4778028535224327,
+    "hi": 0.49350521726147384,
+    "brier": 0.16281878014242376,
+    "ece": 0.009007967904285338
+   },
+   "oldMinusNew": {
+    "estimate": 0.005535782632281406,
+    "lo": 0.0033664408145351143,
+    "hi": 0.007555728687401848
+   }
+  },
+  "new": {
+   "rows": 0,
+   "pairs": 0
+  },
+  "exploring": {
+   "rows": 119179,
+   "pairs": 100,
+   "games": 716,
+   "effectiveN": {
+    "groups": 716,
+    "meanRows": 195.1,
+    "rho": 0.7921,
+    "designEffect": 154.74,
+    "nEff": 770.2
+   },
+   "old": {
+    "logloss": 0.4968044146314459,
+    "lo": 0.46495998447315473,
+    "hi": 0.5295429333256162,
+    "brier": 0.16757953844307144,
+    "ece": 0.008240139903118223
+   },
+   "new": {
+    "logloss": 0.5008256754408623,
+    "lo": 0.47013805021820604,
+    "hi": 0.5345515636468046,
+    "brier": 0.16908719121977556,
+    "ece": 0.011512809397704733
+   },
+   "oldMinusNew": {
+    "estimate": -0.004021260809416197,
+    "lo": -0.012131169467168332,
+    "hi": 0.0034936432090736844
+   }
+  }
+ },
+ "better": true
+}

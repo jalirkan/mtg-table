@@ -1,11 +1,11 @@
-running
+done
 runner: forgecoach-runner 57320655
 started: 2026-11-08T09:53:55-05:00
-phase: commands 4/4
+finished: 2026-11-08T14:50:00-05:00
 mtg-table: 310ba71
 workers: 5 (sized 5: min(cores 7, memory 12, max_workers 6, cap 5); peak 1.50 GB per worker (declared), budget 21.4 GB)
 restarted: 2026-11-08T09:53:55-05:00: retry after "memory: step run3 was killed without an exit code (oomd or the OOM killer?)"; the pilot had passed; starts again at run1: run1, run2 are done, but the job's clean: is job-wide (no clean: line before a block), so the runner cannot tell what they made; moved aside: var/ml/gates/pilot-v3, var/ml/reports/v3-audit.json, var/ml/reports/v3-audit.txt, var/ml/reports/v3-dry.json, var/ml/reports/v3.txt
 adopted: 2026-11-08T09:54:55-05:00: the runner restarted; lab-J196-run2 was still running
 restart_reason: 2026-11-08T09:54:55-05:00: the previous runner (pid 991850, ac07876b) exited at 2026-11-08T09:54:53-05:00: SIGTERM; tools/runner.sh install restarted the service to 5732065; same boot 100fdd81: the service restarted, not the machine; up 8 d 2 h 19 min; invocation 0c84f9df; clock: NTP synchronized at once; synchronized now; elapsed times are monotonic (D461)
-blocks_done: run1 exit 0 at 2026-11-08T09:54:33-05:00, run2 exit 0 at 2026-11-08T11:40:54-05:00, run3 exit 0 at 2026-11-08T13:56:32-05:00
+blocks_done: run1 exit 0 at 2026-11-08T09:54:33-05:00, run2 exit 0 at 2026-11-08T11:40:54-05:00, run3 exit 0 at 2026-11-08T13:56:32-05:00, run4 exit 0 at 2026-11-08T14:49:59-05:00
 set_aside: 5 copies, 0.01 GB beside the job's clean: paths (never deleted: remove them by hand)

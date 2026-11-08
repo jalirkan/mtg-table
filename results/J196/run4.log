@@ -1,0 +1,16 @@
+==== J196 run4 started 2026-11-08T13:56:32-05:00 in unit lab-J196-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+all      : 1925816 rows, 11821 games (effective n 12898), 873 pairs; old 0.4912 new 0.4856; old - new +0.0055 [+0.0034, +0.0076]; ECE old 0.0063 new 0.0090
+reference: 1925816 rows, 11821 games (effective n 12898), 873 pairs; old 0.4912 new 0.4856; old - new +0.0055 [+0.0034, +0.0076]; ECE old 0.0063 new 0.0090
+new      : no rows
+exploring: 119179 rows, 716 games (effective n 770), 100 pairs; old 0.4968 new 0.5008; old - new -0.0040 [-0.0121, +0.0035]; ECE old 0.0082 new 0.0115
+compare: the new model is BETTER than the old one on gate 1's test pairs (D364's rule)
+all      : 3944941 rows, 24454 games (effective n 26663), 1885 pairs; old 0.4923 new 0.4878; old - new +0.0045 [+0.0030, +0.0060]; ECE old 0.0050 new 0.0088
+reference: 2721487 rows, 16871 games (effective n 18413), 873 pairs; old 0.4926 new 0.4882; old - new +0.0044 [+0.0027, +0.0061]; ECE old 0.0048 new 0.0078
+new      : 1223454 rows, 7583 games (effective n 8250), 1012 pairs; old 0.4917 new 0.4870; old - new +0.0046 [+0.0019, +0.0074]; ECE old 0.0077 new 0.0117
+exploring: 480366 rows, 2939 games (effective n 3210), 291 pairs; old 0.4942 new 0.4913; old - new +0.0029 [-0.0013, +0.0070]; ECE old 0.0083 new 0.0096
+compare: the new model is BETTER than the old one on gate 1's test pairs (D364's rule)
+all      : 1925816 rows, 11821 games (effective n 12898), 873 pairs; old 0.5065 new 0.4856; old - new +0.0209 [+0.0171, +0.0245]; ECE old 0.0062 new 0.0090
+reference: 1124648 rows, 6988 games (effective n 7695), 333 pairs; old 0.5006 new 0.4827; old - new +0.0180 [+0.0131, +0.0229]; ECE old 0.0054 new 0.0097
+new      : 801168 rows, 4833 games (effective n 5210), 540 pairs; old 0.5147 new 0.4898; old - new +0.0249 [+0.0187, +0.0308]; ECE old 0.0092 new 0.0080
+exploring: 119179 rows, 716 games (effective n 770), 100 pairs; old 0.5043 new 0.5008; old - new +0.0034 [-0.0084, +0.0146]; ECE old 0.0062 new 0.0115
+compare: the new model is BETTER than the old one on gate 1's test pairs (D364's rule)

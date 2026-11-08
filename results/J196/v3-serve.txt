@@ -1,0 +1,1 @@
+{"ready": true, "model": "0144482f0bfc", "schema": "82815752c2f5e346", "nFeatures": 12670, "boardColumns": 219, "vocab": 731, "n": 1, "explain": true}

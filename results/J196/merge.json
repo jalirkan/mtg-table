@@ -1,0 +1,62 @@
+{
+ "tool": "tools/ml/dataset_merge.py",
+ "decision": "D518",
+ "out": "var/ml/data/nights-1-5",
+ "sources": [
+  {
+   "path": "var/ml/data/nights-1-3",
+   "rows": 19517006,
+   "games": 119816,
+   "gameOffset": 0,
+   "features.json": "ba6cd91d4f415382fea3499f3046c0852802d30937af63e996e3624597743c0b",
+   "games.jsonl": "0599163f30990f0e53da2b140039624f49b88ce1502be55e94b2b412068c66f4",
+   "stats.json": "ab14e86bfb754617f0acd74513af4e31fa8c8e04ff33fd9e1b9e7bc540e5438f",
+   "shards": "90524b06886780b94460635f47432d8682e28cd11219a66ccf1e3435f375f1d5",
+   "shardFiles": 3905
+  },
+  {
+   "path": "var/ml/data/nights-4-5",
+   "rows": 24409752,
+   "games": 151827,
+   "gameOffset": 119816,
+   "features.json": "ba6cd91d4f415382fea3499f3046c0852802d30937af63e996e3624597743c0b",
+   "games.jsonl": "2128ce07730e196c0616f2764352fd3b8db6bc74129f86dd27529fe85e3c7fca",
+   "stats.json": "23bef2e7dd7a6619d5d98fd2667e95967c63ef6529d78e40935b3ef59777494f",
+   "shards": "e142f7cbbba39d4df69b0fab93cf6a9dfebbcb13b16ec29487e654d746ab7883",
+   "shardFiles": 4884
+  }
+ ],
+ "allowSharedSeeds": true,
+ "sharedPairs": 5237,
+ "sharedPairsExamples": [
+  "cubelab 1000 A|cubelab 1000 B",
+  "cubelab 1001 A|cubelab 1001 B",
+  "cubelab 1002 A|cubelab 1002 B",
+  "cubelab 1003 A|cubelab 1003 B",
+  "cubelab 1004 A|cubelab 1004 B",
+  "cubelab 1005 A|cubelab 1005 B",
+  "cubelab 1006 A|cubelab 1006 B",
+  "cubelab 1007 A|cubelab 1007 B",
+  "cubelab 1008 A|cubelab 1008 B",
+  "cubelab 1009 A|cubelab 1009 B"
+ ],
+ "splitCheck": {
+  "splitBy": [
+   "dataset",
+   "pair"
+  ],
+  "gamesMoved": 0,
+  "moves": {},
+  "pairSplitGames": {
+   "train": 216260,
+   "val": 27990,
+   "test": 27393
+  }
+ },
+ "output": {
+  "features.json": "ba6cd91d4f415382fea3499f3046c0852802d30937af63e996e3624597743c0b",
+  "games.jsonl": "f8f7586c8d56d36d9715538abb5a34fbd3f22865a6fcd08a2b676ff570edf6e8",
+  "shards": "e6301e767186d3750c75c742da4a8e6186c7edfab7046674f59770a3717b536e",
+  "shardFiles": 8789
+ }
+}

@@ -2,17 +2,19 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-08T14:46:58-05:00
+- time: 2026-11-08T14:50:00-05:00
 - runner: 57320655, up since 2026-11-08T09:54:53-05:00
-- state: running
-- running: J196 commands 4/4, 5 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 2.11; memory 6.6/30.5 GB, swap 4230 MB, pressure 0% (lab budget 23.4 GB)
+- state: idle
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 2.02; memory 5.1/30.5 GB, swap 4230 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J197 done at 2026-11-08T09:53:54-05:00: cm.played 4800 · cm.score 0.504 · cm.lo 0.497 · cm.hi 0.511 · cm.elo 2.9 · cm.eloLo -2.1 · cm.eloHi 7.9 · cm.aSearch.msPerDecision 935.199 · cm.bSearch.msPerDecision 935.821 · ro.ratio 0.996 · v.costRatio 0.999 · v.noCost 1 · v.shown 0 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 1 · v.unexposed 0 · v.exposure.share 0.048 · ro.aExposedGames 231 · ro.aPolicyGames 231 · ro.bExposedGames 233 · v.knobTrackClosed 1 · v.liveSeatCandidate 0 · bs.min 114900150 · bs.max 114900749 · bs.overlap 0
+- last finished: J196 done at 2026-11-08T14:50:00-05:00: ds.rows 43926758 · ds.games 271643 · audit.pass 1 · dry.peakGB 14.681 · cmp.better 1 · cmp.subsets_reference_pairs 873 · cmpn.better 1 · cmp1.better 1
 
 ## Messages
+
+- FOLLOW-UP READY [J196@2026-11-08T14:50:00-05:00] (the runner, for the cloud session): J196 is done; write and post the template register-v3-strip. It decides: whether evaluator v3 becomes the coach's win-chance model (D361). The helper's model is resolved by D518: --eval-model wins, then config.json coach.evalModel (null today), then the night-1 ensemble (v1 and four seeds, D368). BETTER sends v3 to a follow-up that registers it for the strip only, by setting coach.evalModel under a decision of its own; this job only produces and compares. "Not shown better" kills v3. It never decides the search leaf: J194 and the review's §3b closed that, so nothing here touches tools/ai-ladder/players.json, the Java leaf or D354's gates. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J197@2026-11-08T09:53:54-05:00] (the runner, for the cloud session): J197 is done; write and post the template morning-read. It decides: whether the outlet rollouts are a measured gain over search-v2, at four times J195's games. SHOWN makes search-v2-routlets a candidate for the live seat, under a separate decision with its own evidence, never this job's (D517 Decision 4: the live seat stays search-v2 at 1.5 s and 12 rounds, plain-Forge rollouts; under D509 a seat change is a seat-queue row). SMALL GAIN (a lower end above 0.5 with a point under +15 Elo: under D517's bar, but a measured gain) does the same: the knob track does not close, and the knob is recorded as a live-seat candidate for the owner to decide under a separate decision with its own evidence, never this job's. NOT SHOWN closes the routlets half of the knob track for this deck set, and since search-v2-ranked is already NOT SHOWN (J195 (b), upper end -2.9 Elo), the knob track closes (the play-AI review of 2026-11-05, §5 row 6), unless it is NOT SHOWN, UNEXPOSED (exposure under 3% of games, 144 of 4,800), which keeps the knob open until a rollout-level counter exists. INCONCLUSIVE AT 4,800 (a lower end at or under 0.5 with an upper end at or over +15) leaves the knob as information: it is not confirmed again, it is not a candidate, and the knob track is neither closed by this job nor reopened. Ledger: LEDGER.md. Delete this line once posted.
 

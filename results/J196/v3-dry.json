@@ -1,0 +1,93 @@
+{
+ "dryLoad": true,
+ "data": "/home/justin-a/code/lab/mtg-table/var/ml/data/nights-1-5",
+ "splitBy": "pair",
+ "splitSummary": {
+  "train": {
+   "rows": 17530775,
+   "games": 216260,
+   "pairs": 16926,
+   "decks": 216522,
+   "deckNames": 33852,
+   "decksByContent": 216522
+  },
+  "val": {
+   "rows": 2281003,
+   "games": 27990,
+   "pairs": 2167,
+   "decks": 28024,
+   "deckNames": 4334,
+   "decksByContent": 28024
+  },
+  "test": {
+   "rows": 4425307,
+   "games": 27393,
+   "pairs": 2102,
+   "decks": 27428,
+   "deckNames": 4204,
+   "decksByContent": 27428
+  },
+  "groupKind": "seed",
+  "testRowsWithATrainingDeck": 0,
+  "testRowsWithATrainingDeckName": 0,
+  "testRowsDeckUnknown": 0,
+  "deckCheck": "card multiset (reserved.deck_key)"
+ },
+ "rows": {
+  "train": 17530775,
+  "val": 2281003,
+  "test": 4425307
+ },
+ "memory": [
+  {
+   "stage": "load",
+   "rssGB": 11.195,
+   "peakGB": 11.704
+  },
+  {
+   "stage": "standardise",
+   "rssGB": 12.196,
+   "peakGB": 12.834
+  },
+  {
+   "stage": "one batch",
+   "rssGB": 12.2,
+   "peakGB": 12.834
+  },
+  {
+   "stage": "baselines (1 epoch)",
+   "rssGB": 11.543,
+   "peakGB": 14.681
+  },
+  {
+   "stage": "score",
+   "rssGB": 12.274,
+   "peakGB": 14.681
+  }
+ ],
+ "peakGB": 14.681,
+ "loadSubsample": {
+  "share": 0.5,
+  "seed": 0,
+  "splits": [
+   "train",
+   "val"
+  ],
+  "salt": "load-v1",
+  "rowsInData": {
+   "train": 34953435,
+   "val": 4548016,
+   "test": 4425307
+  },
+  "rowsHeld": {
+   "train": 17530775,
+   "val": 2281003,
+   "test": 4425307
+  },
+  "games": {
+   "train": 216260,
+   "val": 27990,
+   "test": 27393
+  }
+ }
+}
