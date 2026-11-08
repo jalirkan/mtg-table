@@ -1,230 +1,136 @@
 {
  "schema": 1,
- "updated": "2026-11-08T09:53:41-05:00",
- "heartbeat": "2026-11-08T09:53:41-05:00",
+ "updated": "2026-11-08T09:53:56-05:00",
+ "heartbeat": "2026-11-08T09:53:56-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.91,
-  "memUsedGb": 4.6,
+  "load1": 3.7,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4781,
-  "pressure": 0.04,
+  "swapUsedMb": 4777,
+  "pressure": 0.01,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 6,
   "coresTotal": 8
  },
  "running": [
-  {
-   "publicTitle": "Search knob confirmation: one fixed 4,800-game match",
-   "publicEst": "~9-11 h (one long night)",
-   "id": "J197",
-   "title": "The routlets confirmation: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v2-routlets, D390's rollout=outlets under the anytime search, against search-v1-anytime (search-v2), the 4,800-game confirmation D517's rule names for J195's INCONCLUSIVE (a), with a verdict: SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800 or NOT SHOWN (D517, extended by SMALL GAIN for this confirmation, to be recorded as D519)",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-11-08T00:20:32-05:00",
-   "elapsed": 34388,
-   "done": 4792,
-   "total": 4800,
-   "unit": "games",
-   "ratePerHour": 391.6,
-   "eta": "2026-11-08T09:54:54-05:00",
-   "workers": 4,
-   "workersMax": 7,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-11-08T09:52:15-05:00",
-   "memGb": 0.01,
-   "live": {
-    "cm.played": 0,
-    "cm.score": 0,
-    "cm.lo": 0,
-    "cm.hi": 0,
-    "v.noCost": 0,
-    "v.shown": 0,
-    "v.smallGain": 0,
-    "v.inconclusive4800": 0,
-    "v.notShown": 0,
-    "v.unexposed": 0,
-    "v.knobTrackClosed": 0,
-    "v.liveSeatCandidate": 0,
-    "bs.overlap": -1,
-    "bs.blocks": 0,
-    "bs.games": 0,
-    "bs.games_per_h": 0,
-    "bs.j195Blocks": 0,
-    "cm.errors": 0,
-    "cm.timeouts": 0,
-    "elapsed_s": 34366,
-    "j197_err": 1,
-    "j197_games": 4792,
-    "peak_worker_rss_gb": 1.29,
-    "pressure_events": 31,
-    "ro.games": 0,
-    "ro.games_per_h": 0,
-    "v.complete": 0,
-    "v.exposure.exposedGames": 0,
-    "v.written": 0,
-    "workers": 4
-   },
-   "liveHeadline": [
-    "cm.played",
-    "cm.score",
-    "cm.lo",
-    "cm.hi",
-    "v.noCost",
-    "v.shown",
-    "v.smallGain",
-    "v.inconclusive4800",
-    "v.notShown",
-    "v.unexposed",
-    "v.knobTrackClosed",
-    "v.liveSeatCandidate",
-    "bs.overlap"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-11-08T06:42:22-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T06:45:34-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 13.7
-    },
-    {
-     "at": "2026-11-08T06:47:19-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.4
-    },
-    {
-     "at": "2026-11-08T07:08:02-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0.5
-    },
-    {
-     "at": "2026-11-08T07:20:38-05:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T07:26:03-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T07:42:09-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 4.3
-    },
-    {
-     "at": "2026-11-08T07:51:15-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T07:56:21-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0.5
-    },
-    {
-     "at": "2026-11-08T08:11:53-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 3.2
-    },
-    {
-     "at": "2026-11-08T08:17:27-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T08:54:08-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0.3
-    },
-    {
-     "at": "2026-11-08T08:56:19-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 0.6
-    },
-    {
-     "at": "2026-11-08T09:01:23-05:00",
-     "kind": "raise",
-     "workers": 6,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T09:06:27-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-11-08T09:10:30-05:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 1.3
-    },
-    {
-     "at": "2026-11-08T09:11:51-05:00",
-     "kind": "drop",
-     "workers": 5,
-     "pressure": 1.9
-    },
-    {
-     "at": "2026-11-08T09:12:59-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0.9
-    },
-    {
-     "at": "2026-11-08T09:20:11-05:00",
-     "kind": "raise",
-     "workers": 5,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-11-08T09:49:01-05:00",
-     "kind": "drop",
-     "workers": 4,
-     "pressure": 0.2
-    }
-   ],
-   "detail": "lab-J197-run2"
-  }
- ],
- "queue": [
   {
    "publicTitle": "Evaluator v3 (win chance)",
    "publicEst": "~7-9 h",
    "id": "J196",
    "title": "Evaluator v3 for the win-chance strip only (the play-AI review of 2026-11-05, §5 row 7): v2's architecture and hyperparameters, one fit over queue nights 1-5 (v2's nights 1-3 dataset unchanged, plus nights 4-5's 75,991 games encoded over the same vocabulary and merged with D518's dataset_merge.py), holding half of each training game's rows (D518's --load-subsample 0.5), judged by D364's eval_compare against v2 on v2's own held-out pairs",
    "cpu": "heavy",
-   "est": "~7-9 h (unverified as a whole; each part from a measurement). Encode nights 4-5: ~80 min at 6 workers (J087's run1 encoded nights 1-3's 119,822 recordings, 19,517,006 rows, and ran the split audit in 61.8 min at 6 workers, about 32 recordings a second; nights 4-5 are 151,847 recordings at ~171 rows each against nights 1-3's 163, measured on a 240-recording sample). Merge: ~10-15 min (D518's estimate: ~25.9 M rows rewritten at ~7,700 rows a second a process, ~10 min at --jobs 6, plus a 1.7 GB copy of nights 1-3's shards). Split audit: ~3 min (J092's run1, 82 s for 119,816 games). Dry load: ~2 h (D518 measured 53-54 min a dry load of nights-1-3, at share 1 and at 0.5 alike, because both read every shard; five nights are ~2.3x the shards). The fit: ~3-4 h, of which ~2 h is the same load, ~45-85 min the epochs (v2's winner ran ~21 s an epoch over 3.85 M rows a epoch beside three other workers; here an epoch reads about 9 M, and early stopping may come later; an estimate), and ~15 min the baselines and scoring. Comparisons and the strip's load check: ~30-40 min (each loads only a test split, 2-5 M rows). Sum: ~7.3-8.6 h"
+   "phase": "prepare",
+   "started": "2026-11-08T09:53:55-05:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 6,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": null,
+   "memGb": null,
+   "live": {
+    "ds.rows": 43926758,
+    "ds.games": 271643,
+    "audit.written": 0,
+    "cmp.written": 0,
+    "cmp1.written": 0,
+    "cmpn.written": 0,
+    "dry.written": 0,
+    "ds.reservedChecked": 1,
+    "ds.test_games": 26603,
+    "ds.test_rows": 4315122,
+    "ds.train_games": 216632,
+    "ds.train_rows": 35018531,
+    "ds.val_games": 28408,
+    "ds.val_rows": 4593105,
+    "ds.versions": 104,
+    "ds.written": 1,
+    "ds13.games": 119816,
+    "ds13.reservedChecked": 1,
+    "ds13.rows": 19517006,
+    "ds13.test_games": 11951,
+    "ds13.test_rows": 1957326,
+    "ds13.train_games": 94849,
+    "ds13.train_rows": 15436925,
+    "ds13.val_games": 13016,
+    "ds13.val_rows": 2122755,
+    "ds13.versions": 78,
+    "ds13.written": 1,
+    "ds45.games": 151827,
+    "ds45.reservedChecked": 1,
+    "ds45.rows": 24409752,
+    "ds45.test_games": 14652,
+    "ds45.test_rows": 2357796,
+    "ds45.train_games": 121783,
+    "ds45.train_rows": 19581606,
+    "ds45.val_games": 15392,
+    "ds45.val_rows": 2470350,
+    "ds45.versions": 26,
+    "ds45.written": 1,
+    "elapsed_s": 0,
+    "model.bytes": 0
+   },
+   "liveHeadline": [
+    "ds.rows",
+    "ds.games"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J196-prepare"
   }
  ],
+ "queue": [],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Search knob confirmation: one fixed 4,800-game match",
+   "publicEst": "~9-11 h (one long night)",
+   "id": "J197",
+   "title": "The routlets confirmation: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v2-routlets, D390's rollout=outlets under the anytime search, against search-v1-anytime (search-v2), the 4,800-game confirmation D517's rule names for J195's INCONCLUSIVE (a), with a verdict: SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800 or NOT SHOWN (D517, extended by SMALL GAIN for this confirmation, to be recorded as D519)",
+   "status": "done",
+   "finished": "2026-11-08T09:53:54-05:00",
+   "headline": "cm.played 4800 · cm.score 0.504 · cm.lo 0.497 · cm.hi 0.511 · cm.elo 2.9 · cm.eloLo -2.1 · cm.eloHi 7.9 · cm.aSearch.msPerDecision 935.199 · cm.bSearch.msPerDecision 935.821 · ro.ratio 0.996 · v.costRatio 0.999 · v.noCost 1 · v.shown 0 · v.smallGain 0 · v.inconclusive4800 0 · v.notShown 1 · v.unexposed 0 · v.exposure.share 0.048 · ro.aExposedGames 231 · ro.aPolicyGames 231 · ro.bExposedGames 233 · v.knobTrackClosed 1 · v.liveSeatCandidate 0 · bs.min 114900150 · bs.max 114900749 · bs.overlap 0",
+   "numbers": {
+    "cm.played": 4800,
+    "cm.score": 0.5042,
+    "cm.lo": 0.497,
+    "cm.hi": 0.5113,
+    "cm.elo": 2.9,
+    "cm.eloLo": -2.1,
+    "cm.eloHi": 7.9,
+    "cm.aSearch.msPerDecision": 935.199,
+    "cm.bSearch.msPerDecision": 935.821,
+    "ro.ratio": 0.996,
+    "v.costRatio": 0.9993,
+    "v.noCost": 1,
+    "v.shown": 0,
+    "v.smallGain": 0,
+    "v.inconclusive4800": 0,
+    "v.notShown": 1,
+    "v.unexposed": 0,
+    "v.exposure.share": 0.0481,
+    "ro.aExposedGames": 231,
+    "ro.aPolicyGames": 231,
+    "ro.bExposedGames": 233,
+    "v.knobTrackClosed": 1,
+    "v.liveSeatCandidate": 0,
+    "bs.min": 114900150,
+    "bs.max": 114900749,
+    "bs.overlap": 0
+   }
+  },
   {
    "publicTitle": "Search knobs and the lower compute curve: four fixed matches",
    "publicEst": "~8-10 h (one night)",
@@ -1176,17 +1082,6 @@
    "headline": "",
    "numbers": {},
    "detail": "timeout: step run1 ran past 32400 s"
-  },
-  {
-   "publicTitle": "Move atlas: random play vs Forge play, one deck pair",
-   "publicEst": "~4 h",
-   "id": "J142",
-   "title": "The move atlas, first full run -- one deck pair chosen by rule from the ladder's confirm set (pairs-confirm line with the most ladder games and the most even record, D451), seed 451; phase A 10,000 games from the opening with BOTH seats the random seat under D451's mechanical guardrails; phase B, at every one of seat A's 15 decisions in the Forge-vs-Forge baseline, every option forked and played out 200 times with both seats random and 40 times with Forge on both; everything recorded (rows, ledger, frame logs) and checked; the two regret maps side by side. Method only, no outcome rule",
-   "status": "failed",
-   "finished": "2026-10-19T06:33:46-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "prepare: step prepare exited 128 after 7 retries over 10 min: git could not reach the remote (fatal: could not read Username for 'https://github.com': No such device or address)"
   }
  ],
  "runner": {

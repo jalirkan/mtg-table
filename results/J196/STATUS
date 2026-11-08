@@ -1,11 +1,7 @@
-waiting
-reason: memory: step run3 was killed without an exit code (oomd or the OOM killer?)
+running
 runner: forgecoach-runner ac07876b
-started: 2026-11-07T18:35:32-05:00
-finished: 2026-11-08T00:20:31-05:00
-mtg-table: 310ba71
-workers: 6 (sized 6: min(cores 7, memory 12, max_workers 6); peak 1.50 GB per worker (declared), budget 21.4 GB)
-blocks_done: run1 exit 0 at 2026-11-07T20:22:00-05:00, run2 exit 0 at 2026-11-07T22:09:12-05:00
-workers_cap: 5
-retry_after: 2026-11-08T00:35:31-05:00
-memory_stops: 1
+started: 2026-11-08T09:53:55-05:00
+phase: prepare
+workers: 1
+restarted: 2026-11-08T09:53:55-05:00: retry after "memory: step run3 was killed without an exit code (oomd or the OOM killer?)"; the pilot had passed; starts again at run1: run1, run2 are done, but the job's clean: is job-wide (no clean: line before a block), so the runner cannot tell what they made; moved aside: var/ml/gates/pilot-v3, var/ml/reports/v3-audit.json, var/ml/reports/v3-audit.txt, var/ml/reports/v3-dry.json, var/ml/reports/v3.txt
+set_aside: 5 copies, 0.01 GB beside the job's clean: paths (never deleted: remove them by hand)
