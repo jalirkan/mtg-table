@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-08T15:52:28-05:00
+- time: 2026-11-08T15:57:11-05:00
 - runner: 57320655, up since 2026-11-08T09:54:53-05:00
 - state: running
-- running: J198 commands 1/2, 120/4800 games, 392.6/h, ETA 2026-11-09T03:47:42-05:00, 7 worker(s), 7 core(s)
+- running: J198 commands 1/2, 184/4800 games, 465.2/h, ETA 2026-11-09T01:52:36-05:00, 7 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 16.51; memory 16.5/30.5 GB, swap 4218 MB, pressure 0% (lab budget 23.4 GB)
+- load: 19.39; memory 17/30.5 GB, swap 4212 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J196 done at 2026-11-08T14:50:00-05:00: ds.rows 43926758 · ds.games 271643 · audit.pass 1 · dry.peakGB 14.681 · cmp.better 1 · cmp.subsets_reference_pairs 873 · cmpn.better 1 · cmp1.better 1
