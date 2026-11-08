@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-08T09:17:41-05:00",
- "heartbeat": "2026-11-08T09:17:41-05:00",
+ "updated": "2026-11-08T09:20:11-05:00",
+ "heartbeat": "2026-11-08T09:20:11-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.96,
-  "memUsedGb": 19.6,
+  "load1": 10.98,
+  "memUsedGb": 18.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 7478,
-  "pressure": 0.01,
+  "swapUsedMb": 7361,
+  "pressure": 0.12,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-08T00:20:32-05:00",
-   "elapsed": 32229,
-   "done": 4560,
+   "elapsed": 32379,
+   "done": 4568,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 442.1,
-   "eta": "2026-11-08T09:50:15-05:00",
-   "workers": 4,
+   "ratePerHour": 442.9,
+   "eta": "2026-11-08T09:51:37-05:00",
+   "workers": 5,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-08T09:15:10-05:00",
-   "memGb": 4.6,
+   "dataUpdated": "2026-11-08T09:18:23-05:00",
+   "memGb": 4.12,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -59,9 +59,9 @@
     "bs.j195Blocks": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 32205,
+    "elapsed_s": 32335,
     "j197_err": 1,
-    "j197_games": 4560,
+    "j197_games": 4568,
     "peak_worker_rss_gb": 1.29,
     "pressure_events": 29,
     "ro.games": 0,
@@ -89,12 +89,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [
-    {
-     "at": "2026-11-08T04:46:16-05:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    },
     {
      "at": "2026-11-08T06:37:17-05:00",
      "kind": "drop",
@@ -208,6 +202,12 @@
      "kind": "drop",
      "workers": 4,
      "pressure": 0.9
+    },
+    {
+     "at": "2026-11-08T09:20:11-05:00",
+     "kind": "raise",
+     "workers": 5,
+     "pressure": 0.1
     }
    ],
    "detail": "lab-J197-run1"
