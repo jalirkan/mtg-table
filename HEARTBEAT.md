@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-07T22:13:49-05:00
+- time: 2026-11-07T22:18:23-05:00
 - runner: ac07876b, up since 2026-11-01T21:41:21-05:00
 - running: J196 commands 3/4, 6 worker(s), 1 core(s)
 - cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 3.04; memory 4.9/30.5 GB, swap 5387 MB, pressure 0% (lab budget 23.4 GB)
+- load: 3.27; memory 5.1/30.5 GB, swap 5242 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J197
 - waiting: nothing
 - last finished: J195 done at 2026-11-07T18:35:46-05:00: cma.played 1200 · cma.score 0.51 · cma.lo 0.496 · cma.hi 0.524 · cma.elo 6.9 · cma.aSearch.msPerDecision 984.443 · cma.bSearch.msPerDecision 977.505 · cmb.played 1200 · cmb.score 0.483 · cmb.lo 0.469 · cmb.hi 0.496 · cmb.elo -12.2 · cmb.aSearch.msPerDecision 904.264 · cmb.bSearch.msPerDecision 905.542 · cmc.played 1200 · cmc.score 0.493 · cmc.lo 0.48 · cmc.hi 0.507 · cmc.elo -4.6 · cmc.aSearch.msPerDecision 534.972 · cmc.bSearch.msPerDecision 927.53 · cmd.played 1200 · cmd.score 0.479 · cmd.lo 0.463 · cmd.hi 0.496 · cmd.elo -14.5 · cmd.aSearch.msPerDecision 314.204 · cmd.bSearch.msPerDecision 933.479 · roa.ratio 0.995 · rob.ratio 0.994 · rob.aRankedShare 0.049 · rob.aTouchedShare 0.413 · roc.ratio 0.601 · rod.ratio 0.364 · v.a.shown 0 · v.a.notShown 0 · v.a.inconclusive 1 · v.a.unexposed 0 · v.a.exposure.share 0.062 · roa.aExposedGames 74 · roa.aPolicyGames 74 · v.b.shown 0 · v.b.notShown 1 · v.b.inconclusive 0 · v.knobTrackClosed 0 · v.c.indistinguishable 1 · v.c.atMost10Weaker 0 · v.d.indistinguishable 0 · v.d.atMost10Weaker 0
