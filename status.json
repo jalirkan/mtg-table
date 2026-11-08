@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-08T15:34:46-05:00",
- "heartbeat": "2026-11-08T15:34:46-05:00",
+ "updated": "2026-11-08T15:35:01-05:00",
+ "heartbeat": "2026-11-08T15:35:01-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.85,
+  "load1": 3.56,
   "memUsedGb": 7.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3873,
+  "swapUsedMb": 3872,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -25,9 +25,9 @@
    "id": "J198",
    "title": "The faster seat: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v2-ms750-r6, search-v2 at 0.75 s and 6 rounds a decision, against search-v1-anytime (search-v2, the live seat at 1.5 s and 12), on new deal blocks, J195's (c) never pooled, with a pre-registered reading: FASTER SEAT HOLDS, FASTER SEAT FAILS or INCONCLUSIVE AT 4,800. This job never changes the live seat",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-11-08T15:33:13-05:00",
-   "elapsed": 94,
+   "elapsed": 108,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -93,7 +93,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J198-pilot3"
+   "detail": "lab-J198-pilot4"
   }
  ],
  "queue": [],
