@@ -1817,11 +1817,14 @@ public final class Explorer {
                     m.put(able.get(i), defender);
                 }
             }
-            if (v2 && !m.isEmpty() && !oppBlockers.isEmpty()) {
-                // D523 R5: no attacker a possible blocker kills and survives -- kept as drawn if the rest is not legal
+            if (v2 && !m.isEmpty() && !oppBlockers.isEmpty() && m.size() <= oppBlockers.size()) {
+                // D523 R5, a rule on the attack as a set: no attacker a possible blocker kills and survives, unless
+                // the attack is lethal through the blockers or outnumbers them -- kept as drawn if the rest is not legal
                 final Map<Card, GameEntity> kept = new LinkedHashMap<>(m);
                 final ExploreMath probe = new ExploreMath(math.config(), 0);
-                if (RolloutGuards.dropDominated(kept, a -> RolloutGuards.dominated(ai, a, oppBlockers, combat), probe) > 0
+                final boolean through = RolloutGuards.lethalThrough((Player) defender, combat, m.keySet(), oppBlockers.size());
+                if (RolloutGuards.dropDominated(kept, a -> RolloutGuards.dominated(ai, a, oppBlockers, combat),
+                        oppBlockers.size(), through, probe) > 0
                         && SearchPolicy.legalAttack(combat, kept)) {
                     for (int k = probe.guardrails().getOrDefault("v2.dominatedAttacker", 0); k > 0; k--) {
                         math.guardrail("v2.dominatedAttacker");
@@ -1918,15 +1921,16 @@ public final class Explorer {
                     m.put(blockers.get(i), as.get(k - 1));
                 }
             }
-            if (v2 && lethal && RolloutGuards.unblocked(dmg, m) >= ai.getLife()) {
-                lethalRedrawn = true;   // D523 R2: this draw leaves the seat dead; draw again
+            if (v2 && lethal && RolloutGuards.deadAfter(ai, combat, m)) {
+                lethalRedrawn = true;   // D523 R2: this draw leaves the seat dead (trample included); draw again
                 continue;
             }
             if (v2 && !lethal && !m.isEmpty()) {
-                // D523 R6: no chump block when the attack is not lethal -- kept as drawn if the rest is not legal
+                // D523 R6, on the assignment as a whole: no blocker that dies while the blockers on its attacker do
+                // not kill it together -- kept as drawn if the rest is not legal
                 final Map<Card, Card> kept = new LinkedHashMap<>(m);
                 final ExploreMath probe = new ExploreMath(math.config(), 0);
-                if (RolloutGuards.dropChumps(kept, (b, a) -> RolloutGuards.chump(ai, b, a, combat), probe) > 0
+                if (RolloutGuards.dropChumps(ai, combat, kept, probe) > 0
                         && SearchPolicy.legalBlock(combat, ai, kept)) {
                     for (int k = probe.guardrails().getOrDefault("v2.chumpBlock", 0); k > 0; k--) {
                         math.guardrail("v2.chumpBlock");

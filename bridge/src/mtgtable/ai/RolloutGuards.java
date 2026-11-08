@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import forge.ai.ComputerUtilCombat;
@@ -50,8 +49,9 @@ import forge.game.spellability.SpellAbility;
  *       deal at least the defender's life through no untapped creature that
  *       could block them, the attack is all of them.</li>
  *   <li><b>R2 {@code v2.lethalBlock}</b> -- when the attack would kill the seat
- *       unblocked and some legal block leaves it alive, the blocks are redrawn
- *       until they do (then the most damage blocked, greedily).</li>
+ *       unblocked, the blocks are redrawn (up to 64 times) until the seat's life
+ *       after the attack, trample included, is above 0; if no draw does, the
+ *       most damage blocked, greedily, which need not save it.</li>
  *   <li><b>R3 {@code v2.targetSide}</b> -- a harmful targeted part (a curse,
  *       damage, destroy, life loss, discard, sacrifice) is not aimed at the seat
  *       or its own permanents while a target on the other side is legal; a
@@ -59,13 +59,14 @@ import forge.game.spellability.SpellAbility;
  *       is not aimed at the opponent's side while one of the seat's own is legal.</li>
  *   <li><b>R4 {@code v2.castSomething}</b> -- in the seat's own second main phase
  *       with the stack empty, having cast no spell this turn, with a spell it can
- *       cast listed, it does not pass.</li>
- *   <li><b>R5 {@code v2.dominatedAttacker}</b> -- unless R1's attack is on, an
- *       attacker an untapped creature of the defender can block, kill and
- *       survive is taken out of a random attack.</li>
+ *       cast listed that is not an instant, it does not pass.</li>
+ *   <li><b>R5 {@code v2.dominatedAttacker}</b> -- unless the attack is lethal
+ *       through the defender's blockers, and only while the attackers do not
+ *       outnumber them, an attacker an untapped creature of the defender can
+ *       block, kill and survive is taken out of a random attack.</li>
  *   <li><b>R6 {@code v2.chumpBlock}</b> -- unless the attack is lethal (R2's
- *       case), a block whose blocker dies without killing its attacker is taken
- *       out of a random block.</li>
+ *       case), a blocker that dies while the blockers on its attacker do not
+ *       kill it together is taken out of a random block.</li>
  *   <li><b>R7 {@code v2.ownStack}</b> -- while everything on the stack is the
  *       seat's own, it passes: it does not answer itself.</li>
  * </ul>
@@ -90,15 +91,17 @@ final class RolloutGuards {
     /**
      * R4 on an option list: {@code "pass"} is removed when the seat is in its
      * own second main phase ({@code ownMain2}) with the stack empty, has cast no
-     * spell this turn, and a {@code cast:} option remains.  Engine-free.
+     * spell this turn, and a {@code cast:} option remains that is not an
+     * instant ({@code instant} says which are: an instant may wait for the
+     * opponent's turn, so it never forces the cast).  Engine-free.
      */
     static boolean castSomething(final Map<String, ?> opts, final boolean ownMain2, final boolean stackEmpty,
-                                 final int castThisTurn, final ExploreMath math) {
+                                 final int castThisTurn, final Predicate<String> instant, final ExploreMath math) {
         if (!ownMain2 || !stackEmpty || castThisTurn > 0 || !opts.containsKey("pass")) {
             return false;
         }
         for (final String k : opts.keySet()) {
-            if (k.startsWith("cast:")) {
+            if (k.startsWith("cast:") && !instant.test(k)) {
                 opts.remove("pass");
                 math.guardrail("v2.castSomething");
                 return true;
@@ -107,11 +110,15 @@ final class RolloutGuards {
         return false;
     }
 
-    /** R4 at a priority of {@code ai}'s: the engine's half (whose turn, which phase, the stack, spells cast). */
-    static boolean castSomething(final Player ai, final Map<String, ?> opts, final ExploreMath math) {
+    /** R4 at a priority of {@code ai}'s: the engine's half (whose turn, which phase, the stack, spells cast, which casts are instants). */
+    static boolean castSomething(final Player ai, final Map<String, List<SpellAbility>> opts, final ExploreMath math) {
         final forge.game.Game g = ai.getGame();
         final boolean ownMain2 = g.getPhaseHandler().isPlayerTurn(ai) && g.getPhaseHandler().is(PhaseType.MAIN2);
-        return castSomething(opts, ownMain2, g.getStack().isEmpty(), ai.getSpellsCastThisTurn(), math);
+        return castSomething(opts, ownMain2, g.getStack().isEmpty(), ai.getSpellsCastThisTurn(), k -> {
+            final List<SpellAbility> l = opts.get(k);
+            final Card host = l == null || l.isEmpty() ? null : l.get(0).getHostCard();
+            return host != null && host.isInstant();
+        }, math);
     }
 
     // ------------------------------------------------------------------
@@ -257,10 +264,20 @@ final class RolloutGuards {
     }
 
     /**
-     * R5 on a drawn attack: each attacker {@code dominated} says so is removed,
-     * each removal counted.  Engine-free.
+     * R5 on a drawn attack, a rule on the attack as a set: nothing is removed
+     * when the attack is lethal through the defender's blockers
+     * ({@code lethalThrough}, R1's arithmetic with blockers), nor while the
+     * attackers outnumber the defender's {@code blockers} (a wide attack gets
+     * some through, whatever blocks).  Otherwise each attacker {@code dominated}
+     * says so is removed -- the attackers then never outnumber the blockers, so
+     * no removal takes the attack below that point -- each removal counted.
+     * Engine-free.
      */
-    static <T> int dropDominated(final Map<T, ?> attack, final Predicate<T> dominated, final ExploreMath math) {
+    static <T> int dropDominated(final Map<T, ?> attack, final Predicate<T> dominated, final int blockers,
+                                 final boolean lethalThrough, final ExploreMath math) {
+        if (lethalThrough || attack.size() > blockers) {
+            return 0;
+        }
         int n = 0;
         for (final Iterator<T> it = attack.keySet().iterator(); it.hasNext(); ) {
             if (dominated.test(it.next())) {
@@ -270,6 +287,35 @@ final class RolloutGuards {
             }
         }
         return n;
+    }
+
+    /**
+     * R5's lethal test: the attackers' damage {@code dmg} with the defender's
+     * {@code blockers} each blocking one of the largest, the rest reaching it,
+     * is at least its {@code life}.  Engine-free.
+     */
+    static boolean lethalThrough(final int[] dmg, final int blockers, final int life) {
+        final int[] d = dmg.clone();
+        java.util.Arrays.sort(d);
+        long through = 0;
+        for (int i = 0; i < d.length - Math.max(blockers, 0); i++) {
+            through += Math.max(d[i], 0);
+        }
+        return life > 0 && through >= life;
+    }
+
+    /** R5's lethal test for an attack of {@code attackers} at {@code defender}, from the engine's numbers. */
+    static boolean lethalThrough(final Player defender, final Combat combat, final java.util.Collection<Card> attackers,
+                                 final int blockers) {
+        if (!defender.canLoseLife() || defender.cantLose()) {
+            return false;
+        }
+        final int[] d = new int[attackers.size()];
+        int i = 0;
+        for (final Card a : attackers) {
+            d[i++] = ComputerUtilCombat.damageIfUnblocked(a, defender, combat, false);
+        }
+        return lethalThrough(d, blockers, defender.getLife());
     }
 
     /** R5's predicate: an untapped creature of the defender can block {@code a}, destroy it and survive. */
@@ -339,14 +385,28 @@ final class RolloutGuards {
     }
 
     /**
-     * R6 on a drawn block: each pair {@code chump} says so (the blocker dies, the
-     * attacker does not) is removed, each removal counted.  Engine-free.
+     * R6 on a drawn block, judged on the assignment as a whole: a blocker is a
+     * chump only when the blockers assigned to its attacker do not kill it
+     * together ({@code attackerDies}, read on the whole assignment) and the
+     * blocker itself dies ({@code blockerDies}); a gang block that kills its
+     * attacker keeps every blocker.  Each removal counted.  Engine-free.
      */
-    static <B, A> int dropChumps(final Map<B, A> blocks, final BiPredicate<B, A> chump, final ExploreMath math) {
+    static <B, A> int dropChumps(final Map<B, A> blocks, final Predicate<A> attackerDies, final Predicate<B> blockerDies,
+                                 final ExploreMath math) {
+        final java.util.Set<A> dies = new java.util.HashSet<>();
+        final java.util.Set<B> lost = new java.util.HashSet<>();
+        for (final Map.Entry<B, A> e : blocks.entrySet()) {
+            if (attackerDies.test(e.getValue())) {
+                dies.add(e.getValue());
+            }
+            if (blockerDies.test(e.getKey())) {
+                lost.add(e.getKey());
+            }
+        }
         int n = 0;
         for (final Iterator<Map.Entry<B, A>> it = blocks.entrySet().iterator(); it.hasNext(); ) {
             final Map.Entry<B, A> e = it.next();
-            if (chump.test(e.getKey(), e.getValue())) {
+            if (!dies.contains(e.getValue()) && lost.contains(e.getKey())) {
                 it.remove();
                 math.guardrail("v2.chumpBlock");
                 n++;
@@ -355,9 +415,26 @@ final class RolloutGuards {
         return n;
     }
 
-    /** R6's predicate: blocking {@code a} with {@code b}, the blocker dies and the attacker does not. */
-    static boolean chump(final Player ai, final Card b, final Card a, final Combat combat) {
-        return ComputerUtilCombat.canDestroyBlocker(ai, b, a, combat, false)
-                && !ComputerUtilCombat.canDestroyAttacker(ai, a, b, combat, false);
+    /**
+     * R6 for {@code blocks} (blocker -> attacker) in {@code combat}: the block is
+     * declared in the combat first, so Forge's arithmetic reads every blocker on
+     * each attacker together ({@code attackerWouldBeDestroyed},
+     * {@code blockerWouldBeDestroyed}); the combat is left holding {@code blocks}.
+     */
+    static int dropChumps(final Player ai, final Combat combat, final Map<Card, Card> blocks, final ExploreMath math) {
+        SearchPolicy.setBlock(combat, ai, blocks);
+        return dropChumps(blocks, a -> ComputerUtilCombat.attackerWouldBeDestroyed(ai, a, combat),
+                b -> ComputerUtilCombat.blockerWouldBeDestroyed(ai, b, combat), math);
+    }
+
+    /**
+     * R2's test of a drawn block: declared in {@code combat}, the seat's life
+     * after the attack by Forge's arithmetic ({@code lifeThatWouldRemain}:
+     * unblocked attackers, and a blocked trampler's damage past its blockers'
+     * toughness) is below 1.  The combat is left holding {@code blocks}.
+     */
+    static boolean deadAfter(final Player ai, final Combat combat, final Map<Card, Card> blocks) {
+        SearchPolicy.setBlock(combat, ai, blocks);
+        return ComputerUtilCombat.lifeThatWouldRemain(ai, combat) < 1;
     }
 }

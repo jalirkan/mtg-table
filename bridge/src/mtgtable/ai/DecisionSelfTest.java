@@ -564,6 +564,15 @@ public final class DecisionSelfTest {
         final SearchConfig live = SearchConfig.parseLive("");
         check("default".equals(live.rollout) && !live.rolloutRandomUs() && !SearchConfig.LIVE_DEFAULTS.contains("rollout"),
                 "the live seat's rollouts stay plain Forge");
+        for (final String r : List.of("random", "random-self")) {
+            boolean liveRefused = false;
+            try {
+                SearchConfig.parseLive("rollout=" + r);
+            } catch (final IllegalArgumentException e) {
+                liveRefused = e.getMessage().contains("measurement only");
+            }
+            check(liveRefused, "parseLive refuses rollout=" + r + " (measurement only, as oracle=1)");
+        }
 
         final ExploreMath.Config atlas = ExploreMath.Config.randomSeat();
         final ExploreMath.Config r2 = ExploreMath.Config.randomV2();
@@ -572,20 +581,24 @@ public final class DecisionSelfTest {
         check(!ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE)).v2, "a job line's random seat is never random-v2");
         final ExploreMath m = new ExploreMath(r2, 1);
 
-        // R4: no pass in its own main 2 with nothing cast yet and a cast listed
+        // R4: no pass in its own main 2 with nothing cast yet and a cast listed that is not an instant
         final java.util.Map<String, Object> opts = new java.util.LinkedHashMap<>();
         opts.put("pass", null);
         opts.put("activate:3", null);
         opts.put("cast:7", null);
-        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), false, true, 0, m), "R4 quiet off its own main 2");
-        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), true, false, 0, m), "R4 quiet with a stack");
-        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), true, true, 1, m), "R4 quiet once a spell was cast");
+        final java.util.function.Predicate<String> noInstant = k -> false;
+        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), false, true, 0, noInstant, m), "R4 quiet off its own main 2");
+        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), true, false, 0, noInstant, m), "R4 quiet with a stack");
+        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), true, true, 1, noInstant, m), "R4 quiet once a spell was cast");
         final java.util.Map<String, Object> noCast = new java.util.LinkedHashMap<>();
         noCast.put("pass", null);
         noCast.put("activate:3", null);
-        check(!RolloutGuards.castSomething(noCast, true, true, 0, m) && noCast.containsKey("pass"), "R4 quiet with no cast listed");
+        check(!RolloutGuards.castSomething(noCast, true, true, 0, noInstant, m) && noCast.containsKey("pass"), "R4 quiet with no cast listed");
+        final java.util.Map<String, Object> instantOnly = new java.util.LinkedHashMap<>(opts);
+        check(!RolloutGuards.castSomething(instantOnly, true, true, 0, k -> k.equals("cast:7"), m) && instantOnly.containsKey("pass"),
+                "R4 quiet when the only cast listed is an instant");
         final java.util.Map<String, Object> fires = new java.util.LinkedHashMap<>(opts);
-        check(RolloutGuards.castSomething(fires, true, true, 0, m) && !fires.containsKey("pass") && fires.size() == 2
+        check(RolloutGuards.castSomething(fires, true, true, 0, noInstant, m) && !fires.containsKey("pass") && fires.size() == 2
                 && m.guardrails().get("v2.castSomething") == 1, "R4 removes pass, counted");
 
         // R3: harm the other side, help its own
@@ -609,12 +622,25 @@ public final class DecisionSelfTest {
         check(RolloutGuards.lethal(new int[] {3, 0, 2}, 5) && !RolloutGuards.lethal(new int[] {3, 0, 1}, 5)
                 && !RolloutGuards.lethal(new int[] {}, 0), "R1: unblockable damage against life");
 
-        // R5: drop the dominated attackers
+        // R5, a rule on the attack as a set
         final java.util.Map<String, Object> attack = new java.util.LinkedHashMap<>();
         attack.put("bear", "you");
         attack.put("dragon", "you");
-        check(RolloutGuards.dropDominated(attack, a -> a.equals("bear"), m) == 1 && attack.keySet().equals(java.util.Set.of("dragon"))
-                && m.guardrails().get("v2.dominatedAttacker") == 1, "R5 removes the dominated attacker, counted");
+        check(RolloutGuards.dropDominated(attack, a -> a.equals("bear"), 2, false, m) == 1 && attack.keySet().equals(java.util.Set.of("dragon"))
+                && m.guardrails().get("v2.dominatedAttacker") == 1, "R5 removes the dominated attacker when the blockers can meet every attacker, counted");
+        final java.util.Map<String, Object> wide = new java.util.LinkedHashMap<>();
+        wide.put("bearA", "you");
+        wide.put("bearB", "you");
+        check(RolloutGuards.dropDominated(wide, a -> true, 1, false, m) == 0 && wide.size() == 2,
+                "R5 keeps a go-wide attack: two 2/2s into one 4/4 are both kept (the attackers outnumber the blockers)");
+        check(RolloutGuards.lethalThrough(new int[] {2, 2}, 1, 2) && !RolloutGuards.lethalThrough(new int[] {2, 2}, 1, 3)
+                && !RolloutGuards.lethalThrough(new int[] {5, 1}, 1, 2) && RolloutGuards.lethalThrough(new int[] {5, 1, 1}, 1, 2),
+                "R5's lethal test: the blockers take the largest attackers, the rest must reach life");
+        final java.util.Map<String, Object> lethalSet = new java.util.LinkedHashMap<>();
+        lethalSet.put("bear", "you");
+        check(RolloutGuards.dropDominated(lethalSet, a -> true, 3, true, m) == 0 && lethalSet.size() == 1,
+                "R5 drops nothing from an attack lethal through the blockers");
+        check(m.guardrails().get("v2.dominatedAttacker") == 1, "R5's quiet cases count nothing");
 
         // R2: the incoming case and the greedy fallback
         check(RolloutGuards.lethalIncoming(7, 7, true) && !RolloutGuards.lethalIncoming(6, 7, true)
@@ -630,12 +656,17 @@ public final class DecisionSelfTest {
         check("big".equals(g.get("wall")) && "mid".equals(g.get("bear")) && RolloutGuards.unblocked(dmg, g) == 1,
                 "R2's fallback blocks the most damage greedily: " + g);
 
-        // R6: drop the chump blocks
+        // R6, on the assignment as a whole
         final java.util.Map<String, String> blocks = new java.util.LinkedHashMap<>();
         blocks.put("token", "dragon");
         blocks.put("wall", "bear");
-        check(RolloutGuards.dropChumps(blocks, (b, a) -> b.equals("token"), m) == 1 && blocks.keySet().equals(java.util.Set.of("wall"))
+        check(RolloutGuards.dropChumps(blocks, a -> false, b -> b.equals("token"), m) == 1 && blocks.keySet().equals(java.util.Set.of("wall"))
                 && m.guardrails().get("v2.chumpBlock") == 1, "R6 removes the chump block, counted");
+        final java.util.Map<String, String> gang = new java.util.LinkedHashMap<>();
+        gang.put("bearA", "giant");
+        gang.put("bearB", "giant");
+        check(RolloutGuards.dropChumps(gang, a -> a.equals("giant"), b -> b.equals("bearA"), m) == 0 && gang.size() == 2
+                && m.guardrails().get("v2.chumpBlock") == 1, "R6 keeps a double block that kills its attacker, the blocker it loses included");
     }
 
     /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */

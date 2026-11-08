@@ -417,13 +417,19 @@ public final class SearchConfig {
      * {@link #parse} over {@link #LIVE_DEFAULTS} (D412: the live seat runs
      * {@link #LIVE_VERSION}, the anytime loop, unless the text says otherwise),
      * and the bench-only {@code oracle} is refused -- a seat that plays a
-     * person never sees their hidden cards (D312, D350).
+     * person never sees their hidden cards (D312, D350) -- and so are D523's
+     * measurement-only {@code rollout=random} and {@code random-self}.
      */
     public static SearchConfig parseLive(final String text) {
         final SearchConfig c = parse(text == null || text.isBlank() ? LIVE_DEFAULTS : LIVE_DEFAULTS + "," + text);
         if (c.oracle) {
             throw new IllegalArgumentException("search oracle=1 reads the opponent's real hidden cards: bench only "
                     + "(tools/ai-bench, the ladder), never a live seat");
+        }
+        if (c.rolloutRandomUs()) {
+            // D523: random rollouts are a measurement until a separate decision puts them in front of a person
+            throw new IllegalArgumentException("search rollout=" + c.rollout + " is measurement only: bench only "
+                    + "(tools/ai-bench, the ladder), never a live seat (D523)");
         }
         return c;
     }
