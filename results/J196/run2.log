@@ -2,3 +2,7 @@
 memory: baselines (1 epoch): rss 11.69 GB, peak 14.97 GB
 memory: score: rss 12.27 GB, peak 14.97 GB
 dry-load: 24237085 rows (train/val/test 17530775/2281003/4425307); peak RSS 14.97 GB
+==== J196 run2 started 2026-11-08T09:54:33-05:00 in unit lab-J196-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+memory: baselines (1 epoch): rss 11.54 GB, peak 14.68 GB
+memory: score: rss 12.27 GB, peak 14.68 GB
+dry-load: 24237085 rows (train/val/test 17530775/2281003/4425307); peak RSS 14.68 GB
