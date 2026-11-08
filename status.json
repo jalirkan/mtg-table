@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-11-08T00:22:06-05:00",
- "heartbeat": "2026-11-08T00:22:06-05:00",
+ "updated": "2026-11-08T00:22:20-05:00",
+ "heartbeat": "2026-11-08T00:22:20-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.32,
+  "load1": 3.71,
   "memUsedGb": 5.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 4684,
@@ -24,9 +24,9 @@
    "id": "J197",
    "title": "The routlets confirmation: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v2-routlets, D390's rollout=outlets under the anytime search, against search-v1-anytime (search-v2), the 4,800-game confirmation D517's rule names for J195's INCONCLUSIVE (a), with a verdict: SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800 or NOT SHOWN (D517, extended by SMALL GAIN for this confirmation, to be recorded as D519)",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-11-08T00:20:32-05:00",
-   "elapsed": 93,
+   "elapsed": 108,
    "done": 0,
    "total": 4800,
    "unit": "games",
@@ -97,7 +97,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J197-pilot3"
+   "detail": "lab-J197-pilot4"
   }
  ],
  "queue": [],
