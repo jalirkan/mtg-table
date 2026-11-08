@@ -17,6 +17,7 @@
 //   census-replay <rows-file> --game <census:seed> [--record full|rows] [--out <dir>]   the game again from its recipe, asserted the same (D450)
 //   atlas   (--deck-a <dck> --deck-b <dck> | --pair auto) --seed S --jobs K --out <dir> [--turn-cap 40] [--rollouts 10000]
 //           [--branch-random 200] [--branch-forge 40] [--decisions all|N] [--options 8] [--chunk 25]   the move atlas (atlas.ts, D451)
+//           [--only <file>]   D524: only the decisions and options a JSON list [{d, options, tokens?}] names (exit 4: the baseline lists otherwise)
 //   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
 //           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
@@ -158,6 +159,8 @@ function usage(msg?: string): never {
                         [--branch-capped-warn 0.25]   (D478: an option whose branch games the turn cap ended past this share is a warning)
                         [--checks-parallel 1] [--early-stop off|on|a,b,c] [--screen 0] [--min-options 1]   (D480: the cut design, each off by default)
                         [--futility off|<i>] [--futility-tie 0] [--futility-sample 0.1]   (D489: the futility stop, off by default)
+                        [--only <file>]   (D524: a JSON list [{d, options, tokens?}]; only those decisions at those options, option 0 among them;
+                        exit 4 if the baseline lists other tokens at a d; not with --decisions or the cuts; --branch-random 0 allowed)
        tools/cubelab.sh atlas-selftest [--jobs 2]   (D451: a tiny atlas, its forks, no-leak checks and guardrails asserted)
        tools/cubelab.sh seat-identity [--write]     (D451: the Forge, search and explore seats play origin/main's games)
        tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)

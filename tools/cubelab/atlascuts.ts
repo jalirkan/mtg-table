@@ -19,11 +19,16 @@
 //                      best mean over the paired rows, or one within --futility-tie of it, is STOPPED: no more branches of any
 //                      option, no Forge map, and its label is a PARTIAL one at that n (`futileAt`); a seeded --futility-sample
 //                      share of those decisions is played on to the full n anyway as the rule's bias control.
+//   --only <file>      D524: not a cut but a measurement of given options: the decisions are exactly the file's (`why: 'only'`),
+//                      each branched at its own options only (every unit carries them), and nothing is decided after a pick
+//                      (`parseOnly`, `checkOnly`); refused beside the cuts and --decisions.
 //
 // A unit that crosses no checkpoint is the unit it always was; a decision's next units wait for every unit of its current
 // stage (the checkpoint BARRIER), and the units after a checkpoint carry the options still running (`Unit.options`).  Every
 // choice is an event in phase B's schedule.jsonl, written when it is made: a resumed atlas replays them and never decides
 // one again, so a unit re-run after a crash plays the options its stage had.
+
+import { createHash } from 'node:crypto';
 
 import { means, quantile, spread } from './atlasmath.ts';
 import { rng } from './rng.ts';
@@ -39,7 +44,19 @@ export interface Cuts {
   minOptions: number;
   /** D489: the futility stop (absent: off, and the cuts' JSON -- plan.json, the schedule's plan hash -- is D480's). */
   futility?: Futility;
+  /** D524: --only's list (absent: off, and the cuts' JSON is what it was without the flag). */
+  only?: Only;
 }
+
+/**
+ * D524: one decision `--only` branches: `d` its index in the baseline's listing, `options` the option indices played there
+ * (two or more, distinct, option 0 -- Forge's own answer, the regret's reference -- among them), and `tokens` the listing the
+ * caller expects at d (D511: the replay is the recorded game, so a baseline that lists anything else is another game).
+ */
+export interface OnlyEntry { d: number; options: number[]; tokens?: string[] }
+
+/** D524: --only's list as the atlas keeps it -- entries by d, each one's options ascending -- and the sha256 of its JSON. */
+export interface Only { entries: OnlyEntry[]; sha256: string }
 
 /**
  * D489: the futility stop.  At early stopping's checkpoint `at` (an index into `earlyStop`), a decision whose option 0 --
@@ -65,7 +82,7 @@ export const SCREEN_LOW = 0.04;
 export const SCREEN_HIGH = 0.96;
 
 /** Whether any cut changes what phase B plays or records (a schedule.jsonl is written only then). */
-export const cutsOn = (c: Cuts): boolean => c.earlyStop.length > 0 || c.screen > 0 || c.minOptions > 1 || c.futility !== undefined;
+export const cutsOn = (c: Cuts): boolean => c.earlyStop.length > 0 || c.screen > 0 || c.minOptions > 1 || c.futility !== undefined || c.only !== undefined;
 
 /** Whether phase B has checkpoint barriers (units waiting for others). */
 export const hasBarriers = (c: Cuts): boolean => c.earlyStop.length > 0 || c.screen > 0;
@@ -98,6 +115,60 @@ export function parseFutility(v: string | undefined, tie: string | undefined, sa
   return { at, tie: share(tie, FUTILITY_TIE_DEFAULT, 'futility-tie'), sample: share(sample, FUTILITY_SAMPLE_DEFAULT, 'futility-sample') };
 }
 
+/**
+ * D524: `--only`'s file, a JSON array of `{d, options, tokens?}`, checked and normalised (entries by d, options ascending, the
+ * keys in that order) with the sha256 of the normalised JSON.  Refused: anything but a non-empty array of such objects; a key
+ * other than the three; a d that is not a whole number >= 0, or named twice; fewer than two options, an option repeated, not a
+ * whole number >= 0, or option 0 missing; tokens that are not strings, or an option at or past their count.  What the listing
+ * holds at d is the baseline's to say (checkOnly).
+ */
+export function parseOnly(text: string): Only {
+  let raw: unknown;
+  try { raw = JSON.parse(text); } catch (e) { throw new Error(`atlas: --only wants a JSON array of {d, options, tokens?}: ${(e as Error).message}`); }
+  if (!Array.isArray(raw) || raw.length === 0) throw new Error('atlas: --only wants a non-empty JSON array of {d, options, tokens?}');
+  const whole = (x: unknown): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 0;
+  const entries: OnlyEntry[] = raw.map((e: unknown, j) => {
+    if (typeof e !== 'object' || e === null || Array.isArray(e)) throw new Error(`atlas: --only entry ${j} is not an object {d, options, tokens?}`);
+    const x = e as Record<string, unknown>;
+    const extra = Object.keys(x).filter((k) => !['d', 'options', 'tokens'].includes(k));
+    if (extra.length) throw new Error(`atlas: --only entry ${j} has key(s) ${extra.join(', ')}; it takes d, options and tokens`);
+    if (!whole(x.d)) throw new Error(`atlas: --only entry ${j}: d wants a whole number >= 0 (an index into the baseline's listing)`);
+    const os = x.options;
+    if (!Array.isArray(os) || os.length < 2 || !os.every(whole)) throw new Error(`atlas: --only d${x.d}: options wants two or more whole numbers >= 0`);
+    if (new Set(os).size !== os.length) throw new Error(`atlas: --only d${x.d}: an option is named twice (${os.join(', ')})`);
+    if (!os.includes(0)) throw new Error(`atlas: --only d${x.d}: option 0, Forge's own answer, must be among the options (the regret is against it)`);
+    const options = [...(os as number[])].sort((a, b) => a - b);
+    if (x.tokens === undefined) return { d: x.d, options };
+    const t = x.tokens;
+    if (!Array.isArray(t) || !t.every((y) => typeof y === 'string')) throw new Error(`atlas: --only d${x.d}: tokens wants an array of strings (the baseline's listing at d)`);
+    if ((options.at(-1) as number) >= t.length) throw new Error(`atlas: --only d${x.d}: option ${options.at(-1)} is past the ${t.length} token(s) given`);
+    return { d: x.d, options, tokens: [...(t as string[])] };
+  }).sort((a, b) => a.d - b.d);
+  for (let j = 1; j < entries.length; j++) if ((entries[j] as OnlyEntry).d === (entries[j - 1] as OnlyEntry).d) throw new Error(`atlas: --only names d${(entries[j] as OnlyEntry).d} twice`);
+  return { entries, sha256: createHash('sha256').update(JSON.stringify(entries)).digest('hex') };
+}
+
+/**
+ * D524: what the baseline's listing says of --only's list, before any unit: each entry's d must be listed, its options below
+ * the listing's option count there, and its tokens (when given) the listing's, token for token.  Each failure is one line,
+ * naming d and both token lists; [] is a list the atlas can play.
+ */
+export function checkOnly(only: Only, all: DecisionListing[]): string[] {
+  const out: string[] = [];
+  for (const e of only.entries) {
+    const x = all[e.d];
+    if (!x) { out.push(`d${e.d}: the baseline lists ${all.length} decision(s) (d0 to d${all.length - 1}); the list expected ${JSON.stringify(e.tokens ?? null)} there`); continue; }
+    if (e.tokens && JSON.stringify(e.tokens) !== JSON.stringify(x.tokens)) { out.push(`d${e.d}: the baseline listed ${JSON.stringify(x.tokens)}, the list expected ${JSON.stringify(e.tokens)}`); continue; }
+    const past = e.options.filter((o) => o >= x.tokens.length);
+    if (past.length) out.push(`d${e.d}: option(s) ${past.join(', ')} past the ${x.tokens.length} the baseline listed (${JSON.stringify(x.tokens)})`);
+  }
+  return out;
+}
+
+/** D524: --only's picks: every entry, in order of d, with its options (checkOnly has passed, so each d is listed). */
+export const onlyPicks = (all: DecisionListing[], only: Only): DecisionPick[] =>
+  only.entries.map((e) => ({ d: e.d, k: (all[e.d] as DecisionListing).tokens.length, why: 'only' as const, options: [...e.options] }));
+
 /** D489: the random-branch count the futility rule is read at (null: off). */
 export const futilityAt = (c: Cuts): number | null => (c.futility ? (c.earlyStop[c.futility.at] ?? null) : null);
 
@@ -116,6 +187,8 @@ export function checkCuts(c: Cuts, branchRandom: number, chunk: number): void {
     if (!Number.isInteger(f.at) || f.at < 0 || f.at >= c.earlyStop.length) throw new Error(`atlas: --futility ${f.at} names no --early-stop checkpoint (${c.earlyStop.length ? `0 to ${c.earlyStop.length - 1}: ${c.earlyStop.join(', ')}` : 'early stopping is off'})`);
     if (!(f.tie >= 0 && f.tie <= 1) || !(f.sample >= 0 && f.sample <= 1)) throw new Error('atlas: --futility-tie and --futility-sample want numbers from 0 to 1');
   }
+  // D524: --only measures given options; nothing may decide on them after the pick
+  if (c.only && (c.earlyStop.length || c.screen || c.minOptions > 1 || c.futility)) throw new Error('atlas: --only does not combine with --early-stop, --screen, --futility or --min-options above 1');
 }
 
 /** The ends of a decision's random stages: every barrier, then --branch-random.  One stage when no cut has a barrier. */
@@ -149,9 +222,10 @@ export function repeatedPlays(all: DecisionListing[]): string[] {
   return out;
 }
 
-/** Why a decision is branched: D451's spread, a fill from decisions under --min-options, or the replacement of a screened one. */
-export type PickWhy = 'spread' | 'fill' | 'replaces';
-export interface DecisionPick { d: number; k: number; why: PickWhy; replaces?: number }
+/** Why a decision is branched: D451's spread, a fill from decisions under --min-options, the replacement of a screened one, or D524's list. */
+export type PickWhy = 'spread' | 'fill' | 'replaces' | 'only';
+/** D524: `options`, on an --only pick, the options the decision is branched at (absent: every listed one). */
+export interface DecisionPick { d: number; k: number; why: PickWhy; replaces?: number; options?: number[] }
 
 /**
  * The decisions phase B branches, before any screen: `n` of the listed ones spread evenly (D451) over those with at least
@@ -255,7 +329,7 @@ export const stopSeed = (seed: number, d: number, at: number): number => seed * 
 
 /** One line of phase B's schedule.jsonl: a decision picked, screened, or its options checked at a checkpoint. */
 export type ScheduleEvent =
-  | { v: 1; type: 'pick'; d: number; k: number; why: PickWhy; replaces?: number }
+  | { v: 1; type: 'pick'; d: number; k: number; why: PickWhy; replaces?: number; options?: number[] }
   | { v: 1; type: 'screen'; d: number; at: number; mean: number | null; settled: boolean }
   | { v: 1; type: 'stop'; d: number; at: number; leader: number | null; dropped: number[]; alive: number[]; low: Record<number, number | null> }
   // D489: the futility rule read at its checkpoint, for every decision that reaches it: `futile` the rule's verdict, `control`
@@ -295,13 +369,15 @@ export interface DecisionCut {
   screened: boolean; screenMean?: number | null;
   /** D489: the futility rule's read at its checkpoint (absent: off, or the decision never reached it). */
   futility?: { at: number; gap: number | null; futile: boolean; control: boolean; stopped: boolean; alive: number[] };
+  /** D524: the options --only branched the decision at (absent: every listed one). */
+  only?: number[];
 }
 
 /** The schedule's events folded into each decision's cut (decisions in pick order). */
 export function decisionCuts(events: ScheduleEvent[]): Map<number, DecisionCut> {
   const out = new Map<number, DecisionCut>();
   for (const e of events) {
-    if (e.type === 'pick') out.set(e.d, { k: e.k, why: e.why, ...(e.replaces !== undefined ? { replaces: e.replaces } : {}), stoppedAt: {}, forgeOptions: null, screened: false });
+    if (e.type === 'pick') out.set(e.d, { k: e.k, why: e.why, ...(e.replaces !== undefined ? { replaces: e.replaces } : {}), stoppedAt: {}, forgeOptions: null, screened: false, ...(e.options ? { only: [...e.options] } : {}) });
     const x = out.get(e.d);
     if (!x) continue;
     if (e.type === 'screen') { x.screenMean = e.mean; x.screened = e.settled; }
@@ -328,6 +404,9 @@ interface DState {
 export interface ScheduleOptions { branchRandom: number; branchForge: number; chunk: number; decisions: number | 'all'; boot: number; seed: number }
 
 const uid = (u: Unit): string => `d${u.d}-${u.c}-${u.i0}`;
+
+/** A pick's options at its first stage: D524's given ones, or every listed one. */
+const aliveOf = (p: DecisionPick): number[] => (p.options ? [...p.options] : Array.from({ length: p.k }, (_, o) => o));
 
 /**
  * Phase B's schedule under the cuts.  Built from the listing, the events already written (a resumed atlas) and the rows
@@ -360,17 +439,18 @@ export class AtlasSchedule {
     for (const r of priorRows) this.addRow(r);
     for (const e of prior) {
       this.events.push(e);
-      if (e.type === 'pick') this.picks.push({ d: e.d, k: e.k, why: e.why, ...(e.replaces !== undefined ? { replaces: e.replaces } : {}) });
+      if (e.type === 'pick') this.picks.push({ d: e.d, k: e.k, why: e.why, ...(e.replaces !== undefined ? { replaces: e.replaces } : {}), ...(e.options ? { options: [...e.options] } : {}) });
       if (e.type === 'screen') this.recorded.screen.set(`${e.d}:${e.at}`, e);
       if (e.type === 'stop') this.recorded.stop.set(`${e.d}:${e.at}`, e);
       if (e.type === 'futility') this.recorded.futility.set(`${e.d}:${e.at}`, e);
     }
-    if (!this.picks.length) for (const p of pickDecisions(all, o.decisions, cuts.minOptions)) this.pick(p);
+    // D524: --only's list is the picks, each with its options; otherwise D451's spread (with --min-options)
+    if (!this.picks.length) for (const p of cuts.only ? onlyPicks(all, cuts.only) : pickDecisions(all, o.decisions, cuts.minOptions)) this.pick(p);
     // replay each decision's stages: a stage whose checkpoint is recorded is applied as written; one whose units are all done
     // is decided now; the first stage with units still to play is where the decision stands
     for (let j = 0; j < this.picks.length; j++) {
       const p = this.picks[j] as DecisionPick;
-      const s: DState = { d: p.d, k: p.k, stage: 0, alive: Array.from({ length: p.k }, (_, o) => o), done: false, outstanding: new Set() };
+      const s: DState = { d: p.d, k: p.k, stage: 0, alive: aliveOf(p), done: false, outstanding: new Set() };
       this.st.set(p.d, s);
       for (;;) {
         const units = this.stageUnits(s);
@@ -391,7 +471,7 @@ export class AtlasSchedule {
 
   private pick(p: DecisionPick): void {
     this.picks.push(p);
-    this.emit({ v: 1, type: 'pick', d: p.d, k: p.k, why: p.why, ...(p.replaces !== undefined ? { replaces: p.replaces } : {}) });
+    this.emit({ v: 1, type: 'pick', d: p.d, k: p.k, why: p.why, ...(p.replaces !== undefined ? { replaces: p.replaces } : {}), ...(p.options ? { options: [...p.options] } : {}) });
   }
 
   private emit(e: ScheduleEvent): void {
@@ -407,7 +487,8 @@ export class AtlasSchedule {
   /** Stage `s.stage`'s units: random chunks over the running options, and on the last stage the Forge map's too. */
   private stageUnits(s: DState): Unit[] {
     const lo = s.stage === 0 ? 0 : (this.ends[s.stage - 1] as number), hi = this.ends[s.stage] as number;
-    const options = s.alive.length < s.k ? { options: [...s.alive] } : {};
+    // D524: under --only every unit carries its decision's options, all of them given or not
+    const options = s.alive.length < s.k || this.cuts.only ? { options: [...s.alive] } : {};
     const out: Unit[] = [];
     const chunks = (c: Continuation, a: number, b: number): void => { for (let i0 = a; i0 < b; i0 += this.o.chunk) out.push({ d: s.d, c, i0, i1: Math.min(b, i0 + this.o.chunk), ...options }); };
     chunks('random', lo, hi);
@@ -502,7 +583,7 @@ export class AtlasSchedule {
     const out: Unit[] = [];
     if (this.checkpoint(s)) out.push(...this.open(s));
     for (const p of this.picks.slice(before)) {
-      const n: DState = { d: p.d, k: p.k, stage: 0, alive: Array.from({ length: p.k }, (_, o) => o), done: false, outstanding: new Set() };
+      const n: DState = { d: p.d, k: p.k, stage: 0, alive: aliveOf(p), done: false, outstanding: new Set() };
       this.st.set(p.d, n);
       out.push(...this.open(n));
     }
