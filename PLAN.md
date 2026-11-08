@@ -14,10 +14,10 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 398 items still open across 44 follow-up lists** — 366
+**The index below lists 399 items still open across 44 follow-up lists** — 367
 open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
+said 371 across 42, three rows and one list behind its table) — D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
@@ -458,6 +458,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 39 | open | D518's evaluator v3 tooling is built and unused: `dataset_merge.py` (row for row, every game's split kept; `--allow-shared-seeds` for the 5,237 seed numbers nights 4–5 share with nights 1–3, which keep their names), `train_eval.py --load-subsample F` (a fixed share of each train and val game's rows, test whole) and `config.json` `coach.evalModel` (null: the night-1 ensemble; `human_eval.py`'s default follows the same order); J196 (whose draft carries these names and the flag) fits v2's configuration once at `--load-subsample 0.5`, stopping at 17 GB, over nights 1–5 and reads D364's `eval_compare` on v2's own test pairs: BETTER registers v3 for the strip only (a decision sets `coach.evalModel`), else killed | `docs/decisions/D518-eval-v3-tooling.md` |
 | [Cube lab](#fu-cube-lab) | 40 | open | D520: `train_eval.py` now writes `--out` (the final model without `training.metrics` and `auxTurnsToEnd`, with `partial: {complete: false, fit}`) and a `complete: false` `--report` the moment the fit ends, before the baselines where J196 was OOM-killed after 2.5 hours with nothing on disk; `--resume-model PATH` runs only what follows the fit. J196 ran before this code: its retry is one full refit; only a kill after this lands is resumable. Open: a resume still loads the whole dataset (about 2 of J196's 2.5 hours) and peaks at the baselines, so it runs without the painter beside it; a model judged by `eval_compare` from its early file is registered as that file (the sha12 compared) or compared again once final; jobs that read the report check `complete` | `docs/decisions/D520-fit-saves-first.md` |
 | [Cube lab](#fu-cube-lab) | 41 | open | D521's runner uses the whole machine and is not deployed: the core budget is all threads but two by default (`whole`, 14; `shared` = the old 8, `tools/runner.sh budget`), every start needs its expected peak in MemAvailable less 3 GB at PSI some avg10 ≤ 5%, a memory stop is retried first as soon as it fits (one-minute settle, its need carved out, never behind a newer job), a declaration is a floor a measured peak × 1.4 may raise after 60 minutes (J197: 14 GB declared, ~17.2 measured), `alone: yes` keeps ladder matches by themselves (lint `alone-ladder`), and `status.json` says `degraded` for memory held outside the lab with `alerts` (memory-wait, budget-wait, stops, retries); the merger deploys it with `tools/runner.sh install` — after J197 ends or once J197's job file carries `alone: yes` (the decision's Deploy) — a first concurrent night is read for pressure events, and ForgeCoach's `#lab` page learns `degraded`, the alerts and `alone` | `docs/decisions/D521-runner-whole-machine.md` |
+| [Cube lab](#fu-cube-lab) | 42 | open | D523's random-rollout arms `search-v2-rrandom` (`rollout=random`: both seats in the rollout play random-v2, the atlas's random seat with no Forge answer plus seven guardrails R1–R7 from the atlas's evidence, each counted as `search.rr.v2.*`) and `search-v2-rrandom-self` (`random-self`: the searching seat alone) are registered and unplayed: J199, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D523's pre-registered rule (SHOWN / NOT SHOWN / INCONCLUSIVE at +15, "indistinguishable" when the interval holds 0); then the agent's iteration loop (counters and worst-lost games, guardrails added or fixed as a new arm, re-run without asking the owner) | `docs/decisions/D523-random-rollouts.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10396,6 +10397,17 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    it (`tools/runner.sh install`, the decision's Deploy: a restart adopts running units, never stops them) after J197
    ends or once J197's job file carries `alone: yes`; read the first concurrent night's pressure events; ForgeCoach's
    `#lab` page should show `degraded`, the alerts and the `alone` reason.
+42. **D523's random-rollout arms are registered and unplayed: J199, then the iteration loop.**
+   (2026-11-08, D523.) `rollout=random` and `rollout=random-self` (D390's key) seat `RolloutController.Random` in the
+   search's copies: random-v2, the atlas's random seat (D451's guardrails, D508's population untouched) asking Forge's
+   AI for no answer, plus seven guardrails read from 3,900 random branch logs of J193 (R1 lethal attack, R2 lethal
+   block, R3 target side, R4 cast something in main 2, R5 no losing attack, R6 no chump, R7 no answer to its own
+   stack), each counted per rollout as `search.rr.v2.*` in the batch line. Ladder players `search-v2-rrandom`
+   (`fb8ae32c014d`) and `search-v2-rrandom-self` (`d3aa28be73b2`); the 4-game pilots ran ×1.21 and ×1.10 search-v2's
+   rollouts a decision (15.59 and 13.44, contended), not the large speed-up hoped for. **Open:** J199, each arm 1,200
+   games on the confirm set against search-v1-anytime, `alone: yes`, on D523's rule; then the agent reads the
+   counters and the worst-lost games, adds or fixes guardrails as a new arm and re-runs, without asking the owner,
+   who gets the results.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
@@ -10897,6 +10909,27 @@ dataset. `docs/decisions/D516-public-ready.md` is the decision and its evidence.
 
 Its follow-ups are the move atlas release's 9 and 10 ([the list](#fu-move-atlas)); it closed that list's 3 and 4
 and marked its 2 accepted, and answered the owner's question 7 (public).
+
+<a id="d523-random-rollouts"></a>
+## Rollouts played by the random seat (2026-11-08, D523)
+
+**Status: built, piloted, not gated or merged; J199 not posted.** Branch `pc/rollout-random` off main `45615036`.
+`docs/decisions/D523-random-rollouts.md` is the decision. The owner's principle: knowledge comes from randomised
+exploration within reasonable bounds, not from Forge's heuristics, and the agent in the loop rules useless lines out
+from data. So the search's rollouts can be played by the random seat instead of Forge's AI:
+
+- **The seam**: `rollout=random` (both seats in the copy random-v2) and `rollout=random-self` (the searching seat
+  only), the candidate still forced first; random-v2 is the atlas's random seat plus a flag, asking Forge for no
+  answer; the atlas's own seat and its frozen population are unchanged.
+- **Seven guardrails, each from the atlas's evidence** (J193's random branches against Forge's answer at the same
+  decisions): R1 lethal on board taken (random missed it 45.3%, Forge 0.3%), R2 a lethal attack blocked when a block
+  saves (41.1% vs 3.2%), R3 harm the other side and help your own (33.4% of redraws on the wrong side), R4 cast
+  something in main 2 (39.7% vs 7.0% passes), R5 no attacker a blocker kills for free (28.1% vs 9.0%), R6 no chump
+  without lethal (38.3% vs 12.7%), R7 no answer to its own stack (54.7% vs 1.0%).
+- **Two arms**, `search-v2-rrandom` and `search-v2-rrandom-self`, and J199's rule (D517's +15 bar, plus
+  "indistinguishable"); the iteration loop after it is the agent's.
+
+Its follow-up is the cube lab's 42 ([the list](#fu-cube-lab)).
 
 ## Deferred — out of scope for M0–M7
 

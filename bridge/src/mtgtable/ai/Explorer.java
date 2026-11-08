@@ -30,6 +30,7 @@ import forge.ai.AiController;
 import forge.ai.AiCostDecision;
 import forge.ai.ComputerUtilAbility;
 import forge.ai.ComputerUtilCard;
+import forge.ai.ComputerUtilCombat;
 import forge.ai.ComputerUtilCost;
 import forge.ai.ComputerUtilMana;
 import forge.game.Game;
@@ -453,6 +454,12 @@ public final class Explorer {
                 }
                 lastAbility = null;
             }
+            if (math.config().v2 && RolloutGuards.ownStack(ai)) {
+                // D523 R7: everything on the stack is the seat's own -- it lets it resolve (nothing listed)
+                math.guardrail("v2.ownStack");
+                mark = null;
+                return null;
+            }
             final Map<String, List<SpellAbility>> opts = Decisions.quiet(() -> randomOptions(ai, aic, chosen));
             final String forgeTok = tokenOf(chosen);
             final List<String> lands = new ArrayList<>();
@@ -476,6 +483,9 @@ public final class Explorer {
             }
             // G5 (D458): a play the engine refused to pay for in this priority window is not picked again in it
             dropRefused(opts, refusedHere, math);
+            if (math.config().v2) {
+                RolloutGuards.castSomething(ai, opts, math);   // D523 R4: no pass in its own main 2 with nothing cast yet
+            }
             final List<String> keys = new ArrayList<>(opts.keySet());
             if (keys.size() < 2) {
                 final String only = keys.isEmpty() ? "pass" : keys.get(0);
@@ -694,6 +704,9 @@ public final class Explorer {
             final List<GameEntity> legal = candidates(s, ai);
             if (avoid != null) {
                 legal.removeIf(avoid::contains);   // D488: what the play's own cost would take
+            }
+            if (math.config().v2) {
+                RolloutGuards.side(part, ai, legal, math);   // D523 R3: harm the other side, help its own
             }
             final int[] range = targetCount(min, max, legal.size());
             if (range == null) {
@@ -1623,7 +1636,10 @@ public final class Explorer {
 
     private Decision.Explore randomTarget(final SpellAbility head, final SpellAbility s, final Player ai, final GameEntity cur) {
         final List<GameEntity> opts = legalTargets(s, ai, cur);
-        if (opts.size() < 2) {
+        if (math.config().v2) {
+            RolloutGuards.side(s, ai, opts, math);   // D523 R3 (the current target may go too)
+        }
+        if (opts.isEmpty() || opts.size() < 2 && opts.contains(cur)) {
             return null;
         }
         final GameEntity pick = opts.get(math.pick(opts.size()));
@@ -1779,12 +1795,39 @@ public final class Explorer {
             return null;
         }
         final String forgeTok = attackTokenOf(forge.keySet(), ai);
+        final boolean v2 = math.config().v2;
+        if (v2 && defender instanceof Player && RolloutGuards.lethalOpen((Player) defender, combat, able)) {
+            // D523 R1: lethal through no possible blocker -- every creature that may attack does
+            final Map<Card, GameEntity> all = new LinkedHashMap<>();
+            for (final Card c : able) {
+                all.put(c, defender);
+            }
+            if (SearchPolicy.legalAttack(combat, all)) {
+                math.guardrail("v2.lethalAttack");
+                math.randomised("attack", attackTokenOf(all.keySet(), ai).equals(forgeTok));
+                return new Decision.Explore("random", forgeTok);
+            }
+        }
+        final List<Card> oppBlockers = v2 && defender instanceof Player ? RolloutGuards.blockers((Player) defender) : null;
         for (int attempt = 0; attempt < 64; attempt++) {
             final long bits = math.mask(able.size());
             final Map<Card, GameEntity> m = new LinkedHashMap<>();
             for (int i = 0; i < able.size(); i++) {
                 if ((bits & 1L << i) != 0) {
                     m.put(able.get(i), defender);
+                }
+            }
+            if (v2 && !m.isEmpty() && !oppBlockers.isEmpty()) {
+                // D523 R5: no attacker a possible blocker kills and survives -- kept as drawn if the rest is not legal
+                final Map<Card, GameEntity> kept = new LinkedHashMap<>(m);
+                final ExploreMath probe = new ExploreMath(math.config(), 0);
+                if (RolloutGuards.dropDominated(kept, a -> RolloutGuards.dominated(ai, a, oppBlockers, combat), probe) > 0
+                        && SearchPolicy.legalAttack(combat, kept)) {
+                    for (int k = probe.guardrails().getOrDefault("v2.dominatedAttacker", 0); k > 0; k--) {
+                        math.guardrail("v2.dominatedAttacker");
+                    }
+                    math.randomised("attack", attackTokenOf(kept.keySet(), ai).equals(forgeTok));
+                    return new Decision.Explore("random", forgeTok);
                 }
             }
             if (SearchPolicy.legalAttack(combat, m)) {
@@ -1853,6 +1896,19 @@ public final class Explorer {
             return null;
         }
         final String forgeTok = blockTokenOf(forge);
+        final boolean v2 = math.config().v2;
+        Map<Card, Integer> dmg = null;
+        boolean lethal = false;
+        if (v2) {
+            dmg = new LinkedHashMap<>();
+            for (final Card a : combat.getAttackers()) {
+                if (combat.getDefenderByAttacker(a) == ai) {
+                    dmg.put(a, Math.max(0, ComputerUtilCombat.damageIfUnblocked(a, ai, combat, false)));
+                }
+            }
+            lethal = RolloutGuards.lethalIncoming(RolloutGuards.incoming(ai, combat), ai.getLife(), ai.canLoseLife() && !ai.cantLose());
+        }
+        boolean lethalRedrawn = false;
         for (int attempt = 0; attempt < 64; attempt++) {
             final Map<Card, Card> m = new LinkedHashMap<>();
             for (int i = 0; i < blockers.size(); i++) {
@@ -1862,8 +1918,41 @@ public final class Explorer {
                     m.put(blockers.get(i), as.get(k - 1));
                 }
             }
+            if (v2 && lethal && RolloutGuards.unblocked(dmg, m) >= ai.getLife()) {
+                lethalRedrawn = true;   // D523 R2: this draw leaves the seat dead; draw again
+                continue;
+            }
+            if (v2 && !lethal && !m.isEmpty()) {
+                // D523 R6: no chump block when the attack is not lethal -- kept as drawn if the rest is not legal
+                final Map<Card, Card> kept = new LinkedHashMap<>(m);
+                final ExploreMath probe = new ExploreMath(math.config(), 0);
+                if (RolloutGuards.dropChumps(kept, (b, a) -> RolloutGuards.chump(ai, b, a, combat), probe) > 0
+                        && SearchPolicy.legalBlock(combat, ai, kept)) {
+                    for (int k = probe.guardrails().getOrDefault("v2.chumpBlock", 0); k > 0; k--) {
+                        math.guardrail("v2.chumpBlock");
+                    }
+                    math.randomised("block", blockTokenOf(kept).equals(forgeTok));
+                    return new Decision.Explore("random", forgeTok);
+                }
+            }
             if (SearchPolicy.legalBlock(combat, ai, m)) {
+                if (lethalRedrawn) {
+                    math.guardrail("v2.lethalBlock");
+                }
                 math.randomised("block", blockTokenOf(m).equals(forgeTok));
+                return new Decision.Explore("random", forgeTok);
+            }
+        }
+        if (v2 && lethal) {
+            // D523 R2's fallback: no surviving draw in 64 -- the most damage blocked, greedily
+            final Map<Card, List<Card>> opts = new LinkedHashMap<>();
+            for (int i = 0; i < blockers.size(); i++) {
+                opts.put(blockers.get(i), choices.get(i));
+            }
+            final Map<Card, Card> g = RolloutGuards.greedyBlock(opts, dmg);
+            if (SearchPolicy.legalBlock(combat, ai, g)) {
+                math.guardrail("v2.lethalBlock");
+                math.randomised("block", blockTokenOf(g).equals(forgeTok));
                 return new Decision.Explore("random", forgeTok);
             }
         }

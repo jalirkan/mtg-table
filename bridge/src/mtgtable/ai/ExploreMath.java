@@ -57,12 +57,26 @@ public final class ExploreMath {
          * not offered -- G6, D471); no close calls.
          */
         public final boolean random;
+        /**
+         * D523: the rollout's random seat, {@code random-v2} -- the random seat
+         * above (every guardrail of D451-D488 applies) plus the rollout
+         * guardrails of {@link RolloutGuards} (R1-R7), each counted under its
+         * {@code v2.} name.  Only a search rollout's seat ({@code rollout=random},
+         * {@code random-self}) is built with it; the move atlas's seat
+         * ({@link #randomSeat}, D508's frozen population) never is.
+         */
+        public final boolean v2;
 
         public Config(final double epsilon, final double closeCall, final boolean opening) {
             this(epsilon, closeCall, opening, false);
         }
 
         public Config(final double epsilon, final double closeCall, final boolean opening, final boolean random) {
+            this(epsilon, closeCall, opening, random, false);
+        }
+
+        private Config(final double epsilon, final double closeCall, final boolean opening, final boolean random,
+                       final boolean v2) {
             if (!(epsilon >= 0 && epsilon <= 1) || !(closeCall >= 0 && closeCall < 1)) {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "play exploration: epsilon in [0, 1] and closeCall in [0, 1), got %s and %s", epsilon, closeCall));
@@ -74,11 +88,17 @@ public final class ExploreMath {
             this.closeCall = closeCall;
             this.opening = opening;
             this.random = random;
+            this.v2 = v2;
         }
 
         /** D451: the random seat's settings. */
         public static Config randomSeat() {
             return new Config(1, 0, false, true);
+        }
+
+        /** D523: the search rollout's random seat, random-v2: {@link #randomSeat} plus {@link RolloutGuards}. */
+        public static Config randomV2() {
+            return new Config(1, 0, false, true, true);
         }
 
         /** From a job line's {@code playExplore} object (Jetty's parser: numbers are Long or Double); null in, null out. */

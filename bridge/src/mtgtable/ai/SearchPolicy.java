@@ -1953,7 +1953,8 @@ public final class SearchPolicy {
         final Map<Cand, Double> prior = new java.util.IdentityHashMap<>();
         final List<Cand> drop = new ArrayList<>();
         final Limits lim = new Limits(deadline, 0, 2_000, cfg.untapped, cfg.oracle, cfg.rolloutOutletsUs(),
-                cfg.rolloutOutletsThem(), true, priorEval == null ? null : (g, p) -> priorEval.logit(g, p) * LEAF_SCALE, leafEval);
+                cfg.rolloutOutletsThem(), true, priorEval == null ? null : (g, p) -> priorEval.logit(g, p) * LEAF_SCALE, leafEval,
+                null, cfg.rolloutRandomUs(), cfg.rolloutRandomThem());
         int scored = 0;
         for (int i = keep; i < cands.size(); i++) {
             if (System.nanoTime() > deadline) {
@@ -2758,7 +2759,8 @@ public final class SearchPolicy {
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                             final boolean first, final int horizon) {
         return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle,
-                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval), sink, first, failCopyForTest);
+                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval, null,
+                cfg.rolloutRandomUs(), cfg.rolloutRandomThem()), sink, first, failCopyForTest);
     }
 
     /** How far a {@link #playout} may run. */
@@ -2817,6 +2819,21 @@ public final class SearchPolicy {
                       final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
                       final java.util.function.ToDoubleBiFunction<Game, Player> score,
                       final mtgtable.eval.PositionEvaluator evaluator, final LineRecorder line) {
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, outletsUs, outletsThem, untilApplied, score, evaluator,
+                    line, false, false);
+        }
+
+        /** D523: the searching seat inside the rollout is the random seat, random-v2; and the other seat too. */
+        public final boolean randomUs;
+        public final boolean randomThem;
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
+                      final java.util.function.ToDoubleBiFunction<Game, Player> score,
+                      final mtgtable.eval.PositionEvaluator evaluator, final LineRecorder line,
+                      final boolean randomUs, final boolean randomThem) {
+            this.randomUs = randomUs;
+            this.randomThem = randomThem;
             this.line = line;
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
@@ -2877,6 +2894,7 @@ public final class SearchPolicy {
         final java.util.Random realRandom = MyRandom.getRandom();
         MyRandom.setRandom(new Random(seed));
         Atlas.StepClock clock = null;
+        final List<RolloutController.Random> randomSeats = new ArrayList<>(2);   // D523: their guardrail counts, below
         try {
             final long tc = System.nanoTime();
             final LenientGameCopier cp = new LenientGameCopier(game);
@@ -2915,12 +2933,21 @@ public final class SearchPolicy {
             }
             final Player aiCopy = (Player) cp.find(ai);
             RolloutForcing rc = null;
-            for (final Player p : copy.getPlayers()) {
+            final List<Player> seatsInCopy = new ArrayList<>(copy.getPlayers());
+            for (int k = 0; k < seatsInCopy.size(); k++) {
+                final Player p = seatsInCopy.get(k);
                 if (p == aiCopy) {
                     if (lim.line != null) {
                         final RecordingController c = new RecordingController(copy, p, p.getLobbyPlayer(), lim.line);   // D454
                         rc = c;
                         p.dangerouslySetController(c);
+                    } else if (lim.randomUs) {
+                        // D523: the random seat, random-v2; its draws seeded from the rollout's seed (common random numbers)
+                        final RolloutController.Random r = new RolloutController.Random(copy, p, p.getLobbyPlayer(),
+                                ExploreMath.seedFor(seed, RANDOM_ROLLOUT_GAME, k));
+                        randomSeats.add(r);
+                        rc = r;
+                        p.dangerouslySetController(r);
                     } else if (lim.outletsUs) {
                         final RolloutController.Outlets o = new RolloutController.Outlets(copy, p, p.getLobbyPlayer());
                         rc = o;
@@ -2930,6 +2957,11 @@ public final class SearchPolicy {
                         rc = c;
                         p.dangerouslySetController(c);
                     }
+                } else if (lim.randomThem) {
+                    final RolloutController.Random r = new RolloutController.Random(copy, p, p.getLobbyPlayer(),
+                            ExploreMath.seedFor(seed, RANDOM_ROLLOUT_GAME, k));
+                    randomSeats.add(r);
+                    p.dangerouslySetController(r);
                 } else if (lim.outletsThem) {
                     p.dangerouslySetController(new PolicyControllerAi(copy, p, p.getLobbyPlayer(), new OutletPolicy(true)));
                 } else {
@@ -3027,6 +3059,36 @@ public final class SearchPolicy {
                 clock.disarm();
             }
             MyRandom.setRandom(realRandom);
+            countRandomSeats(randomSeats, sink, lim.untilApplied);
+        }
+    }
+
+    /** D523: the random seats' generator stream in a rollout: {@link ExploreMath#seedFor}'s game number, apart from the cube lab's. */
+    static final int RANDOM_ROLLOUT_GAME = -523;
+
+    /**
+     * D523: a random rollout's guardrail counts, into the search's counters --
+     * {@code search.rr.rollouts} (one per rollout that seated the random seat),
+     * {@code search.rr.<guardrail>} for each of D451's and D523's {@code v2.}
+     * names that fired, summed over the rollout's random seats, and
+     * {@code search.rr.failures}.  The ranking's playouts ({@code rank=prior})
+     * count under {@code search.prior.rr.}.  Counted however the rollout ended.
+     */
+    static void countRandomSeats(final List<RolloutController.Random> seats, final Sink sink, final boolean prior) {
+        if (seats.isEmpty()) {
+            return;
+        }
+        final String pre = prior ? "search.prior.rr." : "search.rr.";
+        sink.add(pre + "rollouts", 1);
+        for (final RolloutController.Random r : seats) {
+            for (final Map.Entry<String, Integer> e : r.guardrails().entrySet()) {
+                if (e.getValue() > 0) {
+                    sink.add(pre + e.getKey(), e.getValue());
+                }
+            }
+            if (r.failures() > 0) {
+                sink.add(pre + "failures", r.failures());
+            }
         }
     }
 

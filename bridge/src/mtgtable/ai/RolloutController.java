@@ -275,6 +275,109 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
     }
 
     /**
+     * D523: a seat inside a rollout played by the search's random seat,
+     * {@code random-v2} ({@link ExploreMath.Config#randomV2}): the move atlas's
+     * random seat (D451's guardrails G1-G6 and D485-D488) plus the rollout
+     * guardrails R1-R7 ({@link RolloutGuards}).  The searching seat's is built
+     * with its candidate forced first, as above ({@code rollout=random} and
+     * {@code random-self}); the opponent's under {@code rollout=random} is the
+     * same class with nothing forced.
+     *
+     * <p>Unlike the atlas's seat ({@link AtlasController}), it never asks Forge's
+     * AI for an answer to offer among the random ones: a priority is the random
+     * seat's pick among pass, each land and every play it can make and pay for
+     * (Forge's answer is the list's {@code null}), an attack and a block are
+     * random from an empty declaration.  Mana payment, costs, triggers and the
+     * other choices of an effect stay Forge's, as for every random seat.  No
+     * decision sink, no pay cap (G5 instead), no search.
+     */
+    static final class Random extends PolicyControllerAi implements RolloutForcing {
+        private final Forced forced = new Forced();
+        private final java.util.Map<SpellAbility, Decision.Explore> marks = new java.util.IdentityHashMap<>();
+
+        Random(final Game game, final Player p, final LobbyPlayer lp, final long seed) {
+            super(game, p, lp, null);
+            setExplorer(new Explorer(new ExploreMath(ExploreMath.Config.randomV2(), seed)));
+        }
+
+        /** The guardrails' counts (D451's names and D523's {@code v2.} ones) and the explorer's failures. */
+        java.util.Map<String, Integer> guardrails() {
+            return explorer().math().guardrails();
+        }
+
+        int failures() {
+            return explorer().math().failures();
+        }
+
+        @Override
+        public void forcePriority(final SpellAbility saOrNullForPass) {
+            forced.priority(saOrNullForPass);
+        }
+
+        @Override
+        public void forceAttack(final Map<Card, GameEntity> attackers) {
+            forced.attack(attackers, getGame());
+        }
+
+        @Override
+        public void forceBlock(final Map<Card, Card> blocks) {
+            forced.block(blocks, getGame());
+        }
+
+        @Override
+        public boolean applied(final Game copy) {
+            return forced.applied(copy);
+        }
+
+        @Override
+        public boolean unanswered() {
+            return forced.unanswered();
+        }
+
+        @Override
+        public List<SpellAbility> chooseSpellAbilityToPlay() {
+            if (forced.takePriority(getGame())) {
+                return forced.priorityAnswer();
+            }
+            final Explorer e = explorer();
+            final List<SpellAbility> r = e.priority(player, getAi(), null);
+            e.takeMark();
+            final SpellAbility sa = r == null || r.isEmpty() ? null : r.get(0);
+            if (sa != null && !sa.isLandAbility()) {
+                marks.clear();
+                e.targets(sa, player, marks);
+            }
+            return r;
+        }
+
+        @Override
+        public void declareAttackers(final Player attacker, final Combat combat) {
+            if (forced.attackers(combat, getGame())) {
+                return;
+            }
+            if (attacker != player) {
+                super.declareAttackers(attacker, combat);
+                return;
+            }
+            explorer().attack(player, combat);
+            explorer().takeMark();
+        }
+
+        @Override
+        public void declareBlockers(final Player defender, final Combat combat) {
+            if (forced.blockers(combat, getGame())) {
+                return;
+            }
+            if (defender != player) {
+                super.declareBlockers(defender, combat);
+                return;
+            }
+            explorer().block(player, combat);
+            explorer().takeMark();
+        }
+    }
+
+    /**
      * D390: the searching seat's rollout controller with D310's sacrifice-outlet
      * policy acting in front of Forge (a {@link PolicyControllerAi} with no
      * search and no decision sink), the candidate forced first as above.
