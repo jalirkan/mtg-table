@@ -14,8 +14,8 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 398 items still open across 44 follow-up lists** — 367
-open, 19 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
+**The index below lists 398 items still open across 44 follow-up lists** — 366
+open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
 said 371 across 42, three rows and one list behind its table) — D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
