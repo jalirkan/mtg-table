@@ -3,35 +3,35 @@ runner: forgecoach-runner ac07876b
 started: 2026-11-08T00:20:32-05:00
 phase: commands 1/2
 mtg-table: 310ba71
-workers: 5 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.29), budget 21.4 GB)
+workers: 4 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.29), budget 21.4 GB)
 peak_worker_rss_gb: 1.29
-pressure-1: 2026-11-08T00:58:00-05:00 drop to 6 worker(s): some avg10 0.5%, swap-in 7047/s, job 8.3/21.4 GB
-pressure-2: 2026-11-08T01:03:58-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 2/s, job 6.9/21.4 GB
-pressure-3: 2026-11-08T02:58:12-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 6955/s, job 9.1/21.4 GB
-pressure-4: 2026-11-08T03:05:57-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 3/s, job 8.4/21.4 GB
-pressure-5: 2026-11-08T03:18:26-05:00 drop to 6 worker(s): some avg10 0.1%, swap-in 3041/s, job 8.3/21.4 GB
-pressure-6: 2026-11-08T03:23:29-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 7/s, job 6.6/21.4 GB
-pressure-7: 2026-11-08T03:46:28-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 2241/s, job 8.1/21.4 GB
-pressure-8: 2026-11-08T03:53:19-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 1/s, job 7.7/21.4 GB
-pressure-9: 2026-11-08T04:41:12-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 9937/s, job 8.7/21.4 GB
-pressure-10: 2026-11-08T04:46:16-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 0/s, job 7.2/21.4 GB
-pressure-11: 2026-11-08T06:37:17-05:00 drop to 6 worker(s): some avg10 0.2%, swap-in 7887/s, job 9.4/21.4 GB
-pressure-12: 2026-11-08T06:42:22-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 1/s, job 7.5/21.4 GB
-pressure-13: 2026-11-08T06:45:34-05:00 drop to 6 worker(s): some avg10 13.7%, swap-in 11121/s, job 9.3/21.4 GB
-pressure-14: 2026-11-08T06:47:19-05:00 drop to 5 worker(s): some avg10 0.4%, swap-in 5701/s, job 7.2/21.4 GB
-pressure-15: 2026-11-08T07:08:02-05:00 drop to 4 worker(s): some avg10 0.5%, swap-in 4842/s, job 6.4/21.4 GB
-pressure-16: 2026-11-08T07:20:38-05:00 raise to 5 worker(s): some avg10 0.0%, swap-in 7/s, job 4.4/21.4 GB
-pressure-17: 2026-11-08T07:26:03-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 1/s, job 5.9/21.4 GB
-pressure-18: 2026-11-08T07:42:09-05:00 drop to 5 worker(s): some avg10 4.3%, swap-in 4928/s, job 7.8/21.4 GB
-pressure-19: 2026-11-08T07:51:15-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 44/s, job 5.8/21.4 GB
-pressure-20: 2026-11-08T07:56:21-05:00 raise to 7 worker(s): some avg10 0.5%, swap-in 12/s, job 8.0/21.4 GB
-pressure-21: 2026-11-08T08:11:53-05:00 drop to 6 worker(s): some avg10 3.2%, swap-in 8400/s, job 9.1/21.4 GB
-pressure-22: 2026-11-08T08:17:27-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 5/s, job 6.5/21.4 GB
-pressure-23: 2026-11-08T08:54:08-05:00 drop to 6 worker(s): some avg10 0.3%, swap-in 18984/s, job 8.7/21.4 GB
-pressure-24: 2026-11-08T08:56:19-05:00 drop to 5 worker(s): some avg10 0.6%, swap-in 4421/s, job 7.4/21.4 GB
-pressure-25: 2026-11-08T09:01:23-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 0/s, job 6.0/21.4 GB
-pressure-26: 2026-11-08T09:06:27-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 0/s, job 7.2/21.4 GB
-pressure-27: 2026-11-08T09:10:30-05:00 drop to 6 worker(s): some avg10 1.3%, swap-in 2915/s, job 8.4/21.4 GB
-pressure-28: 2026-11-08T09:11:51-05:00 drop to 5 worker(s): some avg10 1.9%, swap-in 4446/s, job 6.9/21.4 GB
-pressure-29: 2026-11-08T09:12:59-05:00 drop to 4 worker(s): some avg10 0.9%, swap-in 10475/s, job 5.6/21.4 GB
-pressure-30: 2026-11-08T09:20:11-05:00 raise to 5 worker(s): some avg10 0.1%, swap-in 2/s, job 4.1/21.4 GB
+pressure-1: 2026-11-08T01:03:58-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 2/s, job 6.9/21.4 GB
+pressure-2: 2026-11-08T02:58:12-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 6955/s, job 9.1/21.4 GB
+pressure-3: 2026-11-08T03:05:57-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 3/s, job 8.4/21.4 GB
+pressure-4: 2026-11-08T03:18:26-05:00 drop to 6 worker(s): some avg10 0.1%, swap-in 3041/s, job 8.3/21.4 GB
+pressure-5: 2026-11-08T03:23:29-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 7/s, job 6.6/21.4 GB
+pressure-6: 2026-11-08T03:46:28-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 2241/s, job 8.1/21.4 GB
+pressure-7: 2026-11-08T03:53:19-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 1/s, job 7.7/21.4 GB
+pressure-8: 2026-11-08T04:41:12-05:00 drop to 6 worker(s): some avg10 0.0%, swap-in 9937/s, job 8.7/21.4 GB
+pressure-9: 2026-11-08T04:46:16-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 0/s, job 7.2/21.4 GB
+pressure-10: 2026-11-08T06:37:17-05:00 drop to 6 worker(s): some avg10 0.2%, swap-in 7887/s, job 9.4/21.4 GB
+pressure-11: 2026-11-08T06:42:22-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 1/s, job 7.5/21.4 GB
+pressure-12: 2026-11-08T06:45:34-05:00 drop to 6 worker(s): some avg10 13.7%, swap-in 11121/s, job 9.3/21.4 GB
+pressure-13: 2026-11-08T06:47:19-05:00 drop to 5 worker(s): some avg10 0.4%, swap-in 5701/s, job 7.2/21.4 GB
+pressure-14: 2026-11-08T07:08:02-05:00 drop to 4 worker(s): some avg10 0.5%, swap-in 4842/s, job 6.4/21.4 GB
+pressure-15: 2026-11-08T07:20:38-05:00 raise to 5 worker(s): some avg10 0.0%, swap-in 7/s, job 4.4/21.4 GB
+pressure-16: 2026-11-08T07:26:03-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 1/s, job 5.9/21.4 GB
+pressure-17: 2026-11-08T07:42:09-05:00 drop to 5 worker(s): some avg10 4.3%, swap-in 4928/s, job 7.8/21.4 GB
+pressure-18: 2026-11-08T07:51:15-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 44/s, job 5.8/21.4 GB
+pressure-19: 2026-11-08T07:56:21-05:00 raise to 7 worker(s): some avg10 0.5%, swap-in 12/s, job 8.0/21.4 GB
+pressure-20: 2026-11-08T08:11:53-05:00 drop to 6 worker(s): some avg10 3.2%, swap-in 8400/s, job 9.1/21.4 GB
+pressure-21: 2026-11-08T08:17:27-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 5/s, job 6.5/21.4 GB
+pressure-22: 2026-11-08T08:54:08-05:00 drop to 6 worker(s): some avg10 0.3%, swap-in 18984/s, job 8.7/21.4 GB
+pressure-23: 2026-11-08T08:56:19-05:00 drop to 5 worker(s): some avg10 0.6%, swap-in 4421/s, job 7.4/21.4 GB
+pressure-24: 2026-11-08T09:01:23-05:00 raise to 6 worker(s): some avg10 0.0%, swap-in 0/s, job 6.0/21.4 GB
+pressure-25: 2026-11-08T09:06:27-05:00 raise to 7 worker(s): some avg10 0.0%, swap-in 0/s, job 7.2/21.4 GB
+pressure-26: 2026-11-08T09:10:30-05:00 drop to 6 worker(s): some avg10 1.3%, swap-in 2915/s, job 8.4/21.4 GB
+pressure-27: 2026-11-08T09:11:51-05:00 drop to 5 worker(s): some avg10 1.9%, swap-in 4446/s, job 6.9/21.4 GB
+pressure-28: 2026-11-08T09:12:59-05:00 drop to 4 worker(s): some avg10 0.9%, swap-in 10475/s, job 5.6/21.4 GB
+pressure-29: 2026-11-08T09:20:11-05:00 raise to 5 worker(s): some avg10 0.1%, swap-in 2/s, job 4.1/21.4 GB
+pressure-30: 2026-11-08T09:49:01-05:00 drop to 4 worker(s): some avg10 0.2%, swap-in 23184/s, job 5.9/21.4 GB
