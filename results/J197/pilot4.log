@@ -1,0 +1,15 @@
+==== J197 pilot4 started 2026-11-08T00:22:19-05:00 in unit lab-J197-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-routlets vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-routlets vs search-v1-anytime (match:j197-pilot:20261108T052220-2710576, seed 314900000, 1 pair(s))
+  done   w0 search-v2-routlets 2-2 search-v1-anytime (0 draws) in 83 s
+  4 decisive games (2 pairs): search-v2-routlets scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-routlets scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-routlets: 73 decisions searched in 4 games, 10 changed Forge's answer (13.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-routlets by kind: p 8/48, a 1/18, b 1/7
+search-v2-routlets time per decision: 534.629 ms (p+a+b); by kind p 541.219, a 556.433, b 433.373
+search-v1-anytime: 73 decisions searched in 4 games, 10 changed Forge's answer (13.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 8/48, a 1/18, b 1/7
+search-v1-anytime time per decision: 531.397 ms (p+a+b); by kind p 529.765, a 557.846, b 474.582
+{"run":"20261108T052220-2710576","a":"search-v2-routlets","b":"search-v1-anytime","aRolloutsPerDecision":19.03,"bRolloutsPerDecision":19.29,"aRoundsPerDecision":7.7,"bRoundsPerDecision":7.85,"aDecisions":73,"bDecisions":73,"aRanked":0,"bRanked":0,"aPriorPlayouts":0,"aPriorCut":0,"aPriorTimedOut":0,"aRankedShare":0,"aExposedGames":0,"bExposedGames":0,"aPolicyGames":0,"bPolicyGames":0,"aTouchedGames":0,"games":4,"aExposure":0,"bExposure":0,"aTouchedShare":0,"ratio":0.987}
