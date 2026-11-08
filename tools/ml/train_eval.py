@@ -13,6 +13,7 @@ directory, compare it with D305's baselines, and export it for Java (D316).
         [--cv K] [--report report.json] [--dry-load]
         [--search sha [--configs N] [--eta 3] [--min-epochs 2] [--finalists 3] [--jobs J]]
         [--curve 0.25,0.5,1.0] [--train-fraction F] [--fast] [--load-subsample F]
+        [--resume-model PATH]
 
 D364 (all opt-in; without them every number is what it was): `--search sha`
 is successive halving over GRID's space (eval_search.py's header), `--curve`
@@ -29,6 +30,17 @@ still present.  Test is never sampled.  It is the memory fix for a dataset
 too large to hold (five queue nights, ~45 M rows): `--subsample` draws each
 epoch's share only after the whole split is in memory.  F = 1 is the default
 path, bit for bit.
+
+D520: a plain fit (or a search) saves the model to `--out` the moment the best
+epoch's weights are chosen -- before the baselines, the scoring and the report,
+which is where J196 was OOM-killed after 2.5 hours -- with a `partial` block
+(`complete: false`, the fit's val log-loss, epochs run and seconds) and without
+`training.metrics`, and writes a partial `--report` (`complete: false`, the fit
+and the memory so far).  The end rewrites both through a temp file and a
+rename: the model as it always was (no `partial`), the report with `complete:
+true`.  `--resume-model PATH` loads such a model instead of fitting (refused
+unless this command line would have trained it: dataset, split, load,
+configuration) and runs only what follows the fit; it still loads the data.
 
 The model is evalnet.py's (its header says what and why).  It trains on the
 `train` split and stops early on the `val` split's log-loss (patience epochs
@@ -965,7 +977,18 @@ def run_train(a, hp, log) -> dict[str, Any]:
         + (f"; every game weighted equally (--weight-by game)" if weight_by else ""))
     grid_results = []
     search_summary = None
-    if search == "sha":
+    rows = {s: len(r) for s, r in splits.items()}
+    games = {s: int(len(np.unique(r.game))) for s, r in splits.items()}
+    resume = getattr(a, "resume_model", None)
+    saved: dict[str, Any] = {}
+
+    def training(best_epoch, aux_info, date, metrics=None):
+        return training_block(a, backend, hp, rows, games, best_epoch, search_summary, fast, frac, weight_by, opts,
+                              lsub_info, aux_info, soft_info, date, metrics)
+
+    if resume:   # D520: the fit is the saved model's; only the steps after it run
+        net, info, saved = resume_fit(resume, schema, training(None, None, None), opts["aux"], log)
+    elif search == "sha":
         if backend == "torch":
             raise SystemExit("train_eval: --search sha trains with numpy")
         import eval_search as S
@@ -978,17 +1001,38 @@ def run_train(a, hp, log) -> dict[str, Any]:
                         log if a.verbose else None, fast=fast, weight_by=weight_by, subsample=opts["subsample"],
                         aux=opts["aux"])
     log(f"model: hidden {net.hidden or 'none (logistic)'}, card dim {net.dim}, {net.n_params()} parameters, "
-        f"{len(net.cols)} board columns; best epoch {info['bestEpoch']} of {info['epochsRun']} "
-        f"({info['seconds']} s), val logloss {info['valLogloss']:.4f}")
-    mem.note("grid" if search == "grid" else "search" if search else "fit", log)
+        f"{len(net.cols)} board columns; best epoch {info['bestEpoch']} of {info.get('epochsRun')} "
+        f"({info.get('seconds')} s), val logloss {fmt4(info.get('valLogloss'))}"
+        + (f" (resumed from {resume})" if resume else ""))
+    mem.note("resume" if resume else "grid" if search == "grid" else "search" if search else "fit", log)
+    fit_info = {k: v for k, v in info.items() if k != "history"}
+    # D520: the auxiliary head is never exported, so its held-out error is measured here, before anything can
+    # kill the run, and carried in the early model (a resumed run reads it back); the number is the same
+    aux_info = (saved["auxTurnsToEnd"] if resume else aux_report(net, splits, opts["aux"])) if opts["aux"] > 0 else None
+    date = saved["date"] if resume else N.now()
+    # D520: the model and a partial report on disk the moment the fit is chosen, before the baselines, the
+    # scoring and the report -- a kill after the fit no longer loses it (--resume-model then runs only the rest)
+    if a.out:
+        N.save_model(a.out, net.to_json(schema, names, {
+            "excluded": info["excluded"], "training": training(info["bestEpoch"], aux_info, date),
+            "partial": {"complete": False, "fit": {k: fit_info[k] for k in PARTIAL_FIT if k in fit_info}}}))
+        log(f"saved {a.out} after the fit, before the baselines and scoring ({os.path.getsize(a.out)} bytes; "
+            f"rewritten with its metrics at the end)")
+    if a.report:
+        part = {"complete": False, "schemaId": schema["schemaId"], "data": os.path.abspath(a.data),
+                "backend": backend, "splitBy": a.split_by, "splitSummary": summary, "rows": rows, "games": games,
+                "hyper": hp, "fit": fit_info}
+        if resume:
+            part["resumedFrom"] = resume
+        part["memory"] = list(mem.stages)
+        write_json(a.report, part)
     models = fit_baselines(tr, va, names)
     mem.note("baselines", log)
     models["eval"] = net.predict
     report = {"schemaId": schema["schemaId"], "data": os.path.abspath(a.data), "backend": backend,
               "splitBy": a.split_by, "splitSummary": summary,
-              "rows": {s: len(r) for s, r in splits.items()},
-              "games": {s: int(len(np.unique(r.game))) for s, r in splits.items()},
-              "hyper": hp, "fit": {k: v for k, v in info.items() if k != "history"},
+              "rows": rows, "games": games,
+              "hyper": hp, "fit": fit_info,
               "models": score_all(models, splits), "grid": grid_results}
     # D364: only when used, so a default run's report is what it was
     if search_summary:
@@ -1006,7 +1050,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
     if lsub_info:
         report["loadSubsample"] = lsub_info
     if opts["aux"] > 0:
-        report["auxTurnsToEnd"] = aux_report(net, splits, opts["aux"])
+        report["auxTurnsToEnd"] = aux_info
         log(f"auxiliary turns_to_end head (weight {opts['aux']:g}): test MAE {report['auxTurnsToEnd']['testMAE']:.2f} "
             f"turns against {report['auxTurnsToEnd']['testMAEConstant']:.2f} for the training mean")
     # D364: rows, games, pairs, the effective sample size, intervals over pairs, plain vs exploring --
@@ -1019,27 +1063,90 @@ def run_train(a, hp, log) -> dict[str, Any]:
     log(verdict(report))
     if getattr(a, "eval_human", False):
         report["human"] = eval_human(a.data, schema, models, log)
+    if resume:
+        report["resumedFrom"] = resume
     if a.out:
         model = net.to_json(schema, names, {
             "excluded": info["excluded"],
-            "training": {"date": N.now(), "data": os.path.relpath(os.path.abspath(a.data)), "backend": backend,
-                         "splitBy": a.split_by,
-                         "hyper": hp, "rows": report["rows"], "games": report["games"],
-                         "bestEpoch": info["bestEpoch"],
-                         **({"search": {k: v for k, v in search_summary.items() if k != "rungs"}}
-                            if search_summary else {}),
-                         **({"fast": True} if fast else {}),
-                         **({"trainFraction": frac} if frac < 1.0 else {}),
-                         **({"weightBy": weight_by} if weight_by else {}),
-                         **({"subsample": opts["subsample"]} if opts["subsample"] < 1.0 else {}),
-                         **({"loadSubsample": lsub_info} if lsub_info else {}),
-                         **({"auxTurnsToEnd": report["auxTurnsToEnd"]} if opts["aux"] > 0 else {}),
-                         **({"softLabels": soft_info} if soft_info else {}),
-                         "metrics": {m: {s: report["models"][m][s].get("all") for s in ("val", "test")}
-                                     for m in report["models"]}}})
+            "training": training(info["bestEpoch"], aux_info, date,
+                                 {m: {s: report["models"][m][s].get("all") for s in ("val", "test")}
+                                  for m in report["models"]})})
         N.save_model(a.out, model)
         log(f"saved {a.out} ({os.path.getsize(a.out)} bytes)")
+    report["complete"] = True   # D520: the partial report written after the fit says false
     return report
+
+
+# ---------------------------------------------------------------- the model on disk before the baselines (D520)
+
+PARTIAL_FIT = ("valLogloss", "epochsRun", "seconds")   # the fit's facts the model's training block does not hold
+RESUME_CHECKED = ("data", "backend", "splitBy", "hyper", "rows", "games", "fast", "trainFraction", "weightBy",
+                  "subsample", "loadSubsample", "softLabels")
+
+
+def fmt4(x) -> str:
+    return "unknown" if x is None else f"{x:.4f}"
+
+
+def write_json(path: str, obj: Any) -> None:
+    """The report, as json.dump(indent=1) always wrote it, through a temp file and a rename: a kill mid-write
+    leaves the file that was there (D520)."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=1)
+    os.replace(tmp, path)
+
+
+def training_block(a, backend, hp, rows, games, best_epoch, search_summary, fast, frac, weight_by, opts, lsub_info,
+                   aux_info, soft_info, date, metrics=None) -> dict[str, Any]:
+    """The exported model's `training` block, in the order it has always had; `metrics` (the scores) is the
+    one field the model written after the fit lacks (D520)."""
+    return {"date": date, "data": os.path.relpath(os.path.abspath(a.data)), "backend": backend,
+            "splitBy": a.split_by,
+            "hyper": hp, "rows": rows, "games": games,
+            "bestEpoch": best_epoch,
+            **({"search": {k: v for k, v in search_summary.items() if k != "rungs"}}
+               if search_summary else {}),
+            **({"fast": True} if fast else {}),
+            **({"trainFraction": frac} if frac < 1.0 else {}),
+            **({"weightBy": weight_by} if weight_by else {}),
+            **({"subsample": opts["subsample"]} if opts["subsample"] < 1.0 else {}),
+            **({"loadSubsample": lsub_info} if lsub_info else {}),
+            **({"auxTurnsToEnd": aux_info} if aux_info is not None else {}),
+            **({"softLabels": soft_info} if soft_info else {}),
+            **({"metrics": metrics} if metrics is not None else {})}
+
+
+def resume_fit(path: str, schema: dict[str, Any], want: dict[str, Any], aux: float, log):
+    """--resume-model (D520): the net, the fit's facts and the saved date and auxiliary error from a model this
+    command line wrote, refused unless it was trained on this dataset, split, load and configuration (every
+    field of `RESUME_CHECKED` equal to what this run would write).  A model written after the fit carries
+    `partial.fit` (the val log-loss, epochs run, seconds); a finished one does not, and those stay null."""
+    import evalnet as N
+    try:
+        m, net = N.load_model(path)
+    except (OSError, ValueError, KeyError) as e:
+        raise SystemExit(f"train_eval: --resume-model {path}: {e}")
+    if m.get("schemaId") != schema["schemaId"] or m.get("vocab") != schema["vocab"]["cards"]:
+        raise SystemExit(f"train_eval: --resume-model {path}: schema {m.get('schemaId')} is not this dataset's "
+                         f"{schema['schemaId']}")
+    t = m.get("training") or {}
+    if "search" in t:
+        raise SystemExit(f"train_eval: --resume-model {path}: a searched model; --resume-model resumes a plain fit")
+    want = json.loads(json.dumps(want))
+    diff = [k for k in RESUME_CHECKED if t.get(k) != want.get(k)]
+    if (t.get("auxTurnsToEnd") or {}).get("weight") != (aux if aux > 0 else None):
+        diff.append("auxTurnsToEnd")
+    if diff:
+        raise SystemExit(f"train_eval: --resume-model {path} was not trained on this command line: "
+                         f"{', '.join(diff)} differ")
+    # from_json's W is a transposed view; the trained net's is C-ordered, and the same layout gives the same
+    # products bit for bit
+    net.W = [np.ascontiguousarray(w) for w in net.W]
+    fit = (m.get("partial") or {}).get("fit") or {}
+    info = {"bestEpoch": t.get("bestEpoch"), **{k: fit.get(k) for k in PARTIAL_FIT}, "excluded": m.get("excluded", [])}
+    log(f"resume (D520): {path}, trained {t.get('date')}; the fit is skipped, the baselines and scoring run")
+    return net, info, {"date": t.get("date"), "auxTurnsToEnd": t.get("auxTurnsToEnd")}
 
 
 def load_subsample_info(data: str, splits: dict[str, Any], f: float, seed: int) -> dict[str, Any]:
@@ -1316,6 +1423,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--eval-human", action="store_true",
                     help="also score every model on the dataset's `human` split -- the owner's own games, never "
                          "trained on (dataset.py --human; D347)")
+    ap.add_argument("--resume-model", metavar="PATH",
+                    help="skip the fit: score a model this same command line saved (the one --out writes after "
+                         "the fit, before the baselines) -- the baselines, scoring, report and the final --out run "
+                         "as after a fit; refused unless it was trained on this dataset, split and configuration "
+                         "(D520)")
     a = ap.parse_args(argv)
     if np is None:
         print("train_eval: needs numpy (pip install numpy; see tools/ml/README.md)", file=sys.stderr)
@@ -1350,14 +1462,16 @@ def main(argv: list[str] | None = None) -> int:
                          "--search, --train-fraction and --out")
     if a.cv and (a.search or a.train_fraction < 1):
         raise SystemExit("train_eval: --cv takes neither --search nor --train-fraction")
+    if a.resume_model and (a.cv or a.curve or a.grid or a.search or a.dry_load):
+        raise SystemExit("train_eval: --resume-model resumes a plain fit; drop --cv, --curve, --grid, --search "
+                         "and --dry-load")
     if a.curve and not a.dry_load:
         import eval_search as S
         rep = S.learning_curve(a, hp, log)
     else:
         rep = run_cv(a, hp, log) if a.cv else run_train(a, hp, log)
     if a.report:
-        with open(a.report, "w", encoding="utf-8") as f:
-            json.dump(rep, f, indent=1)
+        write_json(a.report, rep)
     return 0
 
 

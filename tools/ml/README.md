@@ -377,6 +377,18 @@ python3 tools/ml/train_eval.py var/ml/data/nights-1-5 --split-by pair --compact 
   rows after the whole split is in memory. Reported as `loadSubsample` (share,
   seed, rows in the data and rows held per split) in the report and the model's
   `training` block. Not with `--cv` or `--curve`.
+- **The model is saved when the fit ends (D520).** `--out` is written the moment the
+  best epoch's weights are chosen, before the baselines, the scoring and the report
+  (J196 was OOM-killed in those after a 2.5-hour fit, with nothing on disk); that file
+  is the final model without `training.metrics` and with a `partial` block
+  (`complete: false`, the fit's val log-loss, epochs run and seconds), and `--report`
+  gets a partial report (`complete: false`, the fit, the memory so far). The end
+  rewrites both through a temp file and a rename -- the model as it always was, the
+  report with `complete: true`. `--resume-model PATH`, beside the run's own command
+  line, loads that model instead of fitting and runs only the rest: refused unless the
+  command line would have trained it (dataset, split, load share, configuration), and
+  not with `--grid`, `--search`, `--cv`, `--curve` or `--dry-load`. It still reads
+  the whole dataset, so it saves the fit, not the load.
 
 ### Rollout labels (D382)
 
