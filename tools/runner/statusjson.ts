@@ -8,7 +8,7 @@
 // orphan branch `lab-status` of the PUBLIC jalirkan/ForgeCoach.  Schema 1:
 //
 //   { schema: 1, updated, heartbeat, paused, state (running|idle|degraded), idleSince, idleReason,
-//     alerts: [ { at, id, kind (memory-stop|memory-retry|memory-wait), needGb, availGb, text } ] (D521),
+//     alerts: [ { at, id, kind (memory-stop|memory-retry|memory-wait|budget-wait), needGb, availGb, freeGb, behind, text } ] (D521),
 //     host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus, budgetGb,
 //             coresUsed, coresTotal (the running jobs' widths out of the core budget, D337 amended) },
 //     running: [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
@@ -104,24 +104,28 @@ export interface QueueItem extends Publicly { id: string; title: string; cpu: 'h
 export interface WaitingItem extends Publicly { id: string; title: string; reason: string; est: string; detail?: string }
 export interface FinishedItem extends Publicly { id: string; title: string; status: 'done' | 'failed' | 'skipped'; finished: string | null; headline: string; numbers: Record<string, number>; detail?: string }
 
-/** D521: `degraded` while any job waits on memory (a memory stop's retry, or a step the host's free memory cannot hold yet). */
+/** D521: `degraded` while any job waits on memory held outside the lab slice (the host's actual free memory, or its pressure); a retry waiting on the budget behind a running job is not. */
 export type RunState = 'running' | 'idle' | 'degraded';
 
 /**
  * D521: a line a watcher reads first.  `memory-stop`: a job was stopped for memory (availGb: MemAvailable then);
- * `memory-retry`: it was retried; `memory-wait`: a job waits on memory now, since `at` (needGb: its step's
- * expected peak; availGb: what was free for it).  `text` is made from the fields (`alertText`), never copied;
- * `detail` (the stop's reason) is private.
+ * `memory-retry`: it was retried; `memory-wait`: a job waits, since `at`, on memory held outside the lab slice
+ * (needGb: its step's expected peak; availGb: MemAvailable; freeGb: what was left for it); `budget-wait`: a
+ * memory retry waits on the lab's budget behind running jobs (`behind`; freeGb: the budget left).  `text` is
+ * made from the fields (`alertText`), never copied; `detail` (the stop's reason) is private.
  */
-export interface Alert { at: string; id: string; kind: 'memory-stop' | 'memory-retry' | 'memory-wait'; needGb: number | null; availGb: number | null; text: string; detail?: string }
-const ALERT_KINDS = new Set(['memory-stop', 'memory-retry', 'memory-wait']);
+export interface Alert { at: string; id: string; kind: 'memory-stop' | 'memory-retry' | 'memory-wait' | 'budget-wait'; needGb: number | null; availGb: number | null; freeGb?: number | null; behind?: string[]; text: string; detail?: string }
+const ALERT_KINDS = new Set(['memory-stop', 'memory-retry', 'memory-wait', 'budget-wait']);
 export const ALERTS_MAX = 20;
 
 /** An alert's words, from its fields alone. */
-export function alertText(a: Pick<Alert, 'at' | 'id' | 'kind' | 'needGb' | 'availGb'>): string {
+export function alertText(a: Pick<Alert, 'at' | 'id' | 'kind' | 'needGb' | 'availGb' | 'freeGb' | 'behind'>): string {
   if (a.kind === 'memory-stop') return `${a.id} was stopped for memory at ${a.at}${a.availGb !== null ? ` (${a.availGb} GB available then)` : ''}; it is retried first, as soon as its step fits`;
   if (a.kind === 'memory-retry') return `${a.id} was retried at ${a.at} after a memory stop`;
-  return `${a.id} waits for memory since ${a.at}${a.needGb !== null ? `: needs ${a.needGb} GB` : ''}${a.availGb !== null ? `, ${a.availGb} GB free for it` : ''}`;
+  const need = a.needGb !== null ? `need ${a.needGb} GB` : '';
+  if (a.kind === 'budget-wait') return `${a.id} waits on the budget behind ${(a.behind ?? []).join(', ') || 'the running jobs'} since ${a.at}${need ? ` (${need}${typeof a.freeGb === 'number' ? `, ${a.freeGb} GB of the budget free` : ''})` : ''}`;
+  const parts = [a.availGb !== null ? `MemAvailable ${a.availGb} GB` : '', need].filter(Boolean);
+  return `${a.id} waits on memory held outside the lab slice since ${a.at}${parts.length ? ` (${parts.join(', ')})` : ''}`;
 }
 
 export interface StatusDoc {
@@ -185,6 +189,7 @@ export const REASONS: Record<string, string> = {
   'needs-check': 'pilot done; needs a check',
   memory: 'stopped for memory; will retry',
   'memory-wait': 'waiting for memory',
+  alone: 'after a job that runs alone',
   invalid: 'the job file needs fixing',
   queued: 'queued',
 };
@@ -299,7 +304,7 @@ export function sanitise(doc: StatusDoc): StatusDoc {
   const alerts = (Array.isArray(doc.alerts) ? doc.alerts : []).slice(0, ALERTS_MAX).flatMap((a): Alert[] => {
     const aid = id(a?.id), at = iso(a?.at);
     if (!aid || !at || !ALERT_KINDS.has(a.kind)) return [];
-    const x = { at, id: aid, kind: a.kind, needGb: num(a.needGb), availGb: num(a.availGb) };
+    const x = { at, id: aid, kind: a.kind, needGb: num(a.needGb), availGb: num(a.availGb), freeGb: num(a.freeGb), behind: (Array.isArray(a.behind) ? a.behind : []).map(id).filter((v): v is string => !!v).slice(0, 8) };
     return [{ ...x, text: alertText(x) }];
   });
   const idle = state === 'idle' || (state === 'degraded' && !running.length);

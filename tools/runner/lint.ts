@@ -43,7 +43,7 @@ import { expandGlob } from './metrics.ts';
 import { BUILTINS, commandName, nameIndex, resolver, scanShell, type Scan, type Word } from './shscan.ts';
 
 export type Severity = 'error' | 'warning';
-export type RuleId = 'timeout-duration' | 'argmax-glob' | 'light-var' | 'metric-self-count' | 'after-missing' | 'placeholder-id' | 'bash-syntax' | 'python-syntax';
+export type RuleId = 'timeout-duration' | 'argmax-glob' | 'light-var' | 'metric-self-count' | 'after-missing' | 'placeholder-id' | 'bash-syntax' | 'python-syntax' | 'alone-ladder';
 
 export const LINT_RULES: Record<RuleId, string> = {
   'timeout-duration': 'timeout / sleep durations GNU accepts: one number, one unit (s m h d)',
@@ -54,6 +54,7 @@ export const LINT_RULES: Record<RuleId, string> = {
   'placeholder-id': 'a placeholder id or ref (J0XX, J###, followup: -, @<sha>)',
   'bash-syntax': 'bash -n on every block and metrics sh: line; here-documents that never end',
   'python-syntax': 'compile() on every Python here-document and literal python3 -c',
+  'alone-ladder': 'a job that runs `ai-ladder.sh match` without `alone: yes` (warning; D521: a wall-clock budget measured beside another job is not the same measurement)',
 };
 
 export interface Finding { rule: RuleId; severity: Severity; where: string; message: string }
@@ -439,6 +440,13 @@ export function lintJob(job: JobFile, opts: LintOptions = {}): Finding[] {
   if (job.cpu === 'light') {
     const reads = units.filter((u) => /(^|[\s"'=(:])(\.\/)?var\//m.test(u.text)).map((u) => u.where);
     if (reads.length) add('light-var')({ severity: 'warning', where: reads.slice(0, 4).join(', ') + (reads.length > 4 ? ', ...' : ''), message: 'a cpu: light job reads var/: since D392 the light lane\'s var/ is a symlink to lane 1\'s, so it sees what the heavy jobs wrote (and may see it half-written while one runs); a runner before 8961fd5 gave it an empty var/ of its own (J088, J090)' });
+  }
+
+  // alone-ladder (D521): a ladder match plays to wall-clock budgets (budgetMs, anytime search); two jobs on
+  // shared physical cores change what a budget buys, so every such job carries `alone: yes`.
+  if (!job.alone) {
+    const hits = units.filter((u) => (scans.get(u) as Scan).cmds.some((c) => /(^|\/)ai-ladder\.sh$/.test(commandName(c) ?? '') && c.words.slice(1).some((w) => w.text === 'match'))).map((u) => u.where);
+    if (hits.length) add('alone-ladder')({ severity: 'warning', where: hits.slice(0, 4).join(', '), message: 'runs `ai-ladder.sh match` without `alone: yes`: since D521 the runner may start another job beside it, and a ladder match plays to wall-clock budgets (D398 fixed matches, anytime search), so its numbers would not be the same measurement. Add `alone: yes` to the header' });
   }
 
   // metric-self-count: only a file the job writes, by name, that the count would take in.  A folder

@@ -457,7 +457,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 37 | open | D514's compute-curve arms `search-v2-ms3000-r24` and `-ms6000-r48` (search-v2 with the budget and the round cap scaled together, ×2 and ×4) are registered and unplayed: the compute-curve night (the play-AI review's §5 rows 1–2, not yet posted; the first job after J193) plays them on D514's pre-registered rule | `docs/decisions/D514-compute-curve-arms.md` |
 | [Cube lab](#fu-cube-lab) | 38 | open | D517's knob and curve arms `search-v2-routlets` (+ `rollout=outlets`), `search-v2-ranked` (+ `rank=prior,gen=24`), `search-v2-ms750-r6` and `-ms375-r3` (search-v2's budget and round cap ×0.5 and ×0.25) are registered and unplayed: J195 plays each against search-v1-anytime, 1,200 games on the confirm set, on D517's own pre-registered rule (the knobs judged SHOWN / NOT SHOWN / INCONCLUSIVE, a routlets NOT SHOWN only at 3% exposure, about half J194's base rate; the lower curve read, no verdict); no counter says whether the outlet policy acts inside a rollout (`rc.counts()` is discarded): a bridge change for a later pin | `docs/decisions/D517-knob-and-curve-arms.md` |
 | [Cube lab](#fu-cube-lab) | 39 | open | D518's evaluator v3 tooling is built and unused: `dataset_merge.py` (row for row, every game's split kept; `--allow-shared-seeds` for the 5,237 seed numbers nights 4–5 share with nights 1–3, which keep their names), `train_eval.py --load-subsample F` (a fixed share of each train and val game's rows, test whole) and `config.json` `coach.evalModel` (null: the night-1 ensemble; `human_eval.py`'s default follows the same order); J196 (whose draft carries these names and the flag) fits v2's configuration once at `--load-subsample 0.5`, stopping at 17 GB, over nights 1–5 and reads D364's `eval_compare` on v2's own test pairs: BETTER registers v3 for the strip only (a decision sets `coach.evalModel`), else killed | `docs/decisions/D518-eval-v3-tooling.md` |
-| [Cube lab](#fu-cube-lab) | 40 | open | D521's runner uses the whole machine and is not deployed: the core budget is all threads but two by default (`whole`, 14; `shared` = the old 8, `tools/runner.sh budget`), a running job holds its measured peak after 10 minutes of its real run (J197: 10.4 GB, not its declared 14), every step starts only when its expected peak fits MemAvailable less 2 GB, a memory stop is retried first as soon as it fits (one-minute settle, never behind a newer job), and `status.json` says `degraded` with `alerts`; the merger deploys it with `tools/runner.sh install` (the decision's Deploy), a first concurrent night is read for pressure events, and ForgeCoach's `#lab` page learns `degraded` and `alerts` | `docs/decisions/D521-runner-whole-machine.md` |
+| [Cube lab](#fu-cube-lab) | 40 | open | D521's runner uses the whole machine and is not deployed: the core budget is all threads but two by default (`whole`, 14; `shared` = the old 8, `tools/runner.sh budget`), every start needs its expected peak in MemAvailable less 3 GB at PSI some avg10 ≤ 5%, a memory stop is retried first as soon as it fits (one-minute settle, its need carved out, never behind a newer job), a declaration is a floor a measured peak × 1.4 may raise after 60 minutes (J197: 14 GB declared, ~17.2 measured), `alone: yes` keeps ladder matches by themselves (lint `alone-ladder`), and `status.json` says `degraded` for memory held outside the lab with `alerts` (memory-wait, budget-wait, stops, retries); the merger deploys it with `tools/runner.sh install` — after J197 ends or once J197's job file carries `alone: yes` (the decision's Deploy) — a first concurrent night is read for pressure events, and ForgeCoach's `#lab` page learns `degraded`, the alerts and `alone` | `docs/decisions/D521-runner-whole-machine.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10354,17 +10354,20 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    cores (J197 held 7 of 8), and J196's fit, killed at 00:20 by the OOM killer while a GPU painter outside the lab
    held 12 GB, was queued behind J197's 9.5-hour match. Now: the core budget is all threads but two (`whole`, 14,
    the default; `shared` is the old 8; `tools/runner.sh budget` shows and sets it in `<state>/budget.json`, read
-   every tick); a running job holds its measured peak once a commands step has run 10 minutes (the largest worker's
-   VmHWM × 1.15; a block's `mem_gb:` only raised; summed VmRSS, never page cache); every admission and every step
-   start needs its expected peak to fit in MemAvailable less 2 GB less what running jobs reserved and have not
-   touched; a memory stop's `retry_after:` is a minute, the retry goes first and keeps its cores and memory
-   reserved while it waits (a newer job starts only beside it); `status.json` is `degraded` while a job waits on
-   memory, with `alerts` (memory-stop, memory-retry, memory-wait), in the public copy rebuilt from numbers and in
-   HEARTBEAT.md. Honestly: J196's 18 GB fit and J197's 10.4 GB would still not have run together (28.4 > 21.4);
-   D521 would have retried J196 first and said `degraded` meanwhile. **Open:** the merger deploys it
-   (`tools/runner.sh install`, the decision's Deploy: a restart adopts running units, never stops them); read the
-   first concurrent night's pressure events (two pools raise swap-in; the backoff and the slice stay the hard stop);
-   ForgeCoach's `#lab` page should show `degraded` and the alerts.
+   every tick; `--mem-gb` only lowers, never under 4 GB or a running or waiting job's need); every admission and
+   step start needs its expected peak in MemAvailable less 3 GB less what running jobs reserved and have not touched,
+   at PSI some avg10 ≤ 5%; a memory stop's `retry_after:` is a minute, the retry goes first and keeps its cores, its
+   memory and its share of the free memory reserved while it waits; a declaration is a floor that a measured peak ×
+   1.4 may raise after 60 minutes of the step (largest worker VmHWM; the unit's `memory.stat` anon + shmem for a
+   block's `mem_gb:`) — J197's "1.29" was its pilot's peak, its live JVMs reach 1.40–1.85 GB, so it holds 14 GB
+   declared, ~17.2 measured; `alone: yes` keeps a job by itself (every ladder match must carry it; lint
+   `alone-ladder`); `status.json` is `degraded` only while a job waits on memory held outside the lab slice, with
+   `alerts` (memory-wait, budget-wait "behind J…", memory-stop including the third, memory-retry), in the public copy
+   rebuilt from numbers and in HEARTBEAT.md. Honestly: J196's 18 GB and J197's 14–17 GB would still not have run
+   together (> 21.4); D521 would have retried J196 first and said `degraded` meanwhile. **Open:** the merger deploys
+   it (`tools/runner.sh install`, the decision's Deploy: a restart adopts running units, never stops them) after J197
+   ends or once J197's job file carries `alone: yes`; read the first concurrent night's pressure events; ForgeCoach's
+   `#lab` page should show `degraded`, the alerts and the `alone` reason.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its

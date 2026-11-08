@@ -37,7 +37,7 @@
 // fills the machine.  Without `machine` in the input, the old rule: one heavy.
 //
 // D521, THE WHOLE MACHINE.  The core budget is all threads but two by default (budget.ts),
-// so two 7-wide jobs run side by side on the 16-thread PC.  Three more rules:
+// so a 7-wide job leaves 7 threads, not 1, for the jobs beside it.  More rules:
 //   - MEMORY RETRIES FIRST.  A job stopped for memory (STATUS `waiting`, reason `memory: …`)
 //     is taken before every other open job, whatever its id: it has sunk cost, and a
 //     newer job must never start in front of it (J196's retry was queued behind a 9.5-hour
@@ -47,11 +47,15 @@
 //     have reserved but not yet touched (`headroomGb`): memory outside the lab (a GPU
 //     painter, the browser) counts.  Light jobs are exempt (their 2 GB is inside the lab's
 //     reserve).  A job that does not fit is blocked `memory` (a retry) or `memory-wait`.
-//   - THE CARVE-OUT.  Such a job keeps its cores and memory reserved inside the budgets, so
-//     a later job starts only BESIDE it, in what it would not use anyway; when the outside
-//     memory goes, it fits.  (A job that does not fit the budgets stops the queue, as above.)
+//   - THE CARVE-OUT.  Such a job keeps its cores and memory reserved inside the budgets, and
+//     its need out of the free memory, so a later job starts only BESIDE it and never in the
+//     memory it waits for; when the outside memory goes, it fits.  A start also needs the
+//     host's memory pressure (PSI some avg10) at or under 5%.  (A job that does not fit the budgets stops the queue, as above.)
 //   A job's need is its header's (width, reservation), or what the runner knows better
 //   (`needs`): a retry's is the step it resumes at, with its measured peaks.
+//   - ALONE.  A job with `alone: yes` (every wall-clock-budgeted measurement: ladder matches)
+//     is admitted only onto an empty machine, and nothing, heavy or light, starts beside it;
+//     while it is next and waits for the running jobs to end, nothing newer starts.
 
 import type { JobFile } from './jobfile.ts';
 import { DEFAULT_PEAK_GB } from './sizing.ts';
@@ -112,11 +116,19 @@ export interface Blocked {
   est: string;
   cpu: 'heavy' | 'light';
   /** A short code the public page may show. */
-  code: 'after' | 'heavy-busy' | 'light-busy' | 'cores' | 'playing' | 'paused' | 'needs-check' | 'memory' | 'memory-wait' | 'invalid' | 'queued';
+  code: 'after' | 'heavy-busy' | 'light-busy' | 'cores' | 'playing' | 'paused' | 'needs-check' | 'memory' | 'memory-wait' | 'alone' | 'invalid' | 'queued';
   reason: string;
-  /** D521, a job waiting on actual memory: what it needs and what was free for it (GB). */
+  /**
+   * D521: what a job waiting on memory waits for -- `memory`: the host's actual free memory (memory held
+   * outside the lab slice, or pressure); `budget`: a memory retry the lab's budgets cannot hold beside the
+   * running jobs (`behind`); `settle`: a memory stop's minute.
+   */
+  wait?: 'memory' | 'budget' | 'settle';
+  behind?: string[];
+  /** What it needs, what was free for it (GB), and MemAvailable then. */
   needGb?: number;
   freeGb?: number;
+  availGb?: number;
 }
 
 /** D521: the host's actual memory, for admission. */
@@ -125,8 +137,13 @@ export interface ActualMemory {
   availGb: number;
   /** Kept free whatever the declarations say (AVAIL_RESERVE_GB). */
   reserveGb: number;
-  /** What the running heavy jobs have reserved and not yet touched (their holding less their RSS). */
+  /** What the running heavy jobs have reserved and not yet touched (their holding less their anon memory). */
   headroomGb: number;
+  /** A need is counted at most this (the INSTALLED heavy budget: never a lowered one). */
+  capGb?: number;
+  /** /proc/pressure/memory some avg10 (%), and the most a start allows (D521: 5). */
+  some10?: number;
+  maxSome10?: number;
 }
 
 /** What a running job holds: its width now (cores) and its memory reservation (GB). */
@@ -209,10 +226,15 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
   }
   /** The first open heavy job that could run but did not fit: nothing after it starts beside (order, starvation). */
   let firstUnfit: string | null = null;
-  /** D521: a job waiting on actual memory holds its cores and memory inside the budgets (the carve-out). */
+  /** D521: a job waiting on actual memory holds its cores and memory inside the budgets, and its need out of the free memory (the carve-out). */
   let carved = false;
-  /** D521: the memory the jobs admitted in this pass will take (their units are not running yet). */
+  /** D521: the memory the jobs admitted (or carved out) in this pass will take: not in MemAvailable yet. */
   let pendingGb = 0;
+  /** D521 `alone: yes`: a job that runs alone is running or admitted (nothing starts beside it), or is next and waits for the machine to empty (nothing starts before it). */
+  const runningIds = [...running.keys()];
+  let aloneBlock: string | null = runningIds.find((id) => inp.jobs.find((j) => j.id === id)?.alone) ?? null;
+  let aloneWaits: string | null = null;
+  const heavyIds = (): string[] => [...running].filter(([, c]) => c === 'heavy').map(([id]) => id);
   // D521: memory retries first (sunk cost), then id order.
   const order = [...inp.jobs].sort((a, b) => Number(isMemoryRetry(inp.statuses.get(b.id))) - Number(isMemoryRetry(inp.statuses.get(a.id))) || idOrder(a.id, b.id));
   for (const job of order) {
@@ -225,13 +247,16 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     if (job.errors.length) { b('invalid', `the job file has errors: ${job.errors[0]}`); continue; }
     if (st && /^(check|human)/i.test(st.fields.needs ?? '')) { b('needs-check', st.fields.reason ?? 'needs a human/Claude check'); continue; }
     const retrying = isMemoryRetry(st);
+    const needOf = (mb: MachineBudget): Holding => inp.needs?.get(job.id) ?? { cores: widthOf(job, mb), memGb: reservationOf(job, widthOf(job, mb)) };
+    /** D521: the need, as the actual-memory check counts it: at most the INSTALLED heavy budget, never a lowered one. */
+    const actualNeed = (n: Holding): number => round1(Math.min(n.memGb, inp.memory?.capGb ?? m?.memGb ?? n.memGb));
+    const carve = (n: Holding): void => { used.cores += n.cores; used.memGb += n.memGb; pendingGb += actualNeed(n); carved = true; };
     // D461: a wall time, read defensively: further ahead than the runner ever writes, the clock went backwards: due.
     const retry = st?.fields.retry_after ? Date.parse(st.fields.retry_after) : NaN;
-    const needOf = (mb: MachineBudget): Holding => inp.needs?.get(job.id) ?? { cores: widthOf(job, mb), memGb: reservationOf(job, widthOf(job, mb)) };
     if (retryHolds(retry, inp.now, MEMORY_RETRY_MS + 60_000)) {
       // D521: a heavy memory retry settling for its minute already holds its place: nothing newer starts in front of it.
-      if (retrying && job.cpu === 'heavy' && m) { const n = needOf(m); used.cores += n.cores; used.memGb += n.memGb; carved = true; }
-      b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`);
+      if (retrying && job.cpu === 'heavy' && m) carve(needOf(m));
+      b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`, { wait: 'settle' });
       continue;
     }
     const notDone = job.after.filter((a) => inp.statuses.get(a)?.state !== 'done');
@@ -239,8 +264,18 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     if (inp.paused) { b('paused', 'the runner is paused'); continue; }
     // D401: people are playing (play.sh --pause-lab): no admission, heavy or light; the public copy says "held".
     if (inp.held) { b('playing', inp.held); continue; }
+    // D521: a job that runs alone is running (or was just admitted): nothing starts beside it.
+    if (aloneBlock) { b('alone', `${aloneBlock} runs alone (alone: yes): nothing starts beside it`); continue; }
+    if (aloneWaits) { b('alone', `after ${aloneWaits}, which runs alone and waits for the machine to empty`); continue; }
     if (job.cpu === 'heavy') {
       if (inp.playing) { b('playing', 'Justin is playing'); continue; }
+      if (job.alone && (running.size > 0 || carved || start.length > 0)) {
+        // It gets the machine when the running jobs end; nothing newer starts meanwhile (no starvation).
+        aloneWaits = job.id;
+        firstUnfit ??= job.id;
+        b('alone', `runs alone (alone: yes): waits for ${[...runningIds, ...start.map((x) => x.id)].join(', ') || 'the job ahead of it'} to end`);
+        continue;
+      }
       const need = m ? needOf(m) : null;
       if (busy('heavy') || carved) {
         if (!m || !m.coSchedule || used.cores === Infinity) { b('heavy-busy', 'a heavy job is running'); continue; }
@@ -249,20 +284,23 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
         const why = m.memoryBackoff ? 'a running job is in memory backoff'
           : used.cores + w > m.cores ? `needs ${w} core(s); ${Math.max(0, m.cores - used.cores)} of ${m.cores} free`
             : used.memGb + mem > m.memGb ? `needs ${round1(mem)} GB; ${round1(Math.max(0, m.memGb - used.memGb))} of ${m.memGb} GB free` : null;
-        // A memory retry that the budgets cannot hold beside the running jobs still says what it needs (its alert).
-        if (why) { firstUnfit = job.id; b('cores', why, retrying ? { needGb: round1(mem), freeGb: round1(Math.max(0, m.memGb - used.memGb)) } : {}); continue; }
+        // A memory retry the budgets cannot hold beside the running jobs: waiting on the BUDGET behind them (its alert).
+        if (why) { firstUnfit = job.id; b('cores', why, retrying ? { wait: 'budget', behind: heavyIds(), needGb: round1(mem), freeGb: round1(Math.max(0, m.memGb - used.memGb)) } : {}); continue; }
       }
       if (m && need) {
         if (inp.memory) {
           const mem = inp.memory;
-          const want = round1(Math.min(need.memGb, m.memGb));
+          const want = actualNeed(need);
           const free = round1(mem.availGb - mem.reserveGb - mem.headroomGb - pendingGb);
-          if (want > free) {
-            // The carve-out: its cores and memory stay reserved, so a later job starts only beside it.
-            used.cores += need.cores;
-            used.memGb += need.memGb;
-            carved = true;
-            b(retrying ? 'memory' : 'memory-wait', `${retrying ? `${st?.fields.reason}; ` : ''}waits for memory: needs ${want} GB; ${Math.max(0, free)} GB free (${round1(mem.availGb)} GB available, less ${mem.reserveGb} GB kept free${mem.headroomGb + pendingGb > 0 ? ` and ${round1(mem.headroomGb + pendingGb)} GB the running jobs have reserved` : ''})`, { needGb: want, freeGb: Math.max(0, free) });
+          const pressured = mem.maxSome10 !== undefined && (mem.some10 ?? 0) > mem.maxSome10;
+          if (want > free || pressured) {
+            // The carve-out: its cores, its memory and its share of the free memory stay reserved, so a later job
+            // starts only beside it, and never in the memory it waits for.
+            carve(need);
+            const why = pressured
+              ? `waits for memory: the host's memory pressure (some avg10) is ${round1(mem.some10 ?? 0)}%, over ${mem.maxSome10}%`
+              : `waits for memory: needs ${want} GB; ${Math.max(0, free)} GB free (${round1(mem.availGb)} GB available, less ${mem.reserveGb} GB kept free${mem.headroomGb + pendingGb - want > 0 ? ` and ${round1(mem.headroomGb + pendingGb - want)} GB the running jobs have reserved` : ''})`;
+            b(retrying ? 'memory' : 'memory-wait', `${retrying ? `${st?.fields.reason}; ` : ''}${why}`, { wait: 'memory', needGb: want, freeGb: Math.max(0, free), availGb: round1(mem.availGb) });
             continue;
           }
           pendingGb += want;
@@ -273,6 +311,7 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     } else if (busy('light')) { b('light-busy', 'a light job is running'); continue; }
     start.push(job);
     running.set(job.id, job.cpu);
+    if (job.alone) aloneBlock = job.id;
   }
   return { start, blocked };
 }

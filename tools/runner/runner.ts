@@ -81,7 +81,7 @@ import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from '
 import { followupMessage, LEDGER_MD_HEAD, ledgerEntry, ledgerJsonLine, ledgerKeys, ledgerMarkdown, withMessages, type LedgerEntry } from './ledger.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
 import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS, sizeWorkers, systemdRunLine, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
-import { formatStatus, isMemoryRetry, isOurs, MEMORY_SETTLE_MS, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
+import { formatStatus, isOurs, MEMORY_SETTLE_MS, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
 import { alertText, fit, headlineOf, idleReasonOf, isoLocal, liveOf, REASONS, sanitise, type Alert, type FinishedItem, type PressureEvent, type RunningJob, type StatusDoc } from './statusjson.ts';
 import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
 import { activeHolds, holdReason } from './holds.ts';
@@ -121,6 +121,8 @@ export interface RunnerConfig {
   cores?: number | null;
   /** D521: a step starts only when its expected peak fits in MemAvailable less this (GB). */
   availReserveGb?: number;
+  /** D521: and only while the host's memory pressure (PSI some avg10, %) is at or under this. */
+  startMaxSome10?: number;
   /** Heavy jobs side by side while their widths and memory fit (`--co-schedule on|off`); default on. */
   coSchedule?: boolean;
 }
@@ -141,12 +143,14 @@ export function blockSha(text: string): string {
 }
 
 /**
- * D521: a measured peak replaces a declaration only once it has been sampled this long in the real run
- * (a `## Commands` step): a pilot's JVMs may not reach their working size, and a short sample may miss
- * the peak.  It is then counted with MEASURED_MARGIN on top.
+ * D521: a declaration is a FLOOR.  A measured peak may only RAISE what a step holds, and only once its
+ * step has run this long in the real run (a `## Commands` step), counted with MEASURED_MARGIN on top: a
+ * Forge JVM's VmHWM grew 36% over hours in J197, and a fit's peak comes late (J196).
  */
-export const MEASURE_MIN_MS = 10 * 60_000;
-export const MEASURED_MARGIN = 1.15;
+export const MEASURE_MIN_MS = 60 * 60_000;
+export const MEASURED_MARGIN = 1.4;
+/** D521: a start needs the host's memory pressure (PSI some avg10, %) at or under this. */
+export const START_MAX_SOME10 = 5;
 /** D521: what a prepare step (git, the bridge's build, npm ci) is expected to take, for the actual-memory check. */
 export const PREPARE_PEAK_GB = 2;
 /** D521: memory-stop and retry alerts stay in status.json's `alerts` this long. */
@@ -157,7 +161,7 @@ export interface Measured {
   /** The largest worker JVM's peak RSS (VmHWM, GB) seen in a commands step, and how long that step had run when it was seen. */
   workerPeakGb?: number | null;
   workerSampledMs?: number;
-  /** Per step: the peak of the unit's summed RSS (GB; page cache not counted) and how long the step had run. */
+  /** Per step: the peak of the unit's anonymous memory (memory.stat anon + shmem, GB) and how long the step had run. */
   steps?: Record<string, { peakGb: number; sampledMs: number }>;
 }
 
@@ -222,8 +226,8 @@ export interface JobRun {
   liveHist?: Array<{ at: number; v: Record<string, number> }>;
   /** The unit's memory as the backoff last read it (GB). */
   memGb?: number | null;
-  /** D521: the unit's processes' summed RSS now (GB; page cache not counted); null while no unit runs. */
-  rssGb?: number | null;
+  /** D521: the unit's anonymous memory now (memory.stat anon + shmem, GB); null while no unit runs. */
+  anonGb?: number | null;
   /** D521: measured peaks of the real run, carried to a retry. */
   measured?: Measured | null;
   /** D521: the memory the next step waits for (GB), when it waits on the host's actual free memory; null: not waiting. */
@@ -279,6 +283,8 @@ interface Persist {
   alerts?: Array<{ at: number; id: string; kind: 'memory-stop' | 'memory-retry'; availGb: number | null; detail?: string }>;
   /** D521: the core budget last logged, so a change is said once. */
   lastCores?: number;
+  /** D521: since when (wall) each job has waited on memory or the budget: its alert's time, kept across a restart. */
+  memWaitSince?: Record<string, number>;
 }
 
 /** The counters whose rate per hour the page shows: drafts and games (a metric line's `<name>.drafts`, ...). */
@@ -396,7 +402,7 @@ export class Runner {
   clock: { fetch: number; publish: number; nextPublish: number; publicAt: number; nextPublic: number };
   /** D521: budget.json as read at the start of this tick (tools/runner.sh budget; no restart needed). */
   budgetFile: BudgetFile | null = null;
-  /** D521: since when (wall) each job has waited on actual memory: its alert's time. */
+  /** D521: since when (wall) each job has waited on memory or the budget: its alert's time (saved in runner.json). */
   memWaitSince = new Map<string, number>();
 
   constructor(cfg: RunnerConfig, sys: Sys) {
@@ -407,6 +413,7 @@ export class Runner {
     this.p.started = sys.now();
     this.startedMono = sys.mono();
     this.budgetFile = readBudgetFile(cfg.stateDir);
+    this.memWaitSince = new Map(Object.entries(this.p.memWaitSince ?? {}));
     const wall = sys.now(), mono = this.startedMono, MAX_BACKOFF = 30 * 60_000;
     this.clock = {
       fetch: monoFromWall(this.p.lastFetch, wall, mono), publish: monoFromWall(this.p.lastPublish, wall, mono),
@@ -605,11 +612,13 @@ export class Runner {
     const { start, blocked } = schedule({
       jobs: this.jobs, statuses: st, active: new Map(this.active().map((r) => [r.id, r.cpu])),
       holdings: new Map(this.active().map((r) => [r.id, this.holding(r)])), machine: this.machineBudget(),
-      needs: this.retryNeeds(st), memory: { availGb: this.availGb(), reserveGb: this.availReserve(), headroomGb: this.headroomGb(null) },
+      needs: this.retryNeeds(st),
+      memory: { availGb: this.availGb(), reserveGb: this.availReserve(), headroomGb: this.headroomGb(null), capGb: this.installedHeavyGb(), some10: this.host?.some10 ?? 0, maxSome10: this.cfg.startMaxSome10 ?? START_MAX_SOME10 },
       playing: this.sys.playing(this.cfg.bridgePort), paused: this.isPaused(), held: holdReason(activeHolds(this.cfg.stateDir)), now: this.sys.now(),
     });
     this.blocked = blocked;
     this.trackMemoryWaits();
+    this.writeNeeds();
     if (start.length && !this.gitReachable()) {
       // D391: git is not reachable yet (at boot, the credentials come a minute or two after login).
       // Nothing is admitted; the jobs wait in the queue, not failed.
@@ -794,7 +803,7 @@ export class Runner {
     if (rc !== null && !Number.isFinite(rc)) rc = null;
     if (rc === null && state !== 'gone') return false;
     r.unit = null;
-    r.rssGb = null;
+    r.anonGb = null;
     this.collectLogTail(r, step);
     if (step.phase === 'prepare' && rc === 0) {
       this.readShas(r, job);
@@ -883,6 +892,7 @@ export class Runner {
     const stops = String(r.memoryStops);
     if (r.memoryStops >= this.cfg.backoff.maxMemoryStops) {
       this.finish(r, 'failed', `memory: stopped ${stops} times (last: ${detail})`, { memory_stops: stops });
+      this.alert(r.id, 'memory-stop', `failed: stopped ${stops} times (last: ${detail})`);
       return;
     }
     const cap = retryCap(r.backoff?.workers ?? r.workers);
@@ -1080,7 +1090,9 @@ export class Runner {
     // the lab (a GPU painter, the browser) counts here, whatever the declarations say.  Checked every tick.
     const mem = this.memoryWait(r, job, step);
     if (mem) {
-      const hold3 = `memory: needs ${mem.need} GB for ${step.name}; ${mem.free} GB free (${mem.avail} GB available, less ${this.availReserve()} GB kept free${mem.headroom > 0 ? ` and ${mem.headroom} GB the other jobs have reserved` : ''}); it starts when that fits`;
+      const hold3 = mem.some10 !== null
+        ? `memory: the host's memory pressure (some avg10) is ${mem.some10}%, over ${this.cfg.startMaxSome10 ?? START_MAX_SOME10}%; ${step.name} starts when it falls`
+        : `memory: needs ${mem.need} GB for ${step.name}; ${mem.free} GB free (${mem.avail} GB available, less ${this.availReserve()} GB kept free${mem.headroom > 0 ? ` and ${mem.headroom} GB the other jobs have reserved` : ''}); it starts when that fits`;
       const changed = r.waitingMemGb !== mem.need;
       r.heldFor = hold3; r.waitingMemGb = mem.need;
       if (changed) {
@@ -1126,7 +1138,7 @@ export class Runner {
     }
     r.unit = u.unit;
     r.unitStartedAt = this.sys.now();
-    r.rssGb = null;
+    r.anonGb = null;
     if (r.monoBoot !== this.sys.bootId()) this.carryClocks(r);
     r.stepElapsedMs = 0;
     this.elapsedMark.set(r.id, this.sys.mono());
@@ -1181,6 +1193,20 @@ export class Runner {
 
   availReserve(): number { return this.cfg.availReserveGb ?? AVAIL_RESERVE_GB; }
 
+  /** The heavy budget as installed (the slice's): a need is counted at most this, never at a budget.json cap. */
+  installedHeavyGb(): number { return budgetOf(this.sys.machine(), this.cfg.budget).heavyGb; }
+
+  /**
+   * D521: <state>/needs.json, every tick: what each running job holds and what each job waiting on memory
+   * needs (GB), so `tools/runner.sh budget --mem-gb` can refuse a cap below one of them.
+   */
+  writeNeeds(): void {
+    const running = Object.fromEntries(this.active().filter((r) => r.cpu === 'heavy').map((r) => [r.id, this.holding(r).memGb]));
+    const waiting = Object.fromEntries([...this.retryNeeds(this.statuses())].map(([id, h]) => [id, h.memGb]));
+    for (const b of this.blocked) if (typeof b.needGb === 'number') waiting[b.id] = Math.max(waiting[b.id] ?? 0, b.needGb);
+    this.writeJson('needs.json', { at: isoLocal(this.sys.now()), running, waiting });
+  }
+
   /** MemAvailable now (GB), from the tick's host sample; unknown: plenty. */
   availGb(): number {
     const h = this.host;
@@ -1192,7 +1218,7 @@ export class Runner {
    * touched: each one's holding less its RSS now (a step whose unit is not running yet: all of it).
    */
   headroomGb(r: JobRun | null): number {
-    return Math.round(this.othersOf(r).reduce((a, x) => a + Math.max(0, this.holding(x).memGb - (x.unit ? x.rssGb ?? 0 : 0)), 0) * 10) / 10;
+    return Math.round(this.othersOf(r).reduce((a, x) => a + Math.max(0, this.holding(x).memGb - (x.unit ? x.anonGb ?? 0 : 0)), 0) * 10) / 10;
   }
 
   /** The memory a step is expected to need at its peak (GB), for the actual-memory check: at most the heavy budget. */
@@ -1202,18 +1228,20 @@ export class Runner {
     if (step.phase === 'prepare') need = Math.min(PREPARE_PEAK_GB, need);
     // A pilot holds the job's width but runs at most PILOT_MAX_WORKERS workers (a block's mem_gb: stands as written).
     else if (step.phase === 'pilot' && !step.memGb && h.cores > PILOT_MAX_WORKERS) need = need / h.cores * PILOT_MAX_WORKERS;
-    return Math.round(Math.min(need, this.budgets().memGb) * 10) / 10;
+    return Math.round(Math.min(need, this.installedHeavyGb()) * 10) / 10;
   }
 
   /** D521: a heavy step whose expected peak does not fit in the host's actual free memory waits, or null. */
-  memoryWait(r: JobRun, job: JobFile, step: Step): { need: number; free: number; avail: number; headroom: number } | null {
+  memoryWait(r: JobRun, job: JobFile, step: Step): { need: number; free: number; avail: number; headroom: number; some10: number | null } | null {
     if (r.cpu !== 'heavy') return null;
     const avail = this.availGb();
     if (!Number.isFinite(avail)) return null;
     const need = this.stepNeedGb(r, job, step);
     const headroom = this.headroomGb(r);
     const free = Math.round((avail - this.availReserve() - headroom) * 10) / 10;
-    return need > free ? { need, free: Math.max(0, free), avail: Math.round(avail * 10) / 10, headroom } : null;
+    const some10 = this.host?.some10 ?? 0;
+    const pressured = some10 > (this.cfg.startMaxSome10 ?? START_MAX_SOME10);
+    return need > free || pressured ? { need, free: Math.max(0, free), avail: Math.round(avail * 10) / 10, headroom, some10: pressured ? Math.round(some10 * 10) / 10 : null } : null;
   }
 
   /**
@@ -1230,7 +1258,7 @@ export class Runner {
       const steps = this.stepsFor(job, true, resume.from);
       const step = steps.find((x) => x.phase === 'commands') ?? steps[0];
       if (!step) continue;
-      const view: JobRun = { ...prev, steps, stepIndex: steps.indexOf(step), unit: null, rssGb: null };
+      const view: JobRun = { ...prev, steps, stepIndex: steps.indexOf(step), unit: null, anonGb: null };
       out.set(job.id, this.holdingAt(view, step, job));
     }
     return out;
@@ -1243,19 +1271,23 @@ export class Runner {
     this.p.dirty = true;
   }
 
-  /** D521: the jobs that wait on memory now -- the schedule's and the running ones' -- each since when. */
-  memoryWaits(): Array<{ id: string; needGb: number | null; freeGb: number | null; since: number }> {
-    const st = this.statuses();
-    const out: Array<{ id: string; needGb: number | null; freeGb: number | null; since: number }> = [];
+  /**
+   * D521: the jobs that wait now, each since when: `memory` -- on the host's actual free memory (memory held
+   * outside the lab slice, or pressure; the schedule's and the running jobs' steps); `budget` -- a memory
+   * retry the lab's budgets cannot hold beside the running jobs (`behind`).  A retry's minute of settle is neither.
+   */
+  memoryWaits(): Array<{ id: string; kind: 'memory' | 'budget'; needGb: number | null; availGb: number | null; freeGb: number | null; behind: string[]; since: number }> {
+    const out: ReturnType<Runner['memoryWaits']> = [];
+    const since = (id: string): number => this.memWaitSince.get(id) ?? this.sys.now();
     for (const b of this.blocked) {
-      if (b.code !== 'memory' && b.code !== 'memory-wait' && !isMemoryRetry(st.get(b.id))) continue;
-      out.push({ id: b.id, needGb: b.needGb ?? null, freeGb: b.freeGb ?? null, since: this.memWaitSince.get(b.id) ?? this.sys.now() });
+      if (b.wait === 'memory') out.push({ id: b.id, kind: 'memory', needGb: b.needGb ?? null, availGb: b.availGb ?? null, freeGb: b.freeGb ?? null, behind: [], since: since(b.id) });
+      else if (b.wait === 'budget') out.push({ id: b.id, kind: 'budget', needGb: b.needGb ?? null, availGb: null, freeGb: b.freeGb ?? null, behind: b.behind ?? [], since: since(b.id) });
     }
     for (const r of this.active()) {
       if (!r.waitingMemGb) continue;
       const job = this.jobOf(r), step = r.steps[r.stepIndex];
-      const free = job && step ? this.memoryWait(r, job, step) : null;
-      out.push({ id: r.id, needGb: r.waitingMemGb, freeGb: free?.free ?? null, since: this.memWaitSince.get(r.id) ?? this.sys.now() });
+      const w = job && step ? this.memoryWait(r, job, step) : null;
+      out.push({ id: r.id, kind: 'memory', needGb: r.waitingMemGb, availGb: w?.avail ?? null, freeGb: w?.free ?? null, behind: [], since: since(r.id) });
     }
     return out;
   }
@@ -1264,6 +1296,7 @@ export class Runner {
     const now = new Set(this.memoryWaits().map((w) => w.id));
     for (const id of now) if (!this.memWaitSince.has(id)) this.memWaitSince.set(id, this.sys.now());
     for (const id of [...this.memWaitSince.keys()]) if (!now.has(id)) this.memWaitSince.delete(id);
+    this.p.memWaitSince = Object.fromEntries(this.memWaitSince);
   }
 
   /**
@@ -1320,21 +1353,22 @@ export class Runner {
   }
 
   /**
-   * What a run holds at `step`.  D521: once the real run has measured them (MEASURE_MIN_MS of a commands
-   * step), the measured peaks stand in for declarations: the largest worker's peak x MEASURED_MARGIN in
-   * place of the sized or declared per-worker peak (J197 declared 2 GB a worker and measured 1.29); a
-   * block's `mem_gb:` stays a floor that a measured peak may only raise (a fit's peak comes late, J196).
-   * Never less than the unit's RSS now.
+   * What a run holds at `step`.  D521: a declaration (or the sized, measured-in-pilot or default per-worker
+   * peak) is a FLOOR.  Once a commands step has run MEASURE_MIN_MS (60 min), a measured peak x MEASURED_MARGIN
+   * (1.4) may RAISE it, never lower it: the largest worker's VmHWM for the per-worker peak (J197's live JVMs:
+   * 1.40-1.85 GB against 2 GB declared, one grew 36% over hours), the unit's anon memory for a block's
+   * `mem_gb:` (a fit's peak comes late, J196).  Never less than the unit's anon memory now.
    */
   holdingAt(r: JobRun, step: Step | undefined, job: JobFile | null): Holding {
     const cores = this.stepWidth(r, step, job);
     const ms = r.measured;
-    const measuredWorker = ms?.workerPeakGb && (ms.workerSampledMs ?? 0) >= MEASURE_MIN_MS ? ms.workerPeakGb * MEASURED_MARGIN : null;
-    const peak = measuredWorker ?? r.sizing?.peakGb ?? Math.max(r.peakRssGb ?? 0, job?.memPerWorkerGb ?? DEFAULT_PEAK_GB);
+    const floor = r.sizing?.peakGb ?? Math.max(r.peakRssGb ?? 0, job?.memPerWorkerGb ?? DEFAULT_PEAK_GB);
+    const measuredWorker = ms?.workerPeakGb && (ms.workerSampledMs ?? 0) >= MEASURE_MIN_MS ? ms.workerPeakGb * MEASURED_MARGIN : 0;
+    const peak = Math.max(floor, measuredWorker);
     let mem = step?.memGb ?? cores * peak;
     const sp = step ? ms?.steps?.[step.name] : undefined;
-    if (step?.memGb && sp && sp.peakGb * MEASURED_MARGIN > mem) mem = sp.peakGb * MEASURED_MARGIN;
-    if (step && step === r.steps[r.stepIndex] && r.unit && (r.rssGb ?? 0) > mem) mem = r.rssGb as number;
+    if (step?.memGb && sp && sp.sampledMs >= MEASURE_MIN_MS && sp.peakGb * MEASURED_MARGIN > mem) mem = sp.peakGb * MEASURED_MARGIN;
+    if (step && step === r.steps[r.stepIndex] && r.unit && (r.anonGb ?? 0) > mem) mem = r.anonGb as number;
     return { cores, memGb: Math.round(mem * 10) / 10 };
   }
 
@@ -1412,8 +1446,10 @@ export class Runner {
 
   /**
    * D521: the real run's peaks.  In a commands step, the largest worker JVM's VmHWM; in every non-prepare
-   * step, the unit's summed RSS (page cache is not counted: an I/O-heavy fit fills the cgroup with cache
-   * up to its limit, and MemAvailable counts cache as free).  Each with how long its step had run then.
+   * step, the unit's anonymous memory (memory.stat anon + shmem: page cache is not counted -- an I/O-heavy
+   * fit fills the cgroup with cache up to its limit, and MemAvailable counts cache as free -- and a forked
+   * pool's shared pages count once, where a sum of VmRSS counts them in every child: dataset.py,
+   * dataset_merge.py and rollout_labels.py fork).  Each with how long its step had run then.
    */
   sampleMemory(r: JobRun, step: Step): void {
     const unit = r.unit as string;
@@ -1426,12 +1462,12 @@ export class Runner {
         m.workerSampledMs = Math.max(m.workerSampledMs ?? 0, elapsed);
       }
     }
-    const rss = this.sys.unitRssGb?.(unit) ?? null;
-    r.rssGb = rss;
-    if (rss !== null && rss > 0) {
+    const anon = this.sys.unitAnonGb?.(unit) ?? null;
+    r.anonGb = anon;
+    if (anon !== null && anon > 0) {
       const steps = m.steps ?? (m.steps = {});
       const prev = steps[step.name];
-      steps[step.name] = { peakGb: Math.round(Math.max(prev?.peakGb ?? 0, rss) * 100) / 100, sampledMs: Math.max(prev?.sampledMs ?? 0, elapsed) };
+      steps[step.name] = { peakGb: Math.round(Math.max(prev?.peakGb ?? 0, anon) * 100) / 100, sampledMs: Math.max(prev?.sampledMs ?? 0, elapsed) };
     }
   }
 
@@ -1864,7 +1900,7 @@ export class Runner {
       running.push({ ...this.publicOf(id), id, title: job?.title ?? id, cpu: job?.cpu ?? 'heavy', phase: 'commands', started: Number.isFinite(started) ? isoLocal(started) : null, elapsed: Number.isFinite(started) ? Math.round((now - started) / 1000) : 0,
         done: null, total: null, unit: null, ratePerHour: null, eta: null, workers: null, workersMax: null, cores: null, errors: null, paused: false, dataUpdated: null, pressureEvents: [], detail: 'not run by the runner' });
     }
-    const queueCodes = new Set(['after', 'heavy-busy', 'light-busy', 'cores', 'queued']);
+    const queueCodes = new Set(['after', 'heavy-busy', 'light-busy', 'cores', 'alone', 'queued']);
     if (running.length) this.p.idleSince = null;
     else this.p.idleSince ??= now;
     const finished: FinishedItem[] = [];
@@ -1880,7 +1916,9 @@ export class Runner {
     // D521: a job waiting on memory makes the whole lab `degraded`, and says why in `alerts`, in one read.
     const waits = this.memoryWaits();
     const alerts: Alert[] = [
-      ...waits.map((w): Alert => ({ at: isoLocal(w.since), id: w.id, kind: 'memory-wait', needGb: w.needGb, availGb: w.freeGb, text: '' })),
+      ...waits.map((w): Alert => w.kind === 'memory'
+        ? { at: isoLocal(w.since), id: w.id, kind: 'memory-wait', needGb: w.needGb, availGb: w.availGb, freeGb: w.freeGb, text: '' }
+        : { at: isoLocal(w.since), id: w.id, kind: 'budget-wait', needGb: w.needGb, availGb: null, freeGb: w.freeGb, behind: w.behind, text: '' }),
       ...[...(this.p.alerts ?? [])].filter((a) => now - a.at <= ALERT_KEEP_MS).reverse()
         .map((a): Alert => ({ at: isoLocal(a.at), id: a.id, kind: a.kind, needGb: null, availGb: a.availGb, text: '', detail: a.detail })),
     ].slice(0, 20).map((a) => ({ ...a, text: alertText(a) }));
@@ -1889,7 +1927,8 @@ export class Runner {
       updated: isoLocal(now),
       heartbeat: isoLocal(now),
       paused: this.isPaused(),
-      state: waits.length ? 'degraded' : running.length ? 'running' : 'idle',
+      // Degraded only for memory the lab cannot see or control; a retry waiting on the budget behind a running job is `running`, with its alert.
+      state: waits.some((w) => w.kind === 'memory') ? 'degraded' : running.length ? 'running' : 'idle',
       alerts,
       idleSince: running.length || this.p.idleSince == null ? null : isoLocal(this.p.idleSince),
       idleReason: running.length ? null : idleReasonOf(this.blocked, this.isPaused()),
@@ -1931,7 +1970,7 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 
 - time: ${doc.updated}
 - runner: ${this.cfg.commit}, up since ${isoLocal(this.p.started)}${doc.paused ? ', PAUSED (tools/runner.sh resume)' : ''}
-- state: ${doc.state ?? (run.length ? 'running' : 'idle')}${doc.state === 'degraded' ? ' (a job waits on memory)' : ''}
+- state: ${doc.state ?? (run.length ? 'running' : 'idle')}${doc.state === 'degraded' ? ' (a job waits on memory held outside the lab slice)' : ''}
 ${(doc.alerts ?? []).map((a) => `- ALERT: ${a.text}${a.detail ? ` (${a.detail})` : ''}\n`).join('')}- running: ${run.length ? run.join('; ') : 'nothing'}
 - cores: ${doc.host.coresUsed ?? '?'} of ${doc.host.coresTotal ?? '?'} in use (the running jobs' widths; ${doc.host.cpus} threads)
 - load: ${doc.host.load1}; memory ${doc.host.memUsedGb}/${doc.host.memTotalGb} GB, swap ${doc.host.swapUsedMb} MB, pressure ${doc.host.pressure}% (lab budget ${doc.host.budgetGb} GB)

@@ -33,7 +33,7 @@
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
 //   --home-mtg-table DIR --home-forgecoach DIR (Justin's checkouts, ~/code/<repo>)
 //   --reserve-gb N (7)  --cores N (the core budget heavy jobs side by side share; budget.json wins; default all threads but 2)
-//   --avail-reserve-gb N (2: a step starts only when its expected peak fits in MemAvailable less this)
+//   --avail-reserve-gb N (3: a step starts only when its expected peak fits in MemAvailable less this, and PSI some avg10 <= 5%)
 //   --co-schedule on|off (on: a heavy job may start beside narrow running ones)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
 //   --public-every-s N (60: the public copy when it changed, at most)  --public-heartbeat-s N (120: unchanged)
 //   --bridge-port N (8642)  --dry-run (once/daemon: same as plan)  --no-push (write nothing to git remotes)
@@ -57,7 +57,7 @@ import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
 import { serveStatus, STATUS_HOST } from './serve.ts';
 import { budget, DEFAULT_BUDGET, DESKTOP_DROPIN, SERVICE, serviceUnit, SLICE, sliceUnit } from './sizing.ts';
-import { AVAIL_RESERVE_GB, budgetText, clearBudgetFile, readBudgetFile, resolveBudget, writeBudgetFile, type BudgetFile } from './budget.ts';
+import { AVAIL_RESERVE_GB, budgetText, clearBudgetFile, MIN_MEM_CAP_GB, readBudgetFile, resolveBudget, writeBudgetFile, type BudgetFile } from './budget.ts';
 import { readMeminfo } from './sys.ts';
 import { isoLocal, type StatusDoc } from './statusjson.ts';
 import { dryRunSys, realSys } from './sys.ts';
@@ -263,10 +263,19 @@ function budgetCmd(cfg: RunnerConfig, pos: string[], f: Map<string, string>): nu
   if (f.has('mem-gb')) {
     const v = f.get('mem-gb');
     const n = Number(v);
+    const refuse = (why: string): number => { console.error(`runner: budget --mem-gb ${v}: ${why}`); return 2; };
     if (v === 'default') set({ ...(file ?? { mode: 'whole' }), memGb: null });
-    else if (!Number.isFinite(n) || n <= 0) throw new Error(`--mem-gb must be a number of GB, or default (got ${v})`);
-    else if (n > b.heavyGb) throw new Error(`--mem-gb ${n} is more than the lab's ${b.heavyGb} GB for heavy jobs; the slice (MemoryMax ${b.labGb} G) is the hard stop: tools/runner.sh install --reserve-gb N rewrites it`);
-    else set({ ...(file ?? { mode: 'whole' }), memGb: n });
+    else if (!Number.isFinite(n) || n <= 0) return refuse('not a number of GB (or default)');
+    else if (n > b.heavyGb) return refuse(`more than the lab's ${b.heavyGb} GB for heavy jobs; the slice (MemoryMax ${b.labGb} G) is the hard stop: tools/runner.sh install --reserve-gb N rewrites it`);
+    else if (n < MIN_MEM_CAP_GB) return refuse(`under ${MIN_MEM_CAP_GB} GB: no heavy job would fit`);
+    else {
+      // D521: never below what a running or waiting job needs (the daemon's needs.json, written every tick).
+      let needs: { running?: Record<string, number>; waiting?: Record<string, number> } = {};
+      try { needs = JSON.parse(fs.readFileSync(path.join(cfg.stateDir, 'needs.json'), 'utf8')) as typeof needs; } catch { /* no daemon state: nothing to compare */ }
+      const over = [...Object.entries(needs.running ?? {}).map(([id, g]) => [id, g, 'runs and holds'] as const), ...Object.entries(needs.waiting ?? {}).map(([id, g]) => [id, g, 'waits and needs'] as const)].filter(([, g]) => typeof g === 'number' && g > n);
+      if (over.length) return refuse(`below what ${over.map(([id, g, w]) => `${id} ${w} ${g} GB`).join(', ')}`);
+      set({ ...(file ?? { mode: 'whole' }), memGb: n });
+    }
   }
   const r = resolveBudget({ file, flagCores: cfg.cores, machine: m, heavyGb: b.heavyGb });
   const mi = (() => { try { return readMeminfo(fs.readFileSync('/proc/meminfo', 'utf8')); } catch { return null; } })();

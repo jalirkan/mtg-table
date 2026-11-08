@@ -21,7 +21,10 @@
 // may only LOWER the runner's accounting under it: raising it is `install --reserve-gb`,
 // which rewrites the slice.  Separately, before any step starts the runner reads the host's
 // MemAvailable and starts it only when its expected peak fits in that less AVAIL_RESERVE_GB
-// (runner.ts `memoryFree`): a GPU painter or a browser outside the slice counts there.
+// (3 GB: systemd-oomd watches user@1000 at 50% pressure, and swap is full) and the host's memory
+// pressure (PSI some avg10) is at most 5% (runner.ts `memoryWait`): a GPU painter or a browser
+// outside the slice counts there.  A need is counted at most the INSTALLED heavy budget, never a
+// lowered one, and `--mem-gb` is refused below 4 GB or below any running or waiting job's need.
 //
 // Where it lives: `<state>/budget.json`, written by `tools/runner.sh budget`, read by the
 // daemon every tick (no restart).  Absent, the daemon's `--cores N` flag, else `whole`.
@@ -35,7 +38,9 @@ export const BUDGET_FILE = 'budget.json';
 /** Threads `whole` leaves for the desktop, the Claude app and the runner. */
 export const DESKTOP_THREADS = 2;
 /** Before a step starts: its expected peak must fit in MemAvailable less this (GB). */
-export const AVAIL_RESERVE_GB = 2;
+export const AVAIL_RESERVE_GB = 3;
+/** `budget --mem-gb` refuses a cap under this (GB). */
+export const MIN_MEM_CAP_GB = 4;
 
 export type BudgetMode = 'whole' | 'shared' | 'custom';
 
@@ -112,8 +117,8 @@ export function budgetText(o: { r: Resolved; file: BudgetFile | null; machine: M
     `        the heavy jobs running side by side keep at most this many busy; one job's own width is unchanged (its cores:, else max_workers, else ${Math.max(1, m.physicalCores - 1)})`,
     `        shared = ${modeCores('shared', m)}, whole = ${modeCores('whole', m)}${o.daemonCores != null && o.daemonCores !== o.r.cores ? `; the daemon's last status.json says ${o.daemonCores} (it reads budget.json every tick: an older runner ignores it)` : ''}`,
     `memory: ${o.r.memGb} GB for heavy jobs${o.r.memFrom === 'budget.json' ? ` (budget.json caps it; the lab's is ${o.heavyGb} GB)` : ''}: the lab slice's MemoryMax ${o.labGb} G (${m.memTotalGb.toFixed(1)} GB less the ${o.reserveGb} GB reserve), less a light job's share`,
-    `        before any step starts, its expected peak must also fit in MemAvailable less ${o.availReserveGb} GB${o.availGb !== null ? ` (now ${(Math.round(o.availGb * 10) / 10)} GB available)` : ''}`,
+    `        before any step starts, its expected peak must also fit in MemAvailable less ${o.availReserveGb} GB${o.availGb !== null ? ` (now ${(Math.round(o.availGb * 10) / 10)} GB available)` : ''}, with memory pressure (some avg10) at most 5%`,
     'set:    tools/runner.sh budget whole | shared | default    (default: remove budget.json; the --cores flag, else whole)',
-    `        tools/runner.sh budget --cores N    tools/runner.sh budget --mem-gb N (at most ${o.heavyGb}; more is tools/runner.sh install --reserve-gb N, which rewrites the slice)`,
+    `        tools/runner.sh budget --cores N    tools/runner.sh budget --mem-gb N (4 to ${o.heavyGb}, and not below a running or waiting job's need; more is tools/runner.sh install --reserve-gb N, which rewrites the slice)`,
   ].join('\n');
 }
