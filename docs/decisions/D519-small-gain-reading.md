@@ -5,7 +5,7 @@ J197's job text (`~/code/mtg-table-pcjobs/jobs/J197-routlets-confirm.md`, writte
 games) reserved D519 by name for this reading, "to be recorded as D519 when the night is read, whichever way it
 lands"; D520's lane took D520 for that reason (its own first note), and D521 followed. Numbers are final (D200), so
 this file takes the reserved number although `node tools/decisions.mjs next` prints D522. Extends D517 (the knob
-arms and their rule, Decision 5) and D398 (the fixed match); reads J197. A reading and a result: no player, search,
+arms and their rule, Decision 5); uses D398's fixed match unchanged; reads J197. A reading and a result: no player, search,
 bridge, wire or protocol change, and the live seat is untouched, so it is free under D509.*
 
 **2026-11-08**
@@ -23,8 +23,9 @@ bridge, wire or protocol change, and the live seat is untouched, so it is free u
   games (6.2%), no errors or timeouts, 984 against 978 ms a decision. D517 sends that to a 4,800-game confirmation,
   J197.
 - **At 4,800 games D517's bar can close the track on a measured gain.** Four times the games halve the interval to
-  about ±4.8 Elo, so any point between about +4.8 and +15 gives a lower end above 0.5 and an upper end under +15: NOT
-  SHOWN under D517, which closes the track. J195's own point would read about [+2.2, +11.7] at that size — a gain
+  about ±4.8 Elo, so any point between about +4.8 and +10.2 gives a lower end above 0.5 and an upper end under +15: NOT
+  SHOWN under D517, which closes the track (from about +10.2 to +15 the upper end reaches +15 and D517 reads
+  INCONCLUSIVE instead). J195's own point would read about [+2.2, +11.7] at that size — a gain
   measured with 95% confidence, at no measured cost — and D517 would have discarded it. The +15 bar was chosen for a
   1,200-game night that could not resolve less; it was never meant to call a resolved small gain "not shown".
 
@@ -55,12 +56,14 @@ bridge, wire or protocol change, and the live seat is untouched, so it is free u
    track neither closed by it nor reopened.
 4. **Exposure's UNEXPOSED applies to NOT SHOWN only.** D517's exposure reading carries over unchanged in its
    threshold (3% of games, 144 of 4,800, in integers: `exposedGames × 100 ≥ 3 × played`): a NOT SHOWN under it is NOT
-   SHOWN, UNEXPOSED and keeps the knob open until a rollout-level counter exists. Exposure never changes SHOWN, SMALL
+   SHOWN, UNEXPOSED and keeps the knob open until a rollout-level counter exists; so is a NOT SHOWN with no exposure
+   read for the match. Exposure never changes SHOWN, SMALL
    GAIN or INCONCLUSIVE AT 4,800, and is reported beside them.
 5. **Cost is reported, never required.** The arm's ms a decision against search-v2's is read from the match line:
    "no cost" (within 5%) when `aMs × 100 ≤ 105 × bMs`, a cheaper arm being within. A SMALL GAIN outside 5% is still
    SMALL GAIN; its cost is what the owner's seat decision weighs.
-6. **The scope is the 4,800-game confirmation of a knob arm under D517's rule.** It changes nothing at 1,200 games,
+6. **The scope is the 4,800-game confirmation of a knob arm under D517's rule** (in practice this one, J197's: ranked
+   was NOT SHOWN at 1,200 and never reached a confirmation). It changes nothing at 1,200 games,
    where D517's three readings stand as written, and nothing in D514's compute-curve rule; a later rule that wants a
    SMALL GAIN reading writes its own, before its games.
 7. **J197's reading under this rule: NOT SHOWN, exposed; the knob track is closed for the confirm deck set.**
