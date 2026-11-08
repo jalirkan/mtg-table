@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-11-08T00:32:57-05:00",
- "heartbeat": "2026-11-08T00:32:57-05:00",
+ "updated": "2026-11-08T00:37:35-05:00",
+ "heartbeat": "2026-11-08T00:37:35-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.79,
-  "memUsedGb": 13.8,
+  "load1": 14.37,
+  "memUsedGb": 13.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4334,
+  "swapUsedMb": 4294,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-08T00:20:32-05:00",
-   "elapsed": 745,
-   "done": 56,
+   "elapsed": 1023,
+   "done": 88,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 283.6,
-   "eta": "2026-11-08T17:16:48-05:00",
+   "ratePerHour": 327.2,
+   "eta": "2026-11-08T15:01:41-05:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-08T00:32:24-05:00",
-   "memGb": 8.17,
+   "dataUpdated": "2026-11-08T00:36:41-05:00",
+   "memGb": 7.79,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -59,9 +59,9 @@
     "bs.j195Blocks": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 711,
+    "elapsed_s": 968,
     "j197_err": 0,
-    "j197_games": 56,
+    "j197_games": 88,
     "peak_worker_rss_gb": 1.29,
     "pressure_events": 0,
     "ro.games": 0,
@@ -92,18 +92,17 @@
    "detail": "lab-J197-run1"
   }
  ],
- "queue": [],
- "waiting": [
+ "queue": [
   {
    "publicTitle": "Evaluator v3 (win chance)",
    "publicEst": "~7-9 h",
    "id": "J196",
    "title": "Evaluator v3 for the win-chance strip only (the play-AI review of 2026-11-05, §5 row 7): v2's architecture and hyperparameters, one fit over queue nights 1-5 (v2's nights 1-3 dataset unchanged, plus nights 4-5's 75,991 games encoded over the same vocabulary and merged with D518's dataset_merge.py), holding half of each training game's rows (D518's --load-subsample 0.5), judged by D364's eval_compare against v2 on v2's own held-out pairs",
-   "reason": "stopped for memory; will retry",
-   "est": "~7-9 h (unverified as a whole; each part from a measurement). Encode nights 4-5: ~80 min at 6 workers (J087's run1 encoded nights 1-3's 119,822 recordings, 19,517,006 rows, and ran the split audit in 61.8 min at 6 workers, about 32 recordings a second; nights 4-5 are 151,847 recordings at ~171 rows each against nights 1-3's 163, measured on a 240-recording sample). Merge: ~10-15 min (D518's estimate: ~25.9 M rows rewritten at ~7,700 rows a second a process, ~10 min at --jobs 6, plus a 1.7 GB copy of nights 1-3's shards). Split audit: ~3 min (J092's run1, 82 s for 119,816 games). Dry load: ~2 h (D518 measured 53-54 min a dry load of nights-1-3, at share 1 and at 0.5 alike, because both read every shard; five nights are ~2.3x the shards). The fit: ~3-4 h, of which ~2 h is the same load, ~45-85 min the epochs (v2's winner ran ~21 s an epoch over 3.85 M rows a epoch beside three other workers; here an epoch reads about 9 M, and early stopping may come later; an estimate), and ~15 min the baselines and scoring. Comparisons and the strip's load check: ~30-40 min (each loads only a test split, 2-5 M rows). Sum: ~7.3-8.6 h",
-   "detail": "memory: step run3 was killed without an exit code (oomd or the OOM killer?); retry after 2026-11-08T00:35:31-05:00"
+   "cpu": "heavy",
+   "est": "~7-9 h (unverified as a whole; each part from a measurement). Encode nights 4-5: ~80 min at 6 workers (J087's run1 encoded nights 1-3's 119,822 recordings, 19,517,006 rows, and ran the split audit in 61.8 min at 6 workers, about 32 recordings a second; nights 4-5 are 151,847 recordings at ~171 rows each against nights 1-3's 163, measured on a 240-recording sample). Merge: ~10-15 min (D518's estimate: ~25.9 M rows rewritten at ~7,700 rows a second a process, ~10 min at --jobs 6, plus a 1.7 GB copy of nights 1-3's shards). Split audit: ~3 min (J092's run1, 82 s for 119,816 games). Dry load: ~2 h (D518 measured 53-54 min a dry load of nights-1-3, at share 1 and at 0.5 alike, because both read every shard; five nights are ~2.3x the shards). The fit: ~3-4 h, of which ~2 h is the same load, ~45-85 min the epochs (v2's winner ran ~21 s an epoch over 3.85 M rows a epoch beside three other workers; here an epoch reads about 9 M, and early stopping may come later; an estimate), and ~15 min the baselines and scoring. Comparisons and the strip's load check: ~30-40 min (each loads only a test split, 2-5 M rows). Sum: ~7.3-8.6 h"
   }
  ],
+ "waiting": [],
  "finished": [
   {
    "publicTitle": "Search knobs and the lower compute curve: four fixed matches",
