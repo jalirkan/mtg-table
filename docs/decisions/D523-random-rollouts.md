@@ -148,6 +148,18 @@ ruling them out, iterating from data.
    from, D522's step 2 with this rollout instead of Forge's). If both arms are confirmed, the one with the higher
    point is taken, `random` at a tie (no Forge in the loop at all). Any change to the live seat is a separate
    decision (a seat-queue row, D509).
+
+   *Three cases the rows do not reach*, read here before any game (2026-11-08, when J199's job was written against
+   this table), so the job's checks and this file say the same thing: (1) a lower end above 0.5 with a point under
+   +15 and an upper end at least +15 (for example +12 [+2.5, +21.5]) is **INCONCLUSIVE** — the SHOWN row needs both
+   of its conditions, and D517's shape, which this table takes, reads everything the SHOWN row does not reach and the
+   INCONCLUSIVE row does as INCONCLUSIVE; (2) a NOT SHOWN interval that lies wholly at or above 0 (lower end at or
+   above 0, upper end below +15 — it needs a half-width under 7.5 Elo, not expected at 1,200 games) is **NOT SHOWN,
+   no weaker**, read with the indistinguishable row: a candidate, confirmed at 4,800 games before anything; (3) a NOT
+   SHOWN upper end of exactly 0 — the interval does not contain 0 and the upper end is not below 0 — is **worse, not
+   badly**. "Lower end" in the SHOWN and INCONCLUSIVE rows is the match line's 95% lower end on the score (`lo`),
+   "point" its Elo point estimate (`elo`), and "interval", "upper end" and the non-inferiority bound's "lower end"
+   its Elo interval (`eloLo`, `eloHi`), the arm being the match's first player.
 10. **The iteration rule.** After J199, the agent reads the counters and the worst-lost games — the arm's lost games
    with the longest turn count and the lowest arm life at the end, the batch line's `seed` replayed with
    `--record full` into a frame log (the searched decisions' reports say which candidate each rollout preferred) —
