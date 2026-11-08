@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-07T21:35:20-05:00",
- "heartbeat": "2026-11-07T21:35:20-05:00",
+ "updated": "2026-11-07T21:39:55-05:00",
+ "heartbeat": "2026-11-07T21:39:55-05:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.1,
-  "memUsedGb": 14.1,
+  "load1": 3.18,
+  "memUsedGb": 17,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5386,
-  "pressure": 10.09,
+  "swapUsedMb": 5931,
+  "pressure": 0.01,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 1,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 2/4",
    "started": "2026-11-07T18:35:32-05:00",
-   "elapsed": 10788,
+   "elapsed": 11063,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 9.44,
+   "memGb": 12.63,
    "live": {
     "ds.rows": 43926758,
     "ds.games": 271643,
@@ -92,7 +92,16 @@
    "detail": "lab-J196-run2"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "Search knob confirmation: one fixed 4,800-game match",
+   "publicEst": "~9-11 h (one long night)",
+   "id": "J197",
+   "title": "The routlets confirmation: one fixed 4,800-game match (2,400 mirrored pairs, D398, the confirm set, no stopping rule) of search-v2-routlets, D390's rollout=outlets under the anytime search, against search-v1-anytime (search-v2), the 4,800-game confirmation D517's rule names for J195's INCONCLUSIVE (a), with a verdict: SHOWN, SMALL GAIN, INCONCLUSIVE AT 4,800 or NOT SHOWN (D517, extended by SMALL GAIN for this confirmation, to be recorded as D519)",
+   "cpu": "heavy",
+   "est": "~9.5 h at 7 workers (range 9-11 h), 12.25 h at worst (the match's own stop). From J195's walls on 7 workers: its (a), this matchup, took 2 h 41 min for 1,200 games (10:23 to 13:04 on 2026-11-07) with 18 of the night's 24 pressure events inside it, its workers dropped to 6, 5 and once 4 between 10:35 and 12:43; its (b), the same kind of mirror at ~905 ms a decision on both sides against (a)'s ~981, took 2 h 10 min with 2 events. (b)'s pace scaled by the thinking time (x1.08) is ~2 h 21 min for 1,200 games, so 4,800 games are ~9.4 h unloaded; at (a)'s own pressured pace, ~10.7 h. The match stops itself at --hours 12.25 (about 1.3x the estimate, 1.15x the pressured pace), under the 13 h timeout; a match that reaches its stop reports complete: false and gives no verdict. The ladder's default 300 s per-game timeout, as J195's (a). Pilot ~10 min (the build, the bench self-test, the ladder tests, 4 games on one worker; J195's whole pilot, its four arms' 16 games included, took about 10 minutes, 10:13 to 10:23)"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
