@@ -35,3 +35,8 @@ matters on the strip). `human_eval` is not a gate for a strip model (D369 reads 
 **The memory lesson** is D520 (the fit saves its model first; `--resume-model`) and D521 (the runner uses the whole
 machine): a kill after training can no longer cost a fit, and the runner no longer parks a killed job behind a
 nine-hour match.
+
+**The runner's own run** (added 2026-11-08 14:55): J196's retry under D521's runner ran 09:54–14:50 (encode skipped,
+dry load 14.7 GB peak, the fit, the compares), 16/16 checks PASS, and reads the same way: BETTER on v2's test pairs,
+BETTER on the five-night pairs, BETTER against v1 (`cmp.better`, `cmpn.better`, `cmp1.better` all 1). The two runs of
+one seed agree; the runner's model is the record.
