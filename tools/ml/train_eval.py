@@ -39,8 +39,11 @@ which is where J196 was OOM-killed after 2.5 hours -- with a `partial` block
 and the memory so far).  The end rewrites both through a temp file and a
 rename: the model as it always was (no `partial`), the report with `complete:
 true`.  `--resume-model PATH` loads such a model instead of fitting (refused
-unless this command line would have trained it: dataset, split, load,
-configuration) and runs only what follows the fit; it still loads the data.
+unless its recorded dataset, split, load share and
+configuration are this run's; --seed at F = 1, --compact and --threads
+pass) and runs only what follows the fit; it still loads the data.  The early
+file is written before the auxiliary head's error is measured, so a run resumed
+from it reports no `auxTurnsToEnd`.
 
 The model is evalnet.py's (its header says what and why).  It trains on the
 `train` split and stops early on the `val` split's log-loss (patience epochs
@@ -1006,16 +1009,16 @@ def run_train(a, hp, log) -> dict[str, Any]:
         + (f" (resumed from {resume})" if resume else ""))
     mem.note("resume" if resume else "grid" if search == "grid" else "search" if search else "fit", log)
     fit_info = {k: v for k, v in info.items() if k != "history"}
-    # D520: the auxiliary head is never exported, so its held-out error is measured here, before anything can
-    # kill the run, and carried in the early model (a resumed run reads it back); the number is the same
-    aux_info = (saved["auxTurnsToEnd"] if resume else aux_report(net, splits, opts["aux"])) if opts["aux"] > 0 else None
     date = saved["date"] if resume else N.now()
     # D520: the model and a partial report on disk the moment the fit is chosen, before the baselines, the
-    # scoring and the report -- a kill after the fit no longer loses it (--resume-model then runs only the rest)
+    # scoring and the report -- a kill after the fit no longer loses it (--resume-model then runs only the rest).
+    # Nothing is computed between the fit and this write; the auxiliary head's error is measured after it.
     if a.out:
+        partial = {"complete": False, "fit": {k: fit_info[k] for k in PARTIAL_FIT if k in fit_info}}
+        if opts["aux"] > 0:
+            partial["auxTurnsWeight"] = opts["aux"]
         N.save_model(a.out, net.to_json(schema, names, {
-            "excluded": info["excluded"], "training": training(info["bestEpoch"], aux_info, date),
-            "partial": {"complete": False, "fit": {k: fit_info[k] for k in PARTIAL_FIT if k in fit_info}}}))
+            "excluded": info["excluded"], "training": training(info["bestEpoch"], None, date), "partial": partial}))
         log(f"saved {a.out} after the fit, before the baselines and scoring ({os.path.getsize(a.out)} bytes; "
             f"rewritten with its metrics at the end)")
     if a.report:
@@ -1026,6 +1029,14 @@ def run_train(a, hp, log) -> dict[str, Any]:
             part["resumedFrom"] = resume
         part["memory"] = list(mem.stages)
         write_json(a.report, part)
+    # the auxiliary head is never exported: a run that fitted it measures it here; a resumed run has it only if
+    # its model is a finished one (an early file was written before it was measured), and otherwise reports none
+    aux_info = None
+    if opts["aux"] > 0:
+        aux_info = saved.get("auxTurnsToEnd") if resume else aux_report(net, splits, opts["aux"])
+        if aux_info is None:
+            log("auxiliary turns_to_end head: not in the resumed model (written before it was measured; the head is "
+                "never exported), so not reported")
     models = fit_baselines(tr, va, names)
     mem.note("baselines", log)
     models["eval"] = net.predict
@@ -1049,7 +1060,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
         report["subsample"] = opts["subsample"]
     if lsub_info:
         report["loadSubsample"] = lsub_info
-    if opts["aux"] > 0:
+    if aux_info is not None:
         report["auxTurnsToEnd"] = aux_info
         log(f"auxiliary turns_to_end head (weight {opts['aux']:g}): test MAE {report['auxTurnsToEnd']['testMAE']:.2f} "
             f"turns against {report['auxTurnsToEnd']['testMAEConstant']:.2f} for the training mean")
@@ -1099,8 +1110,8 @@ def write_json(path: str, obj: Any) -> None:
 
 def training_block(a, backend, hp, rows, games, best_epoch, search_summary, fast, frac, weight_by, opts, lsub_info,
                    aux_info, soft_info, date, metrics=None) -> dict[str, Any]:
-    """The exported model's `training` block, in the order it has always had; `metrics` (the scores) is the
-    one field the model written after the fit lacks (D520)."""
+    """The exported model's `training` block, in the order it has always had.  The model written after the fit
+    lacks `metrics` (the scores) and, under --aux-turns, `auxTurnsToEnd` (measured after that write) (D520)."""
     return {"date": date, "data": os.path.relpath(os.path.abspath(a.data)), "backend": backend,
             "splitBy": a.split_by,
             "hyper": hp, "rows": rows, "games": games,
@@ -1118,10 +1129,12 @@ def training_block(a, backend, hp, rows, games, best_epoch, search_summary, fast
 
 
 def resume_fit(path: str, schema: dict[str, Any], want: dict[str, Any], aux: float, log):
-    """--resume-model (D520): the net, the fit's facts and the saved date and auxiliary error from a model this
-    command line wrote, refused unless it was trained on this dataset, split, load and configuration (every
-    field of `RESUME_CHECKED` equal to what this run would write).  A model written after the fit carries
-    `partial.fit` (the val log-loss, epochs run, seconds); a finished one does not, and those stay null."""
+    """--resume-model (D520): the net, the fit's facts and the saved date (and a finished model's auxiliary
+    error) from a saved model, refused unless its recorded dataset, split, load share and configuration are this
+    run's (every field of `RESUME_CHECKED`, and the auxiliary weight, equal to what this run would write).  What
+    those fields do not record passes: `--seed` at a load share of 1 (it seeds only the fit), `--compact` (the
+    same numbers), `--threads`, `--verbose`.  A model written after the fit carries `partial.fit` (the val
+    log-loss, epochs run, seconds); a finished one does not, and those stay null."""
     import evalnet as N
     try:
         m, net = N.load_model(path)
@@ -1135,15 +1148,17 @@ def resume_fit(path: str, schema: dict[str, Any], want: dict[str, Any], aux: flo
         raise SystemExit(f"train_eval: --resume-model {path}: a searched model; --resume-model resumes a plain fit")
     want = json.loads(json.dumps(want))
     diff = [k for k in RESUME_CHECKED if t.get(k) != want.get(k)]
-    if (t.get("auxTurnsToEnd") or {}).get("weight") != (aux if aux > 0 else None):
+    partial = m.get("partial") or {}
+    aux_weight = (t.get("auxTurnsToEnd") or {}).get("weight", partial.get("auxTurnsWeight"))
+    if aux_weight != (aux if aux > 0 else None):
         diff.append("auxTurnsToEnd")
     if diff:
-        raise SystemExit(f"train_eval: --resume-model {path} was not trained on this command line: "
-                         f"{', '.join(diff)} differ")
+        raise SystemExit(f"train_eval: --resume-model {path} was not trained on this dataset, split, load share and "
+                         f"configuration: {', '.join(diff)} differ")
     # from_json's W is a transposed view; the trained net's is C-ordered, and the same layout gives the same
     # products bit for bit
     net.W = [np.ascontiguousarray(w) for w in net.W]
-    fit = (m.get("partial") or {}).get("fit") or {}
+    fit = partial.get("fit") or {}
     info = {"bestEpoch": t.get("bestEpoch"), **{k: fit.get(k) for k in PARTIAL_FIT}, "excluded": m.get("excluded", [])}
     log(f"resume (D520): {path}, trained {t.get('date')}; the fit is skipped, the baselines and scoring run")
     return net, info, {"date": t.get("date"), "auxTurnsToEnd": t.get("auxTurnsToEnd")}
@@ -1424,9 +1439,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="also score every model on the dataset's `human` split -- the owner's own games, never "
                          "trained on (dataset.py --human; D347)")
     ap.add_argument("--resume-model", metavar="PATH",
-                    help="skip the fit: score a model this same command line saved (the one --out writes after "
-                         "the fit, before the baselines) -- the baselines, scoring, report and the final --out run "
-                         "as after a fit; refused unless it was trained on this dataset, split and configuration "
+                    help="skip the fit: score a saved model (the one --out writes after the fit, before the "
+                         "baselines) -- the baselines, scoring, report and the final --out run as after a fit; "
+                         "refused unless its recorded dataset, split, load share and configuration are this run's "
                          "(D520)")
     a = ap.parse_args(argv)
     if np is None:
