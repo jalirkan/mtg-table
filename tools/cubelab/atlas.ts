@@ -10,6 +10,7 @@
 //       [--branch-error-max 0.1] [--branch-capped-warn 0.25]
 //       [--checks-parallel 1] [--early-stop off|on|a,b,c] [--screen 0] [--min-options 1]   (D480, the cut design: below)
 //       [--futility off|<i>] [--futility-tie 0] [--futility-sample 0.1]                     (D489, the futility stop: below)
+//       [--only <file>]                                                                     (D524, given decisions and options: below)
 //
 // THE PAIR (--pair auto): the line of the pairs file with the most ladder games and the most even record,
 // as one rule (atlasmath.ts rankPairs: the smallest |p - 1/2| + 1.96 sqrt(p(1-p)/n) over the decisive
@@ -73,6 +74,15 @@
 // `complete`, so never confident), unless its seeded draw falls in --futility-sample's share: then it is played to the full n
 // as the rule's bias control (`futilityControl: true`).  atlas.json's `phaseB.schedule` counts `futileStopped`,
 // `futileControls` and `futileBranchGamesSaved`; the rule's settings are in plan.json's `cuts` and the schedule's plan hash.
+//
+// D524, GIVEN DECISIONS AND OPTIONS (off by default): --only <file>, a JSON array of {d, options, tokens?}, branches exactly
+// those decisions of the baseline's listing (`why: 'only'`), each at its options alone -- every unit carries them, as
+// Atlas.Unit.options (D480's hook) -- on whichever maps --branch-random and --branch-forge ask for; --branch-random 0 is a
+// Forge map alone, and its decisions read complete on it.  Option 0 must be among each entry's options.  Before any unit the
+// baseline's listing is checked against the list (each d listed, each option below its count, the tokens the listing's): a
+// mismatch exits 4 with no unit played and baseline.json kept.  Refused (exit 2) beside --decisions, --screen, --early-stop,
+// --futility or --min-options above 1.  The list and its sha256 are in plan.json's `cuts.only` and the schedule's plan hash, so a
+// resume under another list is refused.  Without the flag nothing here changes, byte for byte.
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -85,7 +95,7 @@ import { labPath, recipePath, shownPath } from './labdata.ts';
 import type { Ledger } from './censusplay.ts';
 import { checksParallel, checksSerial, type CheckInputs, type CheckParts, type GuardrailCheck, COUNTED_GUARDRAILS } from './atlaschecks.ts';
 export { COUNTED_GUARDRAILS, emptyGuardrails, forgePayCapOf, GUARDRAIL_VIOLATIONS_LISTED, guardrailCheck, guardrailPass, mergeGuardrails, type GuardrailCheck } from './atlaschecks.ts';
-import { AtlasSchedule, checkCuts, CUTS_OFF, cutsOn, decisionCuts, futilityAt, hasBarriers, parseEarlyStop, parseFutility, playCount, repeatedPlays, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
+import { AtlasSchedule, checkCuts, checkOnly, CUTS_OFF, cutsOn, decisionCuts, futilityAt, hasBarriers, parseEarlyStop, parseFutility, parseOnly, playCount, repeatedPlays, SCREEN_HIGH, SCREEN_LOW, scheduleEvents, type Cuts, type DecisionCut, type Only, type PickWhy, type ScheduleEvent, type ScheduleHeader, type ScheduleLine } from './atlascuts.ts';
 import {
   agreement, gamesFor, meanInterval, pairLines, rankPairs, regretInterval, scoreOf, scoreStat, variance,
   wilson, type LadderGame, type PairRow,
@@ -335,6 +345,19 @@ function readJsonl<T>(file: string): T[] {
 export async function atlasCommand(repo: string, f: Map<string, string[]>, say: (s: string) => void): Promise<number> {
   const outArg = one(f, 'out');
   if (!outArg) throw new Error('atlas: --out <dir> is required');
+  // D524: --only, read and checked before anything is written; a usage error exits 2
+  let only: Only | undefined;
+  const onlyArg = one(f, 'only');
+  if (onlyArg !== undefined) {
+    const clash = onlyClash(f);
+    if (clash) { say(`atlas: --only ${clash}`); return 2; }
+    try {
+      only = parseOnly(fs.readFileSync(path.resolve(repo, onlyArg), 'utf8'));
+    } catch (e) {
+      say(`atlas: --only ${onlyArg}: ${(e as Error).message}`);
+      return 2;
+    }
+  }
   const out = labPath(repo, outArg, 'write');
   const int = (k: string, d: number, min = 0): number => {
     const v = Number(one(f, k) ?? d);
@@ -381,10 +404,16 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
       ...((): { futility?: Cuts['futility'] } => {
         const fu = one(f, 'futility') === undefined && priorCuts ? priorCuts.futility : parseFutility(one(f, 'futility'), one(f, 'futility-tie'), one(f, 'futility-sample'));
         return fu ? { futility: { at: fu.at, tie: fu.tie, sample: fu.sample } } : {};
+      })(),
+      // D524: --only's list (a report reads the folder's own)
+      ...((): { only?: Only } => {
+        const x = onlyArg === undefined && priorCuts ? priorCuts.only : only;
+        return x ? { only: { entries: x.entries, sha256: x.sha256 } } : {};
       })() },
     checksParallel: int('checks-parallel', 1, 1),
   };
   checkCuts(o.cuts as Cuts, o.branchRandom, o.chunk);
+  if (only && o.branchRandom === 0 && o.branchForge === 0) { say('atlas: --only with --branch-random 0 and --branch-forge 0 has nothing to play'); return 2; }
   for (const d of [o.deckA, o.deckB]) if (!fs.existsSync(d)) throw new Error(`atlas: no deck ${d}`);
   const phase = one(f, 'phase') ?? 'both';
   if (!['a', 'b', 'both', 'report'].includes(phase)) throw new Error('atlas: --phase a|b|both|report');
@@ -408,8 +437,38 @@ export async function atlasCommand(repo: string, f: Map<string, string[]>, say: 
   const t0 = Date.now();
   const timing: Record<string, unknown> = {};
   if (phase === 'a' || phase === 'both') timing.phaseA = await phaseA(repo, o, out, jobs, say);
-  if (phase === 'b' || phase === 'both') timing.phaseB = await phaseB(repo, o, out, jobs, say);
+  try {
+    if (phase === 'b' || phase === 'both') timing.phaseB = await phaseB(repo, o, out, jobs, say);
+  } catch (e) {
+    if (!(e instanceof OnlyMismatch)) throw e;
+    // D524: the baseline is not the game the list was written on -- no unit played, no atlas.json, baseline.json kept
+    for (const x of e.lines) say(`atlas: --only: ${x}`);
+    say(`atlas: --only: the baseline's listing does not match the list at ${e.lines.length} decision(s); no unit played (exit 4)`);
+    return 4;
+  }
   return writeAtlasChecked(repo, o, out, plan, { ...timing, wallMs: Date.now() - t0, jobs }, say);
+}
+
+/** D524: the flags --only does not combine with, as the refusal's text (null: none given). */
+export function onlyClash(f: Map<string, string[]>): string | null {
+  const v = (k: string): string | undefined => one(f, k);
+  const given = [
+    ...(v('decisions') !== undefined ? ['--decisions'] : []),
+    ...(v('screen') !== undefined && Number(v('screen')) !== 0 ? ['--screen'] : []),
+    ...(v('early-stop') !== undefined && v('early-stop') !== 'off' ? ['--early-stop'] : []),
+    ...(v('futility') !== undefined && v('futility') !== 'off' ? ['--futility'] : []),
+    ...(v('min-options') !== undefined && Number(v('min-options')) !== 1 ? ['--min-options'] : []),
+  ];
+  return given.length ? `does not combine with ${given.join(', ')}: it measures the options given at the decisions given, so nothing picks or cuts them` : null;
+}
+
+/** D524: the baseline's listing is not what --only's list expected (checkOnly's lines). */
+export class OnlyMismatch extends Error {
+  readonly lines: string[];
+  constructor(lines: string[]) {
+    super(`atlas: --only: ${lines.join('; ')}`);
+    this.lines = lines;
+  }
 }
 
 async function phaseA(repo: string, o: AtlasOptions, out: string, jobs: number, say: (s: string) => void): Promise<Record<string, unknown>> {
@@ -461,7 +520,9 @@ export function scheduleHeader(repo: string, o: AtlasOptions): ScheduleHeader {
   const v: Record<string, unknown> = { deckA: shownPath(repo, o.deckA), deckB: shownPath(repo, o.deckB), seed: o.seed, turnCap: o.turnCap, options: o.options, chunk: o.chunk,
     branchTimeoutSec: o.branchTimeoutSec, branchRandom: o.branchRandom, branchForge: o.branchForge, decisions: o.decisions, boot: o.boot,
     // D489: the futility stop only when on, so a D480 schedule's plan hash is what it was
-    cuts: { earlyStop: c.earlyStop, screen: c.screen, minOptions: c.minOptions, ...(c.futility ? { futility: { at: c.futility.at, tie: c.futility.tie, sample: c.futility.sample } } : {}) } };
+    cuts: { earlyStop: c.earlyStop, screen: c.screen, minOptions: c.minOptions, ...(c.futility ? { futility: { at: c.futility.at, tie: c.futility.tie, sample: c.futility.sample } } : {}),
+      // D524: --only's list only when given, so a schedule without it hashes as before
+      ...(c.only ? { only: { entries: c.only.entries, sha256: c.only.sha256 } } : {}) } };
   const plan = Object.fromEntries(SCHEDULE_PLAN_KEYS.map((k) => [k, v[k]]));
   return { v: 1, type: 'plan', decision: 'D480', planSha256: sha256(JSON.stringify(plan)), deckSha256: { deckA: sha256(fs.readFileSync(o.deckA)), deckB: sha256(fs.readFileSync(o.deckB)) }, plan };
 }
@@ -516,6 +577,11 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
   const baseline = JSON.parse(fs.readFileSync(baseFile, 'utf8')) as { decisions: DecisionListing[]; winner: string; turns: number };
   const all = baseline.decisions;
   const cuts = o.cuts ?? CUTS_OFF;
+  // D524: the list against the baseline's listing, before the schedule is opened or any unit played
+  if (cuts.only) {
+    const bad = checkOnly(cuts.only, all);
+    if (bad.length) throw new OnlyMismatch(bad);
+  }
   const branchesFile = path.join(B, 'branches.jsonl');
   const unitsFile = path.join(B, 'units.jsonl');
   const scheduleFile = path.join(B, 'schedule.jsonl');
@@ -531,7 +597,7 @@ async function phaseB(repo: string, o: AtlasOptions, out: string, jobs: number, 
     priorEvents, priorRows, doneUnits, (e) => { if (sfd !== null) fs.writeSync(sfd, `${JSON.stringify(e)}\n`); });
   const picked = sched.picks.map((p) => p.d);
   say(`atlas phase B: the baseline (${baseline.turns} turns, winner ${baseline.winner}) lists ${all.length} decision(s) of seat A; branching at ${picked.length}: ${picked.map((d) => `d${d} (${all[d]?.kind}, turn ${all[d]?.turn}, ${all[d]?.tokens.length} options)`).join(', ')}`);
-  if (cutsOn(cuts)) say(`atlas phase B: the cut design (D480):${cuts.minOptions > 1 ? ` decisions with ${cuts.minOptions}+ options first;` : ''}${cuts.screen ? ` the screen at ${cuts.screen} branches (settled at <= ${SCREEN_LOW} or >= ${SCREEN_HIGH}, replaced);` : ''}${cuts.earlyStop.length ? ` early stopping at ${cuts.earlyStop.join('/')} (option 0 never stops; the Forge map on the options still running);` : ''}${cuts.futility ? ` the futility stop at ${futilityAt(cuts)} (D489: option 0 best or within ${cuts.futility.tie}; ${cuts.futility.sample} of those played on as controls);` : ''} checkpoints ${sched.ends.join('/')}`);
+  if (cutsOn(cuts)) say(`atlas phase B: the cut design (D480):${cuts.minOptions > 1 ? ` decisions with ${cuts.minOptions}+ options first;` : ''}${cuts.screen ? ` the screen at ${cuts.screen} branches (settled at <= ${SCREEN_LOW} or >= ${SCREEN_HIGH}, replaced);` : ''}${cuts.earlyStop.length ? ` early stopping at ${cuts.earlyStop.join('/')} (option 0 never stops; the Forge map on the options still running);` : ''}${cuts.futility ? ` the futility stop at ${futilityAt(cuts)} (D489: option 0 best or within ${cuts.futility.tie}; ${cuts.futility.sample} of those played on as controls);` : ''}${cuts.only ? ` --only (D524): ${cuts.only.entries.map((e) => `d${e.d} at options ${e.options.join(',')}`).join(', ')}, list sha256 ${cuts.only.sha256.slice(0, 12)};` : ''} checkpoints ${sched.ends.join('/')}`);
   const units = sched.initial;
   const barriers = hasBarriers(cuts);
   const resumed = units.filter((u) => doneBranches(priorRows, u).size > 0).length;
@@ -790,6 +856,8 @@ export interface DecisionAtlas {
    * bias control, `futilityControl: true`.  `why` stays the pick's (spread, fill, replaces).
    */
   futilityGap?: number | null; partial?: true; stoppedAt?: number; stopWhy?: 'futile'; futilityControl?: true;
+  /** D524: the options --only branched the decision at, when fewer than its listed ones (each map's regret and the agreement are over them; another option has n 0). */
+  only?: number[];
 }
 
 /** D466: one map's regret block, its numbers copied out as strings and back (see decisionAtlas). */
@@ -808,11 +876,13 @@ const DECIDED_AT = 0.95, LOST_AT = 0.05;
  * (its regret, and the agreement with the random map, are over those), and whether the screen settled it.  `forgeMap` false
  * is a spine run with --branch-forge 0: `complete`, `decided` and `settled` read the random map alone.
  */
-export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot: number, seed: number, cut?: DecisionCut, forgeMap = true): DecisionAtlas {
+export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot: number, seed: number, cut?: DecisionCut, forgeMap = true, randomMap = true): DecisionAtlas {
   const k = listing.tokens.length;
   const stopped = cut?.stoppedAt ?? {};
-  const running = (o: number, i: number): boolean => stopped[o] === undefined || i < (stopped[o] as number);
-  const fo = cut?.forgeOptions && cut.forgeOptions.length < k ? cut.forgeOptions : null;
+  // D524: an --only decision's maps are over its given options (a random row of another cannot exist; none is expected)
+  const only = cut?.only && cut.only.length < k ? cut.only : null;
+  const running = (o: number, i: number): boolean => (!only || only.includes(o)) && (stopped[o] === undefined || i < (stopped[o] as number));
+  const fo = only ?? (cut?.forgeOptions && cut.forgeOptions.length < k ? cut.forgeOptions : null);
   const matrix = (c: Continuation): number[][] => {
     const byI = new Map<number, number[]>();
     for (const r of rows) {
@@ -836,8 +906,8 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
   // blocks read from them in the return, then `cd web && for i in 1 2 3 4 5 6 7 8; do node --test test/cubelab-atlas.test.ts;
   // done` fails "a decision's two maps" most runs, and the same loop with `node --no-maglev --test ...` never does.
   // If a Node upgrade passes the loop without mapOf, the workaround can go.
-  const random = mapOf(mR.length, regretInterval(mR, k, boot, seed + 1, 0));
   const project = (m: number[][], cols: number[]): number[][] => m.map((row) => cols.map((o) => row[o] as number));
+  const random = only ? mapOf(mR.length, regretInterval(project(mR, only), only.length, boot, seed + 1, only.indexOf(0)), only) : mapOf(mR.length, regretInterval(mR, k, boot, seed + 1, 0));
   const forge = fo ? mapOf(mF.length, regretInterval(project(mF, fo), fo.length, boot, seed + 2, fo.indexOf(0)), fo) : mapOf(mF.length, regretInterval(mF, k, boot, seed + 2, 0));
   const ag = fo ? agreement(project(mR, fo), project(mF, fo), fo.length, boot, seed + 3) : agreement(mR, mF, k, boot, seed + 3);
   const col = (m: number[][], o: number): number[] => m.map((row) => row[o] as number).filter((x) => !Number.isNaN(x));
@@ -846,9 +916,11 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
   const screened = cut?.screened === true;
   const fu = cut?.futility;
   // D489: a decision the futility rule stopped is a partial label, never complete
-  const complete = !screened && !fu?.stopped && mR.length > 0 && (!forgeMap || mF.length > 0);
+  // D524: --branch-random 0 under --only (`randomMap` false) reads the Forge map alone, as D480's --branch-forge 0 reads the random one
+  const complete = !screened && !fu?.stopped && (randomMap || forgeMap) && (!randomMap || mR.length > 0) && (!forgeMap || mF.length > 0);
   const played = (x: (typeof options)[number]): boolean => !fo || fo.includes(x.o);
-  const every = (pred: (m: number) => boolean): boolean => options.every((x) => x.random.mean !== null && pred(x.random.mean))
+  const given = (x: (typeof options)[number]): boolean => !only || only.includes(x.o);
+  const every = (pred: (m: number) => boolean): boolean => (!randomMap || options.filter(given).every((x) => x.random.mean !== null && pred(x.random.mean)))
     && (!forgeMap || options.filter(played).every((x) => x.forge.mean !== null && pred(x.forge.mean)));
   const decided = complete && every((m) => m >= DECIDED_AT);
   return {
@@ -859,7 +931,7 @@ export function decisionAtlas(listing: DecisionListing, rows: BranchRow[], boot:
     rho: ag.rho, rhoLo: ag.lo, rhoHi: ag.hi, sameBest: ag.sameBest,
     complete, decided, settled: screened || decided || (complete && every((m) => m <= LOST_AT)),
     ...(cut ? { k: cut.k, why: cut.why, ...(cut.replaces !== undefined ? { replaces: cut.replaces } : {}), ...(cut.screenMean !== undefined ? { screened, screenMean: cut.screenMean } : {}),
-      ...(fo ? { forgeOptions: fo } : {}) } : {}),
+      ...(only ? { only } : fo ? { forgeOptions: fo } : {}) } : {}),
     ...(fu ? { futilityGap: fu.gap, ...(fu.stopped ? { partial: true as const, stoppedAt: fu.at, stopWhy: 'futile' as const } : {}), ...(fu.control ? { futilityControl: true as const } : {}) } : {}),
   };
 }
@@ -1081,8 +1153,10 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   const schedule = scheduleEvents(readJsonl<ScheduleLine>(path.join(B, 'schedule.jsonl')));
   const cutOf = decisionCuts(schedule);
   const forgeMap = o.branchForge > 0;
-  const ds = baseline ? [...byD.keys()].sort((a, b) => a - b).map((d) => decisionAtlas(baseline.decisions[d] as DecisionListing, byD.get(d) as BranchRow[], o.boot, o.seed + d * 7919, cutOf.get(d), forgeMap)) : [];
-  const complete = forgeMap ? ds.filter((d) => d.complete) : [];
+  // D524: a --only spine with --branch-random 0 has no random map: complete on its Forge map, and no agreement read
+  const randomMap = o.branchRandom > 0 || !o.cuts?.only;
+  const ds = baseline ? [...byD.keys()].sort((a, b) => a - b).map((d) => decisionAtlas(baseline.decisions[d] as DecisionListing, byD.get(d) as BranchRow[], o.boot, o.seed + d * 7919, cutOf.get(d), forgeMap, randomMap)) : [];
+  const complete = forgeMap && randomMap ? ds.filter((d) => d.complete) : [];
   const rhoAll = meanInterval(complete.map((d) => d.rho).filter((x): x is number => x !== null), o.boot, o.seed);
   const same = complete.filter((d) => d.sameBest).length;
   const msOf = (c: Continuation): number[] => bRows.filter((r) => r.c === c && !r.error && !r.unavailable).map((r) => r.ms);
@@ -1097,12 +1171,14 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
     phaseB: baseline ? {
       baseline: { winner: baseline.winner, turns: baseline.turns, first: baseline.first, decisionsListed: baseline.decisions.length },
       decisions: ds,
-      agreement: { decisions: complete.length, meanRho: rhoAll.mean, meanRhoInterval: [rhoAll.lo, rhoAll.hi], sameBest: same, sameBestInterval: Object.values(wilson(same, complete.length)), ...(forgeMap ? {} : { forgeMap: false }) },
+      agreement: { decisions: complete.length, meanRho: rhoAll.mean, meanRhoInterval: [rhoAll.lo, rhoAll.hi], sameBest: same, sameBestInterval: Object.values(wilson(same, complete.length)), ...(forgeMap ? {} : { forgeMap: false }), ...(randomMap ? {} : { randomMap: false }) },
       // D480: --branch-forge 0 -- no Forge map on this spine, so no agreement read; `complete` is the random map's
       ...(forgeMap ? {} : { forgeMap: false }),
+      // D524: --branch-random 0 under --only -- no random map, so no agreement read; `complete` is the Forge map's
+      ...(randomMap ? {} : { randomMap: false }),
       // D480: what the cut design did on this spine (written when a cut is on)
       ...(schedule.length ? { schedule: scheduleSummary(schedule, ds, o) } : {}),
-      disagreeMost: disagreements(forgeMap ? ds : []).map((d) => ({ d: d.d, kind: d.kind, turn: d.turn, rho: d.rho, rhoInterval: [d.rhoLo, d.rhoHi], sameBest: d.sameBest, bestRandom: d.random.best, bestForge: d.forge.best })),
+      disagreeMost: disagreements(forgeMap && randomMap ? ds : []).map((d) => ({ d: d.d, kind: d.kind, turn: d.turn, rho: d.rho, rhoInterval: [d.rhoLo, d.rhoHi], sameBest: d.sameBest, bestRandom: d.random.best, bestForge: d.forge.best })),
       branchGames: bRows.length, branchErrors: errored.length, branchEngineErrors, branchUnavailable: ua.errored, branchRestarted: bRows.filter((r) => (r.restarts ?? 0) > 0).length, cappedRandom: bRows.filter((r) => r.c === 'random' && r.capped).length, cappedForge: bRows.filter((r) => r.c === 'forge' && r.capped).length,
       meanBranchMs: { random: meanMs(msOf('random')), forge: meanMs(msOf('forge')) },
       standInsMax: bRows.reduce((a, r) => Math.max(a, r.standIns), 0),
@@ -1151,7 +1227,7 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
 interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
-  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; forgeMap?: boolean; schedule?: Record<string, unknown>; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number; effectSourceNull?: { branches: number; cards: number }; exileLinksLost?: { branches: number; links: number }; damageLkiLost?: { branches: number; instances: number } };
+  phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; forgeMap?: boolean; randomMap?: boolean; schedule?: Record<string, unknown>; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number; effectSourceNull?: { branches: number; cards: number }; exileLinksLost?: { branches: number; links: number }; damageLkiLost?: { branches: number; instances: number } };
   checks: { problems: string[]; warnings?: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
@@ -1209,18 +1285,24 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
       const cuts = sc.cuts;
       L.push(`${sc.picked} decision(s) branched, ${sc.branchedInFull} of them in full${sc.futileStopped ? ` (${sc.futileStopped} more stopped by the futility rule, D489)` : ''}${cuts.minOptions > 1 ? `; picked among those with ${cuts.minOptions} or more options first${sc.fill ? ` (${sc.fill} filled from the rest)` : ''}` : ''}.${cuts.screen ? ` The screen at ${cuts.screen} random branches settled ${sc.screened.length}: ${sc.screened.map((x) => `d${x.d} (mean value ${pct(x.mean)}%${x.replacedBy === null ? ', nothing left to replace it' : `, replaced by d${x.replacedBy}`})`).join(', ') || 'none'}.` : ''}${cuts.earlyStop.length ? ` Early stopping at ${cuts.earlyStop.join('/')} random branches stopped ${sc.stopped.length} option(s): ${sc.stopped.map((x) => `d${x.d} o${x.o} at ${x.at}`).join(', ') || 'none'} (option 0 never stops; a stopped option's value is on its own branches, and the Forge map played only the options still running).` : ''}`, '');
       // D489
+      // D524
+      if (cuts.only) L.push(`The decisions and options were given (\`--only\`, D524; list sha256 ${cuts.only.sha256.slice(0, 12)}): ${cuts.only.entries.map((e) => `d${e.d} at options ${e.options.join(', ')}`).join('; ')}. Every other option of those decisions was not played (n 0), and no other decision was branched.`, '');
       if (cuts.futility && sc.futility) L.push(`The futility stop (D489) read ${sc.futility.length} decision(s) at ${futilityAt(cuts)} random branches: option 0 the best or within ${cuts.futility.tie} of it at ${sc.futility.filter((x) => x.futile).length}. It stopped ${sc.futileStopped ?? 0} (${sc.futility.filter((x) => x.stopped).map((x) => `d${x.d}`).join(', ') || 'none'}), each a partial label at that n, never confident, saving at most ${sc.futileBranchGamesSaved ?? 0} branch games; ${sc.futileControls ?? 0} it would have stopped played on to the full n as controls (${sc.futility.filter((x) => x.control).map((x) => `d${x.d}`).join(', ') || 'none'}; the share ${cuts.futility.sample}, drawn by seed).`, '');
     }
     const ag = b.agreement;
     if (b.forgeMap === false) {
       L.push('### What the two maps agree and disagree about', '');
       L.push('This spine has no Forge map (`--branch-forge 0`, D480): no agreement read is made, and a decision is complete, decided or settled on the random map alone.', '');
+    } else if (b.randomMap === false) {
+      L.push('### What the two maps agree and disagree about', '');
+      L.push('This spine has no random map (`--branch-random 0` with `--only`, D524): no agreement read is made, and a decision is complete, decided or settled on the Forge map alone.', '');
     }
     const strong = b.decisions.filter((d) => d.complete && d.rhoLo !== null && d.rhoLo > 0).length;
     const against = b.decisions.filter((d) => d.complete && d.rhoHi !== null && d.rhoHi < 0).length;
-    if (b.forgeMap !== false) L.push('### What the two maps agree and disagree about', '');
-    if (b.forgeMap !== false) L.push(`Over ${ag.decisions} decision(s) with both maps complete, the mean rank correlation between the random map's ordering of the options and Forge's is ${num2(ag.meanRho)}${iv(ag.meanRhoInterval[0], ag.meanRhoInterval[1], num2)}; at ${strong} of them the correlation's interval lies above zero (the maps order the options alike beyond the noise), at ${against} below it (they order them in reverse), and at the rest it straddles zero (these branch counts cannot tell). The two maps name the same best option at ${ag.sameBest} of ${ag.decisions} decision(s) (${pct(ag.decisions ? ag.sameBest / ag.decisions : null)}%${iv(ag.sameBestInterval[0], ag.sameBestInterval[1])}). The random map says what an option is worth when both sides play at random after it, Forge's what it is worth when Forge plays both sides on; the list below is where the two orderings differ most.`, '');
-    if (b.forgeMap !== false) L.push('Where they disagree most:', '');
+    const agreed = b.forgeMap !== false && b.randomMap !== false;
+    if (agreed) L.push('### What the two maps agree and disagree about', '');
+    if (agreed) L.push(`Over ${ag.decisions} decision(s) with both maps complete, the mean rank correlation between the random map's ordering of the options and Forge's is ${num2(ag.meanRho)}${iv(ag.meanRhoInterval[0], ag.meanRhoInterval[1], num2)}; at ${strong} of them the correlation's interval lies above zero (the maps order the options alike beyond the noise), at ${against} below it (they order them in reverse), and at the rest it straddles zero (these branch counts cannot tell). The two maps name the same best option at ${ag.sameBest} of ${ag.decisions} decision(s) (${pct(ag.decisions ? ag.sameBest / ag.decisions : null)}%${iv(ag.sameBestInterval[0], ag.sameBestInterval[1])}). The random map says what an option is worth when both sides play at random after it, Forge's what it is worth when Forge plays both sides on; the list below is where the two orderings differ most.`, '');
+    if (agreed) L.push('Where they disagree most:', '');
     for (const x of b.disagreeMost) {
       const d = b.decisions.find((y) => y.d === x.d) as DecisionAtlas;
       L.push(`- d${d.d} (turn ${d.turn}, ${d.kind}): rank correlation ${num2(d.rho)}${iv(d.rhoLo, d.rhoHi, num2)}; random's best \`${d.options[d.random.best ?? 0]?.token}\`, Forge's best \`${d.options[d.forge.best ?? 0]?.token}\`.`);
@@ -1300,7 +1382,8 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
  * X play paid at 0.  D480: then the main folder reported again with --checks-parallel 2 (its checks must be the
  * serial run's), and a cuts leg -- two short spines with all five of the cut design's flags on (atlasSelftestCuts).
  * D511: then a replay leg -- a unit past the turn where J186's s13 pair's unrecorded game leaves its recorded baseline
- * must replay the baseline (atlasSelftestReplay).
+ * must replay the baseline (atlasSelftestReplay).  D524: then an --only leg on the same pair -- one decision, two options, the
+ * Forge map alone -- and the same list with a wrong token, which must exit 4 with no unit played (atlasSelftestOnly).
  */
 /**
  * The self-test's folder: ABSOLUTE, so LAB_DATA_DIR never re-roots it (D450 moves only relative var/
@@ -1359,6 +1442,9 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   // D511: a unit's replay is the baseline's game -- on J186's s13 pair, whose unrecorded game leaves the recorded one at turn 14
   const replay = await atlasSelftestReplay(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
   for (const x of replay.fails) fails.push(`the replay leg: ${x}`);
+  // D524: --only on the same pair -- given options at a given decision, the Forge map alone; a wrong token exits 4
+  const onlyLeg = await atlasSelftestOnly(repo, out, f.get('jobs')?.at(-1) ?? '2', say);
+  for (const x of onlyLeg.fails) fails.push(`the --only leg: ${x}`);
   // D483: no baseline of any leg lists one play twice (every listing carries its options' play identities)
   const baselines = (fs.readdirSync(out, { recursive: true }) as string[]).filter((p) => path.basename(p) === 'baseline.json').map((p) => path.join(out, p));
   for (const b of baselines) {
@@ -1369,7 +1455,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   }
   want(baselines.length > 0, 'D483: the legs\' baseline listings were found');
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
-  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${replay.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
+  say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${replay.summary}; ${onlyLeg.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
   return fails.length ? 1 : 0;
 }
 
@@ -1514,6 +1600,66 @@ async function atlasSelftestReplay(repo: string, out: string, jobs: string, say:
   want(!!at && rows.filter((r) => r.d === u?.d).length === at.tokens.length && rows.every((r) => !r.error),
     `every option of the decision played its branch (${rows.length} row(s) for ${at?.tokens.length ?? '?'} option(s))`);
   return { fails, summary: `replay ${u ? `d${u.d} (turn ${at?.turn}) ${u.ok ? 'replayed' : 'DIVERGED'}, ${rows.length} branch(es)` : 'no unit'}` };
+}
+
+/**
+ * D524: the --only leg's list on SELFTEST_REPLAY's baseline: d30 (turn 19, past SELFTEST_REPLAY_SPLIT_TURN: D511's own
+ * decision), Forge's option 0 and option 2, and the tokens the baseline lists there (read from its baseline.json on 2026-11-08;
+ * the baseline is the recorded game, which reruns exactly, D511).
+ */
+export const SELFTEST_ONLY = { d: 30, options: [0, 2], tokens: ['cast:27', 'pass', 'cast:5'] } as const;
+
+/**
+ * D524: phase B of SELFTEST_REPLAY's pair under --only (SELFTEST_ONLY), --branch-random 0 --branch-forge 2, one leak check.
+ * What it holds: the atlas's own checks clean; one pick, `why: 'only'`, with the options; one unit, the Forge map's, carrying
+ * the options, replayed to d30 without divergence (D511); exactly options 0 and 2 at branches 0 and 1 on the Forge map, and
+ * nothing else; plan.json and the schedule's header carrying the same list sha256; the decision complete on its Forge map with
+ * option 1's n 0.  Then the list with a wrong token: exit 4, no unit line, no atlas.json, baseline.json kept.
+ */
+async function atlasSelftestOnly(repo: string, out: string, jobs: string, say: (s: string) => void): Promise<{ fails: string[]; summary: string }> {
+  const fails: string[] = [];
+  const want = (ok: boolean, what: string): void => { if (!ok) fails.push(what); };
+  const S = SELFTEST_ONLY;
+  const run = async (tag: string, tokens: readonly string[]): Promise<{ rc: number; dir: string }> => {
+    const dir = path.join(out, tag);
+    const list = path.join(out, `${tag}-list.json`);
+    fs.writeFileSync(list, `${JSON.stringify([{ d: S.d, options: S.options, tokens }])}\n`);
+    const flags = new Map<string, string[]>([
+      ['deck-a', [SELFTEST_REPLAY.deckA]], ['deck-b', [SELFTEST_REPLAY.deckB]], ['seed', [String(SELFTEST_REPLAY.seed)]], ['phase', ['b']],
+      ['branch-random', ['0']], ['branch-forge', ['2']], ['chunk', ['2']], ['leak-checks', ['1']], ['boot', ['200']], ['jobs', [jobs]], ['out', [dir]], ['only', [list]],
+    ]);
+    return { rc: await atlasCommand(repo, flags, say), dir };
+  };
+  const a = await run('only', S.tokens);
+  const B = path.join(a.dir, 'phaseB');
+  const doc = fs.existsSync(path.join(a.dir, 'atlas.json'))
+    ? JSON.parse(fs.readFileSync(path.join(a.dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[] }; phaseB: { decisions: DecisionAtlas[]; randomMap?: boolean } }
+    : null;
+  want(a.rc === 0 && !!doc && doc.checks.problems.length === 0, `the atlas's own checks: ${doc?.checks.problems.join('; ') || `exit ${a.rc}`}`);
+  const rows = readJsonl<BranchRow>(path.join(B, 'branches.jsonl'));
+  const units = readJsonl<UnitLine>(path.join(B, 'units.jsonl'));
+  const lines = readJsonl<ScheduleLine>(path.join(B, 'schedule.jsonl'));
+  const plan = JSON.parse(fs.readFileSync(path.join(a.dir, 'plan.json'), 'utf8')) as { cuts?: Cuts };
+  const keys = rows.map((r) => `${r.c}:d${r.d}:o${r.o}:b${r.i}`).sort();
+  const expected = S.options.flatMap((o) => [0, 1].map((i) => `forge:d${S.d}:o${o}:b${i}`)).sort();
+  want(JSON.stringify(keys) === JSON.stringify(expected) && rows.every((r) => !r.error && !r.unavailable),
+    `exactly options ${S.options.join(', ')} at branches 0-1 on the Forge map (${keys.join(', ') || 'no row'})`);
+  want(units.length === 1 && units[0]?.c === 'forge' && units[0].ok && units[0].error === null && JSON.stringify(units[0].options) === JSON.stringify(S.options),
+    `one Forge unit, carrying the options, replayed to d${S.d} (${units.map((u) => `${u.id} ${JSON.stringify(u.options ?? null)} ${u.error ?? 'ok'}`).join('; ') || 'no unit'})`);
+  const picks = lines.filter((l): l is Extract<ScheduleEvent, { type: 'pick' }> => l.type === 'pick');
+  want(picks.length === 1 && picks[0]?.d === S.d && picks[0].why === 'only' && JSON.stringify(picks[0].options) === JSON.stringify(S.options), `one pick, d${S.d}, why only, with the options`);
+  const head = lines[0]?.type === 'plan' ? (lines[0].plan.cuts as Cuts | undefined)?.only : undefined;
+  want(!!plan.cuts?.only && head?.sha256 === plan.cuts.only.sha256, 'plan.json and the schedule\'s header carry the same list sha256');
+  const ad = doc?.phaseB.decisions;
+  want(doc?.phaseB.randomMap === false && ad?.length === 1 && ad[0]?.d === S.d && ad[0].complete && JSON.stringify(ad[0].only) === JSON.stringify(S.options)
+    && ad[0].options.every((x) => x.forge.n === ((S.options as readonly number[]).includes(x.o) ? 2 : 0)), `d${S.d} complete on its Forge map, an option not given at n 0`);
+  // the drift: the same list with a wrong token at option 2
+  const b = await run('only-drift', S.tokens.map((t, o) => (o === 2 ? `${t}-not-listed` : t)));
+  const Bd = path.join(b.dir, 'phaseB');
+  want(b.rc === 4, `a wrong token exits 4 (exit ${b.rc})`);
+  want(readJsonl<UnitLine>(path.join(Bd, 'units.jsonl')).length === 0 && !fs.existsSync(path.join(b.dir, 'atlas.json')) && fs.existsSync(path.join(Bd, 'baseline.json')),
+    'the drift plays no unit, writes no atlas.json and keeps baseline.json');
+  return { fails, summary: `only d${S.d} options ${S.options.join(',')}: ${rows.length} Forge row(s), ${units[0]?.ok ? 'replayed' : 'NOT replayed'}; a wrong token exit ${b.rc}` };
 }
 
 /** D466 (#184's review): the G5 leg's pair, seed and rollouts (see atlasSelftest). */
