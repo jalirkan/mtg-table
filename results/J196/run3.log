@@ -5,3 +5,97 @@ split by pair: train 17530775 rows / 216260 games / 16926 groups; val 2281003 ro
 train_eval: schema 82815752c2f5e346, 12670 features, vocab 731; rows train/val/test 17530775/2281003/4425307; games 216260/27990/27393; backend numpy; float32 (--fast)
 model: hidden [128], card dim 8, 51545 parameters, 219 board columns; best epoch 15 of 39 (1843.3 s), val logloss 0.4918
 memory: fit: rss 11.57 GB, peak 13.08 GB
+==== J196 run3 started 2026-11-08T11:40:54-05:00 in unit lab-J196-run3, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+load share (D518): 0.5 of each game's rows held in train and val, seed 0; rows held / in the dataset: train 17530775/34953435, val 2281003/4548016; test whole
+memory: load: rss 11.28 GB, peak 11.79 GB
+split by pair: train 17530775 rows / 216260 games / 16926 groups; val 2281003 rows / 27990 games / 2167 groups; test 4425307 rows / 27393 games / 2102 groups; groups are seed groups (lab deck names are `cubelab <seed> A|B`: one seed number across cubes); test rows from a deck seen in training, by card multiset: 0
+train_eval: schema 82815752c2f5e346, 12670 features, vocab 731; rows train/val/test 17530775/2281003/4425307; games 216260/27990/27393; backend numpy; float32 (--fast)
+model: hidden [128], card dim 8, 51545 parameters, 219 board columns; best epoch 15 of 39 (1549.6 s), val logloss 0.4918
+memory: fit: rss 12.40 GB, peak 13.11 GB
+memory: baselines: rss 11.58 GB, peak 15.29 GB
+auxiliary turns_to_end head (weight 0.1): test MAE 3.36 turns against 5.50 for the training mean
+memory: score: rss 12.58 GB, peak 15.29 GB
+rows {'train': 17530775, 'val': 2281003, 'test': 4425307}; games {'train': 216260, 'val': 27990, 'test': 27393}
+
+val:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all         2281003  0.504   0.6931  0.250  0.000
+  prior  turn 1-4    357256  0.500   0.6932  0.250  0.004
+  prior  turn 5-8    428940  0.501   0.6932  0.250  0.003
+  prior  turn 9-12   478191  0.503   0.6931  0.250  0.001
+  prior  turn 13-16  438741  0.506   0.6931  0.250  0.002
+  prior  turn 17+    577875  0.507   0.6931  0.250  0.004
+  life   all         2281003  0.641   0.6176  0.214  0.013
+  life   turn 1-4    357256  0.510   0.6925  0.250  0.004
+  life   turn 5-8    428940  0.561   0.6761  0.242  0.008
+  life   turn 9-12   478191  0.648   0.6180  0.215  0.014
+  life   turn 13-16  438741  0.709   0.5621  0.190  0.017
+  life   turn 17+    577875  0.725   0.5695  0.187  0.020
+  core   all         2281003  0.692   0.5597  0.190  0.011
+  core   turn 1-4    357256  0.530   0.6904  0.249  0.019
+  core   turn 5-8    428940  0.609   0.6501  0.230  0.013
+  core   turn 9-12   478191  0.704   0.5598  0.191  0.021
+  core   turn 13-16  438741  0.771   0.4731  0.155  0.023
+  core   turn 17+    577875  0.785   0.4774  0.150  0.012
+  eval   all         2281003  0.744   0.4918  0.165  0.007
+  eval   turn 1-4    357256  0.610   0.6541  0.231  0.008
+  eval   turn 5-8    428940  0.671   0.5969  0.206  0.005
+  eval   turn 9-12   478191  0.754   0.4899  0.163  0.008
+  eval   turn 13-16  438741  0.809   0.3994  0.130  0.011
+  eval   turn 17+    577875  0.824   0.3852  0.122  0.009
+  reliability (eval, val): bin rows predicted observed
+    0.0-0.1  239631  0.046  0.029
+    0.1-0.2  177805  0.150  0.135
+    0.2-0.3  187625  0.251  0.246
+    0.3-0.4  231711  0.352  0.352
+    0.4-0.5  274119  0.451  0.449
+    0.5-0.6  283308  0.550  0.543
+    0.6-0.7  247960  0.648  0.642
+    0.7-0.8  198323  0.748  0.749
+    0.8-0.9  182742  0.850  0.858
+    0.9-1.0  257779  0.955  0.966
+
+test:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all         4425307  0.504   0.6931  0.250  0.000
+  prior  turn 1-4    696061  0.500   0.6932  0.250  0.003
+  prior  turn 5-8    837227  0.501   0.6932  0.250  0.002
+  prior  turn 9-12   937243  0.505   0.6931  0.250  0.001
+  prior  turn 13-16  860018  0.507   0.6931  0.250  0.003
+  prior  turn 17+    1094758  0.506   0.6931  0.250  0.002
+  life   all         4425307  0.644   0.6119  0.212  0.015
+  life   turn 1-4    696061  0.511   0.6921  0.249  0.005
+  life   turn 5-8    837227  0.567   0.6741  0.241  0.015
+  life   turn 9-12   937243  0.652   0.6106  0.212  0.018
+  life   turn 13-16  860018  0.716   0.5508  0.186  0.022
+  life   turn 17+    1094758  0.721   0.5626  0.188  0.018
+  core   all         4425307  0.694   0.5548  0.189  0.012
+  core   turn 1-4    696061  0.530   0.6912  0.249  0.018
+  core   turn 5-8    837227  0.611   0.6488  0.229  0.015
+  core   turn 9-12   937243  0.708   0.5546  0.188  0.024
+  core   turn 13-16  860018  0.779   0.4656  0.152  0.029
+  core   turn 17+    1094758  0.783   0.4663  0.150  0.007
+  eval   all         4425307  0.748   0.4882  0.164  0.008
+  eval   turn 1-4    696061  0.612   0.6535  0.231  0.010
+  eval   turn 5-8    837227  0.678   0.5926  0.204  0.007
+  eval   turn 9-12   937243  0.759   0.4867  0.161  0.008
+  eval   turn 13-16  860018  0.816   0.3950  0.127  0.011
+  eval   turn 17+    1094758  0.825   0.3777  0.121  0.010
+  reliability (eval, test): bin rows predicted observed
+    0.0-0.1  465859  0.046  0.030
+    0.1-0.2  350738  0.149  0.137
+    0.2-0.3  365739  0.251  0.243
+    0.3-0.4  447195  0.352  0.343
+    0.4-0.5  527206  0.451  0.445
+    0.5-0.6  548224  0.550  0.546
+    0.6-0.7  478355  0.648  0.651
+    0.7-0.8  383006  0.748  0.757
+    0.8-0.9  361557  0.851  0.860
+    0.9-1.0  497428  0.955  0.966
+held out (D364): train 17530775 rows / 216260 games / 16926 pairs; val 2281003 rows / 27990 games / 2167 pairs; test 4425307 rows / 27393 games / 2102 pairs
+  test residuals: within-game correlation 0.783 (design effect 148.1, effective n 29872 of 4425307 rows); within-pair 0.002 (design effect 9.7, effective n 456973)
+  test all (4425307 rows, 27393 games, 2102 pairs; 95% over pairs): prior 0.6931 [0.6931, 0.6931] by game 0.6932; life 0.6119 [0.6070, 0.6170] by game 0.5908; core 0.5548 [0.5499, 0.5600] by game 0.5278; eval 0.4882 [0.4829, 0.4933] by game 0.4580
+  test plain (3944941 rows, 24454 games, 1885 pairs; 95% over pairs): prior 0.6931 [0.6931, 0.6931] by game 0.6932; life 0.6111 [0.6057, 0.6162] by game 0.5898; core 0.5546 [0.5492, 0.5597] by game 0.5272; eval 0.4878 [0.4824, 0.4931] by game 0.4574
+  test exploring (480366 rows, 2939 games, 291 pairs; 95% over pairs): prior 0.6930 [0.6930, 0.6931] by game 0.6932; life 0.6190 [0.6058, 0.6335] by game 0.5994; core 0.5560 [0.5424, 0.5697] by game 0.5325; eval 0.4913 [0.4767, 0.5062] by game 0.4628
+verdict (test): eval log-loss 0.4882 vs best baseline core 0.5548 -- the evaluator wins
+saved var/ml/models/nights-1-5-eval.json (1148510 bytes)
