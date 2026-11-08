@@ -1,0 +1,7 @@
+==== J196 run3 started 2026-11-07T22:09:12-05:00 in unit lab-J196-run3, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 2
+load share (D518): 0.5 of each game's rows held in train and val, seed 0; rows held / in the dataset: train 17530775/34953435, val 2281003/4548016; test whole
+memory: load: rss 11.24 GB, peak 11.70 GB
+split by pair: train 17530775 rows / 216260 games / 16926 groups; val 2281003 rows / 27990 games / 2167 groups; test 4425307 rows / 27393 games / 2102 groups; groups are seed groups (lab deck names are `cubelab <seed> A|B`: one seed number across cubes); test rows from a deck seen in training, by card multiset: 0
+train_eval: schema 82815752c2f5e346, 12670 features, vocab 731; rows train/val/test 17530775/2281003/4425307; games 216260/27990/27393; backend numpy; float32 (--fast)
+model: hidden [128], card dim 8, 51545 parameters, 219 board columns; best epoch 15 of 39 (1843.3 s), val logloss 0.4918
+memory: fit: rss 11.57 GB, peak 13.08 GB
