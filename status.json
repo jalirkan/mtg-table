@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-08T14:37:47-05:00",
- "heartbeat": "2026-11-08T14:37:47-05:00",
+ "updated": "2026-11-08T14:42:24-05:00",
+ "heartbeat": "2026-11-08T14:42:24-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.06,
-  "memUsedGb": 5.8,
+  "load1": 2.02,
+  "memUsedGb": 6.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4267,
+  "swapUsedMb": 4238,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -27,7 +27,7 @@
    "cpu": "heavy",
    "phase": "commands 4/4",
    "started": "2026-11-08T09:53:55-05:00",
-   "elapsed": 17032,
+   "elapsed": 17309,
    "done": null,
    "total": null,
    "unit": null,
@@ -39,7 +39,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 5.92,
+   "memGb": 6.37,
    "live": {
     "ds.rows": 43926758,
     "ds.games": 271643,
@@ -47,6 +47,7 @@
     "dry.peakGB": 14.681,
     "cmp.better": 1,
     "cmp.subsets_reference_pairs": 873,
+    "cmpn.better": 1,
     "audit.decksInTwoSplitsCount": 0,
     "audit.draftsInTwoSplitsCount": 0,
     "audit.games": 271643,
@@ -79,8 +80,7 @@
     "audit.reference_gamesMovedSplit": 0,
     "audit.reference_missingGames": 0,
     "audit.reference_newGames": 151827,
-    "audit.reference_newTestPairs": 1186,
-    "audit.reference_pairsMovedSplit": 0
+    "audit.reference_newTestPairs": 1186
    },
    "liveHeadline": [
     "ds.rows",
@@ -88,7 +88,8 @@
     "audit.pass",
     "dry.peakGB",
     "cmp.better",
-    "cmp.subsets_reference_pairs"
+    "cmp.subsets_reference_pairs",
+    "cmpn.better"
    ],
    "cubes": [],
    "publicCubes": false,
