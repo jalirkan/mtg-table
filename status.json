@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-08T17:48:19-05:00",
- "heartbeat": "2026-11-08T17:48:19-05:00",
+ "updated": "2026-11-08T17:53:01-05:00",
+ "heartbeat": "2026-11-08T17:53:01-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 21.69,
-  "memUsedGb": 15,
+  "load1": 20,
+  "memUsedGb": 16.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4402,
+  "swapUsedMb": 4230,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -27,19 +27,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-08T15:33:13-05:00",
-   "elapsed": 8106,
-   "done": 1280,
+   "elapsed": 8389,
+   "done": 1312,
    "total": 4800,
    "unit": "games",
-   "ratePerHour": 591.9,
-   "eta": "2026-11-08T23:45:06-05:00",
+   "ratePerHour": 559,
+   "eta": "2026-11-09T00:07:25-05:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-08T17:47:57-05:00",
-   "memGb": 7.99,
+   "dataUpdated": "2026-11-08T17:51:13-05:00",
+   "memGb": 8.88,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -57,9 +57,9 @@
     "bs.j195cBlocks": 0,
     "cm.errors": 0,
     "cm.timeouts": 0,
-    "elapsed_s": 8084,
+    "elapsed_s": 8344,
     "j198_err": 0,
-    "j198_games": 1280,
+    "j198_games": 1312,
     "peak_worker_rss_gb": 1.15,
     "pressure_events": 0,
     "ro.games": 0,
@@ -87,7 +87,16 @@
    "detail": "lab-J198-run1"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "Random rollouts in the search: two fixed matches",
+   "publicEst": "~5-7 h (one night)",
+   "id": "J199",
+   "title": "Random rollouts: two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom, search-v2 whose rollouts play both seats with D523's guarded random seat random-v2 (rollout=random), and (b) search-v2-rrandom-self, the searching seat random-v2 and the opponent Forge (rollout=random-self), each read once under D523's pre-registered table (SHOWN, INCONCLUSIVE or NOT SHOWN indistinguishable: a 4,800-game confirmation before Forge leaves the loop; NOT SHOWN worse or losing badly: the diagnosis and the iteration loop's random-v3), alone on the machine",
+   "cpu": "heavy",
+   "est": "~5-6.5 h at 7 workers (an estimate; range 4.5-7 h), 8 h at worst (the two matches' own stops). From J195's walls on this host at 7 workers, on these same 600 deals: its (a), search-v2-routlets against search-v2 at 984 against 978 ms a decision, took 2 h 41 min (2.68 h), and its (b), search-v2-ranked at 904 against 906, 2 h 10 min (2.17 h). D523's arms ran about 1.07x search-v2's ms a decision in its pilot (1,009 against 944 and 936) and played x1.21 and x1.10 search-v2's rollouts a decision, on a contended machine; a game costs both sides' thinking plus 3.5-4 s of engine time, so each match is guessed at ~2.5-3 h, ~5-6 h for both, ~6.5 h on a night as pressured as J197's. Each match stops itself at --hours 4 (about 1.5x its estimate): 8 h in all, which with the pilot is under the 9 h timeout, so a slow (a) cannot let the timeout cut (b); a match that reaches its stop reports complete: false and gives its arm no verdict. Both run under the ladder's default 300 s per-game timeout (neither arm lifts maxRounds). Pilot ~15 min (the build, the bench self-test, the ladder tests, 4 games of each arm on one worker; D523's pilot played each arm's 4 games in about 3 minutes contended)"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
