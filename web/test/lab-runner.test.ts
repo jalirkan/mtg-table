@@ -49,7 +49,10 @@ import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './l
 import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, stderrGist, THREAD_CAP_VARS, threadCaps, transientGitFailure, type JobRun, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
+import { alertText } from '../../tools/runner/statusjson.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
+import { clearBudgetFile, modeCores, readBudgetFile, resolveBudget, writeBudgetFile } from '../../tools/runner/budget.ts';
+import { memoryStatAnonGb } from '../../tools/runner/sys.ts';
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
 import { cardName, sanitiseWarehouse } from '../../tools/runner/warehouse.ts';
@@ -978,7 +981,12 @@ class FakeSys implements Sys {
     return { code: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
   }
   machine() { return { memTotalGb: 30, physicalCores: 8, threads: 16 }; }
-  host(): HostSample { return { at: this.t, load1: 1, memTotalGb: 30, memUsedGb: 10, swapUsedMb: 0, some10: this.some10, pswpin: this.pswpin }; }
+  /**
+   * D521: memory in use on the host (MemTotal - MemAvailable): the actual-memory check reads 30 - this.  3 GB:
+   * the desktop alone, inside the lab's 7 GB reserve, so the budget's 21 GB are really free when nothing runs.
+   */
+  memUsedGb = 3;
+  host(): HostSample { return { at: this.t, load1: 1, memTotalGb: 30, memUsedGb: this.memUsedGb, swapUsedMb: 0, some10: this.some10, pswpin: this.pswpin }; }
   /** /proc/vmstat's pswpin: the kernel's swap-ins since boot (D464). */
   pswpin = 0;
   /** D391: the next this-many prepares fail as git did at boot: "could not read Username", exit 128 (the script is not run). */
@@ -1011,6 +1019,8 @@ class FakeSys implements Sys {
   liveUnits(prefix: string): string[] | null { return this.live === null ? null : [...this.live, ...[...this.held.keys()].filter((u) => u.startsWith(prefix))]; }
   runInSlice(command: string, cwd: string) { this.inSlice.push(command); return this.run(['bash', '-c', command], { cwd }); }
   unitJavaPeaksGb(): number[] { return [1.6, 1.9]; }
+  /** D521: the unit's summed RSS; absent (as on a Sys before D521) unless a test sets it. */
+  unitAnonGb?: (unit: string) => number | null;
   /** What systemd or the journal say about an OOM kill in a unit (D365); null: nothing. */
   oomEvidence: string | null = null;
   oomAsked: string[] = [];
@@ -1055,6 +1065,9 @@ function world(jobs: Record<string, string>): World {
   const cfg: RunnerConfig = {
     ...DEFAULT_CONFIG, runnerDir: REPO, stateDir: path.join(root, 'state'), labRoot: path.join(root, 'lab'), homeRepos: {},
     urls: { 'mtg-table': mtg, ForgeCoach: fc }, commit: 'test123', metricsEveryMs: 0,
+    // D521: the tests below were written against the physical cores (8) as the core budget: the `shared`
+    // mode.  The default (`whole`, all threads but two) has its own tests, D521's, at the end of this file.
+    cores: 8,
   };
   return { root, mtg, fc, seed, cfg, sys };
 }
@@ -1354,12 +1367,12 @@ test('runner: memory pressure drops workers through the control file, then stops
   const s = parseStatus(show(w.mtg, 'pc-results:results/J016/STATUS'))!;
   assert.ok(Number(s.fields.workers_cap) < 4);
   assert.ok(s.fields['pressure-1']?.includes('drop to 3'));
-  // Not before retry_after; then again, capped, without the pilot.
+  // Not before retry_after (D521: the minute the freed memory takes to show, no longer 15); then again, capped, without the pilot.
   w.sys.some10 = 0;
-  w.sys.t += 5 * 60_000;
+  w.sys.t += 30_000;
   r.tick();
   assert.equal(r.runs.get('J016')?.outcome?.state, 'waiting');
-  w.sys.t += 15 * 60_000;
+  w.sys.t += 31_000;
   w.sys.mode = 'run';
   r.tick();
   const again = r.runs.get('J016')!;
@@ -3111,4 +3124,462 @@ test('D464: the swap-in rate never compares against another boot\'s pswpin; with
   const r4 = new Runner(w.cfg, w.sys);
   r4.sampleHost();
   assert.equal(r4.swapInRate, 0);
+});
+
+// ------------------------------------------------------------------ D521: the whole machine
+
+const T0 = Date.parse('2026-11-08T01:00:00Z');
+const hjob = (id: string, h: string): ReturnType<typeof parseJobFile> => parseJobFile(`${id}.md`, `id: ${id}\ncpu: heavy\nrepos: mtg-table@main\n${h}`, parse);
+
+test('D521: the budgets: whole (all threads but 2) by default, shared = the physical cores; budget.json over --cores; an invalid budget.json is ignored; the memory cap only lowers', () => {
+  const m = { physicalCores: 8, threads: 16 };
+  assert.deepEqual([modeCores('whole', m), modeCores('shared', m)], [14, 8]);
+  const r = (file: Parameters<typeof resolveBudget>[0]['file'], flagCores: number | null = null) => resolveBudget({ file, flagCores, machine: m, heavyGb: 21.4 });
+  assert.deepEqual(r(null), { mode: 'whole', cores: 14, coresFrom: 'default', memGb: 21.4, memFrom: 'install' });
+  assert.deepEqual([r(null, 8).mode, r(null, 8).cores, r(null, 8).coresFrom], ['shared', 8, '--cores'], 'the old --cores 8 is the shared mode');
+  assert.deepEqual([r({ mode: 'shared' }, 12).cores, r({ mode: 'shared' }, 12).coresFrom], [8, 'budget.json'], 'budget.json wins over the flag');
+  assert.equal(r({ mode: 'custom', cores: 11 }).cores, 11);
+  assert.equal(r({ mode: 'custom', cores: 0 }).cores, 14, 'a custom budget without cores is ignored');
+  assert.deepEqual([r({ mode: 'whole', memGb: 15 }).memGb, r({ mode: 'whole', memGb: 15 }).memFrom], [15, 'budget.json']);
+  assert.deepEqual([r({ mode: 'whole', memGb: 40 }).memGb, r({ mode: 'whole', memGb: 40 }).memFrom], [21.4, 'install'], 'never above the slice');
+  const dir = tmp('budget');
+  assert.equal(readBudgetFile(dir), null);
+  writeBudgetFile(dir, { mode: 'shared', memGb: null, setAt: 'x', by: 't' });
+  assert.equal(readBudgetFile(dir)?.mode, 'shared');
+  for (const bad of ['{"mode":"everything"}', '{not json', '']) {
+    fs.writeFileSync(path.join(dir, 'budget.json'), bad);
+    assert.equal(readBudgetFile(dir), null, `ignored: ${JSON.stringify(bad)}`);
+  }
+  assert.equal(clearBudgetFile(dir), true);
+  assert.equal(clearBudgetFile(dir), false);
+  // An invalid budget.json in a running daemon's state: the default, and the tick goes on.
+  const w = world({ 'J190-a.md': WIDE_THEN_FIT });
+  fs.mkdirSync(w.cfg.stateDir, { recursive: true });
+  fs.writeFileSync(path.join(w.cfg.stateDir, 'budget.json'), '{"mode": "whole",');
+  const runner = new Runner({ ...w.cfg, cores: null }, w.sys);
+  runner.reconcile();
+  w.sys.mode = 'hold';
+  runner.tick();
+  assert.deepEqual([runner.budgets().mode, runner.budgets().cores, runner.budgets().coresFrom], ['whole', 14, 'default']);
+  assert.ok(runner.runs.has('J190'));
+});
+
+test('D521: tools/runner.sh budget sets and shows; --mem-gb is refused (exit 2) above the lab, under 4 GB, or below a running or waiting job\'s need', () => {
+  const dir = tmp('budget-cli');
+  const cli = (...a: string[]) => spawnSync(process.execPath, [path.join(REPO, 'tools', 'runner', 'cli.ts'), 'budget', ...a, '--state', dir], { encoding: 'utf8' });
+  let o = cli('shared');
+  assert.equal(o.status, 0, o.stderr);
+  assert.match(o.stdout, /^cores: {2}\d+ of \d+ threads .*mode shared/m);
+  assert.equal(readBudgetFile(dir)?.mode, 'shared');
+  o = cli('--mem-gb', '9999');
+  assert.equal(o.status, 2);
+  assert.match(o.stderr, /install --reserve-gb/);
+  o = cli('--mem-gb', '3');
+  assert.equal(o.status, 2);
+  assert.match(o.stderr, /under 4 GB/);
+  // The daemon's needs.json: J197 runs holding 10 GB, J196 waits needing 12.
+  fs.writeFileSync(path.join(dir, 'needs.json'), JSON.stringify({ at: 'x', running: { J197: 10 }, waiting: { J196: 12 } }));
+  o = cli('--mem-gb', '11');
+  assert.equal(o.status, 2);
+  assert.match(o.stderr, /below what J196 waits and needs 12 GB/);
+  assert.equal(readBudgetFile(dir)?.memGb, null, 'nothing written');
+  o = cli('whole', '--mem-gb', '12');
+  assert.equal(o.status, 0, o.stderr);
+  assert.deepEqual([readBudgetFile(dir)?.mode, readBudgetFile(dir)?.memGb], ['whole', 12]);
+  assert.match(o.stdout, /^memory: 12 GB for heavy jobs \(budget\.json caps it/m);
+  assert.match(cli('default').stdout, /budget\.json removed/);
+  assert.equal(readBudgetFile(dir), null);
+  assert.notEqual(cli('everything').status, 0, 'an unknown mode is refused');
+});
+
+test('D521: a budget.json change takes effect in a running daemon at its next tick, without a restart', () => {
+  const pool = (id: string): string => WIDE_THEN_FIT.replace('id: J190', `id: ${id}`).replace(/p190/g, `p${id.slice(1)}`).replace(/j190/g, `j${id.slice(1)}`).replace('mem_per_worker_gb: 2', 'mem_per_worker_gb: 1');
+  const w = world({ 'J190-a.md': pool('J190'), 'J193-b.md': pool('J193') });
+  writeBudgetFile(w.cfg.stateDir, { mode: 'shared', memGb: null });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  // shared: 8 cores; J190 holds 7 of them: J193 (7) waits.
+  assert.deepEqual([...r.runs.keys()], ['J190']);
+  assert.match(r.blocked.find((b) => b.id === 'J193')?.reason ?? '', /needs 7 core\(s\); 1 of 8 free/);
+  writeBudgetFile(w.cfg.stateDir, { mode: 'whole', memGb: null });
+  w.sys.t += 10_000; r.tick();
+  assert.deepEqual([...r.runs.keys()].sort(), ['J190', 'J193'], 'whole: 7 + 7 of 14');
+  assert.ok(w.sys.lines.includes('budget: cores 8 -> 14 (mode whole, from budget.json)'), w.sys.lines.join('\n'));
+  assert.equal(r.statusDoc().host.coresTotal, 14);
+});
+
+test('D521: two jobs are scheduled together when the core and memory budgets allow, and not when they do not', () => {
+  const whole: MachineBudget = { cores: 14, memGb: 21.4, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const shared: MachineBudget = { ...whole, cores: 8 };
+  const j197 = hjob('J197', 'cores: 7\nmax_workers: 7\nmem_per_worker_gb: 2\n');      // 14 GB declared
+  const j196 = hjob('J196', 'cores: 6\nmax_workers: 6\nmem_per_worker_gb: 1.5\n');    // 9 GB
+  const j198 = hjob('J198', 'cores: 1\nmem_gb: 4\n');                                  // header: 1 x 2.5 GB
+  const run = (machine: MachineBudget, holdings: Record<string, Holding>, jobs: ReturnType<typeof parseJobFile>[]) => schedule({
+    jobs, statuses: new Map(Object.keys(holdings).map((id) => [id, st('running\nrunner: x\n')])),
+    active: new Map(Object.keys(holdings).map((id) => [id, 'heavy' as const])), holdings: new Map(Object.entries(holdings)),
+    machine, playing: false, paused: false, now: T0,
+  });
+  // J197 running at its declaration (14 GB): a one-core job fits beside it in the whole machine (8 of 14 cores) ...
+  let r = run(whole, { J197: { cores: 7, memGb: 14 } }, [j198]);
+  assert.deepEqual(r.start.map((x) => x.id), ['J198']);
+  // ... and in the shared one too (8 of 8); a 6-wide one fits neither the shared cores nor, beside 14 GB, the memory.
+  assert.deepEqual(run(shared, { J197: { cores: 7, memGb: 14 } }, [j198]).start.map((x) => x.id), ['J198']);
+  r = run(shared, { J197: { cores: 7, memGb: 14 } }, [j196]);
+  assert.match(r.blocked[0]?.reason ?? '', /needs 6 core\(s\); 1 of 8 free/);
+  r = run(whole, { J197: { cores: 7, memGb: 14 } }, [j196]);
+  assert.match(r.blocked[0]?.reason ?? '', /needs 9 GB; 7\.4 of 21\.4 GB free/);
+  // Nothing running: two pools that fit both budgets (6 + 7 cores, 9 + 10.5 GB) start in one pass in the whole machine only.
+  const j199 = hjob('J199', 'cores: 7\nmax_workers: 7\nmem_per_worker_gb: 1.5\n');
+  assert.deepEqual(run(whole, {}, [j196, j199]).start.map((x) => x.id), ['J196', 'J199']);
+  assert.deepEqual(run(shared, {}, [j196, j199]).start.map((x) => x.id), ['J196']);
+  // Two J197s never fit: 14 + 14 > 21.4, whatever the cores.
+  r = run(whole, {}, [j197, hjob('J200', 'cores: 7\nmax_workers: 7\nmem_per_worker_gb: 2\n')]);
+  assert.deepEqual([r.start.map((x) => x.id), r.blocked[0]?.reason], [['J197'], 'needs 14 GB; 7.4 of 21.4 GB free']);
+});
+
+test('D521: actual free memory: a start needs its need in MemAvailable less the reserve, PSI some avg10 at most 5%, and the INSTALLED cap; the carve-out reserves free memory too', () => {
+  const machine: MachineBudget = { cores: 14, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const wide = hjob('J300', 'max_workers: 7\n');             // 7 x 2.5 = 17.5 GB
+  const narrow = hjob('J301', 'cores: 1\n');                 // 1 x 2.5 = 2.5 GB
+  const base = { statuses: new Map(), active: new Map<string, 'heavy' | 'light'>(), machine, playing: false, paused: false, now: T0 };
+  const mem = (availGb: number, extra = {}) => ({ availGb, reserveGb: 3, headroomGb: 0, capGb: 21, some10: 0, maxSome10: 5, ...extra });
+  // A painter outside the lab holds 13 GB: 14 available, less 3 kept free: 11 < 17.5.
+  let r = schedule({ ...base, jobs: [wide], memory: mem(14) });
+  assert.deepEqual([r.start.length, r.blocked[0]?.code, r.blocked[0]?.wait, r.blocked[0]?.needGb, r.blocked[0]?.freeGb, r.blocked[0]?.availGb], [0, 'memory-wait', 'memory', 17.5, 11, 14]);
+  assert.match(r.blocked[0]?.reason ?? '', /waits for memory: needs 17\.5 GB; 11 GB free \(14 GB available, less 3 GB kept free\)/);
+  // What the running jobs reserved and have not touched counts.
+  r = schedule({ ...base, jobs: [narrow], memory: mem(7, { headroomGb: 2 }) });
+  assert.deepEqual([r.start.length, r.blocked[0]?.code], [0, 'memory-wait']);
+  // The carve-out reserves the free memory J300 waits for: J301 (2.5 GB, which 11 GB would hold) does not start in it.
+  r = schedule({ ...base, jobs: [wide, narrow], memory: mem(14) });
+  assert.deepEqual(r.start, []);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J300', 'memory-wait'], ['J301', 'memory-wait']]);
+  // Enough for both: J300 starts, and J301 is counted against what J300 is about to take (27 - 3 - 17.5 = 6.5 >= 2.5).
+  assert.deepEqual(schedule({ ...base, jobs: [wide, narrow], memory: mem(27) }).start.map((x) => x.id), ['J300', 'J301']);
+  r = schedule({ ...base, jobs: [wide, narrow], memory: mem(22) });
+  assert.deepEqual([r.start.map((x) => x.id), r.blocked[0]?.code], [['J300'], 'memory-wait']);
+  // Memory pressure over 5%: no start, whatever is free.
+  r = schedule({ ...base, jobs: [narrow], memory: mem(27, { some10: 6.2 }) });
+  assert.deepEqual([r.start.length, r.blocked[0]?.code], [0, 'memory-wait']);
+  assert.match(r.blocked[0]?.reason ?? '', /memory pressure \(some avg10\) is 6\.2%, over 5%/);
+  // A budget.json cap of 10 GB never shrinks a need: 17.5 is counted (at most the installed 21), not 10.
+  r = schedule({ ...base, machine: { ...machine, memGb: 10 }, jobs: [wide], memory: mem(16) });
+  assert.deepEqual([r.start.length, r.blocked[0]?.needGb], [0, 17.5]);
+  // A light job is exempt (its 2 GB is inside the lab's reserve).
+  const light = parseJobFile('J303.md', 'id: J303\ncpu: light\nrepos: mtg-table@main\n', parse);
+  assert.deepEqual(schedule({ ...base, jobs: [light], memory: mem(1) }).start.map((x) => x.id), ['J303']);
+});
+
+test('D521: a job stopped for memory goes first, before lower ids, and holds its place while it settles, waits on memory, or waits on the budget', () => {
+  const machine: MachineBudget = { cores: 8, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const now = Date.parse('2026-11-08T05:21:00Z');
+  const stopped = st('waiting\nreason: memory: step run3 was killed without an exit code\nrunner: x\nretry_after: 2026-11-08T05:20:30Z\n');
+  const jobs = [hjob('J150', 'max_workers: 7\n'), hjob('J196', 'cores: 1\nmax_workers: 6\n'), hjob('J197', 'max_workers: 7\n')];
+  const needs = new Map([['J196', { cores: 1, memGb: 18 }]]);
+  const mem = (availGb: number, headroomGb = 0) => ({ availGb, reserveGb: 3, headroomGb, capGb: 21, some10: 0, maxSome10: 5 });
+  const base = { jobs, statuses: new Map([['J196', stopped]]), active: new Map<string, 'heavy' | 'light'>(), needs, machine, playing: false, paused: false, now };
+  let r = schedule({ ...base, memory: mem(26) });
+  assert.deepEqual(r.start.map((x) => x.id), ['J196'], 'first, ahead of J150');
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J150', 'cores'], ['J197', 'heavy-busy']]);
+  // Memory held outside the lab: it waits (wait: memory), and nothing newer starts in front of it.
+  r = schedule({ ...base, memory: mem(14) });
+  assert.deepEqual(r.start, []);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code, b.wait ?? null]), [['J196', 'memory', 'memory'], ['J150', 'cores', null], ['J197', 'heavy-busy', null]]);
+  assert.match(r.blocked[0]?.reason ?? '', /^memory: step run3 was killed without an exit code; waits for memory: needs 18 GB; 11 GB free/);
+  // J197 running at 14 GB: 18 + 14 > 21 -- it waits on the BUDGET behind J197 (wait: budget), still first.
+  r = schedule({ ...base, statuses: new Map([['J196', stopped], ['J197', st('running\nrunner: x\n')]]), active: new Map([['J197', 'heavy' as const]]),
+    holdings: new Map([['J197', { cores: 7, memGb: 14 }]]), memory: mem(17, 1) });
+  assert.deepEqual(r.start, []);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code, b.wait ?? null, b.needGb ?? null, b.behind ?? null]), [['J196', 'cores', 'budget', 18, ['J197']], ['J150', 'heavy-busy', null, null, null]]);
+  // Its minute of settle: it holds its place too (before D521 the next job started right here).
+  r = schedule({ ...base, now: Date.parse('2026-11-08T05:20:00Z'), memory: mem(26) });
+  assert.deepEqual([r.start, r.blocked.map((b) => [b.code, b.wait ?? null])], [[], [['memory', 'settle'], ['cores', null], ['heavy-busy', null]]]);
+});
+
+test('D521: alone: yes -- never admitted beside another job, nothing admitted beside it, and nothing newer starts while it waits', () => {
+  const machine: MachineBudget = { cores: 14, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const match = hjob('J400', 'cores: 7\nmax_workers: 7\nmem_per_worker_gb: 1\nalone: yes\n');
+  assert.equal(match.alone, true);
+  assert.equal(hjob('J401', 'cores: 1\n').alone, false);
+  assert.equal(hjob('J402', 'alone: sometimes\n').errors.length, 1);
+  const narrow = hjob('J401', 'cores: 1\n');
+  const light = parseJobFile('J403.md', 'id: J403\ncpu: light\nrepos: mtg-table@main\n', parse);
+  const run = (jobs: ReturnType<typeof parseJobFile>[], runningIds: string[] = [], allJobs = jobs) => schedule({
+    jobs: allJobs, statuses: new Map(runningIds.map((id) => [id, st('running\nrunner: x\n')])), active: new Map(runningIds.map((id) => [id, 'heavy' as const])),
+    holdings: new Map(runningIds.map((id) => [id, { cores: 1, memGb: 2 }])), machine, playing: false, paused: false, now: T0,
+  });
+  // On an empty machine it starts, and nothing (heavy or light) starts beside it, though the budgets would hold them.
+  let r = run([match, narrow, light]);
+  assert.deepEqual(r.start.map((x) => x.id), ['J400']);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J401', 'alone'], ['J403', 'alone']]);
+  // Running: still nothing beside it.
+  r = run([narrow, light], ['J400'], [match, narrow, light]);
+  assert.deepEqual([r.start, r.blocked.map((b) => b.code)], [[], ['alone', 'alone']]);
+  assert.match(r.blocked[0]?.reason ?? '', /J400 runs alone/);
+  // Next in line while a narrow job runs: it waits for the machine to empty, and nothing newer starts in front of it.
+  const j399 = hjob('J399', 'cores: 1\n');
+  r = run([match, narrow, light], ['J399'], [j399, match, narrow, light]);
+  assert.deepEqual(r.start, []);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J400', 'alone'], ['J401', 'alone'], ['J403', 'alone']]);
+  assert.match(r.blocked[0]?.reason ?? '', /runs alone \(alone: yes\): waits for J399 to end/);
+  assert.equal(REASONS.alone, 'after a job that runs alone');
+});
+
+/** A job that runs alone at seven workers (2 GB a worker declared), then a one-core block that holds 12 GB. */
+const WIDE_THEN_FIT = `id: J190
+title: D521: a pool, then a fit
+cpu: heavy
+repos: mtg-table@main
+max_workers: 7
+mem_per_worker_gb: 2
+metrics: n = lines var/p190.jsonl
+
+## Pilot
+\`\`\`bash
+mkdir -p var
+echo '{}' > var/p190.jsonl
+\`\`\`
+check: n == 1
+
+## Commands
+\`\`\`bash
+echo pool >> var/j190.txt
+\`\`\`
+cores: 1
+mem_gb: 12
+\`\`\`bash
+echo fit >> var/j190.txt
+\`\`\`
+`;
+
+test('D521: memory.stat anon (+ shmem) is the unit\'s memory, page cache and a forked pool\'s shared pages counted once', () => {
+  assert.equal(memoryStatAnonGb('anon 2147483648\nfile 9000000000\nshmem 1073741824\n'), 3);
+  assert.equal(memoryStatAnonGb('anon 1073741824\nfile 1\n'), 1);
+  assert.equal(memoryStatAnonGb('file 1\n'), null);
+});
+
+test('D521: the declaration is a floor: a measured peak x 1.4 may only raise it, and only after 60 minutes of the step; the measurements survive a restart', () => {
+  const w = world({ 'J190-a.md': WIDE_THEN_FIT });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J190-prepare', 'ok'); r.tick();
+  // J197's live JVMs: VmHWM 1.40-1.85 GB, the largest 1.76 at the time of the review.
+  w.sys.release('lab-J190-pilot1', 'ok');
+  w.sys.unitJavaPeaksGb = () => [1.76, 1.4];
+  w.sys.unitAnonGb = () => 9.5;
+  r.tick();
+  const run = r.runs.get('J190')!;
+  assert.equal(run.unit, 'lab-J190-run1');
+  assert.equal(run.workers, 7);
+  assert.deepEqual(r.holding(run), { cores: 7, memGb: 14 }, 'the declaration: 7 x 2 GB');
+  for (let i = 0; i < 30; i++) { w.sys.t += 60_000; r.tick(); }
+  assert.deepEqual(r.holding(run), { cores: 7, memGb: 14 }, '30 minutes: still the declaration');
+  for (let i = 0; i < 31; i++) { w.sys.t += 60_000; r.tick(); }
+  // Past 60 minutes: max(2, 1.76 x 1.4 = 2.464) a worker: 17.2 GB.
+  assert.deepEqual(r.holding(run), { cores: 7, memGb: 17.2 });
+  // A smaller measured peak never lowers a declaration: 1.29 x 1.4 = 1.81 < 2.
+  assert.deepEqual(r.holdingAt({ ...run, measured: { workerPeakGb: 1.29, workerSampledMs: 5 * 3600_000 } }, run.steps[run.stepIndex], r.jobOf(run)), { cores: 7, memGb: 14 });
+  // Never less than the unit's anon memory now.
+  w.sys.unitAnonGb = () => 18.3;
+  r.tick();
+  assert.deepEqual(r.holding(run), { cores: 7, memGb: 18.3 });
+  // The fit block (mem_gb: 12): raised by a peak measured 60 minutes (14 x 1.4 = 19.6), not by a shorter one, never lowered.
+  const job = r.jobOf(run)!;
+  const fit = run.steps.find((x) => x.name === 'run2')!;
+  const at = (peakGb: number, sampledMs: number) => r.holdingAt({ ...run, measured: { steps: { run2: { peakGb, sampledMs } } } }, fit, job);
+  assert.deepEqual(at(14, 30 * 60_000), { cores: 1, memGb: 12 });
+  assert.deepEqual(at(14, 61 * 60_000), { cores: 1, memGb: 19.6 });
+  assert.deepEqual(at(4, 5 * 3600_000), { cores: 1, memGb: 12 });
+  // A runner restart adopts the running unit and keeps what it measured.
+  w.sys.unitAnonGb = () => 9.5;
+  const measured = JSON.parse(JSON.stringify(run.measured));
+  const r2 = new Runner(w.cfg, w.sys);
+  r2.reconcile();
+  const again = r2.runs.get('J190')!;
+  assert.match(again.restarts.at(-1)?.how ?? '', /adopted/);
+  assert.deepEqual(again.measured, measured);
+  r2.tick();
+  assert.deepEqual(r2.holding(again), { cores: 7, memGb: 17.2 });
+});
+
+test('D521: a step waits on memory held outside the lab (and on pressure), degraded meanwhile; a waiting step\'s reserve is counted against a new admission', () => {
+  const w = world({ 'J190-a.md': WIDE_THEN_FIT, 'J192-b.md': WIDE_THEN_FIT.replace('id: J190', 'id: J192').replace('max_workers: 7\nmem_per_worker_gb: 2', 'cores: 8\nmem_per_worker_gb: 0.25').replace(/p190/g, 'p192').replace(/j190/g, 'j192') });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  // A painter holds 15 GB: 12 GB available, less 3 kept free, is not J190's 14: it is not admitted.
+  w.sys.memUsedGb = 18;
+  r.tick();
+  assert.equal(r.runs.has('J190'), false);
+  assert.deepEqual([r.blocked[0]?.code, r.blocked[0]?.needGb, r.blocked[0]?.freeGb], ['memory-wait', 14, 9]);
+  let doc = r.statusDoc();
+  assert.equal(doc.state, 'degraded');
+  assert.deepEqual(doc.alerts?.map((a) => [a.id, a.kind, a.needGb, a.availGb]), [['J190', 'memory-wait', 14, 12]]);
+  assert.match(r.blocked.find((b) => b.id === 'J192')?.reason ?? '', /needs 8 core\(s\); 7 of 14 free/, 'J190\'s carve-out holds its 7 cores');
+  assert.match(doc.alerts?.[0]?.text ?? '', /^J190 waits on memory held outside the lab slice since .* \(MemAvailable 12 GB, need 14 GB\)$/);
+  assert.equal(doc.waiting[0]?.reason, 'waiting for memory');
+  assert.equal(sanitise(doc).state, 'degraded');
+  // The painter is done: J190 starts; J192 (8 cores) does not fit beside its 7 in 14.
+  w.sys.memUsedGb = 3;
+  r.tick();
+  assert.deepEqual([...r.runs.keys()], ['J190']);
+  assert.equal(r.statusDoc().state, 'running');
+  assert.deepEqual(r.statusDoc().alerts, []);
+  w.sys.release('lab-J190-prepare', 'ok'); r.tick();
+  w.sys.release('lab-J190-pilot1', 'ok'); r.tick();
+  // The pool ends and the painter is back (13 GB): the fit's 12 GB do not fit in 30 - 16 - 3 = 11: run2 waits.
+  w.sys.memUsedGb = 16;
+  w.sys.release('lab-J190-run1', 'ok'); r.tick();
+  const run = r.runs.get('J190')!;
+  assert.equal(run.unit, null);
+  assert.equal(run.steps[run.stepIndex]?.name, 'run2');
+  assert.match(run.heldFor ?? '', /^memory: needs 12 GB for run2; 11 GB free \(14 GB available, less 3 GB kept free\); it starts when that fits/);
+  assert.match(run.pendingStatus ?? '', /^waits: memory: needs 12 GB for run2/m);
+  // J192 now fits the budgets beside run2 (1 + 8 of 14 cores, 12 + 2 of 21 GB) and 11 GB would hold its 2 -- but the
+  // waiting step's 12 GB are counted against it (14 - 3 - 12 < 2): it does not take the memory J190 waits for.
+  assert.equal(r.runs.has('J192'), false);
+  const b192 = r.blocked.find((b) => b.id === 'J192');
+  assert.deepEqual([b192?.code, b192?.needGb, b192?.freeGb], ['memory-wait', 2, 0]);
+  doc = r.statusDoc();
+  const a190 = doc.alerts?.find((a) => a.id === 'J190');
+  assert.deepEqual([doc.state, a190?.kind, a190?.needGb, a190?.availGb], ['degraded', 'memory-wait', 12, 14]);
+  assert.deepEqual(doc.alerts?.map((a) => a.id).sort(), ['J190', 'J192']);
+  for (let i = 0; i < 6; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.equal(run.unit, null, 'rechecked every tick, still waiting');
+  // The memory comes back but the host is under pressure (some avg10 6% > 5%): still waiting.
+  w.sys.memUsedGb = 4;
+  w.sys.some10 = 6;
+  w.sys.t += 10_000; r.tick();
+  assert.equal(run.unit, null);
+  assert.match(run.heldFor ?? '', /^memory: the host's memory pressure \(some avg10\) is 6%, over 5%; run2 starts when it falls/);
+  w.sys.some10 = 0;
+  w.sys.t += 10_000; r.tick();
+  assert.equal(run.unit, 'lab-J190-run2');
+  // A retry waiting on the BUDGET behind a running job is an alert, not degraded.
+  r.blocked = [{ id: 'J196', title: 'x', est: '', cpu: 'heavy', code: 'cores', reason: 'needs 18 GB', wait: 'budget', behind: ['J190'], needGb: 18, freeGb: 9 }];
+  doc = r.statusDoc();
+  assert.equal(doc.state, 'running');
+  assert.equal(doc.alerts?.[0]?.kind, 'budget-wait');
+  assert.match(doc.alerts?.[0]?.text ?? '', /^J196 waits on the budget behind J190 since .* \(need 18 GB, 9 GB of the budget free\)$/);
+});
+
+test('D521: a memory stop retries as soon as its step fits (not 15 minutes later), first in the queue, never behind a newer job; degraded and alerted; since survives a restart', () => {
+  const w = world({ 'J190-a.md': WIDE_THEN_FIT, 'J191-b.md': NEW_JOB.replace('id: J010', 'id: J191').replace('max_workers: 3', 'max_workers: 7').replace('mem_per_worker_gb: 1.5', 'mem_per_worker_gb: 2.5') });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  assert.deepEqual([...r.runs.keys()], ['J190']);
+  assert.equal(r.blocked.find((b) => b.id === 'J191')?.code, 'cores', 'J191 (17.5 GB) does not fit beside J190 (14 GB) in 21 GB');
+  for (const u of ['prepare', 'pilot1', 'run1']) { w.sys.release(`lab-J190-${u}`, 'ok'); r.tick(); }
+  const run = r.runs.get('J190')!;
+  assert.equal(run.unit, 'lab-J190-run2');
+  // A GPU painter takes 16 GB; the kernel's OOM killer kills the fit (no exit code).
+  w.sys.memUsedGb = 19;
+  w.sys.release('lab-J190-run2', 'killed');
+  const stopAt = w.sys.now();
+  r.tick();
+  assert.equal(run.outcome?.state, 'waiting');
+  const s = parseStatus(show(w.mtg, 'pc-results:results/J190/STATUS'))!;
+  assert.match(s.fields.reason ?? '', /^memory: step run2 was killed without an exit code/);
+  assert.equal(Date.parse(s.fields.retry_after ?? '') - stopAt, 60_000, 'retry_after is a minute of settle');
+  assert.equal(r.runs.has('J191'), false);
+  assert.deepEqual(r.statusDoc().alerts?.map((a) => a.kind), ['memory-stop'], 'settling: the stop alert, no wait yet');
+  for (let i = 0; i < 12; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.equal(r.runs.get('J190')?.outcome?.state, 'waiting', 'the painter still holds the memory');
+  assert.equal(r.runs.has('J191'), false, 'never behind a newer job');
+  const wait = r.blocked.find((b) => b.id === 'J190');
+  assert.deepEqual([wait?.code, wait?.wait, wait?.needGb], ['memory', 'memory', 12]);
+  let doc = r.statusDoc();
+  assert.equal(doc.state, 'degraded');
+  const since = doc.alerts?.[0]?.at;
+  assert.match(doc.alerts?.[0]?.text ?? '', /^J190 waits on memory held outside the lab slice since .* \(MemAvailable 11 GB, need 12 GB\)$/);
+  assert.match(doc.alerts?.[1]?.text ?? '', /^J190 was stopped for memory at .*\(11 GB available then\); it is retried first/);
+  const pub = sanitise(doc);
+  assert.deepEqual(pub.alerts?.map((a) => a.text), doc.alerts?.map((a) => a.text));
+  assert.ok(!JSON.stringify(pub).includes('killed without'), 'the stop reason is private');
+  // A runner restart: the wait's "since" is kept (runner.json).
+  r.save();
+  const r2 = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r2.reconcile();
+  w.sys.t += 10_000; r2.tick();
+  doc = r2.statusDoc();
+  assert.deepEqual([doc.state, doc.alerts?.[0]?.at], ['degraded', since]);
+  // HEARTBEAT.md, pushed: the state and the alerts in one read.
+  w.sys.t += 10 * 60_000;
+  r2.tick();
+  const hb = show(w.mtg, 'pc-results:HEARTBEAT.md');
+  assert.match(hb, /^- state: degraded \(a job waits on memory held outside the lab slice\)$/m);
+  assert.match(hb, /^- ALERT: J190 was stopped for memory at .* \(step run2 was killed without an exit code/m);
+  assert.equal(JSON.parse(show(w.mtg, 'pc-results:status.json')).state, 'degraded');
+  // The painter is done: the retry starts at the next tick, at run2, ahead of J191.
+  w.sys.memUsedGb = 3;
+  w.sys.t += 10_000; r2.tick();
+  const again = r2.runs.get('J190')!;
+  assert.equal(again.outcome, null);
+  assert.deepEqual(again.steps.filter((x) => x.kind === 'shell').map((x) => x.name), ['prepare', 'run2']);
+  assert.equal(r2.runs.has('J191'), false, 'J191 still waits behind it (budgets)');
+  assert.notEqual(r2.statusDoc().state, 'degraded');
+  assert.deepEqual(r2.statusDoc().alerts?.map((a) => a.kind), ['memory-retry', 'memory-stop']);
+  w.sys.release('lab-J190-prepare', 'ok'); r2.tick();
+  assert.equal(again.unit, 'lab-J190-run2');
+  w.sys.release('lab-J190-run2', 'ok'); r2.tick();
+  assert.equal(r2.runs.get('J190')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.ok(r2.runs.has('J191'), 'and then J191');
+});
+
+test('D521: three memory stops, each retried after its minute of settle; the third fails the job and is alerted too', () => {
+  const w = world({ 'J190-a.md': WIDE_THEN_FIT });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  for (const u of ['prepare', 'pilot1', 'run1']) { w.sys.release(`lab-J190-${u}`, 'ok'); r.tick(); }
+  for (let stop = 1; stop <= 3; stop++) {
+    assert.equal(r.runs.get('J190')?.unit, 'lab-J190-run2', `attempt ${stop}`);
+    w.sys.release('lab-J190-run2', 'killed');
+    r.tick();
+    const out = r.runs.get('J190')?.outcome;
+    if (stop < 3) {
+      assert.equal(out?.state, 'waiting');
+      w.sys.t += 30_000; r.tick();
+      assert.equal(r.runs.get('J190')?.outcome?.state, 'waiting', 'inside the settle minute');
+      w.sys.t += 31_000; r.tick();
+      assert.equal(r.runs.get('J190')?.outcome, null, 'retried after it');
+      w.sys.release('lab-J190-prepare', 'ok'); r.tick();
+    } else {
+      assert.equal(out?.state, 'failed');
+      assert.match(out?.reason ?? '', /^memory: stopped 3 times/);
+    }
+  }
+  const kinds = r.statusDoc().alerts?.map((a) => a.kind);
+  assert.deepEqual(kinds, ['memory-stop', 'memory-retry', 'memory-stop', 'memory-retry', 'memory-stop']);
+  assert.match(r.statusDoc().alerts?.[0]?.detail ?? '', /^failed: stopped 3 times/);
+});
+
+test('D521: alerts in the public copy: rebuilt from their fields, unknown kinds and bad ids dropped; idle fields kept when degraded with nothing running', () => {
+  const doc: StatusDoc = {
+    schema: 1, updated: '2026-11-08T01:00:00-05:00', paused: false, state: 'degraded', idleSince: '2026-11-08T00:20:31-05:00', idleReason: 'memory backoff',
+    host: { load1: 0, memUsedGb: 0, memTotalGb: 0, swapUsedMb: 0, pressure: 0, cpus: 16, budgetGb: 23.4 }, running: [], queue: [], waiting: [], finished: [],
+    alerts: [
+      { at: '2026-11-08T00:20:31-05:00', id: 'J196', kind: 'memory-stop', needGb: null, availGb: 11.4, text: 'J196 /home/justin-a/x', detail: 'memory: /home/justin-a/x' },
+      { at: '2026-11-08T00:21:31-05:00', id: 'J196', kind: 'memory-wait', needGb: 18, availGb: 12.4, freeGb: 9.4, text: '' },
+      { at: '2026-11-08T00:21:31-05:00', id: 'J198', kind: 'budget-wait', needGb: 9, availGb: null, freeGb: 7.4, behind: ['J197', '/etc/passwd'], text: '' },
+      { at: '2026-11-08T00:21:31-05:00', id: '/etc', kind: 'memory-wait', needGb: 18, availGb: 9.4, text: '' },
+      { at: '2026-11-08T00:21:31-05:00', id: 'J196', kind: 'rm -rf' as 'memory-wait', needGb: 1, availGb: 1, text: '' },
+    ],
+  };
+  const pub = sanitise(doc);
+  assert.equal(pub.state, 'degraded');
+  assert.deepEqual([pub.idleSince, pub.idleReason], ['2026-11-08T00:20:31-05:00', 'memory backoff']);
+  assert.deepEqual(pub.alerts?.map((a) => [a.id, a.kind]), [['J196', 'memory-stop'], ['J196', 'memory-wait'], ['J198', 'budget-wait']]);
+  assert.equal(pub.alerts?.[0]?.text, alertText({ at: '2026-11-08T00:20:31-05:00', id: 'J196', kind: 'memory-stop', needGb: null, availGb: 11.4 }));
+  assert.equal(pub.alerts?.[2]?.text, 'J198 waits on the budget behind J197 since 2026-11-08T00:21:31-05:00 (need 9 GB, 7.4 GB of the budget free)');
+  assert.ok(!JSON.stringify(pub).includes('/home') && !JSON.stringify(pub).includes('/etc'), 'no free text gets through');
+  assert.equal(idleReasonOf([{ code: 'memory-wait', reason: 'x' }], false), 'memory backoff');
+  assert.equal(REASONS['memory-wait'], 'waiting for memory');
 });

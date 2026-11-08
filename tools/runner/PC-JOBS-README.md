@@ -19,16 +19,21 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 The runner checks every 10 seconds and fetches both branches every minute.
 
 1. **Find work.** A job is open when `pc-results` has no `results/<id>/STATUS`, or its
-   STATUS is `waiting`. Open jobs are taken in id order. A job whose `after:` jobs aren't
+   STATUS is `waiting`. Open jobs are taken in id order, but a job stopped for memory goes
+   first (D521). A job whose `after:` jobs aren't
    all `done` waits. A `waiting` job with `needs: check`, or with a `retry_after:` still in
    the future, waits too.
 2. **Heavy jobs share the cores; they never crowd each other.** Every `cpu: heavy` job has a
    **width**: the cores it keeps busy (`cores:`, else `max_workers`, else 7). The core budget
-   is the machine's physical cores (8 on the 9700X; `--cores N` on the runner). A heavy job
+   is all the machine's threads but two (14 of 16 on the 9700X: `whole`, the default; `shared`
+   is the physical cores, 8; `tools/runner.sh budget`, D521). A heavy job
    starts beside running heavy jobs only when the widths, its own included, fit in the
    budget, their memory fits the lab's heavy budget (width × the per-worker peak:
-   `mem_per_worker_gb`, measured, or 2.5 GB), no running job is backing off for memory, and
-   Justin is not at the table. A running job's width is its current block's (a `cores:` line
+   `mem_per_worker_gb`, measured, or 2.5 GB; a declaration is a floor: after 60 minutes of a
+   step its measured peak × 1.4 may raise it, never lower it), its need fits in the host's
+   actual MemAvailable less 3 GB with memory pressure (PSI some avg10) at most 5% (memory
+   outside the lab counts; every step is held to the same check), neither it nor a running job
+   carries `alone: yes`, no running job is backing off for memory, and Justin is not at the table. A running job's width is its current block's (a `cores:` line
    before a block, below), so a wide job with a single-process step makes room while that
    step runs. **Order is kept:** the first open heavy job that could run but does not fit
    stops the queue; nothing after it starts beside the others, so a wide job is never
@@ -67,7 +72,10 @@ The runner checks every 10 seconds and fetches both branches every minute.
    machine's RAM minus a 7 GB reserve for the OS, the desktop, the Claude app and the
    runner), `Nice=10` and `KillMode=control-group`. Under memory pressure the runner first
    drops workers and then pauses new games, through the pool control file. Past the hard
-   line it stops the job: `waiting`, reason `memory: …`, `retry_after:` 15 minutes later,
+   line it stops the job: `waiting`, reason `memory: …`, `retry_after:` one minute later
+   (D521: it is then retried first, as soon as its step fits the actual free memory, and
+   nothing newer starts in front of it; `status.json` carries `alerts`, and says `degraded`
+   while it waits on memory held outside the lab slice),
    `workers_cap:` one fewer. The retry skips a pilot that passed and every `## Commands`
    block that finished: it starts at the block that was stopped (`blocks_done:` in STATUS;
    see *Blocks and `clean:`* below). A step that exits 137 or 9 because the kernel's OOM
@@ -236,6 +244,9 @@ metrics: [name =] sh: <command printing JSON or a number>
 headline: control.a_win_rate, all.games            the numbers the progress page shows when done
 clean: var/ai-bench/night-x var/ai-bench/night-y   moved aside before a non-resumable restart from run1
 timeout: 8h                          a step running longer is stopped, and the job fails
+alone: yes | no                      D521: never beside another job, nothing beside it (default no). EVERY ladder match
+                                     job (D398 fixed matches, anytime budgets) must say yes: a wall-clock budget
+                                     measured beside another job is another measurement; the lint warns without it
 control: yes | no                    the job's tools read the pool control file; default: detected after prepare
                                      (the checkout has tools/runner/control.ts and the job runs ai-bench, the cube lab or the ladder)
 public_title: Search AI bench        the title the PUBLIC #lab page may show; without it, the id only

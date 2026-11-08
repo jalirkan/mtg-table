@@ -136,6 +136,7 @@ lints many at once. Each rule comes from a job that failed on the PC:
 | `placeholder-id` | `J0XX`, `J###`, `followup: -`, `@<sha>`; `after:` drops a non-id without a word | |
 | `bash-syntax` | `bash -n` on every block and `metrics: sh:` line; a here-document that never ends | |
 | `python-syntax` | `compile()` on every Python here-document (`python3 - <<'PY'`, `cat > x.py <<'PY'`) and every literal `python3 -c` | |
+| `alone-ladder` | a job that runs `ai-ladder.sh match` without `alone: yes` (a warning; a wall-clock budget measured beside another job is another measurement) | D521 |
 
 The lint reads the blocks with a small bash scanner (`shscan.ts`): quoted and unquoted globs,
 substitutions, here-documents and `NAME=literal` assignments carried forward. It cannot see
@@ -228,20 +229,61 @@ A heavy job has a **width**, the cores it keeps busy: its `cores:` header, else 
 `max_workers`, else physical cores − 1. A `cores: N` line before a block in `## Pilot` or
 `## Commands` sets that block's width (and caps `{workers}` and `$JOBS` in it), and a
 `mem_gb: G` line its whole memory reservation, so a running job's width and memory are its
-current step's. The **core budget** is the physical cores (8 on the 9700X;
-`--cores N`). The machine used to count as busy whenever one heavy job ran, however narrow
+current step's. The **core budget** is all the machine's threads but two (14 of 16 on the
+9700X: the `whole` mode, the default since D521); `shared` is the physical cores (8, the
+budget before D521). `tools/runner.sh budget` shows it and sets it (below). The machine used to count as busy whenever one heavy job ran, however narrow
 (J049, a single-threaded encode, left 15 of 16 threads idle for hours); now a heavy job may
 start **beside** running heavy jobs (`schedule.ts`) when:
 
 - the widths of the running heavy jobs and its own sum to at most the core budget;
 - their memory reservations (a block's `mem_gb:`, else width × per-worker peak: the measured
-  one, else `mem_per_worker_gb`, else 2.5 GB) sum to at most the heavy memory budget (below);
+  one, else `mem_per_worker_gb`, else 2.5 GB) sum to at most the heavy memory budget (below).
+  D521: a declaration is a floor. Once a commands step has run 60 minutes, a measured peak ×
+  1.4 may raise it, never lower it: the largest worker's VmHWM against the per-worker peak,
+  the unit's `memory.stat` anon + shmem against a block's `mem_gb:` (J197 declares 2 GB a
+  worker; its live JVMs reach 1.40–1.85 GB, so it holds 14 GB, ~17.2 after an hour). A step
+  never holds less than its unit's anon memory now;
+- D521: its need fits in the host's **actual** free memory: MemAvailable less 3 GB
+  (`--avail-reserve-gb`) less what the running jobs have reserved and not yet touched, and
+  the host's memory pressure (PSI some avg10) is at most 5%. Memory outside the lab (a GPU
+  painter, the browser) counts; a need is counted at most the installed budget. The same
+  check holds back every step of a running job (`waits: memory: …` in STATUS), every tick,
+  until it fits;
+- D521: neither it nor a running job carries `alone: yes` (below);
 - no running job is in memory backoff (a dropped worker or a pause), and the host's memory
   pressure is under the backoff's high line;
 - Justin is not at the table, the runner is not paused, and the job is not held by
   `needs: check` or `retry_after:`, as always.
 
-**Order and starvation.** Open jobs are taken in id order, and the first heavy job that could
+**The budgets (D521).** `tools/runner.sh budget` prints the core budget (its mode and where it
+comes from), the memory budget and MemAvailable now. `budget whole` (all threads but two, the
+default), `budget shared` (the physical cores), `budget --cores N`, `budget --mem-gb N` (only
+below the lab's -- a bigger budget is a bigger slice, `install --reserve-gb` -- and refused,
+exit 2, under 4 GB or below what a running or waiting job needs, from the daemon's
+`<state>/needs.json`) and `budget default`
+write `<state>/budget.json`, which the daemon reads every tick: no restart. budget.json wins
+over the daemon's `--cores` flag. One job's width is unchanged by the mode: the budget is how
+many widths run at once.
+
+**A memory stop goes first (D521).** A job stopped for memory is retried as soon as its step
+fits the actual free memory (its `retry_after:` is one minute, for the freed memory to show), and
+it is taken before every other open job, whatever its id. While it settles or waits, its cores
+and memory stay reserved inside the budgets and its need out of the free memory: a newer job
+starts only beside it, never in front and never in the memory it waits for. Any job that fits
+the budgets but not the actual memory (`memory-wait`) is reserved the same way. While a job
+waits on memory held outside the lab slice, `status.json`'s `state` is `degraded`; its
+`alerts` say which job, since when, MemAvailable and its need (`memory-wait`), or that a retry
+waits on the budget behind running jobs (`budget-wait`, state `running`), and each memory stop
+(the third, which fails the job, too) and retry. HEARTBEAT.md and `tools/runner.sh status`
+print them too.
+
+**`alone: yes` (D521).** A job with this header is admitted only onto an empty machine, and
+nothing, heavy or light, is admitted beside it; while it is next and waits for the running
+jobs to end, nothing newer starts. Two jobs on shared physical cores change what a wall-clock
+budget buys, so every ladder match job (D398's fixed matches, anytime search budgets) must
+carry it; the lint's `alone-ladder` warns on `ai-ladder.sh match` without it.
+
+**Order and starvation.** Open jobs are taken in id order (memory retries first), and the first heavy job that could
 run but does not fit stops the queue: nothing after it starts beside the running jobs. So a
 narrow job never jumps ahead of a wide one, and a wide job gets the machine as soon as the
 running jobs end. A job waiting on its `after:` does not stop the queue (it cannot run).
@@ -340,7 +382,7 @@ reads `/proc/pressure/memory` (some avg10, %), the swap-in rate (`pswpin`), and 
 | Condition | Action |
 |---|---|
 | some avg10 ≥ 10%, swap-in ≥ 2000 pages/s, or the unit at 95% of its `MemoryMax`, 2 samples running | one worker fewer. The next drop waits until this one took effect (the unit's Java processes fell to the new cap, since a worker leaves only when its game ends) or 5 minutes, and never comes sooner than 1 minute. At 1 worker, pause new games |
-| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +15 min, `workers_cap` one fewer. The retry skips the passed pilot and the `## Commands` blocks that finished (below), and checks out the same commits. The third memory stop fails the job |
+| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +1 min (D521: then it waits for its step to fit the actual free memory, first in the queue), `workers_cap` one fewer. The retry skips the passed pilot and the `## Commands` blocks that finished (below), and checks out the same commits. The third memory stop fails the job |
 | some avg10 < 2% and swap-in < 100/s for 2 minutes | lift a pause, then one worker back (at most one per 5 minutes, never above the sized count) |
 
 Every event goes to STATUS (`pressure-<n>:`), `events.jsonl` and `status.json`
@@ -429,7 +471,7 @@ is counted the same way, for the whole run (D464).
 settle, the pressure backoff's cooldowns and the loop's fetch and publish cadences read
 CLOCK_MONOTONIC, which NTP never steps. Wall times stay for what people read (STATUS,
 status.json, the logs). `retry_after:` is a wall time in STATUS; one further ahead than the
-15 minutes the runner writes means the clock went backwards since, and the job is due.
+15 minutes a runner ever wrote (D521's write one) means the clock went backwards since, and the job is due.
 
 **A retry starts at the block that was stopped** (D365). Every `## Commands` block that
 finishes is recorded in the job's `run.json` (`blocksDone`: its exit code, when, and a hash
@@ -482,7 +524,8 @@ Schema 1 (`tools/runner/statusjson.ts`):
 
 ```
 { schema: 1, updated, heartbeat, paused,
-  state: running|idle, idleSince, idleReason,
+  state: running|idle|degraded, idleSince, idleReason,
+  alerts: [{ at, id, kind: memory-stop|memory-retry|memory-wait, needGb, availGb, text }],
   host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus (threads), budgetGb,
           coresUsed, coresTotal },
   running:  [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
@@ -499,7 +542,12 @@ runner. `state` is `running` while any job runs (the runner's or someone else's)
 `idle`, with `idleSince` and `idleReason`: `queue empty`, `blocked after J###` (the first
 waiting job's unfinished `after:`), `Justin playing` (`held` in the public copy), `paused`,
 `memory backoff`, `needs a check`, `job file needs fixing` or `waiting`. The `#lab` page shows
-IDLE in red once it has lasted ten minutes.
+IDLE in red once it has lasted ten minutes. `state` is `degraded` (D521) while any job waits on
+memory — a memory stop's retry, a job the host's free memory cannot hold yet, or a running job's
+step waiting for it — whether or not something runs; `alerts` (newest first, at most 20) says
+which job, since when, its need and what was free, plus each memory stop (kept 24 h, with
+MemAvailable then) and retry. The public copy rebuilds each alert from its id, time, kind and
+numbers; the stop's reason (`detail`) stays private.
 
 A running job carries what it is doing now: `phase` (`pilot 1/2`, `commands 1/1`: the step
 and the block), `memGb` (its unit's memory as the backoff last read it), and `live`, the

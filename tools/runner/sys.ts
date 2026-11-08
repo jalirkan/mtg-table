@@ -72,6 +72,11 @@ export interface Sys {
   /** Peak resident set (VmHWM, GB) of every java process in the unit's cgroup now. */
   unitJavaPeaksGb(unit: string): number[];
   /**
+   * D521: the unit's anonymous memory now (GB): its cgroup's memory.stat `anon` plus `shmem` -- page cache not
+   * counted, and a forked pool's shared pages counted once (a sum of VmRSS counts them in every child); null when unknown.
+   */
+  unitAnonGb?(unit: string): number | null;
+  /**
    * What systemd says about an OOM kill in an ended unit (D365), or null: its `Result=oom-kill` while it is
    * still loaded, else a line of its journal since `sinceMs` saying a process was killed by the OOM killer.
    */
@@ -118,6 +123,13 @@ export function establishedOn(tables: string[], port: number): number {
 export function oomJournalLine(journal: string): string | null {
   const l = journal.split('\n').find((x) => /killed by the OOM killer|Failed with result 'oom-kill'|oom-kill/i.test(x));
   return l ? l.trim().slice(0, 200) : null;
+}
+
+/** D521: a cgroup's memory.stat `anon` plus `shmem` (if present), GB; null when it has no `anon` line. */
+export function memoryStatAnonGb(stat: string): number | null {
+  const v = (k: string): number | null => { const m = new RegExp(`^${k} (\\d+)$`, 'm').exec(stat); return m ? Number(m[1]) : null; };
+  const anon = v('anon');
+  return anon === null ? null : (anon + (v('shmem') ?? 0)) / GB;
 }
 
 /** Every pid in a unit's cgroup (its sub-cgroups too); null when the unit has none or systemctl did not answer. */
@@ -214,6 +226,11 @@ export function realSys(): Sys {
         if (kb) out.push(kb / 1048576);
       }
       return out;
+    },
+    unitAnonGb(unit) {
+      const cg = systemctlShow(unit, ['ControlGroup'])?.ControlGroup;
+      if (!cg) return null;
+      return memoryStatAnonGb(readOr(`/sys/fs/cgroup${cg}/memory.stat`));
     },
     unitOomEvidence(unit, sinceMs) {
       if (systemctlShow(unit, ['Result'])?.Result === 'oom-kill') return 'systemd: Result=oom-kill';

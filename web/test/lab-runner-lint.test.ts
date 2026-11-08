@@ -130,6 +130,11 @@ const CASES: Case[] = [
     text: job({ pilot: ['if true; then echo x'] }), control: job({ pilot: ['if true; then echo x; fi'] }),
   },
   {
+    name: 'D521: a ladder match without alone: yes', fires: 'alone-ladder', severity: 'warning',
+    text: job({ commands: ['./tools/ai-ladder.sh match --a search-v2 --b search-v2-routlets --games 400 --budget-ms 1500'] }),
+    control: job({ header: 'alone: yes\n', commands: ['./tools/ai-ladder.sh match --a search-v2 --b search-v2-routlets --games 400 --budget-ms 1500; tools/ai-ladder.sh report'] }),
+  },
+  {
     name: 'a Python here-document that does not compile', fires: 'python-syntax', severity: 'error',
     text: job({ pilot: ["python3 - <<'PY'\nfor x in range(3)\n    print(x)\nPY"] }),
     control: job({ pilot: ["python3 - <<'PY'\nfor x in range(3):\n    print(x)\nPY"] }),

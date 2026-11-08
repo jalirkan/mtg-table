@@ -27,6 +27,8 @@
 //   clean: var/ai-bench/night-*      NEW: moved aside (never deleted) before a non-resumable job restarts from run1
 //   timeout: 8h                      NEW: a step running longer is stopped and the job fails
 //   control: yes | no                NEW: the job's tools read the pool control file (default: detected)
+//   alone: yes | no                  D521: never admitted beside another job, and nothing admitted beside it
+//                                    (every wall-clock-budgeted measurement: ladder matches, anytime budgets)
 //   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
 //   public_est: ~3 h                 NEW: the estimate it may show (letters, digits, space , : ; ( ) + % ~ # & - only)
 //   public_cubes: yes                NEW: the public page may name the cube ids in its per-cube progress (else "cube 1", ...)
@@ -118,6 +120,8 @@ export interface JobFile {
   publicCubes: boolean;
   /** `control:` as written: true / false, or null (the runner detects it after prepare). */
   control: boolean | null;
+  /** D521 `alone: yes`: the job runs with no other job beside it (a wall-clock-budgeted measurement). */
+  alone: boolean;
   pilot: Section | null;
   commands: Section | null;
   aborts: string[];
@@ -312,6 +316,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   }
   if (header.public_cubes !== undefined && !/^(yes|no)$/i.test(header.public_cubes.trim())) errors.push(`public_cubes: "${header.public_cubes}" is not yes or no`);
   if (header.control !== undefined && !/^(yes|no)$/i.test(header.control.trim())) errors.push(`control: "${header.control}" is not yes or no`);
+  if (header.alone !== undefined && !/^(yes|no)$/i.test(header.alone.trim())) errors.push(`alone: "${header.alone}" is not yes or no`);
   const pilot = sections.get('pilot') ?? null;
   const commands = sections.get('commands') ?? null;
   const repos = parseRepos(header.repos ?? '');
@@ -343,6 +348,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     publicDecides: header.public_decides !== undefined && PUBLIC_TEXT.test(header.public_decides) ? header.public_decides : null,
     publicCubes: /^yes$/i.test((header.public_cubes ?? '').trim()),
     control: header.control === undefined ? null : /^yes$/i.test(header.control.trim()),
+    alone: /^yes$/i.test((header.alone ?? '').trim()),
     pilot,
     commands,
     aborts,

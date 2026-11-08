@@ -13,6 +13,7 @@
 #
 #   tools/runner.sh install [--reserve-gb 7] [--public-status on|off] [--dry-run]
 #   tools/runner.sh status | pause | resume | stop [J###] | logs [J###] [-f] | once | plan [J###]
+#   tools/runner.sh budget [whole|shared|default] [--cores N] [--mem-gb N]   # D521: the core and memory budgets
 #   tools/runner.sh approve J###                 # an old-format job: run its commands after a pilot a person checked
 #   tools/runner.sh check jobs/J003-x.md [--metrics m.json]   # parse and lint (D397: a lint error fails)
 #   tools/runner.sh lint jobs/*.md [--jobs-dir jobs]          # the lint alone
