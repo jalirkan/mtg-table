@@ -97,7 +97,7 @@ bridge, wire or protocol change, and the live seat is untouched, so it is free u
 
 **Measured.** From `~/code/lab/pc-results/results/J197/` (`match-J197.json`, `verdict.json`, `report.md`; read only),
 J197 run 2026-11-08 00:20–09:53 EST on the runner (`forgecoach-runner ac07876b`) at mtg-table `310ba71b`, match id
-`justin-a-B650-GAMING-X-AX-V2:20261108T052348-2746448`, 9.5 hours:
+`<this host>:20261108T052348-2746448` (the match id, its host part not spelled here, D516), 9.5 hours:
 
 - The verdict's reading line, word for word: "NOT SHOWN: search-v2-routlets's upper end 7.9 Elo is below +15;
   exposure 231 of 4800 games (4.81%); 935.199 against 935.821 ms a decision (x0.9993, within 5%); with
