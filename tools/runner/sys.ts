@@ -71,7 +71,7 @@ export interface Sys {
   runInSlice(command: string, cwd: string, timeoutMs: number): Run;
   /** Peak resident set (VmHWM, GB) of every java process in the unit's cgroup now. */
   unitJavaPeaksGb(unit: string): number[];
-  /** D519: the summed resident set (VmRSS, GB) of every process in the unit's cgroup now (page cache not counted); null when unknown. */
+  /** D521: the summed resident set (VmRSS, GB) of every process in the unit's cgroup now (page cache not counted); null when unknown. */
   unitRssGb?(unit: string): number | null;
   /**
    * What systemd says about an OOM kill in an ended unit (D365), or null: its `Result=oom-kill` while it is

@@ -1,8 +1,8 @@
-## D519 — the lab runner uses the whole machine: the core budget is all threads but two by default (`whole`; `shared` = the physical cores, the old 8), a running job's reservation is its measured peak once the real run has measured it, every step starts only when its expected peak fits the host's actual free memory less 2 GB, a job stopped for memory is retried first as soon as it fits, `status.json` says `degraded` with `alerts` meanwhile, and `tools/runner.sh budget` shows and sets the budgets
+## D521 — the lab runner uses the whole machine: the core budget is all threads but two by default (`whole`; `shared` = the physical cores, the old 8), a running job's reservation is its measured peak once the real run has measured it, every step starts only when its expected peak fits the host's actual free memory less 2 GB, a job stopped for memory is retried first as soon as it fits, `status.json` says `degraded` with `alerts` meanwhile, and `tools/runner.sh budget` shows and sets the budgets
 
-*Branch `pc/runner-whole-machine`, off main `310ba71b` (D518's merge). `node tools/decisions.mjs next` printed D519
-while two other lanes were taking numbers (one of them D519/D520); if the file name collides at the merge, the merger
-renumbers. Amends D337 (the runner, its co-scheduling rule and its memory stop) and D365 (per-step widths: a later job
+*Branch `pc/runner-whole-machine`, off main `310ba71b` (D518's merge). `node tools/decisions.mjs next` printed D519 when the lane
+started; it was renumbered D521 before the merge, because J197's job text reserves D519 for its SMALL GAIN reading and
+D520 is the fit-saves-first lane's. Amends D337 (the runner, its co-scheduling rule and its memory stop) and D365 (per-step widths: a later job
 waiting on memory is excluded from an earlier one's count the way a later job waiting on cores is). Runner code, its
 tests and its manual; no job file, bridge, wire or protocol change.*
 
@@ -28,7 +28,7 @@ tests and its manual; no job file, bridge, wire or protocol change.*
 **Decision.**
 
 1. **The core budget is all threads but two, `whole`, by default** (`tools/runner/budget.ts`): 14 on the 16-thread
-   PC. `shared` is the physical cores, 8, the runner's numbers before D519. The heavy jobs running side by side keep
+   PC. `shared` is the physical cores, 8, the runner's numbers before D521. The heavy jobs running side by side keep
    at most that many busy. A job's own width is unchanged — its `cores:`, else `max_workers`, else physical cores − 1
    — and sizing still caps one job's workers at physical cores − 1: the budget says how many such widths run at once,
    not how wide one job may grow (Rejected). Precedence: `<state>/budget.json`, else the daemon's `--cores N`, else
@@ -73,8 +73,8 @@ tests and its manual; no job file, bridge, wire or protocol change.*
    rewrites the slice) and `budget default` (remove budget.json) write `<state>/budget.json`, which the daemon reads
    every tick: no restart. A change is logged once (`budget: cores 8 -> 14`).
 
-**Last night under D519 — honestly.** The memory, not the cores, was what J196 and J197 could not share: J196's fit
-declares 18 GB and J197 holds 10.4 measured, 28.4 > 21.4. So D519 would not have run them together. It would have
+**Last night under D521 — honestly.** The memory, not the cores, was what J196 and J197 could not share: J196's fit
+declares 18 GB and J197 holds 10.4 measured, 28.4 > 21.4. So D521 would not have run them together. It would have
 retried J196 first — at 00:21:31 if the painter had gone, else as soon as MemAvailable showed 20 GB — with J197
 waiting behind it, and `status.json` would have said `degraded` from 00:20:31 with the alert "J196 waits for memory
 … needs 18 GB, N GB free for it". While the painter held its 12 GB, nothing new would have started: the owner's rule
@@ -101,7 +101,7 @@ longer stop them: two J197-shaped pools (7 wide, 10.4 GB measured each, 20.8 ≤
 - **Raising the memory budget from `budget.json`.** The slice's MemoryHigh/MemoryMax are the hard stop and stay
   as installed; a bigger budget is a bigger slice, `install --reserve-gb`.
 
-**Tests** (`web/test/lab-runner.test.ts`, the D519 section, eight tests): the budgets and their CLI; two jobs
+**Tests** (`web/test/lab-runner.test.ts`, the D521 section, eight tests): the budgets and their CLI; two jobs
 scheduled together in `whole` and not in `shared` or past the memory budget; the actual-memory check blocking an
 admission, the carve-out letting a narrow job beside it and stopping a wide one; the retry first, before a lower
 id, holding its place while it settles and while it waits, and saying its need when the budgets hold it back; a

@@ -16,9 +16,9 @@
 //   hold    [--pid N] [--by S]   D401: admit no new job while process N lives (default: the calling shell);
 //                         running jobs carry on untouched.  `scripts/play.sh --pause-lab` does this
 //   release [--pid N]     give that hold back (a hold whose process is gone holds nothing anyway)
-//   budget  [whole|shared|default] [--cores N] [--mem-gb N]   D519: show or set the core and memory budgets
+//   budget  [whole|shared|default] [--cores N] [--mem-gb N]   D521: show or set the core and memory budgets
 //                         (<state>/budget.json, read by the daemon every tick: no restart).  whole: all threads
-//                         but 2 (the default); shared: the physical cores (the budget before D519)
+//                         but 2 (the default); shared: the physical cores (the budget before D521)
 //   logs    [J###] [-n N] [-f]   the current step's log
 //   approve J###          after an old-format pilot: let the runner run the commands (STATUS approved)
 //   check   <job.md> [--metrics m.json] [--jobs-dir DIR] [--var DIR] [--no-lint]
@@ -241,7 +241,7 @@ function printStatus(cfg: RunnerConfig): number {
 }
 
 /**
- * D519: `tools/runner.sh budget`: show the core and memory budgets, or set them in <state>/budget.json,
+ * D521: `tools/runner.sh budget`: show the core and memory budgets, or set them in <state>/budget.json,
  * which the daemon reads every tick.  The memory budget may only be lowered here: raising it means a
  * bigger slice, which is `install --reserve-gb`.
  */
@@ -271,7 +271,7 @@ function budgetCmd(cfg: RunnerConfig, pos: string[], f: Map<string, string>): nu
   const r = resolveBudget({ file, flagCores: cfg.cores, machine: m, heavyGb: b.heavyGb });
   const mi = (() => { try { return readMeminfo(fs.readFileSync('/proc/meminfo', 'utf8')); } catch { return null; } })();
   console.log(budgetText({ r, file, machine: m, labGb: b.labGb, heavyGb: b.heavyGb, reserveGb: cfg.budget.reserveGb, availGb: mi ? mi.availGb : null, availReserveGb: cfg.availReserveGb ?? AVAIL_RESERVE_GB, daemonCores: readStatus(cfg)?.host.coresTotal ?? null }));
-  // The daemon reads budget.json only from D519 on: an older installed runner ignores it.
+  // The daemon reads budget.json only from D521 on: an older installed runner ignores it.
   const installed = path.resolve(cfg.stateDir, '..', '..');
   if (fs.existsSync(path.join(installed, 'tools', 'runner')) && !fs.existsSync(path.join(installed, 'tools', 'runner', 'budget.ts'))) {
     console.log(`note: the installed runner (${installed}) predates budget.json and ignores it -- run tools/runner.sh install to update it.`);

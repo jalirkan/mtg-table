@@ -1,15 +1,15 @@
-// mtg-table — the lab runner: the core and memory budgets, and their two modes (D519).
+// mtg-table — the lab runner: the core and memory budgets, and their two modes (D521).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // THE CORE BUDGET is what the widths of the heavy jobs running side by side may sum to
-// (schedule.ts).  Before D519 it was the physical cores (8 on the 9700X), so a 7-wide job
+// (schedule.ts).  Before D521 it was the physical cores (8 on the 9700X), so a 7-wide job
 // left one core and every other heavy job waited behind it while 8 of the 16 threads sat
 // idle all night.  Two modes, the owner's words:
 //
 //   whole   all the machine's threads but DESKTOP_THREADS (2) for the desktop: 14 of 16.
 //           The default.
-//   shared  the physical cores: 8 — the runner's numbers before D519, for when the owner
+//   shared  the physical cores: 8 — the runner's numbers before D521, for when the owner
 //           wants the machine to himself as well.
 //
 // A job's own width is unchanged by either (its `cores:`, else `max_workers`, else
@@ -105,7 +105,7 @@ export function clearBudgetFile(stateDir: string): boolean {
 /** `tools/runner.sh budget`'s report. */
 export function budgetText(o: { r: Resolved; file: BudgetFile | null; machine: Machine; labGb: number; heavyGb: number; reserveGb: number; availGb: number | null; availReserveGb: number; daemonCores?: number | null }): string {
   const m = o.machine;
-  const why = o.r.mode === 'whole' ? `all ${m.threads} threads but ${DESKTOP_THREADS} for the desktop` : o.r.mode === 'shared' ? 'the physical cores: the runner\'s budget before D519' : 'set by hand';
+  const why = o.r.mode === 'whole' ? `all ${m.threads} threads but ${DESKTOP_THREADS} for the desktop` : o.r.mode === 'shared' ? 'the physical cores: the runner\'s budget before D521' : 'set by hand';
   const from = o.r.coresFrom === 'budget.json' ? `budget.json${o.file?.setAt ? `, set ${o.file.setAt}${o.file.by ? ` by ${o.file.by}` : ''}` : ''}` : o.r.coresFrom === '--cores' ? 'the --cores flag' : 'the default, no budget.json';
   return [
     `cores:  ${o.r.cores} of ${m.threads} threads (${m.physicalCores} physical cores): mode ${o.r.mode}, ${why} (from ${from})`,

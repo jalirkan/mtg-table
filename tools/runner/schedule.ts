@@ -36,7 +36,7 @@
 // (it cannot run anyway).  Someone else's running job has an unknown width: it
 // fills the machine.  Without `machine` in the input, the old rule: one heavy.
 //
-// D519, THE WHOLE MACHINE.  The core budget is all threads but two by default (budget.ts),
+// D521, THE WHOLE MACHINE.  The core budget is all threads but two by default (budget.ts),
 // so two 7-wide jobs run side by side on the 16-thread PC.  Three more rules:
 //   - MEMORY RETRIES FIRST.  A job stopped for memory (STATUS `waiting`, reason `memory: …`)
 //     is taken before every other open job, whatever its id: it has sunk cost, and a
@@ -59,13 +59,13 @@ import { retryHolds } from './clock.ts';
 
 /**
  * The furthest ahead a memory stop's `retry_after:` is ever written: D461 reads one further ahead as
- * a clock that went backwards.  Runners before D519 wrote 15 minutes; D519 writes MEMORY_SETTLE_MS.
+ * a clock that went backwards.  Runners before D521 wrote 15 minutes; D521 writes MEMORY_SETTLE_MS.
  */
 export const MEMORY_RETRY_MS = 15 * 60_000;
-/** D519: a memory stop's `retry_after:`: the freed memory shows in MemAvailable; then the memory check decides. */
+/** D521: a memory stop's `retry_after:`: the freed memory shows in MemAvailable; then the memory check decides. */
 export const MEMORY_SETTLE_MS = 60_000;
 
-/** A job stopped for memory and waiting to be retried (D519: it goes first). */
+/** A job stopped for memory and waiting to be retried (D521: it goes first). */
 export const isMemoryRetry = (s: Status | null | undefined): boolean => !!s && s.state === 'waiting' && /^memory:/.test(s.fields.reason ?? '');
 
 export type State = 'waiting' | 'running' | 'done' | 'failed' | 'skipped';
@@ -114,12 +114,12 @@ export interface Blocked {
   /** A short code the public page may show. */
   code: 'after' | 'heavy-busy' | 'light-busy' | 'cores' | 'playing' | 'paused' | 'needs-check' | 'memory' | 'memory-wait' | 'invalid' | 'queued';
   reason: string;
-  /** D519, a job waiting on actual memory: what it needs and what was free for it (GB). */
+  /** D521, a job waiting on actual memory: what it needs and what was free for it (GB). */
   needGb?: number;
   freeGb?: number;
 }
 
-/** D519: the host's actual memory, for admission. */
+/** D521: the host's actual memory, for admission. */
 export interface ActualMemory {
   /** MemAvailable (GB). */
   availGb: number;
@@ -159,9 +159,9 @@ export interface ScheduleInput {
   paused: boolean;
   /** D401: admissions held (tools/runner/holds.ts, `play.sh --pause-lab`): no job starts, running ones carry on. The words why, or null. */
   held?: string | null;
-  /** D519: what a job needs when the runner knows better than its header (a retry: the step it resumes at, measured). */
+  /** D521: what a job needs when the runner knows better than its header (a retry: the step it resumes at, measured). */
   needs?: Map<string, Holding>;
-  /** D519: present: a heavy job starts only when its need fits in the host's actual free memory. */
+  /** D521: present: a heavy job starts only when its need fits in the host's actual free memory. */
   memory?: ActualMemory;
   now: number;
 }
@@ -209,11 +209,11 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
   }
   /** The first open heavy job that could run but did not fit: nothing after it starts beside (order, starvation). */
   let firstUnfit: string | null = null;
-  /** D519: a job waiting on actual memory holds its cores and memory inside the budgets (the carve-out). */
+  /** D521: a job waiting on actual memory holds its cores and memory inside the budgets (the carve-out). */
   let carved = false;
-  /** D519: the memory the jobs admitted in this pass will take (their units are not running yet). */
+  /** D521: the memory the jobs admitted in this pass will take (their units are not running yet). */
   let pendingGb = 0;
-  // D519: memory retries first (sunk cost), then id order.
+  // D521: memory retries first (sunk cost), then id order.
   const order = [...inp.jobs].sort((a, b) => Number(isMemoryRetry(inp.statuses.get(b.id))) - Number(isMemoryRetry(inp.statuses.get(a.id))) || idOrder(a.id, b.id));
   for (const job of order) {
     const st = inp.statuses.get(job.id);
@@ -229,7 +229,7 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     const retry = st?.fields.retry_after ? Date.parse(st.fields.retry_after) : NaN;
     const needOf = (mb: MachineBudget): Holding => inp.needs?.get(job.id) ?? { cores: widthOf(job, mb), memGb: reservationOf(job, widthOf(job, mb)) };
     if (retryHolds(retry, inp.now, MEMORY_RETRY_MS + 60_000)) {
-      // D519: a heavy memory retry settling for its minute already holds its place: nothing newer starts in front of it.
+      // D521: a heavy memory retry settling for its minute already holds its place: nothing newer starts in front of it.
       if (retrying && job.cpu === 'heavy' && m) { const n = needOf(m); used.cores += n.cores; used.memGb += n.memGb; carved = true; }
       b('memory', `${st?.fields.reason ?? 'memory'}; retry after ${st?.fields.retry_after}`);
       continue;

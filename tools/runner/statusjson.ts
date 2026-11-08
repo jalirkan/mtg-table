@@ -8,7 +8,7 @@
 // orphan branch `lab-status` of the PUBLIC jalirkan/ForgeCoach.  Schema 1:
 //
 //   { schema: 1, updated, heartbeat, paused, state (running|idle|degraded), idleSince, idleReason,
-//     alerts: [ { at, id, kind (memory-stop|memory-retry|memory-wait), needGb, availGb, text } ] (D519),
+//     alerts: [ { at, id, kind (memory-stop|memory-retry|memory-wait), needGb, availGb, text } ] (D521),
 //     host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus, budgetGb,
 //             coresUsed, coresTotal (the running jobs' widths out of the core budget, D337 amended) },
 //     running: [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
@@ -104,11 +104,11 @@ export interface QueueItem extends Publicly { id: string; title: string; cpu: 'h
 export interface WaitingItem extends Publicly { id: string; title: string; reason: string; est: string; detail?: string }
 export interface FinishedItem extends Publicly { id: string; title: string; status: 'done' | 'failed' | 'skipped'; finished: string | null; headline: string; numbers: Record<string, number>; detail?: string }
 
-/** D519: `degraded` while any job waits on memory (a memory stop's retry, or a step the host's free memory cannot hold yet). */
+/** D521: `degraded` while any job waits on memory (a memory stop's retry, or a step the host's free memory cannot hold yet). */
 export type RunState = 'running' | 'idle' | 'degraded';
 
 /**
- * D519: a line a watcher reads first.  `memory-stop`: a job was stopped for memory (availGb: MemAvailable then);
+ * D521: a line a watcher reads first.  `memory-stop`: a job was stopped for memory (availGb: MemAvailable then);
  * `memory-retry`: it was retried; `memory-wait`: a job waits on memory now, since `at` (needGb: its step's
  * expected peak; availGb: what was free for it).  `text` is made from the fields (`alertText`), never copied;
  * `detail` (the stop's reason) is private.
@@ -136,7 +136,7 @@ export interface StatusDoc {
   idleSince?: string | null;
   /** Why nothing runs (idleReasonOf; null while running). */
   idleReason?: string | null;
-  /** D519: memory stops, retries and waits, newest first. */
+  /** D521: memory stops, retries and waits, newest first. */
   alerts?: Alert[];
   host: { load1: number; memUsedGb: number; memTotalGb: number; swapUsedMb: number; pressure: number; cpus: number; budgetGb: number; coresUsed?: number; coresTotal?: number };
   running: RunningJob[];

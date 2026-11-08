@@ -229,19 +229,19 @@ A heavy job has a **width**, the cores it keeps busy: its `cores:` header, else 
 `## Commands` sets that block's width (and caps `{workers}` and `$JOBS` in it), and a
 `mem_gb: G` line its whole memory reservation, so a running job's width and memory are its
 current step's. The **core budget** is all the machine's threads but two (14 of 16 on the
-9700X: the `whole` mode, the default since D519); `shared` is the physical cores (8, the
-budget before D519). `tools/runner.sh budget` shows it and sets it (below). The machine used to count as busy whenever one heavy job ran, however narrow
+9700X: the `whole` mode, the default since D521); `shared` is the physical cores (8, the
+budget before D521). `tools/runner.sh budget` shows it and sets it (below). The machine used to count as busy whenever one heavy job ran, however narrow
 (J049, a single-threaded encode, left 15 of 16 threads idle for hours); now a heavy job may
 start **beside** running heavy jobs (`schedule.ts`) when:
 
 - the widths of the running heavy jobs and its own sum to at most the core budget;
 - their memory reservations (a block's `mem_gb:`, else width × per-worker peak: the measured
   one, else `mem_per_worker_gb`, else 2.5 GB) sum to at most the heavy memory budget (below).
-  D519: once a commands step has run 10 minutes, the largest worker's measured peak × 1.15
+  D521: once a commands step has run 10 minutes, the largest worker's measured peak × 1.15
   replaces the declared or default per-worker peak (J197 declared 2 GB and measured 1.29), a
   block's `mem_gb:` is only ever raised by a measured peak, and a step never holds less than
   its unit's summed RSS now;
-- D519: its need fits in the host's **actual** free memory: MemAvailable less 2 GB
+- D521: its need fits in the host's **actual** free memory: MemAvailable less 2 GB
   (`--avail-reserve-gb`) less what the running jobs have reserved and not yet touched. Memory
   outside the lab (a GPU painter, the browser) counts. The same check holds back every step
   of a running job (`waits: memory: …` in STATUS), every tick, until it fits;
@@ -250,7 +250,7 @@ start **beside** running heavy jobs (`schedule.ts`) when:
 - Justin is not at the table, the runner is not paused, and the job is not held by
   `needs: check` or `retry_after:`, as always.
 
-**The budgets (D519).** `tools/runner.sh budget` prints the core budget (its mode and where it
+**The budgets (D521).** `tools/runner.sh budget` prints the core budget (its mode and where it
 comes from), the memory budget and MemAvailable now. `budget whole` (all threads but two, the
 default), `budget shared` (the physical cores), `budget --cores N`, `budget --mem-gb N` (only
 below the lab's: a bigger budget is a bigger slice, `install --reserve-gb`) and `budget default`
@@ -258,7 +258,7 @@ write `<state>/budget.json`, which the daemon reads every tick: no restart. budg
 over the daemon's `--cores` flag. One job's width is unchanged by the mode: the budget is how
 many widths run at once.
 
-**A memory stop goes first (D519).** A job stopped for memory is retried as soon as its step
+**A memory stop goes first (D521).** A job stopped for memory is retried as soon as its step
 fits the actual free memory (its `retry_after:` is one minute, for the freed memory to show), and
 it is taken before every other open job, whatever its id. While it settles or waits, its cores
 and memory stay reserved inside the budgets: a newer job starts only beside it, never in front.
@@ -366,7 +366,7 @@ reads `/proc/pressure/memory` (some avg10, %), the swap-in rate (`pswpin`), and 
 | Condition | Action |
 |---|---|
 | some avg10 ≥ 10%, swap-in ≥ 2000 pages/s, or the unit at 95% of its `MemoryMax`, 2 samples running | one worker fewer. The next drop waits until this one took effect (the unit's Java processes fell to the new cap, since a worker leaves only when its game ends) or 5 minutes, and never comes sooner than 1 minute. At 1 worker, pause new games |
-| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +1 min (D519: then it waits for its step to fit the actual free memory, first in the queue), `workers_cap` one fewer. The retry skips the passed pilot and the `## Commands` blocks that finished (below), and checks out the same commits. The third memory stop fails the job |
+| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +1 min (D521: then it waits for its step to fit the actual free memory, first in the queue), `workers_cap` one fewer. The retry skips the passed pilot and the `## Commands` blocks that finished (below), and checks out the same commits. The third memory stop fails the job |
 | some avg10 < 2% and swap-in < 100/s for 2 minutes | lift a pause, then one worker back (at most one per 5 minutes, never above the sized count) |
 
 Every event goes to STATUS (`pressure-<n>:`), `events.jsonl` and `status.json`
@@ -455,7 +455,7 @@ is counted the same way, for the whole run (D464).
 settle, the pressure backoff's cooldowns and the loop's fetch and publish cadences read
 CLOCK_MONOTONIC, which NTP never steps. Wall times stay for what people read (STATUS,
 status.json, the logs). `retry_after:` is a wall time in STATUS; one further ahead than the
-15 minutes a runner ever wrote (D519's write one) means the clock went backwards since, and the job is due.
+15 minutes a runner ever wrote (D521's write one) means the clock went backwards since, and the job is due.
 
 **A retry starts at the block that was stopped** (D365). Every `## Commands` block that
 finishes is recorded in the job's `run.json` (`blocksDone`: its exit code, when, and a hash
@@ -526,7 +526,7 @@ runner. `state` is `running` while any job runs (the runner's or someone else's)
 `idle`, with `idleSince` and `idleReason`: `queue empty`, `blocked after J###` (the first
 waiting job's unfinished `after:`), `Justin playing` (`held` in the public copy), `paused`,
 `memory backoff`, `needs a check`, `job file needs fixing` or `waiting`. The `#lab` page shows
-IDLE in red once it has lasted ten minutes. `state` is `degraded` (D519) while any job waits on
+IDLE in red once it has lasted ten minutes. `state` is `degraded` (D521) while any job waits on
 memory — a memory stop's retry, a job the host's free memory cannot hold yet, or a running job's
 step waiting for it — whether or not something runs; `alerts` (newest first, at most 20) says
 which job, since when, its need and what was free, plus each memory stop (kept 24 h, with
