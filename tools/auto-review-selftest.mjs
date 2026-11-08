@@ -189,10 +189,24 @@ status({ host: { coresUsed: 2, coresTotal: 8 }, running: [{ id: 'J001', cores: 2
 check(!labGate(STATUS).open && labGate(STATUS).freeCores === 0, "a job the runner does not run (cores: null, not in coresUsed): closed, whatever coresUsed says", labGate(STATUS));
 status({ host: { coresUsed: 2, coresTotal: 8 }, running: [{ id: 'J001', cores: 2 }] });
 check(labGate(STATUS).open && labGate(STATUS).freeCores === 6, 'the same lab without it: open, 6 free');
+// D521: degraded -- a lab job waits on memory held outside the lab slice.  Closed with jobs running, cores free or not.
+const memWait = { at: iso(Date.now()), id: 'J196', kind: 'memory-wait', needGb: 18, availGb: 12, text: 'J196 waits on memory held outside the lab slice since x (MemAvailable 12 GB, need 18 GB)' };
+status({ state: 'degraded', host: { coresUsed: 2, coresTotal: 14 }, running: [{ id: 'J197', cores: 2 }], alerts: [memWait] });
+check(!labGate(STATUS).open && labGate(STATUS).freeCores === 0 && /lab degraded.*J196 waits on memory held outside the lab slice/.test(labGate(STATUS).why), 'degraded, a job running and 12 cores free: closed, the memory-wait alert in the why', labGate(STATUS));
+// ... and with nothing running: still closed -- the lab is idle only because it waits for that memory, and a review would take it.
+status({ state: 'degraded', host: { coresUsed: 0, coresTotal: 14 }, running: [], alerts: [memWait] });
+check(!labGate(STATUS).open && /nothing runs\): J196 waits/.test(labGate(STATUS).why), 'degraded, nothing running: closed (a review would take the memory the waiting job needs)', labGate(STATUS));
+status({ state: 'degraded', running: [], alerts: [] });
+check(!labGate(STATUS).open && /^lab degraded/.test(labGate(STATUS).why), 'degraded without an alert: closed all the same');
+status({ state: 'degraded', heartbeat: iso(Date.now() - 10 * 60_000), updated: iso(Date.now() - 10 * 60_000) });
+check(labGate(STATUS).open, 'degraded but the heartbeat is 10 min old (a dead runner): open');
+// A retry waiting on the BUDGET behind a running job is `running` (with a budget-wait alert): the core rule applies.
+status({ state: 'running', host: { coresUsed: 7, coresTotal: 14 }, running: [{ id: 'J197', cores: 7 }], alerts: [{ ...memWait, kind: 'budget-wait' }] });
+check(labGate(STATUS).open && labGate(STATUS).freeCores === 7, 'a budget-wait behind a running job: the core rule, 7 free');
 // The fields the gate reads must still be what the runner writes (tools/runner/runner.ts statusDoc, statusjson.ts schema 1).
 const runnerSrc = readFileSync('tools/runner/runner.ts', 'utf8');
 const docSrc = runnerSrc.slice(runnerSrc.indexOf('return fit({'), runnerSrc.indexOf('runner: { commit', runnerSrc.indexOf('return fit({')));
-for (const [f, re] of [['schema: 1', /\bschema: 1,/], ['heartbeat', /\bheartbeat: /], ['updated', /\bupdated: /], ['state', /\bstate: running\.length \? 'running' : 'idle'/],
+for (const [f, re] of [['schema: 1', /\bschema: 1,/], ['heartbeat', /\bheartbeat: /], ['updated', /\bupdated: /], ['state', /\bstate: waits\.some\(\(w\) => w\.kind === 'memory'\) \? 'degraded' : running\.length \? 'running' : 'idle'/], ['alerts', /^\s*alerts,$/m],
   ['running', /^\s*running,$/m], ['host.coresUsed', /\bcoresUsed: running\.reduce/], ['host.coresTotal', /\bcoresTotal: /]]) {
   check(docSrc.length > 0 && re.test(docSrc), `the runner's status writer still writes ${f}`);
 }

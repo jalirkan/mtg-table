@@ -73,6 +73,10 @@
 //     read from its status.json (statusjson.ts, schema 1): no file, or a
 //     `heartbeat` (else `updated`, else the file's mtime) older than `staleMs`
 //     (2 min; the runner writes it every 10 s tick) -- no runner -- is idle;
+//     `state` "degraded" (D521: a lab job waits on memory held outside the lab
+//     slice) is closed, running jobs or none: the lab is waiting for that very
+//     memory, and a review's JVMs would take it -- the why carries the runner's
+//     memory-wait alert;
 //     `state` "idle" or an empty `running` is idle; a `running` job with
 //     `cores: null` (one the runner shows but does not run: its width is
 //     unknown and not in coresUsed) is busy; else `host.coresTotal -
@@ -212,6 +216,14 @@ export function labGate(file, { now = Date.now(), staleMs = STALE_MS } = {}) {
   const beat = Date.parse(doc.heartbeat ?? '') || Date.parse(doc.updated ?? '') || mtimeMs;
   if (now - beat > staleMs) return { open: true, why: `lab runner not running (heartbeat ${Math.round((now - beat) / 1000)} s old)`, freeCores: null };
   const running = Array.isArray(doc.running) ? doc.running : [];
+  // D521: degraded -- a lab job waits on memory held outside the lab slice (a retry after a memory stop, or a
+  // step the host's free memory cannot hold).  Closed whether or not anything runs: with nothing running the
+  // lab is idle only because it is waiting for that memory, and a review's JVMs would take it and push the
+  // waiting job back.  The runner's own alert says which job and what it needs.
+  if (doc.state === 'degraded') {
+    const a = (Array.isArray(doc.alerts) ? doc.alerts : []).find((x) => x && x.kind === 'memory-wait' && typeof x.text === 'string');
+    return { open: false, why: `lab degraded (a job waits on memory held outside the lab slice${running.length ? '' : '; nothing runs'})${a ? `: ${a.text}` : ''}`, freeCores: 0 };
+  }
   if (doc.state === 'idle' || running.length === 0) return { open: true, why: 'lab idle', freeCores: null };
   // A job the runner shows but does not run (runner.ts: "not run by the runner") has `cores: null`
   // and adds nothing to coresUsed: its width is unknown, so the lab is taken as busy.
