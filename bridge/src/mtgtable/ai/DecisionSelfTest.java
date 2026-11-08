@@ -147,6 +147,7 @@ public final class DecisionSelfTest {
         evalLeafOnly();
         budgetAndRoundsOnly();
         knobAndCurveArms();
+        rolloutRandom();
         explore();
         randomSeat();
 
@@ -523,6 +524,149 @@ public final class DecisionSelfTest {
         check(live.budgetMs == 1500 && live.maxRounds == 12 && "default".equals(live.rollout) && !live.rankPrior
                 && !SearchConfig.LIVE_DEFAULTS.contains("rollout") && !SearchConfig.LIVE_DEFAULTS.contains("rank"),
                 "the live seat stays 1500 ms and 12 rounds, plain-Forge rollouts, candidates in order");
+    }
+
+    /**
+     * D523: the two random-rollout arms and random-v2's guardrails, without
+     * the engine.  {@code search-v2-rrandom} is search-v2 plus
+     * {@code rollout=random} (both seats in the rollout random-v2) and
+     * {@code search-v2-rrandom-self} plus {@code rollout=random-self} (the
+     * searching seat alone); each differs from search-v2 in the field
+     * {@code rollout} only, neither turns D390's outlet policy on, and the live
+     * seat stays plain-Forge rollouts.  The atlas's random seat (D508's frozen
+     * population) is not random-v2; random-v2 is the random seat plus the flag.
+     * Then each guardrail's engine-free core (R1-R7), firing where it must and
+     * quiet where it must not, with its counter.
+     */
+    private static void rolloutRandom() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig rr = SearchConfig.parse(v2Text + ",rollout=random");
+        final SearchConfig rs = SearchConfig.parse(v2Text + ",rollout=random-self");
+        check(rr.rolloutRandomUs() && rr.rolloutRandomThem() && !rr.rolloutOutletsUs() && !rr.rolloutOutletsThem(),
+                "rrandom: both rollout seats random-v2, no outlet policy");
+        check(rs.rolloutRandomUs() && !rs.rolloutRandomThem() && !rs.rolloutOutletsUs() && !rs.rolloutOutletsThem(),
+                "rrandom-self: the searching seat random-v2, the opponent Forge, no outlet policy");
+        check(!v2.rolloutRandomUs() && !v2.rolloutRandomThem() && !v2.rolloutOutletsUs()
+                && SearchConfig.parse("rollout=outlets").rolloutOutletsUs() && !SearchConfig.parse("rollout=outlets").rolloutRandomUs(),
+                "search-v2 and routlets play no random seat in their rollouts");
+        check(rr.toString().equals(v2.toString() + ",rollout=random") && rs.toString().equals(v2.toString() + ",rollout=random-self"),
+                "the texts are search-v2's plus rollout=random / random-self: " + rr + " / " + rs);
+        configOnly("rrandom", v2, rr, List.of("rollout"));
+        configOnly("rrandom-self", v2, rs, List.of("rollout"));
+        boolean refused = false;
+        try {
+            SearchConfig.parse("rollout=chaos");
+        } catch (final IllegalArgumentException e) {
+            refused = e.getMessage().contains("random-self");
+        }
+        check(refused, "an unknown rollout= is refused, naming the random values");
+        final SearchConfig live = SearchConfig.parseLive("");
+        check("default".equals(live.rollout) && !live.rolloutRandomUs() && !SearchConfig.LIVE_DEFAULTS.contains("rollout"),
+                "the live seat's rollouts stay plain Forge");
+        for (final String r : List.of("random", "random-self")) {
+            boolean liveRefused = false;
+            try {
+                SearchConfig.parseLive("rollout=" + r);
+            } catch (final IllegalArgumentException e) {
+                liveRefused = e.getMessage().contains("measurement only");
+            }
+            check(liveRefused, "parseLive refuses rollout=" + r + " (measurement only, as oracle=1)");
+        }
+
+        final ExploreMath.Config atlas = ExploreMath.Config.randomSeat();
+        final ExploreMath.Config r2 = ExploreMath.Config.randomV2();
+        check(!atlas.v2 && r2.v2 && r2.random && r2.epsilon == 1 && r2.closeCall == 0 && !r2.opening,
+                "random-v2 is the random seat plus the flag; the atlas's random seat is not random-v2");
+        check(!ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE)).v2, "a job line's random seat is never random-v2");
+        final ExploreMath m = new ExploreMath(r2, 1);
+
+        // R4: no pass in its own main 2 with nothing cast yet and a cast listed that is not an instant
+        final java.util.Map<String, Object> opts = new java.util.LinkedHashMap<>();
+        opts.put("pass", null);
+        opts.put("activate:3", null);
+        opts.put("cast:7", null);
+        final java.util.function.Predicate<String> noInstant = k -> false;
+        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), false, true, 0, noInstant, m), "R4 quiet off its own main 2");
+        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), true, false, 0, noInstant, m), "R4 quiet with a stack");
+        check(!RolloutGuards.castSomething(new java.util.LinkedHashMap<>(opts), true, true, 1, noInstant, m), "R4 quiet once a spell was cast");
+        final java.util.Map<String, Object> noCast = new java.util.LinkedHashMap<>();
+        noCast.put("pass", null);
+        noCast.put("activate:3", null);
+        check(!RolloutGuards.castSomething(noCast, true, true, 0, noInstant, m) && noCast.containsKey("pass"), "R4 quiet with no cast listed");
+        final java.util.Map<String, Object> instantOnly = new java.util.LinkedHashMap<>(opts);
+        check(!RolloutGuards.castSomething(instantOnly, true, true, 0, k -> k.equals("cast:7"), m) && instantOnly.containsKey("pass"),
+                "R4 quiet when the only cast listed is an instant");
+        final java.util.Map<String, Object> fires = new java.util.LinkedHashMap<>(opts);
+        check(RolloutGuards.castSomething(fires, true, true, 0, noInstant, m) && !fires.containsKey("pass") && fires.size() == 2
+                && m.guardrails().get("v2.castSomething") == 1, "R4 removes pass, counted");
+
+        // R3: harm the other side, help its own
+        final List<String> legal = new ArrayList<>(List.of("me", "myBear", "you", "yourBear"));
+        final java.util.function.Predicate<String> ours = t -> t.startsWith("m");
+        final List<String> harmful = new ArrayList<>(legal);
+        check(RolloutGuards.side(harmful, ours, 1, m) && harmful.equals(List.of("you", "yourBear")), "R3: a harmful part keeps the other side");
+        final List<String> helpful = new ArrayList<>(legal);
+        check(RolloutGuards.side(helpful, ours, -1, m) && helpful.equals(List.of("me", "myBear")), "R3: a helpful part keeps its own side");
+        final List<String> neutral = new ArrayList<>(legal);
+        check(!RolloutGuards.side(neutral, ours, 0, m) && neutral.size() == 4, "R3 quiet on a part neither harmful nor helpful");
+        final List<String> onlyOurs = new ArrayList<>(List.of("me", "myBear"));
+        check(!RolloutGuards.side(onlyOurs, ours, 1, m) && onlyOurs.size() == 2, "R3 quiet when no other-side target is legal");
+        check(m.guardrails().get("v2.targetSide") == 2, "R3 counted once per list it changed");
+
+        // R7: its own stack
+        check(RolloutGuards.ownStack(2, 2) && !RolloutGuards.ownStack(2, 1) && !RolloutGuards.ownStack(0, 0),
+                "R7: a non-empty stack of the seat's own items only");
+
+        // R1: lethal through no possible blocker
+        check(RolloutGuards.lethal(new int[] {3, 0, 2}, 5) && !RolloutGuards.lethal(new int[] {3, 0, 1}, 5)
+                && !RolloutGuards.lethal(new int[] {}, 0), "R1: unblockable damage against life");
+
+        // R5, a rule on the attack as a set
+        final java.util.Map<String, Object> attack = new java.util.LinkedHashMap<>();
+        attack.put("bear", "you");
+        attack.put("dragon", "you");
+        check(RolloutGuards.dropDominated(attack, a -> a.equals("bear"), 2, false, m) == 1 && attack.keySet().equals(java.util.Set.of("dragon"))
+                && m.guardrails().get("v2.dominatedAttacker") == 1, "R5 removes the dominated attacker when the blockers can meet every attacker, counted");
+        final java.util.Map<String, Object> wide = new java.util.LinkedHashMap<>();
+        wide.put("bearA", "you");
+        wide.put("bearB", "you");
+        check(RolloutGuards.dropDominated(wide, a -> true, 1, false, m) == 0 && wide.size() == 2,
+                "R5 keeps a go-wide attack: two 2/2s into one 4/4 are both kept (the attackers outnumber the blockers)");
+        check(RolloutGuards.lethalThrough(new int[] {2, 2}, 1, 2) && !RolloutGuards.lethalThrough(new int[] {2, 2}, 1, 3)
+                && !RolloutGuards.lethalThrough(new int[] {5, 1}, 1, 2) && RolloutGuards.lethalThrough(new int[] {5, 1, 1}, 1, 2),
+                "R5's lethal test: the blockers take the largest attackers, the rest must reach life");
+        final java.util.Map<String, Object> lethalSet = new java.util.LinkedHashMap<>();
+        lethalSet.put("bear", "you");
+        check(RolloutGuards.dropDominated(lethalSet, a -> true, 3, true, m) == 0 && lethalSet.size() == 1,
+                "R5 drops nothing from an attack lethal through the blockers");
+        check(m.guardrails().get("v2.dominatedAttacker") == 1, "R5's quiet cases count nothing");
+
+        // R2: the incoming case and the greedy fallback
+        check(RolloutGuards.lethalIncoming(7, 7, true) && !RolloutGuards.lethalIncoming(6, 7, true)
+                && !RolloutGuards.lethalIncoming(9, 7, false), "R2's case: unblocked damage at least life, life loseable");
+        final java.util.Map<String, Integer> dmg = new java.util.LinkedHashMap<>();
+        dmg.put("small", 1);
+        dmg.put("big", 5);
+        dmg.put("mid", 3);
+        final java.util.Map<String, List<String>> can = new java.util.LinkedHashMap<>();
+        can.put("wall", List.of("small", "big"));
+        can.put("bear", List.of("small", "mid"));
+        final java.util.Map<String, String> g = RolloutGuards.greedyBlock(can, dmg);
+        check("big".equals(g.get("wall")) && "mid".equals(g.get("bear")) && RolloutGuards.unblocked(dmg, g) == 1,
+                "R2's fallback blocks the most damage greedily: " + g);
+
+        // R6, on the assignment as a whole
+        final java.util.Map<String, String> blocks = new java.util.LinkedHashMap<>();
+        blocks.put("token", "dragon");
+        blocks.put("wall", "bear");
+        check(RolloutGuards.dropChumps(blocks, a -> false, b -> b.equals("token"), m) == 1 && blocks.keySet().equals(java.util.Set.of("wall"))
+                && m.guardrails().get("v2.chumpBlock") == 1, "R6 removes the chump block, counted");
+        final java.util.Map<String, String> gang = new java.util.LinkedHashMap<>();
+        gang.put("bearA", "giant");
+        gang.put("bearB", "giant");
+        check(RolloutGuards.dropChumps(gang, a -> a.equals("giant"), b -> b.equals("bearA"), m) == 0 && gang.size() == 2
+                && m.guardrails().get("v2.chumpBlock") == 1, "R6 keeps a double block that kills its attacker, the blocker it loses included");
     }
 
     /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */

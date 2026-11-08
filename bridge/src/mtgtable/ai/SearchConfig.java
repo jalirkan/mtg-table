@@ -84,7 +84,12 @@ import java.util.Locale;
  * <li>{@code rollout=outlets} -- inside the rollouts the searching seat plays
  *     Forge's AI with D310's sacrifice-outlet policy in front, instead of plain
  *     Forge; {@code rollout=both} gives the opponent's seat the policy too
- *     (D390).</li>
+ *     (D390);</li>
+ * <li>{@code rollout=random} -- inside the rollouts BOTH seats play the
+ *     search's random seat, random-v2 (the move atlas's random seat with D523's
+ *     rollout guardrails, {@link RolloutGuards}), the candidate still forced as
+ *     the searching seat's first answer; {@code rollout=random-self} only the
+ *     searching seat, the opponent plain Forge (D523).</li>
  * </ul>
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
@@ -230,8 +235,8 @@ public final class SearchConfig {
         if ("eval".equals(prior) && (evalModel == null || evalModel.isEmpty())) {
             throw new IllegalArgumentException("search prior=eval needs evalmodel=<model file> (D316)");
         }
-        if (!"default".equals(rollout) && !"outlets".equals(rollout) && !"both".equals(rollout)) {
-            throw new IllegalArgumentException("search rollout= is default, outlets or both: " + rollout);
+        if (!ROLLOUTS.contains(rollout)) {
+            throw new IllegalArgumentException("search rollout= is default, outlets, both, random or random-self: " + rollout);
         }
         this.budgetMs = budgetMs;
         this.maxCandidates = maxCandidates;
@@ -263,9 +268,22 @@ public final class SearchConfig {
         this.observe = false;
     }
 
+    /** The {@code rollout=} values: D390's three, and D523's two random ones. */
+    public static final java.util.List<String> ROLLOUTS = java.util.List.of("default", "outlets", "both", "random", "random-self");
+
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
     public boolean rolloutOutletsUs() {
-        return !"default".equals(rollout);
+        return "outlets".equals(rollout) || "both".equals(rollout);
+    }
+
+    /** D523: whether the searching seat inside the rollouts is the random seat, random-v2 ({@code random}, {@code random-self}). */
+    public boolean rolloutRandomUs() {
+        return "random".equals(rollout) || "random-self".equals(rollout);
+    }
+
+    /** D523: whether the opponent's seat inside the rollouts is random-v2 too ({@code random}); under {@code random-self} it is Forge. */
+    public boolean rolloutRandomThem() {
+        return "random".equals(rollout);
     }
 
     /** Whether the opponent's seat in the rollouts plays it too (D390). */
@@ -399,13 +417,19 @@ public final class SearchConfig {
      * {@link #parse} over {@link #LIVE_DEFAULTS} (D412: the live seat runs
      * {@link #LIVE_VERSION}, the anytime loop, unless the text says otherwise),
      * and the bench-only {@code oracle} is refused -- a seat that plays a
-     * person never sees their hidden cards (D312, D350).
+     * person never sees their hidden cards (D312, D350) -- and so are D523's
+     * measurement-only {@code rollout=random} and {@code random-self}.
      */
     public static SearchConfig parseLive(final String text) {
         final SearchConfig c = parse(text == null || text.isBlank() ? LIVE_DEFAULTS : LIVE_DEFAULTS + "," + text);
         if (c.oracle) {
             throw new IllegalArgumentException("search oracle=1 reads the opponent's real hidden cards: bench only "
                     + "(tools/ai-bench, the ladder), never a live seat");
+        }
+        if (c.rolloutRandomUs()) {
+            // D523: random rollouts are a measurement until a separate decision puts them in front of a person
+            throw new IllegalArgumentException("search rollout=" + c.rollout + " is measurement only: bench only "
+                    + "(tools/ai-bench, the ladder), never a live seat (D523)");
         }
         return c;
     }
