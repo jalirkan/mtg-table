@@ -598,3 +598,8 @@ split audit (pair): 271643 games; pairs per split {'train': 16926, 'val': 2167, 
   pairs per night and split: night 1: {'train': 2530, 'val': 329, 'test': 333}; night 2: {'train': 3665, 'val': 484, 'test': 493}; night 3: {'train': 4661, 'test': 621, 'val': 614}; night 4: {'train': 8683, 'test': 1059, 'val': 1097}; night 5: {'train': 11330, 'val': 1426, 'test': 1365}; pairs with games from several nights: 14390
   reference var/ml/data/nights-1-3: 119816 games, missing 0, moved 0; its 916 test pairs: 916 are DATA test pairs; DATA test pairs it trained on: 0; new games 151827, new test pairs 1186
 split audit: PASS
+==== J196 run1 started 2026-11-08T09:54:20-05:00 in unit lab-J196-run1, 5 worker(s), 6 core(s), BLAS/OpenMP threads 6
+split audit (pair): 271643 games; pairs per split {'train': 16926, 'val': 2167, 'test': 2102}; pairs / drafts / decks in two splits: 0 / 0 / 0
+  pairs per night and split: night 1: {'train': 2530, 'val': 329, 'test': 333}; night 2: {'train': 3665, 'val': 484, 'test': 493}; night 3: {'train': 4661, 'test': 621, 'val': 614}; night 4: {'train': 8683, 'test': 1059, 'val': 1097}; night 5: {'train': 11330, 'val': 1426, 'test': 1365}; pairs with games from several nights: 14390
+  reference var/ml/data/nights-1-3: 119816 games, missing 0, moved 0; its 916 test pairs: 916 are DATA test pairs; DATA test pairs it trained on: 0; new games 151827, new test pairs 1186
+split audit: PASS

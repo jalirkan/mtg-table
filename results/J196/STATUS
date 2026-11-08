@@ -1,8 +1,9 @@
 running
 runner: forgecoach-runner ac07876b
 started: 2026-11-08T09:53:55-05:00
-phase: commands 1/4
+phase: commands 2/4
 mtg-table: 310ba71
 workers: 5 (sized 5: min(cores 7, memory 12, max_workers 6, cap 5); peak 1.50 GB per worker (declared), budget 21.4 GB)
 restarted: 2026-11-08T09:53:55-05:00: retry after "memory: step run3 was killed without an exit code (oomd or the OOM killer?)"; the pilot had passed; starts again at run1: run1, run2 are done, but the job's clean: is job-wide (no clean: line before a block), so the runner cannot tell what they made; moved aside: var/ml/gates/pilot-v3, var/ml/reports/v3-audit.json, var/ml/reports/v3-audit.txt, var/ml/reports/v3-dry.json, var/ml/reports/v3.txt
+blocks_done: run1 exit 0 at 2026-11-08T09:54:33-05:00
 set_aside: 5 copies, 0.01 GB beside the job's clean: paths (never deleted: remove them by hand)
