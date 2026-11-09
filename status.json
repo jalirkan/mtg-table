@@ -1,28 +1,18 @@
 {
  "schema": 1,
- "updated": "2026-11-09T06:28:03-05:00",
- "heartbeat": "2026-11-09T06:28:03-05:00",
+ "updated": "2026-11-09T06:28:18-05:00",
+ "heartbeat": "2026-11-09T06:28:18-05:00",
  "paused": false,
- "state": "degraded",
- "alerts": [
-  {
-   "at": "2026-11-09T06:28:03-05:00",
-   "id": "J201",
-   "kind": "memory-wait",
-   "needGb": 6,
-   "availGb": 21.7,
-   "freeGb": 18.7,
-   "text": "J201 waits on memory held outside the lab slice since 2026-11-09T06:28:03-05:00 (MemAvailable 21.7 GB, need 6 GB)"
-  }
- ],
+ "state": "running",
+ "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.86,
-  "memUsedGb": 8.8,
+  "load1": 4.22,
+  "memUsedGb": 5.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4453,
-  "pressure": 5.37,
+  "swapUsedMb": 4458,
+  "pressure": 1.65,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -37,7 +27,7 @@
    "cpu": "heavy",
    "phase": "pilot 4/4",
    "started": "2026-11-09T06:26:15-05:00",
-   "elapsed": 108,
+   "elapsed": 123,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -125,7 +115,8 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": []
+   "pressureEvents": [],
+   "detail": "lab-J201-pilot4"
   }
  ],
  "queue": [],
