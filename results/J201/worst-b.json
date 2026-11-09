@@ -1,0 +1,568 @@
+{
+ "run": "20261109T144722-2928897",
+ "a": "search-v2-rrandom3-held",
+ "mode": "random3-held",
+ "games": 1200,
+ "lost": 651,
+ "won": 549,
+ "other": 0,
+ "aCfgOther": 0,
+ "meanTurnsLost": 17.47,
+ "meanTurnsWon": 17.92,
+ "longest": [
+  {
+   "batch": "b65.jsonl",
+   "line": 7,
+   "seed": 114900409710202,
+   "pair": 1,
+   "game": 3,
+   "aSeat": 1,
+   "aDeck": "pauper-900000003-B",
+   "bDeck": "pauper-900000003-A",
+   "turns": 39,
+   "reason": "AllOpponentsLost",
+   "ms": 127576,
+   "cpuMs": 137220,
+   "searched": 47,
+   "changed": 16,
+   "rrRollouts": 580,
+   "v2PerRollout": {
+    "castSomething": 0.048,
+    "chumpBlock": 0.003,
+    "dominatedAttacker": 0.041,
+    "lethalBlock": 0.002,
+    "ownStack": 2.919,
+    "targetSide": 0.65
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.01,
+    "goodBlockDead": 0.017,
+    "heldInstant": 0.579
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b29.jsonl",
+   "line": 4,
+   "seed": 114900373710094,
+   "pair": 1,
+   "game": 0,
+   "aSeat": 0,
+   "aDeck": "vintage-900000009-A",
+   "bDeck": "vintage-900000009-B",
+   "turns": 37,
+   "reason": "AllOpponentsLost",
+   "ms": 94172,
+   "cpuMs": 116150,
+   "searched": 47,
+   "changed": 23,
+   "rrRollouts": 1096,
+   "v2PerRollout": {
+    "castSomething": 0.307,
+    "dominatedAttacker": 0.001,
+    "ownStack": 3.119,
+    "targetSide": 2.991
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.016,
+    "heldInstant": 0.071
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b82.jsonl",
+   "line": 6,
+   "seed": 114900426710254,
+   "pair": 1,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "peasant-900000001-A",
+   "bDeck": "peasant-900000001-B",
+   "turns": 36,
+   "reason": "AllOpponentsLost",
+   "ms": 53891,
+   "cpuMs": 59890,
+   "searched": 33,
+   "changed": 7,
+   "rrRollouts": 498,
+   "v2PerRollout": {
+    "castSomething": 0.339,
+    "dominatedAttacker": 0.004,
+    "ownStack": 2.159,
+    "targetSide": 1.084
+   },
+   "v3PerRollout": {
+    "heldInstant": 0.992
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b91.jsonl",
+   "line": 6,
+   "seed": 114900435710281,
+   "pair": 1,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "fair-fight-900000007-A",
+   "bDeck": "fair-fight-900000007-B",
+   "turns": 35,
+   "reason": "AllOpponentsLost",
+   "ms": 80447,
+   "cpuMs": 87710,
+   "searched": 38,
+   "changed": 10,
+   "rrRollouts": 462,
+   "v2PerRollout": {
+    "castSomething": 0.297,
+    "chumpBlock": 0.074,
+    "dominatedAttacker": 0.052,
+    "ownStack": 3.26,
+    "targetSide": 0.677
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.05
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b133.jsonl",
+   "line": 3,
+   "seed": 114900477700399,
+   "pair": 0,
+   "game": 3,
+   "aSeat": 1,
+   "aDeck": "vintage-900000003-B",
+   "bDeck": "vintage-900000003-A",
+   "turns": 33,
+   "reason": "AllOpponentsLost",
+   "ms": 152746,
+   "cpuMs": 165350,
+   "searched": 50,
+   "changed": 22,
+   "rrRollouts": 516,
+   "v2PerRollout": {
+    "castSomething": 0.176,
+    "chumpBlock": 0.037,
+    "dominatedAttacker": 0.136,
+    "ownStack": 3.44,
+    "targetSide": 0.103
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.017,
+    "heldInstant": 0.052
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b129.jsonl",
+   "line": 5,
+   "seed": 114900473710395,
+   "pair": 1,
+   "game": 1,
+   "aSeat": 0,
+   "aDeck": "peasant-900000009-B",
+   "bDeck": "peasant-900000009-A",
+   "turns": 32,
+   "reason": "AllOpponentsLost",
+   "ms": 98461,
+   "cpuMs": 103630,
+   "searched": 57,
+   "changed": 15,
+   "rrRollouts": 705,
+   "v2PerRollout": {
+    "castSomething": 0.289,
+    "chumpBlock": 0.014,
+    "dominatedAttacker": 0.07,
+    "ownStack": 2.835,
+    "targetSide": 0.014
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.01
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b18.jsonl",
+   "line": 2,
+   "seed": 114900362700055,
+   "pair": 0,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "modern-era-900000003-A",
+   "bDeck": "modern-era-900000003-B",
+   "turns": 32,
+   "reason": "AllOpponentsLost",
+   "ms": 92559,
+   "cpuMs": 101690,
+   "searched": 35,
+   "changed": 5,
+   "rrRollouts": 579,
+   "v2PerRollout": {
+    "castSomething": 0.416,
+    "chumpBlock": 0.048,
+    "dominatedAttacker": 0.021,
+    "ownStack": 2.233,
+    "targetSide": 0.15
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.021
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b125.jsonl",
+   "line": 2,
+   "seed": 114900469700376,
+   "pair": 0,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "pauper-900000001-A",
+   "bDeck": "pauper-900000001-B",
+   "turns": 32,
+   "reason": "AllOpponentsLost",
+   "ms": 57036,
+   "cpuMs": 65200,
+   "searched": 35,
+   "changed": 9,
+   "rrRollouts": 619,
+   "v2PerRollout": {
+    "castSomething": 0.078,
+    "chumpBlock": 0.06,
+    "ownStack": 2.488,
+    "targetSide": 0.378
+   },
+   "v3PerRollout": {
+    "heldInstant": 0.489
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b5.jsonl",
+   "line": 4,
+   "seed": 114900349710022,
+   "pair": 1,
+   "game": 0,
+   "aSeat": 0,
+   "aDeck": "pauper-900000003-A",
+   "bDeck": "pauper-900000003-B",
+   "turns": 31,
+   "reason": "AllOpponentsLost",
+   "ms": 136457,
+   "cpuMs": 154610,
+   "searched": 53,
+   "changed": 15,
+   "rrRollouts": 607,
+   "v2PerRollout": {
+    "castSomething": 0.346,
+    "chumpBlock": 0.02,
+    "dominatedAttacker": 0.247,
+    "ownStack": 3.422,
+    "targetSide": 0.277
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.049,
+    "heldInstant": 0.038
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b61.jsonl",
+   "line": 6,
+   "seed": 114900405710191,
+   "pair": 1,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "fair-fight-900000007-A",
+   "bDeck": "fair-fight-900000007-B",
+   "turns": 31,
+   "reason": "AllOpponentsLost",
+   "ms": 82879,
+   "cpuMs": 91650,
+   "searched": 45,
+   "changed": 12,
+   "rrRollouts": 595,
+   "v2PerRollout": {
+    "castSomething": 0.195,
+    "chumpBlock": 0.007,
+    "dominatedAttacker": 0.087,
+    "ownStack": 2.225,
+    "targetSide": 1.461
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.022,
+    "heldInstant": 0.134
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  }
+ ],
+ "quickest": [
+  {
+   "batch": "b14.jsonl",
+   "line": 4,
+   "seed": 114900358710049,
+   "pair": 1,
+   "game": 0,
+   "aSeat": 0,
+   "aDeck": "vintage-900000009-A",
+   "bDeck": "vintage-900000009-B",
+   "turns": 7,
+   "reason": "AllOpponentsLost",
+   "ms": 10522,
+   "cpuMs": 14300,
+   "searched": 2,
+   "changed": 0,
+   "rrRollouts": 28,
+   "v2PerRollout": {
+    "castSomething": 0.321,
+    "ownStack": 2.714,
+    "targetSide": 0.857
+   },
+   "v3PerRollout": {},
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b58.jsonl",
+   "line": 2,
+   "seed": 114900402700175,
+   "pair": 0,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "vintage-900000003-A",
+   "bDeck": "vintage-900000003-B",
+   "turns": 7,
+   "reason": "AllOpponentsLost",
+   "ms": 13732,
+   "cpuMs": 17380,
+   "searched": 11,
+   "changed": 4,
+   "rrRollouts": 249,
+   "v2PerRollout": {
+    "castSomething": 0.177,
+    "dominatedAttacker": 0.129,
+    "ownStack": 1.361,
+    "targetSide": 0.197
+   },
+   "v3PerRollout": {
+    "goodBlock": 0.004
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b14.jsonl",
+   "line": 3,
+   "seed": 114900358700042,
+   "pair": 0,
+   "game": 3,
+   "aSeat": 1,
+   "aDeck": "vintage-900000007-B",
+   "bDeck": "vintage-900000007-A",
+   "turns": 7,
+   "reason": "AllOpponentsLost",
+   "ms": 15220,
+   "cpuMs": 18680,
+   "searched": 5,
+   "changed": 2,
+   "rrRollouts": 133,
+   "v2PerRollout": {
+    "castSomething": 0.128,
+    "ownStack": 2.233,
+    "targetSide": 4.293
+   },
+   "v3PerRollout": {
+    "heldInstant": 2.812
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b87.jsonl",
+   "line": 6,
+   "seed": 114900431710269,
+   "pair": 1,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "vintage-900000001-A",
+   "bDeck": "vintage-900000001-B",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 5380,
+   "cpuMs": 6890,
+   "searched": 1,
+   "changed": 0,
+   "rrRollouts": 24,
+   "v2PerRollout": {
+    "castSomething": 0.5,
+    "ownStack": 1.417
+   },
+   "v3PerRollout": {},
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b118.jsonl",
+   "line": 5,
+   "seed": 114900462710362,
+   "pair": 1,
+   "game": 1,
+   "aSeat": 0,
+   "aDeck": "vintage-900000005-B",
+   "bDeck": "vintage-900000005-A",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 10835,
+   "cpuMs": 13900,
+   "searched": 6,
+   "changed": 0,
+   "rrRollouts": 114,
+   "v2PerRollout": {
+    "castSomething": 0.421,
+    "ownStack": 0.965,
+    "targetSide": 0.114
+   },
+   "v3PerRollout": {
+    "heldInstant": 0.07
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b19.jsonl",
+   "line": 0,
+   "seed": 114900363700057,
+   "pair": 0,
+   "game": 0,
+   "aSeat": 0,
+   "aDeck": "modern-era-900000007-A",
+   "bDeck": "modern-era-900000007-B",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 13205,
+   "cpuMs": 41900,
+   "searched": 2,
+   "changed": 1,
+   "rrRollouts": 49,
+   "v2PerRollout": {
+    "castSomething": 0.02,
+    "ownStack": 1.429
+   },
+   "v3PerRollout": {},
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b83.jsonl",
+   "line": 3,
+   "seed": 114900427700249,
+   "pair": 0,
+   "game": 3,
+   "aSeat": 1,
+   "aDeck": "peasant-900000003-B",
+   "bDeck": "peasant-900000003-A",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 13959,
+   "cpuMs": 17000,
+   "searched": 10,
+   "changed": 0,
+   "rrRollouts": 154,
+   "v2PerRollout": {
+    "castSomething": 0.299,
+    "chumpBlock": 0.065,
+    "ownStack": 1.636,
+    "targetSide": 0.169
+   },
+   "v3PerRollout": {
+    "heldInstant": 0.097
+   },
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b59.jsonl",
+   "line": 2,
+   "seed": 114900403700178,
+   "pair": 0,
+   "game": 2,
+   "aSeat": 1,
+   "aDeck": "vintage-900000007-A",
+   "bDeck": "vintage-900000007-B",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 14444,
+   "cpuMs": 18450,
+   "searched": 10,
+   "changed": 2,
+   "rrRollouts": 199,
+   "v2PerRollout": {
+    "castSomething": 0.141,
+    "dominatedAttacker": 0.196,
+    "ownStack": 2.251,
+    "targetSide": 0.136
+   },
+   "v3PerRollout": {},
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b28.jsonl",
+   "line": 0,
+   "seed": 114900372700084,
+   "pair": 0,
+   "game": 0,
+   "aSeat": 0,
+   "aDeck": "vintage-900000003-A",
+   "bDeck": "vintage-900000003-B",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 15190,
+   "cpuMs": 45480,
+   "searched": 5,
+   "changed": 1,
+   "rrRollouts": 82,
+   "v2PerRollout": {
+    "castSomething": 0.171,
+    "chumpBlock": 0.073,
+    "ownStack": 1.976
+   },
+   "v3PerRollout": {},
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  },
+  {
+   "batch": "b53.jsonl",
+   "line": 7,
+   "seed": 114900397710166,
+   "pair": 1,
+   "game": 3,
+   "aSeat": 1,
+   "aDeck": "peasant-900000005-B",
+   "bDeck": "peasant-900000005-A",
+   "turns": 9,
+   "reason": "AllOpponentsLost",
+   "ms": 16098,
+   "cpuMs": 18120,
+   "searched": 13,
+   "changed": 1,
+   "rrRollouts": 312,
+   "v2PerRollout": {
+    "castSomething": 0.295,
+    "ownStack": 1.987
+   },
+   "v3PerRollout": {},
+   "rrFailures": 0,
+   "rolloutErrors": 0
+  }
+ ]
+}
