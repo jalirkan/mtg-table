@@ -2,17 +2,19 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-08T22:59:38-05:00
+- time: 2026-11-08T22:59:53-05:00
 - runner: 57320655, up since 2026-11-08T09:54:53-05:00
 - state: running
-- running: J198 commands 2/2, 4800/4800 games, 760.7/h, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 6.24; memory 6.9/30.5 GB, swap 4545 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J199, J200
+- running: J199 prepare, 0/2400 games, 1 worker(s), 7 core(s)
+- cores: 7 of 14 in use (the running jobs' widths; 16 threads)
+- load: 5.3; memory 7/30.5 GB, swap 4544 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J200
 - waiting: nothing
-- last finished: J196 done at 2026-11-08T14:50:00-05:00: ds.rows 43926758 · ds.games 271643 · audit.pass 1 · dry.peakGB 14.681 · cmp.better 1 · cmp.subsets_reference_pairs 873 · cmpn.better 1 · cmp1.better 1
+- last finished: J198 done at 2026-11-08T22:59:51-05:00: cm.played 4800 · cm.score 0.491 · cm.lo 0.483 · cm.hi 0.498 · cm.elo -6.5 · cm.eloLo -11.7 · cm.eloHi -1.3 · cm.aSearch.msPerDecision 551.793 · cm.bSearch.msPerDecision 955.459 · v.costRatio 0.578 · cm.aSearch.budgetRate 0.022 · cm.bSearch.budgetRate 0.006 · ro.aRolloutsPerDecision 8.91 · ro.bRolloutsPerDecision 14.82 · ro.ratio 0.601 · v.holds 0 · v.fails 0 · v.inconclusive4800 1 · v.indistinguishable 0 · v.liveSeatCandidate 0 · bs.min 114900150 · bs.max 114900749 · bs.overlap 0
 
 ## Messages
+
+- FOLLOW-UP READY [J198@2026-11-08T22:59:51-05:00] (the runner, for the cloud session): J198 is done; write and post the template morning-read. It decides: whether the live seat could think half as long (0.75 s and 6 rounds a decision instead of 1.5 s and 12) at a cost of at most 10 Elo, measured with 95% confidence at four times J195's (c) games. FASTER SEAT HOLDS makes search-v2-ms750-r6's settings a candidate for the live seat, for the owner to decide under a separate decision (D52x) with its own evidence and, under D509, a seat-queue row, never this job's. FASTER SEAT FAILS says it is clearly more than 10 Elo weaker, and the live seat stays. INCONCLUSIVE AT 4,800 leaves the question as information and the live seat stays. Whatever the reading, this job never changes the live seat: SearchConfig.LIVE_DEFAULTS stays `anytime=1` over the parse defaults of 1,500 ms and 12 rounds (D517 Decision 4). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J196@2026-11-08T14:50:00-05:00] (the runner, for the cloud session): J196 is done; write and post the template register-v3-strip. It decides: whether evaluator v3 becomes the coach's win-chance model (D361). The helper's model is resolved by D518: --eval-model wins, then config.json coach.evalModel (null today), then the night-1 ensemble (v1 and four seeds, D368). BETTER sends v3 to a follow-up that registers it for the strip only, by setting coach.evalModel under a decision of its own; this job only produces and compares. "Not shown better" kills v3. It never decides the search leaf: J194 and the review's §3b closed that, so nothing here touches tools/ai-ladder/players.json, the Java leaf or D354's gates. Ledger: LEDGER.md. Delete this line once posted.
 
