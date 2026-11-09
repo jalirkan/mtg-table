@@ -68,12 +68,13 @@ public final class ExploreMath {
         public final boolean v2;
         /**
          * D525: random-v3's two rollout guardrails ({@link RolloutGuards}),
-         * each its own flag so each arm measures one rule against its own J199
-         * baseline: {@code goodBlock} is R8 ({@link #randomV3Block},
-         * {@code rollout=random3}), {@code heldInstant} R9
-         * ({@link #randomV3Instant}, {@code random3-self}); counted under their
-         * {@code v3.} names.  Only a search rollout's seat; never the atlas's,
-         * and never without {@link #v2}.
+         * each its own flag so each arm adds one rule to the arm before it:
+         * {@code goodBlock} is R8 ({@link #randomV3Block},
+         * {@code rollout=random3}, against random-v2), {@code heldInstant} R9
+         * on top of it ({@link #randomV3BlockHeld}, {@code random3-held},
+         * against random3); counted under their {@code v3.} names.  Only a
+         * search rollout's seat; never the atlas's, and never without
+         * {@link #v2}.
          */
         public final boolean goodBlock;
         public final boolean heldInstant;
@@ -122,9 +123,9 @@ public final class ExploreMath {
             return new Config(1, 0, false, true, true, true, false);
         }
 
-        /** D525: random-v3's instant arm ({@code rollout=random3-self}): {@link #randomV2} plus R9 alone, the held instant. */
-        public static Config randomV3Instant() {
-            return new Config(1, 0, false, true, true, false, true);
+        /** D525: random-v3's held arm ({@code rollout=random3-held}): {@link #randomV3Block} plus R9, the held instant. */
+        public static Config randomV3BlockHeld() {
+            return new Config(1, 0, false, true, true, true, true);
         }
 
         /** From a job line's {@code playExplore} object (Jetty's parser: numbers are Long or Double); null in, null out. */

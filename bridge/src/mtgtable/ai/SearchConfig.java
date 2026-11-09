@@ -90,10 +90,10 @@ import java.util.Locale;
  *     rollout guardrails, {@link RolloutGuards}), the candidate still forced as
  *     the searching seat's first answer; {@code rollout=random-self} only the
  *     searching seat, the opponent plain Forge (D523);</li>
- * <li>{@code rollout=random3} and {@code random3-self} -- the same two seatings
- *     with random-v3 instead, one new rule each (D525): {@code random3} is
- *     random-v2 plus R8, the good block, on both seats; {@code random3-self}
- *     random-v2 plus R9, the held instant, on the searching seat.</li>
+ * <li>{@code rollout=random3} and {@code random3-held} -- both seats random-v3,
+ *     a chain of single additions (D525): {@code random3} is random-v2 plus R8,
+ *     the good block; {@code random3-held} is {@code random3} plus R9, the held
+ *     instant.</li>
  * </ul>
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
@@ -241,7 +241,7 @@ public final class SearchConfig {
         }
         if (!ROLLOUTS.contains(rollout)) {
             throw new IllegalArgumentException("search rollout= is default, outlets, both, random, random-self, random3 or "
-                    + "random3-self: " + rollout);
+                    + "random3-held: " + rollout);
         }
         this.budgetMs = budgetMs;
         this.maxCandidates = maxCandidates;
@@ -275,7 +275,7 @@ public final class SearchConfig {
 
     /** The {@code rollout=} values: D390's three, D523's two random ones and D525's two random-v3 ones. */
     public static final java.util.List<String> ROLLOUTS = java.util.List.of("default", "outlets", "both", "random", "random-self",
-            "random3", "random3-self");
+            "random3", "random3-held");
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
     public boolean rolloutOutletsUs() {
@@ -284,32 +284,32 @@ public final class SearchConfig {
 
     /**
      * D523: whether the searching seat inside the rollouts is the random seat ({@code random}, {@code random-self}:
-     * random-v2; D525's {@code random3}, {@code random3-self}: random-v3).
+     * random-v2; D525's {@code random3}, {@code random3-held}: random-v3).
      */
     public boolean rolloutRandomUs() {
         return "random".equals(rollout) || "random-self".equals(rollout) || rolloutRandomV3();
     }
 
-    /** D523: whether the opponent's seat inside the rollouts is the random seat too ({@code random}, {@code random3}); under the {@code -self} values it is Forge. */
+    /** D523: whether the opponent's seat inside the rollouts is the random seat too ({@code random}, D525's two); under {@code random-self} it is Forge. */
     public boolean rolloutRandomThem() {
-        return "random".equals(rollout) || "random3".equals(rollout);
+        return "random".equals(rollout) || rolloutRandomV3();
     }
 
-    /** D525: whether the rollouts' random seats are random-v3 ({@code random3}, {@code random3-self}) rather than random-v2. */
+    /** D525: whether the rollouts' random seats are random-v3 ({@code random3}, {@code random3-held}, both seats) rather than random-v2. */
     public boolean rolloutRandomV3() {
-        return "random3".equals(rollout) || "random3-self".equals(rollout);
+        return "random3".equals(rollout) || "random3-held".equals(rollout);
     }
 
     /**
-     * The rollouts' random seat's settings: under D525's values random-v3 with exactly one new rule --
-     * {@code random3} R8 ({@link ExploreMath.Config#randomV3Block}), {@code random3-self} R9
-     * ({@link ExploreMath.Config#randomV3Instant}) -- else random-v2 (D523).
+     * The rollouts' random seat's settings: under D525's values random-v3, each value one rule more than the
+     * one before -- {@code random3} R8 ({@link ExploreMath.Config#randomV3Block}), {@code random3-held} R8 and R9
+     * ({@link ExploreMath.Config#randomV3BlockHeld}) -- else random-v2 (D523).
      */
     public ExploreMath.Config rolloutRandomSeat() {
         if ("random3".equals(rollout)) {
             return ExploreMath.Config.randomV3Block();
         }
-        return "random3-self".equals(rollout) ? ExploreMath.Config.randomV3Instant() : ExploreMath.Config.randomV2();
+        return "random3-held".equals(rollout) ? ExploreMath.Config.randomV3BlockHeld() : ExploreMath.Config.randomV2();
     }
 
     /** Whether the opponent's seat in the rollouts plays it too (D390). */
@@ -445,7 +445,7 @@ public final class SearchConfig {
      * and the bench-only {@code oracle} is refused -- a seat that plays a
      * person never sees their hidden cards (D312, D350) -- and so are D523's
      * measurement-only {@code rollout=random} and {@code random-self}, and
-     * D525's {@code random3} and {@code random3-self}.
+     * D525's {@code random3} and {@code random3-held}.
      */
     public static SearchConfig parseLive(final String text) {
         final SearchConfig c = parse(text == null || text.isBlank() ? LIVE_DEFAULTS : LIVE_DEFAULTS + "," + text);

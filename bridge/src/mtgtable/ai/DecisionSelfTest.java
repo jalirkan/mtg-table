@@ -673,11 +673,11 @@ public final class DecisionSelfTest {
     /**
      * D525: the two random-v3 arms and R8/R9, without the engine.
      * {@code search-v2-rrandom3} is search-v2 plus {@code rollout=random3}
-     * (both rollout seats random-v3), {@code search-v2-rrandom3-self} plus
-     * {@code rollout=random3-self} (the searching seat alone); each differs
-     * from search-v2 in {@code rollout} only, and the live seat refuses both.
-     * random-v3 is random-v2 plus the flag; random-v2 and the atlas's seat are
-     * not random-v3.  Then R8's and R9's engine-free cores, firing where they
+     * (both rollout seats random-v2 plus R8), {@code search-v2-rrandom3-held}
+     * plus {@code rollout=random3-held} (both seats random-v2 plus R8 and R9);
+     * each differs from search-v2 in {@code rollout} only, and the live seat
+     * refuses both.  random-v2, D523's values and the atlas's seat carry
+     * neither rule.  Then R8's and R9's engine-free cores, firing where they
      * must and quiet where they must not, with their counters.
      */
     private static void rolloutRandomV3() {
@@ -685,32 +685,32 @@ public final class DecisionSelfTest {
         final SearchConfig v2 = SearchConfig.parse(v2Text);
         final SearchConfig rr = SearchConfig.parse(v2Text + ",rollout=random");
         final SearchConfig r3 = SearchConfig.parse(v2Text + ",rollout=random3");
-        final SearchConfig r3s = SearchConfig.parse(v2Text + ",rollout=random3-self");
-        check(r3.rolloutRandomUs() && r3.rolloutRandomThem() && r3.rolloutRandomV3() && !r3.rolloutOutletsUs()
-                && !r3.rolloutOutletsThem(), "rrandom3: both rollout seats random-v3 (R8), no outlet policy");
-        check(r3s.rolloutRandomUs() && !r3s.rolloutRandomThem() && r3s.rolloutRandomV3() && !r3s.rolloutOutletsUs()
-                && !r3s.rolloutOutletsThem(), "rrandom3-self: the searching seat random-v3 (R9), the opponent Forge, no outlet policy");
+        final SearchConfig r3h = SearchConfig.parse(v2Text + ",rollout=random3-held");
+        for (final SearchConfig c : List.of(r3, r3h)) {
+            check(c.rolloutRandomUs() && c.rolloutRandomThem() && c.rolloutRandomV3() && !c.rolloutOutletsUs()
+                    && !c.rolloutOutletsThem(), c.rollout + ": both rollout seats random-v3, no outlet policy");
+        }
         final ExploreMath.Config s3 = r3.rolloutRandomSeat();
-        final ExploreMath.Config s3s = r3s.rolloutRandomSeat();
-        check(s3.v2 && s3.goodBlock && !s3.heldInstant, "random3 seats random-v2 plus R8 alone: R8 fires there, R9 is quiet");
-        check(s3s.v2 && s3s.heldInstant && !s3s.goodBlock, "random3-self seats random-v2 plus R9 alone: R9 fires there, R8 is quiet");
+        final ExploreMath.Config s3h = r3h.rolloutRandomSeat();
+        check(s3.v2 && s3.goodBlock && !s3.heldInstant, "random3 seats random-v2 plus R8 alone: R8 on, R9 quiet");
+        check(s3h.v2 && s3h.goodBlock && s3h.heldInstant, "random3-held seats random-v2 plus R8 and R9: both on");
         final ExploreMath.Config srr = rr.rolloutRandomSeat();
         final ExploreMath.Config srs = SearchConfig.parse(v2Text + ",rollout=random-self").rolloutRandomSeat();
         check(srr.v2 && srs.v2 && !srr.goodBlock && !srr.heldInstant && !srs.goodBlock && !srs.heldInstant
                 && !rr.rolloutRandomV3() && !SearchConfig.parse(v2Text + ",rollout=random-self").rolloutRandomV3()
                 && !v2.rolloutRandomV3(), "D523's random and random-self stay random-v2, neither R8 nor R9");
-        check(r3.toString().equals(v2.toString() + ",rollout=random3") && r3s.toString().equals(v2.toString() + ",rollout=random3-self"),
-                "the texts are search-v2's plus rollout=random3 / random3-self: " + r3 + " / " + r3s);
+        check(r3.toString().equals(v2.toString() + ",rollout=random3") && r3h.toString().equals(v2.toString() + ",rollout=random3-held"),
+                "the texts are search-v2's plus rollout=random3 / random3-held: " + r3 + " / " + r3h);
         configOnly("rrandom3", v2, r3, List.of("rollout"));
-        configOnly("rrandom3-self", v2, r3s, List.of("rollout"));
+        configOnly("rrandom3-held", v2, r3h, List.of("rollout"));
         boolean refused = false;
         try {
-            SearchConfig.parse("rollout=random4");
+            SearchConfig.parse("rollout=random3-self");
         } catch (final IllegalArgumentException e) {
-            refused = e.getMessage().contains("random3-self");
+            refused = e.getMessage().contains("random3-held");
         }
-        check(refused, "an unknown rollout= is refused, naming the random3 values");
-        for (final String r : List.of("random3", "random3-self")) {
+        check(refused, "random3-self (dropped, D525) is refused as an unknown rollout=, naming the random3 values");
+        for (final String r : List.of("random3", "random3-held")) {
             boolean liveRefused = false;
             try {
                 SearchConfig.parseLive("rollout=" + r);
@@ -721,9 +721,9 @@ public final class DecisionSelfTest {
         }
 
         final ExploreMath.Config c3 = ExploreMath.Config.randomV3Block();
-        final ExploreMath.Config c3i = ExploreMath.Config.randomV3Instant();
-        check(c3.random && c3.epsilon == 1 && c3.closeCall == 0 && !c3.opening && c3i.random && c3i.epsilon == 1 && !c3i.opening,
-                "random-v3's two seats are random-v2 plus one flag each");
+        final ExploreMath.Config c3h = ExploreMath.Config.randomV3BlockHeld();
+        check(c3.random && c3.epsilon == 1 && c3.closeCall == 0 && !c3.opening && c3h.random && c3h.epsilon == 1 && !c3h.opening,
+                "random-v3's two seats are the random seat's settings");
         final ExploreMath.Config job = ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE));
         check(!ExploreMath.Config.randomV2().goodBlock && !ExploreMath.Config.randomV2().heldInstant
                 && !ExploreMath.Config.randomSeat().goodBlock && !ExploreMath.Config.randomSeat().heldInstant

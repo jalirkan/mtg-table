@@ -71,9 +71,10 @@ import forge.game.spellability.SpellAbility;
  *       seat's own, it passes: it does not answer itself.</li>
  * </ul>
  *
- * <p>D525's {@code random-v3} adds two, one to each arm so each is measured
- * alone ({@link ExploreMath.Config#randomV3Block} R8 under {@code random3},
- * {@link ExploreMath.Config#randomV3Instant} R9 under {@code random3-self}),
+ * <p>D525's {@code random-v3} adds two, one at a time so each is measured
+ * against the arm before it ({@link ExploreMath.Config#randomV3Block} R8 under
+ * {@code random3}, {@link ExploreMath.Config#randomV3BlockHeld} R8 and R9 under
+ * {@code random3-held}),
  * counted under their {@code v3.} names (J199's diagnosis: a random defender
  * that rarely takes the block that kills the attacker makes attacks look safe):
  *

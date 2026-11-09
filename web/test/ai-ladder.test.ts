@@ -855,13 +855,13 @@ test('D523: search-v2-rrandom and -rrandom-self are search-v2 (search-v1-anytime
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
-test('D525: search-v2-rrandom3 and -rrandom3-self are search-v2 (search-v1-anytime) plus rollout=random3 / random3-self', () => {
+test('D525: search-v2-rrandom3 and -rrandom3-held are search-v2 (search-v1-anytime) plus rollout=random3 / random3-held', () => {
   const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
   const reg = players(raw, REPO);
   const by = new Map(reg.map((x) => [x.name, x]));
   const v2 = by.get('search-v1-anytime')!;
   const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
-  for (const [name, rollout, hash] of [['search-v2-rrandom3', 'random3', '8d1623965986'], ['search-v2-rrandom3-self', 'random3-self', '0403f4770b26']] as const) {
+  for (const [name, rollout, hash] of [['search-v2-rrandom3', 'random3', '8d1623965986'], ['search-v2-rrandom3-held', 'random3-held', 'a484402b1185']] as const) {
     const p = by.get(name);
     assert.ok(p?.cfg, `${name} is registered and playable`);
     const pr = raw.players.find((y) => y.name === name)!;
@@ -876,6 +876,7 @@ test('D525: search-v2-rrandom3 and -rrandom3-self are search-v2 (search-v1-anyti
   }
   assert.equal(by.get('search-v2-rrandom')!.hash, 'fb8ae32c014d', "D523's rrandom arm keeps its hash");
   assert.equal(by.get('search-v2-rrandom-self')!.hash, 'd3aa28be73b2', "D523's rrandom-self arm keeps its hash");
+  assert.ok(!by.has('search-v2-rrandom3-self'), "D525 dropped the -self arm: R9 hardly acts there, and nothing new does");
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
