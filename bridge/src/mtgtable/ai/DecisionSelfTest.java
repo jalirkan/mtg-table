@@ -687,12 +687,18 @@ public final class DecisionSelfTest {
         final SearchConfig r3 = SearchConfig.parse(v2Text + ",rollout=random3");
         final SearchConfig r3s = SearchConfig.parse(v2Text + ",rollout=random3-self");
         check(r3.rolloutRandomUs() && r3.rolloutRandomThem() && r3.rolloutRandomV3() && !r3.rolloutOutletsUs()
-                && !r3.rolloutOutletsThem(), "rrandom3: both rollout seats random-v3, no outlet policy");
+                && !r3.rolloutOutletsThem(), "rrandom3: both rollout seats random-v3 (R8), no outlet policy");
         check(r3s.rolloutRandomUs() && !r3s.rolloutRandomThem() && r3s.rolloutRandomV3() && !r3s.rolloutOutletsUs()
-                && !r3s.rolloutOutletsThem(), "rrandom3-self: the searching seat random-v3, the opponent Forge, no outlet policy");
-        check(r3.rolloutRandomSeat().v3 && r3s.rolloutRandomSeat().v3 && !rr.rolloutRandomSeat().v3 && rr.rolloutRandomSeat().v2
+                && !r3s.rolloutOutletsThem(), "rrandom3-self: the searching seat random-v3 (R9), the opponent Forge, no outlet policy");
+        final ExploreMath.Config s3 = r3.rolloutRandomSeat();
+        final ExploreMath.Config s3s = r3s.rolloutRandomSeat();
+        check(s3.v2 && s3.goodBlock && !s3.heldInstant, "random3 seats random-v2 plus R8 alone: R8 fires there, R9 is quiet");
+        check(s3s.v2 && s3s.heldInstant && !s3s.goodBlock, "random3-self seats random-v2 plus R9 alone: R9 fires there, R8 is quiet");
+        final ExploreMath.Config srr = rr.rolloutRandomSeat();
+        final ExploreMath.Config srs = SearchConfig.parse(v2Text + ",rollout=random-self").rolloutRandomSeat();
+        check(srr.v2 && srs.v2 && !srr.goodBlock && !srr.heldInstant && !srs.goodBlock && !srs.heldInstant
                 && !rr.rolloutRandomV3() && !SearchConfig.parse(v2Text + ",rollout=random-self").rolloutRandomV3()
-                && !v2.rolloutRandomV3(), "random3 seats random-v3; D523's random and random-self stay random-v2");
+                && !v2.rolloutRandomV3(), "D523's random and random-self stay random-v2, neither R8 nor R9");
         check(r3.toString().equals(v2.toString() + ",rollout=random3") && r3s.toString().equals(v2.toString() + ",rollout=random3-self"),
                 "the texts are search-v2's plus rollout=random3 / random3-self: " + r3 + " / " + r3s);
         configOnly("rrandom3", v2, r3, List.of("rollout"));
@@ -714,12 +720,15 @@ public final class DecisionSelfTest {
             check(liveRefused, "parseLive refuses rollout=" + r + " (measurement only, as D523's)");
         }
 
-        final ExploreMath.Config c3 = ExploreMath.Config.randomV3();
-        check(c3.v3 && c3.v2 && c3.random && c3.epsilon == 1 && c3.closeCall == 0 && !c3.opening,
-                "random-v3 is random-v2 plus the flag");
-        check(!ExploreMath.Config.randomV2().v3 && !ExploreMath.Config.randomSeat().v3
-                && !ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE)).v3,
-                "random-v2, the atlas's random seat and a job line's random seat are not random-v3 (R8 and R9 quiet there)");
+        final ExploreMath.Config c3 = ExploreMath.Config.randomV3Block();
+        final ExploreMath.Config c3i = ExploreMath.Config.randomV3Instant();
+        check(c3.random && c3.epsilon == 1 && c3.closeCall == 0 && !c3.opening && c3i.random && c3i.epsilon == 1 && !c3i.opening,
+                "random-v3's two seats are random-v2 plus one flag each");
+        final ExploreMath.Config job = ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE));
+        check(!ExploreMath.Config.randomV2().goodBlock && !ExploreMath.Config.randomV2().heldInstant
+                && !ExploreMath.Config.randomSeat().goodBlock && !ExploreMath.Config.randomSeat().heldInstant
+                && !job.goodBlock && !job.heldInstant,
+                "random-v2, the atlas's random seat and a job line's random seat carry neither R8 nor R9 (both quiet there)");
         final ExploreMath m = new ExploreMath(c3, 1);
 
         // R8: an attacker a blocker can block, destroy and survive gets that block

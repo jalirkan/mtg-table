@@ -279,7 +279,7 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
      * {@code random-v2} ({@link ExploreMath.Config#randomV2}): the move atlas's
      * random seat (D451's guardrails G1-G6 and D485-D488) plus the rollout
      * guardrails R1-R7 ({@link RolloutGuards}); under D525's {@code random3}
-     * values random-v3, R8 and R9 too.  The searching seat's is built
+     * values random-v3, R8 ({@code random3}) or R9 ({@code random3-self}) too.  The searching seat's is built
      * with its candidate forced first, as above ({@code rollout=random} and
      * {@code random-self}); the opponent's under {@code rollout=random} is the
      * same class with nothing forced.

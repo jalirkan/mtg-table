@@ -91,8 +91,9 @@ import java.util.Locale;
  *     the searching seat's first answer; {@code rollout=random-self} only the
  *     searching seat, the opponent plain Forge (D523);</li>
  * <li>{@code rollout=random3} and {@code random3-self} -- the same two seatings
- *     with random-v3 instead (D525: random-v2 plus R8, the good block, and R9,
- *     the held instant).</li>
+ *     with random-v3 instead, one new rule each (D525): {@code random3} is
+ *     random-v2 plus R8, the good block, on both seats; {@code random3-self}
+ *     random-v2 plus R9, the held instant, on the searching seat.</li>
  * </ul>
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
@@ -299,9 +300,16 @@ public final class SearchConfig {
         return "random3".equals(rollout) || "random3-self".equals(rollout);
     }
 
-    /** The rollouts' random seat's settings: random-v3 under D525's values, else random-v2 (D523). */
+    /**
+     * The rollouts' random seat's settings: under D525's values random-v3 with exactly one new rule --
+     * {@code random3} R8 ({@link ExploreMath.Config#randomV3Block}), {@code random3-self} R9
+     * ({@link ExploreMath.Config#randomV3Instant}) -- else random-v2 (D523).
+     */
     public ExploreMath.Config rolloutRandomSeat() {
-        return rolloutRandomV3() ? ExploreMath.Config.randomV3() : ExploreMath.Config.randomV2();
+        if ("random3".equals(rollout)) {
+            return ExploreMath.Config.randomV3Block();
+        }
+        return "random3-self".equals(rollout) ? ExploreMath.Config.randomV3Instant() : ExploreMath.Config.randomV2();
     }
 
     /** Whether the opponent's seat in the rollouts plays it too (D390). */

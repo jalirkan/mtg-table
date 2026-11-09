@@ -486,7 +486,7 @@ public final class Explorer {
             if (math.config().v2) {
                 RolloutGuards.castSomething(ai, opts, math);   // D523 R4: no pass in its own main 2 with nothing cast yet
             }
-            if (math.config().v3) {
+            if (math.config().heldInstant) {
                 RolloutGuards.holdInstants(ai, opts, math);    // D525 R9: harm on their turn only after blockers or at the end step
             }
             final List<String> keys = new ArrayList<>(opts.keySet());
@@ -1918,7 +1918,7 @@ public final class Explorer {
         // blocks declared -- and the attackers by their damage, largest first
         final Map<Card, List<Card>> good = new LinkedHashMap<>();
         final List<Card> byDamage = new ArrayList<>();
-        if (math.config().v3) {
+        if (math.config().goodBlock) {
             final Map<Card, Integer> at = new LinkedHashMap<>();
             for (final Card a : combat.getAttackers()) {
                 at.put(a, Math.max(0, ComputerUtilCombat.damageIfUnblocked(a, ai, combat, false)));
