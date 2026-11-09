@@ -1,15 +1,15 @@
 {
  "schema": 1,
- "updated": "2026-11-08T23:01:11-05:00",
- "heartbeat": "2026-11-08T23:01:11-05:00",
+ "updated": "2026-11-08T23:01:25-05:00",
+ "heartbeat": "2026-11-08T23:01:25-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.55,
-  "memUsedGb": 7.6,
+  "load1": 4.16,
+  "memUsedGb": 7.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 4509,
   "pressure": 0,
@@ -25,9 +25,9 @@
    "id": "J199",
    "title": "Random rollouts: two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom, search-v2 whose rollouts play both seats with D523's guarded random seat random-v2 (rollout=random), and (b) search-v2-rrandom-self, the searching seat random-v2 and the opponent Forge (rollout=random-self), each read once under D523's pre-registered table (SHOWN, INCONCLUSIVE or NOT SHOWN indistinguishable: a 4,800-game confirmation before Forge leaves the loop; NOT SHOWN worse or losing badly: the diagnosis and the iteration loop's random-v3), alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 2/4",
+   "phase": "pilot 3/4",
    "started": "2026-11-08T22:59:52-05:00",
-   "elapsed": 79,
+   "elapsed": 93,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -112,7 +112,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J199-pilot2"
+   "detail": "lab-J199-pilot3"
   }
  ],
  "queue": [
