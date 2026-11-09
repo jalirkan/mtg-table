@@ -149,6 +149,7 @@ public final class DecisionSelfTest {
         knobAndCurveArms();
         rolloutRandom();
         rolloutRandomV3();
+        rolloutRandomV4();
         explore();
         randomSeat();
 
@@ -815,6 +816,117 @@ public final class DecisionSelfTest {
                 && !RolloutGuards.instantWindow("UPKEEP", true),
                 "R9's window: combat after blockers or the end step, the stack empty -- never in answer to a cast");
         check(!RolloutGuards.harmful(null) && !RolloutGuards.harmful(List.of()), "R9: pass is never harmful");
+    }
+
+    /** D527: random-v4, R8 made lethal-aware under {@code rollout=random4}. */
+    private static void rolloutRandomV4() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig r4 = SearchConfig.parse(v2Text + ",rollout=random4");
+        check(r4.rolloutRandomUs() && r4.rolloutRandomThem() && r4.rolloutRandomV4() && !r4.rolloutRandomV3()
+                && !r4.rolloutOutletsUs() && !r4.rolloutOutletsThem(), "random4: both rollout seats random-v4, no outlet policy");
+        final ExploreMath.Config s4 = r4.rolloutRandomSeat();
+        check(s4.v2 && s4.goodBlock && s4.lethalGood && !s4.heldInstant && s4.random && s4.epsilon == 1 && !s4.opening,
+                "random4 seats random-v2 plus R8 made lethal-aware, no R9");
+        boolean quietElsewhere = !v2.rolloutRandomV4();
+        for (final String r : List.of("random", "random-self", "random3", "random3-held")) {
+            final SearchConfig c = SearchConfig.parse(v2Text + ",rollout=" + r);
+            quietElsewhere &= !c.rolloutRandomV4() && !c.rolloutRandomSeat().lethalGood;
+        }
+        check(quietElsewhere && SearchConfig.parse(v2Text + ",rollout=random3").rolloutRandomSeat().goodBlock
+                && !SearchConfig.parse(v2Text + ",rollout=random").rolloutRandomSeat().goodBlock,
+                "D523's and D525's values seat what they did: random3 R8 as D525 built it, random no R8, none lethal-aware");
+        final ExploreMath.Config job = ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE));
+        check(!ExploreMath.Config.randomSeat().lethalGood && !job.lethalGood && !ExploreMath.Config.randomV2().lethalGood
+                && !ExploreMath.Config.randomV3Block().lethalGood && !ExploreMath.Config.randomV3BlockHeld().lethalGood,
+                "the atlas's and a job line's random seats, random-v2 and random-v3 are not lethal-aware");
+        check(r4.toString().equals(v2.toString() + ",rollout=random4"), "the text is search-v2's plus rollout=random4: " + r4);
+        configOnly("rrandom4", v2, r4, List.of("rollout"));
+        final SearchConfig r4m = SearchConfig.parse(v2Text.replace(",margin=20,", ",margin=40,") + ",rollout=random4");
+        configOnly("rrandom4-m40", r4, r4m, List.of("margin"));
+        check(r4m.margin == 40 && r4.margin == 20 && r4m.rolloutRandomSeat().lethalGood
+                && r4m.toString().equals(r4.toString().replace(",margin=20,", ",margin=40,")),
+                "rrandom4-m40 is rrandom4 with the override margin 40 for 20, and the same random-v4 seat: " + r4m);
+        boolean liveRefused = false;
+        try {
+            SearchConfig.parseLive("rollout=random4");
+        } catch (final IllegalArgumentException e) {
+            liveRefused = e.getMessage().contains("measurement only");
+        }
+        check(liveRefused, "parseLive refuses rollout=random4 (measurement only, as D523's and D525's)");
+        boolean unknown = false;
+        try {
+            SearchConfig.parse("rollout=random5");
+        } catch (final IllegalArgumentException e) {
+            unknown = e.getMessage().contains("random4");
+        }
+        check(unknown, "an unknown rollout= is refused, naming random4");
+
+        // R8 made lethal-aware: the seat, life 3, attacked by a giant (5) and a bear (2); alive while the unblocked
+        // damage is under 3.  The wall blocks the bear well (kills it, survives); the token can only chump.
+        final java.util.Map<String, Integer> dmg = new java.util.LinkedHashMap<>();
+        dmg.put("giant", 5);
+        dmg.put("bear", 2);
+        final java.util.function.Predicate<java.util.Map<String, String>> alive = b -> RolloutGuards.unblocked(dmg, b) < 3;
+        final List<String> order = List.of("giant", "bear");
+        final java.util.Map<String, List<String>> good = new java.util.LinkedHashMap<>();
+        good.put("wall", List.of("bear"));
+        final ExploreMath m = new ExploreMath(s4, 1);
+        final java.util.Map<String, String> fires = new java.util.LinkedHashMap<>();
+        fires.put("token", "giant");
+        check(RolloutGuards.goodBlocksAlive(fires, good, order, k -> 0, alive, m) == 1
+                && fires.equals(java.util.Map.of("token", "giant", "wall", "bear"))
+                && m.guardrails().get("v3.goodBlock") == 1 && m.guardrails().get("v4.goodBlockLethal") == 1
+                && !m.guardrails().containsKey("v4.goodBlockRefused"),
+                "R8 lethal-aware fires under a lethal attack where the good block survives: the token keeps the giant, the wall takes the bear, counted");
+        final java.util.Map<String, String> chumpSaves = new java.util.LinkedHashMap<>();
+        chumpSaves.put("wall", "giant");
+        final java.util.Map<String, String> asD525 = new java.util.LinkedHashMap<>(chumpSaves);
+        RolloutGuards.goodBlocks(asD525, good, order, k -> 0, new ExploreMath(s4, 1));
+        check(!alive.test(asD525) && RolloutGuards.goodBlocksAlive(chumpSaves, good, order, k -> 0, alive, m) == 0
+                && chumpSaves.equals(java.util.Map.of("wall", "giant")) && m.guardrails().get("v4.goodBlockRefused") == 1
+                && m.guardrails().get("v3.goodBlock") == 1,
+                "R8 lethal-aware is quiet when no good block survives: D525's R8 moves the wall off the giant (dead), random-v4 "
+                        + "keeps the drawn chump, counted refused");
+        final java.util.Map<String, String> dead = new java.util.LinkedHashMap<>();
+        check(RolloutGuards.goodBlocksAlive(dead, good, order, k -> 0, alive, m) == 0 && dead.isEmpty()
+                && m.guardrails().get("v4.goodBlockRefused") == 1,
+                "from a dead draw a good block that does not rescue the seat is not made, and not counted refused (R2 redraws)");
+        final java.util.Map<String, String> rescue = new java.util.LinkedHashMap<>();
+        rescue.put("token", "bear");
+        final java.util.Map<String, List<String>> bigWall = new java.util.LinkedHashMap<>();
+        bigWall.put("wall", List.of("giant"));
+        check(!alive.test(rescue) && RolloutGuards.goodBlocksAlive(rescue, bigWall, order, k -> 0, alive, m) == 1
+                && rescue.equals(java.util.Map.of("token", "bear", "wall", "giant")),
+                "from a dead draw a good block that rescues the seat is made");
+        final java.util.Map<String, List<String>> two = new java.util.LinkedHashMap<>();
+        two.put("wall", List.of("bear"));
+        two.put("wall2", List.of("bear"));
+        final java.util.Map<String, String> next = new java.util.LinkedHashMap<>();
+        next.put("wall", "giant");
+        check(RolloutGuards.goodBlocksAlive(next, two, order, k -> 0, alive, m) == 1
+                && next.equals(java.util.Map.of("wall", "giant", "wall2", "bear")),
+                "when the drawn good blocker is the giant's chump, the next one in list order takes the bear, with no draw");
+        boolean same = true;
+        for (long seed = 0; seed < 64; seed++) {
+            final ExploreMath a = new ExploreMath(s4, seed);
+            final ExploreMath b = new ExploreMath(s4, seed);
+            final java.util.Map<String, String> ma = new java.util.LinkedHashMap<>();
+            final java.util.Map<String, String> mb = new java.util.LinkedHashMap<>();
+            ma.put("token", "giant");
+            mb.put("token", "giant");
+            RolloutGuards.goodBlocks(ma, two, order, a::pick, a);
+            RolloutGuards.goodBlocksAlive(mb, two, order, b::pick, x -> true, b);
+            same &= ma.equals(mb) && a.pick(1000) == b.pick(1000);
+        }
+        check(same, "with no refusal R8 lethal-aware is D525's R8: the same blocks and the same draws on the same seed");
+        check(RolloutGuards.goodBound(good) == 1 && RolloutGuards.goodBound(two) == 1
+                && RolloutGuards.goodBound(java.util.Map.of("wall", List.of("bear", "giant"))) == 1
+                && RolloutGuards.goodBound(java.util.Map.of("wall", List.of("bear"), "wall2", List.of("giant"))) == 2,
+                "the redraws' stop: the attackers blocked well, at most one per good blocker");
+        check(RolloutGuards.goodCount(java.util.Map.of("wall", "bear", "token", "giant"), two) == 1
+                && RolloutGuards.goodCount(java.util.Map.of("wall", "giant"), two) == 0,
+                "the redraws' preference counts the good blocks an assignment holds, drawn or made");
     }
 
     /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */

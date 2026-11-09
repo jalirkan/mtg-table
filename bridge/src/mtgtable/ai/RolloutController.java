@@ -279,7 +279,8 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
      * {@code random-v2} ({@link ExploreMath.Config#randomV2}): the move atlas's
      * random seat (D451's guardrails G1-G6 and D485-D488) plus the rollout
      * guardrails R1-R7 ({@link RolloutGuards}); under D525's {@code random3}
-     * values random-v3, R8 ({@code random3}) or R8 and R9 ({@code random3-held}) too.  The searching seat's is built
+     * values random-v3, R8 ({@code random3}) or R8 and R9 ({@code random3-held}) too; under D527's {@code random4}
+     * random-v4, R8 made lethal-aware.  The searching seat's is built
      * with its candidate forced first, as above ({@code rollout=random} and
      * {@code random-self}); the opponent's under {@code rollout=random} is the
      * same class with nothing forced.
@@ -296,7 +297,7 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
         private final Forced forced = new Forced();
         private final java.util.Map<SpellAbility, Decision.Explore> marks = new java.util.IdentityHashMap<>();
 
-        /** {@code cfg} is random-v2 ({@code rollout=random}, D523) or random-v3 ({@code random3}, D525). */
+        /** {@code cfg} is random-v2 ({@code rollout=random}, D523), random-v3 ({@code random3}, D525) or random-v4 ({@code random4}, D527). */
         Random(final Game game, final Player p, final LobbyPlayer lp, final long seed, final ExploreMath.Config cfg) {
             super(game, p, lp, null);
             if (cfg == null || !cfg.v2) {

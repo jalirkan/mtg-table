@@ -94,6 +94,24 @@ import forge.game.spellability.SpellAbility;
  *       stack empty and combat past its blockers, or at the end step.</li>
  * </ul>
  *
+ * <p>D527's {@code random-v4} ({@link ExploreMath.Config#randomV4Block},
+ * {@code rollout=random4}) is {@code random3} with one change (J201's
+ * counters: under a lethal attack R2 rejected R8's block seven times as often
+ * as R8 made one, so the defender stayed random exactly where its block
+ * matters most):
+ *
+ * <ul>
+ *   <li><b>R8, lethal-aware, {@code v4.goodBlockLethal}</b> -- under a lethal
+ *       attack (R2's case) each good block is made only if the seat survives
+ *       the assignment after it ({@link #goodBlocksAlive}), and once a draw
+ *       has left the seat dead, R2's redraws keep the surviving assignment with
+ *       the most good blocks, and its greedy fallback takes the good blocks
+ *       that keep it alive.  Its diagnostic {@code v4.goodBlockRefused} counts
+ *       a good block not made because it would have taken the seat from alive
+ *       to dead.  A block that is not under a lethal attack is R8's as
+ *       D525 built it.</li>
+ * </ul>
+ *
  * <p>The combat checks read Forge's combat arithmetic
  * ({@code ComputerUtilCombat.damageIfUnblocked}, {@code canDestroyAttacker},
  * {@code canDestroyBlocker}, {@code CombatUtil.canBlock}) -- what the damage
@@ -545,6 +563,107 @@ final class RolloutGuards {
             }
         }
         return good;
+    }
+
+    // ------------------------------------------------------------------
+    // R8 made lethal-aware (D527): random-v4
+    // ------------------------------------------------------------------
+
+    /**
+     * D527, R8 under a lethal attack: as {@link #goodBlocks} -- a blocker
+     * already on an attacker it blocks well stays; then the attackers in
+     * {@code order} (largest first), each one no blocker holds well offered one
+     * of the blockers that would (not one already holding a good block), drawn
+     * by {@code pick} when there are several, alone -- but the move is made
+     * only if the seat survives the assignment after it ({@code alive}, R2's
+     * test).  When it would not, the other candidates follow in list order
+     * after the drawn one, with no further draw; when none survives, the
+     * attacker keeps its drawn blocks, counted {@code v4.goodBlockRefused} if
+     * the assignment before the move survived (the move would have taken the
+     * seat from alive to dead: D525's {@code v3.goodBlockDead}, one attacker at
+     * a time).  Each attacker given a good block counted {@code v3.goodBlock}
+     * and {@code v4.goodBlockLethal}.  With no refusal its draws and its result
+     * are {@link #goodBlocks}'s.  Engine-free.
+     */
+    static <B, A> int goodBlocksAlive(final Map<B, A> blocks, final Map<B, List<A>> good, final List<A> order,
+                                      final java.util.function.IntUnaryOperator pick, final Predicate<Map<B, A>> alive,
+                                      final ExploreMath math) {
+        final java.util.Set<B> held = new java.util.HashSet<>();
+        final java.util.Set<A> covered = new java.util.HashSet<>();
+        for (final Map.Entry<B, A> e : blocks.entrySet()) {
+            final List<A> g = good.get(e.getKey());
+            if (g != null && g.contains(e.getValue())) {
+                held.add(e.getKey());
+                covered.add(e.getValue());
+            }
+        }
+        boolean living = alive.test(blocks);
+        int n = 0;
+        for (final A a : order) {
+            if (covered.contains(a)) {
+                continue;
+            }
+            final List<B> cands = new ArrayList<>();
+            for (final Map.Entry<B, List<A>> e : good.entrySet()) {
+                if (!held.contains(e.getKey()) && e.getValue().contains(a)) {
+                    cands.add(e.getKey());
+                }
+            }
+            if (cands.isEmpty()) {
+                continue;
+            }
+            final int start = cands.size() == 1 ? 0 : pick.applyAsInt(cands.size());
+            boolean made = false;
+            for (int j = 0; j < cands.size() && !made; j++) {
+                final B c = cands.get((start + j) % cands.size());
+                final Map<B, A> trial = new java.util.LinkedHashMap<>(blocks);
+                trial.values().removeIf(a::equals);
+                trial.put(c, a);
+                if (alive.test(trial)) {
+                    blocks.clear();
+                    blocks.putAll(trial);
+                    held.add(c);
+                    covered.add(a);
+                    math.guardrail("v3.goodBlock");
+                    math.guardrail("v4.goodBlockLethal");
+                    n++;
+                    made = true;
+                    living = true;
+                }
+            }
+            if (!made && living) {
+                math.guardrail("v4.goodBlockRefused");
+            }
+        }
+        return n;
+    }
+
+    /** D527: the good blocks {@code blocks} (blocker -> attacker) holds, drawn or made: the pairs {@code good} lists. Engine-free. */
+    static <B, A> int goodCount(final Map<B, A> blocks, final Map<B, List<A>> good) {
+        int n = 0;
+        for (final Map.Entry<B, A> e : blocks.entrySet()) {
+            final List<A> g = good.get(e.getKey());
+            if (g != null && g.contains(e.getValue())) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * D527: an upper bound on the good blocks one assignment can hold -- the
+     * attackers some blocker blocks well, at most one per blocker of
+     * {@code good} -- so R2's redraws stop early at a surviving one that
+     * reaches it.  Only a bound: when no surviving assignment reaches it (the
+     * only good blocker is also the only chump that keeps the seat alive) the
+     * redraws run all 64 attempts.  Engine-free.
+     */
+    static <B, A> int goodBound(final Map<B, List<A>> good) {
+        final java.util.Set<A> as = new java.util.HashSet<>();
+        for (final List<A> l : good.values()) {
+            as.addAll(l);
+        }
+        return Math.min(as.size(), good.size());
     }
 
     // ------------------------------------------------------------------

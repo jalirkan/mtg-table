@@ -17,7 +17,7 @@ commit.
 **The index below lists 399 items still open across 44 follow-up lists** — 367
 open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
+said 371 across 42, three rows and one list behind its table) — D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
@@ -462,6 +462,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 43 | open | D524's `--only <file>` (the move atlas branched at given decisions with given options, option 0 among them; the baseline's listing checked first, exit 4 on a mismatch; refused beside `--decisions` and the cuts; off by default, byte for byte) is built on `pc/atlas-only` and not merged: the merger runs the full gate on it, then J200 pins main and plays its 106 decisions on the Forge map alone; open until J200's pilot passes on the merged pin | `docs/decisions/D524-atlas-only.md` |
 | [Cube lab](#fu-cube-lab) | 44 | open | D525's random-v3 arms, a chain of single additions on both rollout seats: `search-v2-rrandom3` (`rollout=random3`: random-v2 plus R8 — a blocker that can block an attacker, destroy it and survive takes that block, `search.rr.v3.goodBlock` — against J199 (a)) and `search-v2-rrandom3-held` (`random3-held`: R8 plus R9 — a harmful instant or ability on the opponent's turn waits for combat after blockers or the end step, `search.rr.v3.heldInstant` — against `rrandom3` on the same night: the difference is R9) are registered and unplayed, from J199's: (a) `rrandom` lost badly, −43.7 Elo [−57.1, −30.4], and (b) `rrandom-self` read worse, not badly, −25.5 [−38.3, −12.8]: 18 Elo of the loss is the random opponent; the diagnosis (the random defender rarely takes the block that kills the attacker, so the search overrides Forge's "attack none" ×1.55 as often, and loses those games); the `-self` path pauses at −25.5 (neither rule acts there): J201, `rrandom3` then `rrandom3-held`, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D525's copy of D523's rule; then D523's iteration loop | `docs/decisions/D525-random-v3-good-block.md` |
 | [Cube lab](#fu-cube-lab) | 45 | open | D526's runner starts a step that cannot get its full memory with as many workers as fit (at least two; J201's run2 waited at 08:50:56 for 21.4 GB with 19.6 free, five workers' worth, beside a GPU painter's ~6 GB), raises it toward its sized count as memory frees (the backoff's raise, capped by what fits), waits (`memory-wait`, `degraded`) only under two, and alerts the start as `memory-fit`, never `degraded`; built on `pc/runner-memory-fit` and not merged: the merger runs the full gate, then `tools/runner.sh install` only while the runner is idle; ForgeCoach's `#lab` page learns `memory-fit` | `docs/decisions/D526-runner-memory-fit.md` |
+| [Cube lab](#fu-cube-lab) | 46 | open | D527's random-v4 arms, a chain of single changes: `search-v2-rrandom4` (`rollout=random4`, both seats: `random3` with R8 made lethal-aware — under a lethal attack a good block is made only if the seat survives it, and after a dead draw R2's redraws keep the surviving assignment with the most good blocks, `search.rr.v4.goodBlockLethal`; no R9) and `search-v2-rrandom4-m40` (the same with the override margin 40 for 20; against `rrandom4` on the same night) are registered and unplayed, from J201's: (a) `rrandom3` lost badly, −30.8 Elo [−44.4, −17.2], +12.9 on J199 (a), with R2 rejecting R8's block ×7 as often as R8 made one (`v3.goodBlockDead` 0.147 a rollout, `goodBlock` 0.021), and (b) R8 + R9 lost badly too (−29.6 [−43.7, −15.6]), R9 adding nothing measurable: J202, `rrandom4` then `rrandom4-m40`, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D527's rule; then the loop, which stops if both lose badly | `docs/decisions/D527-random-v4-lethal-good-block.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10457,6 +10458,24 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    and the STATUS says "5 of 7 fit: memory … GB available, … GB a worker". **Open:** the merge with the full gate;
    `tools/runner.sh install` only while the runner is idle (never mid-job); ForgeCoach's `#lab` page should show
    `memory-fit`.
+46. **D527's random-v4 arms are registered and unplayed: J202, then the iteration loop.**
+   (2026-11-09, D527, amending D525.) J201 (a), `search-v2-rrandom3` (random-v2 + R8, both seats), lost badly at
+   1,200 games (−30.8 Elo [−44.4, −17.2], 0 errors; +12.9 on J199 (a)'s −43.7); its attack overrides over Forge fell
+   from ×1.47 search-v2's rate to ×1.26, the priority ones did not move (×2.09). J201 (b), R8 + R9, lost badly too
+   (−29.6 [−43.7, −15.6]): R9 adds nothing measurable and is not carried. R2 rejected an R8 result 0.147 times a
+   random rollout (per attempt) against 0.021 good blocks made: under a lethal attack R8's whole result moved a
+   blocker off the chump that kept the seat alive, R2 refused it and the uniform draw stood. random-v4 makes R8
+   lethal-aware, one change: under a lethal attack each good block is made only if the seat survives it (R2's own
+   `lifeThatWouldRemain`), and after a dead draw R2's redraws keep the surviving assignment with the most good blocks
+   (the greedy fallback takes the good blocks that keep it alive); a block not under a lethal attack is D525's R8,
+   the same draws. Counters `search.rr.v4.goodBlockLethal` and the diagnostic `v4.goodBlockRefused`;
+   `v3.goodBlockDead` is 0 under `random4` by construction. On top, one more change in a second arm: the search's
+   override margin 40 for 20 (the priority overrides ran ×2.09 search-v2's at the same margin; noisier values beat a
+   fixed bar). Ladder players `search-v2-rrandom4` (`646d59a008f6`) and `search-v2-rrandom4-m40` (`968c9003c616`);
+   D523's and D525's four arms and the atlas's seat unchanged. **Open:** the merge with the full gate; then J202,
+   `rrandom4` (against J201 (a)) then `rrandom4-m40` (against `rrandom4`: the margin), each 1,200 games on the confirm
+   set against search-v1-anytime, `alone: yes`, on D527's rule; then the loop (D527 point 7: random-v3 lost badly on
+   both arms, so if both of J202's arms lose badly the loop stops and the owner is told).
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
@@ -11001,6 +11020,23 @@ that kills the attacker, so the search's extra attacks over Forge's "attack none
   arms renamed. The `-self` path pauses at J199 (b)'s −25.5: neither rule acts there.
 
 Its follow-up is the cube lab's 44 ([the list](#fu-cube-lab)).
+
+<a id="d527-random-v4"></a>
+## random-v4: the good block, made lethal-aware (2026-11-09, D527)
+
+**Status: built, piloted, not gated or merged; J202 drafted, not posted.** Branch `pc/rollout-random-v4` off main
+`5876b554`. `docs/decisions/D527-random-v4-lethal-good-block.md` is the decision, D523's iteration loop's third iteration (random-v2 J199, random-v3 J201, random-v4 J202):
+J201 (a), random-v2 + R8, lost badly (−30.8 Elo [−44.4, −17.2]; +12.9 on J199 (a)), and its counters showed R2
+rejecting R8's block about seven times as often as R8 made one, so under a lethal attack the defender stayed random.
+
+- **R8, lethal-aware**, the arm `search-v2-rrandom4` (`rollout=random4`, both seats, against J201 (a)): under a lethal
+  attack a good block is made only if the seat survives it, and after a dead draw the surviving redraw with the most
+  good blocks is kept (`search.rr.v4.goodBlockLethal`); elsewhere D525's R8, the same draws. No R9.
+- **The margin**, added on top in `search-v2-rrandom4-m40` (against `rrandom4` on the same night): an override must
+  beat Forge's answer by 40 leaf points, not 20.
+- **J202's rule** is D525's point 6 copied with the arms renamed; both arms losing badly stops the loop.
+
+Its follow-up is the cube lab's 46 ([the list](#fu-cube-lab)).
 
 ## Deferred — out of scope for M0–M7
 

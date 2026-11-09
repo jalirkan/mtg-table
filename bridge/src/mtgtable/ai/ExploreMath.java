@@ -78,17 +78,26 @@ public final class ExploreMath {
          */
         public final boolean goodBlock;
         public final boolean heldInstant;
+        /**
+         * D527: random-v4's one change ({@link #randomV4Block},
+         * {@code rollout=random4}, against random3): R8 made lethal-aware --
+         * under a lethal attack (R2's case) a good block is made only if the
+         * seat survives it, and after a dead draw R2's redraws and its greedy
+         * fallback keep the surviving assignment with the most good blocks
+         * ({@code v4.goodBlockLethal}).  Only with {@link #goodBlock}.
+         */
+        public final boolean lethalGood;
 
         public Config(final double epsilon, final double closeCall, final boolean opening) {
             this(epsilon, closeCall, opening, false);
         }
 
         public Config(final double epsilon, final double closeCall, final boolean opening, final boolean random) {
-            this(epsilon, closeCall, opening, random, false, false, false);
+            this(epsilon, closeCall, opening, random, false, false, false, false);
         }
 
         private Config(final double epsilon, final double closeCall, final boolean opening, final boolean random,
-                       final boolean v2, final boolean goodBlock, final boolean heldInstant) {
+                       final boolean v2, final boolean goodBlock, final boolean heldInstant, final boolean lethalGood) {
             if (!(epsilon >= 0 && epsilon <= 1) || !(closeCall >= 0 && closeCall < 1)) {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "play exploration: epsilon in [0, 1] and closeCall in [0, 1), got %s and %s", epsilon, closeCall));
@@ -103,9 +112,13 @@ public final class ExploreMath {
             if ((goodBlock || heldInstant) && !v2) {
                 throw new IllegalArgumentException("random-v3 (D525) is random-v2 plus one guardrail: R8 or R9 needs v2");
             }
+            if (lethalGood && !goodBlock) {
+                throw new IllegalArgumentException("random-v4 (D527) is R8 made lethal-aware: it needs R8");
+            }
             this.v2 = v2;
             this.goodBlock = goodBlock;
             this.heldInstant = heldInstant;
+            this.lethalGood = lethalGood;
         }
 
         /** D451: the random seat's settings. */
@@ -115,17 +128,25 @@ public final class ExploreMath {
 
         /** D523: the search rollout's random seat, random-v2: {@link #randomSeat} plus {@link RolloutGuards}. */
         public static Config randomV2() {
-            return new Config(1, 0, false, true, true, false, false);
+            return new Config(1, 0, false, true, true, false, false, false);
         }
 
         /** D525: random-v3's block arm ({@code rollout=random3}): {@link #randomV2} plus R8 alone, the good block. */
         public static Config randomV3Block() {
-            return new Config(1, 0, false, true, true, true, false);
+            return new Config(1, 0, false, true, true, true, false, false);
         }
 
         /** D525: random-v3's held arm ({@code rollout=random3-held}): {@link #randomV3Block} plus R9, the held instant. */
         public static Config randomV3BlockHeld() {
-            return new Config(1, 0, false, true, true, true, true);
+            return new Config(1, 0, false, true, true, true, true, false);
+        }
+
+        /**
+         * D527: random-v4 ({@code rollout=random4}): {@link #randomV3Block} with R8 made lethal-aware, nothing else
+         * (no R9).
+         */
+        public static Config randomV4Block() {
+            return new Config(1, 0, false, true, true, true, false, true);
         }
 
         /** From a job line's {@code playExplore} object (Jetty's parser: numbers are Long or Double); null in, null out. */

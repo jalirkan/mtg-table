@@ -16,7 +16,10 @@
 #   the host name of the machine running the check, read with `hostname` at run time, when it is at least six
 #                   characters and not localhost (so a CI runner bans its own name and this PC bans its own)
 #
-# and exits 1 with the file:line of every hit.  /mnt/e/ is ALLOWED: config.json's labArchiveRoot names the
+# and exits 1 with the file:line of every hit.  A tracked SYMLINK (mode 120000) is checked too, by its committed
+# target (`git cat-file` on its blob, which `git grep` never reads), against the same strings, printed as
+# path:symlink:target -- a lane that committed web/node_modules as a link to the main checkout's (D527's review)
+# published a home path that way.  /mnt/e/ is ALLOWED: config.json's labArchiveRoot names the
 # lab's archive drive (`/mnt/e/forgecoach-archive`, tools/lab/archive.py's setting), a mount point that says nothing about anyone's home
 # and that tools/lab/ reads as configuration; ~/ cannot stand in for it.
 #
@@ -62,6 +65,16 @@ check() {
     out="$(git -C "$dir" grep -I -n -i -F -e "$host" -- . "${excl[@]}" || true)"
     if [ -n "$out" ]; then printf '%s\n' "$out"; hits=1; fi
   fi
+  # symlinks: git grep reads none of them; their committed targets, the same strings (the host name ignoring case)
+  local mode sha stage path target
+  while IFS=$' \t' read -r mode sha stage path; do
+    case "$path" in var/*|personal/*) continue ;; esac
+    target="$(git -C "$dir" cat-file -p "$sha")"
+    if printf '%s\n' "$target" | grep -q -F "${args[@]}" \
+        || { [ "${#host}" -ge 6 ] && [ "${host,,}" != "localhost" ] && printf '%s\n' "$target" | grep -q -i -F -e "$host"; }; then
+      printf '%s:symlink:%s\n' "$path" "$target"; hits=1
+    fi
+  done < <(git -C "$dir" ls-files -s | grep '^120000' || true)
   return "$hits"
 }
 
@@ -80,17 +93,19 @@ selftest() {
   printf 'planted /home/x\n' > "$s/web/test/lab-runner.test.ts"     # an allowed path: quiet
   printf '/home/x\n' > "$s/var/untracked-anyway.txt"                 # var/ is never read
   printf '\0/home/binary\n' > "$s/img/x.jpg"                         # a binary is never read
+  ln -s /home/someone/node_modules "$s/docs/link"                     # a symlink's target: caught
+  ln -s ../img/x.jpg "$s/docs/rel-link"                               # a repo-relative symlink: quiet
   git -C "$s" add docs web img
   git -C "$s" add -f var/untracked-anyway.txt
   out="$(PUBLIC_CHECK_HOST=test-host-name-7 PUBLIC_CHECK_USER=test-user-7 check "$s" || true)"
-  for f in docs/a.md:1 docs/b.md:1 docs/c.md:1 docs/d.md:1; do
+  for f in docs/a.md:1 docs/b.md:1 docs/c.md:1 docs/d.md:1 docs/link:symlink; do
     case "$out" in *"$f:"*) ;; *) echo "SELFTEST FAIL: no hit for $f"; fails=1 ;; esac
   done
-  for f in web/test/lab-runner.test.ts var/untracked-anyway.txt img/x.jpg docs/clean.md; do
+  for f in web/test/lab-runner.test.ts var/untracked-anyway.txt img/x.jpg docs/clean.md docs/rel-link; do
     case "$out" in *"$f:"*) echo "SELFTEST FAIL: a hit for $f, which must stay quiet"; fails=1 ;; esac
   done
   rm -rf "$s"
-  if [ "$fails" = 0 ]; then echo "public-check selftest: OK (4 plants caught; an allowed path, var/, a binary and a clean file quiet)"; fi
+  if [ "$fails" = 0 ]; then echo "public-check selftest: OK (5 plants caught, a symlink's target among them; an allowed path, var/, a binary, a clean file and a relative symlink quiet)"; fi
   return "$fails"
 }
 
@@ -98,7 +113,7 @@ case "${1:-}" in
   --selftest) selftest ;;
   "")
     if out="$(check "$REPO_ROOT")"; then
-      echo "public-check: OK -- no tracked file names a home folder, this machine or a personal address (${#ALLOW[@]} allowed paths)"
+      echo "public-check: OK -- no tracked file or symlink target names a home folder, this machine or a personal address (${#ALLOW[@]} allowed paths)"
     else
       printf '%s\n' "$out"
       echo "public-check: FAILED -- $(printf '%s\n' "$out" | wc -l) line(s) above name a home folder, this machine or a personal address; write ~/ or \$HOME, or reword (D516)" >&2
