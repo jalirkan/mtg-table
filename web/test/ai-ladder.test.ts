@@ -919,6 +919,45 @@ test('D527: search-v2-rrandom4 is search-v2 (search-v1-anytime) plus rollout=ran
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D528: search-v2-rrandom4-m60 is search-v2-rrandom4 plus margin=60, and its baseline policy-outlet is search-v2 with the search off', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const a = by.get('search-v2-rrandom4')!;
+  const m = by.get('search-v2-rrandom4-m60');
+  assert.ok(m?.cfg, 'search-v2-rrandom4-m60 is registered and playable');
+  const mr = raw.players.find((y) => y.name === 'search-v2-rrandom4-m60')!;
+  assert.equal(mr.kind, v2raw.kind);
+  assert.deepEqual(mr.params, { ...v2raw.params, margin: 60, rollout: 'random4' }, "its params are search-v2's plus margin 60 and rollout random4");
+  const mrest: Record<string, unknown> = { ...m!.resolved };
+  delete mrest.margin;
+  const arest: Record<string, unknown> = { ...a.resolved };
+  delete arest.margin;
+  assert.deepEqual(mrest, arest, "every other resolved param is search-v2-rrandom4's: no new rollout logic, the margin alone");
+  assert.equal(m!.resolved.margin, 60);
+  assert.equal(m!.cfg, a.cfg!.replace(',margin=20,', ',margin=60,'), "the seat config is search-v2-rrandom4's with margin=60");
+  assert.equal(m!.cfg, by.get('search-v2-rrandom4-m40')!.cfg!.replace(',margin=40,', ',margin=60,'), "and search-v2-rrandom4-m40's with margin=60 for 40");
+  assert.equal(m!.hash, '216e66d89fe3', "search-v2-rrandom4-m60's config hash (D528)");
+  assert.match(mr.note ?? '', /never the live seat/);
+  // The baseline: the seat search-v2 sits on, with the search off -- the policy kind, Default and D310's outlets on.
+  // forge-default ("Default", outlets off) is NOT it: J194 (a) measured the outlet policy acting in 72 of its 1,200 games.
+  const b = by.get('policy-outlet');
+  assert.ok(b?.cfg, 'policy-outlet is registered and playable');
+  assert.equal(b!.kind, 'policy');
+  assert.deepEqual(b!.resolved, { profile: v2.resolved.profile, outlets: v2.resolved.outlets }, "its params are search-v2's profile and outlets, and nothing else");
+  assert.equal(b!.cfg, 'Default+outlets');
+  assert.equal(v2.cfg!.slice(0, v2.cfg!.indexOf('+search:')), b!.cfg, "search-v2's seat config is policy-outlet's with +search:... appended");
+  assert.equal(b!.hash, 'e350d94649a4', "policy-outlet's config hash, unchanged since it was registered");
+  assert.notEqual(by.get('forge-default')!.cfg, b!.cfg, 'forge-default (outlets off) is not the seat under the search');
+  for (const [name, hash] of [['search-v2-rrandom4', '646d59a008f6'], ['search-v2-rrandom4-m40', '968c9003c616'],
+    ['search-v2-rrandom3', '8d1623965986'], ['search-v2-rrandom3-held', 'a484402b1185'], ['forge-default', '3ed453ffef1c']] as const) {
+    assert.equal(by.get(name)!.hash, hash, `${name} keeps its hash`);
+  }
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
