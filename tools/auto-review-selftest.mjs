@@ -203,6 +203,15 @@ check(labGate(STATUS).open, 'degraded but the heartbeat is 10 min old (a dead ru
 // A retry waiting on the BUDGET behind a running job is `running` (with a budget-wait alert): the core rule applies.
 status({ state: 'running', host: { coresUsed: 7, coresTotal: 14 }, running: [{ id: 'J197', cores: 7 }], alerts: [{ ...memWait, kind: 'budget-wait' }] });
 check(labGate(STATUS).open && labGate(STATUS).freeCores === 7, 'a budget-wait behind a running job: the core rule, 7 free');
+// D526: a job started with as many workers as fit is `running` with cores free, but closed while it is under-sized.
+const memFit = { at: iso(Date.now()), id: 'J201', kind: 'memory-fit', needGb: 3.59, availGb: 22.6, workers: 5, workersMax: 7, text: 'J201 started with 5 of 7 workers at x, as many as fit (MemAvailable 22.6 GB, 3.59 GB a worker); raised toward 7 as memory frees' };
+status({ state: 'running', host: { coresUsed: 7, coresTotal: 14 }, running: [{ id: 'J201', cores: 7, workers: 5, workersMax: 7 }], alerts: [memFit] });
+check(!labGate(STATUS).open && labGate(STATUS).freeCores === 0 && /lab fitted to memory \(J201 runs 5 of 7 workers.*J201 started with 5 of 7 workers/.test(labGate(STATUS).why), 'a live memory-fit (5 of 7, 7 cores free): closed, the alert in the why', labGate(STATUS));
+status({ state: 'running', host: { coresUsed: 7, coresTotal: 14 }, running: [{ id: 'J201', cores: 7, workers: 7, workersMax: 7 }], alerts: [memFit] });
+check(labGate(STATUS).open && labGate(STATUS).freeCores === 7, 'the same job raised back to 7 of 7: the alert is history, the core rule, 7 free');
+status({ state: 'running', host: { coresUsed: 7, coresTotal: 14 }, running: [{ id: 'J201', cores: 7, workers: 5, workersMax: 7 }], alerts: [] });
+check(labGate(STATUS).open && labGate(STATUS).freeCores === 7, 'under-sized by a pressure drop alone (no memory-fit): the core rule, 7 free');
+check(/'budget-wait' \| 'memory-fit'/.test(readFileSync('tools/runner/statusjson.ts', 'utf8')) && /this\.alert\(r\.id, 'memory-fit'/.test(readFileSync('tools/runner/runner.ts', 'utf8')) && /workersMax: r\.sizing\?\.workers \?\? r\.workers/.test(readFileSync('tools/runner/runner.ts', 'utf8')), 'the runner still writes memory-fit alerts and running[].workersMax');
 // The fields the gate reads must still be what the runner writes (tools/runner/runner.ts statusDoc, statusjson.ts schema 1).
 const runnerSrc = readFileSync('tools/runner/runner.ts', 'utf8');
 const docSrc = runnerSrc.slice(runnerSrc.indexOf('return fit({'), runnerSrc.indexOf('runner: { commit', runnerSrc.indexOf('return fit({')));

@@ -48,7 +48,7 @@ import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubela
 import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
 import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, stderrGist, THREAD_CAP_VARS, threadCaps, transientGitFailure, type JobRun, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
-import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
+import { formatStatus, headerNeed, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { alertText } from '../../tools/runner/statusjson.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
 import { clearBudgetFile, modeCores, readBudgetFile, resolveBudget, writeBudgetFile } from '../../tools/runner/budget.ts';
@@ -3241,19 +3241,22 @@ test('D521: two jobs are scheduled together when the core and memory budgets all
 
 test('D521: actual free memory: a start needs its need in MemAvailable less the reserve, PSI some avg10 at most 5%, and the INSTALLED cap; the carve-out reserves free memory too', () => {
   const machine: MachineBudget = { cores: 14, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
-  const wide = hjob('J300', 'max_workers: 7\n');             // 7 x 2.5 = 17.5 GB
+  const wide = hjob('J300', 'max_workers: 7\n');             // 7 x 2.5 = 17.5 GB; D526: it starts with 2 (5 GB)
   const narrow = hjob('J301', 'cores: 1\n');                 // 1 x 2.5 = 2.5 GB
   const base = { statuses: new Map(), active: new Map<string, 'heavy' | 'light'>(), machine, playing: false, paused: false, now: T0 };
   const mem = (availGb: number, extra = {}) => ({ availGb, reserveGb: 3, headroomGb: 0, capGb: 21, some10: 0, maxSome10: 5, ...extra });
-  // A painter outside the lab holds 13 GB: 14 available, less 3 kept free: 11 < 17.5.
+  // D526: a painter outside the lab holds 16 GB: 14 available, less 3 kept free: 11 < 17.5, but 2 workers (5 GB) fit: it starts.
   let r = schedule({ ...base, jobs: [wide], memory: mem(14) });
-  assert.deepEqual([r.start.length, r.blocked[0]?.code, r.blocked[0]?.wait, r.blocked[0]?.needGb, r.blocked[0]?.freeGb, r.blocked[0]?.availGb], [0, 'memory-wait', 'memory', 17.5, 11, 14]);
-  assert.match(r.blocked[0]?.reason ?? '', /waits for memory: needs 17\.5 GB; 11 GB free \(14 GB available, less 3 GB kept free\)/);
+  assert.deepEqual(r.start.map((x) => x.id), ['J300']);
+  // A painter that holds 23 GB: 7 available, less 3: 4 < 5, not even 2 workers fit: it waits, for those 5 GB.
+  r = schedule({ ...base, jobs: [wide], memory: mem(7) });
+  assert.deepEqual([r.start.length, r.blocked[0]?.code, r.blocked[0]?.wait, r.blocked[0]?.needGb, r.blocked[0]?.freeGb, r.blocked[0]?.availGb], [0, 'memory-wait', 'memory', 5, 4, 7]);
+  assert.match(r.blocked[0]?.reason ?? '', /waits for memory: needs 5 GB \(2 workers of its 17\.5 GB\); 4 GB free \(7 GB available, less 3 GB kept free\)/);
   // What the running jobs reserved and have not touched counts.
   r = schedule({ ...base, jobs: [narrow], memory: mem(7, { headroomGb: 2 }) });
   assert.deepEqual([r.start.length, r.blocked[0]?.code], [0, 'memory-wait']);
-  // The carve-out reserves the free memory J300 waits for: J301 (2.5 GB, which 11 GB would hold) does not start in it.
-  r = schedule({ ...base, jobs: [wide, narrow], memory: mem(14) });
+  // The carve-out reserves the free memory J300 waits for (all of its 17.5 GB): J301 (2.5 GB, which 4 GB would hold) does not start in it.
+  r = schedule({ ...base, jobs: [wide, narrow], memory: mem(7) });
   assert.deepEqual(r.start, []);
   assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J300', 'memory-wait'], ['J301', 'memory-wait']]);
   // Enough for both: J300 starts, and J301 is counted against what J300 is about to take (27 - 3 - 17.5 = 6.5 >= 2.5).
@@ -3265,8 +3268,9 @@ test('D521: actual free memory: a start needs its need in MemAvailable less the 
   assert.deepEqual([r.start.length, r.blocked[0]?.code], [0, 'memory-wait']);
   assert.match(r.blocked[0]?.reason ?? '', /memory pressure \(some avg10\) is 6\.2%, over 5%/);
   // A budget.json cap of 10 GB never shrinks a need: 17.5 is counted (at most the installed 21), not 10.
-  r = schedule({ ...base, machine: { ...machine, memGb: 10 }, jobs: [wide], memory: mem(16) });
-  assert.deepEqual([r.start.length, r.blocked[0]?.needGb], [0, 17.5]);
+  r = schedule({ ...base, machine: { ...machine, memGb: 10 }, jobs: [wide], memory: mem(7.5) });
+  assert.deepEqual([r.start.length, r.blocked[0]?.needGb], [0, 5]);
+  assert.match(r.blocked[0]?.reason ?? '', /\(2 workers of its 17\.5 GB\)/);
   // A light job is exempt (its 2 GB is inside the lab's reserve).
   const light = parseJobFile('J303.md', 'id: J303\ncpu: light\nrepos: mtg-table@main\n', parse);
   assert.deepEqual(schedule({ ...base, jobs: [light], memory: mem(1) }).start.map((x) => x.id), ['J303']);
@@ -3411,7 +3415,8 @@ test('D521: a step waits on memory held outside the lab (and on pressure), degra
   const r = new Runner({ ...w.cfg, cores: null }, w.sys);
   r.reconcile();
   w.sys.mode = 'hold';
-  // A painter holds 15 GB: 12 GB available, less 3 kept free, is not J190's 14: it is not admitted.
+  // A painter holds 15 GB: 12 GB available, less 3 kept free, is not J190's 14: it is not admitted (D526: a job with a
+  // block mem_gb: waits for its whole need -- that block is exempt from the fit).
   w.sys.memUsedGb = 18;
   r.tick();
   assert.equal(r.runs.has('J190'), false);
@@ -3582,4 +3587,238 @@ test('D521: alerts in the public copy: rebuilt from their fields, unknown kinds 
   assert.ok(!JSON.stringify(pub).includes('/home') && !JSON.stringify(pub).includes('/etc'), 'no free text gets through');
   assert.equal(idleReasonOf([{ code: 'memory-wait', reason: 'x' }], false), 'memory backoff');
   assert.equal(REASONS['memory-wait'], 'waiting for memory');
+});
+
+// ------------------------------------------------------------------ D526: as many workers as fit
+
+/** A pool of seven at 2.5 GB a worker declared (17.5 GB), whose tools read the control file. */
+const FIT_POOL = `id: J526
+title: D526: a pool that starts with as many workers as fit
+cpu: heavy
+repos: mtg-table@main
+max_workers: 7
+mem_per_worker_gb: 2.5
+control: yes
+metrics: n = lines var/p526.jsonl
+
+## Pilot
+\`\`\`bash
+mkdir -p var
+echo '{}' > var/p526.jsonl
+\`\`\`
+check: n == 1
+
+## Commands
+\`\`\`bash
+echo "{\\"w\\": $JOBS, \\"p\\": {workers}}" > var/w526.json
+\`\`\`
+`;
+
+/** Prepare and the pilot on an empty host, then the painter takes `memUsedGb` before run1 is due. */
+function fitWorld(memUsedGb: number, job = FIT_POOL): { w: World; r: Runner; run: JobRun; ctl: () => unknown } {
+  const w = world({ 'J526-a.md': job });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J526-prepare', 'ok'); r.tick();
+  assert.equal(r.runs.get('J526')?.unit, 'lab-J526-pilot1');
+  w.sys.memUsedGb = memUsedGb;
+  w.sys.release('lab-J526-pilot1', 'ok'); r.tick();
+  return { w, r, run: r.runs.get('J526')!, ctl: () => JSON.parse(fs.readFileSync(r.controlFile('J526'), 'utf8')) };
+}
+
+test('D526: the backoff raises a step started under-sized only as far as memCap holds; absent, as before', () => {
+  const st0: BackoffState = { ...initialBackoff(7), workers: 4 };
+  const calm = (at: number, memCap?: number | null) => ({ at, some10: 0, swapIn: 0, jobGb: 4, jobMaxGb: 21, memCap });
+  let s = st0;
+  for (let i = 1; i <= 12; i++) s = decide(s, calm(i * 10_000, 4), true).state;
+  assert.equal(s.workers, 4, 'calm for two minutes, but the memory holds 4');
+  const up = decide(s, calm(130_000, 6), true);
+  assert.deepEqual([up.action?.kind, up.state.workers], ['raise', 5]);
+  let t = st0;
+  for (let i = 1; i <= 12; i++) t = decide(t, calm(i * 10_000), true).state;
+  assert.equal(t.workers, 5, 'no memCap: the pressure rule alone (D337)');
+});
+
+test('D526: a step that cannot get its full budget starts with as many workers as fit (4 of 7), not degraded, alerted memory-fit, in STATUS and both copies', () => {
+  // A painter outside the lab holds 13.5 GB: 13.5 GB available, less 3 kept free, is 10.5: floor(10.5 / 2.5) = 4 of 7.
+  const { w, r, run, ctl } = fitWorld(16.5);
+  assert.equal(run.unit, 'lab-J526-run1', w.sys.lines.join('\n'));
+  assert.equal(run.workers, 7);
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 4 }, 'the control file holds it at 4');
+  assert.equal(w.sys.started.at(-1)?.env.JOBS, '7', 'the pool is started for 7: the control file raises it');
+  assert.deepEqual(run.memFit && [run.memFit.step, run.memFit.workers, run.memFit.max, run.memFit.perWorkerGb, run.memFit.availGb, run.memFit.raisable], ['run1', 4, 7, 2.5, 13.5, true]);
+  assert.equal(run.waitingMemGb, null);
+  const doc = r.statusDoc();
+  assert.equal(doc.state, 'running', 'the machine is working: not degraded');
+  assert.deepEqual(doc.alerts?.map((a) => [a.id, a.kind, a.workers, a.workersMax, a.needGb, a.availGb]), [['J526', 'memory-fit', 4, 7, 2.5, 13.5]]);
+  assert.match(doc.alerts?.[0]?.text ?? '', /^J526 started with 4 of 7 workers at .*, as many as fit \(MemAvailable 13\.5 GB, 2\.5 GB a worker\); raised toward 7 as memory frees$/);
+  assert.deepEqual([doc.running[0]?.workers, doc.running[0]?.workersMax], [4, 7]);
+  const pub = sanitise(doc);
+  assert.deepEqual([pub.state, pub.alerts?.[0]?.kind, pub.alerts?.[0]?.workers, pub.alerts?.[0]?.workersMax, pub.alerts?.[0]?.text], ['running', 'memory-fit', 4, 7, doc.alerts?.[0]?.text]);
+  assert.match(run.pendingStatus ?? '', /^workers: 4 \(4 of 7 fit: memory 13\.5 GB available, 2\.5 GB a worker; raised toward 7 as memory frees; sized 7: min\(/m);
+  assert.doesNotMatch(run.pendingStatus ?? '', /^waits:/m);
+  // A job that cannot be told (control: no) starts at its fit too, with {workers} and JOBS 4 for the whole step.
+  const told = fitWorld(16.5, FIT_POOL.replace('control: yes', 'control: no'));
+  assert.equal(told.run.unit, 'lab-J526-run1');
+  assert.equal(told.w.sys.started.at(-1)?.env.JOBS, '4');
+  assert.equal(told.run.memFit?.raisable, false);
+  assert.deepEqual([told.run.backoff?.workers, told.r.statusDoc().running[0]?.workers, told.r.statusDoc().running[0]?.workersMax], [4, 4, 7], 'the real count everywhere');
+  assert.match(told.run.pendingStatus ?? '', /^workers: 4 \(4 of 7 fit: memory 13\.5 GB available, 2\.5 GB a worker; sized 7: /m);
+});
+
+test('D526: under 2 workers it waits as D521 does: memory-wait, degraded, for 2 workers\' worth', () => {
+  // 7 GB available, less 3: 4 GB, one worker's worth.
+  const { w, r, run } = fitWorld(23);
+  assert.equal(run.unit, null, w.sys.lines.join('\n'));
+  assert.equal(run.steps[run.stepIndex]?.name, 'run1');
+  assert.equal(run.memFit ?? null, null);
+  assert.match(run.heldFor ?? '', /^memory: needs 5 GB for run1 \(2 workers; all of them 17\.5 GB\); 4 GB free \(7 GB available, less 3 GB kept free\); it starts when that fits/);
+  const doc = r.statusDoc();
+  assert.equal(doc.state, 'degraded');
+  assert.deepEqual(doc.alerts?.map((a) => [a.id, a.kind, a.needGb, a.availGb]), [['J526', 'memory-wait', 5, 7]]);
+  // Two workers' worth frees (9.5 GB available, 6.5 free: 2 workers): it starts with 2.
+  w.sys.memUsedGb = 20.5;
+  w.sys.t += 10_000; r.tick();
+  assert.equal(run.unit, 'lab-J526-run1');
+  assert.deepEqual([run.memFit?.workers, run.memFit?.max, r.statusDoc().state], [2, 7, 'running']);
+});
+
+test('D526: a step started at 4 is raised to 7 as the memory frees -- through the pressure rule, never past what fits', () => {
+  const { w, r, run, ctl } = fitWorld(16.5);
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 4 });
+  // Calm for 10 minutes, the painter still there: 13.5 - 3 - 4 x 2.5 untouched leaves 0.5 GB: no raise.
+  for (let i = 0; i < 60; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual([ctl(), run.events.length], [{ paused: false, maxWorkers: 4 }, 0]);
+  // The painter gives back 5.5 GB (19 available): 19 - 3 - 10 = 6 GB, two more workers: raised to 5, then 6, and held there.
+  w.sys.memUsedGb = 11;
+  for (let i = 0; i < 90; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(run.events.map((e) => [e.kind, e.workers]), [['raise', 5], ['raise', 6]]);
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 6 });
+  assert.equal(run.memFit?.workers, 4, 'still the fit it started at');
+  // The painter is done: raised to 7 (max_workers), and the step is no longer under-sized.
+  w.sys.memUsedGb = 3;
+  for (let i = 0; i < 60; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(run.events.map((e) => [e.kind, e.workers]), [['raise', 5], ['raise', 6], ['raise', 7]]);
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 7 });
+  assert.equal(run.memFit, null);
+  assert.match(run.pendingStatus ?? '', /^workers: 7 \(sized 7: min\(/m);
+  assert.equal(r.statusDoc().alerts?.[0]?.kind, 'memory-fit', 'the start stays in the alerts as information (24 h)');
+  w.sys.release('lab-J526-run1', 'ok'); r.tick();
+  assert.equal(r.runs.get('J526')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+});
+
+/** FIT_POOL with a second per-worker block. */
+const FIT_POOL2 = `${FIT_POOL}\`\`\`bash
+echo two >> var/w526b.txt
+\`\`\`
+`;
+
+test('D526: a pilot fits too, at a fixed {workers} it is never raised past; one memory-fit alert per run; a pool after it fits again', () => {
+  const w = world({ 'J526-a.md': FIT_POOL });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  // 9 GB available, 6 free: admitted on 2 workers' worth (5 GB); the pilot's 3 x 2.5 = 7.5 GB do not fit, 2 do.
+  w.sys.memUsedGb = 21;
+  r.tick();
+  w.sys.release('lab-J526-prepare', 'ok'); r.tick();
+  const run = r.runs.get('J526')!;
+  assert.equal(run.unit, 'lab-J526-pilot1', w.sys.lines.join('\n'));
+  assert.equal(w.sys.started.at(-1)?.env.JOBS, '2');
+  assert.deepEqual([run.memFit?.workers, run.memFit?.max, run.memFit?.raisable, run.backoff?.workers], [2, 3, false, 2]);
+  assert.match(run.pendingStatus ?? '', /^workers: 2 \(2 of 3 fit: memory 9 GB available, 2\.5 GB a worker\)$/m);
+  // The memory frees and the host is calm for 7 minutes: a pilot's {workers} is fixed, so the count stays 2.
+  w.sys.memUsedGb = 3;
+  for (let i = 0; i < 42; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual([run.backoff?.workers, run.events.length], [2, 0]);
+  // The painter is back when the pool is due: 2 of 7, raisable; still the run's one memory-fit alert.
+  w.sys.memUsedGb = 21;
+  w.sys.release('lab-J526-pilot1', 'ok'); r.tick();
+  assert.equal(run.unit, 'lab-J526-run1');
+  assert.deepEqual([run.memFit?.workers, run.memFit?.max, run.memFit?.raisable, w.sys.started.at(-1)?.env.JOBS], [2, 7, true, '7']);
+  assert.deepEqual(r.statusDoc().alerts?.filter((a) => a.kind === 'memory-fit').map((a) => [a.workers, a.workersMax]), [[2, 3]]);
+});
+
+test('D526: a fit is decided on the uncapped per-worker total (no jump at the installed cap); the next block gets back the workers a fit held down', () => {
+  const w = world({ 'J526-a.md': FIT_POOL2.replace('mem_per_worker_gb: 2.5', 'mem_per_worker_gb: 2') });
+  const r = new Runner({ ...w.cfg, cores: null }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J526-prepare', 'ok'); r.tick();
+  w.sys.release('lab-J526-pilot1', 'ok'); r.tick();
+  const run = r.runs.get('J526')!;
+  const ctl = (): unknown => JSON.parse(fs.readFileSync(r.controlFile('J526'), 'utf8'));
+  assert.deepEqual([run.unit, run.workers, ctl()], ['lab-J526-run1', 7, { paused: false, maxWorkers: 7 }]);
+  // An hour of run1 measures a 2.5 GB worker: 2.5 x 1.4 = 3.5 a worker, 7 x 3.5 = 24.5 GB, which D521 counts at the
+  // installed 21 -- and 24 GB are free (27 available).  D521 would start run2 at 7 (24.5 > 24); D526 starts 6.
+  w.sys.unitJavaPeaksGb = () => [2.5];
+  for (let i = 0; i < 61; i++) { w.sys.t += 60_000; r.tick(); }
+  assert.equal(r.perWorkerGb(run, r.jobOf(run)), 3.5);
+  w.sys.release('lab-J526-run1', 'ok'); r.tick();
+  assert.equal(run.unit, 'lab-J526-run2');
+  assert.equal(r.stepNeedGb(run, r.jobOf(run)!, run.steps[run.stepIndex]!), 21, 'the capped need fits');
+  assert.deepEqual([run.memFit?.workers, run.memFit?.max, ctl()], [6, 7, { paused: false, maxWorkers: 6 }]);
+  // A second world: run1 starts at 4 of 7 beside the painter, is raised to 5, and run2 (the painter gone) starts at 7.
+  const f = fitWorld(16.5, FIT_POOL2);
+  f.w.sys.memUsedGb = 11;      // 19 available: room for one more worker (19 - 3 - 4 x 2.5 = 6 -> 2; then 1 at 5)
+  for (let i = 0; i < 14; i++) { f.w.sys.t += 10_000; f.r.tick(); }
+  assert.deepEqual(f.ctl(), { paused: false, maxWorkers: 5 });
+  f.w.sys.memUsedGb = 3;
+  f.w.sys.release('lab-J526-run1', 'ok'); f.r.tick();
+  assert.equal(f.run.unit, 'lab-J526-run2');
+  assert.deepEqual([f.run.memFit ?? null, f.run.backoff?.workers, f.ctl()], [null, 7, { paused: false, maxWorkers: 7 }]);
+});
+
+test('D526: a memory retry needs 2 workers\' worth (retryNeeds minGb) and starts fitted at the step it resumes', () => {
+  const { w, r, run } = fitWorld(3);
+  assert.equal(run.unit, 'lab-J526-run1');
+  w.sys.release('lab-J526-run1', 'killed'); r.tick();
+  assert.equal(r.runs.get('J526')?.outcome?.state, 'waiting');
+  w.sys.t += 10_000; r.tick();     // its STATUS published: waiting, settling for its minute
+  // Retried with one worker fewer (retryCap): 6 x 2.5 = 15 GB, at least 2 x 2.5 = 5.
+  assert.deepEqual(r.retryNeeds(r.statuses()).get('J526'), { cores: 7, memGb: 17.5, minGb: 5 });
+  w.sys.memUsedGb = 16.5;    // 13.5 available, 10.5 free: not 15, but 5
+  w.sys.t += 51_000; r.tick();
+  const again = r.runs.get('J526')!;
+  assert.equal(again.outcome, null, 'admitted on its least');
+  w.sys.release('lab-J526-prepare', 'ok'); r.tick();
+  assert.equal(again.unit, 'lab-J526-run1', w.sys.lines.join('\n'));
+  assert.deepEqual([again.memFit?.workers, again.memFit?.max], [4, 6]);
+});
+
+test('D526: a pressure drop after a fit (the painter back mid-step), then a re-raise capped by what fits', () => {
+  const { w, r, run, ctl } = fitWorld(16.5);
+  w.sys.memUsedGb = 3;
+  for (let i = 0; i < 13; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 5 });
+  // The painter comes back and the host swaps: a drop, by D337's rule.
+  w.sys.memUsedGb = 13.5;
+  w.sys.some10 = 15;
+  for (let i = 0; i < 2; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 4 });
+  // Calm again, the painter still there: 16.5 - 3 - 4 x 2.5 = 3.5 GB, one worker: raised to 5, never 6.
+  w.sys.some10 = 0;
+  for (let i = 0; i < 90; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(run.events.map((e) => [e.kind, e.workers]), [['raise', 5], ['drop', 4], ['raise', 5]]);
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 5 });
+  assert.equal(run.memFit?.workers, 4);
+});
+
+test('D526: admission -- two heavy jobs in one pass: the first admitted on its least, the second carved out; a block mem_gb: means the whole need', () => {
+  const machine: MachineBudget = { cores: 14, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const wide = hjob('J300', 'max_workers: 7\n');             // 17.5 GB, at least 5
+  const narrow = hjob('J301', 'cores: 1\n');                 // 2.5 GB
+  const mem = { availGb: 14, reserveGb: 3, headroomGb: 0, capGb: 21, some10: 0, maxSome10: 5 };
+  const r = schedule({ jobs: [wide, narrow], statuses: new Map(), active: new Map(), machine, playing: false, paused: false, now: T0, memory: mem });
+  // J300 starts (5 <= 11) and reserves all its 17.5 GB of the free memory: J301 is not admitted into it.
+  assert.deepEqual(r.start.map((x) => x.id), ['J300']);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code, b.needGb, b.freeGb]), [['J301', 'memory-wait', 2.5, 0]]);
+  assert.deepEqual(headerNeed(wide, 7), { cores: 7, memGb: 17.5, minGb: 5 });
+  assert.deepEqual(headerNeed(narrow, 1), { cores: 1, memGb: 2.5 });
+  const withFit = hjob('J302', 'max_workers: 7\n\n## Commands\ncores: 1\nmem_gb: 12\n```bash\necho fit\n```\n');
+  assert.deepEqual(withFit.errors, []);
+  assert.deepEqual(headerNeed(withFit, 7), { cores: 7, memGb: 17.5 }, 'a block mem_gb: is exempt from the fit, so the job waits for its whole need');
 });

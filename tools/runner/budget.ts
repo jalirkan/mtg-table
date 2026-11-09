@@ -25,6 +25,10 @@
 // pressure (PSI some avg10) is at most 5% (runner.ts `memoryWait`): a GPU painter or a browser
 // outside the slice counts there.  A need is counted at most the INSTALLED heavy budget, never a
 // lowered one, and `--mem-gb` is refused below 4 GB or below any running or waiting job's need.
+// D526 (amends D521): a `## Commands` step whose workers do not all fit does not wait: it starts
+// with as many as fit, floor((MemAvailable − the reserve − the others' untouched reserve) / its
+// per-worker need), at least FIT_MIN_WORKERS, and the backoff raises it toward its sized count as
+// the memory frees (runner.ts `memoryFit`, `fitCap`).  Under FIT_MIN_WORKERS, it waits as before.
 //
 // Where it lives: `<state>/budget.json`, written by `tools/runner.sh budget`, read by the
 // daemon every tick (no restart).  Absent, the daemon's `--cores N` flag, else `whole`.
@@ -39,6 +43,8 @@ export const BUDGET_FILE = 'budget.json';
 export const DESKTOP_THREADS = 2;
 /** Before a step starts: its expected peak must fit in MemAvailable less this (GB). */
 export const AVAIL_RESERVE_GB = 3;
+/** D526: the fewest workers a step starts with when not all of them fit; under this it waits (`memory-wait`). */
+export const FIT_MIN_WORKERS = 2;
 /** `budget --mem-gb` refuses a cap under this (GB). */
 export const MIN_MEM_CAP_GB = 4;
 
@@ -118,6 +124,7 @@ export function budgetText(o: { r: Resolved; file: BudgetFile | null; machine: M
     `        shared = ${modeCores('shared', m)}, whole = ${modeCores('whole', m)}${o.daemonCores != null && o.daemonCores !== o.r.cores ? `; the daemon's last status.json says ${o.daemonCores} (it reads budget.json every tick: an older runner ignores it)` : ''}`,
     `memory: ${o.r.memGb} GB for heavy jobs${o.r.memFrom === 'budget.json' ? ` (budget.json caps it; the lab's is ${o.heavyGb} GB)` : ''}: the lab slice's MemoryMax ${o.labGb} G (${m.memTotalGb.toFixed(1)} GB less the ${o.reserveGb} GB reserve), less a light job's share`,
     `        before any step starts, its expected peak must also fit in MemAvailable less ${o.availReserveGb} GB${o.availGb !== null ? ` (now ${(Math.round(o.availGb * 10) / 10)} GB available)` : ''}, with memory pressure (some avg10) at most 5%`,
+    `        a commands step whose workers do not all fit starts with as many as fit (at least ${FIT_MIN_WORKERS}, D526) and is raised toward its sized count as memory frees`,
     'set:    tools/runner.sh budget whole | shared | default    (default: remove budget.json; the --cores flag, else whole)',
     `        tools/runner.sh budget --cores N    tools/runner.sh budget --mem-gb N (4 to ${o.heavyGb}, and not below a running or waiting job's need; more is tools/runner.sh install --reserve-gb N, which rewrites the slice)`,
   ].join('\n');
