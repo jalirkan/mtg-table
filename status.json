@@ -1,21 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-11-09T13:10:57-05:00",
- "heartbeat": "2026-11-09T13:10:57-05:00",
+ "updated": "2026-11-09T13:11:54-05:00",
+ "heartbeat": "2026-11-09T13:11:54-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.88,
-  "memUsedGb": 8.7,
+  "load1": 4.23,
+  "memUsedGb": 7.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4335,
+  "swapUsedMb": 4334,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 3,
+  "coresUsed": 7,
   "coresTotal": 14
  },
  "running": [
@@ -25,21 +25,21 @@
    "id": "J202",
    "title": "Random rollouts, iteration 3 (random-v4): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2), a chain of single changes on both rollout seats: (a) search-v2-rrandom4, J201 (a)'s search-v2-rrandom3 with R8 made lethal-aware (rollout=random4: under a lethal attack a good block only where the seat survives it, and after a dead draw the surviving redraw with the most good blocks; no R9), and (b) search-v2-rrandom4-m40, (a) with the search's override margin at 40 instead of 20 ((a) plus one change), each read once under D527's pre-registered table, D525's copied with the arms renamed (SHOWN, INCONCLUSIVE or NOT SHOWN indistinguishable: a 4,800-game confirmation before Forge leaves the loop; NOT SHOWN worse or losing badly: the diagnosis and the iteration loop's random-v5; both losing badly after random-v3 lost badly: the loop stops), alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 4/4",
+   "phase": "commands 1/3",
    "started": "2026-11-09T13:04:29-05:00",
-   "elapsed": 389,
+   "elapsed": 445,
    "done": 0,
    "total": 2400,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 3,
+   "workers": 7,
+   "workersMax": 7,
+   "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-09T13:04:29-05:00",
-   "memGb": 1.17,
+   "memGb": 0.01,
    "live": {
     "cma.played": 0,
     "cma.score": 0,
@@ -79,7 +79,7 @@
     "cma.timeouts": 0,
     "cmb.errors": 0,
     "cmb.timeouts": 0,
-    "elapsed_s": 388,
+    "elapsed_s": 442,
     "j202_err": 0
    },
    "liveHeadline": [
@@ -115,7 +115,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J202-pilot4"
+   "detail": "lab-J202-run1"
   }
  ],
  "queue": [],

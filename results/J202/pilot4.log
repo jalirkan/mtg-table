@@ -1,0 +1,31 @@
+==== J202 pilot4 started 2026-11-09T13:06:17-05:00 in unit lab-J202-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-rrandom4 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-rrandom4 vs search-v1-anytime (match:j202-pilot:20261109T180618-1126748, seed 680900000, 1 pair(s))
+  done   w0 search-v2-rrandom4 2-2 search-v1-anytime (0 draws) in 136 s
+  4 decisive games (2 pairs): search-v2-rrandom4 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-rrandom4 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-rrandom4: 112 decisions searched in 4 games, 29 changed Forge's answer (25.9%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-rrandom4 by kind: p 23/77, a 4/23, b 2/12
+search-v2-rrandom4 time per decision: 551.87 ms (p+a+b); by kind p 506.064, a 645.037, b 667.216
+search-v1-anytime: 111 decisions searched in 4 games, 19 changed Forge's answer (17.1%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 13/78, a 3/23, b 3/10
+search-v1-anytime time per decision: 607.237 ms (p+a+b); by kind p 634.712, a 494.23, b 652.846
+{"run":"20261109T180618-1126748","games":4,"aRolloutsPerDecision":20.79,"bRolloutsPerDecision":20.61,"ratio":1.009,"aRrRollouts":2340,"bRrRollouts":0,"aV2Fires":9179,"aV3Fires":49,"aV4Fires":6,"aPerRollout":{"cardTargetOffered":0.3444,"land":0.1162,"noRepeatNoOp":0.0286,"v2_castSomething":0.2855,"v2_chumpBlock":0.0329,"v2_dominatedAttacker":0.0158,"v2_lethalAttack":0.0013,"v2_lethalBlock":0.0038,"v2_ownStack":2.5004,"v2_targetSide":1.0829,"v3_goodBlock":0.0209,"v4_goodBlockLethal":0.0026,"xDrawn":0.0205,"zeroXLeftOut":0.2064}}
+{"run":"20261109T180618-1126748","games":4,"lost":2,"won":2,"other":0,"aCfgOther":0,"meanTurnsLost":17,"meanTurnsWon":14}
+match search-v2-rrandom4-m40 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-rrandom4-m40 vs search-v1-anytime (match:j202-pilot:20261109T180835-1157613, seed 680900000, 1 pair(s))
+  done   w0 search-v2-rrandom4-m40 2-2 search-v1-anytime (0 draws) in 191 s
+  4 decisive games (2 pairs): search-v2-rrandom4-m40 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-rrandom4-m40 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-rrandom4-m40: 128 decisions searched in 4 games, 38 changed Forge's answer (29.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-rrandom4-m40 by kind: p 30/88, a 4/26, b 4/14
+search-v2-rrandom4-m40 time per decision: 754.483 ms (p+a+b); by kind p 706.528, a 856.64, b 866.197
+search-v1-anytime: 120 decisions searched in 4 games, 26 changed Forge's answer (21.7%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 18/83, a 5/26, b 3/11
+search-v1-anytime time per decision: 695.613 ms (p+a+b); by kind p 709.677, a 636.054, b 730.272
+{"run":"20261109T180835-1157613","games":4,"aRolloutsPerDecision":23.7,"bRolloutsPerDecision":20.61,"ratio":1.15,"aRrRollouts":3067,"bRrRollouts":0,"aV2Fires":13200,"aV3Fires":113,"aV4Fires":179,"aPerRollout":{"cardTargetOffered":0.4457,"land":0.1493,"noRepeatNoOp":0.0626,"v2_castSomething":0.3228,"v2_chumpBlock":0.0577,"v2_dominatedAttacker":0.0812,"v2_lethalBlock":0.0316,"v2_ownStack":2.7861,"v2_targetSide":1.0245,"v3_goodBlock":0.0368,"v4_goodBlockRefused":0.0584,"xDrawn":0.031,"zeroXLeftOut":0.1966}}
+{"run":"20261109T180835-1157613","games":4,"lost":2,"won":2,"other":0,"aCfgOther":0,"meanTurnsLost":16.5,"meanTurnsWon":17.5}
