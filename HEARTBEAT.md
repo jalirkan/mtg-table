@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-09T05:45:57-05:00
+- time: 2026-11-09T05:50:33-05:00
 - runner: 57320655, up since 2026-11-08T09:54:53-05:00
 - state: running
-- running: J200 commands 1/3, 6139/8840 lines, 3878/h, ETA 2026-11-09T06:27:44-05:00, 6 worker(s), 7 core(s)
+- running: J200 commands 1/3, 6358/8840 lines, 4000.5/h, ETA 2026-11-09T06:27:47-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 11.47; memory 9.9/30.5 GB, swap 4431 MB, pressure 0% (lab budget 23.4 GB)
+- load: 15.43; memory 5.8/30.5 GB, swap 4430 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J201
 - waiting: nothing
 - last finished: J199 done at 2026-11-09T03:33:14-05:00: cma.played 1200 · cma.score 0.438 · cma.lo 0.419 · cma.hi 0.456 · cma.elo -43.7 · cma.eloLo -57.1 · cma.eloHi -30.4 · cma.aSearch.msPerDecision 928.496 · cma.bSearch.msPerDecision 911.268 · roa.aRolloutsPerDecision 17.95 · roa.bRolloutsPerDecision 15.55 · roa.ratio 1.154 · roa.aPerRollout.v2_lethalAttack 0.012 · roa.aPerRollout.v2_lethalBlock 0.016 · roa.aPerRollout.v2_targetSide 0.568 · roa.aPerRollout.v2_castSomething 0.227 · roa.aPerRollout.v2_dominatedAttacker 0.05 · roa.aPerRollout.v2_chumpBlock 0.055 · roa.aPerRollout.v2_ownStack 2.382 · roa.aRrFailures 86 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 0 · v.a.losesBadly 1 · v.a.candidate 0 · cmb.played 1200 · cmb.score 0.463 · cmb.lo 0.445 · cmb.hi 0.482 · cmb.elo -25.5 · cmb.eloLo -38.3 · cmb.eloHi -12.8 · cmb.aSearch.msPerDecision 942.617 · cmb.bSearch.msPerDecision 913.189 · rob.aRolloutsPerDecision 16.86 · rob.bRolloutsPerDecision 15.57 · rob.ratio 1.083 · rob.aPerRollout.v2_lethalAttack 0.011 · rob.aPerRollout.v2_targetSide 0.307 · rob.aPerRollout.v2_castSomething 0.201 · rob.aPerRollout.v2_dominatedAttacker 0.058 · rob.aPerRollout.v2_ownStack 1.916 · rob.aRrFailures 2 · v.b.shown 0 · v.b.inconclusive 0 · v.b.indistinguishable 0 · v.b.worseNotBadly 1 · v.b.losesBadly 0 · v.b.candidate 0 · v.confirm 0 · v.iterate 1 · v.principleInDoubt 1 · wa.lost 675 · wb.lost 644
