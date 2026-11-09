@@ -66,17 +66,25 @@ public final class ExploreMath {
          * ({@link #randomSeat}, D508's frozen population) never is.
          */
         public final boolean v2;
+        /**
+         * D525: {@code random-v3} -- random-v2 above plus D525's two rollout
+         * guardrails ({@link RolloutGuards}: R8 the good block, R9 the held
+         * instant), each counted under its {@code v3.} name.  Only a search
+         * rollout's seat ({@code rollout=random3}, {@code random3-self}); never
+         * the atlas's, and never without {@link #v2}.
+         */
+        public final boolean v3;
 
         public Config(final double epsilon, final double closeCall, final boolean opening) {
             this(epsilon, closeCall, opening, false);
         }
 
         public Config(final double epsilon, final double closeCall, final boolean opening, final boolean random) {
-            this(epsilon, closeCall, opening, random, false);
+            this(epsilon, closeCall, opening, random, false, false);
         }
 
         private Config(final double epsilon, final double closeCall, final boolean opening, final boolean random,
-                       final boolean v2) {
+                       final boolean v2, final boolean v3) {
             if (!(epsilon >= 0 && epsilon <= 1) || !(closeCall >= 0 && closeCall < 1)) {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "play exploration: epsilon in [0, 1] and closeCall in [0, 1), got %s and %s", epsilon, closeCall));
@@ -88,7 +96,11 @@ public final class ExploreMath {
             this.closeCall = closeCall;
             this.opening = opening;
             this.random = random;
+            if (v3 && !v2) {
+                throw new IllegalArgumentException("random-v3 (D525) is random-v2 plus its guardrails: v3 needs v2");
+            }
             this.v2 = v2;
+            this.v3 = v3;
         }
 
         /** D451: the random seat's settings. */
@@ -98,7 +110,12 @@ public final class ExploreMath {
 
         /** D523: the search rollout's random seat, random-v2: {@link #randomSeat} plus {@link RolloutGuards}. */
         public static Config randomV2() {
-            return new Config(1, 0, false, true, true);
+            return new Config(1, 0, false, true, true, false);
+        }
+
+        /** D525: the search rollout's random seat, random-v3: {@link #randomV2} plus R8 and R9 ({@link RolloutGuards}). */
+        public static Config randomV3() {
+            return new Config(1, 0, false, true, true, true);
         }
 
         /** From a job line's {@code playExplore} object (Jetty's parser: numbers are Long or Double); null in, null out. */

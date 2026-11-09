@@ -17,7 +17,7 @@ commit.
 **The index below lists 399 items still open across 44 follow-up lists** — 367
 open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
+said 371 across 42, three rows and one list behind its table) — D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
@@ -460,6 +460,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 41 | open | D521's runner uses the whole machine and is not deployed: the core budget is all threads but two by default (`whole`, 14; `shared` = the old 8, `tools/runner.sh budget`), every start needs its expected peak in MemAvailable less 3 GB at PSI some avg10 ≤ 5%, a memory stop is retried first as soon as it fits (one-minute settle, its need carved out, never behind a newer job), a declaration is a floor a measured peak × 1.4 may raise after 60 minutes (J197: 14 GB declared, ~17.2 measured), `alone: yes` keeps ladder matches by themselves (lint `alone-ladder`), and `status.json` says `degraded` for memory held outside the lab with `alerts` (memory-wait, budget-wait, stops, retries); the merger deploys it with `tools/runner.sh install` — after J197 ends or once J197's job file carries `alone: yes` (the decision's Deploy) — a first concurrent night is read for pressure events, and ForgeCoach's `#lab` page learns `degraded`, the alerts and `alone` | `docs/decisions/D521-runner-whole-machine.md` |
 | [Cube lab](#fu-cube-lab) | 42 | open | D523's random-rollout arms `search-v2-rrandom` (`rollout=random`: both seats in the rollout play random-v2, the atlas's random seat with no Forge answer plus seven guardrails R1–R7 from the atlas's evidence, each counted as `search.rr.v2.*`) and `search-v2-rrandom-self` (`random-self`: the searching seat alone) are registered and unplayed: J199, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D523's pre-registered rule (SHOWN or INCONCLUSIVE at +15 go to a 4,800-game confirmation; NOT SHOWN splits into indistinguishable — the interval holds 0 and its lower end is above −15 — worse not badly, and loses badly below −15); then the agent's iteration loop (counters and worst-lost games, guardrails added or fixed as a new arm, re-run without asking the owner) | `docs/decisions/D523-random-rollouts.md` |
 | [Cube lab](#fu-cube-lab) | 43 | open | D524's `--only <file>` (the move atlas branched at given decisions with given options, option 0 among them; the baseline's listing checked first, exit 4 on a mismatch; refused beside `--decisions` and the cuts; off by default, byte for byte) is built on `pc/atlas-only` and not merged: the merger runs the full gate on it, then J200 pins main and plays its 106 decisions on the Forge map alone; open until J200's pilot passes on the merged pin | `docs/decisions/D524-atlas-only.md` |
+| [Cube lab](#fu-cube-lab) | 44 | open | D525's random-v3 arms `search-v2-rrandom3` (`rollout=random3`: both rollout seats random-v3, D523's random-v2 plus R8 — a blocker that can block an attacker, destroy it and survive takes that block, `search.rr.v3.goodBlock` — and R9 — a harmful instant or ability on the opponent's turn waits for combat after blockers or the end step, `search.rr.v3.heldInstant`) and `search-v2-rrandom3-self` (`random3-self`: the searching seat alone) are registered and unplayed, from J199 (a)'s diagnosis (−45 Elo at 976 games: the random defender rarely takes the block that kills the attacker, so the search overrides Forge's "attack none" ×1.55 as often, and loses those games): J201, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D525's copy of D523's rule; then D523's iteration loop | `docs/decisions/D525-random-v3-good-block.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10422,6 +10423,18 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    is byte-identical (the D524 file's Measured: atlas-selftest's legs before and after); `web/test/cubelab-atlas-only.test.ts`
    and atlas-selftest's new `--only` leg on D511's pair hold it. **Open:** the merge, with the full gate; then J200's pin
    and its pilot (J193's s01 d12, options 0 and 3, five Forge branches).
+44. **D525's random-v3 arms are registered and unplayed: J201, then the iteration loop.**
+   (2026-11-09, D525, amending D523.) J199 (a), `search-v2-rrandom`, lost badly (427 of 976, about −45 Elo, 0 errors
+   at the diagnosis's snapshot); its counters were within ×2 of the pilot, and the loss sat in the search overriding
+   Forge's "attack none" with extra attackers ×1.55 as often (games with one won 0.72 of the arm's base against
+   search-v2's 0.86), because random-v2 as the rollout's defender draws each blocker's block uniformly and so rarely
+   takes the block that kills the attacker and survives. random-v3 adds R8 (that block is taken, R5's own pair
+   predicate, in every random block, several candidates drawn from the seeded stream; `search.rr.v3.goodBlock`) and
+   R9 (a harmful instant or ability on the opponent's turn waits for combat after blockers or the end step;
+   `search.rr.v3.heldInstant`). Ladder players `search-v2-rrandom3` (`8d1623965986`) and `search-v2-rrandom3-self`
+   (`0403f4770b26`); D523's arms and the atlas's seat unchanged. **Open:** the merge with the full gate; then J201,
+   each arm 1,200 games on the confirm set against search-v1-anytime, `alone: yes`, on D525's rule; then the loop
+   (D523 point 10; D525 point 7 counts its iterations).
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
@@ -10947,6 +10960,23 @@ random seat instead of Forge's AI:
   successive iterations that lose badly.
 
 Its follow-up is the cube lab's 42 ([the list](#fu-cube-lab)).
+
+<a id="d525-random-v3"></a>
+## random-v3: the good block and the held instant (2026-11-09, D525)
+
+**Status: built, piloted, not gated or merged; J201 drafted, not posted.** Branch `pc/rollout-random-v3` off main
+`2ffb65fe`. `docs/decisions/D525-random-v3-good-block.md` is the decision, D523's iteration loop's first turn: J199's
+match (a) lost badly (about −45 Elo at 976 games) because the random defender in the rollouts rarely takes the block
+that kills the attacker, so the search's extra attacks over Forge's "attack none" looked safe and were not.
+
+- **R8, the good block**: in every random block, an attacker a blocker can block, destroy and survive gets that
+  blocker, alone (R5's pair predicate on the defender's side; `search.rr.v3.goodBlock`).
+- **R9, the held instant**: on the opponent's turn a harmful play waits for combat after blockers or the end step,
+  never in answer to a cast (`search.rr.v3.heldInstant`).
+- **Two arms**, `search-v2-rrandom3` and `search-v2-rrandom3-self` (`rollout=random3`, `random3-self`), and J201's
+  rule, D523's point 9 copied with the arms renamed.
+
+Its follow-up is the cube lab's 44 ([the list](#fu-cube-lab)).
 
 ## Deferred — out of scope for M0–M7
 

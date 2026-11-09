@@ -148,6 +148,7 @@ public final class DecisionSelfTest {
         budgetAndRoundsOnly();
         knobAndCurveArms();
         rolloutRandom();
+        rolloutRandomV3();
         explore();
         randomSeat();
 
@@ -667,6 +668,134 @@ public final class DecisionSelfTest {
         gang.put("bearB", "giant");
         check(RolloutGuards.dropChumps(gang, a -> a.equals("giant"), b -> b.equals("bearA"), m) == 0 && gang.size() == 2
                 && m.guardrails().get("v2.chumpBlock") == 1, "R6 keeps a double block that kills its attacker, the blocker it loses included");
+    }
+
+    /**
+     * D525: the two random-v3 arms and R8/R9, without the engine.
+     * {@code search-v2-rrandom3} is search-v2 plus {@code rollout=random3}
+     * (both rollout seats random-v3), {@code search-v2-rrandom3-self} plus
+     * {@code rollout=random3-self} (the searching seat alone); each differs
+     * from search-v2 in {@code rollout} only, and the live seat refuses both.
+     * random-v3 is random-v2 plus the flag; random-v2 and the atlas's seat are
+     * not random-v3.  Then R8's and R9's engine-free cores, firing where they
+     * must and quiet where they must not, with their counters.
+     */
+    private static void rolloutRandomV3() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig rr = SearchConfig.parse(v2Text + ",rollout=random");
+        final SearchConfig r3 = SearchConfig.parse(v2Text + ",rollout=random3");
+        final SearchConfig r3s = SearchConfig.parse(v2Text + ",rollout=random3-self");
+        check(r3.rolloutRandomUs() && r3.rolloutRandomThem() && r3.rolloutRandomV3() && !r3.rolloutOutletsUs()
+                && !r3.rolloutOutletsThem(), "rrandom3: both rollout seats random-v3, no outlet policy");
+        check(r3s.rolloutRandomUs() && !r3s.rolloutRandomThem() && r3s.rolloutRandomV3() && !r3s.rolloutOutletsUs()
+                && !r3s.rolloutOutletsThem(), "rrandom3-self: the searching seat random-v3, the opponent Forge, no outlet policy");
+        check(r3.rolloutRandomSeat().v3 && r3s.rolloutRandomSeat().v3 && !rr.rolloutRandomSeat().v3 && rr.rolloutRandomSeat().v2
+                && !rr.rolloutRandomV3() && !SearchConfig.parse(v2Text + ",rollout=random-self").rolloutRandomV3()
+                && !v2.rolloutRandomV3(), "random3 seats random-v3; D523's random and random-self stay random-v2");
+        check(r3.toString().equals(v2.toString() + ",rollout=random3") && r3s.toString().equals(v2.toString() + ",rollout=random3-self"),
+                "the texts are search-v2's plus rollout=random3 / random3-self: " + r3 + " / " + r3s);
+        configOnly("rrandom3", v2, r3, List.of("rollout"));
+        configOnly("rrandom3-self", v2, r3s, List.of("rollout"));
+        boolean refused = false;
+        try {
+            SearchConfig.parse("rollout=random4");
+        } catch (final IllegalArgumentException e) {
+            refused = e.getMessage().contains("random3-self");
+        }
+        check(refused, "an unknown rollout= is refused, naming the random3 values");
+        for (final String r : List.of("random3", "random3-self")) {
+            boolean liveRefused = false;
+            try {
+                SearchConfig.parseLive("rollout=" + r);
+            } catch (final IllegalArgumentException e) {
+                liveRefused = e.getMessage().contains("measurement only");
+            }
+            check(liveRefused, "parseLive refuses rollout=" + r + " (measurement only, as D523's)");
+        }
+
+        final ExploreMath.Config c3 = ExploreMath.Config.randomV3();
+        check(c3.v3 && c3.v2 && c3.random && c3.epsilon == 1 && c3.closeCall == 0 && !c3.opening,
+                "random-v3 is random-v2 plus the flag");
+        check(!ExploreMath.Config.randomV2().v3 && !ExploreMath.Config.randomSeat().v3
+                && !ExploreMath.Config.of(java.util.Map.of("random", Boolean.TRUE)).v3,
+                "random-v2, the atlas's random seat and a job line's random seat are not random-v3 (R8 and R9 quiet there)");
+        final ExploreMath m = new ExploreMath(c3, 1);
+
+        // R8: an attacker a blocker can block, destroy and survive gets that block
+        final java.util.Map<String, List<String>> good = new java.util.LinkedHashMap<>();
+        good.put("wall", List.of("bear"));
+        final java.util.Map<String, String> none = new java.util.LinkedHashMap<>();
+        check(RolloutGuards.goodBlocks(none, good, List.of("bear"), k -> 0, m) == 1 && "bear".equals(none.get("wall")) && none.size() == 1
+                && m.guardrails().get("v3.goodBlock") == 1, "R8: a blocker drawn as no block takes the good block, counted");
+        final java.util.Map<String, String> chump = new java.util.LinkedHashMap<>();
+        chump.put("token", "bear");
+        check(RolloutGuards.goodBlocks(chump, good, List.of("bear"), k -> 0, m) == 1 && chump.equals(java.util.Map.of("wall", "bear")),
+                "R8: the good blocker takes its attacker alone (the drawn chump goes back to no block)");
+        final java.util.Map<String, String> moved = new java.util.LinkedHashMap<>();
+        moved.put("wall", "giant");
+        check(RolloutGuards.goodBlocks(moved, good, List.of("giant", "bear"), k -> 0, m) == 1 && moved.equals(java.util.Map.of("wall", "bear")),
+                "R8: a blocker drawn onto an attacker it does not block well moves to the one it does");
+        final java.util.Map<String, String> held = new java.util.LinkedHashMap<>();
+        held.put("wall", "bear");
+        final java.util.Map<String, List<String>> two = new java.util.LinkedHashMap<>();
+        two.put("wall", List.of("bear"));
+        two.put("wall2", List.of("bear"));
+        check(RolloutGuards.goodBlocks(held, two, List.of("bear"), k -> 0, m) == 0 && held.equals(java.util.Map.of("wall", "bear")),
+                "R8 quiet when the attacker already has a good block");
+        final java.util.Map<String, String> quiet = new java.util.LinkedHashMap<>();
+        quiet.put("token", "dragon");
+        check(RolloutGuards.goodBlocks(quiet, new java.util.LinkedHashMap<String, List<String>>(), List.of("dragon"), k -> 0, m) == 0
+                && quiet.equals(java.util.Map.of("token", "dragon")), "R8 quiet when no blocker can block, destroy and survive");
+        check(m.guardrails().get("v3.goodBlock") == 3, "R8's quiet cases count nothing");
+        final java.util.Map<String, List<String>> both = new java.util.LinkedHashMap<>();
+        both.put("wall", List.of("bear", "dragon"));
+        final java.util.Map<String, String> one = new java.util.LinkedHashMap<>();
+        check(RolloutGuards.goodBlocks(one, both, List.of("dragon", "bear"), k -> 0, m) == 1 && one.equals(java.util.Map.of("wall", "dragon")),
+                "R8: one blocker good against two attackers takes the largest, once");
+        final java.util.Set<String> chosen = new java.util.TreeSet<>();
+        boolean same = true;
+        for (long seed = 0; seed < 64; seed++) {
+            final ExploreMath a = new ExploreMath(c3, seed);
+            final ExploreMath b = new ExploreMath(c3, seed);
+            final java.util.Map<String, String> ma = new java.util.LinkedHashMap<>();
+            final java.util.Map<String, String> mb = new java.util.LinkedHashMap<>();
+            RolloutGuards.goodBlocks(ma, two, List.of("bear"), a::pick, a);
+            RolloutGuards.goodBlocks(mb, two, List.of("bear"), b::pick, b);
+            same &= ma.equals(mb) && ma.size() == 1;
+            chosen.addAll(ma.keySet());
+        }
+        check(same && chosen.equals(java.util.Set.of("wall", "wall2")),
+                "R8: among several good blockers the seat's seeded stream picks one -- the same on the same seed, each of them on some seed");
+
+        // R9: harm on their turn waits for combat past its blockers, or the end step
+        final java.util.Map<String, Object> opts = new java.util.LinkedHashMap<>();
+        opts.put("pass", null);
+        opts.put("cast:bolt", null);
+        opts.put("cast:bear", null);
+        opts.put("activate:pinger", null);
+        final java.util.function.Predicate<String> harmful = k -> k.equals("cast:bolt") || k.equals("activate:pinger");
+        final java.util.Map<String, Object> fires = new java.util.LinkedHashMap<>(opts);
+        check(RolloutGuards.holdInstants(fires, true, false, harmful, m) == 2
+                && fires.keySet().equals(new java.util.LinkedHashSet<>(List.of("pass", "cast:bear")))
+                && m.guardrails().get("v3.heldInstant") == 1, "R9 holds the harmful plays on their turn out of the window, counted once");
+        check(RolloutGuards.holdInstants(new java.util.LinkedHashMap<>(opts), false, false, harmful, m) == 0,
+                "R9 quiet on its own turn");
+        check(RolloutGuards.holdInstants(new java.util.LinkedHashMap<>(opts), true, true, harmful, m) == 0,
+                "R9 quiet in the window");
+        final java.util.Map<String, Object> alone = new java.util.LinkedHashMap<>();
+        alone.put("cast:bolt", null);
+        check(RolloutGuards.holdInstants(alone, true, false, harmful, m) == 0 && alone.size() == 1, "R9 never removes the last option");
+        check(m.guardrails().get("v3.heldInstant") == 1, "R9's quiet cases count nothing");
+        check(RolloutGuards.instantWindow("COMBAT_DECLARE_BLOCKERS", true)
+                && RolloutGuards.instantWindow("COMBAT_DAMAGE", true)
+                && RolloutGuards.instantWindow("END_OF_TURN", true)
+                && !RolloutGuards.instantWindow("END_OF_TURN", false)
+                && !RolloutGuards.instantWindow("COMBAT_DECLARE_ATTACKERS", true)
+                && !RolloutGuards.instantWindow("MAIN1", true)
+                && !RolloutGuards.instantWindow("UPKEEP", true),
+                "R9's window: combat after blockers or the end step, the stack empty -- never in answer to a cast");
+        check(!RolloutGuards.harmful(null) && !RolloutGuards.harmful(List.of()), "R9: pass is never harmful");
     }
 
     /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */

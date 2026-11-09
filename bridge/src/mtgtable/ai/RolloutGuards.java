@@ -71,6 +71,22 @@ import forge.game.spellability.SpellAbility;
  *       seat's own, it passes: it does not answer itself.</li>
  * </ul>
  *
+ * <p>D525's {@code random-v3} ({@link ExploreMath.Config#randomV3}) adds two,
+ * counted under their {@code v3.} names (J199's diagnosis: a random defender
+ * that rarely takes the block that kills the attacker makes attacks look safe):
+ *
+ * <ul>
+ *   <li><b>R8 {@code v3.goodBlock}</b> -- in every random block, an attacker
+ *       that one of the seat's blockers can block, destroy and survive (R5's
+ *       pair predicate, {@link #goodBlock}) gets that blocker, alone: largest
+ *       attacker first, one such blocker each, several candidates drawn from
+ *       the seat's seeded stream; R2's trample-aware test and R6 then judge the
+ *       result as before.</li>
+ *   <li><b>R9 {@code v3.heldInstant}</b> -- on the opponent's turn a harmful
+ *       play (R3's {@link #harm} on any of its parts) is offered only with the
+ *       stack empty and combat past its blockers, or at the end step.</li>
+ * </ul>
+ *
  * <p>The combat checks read Forge's combat arithmetic
  * ({@code ComputerUtilCombat.damageIfUnblocked}, {@code canDestroyAttacker},
  * {@code canDestroyBlocker}, {@code CombatUtil.canBlock}) -- what the damage
@@ -324,12 +340,21 @@ final class RolloutGuards {
             if (!CombatUtil.canBlock(a, b)) {
                 continue;
             }
-            if (ComputerUtilCombat.canDestroyAttacker(ai, a, b, combat, false)
-                    && !ComputerUtilCombat.canDestroyBlocker(ai, b, a, combat, false)) {
+            if (goodBlock(ai, a, b, combat)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * R5's and R8's pair predicate: blocking {@code a}, {@code b} destroys it
+     * ({@code canDestroyAttacker}) and survives (not {@code canDestroyBlocker})
+     * by Forge's combat arithmetic; {@code ai} is the seat whose decision it is.
+     */
+    static boolean goodBlock(final Player ai, final Card a, final Card b, final Combat combat) {
+        return ComputerUtilCombat.canDestroyAttacker(ai, a, b, combat, false)
+                && !ComputerUtilCombat.canDestroyBlocker(ai, b, a, combat, false);
     }
 
     // ------------------------------------------------------------------
@@ -436,5 +461,119 @@ final class RolloutGuards {
     static boolean deadAfter(final Player ai, final Combat combat, final Map<Card, Card> blocks) {
         SearchPolicy.setBlock(combat, ai, blocks);
         return ComputerUtilCombat.lifeThatWouldRemain(ai, combat) < 1;
+    }
+
+    // ------------------------------------------------------------------
+    // R8 (D525): the good block
+    // ------------------------------------------------------------------
+
+    /**
+     * R8 on a drawn block {@code blocks} (blocker -> attacker): {@code good}
+     * maps each blocker to the attackers it can block, destroy and survive.  A
+     * blocker already on an attacker it blocks well stays there; then, the
+     * attackers in {@code order} (largest first), each attacker no blocker
+     * holds well gets one of the blockers that would -- not one already
+     * holding a good block -- drawn by {@code pick} when there are several,
+     * alone: the blockers drawn onto it go back to no block, and the chosen
+     * blocker leaves whatever it was drawn to.  Each attacker given a good
+     * block counted once.  Engine-free.
+     */
+    static <B, A> int goodBlocks(final Map<B, A> blocks, final Map<B, List<A>> good, final List<A> order,
+                                 final java.util.function.IntUnaryOperator pick, final ExploreMath math) {
+        final java.util.Set<B> held = new java.util.HashSet<>();
+        final java.util.Set<A> covered = new java.util.HashSet<>();
+        for (final Map.Entry<B, A> e : blocks.entrySet()) {
+            final List<A> g = good.get(e.getKey());
+            if (g != null && g.contains(e.getValue())) {
+                held.add(e.getKey());
+                covered.add(e.getValue());
+            }
+        }
+        int n = 0;
+        for (final A a : order) {
+            if (covered.contains(a)) {
+                continue;
+            }
+            final List<B> cands = new ArrayList<>();
+            for (final Map.Entry<B, List<A>> e : good.entrySet()) {
+                if (!held.contains(e.getKey()) && e.getValue().contains(a)) {
+                    cands.add(e.getKey());
+                }
+            }
+            if (cands.isEmpty()) {
+                continue;
+            }
+            final B c = cands.size() == 1 ? cands.get(0) : cands.get(pick.applyAsInt(cands.size()));
+            blocks.values().removeIf(a::equals);
+            blocks.put(c, a);
+            held.add(c);
+            covered.add(a);
+            math.guardrail("v3.goodBlock");
+            n++;
+        }
+        return n;
+    }
+
+    // ------------------------------------------------------------------
+    // R9 (D525): the held instant
+    // ------------------------------------------------------------------
+
+    /**
+     * R9 on an option list: on the opponent's turn ({@code theirTurn}) and out
+     * of its window ({@code window}: the stack empty, and combat past its
+     * blockers or the end step), every {@code cast:} and {@code activate:}
+     * option {@code harmful} says is harmful is removed -- never the last
+     * option.  Counted once per list it narrowed.  Engine-free.
+     */
+    static int holdInstants(final Map<String, ?> opts, final boolean theirTurn, final boolean window,
+                            final Predicate<String> harmful, final ExploreMath math) {
+        if (!theirTurn || window) {
+            return 0;
+        }
+        final List<String> drop = new ArrayList<>();
+        for (final String k : opts.keySet()) {
+            if ((k.startsWith("cast:") || k.startsWith("activate:")) && harmful.test(k)) {
+                drop.add(k);
+            }
+        }
+        if (drop.isEmpty() || drop.size() >= opts.size()) {
+            return 0;
+        }
+        for (final String k : drop) {
+            opts.remove(k);
+        }
+        math.guardrail("v3.heldInstant");
+        return drop.size();
+    }
+
+    /** R9's after-blockers-or-end steps, by {@code PhaseType} name (engine-free: naming the enum would load Forge's localizer). */
+    static final java.util.Set<String> INSTANT_STEPS = java.util.Set.of("COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE",
+            "COMBAT_DAMAGE", "COMBAT_END", "END_OF_TURN");
+
+    /** R9's window: the stack empty, and the step ({@code PhaseType.name()}) one of combat's after blockers are declared, or the end step. */
+    static boolean instantWindow(final String step, final boolean stackEmpty) {
+        return stackEmpty && step != null && INSTANT_STEPS.contains(step);
+    }
+
+    /** R9's harm: R3's {@link #harm} is +1 on the play or on any of its sub-abilities. */
+    static boolean harmful(final List<SpellAbility> play) {
+        if (play == null || play.isEmpty()) {
+            return false;
+        }
+        for (SpellAbility s = play.get(0); s != null; s = s.getSubAbility()) {
+            if (harm(s) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** R9 at a priority of {@code ai}'s: the engine's half (whose turn, which step, the stack, which plays harm). */
+    static int holdInstants(final Player ai, final Map<String, List<SpellAbility>> opts, final ExploreMath math) {
+        final forge.game.Game g = ai.getGame();
+        final boolean theirTurn = !g.getPhaseHandler().isPlayerTurn(ai);
+        final PhaseType ph = g.getPhaseHandler().getPhase();
+        return holdInstants(opts, theirTurn, instantWindow(ph == null ? null : ph.name(), g.getStack().isEmpty()),
+                k -> harmful(opts.get(k)), math);
     }
 }
