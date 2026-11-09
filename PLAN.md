@@ -10437,9 +10437,10 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    rule acts when only the searching seat is random and the rollout ends with the turn (a `-self` R9 seat fired 8
    times in 1,517 rollouts); what would test it is a seating where the random seat plays the opponent's turn. Ladder
    players `search-v2-rrandom3` (`8d1623965986`) and `search-v2-rrandom3-held` (`a484402b1185`); D523's arms and the
-   atlas's seat unchanged. The 4-game pilots ran ×1.25 and
-   ×1.28 search-v2's rollouts a decision, 2–2 each, 0 errors; R8 fired 0.013 and 0.010 a random rollout, R9 0.39 in
-   `rrandom3-held`. **Open:** the merge with the full gate; then J201, `rrandom3` as (a) and
+   atlas's seat unchanged. The final 4-game pilots (after the skeptic's fixes:
+   menace left out of R8, R2's rejection of an R8 result falling back to the draw, two diagnostics) ran ×1.24 and ×1.20
+   search-v2's rollouts a decision, 2–2 each, 0 errors; R8 fired 0.011 and 0.016 a random rollout, R9 0.36 in
+   `rrandom3-held`; no R8 result was illegal, and R2 rejected one 0.086 and 0.19 times a rollout (per attempt). **Open:** the merge with the full gate; then J201, `rrandom3` as (a) and
    `rrandom3-held` as (b), each 1,200 games on the confirm set against search-v1-anytime, `alone: yes`, on D525's
    rule; then the loop (D523 point 10; D525 point 7: J199 was not an iteration that lost badly, since its (b) was not,
    so J201 cannot stop the loop).

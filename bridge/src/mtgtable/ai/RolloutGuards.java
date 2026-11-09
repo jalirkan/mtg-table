@@ -83,8 +83,12 @@ import forge.game.spellability.SpellAbility;
  *       that one of the seat's blockers can block, destroy and survive (R5's
  *       pair predicate, {@link #goodBlock}) gets that blocker, alone: largest
  *       attacker first, one such blocker each, several candidates drawn from
- *       the seat's seeded stream; R2's trample-aware test and R6 then judge the
- *       result as before.</li>
+ *       the seat's seeded stream; an attacker no lone blocker may block
+ *       (menace) is left out; R2's trample-aware test and R6 then judge the
+ *       result as before, and under a lethal attack an R8 result R2 rejects
+ *       gives way to the draw as it was.  Its diagnostics count an R8 result
+ *       refused as illegal ({@code v3.goodBlockIllegal}) and one R2 rejected
+ *       ({@code v3.goodBlockDead}); neither takes a draw.</li>
  *   <li><b>R9 {@code v3.heldInstant}</b> -- on the opponent's turn a harmful
  *       play (R3's {@link #harm} on any of its parts) is offered only with the
  *       stack empty and combat past its blockers, or at the end step.</li>
@@ -515,6 +519,32 @@ final class RolloutGuards {
             n++;
         }
         return n;
+    }
+
+    /**
+     * R8's map: each blocker to the attackers it may block ({@code choices},
+     * in step) that it can block, destroy and survive ({@code pairGood}),
+     * leaving out an attacker one blocker alone may not block
+     * ({@code soloBlockable} false: menace, "can't be blocked except by two or
+     * more"), since a lone good blocker on it would make the whole result
+     * illegal.  Blockers with no such attacker are left out.  Engine-free.
+     */
+    static <B, A> Map<B, List<A>> goodMap(final List<B> blockers, final List<List<A>> choices,
+                                          final java.util.function.BiPredicate<A, B> pairGood,
+                                          final Predicate<A> soloBlockable) {
+        final Map<B, List<A>> good = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < blockers.size(); i++) {
+            final List<A> gs = new ArrayList<>();
+            for (final A a : choices.get(i)) {
+                if (soloBlockable.test(a) && pairGood.test(a, blockers.get(i))) {
+                    gs.add(a);
+                }
+            }
+            if (!gs.isEmpty()) {
+                good.put(blockers.get(i), gs);
+            }
+        }
+        return good;
     }
 
     // ------------------------------------------------------------------

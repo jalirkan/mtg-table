@@ -62,14 +62,19 @@ the wire and the protocol are unchanged, so it is free under D509.*
    search is evaluating included — an attacker that one of the seat's blockers can **block, destroy and survive**
    gets that blocker, alone. The pair predicate is R5's own (`RolloutGuards.goodBlock`: `canDestroyAttacker` and not
    `canDestroyBlocker`, Forge's combat arithmetic, read with none of the seat's blocks declared), so R5 and R8 are the
-   two sides of one rule. The attackers are taken largest first (`damageIfUnblocked`); a blocker already drawn onto an
+   two sides of one rule. An attacker no lone blocker may block (menace, "can't be blocked except by two or more":
+   `CombatUtil.canAttackerBeBlockedWithAmount(a, 1, combat)` false) is left out, since a lone good blocker on it would
+   make the whole result illegal. The attackers are taken largest first (`damageIfUnblocked`); a blocker already drawn onto an
    attacker it blocks well stays; otherwise one of the blockers that would — not one already holding a good block —
    is drawn from the seat's seeded stream when there are several (common random numbers, D523 point 1), the other
    blockers drawn onto that attacker go back to no block, and the chosen one leaves whatever it was drawn to. Then R2
-   (`lifeThatWouldRemain`, trample through a blocker included) and R6 judge the result exactly as before: under a
-   lethal attack a draw R8 left dead is redrawn, and R2's greedy fallback is unchanged. A result that is not a legal
-   declaration is not made (the draw stands). Each attacker given a good block counts once, when the block is the one
-   declared.
+   (`lifeThatWouldRemain`, trample through a blocker included) and R6 judge the result as before, with one difference:
+   under a lethal attack an R8 result R2 rejects gives way to the draw as it was, which is redrawn only if it is dead
+   too; R2's greedy fallback is unchanged. A result that is not a legal declaration is not made (the draw stands). Each
+   attacker given a good block counts once, when the block is the one declared. Two diagnostics take no draw, so the
+   streams stay: `v3.goodBlockIllegal` (an R8 result refused as illegal) and `v3.goodBlockDead` (an R8 result R2
+   rejected), on the match line's batch counts like the others (`search.rr.v3.goodBlockIllegal`,
+   `search.rr.v3.goodBlockDead`).
 2. **R9, the held instant** (`RolloutGuards.holdInstants`, counted `v3.heldInstant` once per priority it narrowed). For
    an R9 seat (`rollout=random3-held`, point 3), on the **opponent's** turn, a `cast:` or `activate:` option any part of which is harmful by R3's own test
    (`RolloutGuards.harm`: a curse, DealDamage, Destroy, LoseLife, Discard, Sacrifice) is removed unless the stack is
@@ -102,7 +107,12 @@ the wire and the protocol are unchanged, so it is free under D509.*
    built this twice before: one random-v3 with both rules in both seatings, then one rule per seating — `random3` R8
    on both seats, `random3-self` R9 on the searching seat. The coordinator split the first because `random3` was
    confounded, and replaced the second because R9 hardly acts under `-self`. Both pilots are kept, under
-   `var/pilot-rrandom3/first/` and `var/pilot-rrandom3/split/`; `rollout=random3-self` is now refused as unknown.)
+   `var/pilot-rrandom3/first/` and `var/pilot-rrandom3/split/`; `rollout=random3-self` is now refused as unknown.
+   `first/`'s `search-v2-rrandom3` lines carry hash `8d1623965986` with R8 **and** R9 in both seatings: a config hash is
+   the seat config's text only, and the code is pinned by the commit (D341), so the same hash then meant other code.
+   From the merge on, any change to R8's or R9's definition takes a **new** rollout value and a new arm, never an edit
+   under `random3` or `random3-held`. The final pilot is `var/pilot-rrandom3/final2/`, after the skeptic's fixes to R8
+   (menace, the lethal fallback).)
 4. **The atlas's random seat is untouched** (D523 point 6): `Config.randomSeat()` and a job line's `playExplore:
    {random: true}` are not v2 and carry neither R8 nor R9; `DecisionSelfTest.randomSeat` is unchanged and
    `rolloutRandomV3` asserts it.
@@ -185,14 +195,15 @@ the wire and the protocol are unchanged, so it is free under D509.*
 **Measured.**
 
 - `./bridge/build.sh` (nice 19): the lint and its self-test unchanged and green (`lint-bridge-selftest OK: 33 rules,
-  79 firing cases`, `bridge lint OK`; no new hop, no `CardView`, no thread); `decision selftest: 317 check(s), 0
+  79 firing cases`, `bridge lint OK`; no new hop, no `CardView`, no thread); `decision selftest: 319 check(s), 0
   failure(s)` (289 before; `DecisionSelfTest.rolloutRandomV3`: each arm's config is search-v2's in the field `rollout`
   alone; both values seat both rollout seats; `random3` seats random-v2 plus R8 (R8 on, R9 quiet) and `random3-held`
   random-v2 plus R8 and R9 (both on); D523's two still random-v2 with neither; the texts; `random3-self` refused as an
   unknown value naming the new ones; `parseLive` refusing both; the atlas's and a job line's random seats carry neither rule; R8 fires for a blocker drawn as no block, replaces a drawn chump on the attacker, moves a blocker drawn onto an
   attacker it does not block well, gives one blocker good against two attackers the larger, and on several good
   blockers draws one from the seeded stream — the same on the same seed, each on some seed — and is quiet when the
-  attacker already has a good block or no blocker kills and survives; R9 holds the harmful plays on their turn,
+  attacker already has a good block or no blocker kills and survives; R8's map leaves out an attacker no lone blocker may
+  block (menace) and keeps only the pairs that kill and survive; R9 holds the harmful plays on their turn,
   counted once, is quiet on its own turn and in the window, never removes the last option, and its window is combat
   after blockers or the end step with the stack empty); `build OK`.
 - `web/test/ai-ladder.test.ts`: each new arm's raw params are search-v2's plus `rollout`, its resolved params
@@ -200,51 +211,66 @@ the wire and the protocol are unchanged, so it is free under D509.*
   hashes above; D523's two and search-v2's hashes unchanged; no `search-v2-rrandom3-self` registered. `npm --prefix web test` green (node --test 1,890 passed
   of 1,900, 0 failed; vitest 161 of 161); `tsc --noEmit` clean; `node tools/decisions.mjs check` OK; `tools/public-check.sh`
   OK.
-- **The pilot**: D523's recipe, `./tools/ai-ladder.sh match <arm> search-v1-anytime --games 2 --batch-pairs 1 --jobs 1
-  --purpose pilot --dir var/pilot-rrandom3/<arm>` at nice 10, 4 games each, after J199 ended, while J200 ran its pilot
-  (so the machine was contended a little), on the R8 / R8+R9 code. It played `search-v2-rrandom3` first, in 2 min
-  56 s, then `search-v2-rrandom3-held`, in 2 min 56 s. Rollouts a decision is `search.rollouts` over
-  `search.{p,a,b}.considered`; play and copy time are `search.playUs` and `search.copyUs` over `search.rollouts`. J201's
-  reader (`rollouts.cjs`, J199's plus the `v3.` sums) reproduces D523's pilot table exactly from its batches.
+- **The pilot** (final, after the skeptic's fixes): D523's recipe, `./tools/ai-ladder.sh match <arm> search-v1-anytime
+  --games 2 --batch-pairs 1 --jobs 1 --purpose pilot --dir var/pilot-rrandom3/final2/<arm>` at nice 10, 4 games each,
+  after J199 ended, while J200 ran (so the machine was contended a little). It played `search-v2-rrandom3` first, in
+  2 min 38 s, then `search-v2-rrandom3-held`, in 2 min 45 s; each match line names its arm at its hash
+  (`8d1623965986`, `a484402b1185`). Rollouts a decision is `search.rollouts` over `search.{p,a,b}.considered`; play and
+  copy time are `search.playUs` and `search.copyUs` over `search.rollouts`. J201's reader (`rollouts.cjs`, J199's plus
+  the `v3.` sums) reproduces D523's pilot table exactly from its batches.
 
   | match (4 games) | side | decisions | ms a decision | rollouts a decision | rounds a decision | play ms a rollout | copy ms a rollout | rollout errors |
   |---|---|---|---|---|---|---|---|---|
-  | rrandom3 (R8) vs search-v2 | **rrandom3** | 80 | 903 | **17.50** (×1.25) | 7.15 | 44.5 | 5.2 | 0 |
-  | | search-v2 | 94 | 914 | 14.04 | 5.67 | 57.5 | 5.2 | 0 |
-  | rrandom3-held (R8+R9) vs search-v2 | **rrandom3-held** | 86 | 894 | **17.27** (×1.28) | 6.94 | 45.3 | 5.1 | 0 |
-  | | search-v2 | 96 | 873 | 13.45 | 5.45 | 57.2 | 5.1 | 0 |
+  | rrandom3 (R8) vs search-v2 | **rrandom3** | 71 | 886 | **17.14** (×1.24) | 7.13 | 44.8 | 5.4 | 0 |
+  | | search-v2 | 89 | 852 | 13.88 | 5.78 | 53.9 | 5.3 | 0 |
+  | rrandom3-held (R8+R9) vs search-v2 | **rrandom3-held** | 79 | 868 | **16.75** (×1.20) | 6.87 | 44.8 | 5.2 | 0 |
+  | | search-v2 | 95 | 846 | 13.94 | 5.61 | 53.3 | 4.7 | 0 |
 
-  Both matches 2–2, no engine error, no step timeout, no step cap, no budget fallback; each side one `unmappable`
-  fallback; 0 random-seat failures. Guardrail fires: `search.rr.<rule>` over `search.rr.rollouts` (every rollout that
-  seated a random seat, deadline-cut ones included; summed over both seats):
+  Both matches 2–2, no engine error, no step timeout, no step cap, no budget fallback; one `unmappable` fallback on
+  each side except `rrandom3`'s arm (none); 0 random-seat failures. Guardrail fires: `search.rr.<rule>` over
+  `search.rr.rollouts` (every rollout that seated a random seat, deadline-cut ones included; summed over both seats):
 
-  | rule | rrandom3, R8 (1,423 rollouts) | rrandom3-held, R8+R9 (1,510) |
+  | rule | rrandom3, R8 (1,238 rollouts) | rrandom3-held, R8+R9 (1,343) |
   |---|---|---|
-  | R1 `v2.lethalAttack` | 20 (0.014) | 19 (0.013) |
-  | R2 `v2.lethalBlock` | 63 (0.044) | 59 (0.039) |
-  | R3 `v2.targetSide` | 1,198 (0.84) | 1,724 (1.14) |
-  | R4 `v2.castSomething` | 279 (0.20) | 306 (0.20) |
-  | R5 `v2.dominatedAttacker` | 55 (0.039) | 44 (0.029) |
-  | R6 `v2.chumpBlock` | 102 (0.072) | 99 (0.066) |
-  | R7 `v2.ownStack` | 2,589 (1.82) | 2,962 (1.96) |
-  | **R8 `v3.goodBlock`** | **18 (0.013)** | **15 (0.010)** |
-  | **R9 `v3.heldInstant`** | **— (off)** | **593 (0.39)** |
-  | D451's `land` / `zeroXLeftOut` / `refusedCast` | 228 / 439 / 6 | 217 / 396 / 8 |
+  | R1 `v2.lethalAttack` | 0 | 23 (0.017) |
+  | R2 `v2.lethalBlock` | 22 (0.018) | 61 (0.045) |
+  | R3 `v2.targetSide` | 1,356 (1.10) | 1,412 (1.05) |
+  | R4 `v2.castSomething` | 256 (0.21) | 294 (0.22) |
+  | R5 `v2.dominatedAttacker` | 45 (0.036) | 58 (0.043) |
+  | R6 `v2.chumpBlock` | 38 (0.031) | 81 (0.060) |
+  | R7 `v2.ownStack` | 2,638 (2.13) | 2,524 (1.88) |
+  | **R8 `v3.goodBlock`** | **14 (0.011)** | **21 (0.016)** |
+  | R8 `v3.goodBlockIllegal` | 0 | 0 |
+  | R8 `v3.goodBlockDead` | 107 (0.086) | 258 (0.19) |
+  | **R9 `v3.heldInstant`** | **— (off)** | **480 (0.36)** |
+  | D451's `land` / `zeroXLeftOut` / `refusedCast` | 253 / 334 / 9 | 230 / 481 / 10 |
 
-  R8 fires in both arms at about one good block every 80–100 random rollouts (the lane's earlier pilots, on other
-  games: 0.019 and 0.007); against R6's ~0.07 chumps removed, most random blocks have no good block to take. R9 holds
-  a harmful play in about two `random3-held` rollouts in five, and is absent from `random3`'s lines. Rollouts a
-  decision rose ×1.25 and ×1.28 over search-v2 (J199's night under `random`: ×1.15). The pilot is 8 games: a cost and
-  a liveness check, not a strength reading.
+  **No R8 result was refused as illegal** after the menace exclusion. **`v3.goodBlockDead` outnumbers the good blocks
+  taken by about ×8 and ×12**: under a lethal attack R8 often moves a blocker off the attacker whose block kept the
+  seat alive, R2 rejects that, and the draw as it was is kept or redrawn (the skeptic's fallback, point 1). It is
+  counted per attempt, and a lethal block can take up to 64 attempts, so it says how often R8 met R2 rather than how
+  many blocks it changed; but it says that most of R8's chances in these 8 games came under lethal attacks, where R2's
+  arithmetic overrules it. R8 took a good block about once every 70–90 random rollouts; R9 held a harmful play in
+  about one `random3-held` rollout in three and is absent from `random3`'s lines. Rollouts a decision rose ×1.24 and
+  ×1.20 over search-v2 (J199's night under `random`: ×1.15). The pilot is 8 games: a cost and a liveness check, not a
+  strength reading.
 
 **Residuals.**
 
 - **R8's predicate is the pair's.** `canDestroyAttacker` / `canDestroyBlocker` judge one blocker against one attacker
   with Forge's combat prediction (first strike, deathtouch, indestructible, regeneration, the static pumps it
   predicts); it does not foresee the attacker's combat trick, and does not look for a pair of blockers that kill
-  together. D523's residual on the evidence's definitions holds here too.
+  together. D523's residual on the evidence's definitions holds here too. It is called with `withoutAbilities` false,
+  as R5 calls it: that credits the blocker's own activated pumps and damage prevention, which the random seat may
+  never use, and also the attacker's regeneration, transform and prevention, which the attacker's side may. `true`
+  would drop both sides, and would change R5, which D523's arms share; so R8 keeps R5's call and can call a block good
+  that needs the blocker's own pump to be.
+- **R8 ranks attackers by their damage to the seat** (`damageIfUnblocked` with the seat as defender), the attackers on
+  a planeswalker or a battle included, while R2 counts only those at the seat. The ranking only orders the attackers
+  for the choice of good blockers; every attacker is still eligible.
 - **R8 gives up an attacker's chump for a good block elsewhere.** Under a lethal attack that can leave the seat dead;
-  R2 then redraws, and when no draw survives in 64 the greedy fallback blocks without R8.
+  R2 then rejects the R8 result and the draw as it was is kept if it survives (counted `v3.goodBlockDead`), else
+  redrawn, and when no draw survives in 64 the greedy fallback blocks without R8.
 - **R9's harm is R3's list.** A harmful play outside it (a bounce, a tap, a -X/-X that is not a curse by Forge's flag)
   is not held; a beneficial instant (a pump on its own creature) is never held, so it can still fire early. Activated
   abilities that are harmful (a pinger) are held with the spells.
@@ -252,8 +278,10 @@ the wire and the protocol are unchanged, so it is free under D509.*
   −25.5 is the searching seat's own random play, which neither new rule reaches (point 3): that path pauses until an
   arm seats the random seat on the opponent's turn.
 - **(b) − (a) is R9 only on identical deals and code.** Both arms play the same 600 deals on the same pin and night,
-  each against search-v2; their difference carries both arms' noise (about ±13.5 Elo at 1,200 games each, two
-  independent ±9.5 intervals), so only a large R9 effect reads clearly from one night.
+  each against search-v2; their difference carries both arms' noise: about ±18.5 Elo at 1,200 games each, from J199's
+  own 95% intervals of ±13.35 (a) and ±12.75 (b), √(13.35² + 12.75²) ≈ 18.5. The shared deals may lower it (the two
+  arms' outcomes are correlated deal by deal), but nothing has measured that; so only a large R9 effect reads clearly
+  from one night.
 
 **Follow-up.** The cube lab's 44 (`PLAN.md`): J201, the two 1,200-game matches above, and D523's iteration loop on
 their reading.

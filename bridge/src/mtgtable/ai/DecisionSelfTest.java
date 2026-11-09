@@ -777,6 +777,16 @@ public final class DecisionSelfTest {
         check(same && chosen.equals(java.util.Set.of("wall", "wall2")),
                 "R8: among several good blockers the seat's seeded stream picks one -- the same on the same seed, each of them on some seed");
 
+        // R8's map: a menace attacker (no lone blocker may block it) is left out, so a lone good blocker never makes the
+        // whole R8 result illegal (the skeptic's review); a blocker with no good block left is left out too
+        final java.util.Map<String, List<String>> gm = RolloutGuards.goodMap(List.of("wall", "bear"),
+                List.of(List.of("menace", "goblin"), List.of("menace")), (a, b) -> true, a -> !a.equals("menace"));
+        check(gm.equals(java.util.Map.of("wall", List.of("goblin"))),
+                "R8's map leaves out an attacker one blocker alone may not block, and a blocker left with none: " + gm);
+        final java.util.Map<String, List<String>> gm2 = RolloutGuards.goodMap(List.of("wall"), List.of(List.of("goblin", "dragon")),
+                (a, b) -> a.equals("goblin"), a -> true);
+        check(gm2.equals(java.util.Map.of("wall", List.of("goblin"))), "R8's map keeps only the pairs that kill and survive: " + gm2);
+
         // R9: harm on their turn waits for combat past its blockers, or the end step
         final java.util.Map<String, Object> opts = new java.util.LinkedHashMap<>();
         opts.put("pass", null);

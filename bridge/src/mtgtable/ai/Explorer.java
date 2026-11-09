@@ -1925,17 +1925,10 @@ public final class Explorer {
             }
             byDamage.addAll(at.keySet());
             byDamage.sort((x, y) -> Integer.compare(at.get(y), at.get(x)));
-            for (int i = 0; i < blockers.size(); i++) {
-                final List<Card> gs = new ArrayList<>();
-                for (final Card a : choices.get(i)) {
-                    if (RolloutGuards.goodBlock(ai, a, blockers.get(i), combat)) {
-                        gs.add(a);
-                    }
-                }
-                if (!gs.isEmpty()) {
-                    good.put(blockers.get(i), gs);
-                }
-            }
+            // an attacker one blocker alone may not block (menace) is left out: a lone good blocker on it would make
+            // every R8 result of the draw illegal (the skeptic's review)
+            good.putAll(RolloutGuards.goodMap(blockers, choices, (a, b) -> RolloutGuards.goodBlock(ai, a, b, combat),
+                    a -> CombatUtil.canAttackerBeBlockedWithAmount(a, 1, combat)));
         }
         boolean lethalRedrawn = false;
         for (int attempt = 0; attempt < 64; attempt++) {
@@ -1953,10 +1946,16 @@ public final class Explorer {
                 // kept as drawn if the result is not legal; counted once the draw is taken
                 final Map<Card, Card> r8 = new LinkedHashMap<>(m);
                 final ExploreMath probe = new ExploreMath(math.config(), 0);
-                if (RolloutGuards.goodBlocks(r8, good, byDamage, math::pick, probe) > 0
-                        && SearchPolicy.legalBlock(combat, ai, r8)) {
-                    m = r8;
-                    goodBlocks = probe.guardrails().getOrDefault("v3.goodBlock", 0);
+                if (RolloutGuards.goodBlocks(r8, good, byDamage, math::pick, probe) > 0) {
+                    if (!SearchPolicy.legalBlock(combat, ai, r8)) {
+                        math.guardrail("v3.goodBlockIllegal");   // the R8 result is not a legal declaration
+                    } else if (v2 && lethal && RolloutGuards.deadAfter(ai, combat, r8)) {
+                        // R2 rejects the R8 result; the draw as it was is tried below (redrawn only if dead too)
+                        math.guardrail("v3.goodBlockDead");
+                    } else {
+                        m = r8;
+                        goodBlocks = probe.guardrails().getOrDefault("v3.goodBlock", 0);
+                    }
                 }
             }
             if (v2 && lethal && RolloutGuards.deadAfter(ai, combat, m)) {
