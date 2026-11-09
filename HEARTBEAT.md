@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-09T10:09:20-05:00
+- time: 2026-11-09T10:11:31-05:00
 - runner: 57320655, up since 2026-11-08T09:54:53-05:00
 - state: running
-- running: J201 commands 2/3, 1360/2400 games, 441.3/h, ETA 2026-11-09T12:30:44-05:00, 5 worker(s), 7 core(s)
+- running: J201 commands 2/3, 1368/2400 games, 421.4/h, ETA 2026-11-09T12:38:27-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 14.32; memory 15.3/30.5 GB, swap 4988 MB, pressure 0.06% (lab budget 23.4 GB)
+- load: 11.02; memory 15.7/30.5 GB, swap 4888 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J200 failed at 2026-11-09T06:26:14-05:00: branches 8840 · spines_done 53 · branch_errors 15 · branch_timeouts 15 · replay_diverged 0 · v.valid 82 · v.forge.wins 43 · v.forge.losses 24 · v.forge.ties 15 · v.forge.share 0.642 · v.forge.shareLo 0.515 · v.forge.shareHi 0.767 · v.forge.gain 0.05 · v.forge.gainLo 0.018 · v.forge.gainHi 0.082 · v.random.share 0.963 · v.random.gain 0.156 · v.shown 1 · v.notShown 0 · v.inconclusive 0
