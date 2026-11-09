@@ -1,0 +1,118 @@
+==== J200 run2 started 2026-11-09T06:06:31-05:00 in unit lab-J200-run2, 6 worker(s), 7 core(s), BLAS/OpenMP threads 7
+J200: J191-b-s01-pauper-3001: 1 decision(s) d23 [0, 2]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j191/decks/s01-pauper-2901/decks/pauper-2901-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j191/decks/s01-pauper-2901/decks/pauper-2901-00002.dck --seed 3001 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J191-b-s01-pauper-3001.json --out var/lab-j200/J191-b-s01-pauper-3001
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (41 turns, winner draw) lists 54 decision(s) of seat A; branching at 1: d23 (p, turn 20, 3 options)
+atlas phase B: the cut design (D480): --only (D524): d23 at options 0,2, list sha256 31e1c2a64c8f; checkpoints 0
+atlas phase B: 8 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/8] d23-forge-5: 10/10 branch game(s); 1801 branch games/h
+  [B 2/8] d23-forge-15: 10/10 branch game(s); 1742 branch games/h
+  [B 3/8] d23-forge-20: 10/10 branch game(s); 1741 branch games/h
+  [B 4/8] d23-forge-25: 10/10 branch game(s); 1736 branch games/h
+  [B 5/8] d23-forge-0: 10/10 branch game(s); 1645 branch games/h
+  [B 6/8] d23-forge-10: 10/10 branch game(s); 1661 branch games/h
+  [B 7/8] d23-forge-35: 10/10 branch game(s); 1653 branch games/h
+  [B 8/8] d23-forge-30: 10/10 branch game(s); 1491 branch games/h
+atlas: the checks on 6 workers took 9 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J191-b-s01-pauper-3001/atlas.json and atlas.md; phase A 0 game(s), phase B 80 branch game(s) at 1 decision(s); checks: clean (4041 rows, 162 frame logs, 1 leak check(s))
+  atlas warning: d23 option 0 `pass` (pass): 14 of 40 branch game(s) were capped (forge 14 of 40): 14 x ended at the turn cap
+  atlas warning: d23 option 2 `cast:19` (Chart a Course): 11 of 40 branch game(s) were capped (forge 11 of 40): 11 x ended at the turn cap
+J200: J193-b-s09-pauper-3793: 2 decision(s) d16 [0, 2], d22 [0, 1, 2]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j193/decks/s09-pauper-3693/decks/pauper-3693-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j193/decks/s09-pauper-3693/decks/pauper-3693-00002.dck --seed 3793 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J193-b-s09-pauper-3793.json --out var/lab-j200/J193-b-s09-pauper-3793
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (19 turns, winner B) lists 37 decision(s) of seat A; branching at 2: d16 (p, turn 12, 6 options), d22 (p, turn 14, 5 options)
+atlas phase B: the cut design (D480): --only (D524): d16 at options 0,2, d22 at options 0,1,2, list sha256 a67114e7b60c; checkpoints 0
+atlas phase B: 16 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/16] d16-forge-5: 10/10 branch game(s); 3410 branch games/h
+  [B 2/16] d16-forge-10: 10/10 branch game(s); 3522 branch games/h
+  [B 3/16] d16-forge-25: 10/10 branch game(s); 3450 branch games/h
+  [B 4/16] d16-forge-15: 10/10 branch game(s); 3884 branch games/h
+  [B 5/16] d16-forge-0: 10/10 branch game(s); 3905 branch games/h
+  [B 6/16] d16-forge-20: 10/10 branch game(s); 4521 branch games/h
+  [B 7/16] d16-forge-30: 10/10 branch game(s); 4657 branch games/h
+  [B 8/16] d16-forge-35: 10/10 branch game(s); 4750 branch games/h
+  [B 9/16] d22-forge-0: 15/15 branch game(s); 4853 branch games/h
+  [B 10/16] d22-forge-5: 15/15 branch game(s); 5177 branch games/h
+  [B 11/16] d22-forge-20: 15/15 branch game(s); 5219 branch games/h
+  [B 12/16] d22-forge-10: 15/15 branch game(s); 5284 branch games/h
+  [B 13/16] d22-forge-15: 15/15 branch game(s); 5322 branch games/h
+  [B 14/16] d22-forge-30: 15/15 branch game(s); 5327 branch games/h
+  [B 15/16] d22-forge-25: 15/15 branch game(s); 5243 branch games/h
+  [B 16/16] d22-forge-35: 15/15 branch game(s); 5026 branch games/h
+atlas: the checks on 6 workers took 7 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J193-b-s09-pauper-3793/atlas.json and atlas.md; phase A 0 game(s), phase B 200 branch game(s) at 2 decision(s); checks: clean (8185 rows, 402 frame logs, 2 leak check(s))
+J200: J193-b-s10-peasant-3794: 1 decision(s) d1 [0, 2]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j193/decks/s10-peasant-3694/decks/peasant-3694-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j193/decks/s10-peasant-3694/decks/peasant-3694-00002.dck --seed 3794 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J193-b-s10-peasant-3794.json --out var/lab-j200/J193-b-s10-peasant-3794
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (21 turns, winner A) lists 22 decision(s) of seat A; branching at 1: d1 (p, turn 3, 3 options)
+atlas phase B: the cut design (D480): --only (D524): d1 at options 0,2, list sha256 571627f957d6; checkpoints 0
+atlas phase B: 8 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/8] d1-forge-20: 10/10 branch game(s); 2386 branch games/h
+  [B 2/8] d1-forge-25: 10/10 branch game(s); 2515 branch games/h
+  [B 3/8] d1-forge-0: 10/10 branch game(s); 2507 branch games/h
+  [B 4/8] d1-forge-10: 10/10 branch game(s); 2450 branch games/h
+  [B 5/8] d1-forge-5: 10/10 branch game(s); 2409 branch games/h
+  [B 6/8] d1-forge-15: 10/10 branch game(s); 2411 branch games/h
+  [B 7/8] d1-forge-35: 10/10 branch game(s); 2138 branch games/h
+  [B 8/8] d1-forge-30: 10/10 branch game(s); 1789 branch games/h
+atlas: the checks on 6 workers took 7 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J193-b-s10-peasant-3794/atlas.json and atlas.md; phase A 0 game(s), phase B 80 branch game(s) at 1 decision(s); checks: clean (4790 rows, 162 frame logs, 1 leak check(s))
+J200: J187-b-s10-peasant-2562: 1 decision(s) d11 [0, 1, 2]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j187/decks/s10-peasant-2462/decks/peasant-2462-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j187/decks/s10-peasant-2462/decks/peasant-2462-00002.dck --seed 2562 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J187-b-s10-peasant-2562.json --out var/lab-j200/J187-b-s10-peasant-2562
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (19 turns, winner A) lists 15 decision(s) of seat A; branching at 1: d11 (a, turn 15, 7 options)
+atlas phase B: the cut design (D480): --only (D524): d11 at options 0,1,2, list sha256 9cb9423c6dce; checkpoints 0
+atlas phase B: 8 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/8] d11-forge-0: 15/15 branch game(s); 1800 branch games/h
+  [B 2/8] d11-forge-20: 15/15 branch game(s); 1700 branch games/h
+  [B 3/8] d11-forge-15: 15/15 branch game(s); 1761 branch games/h
+  [B 4/8] d11-forge-10: 15/15 branch game(s); 1775 branch games/h
+  [B 5/8] d11-forge-25: 15/15 branch game(s); 1751 branch games/h
+  [B 6/8] d11-forge-5: 15/15 branch game(s); 1427 branch games/h
+  [B 7/8] d11-forge-35: 15/15 branch game(s); 1298 branch games/h
+  [B 8/8] d11-forge-30: 15/15 branch game(s); 1378 branch games/h
+atlas: the checks on 6 workers took 7 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J187-b-s10-peasant-2562/atlas.json and atlas.md; phase A 0 game(s), phase B 120 branch game(s) at 1 decision(s); checks: clean (3881 rows, 242 frame logs, 1 leak check(s))
+  atlas warning: d11 option 2 `attack:18` (attack Scurry Oak): 13 of 40 branch game(s) were capped (forge 13 of 40): 13 x ended at the turn cap
+J200: J191-b-s06-peasant-3006: 1 decision(s) d6 [0, 4]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j191/decks/s06-peasant-2906/decks/peasant-2906-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j191/decks/s06-peasant-2906/decks/peasant-2906-00002.dck --seed 3006 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J191-b-s06-peasant-3006.json --out var/lab-j200/J191-b-s06-peasant-3006
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (21 turns, winner B) lists 12 decision(s) of seat A; branching at 1: d6 (p, turn 13, 5 options)
+atlas phase B: the cut design (D480): --only (D524): d6 at options 0,4, list sha256 6c8a84239605; checkpoints 0
+atlas phase B: 8 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/8] d6-forge-15: 10/10 branch game(s); 3399 branch games/h
+  [B 2/8] d6-forge-10: 10/10 branch game(s); 4024 branch games/h
+  [B 3/8] d6-forge-25: 10/10 branch game(s); 4266 branch games/h
+  [B 4/8] d6-forge-20: 10/10 branch game(s); 4806 branch games/h
+  [B 5/8] d6-forge-5: 10/10 branch game(s); 5006 branch games/h
+  [B 6/8] d6-forge-0: 10/10 branch game(s); 5206 branch games/h
+  [B 7/8] d6-forge-30: 10/10 branch game(s); 5238 branch games/h
+  [B 8/8] d6-forge-35: 10/10 branch game(s); 5211 branch games/h
+atlas: the checks on 6 workers took 4 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J191-b-s06-peasant-3006/atlas.json and atlas.md; phase A 0 game(s), phase B 80 branch game(s) at 1 decision(s); checks: clean (2377 rows, 162 frame logs, 1 leak check(s))
+J200: J186-b-s09-pauper-2548: 1 decision(s) d15 [0, 2]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j186/decks/s09-pauper-2448/decks/pauper-2448-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j186/decks/s09-pauper-2448/decks/pauper-2448-00002.dck --seed 2548 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J186-b-s09-pauper-2548.json --out var/lab-j200/J186-b-s09-pauper-2548
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (20 turns, winner B) lists 31 decision(s) of seat A; branching at 1: d15 (a, turn 11, 4 options)
+atlas phase B: the cut design (D480): --only (D524): d15 at options 0,2, list sha256 671bd211a6ad; checkpoints 0
+atlas phase B: 8 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/8] d15-forge-15: 10/10 branch game(s); 2666 branch games/h
+  [B 2/8] d15-forge-20: 10/10 branch game(s); 2710 branch games/h
+  [B 3/8] d15-forge-25: 10/10 branch game(s); 2848 branch games/h
+  [B 4/8] d15-forge-10: 10/10 branch game(s); 2928 branch games/h
+  [B 5/8] d15-forge-30: 10/10 branch game(s); 3005 branch games/h
+  [B 6/8] d15-forge-5: 10/10 branch game(s); 2962 branch games/h
+  [B 7/8] d15-forge-35: 10/10 branch game(s); 2700 branch games/h
+  [B 8/8] d15-forge-0: 10/10 branch game(s); 2118 branch games/h
+atlas: the checks on 6 workers took 6 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J186-b-s09-pauper-2548/atlas.json and atlas.md; phase A 0 game(s), phase B 80 branch game(s) at 1 decision(s); checks: clean (3304 rows, 162 frame logs, 1 leak check(s))
+J200: J188-b-s08-powered-2573: 1 decision(s) d3 [0, 1]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j188/decks/s08-powered-2473/decks/powered-2473-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j188/decks/s08-powered-2473/decks/powered-2473-00002.dck --seed 2573 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 40 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 6 --jobs 6 --only /home/justin-a/code/lab/mtg-table/var/j200-tools/only/J188-b-s08-powered-2573.json --out var/lab-j200/J188-b-s08-powered-2573
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (16 turns, winner A) lists 24 decision(s) of seat A; branching at 1: d3 (p, turn 6, 3 options)
+atlas phase B: the cut design (D480): --only (D524): d3 at options 0,1, list sha256 40a5bc454834; checkpoints 0
+atlas phase B: 8 unit(s) to play (0 done), chunks of 5 branches, on 6 worker(s)
+  [B 1/8] d3-forge-25: 10/10 branch game(s); 3171 branch games/h
+  [B 2/8] d3-forge-5: 10/10 branch game(s); 3462 branch games/h
+  [B 3/8] d3-forge-10: 10/10 branch game(s); 4020 branch games/h
+  [B 4/8] d3-forge-15: 10/10 branch game(s); 4080 branch games/h
+  [B 5/8] d3-forge-0: 10/10 branch game(s); 4222 branch games/h
+  [B 6/8] d3-forge-20: 10/10 branch game(s); 4360 branch games/h
+  [B 7/8] d3-forge-30: 10/10 branch game(s); 4298 branch games/h
+  [B 8/8] d3-forge-35: 10/10 branch game(s); 4170 branch games/h
+atlas: the checks on 6 workers took 4 s
+atlas: /home/justin-a/code/lab/data/lab-j200/J188-b-s08-powered-2573/atlas.json and atlas.md; phase A 0 game(s), phase B 80 branch game(s) at 1 decision(s); checks: clean (3300 rows, 162 frame logs, 1 leak check(s))
+J200: group t2: 7 spine command(s) run
