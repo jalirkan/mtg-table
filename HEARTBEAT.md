@@ -2,15 +2,15 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-09T06:26:00-05:00
+- time: 2026-11-09T06:26:16-05:00
 - runner: 57320655, up since 2026-11-08T09:54:53-05:00
 - state: running
-- running: J200 commands 3/3, 8840/8840 lines, 3812.1/h, 6 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 12.65; memory 6.4/30.5 GB, swap 4456 MB, pressure 0.16% (lab budget 23.4 GB)
-- queue: J201
+- running: J201 prepare, 0/2400 games, 1 worker(s), 7 core(s)
+- cores: 7 of 14 in use (the running jobs' widths; 16 threads)
+- load: 10.43; memory 6/30.5 GB, swap 4455 MB, pressure 0.04% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J199 done at 2026-11-09T03:33:14-05:00: cma.played 1200 · cma.score 0.438 · cma.lo 0.419 · cma.hi 0.456 · cma.elo -43.7 · cma.eloLo -57.1 · cma.eloHi -30.4 · cma.aSearch.msPerDecision 928.496 · cma.bSearch.msPerDecision 911.268 · roa.aRolloutsPerDecision 17.95 · roa.bRolloutsPerDecision 15.55 · roa.ratio 1.154 · roa.aPerRollout.v2_lethalAttack 0.012 · roa.aPerRollout.v2_lethalBlock 0.016 · roa.aPerRollout.v2_targetSide 0.568 · roa.aPerRollout.v2_castSomething 0.227 · roa.aPerRollout.v2_dominatedAttacker 0.05 · roa.aPerRollout.v2_chumpBlock 0.055 · roa.aPerRollout.v2_ownStack 2.382 · roa.aRrFailures 86 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 0 · v.a.losesBadly 1 · v.a.candidate 0 · cmb.played 1200 · cmb.score 0.463 · cmb.lo 0.445 · cmb.hi 0.482 · cmb.elo -25.5 · cmb.eloLo -38.3 · cmb.eloHi -12.8 · cmb.aSearch.msPerDecision 942.617 · cmb.bSearch.msPerDecision 913.189 · rob.aRolloutsPerDecision 16.86 · rob.bRolloutsPerDecision 15.57 · rob.ratio 1.083 · rob.aPerRollout.v2_lethalAttack 0.011 · rob.aPerRollout.v2_targetSide 0.307 · rob.aPerRollout.v2_castSomething 0.201 · rob.aPerRollout.v2_dominatedAttacker 0.058 · rob.aPerRollout.v2_ownStack 1.916 · rob.aRrFailures 2 · v.b.shown 0 · v.b.inconclusive 0 · v.b.indistinguishable 0 · v.b.worseNotBadly 1 · v.b.losesBadly 0 · v.b.candidate 0 · v.confirm 0 · v.iterate 1 · v.principleInDoubt 1 · wa.lost 675 · wb.lost 644
+- last finished: J200 failed at 2026-11-09T06:26:14-05:00: branches 8840 · spines_done 53 · branch_errors 15 · branch_timeouts 15 · replay_diverged 0 · v.valid 82 · v.forge.wins 43 · v.forge.losses 24 · v.forge.ties 15 · v.forge.share 0.642 · v.forge.shareLo 0.515 · v.forge.shareHi 0.767 · v.forge.gain 0.05 · v.forge.gainLo 0.018 · v.forge.gainHi 0.082 · v.random.share 0.963 · v.random.gain 0.156 · v.shown 1 · v.notShown 0 · v.inconclusive 0
 
 ## Messages
 

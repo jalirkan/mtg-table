@@ -1,8 +1,9 @@
-running
+failed
+reason: check: v.checks.problems == 0 (v.checks.problems = 1)
 runner: forgecoach-runner 57320655
 started: 2026-11-09T03:33:15-05:00
-phase: commands 3/3
+finished: 2026-11-09T06:26:14-05:00
 mtg-table: 2ffb65f
 workers: 6 (sized 6: min(cores 7, memory 6, max_workers 7); peak 2.70 GB per worker (declared; measured 1.27), budget 21.4 GB)
 peak_worker_rss_gb: 1.27
-blocks_done: run1 exit 0 at 2026-11-09T06:06:31-05:00, run2 exit 0 at 2026-11-09T06:25:59-05:00
+blocks_done: run1 exit 0 at 2026-11-09T06:06:31-05:00, run2 exit 0 at 2026-11-09T06:25:59-05:00, run3 exit 0 at 2026-11-09T06:26:14-05:00
