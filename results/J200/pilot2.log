@@ -1,0 +1,14 @@
+==== J200 pilot2 started 2026-11-09T03:44:18-05:00 in unit lab-J200-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+{"decisions": 106, "tier1": 82, "tier2": 24, "spines": 53, "spinesOk": 53, "decksOk": 53, "seedOk": 53, "listingOk": 106, "optionsOk": 106, "spinesT1": 46, "ok": 1}
+ok   the judge better by 0.2 everywhere: KNOWLEDGE SHOWN: KNOWLEDGE SHOWN
+ok   Forge better by 0.2 everywhere: NOT SHOWN: NOT SHOWN
+ok   no difference: INCONCLUSIVE: INCONCLUSIVE
+ok   every branch a win for both: all ties, no share, INCONCLUSIVE never SHOWN: INCONCLUSIVE
+ok   better on the random map only: NOT SHOWN on Forge, the random side above 0.5: NOT SHOWN
+ok   8 decisions excluded (a drifted spine: 2; divergence, failure, short: 2 each) still complete at 74: KNOWLEDGE SHOWN
+ok   9 excluded: 73 valid, INCOMPLETE, no verdict: INCOMPLETE: 73 of 82 tier-1 decisions valid (at least 74 needed); no verdict
+ok   the errored row is no score: 40 paired less one: KNOWLEDGE SHOWN
+ok   a drifted spine is the only exclusion: 80 valid, its two decisions named: KNOWLEDGE SHOWN
+ok   the reproduction read sees identical night rows: KNOWLEDGE SHOWN
+ok   tier 2 is read and never in the verdict: KNOWLEDGE SHOWN
+{"selftest": 1, "cases": 11, "passed": 11, "ok": 1}

@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-11-09T03:44:18-05:00",
- "heartbeat": "2026-11-09T03:44:18-05:00",
+ "updated": "2026-11-09T03:44:33-05:00",
+ "heartbeat": "2026-11-09T03:44:33-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.66,
-  "memUsedGb": 7.5,
+  "load1": 6.06,
+  "memUsedGb": 8,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4680,
+  "swapUsedMb": 4679,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -25,9 +25,9 @@
    "id": "J200",
    "title": "Judge the judge -- does the language model's pick beat Forge's under STRONG continuation? The 82 move-atlas decisions (v1's confident rows) where both blind judges of round 2 (the board shown) picked the same option and it is not Forge's option 0, each played on D451's Forge map (Forge's AI on both seats, 40 branches an option, D498's redeal, D511's replay of the night's recorded game) for exactly two options, Forge's and the judges'; the 24 split decisions beside them as information; a pre-registered reading: KNOWLEDGE SHOWN, NOT SHOWN or INCONCLUSIVE. Needs the `--only` lane first (an atlas spine branched at given decisions and options)",
    "cpu": "heavy",
-   "phase": "pilot 2/3",
+   "phase": "pilot 3/3",
    "started": "2026-11-09T03:33:15-05:00",
-   "elapsed": 663,
+   "elapsed": 678,
    "done": 0,
    "total": 8840,
    "unit": "lines",
@@ -96,7 +96,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J200-pilot2"
+   "detail": "lab-J200-pilot3"
   }
  ],
  "queue": [],
