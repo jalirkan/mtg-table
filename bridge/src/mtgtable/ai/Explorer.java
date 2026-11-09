@@ -1931,6 +1931,14 @@ public final class Explorer {
                     a -> CombatUtil.canAttackerBeBlockedWithAmount(a, 1, combat)));
         }
         boolean lethalRedrawn = false;
+        // D527 R8 made lethal-aware (random-v4): under a lethal attack with a good block on the board, the good blocks
+        // the seat survives; after a dead draw, the surviving redraw with the most of them (the first at a tie),
+        // stopping early only at one that reaches goodBound's upper bound (else all 64 attempts run)
+        final boolean lethal4 = v2 && lethal && math.config().lethalGood && !good.isEmpty();
+        final int bound = lethal4 ? RolloutGuards.goodBound(good) : 0;
+        Map<Card, Card> best = null;
+        int bestHolds = -1;
+        int bestGood = 0;
         for (int attempt = 0; attempt < 64; attempt++) {
             Map<Card, Card> m = new LinkedHashMap<>();
             for (int i = 0; i < blockers.size(); i++) {
@@ -1941,7 +1949,24 @@ public final class Explorer {
                 }
             }
             int goodBlocks = 0;
-            if (!good.isEmpty()) {
+            if (lethal4) {
+                // D527: each good block only where the seat survives it; a refusal counted now, the blocks once declared
+                final Map<Card, Card> r8 = new LinkedHashMap<>(m);
+                final ExploreMath probe = new ExploreMath(math.config(), 0);
+                final int n = RolloutGuards.goodBlocksAlive(r8, good, byDamage, math::pick,
+                        x -> !RolloutGuards.deadAfter(ai, combat, x), probe);
+                for (int k = probe.guardrails().getOrDefault("v4.goodBlockRefused", 0); k > 0; k--) {
+                    math.guardrail("v4.goodBlockRefused");
+                }
+                if (n > 0) {
+                    if (!SearchPolicy.legalBlock(combat, ai, r8)) {
+                        math.guardrail("v3.goodBlockIllegal");   // the result is not a legal declaration: the draw stands
+                    } else {
+                        m = r8;
+                        goodBlocks = n;
+                    }
+                }
+            } else if (!good.isEmpty()) {
                 // D525 R8: each attacker one of the seat's blockers can block, destroy and survive gets that block --
                 // kept as drawn if the result is not legal; counted once the draw is taken
                 final Map<Card, Card> r8 = new LinkedHashMap<>(m);
@@ -1978,13 +2003,31 @@ public final class Explorer {
                 }
             }
             if (SearchPolicy.legalBlock(combat, ai, m)) {
+                final int holds = lethal4 ? RolloutGuards.goodCount(m, good) : 0;
+                if (lethal4 && lethalRedrawn && holds < bound) {
+                    // D527: a surviving redraw is kept if it holds more good blocks (drawn or made) than the one kept
+                    // so far; draw on
+                    if (best == null || holds > bestHolds) {
+                        best = m;
+                        bestHolds = holds;
+                        bestGood = goodBlocks;
+                    }
+                    continue;
+                }
                 if (lethalRedrawn) {
                     math.guardrail("v2.lethalBlock");
                 }
-                countGood(goodBlocks);
+                countGood(goodBlocks, lethal4);
                 math.randomised("block", blockTokenOf(m).equals(forgeTok));
                 return new Decision.Explore("random", forgeTok);
             }
+        }
+        if (best != null && SearchPolicy.legalBlock(combat, ai, best)) {
+            // D527: the 64 draws are spent; the surviving redraw with the most good blocks is the block
+            math.guardrail("v2.lethalBlock");
+            countGood(bestGood, true);
+            math.randomised("block", blockTokenOf(best).equals(forgeTok));
+            return new Decision.Explore("random", forgeTok);
         }
         if (v2 && lethal) {
             // D523 R2's fallback: no surviving draw in 64 -- the most damage blocked, greedily
@@ -1992,9 +2035,25 @@ public final class Explorer {
             for (int i = 0; i < blockers.size(); i++) {
                 opts.put(blockers.get(i), choices.get(i));
             }
-            final Map<Card, Card> g = RolloutGuards.greedyBlock(opts, dmg);
+            Map<Card, Card> g = RolloutGuards.greedyBlock(opts, dmg);
+            int greedyGood = 0;
+            if (lethal4) {
+                // D527: the greedy block takes the good blocks the seat survives (a rescue, from a dead greedy block)
+                final Map<Card, Card> r8 = new LinkedHashMap<>(g);
+                final ExploreMath probe = new ExploreMath(math.config(), 0);
+                final int n = RolloutGuards.goodBlocksAlive(r8, good, byDamage, math::pick,
+                        x -> !RolloutGuards.deadAfter(ai, combat, x), probe);
+                for (int k = probe.guardrails().getOrDefault("v4.goodBlockRefused", 0); k > 0; k--) {
+                    math.guardrail("v4.goodBlockRefused");
+                }
+                if (n > 0 && SearchPolicy.legalBlock(combat, ai, r8)) {
+                    g = r8;
+                    greedyGood = n;
+                }
+            }
             if (SearchPolicy.legalBlock(combat, ai, g)) {
                 math.guardrail("v2.lethalBlock");
+                countGood(greedyGood, true);
                 math.randomised("block", blockTokenOf(g).equals(forgeTok));
                 return new Decision.Explore("random", forgeTok);
             }
@@ -2006,8 +2065,16 @@ public final class Explorer {
 
     /** D525 R8's count, once its block is the one declared. */
     private void countGood(final int n) {
+        countGood(n, false);
+    }
+
+    /** D525 R8's count, and with {@code lethal4} D527's {@code v4.goodBlockLethal} beside it (random-v4 under a lethal attack). */
+    private void countGood(final int n, final boolean lethal4) {
         for (int k = n; k > 0; k--) {
             math.guardrail("v3.goodBlock");
+            if (lethal4) {
+                math.guardrail("v4.goodBlockLethal");
+            }
         }
     }
 

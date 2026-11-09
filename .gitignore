@@ -1,6 +1,6 @@
 # --- build output -----------------------------------------------------------
 bridge/out/
-web/node_modules/
+web/node_modules
 web/dist/
 # Vite's dependency-optimizer cache.  Under web/ it lands inside node_modules/,
 # but a vite started with the REPO ROOT as its root writes it to ./.vite/deps/,

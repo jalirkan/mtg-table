@@ -880,6 +880,45 @@ test('D525: search-v2-rrandom3 and -rrandom3-held are search-v2 (search-v1-anyti
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D527: search-v2-rrandom4 is search-v2 (search-v1-anytime) plus rollout=random4, and -m40 is it plus margin=40', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const p = by.get('search-v2-rrandom4');
+  assert.ok(p?.cfg, 'search-v2-rrandom4 is registered and playable');
+  const pr = raw.players.find((y) => y.name === 'search-v2-rrandom4')!;
+  assert.equal(pr.kind, v2raw.kind);
+  assert.deepEqual(pr.params, { ...v2raw.params, rollout: 'random4' }, "its params are search-v2's plus rollout random4");
+  const rest: Record<string, unknown> = { ...p!.resolved };
+  delete rest.rollout;
+  assert.deepEqual(rest, v2.resolved, "every other resolved param is search-v2's");
+  assert.equal(p!.cfg, `${v2.cfg},rollout=random4`, 'the seat config is search-v2\'s with rollout=random4 added');
+  assert.equal(p!.hash, '646d59a008f6', "search-v2-rrandom4's config hash (D527)");
+  assert.match(pr.note ?? '', /never the live seat/);
+  const m = by.get('search-v2-rrandom4-m40');
+  assert.ok(m?.cfg, 'search-v2-rrandom4-m40 is registered and playable');
+  const mr = raw.players.find((y) => y.name === 'search-v2-rrandom4-m40')!;
+  assert.equal(mr.kind, v2raw.kind);
+  assert.deepEqual(mr.params, { ...v2raw.params, margin: 40, rollout: 'random4' }, "its params are search-v2's plus margin 40 and rollout random4");
+  const mrest: Record<string, unknown> = { ...m!.resolved };
+  delete mrest.margin;
+  const arest: Record<string, unknown> = { ...p!.resolved };
+  delete arest.margin;
+  assert.deepEqual(mrest, arest, "every other resolved param is search-v2-rrandom4's: (b) - (a) is the margin");
+  assert.equal(m!.resolved.margin, 40);
+  assert.equal(v2.resolved.margin, 20, "search-v2's margin is 20");
+  assert.equal(m!.cfg, p!.cfg.replace(',margin=20,', ',margin=40,'), 'the seat config is search-v2-rrandom4\'s with margin=40');
+  assert.equal(m!.hash, '968c9003c616', "search-v2-rrandom4-m40's config hash (D527)");
+  assert.match(mr.note ?? '', /never the live seat/);
+  for (const [name, hash] of [['search-v2-rrandom', 'fb8ae32c014d'], ['search-v2-rrandom-self', 'd3aa28be73b2'],
+    ['search-v2-rrandom3', '8d1623965986'], ['search-v2-rrandom3-held', 'a484402b1185']] as const) {
+    assert.equal(by.get(name)!.hash, hash, `${name} keeps its hash: a changed guardrail is a new rollout value, never an edit (D525)`);
+  }
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
