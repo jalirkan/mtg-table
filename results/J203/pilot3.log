@@ -1,0 +1,11 @@
+==== J203 pilot3 started 2026-11-09T18:17:19-05:00 in unit lab-J203-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+J203: pilot-J193-b-s01-pauper-3785: 1 decision(s) d12 [0, 3]; tools/cubelab.sh atlas --deck-a /home/justin-a/code/lab/data/lab-j193/decks/s01-pauper-3685/decks/pauper-3685-00001.dck --deck-b /home/justin-a/code/lab/data/lab-j193/decks/s01-pauper-3685/decks/pauper-3685-00002.dck --seed 3785 --phase b --turn-cap 40 --options 8 --branch-random 0 --branch-forge 5 --chunk 5 --branch-timeout 120 --unit-timeout 30 --leak-checks 1 --checks-parallel 3 --jobs 3 --only /home/justin-a/code/lab/mtg-table/var/j203-tools/only/pilot-J193-b-s01-pauper-3785.json --out var/lab-j203/pilot-J193-b-s01-pauper-3785
+atlas phase B: the baseline game (Forge on both seats), listing seat A's decisions
+atlas phase B: the baseline (19 turns, winner B) lists 20 decision(s) of seat A; branching at 1: d12 (p, turn 14, 4 options)
+atlas phase B: the cut design (D480): --only (D524): d12 at options 0,3, list sha256 04d69e73307e; checkpoints 0
+atlas phase B: 1 unit(s) to play (0 done), chunks of 5 branches, on 1 worker(s)
+  [B 1/1] d12-forge-0: 10/10 branch game(s); 936 branch games/h
+atlas: the checks on 3 workers took 1 s
+atlas: /home/justin-a/code/lab/data/lab-j203/pilot-J193-b-s01-pauper-3785/atlas.json and atlas.md; phase A 0 game(s), phase B 10 branch game(s) at 1 decision(s); checks: clean (410 rows, 22 frame logs, 1 leak check(s))
+J203: group pilot: 1 spine command(s) run
+{"baseline": 1, "sameGame": 1, "listingAtD": 1, "units": 1, "unitsOk": 1, "diverged": 0, "forgeRows": 10, "randomRows": 0, "rowsHere": 10, "otherOptionRows": 0, "scored": 10, "scoresValid": 1, "errors": 0, "expected": 10, "nightCells": 10, "nightSame": 10, "atlasJson": 1, "problems": 0, "frameLogsFailed": 0, "leaks": 0, "means": {"0": 0.0, "3": 0.2}}
