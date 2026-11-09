@@ -1,7 +1,8 @@
 running
 runner: forgecoach-runner 57320655
 started: 2026-11-09T06:26:15-05:00
-phase: pilot 3/4
+phase: pilot 4/4
 mtg-table: ec9b77f
 workers: 3
 peak_worker_rss_gb: 1.27
+waits: memory: the host's memory pressure (some avg10) is 5.4%, over 5%; pilot4 starts when it falls

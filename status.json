@@ -1,18 +1,28 @@
 {
  "schema": 1,
- "updated": "2026-11-09T06:27:49-05:00",
- "heartbeat": "2026-11-09T06:27:49-05:00",
+ "updated": "2026-11-09T06:28:03-05:00",
+ "heartbeat": "2026-11-09T06:28:03-05:00",
  "paused": false,
- "state": "running",
- "alerts": [],
+ "state": "degraded",
+ "alerts": [
+  {
+   "at": "2026-11-09T06:28:03-05:00",
+   "id": "J201",
+   "kind": "memory-wait",
+   "needGb": 6,
+   "availGb": 21.7,
+   "freeGb": 18.7,
+   "text": "J201 waits on memory held outside the lab slice since 2026-11-09T06:28:03-05:00 (MemAvailable 21.7 GB, need 6 GB)"
+  }
+ ],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.67,
-  "memUsedGb": 4.9,
+  "load1": 4.86,
+  "memUsedGb": 8.8,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4445,
-  "pressure": 0,
+  "swapUsedMb": 4453,
+  "pressure": 5.37,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -25,9 +35,9 @@
    "id": "J201",
    "title": "Random rollouts, iteration 2 (random-v3): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2), a chain of single additions on both rollout seats: (a) search-v2-rrandom3, D523's random-v2 plus R8, the good block (rollout=random3; J199 (a) plus one rule), and (b) search-v2-rrandom3-held, R8 plus R9, the held instant (rollout=random3-held; (a) plus one rule), each read once under D525's pre-registered table, D523's copied with the arms renamed (SHOWN, INCONCLUSIVE or NOT SHOWN indistinguishable: a 4,800-game confirmation before Forge leaves the loop; NOT SHOWN worse or losing badly: the diagnosis and the iteration loop's random-v4), alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-11-09T06:26:15-05:00",
-   "elapsed": 94,
+   "elapsed": 108,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -115,8 +125,7 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J201-pilot3"
+   "pressureEvents": []
   }
  ],
  "queue": [],
