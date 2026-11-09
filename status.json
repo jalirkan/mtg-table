@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-09T15:32:08-05:00",
- "heartbeat": "2026-11-09T15:32:08-05:00",
+ "updated": "2026-11-09T15:36:42-05:00",
+ "heartbeat": "2026-11-09T15:36:42-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,11 +19,11 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 12.76,
-  "memUsedGb": 13.8,
+  "load1": 13.4,
+  "memUsedGb": 13.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5247,
-  "pressure": 0.94,
+  "swapUsedMb": 4470,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -38,19 +38,19 @@
    "cpu": "heavy",
    "phase": "commands 2/3",
    "started": "2026-11-09T13:04:29-05:00",
-   "elapsed": 8859,
-   "done": 1200,
+   "elapsed": 9134,
+   "done": 1240,
    "total": 2400,
    "unit": "games",
-   "ratePerHour": 490.3,
-   "eta": "2026-11-09T17:58:58-05:00",
+   "ratePerHour": 505.4,
+   "eta": "2026-11-09T17:54:25-05:00",
    "workers": 5,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-09T15:29:14-05:00",
-   "memGb": 6.99,
+   "dataUpdated": "2026-11-09T15:35:49-05:00",
+   "memGb": 5.59,
    "live": {
     "cma.played": 1200,
     "cma.score": 0.4433,
@@ -165,7 +165,16 @@
    "detail": "lab-J202-run2"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "Judge the judge, unselected: language model picks on decisions nobody chose",
+   "publicEst": "~3 h (range 2-6 h)",
+   "id": "J203",
+   "title": "Judge the judge, unselected -- does J200's KNOWLEDGE SHOWN hold on decisions nobody chose? 160 move-atlas decisions drawn at random (seed 203, stratified by kind, no filter on confidence, disagreement or either map), each read blind by two judges for a first choice, a second choice and a confidence; set i (both judges on one option that is not Forge's) branched on D451's Forge map for Forge's option and theirs, exactly as J200; set ii (both judges on Forge's option) branched for Forge's option and their second choice, as a control; set iii (the judges split) recorded, not branched; two pre-registered readings: J200's rule on set i (KNOWLEDGE SHOWN, NOT SHOWN or INCONCLUSIVE) and the control on set ii (CONTROL HOLDS, FAILS or INCONCLUSIVE)",
+   "cpu": "heavy",
+   "est": "~3.3 h at 7 workers (an estimate; range 2-6 h). 10720 branch games (128 entries: set i 58 x 2 options x 40, set ii 70 with 12 of them on three options), ~12.4 worker-hours scaled from J200 (10.3 worker-hours for 106 entries; 9.5 from the nights' own rows, J200's way: Forge rows where the night had them, else 1.3x the random rows); wall scaled from J200's 2.69 h for 8,840 games. Pilot ~15 min. Disk ~4 GB on /home/justin-a/code/lab/data"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
