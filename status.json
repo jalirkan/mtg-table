@@ -1,18 +1,18 @@
 {
  "schema": 1,
- "updated": "2026-11-09T06:28:18-05:00",
- "heartbeat": "2026-11-09T06:28:18-05:00",
+ "updated": "2026-11-09T06:32:12-05:00",
+ "heartbeat": "2026-11-09T06:32:12-05:00",
  "paused": false,
  "state": "running",
  "alerts": [],
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.22,
-  "memUsedGb": 5.9,
+  "load1": 4.17,
+  "memUsedGb": 9.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4458,
-  "pressure": 1.65,
+  "swapUsedMb": 4065,
+  "pressure": 0.16,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -27,19 +27,19 @@
    "cpu": "heavy",
    "phase": "pilot 4/4",
    "started": "2026-11-09T06:26:15-05:00",
-   "elapsed": 123,
+   "elapsed": 357,
    "done": 0,
    "total": 2400,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
+   "workers": 2,
    "workersMax": 3,
    "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-09T06:26:15-05:00",
-   "memGb": 0.01,
+   "memGb": 1.33,
    "live": {
     "cma.played": 0,
     "cma.score": 0,
@@ -77,7 +77,7 @@
     "cma.timeouts": 0,
     "cmb.errors": 0,
     "cmb.timeouts": 0,
-    "elapsed_s": 69,
+    "elapsed_s": 325,
     "j201_err": 0,
     "j201_games": 0,
     "merged": 1
@@ -115,7 +115,14 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
+   "pressureEvents": [
+    {
+     "at": "2026-11-09T06:32:12-05:00",
+     "kind": "drop",
+     "workers": 2,
+     "pressure": 0.2
+    }
+   ],
    "detail": "lab-J201-pilot4"
   }
  ],
