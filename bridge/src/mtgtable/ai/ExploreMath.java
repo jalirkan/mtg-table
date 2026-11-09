@@ -66,17 +66,29 @@ public final class ExploreMath {
          * ({@link #randomSeat}, D508's frozen population) never is.
          */
         public final boolean v2;
+        /**
+         * D525: random-v3's two rollout guardrails ({@link RolloutGuards}),
+         * each its own flag so each arm adds one rule to the arm before it:
+         * {@code goodBlock} is R8 ({@link #randomV3Block},
+         * {@code rollout=random3}, against random-v2), {@code heldInstant} R9
+         * on top of it ({@link #randomV3BlockHeld}, {@code random3-held},
+         * against random3); counted under their {@code v3.} names.  Only a
+         * search rollout's seat; never the atlas's, and never without
+         * {@link #v2}.
+         */
+        public final boolean goodBlock;
+        public final boolean heldInstant;
 
         public Config(final double epsilon, final double closeCall, final boolean opening) {
             this(epsilon, closeCall, opening, false);
         }
 
         public Config(final double epsilon, final double closeCall, final boolean opening, final boolean random) {
-            this(epsilon, closeCall, opening, random, false);
+            this(epsilon, closeCall, opening, random, false, false, false);
         }
 
         private Config(final double epsilon, final double closeCall, final boolean opening, final boolean random,
-                       final boolean v2) {
+                       final boolean v2, final boolean goodBlock, final boolean heldInstant) {
             if (!(epsilon >= 0 && epsilon <= 1) || !(closeCall >= 0 && closeCall < 1)) {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "play exploration: epsilon in [0, 1] and closeCall in [0, 1), got %s and %s", epsilon, closeCall));
@@ -88,7 +100,12 @@ public final class ExploreMath {
             this.closeCall = closeCall;
             this.opening = opening;
             this.random = random;
+            if ((goodBlock || heldInstant) && !v2) {
+                throw new IllegalArgumentException("random-v3 (D525) is random-v2 plus one guardrail: R8 or R9 needs v2");
+            }
             this.v2 = v2;
+            this.goodBlock = goodBlock;
+            this.heldInstant = heldInstant;
         }
 
         /** D451: the random seat's settings. */
@@ -98,7 +115,17 @@ public final class ExploreMath {
 
         /** D523: the search rollout's random seat, random-v2: {@link #randomSeat} plus {@link RolloutGuards}. */
         public static Config randomV2() {
-            return new Config(1, 0, false, true, true);
+            return new Config(1, 0, false, true, true, false, false);
+        }
+
+        /** D525: random-v3's block arm ({@code rollout=random3}): {@link #randomV2} plus R8 alone, the good block. */
+        public static Config randomV3Block() {
+            return new Config(1, 0, false, true, true, true, false);
+        }
+
+        /** D525: random-v3's held arm ({@code rollout=random3-held}): {@link #randomV3Block} plus R9, the held instant. */
+        public static Config randomV3BlockHeld() {
+            return new Config(1, 0, false, true, true, true, true);
         }
 
         /** From a job line's {@code playExplore} object (Jetty's parser: numbers are Long or Double); null in, null out. */

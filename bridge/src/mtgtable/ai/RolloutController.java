@@ -278,7 +278,8 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
      * D523: a seat inside a rollout played by the search's random seat,
      * {@code random-v2} ({@link ExploreMath.Config#randomV2}): the move atlas's
      * random seat (D451's guardrails G1-G6 and D485-D488) plus the rollout
-     * guardrails R1-R7 ({@link RolloutGuards}).  The searching seat's is built
+     * guardrails R1-R7 ({@link RolloutGuards}); under D525's {@code random3}
+     * values random-v3, R8 ({@code random3}) or R8 and R9 ({@code random3-held}) too.  The searching seat's is built
      * with its candidate forced first, as above ({@code rollout=random} and
      * {@code random-self}); the opponent's under {@code rollout=random} is the
      * same class with nothing forced.
@@ -295,9 +296,13 @@ class RolloutController extends PlayerControllerAi implements RolloutForcing {
         private final Forced forced = new Forced();
         private final java.util.Map<SpellAbility, Decision.Explore> marks = new java.util.IdentityHashMap<>();
 
-        Random(final Game game, final Player p, final LobbyPlayer lp, final long seed) {
+        /** {@code cfg} is random-v2 ({@code rollout=random}, D523) or random-v3 ({@code random3}, D525). */
+        Random(final Game game, final Player p, final LobbyPlayer lp, final long seed, final ExploreMath.Config cfg) {
             super(game, p, lp, null);
-            setExplorer(new Explorer(new ExploreMath(ExploreMath.Config.randomV2(), seed)));
+            if (cfg == null || !cfg.v2) {
+                throw new IllegalArgumentException("a rollout's random seat is random-v2 or random-v3, never the atlas's (D523, D525)");
+            }
+            setExplorer(new Explorer(new ExploreMath(cfg, seed)));
         }
 
         /** The guardrails' counts (D451's names and D523's {@code v2.} ones) and the explorer's failures. */

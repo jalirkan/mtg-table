@@ -486,6 +486,9 @@ public final class Explorer {
             if (math.config().v2) {
                 RolloutGuards.castSomething(ai, opts, math);   // D523 R4: no pass in its own main 2 with nothing cast yet
             }
+            if (math.config().heldInstant) {
+                RolloutGuards.holdInstants(ai, opts, math);    // D525 R9: harm on their turn only after blockers or at the end step
+            }
             final List<String> keys = new ArrayList<>(opts.keySet());
             if (keys.size() < 2) {
                 final String only = keys.isEmpty() ? "pass" : keys.get(0);
@@ -1911,14 +1914,48 @@ public final class Explorer {
             }
             lethal = RolloutGuards.lethalIncoming(RolloutGuards.incoming(ai, combat), ai.getLife(), ai.canLoseLife() && !ai.cantLose());
         }
+        // D525 R8: which attackers each blocker can block, destroy and survive -- read with none of the seat's
+        // blocks declared -- and the attackers by their damage, largest first
+        final Map<Card, List<Card>> good = new LinkedHashMap<>();
+        final List<Card> byDamage = new ArrayList<>();
+        if (math.config().goodBlock) {
+            final Map<Card, Integer> at = new LinkedHashMap<>();
+            for (final Card a : combat.getAttackers()) {
+                at.put(a, Math.max(0, ComputerUtilCombat.damageIfUnblocked(a, ai, combat, false)));
+            }
+            byDamage.addAll(at.keySet());
+            byDamage.sort((x, y) -> Integer.compare(at.get(y), at.get(x)));
+            // an attacker one blocker alone may not block (menace) is left out: a lone good blocker on it would make
+            // every R8 result of the draw illegal (the skeptic's review)
+            good.putAll(RolloutGuards.goodMap(blockers, choices, (a, b) -> RolloutGuards.goodBlock(ai, a, b, combat),
+                    a -> CombatUtil.canAttackerBeBlockedWithAmount(a, 1, combat)));
+        }
         boolean lethalRedrawn = false;
         for (int attempt = 0; attempt < 64; attempt++) {
-            final Map<Card, Card> m = new LinkedHashMap<>();
+            Map<Card, Card> m = new LinkedHashMap<>();
             for (int i = 0; i < blockers.size(); i++) {
                 final List<Card> as = choices.get(i);
                 final int k = math.pick(as.size() + 1);
                 if (k > 0) {
                     m.put(blockers.get(i), as.get(k - 1));
+                }
+            }
+            int goodBlocks = 0;
+            if (!good.isEmpty()) {
+                // D525 R8: each attacker one of the seat's blockers can block, destroy and survive gets that block --
+                // kept as drawn if the result is not legal; counted once the draw is taken
+                final Map<Card, Card> r8 = new LinkedHashMap<>(m);
+                final ExploreMath probe = new ExploreMath(math.config(), 0);
+                if (RolloutGuards.goodBlocks(r8, good, byDamage, math::pick, probe) > 0) {
+                    if (!SearchPolicy.legalBlock(combat, ai, r8)) {
+                        math.guardrail("v3.goodBlockIllegal");   // the R8 result is not a legal declaration
+                    } else if (v2 && lethal && RolloutGuards.deadAfter(ai, combat, r8)) {
+                        // R2 rejects the R8 result; the draw as it was is tried below (redrawn only if dead too)
+                        math.guardrail("v3.goodBlockDead");
+                    } else {
+                        m = r8;
+                        goodBlocks = probe.guardrails().getOrDefault("v3.goodBlock", 0);
+                    }
                 }
             }
             if (v2 && lethal && RolloutGuards.deadAfter(ai, combat, m)) {
@@ -1935,6 +1972,7 @@ public final class Explorer {
                     for (int k = probe.guardrails().getOrDefault("v2.chumpBlock", 0); k > 0; k--) {
                         math.guardrail("v2.chumpBlock");
                     }
+                    countGood(goodBlocks);
                     math.randomised("block", blockTokenOf(kept).equals(forgeTok));
                     return new Decision.Explore("random", forgeTok);
                 }
@@ -1943,6 +1981,7 @@ public final class Explorer {
                 if (lethalRedrawn) {
                     math.guardrail("v2.lethalBlock");
                 }
+                countGood(goodBlocks);
                 math.randomised("block", blockTokenOf(m).equals(forgeTok));
                 return new Decision.Explore("random", forgeTok);
             }
@@ -1963,6 +2002,13 @@ public final class Explorer {
         SearchPolicy.setBlock(combat, ai, forge);
         math.failed();
         return null;
+    }
+
+    /** D525 R8's count, once its block is the one declared. */
+    private void countGood(final int n) {
+        for (int k = n; k > 0; k--) {
+            math.guardrail("v3.goodBlock");
+        }
     }
 
     private static String blockTokenOf(final Map<Card, Card> m) {
