@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-09T18:17:06-05:00",
- "heartbeat": "2026-11-09T18:17:06-05:00",
+ "updated": "2026-11-09T18:17:20-05:00",
+ "heartbeat": "2026-11-09T18:17:20-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,11 +19,11 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.02,
+  "load1": 6.48,
   "memUsedGb": 7.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 4605,
-  "pressure": 1.81,
+  "pressure": 0.44,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -36,9 +36,9 @@
    "id": "J203",
    "title": "Judge the judge, unselected -- does J200's KNOWLEDGE SHOWN hold on decisions nobody chose? 160 move-atlas decisions drawn at random (seed 203, stratified by kind, no filter on confidence, disagreement or either map), each read blind by two judges for a first choice, a second choice and a confidence; set i (both judges on one option that is not Forge's) branched on D451's Forge map for Forge's option and theirs, exactly as J200; set ii (both judges on Forge's option) branched for Forge's option and their second choice, as a control; set iii (the judges split) recorded, not branched; two pre-registered readings: J200's rule on set i (KNOWLEDGE SHOWN, NOT SHOWN or INCONCLUSIVE) and the control on set ii (CONTROL HOLDS, FAILS or INCONCLUSIVE)",
    "cpu": "heavy",
-   "phase": "pilot 2/3",
+   "phase": "pilot 3/3",
    "started": "2026-11-09T18:05:49-05:00",
-   "elapsed": 677,
+   "elapsed": 691,
    "done": 0,
    "total": 10720,
    "unit": "lines",
@@ -111,7 +111,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J203-pilot2"
+   "detail": "lab-J203-pilot3"
   }
  ],
  "queue": [],

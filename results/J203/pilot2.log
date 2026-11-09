@@ -1,0 +1,17 @@
+==== J203 pilot2 started 2026-11-09T18:17:05-05:00 in unit lab-J203-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+{"decisions": 160, "spines": 61, "spinesOk": 61, "decksOk": 61, "seedOk": 61, "listingOk": 128, "shapeOk": 160, "disagree": 58, "control": 70, "split": 32, "branched": 128, "spinesI": 41, "sha256": "1a13dd299c5486032975e09ac901367f57008409a7a002d9826e5a274b6dda38", "expect": {"disagree": 58, "control": 70, "split": 32, "spines": 61, "spinesI": 41, "sha256": "1a13dd299c5486032975e09ac901367f57008409a7a002d9826e5a274b6dda38"}, "expectOk": 1, "ok": 1}
+ok   judges better on i, Forge better than the second on ii: SHOWN and CONTROL HOLDS: KNOWLEDGE SHOWN; CONTROL HOLDS
+ok   Forge better on i, second better on ii: NOT SHOWN and CONTROL FAILS: NOT SHOWN; CONTROL FAILS
+ok   no difference: INCONCLUSIVE and CONTROL INCONCLUSIVE: INCONCLUSIVE; CONTROL INCONCLUSIVE
+ok   every branch a win: all ties, no share, never SHOWN: INCONCLUSIVE; CONTROL INCONCLUSIVE
+ok   better on the random map only: NOT SHOWN, the random side above 0.5: NOT SHOWN; CONTROL INCONCLUSIVE
+ok   4 of 40 set-i decisions excluded: 36 valid = ceil(0.9 x 40), complete: KNOWLEDGE SHOWN; CONTROL HOLDS
+ok   5 excluded: 35 valid, INCOMPLETE, no primary verdict; the control still reads: INCOMPLETE: 35 of 40 decisions valid (at least 36 needed); no verdict; CONTROL HOLDS
+ok   a set under 30 planned is INCOMPLETE however many are valid: INCOMPLETE: 20 of 20 decisions valid (at least 30 needed); no verdict; CONTROL HOLDS
+ok   the errored row is no score: 40 paired less one: KNOWLEDGE SHOWN; CONTROL HOLDS
+ok   a drifted spine (two decisions) is excluded and named: KNOWLEDGE SHOWN; CONTROL HOLDS
+ok   two different seconds: the control diff is F minus their mean (1 - 0.25 = 0.75 everywhere): INCONCLUSIVE; CONTROL HOLDS
+ok   splits are never read; the agreement counts come from the plan: KNOWLEDGE SHOWN; CONTROL HOLDS
+ok   atlas problems are counted and decide nothing: still SHOWN: KNOWLEDGE SHOWN; CONTROL HOLDS
+ok   the whole-sample gain is set i diluted by zeros on set ii: KNOWLEDGE SHOWN; CONTROL HOLDS
+{"selftest": 1, "cases": 14, "passed": 14, "ok": 1}
