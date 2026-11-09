@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-09T16:32:39-05:00
+- time: 2026-11-09T16:34:31-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J202 commands 2/3, 1640/2400 games, 442.7/h, ETA 2026-11-09T18:15:40-05:00, 6 worker(s), 7 core(s)
+- running: J202 commands 2/3, 1672/2400 games, 491.5/h, ETA 2026-11-09T18:03:23-05:00, 5 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 12.25; memory 12.9/30.5 GB, swap 4581 MB, pressure 0% (lab budget 23.4 GB)
+- load: 12.77; memory 13.4/30.5 GB, swap 5347 MB, pressure 2.05% (lab budget 23.4 GB)
 - queue: J203
 - waiting: nothing
 - last finished: J201 done at 2026-11-09T12:04:41-05:00: cma.played 1200 · cma.score 0.456 · cma.lo 0.437 · cma.hi 0.475 · cma.elo -30.8 · cma.eloLo -44.4 · cma.eloHi -17.2 · cma.aSearch.msPerDecision 932.054 · cma.bSearch.msPerDecision 923.457 · roa.aRolloutsPerDecision 17.4 · roa.bRolloutsPerDecision 15.34 · roa.ratio 1.134 · roa.aPerRollout.v2_lethalAttack 0.011 · roa.aPerRollout.v2_lethalBlock 0.015 · roa.aPerRollout.v2_targetSide 0.583 · roa.aPerRollout.v2_castSomething 0.226 · roa.aPerRollout.v2_dominatedAttacker 0.053 · roa.aPerRollout.v2_chumpBlock 0.051 · roa.aPerRollout.v2_ownStack 2.414 · roa.aPerRollout.v3_goodBlock 0.021 · roa.aPerRollout.v3_goodBlockIllegal 0 · roa.aPerRollout.v3_goodBlockDead 0.147 · roa.aRrFailures 63 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 0 · v.a.losesBadly 1 · v.a.candidate 0 · cmb.played 1200 · cmb.score 0.458 · cmb.lo 0.437 · cmb.hi 0.478 · cmb.elo -29.6 · cmb.eloLo -43.7 · cmb.eloHi -15.6 · cmb.aSearch.msPerDecision 951.427 · cmb.bSearch.msPerDecision 952.437 · rob.aRolloutsPerDecision 17.1 · rob.bRolloutsPerDecision 14.82 · rob.ratio 1.154 · rob.aPerRollout.v2_lethalAttack 0.011 · rob.aPerRollout.v2_lethalBlock 0.014 · rob.aPerRollout.v2_targetSide 0.716 · rob.aPerRollout.v2_castSomething 0.225 · rob.aPerRollout.v2_dominatedAttacker 0.053 · rob.aPerRollout.v2_chumpBlock 0.053 · rob.aPerRollout.v2_ownStack 2.386 · rob.aPerRollout.v3_goodBlock 0.021 · rob.aPerRollout.v3_goodBlockIllegal 0 · rob.aPerRollout.v3_goodBlockDead 0.144 · rob.aPerRollout.v3_heldInstant 0.258 · rob.aRrFailures 83 · v.b.shown 0 · v.b.inconclusive 0 · v.b.indistinguishable 0 · v.b.worseNotBadly 0 · v.b.losesBadly 1 · v.b.candidate 0 · v.confirm 0 · v.iterate 1 · v.principleInDoubt 1 · v.iterationLosesBadly 1 · wa.lost 652 · wb.lost 651
