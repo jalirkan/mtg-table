@@ -86,7 +86,7 @@ import { alertText, fit, headlineOf, idleReasonOf, isoLocal, liveOf, REASONS, sa
 import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
 import { activeHolds, holdReason } from './holds.ts';
 import { monoFromWall, wallOfMono } from './clock.ts';
-import { AVAIL_RESERVE_GB, readBudgetFile, resolveBudget, type BudgetFile, type Resolved as ResolvedBudget } from './budget.ts';
+import { AVAIL_RESERVE_GB, FIT_MIN_WORKERS, readBudgetFile, resolveBudget, type BudgetFile, type Resolved as ResolvedBudget } from './budget.ts';
 
 export interface RunnerConfig {
   /** The runner's own checkout (its commit is reported). */
@@ -232,6 +232,15 @@ export interface JobRun {
   measured?: Measured | null;
   /** D521: the memory the next step waits for (GB), when it waits on the host's actual free memory; null: not waiting. */
   waitingMemGb?: number | null;
+  /**
+   * D526: the step `step` started with `workers` of its `max` because the rest did not fit the host's free
+   * memory (`perWorkerGb` a worker, `availGb` MemAvailable then, `at` wall).  `raisable`: a commands step whose
+   * tools read the control file -- the backoff raises it toward `max` as the memory frees (`memFitCap`), and
+   * this is cleared when it gets there; otherwise its {workers} is `workers` for the whole step.
+   */
+  memFit?: { step: string; workers: number; max: number; perWorkerGb: number; availGb: number; at: number; raisable: boolean; prevWorkers?: number } | null;
+  /** D526: this run has raised its one `memory-fit` alert (one per job per run, whatever its steps do). */
+  memFitAlerted?: boolean;
   shas: Record<string, string>;
   /** Full commits the first prepare checked out: a retry or resume checks these out again, never a branch that moved (D341's version refusal). */
   pinned?: Record<string, string>;
@@ -280,7 +289,7 @@ interface Persist {
   /** Since when nothing has run (null while something runs). */
   idleSince?: number | null;
   /** D521: memory stops and retries, newest last (status.json `alerts`, kept ALERT_KEEP_MS). */
-  alerts?: Array<{ at: number; id: string; kind: 'memory-stop' | 'memory-retry'; availGb: number | null; detail?: string }>;
+  alerts?: Array<{ at: number; id: string; kind: 'memory-stop' | 'memory-retry' | 'memory-fit'; availGb: number | null; needGb?: number | null; workers?: number | null; workersMax?: number | null; detail?: string }>;
   /** D521: the core budget last logged, so a change is said once. */
   lastCores?: number;
   /** D521: since when (wall) each job has waited on memory or the budget: its alert's time, kept across a restart. */
@@ -1089,12 +1098,18 @@ export class Runner {
     // less the reserve and less what the other running jobs have reserved but not touched.  Memory outside
     // the lab (a GPU painter, the browser) counts here, whatever the declarations say.  Checked every tick.
     const mem = this.memoryWait(r, job, step);
-    if (mem) {
+    // D526: a step whose workers do not all fit starts with as many as fit (at least FIT_MIN_WORKERS); under that it waits.
+    // Decided on the UNCAPPED per-worker total (the free memory over the per-worker need), so a step whose whole
+    // need the installed cap hides (D521 counts a need at most the heavy budget) is fitted too, with no jump there.
+    const fitN = !mem || mem.some10 === null ? this.memoryFit(r, job, step, mem ? mem.free : this.freeGb(r)) : null;
+    if (mem && fitN === null) {
+      // D526: what it waits for: FIT_MIN_WORKERS workers' worth, where its memory is per worker; else all of it.
+      const least = this.fitEligible(r, step) ? Math.round(Math.min(mem.need, FIT_MIN_WORKERS * this.perWorkerGb(r, job)) * 10) / 10 : mem.need;
       const hold3 = mem.some10 !== null
         ? `memory: the host's memory pressure (some avg10) is ${mem.some10}%, over ${this.cfg.startMaxSome10 ?? START_MAX_SOME10}%; ${step.name} starts when it falls`
-        : `memory: needs ${mem.need} GB for ${step.name}; ${mem.free} GB free (${mem.avail} GB available, less ${this.availReserve()} GB kept free${mem.headroom > 0 ? ` and ${mem.headroom} GB the other jobs have reserved` : ''}); it starts when that fits`;
-      const changed = r.waitingMemGb !== mem.need;
-      r.heldFor = hold3; r.waitingMemGb = mem.need;
+        : `memory: needs ${least} GB for ${step.name}${least < mem.need ? ` (${FIT_MIN_WORKERS} workers; all of them ${mem.need} GB)` : ''}; ${mem.free} GB free (${mem.avail} GB available, less ${this.availReserve()} GB kept free${mem.headroom > 0 ? ` and ${mem.headroom} GB the other jobs have reserved` : ''}); it starts when that fits`;
+      const changed = r.waitingMemGb !== least;
+      r.heldFor = hold3; r.waitingMemGb = least;
       if (changed) {
         this.sys.log(`${r.id}: ${step.name} waits: ${hold3}`);
         this.setStatus(r, 'running', { phase: this.phaseOf(r) });
@@ -1113,9 +1128,34 @@ export class Runner {
       r.workers = Math.min(PILOT_MAX_WORKERS, sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: this.maxWorkersOf(job), measuredPeakGb: null, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap }).workers);
     }
     if (step.phase === 'commands' && !r.sizing) this.size(r, job);
+    // D526: a fit is the step's own, decided at its start.  The one before it gives back the workers it held
+    // down (less any pressure drop it took meanwhile), so the next step does not inherit a fit it never needed.
+    const old = r.memFit;
+    r.memFit = null;
+    if (old?.prevWorkers && r.backoff) r.backoff = { ...r.backoff, workers: Math.max(1, Math.min(r.backoff.sized, old.prevWorkers - Math.max(0, old.workers - r.backoff.workers))) };
+    if (fitN !== null) {
+      // What the step would run (sized, at most the block's cores:) against what fits; all of them fit: no fit.
+      const max = this.stepWorkers(r, step);
+      if (fitN < max) {
+        const per = this.perWorkerGb(r, job);
+        const avail = Math.round(this.availGb() * 10) / 10;
+        r.memFit = { step: step.name, workers: fitN, max, perWorkerGb: Math.round(per * 100) / 100, availGb: avail, at: this.sys.now(), raisable: step.phase === 'commands' && r.canControl === true };
+        this.sys.log(`${r.id}: ${step.name} starts with ${fitN} of ${max} workers: memory ${avail} GB available, ${r.memFit.perWorkerGb} GB a worker (D526)${r.memFit.raisable ? '; raised as memory frees' : ''}`);
+        if (!r.memFitAlerted) {
+          r.memFitAlerted = true;
+          this.alert(r.id, 'memory-fit', '', { needGb: r.memFit.perWorkerGb, workers: fitN, workersMax: max });
+        }
+      }
+    }
     if (step.phase !== 'prepare') {
       r.backoff ??= initialBackoff(r.workers);
       if (step.phase === 'commands' && r.backoff.sized !== r.workers) r.backoff = initialBackoff(r.workers);
+      // D526: the backoff's count is the fit's, raisable or not, so STATUS, status.json, the workers metric and
+      // the pressure events say the workers that really run.
+      if (r.memFit) {
+        r.memFit.prevWorkers = r.backoff.workers;
+        r.backoff = { ...r.backoff, workers: Math.min(r.backoff.workers, r.memFit.workers) };
+      }
       this.writeEffectiveControl(r);
     }
     const u = this.unitSpec(r, job, step);
@@ -1245,6 +1285,46 @@ export class Runner {
   }
 
   /**
+   * D526: the workers of `step` that fit in `free` GB (the host's MemAvailable less the reserve and the other
+   * jobs' untouched reserve), when that is at least FIT_MIN_WORKERS; null: the step waits (D521).  Only a pilot or
+   * commands step whose memory is per worker (no block `mem_gb:`).
+   */
+  memoryFit(r: JobRun, job: JobFile, step: Step, free: number): number | null {
+    if (!this.fitEligible(r, step)) return null;
+    const per = this.perWorkerGb(r, job);
+    if (!Number.isFinite(free)) return null;
+    const n = Math.floor(free / per + 1e-9);
+    return n >= FIT_MIN_WORKERS ? n : null;
+  }
+
+  /** D526: MemAvailable less the reserve and the other jobs' untouched reserve (GB): what a step may start in. */
+  freeGb(r: JobRun): number {
+    const avail = this.availGb();
+    return Number.isFinite(avail) ? Math.round((avail - this.availReserve() - this.headroomGb(r)) * 10) / 10 : Infinity;
+  }
+
+  /** D526: a heavy pilot or commands step whose memory is per worker (no block `mem_gb:`) may start with fewer workers. */
+  fitEligible(r: JobRun, step: Step): boolean {
+    return r.cpu === 'heavy' && (step.phase === 'pilot' || step.phase === 'commands') && !step.memGb;
+  }
+
+  /**
+   * D526: the most workers a step started under-sized may have now: the ones it runs, plus as many more as fit in
+   * MemAvailable less the reserve, the other jobs' untouched reserve and what its own running workers are expected
+   * to take and have not yet (their need less the unit's anon memory); at most its `max`.
+   */
+  memFitCap(r: JobRun, job: JobFile): number {
+    const f = r.memFit as NonNullable<JobRun['memFit']>;
+    const avail = this.availGb();
+    if (!Number.isFinite(avail)) return f.max;
+    const per = Math.max(f.perWorkerGb, this.perWorkerGb(r, job));
+    const workers = r.backoff?.workers ?? f.workers;
+    const untouched = Math.max(0, workers * per - (r.unit ? r.anonGb ?? 0 : 0));
+    const room = avail - this.availReserve() - this.headroomGb(r) - untouched;
+    return Math.min(f.max, workers + Math.max(0, Math.floor(room / per + 1e-9)));
+  }
+
+  /**
    * D521: what each job stopped for memory (or by `stop`) needs to be retried: the holding of the step its
    * retry resumes at, with what the stopped run measured.  The schedule admits it only when that fits.
    */
@@ -1258,16 +1338,19 @@ export class Runner {
       const steps = this.stepsFor(job, true, resume.from);
       const step = steps.find((x) => x.phase === 'commands') ?? steps[0];
       if (!step) continue;
-      const view: JobRun = { ...prev, steps, stepIndex: steps.indexOf(step), unit: null, anonGb: null };
-      out.set(job.id, this.holdingAt(view, step, job));
+      const view: JobRun = { ...prev, steps, stepIndex: steps.indexOf(step), unit: null, anonGb: null, memFit: null };
+      const h = this.holdingAt(view, step, job);
+      // D526: a per-worker step starts with as few as FIT_MIN_WORKERS: that is what the retry waits for.
+      const fitMin = step.phase === 'commands' && !step.memGb && this.stepWorkers(view, step) > FIT_MIN_WORKERS ? Math.round(FIT_MIN_WORKERS * this.perWorkerGb(view, job) * 10) / 10 : null;
+      out.set(job.id, fitMin !== null && fitMin < h.memGb ? { ...h, minGb: fitMin } : h);
     }
     return out;
   }
 
   /** D521: a memory-stop or retry alert for status.json (kept ALERT_KEEP_MS, the newest 20). */
-  alert(id: string, kind: 'memory-stop' | 'memory-retry', detail: string): void {
+  alert(id: string, kind: 'memory-stop' | 'memory-retry' | 'memory-fit', detail: string, extra: { needGb?: number; workers?: number; workersMax?: number } = {}): void {
     const a = Number.isFinite(this.availGb()) ? Math.round(this.availGb() * 10) / 10 : null;
-    this.p.alerts = [...(this.p.alerts ?? []), { at: this.sys.now(), id, kind, availGb: a, detail }].filter((x) => this.sys.now() - x.at <= ALERT_KEEP_MS).slice(-20);
+    this.p.alerts = [...(this.p.alerts ?? []), { at: this.sys.now(), id, kind, availGb: a, ...extra, ...(detail ? { detail } : {}) }].filter((x) => this.sys.now() - x.at <= ALERT_KEEP_MS).slice(-20);
     this.p.dirty = true;
   }
 
@@ -1328,7 +1411,10 @@ export class Runner {
 
   /** {workers} (and JOBS) in a step: the run's workers, at most the block's own `cores:`. */
   stepWorkers(r: JobRun, step: Step | undefined = r.steps[r.stepIndex]): number {
-    return step?.cores ? Math.max(1, Math.min(r.workers, step.cores)) : r.workers;
+    const w = step?.cores ? Math.max(1, Math.min(r.workers, step.cores)) : r.workers;
+    // D526: a step started under-sized that the control file cannot raise runs its fit for the whole step.
+    const f = r.memFit;
+    return f && !f.raisable && step && f.step === step.name ? Math.max(1, Math.min(w, f.workers)) : w;
   }
 
   /** The core budget heavy jobs share, the memory they share, and whether one may start beside another now. */
@@ -1362,14 +1448,24 @@ export class Runner {
   holdingAt(r: JobRun, step: Step | undefined, job: JobFile | null): Holding {
     const cores = this.stepWidth(r, step, job);
     const ms = r.measured;
-    const floor = r.sizing?.peakGb ?? Math.max(r.peakRssGb ?? 0, job?.memPerWorkerGb ?? DEFAULT_PEAK_GB);
-    const measuredWorker = ms?.workerPeakGb && (ms.workerSampledMs ?? 0) >= MEASURE_MIN_MS ? ms.workerPeakGb * MEASURED_MARGIN : 0;
-    const peak = Math.max(floor, measuredWorker);
+    const peak = this.perWorkerGb(r, job);
     let mem = step?.memGb ?? cores * peak;
     const sp = step ? ms?.steps?.[step.name] : undefined;
     if (step?.memGb && sp && sp.sampledMs >= MEASURE_MIN_MS && sp.peakGb * MEASURED_MARGIN > mem) mem = sp.peakGb * MEASURED_MARGIN;
     if (step && step === r.steps[r.stepIndex] && r.unit && (r.anonGb ?? 0) > mem) mem = r.anonGb as number;
     return { cores, memGb: Math.round(mem * 10) / 10 };
+  }
+
+  /**
+   * A worker's expected peak (GB): the sized, measured-in-pilot, declared or default per-worker peak (a floor),
+   * raised by the largest worker's VmHWM x MEASURED_MARGIN once a commands step has run MEASURE_MIN_MS (D521).
+   * D526's fit divides the free memory by this.
+   */
+  perWorkerGb(r: JobRun, job: JobFile | null): number {
+    const ms = r.measured;
+    const floor = r.sizing?.peakGb ?? Math.max(r.peakRssGb ?? 0, job?.memPerWorkerGb ?? DEFAULT_PEAK_GB);
+    const measuredWorker = ms?.workerPeakGb && (ms.workerSampledMs ?? 0) >= MEASURE_MIN_MS ? ms.workerPeakGb * MEASURED_MARGIN : 0;
+    return Math.max(floor, measuredWorker);
   }
 
   /**
@@ -1426,8 +1522,17 @@ export class Runner {
     if (this.host && r.backoff && step.phase !== 'prepare' && r.unit) {
       const maxGb = this.unitSpec(r, job, step).memoryMaxGb;
       r.memGb = this.sys.unitMemoryGb(r.unit);
-      const { state, action } = decide(r.backoff, { at: now, some10: this.host.some10, swapIn: this.swapInRate, jobGb: r.memGb, jobMaxGb: maxGb, javaCount: this.sys.unitJavaCount(r.unit) }, canControl, this.cfg.backoff);
+      // D526: a step started under-sized is raised only as far as the host's free memory holds.
+      const mine = r.memFit && r.memFit.step === step.name ? r.memFit : null;
+      const fitting = !!mine?.raisable;
+      // A fit that cannot be raised (a pilot, a job that cannot be told) stays at its fit: its {workers} is fixed.
+      const memCap = mine ? (fitting ? this.memFitCap(r, job) : mine.workers) : null;
+      const { state, action } = decide(r.backoff, { at: now, some10: this.host.some10, swapIn: this.swapInRate, jobGb: r.memGb, jobMaxGb: maxGb, javaCount: this.sys.unitJavaCount(r.unit), memCap }, canControl, this.cfg.backoff);
       r.backoff = state;
+      if (fitting && r.memFit && state.workers >= r.memFit.max) {
+        this.sys.log(`${r.id}: ${step.name} has all ${r.memFit.max} workers again (D526)`);
+        r.memFit = null;
+      }
       // The job's own memory at its cap is the job's alone: no other job's stop relieves it.
       const ownHard = r.memGb !== null && r.memGb !== undefined && maxGb > 0 && r.memGb >= this.cfg.backoff.hardFraction * maxGb;
       if (action) this.apply(r, action, ownHard);
@@ -1675,8 +1780,11 @@ export class Runner {
     const f: Record<string, string> = { runner: `forgecoach-runner ${this.cfg.commit}`, started: isoLocal(r.startedAt) };
     for (const [repo, sha] of Object.entries(r.shas)) f[repo] = sha;
     if (state !== 'running') f.finished = isoLocal(r.outcome?.at ?? this.sys.now());
-    if (r.sizing) f.workers = `${r.backoff?.workers ?? r.workers} (sized ${r.sizing.workers}: ${r.sizing.detail})`;
-    else if (r.workers) f.workers = String(r.workers);
+    const mf = r.memFit && r.steps[r.stepIndex]?.name === r.memFit.step ? r.memFit : null;
+    // D526: a step started with as many workers as fit says so, and what it is raised toward.
+    const fitWords = mf ? `${mf.workers} of ${mf.max} fit: memory ${mf.availGb} GB available, ${mf.perWorkerGb} GB a worker${mf.raisable ? `; raised toward ${mf.max} as memory frees` : ''}; ` : '';
+    if (r.sizing) f.workers = `${r.backoff?.workers ?? r.workers} (${fitWords}sized ${r.sizing.workers}: ${r.sizing.detail})`;
+    else if (r.workers) f.workers = mf ? `${this.stepWorkers(r)} (${fitWords.replace(/; $/, '')})` : String(r.workers);
     if (r.peakRssGb !== null) f.peak_worker_rss_gb = (Math.round(r.peakRssGb * 100) / 100).toString();
     if (r.approved) f.approved = 'pilot approved; the runner skipped it';
     for (const x of r.restarts) {
@@ -1920,7 +2028,7 @@ export class Runner {
         ? { at: isoLocal(w.since), id: w.id, kind: 'memory-wait', needGb: w.needGb, availGb: w.availGb, freeGb: w.freeGb, text: '' }
         : { at: isoLocal(w.since), id: w.id, kind: 'budget-wait', needGb: w.needGb, availGb: null, freeGb: w.freeGb, behind: w.behind, text: '' }),
       ...[...(this.p.alerts ?? [])].filter((a) => now - a.at <= ALERT_KEEP_MS).reverse()
-        .map((a): Alert => ({ at: isoLocal(a.at), id: a.id, kind: a.kind, needGb: null, availGb: a.availGb, text: '', detail: a.detail })),
+        .map((a): Alert => ({ at: isoLocal(a.at), id: a.id, kind: a.kind, needGb: a.needGb ?? null, availGb: a.availGb, ...(a.kind === 'memory-fit' ? { workers: a.workers ?? null, workersMax: a.workersMax ?? null } : {}), text: '', detail: a.detail })),
     ].slice(0, 20).map((a) => ({ ...a, text: alertText(a) }));
     return fit({
       schema: 1,

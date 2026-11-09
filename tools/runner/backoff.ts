@@ -21,7 +21,9 @@
 //         memory, retried later with fewer workers.
 //   LOW   some avg10 < lowSome and swap-in < lowSwapIn for `lowSamples` in a
 //         row: lift a pause first, then add a worker back, at most once per
-//         `raiseCooldownS`, never above the sized count.
+//         `raiseCooldownS`, never above the sized count — nor, for a step that started
+//         with fewer workers than it was sized to because the rest did not fit the host's
+//         free memory (D526), above the workers that fit now (`memCap`).
 //
 // Pure: the state goes in and comes out, and the tests drive it with numbers.
 
@@ -61,6 +63,8 @@ export interface Sample {
   jobMaxGb: number | null;
   /** Java processes in the unit now (null: unknown). */
   javaCount?: number | null;
+  /** D526: the most workers the host's free memory holds now, for a step started under-sized (absent: no limit). */
+  memCap?: number | null;
 }
 
 export interface BackoffState {
@@ -128,7 +132,7 @@ export function decide(s: BackoffState, x: Sample, canControl: boolean, c: Backo
       st.lowRun = 0;
       return { state: st, action: { kind: 'resume', why } };
     }
-    if (st.workers < st.sized) {
+    if (st.workers < Math.min(st.sized, x.memCap ?? Infinity)) {
       st.workers += 1;
       st.lastRaise = x.at;
       st.lowRun = 0;

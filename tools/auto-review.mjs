@@ -77,6 +77,12 @@
 //     slice) is closed, running jobs or none: the lab is waiting for that very
 //     memory, and a review's JVMs would take it -- the why carries the runner's
 //     memory-wait alert;
+//     a running job with a live `memory-fit` (D526: it started with fewer
+//     workers than it was sized to because the rest did not fit the host's free
+//     memory, and its `workers` are still under its `workersMax`) is closed too:
+//     the state is `running` with cores free, but the memory the review's JVMs
+//     would take is the memory the fit grows back into -- the why carries the
+//     memory-fit alert;
 //     `state` "idle" or an empty `running` is idle; a `running` job with
 //     `cores: null` (one the runner shows but does not run: its width is
 //     unknown and not in coresUsed) is busy; else `host.coresTotal -
@@ -225,6 +231,14 @@ export function labGate(file, { now = Date.now(), staleMs = STALE_MS } = {}) {
     return { open: false, why: `lab degraded (a job waits on memory held outside the lab slice${running.length ? '' : '; nothing runs'})${a ? `: ${a.text}` : ''}`, freeCores: 0 };
   }
   if (doc.state === 'idle' || running.length === 0) return { open: true, why: 'lab idle', freeCores: null };
+  // D526: a job running under-sized for memory (a memory-fit alert, and fewer workers than its sized count) is
+  // waiting to grow back into the free memory; a review's JVMs would take it (and the 3 GB reserve) from it.
+  const fits = (Array.isArray(doc.alerts) ? doc.alerts : []).filter((x) => x && x.kind === 'memory-fit' && typeof x.text === 'string');
+  const short = running.find((r) => r && typeof r.workers === 'number' && typeof r.workersMax === 'number' && r.workers < r.workersMax && fits.some((a) => a.id === r.id));
+  if (short) {
+    const a = fits.find((x) => x.id === short.id);
+    return { open: false, why: `lab fitted to memory (${short.id} runs ${short.workers} of ${short.workersMax} workers until the host's memory frees): ${a.text}`, freeCores: 0 };
+  }
   // A job the runner shows but does not run (runner.ts: "not run by the runner") has `cores: null`
   // and adds nothing to coresUsed: its width is unknown, so the lab is taken as busy.
   if (running.some((r) => r && r.cores === null)) return { open: false, why: 'lab busy (a job the runner does not run: its cores are unknown)', freeCores: 0 };

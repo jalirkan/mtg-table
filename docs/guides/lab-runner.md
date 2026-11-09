@@ -277,6 +277,20 @@ waits on the budget behind running jobs (`budget-wait`, state `running`), and ea
 (the third, which fails the job, too) and retry. HEARTBEAT.md and `tools/runner.sh status`
 print them too.
 
+**As many workers as fit (D526).** A pilot or commands step whose memory is per worker (no
+block `mem_gb:`) and whose workers do not all fit the actual free memory does not wait: it
+starts with floor(free / its per-worker need) workers — the need the budget uses, the declared
+or sized peak raised by a measured VmHWM × 1.4 after an hour — when that is at least two. A pool
+that reads the control file starts at its sized count with `maxWorkers` at the fit, and the
+backoff raises it toward its sized count as the memory frees, each raise only when one more
+worker fits; a pilot or a job that cannot be told runs its fit for the whole step. Under two
+workers it waits as above (`memory-wait`, `degraded`), for two workers' worth; admission and a
+memory retry need two workers' worth too (a job with a block `mem_gb:` waits for its whole need).
+The fit is decided on the step's uncapped total, so a need the installed cap hides is fitted too.
+While a job runs fitted, the coach helper's automatic review stays off (`tools/auto-review.mjs`). The start is a `memory-fit` alert (`workers`,
+`workersMax`, the need a worker, MemAvailable), information: the state stays `running`, and the
+STATUS's `workers:` line says "5 of 7 fit: memory … GB available, … GB a worker".
+
 **`alone: yes` (D521).** A job with this header is admitted only onto an empty machine, and
 nothing, heavy or light, is admitted beside it; while it is next and waits for the running
 jobs to end, nothing newer starts. Two jobs on shared physical cores change what a wall-clock
@@ -525,7 +539,8 @@ Schema 1 (`tools/runner/statusjson.ts`):
 ```
 { schema: 1, updated, heartbeat, paused,
   state: running|idle|degraded, idleSince, idleReason,
-  alerts: [{ at, id, kind: memory-stop|memory-retry|memory-wait, needGb, availGb, text }],
+  alerts: [{ at, id, kind: memory-stop|memory-retry|memory-wait|budget-wait|memory-fit, needGb, availGb, freeGb, behind,
+             workers, workersMax (memory-fit), text }],
   host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus (threads), budgetGb,
           coresUsed, coresTotal },
   running:  [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,

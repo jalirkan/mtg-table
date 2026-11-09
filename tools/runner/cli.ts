@@ -231,7 +231,7 @@ function printStatus(cfg: RunnerConfig): number {
   if (holds.length) console.log(`HELD: ${holdReason(holds)} (D401)`);
   console.log(`host: load ${d.host.load1}, cores ${d.host.coresUsed ?? '?'}/${d.host.coresTotal ?? '?'} in use, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
   for (const r of d.running) {
-    console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'} worker(s), ${r.cores ?? '?'} core(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
+    console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'}${r.workersMax && r.workers !== null && r.workers < r.workersMax ? ` of ${r.workersMax}` : ''} worker(s), ${r.cores ?? '?'} core(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
     for (const e of r.pressureEvents.slice(-5)) console.log(`   ${e.at} ${e.kind} -> ${e.workers} worker(s), pressure ${e.pressure}%`);
   }
   for (const q of d.queue) console.log(`queued  ${q.id} ${q.title} (${q.cpu}${q.est ? `, ${q.est}` : ''})`);

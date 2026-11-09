@@ -53,12 +53,17 @@
 //     host's memory pressure (PSI some avg10) at or under 5%.  (A job that does not fit the budgets stops the queue, as above.)
 //   A job's need is its header's (width, reservation), or what the runner knows better
 //   (`needs`): a retry's is the step it resumes at, with its measured peaks.
+//   - D526, AS MANY AS FIT.  A job whose memory is per worker waits only for FIT_MIN_WORKERS
+//     workers' worth of that free memory (`minGb`), not all of it: its steps start with as many
+//     workers as fit, and the runner raises them as the memory frees (runner.ts `memoryFit`).
+//     Under that it waits as above.  Its whole need stays reserved inside the budgets.
 //   - ALONE.  A job with `alone: yes` (every wall-clock-budgeted measurement: ladder matches)
 //     is admitted only onto an empty machine, and nothing, heavy or light, starts beside it;
 //     while it is next and waits for the running jobs to end, nothing newer starts.
 
 import type { JobFile } from './jobfile.ts';
 import { DEFAULT_PEAK_GB } from './sizing.ts';
+import { FIT_MIN_WORKERS } from './budget.ts';
 import { retryHolds } from './clock.ts';
 
 /**
@@ -146,8 +151,11 @@ export interface ActualMemory {
   maxSome10?: number;
 }
 
-/** What a running job holds: its width now (cores) and its memory reservation (GB). */
-export interface Holding { cores: number; memGb: number }
+/**
+ * What a running job holds: its width now (cores) and its memory reservation (GB).  As a need, `minGb` (D526):
+ * the least it starts with -- FIT_MIN_WORKERS workers' worth, for a job whose memory is per worker.
+ */
+export interface Holding { cores: number; memGb: number; minGb?: number }
 
 /** The machine, for co-scheduling heavy jobs. */
 export interface MachineBudget {
@@ -187,6 +195,17 @@ export interface ScheduleInput {
 export function widthOf(job: JobFile, m: { cores: number; defaultWidth: number }): number {
   const w = job.cores ?? (job.cpu === 'light' ? 1 : job.maxWorkers ?? m.defaultWidth);
   return Math.max(1, Math.min(w, m.cores));
+}
+
+/**
+ * D526: a job's need before it runs, from its header: its width and reservation, and the least it starts with
+ * (FIT_MIN_WORKERS workers' worth) when it is wider than that and no pilot or commands block carries `mem_gb:`.
+ */
+export function headerNeed(job: JobFile, width: number): Holding {
+  const memGb = reservationOf(job, width);
+  // A block with its own `mem_gb:` is exempt from the fit (its step waits for all of it), so such a job waits for its whole need.
+  const blockMem = [job.pilot, job.commands].some((sec) => !!sec?.blockMemGb.some((x) => x !== null));
+  return width > FIT_MIN_WORKERS && !blockMem ? { cores: width, memGb, minGb: reservationOf(job, FIT_MIN_WORKERS) } : { cores: width, memGb };
 }
 
 /** A job's memory reservation before it runs: width × max(mem_per_worker_gb ?? 2.5, a peak measured before). */
@@ -247,7 +266,7 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     if (job.errors.length) { b('invalid', `the job file has errors: ${job.errors[0]}`); continue; }
     if (st && /^(check|human)/i.test(st.fields.needs ?? '')) { b('needs-check', st.fields.reason ?? 'needs a human/Claude check'); continue; }
     const retrying = isMemoryRetry(st);
-    const needOf = (mb: MachineBudget): Holding => inp.needs?.get(job.id) ?? { cores: widthOf(job, mb), memGb: reservationOf(job, widthOf(job, mb)) };
+    const needOf = (mb: MachineBudget): Holding => inp.needs?.get(job.id) ?? headerNeed(job, widthOf(job, mb));
     /** D521: the need, as the actual-memory check counts it: at most the INSTALLED heavy budget, never a lowered one. */
     const actualNeed = (n: Holding): number => round1(Math.min(n.memGb, inp.memory?.capGb ?? m?.memGb ?? n.memGb));
     const carve = (n: Holding): void => { used.cores += n.cores; used.memGb += n.memGb; pendingGb += actualNeed(n); carved = true; };
@@ -291,16 +310,19 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
         if (inp.memory) {
           const mem = inp.memory;
           const want = actualNeed(need);
+          // D526: a job whose memory is per worker starts with as many workers as fit, at least FIT_MIN_WORKERS:
+          // that is what it waits for.  It still reserves all of `want` below (it grows into it).
+          const least = need.minGb !== undefined ? round1(Math.min(want, need.minGb)) : want;
           const free = round1(mem.availGb - mem.reserveGb - mem.headroomGb - pendingGb);
           const pressured = mem.maxSome10 !== undefined && (mem.some10 ?? 0) > mem.maxSome10;
-          if (want > free || pressured) {
+          if (least > free || pressured) {
             // The carve-out: its cores, its memory and its share of the free memory stay reserved, so a later job
             // starts only beside it, and never in the memory it waits for.
             carve(need);
             const why = pressured
               ? `waits for memory: the host's memory pressure (some avg10) is ${round1(mem.some10 ?? 0)}%, over ${mem.maxSome10}%`
-              : `waits for memory: needs ${want} GB; ${Math.max(0, free)} GB free (${round1(mem.availGb)} GB available, less ${mem.reserveGb} GB kept free${mem.headroomGb + pendingGb - want > 0 ? ` and ${round1(mem.headroomGb + pendingGb - want)} GB the running jobs have reserved` : ''})`;
-            b(retrying ? 'memory' : 'memory-wait', `${retrying ? `${st?.fields.reason}; ` : ''}${why}`, { wait: 'memory', needGb: want, freeGb: Math.max(0, free), availGb: round1(mem.availGb) });
+              : `waits for memory: needs ${least} GB${least < want ? ` (${FIT_MIN_WORKERS} workers of its ${want} GB)` : ''}; ${Math.max(0, free)} GB free (${round1(mem.availGb)} GB available, less ${mem.reserveGb} GB kept free${mem.headroomGb + pendingGb - want > 0 ? ` and ${round1(mem.headroomGb + pendingGb - want)} GB the running jobs have reserved` : ''})`;
+            b(retrying ? 'memory' : 'memory-wait', `${retrying ? `${st?.fields.reason}; ` : ''}${why}`, { wait: 'memory', needGb: least, freeGb: Math.max(0, free), availGb: round1(mem.availGb) });
             continue;
           }
           pendingGb += want;
