@@ -1,8 +1,8 @@
 ## D535 — where the search's strength is, by decision kind: search-v2 with each of priority, attacks and blocks searched or left to Forge, all eight combinations against Forge Default on the same 600 deals (config only, no new Java), and the rule that names a faster-seat candidate from it
 
 *Branch `pc/search-kinds`, off main `4e823718` (D533's merge, the pin of J209). The lane reserved D534 and D535
-(D200): D534 is the random-rollout track's closing decision, written when J209 is read, and stays unused if J209
-finds a candidate; this is D535. Six ladder players, one test, this file and PLAN's rows. **Nothing under
+(D200): D534 is the random-rollout track's closing decision, written when J209 was read (−6.9 Elo [−17.8, +3.9], no
+candidate); this is D535. Six ladder players, one test, this file and PLAN's rows. **Nothing under
 `bridge/src` changes**: `what=` is a `SearchConfig` key the ladder already passes (`KINDS.search.params.what`), and
 `SearchPolicy` already honours it (`wantsPriority` is false without `p`; `chooseAttack` and `chooseBlock` return
 Forge's answer at once without `a` or `b`). The live seat, the atlas's random seat (D508's frozen population), every
