@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T01:36:42-05:00",
- "heartbeat": "2026-11-10T01:36:42-05:00",
+ "updated": "2026-11-10T01:36:56-05:00",
+ "heartbeat": "2026-11-10T01:36:56-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -29,7 +29,7 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.34,
+  "load1": 4.03,
   "memUsedGb": 6,
   "memTotalGb": 30.5,
   "swapUsedMb": 3923,
@@ -46,9 +46,9 @@
    "id": "J205",
    "title": "Random rollouts, iteration 5 (random-v6, no new rollout logic): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2), of the two registered arms D350's override=lcb (z 1) on rollout=random4 at margins 60 and 40, both read under D527's table: (a) the arm at J204's v6Margin (40, so search-v2-rrandom4-lcb-m40: J204 (a) minus J202 (b) read -3.5; the job reads it from J204's match lines), which alone is read for D528's SIGNAL against J204 (b)'s policy-outlet line on the same deals (not replayed), with the count of successive SIGNAL INCONCLUSIVE readings re-read from J204's match lines; (b) the other margin; alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-11-10T01:35:08-05:00",
-   "elapsed": 94,
+   "elapsed": 109,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -147,7 +147,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J205-pilot3"
+   "detail": "lab-J205-pilot4"
   }
  ],
  "queue": [],
