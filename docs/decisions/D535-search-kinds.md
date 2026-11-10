@@ -53,17 +53,21 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
    | pab | `search-v1-anytime` | `pab` | `cdd55e02a89c` | everything (search-v2 itself) |
 
    Each arm's seat config is `Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=<w>,seed=0,anytime=1`.
-2. **The `all` corner is `search-v1-anytime` itself, and its match is played in a ladder folder of its own.** A
-   match's batch seeds go by its two players (`Session.spec`, `usedBseeds`): `search-v1-anytime` against
-   `forge-default` has played blocks 114,900,000–114,900,149 in this host's ladder folder already (J194 (a)) and
-   would take the next 150 there, other deals than the other seven corners'. So the night plays that one match with
-   `--dir var/j210-all`, an empty folder on the same host name: the seed base is the host's, the folder holds no
-   earlier game, and the match takes the same 150 blocks. Its rows stay out of `var/ai-ladder/results`, where the
-   same deals of the same matchup are J194 (a)'s already. **A second name for search-v2's config was written first
-   and is rejected** (below): the ladder cannot play one.
-3. **The same deals for every corner.** The other seven matchups (`policy-outlet` and the six arms, each against
-   `forge-default`) have never been played on this host and take blocks 114,900,000–114,900,149 of the match base in
-   `var/ai-ladder`, the deals of J194 (a), J101 and the random-rollout track. A deal is
+2. **The `all` corner is `search-v1-anytime` itself, and every match of the night is played in a ladder folder of
+   its own.** A match's batch seeds go by its two players (`Session.spec`, `usedBseeds`): a matchup takes the
+   host's match base and then its next block the folder has not played. Two things follow. `search-v1-anytime`
+   against `forge-default` has played blocks 114,900,000–114,900,149 in this host's ladder folder already (J194
+   (a)) and would take the next 150 there, other deals than the other seven corners'. And a match that the runner
+   starts again after a stop (a memory stop, as J206's and J208's were) finds its own first rows in a shared folder
+   and takes the blocks after them. So the night plays each match with `--dir var/j210-<corner>`, a folder on the
+   same host name that the match's block empties before it starts: the seed base is the host's, the folder holds
+   no earlier game, and the match takes the same 150 blocks, on a first run and on a retry. The night's rows stay
+   out of `var/ai-ladder/results`, where J194 (a)'s rows of the same deals are read from for REPLICATION. *(The
+   first writing of this point gave only the `all` corner a folder of its own, `var/j210-all`; amended the same
+   day, before the job was written, when the retry case was read in `cmdMatch`.)* **A second name for
+   search-v2's config was written first and is rejected** (below): the ladder cannot play one.
+3. **The same deals for every corner.** Every one of the eight matches takes blocks 114,900,000–114,900,149 of the
+   host's match base in its own empty folder: the deals of J194 (a), J101 and the random-rollout track. A deal is
    D321's key, (batch seed, deck pair, the game's block of four, the half), which does not carry the run, so one
    deal is the same two games (seats swapped) in every corner's match. An arm's **pair score** on a deal is its
    wins over its decisive games there (draws dropped, as `pairScores` does).
@@ -103,8 +107,10 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
    direction it points at is a budget by kind (the anytime clock and the candidate count spent where LAST and
    ALONE are largest), which is new Java under its own decision.
 8. **Order and time.** Cheapest and most needed first, so a cut night still reads: `none` (about 15 minutes),
-   `only-b`, `only-a`, `only-p`, `no-p`, `no-a`, `no-b`, `all`. From J194 (a)'s time shares the night is about 9 h
-   at 7 workers (0.25, 0.4, 0.65, 1.5, 0.8, 1.6, 1.9, 2.0), `alone: yes`. If `all` is cut, LAST and the candidate
+   `only-b`, `only-a`, `only-p`, `no-p`, `no-a`, `no-b`, `all`. From J194 (a)'s wall (1.27 h for its 1,200 games
+   at 7 workers) and its time shares by kind the night is about 6 h at 7 workers (0.2, 0.3, 0.45, 0.95, 0.5, 1.0,
+   1.2, 1.3), `alone: yes`. *(First written as about 9 h, from a wall of 2 h that J194 (a) did not take.)* If `all`
+   is cut, LAST and the candidate
    rule are read against J194 (a)'s rows instead and the report says so in every line that uses them.
 
 **Rejected.**
@@ -138,7 +144,8 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
 - That the deals are the same in all eight matches. The job checks each match's batch seeds against
   114,900,000–114,900,149 and the verdict counts the deals each comparison shares (at least 590 of 600, or it is
   not read).
-- The time estimates of point 8: shares of J194 (a)'s search time, not measurements of these arms.
+- The time estimates of point 8: J194 (a)'s wall scaled by its shares of search time by kind, not measurements of
+  these arms.
 - Whether the confirm set's 34 deck pairs stand for the decks the seat meets at the table. They are the pairs every
   search number in this repo since D398 was read on.
 
