@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T10:43:46-05:00",
- "heartbeat": "2026-11-10T10:43:46-05:00",
+ "updated": "2026-11-10T10:44:01-05:00",
+ "heartbeat": "2026-11-10T10:44:01-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,8 +39,8 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.05,
-  "memUsedGb": 8.3,
+  "load1": 3.59,
+  "memUsedGb": 8.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 4083,
   "pressure": 0,
@@ -56,9 +56,9 @@
    "id": "J207",
    "title": "Random rollouts, iteration 7 (random-v8, no new Java: rollout=random4-them on the margin rule): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4them-m40, J206's arm without override=lcb (the rollout's opponent random-v4, the searching seat's own continuation Forge's, the margin rule at 40), then (b) search-v2-rrandom4them, the same at search-v2's own margin of 20; each read from its own match under D527's table (its SHOWN row restated by D530 point 7); a candidate goes to a 4,800-game confirmation, both arms losing badly close the random-rollout track, otherwise random-v9 (a per-rollout mix, the track's last iteration) at the better arm's margin; alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-11-10T10:42:10-05:00",
-   "elapsed": 96,
+   "elapsed": 111,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -152,7 +152,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J207-pilot3"
+   "detail": "lab-J207-pilot4"
   }
  ],
  "queue": [],
