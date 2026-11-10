@@ -1,0 +1,128 @@
+{
+ "written": 1,
+ "games": 1200,
+ "bar": 60,
+ "armKey": "m40",
+ "arm": "search-v2-rmix4them-m40",
+ "armHash": "fcf472f384b7",
+ "margin": 40,
+ "armM40": 1,
+ "armM20": 0,
+ "match": 1,
+ "names": 1,
+ "complete": 1,
+ "a": "search-v2-rmix4them-m40",
+ "ah": "fcf472f384b7",
+ "id": "justin-a-B650-GAMING-X-AX-V2:20261110T210308-3105240",
+ "played": 1200,
+ "errors": 0,
+ "timeouts": 0,
+ "score": 0.49,
+ "lo": 0.4743,
+ "hi": 0.5057,
+ "elo": -6.9,
+ "eloLo": -17.8,
+ "eloHi": 3.9,
+ "aMs": 923.313,
+ "bMs": 910.695,
+ "shown": 0,
+ "inconclusive": 0,
+ "indistinguishable": 0,
+ "noWeaker": 0,
+ "worseNotBadly": 1,
+ "losesBadly": 0,
+ "reading": [
+  "J208 re-read: (a) NOT SHOWN, worse, not badly -19.1, (b) NOT SHOWN, worse, not badly -19.7; the margin its two points name 40, this arm's 40 (the same)",
+  "NOT SHOWN, worse, not badly: search-v2-rmix4them-m40 -6.9 Elo [-17.8, 3.9], score 0.49, lower end 0.4743, margin 40",
+  "the random-rollout track closes now, with a closing decision written from the track's closing draft (D532 point 6); no further iteration; the owner is told, with the counters, which way it went",
+  "the self-play-from-random path does not open on this night",
+  "the live seat is unchanged (a separate decision, D509)"
+ ],
+ "candidate": 0,
+ "diagnose": 1,
+ "tooWide": 1,
+ "upperAtZero": 0,
+ "inconclusiveAbove": 0,
+ "chainDeals": 1,
+ "blocks": {
+  "blocks": 150,
+  "min": 114900000,
+  "max": 114900149,
+  "games": 1200
+ },
+ "readingMeans": null,
+ "confirm": 0,
+ "trackCloses": 1,
+ "closing": 1,
+ "closesAsReachedIfHolds": 0,
+ "follows": 1,
+ "repost": 0,
+ "selfPlayOpens": 0,
+ "liveSeatChanged": 0,
+ "mix": {
+  "read": 1,
+  "decisions": 27951,
+  "forgeRounds": 96832,
+  "randomRounds": 82261,
+  "forgeRoundsPerDecision": 3.4643,
+  "randomRoundsPerDecision": 2.943,
+  "forgeRollouts": 250585,
+  "randomRollouts": 197737,
+  "forgeRolloutsPerDecision": 8.9652,
+  "randomRolloutsPerDecision": 7.0744,
+  "pairsForge": 36532,
+  "pairsRandom": 33885,
+  "meanDForge": 793.0775,
+  "meanDRandom": 692.5842,
+  "both": 8311,
+  "disagree": 872,
+  "disagreeShare": 0.1049
+ },
+ "j208": {
+  "bothComplete": 1,
+  "marginFromJ208": 40,
+  "marginMatches": 1,
+  "bothLoseBadly": 0,
+  "candidate": 0
+ },
+ "info": {
+  "minusJ208Same": 12.2,
+  "minusJ208Other": 12.8,
+  "minusJ206": 16.3,
+  "minusJ202Same": 14,
+  "minusJ204b": {
+   "diff": 77.5,
+   "hw": 18.8,
+   "lo": 58.7,
+   "hi": 96.3
+  },
+  "acrossCode": "every difference with another job is across D533's merge, which changes bridge/src and by D533 point 3 leaves every earlier value's play unchanged; information only",
+  "acrossDeals": 0,
+  "cost": {
+   "read": 1,
+   "ratio": 1.03,
+   "aRolloutsPerDecision": 16.02,
+   "bRolloutsPerDecision": 15.55,
+   "aPriorityShare": {
+    "fromPass": 0.0662,
+    "toOther": 0.0574,
+    "toPass": 0.0312
+   },
+   "bPriorityShare": {
+    "fromPass": 0.0816,
+    "toOther": 0.0633,
+    "toPass": 0.0481
+   },
+   "aChangedShare": {
+    "p": 0.1548,
+    "a": 0.1169,
+    "b": 0.1823
+   },
+   "bChangedShare": {
+    "p": 0.193,
+    "a": 0.1532,
+    "b": 0.2101
+   }
+  }
+ }
+}
