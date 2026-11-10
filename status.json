@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-09T21:08:24-05:00",
- "heartbeat": "2026-11-09T21:08:24-05:00",
+ "updated": "2026-11-09T21:08:39-05:00",
+ "heartbeat": "2026-11-09T21:08:39-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,10 +19,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.78,
+  "load1": 8.28,
   "memUsedGb": 8.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4671,
+  "swapUsedMb": 4668,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -36,9 +36,9 @@
    "id": "J204",
    "title": "Random rollouts, iteration 4 (random-v5, no new rollout logic): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4-m60, J202 (b)'s search-v2-rrandom4-m40 with the search's override margin at 60 instead of 40 (rollout=random4 unchanged, both seats), read under D527's table; and (b) policy-outlet, the seat search-v2 sits on with the search off (Default+outlets, the baseline the arm converges on as the margin rises), never played on this host; then D528's SIGNAL reading, (a)'s Elo minus (b)'s on the same deals with both intervals' noise (SIGNAL SHOWN keeps the random-rollout track open on the margin/LCB line; NO SIGNAL or SIGNAL AGAINST closes it unless (a) is a candidate), alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 2/4",
+   "phase": "pilot 3/4",
    "started": "2026-11-09T21:06:54-05:00",
-   "elapsed": 90,
+   "elapsed": 104,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -130,7 +130,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J204-pilot2"
+   "detail": "lab-J204-pilot3"
   }
  ],
  "queue": [],
