@@ -98,6 +98,11 @@ import java.util.Locale;
  *     with R8 made lethal-aware (under a lethal attack a good block only where
  *     the seat survives it, and the surviving redraw with the most good
  *     blocks); no R9.</li>
+ * <li>{@code rollout=random4-them} -- the opponent's seat alone random-v4
+ *     (D531, random-v7, pre-registered by D530 point 7): the searching seat
+ *     plays its own continuation as search-v2's rollouts do (plain Forge, its
+ *     candidate forced first), the opponent the same random-v4 seat as under
+ *     {@code random4}; {@code random-self}'s seating reversed.</li>
  * </ul>
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
@@ -245,7 +250,7 @@ public final class SearchConfig {
         }
         if (!ROLLOUTS.contains(rollout)) {
             throw new IllegalArgumentException("search rollout= is default, outlets, both, random, random-self, random3, "
-                    + "random3-held or random4: " + rollout);
+                    + "random3-held, random4 or random4-them: " + rollout);
         }
         this.budgetMs = budgetMs;
         this.maxCandidates = maxCandidates;
@@ -277,9 +282,12 @@ public final class SearchConfig {
         this.observe = false;
     }
 
-    /** The {@code rollout=} values: D390's three, D523's two random ones, D525's two random-v3 ones and D527's random-v4. */
+    /**
+     * The {@code rollout=} values: D390's three, D523's two random ones, D525's two random-v3 ones, D527's random-v4 and
+     * D531's random-v4 on the opponent's seat alone.
+     */
     public static final java.util.List<String> ROLLOUTS = java.util.List.of("default", "outlets", "both", "random", "random-self",
-            "random3", "random3-held", "random4");
+            "random3", "random3-held", "random4", "random4-them");
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
     public boolean rolloutOutletsUs() {
@@ -288,23 +296,28 @@ public final class SearchConfig {
 
     /**
      * D523: whether the searching seat inside the rollouts is the random seat ({@code random}, {@code random-self}:
-     * random-v2; D525's {@code random3}, {@code random3-held}: random-v3; D527's {@code random4}: random-v4).
+     * random-v2; D525's {@code random3}, {@code random3-held}: random-v3; D527's {@code random4}: random-v4).  Not
+     * under D531's {@code random4-them}, whose searching seat plays plain Forge as search-v2's does.
      */
     public boolean rolloutRandomUs() {
-        return "random".equals(rollout) || "random-self".equals(rollout) || rolloutRandomV3() || rolloutRandomV4();
+        return "random".equals(rollout) || "random-self".equals(rollout) || rolloutRandomV3() || "random4".equals(rollout);
     }
 
     /**
      * D523: whether the opponent's seat inside the rollouts is the random seat too ({@code random}, D525's two,
-     * D527's {@code random4}); under {@code random-self} it is Forge.
+     * D527's {@code random4}); under {@code random-self} it is Forge.  D531: under {@code random4-them} it is the
+     * only random seat.
      */
     public boolean rolloutRandomThem() {
         return "random".equals(rollout) || rolloutRandomV3() || rolloutRandomV4();
     }
 
-    /** D527: whether the rollouts' random seats are random-v4 ({@code random4}, both seats). */
+    /**
+     * D527: whether the rollouts' random seats are random-v4 ({@code random4}, both seats; D531's
+     * {@code random4-them}, the opponent's seat alone).
+     */
     public boolean rolloutRandomV4() {
-        return "random4".equals(rollout);
+        return "random4".equals(rollout) || "random4-them".equals(rollout);
     }
 
     /** D525: whether the rollouts' random seats are random-v3 ({@code random3}, {@code random3-held}, both seats) rather than random-v2. */
@@ -461,7 +474,8 @@ public final class SearchConfig {
      * and the bench-only {@code oracle} is refused -- a seat that plays a
      * person never sees their hidden cards (D312, D350) -- and so are D523's
      * measurement-only {@code rollout=random} and {@code random-self}, and
-     * D525's {@code random3} and {@code random3-held}, and D527's {@code random4}.
+     * D525's {@code random3} and {@code random3-held}, and D527's {@code random4}, and D531's
+     * {@code random4-them}, whose random seat is the opponent's alone, so the test is either seat.
      */
     public static SearchConfig parseLive(final String text) {
         final SearchConfig c = parse(text == null || text.isBlank() ? LIVE_DEFAULTS : LIVE_DEFAULTS + "," + text);
@@ -469,10 +483,11 @@ public final class SearchConfig {
             throw new IllegalArgumentException("search oracle=1 reads the opponent's real hidden cards: bench only "
                     + "(tools/ai-bench, the ladder), never a live seat");
         }
-        if (c.rolloutRandomUs()) {
-            // D523: random rollouts are a measurement until a separate decision puts them in front of a person
+        if (c.rolloutRandomUs() || c.rolloutRandomThem()) {
+            // D523: random rollouts are a measurement until a separate decision puts them in front of a person;
+            // D531: either seat (random4-them seats the opponent alone)
             throw new IllegalArgumentException("search rollout=" + c.rollout + " is measurement only: bench only "
-                    + "(tools/ai-bench, the ladder), never a live seat (D523, D525, D527)");
+                    + "(tools/ai-bench, the ladder), never a live seat (D523, D525, D527, D531)");
         }
         return c;
     }
