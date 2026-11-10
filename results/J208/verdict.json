@@ -1,0 +1,215 @@
+{
+ "written": 1,
+ "games": 1200,
+ "bar": 60,
+ "arms": [
+  "search-v2-rrandom4them-m40",
+  "search-v2-rrandom4them"
+ ],
+ "a": {
+  "match": 1,
+  "names": 1,
+  "complete": 1,
+  "a": "search-v2-rrandom4them-m40",
+  "ah": "179ab0649521",
+  "id": "justin-a-B650-GAMING-X-AX-V2:20261110T155758-1766058",
+  "played": 1200,
+  "errors": 0,
+  "timeouts": 0,
+  "score": 0.4725,
+  "lo": 0.4566,
+  "hi": 0.4884,
+  "elo": -19.1,
+  "eloLo": -30.3,
+  "eloHi": -8,
+  "aMs": 930.52,
+  "bMs": 912.737,
+  "shown": 0,
+  "inconclusive": 0,
+  "indistinguishable": 0,
+  "noWeaker": 0,
+  "worseNotBadly": 1,
+  "losesBadly": 0,
+  "reading": "NOT SHOWN, worse, not badly",
+  "candidate": 0,
+  "diagnose": 1,
+  "notShown": 1,
+  "tooWide": 0,
+  "upperAtZero": 0,
+  "inconclusiveAbove": 0,
+  "margin": 40,
+  "cost": {
+   "read": 1,
+   "ratio": 1.046,
+   "aRolloutsPerDecision": 16.26,
+   "bRolloutsPerDecision": 15.55,
+   "aLcb": {
+    "overrode": 0,
+    "held": 0,
+    "none": 0
+   },
+   "aPriorityShare": {
+    "fromPass": 0.067,
+    "toOther": 0.0558,
+    "toPass": 0.0303
+   },
+   "bPriorityShare": {
+    "fromPass": 0.0808,
+    "toOther": 0.0634,
+    "toPass": 0.0468
+   },
+   "aChangedShare": {
+    "p": 0.153,
+    "a": 0.1406,
+    "b": 0.1753
+   },
+   "bChangedShare": {
+    "p": 0.1909,
+    "a": 0.1527,
+    "b": 0.1804
+   }
+  },
+  "chainDeals": 1,
+  "blocks": {
+   "blocks": 150,
+   "min": 114900000,
+   "max": 114900149,
+   "games": 1200
+  }
+ },
+ "b": {
+  "match": 1,
+  "names": 1,
+  "complete": 1,
+  "a": "search-v2-rrandom4them",
+  "ah": "d5381ade9e66",
+  "id": "justin-a-B650-GAMING-X-AX-V2:20261110T181215-2024311",
+  "played": 1200,
+  "errors": 0,
+  "timeouts": 0,
+  "score": 0.4717,
+  "lo": 0.4555,
+  "hi": 0.4879,
+  "elo": -19.7,
+  "eloLo": -31,
+  "eloHi": -8.4,
+  "aMs": 879.038,
+  "bMs": 867.383,
+  "shown": 0,
+  "inconclusive": 0,
+  "indistinguishable": 0,
+  "noWeaker": 0,
+  "worseNotBadly": 1,
+  "losesBadly": 0,
+  "reading": "NOT SHOWN, worse, not badly",
+  "candidate": 0,
+  "diagnose": 1,
+  "notShown": 1,
+  "tooWide": 0,
+  "upperAtZero": 0,
+  "inconclusiveAbove": 0,
+  "margin": 20,
+  "cost": {
+   "read": 1,
+   "ratio": 1.033,
+   "aRolloutsPerDecision": 16.7,
+   "bRolloutsPerDecision": 16.17,
+   "aLcb": {
+    "overrode": 0,
+    "held": 0,
+    "none": 0
+   },
+   "aPriorityShare": {
+    "fromPass": 0.0887,
+    "toOther": 0.0699,
+    "toPass": 0.0429
+   },
+   "bPriorityShare": {
+    "fromPass": 0.0805,
+    "toOther": 0.0627,
+    "toPass": 0.0481
+   },
+   "aChangedShare": {
+    "p": 0.2014,
+    "a": 0.1768,
+    "b": 0.2204
+   },
+   "bChangedShare": {
+    "p": 0.1913,
+    "a": 0.1457,
+    "b": 0.1805
+   }
+  },
+  "chainDeals": 1,
+  "blocks": {
+   "blocks": 150,
+   "min": 114900000,
+   "max": 114900149,
+   "games": 1200
+  }
+ },
+ "bothComplete": 1,
+ "candidate": 0,
+ "confirm": 0,
+ "confirmA": 0,
+ "confirmB": 0,
+ "confirmArm": "",
+ "bothLoseBadly": 0,
+ "trackCloses": 0,
+ "closing": 0,
+ "v9": 1,
+ "v9Margin": 40,
+ "v9A": 1,
+ "v9B": 0,
+ "follows": 1,
+ "keepsOpen": 1,
+ "repost": 0,
+ "repostA": 0,
+ "repostB": 0,
+ "selfPlayOpens": 0,
+ "liveSeatChanged": 0,
+ "countIn": 0,
+ "j206": {
+  "complete": 1,
+  "reading": "NOT SHOWN, worse, not badly",
+  "elo": -23.2,
+  "eloLo": -34.7,
+  "eloHi": -11.7
+ },
+ "info": {
+  "aMinusJ206": 4.1,
+  "bMinusJ206": 3.5,
+  "bMinusA": -0.6,
+  "aMinusJ202b": 1.8,
+  "bMinusJ202a": 19.8,
+  "aMinusJ205a": 16.3,
+  "bMinusJ205a": 15.7,
+  "aMinusJ204a": 5.3,
+  "bMinusJ204a": 4.7,
+  "aMinusJ204b": {
+   "diff": 65.3,
+   "hw": 18.9,
+   "lo": 46.4,
+   "hi": 84.2
+  },
+  "bMinusJ204b": {
+   "diff": 64.7,
+   "hw": 19,
+   "lo": 45.7,
+   "hi": 83.7
+  },
+  "acrossCode": "every difference with another job is across D529's merge (03d5464f), which leaves what a ladder match runs unchanged by D532's reading; information only",
+  "acrossDeals": {
+   "a": 0,
+   "b": 0
+  }
+ },
+ "reading": [
+  "J206 re-read: search-v2-rrandom4them-lcb-m40 NOT SHOWN, worse, not badly, -23.2 [-34.7, -11.7]; the two-losing count going in 0",
+  "(a) NOT SHOWN, worse, not badly: search-v2-rrandom4them-m40 -19.1 Elo [-30.3, -8], score 0.4725, lower end 0.4566, margin 40",
+  "(b) NOT SHOWN, worse, not badly: search-v2-rrandom4them -19.7 Elo [-31, -8.4], score 0.4717, lower end 0.4555, margin 20",
+  "random-v9 follows (D532 point 5): a per-rollout mix of search-v2's Forge rollouts and random4-them rollouts at margin 40, the margin of (a), the arm with the higher point; new Java under its own decision and one 1,200-game match, after which the track closes whatever it reads unless its arm is a candidate",
+  "the self-play-from-random path does not open on this night",
+  "the live seat is unchanged (a separate decision, D509)"
+ ]
+}
