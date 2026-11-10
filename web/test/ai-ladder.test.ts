@@ -1029,6 +1029,57 @@ test('D531: search-v2-rrandom4them-lcb-m40 is search-v2-rrandom4-lcb-m40 with ro
   assert.equal(by.get('search-v1-anytime')!.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D532: search-v2-rrandom4them-m40 and search-v2-rrandom4them are random4-them on the margin rule at 40 and at search-v2\'s own 20, and nothing else', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const v2 = by.get('search-v1-anytime')!;
+  const j206 = by.get('search-v2-rrandom4them-lcb-m40')!;
+  // (a): J206's arm minus override=lcb and z -- one change from J206
+  const a = by.get('search-v2-rrandom4them-m40');
+  assert.ok(a?.cfg, 'search-v2-rrandom4them-m40 is registered and playable');
+  const ar = raw.players.find((y) => y.name === 'search-v2-rrandom4them-m40')!;
+  assert.equal(ar.kind, v2raw.kind);
+  assert.deepEqual(ar.params, { ...v2raw.params, margin: 40, rollout: 'random4-them' },
+    "its params are search-v2's plus margin 40 and rollout random4-them, no override and no z");
+  const jrest: Record<string, unknown> = { ...j206.resolved };
+  delete jrest.override;
+  assert.deepEqual(a!.resolved, jrest, "its resolved params are J206's arm's but the override rule");
+  assert.equal(a!.resolved.override, undefined, 'the margin rule (the default override) is out of the hash');
+  assert.equal(a!.cfg, j206.cfg!.replace(',seed=0,override=lcb,z=1,anytime=1,', ',seed=0,anytime=1,'),
+    "the seat config is J206's arm's with override=lcb,z=1 removed and nothing else");
+  assert.equal(a!.cfg, by.get('search-v2-rrandom4-m40')!.cfg!.replace(/,rollout=random4$/, ',rollout=random4-them'),
+    "and J202 (b)'s search-v2-rrandom4-m40 with the rollout value alone changed");
+  assert.match(a!.cfg!, /,margin=40,.*,seed=0,anytime=1,rollout=random4-them$/);
+  assert.equal(a!.hash, '179ab0649521', "search-v2-rrandom4them-m40's config hash (D532)");
+  assert.match(ar.note ?? '', /never the live seat/);
+  // (b): (a) at search-v2's own margin, which is the default and so no margin key, as search-v2-rrandom4 has none
+  const b = by.get('search-v2-rrandom4them');
+  assert.ok(b?.cfg, 'search-v2-rrandom4them is registered and playable');
+  const br = raw.players.find((y) => y.name === 'search-v2-rrandom4them')!;
+  assert.equal(br.kind, v2raw.kind);
+  assert.deepEqual(br.params, { ...v2raw.params, rollout: 'random4-them' }, "its params are search-v2's plus rollout random4-them alone");
+  assert.equal(raw.players.find((y) => y.name === 'search-v2-rrandom4')!.params.margin, undefined, 'search-v2-rrandom4 has no margin key either');
+  assert.deepEqual(b!.resolved, { ...v2.resolved, rollout: 'random4-them' }, "its resolved params are search-v2's plus the rollout");
+  assert.equal(by.get('search-v2-rrandom4them')!.resolved.margin, 20, "the margin resolves to search-v2's 20, as search-v2's and search-v2-rrandom4's do");
+  assert.equal(by.get('search-v2-rrandom4')!.resolved.margin, 20);
+  assert.equal(b!.cfg, `${v2.cfg},rollout=random4-them`, "the seat config is search-v2's with ,rollout=random4-them appended");
+  assert.equal(b!.cfg, by.get('search-v2-rrandom4')!.cfg!.replace(/,rollout=random4$/, ',rollout=random4-them'),
+    "and J202 (a)'s search-v2-rrandom4 with the rollout value alone changed");
+  assert.equal(b!.cfg, a!.cfg!.replace(',margin=40,', ',margin=20,'), 'the two random-v8 arms differ in the margin alone');
+  assert.match(b!.cfg!, /,margin=20,.*,seed=0,anytime=1,rollout=random4-them$/);
+  assert.equal(b!.hash, 'd5381ade9e66', "search-v2-rrandom4them's config hash (D532)");
+  assert.match(br.note ?? '', /never the live seat/);
+  for (const x of [a!, b!]) assert.doesNotMatch(x.cfg!, /override=|,z=/, `${x.name} is on the margin rule`);
+  for (const [n, hash] of [['search-v2-rrandom4them-lcb-m40', '01e2aba2d33e'], ['search-v2-rrandom4', '646d59a008f6'],
+    ['search-v2-rrandom4-m40', '968c9003c616'], ['search-v2-rrandom4-m60', '216e66d89fe3'], ['search-v2-rrandom4-lcb-m60', 'd6d75fdefd25'],
+    ['search-v2-rrandom4-lcb-m40', '98eea870967e'], ['search-v2-rrandom-self', 'd3aa28be73b2'], ['policy-outlet', 'e350d94649a4']] as const) {
+    assert.equal(by.get(n)!.hash, hash, `${n} keeps its hash`);
+  }
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
