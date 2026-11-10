@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T18:36:44-05:00",
- "heartbeat": "2026-11-10T18:36:44-05:00",
+ "updated": "2026-11-10T18:37:39-05:00",
+ "heartbeat": "2026-11-10T18:37:39-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,8 +39,8 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.46,
-  "memUsedGb": 6.2,
+  "load1": 4.16,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
   "swapUsedMb": 4126,
   "pressure": 0,
@@ -56,9 +56,9 @@
    "id": "J210",
    "title": "Where the search's strength is, by decision kind (D535, config only, no new Java): search-v2 with each of priority, attacks and blocks searched or left to Forge, all eight combinations, each one fixed 1,200-game match (600 mirrored pairs, D398, the confirm set, no stopping rule) against forge-default on the same 600 deals, each in a ladder folder of its own, read paired by deal (WHOLE, ALONE and LAST for each kind, INTERACTION, REPLICATION against J194 (a)'s rows) and by D535's faster-seat candidate rule; alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 1/4",
+   "phase": "pilot 2/4",
    "started": "2026-11-10T18:36:19-05:00",
-   "elapsed": 24,
+   "elapsed": 79,
    "done": 0,
    "total": 9600,
    "unit": "games",
@@ -109,9 +109,9 @@
     "cf.corners": 0,
     "cf.lines": 0,
     "cf.ok": 0,
-    "elapsed_s": 0,
-    "j210_err": 0,
-    "j210_games": 0
+    "cfst.ok": 0,
+    "cst.cases": 0,
+    "cst.ok": 0
    },
    "liveHeadline": [
     "mn.played",
@@ -152,7 +152,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J210-pilot1"
+   "detail": "lab-J210-pilot2"
   }
  ],
  "queue": [],
