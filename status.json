@@ -1,10 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-11-10T13:09:34-05:00",
- "heartbeat": "2026-11-10T13:09:34-05:00",
+ "updated": "2026-11-10T13:12:14-05:00",
+ "heartbeat": "2026-11-10T13:12:14-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
+  {
+   "at": "2026-11-10T13:12:14-05:00",
+   "id": "J208",
+   "kind": "memory-fit",
+   "needGb": 3.64,
+   "availGb": 25.1,
+   "workers": 6,
+   "workersMax": 7,
+   "text": "J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees"
+  },
   {
    "at": "2026-11-10T04:07:33-05:00",
    "id": "J205",
@@ -39,10 +49,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.94,
-  "memUsedGb": 12.4,
+  "load1": 5.1,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4443,
+  "swapUsedMb": 4404,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -56,21 +66,21 @@
    "id": "J208",
    "title": "Random rollouts, iteration 7 (random-v8, no new Java: rollout=random4-them on the margin rule): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4them-m40, J206's arm without override=lcb (the rollout's opponent random-v4, the searching seat's own continuation Forge's, the margin rule at 40), then (b) search-v2-rrandom4them, the same at search-v2's own margin of 20; each read from its own match under D527's table (its SHOWN row restated by D530 point 7); a candidate goes to a 4,800-game confirmation, both arms losing badly close the random-rollout track, otherwise random-v9 (a per-rollout mix, the track's last iteration) at the better arm's margin; alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 1/3",
+   "phase": "commands 2/3",
    "started": "2026-11-10T10:51:25-05:00",
-   "elapsed": 8289,
-   "done": 1152,
+   "elapsed": 8450,
+   "done": 1192,
    "total": 2400,
    "unit": "games",
-   "ratePerHour": 555,
-   "eta": "2026-11-10T15:24:29-05:00",
-   "workers": 7,
+   "ratePerHour": 572.1,
+   "eta": "2026-11-10T15:18:57-05:00",
+   "workers": 6,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T13:08:50-05:00",
-   "memGb": 7,
+   "dataUpdated": "2026-11-10T13:12:04-05:00",
+   "memGb": 0.01,
    "live": {
     "cma.played": 0,
     "cma.score": 0,
@@ -165,7 +175,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J208-run1"
+   "detail": "lab-J208-run2"
   }
  ],
  "queue": [],
