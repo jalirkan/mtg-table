@@ -1425,8 +1425,18 @@ like this one, not a fault in the atlas.
 - **Everything is recorded**: every phase A game and every branch as D450's rows (both seats), ledger and
   both frame logs; `phaseA/`, `phaseB/` under `--out`. Every fork is checked (the position, card for card);
   `--leak-checks` (1 a unit) plays a branch again after seat B's real hidden cards were redealt in the real
-  game (nothing may move) and after seat A's own hand was (something must). Every rows file and frame log
-  is checked as D450's are. A problem exits 3.
+  game (nothing may move) and after seat A's own hand was (something must). Since
+  [D529](../decisions/D529-atlas-leak-check-retest.md) the copy is compared too: seat B's hand and library
+  must differ between base and redeal before the determinization (the redeal reached the copy) and every
+  zone of both seats, card id by card id, must be equal after it (the determinization deals seat B's hidden
+  cards from their canonical order; a difference is a leak); the control's swap must move it. A first
+  redealt replay whose outcome moved is not yet a leak: base and redeal are each replayed four more times,
+  and only outcome sets that share nothing, with the base reproduced, are (`checks.leaks`); sets that
+  overlap are a branch Forge 2.0.14 does not replay exactly from its seed (`checks.leakNondeterministic`)
+  and disjoint sets with a varying base are `checks.leakUnresolved`, both warnings, three of them in one
+  atlas a problem; a retest out of its budget, a fork the copier did not reproduce and a check that tested
+  nothing are problems counted in `checks.leakFaults`. Every rows file and frame log is checked as D450's
+  are. A problem exits 3.
 - **`atlas.json`** (strict): the plan and the pair's table, phase A's outcome distribution, game length
   and the rollouts a ± 2-point interval needs; per decision every option's value under each continuation
   (Wilson), each map's regret (best − played, a paired bootstrap interval), the rank correlation between

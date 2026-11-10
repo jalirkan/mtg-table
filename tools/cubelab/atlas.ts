@@ -152,6 +152,23 @@ export interface BranchRow {
   v: 1; d: number; kind: string; turn: number; c: Continuation; o: number; token: string; label: string; i: number; seed: number;
   result: number; score: number; capped: boolean; timedOut: boolean; turns: number; steps: number; ms: number; bytes: number;
   standIns: number; error: string | null; forkProblems: string[]; leakSame?: boolean; controlMoved?: boolean; key: string;
+  /**
+   * D529, beside D451's no-leak check (`leakSame`, false only for a leak; `controlMoved`): whether the first redealt replay's
+   * outcome moved (D451's own `leakSame`, negated); whether every replay's fork digest -- the copy AFTER the determinize, which
+   * deals seat B's hidden cards from their canonical order, so equal is expected -- was the base's; whether seat B's hand and
+   * library on the copy BEFORE the determinize differed between base and redeal (the redeal reached the copy: the check tested
+   * something) and how many cards the redeal could move; whether the control's digest moved and how many cards it swapped.
+   * Written with `leakSame` by a bridge from D529 on; a row from before has none of them, and its `leakSame` is D451's (any
+   * first move).
+   */
+  leakMoved?: boolean;
+  leakForkSame?: boolean;
+  leakRedealApplied?: boolean;
+  leakRedealable?: number;
+  controlForkMoved?: boolean;
+  controlSwap?: number;
+  /** D529: the retest (the first redealt replay moved with the digests agreeing, or a self-test forced it): what was seen, the verdict. */
+  leakRetest?: LeakRetest;
   /** D465: the branch threw a Java Error (an OutOfMemoryError above all): an engine error, never a result. */
   engineError?: boolean;
   /** D470: the option could not be given in this branch's copy, and why: no error, no result, left out of the option's value. */
@@ -175,6 +192,89 @@ export interface BranchRow {
   /** D488: the plays the branch's random seats cast with targets drawn away from what the play's own cost takes (written when > 0). */
   costTargetAvoided?: number;
 }
+/**
+ * D529: the no-leak check's retest.  `base` and `redeal` replays (the first of each included), their distinct outcome signatures,
+ * the signatures both sides saw, and the verdict over all of them (the bridge's `LeakVerdict.Kind`): `same` (one signature in all:
+ * only where a self-test forced the retest), `nondeterministic` (the sets overlap: a warning), `leak` (disjoint, the base
+ * reproduced), `unresolved` (disjoint, the base itself varied: a warning), `incomplete` (the retest ran out of its budget: a
+ * problem), `forkUnstable` (a side's fork digests disagreed among themselves: the copier, a problem, not a leak).
+ */
+export interface LeakRetest { base: number; redeal: number; baseDistinct: number; redealDistinct: number; shared: number; verdict: 'same' | 'leak' | 'nondeterministic' | 'unresolved' | 'incomplete' | 'forkUnstable' }
+
+/** D529: the bridge's `LeakVerdict.RETESTS`, the replays of each side after a first pair that moved. */
+export const LEAK_RETESTS = 4;
+
+/** D529: the bridge's `LeakVerdict.RETEST_BUDGET_MS`, the retest's wall budget. */
+export const LEAK_RETEST_BUDGET_MS = 600_000;
+
+/**
+ * D529: this many no-leak checks in one atlas run that moved and were not resolved as a leak (non-deterministic plus
+ * unresolved) is a problem: one such branch is Forge's race, but a real leak mechanism would show on many checks, and J186-J203
+ * saw one moved check in all their nights.
+ */
+export const LEAK_UNRESOLVED_CAP = 3;
+
+/** D529: the self-test switch's values (`MTGTABLE_ATLAS_LEAK_RETEST`); a lab night leaves it unset, anything else is refused. */
+export const LEAK_RETEST_MODES = ['always', 'perturb'] as const;
+
+export interface LeakCounts {
+  leakChecks: number; leaks: number; leakControlsMoved: number; leakMoved: number; leakNondeterministic: number; leakUnresolved: number;
+  leakRetestIncomplete: number; leakForkUnstable: number; leakForkChecked: number; leakRedealApplied: number; leakRedealNothing: number;
+  leakControlForkMoved: number; leakControlEmpty: number; leakFaults: number;
+}
+
+/**
+ * D529: the no-leak checks read: counts, problems and warnings.  A leak (`leakSame: false`), a retest out of its budget, a fork the
+ * copier did not reproduce, a redeal that left seat B's cards where they were though it could move two or more, a control that
+ * swapped cards and left the digest where it was, and `LEAK_UNRESOLVED_CAP` or more unresolved moves are problems; one
+ * non-deterministic or unresolved check, a redeal with fewer than two cards to move, a control with nothing to swap are warnings.
+ * `leakFaults` counts the problems that are not leaks (the cap as one), so a job's verdict can read it beside `leaks`.
+ */
+export function leakChecksReport(rows: BranchRow[]): { counts: LeakCounts; problems: string[]; warnings: string[] } {
+  const leak = rows.filter((r) => r.leakSame !== undefined);
+  const d529 = leak.filter((r) => r.leakMoved !== undefined);
+  const verdict = (v: LeakRetest['verdict']): BranchRow[] => leak.filter((r) => r.leakRetest?.verdict === v);
+  const leaks = leak.filter((r) => r.leakSame === false);
+  const nd = verdict('nondeterministic'), unres = verdict('unresolved'), incomplete = verdict('incomplete'), unstable = verdict('forkUnstable');
+  const redealStill = d529.filter((r) => r.leakRedealApplied === false);
+  const redealFault = redealStill.filter((r) => (r.leakRedealable ?? 0) >= 2), redealNothing = redealStill.filter((r) => (r.leakRedealable ?? 0) < 2);
+  const controlStill = d529.filter((r) => r.controlForkMoved === false);
+  const controlFault = controlStill.filter((r) => (r.controlSwap ?? 0) > 0), controlEmpty = controlStill.filter((r) => (r.controlSwap ?? 0) === 0);
+  const capped = nd.length + unres.length >= LEAK_UNRESOLVED_CAP;
+  const seen = (r: BranchRow): string => (r.leakRetest ? ` (${r.leakRetest.base} base / ${r.leakRetest.redeal} redeal replays, ${r.leakRetest.baseDistinct} / ${r.leakRetest.redealDistinct} distinct outcomes, ${r.leakRetest.shared} shared)` : '');
+  const first = (xs: BranchRow[]): string => `${xs[0]?.key}${xs.length > 1 ? ', ...' : ''}`;
+  const problems: string[] = [];
+  const warnings: string[] = [];
+  if (leaks.length) {
+    const x = leaks[0] as BranchRow;
+    problems.push(`${leaks.length} of ${leak.length} no-leak check(s) moved when only seat B's hidden cards did${x.leakForkSame === false ? ` (${x.key}: the fork digest moved)` : x.leakRetest ? ` (${x.key}: ${x.leakRetest.base} base and ${x.leakRetest.redeal} redeal replays share no outcome, the base reproduced)` : ''}`);
+  }
+  if (incomplete.length) problems.push(`${incomplete.length} no-leak check(s) moved, retest incomplete: the retest ran out of its ${LEAK_RETEST_BUDGET_MS / 60_000}-minute budget before its last pair (D529): ${first(incomplete)}${seen(incomplete[0] as BranchRow)}`);
+  if (unstable.length) problems.push(`${unstable.length} no-leak check(s) whose replays of one side disagreed on the fork digest among themselves: the copier did not reproduce the fork from its seed, not a leak (D529): ${first(unstable)}${seen(unstable[0] as BranchRow)}`);
+  if (redealFault.length) problems.push(`${redealFault.length} no-leak check(s) whose redeal left seat B's hand and library where they were on the copy, with ${redealFault[0]?.leakRedealable} card(s) it could move: the check tested nothing (D529): ${first(redealFault)}`);
+  if (controlFault.length) problems.push(`${controlFault.length} no-leak check(s) whose negative control swapped ${controlFault[0]?.controlSwap} card(s) of seat A's hand and left the fork digest where it was: the digest did not see the change (D529): ${first(controlFault)}`);
+  if (capped) problems.push(`${nd.length + unres.length} no-leak checks in this atlas moved and were not resolved as a leak (${nd.length} non-deterministic, ${unres.length} unresolved): ${LEAK_UNRESOLVED_CAP} or more is a problem, since a leak would show on many checks (D529): ${first([...nd, ...unres])}`);
+  if (nd.length) warnings.push(`${nd.length} of ${leak.length} no-leak check(s) moved on the first redealt replay but are not a leak: the fork digests agreed and the base's and the redeal's outcomes overlap on the retest, a branch Forge does not replay exactly from its seed (D529): ${first(nd)}${seen(nd[0] as BranchRow)}`);
+  if (unres.length) warnings.push(`${unres.length} of ${leak.length} no-leak check(s) moved and are unresolved: the outcome sets were disjoint but the base itself varied, which many outcomes give by chance (D529): ${first(unres)}${seen(unres[0] as BranchRow)}`);
+  if (redealNothing.length) warnings.push(`${redealNothing.length} no-leak check(s) where seat B had fewer than two cards the redeal could move: nothing to test (D529): ${first(redealNothing)}`);
+  if (controlEmpty.length) warnings.push(`${controlEmpty.length} no-leak check(s) whose negative control had nothing to swap (seat A's hand or library empty), so its digest could not move (D529): ${first(controlEmpty)}`);
+  const counts: LeakCounts = {
+    leakChecks: leak.length, leaks: leaks.length, leakControlsMoved: leak.filter((r) => r.controlMoved).length,
+    leakMoved: leak.filter((r) => r.leakMoved === true).length, leakNondeterministic: nd.length, leakUnresolved: unres.length,
+    leakRetestIncomplete: incomplete.length, leakForkUnstable: unstable.length, leakForkChecked: d529.length,
+    leakRedealApplied: d529.filter((r) => r.leakRedealApplied === true).length, leakRedealNothing: redealNothing.length,
+    leakControlForkMoved: d529.filter((r) => r.controlForkMoved === true).length, leakControlEmpty: controlEmpty.length,
+    leakFaults: incomplete.length + unstable.length + redealFault.length + controlFault.length + (capped ? 1 : 0),
+  };
+  return { counts, problems, warnings };
+}
+
+/** D529: `MTGTABLE_ATLAS_LEAK_RETEST` as the bridge reads it -- unset or empty, or one of LEAK_RETEST_MODES; anything else throws. */
+export function checkLeakRetestEnv(v: string | undefined): void {
+  if (v === undefined || v === '' || (LEAK_RETEST_MODES as readonly string[]).includes(v)) return;
+  throw new Error(`atlas: MTGTABLE_ATLAS_LEAK_RETEST=${v} is not ${LEAK_RETEST_MODES.join(' or ')} or unset (D529: the atlas self-test's switch; a lab night leaves it unset)`);
+}
+
 export interface RolloutRow { v: 1; g: number; seed: number; winner: 'A' | 'B' | 'draw' | null; first: string | null; turns: number | null; capped: boolean; reason: string | null; ms: number | null; error: string | null; engineError: string | null; guardrails?: Record<string, number>; rows?: unknown; bytes?: number }
 
 const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
@@ -345,6 +445,8 @@ function readJsonl<T>(file: string): T[] {
 export async function atlasCommand(repo: string, f: Map<string, string[]>, say: (s: string) => void): Promise<number> {
   const outArg = one(f, 'out');
   if (!outArg) throw new Error('atlas: --out <dir> is required');
+  // D529: the self-test's retest switch reaches the workers through the environment; a value the bridge would refuse is refused here
+  checkLeakRetestEnv(process.env.MTGTABLE_ATLAS_LEAK_RETEST);
   // D524: --only, read and checked before anything is written; a usage error exits 2
   let only: Only | undefined;
   const onlyArg = one(f, 'only');
@@ -776,7 +878,11 @@ function addBranch(st: UnitState, all: DecisionListing[], b: WorkerBranch, sink:
     ...(b.modesDrawn ? { modesDrawn: b.modesDrawn } : {}),
     ...(b.targetCountTrimmed ? { targetCountTrimmed: b.targetCountTrimmed } : {}),
     ...(b.costTargetAvoided ? { costTargetAvoided: b.costTargetAvoided } : {}),
-    ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}) };
+    ...(b.leakSame !== undefined ? { leakSame: b.leakSame, controlMoved: b.controlMoved } : {}),
+    // D529: the first redealt replay's move, the fork digest's word, and the retest when there was one
+    ...(b.leakMoved !== undefined ? { leakMoved: b.leakMoved, leakForkSame: b.leakForkSame, leakRedealApplied: b.leakRedealApplied, leakRedealable: b.leakRedealable,
+      controlForkMoved: b.controlForkMoved, controlSwap: b.controlSwap } : {}),
+    ...(b.leakRetest ? { leakRetest: b.leakRetest } : {}) };
   st.done.add(key);
   st.fresh++;
   if (b.engineError) st.engineErrors++;
@@ -1119,9 +1225,11 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   if (truncated.length) problems.push(`${truncated.length} frame log(s) could not be read (gzip: ${[...new Set(truncated.map((t) => t.why))].join('; ')}) and were left out of the checks -- a worker killed mid-branch leaves its logs truncated: ${truncated.slice(0, 5).map((t) => t.log).join(', ')}${truncated.length > 5 ? ', ...' : ''}`);
   const forkBad = bRows.filter((r) => r.forkProblems.length);
   if (forkBad.length) problems.push(`${forkBad.length} branch fork(s) were not the position: ${forkBad[0]?.key}: ${forkBad[0]?.forkProblems.join('; ')}`);
+  // D529: the no-leak checks read -- `leakSame` false only for a leak; the checks that tested nothing or could not finish, and three
+  // or more unresolved moves, are problems too; one move read as non-determinism is a warning
   const leak = bRows.filter((r) => r.leakSame !== undefined);
-  const leaks = leak.filter((r) => !r.leakSame);
-  if (leaks.length) problems.push(`${leaks.length} of ${leak.length} no-leak check(s) moved when only seat B's hidden cards did`);
+  const leakRead = leakChecksReport(leak);
+  problems.push(...leakRead.problems);
   problems.push(...gc.violations.slice(0, 10));
   // D466: the list is capped, the count is not
   const g14 = (gc.violationCount?.G1 ?? 0) + (gc.violationCount?.G4 ?? 0);
@@ -1153,6 +1261,8 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
   if (bCappedNotDrawn.length) problems.push(`${bCappedNotDrawn.length} capped or timed-out branch game(s) not scored a draw (D478): ${bCappedNotDrawn[0]?.key} result ${bCappedNotDrawn[0]?.result}`);
   const bc = cappedBranches(bRows, o.branchCappedWarn ?? BRANCH_CAPPED_WARN_DEFAULT);
   for (const x of bc.options) warnings.push(erroredOptionProblem(x, 'were capped'));
+  // D529: a no-leak check whose first redealt replay moved but whose retest overlaps is a branch Forge does not replay exactly
+  warnings.push(...leakRead.warnings);
   const retained = units.map((u) => u.copiesRetained).filter((x): x is number => typeof x === 'number');
   // the maps
   const byD = new Map<number, BranchRow[]>();
@@ -1199,7 +1309,8 @@ function finishAtlas(repo: string, o: AtlasOptions, out: string, plan: Record<st
     } : null,
     checks: { rowsFiles: rc.reduce((a, c) => a + c.files, 0), rows: rc.reduce((a, c) => a + c.rows, 0), gamesIdChecked: rc.reduce((a, c) => a + c.games, 0),
       frameLogs: red.checked, frameLogsFailed: red.failed.length, redactionMs: red.ms, forks: bRows.length, forkProblems: forkBad.length,
-      leakChecks: leak.length, leaks: leaks.length, leakControlsMoved: leak.filter((r) => r.controlMoved).length,
+      // D529: leakChecks, leaks and leakControlsMoved as before (leaks: real leaks only), and the D529 counts (leakChecksReport)
+      ...leakRead.counts,
       // D466: `violations` is every violation (the problems name the first ten), `violationsBy` G1's and G4's (and G6's, D471)
       guardrails: { logs: gc.logs, priorityDecisions: gc.priority, landOffered: gc.landOffered, landTaken: gc.landTaken, mulligans: gc.mulligans, kept: gc.kept, violations: vTotal,
         violationsBy: { G1: gc.violationCount?.G1 ?? 0, G4: gc.violationCount?.G4 ?? 0, G6: g6 }, ...countedGuardrails(gc), forgePayCap },
@@ -1237,7 +1348,7 @@ interface AtlasDoc {
   plan: Record<string, unknown> & { pairRule: { chosen: PairRow; top: PairRow[]; ladderGames: number } | null };
   phaseA: ReturnType<typeof phaseAReport> & Record<string, unknown>;
   phaseB: null | { baseline: { winner: string; turns: number; decisionsListed: number }; decisions: DecisionAtlas[]; forgeMap?: boolean; randomMap?: boolean; schedule?: Record<string, unknown>; agreement: { decisions: number; meanRho: number | null; meanRhoInterval: Array<number | null>; sameBest: number; sameBestInterval: Array<number | null> }; disagreeMost: Array<{ d: number }>; branchGames: number; branchErrors: number; branchEngineErrors?: number; branchUnavailable?: number; branchRestarted?: number; cappedRandom: number; cappedForge: number; effectSourceNull?: { branches: number; cards: number }; exileLinksLost?: { branches: number; links: number }; damageLkiLost?: { branches: number; instances: number } };
-  checks: { problems: string[]; warnings?: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; forks: number; forkProblems: number;
+  checks: { problems: string[]; warnings?: string[]; rows: number; frameLogs: number; leakChecks: number; leaks: number; leakControlsMoved: number; leakNondeterministic?: number; leakUnresolved?: number; leakFaults?: number; forks: number; forkProblems: number;
     guardrails: { logs: number; priorityDecisions: number; landOffered: number; landTaken: number; mulligans: number; kept: number; violations: number;
       violationsBy?: { G1: number; G4: number; G6?: number }; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number;
       xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number };
@@ -1329,7 +1440,7 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
   const c = doc.checks;
   L.push('## Checks', '');
   const g = c.guardrails;
-  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} moved; the negative control moved in ${c.leakControlsMoved}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.xDrawn === undefined ? '' : `; G6 (D471): ${g.xDrawn} pick(s) of the seats' own X plays had X drawn from 1 up, ${g.zeroXLeftOut ?? 0} offer(s) payable only at X = 0 were left out, and ${g.zeroX ?? 0} own play(s) were paid at X = 0`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4}${g.violationsBy.G6 === undefined ? '' : `, G6 ${g.violationsBy.G6}`})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}${c.warnings?.length ? ` Warnings (never a problem): ${c.warnings.length}, below.` : ''}`, '');
+  L.push(`${c.rows} rows checked (ids against each seat's own frame log), ${c.frameLogs} frame logs through tools/check-redaction.mjs, ${c.forks} forks checked (${c.forkProblems} not the position), ${c.leakChecks} no-leak checks (${c.leaks} a leak; the negative control moved in ${c.leakControlsMoved}${c.leakNondeterministic || c.leakUnresolved ? `; ${c.leakNondeterministic ?? 0} more moved on a first replay and were read as a branch Forge does not replay exactly and ${c.leakUnresolved ?? 0} were unresolved, D529` : ''}${c.leakFaults ? `; ${c.leakFaults} check fault(s), D529` : ''}). The guardrails read back from ${g.logs} random seats' logs: a land offered at ${g.landOffered} of ${g.priorityDecisions} priority decisions and taken at ${g.landTaken}; ${g.kept} of ${g.mulligans} opening hands kept${g.refusedCast === undefined ? '' : `; G3 left out a repeated no-op ${g.noRepeatNoOp ?? 0} time(s); G5 (D458): the engine refused ${g.refusedCast} pick(s) it could not pay for, and ${g.noRepeatRefused ?? 0} later offer(s) of them in the same priority window were left out`}${g.xDrawn === undefined ? '' : `; G6 (D471): ${g.xDrawn} pick(s) of the seats' own X plays had X drawn from 1 up, ${g.zeroXLeftOut ?? 0} offer(s) payable only at X = 0 were left out, and ${g.zeroX ?? 0} own play(s) were paid at X = 0`}${g.forgePayCap === undefined ? '' : `; the Forge seats' pay cap (D465) passed instead of a play refused 3 times in one window ${g.forgePayCap} time(s)`}${g.violationsBy ? `; ${g.violations} guardrail violation(s) (G1 ${g.violationsBy.G1}, G4 ${g.violationsBy.G4}${g.violationsBy.G6 === undefined ? '' : `, G6 ${g.violationsBy.G6}`})` : ''}. ${c.problems.length ? `PROBLEMS: ${c.problems.join('; ')}` : 'No problem.'}${c.warnings?.length ? ` Warnings (never a problem): ${c.warnings.length}, below.` : ''}`, '');
   // D499: said once
   if (c.abandonedPlays) L.push(`${abandonedPlaysText(c.abandonedPlays, c.abandonedRows ?? 0)} of the id check (D499): a worker killed mid-branch left the branch's \`begin\` with no \`end\` in its rows file, and the unit's re-run played the branch again, over the frame logs now on disk (\`checks.abandoned\` names them).`, '');
   const be = c.branchErrors;
@@ -1393,6 +1504,10 @@ export function atlasMd(doc: AtlasDoc, o: AtlasOptions): string {
  * D511: then a replay leg -- a unit past the turn where J186's s13 pair's unrecorded game leaves its recorded baseline
  * must replay the baseline (atlasSelftestReplay).  D524: then an --only leg on the same pair -- one decision, two options, the
  * Forge map alone -- and the same list with a wrong token, which must exit 4 with no unit played (atlasSelftestOnly).
+ * D529: every no-leak check of every leg, row by row: no leak, the fork digests equal, the redeal applied on the copy before the
+ * determinize, the control's digest moved; the --only leg's one check had its retest forced (MTGTABLE_ATLAS_LEAK_RETEST=always):
+ * five base and five redeal replays of a branch that replays exactly, one outcome, `same`; and an --only-perturb leg perturbs its
+ * first redealt replay (`perturb`) so the moved path runs in the bridge: non-determinism, one warning, exit 0.
  */
 /**
  * The self-test's folder: ABSOLUTE, so LAB_DATA_DIR never re-roots it (D450 moves only relative var/
@@ -1410,7 +1525,7 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   ]);
   const rc = await atlasCommand(repo, flags, say);
   const doc = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8')) as {
-    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number }; problems: string[]; frameLogs: number; rows: number; copiesRetainedMax?: number | null };
+    checks: { forks: number; forkProblems: number; leakChecks: number; leaks: number; leakControlsMoved: number; leakForkChecked?: number; leakControlForkMoved?: number; leakNondeterministic?: number; guardrails: { violations: number; landOffered: number; landTaken: number; noRepeatNoOp?: number; refusedCast?: number; noRepeatRefused?: number; xDrawn?: number; zeroXLeftOut?: number; zeroX?: number; forgePayCap?: number }; problems: string[]; frameLogs: number; rows: number; copiesRetainedMax?: number | null };
     phaseA: { played: number }; phaseB: { decisions: Array<{ complete: boolean }> } | null;
   };
   const c = doc.checks;
@@ -1422,6 +1537,8 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
   want(c.forks > 0 && c.forkProblems === 0, `every fork is the position (${c.forkProblems} of ${c.forks} not)`);
   want(c.leakChecks >= 4 && c.leaks === 0, `no-leak checks ran on every unit and stayed put (${c.leaks} of ${c.leakChecks} moved)`);
   want(c.leakControlsMoved === c.leakChecks, `every negative control moved (${c.leakControlsMoved} of ${c.leakChecks})`);
+  // D529: every check compared the fork digests too (a leak by the digest would be in c.leaks above)
+  want(c.leakForkChecked === c.leakChecks, `D529: every no-leak check compared its fork digests (${String(c.leakForkChecked)} of ${c.leakChecks})`);
   want(c.guardrails.violations === 0 && c.guardrails.landOffered > 0 && c.guardrails.landTaken === c.guardrails.landOffered, 'G1 and G4 read back clean, with lands offered');
   want(COUNTED_GUARDRAILS.every((k) => typeof c.guardrails[k] === 'number'), 'G3, G5 (D458) and G6 (D471) counted from the logs');
   want(typeof c.guardrails.forgePayCap === 'number', 'the Forge seats\' pay cap (D465) counted from the logs');
@@ -1463,6 +1580,15 @@ export async function atlasSelftest(repo: string, f: Map<string, string[]>, say:
     want(twice.length === 0, `D483: ${path.relative(out, b)} lists a play twice: ${twice.slice(0, 3).join('; ')}`);
   }
   want(baselines.length > 0, 'D483: the legs\' baseline listings were found');
+  // D529: every no-leak check of every leg, row by row: no leak, the fork digests equal after the determinize, the redeal reached
+  // the copy before it (unless seat B had fewer than two cards to move), and the control's digest moved (unless it had nothing to swap)
+  const leakRows = (fs.readdirSync(out, { recursive: true }) as string[]).filter((p) => path.basename(p) === 'branches.jsonl')
+    .flatMap((p) => readJsonl<BranchRow>(path.join(out, p)).filter((r) => r.leakSame !== undefined).map((r) => ({ leg: path.dirname(path.dirname(p)) || '.', r })));
+  for (const { leg, r } of leakRows) {
+    want(r.leakSame === true && r.leakForkSame === true && (r.leakRedealApplied === true || (r.leakRedealable ?? 0) < 2) && (r.controlForkMoved === true || r.controlSwap === 0),
+      `D529: ${leg} ${r.key}: no leak, digests equal, the redeal reached the copy, the control moved the digest (${JSON.stringify({ leakSame: r.leakSame, leakForkSame: r.leakForkSame, leakRedealApplied: r.leakRedealApplied, leakRedealable: r.leakRedealable, controlForkMoved: r.controlForkMoved, controlSwap: r.controlSwap })})`);
+  }
+  want(leakRows.length >= c.leakChecks + 2, `D529: the legs' no-leak checks were found (${leakRows.length})`);
   for (const x of fails) say(`atlas-selftest: FAIL ${x}`);
   say(fails.length ? `atlas-selftest: ${fails.length} failure(s)` : `atlas-selftest: OK (${cuts.summary}; ${replay.summary}; ${onlyLeg.summary}; ${c.forks} forks, ${c.leakChecks} no-leak checks, ${c.frameLogs} frame logs, ${c.rows} rows; G3 ${c.guardrails.noRepeatNoOp ?? 0}, G5 refused ${c.guardrails.refusedCast ?? 0} / left out ${c.guardrails.noRepeatRefused ?? 0}; pay cap ${c.guardrails.forgePayCap ?? 0}; copies held ${String(c.copiesRetainedMax)}; the tax pair's G5 refused ${g5.refusedCast} / left out ${g5.noRepeatRefused}; the Crypt Rats pair's G6 drew X ${g6.guardrails.xDrawn ?? 0} / left out ${g6.guardrails.zeroXLeftOut ?? 0} / paid at 0 ${g6.guardrails.zeroX ?? 0})`);
   return fails.length ? 1 : 0;
@@ -1629,17 +1755,25 @@ async function atlasSelftestOnly(repo: string, out: string, jobs: string, say: (
   const fails: string[] = [];
   const want = (ok: boolean, what: string): void => { if (!ok) fails.push(what); };
   const S = SELFTEST_ONLY;
-  const run = async (tag: string, tokens: readonly string[]): Promise<{ rc: number; dir: string }> => {
+  // D529: `retest` sets the self-test's switch for the run (MTGTABLE_ATLAS_LEAK_RETEST, which the pool's workers inherit)
+  const run = async (tag: string, tokens: readonly string[], retest?: 'always' | 'perturb', forge = 2): Promise<{ rc: number; dir: string }> => {
     const dir = path.join(out, tag);
     const list = path.join(out, `${tag}-list.json`);
     fs.writeFileSync(list, `${JSON.stringify([{ d: S.d, options: S.options, tokens }])}\n`);
     const flags = new Map<string, string[]>([
       ['deck-a', [SELFTEST_REPLAY.deckA]], ['deck-b', [SELFTEST_REPLAY.deckB]], ['seed', [String(SELFTEST_REPLAY.seed)]], ['phase', ['b']],
-      ['branch-random', ['0']], ['branch-forge', ['2']], ['chunk', ['2']], ['leak-checks', ['1']], ['boot', ['200']], ['jobs', [jobs]], ['out', [dir]], ['only', [list]],
+      ['branch-random', ['0']], ['branch-forge', [String(forge)]], ['chunk', ['2']], ['leak-checks', ['1']], ['boot', ['200']], ['jobs', [jobs]], ['out', [dir]], ['only', [list]],
     ]);
-    return { rc: await atlasCommand(repo, flags, say), dir };
+    const was = process.env.MTGTABLE_ATLAS_LEAK_RETEST;
+    if (retest) process.env.MTGTABLE_ATLAS_LEAK_RETEST = retest;
+    try {
+      return { rc: await atlasCommand(repo, flags, say), dir };
+    } finally {
+      if (was === undefined) delete process.env.MTGTABLE_ATLAS_LEAK_RETEST; else process.env.MTGTABLE_ATLAS_LEAK_RETEST = was;
+    }
   };
-  const a = await run('only', S.tokens);
+  // D529: the retest forced on this leg's one no-leak check (`always`), so the bridge's retest loop plays on a real game every self-test
+  const a = await run('only', S.tokens, 'always');
   const B = path.join(a.dir, 'phaseB');
   const doc = fs.existsSync(path.join(a.dir, 'atlas.json'))
     ? JSON.parse(fs.readFileSync(path.join(a.dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[] }; phaseB: { decisions: DecisionAtlas[]; randomMap?: boolean } }
@@ -1662,13 +1796,34 @@ async function atlasSelftestOnly(repo: string, out: string, jobs: string, say: (
   const ad = doc?.phaseB.decisions;
   want(doc?.phaseB.randomMap === false && ad?.length === 1 && ad[0]?.d === S.d && ad[0].complete && JSON.stringify(ad[0].only) === JSON.stringify(S.options)
     && ad[0].options.every((x) => x.forge.n === ((S.options as readonly number[]).includes(x.o) ? 2 : 0)), `d${S.d} complete on its Forge map, an option not given at n 0`);
+  const lr = rows.find((r) => r.leakSame !== undefined);
+  const lrt = lr?.leakRetest;
+  want(!!lr && lr.leakSame === true && lr.leakForkSame === true && lrt?.base === 1 + LEAK_RETESTS && lrt.redeal === 1 + LEAK_RETESTS
+    && lrt.verdict === 'same' && lrt.baseDistinct === 1 && lrt.redealDistinct === 1,
+    `D529: the forced retest played ${1 + LEAK_RETESTS} base and ${1 + LEAK_RETESTS} redeal replays of a branch that replays exactly: one outcome, verdict same (${JSON.stringify(lr ? { leakSame: lr.leakSame, leakForkSame: lr.leakForkSame, leakRetest: lrt } : null)})`);
+  // D529: the moved path on a real game -- the first redealt replay's signature perturbed (`perturb`), so the retest runs because
+  // it moved, its unperturbed replays overlap the base's, and the atlas reads non-determinism: one warning, no problem, exit 0.
+  // The leg reuses the --only leg's baseline (copied in: phase B plays no baseline game) and one Forge branch an option.
+  fs.mkdirSync(path.join(out, 'only-perturb', 'phaseB'), { recursive: true });
+  if (fs.existsSync(path.join(B, 'baseline.json'))) fs.copyFileSync(path.join(B, 'baseline.json'), path.join(out, 'only-perturb', 'phaseB', 'baseline.json'));
+  const pt = await run('only-perturb', S.tokens, 'perturb', 1);
+  const pdoc = fs.existsSync(path.join(pt.dir, 'atlas.json'))
+    ? JSON.parse(fs.readFileSync(path.join(pt.dir, 'atlas.json'), 'utf8')) as { checks: { problems: string[]; warnings?: string[]; leakNondeterministic?: number; leaks: number } }
+    : null;
+  const pr = readJsonl<BranchRow>(path.join(pt.dir, 'phaseB', 'branches.jsonl')).find((r) => r.leakSame !== undefined);
+  want(pt.rc === 0 && !!pdoc && pdoc.checks.problems.length === 0 && pdoc.checks.leaks === 0 && pdoc.checks.leakNondeterministic === 1
+    && pdoc.checks.warnings?.length === 1 && /not a leak/.test(pdoc.checks.warnings[0] ?? ''),
+    `D529: the perturbed leg exits 0 with one non-determinism warning and no problem (exit ${pt.rc}; ${JSON.stringify(pdoc?.checks.problems ?? null)}; ${JSON.stringify(pdoc?.checks.warnings ?? null)})`);
+  want(!!pr && pr.leakSame === true && pr.leakMoved === true && pr.leakRetest?.verdict === 'nondeterministic' && pr.leakRetest.base === 1 + LEAK_RETESTS
+    && pr.leakRetest.redeal === 1 + LEAK_RETESTS && pr.leakRetest.shared >= 1,
+    `D529: the perturbed check moved, retested ${1 + LEAK_RETESTS} / ${1 + LEAK_RETESTS} and read non-determinism (${JSON.stringify(pr ? { leakSame: pr.leakSame, leakMoved: pr.leakMoved, leakRetest: pr.leakRetest } : null)})`);
   // the drift: the same list with a wrong token at option 2
   const b = await run('only-drift', S.tokens.map((t, o) => (o === 2 ? `${t}-not-listed` : t)));
   const Bd = path.join(b.dir, 'phaseB');
   want(b.rc === 4, `a wrong token exits 4 (exit ${b.rc})`);
   want(readJsonl<UnitLine>(path.join(Bd, 'units.jsonl')).length === 0 && !fs.existsSync(path.join(b.dir, 'atlas.json')) && fs.existsSync(path.join(Bd, 'baseline.json')),
     'the drift plays no unit, writes no atlas.json and keeps baseline.json');
-  return { fails, summary: `only d${S.d} options ${S.options.join(',')}: ${rows.length} Forge row(s), ${units[0]?.ok ? 'replayed' : 'NOT replayed'}; a wrong token exit ${b.rc}` };
+  return { fails, summary: `only d${S.d} options ${S.options.join(',')}: ${rows.length} Forge row(s), ${units[0]?.ok ? 'replayed' : 'NOT replayed'}; the forced no-leak retest ${lrt ? `${lrt.base} / ${lrt.redeal} replays, ${lrt.baseDistinct} / ${lrt.redealDistinct} distinct, ${lrt.verdict}` : 'NOT played'}; the perturbed one ${pr?.leakRetest ? `${pr.leakRetest.base} / ${pr.leakRetest.redeal} replays, ${pr.leakRetest.shared} shared, ${pr.leakRetest.verdict}` : 'NOT played'}; a wrong token exit ${b.rc}` };
 }
 
 /** D466 (#184's review): the G5 leg's pair, seed and rollouts (see atlasSelftest). */

@@ -482,3 +482,45 @@ FAIL), and the D501 block's s07 shape cut inside the exchange (a WARN under `--e
 the "either" mutant fails 3 (control 4 passes). `npm --prefix web test`: `node --test` 1,869 tests, 1,858 pass, 11
 skipped, 0 fail (`claude-md.test.ts` included); vitest 161 passed. `node tools/decisions.mjs check` OK. PLAN.md's cube
 lab follow-up 36 holds what is still refused.
+
+## 17. J203's no-leak check that moved (D529, 2026-11-09)
+
+Lab night J203 (the atlas, under `~/code/lab/data/lab-j203/`, read only) failed its runner verdict `v.checks.leaks == 0`:
+1 of 128 no-leak checks moved, spine `J186-b-s04-powered-2543`, row `atlas:d34:forge:o0:b0` (seed 38540324683130, an
+attack decision on turn 26, option 0 `attack:none`, result 1 in 31 turns, 11,703 ms), `leakSame: false`,
+`controlMoved: true`. The diagnosis (the same night, one worker, `--only` on d34 options 0 and 5, uncommitted
+instrumentation in `Atlas.java` that dumped each replay's zones and signature and repeated the base and the redeal in
+turn): after `Determinizer.determinize` the copy's hands and libraries were identical, card id by card id in order, for
+the base and for every redealt replay. The four runs, from their dumps (`rep<n>-base` and `rep<n>-swapped`, beside the
+first pair's files), by signature:
+
+| run | base replays | rare outcome | redeal replays | rare outcome | the check |
+|---|---:|---:|---:|---:|---|
+| 1 | 1 | 0 | 1 | 0 | clean |
+| 2 | 9 | 1 | 9 | 3 | clean |
+| 3 | 9 | 0 | 9 | 0 | clean |
+| 4 | 11 | 1 (the first) | 11 | 1 | moved: the night's failure |
+
+Runs 2–4 are the summary's 4 of 18, 0 of 18 and 2 of 22: the rare outcome on 2 of 29 base and 4 of 29 redeal
+replays, 6 of 58. Every replay's result is the same (a win in 31 turns); the two outcomes differ in seat A's rows. The
+first difference is turn 27, Goblin Rabblemaster forcing Goblin Engineer and a Goblin token into a planeswalker: Forge
+2.0.14's `AiAttackController` adds forced attackers from per-attacker `CompletableFuture`s in finishing order, and
+`AiBlockController.sortPotentialAttackers` sorts by power only, stably. J203's summary bounds the exposure: at most 281
+of its 10,720 branch games (2.6%), in 6 of its 62 spine folders, had a qualifying forced attack, and the night logged
+201 AI timeouts.
+
+What this lane ran, on its first version (`19e6967e`: the digest after the determinize, the retest with disjoint sets
+alone a leak, no budget), under `nice -n 19`, inside J204's `alone` match (the coordinator has disclosed it):
+
+| what | result |
+|---|---|
+| `bridge/build.sh` (lint and its self-test, javac, the self-tests) | OK, three times |
+| `tools/cubelab.sh atlas-selftest --jobs 1` (once) | OK in 20 min 59 s at a load of 15–23; main leg 8 no-leak checks, none moved, digests equal in all 8; the `--only` leg's forced retest 5 / 5 replays, 1 / 1 distinct outcome, `same` |
+| the self-test's main leg alone (`atlas`, seed 4515, its flags) | exit 0 in 2 min 50 s; the control's digest moved in 8 of 8; its 16 branch rows equal the self-test's in every field but `ms`, `bytes` (D451: frame cut points ride a 500 ms clock) and the new field |
+| `npm --prefix web run test:node` | 1,917 tests, 1,907 pass, 10 skipped, 0 fail |
+
+The review's version (the redeal's before-half, the three-way rule, the budget, the night cap, the perturbed leg) ran
+engine-free only: `tools/lint-bridge.sh`, `tsc --noEmit`, `web/test/cubelab-atlas-leak.test.ts` and the atlas tests
+with the fake `java`, `tools/atlas/tests`, `node tools/decisions.mjs check`, `tools/public-check.sh`. Its Java has not
+been compiled or run; `bridge/build.sh` (with `DecisionSelfTest`'s D529 cases) and one atlas self-test wait for J204's
+end.

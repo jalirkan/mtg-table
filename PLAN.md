@@ -17,7 +17,7 @@ commit.
 **The index below lists 399 items still open across 44 follow-up lists** — 367
 open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D530 (2026-11-10) added the cube lab's 49 (random-v6, [its entry](#d530-random-v6)); D528 (2026-11-09) added the cube lab's 47 (random-v5 and the seat under the search, [its entry](#d528-random-v5)); D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
+said 371 across 42, three rows and one list behind its table) — D530 (2026-11-10) added the cube lab's 49 (random-v6, [its entry](#d530-random-v6)); D529 (2026-11-09) added the cube lab's 48 (the atlas's no-leak check after J203, [its entry](#d529-atlas-leak-recheck)); D528 (2026-11-09) added the cube lab's 47 (random-v5 and the seat under the search, [its entry](#d528-random-v5)); D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
@@ -464,6 +464,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 45 | open | D526's runner starts a step that cannot get its full memory with as many workers as fit (at least two; J201's run2 waited at 08:50:56 for 21.4 GB with 19.6 free, five workers' worth, beside a GPU painter's ~6 GB), raises it toward its sized count as memory frees (the backoff's raise, capped by what fits), waits (`memory-wait`, `degraded`) only under two, and alerts the start as `memory-fit`, never `degraded`; built on `pc/runner-memory-fit` and not merged: the merger runs the full gate, then `tools/runner.sh install` only while the runner is idle; ForgeCoach's `#lab` page learns `memory-fit` | `docs/decisions/D526-runner-memory-fit.md` |
 | [Cube lab](#fu-cube-lab) | 46 | open | **Read**: J202 (a) −39.5 [−53.9, −25.3] losing badly, (b) −20.9 [−34.1, −7.7] worse, not badly (D528). D527's random-v4 arms, a chain of single changes: `search-v2-rrandom4` (`rollout=random4`, both seats: `random3` with R8 made lethal-aware — under a lethal attack a good block is made only if the seat survives it, and after a dead draw R2's redraws keep the surviving assignment with the most good blocks, `search.rr.v4.goodBlockLethal`; no R9) and `search-v2-rrandom4-m40` (the same with the override margin 40 for 20; against `rrandom4` on the same night) are registered and unplayed, from J201's: (a) `rrandom3` lost badly, −30.8 Elo [−44.4, −17.2], +12.9 on J199 (a), with R2 rejecting R8's block ×7 as often as R8 made one (`v3.goodBlockDead` 0.147 a rollout, `goodBlock` 0.021), and (b) R8 + R9 lost badly too (−29.6 [−43.7, −15.6]), R9 adding nothing measurable: J202, `rrandom4` then `rrandom4-m40`, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D527's rule; then the loop, which stops if both lose badly | `docs/decisions/D527-random-v4-lethal-good-block.md` |
 | [Cube lab](#fu-cube-lab) | 47 | open | **Read**: J204 read it 2026-11-10: (a) `search-v2-rrandom4-m60` −24.4 Elo [−38.4, −10.4], NOT SHOWN, worse, not badly; (b) `policy-outlet` −84.4 Elo [−99.9, −69.3]; SIGNAL (a) − (b) +60.0 [39.3, 80.7] (±20.7), **SIGNAL SHOWN** (the random values keep 71% of search-v2's gain over the seat under it); the track stays open on the margin/LCB line; `marginStep` −3.5, so `v6Margin` = 40 (D530). D528's random-v5, no new rollout logic: `search-v2-rrandom4-m60` (`random4` at the override margin 60; J202 read `rrandom4` −39.5 Elo [−53.9, −25.3], losing badly, and `rrandom4-m40` −20.9 [−34.1, −7.7], worse, not badly, the margin cutting its overrides of Forge from 33.3% to 26.4% of searched decisions) and the baseline `policy-outlet` (search-v2's seat with the search off; no line of it on this host, `forge-default`'s J194 (a) −87.5 being one rule away) are unplayed: J204, each 1,200 games on the confirm set against search-v2, `alone: yes`; D527's table for the arm, and the SIGNAL rule (arm minus baseline) that closes the random-rollout track on NO SIGNAL or AGAINST | `docs/decisions/D528-random-v5-margin-and-forge-baseline.md` |
+| [Cube lab](#fu-cube-lab) | 48 | open | D529's no-leak check (amends D451 point 6), from J203's one moved check (`J186-b-s04-powered-2543`, `atlas:d34:forge:o0:b0`: Forge 2.0.14's race of forced attackers of equal power, not a leak): the redeal must change seat B's cards before the determinize and leave the fork equal after it; a first move is replayed 4 more times a side, a leak only when the sets are disjoint and the base reproduced, else a warning (3 in one atlas a problem); other check faults in `checks.leakFaults`; built on `pc/atlas-leak-recheck`, merges after D530 with the full gate after J204 | `docs/decisions/D529-atlas-leak-check-retest.md` |
 | [Cube lab](#fu-cube-lab) | 49 | open | D530's random-v6, no new rollout logic: D350's `override=lcb` (z 1: the best candidate's paired difference to Forge's answer must clear the margin by one standard error, over at least 3 paired rounds) on `random4`, two registered arms, `search-v2-rrandom4-lcb-m60` (`d6d75fdefd25`) and `-lcb-m40` (`98eea870967e`), unplayed: J205, each 1,200 games on the confirm set against search-v2, `alone: yes`, pinned to D530's own merge (merged alone, before D529's); both arms under D527's table (a candidate from either gets its own 4,800-game confirmation; the iteration loses badly only when both do), SIGNAL on the arm at J204's `v6Margin` against J204 (b)'s `policy-outlet` line on the same deals (not replayed; the pilot checks the code and set, the verdict the blocks), the count of successive SIGNAL INCONCLUSIVE readings re-read from J204's match lines (two close the track); random-v7 pre-registered as `rollout=random4-them` (the opponent random, the searching seat's own continuation Forge's: at margin 40 the arm's priority overrides stay +12.7 points above search-v2's, two thirds of it pass-to-play at ×2.01 and a third play-to-other-play at ×1.68, and J199's `random-self` had the same priority pattern); after it only the existing stops close the track | `docs/decisions/D530-random-v6-lcb.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
@@ -10495,8 +10496,8 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    leads), never played on this host (`forge-default`, J194 (a)'s −87.5 on the same deals, has the outlet policy off;
    the policy acted in 72 of those 1,200 games). Two readings: D527's table for the arm, and SIGNAL, the arm's Elo minus the
    baseline's with both intervals' noise (SHOWN at +15 with the interval above 0; NO SIGNAL inside ±15 with 0 in the
-   interval; AGAINST at −15 below 0; else INCONCLUSIVE). NO SIGNAL or AGAINST closes the track (a D529 from the
-   closing draft; NO SIGNAL worded as no signal at margin 60 at ±15 on the point) unless the arm is a candidate;
+   interval; AGAINST at −15 below 0; else INCONCLUSIVE). NO SIGNAL or AGAINST closes the track (D531 or later, from
+   the closing draft; NO SIGNAL worded as no signal at margin 60 at ±15 on the point) unless the arm is a candidate;
    SIGNAL SHOWN keeps it open on the margin/LCB line, random-v6 pre-registered as `override=lcb` at margin 60 (40 if
    the arm's point is under J202 (b)'s). The two-losing
    count restarted (random-v4 did not lose badly), so it cannot stop this night. Expected from J194 (a), not
@@ -10504,6 +10505,17 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    with the full gate; then J204, (a) then (b), each 1,200 games on the confirm set against search-v1-anytime,
    `alone: yes`, on D528's rule.
 
+48. **D529's no-leak check tells a leak from a branch Forge does not replay exactly; built, not merged.**
+   (2026-11-09, D529, amending D451 point 6.) J203 failed `v.checks.leaks == 0` on 1 of 128 checks
+   (`J186-b-s04-powered-2543`, `atlas:d34:forge:o0:b0`): not a leak — Forge 2.0.14's `AiAttackController` races forced
+   attackers of equal power, and the branch replayed with nothing changed showed the rare outcome on 2 of 29 base and
+   4 of 29 redeal replays. Now the redeal must change seat B's cards on the copy before the determinize and leave the
+   fork digest equal after it; a first move is replayed 4 more times a side: a leak only when the sets are disjoint
+   and the base reproduced; overlap and disjoint-with-a-varying-base are warnings (`leakNondeterministic`,
+   `leakUnresolved`), 3 in one atlas a problem; an incomplete retest, an unstable fork and a check that tested
+   nothing are problems in `checks.leakFaults`, which a job verdict must read beside `leaks`. **Open:** the merge
+   after D530, with the full gate after J204 (the coordinator runs `bridge/build.sh` and one atlas self-test then);
+   the first night with a check that moves on its own is the retest's first unforced run (its worker log names it).
 49. **D530's random-v6 is registered and unplayed: J205, D350's lcb rule on `random4`.**
    (2026-11-10, D530, amending D528.) D528 point 8 pre-registered random-v6 as `override=lcb` at `v6Margin` (60,
    unless J204 (a)'s point is under J202 (b)'s, then 40); D530 fixes the rest before any game: z at D350's 1, two
@@ -11116,6 +11128,23 @@ difference to clear the margin by a standard error.
   after it, only the existing stops close the track.
 
 Its follow-up is the cube lab's 49 ([the list](#fu-cube-lab)).
+
+<a id="d529-atlas-leak-recheck"></a>
+## The atlas's no-leak check after J203 (2026-11-09, D529)
+
+**Status: built, not gated or merged.** Branch `pc/atlas-leak-recheck` off main `137b2bf6`.
+`docs/decisions/D529-atlas-leak-check-retest.md` is the decision, amending D451 point 6. J203's one moved no-leak
+check was a branch Forge 2.0.14 does not replay exactly from its seed, not a leak, and D451's one-pair comparison
+could not tell the two apart.
+
+- **Before and after the determinize**: the redeal must change seat B's cards on the copy before it, and the fork
+  digest must be equal after it; a digest that moved is a leak.
+- **The retest**, when the first redealt replay moved: 4 more replays a side; disjoint sets with the base reproduced
+  are a leak, overlap is non-determinism and a varying base unresolved, both warnings, 3 in one atlas a problem.
+- **The known limit**: branches with forced attackers of equal power (at most 281 of J203's 10,720, 2.6%) and AI
+  timeouts cannot be replayed exactly; the published rows and labels stand.
+
+Its follow-up is the cube lab's 48 ([the list](#fu-cube-lab)).
 
 ## Deferred — out of scope for M0–M7
 
