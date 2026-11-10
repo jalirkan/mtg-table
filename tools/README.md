@@ -461,7 +461,7 @@ tools/cubelab.sh census-replay var/cubelab/deck-census/legacy/games/rows/rows-<p
 LAB_DATA_DIR=/mnt/lab tools/cubelab.sh census-play ... --out var/census/x   # D450: writes /mnt/lab/census/x
 tools/cubelab.sh atlas --pair auto --seed 451 --rollouts 50 --decisions 3 --branch-random 16 --branch-forge 8 --chunk 8 --jobs 2 --out var/cubelab/atlas/smoke   # D451: the move atlas
 tools/cubelab.sh atlas-selftest && tools/cubelab.sh seat-identity   # D451: its checks asserted; the other seats untouched
-tools/cubelab.sh atlas-leaks var/lab-jNNN/runs/*/atlas.json   # D529: a night's no-leak checks summed, the night cap applied (no engine; exit 3 on a leak or fault)
+tools/cubelab.sh atlas-leaks var/lab-jNNN/J*/   # D529: a night's no-leak checks summed, the night cap applied (no engine; exit 3 on a leak or fault)
 tools/cubelab.sh atlas --deck-a A.dck --deck-b B.dck --seed 1 --phase b --decisions 8 --min-options 3 --screen 25 --early-stop on --checks-parallel 7 --jobs 7 --out var/cubelab/atlas/cut   # D480: the cut design
 tools/cubelab.sh atlas ... --early-stop on --futility 0   # D489: the futility stop at 50 (a tenth played on as controls)
 node docs/evidence/d489-futility-replay.mjs <spine dir>   # D489: what the futility stop would have done on a finished spine, no engine

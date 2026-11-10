@@ -97,7 +97,7 @@ in code (point 5), and points 1, 4, 6 and 7 carry its notes.*
    reaching 3 **over a night** — every spine's atlas run summed — is a problem. One such branch is Forge's race; a real
    leak mechanism would show on many checks, and J186–J203 saw one moved check in all their nights. **It is a
    night-level rule, not a per-run one** (the second review's blocker): one atlas run is one spine, and only a unit's
-   first chunk (`i0` 0) carries a check, so a run holds about two (J203: 128 over 62 spines) and three in one run would
+   first chunk (`i0` 0) carries a check, so a run holds about two (J203: 128 over 61 spines) and three in one run would
    almost never happen. So each run's `atlas.json` counts its own (`leakNondeterministic`, `leakUnresolved`, as
    warnings, never a problem however many), and the cap is applied where the runs are read together:
    `nightLeakChecks` in `tools/cubelab/atlas.ts`, exposed as **`tools/cubelab.sh atlas-leaks <atlas.json | spine

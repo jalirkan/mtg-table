@@ -19,7 +19,7 @@
 #   tools/cubelab.sh census-play --decks var/cubelab/deck-census/legacy/decks --pairs 200 --seed 1 --jobs 2 --out var/cubelab/deck-census/legacy/games
 #   tools/cubelab.sh census-replay var/cubelab/deck-census/legacy/games/rows/rows-<pid>.jsonl --game census:<seed>   # D450
 #   tools/cubelab.sh atlas --pair auto --seed 1 --rollouts 50 --decisions 3 --jobs 2 --out var/cubelab/atlas/smoke   # D451: the move atlas
-#   tools/cubelab.sh atlas-leaks var/lab-jNNN/runs/*/atlas.json                   # D529: a night's no-leak checks, no engine
+#   tools/cubelab.sh atlas-leaks var/lab-jNNN/J*/                   # D529: a night's no-leak checks, no engine
 #   tools/cubelab.sh census-read --games var/cubelab/deck-census/legacy/games --decks var/cubelab/deck-census/legacy/decks --out var/cubelab/deck-census/read
 #   tools/cubelab.sh sample --band pauper --structure two-colour --seed 1 --count 40 --out var/cubelab/census/pauper   # D445
 #   tools/cubelab.sh shapes var/lab-j140/runs/*/* --out var/lab-j140/out              # D446: shape measures by band, no engine

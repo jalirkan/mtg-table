@@ -1439,8 +1439,9 @@ like this one, not a fault in the atlas.
   file and frame log is checked as D450's are. A problem exits 3.
 - **A night's no-leak checks** (D529): one atlas run is one spine, with about two checks, so the night cap —
   three non-deterministic plus unresolved checks **over the night** is a problem — is read over every spine
-  together: `tools/cubelab.sh atlas-leaks var/lab-jNNN/runs/*/atlas.json` (no engine; a spine's folder
-  works too) sums every run's leak counts, applies the cap (one more `leakFaults`), and prints one JSON
+  together: `tools/cubelab.sh atlas-leaks var/lab-jNNN/J*/` (no engine; name every spine's folder, so a
+  spine that wrote no `atlas.json` exits 2 instead of being skipped by a glob; a file works too, a run named
+  twice is read once, and an `atlas.json` with no `checks` exits 2) sums every run's leak counts, applies the cap (one more `leakFaults`), and prints one JSON
   object, the counts at its top level (`leaks`, `leakFaults`, `leakNondeterministic`, `leakUnresolved`, …,
   `capped`, `ok`, `problems`, `warnings`); exit 3 on a leak or a fault. A night job's verdict calls it and
   checks `leaks == 0` and `leakFaults == 0`, rather than summing the runs' `checks` itself.

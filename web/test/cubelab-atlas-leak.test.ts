@@ -142,6 +142,16 @@ test('D529, atlas-leaks: every spine\'s atlas.json read (a folder means its atla
     const capped = JSON.parse(said[0] ?? '') as Record<string, unknown>;
     assert.deepEqual([capped.leaks, capped.leakFaults, capped.capped, capped.ok, (capped.problems as string[]).length], [0, 1, true, false, 1]);
     assert.equal(atlasLeaksCommand(REPO, [path.join(root, 'missing')], () => undefined), 2);
+    // a run named twice, by its folder and by its file, is one run: two of its own moves never reach the cap of three
+    said.length = 0;
+    assert.equal(atlasLeaksCommand(REPO, [s[0]!, path.join(s[0]!, 'atlas.json'), s[1]!, s[1]!], (x) => said.push(x)), 0);
+    assert.deepEqual([(JSON.parse(said[0] ?? '') as Record<string, unknown>).runs, (JSON.parse(said[0] ?? '') as Record<string, unknown>).leakChecks], [2, 4]);
+    // an atlas.json that is null, or has no checks, is not read as a clean run
+    for (const [name, body] of [['null-doc', 'null'], ['no-checks', '{"spine":"x"}']] as const) {
+      fs.mkdirSync(path.join(root, name), { recursive: true });
+      fs.writeFileSync(path.join(root, name, 'atlas.json'), body);
+      assert.equal(atlasLeaksCommand(REPO, [s[0]!, path.join(root, name)], () => undefined), 2, name);
+    }
     assert.equal(atlasLeaksCommand(REPO, [], () => undefined), 2);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

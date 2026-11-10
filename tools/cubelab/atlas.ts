@@ -211,7 +211,7 @@ export const LEAK_RETEST_BUDGET_MS = 600_000;
  * D529: the NIGHT cap.  This many no-leak checks over a whole night -- every spine's atlas run, summed by `nightLeakChecks` --
  * that moved and were not resolved as a leak (non-deterministic plus unresolved) is a problem: one such branch is Forge's race,
  * but a real leak mechanism would show on many checks, and J186-J203 saw one moved check in all their nights.  It is not a
- * per-run rule: a run is one spine, which carries about two checks (J203: 128 over 62 spines; only a unit's first chunk, i0 0,
+ * per-run rule: a run is one spine, which carries about two checks (J203: 128 over 61 spines; only a unit's first chunk, i0 0,
  * carries one), so three in one run would almost never happen.  `leakChecksReport` counts a run's own; the cap is read only
  * over the night (`nightLeakChecks`, `tools/cubelab.sh atlas-leaks`).
  */
@@ -320,21 +320,31 @@ export function nightLeakChecks(runs: NightLeakRun[]): NightLeakReport {
  * D529: `tools/cubelab.sh atlas-leaks <atlas.json | spine folder>...`, no engine.  Reads every spine's atlas.json (a folder means
  * its atlas.json; a relative var/ path is re-rooted under LAB_DATA_DIR, D450), applies `nightLeakChecks` and prints its report as
  * one JSON object on stdout (the counts at its top level: `leaks`, `leakFaults`, `leakNondeterministic`, ...); exit 0 when `ok`,
- * 3 when the night has a leak or a fault (the JSON is printed either way), 2 when a file cannot be read.  A night job's verdict runs it over every spine's atlas.json and checks `leaks == 0` and `leakFaults == 0`
+ * 3 when the night has a leak or a fault (the JSON is printed either way), 2 when a file cannot be read or carries no `checks`; a run named twice is read once.  A night job's verdict runs it over every spine's atlas.json and checks `leaks == 0` and `leakFaults == 0`
  * (or `ok`) instead of summing the runs' checks itself.
  */
 export function atlasLeaksCommand(repo: string, pos: string[], say: (s: string) => void): number {
   if (!pos.length) { process.stderr.write('atlas-leaks: name every spine\'s atlas.json (or its folder)\n'); return 2; }
   const runs: NightLeakRun[] = [];
+  const seen = new Set<string>();
   for (const p of pos) {
     const at = labArg(repo, p, 'read');
     const file = fs.existsSync(at) && fs.statSync(at).isDirectory() ? path.join(at, 'atlas.json') : at;
-    let doc: { checks?: unknown };
-    try { doc = JSON.parse(fs.readFileSync(file, 'utf8')) as { checks?: unknown }; } catch (e) {
+    let doc: { checks?: unknown } | null;
+    let real: string;
+    try { real = fs.realpathSync(file); doc = JSON.parse(fs.readFileSync(real, 'utf8')) as { checks?: unknown } | null; } catch (e) {
       process.stderr.write(`atlas-leaks: ${file}: ${e instanceof Error ? e.message : String(e)}\n`);
       return 2;
     }
-    runs.push({ name: p, checks: doc.checks && typeof doc.checks === 'object' ? doc.checks as Partial<LeakCounts> : null });
+    // a run named twice (its folder and its file) is one run: counted twice it would double a leak, or reach the cap alone
+    if (seen.has(real)) continue;
+    seen.add(real);
+    // every atlas.json since D451 carries `checks`: one without is not an atlas run, or is cut off, and reading it as clean would hide it
+    if (!doc || typeof doc !== 'object' || !doc.checks || typeof doc.checks !== 'object') {
+      process.stderr.write(`atlas-leaks: ${file}: no checks object: not an atlas run's atlas.json\n`);
+      return 2;
+    }
+    runs.push({ name: p, checks: doc.checks as Partial<LeakCounts> });
   }
   const r = nightLeakChecks(runs);
   // the counts flat beside the rest, so a job's metrics read `leaks` and `leakFaults` at the top
