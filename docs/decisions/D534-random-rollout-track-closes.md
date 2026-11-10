@@ -1,4 +1,4 @@
-## D534 — the random-rollout track closes: eight nights, thirteen arms, none a candidate; a search that values its options on guarded random play is 19 to 44 Elo behind the same search on Forge's rollouts (about 7 with half its rollouts Forge's), the gap is in the value and not the budget, and what would reopen it is named (closes D523's loop; amends D533)
+## D534 — the random-rollout track closes: eight nights, thirteen arms, none a candidate; a search that values its options on guarded random play is 19 to 44 Elo behind the same search on Forge's rollouts on the point (about 7 with half its rounds Forge's), the gap is in the value and not the budget, and what would reopen it is named (closes D523's loop; amends D533)
 
 *Branch `pc/search-kinds`, off main `4e823718` (D533's merge, the pin of J209). The number was reserved for this
 closing when the kinds lane was written beside J209 (D535, the same branch); `node tools/decisions.mjs next` printed
@@ -60,7 +60,7 @@ draw, error or timeout, all 49 of the job's checks passing, the runner's status 
   / attack / block) and the priority directions (from a pass / to another play / to a pass): the arm 15.5% / 11.7%
   / 18.2% and 6.62% / 5.74% / 3.12%; search-v2's side in the same match 19.3% / 15.3% / 21.0% and 8.16% / 6.33% /
   4.81%; J208 (a) 15.3% / 14.1% / 17.5% and 6.70% / 5.58% / 3.03%. Cost the same on both sides: 923 against 911 ms a
-  decision, 16.0 against 15.6 rollouts, 6.2 against 6.0 rounds. Information, deciding nothing, each about ±19
+  decision, 16.0 against 15.6 rollouts, 6.2 against 6.0 rounds. Information, deciding nothing, each about ±16 to ±17
   between two lines: the arm minus J208 (a) +12.2, minus J208 (b) +12.8, minus J206's arm +16.3, minus J202 (b)
   +14.0; the arm minus J204 (b)'s `policy-outlet` +77.5 [58.7, 96.3].
 
@@ -72,49 +72,54 @@ draw, error or timeout, all 49 of the job's checks passing, the runner's status 
    live seat never changed and does not change here.
 2. **What the track measured.**
    - **The size.** At equal time a decision, the search on guarded random rollouts sits **19 to 44 Elo under** the
-     search on Forge's rollouts on these deals. Its four best arms with every rollout's opponent random are within
-     about 4 Elo of one another (−19.1, −19.7, −20.9, −23.2), each interval's upper end below 0: the floor the
-     track found is about −20, across two override rules, both seatings and two margins. The one arm above it
-     is the mix, −6.9, half of whose rounds are Forge's own rollouts.
+     search on Forge's rollouts on these deals, on the point (the intervals' upper ends reach −7.7). Its four best arms with every rollout's opponent random are within
+     about 4 Elo of one another (−19.1, −19.7, −20.9, −23.2), each interval's upper end below 0: the best the
+     track found with every round's opponent random is about −20, across two override rules, both seatings and two margins. The one arm above it
+     is the mix, −6.9 [−17.8, +3.9], 54% of whose rounds and 56% of whose scored rollouts are Forge's own.
    - **It is the value, not the budget.** The random arms searched *more* than search-v2 at the same ms (×1.08 to
      ×1.15 rollouts a decision on J199 and J201, since a random rollout is cheaper), and J194's
      `search-v2-ms6000-r48`, ×3.14 search-v2's rollouts a decision, bought +1.7 Elo [−6.7, +10.2] against it: more
-     rollouts of either kind do not close a 20-Elo gap.
+     Forge rollouts buy nothing measurable at this budget, and the random arms' extra rollouts (the only larger
+     random budget measured, ×1.08 to ×1.15) did not close the gap. A much larger random budget was never run
+     (Residual).
    - **Where it loses.** With both rollout seats random the arm overrode Forge's answer at priority about twice as
      often as search-v2 at the same margin (39.3% against 18.8%, J201), led by plays chosen over a pass (16.4% and
-     19.2% of priority decisions on J202's two arms against search-v2's 8.1%), and those overrides lost. The random
-     *opponent* is most of it: Forge back on the opponent's rollout seat was worth 18 Elo on the point (J199 b over
-     a), and with the opponent alone random the from-pass share fell to search-v2's (6.7% and 8.9%, J208) while the
-     arm stayed 19 behind.
+     19.2% of priority decisions on J202's two arms against search-v2's 8.1%). Which overrides lose was measured once, on J199's attacks (the search overrode
+     Forge's "attack none" ×1.55 as often and lost those games); for priority the counters give rates, not which
+     overrides win. Neither rollout seat carries the loss alone: the searching seat alone random read −25.5 (J199
+     b), the opponent alone random −19 to −23 (J206, J208), both −21 to −44. And the from-pass plays are a symptom,
+     not the whole of it: with the opponent alone random that share fell to search-v2's (6.7% and 8.9%, J208) and
+     the arm stayed 19 behind.
    - **What the guardrails bought.** R1–R7 fired as designed (on J199 (a), R7 2.4 a rollout, R3 0.6, R4 0.23). The block-side rules
-     (R8 the good block, its lethal-aware form) moved the point by at most 13 Elo and the last by nothing; R9 the
-     held instant by nothing. Rules written from the arm's worst games did not make the random seat's play a better
+     (R8 the good block, its lethal-aware form) moved the point by at most 13 Elo, each move inside the noise between two nights; R9 the
+     held instant by nothing measurable. Rules written from the arm's worst games did not make the random seat's play a better
      estimate of the position.
    - **What the verdict rules bought.** Doubling the override margin was worth about 19 Elo on the point with both
      seats random (J202 b over a) and nothing with the opponent alone random (J208 a and b, 0.6 apart); 60 was no
-     better than 40 (J204 a); the noise-aware override (`lcb`) cost 10 to 14 on the point with both seats random (J205 (a) against
+     better than 40 (J204 a); the noise-aware override (`lcb`) cost 10 to 15 on the point (9.9 and 14.5) with both seats random (J205 (a) against
      J202 (b), (b) against J204 (a)), and with the opponent alone random it held back 35.5% of the overrides for no
      measured gain (J208 (a), the same arm without it, +4.1 on the point, inside the noise). A margin is the
      search trusting a noisier value less; it is not a better value.
    - **The mix.** `mix4-them` was built on an argument (D532 point 5): since more Forge rollouts of the same kind
      buy nothing, a second, differently wrong opponent model beside Forge's is the one way random rollouts could add
      information rather than replace it. J209 does not show that. The arm reads −6.9 where J208 (a), the same margin
-     with the random opponent in every round, read −19.1; +12.2 between two lines is inside their ±19, and half of
-     −19.1 is −9.6, so the mix sits where taking half the random rounds out would put it by dilution alone. The two
-     kinds of round agreed on the sign of the best alternative's difference in 89.5% of the decisions that paired it
-     in both, with means of the same sign and size (+793 and +693): the random rounds mostly said what the Forge
-     rounds said, a little less strongly, and nothing in the night's result says the 10.5% where they parted were
-     the random rounds being right. An arm made no weaker by being half Forge's would in any case leave Forge in the
+     with the random opponent in every round, read −19.1; +12.2 between two lines is inside their ±16, and half of
+     −19.1 is −9.6, so the point is consistent with plain dilution (fewer random rounds, proportionally less of
+     their cost); the interval is as consistent with a full recovery and nearly with J208 (a) itself, and the night
+     cannot tell these apart. The two kinds of round agreed on the sign of the best alternative's difference in
+     89.5% of the 8,311 decisions that paired it in both; over each kind's own pairs (36,532 and 33,885, not the
+     same decisions) the means have the same sign (+793 and +693). There is no Forge-against-Forge split to say
+     whether 10.5% is many, and nothing in the night's result says the decisions where they parted were the random
+     rounds being right. An arm made no weaker by being half Forge's would in any case leave Forge in the
      loop for half the rollouts, which is not the question the track asked.
    - **What the search is worth on random rollouts all the same.** Against `policy-outlet` on the same deals
-     (J204 b, search-v2's seat with the search off, −84.4 against search-v2) the arms read from J204 on sit 49 to 65
+     (J204 b, search-v2's seat with the search off, −84.4 against search-v2) the pure-random arms read from J204 on sit 49 to 65
      Elo over it on the point (J204 (a) +60.0 [39.3, 80.7], J205 (a) +49.0 [28.3, 69.7], J206 +61.2 [42.1, 80.3];
-     J208 (a) −19.1 against −84.4). Guarded random play is a usable rollout policy; it is a worse one than Forge's
+     J208 (a) −19.1 against −84.4; the mix, half Forge's, +77.5 [58.7, 96.3]). Guarded random play is a usable rollout policy; it is a worse one than Forge's
      AI.
 3. **The conclusion, in the question's own words.** The cheap path — Forge out of the rollout loop at no cost — is
    **NOT SHOWN**. Forge's opponent model, wrong as it is, is a better stand-in for an opponent inside a rollout than
-   a random one under the track's guardrails, by about 20 Elo at this budget, and the difference is not noise the
-   search can vote away. This is a statement about *uniform random play inside rollouts*; it is not a statement
+   a random one under the track's guardrails, by about 20 Elo at this budget, and neither a wider margin nor a noise-aware override recovered it. This is a statement about *uniform random play inside rollouts*; it is not a statement
    about randomised exploration as a source of knowledge (the atlas, D508, is that, and its labels are the input to
    what item 4's second line names), and it is not a statement that Forge's AI is the ceiling: the same nights put
    the search 84 Elo over the same seat with the search off.
@@ -129,7 +134,7 @@ draw, error or timeout, all 49 of the job's checks passing, the runner's status 
 5. **What stays.** Every arm's registration and hash, every rollout value, every counter (`search.rr.*`,
    `search.mix.*`), the self-test cases and the nights' match files and summaries stay as they are: they are the
    baseline a reopened track is read against, and removing a value would change no hash but would lose the ability
-   to replay a night. `PLAN.md`'s items 51 and 52 are closed with this reading; D535 (the kinds night, the same
+   to replay a night. `PLAN.md`'s track items (42, 44, 46, 47, 49, 50, 51 and 52) are closed with this reading; D535 (the kinds night, the same
    branch) is the next thing the machine plays, and it does not depend on any of this.
 
 **Alternatives rejected.**
@@ -150,7 +155,7 @@ draw, error or timeout, all 49 of the job's checks passing, the runner's status 
 - Every number is on one cube's confirm set (600 deals) at one budget (search-v2's ms a decision). The gap could be
   smaller on other deals or at a much larger budget; nothing here measured that.
 - The comparisons between nights (an arm minus another night's arm) are across merges that changed no path a match
-  runs (D529, D532's Context) and are about ±19 Elo each; they order nothing inside 19.
+  runs (D529, D532's Context) and are about ±16 to ±20 Elo each (two 1,200-game lines); they order nothing inside that.
 - **J209's interval reaches 0, and the track closes all the same.** The table and its too-wide case were fixed
   before the first night and D532 point 6 fixed the end before J208 was read; a mix is the arm most likely to land
   there, because it is half the baseline. Whether a mix at 4,800 games would read indistinguishable is not known and

@@ -24,14 +24,14 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
 - **What has never been measured: which kind of decision that strength comes from.** J194 (a)'s counters give rates
   only: 29,179 searched decisions in 1,199 games, 20,434 priority (4,004 changed, 19.6%), 6,839 attacks (1,073,
   15.7%), 1,906 blocks (304, 15.9%), at 939.7, 908.0 and 911.9 ms each. So priority windows are about 70% of the
-  seat's thinking time, attacks about 23% and blocks about 6.5%. A changed answer is not a won game, and the
-  random-rollout track said the same thing of its own counters eight times: they "give rates, not which overrides
-  win" (D532 point 6, D533 point 8).
+  seat's thinking time, attacks about 23% and blocks about 6.4%. A changed answer is not a won game, and the
+  random-rollout track said the same thing of its own counters night after night: they "give rates, not which overrides
+  win" (D532's Context, and the nights' summaries).
 - **Why it matters now.** Two things wait on it. (1) The owner asked for a faster seat; halving the budget did not
   hold (J198, 0.75 s: −6.5 Elo [−11.7, −1.3], INCONCLUSIVE AT 4,800 against a −10 Elo bar, D519), and the other way
   to a faster seat is to stop searching a kind of decision that pays little: priority alone is 70% of the time.
   (2) Every lane that tried to make the search stronger since the anytime loop changed all three kinds at once
-  (budget, round cap, rollout policy, margin, leaf) and landed between −84 and +9 Elo; knowing where the strength
+  (budget, round cap, rollout policy, margin, leaf) and landed between −44 and +9 Elo; knowing where the strength
   is says where the next lane's compute and candidates should go.
 - **The switch has never been run as an ablation.** `what=` has been `pab` in every registered search player.
 
@@ -96,10 +96,10 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
    An interval that includes 0 is never worded as "no effect".
 6. **The faster-seat candidate rule.** The six partial arms (`only-p`, `only-a`, `only-b`, `no-p`, `no-a`, `no-b`)
    are each read against `all`: an arm X is a **faster-seat candidate** when Δ(all, X)'s point is at most +0.014 in
-   score (about 10 Elo at these scores: the bar J198 used), WHOLE being above 0. Among several candidates the one
+   score (about 10 Elo at these scores: the bar J198 used), WHOLE's interval being wholly above 0 (point 5's reading). Among several candidates the one
    taken forward is the one with the least search time a game on its own match line (`aSearch.msPerDecision ×
    aSearch.searched / played`). A candidate is not a result: at this night's ± 16 Elo an arm truly 20 Elo worse
-   passes about one time in three. It earns a **4,800-game head-to-head against `search-v1-anytime`**, as its own
+   passes about one time in nine (a standard error of about 8 Elo, the bar 10 Elo under the truth). It earns a **4,800-game head-to-head against `search-v1-anytime`**, as its own
    job under its own decision, in J198's shape (the −10 Elo bar, D519's four readings). A seat change is never
    made by this decision or that one: it is a seat-queue row and the owner's (D509).
 7. **No candidate is the expected reading, and it is information.** The table then says where the search's
@@ -120,7 +120,7 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
 - **Head-to-head against search-v2 instead of against Forge.** A head-to-head is the sharper test for one arm
   (it is what the candidate gets), but seven arms against search-v2 would share no baseline with `none`, and the
   additive reading (ALONE, LAST, INTERACTION) needs every corner on one scale. Forge Default is the anchor.
-- **Only the three leave-one-out arms.** Cheaper by four hours, and blind to overlap: if attacks and blocks each
+- **Only the three leave-one-out arms.** Cheaper by about 1.7 hours (point 8's 0.3, 0.45 and 0.95), and blind to overlap: if attacks and blocks each
   look unneeded alone, only `only-p` says whether dropping both is safe.
 - **A second name for search-v2 (`search-v2-all`, the same params and hash), so that its matchup is new and takes
   the shared blocks in `var/ai-ladder`.** This lane's first commit registered it. The ladder cannot play it: a
@@ -133,7 +133,7 @@ machine alone (`alone: yes`): no Java, no build and no test ran beside it; the r
 - **Reusing J194 (a) as the `all` corner.** It is the same config on the same deals, but at pin `72302c69`, before
   D523 to D533 touched `SearchPolicy`; each of those says no earlier value's behaviour changed and the decision
   self-test holds it, yet the cleanest pab is one played on the night's own pin, and the replication is worth its
-  two hours on its own (point 5).
+  1.3 hours on its own (point 5).
 - **A per-kind budget arm now.** New Java, and it needs this table to know which kind to give the clock to.
 
 **What is unverified.**
