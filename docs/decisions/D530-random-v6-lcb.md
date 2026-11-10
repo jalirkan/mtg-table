@@ -26,16 +26,17 @@ unchanged: free under D509.*
   | random-v3 (J201 b) | `search-v2-rrandom3-held` | + R9 the held instant | −29.6 [−43.7, −15.6] | loses badly |
   | random-v4 (J202 a) | `search-v2-rrandom4` | R8 made lethal-aware | −39.5 [−53.9, −25.3] | loses badly |
   | random-v4 (J202 b) | `search-v2-rrandom4-m40` | + the override margin 20 → 40 | −20.9 [−34.1, −7.7] | worse, not badly |
-  | random-v5 (J204 a) | `search-v2-rrandom4-m60` | the override margin 40 → 60 | TODO(J204): J204 (a)'s Elo [eloLo, eloHi] | TODO(J204): its D527 reading |
-  | random-v5 (J204 b) | `policy-outlet` (the baseline) | search-v2's seat, the search off | TODO(J204): J204 (b)'s Elo [eloLo, eloHi] | (no reading of its own) |
+  | random-v5 (J204 a) | `search-v2-rrandom4-m60` | the override margin 40 → 60 | −24.4 [−38.4, −10.4] | worse, not badly |
+  | random-v5 (J204 b) | `policy-outlet` (the baseline) | search-v2's seat, the search off | −84.4 [−99.9, −69.3] | (no reading of its own) |
 
-- **J204 read random-v5** (the runner's lines, 1,200 games each): TODO(J204): (a) `search-v2-rrandom4-m60`'s score,
-  Elo and D527 reading, errors and timeouts; (b) `policy-outlet`'s score and Elo; SIGNAL (a) − (b) = TODO(J204): diff
-  [lo, hi] (±hw), the reading (SIGNAL SHOWN or SIGNAL INCONCLUSIVE: either keeps the track open on the margin/LCB
-  line, D528 point 6); `signalInconclusiveCount` TODO(J204): 0 or 1; (a) − J202 (b) = TODO(J204): `marginStep`, so
-  **`v6Margin` = TODO(J204): 60 or 40**, and **the deciding arm is TODO(J204): `search-v2-rrandom4-lcb-m60` or
-  `-lcb-m40`** (point 2). This file is written for the case the job's report names `v.iterate` 1 (the arm to diagnose,
-  the track open); a candidate (a) goes to its 4,800-game confirmation instead, and a closed track to the closing
+- **J204 read random-v5** (the runner's lines, 1,200 games each): (a) `search-v2-rrandom4-m60` scored 0.4650
+  [0.4449, 0.4851], −24.4 Elo [−38.4, −10.4], **NOT SHOWN, worse, not badly**, 0 errors and 0 timeouts; (b)
+  `policy-outlet` scored 0.3808 [0.3601, 0.4016], −84.4 Elo [−99.9, −69.3], 0 errors and 1 timeout; SIGNAL (a) − (b) =
+  **+60.0 Elo [39.3, 80.7] (±20.7), SIGNAL SHOWN** (the random values keep 71% of search-v2's own 84.4 over the seat
+  under it; SIGNAL SHOWN keeps the track open on the margin/LCB line, D528 point 6); `signalInconclusiveCount` 0;
+  (a) − J202 (b) = −3.5 (`marginStep`, below 0), so **`v6Margin` = 40**, and **the deciding arm is
+  `search-v2-rrandom4-lcb-m40`** (point 2). The report names `v.iterate` 1 (the arm to diagnose, the track open),
+  the case this file is written for; a candidate (a) goes to its 4,800-game confirmation instead, and a closed track to the closing
   decision D528 point 6 names (written from the track's closing draft; D529, the number D528 expected, is another
   lane's since), and then this decision is not merged.
 - **What D528 point 8 fixed, and what is left to fix here.** random-v6 is D350's `override=lcb` — the paired
@@ -74,7 +75,7 @@ unchanged: free under D509.*
   `config.json` (the jar's path) — lists `tools/ai-ladder/players.json` alone. J204's pin is `137b2bf6`, and with D530
   merged alone first and J205 pinned to that merge, the list is this lane's own; it also makes search-v2 the same code
   on both nights. (2) The blocks actually played: J204 (b) played 150 blocks, 114,900,000–114,900,149, every
-  game (`var/j204/seeds-b.json`, TODO(J204): its `blocks`, `min`, `max`, `games`), and J205 (a) does too
+  game (`var/j204/seeds-b.json`: `blocks` 150, `min` 114900000, `max` 114900149, `games` 1200), and J205 (a) does too
   (`var/j205/seeds-a.json`; a memory retry would move it). The verdict reads both.
   **If J204 (b)'s seeds file does not show exactly those blocks**, or main has moved under `bridge/src`,
   `tools/ai-bench` or the ladder's code when J205 is pinned, the baseline is not on these deals, and J205 is posted
@@ -102,7 +103,7 @@ unchanged: free under D509.*
    (after `seed`, before `anytime`); its resolved params are the margin arm's plus `override: lcb` (`z` at its default
    is out of the hash, as every default is). `web/test/ai-ladder.test.ts` holds all of it.
    **The deciding arm** is the one at `v6Margin` (D528 point 8: 60, unless J204 (a)'s Elo point minus J202 (b)'s is
-   below 0, then 40): TODO(J204): `search-v2-rrandom4-lcb-m60` or `-lcb-m40`. When it is `-lcb-m60` it is one change
+   below 0, then 40): J204 read −3.5, so it is **`search-v2-rrandom4-lcb-m40`**. When it is `-lcb-m60` it is one change
    from J204 (a) (the rule, at the same margin); when it is `-lcb-m40`, one change from J202 (b). Two things are the
    deciding arm's alone: SIGNAL is read on it (point 5), and it is the arm random-v7 inherits its rule from (point 7).
 3. **The other margin is a registered arm too.** Both lcb arms are read under D527's table, unamended: a candidate
@@ -179,7 +180,8 @@ unchanged: free under D509.*
    J202's and J204's; `search.lcb.overrode`, `held` and `none` a decision, and `held` as a share of what the margin rule
    would have overridden; ms, rollouts and rounds a decision; every `search.rr.*` per random rollout; the deal blocks.
 6. **The loop's count** (D523 point 10, D527 point 7, D528 point 7). random-v5 is an iteration that lost badly exactly
-   when J204 (a) did (one random arm): TODO(J204): J204 (a)'s upper end and whether it is below −15. random-v6
+   when J204 (a) did (one random arm): J204 (a)'s upper end is −10.4, not below −15, so random-v5 did not lose badly
+   and the count stands at 0 going into J205. random-v6
    registers two arms, so it loses badly exactly when both do (each complete, each upper end below −15). **The loop
    stops** when both of J205's arms lose badly and J204 (a) lost badly, all read from the match lines
    (`var/ai-ladder/match-J204a.json` at `216e66d89fe3`, complete by D528's test, `eloHi < −15`).
