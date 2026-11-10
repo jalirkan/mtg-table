@@ -1080,6 +1080,56 @@ test('D532: search-v2-rrandom4them-m40 and search-v2-rrandom4them are random4-th
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D533: search-v2-rmix4them-m40 and search-v2-rmix4them are D532\'s two arms with rollout=mix4-them, and differ from each other in the margin alone', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const v2 = by.get('search-v1-anytime')!;
+  assert.ok((KINDS.search!.params.rollout?.values ?? []).includes('mix4-them'), "the ladder's rollout enum takes mix4-them");
+  const arms = [
+    ['search-v2-rmix4them-m40', 'search-v2-rrandom4them-m40', 40, 'fcf472f384b7'],
+    ['search-v2-rmix4them', 'search-v2-rrandom4them', undefined, 'b2592de740c9'],
+  ] as const;
+  for (const [name, d532, margin, hash] of arms) {
+    const x = by.get(name);
+    assert.ok(x?.cfg, `${name} is registered and playable`);
+    const xr = raw.players.find((y) => y.name === name)!;
+    const br = raw.players.find((y) => y.name === d532)!;
+    assert.equal(xr.kind, v2raw.kind);
+    // D532's arm's params with the rollout value alone changed (no override, no z; the margin key only at 40)
+    assert.deepEqual(xr.params, { ...br.params, rollout: 'mix4-them' }, `${name}'s params are ${d532}'s with rollout mix4-them`);
+    assert.equal(raw.players.find((y) => y.name === name)!.params.margin, margin, `${name}'s margin key`);
+    const base = by.get(d532)!;
+    const xrest: Record<string, unknown> = { ...x!.resolved };
+    const brest: Record<string, unknown> = { ...base.resolved };
+    delete xrest.rollout;
+    delete brest.rollout;
+    assert.deepEqual(xrest, brest, `every other resolved param is ${d532}'s`);
+    assert.equal(by.get(name)!.resolved.rollout, 'mix4-them');
+    assert.equal(by.get(name)!.resolved.override, undefined, 'the margin rule (the default override) is out of the hash');
+    assert.equal(by.get(name)!.cfg, base.cfg!.replace(/,rollout=random4-them$/, ',rollout=mix4-them'),
+      `the seat config is ${d532}'s with the rollout value alone changed`);
+    assert.doesNotMatch(by.get(name)!.cfg!, /override=|,z=/, `${name} is on the margin rule`);
+    assert.equal(by.get(name)!.hash, hash, `${name}'s config hash (D533)`);
+    assert.match(xr.note ?? '', /never the live seat/);
+  }
+  const a = by.get('search-v2-rmix4them-m40')!;
+  const b = by.get('search-v2-rmix4them')!;
+  assert.equal(b.resolved.margin, 20, "the margin resolves to search-v2's 20");
+  assert.equal(b.cfg, `${v2.cfg},rollout=mix4-them`, "(b)'s seat config is search-v2's with ,rollout=mix4-them appended");
+  assert.equal(b.cfg, a.cfg!.replace(',margin=40,', ',margin=20,'), 'the two random-v9 arms differ in the margin alone');
+  assert.match(a.cfg!, /,margin=40,.*,seed=0,anytime=1,rollout=mix4-them$/);
+  assert.notEqual(a.hash, b.hash);
+  for (const [n, hash] of [['search-v2-rrandom4them-m40', '179ab0649521'], ['search-v2-rrandom4them', 'd5381ade9e66'],
+    ['search-v2-rrandom4them-lcb-m40', '01e2aba2d33e'], ['search-v2-rrandom4', '646d59a008f6'], ['search-v2-rrandom4-m40', '968c9003c616'],
+    ['search-v2-rrandom4-m60', '216e66d89fe3'], ['search-v2-rrandom4-lcb-m60', 'd6d75fdefd25'], ['search-v2-rrandom4-lcb-m40', '98eea870967e'],
+    ['search-v2-rrandom-self', 'd3aa28be73b2'], ['policy-outlet', 'e350d94649a4']] as const) {
+    assert.equal(by.get(n)!.hash, hash, `${n} keeps its hash`);
+  }
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
