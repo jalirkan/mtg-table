@@ -261,6 +261,21 @@ the lab's method), and this file writes down the step it decided.*
   step caps; **no `search.lcb.*` key on either side of either match** (the margin rule); search-v2's side carries no
   `search.rr.*`. One `unmappable` fallback on each side of each match, 0 budget fallbacks. The pilot is a liveness
   check, not a strength reading.
+- **J207's draft, dry-run** (in the session scratchpad, not posted). Its pilot blocks ran end to end (10:09–10:16
+  EST) in a throwaway detached worktree of `03d5464f` with this lane merged into it `--no-ff` (a local merge, never on
+  a branch, removed after), with J206's, J205 (a)'s, J204's and J202's lines copied in from the lab host: the build
+  (`decision selftest: 371 check(s), 0 failure(s)`), the bench self-test and the registry test; the six players and
+  both arms' seat configs and hashes as point 2 says; **the code check by content passed on the real merge** (two
+  parents, the second the lane tip; the tree under every match path the lane tip's; `players.json` alone since
+  `03d5464f`; D529's three files and `players.json` since `ecd9bb4e`) and its six synthetic cases each read as
+  meant; the verdict's selftest 39 of 39 (every branch of point 4, D527's table at each edge in integers, an
+  incomplete arm holding back what follows, every checked value a number); J206 re-read worse, not badly; the
+  readers' selftests; and 4 games of each arm (2–2 and 2–2, 0 errors, 1,318 and 1,342 random rollouts on the arm's
+  side, none on search-v2's, no `search.lcb.*` on either side, all 4 lines' configs exactly the arm's and
+  search-v2's). `tools/runner.sh check` lints the draft clean, and with the metrics of that pilot and of six
+  synthetic nights (a candidate in (a); both candidates, (b) higher; both losing badly; random-v9 at 40, at 40 on a
+  tie, and at 20), each written by the draft's own `metrics:` lines over files the real verdict wrote, passes every
+  check but `merged == 1` (the local merge is not on `origin/main`); the report block ran on one of them.
 
 **What is unverified.**
 
