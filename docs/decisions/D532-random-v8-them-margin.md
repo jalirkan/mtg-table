@@ -51,14 +51,17 @@ the lab's method), and this file writes down the step it decided.*
   | J205 (a) `rrandom4-lcb-m40`, both seats random, lcb | 11.39% | 7.43% | 1.88% | 7.8% | 11.5% | 4,669 / 2,849 / 20,071 | 37.9% |
   | **J206 `rrandom4them-lcb-m40`, the opponent alone random, lcb** | **5.11%** | **4.17%** | **1.94%** | **8.4%** | **11.6%** | 3,034 / 1,669 / 23,615 | **35.5%** |
 
-  The from-pass excess is gone: 5.11% against search-v2's 7.96%, where every both-random arm ran at 11% to 19%. D530
-  point 8 traced that excess to the searching seat's own random continuation (a pass hands the rest of the turn to a
-  seat that plays its cards by draw, so passing was scored as worse than it was), and J206 is the test it predicted:
-  with the searching seat's continuation Forge's again, the excess went with it. **What lcb was brought in to remove
-  is no longer there**, and lcb still held 35.5% of the overrides the margin rule would have made (1,669 of 4,703):
-  the arm now overrides Forge less than search-v2 in every kind and direction (attack 8.4% against 14.7%, block 11.6%
-  against 16.8%, from a pass 5.11% against 7.96%, to another play 4.17% against 6.36%, to a pass 1.94% against
-  4.80%). What lcb removes now is overrides of the kind search-v2 makes on Forge rollouts and wins with.
+  J206's from-pass share reads under search-v2's: 5.11% against 7.96%, where every both-random arm ran at 11% to
+  19%. D530 point 8 traced that excess to the searching seat's own random continuation (a pass hands the rest of the
+  turn to a seat that plays its cards by draw, so passing was scored as worse than it was), and J206 is consistent
+  with it: with the searching seat's continuation Forge's again, the share fell from J205 (a)'s 11.39% to 5.11% under
+  the same rule and margin. **It was measured with lcb on**, and lcb itself took the share from 16.41% to 11.39% at
+  the same margin (J202 (b) to J205 (a)), so whether the excess is gone under the margin rule is not measured yet:
+  arm (a) measures it (the same proportional fall from J202 (b)'s 16.41% would put it near 7.4%). lcb still held 35.5%
+  of the overrides the margin rule would have made (1,669 of 4,703), and the arm overrides Forge less than search-v2
+  in every kind and direction (attack 8.4% against 14.7%, block 11.6% against 16.8%, from a pass 5.11% against 7.96%,
+  to another play 4.17% against 6.36%, to a pass 1.94% against 4.80%). The counters give rates, not which overrides
+  win: whether the overrides lcb holds back are ones the arm gains by is what (a) beside J206 tells, as information.
 - **J206's runner status is `failed`, and the cause is a check, not the data.** 64 of its 65 checks passed and both
   run steps exited 0; the 65th was `v.v8 == null` ("no random-v8 was named"). The verdict left `v8` null as intended,
   the runner read the metric as missing, and a comparison on a missing metric reads UNKNOWN, which fails a job. Every
@@ -95,8 +98,9 @@ the lab's method), and this file writes down the step it decided.*
    (the rollout's opponent random-v4, `Config.randomV4Block()`; the searching seat Forge's Default AI with the
    candidate forced first, as search-v2's rollouts play it), and both decide on **the margin rule**, search-v2's own
    (no `override` key: the best alternative's mean paired difference to Forge's answer must clear the margin), in
-   place of D350's `override=lcb`. The counters say why (Context): the excess lcb was brought in for (D530) left with
-   the them-only seating, and lcb now removes good overrides.
+   place of D350's `override=lcb`. The counters say why (Context): with the them-only seating the from-pass share lcb was
+   brought in for (D530) read under search-v2's with lcb on, lcb still held a third of the overrides, and the arm
+   overrode Forge less than search-v2 in every kind; random-v8 measures the seating without lcb.
 2. **Two arms**, kind `search`, every param search-v2's plus `rollout: random4-them`, and (a) the margin 40. Each note
    says "for measurement, never the live seat".
 
@@ -113,9 +117,10 @@ the lab's method), and this file writes down the step it decided.*
    rollout value alone changed. (b) is (a) at margin 20 and search-v2's own seat config with `,rollout=random4-them`
    appended, as `search-v2-rrandom4` is search-v2's with `,rollout=random4`: its params carry no `margin` key, as
    `search-v2-rrandom4`'s do not, and the margin resolves to search-v2's 20. D527 raised the margin from 20 to 40
-   only because the random rollouts overrode Forge at priority about twice as often as search-v2 (J201, then J202:
-   from a pass 19.2% at margin 20, 16.4% at 40); with that excess gone, search-v2's own margin is the natural
-   setting, and (b) is search-v2 with nothing changed but the opponent's seat in its rollouts. The hashes are
+   only because the random rollouts overrode Forge at priority about twice as often as search-v2 (J201 (a);
+   J202 then measured from a pass 19.2% at margin 20, its arm (a), and 16.4% at 40, its arm (b)); if that excess is
+   gone under the margin rule too, which these two arms measure, search-v2's own margin is the natural setting, and
+   (b) is search-v2 with nothing changed but the opponent's seat in its rollouts. The hashes are
    `registry.ts`'s (`configHash` over the kind and the resolved params), computed on the lane by `ai-ladder.sh list`;
    `web/test/ai-ladder.test.ts` holds both arms, that they differ in the margin alone, and every earlier arm's hash.
 3. **The night** (drafted as J207): **two fixed D398 matches of 1,200 games on the confirm set, each arm against
@@ -154,7 +159,10 @@ the lab's method), and this file writes down the step it decided.*
    `complete: true`, played all 1,200 games with engine errors plus timeouts at most 60, and carries the four
    numbers. Every threshold is compared on the numbers the match lines carry: Elo in integer tenths, the score's lower
    end in integer ten-thousandths. What follows is decided only when both arms are complete; an incomplete arm gives
-   no reading and is reposted alone, and the reposted arm's job applies this rule to both lines. Exactly one of three
+   no reading and is reposted alone, and the reposted arm's job applies this rule to both lines (the repost is a job of
+   its own in a ladder folder of its own, whose blocks start at 114,900,000, the incomplete line kept and never
+   resumed; both arms incomplete are reposted in one job, (a) first; an arm incomplete a second time is diagnosed
+   before any third post). Exactly one of three
    things follows. **A confirmation**: when either arm is a candidate (SHOWN, INCONCLUSIVE, indistinguishable or no
    weaker), a 4,800-game confirmation of that arm under D519's readings, posted as its own job — of the arm with the
    higher Elo point when both are, and of (a) when the points are equal. **The track closes**: when both arms lose
@@ -165,7 +173,8 @@ the lab's method), and this file writes down the step it decided.*
    there is none to build on. **random-v9**: otherwise (both arms to diagnose and not both losing badly), random-v9,
    point 5, at the margin of the arm with the higher Elo point, 40 for (a) and 20 for (b), 40 when the points are
    equal. A confirmation that does not hold sends the track to random-v9 the same way, at the margin this rule names
-   from J207's two points. Reported beside, deciding nothing: point 3's comparisons; each arm minus J204 (b) with
+   from J207's two points; when both arms were candidates the other is not confirmed in its place (its point was the
+   lower on the same deals, and one confirmation for the night is the guard against two looks at it). Reported beside, deciding nothing: point 3's comparisons; each arm minus J204 (b) with
    D528's `hw` and interval; each side's overrides of Forge by kind and by direction at priority (`fromPass`,
    `toOther`, `toPass`) beside J206's, J205 (a)'s and J202's; ms, rollouts and rounds a decision; every `search.rr.*`
    per random rollout; the deal blocks; each arm's ten longest and ten quickest lost games. The self-play-from-random
@@ -188,8 +197,15 @@ the lab's method), and this file writes down the step it decided.*
 6. **The closing rule.** After random-v9 is read, the random-rollout track closes with a closing decision whatever it
    read, unless its arm is a candidate under point 4's table, when its 4,800-game confirmation decides: holding, the
    track reached its goal (the random opponent model is as good as Forge's for the search, Forge staying in the loop
-   for the searching seat's own continuation and, under random-v9, for half the rollouts); failing, the track closes.
-   The same holds for a J207 candidate's confirmation that holds. The closing decision is written from the track's
+   for the searching seat's own continuation and, under random-v9, for half the rollouts) and closes as reached, its
+   closing decision saying so; failing, the track closes. A J207 candidate's confirmation that holds closes the track
+   the same way, as reached, and random-v9 is not run under this rule: whether a mix is then worth a night is a new
+   question with a decision of its own. **This amends two things in D530 and D531, by name.** Their "nothing closes on
+   a schedule" (D530 point 7's last bullet, D531 point 6) no longer holds: the track closes after random-v9 at the
+   latest, and a confirmation that holds closes it as reached where they had it "stay open". Their SIGNAL stops (NO
+   SIGNAL, SIGNAL AGAINST and the SIGNAL INCONCLUSIVE count, in each rule's *The track closes* paragraph) do not apply
+   from J207 on, since SIGNAL is no longer read (point 3). D523's stop on two successive iterations that lose badly
+   stands. The closing decision is written from the track's
    closing draft with the counters of every iteration, and names what would reopen it (D530 point 7's list: a seating
    where the search decides the random defender's blocks; a learned rollout policy, D522's step 2 with a teacher that
    is not Forge). **The live seat is never changed by any of this**: a candidate that holds is a seat-queue row (D509),
@@ -198,16 +214,17 @@ the lab's method), and this file writes down the step it decided.*
    every kind (the margin rule holds none back) and near search-v2's, with its from-pass share near search-v2's 7.96%
    rather than J202 (b)'s 16.4%; (b)'s overrides above (a)'s at every kind (the lower margin), its attack overrides the
    question, since the random defender's attacks were what D527's margin suppressed (J202 (a), both seats random at
-   margin 20: attack 19.9% against search-v2's 14.8%); both arms' rollouts a decision about J206's (×1.05 search-v2's).
+   margin 20: attack 19.9%; search-v2's, on the other side of J202 (b)'s match, 14.8%); both arms' rollouts a decision about J206's (×1.05 search-v2's).
 8. **The hashes rule (D525 point 3) holds**: a config hash is the seat config's text and the code is pinned by the
    commit (D341). Both arms are new names over existing values; every earlier arm keeps its hash
    (`web/test/ai-ladder.test.ts`).
 
 **Rejected.**
 
-- **Keeping lcb** (`random4-them` with lcb at another margin, or at 20). J206's counters show lcb holding back the
-  overrides that win for search-v2, with nothing left of the excess it was chosen for; a third lcb arm would tune a
-  rule whose reason is gone.
+- **Keeping lcb** (`random4-them` with lcb at another margin, or at 20). J206's counters have lcb holding back a
+  third of the overrides while the arm's from-pass share, the excess lcb was chosen for, already reads under
+  search-v2's; lcb's two iterations read −35.4 and −34.3, then −23.2, and a third lcb arm would tune the rule before
+  the seating has been measured without it.
 - **One arm only, at 40.** (a) alone is the single change from J206; (b) costs one match and asks whether D527's
   margin is still needed at all. Both are registered under point 4's table, and the confirmation is the guard against
   two looks at one night, as at J205.
@@ -221,12 +238,13 @@ the lab's method), and this file writes down the step it decided.*
   random-v9 needs Java, a self-test and a scoring choice, and its margin is what random-v8 measures.
 - **An open-ended track** (D530's rejection of "a last iteration … whatever it reads" as a schedule, and D531 point 6's
   "nothing closes on a schedule"). Reversed here, deliberately: seven iterations and eleven arms have produced no
-  candidate, the best arms (J202 (b) −20.9, J206 −23.2) sit about 20 Elo under search-v2, and each step toward it has
-  come from overriding Forge less, that is from becoming search-v2. random-v9 is the one construction left that could
-  add information rather than replace it; if it does not, the evidence a reopening needs is written down, and the
-  lab's nights go to other questions.
-- **`random4-them` at margin 60.** J204 measured 60 against 40 on `random4` (−24.4 against −20.9), the from-pass
-  excess was its reason, and that reason is gone.
+  candidate, the best three arms (J202 (b) −20.9, J206 −23.2, J204 (a) −24.4) sit within 4 Elo of one another on
+  the same deals, each interval about ±12 to ±14 wide and wholly under 0, across three rules (the margin at 40 and at
+  60, lcb) and both seatings: no change since J202 (b) has moved the point. random-v9 is the one construction left
+  that could add information rather than replace it; if it does not, the evidence a reopening needs is written
+  down, and the lab's nights go to other questions.
+- **`random4-them` at margin 60.** J204 measured 60 against 40 on `random4` (−24.4 against −20.9) and
+  the higher margin read no better; nothing in J206 asks for it.
 - **Checking an absence with `== null`** in J207's job (J206's `failed`, Context). Every checked metric is a 0/1 flag
   or a number.
 
