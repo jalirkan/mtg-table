@@ -99,7 +99,7 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
    the rollout's index" say otherwise, this point replaces them. **Rounds by kind**: under `anytime=1` a decision gets
    as many rounds as the budget allows (at most `maxrounds` 12 complete ones), so a decision with an odd number of
    rounds has **one more Forge round than random ones**, and a decision decided on a single round (`search.anytime.short`)
-   decided on a Forge round alone. Both are counted (point 3's counters), never corrected for.
+   usually decided on round 0, a Forge round (a candidate or Forge's answer that errored once there is paired on round 1). Both are counted (point 3's counters), never corrected for.
 2. **The scoring rule for the two kinds of leaf** (D532 point 5 left it here): **none new.** Both kinds end in the same
    leaf (`SearchPolicy.leaf`, the hand leaf, on the same scale), and the verdict is search-v2's margin rule unchanged:
    Forge's answer is overruled when the best candidate's mean paired difference to it, **pooled unweighted over every
@@ -290,7 +290,7 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
 
 - **Everything that needs the JVM**: that the Java compiles; that the self-test passes; that `SearchPolicy`'s static
   initialization, which the self-test now triggers earlier (`rolloutLimits` and the counters' helpers are static
-  methods of `SearchPolicy`; `explore()`'s case already initialized it later in the same run), behaves the same; that
+  methods of `SearchPolicy`; `randomSeat()`'s cases, through `decisionClock`, already initialized it later in the same run), behaves the same; that
   the pilot's batch lines carry the `search.mix.*` keys as read; and that search-v2's side and every earlier arm play
   as before, which point 3 argues from the code and the self-test's guard checks on the seats alone. TODO(build).
 - **That pooling two kinds of leaf is a sensible estimator.** It is the rule chosen (point 2), not a measured one; the

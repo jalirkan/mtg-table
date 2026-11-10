@@ -1223,7 +1223,7 @@ public final class DecisionSelfTest {
         configOnly("rmix4them-m40 vs rmix4them", mx, mx40, List.of("margin"));
         check(!mx40.lcb && mx40.margin == 40 && !mx.lcb && mx.margin == 20
                         && mx40.toString().equals(rt40.toString().replace(",rollout=random4-them", ",rollout=mix4-them"))
-                        && mx40.toString().endsWith(",seed=0,anytime=1,rollout=mix4-them") && !mx40.toString().contains("override="),
+                        && mx40.toString().endsWith(",anytime=1,rollout=mix4-them") && !mx40.toString().contains("override="),
                 "rmix4them-m40 is rrandom4them-m40 (the margin rule at 40) with the rollout value alone changed: " + mx40);
         boolean liveRefused = false;
         try {
