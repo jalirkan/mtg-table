@@ -1130,6 +1130,53 @@ test('D533: search-v2-rmix4them-m40 and search-v2-rmix4them are D532\'s two arms
   assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D535: the six kind arms are search-v2 with what= alone changed, and no second name carries a corner\'s hash', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const v2 = by.get('search-v1-anytime')!;
+  assert.equal(v2.resolved.what, 'pab', 'search-v2 searches all three kinds');
+  assert.match(v2.cfg!, /,what=pab,/);
+  const arms = [
+    ['search-v2-only-p', 'p', 'cf536ce63aee'],
+    ['search-v2-only-a', 'a', '9f7945dd5b1b'],
+    ['search-v2-only-b', 'b', 'c214a22644a2'],
+    ['search-v2-no-b', 'pa', '59505e241363'],
+    ['search-v2-no-a', 'pb', 'ba2eafaee6fb'],
+    ['search-v2-no-p', 'ab', 'd8508f47552b'],
+  ] as const;
+  const whats = KINDS.search!.params.what?.values ?? [];
+  for (const [name, what, hash] of arms) {
+    assert.ok(whats.includes(what), `the ladder's what enum takes ${what}`);
+    const x = by.get(name);
+    assert.ok(x?.cfg, `${name} is registered and playable`);
+    const xr = raw.players.find((y) => y.name === name)!;
+    assert.equal(xr.kind, v2raw.kind);
+    assert.deepEqual(xr.params, { ...v2raw.params, what }, `${name}'s params are search-v2's with what=${what}`);
+    const xrest: Record<string, unknown> = { ...x!.resolved };
+    const brest: Record<string, unknown> = { ...v2.resolved };
+    delete xrest.what;
+    delete brest.what;
+    assert.deepEqual(xrest, brest, 'every other resolved param is search-v2\'s');
+    assert.equal(x!.cfg, v2.cfg!.replace(',what=pab,', `,what=${what},`), `the seat config is search-v2's with what=${what}`);
+    assert.equal(x!.hash, hash, `${name}'s config hash (D535)`);
+    assert.match(xr.note ?? '', /never the live seat/);
+  }
+  assert.equal(new Set(arms.map(([, w]) => w)).size, 6, 'six different partial corners');
+  assert.equal(new Set(arms.map(([, , h]) => h)).size, 6);
+  // the pab corner is search-v1-anytime itself. A second name for its config would be rated as the first
+  // (Session.side goes by hash) while its batch seeds go by name (Session.spec), so its match would replay
+  // the same few seeds and count no win for it: every corner's hash names exactly one registered player.
+  for (const h of [v2.hash, by.get('policy-outlet')!.hash, ...arms.map(([, , x]) => x)]) {
+    assert.equal(reg.filter((x) => x.hash === h).length, 1, `one registered player has the hash ${h}`);
+  }
+  assert.equal(by.get('search-v2-all'), undefined, 'no alias of search-v2 is registered');
+  assert.equal(by.get('policy-outlet')!.hash, 'e350d94649a4', 'the corner with no search keeps its hash');
+  assert.equal(by.get('forge-default')!.hash, '3ed453ffef1c');
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
