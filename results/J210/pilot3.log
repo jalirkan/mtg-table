@@ -1,0 +1,34 @@
+==== J210 pilot3 started 2026-11-10T18:37:52-05:00 in unit lab-J210-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+ok   the base night: every kind adds alone and is needed, no candidate
+ok   two candidates: the one with less search time a game is taken
+ok   two candidates at the same search time: the earlier in the order is taken
+ok   the candidate bar from below: 8 deals of 600 lost against all (0.0133) is a candidate
+ok   the candidate bar from above: 9 deals of 600 (0.015) is not
+ok   WHOLE not above 0: the night is diagnosed and nothing else is read
+ok   a kind that hurts alone
+ok   a kind whose search hurts when the others are searched: its arm is a candidate
+ok   intervals that include 0 are NOT SHOWN, never no effect
+ok   a corner cut short gives no reading that uses it
+ok   all cut short: LAST, WHOLE and the candidates are read against J194 (a)
+ok   all missing and J194 (a) missing: nothing is read
+ok   another hash in a match file: that corner is not read
+ok   the players swapped in a match file
+ok   rows of another config under the match id
+ok   a match on other deal blocks
+ok   fewer than 590 shared deals
+ok   an unsearched kind with searched decisions
+ok   a searched kind with none
+ok   the corner with no search searched
+ok   Forge's side searched
+ok   draws are dropped from a deal, as the ladder drops them
+ok   a match line whose score is not its rows'
+ok   J194 (a) under another hash: no replication, the night unchanged
+ok   too many timeouts in a match
+{"selftest":1,"cases":25,"passed":25,"ok":1}
+{"written":1,"refValid":1,"allJ194":1,"present":0,"valid":0,"readings":0,"candidates":0,"refPlayed":1200,"refDeals":600,"refBlocks":150,"refScore":0.6233}
+{"run":"run-c","lines":3,"aExact":1,"bExact":2,"aOther":2,"bOther":1,"ok":0,"aOtherSeen":["Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pa,seed=0,anytime=1","Default"],"bOtherSeen":["Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=a,seed=0,anytime=1"]}
+{"ok":1}
+{"names":1,"played":4,"complete":1,"bad":1,"p":0,"a":7,"b":0,"searched":7,"forge":0,"ms":812.5,"sums":1}
+{"names":0,"played":4,"complete":0,"bad":0,"p":0,"a":7,"b":0,"searched":9,"forge":2,"ms":812.5,"sums":0}
+{"names":0,"played":0,"complete":0,"bad":0,"p":0,"a":0,"b":0,"searched":0,"forge":0,"ms":0,"sums":1}
+{"ok":1}
