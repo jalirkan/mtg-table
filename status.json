@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T01:07:07-05:00",
- "heartbeat": "2026-11-10T01:07:07-05:00",
+ "updated": "2026-11-10T01:10:20-05:00",
+ "heartbeat": "2026-11-10T01:10:20-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -29,14 +29,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.95,
-  "memUsedGb": 12.7,
+  "load1": 6.88,
+  "memUsedGb": 6.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4916,
+  "swapUsedMb": 4680,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -46,21 +46,21 @@
    "id": "J204",
    "title": "Random rollouts, iteration 4 (random-v5, no new rollout logic): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4-m60, J202 (b)'s search-v2-rrandom4-m40 with the search's override margin at 60 instead of 40 (rollout=random4 unchanged, both seats), read under D527's table; and (b) policy-outlet, the seat search-v2 sits on with the search off (Default+outlets, the baseline the arm converges on as the margin rises), never played on this host; then D528's SIGNAL reading, (a)'s Elo minus (b)'s on the same deals with both intervals' noise (SIGNAL SHOWN keeps the random-rollout track open on the margin/LCB line; NO SIGNAL or SIGNAL AGAINST closes it unless (a) is a candidate), alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 2/3",
+   "phase": "commands 3/3",
    "started": "2026-11-09T21:06:54-05:00",
-   "elapsed": 14413,
-   "done": 2336,
+   "elapsed": 14606,
+   "done": 2376,
    "total": 2400,
    "unit": "games",
-   "ratePerHour": 710,
-   "eta": "2026-11-10T01:12:32-05:00",
-   "workers": 5,
+   "ratePerHour": 759.9,
+   "eta": "2026-11-10T01:12:14-05:00",
+   "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T01:06:24-05:00",
-   "memGb": 5.66,
+   "dataUpdated": "2026-11-10T01:09:37-05:00",
+   "memGb": 0.01,
    "live": {
     "cma.played": 1200,
     "cma.score": 0.465,
@@ -194,7 +194,7 @@
      "pressure": 0.7
     }
    ],
-   "detail": "lab-J204-run2"
+   "detail": "lab-J204-run3"
   }
  ],
  "queue": [],
