@@ -11,7 +11,8 @@ case, tests and this file. **Three files under `bridge/src` change** — `Search
 `SearchPolicy.java` (the round's index reaches the rollout's seats, and the mix's counters) and `DecisionSelfTest.java`
 (the case) — and no earlier value's behaviour does (point 3): the live seat, the atlas's random seat (D508's frozen
 population), D523's to D532's arms, the wire and the protocol are unchanged, so this is free under D509.
-**Prepared while J208 runs, before its reading, and merged only on one of them**: J208's verdict says `v9` 1 (both
+**Prepared while J208 ran, before its reading, to be merged only on one of them (the first happened: Context)**:
+J208's verdict says `v9` 1 (both
 arms to diagnose, not both losing badly), or a J208 confirmation fails and D532 point 4 sends the track here. If J208
 finds a candidate whose confirmation holds, or closes the track (both arms losing badly), this lane is shelved,
 unmerged, and this number stays unused (D200).*
@@ -63,9 +64,11 @@ the pilot supplied are filled in where the first draft marked them.
   block) and the priority directions (from a pass / to another play / to a pass, of priority decisions): (a) 15.3% /
   14.1% / 17.5% and 6.70% / 5.58% / 3.03%; (b) 20.1% / 17.7% / 22.0% and 8.87% / 6.99% / 4.29%; J206's arm (lcb at 40)
   11.2% / 8.5% / 11.6% and 5.11% / 4.17% / 1.94%; search-v2's side in J208's two matches 19.1% / 14.6–15.3% /
-  18.0% and 8.05–8.08% / 6.27–6.34% / 4.68–4.81%. As D532 point 7 expected, not registered: the from-pass excess
-  of the both-seats-random arm at margin 40 (J202 (b): 16.4%) is absent under the margin rule with the opponent alone random, at
-  either margin. Information, deciding nothing, each about ±19 between two lines: (a) minus J206's arm +4.1, (a) minus
+  18.0–18.1% and 8.05–8.08% / 6.27–6.34% / 4.68–4.81%. Of what D532 point 7 expected (not registered): the from-pass
+  share is far below the both-seats-random arms' at either margin (J202 (b), margin 40: 16.4%; J202 (a), margin 20:
+  19.2%), (a)'s under search-v2's and (b)'s 0.8 points above it; (a)'s overrides are above J206's in every kind, but
+  its priority overrides sit about 4 points under search-v2's rather than near them; (b)'s are above (a)'s, attack
+  and block above search-v2's. Information, deciding nothing, each about ±19 between two lines: (a) minus J206's arm +4.1, (a) minus
   J202 (b) +1.8, (b) minus (a) −0.6.
 - **What D532 point 5 fixed, and what it left here.** Fixed: "Each candidate's rollouts alternate, within a round,
   between search-v2's own Forge rollout (both seats Forge's Default AI) and a `random4-them` rollout (the opponent
@@ -302,7 +305,8 @@ the pilot supplied are filled in where the first draft marked them.
 - **The build** (`./bridge/build.sh` on the lane after J208 ended: the lint's self-test, the lint, javac, the
   self-tests): `build OK`, first compile, `decision selftest: 392 check(s), 0 failure(s)`.
 - **The pilot** (4 games of `search-v2-rmix4them-m40` against `search-v1-anytime`, one worker, on the lane): 4 of 4
-  complete, 0 errors; the arm searched 100 decisions on 715 rounds, **383 Forge rounds and 332 random ones** (3.83 and
+  complete, 0 errors; the arm searched 100 decisions on 715 rounds holding a leaf (705 complete, `search.rounds`), **383 Forge rounds
+  and 332 random ones** (3.83 and
   3.32 a decision), 1,057 Forge rollouts and 848 random ones, their sum the arm's 1,905 `search.rollouts`;
   `search.rr.rollouts` 857, at least the random count; no `search.mix.*` or `search.rr.*` on search-v2's side and no
   `search.lcb.*` on either; 19.05 rollouts a decision against search-v2's 18.1. Of the 34 decisions where the best
