@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T06:37:16-05:00",
- "heartbeat": "2026-11-10T06:37:16-05:00",
+ "updated": "2026-11-10T06:38:21-05:00",
+ "heartbeat": "2026-11-10T06:38:21-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,14 +39,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.55,
-  "memUsedGb": 8.7,
+  "load1": 4.73,
+  "memUsedGb": 6.3,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4034,
+  "swapUsedMb": 3880,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -56,21 +56,21 @@
    "id": "J205",
    "title": "Random rollouts, iteration 5 (random-v6, no new rollout logic): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2), of the two registered arms D350's override=lcb (z 1) on rollout=random4 at margins 60 and 40, both read under D527's table: (a) the arm at J204's v6Margin (40, so search-v2-rrandom4-lcb-m40: J204 (a) minus J202 (b) read -3.5; the job reads it from J204's match lines), which alone is read for D528's SIGNAL against J204 (b)'s policy-outlet line on the same deals (not replayed), with the count of successive SIGNAL INCONCLUSIVE readings re-read from J204's match lines; (b) the other margin; alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 2/3",
+   "phase": "commands 3/3",
    "started": "2026-11-10T01:35:08-05:00",
-   "elapsed": 18129,
-   "done": 2376,
+   "elapsed": 18193,
+   "done": 2392,
    "total": 2400,
    "unit": "games",
-   "ratePerHour": 509,
-   "eta": "2026-11-10T06:40:06-05:00",
-   "workers": 6,
+   "ratePerHour": 508.9,
+   "eta": "2026-11-10T06:39:18-05:00",
+   "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T06:36:33-05:00",
-   "memGb": 2.6,
+   "dataUpdated": "2026-11-10T06:37:38-05:00",
+   "memGb": 0.01,
    "live": {
     "cma.played": 1200,
     "cma.score": 0.4492,
@@ -195,7 +195,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J205-run2"
+   "detail": "lab-J205-run3"
   }
  ],
  "queue": [],
