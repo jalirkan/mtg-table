@@ -2,18 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T09:30:49-05:00
+- time: 2026-11-10T09:31:03-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
-- state: running
+- state: idle
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
 - ALERT: J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J206 commands 2/2, 1192/1200 games, 540.6/h, ETA 2026-11-10T09:31:42-05:00, 7 worker(s), 1 core(s)
-- cores: 1 of 14 in use (the running jobs' widths; 16 threads)
-- load: 4.65; memory 8/30.5 GB, swap 4238 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 14 in use (the running jobs' widths; 16 threads)
+- load: 4.06; memory 8/30.5 GB, swap 4237 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J205 done at 2026-11-10T06:38:35-05:00: v.v6Margin 40 · cma.played 1200 · cma.score 0.449 · cma.lo 0.429 · cma.hi 0.469 · cma.elo -35.4 · cma.eloLo -49.5 · cma.eloHi -21.5 · cma.aSearch.msPerDecision 933.913 · cma.bSearch.msPerDecision 931.436 · roa.aRolloutsPerDecision 17.15 · roa.bRolloutsPerDecision 15.28 · roa.ratio 1.122 · roa.aLcb.overrode 4669 · roa.aLcb.held 2849 · roa.aLcb.none 20071 · roa.aLcbHeldShare 0.379 · roa.aPriorityShare.fromPass 0.114 · roa.bPriorityShare.fromPass 0.08 · roa.aPerRollout.v2_ownStack 2.494 · roa.aPerRollout.v3_goodBlock 0.022 · roa.aRrFailures 37 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 0 · v.a.losesBadly 1 · v.a.candidate 0 · v.a.sameDeals 1 · cmb.played 1200 · cmb.elo -34.3 · cmb.eloLo -47.8 · cmb.eloHi -20.9 · v.b.shown 0 · v.b.inconclusive 0 · v.b.indistinguishable 0 · v.b.worseNotBadly 0 · v.b.losesBadly 1 · v.b.candidate 0 · v.signal.diff 49 · v.signal.hw 20.7 · v.signal.lo 28.3 · v.signal.hi 69.7 · v.signal.signalShown 1 · v.signal.signalAgainst 0 · v.signal.noSignal 0 · v.signal.signalInconclusive 0 · v.j204.count 0 · v.signalInconclusiveCount 0 · v.countCloses 0 · v.j204.losesBadly 0 · v.iterationLosesBadly 1 · v.loopStops 0 · v.trackCloses 0 · v.closingWaits 0 · v.keepsOpen 1 · v.confirmA 0 · v.confirmB 0 · v.iterate 1 · v.replayBaseline 0 · v.ruleEffect -14.5 · v.signalB.diff 50.1 · v.bMinusA 1.1 · bsa.min 114900000 · bs4.min 114900000 · v.repost 0 · wa.lost 661
+- last finished: J206 failed at 2026-11-10T09:31:02-05:00: cma.played 1200 · cma.score 0.467 · cma.lo 0.45 · cma.hi 0.483 · cma.elo -23.2 · cma.eloLo -34.7 · cma.eloHi -11.7 · cma.aSearch.msPerDecision 934.297 · cma.bSearch.msPerDecision 916.771 · roa.aRolloutsPerDecision 16.28 · roa.bRolloutsPerDecision 15.45 · roa.ratio 1.054 · roa.aLcb.overrode 3034 · roa.aLcb.held 1669 · roa.aLcb.none 23615 · roa.aLcbHeldShare 0.355 · roa.aPriorityShare.fromPass 0.051 · roa.bPriorityShare.fromPass 0.08 · roa.aPerRollout.v2_ownStack 0.435 · roa.aPerRollout.v3_goodBlock 0.016 · roa.aRrFailures 0 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 1 · v.a.losesBadly 0 · v.a.candidate 0 · v.a.sameDeals 1 · v.signal.diff 61.2 · v.signal.hw 19.1 · v.signal.lo 42.1 · v.signal.hi 80.3 · v.signal.signalShown 1 · v.signal.signalAgainst 0 · v.signal.noSignal 0 · v.signal.signalInconclusive 0 · v.j205.count 0 · v.signalInconclusiveCount 0 · v.countCloses 0 · v.j205.iterationLosesBadly 1 · v.iterationLosesBadly 0 · v.loopStops 0 · v.trackCloses 0 · v.closingWaits 0 · v.keepsOpen 1 · v.confirm 0 · v.newDecision 1 · v.replayBaseline 0 · v.aMinusJ205a 12.2 · v.aMinusJ202b -2.3 · bsa.min 114900000 · bs4.min 114900000 · v.repost 0 · wa.lost 640
 
 ## Messages
 
