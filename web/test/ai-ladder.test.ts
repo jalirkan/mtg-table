@@ -992,6 +992,43 @@ test('D530: search-v2-rrandom4-lcb-m60 and -lcb-m40 are search-v2-rrandom4-m60 a
   assert.equal(by.get('search-v1-anytime')!.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
 });
 
+test('D531: search-v2-rrandom4them-lcb-m40 is search-v2-rrandom4-lcb-m40 with rollout=random4-them, and nothing else', () => {
+  const raw = JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')) as Registry;
+  const reg = players(raw, REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2raw = raw.players.find((p) => p.name === 'search-v1-anytime')!;
+  const name = 'search-v2-rrandom4them-lcb-m40';
+  const x = by.get(name);
+  assert.ok(x?.cfg, `${name} is registered and playable`);
+  const xr = raw.players.find((y) => y.name === name)!;
+  assert.equal(xr.kind, v2raw.kind);
+  assert.deepEqual(xr.params, { ...v2raw.params, margin: 40, override: 'lcb', z: '1', rollout: 'random4-them' },
+    `${name}'s params are search-v2's plus margin 40, override lcb at D350's z of 1, and rollout random4-them`);
+  const base = by.get('search-v2-rrandom4-lcb-m40')!;
+  const xrest: Record<string, unknown> = { ...x!.resolved };
+  const brest: Record<string, unknown> = { ...base.resolved };
+  delete xrest.rollout;
+  delete brest.rollout;
+  assert.deepEqual(xrest, brest, "every other resolved param is search-v2-rrandom4-lcb-m40's: J205's deciding arm's verdict unchanged");
+  assert.equal(x!.resolved.rollout, 'random4-them');
+  assert.equal(base.resolved.rollout, 'random4');
+  assert.equal(x!.cfg, base.cfg!.replace(/,rollout=random4$/, ',rollout=random4-them'),
+    'the seat config is search-v2-rrandom4-lcb-m40\'s with the rollout value alone changed');
+  assert.match(x!.cfg!, /,margin=40,.*,override=lcb,z=1,anytime=1,rollout=random4-them$/);
+  assert.equal(x!.hash, '01e2aba2d33e', `${name}'s config hash (D531)`);
+  assert.match(xr.note ?? '', /never the live seat/);
+  assert.ok((KINDS.search!.params.rollout?.values ?? []).includes('random4-them'),
+    "the ladder's rollout enum takes random4-them");
+  assert.ok(!by.has('search-v2-rrandom4them-lcb-m60'), 'D530 point 7 registers one random-v7 arm, at v6Margin (40)');
+  for (const [n, hash] of [['search-v2-rrandom4', '646d59a008f6'], ['search-v2-rrandom4-m40', '968c9003c616'],
+    ['search-v2-rrandom4-m60', '216e66d89fe3'], ['search-v2-rrandom4-lcb-m60', 'd6d75fdefd25'],
+    ['search-v2-rrandom4-lcb-m40', '98eea870967e'], ['search-v2-rrandom-self', 'd3aa28be73b2'],
+    ['policy-outlet', 'e350d94649a4']] as const) {
+    assert.equal(by.get(n)!.hash, hash, `${n} keeps its hash`);
+  }
+  assert.equal(by.get('search-v1-anytime')!.hash, 'cdd55e02a89c', "search-v2's hash is unchanged");
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');

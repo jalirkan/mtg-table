@@ -150,6 +150,7 @@ public final class DecisionSelfTest {
         rolloutRandom();
         rolloutRandomV3();
         rolloutRandomV4();
+        rolloutRandomV4Them();
         explore();
         randomSeat();
 
@@ -930,6 +931,82 @@ public final class DecisionSelfTest {
     }
 
     /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */
+    /**
+     * D531 (random-v7, pre-registered by D530 point 7): {@code rollout=random4-them}, a seating never run or
+     * self-tested before -- the opponent's rollout seat random-v4 (R8 made lethal-aware, as under {@code random4}),
+     * the searching seat no random seat at all (plain Forge, its candidate forced first, as search-v2's rollouts):
+     * {@code random-self}'s seating reversed.  Checked on the config, on its random seat's settings, and on the
+     * {@link SearchPolicy.Limits} that {@code SearchPolicy.rollout} builds from it, whose two booleans are what
+     * {@code playout} reads to seat each player.  The arm, {@code search-v2-rrandom4them-lcb-m40}, is
+     * {@code search-v2-rrandom4-lcb-m40} with the rollout value alone changed.
+     */
+    private static void rolloutRandomV4Them() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig r4 = SearchConfig.parse(v2Text + ",rollout=random4");
+        final SearchConfig rs = SearchConfig.parse(v2Text + ",rollout=random-self");
+        final SearchConfig rt = SearchConfig.parse(v2Text + ",rollout=random4-them");
+        check(!rt.rolloutRandomUs() && rt.rolloutRandomThem() && rt.rolloutRandomV4() && !rt.rolloutRandomV3()
+                && !rt.rolloutOutletsUs() && !rt.rolloutOutletsThem(),
+                "random4-them: the opponent's rollout seat random-v4; the searching seat no random seat, no outlet policy");
+        check(r4.rolloutRandomUs() && r4.rolloutRandomThem() && rs.rolloutRandomUs() && !rs.rolloutRandomThem(),
+                "random4 still seats both, random-self still the searching seat alone: random4-them is the one us-false, "
+                        + "them-true value");
+        final ExploreMath.Config st = rt.rolloutRandomSeat();
+        final ExploreMath.Config s4 = r4.rolloutRandomSeat();
+        check(st.v2 && st.goodBlock && st.lethalGood && !st.heldInstant && st.random && st.epsilon == 1 && !st.opening
+                && st.v2 == s4.v2 && st.goodBlock == s4.goodBlock && st.lethalGood == s4.lethalGood
+                && st.heldInstant == s4.heldInstant && st.random == s4.random && st.epsilon == s4.epsilon
+                && st.closeCall == s4.closeCall && st.opening == s4.opening,
+                "random4-them's random seat is random4's: random-v2 plus R8 made lethal-aware, no R9");
+        final SearchPolicy.Limits lt = new SearchPolicy.Limits(0L, 0, 20_000, rt.untapped, rt.oracle,
+                rt.rolloutOutletsUs(), rt.rolloutOutletsThem(), false, null, null, null,
+                rt.rolloutRandomUs(), rt.rolloutRandomThem(), rt.rolloutRandomSeat());
+        check(!lt.randomUs && lt.randomThem && lt.randomSeat.lethalGood && !lt.outletsUs && !lt.outletsThem && lt.line == null,
+                "random4-them's rollout limits: playout seats the searching seat as plain Forge (RolloutController) and "
+                        + "the opponent alone as RolloutController.Random on random-v4");
+        final SearchPolicy.Limits ls = new SearchPolicy.Limits(0L, 0, 20_000, rs.untapped, rs.oracle,
+                rs.rolloutOutletsUs(), rs.rolloutOutletsThem(), false, null, null, null,
+                rs.rolloutRandomUs(), rs.rolloutRandomThem(), rs.rolloutRandomSeat());
+        check(ls.randomUs && !ls.randomThem && lt.randomUs == ls.randomThem && lt.randomThem == ls.randomUs,
+                "random4-them's seating is random-self's reversed");
+        check(rt.toString().equals(v2.toString() + ",rollout=random4-them"), "the text is search-v2's plus rollout=random4-them: " + rt);
+        configOnly("rrandom4-them", v2, rt, List.of("rollout"));
+        configOnly("rrandom4-them vs rrandom4", r4, rt, List.of("rollout"));
+        final String lcb40 = v2Text.replace(",margin=20,", ",margin=40,").replace(",seed=0,", ",seed=0,override=lcb,z=1,");
+        final SearchConfig r4l = SearchConfig.parse(lcb40 + ",rollout=random4");
+        final SearchConfig rtl = SearchConfig.parse(lcb40 + ",rollout=random4-them");
+        configOnly("rrandom4them-lcb-m40 vs rrandom4-lcb-m40", r4l, rtl, List.of("rollout"));
+        check(rtl.lcb && rtl.z == 1.0 && rtl.margin == 40 && !rtl.rolloutRandomUs() && rtl.rolloutRandomThem()
+                && rtl.toString().equals(r4l.toString().replace(",rollout=random4", ",rollout=random4-them"))
+                && rtl.toString().contains(",override=lcb,z=1,") && rtl.toString().endsWith(",anytime=1,rollout=random4-them"),
+                "rrandom4them-lcb-m40 is rrandom4-lcb-m40's verdict (lcb, z 1, margin 40) with the opponent alone random: " + rtl);
+        boolean liveRefused = false;
+        try {
+            SearchConfig.parseLive("rollout=random4-them");
+        } catch (final IllegalArgumentException e) {
+            liveRefused = e.getMessage().contains("measurement only");
+        }
+        check(liveRefused, "parseLive refuses rollout=random4-them although the searching seat is not random "
+                + "(measurement only: the test is either seat)");
+        for (final String r : List.of("default", "outlets", "both")) {
+            boolean ok = true;
+            try {
+                SearchConfig.parseLive("rollout=" + r);
+            } catch (final IllegalArgumentException e) {
+                ok = false;
+            }
+            check(ok, "parseLive still takes rollout=" + r + " (its random test is either seat, and these seat none)");
+        }
+        boolean unknown = false;
+        try {
+            SearchConfig.parse("rollout=random5");
+        } catch (final IllegalArgumentException e) {
+            unknown = e.getMessage().contains("random4-them");
+        }
+        check(unknown, "an unknown rollout= is refused, naming random4-them");
+    }
+
     private static void configOnly(final String what, final SearchConfig a, final SearchConfig b, final List<String> only) {
         int compared = 0;
         final List<String> differ = new ArrayList<>();
