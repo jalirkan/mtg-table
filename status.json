@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T10:51:25-05:00",
- "heartbeat": "2026-11-10T10:51:25-05:00",
+ "updated": "2026-11-10T10:51:51-05:00",
+ "heartbeat": "2026-11-10T10:51:51-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,14 +39,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.72,
-  "memUsedGb": 8.4,
+  "load1": 3.68,
+  "memUsedGb": 8.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 4080,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 3,
   "coresTotal": 14
  },
  "running": [
@@ -56,21 +56,21 @@
    "id": "J208",
    "title": "Random rollouts, iteration 7 (random-v8, no new Java: rollout=random4-them on the margin rule): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4them-m40, J206's arm without override=lcb (the rollout's opponent random-v4, the searching seat's own continuation Forge's, the margin rule at 40), then (b) search-v2-rrandom4them, the same at search-v2's own margin of 20; each read from its own match under D527's table (its SHOWN row restated by D530 point 7); a candidate goes to a 4,800-game confirmation, both arms losing badly close the random-rollout track, otherwise random-v9 (a per-rollout mix, the track's last iteration) at the better arm's margin; alone on the machine",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/4",
    "started": "2026-11-10T10:51:25-05:00",
-   "elapsed": 0,
+   "elapsed": 26,
    "done": 0,
    "total": 2400,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
+   "workers": 3,
+   "workersMax": 3,
+   "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-10T10:51:25-05:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "cma.played": 0,
     "cma.score": 0,
@@ -152,7 +152,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J208-prepare"
+   "detail": "lab-J208-pilot1"
   }
  ],
  "queue": [],
