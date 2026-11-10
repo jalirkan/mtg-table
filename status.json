@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-09T21:05:19-05:00",
- "heartbeat": "2026-11-09T21:05:19-05:00",
+ "updated": "2026-11-09T21:06:39-05:00",
+ "heartbeat": "2026-11-09T21:06:39-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,14 +19,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 17.17,
-  "memUsedGb": 12.5,
+  "load1": 26,
+  "memUsedGb": 8.3,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4704,
+  "swapUsedMb": 4692,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -36,24 +36,24 @@
    "id": "J203",
    "title": "Judge the judge, unselected -- does J200's KNOWLEDGE SHOWN hold on decisions nobody chose? 160 move-atlas decisions drawn at random (seed 203, stratified by kind, no filter on confidence, disagreement or either map), each read blind by two judges for a first choice, a second choice and a confidence; set i (both judges on one option that is not Forge's) branched on D451's Forge map for Forge's option and theirs, exactly as J200; set ii (both judges on Forge's option) branched for Forge's option and their second choice, as a control; set iii (the judges split) recorded, not branched; two pre-registered readings: J200's rule on set i (KNOWLEDGE SHOWN, NOT SHOWN or INCONCLUSIVE) and the control on set ii (CONTROL HOLDS, FAILS or INCONCLUSIVE)",
    "cpu": "heavy",
-   "phase": "commands 2/3",
+   "phase": "commands 3/3",
    "started": "2026-11-09T18:05:49-05:00",
-   "elapsed": 10770,
-   "done": 10461,
+   "elapsed": 10850,
+   "done": 10550,
    "total": 10720,
    "unit": "lines",
-   "ratePerHour": 2789.8,
-   "eta": "2026-11-09T21:10:53-05:00",
+   "ratePerHour": 2923.2,
+   "eta": "2026-11-09T21:10:08-05:00",
    "workers": 6,
    "workersMax": 6,
-   "cores": 7,
+   "cores": 1,
    "errors": 14,
    "paused": false,
-   "dataUpdated": "2026-11-09T21:04:39-05:00",
-   "memGb": 5.39,
+   "dataUpdated": "2026-11-09T21:05:46-05:00",
+   "memGb": 0.01,
    "live": {
-    "branches": 10461,
-    "spines_done": 57,
+    "branches": 10550,
+    "spines_done": 59,
     "branch_errors": 14,
     "branch_timeouts": 14,
     "replay_diverged": 2,
@@ -66,7 +66,7 @@
     "v.controlFails": 0,
     "v.checks.problems": -1,
     "data_free_gb": 310.2,
-    "elapsed_s": 10730,
+    "elapsed_s": 10796,
     "engine_errors": 14,
     "peak_worker_rss_gb": 1.58,
     "pressure_events": 2,
@@ -109,7 +109,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J203-run2"
+   "detail": "lab-J203-run3"
   }
  ],
  "queue": [
