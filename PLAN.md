@@ -17,7 +17,7 @@ commit.
 **The index below lists 399 items still open across 44 follow-up lists** — 367
 open, 20 partly done, 3 not reproduced, 2 standing and 3 accepted, recounted
 from the table's own rows at D495's merge of `3d78fc18` (the header before it
-said 371 across 42, three rows and one list behind its table) — D528 (2026-11-09) added the cube lab's 47 (random-v5 and the seat under the search, [its entry](#d528-random-v5)); D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
+said 371 across 42, three rows and one list behind its table) — D530 (2026-11-10) added the cube lab's 49 (random-v6, [its entry](#d530-random-v6)); D528 (2026-11-09) added the cube lab's 47 (random-v5 and the seat under the search, [its entry](#d528-random-v5)); D527 (2026-11-09) added the cube lab's 46 (random-v4, [its entry](#d527-random-v4)); D526 (2026-11-09) added the cube lab's 45 (the runner's memory fit, `docs/decisions/D526-runner-memory-fit.md`); D525 (2026-11-09) added the cube lab's 44 (random-v3, [its entry](#d525-random-v3)); D523 (2026-11-08) added the cube lab's 42 (random rollouts, [its entry](#d523-random-rollouts)) and D524 its 43 (the atlas's `--only`); D519 (2026-11-08) closed the knob track in the cube lab's 38, now partly (its rollout counter stays open, diagnostic only), and added none; D520 (2026-11-08) added the cube lab's 40 and D521 its 41; D518
 (2026-11-07) added the cube lab's 39; D517
 (2026-11-07) added the cube lab's 38; D516
 (2026-11-06) closed the move atlas release's 3 and 4, marked its 2 accepted and
@@ -463,7 +463,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 44 | open | **Read**: J201 (a) −30.8 [−44.4, −17.2] and (b) −29.6 [−43.7, −15.6], both losing badly (D527). D525's random-v3 arms, a chain of single additions on both rollout seats: `search-v2-rrandom3` (`rollout=random3`: random-v2 plus R8 — a blocker that can block an attacker, destroy it and survive takes that block, `search.rr.v3.goodBlock` — against J199 (a)) and `search-v2-rrandom3-held` (`random3-held`: R8 plus R9 — a harmful instant or ability on the opponent's turn waits for combat after blockers or the end step, `search.rr.v3.heldInstant` — against `rrandom3` on the same night: the difference is R9) are registered and unplayed, from J199's: (a) `rrandom` lost badly, −43.7 Elo [−57.1, −30.4], and (b) `rrandom-self` read worse, not badly, −25.5 [−38.3, −12.8]: 18 Elo of the loss is the random opponent; the diagnosis (the random defender rarely takes the block that kills the attacker, so the search overrides Forge's "attack none" ×1.55 as often, and loses those games); the `-self` path pauses at −25.5 (neither rule acts there): J201, `rrandom3` then `rrandom3-held`, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D525's copy of D523's rule; then D523's iteration loop | `docs/decisions/D525-random-v3-good-block.md` |
 | [Cube lab](#fu-cube-lab) | 45 | open | D526's runner starts a step that cannot get its full memory with as many workers as fit (at least two; J201's run2 waited at 08:50:56 for 21.4 GB with 19.6 free, five workers' worth, beside a GPU painter's ~6 GB), raises it toward its sized count as memory frees (the backoff's raise, capped by what fits), waits (`memory-wait`, `degraded`) only under two, and alerts the start as `memory-fit`, never `degraded`; built on `pc/runner-memory-fit` and not merged: the merger runs the full gate, then `tools/runner.sh install` only while the runner is idle; ForgeCoach's `#lab` page learns `memory-fit` | `docs/decisions/D526-runner-memory-fit.md` |
 | [Cube lab](#fu-cube-lab) | 46 | open | **Read**: J202 (a) −39.5 [−53.9, −25.3] losing badly, (b) −20.9 [−34.1, −7.7] worse, not badly (D528). D527's random-v4 arms, a chain of single changes: `search-v2-rrandom4` (`rollout=random4`, both seats: `random3` with R8 made lethal-aware — under a lethal attack a good block is made only if the seat survives it, and after a dead draw R2's redraws keep the surviving assignment with the most good blocks, `search.rr.v4.goodBlockLethal`; no R9) and `search-v2-rrandom4-m40` (the same with the override margin 40 for 20; against `rrandom4` on the same night) are registered and unplayed, from J201's: (a) `rrandom3` lost badly, −30.8 Elo [−44.4, −17.2], +12.9 on J199 (a), with R2 rejecting R8's block ×7 as often as R8 made one (`v3.goodBlockDead` 0.147 a rollout, `goodBlock` 0.021), and (b) R8 + R9 lost badly too (−29.6 [−43.7, −15.6]), R9 adding nothing measurable: J202, `rrandom4` then `rrandom4-m40`, each 1,200 games on the confirm set against search-v2, `alone: yes`, on D527's rule; then the loop, which stops if both lose badly | `docs/decisions/D527-random-v4-lethal-good-block.md` |
-| [Cube lab](#fu-cube-lab) | 47 | open | D528's random-v5, no new rollout logic: `search-v2-rrandom4-m60` (`random4` at the override margin 60; J202 read `rrandom4` −39.5 Elo [−53.9, −25.3], losing badly, and `rrandom4-m40` −20.9 [−34.1, −7.7], worse, not badly, the margin cutting its overrides of Forge from 33.3% to 26.4% of searched decisions) and the baseline `policy-outlet` (search-v2's seat with the search off; no line of it on this host, `forge-default`'s J194 (a) −87.5 being one rule away) are unplayed: J204, each 1,200 games on the confirm set against search-v2, `alone: yes`; D527's table for the arm, and the SIGNAL rule (arm minus baseline) that closes the random-rollout track on NO SIGNAL or AGAINST | `docs/decisions/D528-random-v5-margin-and-forge-baseline.md` |
+| [Cube lab](#fu-cube-lab) | 47 | open | **Read**: TODO(J204): J204 (a) `search-v2-rrandom4-m60` Elo [eloLo, eloHi] and its D527 reading, (b) `policy-outlet` Elo [eloLo, eloHi], SIGNAL diff [lo, hi] and its reading, `v6Margin` (D530). D528's random-v5, no new rollout logic: `search-v2-rrandom4-m60` (`random4` at the override margin 60; J202 read `rrandom4` −39.5 Elo [−53.9, −25.3], losing badly, and `rrandom4-m40` −20.9 [−34.1, −7.7], worse, not badly, the margin cutting its overrides of Forge from 33.3% to 26.4% of searched decisions) and the baseline `policy-outlet` (search-v2's seat with the search off; no line of it on this host, `forge-default`'s J194 (a) −87.5 being one rule away) are unplayed: J204, each 1,200 games on the confirm set against search-v2, `alone: yes`; D527's table for the arm, and the SIGNAL rule (arm minus baseline) that closes the random-rollout track on NO SIGNAL or AGAINST | `docs/decisions/D528-random-v5-margin-and-forge-baseline.md` |
+| [Cube lab](#fu-cube-lab) | 49 | open | D530's random-v6, no new rollout logic: D350's `override=lcb` (z 1: the best candidate's paired difference to Forge's answer must clear the margin by one standard error, over at least 3 paired rounds) on `random4`, two registered arms, `search-v2-rrandom4-lcb-m60` (`d6d75fdefd25`) and `-lcb-m40` (`98eea870967e`), unplayed: J205, each 1,200 games on the confirm set against search-v2, `alone: yes`, pinned to D530's own merge (merged alone, before D529's); both arms under D527's table (a candidate from either gets its own 4,800-game confirmation; the iteration loses badly only when both do), SIGNAL on the arm at J204's `v6Margin` against J204 (b)'s `policy-outlet` line on the same deals (not replayed; the pilot checks the code and set, the verdict the blocks), the count of successive SIGNAL INCONCLUSIVE readings re-read from J204's match lines (two close the track); random-v7 pre-registered as `rollout=random4-them` (the opponent random, the searching seat's own continuation Forge's: at margin 40 the arm's priority overrides stay +12.7 points above search-v2's, two thirds of it pass-to-play at ×2.01 and a third play-to-other-play at ×1.68, and J199's `random-self` had the same priority pattern); after it only the existing stops close the track | `docs/decisions/D530-random-v6-lcb.md` |
 | [Move atlas release](#fu-move-atlas) | 1 | open | The owner's: flip the repository public, upload the dataset zip and list it, with the attribution the owner wants | `tools/atlas/release.py` |
 | [Move atlas release](#fu-move-atlas) | 2 | accepted | The owner's: 206 commits on `main` are authored with the owner's email address, which a public history shows (accepted 2026-11-06, D516: no rewrite) | — |
 | [Move atlas release](#fu-move-atlas) | 5 | open | J186's refused- and lost-cast fields are null in the release: its frame-log scan never ran | `tools/atlas/metrics.py` |
@@ -10481,6 +10482,8 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    both arms, so if both of J202's arms lose badly the loop stops and the owner is told).
 
 47. **D528's random-v5 is registered and unplayed: J204, the margin at 60 and the seat under the search.**
+   **Read**: TODO(J204): J204 (a) Elo [eloLo, eloHi] and its D527 reading, (b) Elo [eloLo, eloHi], SIGNAL diff [lo, hi] and
+   its reading, `v6Margin` (D530).
    (2026-11-09, D528, amending D527.) J202 read random-v4: (a) `search-v2-rrandom4` lost badly (−39.5 Elo [−53.9,
    −25.3]; R8 made lethal-aware fired 0.0022 a random rollout and did nothing), (b) `search-v2-rrandom4-m40` worse,
    not badly (−20.9 [−34.1, −7.7]), +18.6 on (a)'s point; the margin made the search override Forge less (33.3% of
@@ -10498,6 +10501,26 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    registered: SIGNAL SHOWN by a wide margin (J202 (b) − `forge-default` = +66.6, about ±20). **Open:** the merge
    with the full gate; then J204, (a) then (b), each 1,200 games on the confirm set against search-v1-anytime,
    `alone: yes`, on D528's rule.
+
+49. **D530's random-v6 is registered and unplayed: J205, D350's lcb rule on `random4`.**
+   (2026-11-10, D530, amending D528.) D528 point 8 pre-registered random-v6 as `override=lcb` at `v6Margin` (60,
+   unless J204 (a)'s point is under J202 (b)'s, then 40); D530 fixes the rest before any game: z at D350's 1, two
+   registered arms (`search-v2-rrandom4-lcb-m60`, `d6d75fdefd25`; `-lcb-m40`, `98eea870967e`; each its margin arm's
+   seat config with `override=lcb,z=1`, nothing under `bridge/src` changed), both read under D527's table (a candidate
+   from either gets its own 4,800-game confirmation; the iteration loses badly only when both do), the one at
+   `v6Margin` (TODO(J204): which) deciding SIGNAL and passing its rule to random-v7. J205 plays both, 1,200 games each
+   on the confirm set against search-v2, `alone: yes`, pinned to D530's own merge (D530 merges alone, before D529's
+   lane); SIGNAL reads J204 (b)'s `policy-outlet` line, which is not replayed (same blocks 114,900,000–114,900,149,
+   same code, set and Forge homes as J204's pin `137b2bf6`, both checked; if either fails, the baseline is replayed in
+   its own ladder folder). The count of successive SIGNAL INCONCLUSIVE readings is re-read from J204's match lines; two
+   in a row close the track, as do NO SIGNAL, AGAINST and the two-losing count, unless an arm is a candidate (its
+   confirmation first). With the track open and both arms to diagnose, random-v7 is `rollout=random4-them`: the
+   rollout's opponent random-v4 and the searching seat's own continuation Forge's (J202 (b) at margin 40 still
+   overrode Forge at priority +12.7 points above search-v2, two thirds pass-to-play at ×2.01 and a third
+   play-to-other-play at ×1.68, while its attack, block and to-pass overrides were at search-v2's; J199's
+   `random-self` had the same priority pattern); after it only the existing stops close the track. Disclosed: this
+   lane's pilot and the D529 lane's Java overlapped J204 (a) from 21:55 to 22:27 (two worker drops). **Open:** J204's
+   numbers into D530's `TODO(J204)` lines; the merge, alone, with the full gate; then J205 at the merge's pin.
 
 **The queue (D509, 2026-11-03).** From J186 on the seat is frozen while a population runs: a follow-up on this
 list that would change what the seat plays or offers (27, 28 — the owner's call — 30, 31 and 34 today) waits on its
@@ -11074,6 +11097,23 @@ signal beyond Forge's own choice.
 - **SIGNAL**: the arm minus the baseline; NO SIGNAL or AGAINST closes the random-rollout track.
 
 Its follow-up is the cube lab's 47 ([the list](#fu-cube-lab)).
+
+<a id="d530-random-v6"></a>
+## random-v6: D350's lcb rule on random rollouts (2026-11-10, D530)
+
+**Status: built, piloted, not gated or merged; J205 drafted, not posted; J204's numbers are `TODO(J204)` in the
+decision.** Branch `pc/rollout-random-v6` off main `137b2bf6`. `docs/decisions/D530-random-v6-lcb.md` is the decision,
+D523's iteration loop's fifth iteration, the one D528 point 8 pre-registered. The margin was the one lever that moved
+(`rrandom4` −39.5, `-m40` −20.9); lcb is its noise-aware form: an override needs the best candidate's paired
+difference to clear the margin by a standard error.
+
+- **The deciding arm**: the lcb arm at J204's `v6Margin`, against search-v2 under D527's table and SIGNAL against
+  J204's `policy-outlet` on the same deals.
+- **The other margin**: a registered arm under the same table; a candidate there is confirmed too.
+- **random-v7**, if the track stays open: `rollout=random4-them`, the searching seat's own continuation back to Forge;
+  after it, only the existing stops close the track.
+
+Its follow-up is the cube lab's 49 ([the list](#fu-cube-lab)).
 
 ## Deferred — out of scope for M0–M7
 
