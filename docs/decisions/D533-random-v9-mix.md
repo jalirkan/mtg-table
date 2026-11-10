@@ -268,6 +268,19 @@ can supply is marked TODO(J208); every fact only the build and the pilot can sup
   neither carries `override=` or `z=`; the ladder's enum takes the value; D527's to D532's arms, `rrandom-self`,
   `policy-outlet` and search-v2 keep their hashes. `npx tsc --noEmit` in `web/` clean. `./tools/lint-bridge.sh` (grep,
   no JVM): `bridge lint OK (96 file(s) under bridge/src, 3 under tools/; 33 rules)`.
+- **J209's draft, dry-run without the engine** (in the session scratchpad, not posted, `runner.sh check` not run): the
+  assembler (`--arm m40|m20`, `--pin`) against a local `--no-ff` merge of this lane onto `429ccd9e` in a scratch clone
+  (never on a branch of the repo) passed its tree checks and refused a pin that is not this lane's merge and a draft
+  with no arm; the pilot's engine-free blocks ran there for both arms: the players and hashes as point 5 says (from
+  `node tools/ai-ladder/cli.ts list`), the code check by content on the real merge (`ok` 1, three files under
+  `bridge/src`) and on its eight synthetic answers, the verdict's selftest 34 of 34 with every row of the table firing,
+  J208's margin recomputed from synthetic J208 lines, the readers' selftests; the night's reading on a synthetic match
+  line per row fired exactly one row each (a candidate to its confirmation, worse and losing badly to the track's
+  closing, an incomplete line to a repost), and on J206's real match line with the arm's name written over it read
+  worse, not badly, the track closing. Every `check:` line was evaluated with the runner's own expression language
+  over metrics computed as the runner would: on the synthetic night 49 of 49 pass; in the pilot the 18 that fail are
+  exactly the ones that need the JVM (the build, the 4 games) or `origin/main`, each reading its default 0, none
+  UNKNOWN. No `metrics:` line carries a `$`.
 - **The build** (`./bridge/build.sh`: the lint's self-test, the lint, javac, the decision self-test): TODO(build).
 - **The pilot** (4 games of the arm against `search-v1-anytime`, one worker; the mix counters on the arm's side alone,
   Forge and random rounds about equal, no `search.lcb.*`): TODO(build).
