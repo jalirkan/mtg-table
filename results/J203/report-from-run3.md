@@ -1,0 +1,176 @@
+# J203: judge the judge, unselected -- 160 random atlas decisions, the judges against Forge under Forge continuation
+
+**Primary reading (set i, J200's rule):** INCONCLUSIVE.
+
+**Control reading (set ii):** CONTROL INCONCLUSIVE.
+
+Judges on the whole sample (from the picks): A on Forge's option 84 of 160 (0.525), B 78 (0.4875); A = B on 128 (0.8): both on Forge 70 (set ii), both on another option 58 (set i), split 32 (set iii, not branched); the control's two seconds the same on 58.
+
+Set i: 58 planned, 58 valid (at least 53 needed). Set ii: 70 planned, 69 valid (at least 63 needed). Excluded: {"control: replay diverged": 1}. Spines: 61, played 61, the night's game 61.
+
+| reading | decisions | better / worse / tied | share of untied [95%] | mean gain [95%] |
+|---|---|---|---|---|
+| **set i: judges' option vs Forge's (Forge map)** | 58 | 23 / 15 / 20 | 0.6053 [0.4318, 0.75] | 0.0123 [-0.0114, 0.0364] |
+| **set ii: Forge's option (the judges' first) vs their second (Forge map)** | 69 | 30 / 14 / 25 | 0.6818 [0.5, 0.8] | 0.0147 [-0.0116, 0.0398] |
+| whole sample, sets i + ii: judges' first choice vs Forge's (0 on set ii) | 127 | 23 / 15 / 89 | 0.6053 [0.4359, 0.75] | 0.0056 [-0.005, 0.0166] |
+| set i, random map (the night's rows) | 58 | 33 / 16 / 9 | 0.6735 [0.5102, 0.7736] | 0.0166 [-0.0104, 0.0421] |
+| set ii, random map (the night's rows) | 69 | 36 / 18 / 15 | 0.6667 [0.5, 0.7755] | 0.0393 [0.0136, 0.0714] |
+
+Set i's gain minus set ii's control gain: -0.0024 [-0.0386, 0.0315] (joint bootstrap; deciding nothing).
+
+Beside the readings, deciding nothing (Forge map, 2,000 draws):
+
+| subset | decisions | better / worse / tied | share [95%] | gain [95%] |
+|---|---|---|---|---|
+| disagree, priority | 49 | 19 / 13 / 17 | 0.5938 [0.4194, 0.75] | 0.0135 [-0.013, 0.0399] |
+| disagree, attack | 6 | 3 / 1 / 2 | 0.75 [0.25, 1.0] | 0.0083 [-0.0304, 0.0525] |
+| disagree, block | 3 | 1 / 1 / 1 | 0.5 [0.0, 1.0] | 0.0 [-0.0708, 0.075] |
+| disagree, the label confident (J200's population) | 17 | 10 / 5 / 2 | 0.6667 [0.3571, 0.8462] | 0.0154 [-0.0242, 0.0581] |
+| disagree, the label not confident | 41 | 13 / 10 / 18 | 0.5652 [0.3913, 0.7858] | 0.011 [-0.0161, 0.039] |
+| disagree, live (an option between .05 and .95) | 36 | 18 / 14 / 4 | 0.5625 [0.4054, 0.7576] | 0.0163 [-0.0197, 0.0573] |
+| disagree, both judges at confidence 3 | 8 | 2 / 2 / 4 | 0.5 [0.0, 1.0] | 0.0328 [-0.0375, 0.1313] |
+| control, priority | 35 | 16 / 8 / 11 | 0.6667 [0.4, 0.8] | 0.0151 [-0.0253, 0.056] |
+| control, attack | 26 | 12 / 5 / 9 | 0.7059 [0.4545, 0.9286] | 0.0128 [-0.0318, 0.0483] |
+| control, block | 8 | 2 / 1 / 5 | 0.6667 [0.0, 1.0] | 0.0187 [-0.0094, 0.0563] |
+| control, the label confident (J200's population) | 6 | 2 / 2 / 2 | 0.5 [0.0, 1.0] | -0.0292 [-0.2, 0.0709] |
+| control, the label not confident | 63 | 28 / 12 / 23 | 0.7 [0.5, 0.8095] | 0.0189 [-0.0055, 0.0431] |
+| control, live (an option between .05 and .95) | 46 | 29 / 12 / 5 | 0.7073 [0.5227, 0.8108] | 0.022 [-0.0163, 0.0587] |
+| control, both judges at confidence 3 | 17 | 7 / 2 / 8 | 0.7778 [0.4286, 1.0] | 0.0311 [-0.0107, 0.0865] |
+
+Random-map diff against Forge-map diff, per decision (Spearman): set i 0.3532, set ii 0.3452.
+Reproduction of the night's Forge rows (decisions the night mapped): 1040 of 1040 cells the same (1.0), over 13 decisions.
+Checks (information; the validity conditions decide): 61 spines with atlas.json; problems 2; frame logs 21542, failed 0; leaks 1 of 128 leak checks; fork problems 0.
+- problem: J186/b-s04-powered-2543: 1 of 1 no-leak check(s) moved when only seat B's hidden cards did
+- problem: J191/b-s08-powered-3008: 1 unit(s) did not finish: d10-forge-20: the replay diverged at decision 10: the baseline listed [attack:18,25, attack:none, attack:25, attack:18], the replay [pass, cast:27]
+Forge rows 10710 (errors 14, timed out 14, capped 282); 10.33 worker-hours of branch games.
+
+| decision | set | kind | turn | options | side A mean | side B mean | diff [95%] | random diff | label | excluded |
+|---|---|---|---|---|---|---|---|---|---|---|
+| J186/s01/d12 | disagree | a | 15 | [0, 3] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0367 | complete |  |
+| J186/s01/d15 | control | p | 15 | [0, 1] | 1.0 | 0.6375 | 0.3625 [0.225, 0.5125] | 0.08 | screened |  |
+| J186/s02/d16 | disagree | b | 13 | [0, 2] | 0.275 | 0.225 | 0.05 [-0.075, 0.175] | 0.14 | confident |  |
+| J186/s03/d6 | disagree | p | 7 | [0, 2] | 0.6 | 0.6 | 0.0 [-0.15, 0.125] | -0.07 | partial |  |
+| J186/s03/d10 | disagree | p | 9 | [0, 2] | 0.25 | 0.45 | -0.2 [-0.4, 0.0] | -0.16 | partial |  |
+| J186/s04/d34 | control | a | 26 | [0, 5] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.12 | partial |  |
+| J186/s05/d1 | disagree | p | 9 | [0, 2] | 0.4125 | 0.425 | -0.0125 [-0.1378, 0.1125] | -0.03 | partial |  |
+| J186/s05/d2 | disagree | p | 11 | [0, 1] | 0.5 | 0.5128 | -0.0128 [-0.1154, 0.0897] | 0.03 | complete |  |
+| J186/s05/d3 | control | p | 11 | [0, 2] | 0.4737 | 0.4605 | 0.0132 [0.0, 0.0395] | 0.0333 | complete |  |
+| J186/s06/d4 | disagree | p | 8 | [0, 2] | 0.225 | 0.175 | 0.05 [-0.075, 0.175] | 0.0367 | confident |  |
+| J186/s06/d5 | disagree | p | 10 | [0, 2] | 0.0 | 0.05 | -0.05 [-0.125, 0.0] | 0.06 | confident |  |
+| J186/s06/d12 | disagree | p | 14 | [0, 3] | 0.05 | 0.0 | 0.05 [0.0, 0.125] | 0.05 | complete |  |
+| J186/s06/d13 | disagree | p | 14 | [0, 4] | 0.075 | 0.0 | 0.075 [0.0, 0.175] | -0.08 | partial |  |
+| J186/s07/d15 | disagree | p | 13 | [0, 2] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | -0.08 | partial |  |
+| J186/s07/d16 | control | a | 13 | [0, 7] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.08 | screened |  |
+| J186/s07/d22 | disagree | p | 17 | [0, 1] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.02 | screened |  |
+| J186/s09/d5 | control | p | 5 | [0, 2] | 0.5875 | 0.7625 | -0.175 [-0.3253, -0.0125] | -0.08 | complete |  |
+| J186/s09/d26 | disagree | p | 19 | [0, 2] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0 | complete |  |
+| J186/s10/d2 | disagree | p | 4 | [0, 3] | 0.375 | 0.375 | 0.0 [-0.175, 0.175] | -0.08 | partial |  |
+| J186/s10/d17 | control | p | 14 | [0, 1] | 0.025 | 0.075 | -0.05 [-0.125, 0.0] | 0.0 | screened |  |
+| J186/s10/d22 | control | p | 16 | [0, 1] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0067 | complete |  |
+| J186/s11/d11 | control | p | 9 | [0, 1] | 0.85 | 0.8 | 0.05 [-0.075, 0.175] | 0.057 | complete |  |
+| J186/s11/d24 | disagree | p | 13 | [0, 2] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.04 | screened |  |
+| J186/s12/d8 | disagree | p | 12 | [0, 5] | 0.05 | 0.125 | -0.075 [-0.175, 0.0] | 0.04 | confident |  |
+| J186/s12/d9 | disagree | a | 12 | [0, 1] | 0.1125 | 0.0875 | 0.025 [-0.025, 0.0875] | 0.0 | screened |  |
+| J186/s12/d12 | control | p | 14 | [0, 1] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0 | complete |  |
+| J187/s01/d9 | control | a | 8 | [0, 2] | 0.2 | 0.3625 | -0.1625 [-0.275, -0.0625] | 0.0633 | complete |  |
+| J187/s01/d12 | control | a | 10 | [0, 2, 3] | 0.3 | 0.2313 | 0.0688 [-0.0375, 0.1875] | -0.005 | complete |  |
+| J187/s01/d15 | disagree | p | 14 | [0, 2] | 0.1375 | 0.1375 | 0.0 [-0.1, 0.1] | 0.0833 | complete |  |
+| J187/s02/d2 | disagree | p | 3 | [0, 2] | 0.825 | 0.725 | 0.1 [-0.05, 0.275] | -0.0067 | complete |  |
+| J187/s02/d26 | control | a | 15 | [0, 1] | 0.125 | 0.075 | 0.05 [0.0, 0.125] | 0.06 | complete |  |
+| J187/s02/d32 | disagree | a | 19 | [0, 1] | 0.075 | 0.0 | 0.075 [0.0, 0.15] | 0.2067 | confident |  |
+| J187/s03/d8 | control | p | 10 | [0, 2] | 0.8462 | 0.7308 | 0.1154 [-0.0128, 0.2436] | 0.04 | partial |  |
+| J187/s04/d3 | disagree | p | 5 | [0, 2] | 0.675 | 0.375 | 0.3 [0.125, 0.475] | 0.0301 | complete |  |
+| J187/s04/d8 | disagree | p | 11 | [0, 3] | 0.025 | 0.0 | 0.025 [0.0, 0.075] | 0.1387 | confident |  |
+| J187/s05/d13 | disagree | a | 14 | [0, 1] | 0.925 | 0.8875 | 0.0375 [-0.05, 0.1375] | 0.0333 | complete |  |
+| J187/s05/d26 | control | a | 22 | [0, 2, 4] | 0.9875 | 0.9187 | 0.0688 [0.0125, 0.1375] | 0.02 | partial |  |
+| J187/s05/d38 | disagree | a | 30 | [0, 3] | 0.6 | 0.6875 | -0.0875 [-0.2125, 0.0375] | -0.24 | confident |  |
+| J187/s06/d8 | disagree | p | 7 | [0, 2] | 0.975 | 0.95 | 0.025 [-0.05, 0.1] | 0.0767 | confident |  |
+| J187/s08/d0 | disagree | p | 3 | [0, 2] | 0.6 | 0.575 | 0.025 [-0.125, 0.175] | 0.0733 | confident |  |
+| J187/s08/d1 | control | p | 3 | [0, 2] | 0.675 | 0.65 | 0.025 [-0.075, 0.125] | 0.14 | partial |  |
+| J187/s08/d18 | control | a | 13 | [0, 2, 6] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J187/s09/d1 | disagree | p | 2 | [0, 1] | 0.425 | 0.3625 | 0.0625 [-0.1, 0.225] | -0.05 | partial |  |
+| J187/s10/d0 | disagree | p | 5 | [0, 1] | 0.675 | 0.7 | -0.025 [-0.125, 0.075] | -0.09 | partial |  |
+| J187/s12/d14 | disagree | p | 11 | [0, 6] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | -0.02 | complete |  |
+| J187/s13/d3 | disagree | p | 6 | [0, 1] | 0.325 | 0.4125 | -0.0875 [-0.225, 0.05] | 0.0 | partial |  |
+| J187/s13/d10 | disagree | b | 13 | [0, 2] | 0.0625 | 0.1125 | -0.05 [-0.15, 0.05] | 0.0567 | confident |  |
+| J187/s13/d12 | control | a | 16 | [0, 1] | 0.075 | 0.05 | 0.025 [0.0, 0.075] | -0.01 | complete |  |
+| J188/s01/d13 | disagree | p | 13 | [0, 2] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.04 | complete |  |
+| J188/s03/d5 | disagree | p | 11 | [0, 2] | 0.1 | 0.125 | -0.025 [-0.125, 0.05] | -0.14 | partial |  |
+| J188/s03/d6 | control | p | 11 | [0, 2] | 0.1 | 0.125 | -0.025 [-0.125, 0.075] | -0.0033 | complete |  |
+| J188/s03/d16 | control | b | 16 | [0, 3] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J188/s04/d15 | control | a | 16 | [0, 4] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J188/s05/d10 | control | p | 9 | [0, 1] | 0.175 | 0.1625 | 0.0125 [-0.075, 0.1125] | 0.0067 | complete |  |
+| J188/s05/d19 | control | p | 15 | [0, 2] | 0.4 | 0.475 | -0.075 [-0.225, 0.075] | 0.0133 | complete |  |
+| J188/s05/d20 | control | p | 17 | [0, 4] | 0.775 | 0.725 | 0.05 [-0.125, 0.225] | 0.0067 | complete |  |
+| J188/s05/d21 | control | a | 17 | [0, 2] | 0.95 | 0.775 | 0.175 [0.075, 0.3] | 0.12 | complete |  |
+| J188/s06/d5 | control | a | 6 | [0, 3] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.02 | partial |  |
+| J188/s06/d6 | disagree | p | 8 | [0, 2] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.08 | screened |  |
+| J188/s07/d4 | control | b | 10 | [0, 1] | 0.975 | 0.9 | 0.075 [0.0, 0.175] | 0.0267 | complete |  |
+| J188/s07/d9 | disagree | p | 13 | [0, 3] | 0.975 | 0.975 | 0.0 [-0.075, 0.075] | 0.0 | screened |  |
+| J188/s08/d5 | control | p | 6 | [0, 3] | 0.45 | 0.8 | -0.35 [-0.5, -0.2] | -0.1 | confident |  |
+| J188/s08/d14 | control | p | 10 | [0, 1] | 0.975 | 0.975 | 0.0 [0.0, 0.0] | -0.0333 | complete |  |
+| J188/s08/d15 | control | p | 12 | [0, 1] | 0.95 | 0.95 | 0.0 [0.0, 0.0] | -0.08 | screened |  |
+| J188/s09/d5 | disagree | p | 9 | [0, 1] | 0.15 | 0.2 | -0.05 [-0.15, 0.05] | -0.15 | partial |  |
+| J188/s11/d15 | control | b | 12 | [0, 2] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J188/s12/d8 | disagree | p | 8 | [0, 1] | 0.225 | 0.025 | 0.2 [0.1, 0.325] | 0.1 | confident |  |
+| J188/s12/d17 | control | a | 12 | [0, 3, 4] | 0.3 | 0.175 | 0.125 [0.0375, 0.2] | -0.02 | confident |  |
+| J188/s13/d2 | control | p | 5 | [0, 1] | 0.225 | 0.2125 | 0.0125 [-0.1125, 0.125] | -0.0233 | complete |  |
+| J188/s13/d6 | control | p | 9 | [0, 1] | 0.05 | 0.075 | -0.025 [-0.075, 0.0] | -0.1067 | confident |  |
+| J190/s01/d18 | disagree | p | 16 | [0, 1] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J190/s04/d3 | control | a | 3 | [0, 1] | 0.825 | 0.75 | 0.075 [0.0, 0.15] | 0.0333 | complete |  |
+| J190/s05/d16 | control | a | 16 | [0, 2] | 0.55 | 0.5625 | -0.0125 [-0.1125, 0.0875] | 0.05 | complete |  |
+| J190/s05/d27 | control | p | 20 | [0, 1, 2] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | -0.0383 | complete |  |
+| J190/s05/d33 | disagree | p | 24 | [0, 1] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0033 | complete |  |
+| J190/s06/d13 | control | a | 15 | [0, 1, 2] | 0.8 | 0.75 | 0.05 [-0.0625, 0.175] | 0.0333 | complete |  |
+| J190/s07/d12 | disagree | p | 14 | [0, 1] | 0.9 | 0.95 | -0.05 [-0.15, 0.05] | 0.0 | screened |  |
+| J190/s07/d18 | disagree | p | 16 | [0, 1] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J190/s09/d19 | control | a | 12 | [0, 6] | 0.8125 | 0.7875 | 0.025 [-0.05, 0.1] | 0.0367 | complete |  |
+| J190/s10/d14 | disagree | p | 13 | [0, 1] | 0.125 | 0.025 | 0.1 [0.025, 0.2] | 0.06 | complete |  |
+| J190/s10/d32 | control | b | 24 | [0, 4, 5] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J190/s11/d0 | disagree | p | 4 | [0, 1] | 0.65 | 0.725 | -0.075 [-0.225, 0.075] | -0.15 | partial |  |
+| J190/s11/d3 | control | p | 6 | [0, 2] | 0.775 | 0.85 | -0.075 [-0.225, 0.075] | 0.2 | partial |  |
+| J190/s12/d2 | disagree | p | 5 | [0, 1] | 0.1 | 0.1 | 0.0 [-0.1, 0.1] | 0.0933 | confident |  |
+| J190/s12/d11 | disagree | b | 16 | [0, 4] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.04 | screened |  |
+| J191/s01/d10 | disagree | p | 14 | [0, 1] | 0.3125 | 0.275 | 0.0375 [-0.025, 0.125] | 0.01 | complete |  |
+| J191/s03/d1 | control | a | 2 | [0, 1] | 0.9 | 0.8 | 0.1 [0.025, 0.2] | -0.04 | screened |  |
+| J191/s03/d16 | disagree | p | 14 | [0, 1] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J191/s03/d21 | disagree | a | 18 | [0, 2] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J191/s04/d6 | disagree | p | 13 | [0, 4] | 0.975 | 0.875 | 0.1 [0.025, 0.2] | 0.1667 | confident |  |
+| J191/s05/d16 | control | a | 18 | [0, 5] | 0.7875 | 0.7125 | 0.075 [-0.05, 0.2] | 0.0633 | complete |  |
+| J191/s05/d29 | control | a | 30 | [0, 2, 3] | 0.6875 | 0.6125 | 0.075 [0.0312, 0.125] | -0.01 | confident |  |
+| J191/s05/d37 | control | a | 36 | [0, 3] | 0.5 | 0.5 | 0.0 [0.0, 0.0] | 0.1 | confident |  |
+| J191/s06/d4 | control | p | 11 | [0, 4] | 0.4 | 0.3 | 0.1 [-0.0625, 0.2625] | 0.18 | partial |  |
+| J191/s08/d7 | control | a | 7 | [0, 2] | 0.7222 | 0.75 | -0.0278 [-0.1111, 0.0556] | 0.02 | complete |  |
+| J191/s08/d10 | control | a | 9 | [0, 2] | 0.8857 | 0.8857 | 0.0 [0.0, 0.0] | 0.02 | complete | replay diverged |
+| J191/s08/d15 | control | a | 11 | [0, 2, 3] | 0.9744 | 1.0 | -0.0256 [-0.0769, 0.0] | 0.0 | screened |  |
+| J191/s08/d17 | control | p | 13 | [0, 1] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J191/s10/d0 | disagree | p | 5 | [0, 1] | 0.975 | 0.9 | 0.075 [0.0, 0.175] | -0.03 | partial |  |
+| J191/s10/d1 | control | p | 5 | [0, 1] | 1.0 | 0.925 | 0.075 [0.0, 0.15] | 0.08 | screened |  |
+| J191/s10/d3 | control | p | 7 | [0, 1] | 0.7875 | 0.75 | 0.0375 [-0.075, 0.15] | -0.0333 | complete |  |
+| J191/s10/d13 | control | p | 15 | [0, 1] | 1.0 | 0.95 | 0.05 [0.0, 0.125] | 0.74 | complete |  |
+| J191/s11/d12 | control | b | 13 | [0, 2] | 0.175 | 0.075 | 0.1 [0.025, 0.2] | 0.0 | screened |  |
+| J191/s11/d14 | control | p | 14 | [0, 1] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | -0.04 | screened |  |
+| J191/s11/d15 | control | p | 14 | [0, 1] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.04 | screened |  |
+| J191/s12/d8 | control | p | 7 | [0, 3] | 0.65 | 0.575 | 0.075 [-0.125, 0.275] | 0.1333 | partial |  |
+| J193/s01/d12 | disagree | p | 14 | [0, 3] | 0.05 | 0.025 | 0.025 [0.0, 0.075] | 0.1833 | confident |  |
+| J193/s01/d19 | control | p | 18 | [0, 1] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0367 | complete |  |
+| J193/s04/d14 | control | a | 15 | [0, 4] | 0.475 | 0.825 | -0.35 [-0.5, -0.2] | -0.0133 | complete |  |
+| J193/s04/d15 | disagree | p | 17 | [0, 1] | 1.0 | 0.95 | 0.05 [0.0, 0.125] | 0.14 | confident |  |
+| J193/s05/d11 | control | p | 8 | [0, 2] | 0.95 | 0.875 | 0.075 [0.0, 0.175] | 0.22 | partial |  |
+| J193/s05/d18 | control | a | 14 | [0, 5] | 1.0 | 1.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J193/s06/d6 | control | b | 12 | [0, 1] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0 | screened |  |
+| J193/s08/d12 | control | p | 11 | [0, 3] | 0.85 | 0.65 | 0.2 [0.075, 0.325] | 0.45 | complete |  |
+| J193/s08/d17 | control | a | 15 | [0, 2] | 0.9 | 0.9 | 0.0 [0.0, 0.0] | -0.02 | complete |  |
+| J193/s09/d26 | control | b | 15 | [0, 2, 3] | 0.5125 | 0.5125 | 0.0 [0.0, 0.0] | -0.0033 | confident |  |
+| J193/s10/d0 | disagree | p | 3 | [0, 2] | 0.475 | 0.625 | -0.15 [-0.325, 0.025] | 0.0467 | complete |  |
+| J193/s10/d1 | disagree | p | 3 | [0, 2] | 0.425 | 0.525 | -0.1 [-0.2875, 0.0875] | 0.08 | confident |  |
+| J193/s10/d2 | disagree | p | 5 | [0, 1] | 0.6625 | 0.5375 | 0.125 [-0.025, 0.2875] | 0.0667 | complete |  |
+| J193/s10/d6 | control | p | 7 | [0, 1] | 0.3 | 0.175 | 0.125 [-0.025, 0.2506] | 0.0133 | complete |  |
+| J193/s11/d1 | control | p | 4 | [0, 2, 3] | 0.1 | 0.1 | 0.0 [-0.0875, 0.0875] | 0.02 | partial |  |
+| J193/s11/d2 | disagree | p | 6 | [0, 2] | 0.175 | 0.15 | 0.025 [-0.05, 0.1006] | -0.03 | complete |  |
+| J193/s11/d7 | control | p | 8 | [0, 1] | 0.025 | 0.025 | 0.0 [0.0, 0.0] | 0.0267 | complete |  |
+| J193/s11/d13 | disagree | p | 12 | [0, 1] | 0.125 | 0.0 | 0.125 [0.025, 0.225] | 0.04 | screened |  |
+| J193/s11/d16 | control | b | 13 | [0, 1, 2] | 0.0 | 0.025 | -0.025 [-0.075, 0.0] | 0.0 | screened |  |
+| J193/s12/d6 | control | a | 5 | [0, 1] | 0.725 | 0.725 | 0.0 [-0.125, 0.125] | 0.0 | complete |  |
+| J193/s12/d19 | control | p | 11 | [0, 1] | 0.175 | 0.25 | -0.075 [-0.2, 0.025] | 0.0 | partial |  |
+| J193/s13/d17 | disagree | p | 18 | [0, 2] | 0.0 | 0.0 | 0.0 [0.0, 0.0] | 0.0667 | confident |  |
