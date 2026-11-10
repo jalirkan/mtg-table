@@ -930,7 +930,6 @@ public final class DecisionSelfTest {
                 "the redraws' preference counts the good blocks an assignment holds, drawn or made");
     }
 
-    /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */
     /**
      * D531 (random-v7, pre-registered by D530 point 7): {@code rollout=random4-them}, a seating never run or
      * self-tested before -- the opponent's rollout seat random-v4 (R8 made lethal-aware, as under {@code random4}),
@@ -1007,6 +1006,7 @@ public final class DecisionSelfTest {
         check(unknown, "an unknown rollout= is refused, naming random4-them");
     }
 
+    /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */
     private static void configOnly(final String what, final SearchConfig a, final SearchConfig b, final List<String> only) {
         int compared = 0;
         final List<String> differ = new ArrayList<>();

@@ -33,14 +33,15 @@ J205 has read.*
   | random-v6 (J205 a) | `search-v2-rrandom4-lcb-m40` | D350's `override=lcb`, z 1, at margin 40 | TODO(J205) | TODO(J205) |
   | random-v6 (J205 b) | `search-v2-rrandom4-lcb-m60` | the same at margin 60 | TODO(J205) | TODO(J205) |
 
-- **J205 read random-v6** (the runner's lines, 1,200 games each): (a) `search-v2-rrandom4-lcb-m40` (the deciding arm,
+- **J205's reading of random-v6, TODO(J205)** (the runner's lines, 1,200 games each): (a) `search-v2-rrandom4-lcb-m40` (the deciding arm,
   `98eea870967e`) scored TODO(J205) [lo, hi], TODO(J205) Elo [eloLo, eloHi], **TODO(J205): its D527 reading**, errors
   and timeouts TODO(J205); (b) `search-v2-rrandom4-lcb-m60` (`d6d75fdefd25`) TODO(J205) Elo [eloLo, eloHi],
   **TODO(J205): its reading**; SIGNAL (a) − J204 (b) = **TODO(J205): diff [lo, hi] (±hw), its reading**;
   `signalInconclusiveCount` TODO(J205) (J204's 0, plus 1 or reset); this iteration lost badly TODO(J205) (both arms:
   TODO(J205)/TODO(J205)), so the loop count going into J206 is TODO(J205); the rule's own effect, (a) − J202 (b),
-  TODO(J205). The report named `v.iterate` 1 and `v.v7` `search-v2-rrandom4them-lcb-m40`: both arms to diagnose, the
-  track open — the case this file is written for and the only one on which it merges.
+  TODO(J205). **The condition this file merges on, not yet a fact:** J205's report names `v.iterate` 1 and `v.v7`
+  `search-v2-rrandom4them-lcb-m40` (both arms to diagnose, the track open: the case this file is written for);
+  TODO(J205): whether it did.
 - **The counters D530 point 8 used, at J205** (TODO(J205), from `var/j205/rollouts-a.json` and `-b.json`; each as a
   share of the side's decisions of that kind):
 
@@ -119,19 +120,29 @@ J205 has read.*
    `search-v1-anytime`, `alone: yes`** (D521), in the real ladder folder, `var/ai-ladder/match-J206a.json`. The matchup
    is new, so it takes blocks 114,900,000–114,900,149, J204's deals. **The baseline is not replayed**: SIGNAL reads
    J204 (b)'s match line, as J205 did, under D530's two conditions with condition (1) restated for this lane, which is
-   the first since D528 to change code a match runs. **(1) The code.** The pilot lists `git diff --name-only 137b2bf6
-   <pin>` over everything a ladder match runs (D530's list: `bridge/src`, `tools/ai-bench`, `tools/ai-ladder`,
-   `tools/cubelab/lines.ts`, `tools/cubelab/rng.ts`, `tools/runner/control.ts`, `tools/ai-ladder.sh`,
-   `tools/ai-bench.sh`, `tools/config.sh`, `forge-home/custom-cards`, `config.json`) and requires it to be exactly this
-   lane's four files: `tools/ai-ladder/players.json`, `tools/ai-ladder/kinds.ts`,
-   `bridge/src/mtgtable/ai/SearchConfig.java` and `bridge/src/mtgtable/ai/DecisionSelfTest.java`. None of them changes
-   what search-v2 or `policy-outlet` plays: `players.json` adds a player; `kinds.ts` adds an enum value and a doc
-   string; `DecisionSelfTest` is not on a match's path; `SearchConfig`'s changes return what they returned for every
-   existing value (point 1), and `parseLive` is not on the bench's path (`SeatSpec` parses with `parse`). The pilot
-   also requires the arm's own build to pass the decision self-test. **(2) The blocks**: J204 (b)'s seeds file
+   the first since D528 to change code a match runs. **Merge order** (as D530's): D531 merges alone and first, and J206 is
+   pinned to D531's own merge; any other lane merges after it — D529's included, which touches `Atlas.java`, and
+   `SearchPolicy.playout` uses `Atlas.StepClock`, `BranchTimeout`, `timeoutIn` and `unavailableIn`, so it is not an
+   atlas-only file. **(1) The code, by content.** The paths are D530's list of everything a ladder match runs
+   (`bridge/src`, `tools/ai-bench`, `tools/ai-ladder`, `tools/cubelab/lines.ts`, `tools/cubelab/rng.ts`,
+   `tools/runner/control.ts`, `tools/ai-ladder.sh`, `tools/ai-bench.sh`, `tools/config.sh`, `forge-home/custom-cards`,
+   `config.json`). In the runner's checkout of the pin (HEAD), the pilot requires: HEAD has two parents and its second
+   is the lane tip the job names (a HEAD with no second parent fails the check, never passes it); `git diff --quiet
+   1e72a8ec HEAD^1 -- <paths>` exits 0, so main under those paths is D530's merge, J205's pin, whose difference there
+   from J204's pin `137b2bf6` is `players.json` alone (two added players; J205's pilot checked it); `git diff --quiet
+   HEAD^2 HEAD -- <paths>` exits 0, so the merge result there is the lane tip; and the merge's diff from its first
+   parent there names exactly this lane's four files, `tools/ai-ladder/players.json`, `tools/ai-ladder/kinds.ts`,
+   `bridge/src/mtgtable/ai/SearchConfig.java` and `bridge/src/mtgtable/ai/DecisionSelfTest.java` (and so does the
+   diff from `137b2bf6`, by name, read beside). Names alone would not be enough: another lane editing one of those
+   four files would give the same names; the first-parent and merge-result conditions are what make this lane's
+   content the only change. None of the four changes what search-v2 or `policy-outlet` plays: `players.json` adds a
+   player; `kinds.ts` adds an enum value and a doc string; `DecisionSelfTest` is not on a match's path;
+   `SearchConfig`'s changes return what they returned for every existing value (point 1), and `parseLive` is not on
+   the bench's path (`SeatSpec` parses with `parse`). The pilot also requires the arm's own build to pass the decision
+   self-test, and tests the check itself on synthetic answers. **(2) The blocks**: J204 (b)'s seeds file
    (`var/j204/seeds-b.json`) and J206's (`var/j206/seeds-a.json`) each show exactly 150 blocks, 114,900,000 to
-   114,900,149, and every game. **If (1) fails** — main has moved under any of those paths since D530's merge, D529's
-   lane included — the job is not posted as drafted: it is posted with a second match, `policy-outlet` against
+   114,900,149, and every game. **If (1) fails** — main has moved under any of those paths since D530's merge (another
+   lane merged first, D529's included), or the pin is not D531's merge — the job is not posted as drafted: it is posted with a second match, `policy-outlet` against
    `search-v1-anytime`, 1,200 games, `--dir var/ai-ladder-j206b` (a ladder folder of its own on the same host, whose
    blocks start at 114,900,000), and SIGNAL reads (a) against that; the count and the loop are read as below. Decided
    here, so no choice is left for the night.
@@ -144,13 +155,15 @@ J205 has read.*
    a 4,800-game confirmation under D519's readings holds it), **INCONCLUSIVE** (upper end at least +15 and lower end at
    most 0.5: confirm at 4,800 games under D519's readings before anything), **NOT SHOWN, indistinguishable** (upper end
    below +15, the interval contains 0, and its lower end is above −15 Elo: a candidate, confirmed at 4,800 games before
-   Forge's opponent model leaves the loop), **NOT SHOWN, worse, not badly** (upper end below 0 and at least −15 Elo:
-   diagnose), **NOT SHOWN, loses badly** (upper end below −15 Elo: the same, the principle's cheap path in doubt) —
+   it replaces Forge in the loop), **NOT SHOWN, worse, not badly** (upper end below 0 and at least −15 Elo: diagnose
+   and iterate), **NOT SHOWN, loses badly** (upper end below −15 Elo: the same, the principle's cheap path in doubt) —
    with D527's three unreached cases read as D527 reads them (a lower end above 0.5 with a point under +15 and an upper
    end at least +15 is INCONCLUSIVE; an interval wholly at or above 0 with an upper end below +15 is NOT SHOWN, no
    weaker, a candidate; an upper end of exactly 0 is worse, not badly) and its too-wide case (an interval containing 0
    with its lower end at or below −15 is worse, not badly). "Lower end" in the SHOWN and INCONCLUSIVE rows is the match
    line's `lo`, "point" its `elo`, "interval" and "upper end" its `eloLo` and `eloHi`, the arm the match's first player.
+   (Only SHOWN is restated; in the other rows, D527's words as they stand, "replaces Forge in the loop" is read as
+   SHOWN's restatement reads it, Forge's opponent model, and "iterate" is point 6's new decision.)
 
    *Second, SIGNAL*, D528's, with J204's baseline, on the arm: `diff` = the arm's Elo point minus J204 (b)'s
    (`policy-outlet` against `search-v1-anytime`, its own match line), `hw` = √(((a.eloHi − a.eloLo)/2)² + ((b.eloHi −
@@ -238,8 +251,11 @@ J205 has read.*
 - **Replaying the baseline beside the arm.** As D530: J204 (b) is on the same deals by the block function and the
   pilot's checks; the replay is the fallback when condition (1) fails (point 4).
 - **Treating this lane's `bridge/src` diff as a reason to replay the baseline.** The diff is four files, each read in
-  point 4 for whether it changes what search-v2 or `policy-outlet` plays; it does not, and the pilot requires the diff
-  to be exactly those files, so a change by anyone else still forces the replay.
+  point 4 for whether it changes what search-v2 or `policy-outlet` plays; it does not. The pilot checks by content
+  that nothing else changed: the pin's first parent equals `1e72a8ec` under every path a match runs and the merge
+  result equals the lane tip there, so another lane's change — to one of these four files or any other — fails the
+  check and forces the replay. A check by file names alone was rejected at review: another lane editing
+  `SearchConfig.java`, `kinds.ts` or `players.json` would have passed it.
 - **Pre-registering random-v8 now.** D530 point 7 sends the step after random-v7 to its counters; naming it before
   J206 would be a schedule.
 - **Leaving `parseLive`'s test at `rolloutRandomUs()`.** It would have let `rollout=random4-them` through to the live
