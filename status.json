@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T18:38:08-05:00",
- "heartbeat": "2026-11-10T18:38:08-05:00",
+ "updated": "2026-11-10T18:40:30-05:00",
+ "heartbeat": "2026-11-10T18:40:30-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -40,13 +40,13 @@
  "idleReason": null,
  "host": {
   "load1": 3.43,
-  "memUsedGb": 8.2,
+  "memUsedGb": 6.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4131,
-  "pressure": 2.85,
+  "swapUsedMb": 4133,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 3,
+  "coresUsed": 7,
   "coresTotal": 14
  },
  "running": [
@@ -56,17 +56,17 @@
    "id": "J210",
    "title": "Where the search's strength is, by decision kind (D535, config only, no new Java): search-v2 with each of priority, attacks and blocks searched or left to Forge, all eight combinations, each one fixed 1,200-game match (600 mirrored pairs, D398, the confirm set, no stopping rule) against forge-default on the same 600 deals, each in a ladder folder of its own, read paired by deal (WHOLE, ALONE and LAST for each kind, INTERACTION, REPLICATION against J194 (a)'s rows) and by D535's faster-seat candidate rule; alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 4/4",
+   "phase": "commands 1/9",
    "started": "2026-11-10T18:36:19-05:00",
-   "elapsed": 108,
+   "elapsed": 250,
    "done": 0,
    "total": 9600,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 3,
+   "workers": 7,
+   "workersMax": 7,
+   "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-10T18:36:20-05:00",
@@ -109,9 +109,9 @@
     "cf.corners": 0,
     "cf.lines": 0,
     "cf.ok": 0,
-    "cfst.ok": 0,
-    "cst.cases": 0,
-    "cst.ok": 0
+    "cfst.ok": 1,
+    "cst.cases": 9,
+    "cst.ok": 1
    },
    "liveHeadline": [
     "mn.played",
@@ -152,7 +152,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J210-pilot4"
+   "detail": "lab-J210-run1"
   }
  ],
  "queue": [],

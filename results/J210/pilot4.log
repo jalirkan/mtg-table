@@ -1,0 +1,40 @@
+==== J210 pilot4 started 2026-11-10T18:38:06-05:00 in unit lab-J210-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-only-a vs forge-default on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-only-a vs forge-default (match:j210-pilot:20261110T233807-885533, seed 274900000, 1 pair(s))
+  done   w0 search-v2-only-a 3-1 forge-default (0 draws) in 33 s
+  4 decisive games (2 pairs): search-v2-only-a scores 75.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-only-a scores 75.0% [95% 26.0%, 100.0%] = +191 Elo [-182, Infinity] against forge-default
+search-v2-only-a: 25 decisions searched in 4 games, 6 changed Forge's answer (24.0%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-only-a by kind: a 6/25
+search-v2-only-a time per decision: 898.704 ms (p+a+b); by kind a 898.704
+forge-default: no searched decisions
+{"names":1,"played":4,"complete":1,"bad":0,"p":0,"a":25,"b":0,"searched":25,"forge":0,"ms":898.704,"sums":1}
+{"run":"20261110T233807-885533","lines":4,"aExact":4,"bExact":4,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+match search-v2-no-a vs forge-default on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-no-a vs forge-default (match:j210-pilot:20261110T233841-894162, seed 274900000, 1 pair(s))
+  done   w0 search-v2-no-a 3-1 forge-default (0 draws) in 76 s
+  4 decisive games (2 pairs): search-v2-no-a scores 75.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-no-a scores 75.0% [95% 26.0%, 100.0%] = +191 Elo [-182, Infinity] against forge-default
+search-v2-no-a: 82 decisions searched in 4 games, 15 changed Forge's answer (18.3%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-no-a by kind: p 13/72, b 2/10
+search-v2-no-a time per decision: 807.857 ms (p+a+b); by kind p 798.273, b 876.868
+forge-default: no searched decisions
+{"names":1,"played":4,"complete":1,"bad":0,"p":72,"a":0,"b":10,"searched":82,"forge":0,"ms":807.857,"sums":1}
+{"run":"20261110T233841-894162","lines":4,"aExact":4,"bExact":4,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+match search-v2-only-b vs forge-default on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-only-b vs forge-default (match:j210-pilot:20261110T233956-915655, seed 274900000, 1 pair(s))
+  done   w0 search-v2-only-b 2-2 forge-default (0 draws) in 22 s
+  4 decisive games (2 pairs): search-v2-only-b scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-only-b scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against forge-default
+search-v2-only-b: 12 decisions searched in 3 games, 4 changed Forge's answer (33.3%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-only-b by kind: b 4/12
+search-v2-only-b time per decision: 963.835 ms (p+a+b); by kind b 963.835
+forge-default: no searched decisions
+{"names":1,"played":4,"complete":1,"bad":0,"p":0,"a":0,"b":12,"searched":12,"forge":0,"ms":963.835,"sums":1}
+{"run":"20261110T233956-915655","lines":4,"aExact":4,"bExact":4,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
