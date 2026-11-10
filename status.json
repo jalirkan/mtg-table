@@ -1,10 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-11-09T23:36:14-05:00",
- "heartbeat": "2026-11-09T23:36:14-05:00",
+ "updated": "2026-11-09T23:36:26-05:00",
+ "heartbeat": "2026-11-09T23:36:26-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
+  {
+   "at": "2026-11-09T23:36:26-05:00",
+   "id": "J204",
+   "kind": "memory-fit",
+   "needGb": 3.64,
+   "availGb": 22.8,
+   "workers": 5,
+   "workersMax": 7,
+   "text": "J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees"
+  },
   {
    "at": "2026-11-09T15:28:17-05:00",
    "id": "J202",
@@ -19,10 +29,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.28,
-  "memUsedGb": 9.2,
+  "load1": 3.93,
+  "memUsedGb": 7.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4918,
+  "swapUsedMb": 4885,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -36,21 +46,21 @@
    "id": "J204",
    "title": "Random rollouts, iteration 4 (random-v5, no new rollout logic): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4-m60, J202 (b)'s search-v2-rrandom4-m40 with the search's override margin at 60 instead of 40 (rollout=random4 unchanged, both seats), read under D527's table; and (b) policy-outlet, the seat search-v2 sits on with the search off (Default+outlets, the baseline the arm converges on as the margin rises), never played on this host; then D528's SIGNAL reading, (a)'s Elo minus (b)'s on the same deals with both intervals' noise (SIGNAL SHOWN keeps the random-rollout track open on the margin/LCB line; NO SIGNAL or SIGNAL AGAINST closes it unless (a) is a candidate), alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 1/3",
+   "phase": "commands 2/3",
    "started": "2026-11-09T21:06:54-05:00",
-   "elapsed": 8960,
+   "elapsed": 8972,
    "done": 1192,
    "total": 2400,
    "unit": "games",
    "ratePerHour": 575,
-   "eta": "2026-11-10T01:42:18-05:00",
-   "workers": 7,
+   "eta": "2026-11-10T01:42:30-05:00",
+   "workers": 5,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-11-09T23:35:44-05:00",
-   "memGb": 1.72,
+   "memGb": 0.01,
    "live": {
     "cma.played": 0,
     "cma.score": 0,
@@ -167,7 +177,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J204-run1"
+   "detail": "lab-J204-run2"
   }
  ],
  "queue": [],
