@@ -1,0 +1,100 @@
+# J204: random-v5, search-v2-rrandom4-m60 (random4 rollouts, override margin 60) and the baseline policy-outlet (search-v2's seat with the search off), each against search-v1-anytime (D528)
+
+**The arm under D527's table (D528 point 6):** NOT SHOWN, worse, not badly: search-v2-rrandom4-m60 -24.4 Elo [-38.4, -10.4], score 0.465, lower end 0.4449; diagnose.
+
+**The baseline:** policy-outlet (search-v2's seat with the search off) -84.4 Elo [-99.9, -69.3], score 0.3808.
+
+**SIGNAL (D528 point 6):** SIGNAL SHOWN: search-v2-rrandom4-m60 minus policy-outlet 60 Elo [39.3, 80.7] (+-20.7); the random values carry signal beyond Forge's choice: the track stays open on the margin/LCB line; the random values keep 71.1% of search-v2's own gain over the seat under it (information).
+
+**Beside the reading (information, deciding nothing):** J202 (b), random4 at margin 40, minus the baseline on the same deals: 63.5 Elo on the point (margin 40 against the same seat under the search); (a) minus J202 (b): -3.5 (the margin 40 to 60), so random-v6's override=lcb margin is 40 (D528 point 8: 40 when that difference is below 0, else 60); SIGNAL INCONCLUSIVE count 0 of 2. Both matches start at block 114,900,000: (a) 1, (b) 1 (lowest blocks 114900000 and 114900000; a memory retry starts later, and the deals then differ in part).
+
+**What the night decides:** the arm is not a candidate; the track stays open on the margin/LCB line; the agent diagnoses search-v2-rrandom4-m60 and iterates as random-v6, override=lcb at margin 40 (D528 point 8: (a) minus J202 (b) -3.5, below 0), without asking the owner; both matches complete; SIGNAL INCONCLUSIVE count 0; random-v4 did not lose badly (J202 (a) upper end -25.3, (b) -7.7): the count restarted; random-v5 does not lose badly; the two-losing count does not stop the loop on this night; the self-play-from-random path does not open on this night; the live seat is unchanged (a separate decision, D509).
+
+| match | played / planned | complete | score [95%] | Elo [95%] | draws, errors, timeouts | A ms per decision | B ms per decision | A rollouts per decision | B rollouts per decision | A / B rollouts | A / B play ms a rollout | A / B copy ms a rollout | hours |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| (a) search-v2-rrandom4-m60 vs search-v1-anytime | 1200 / 1200 | true | 0.465 [0.4449, 0.4851] | -24.4 [-38.4, -10.4] | 0, 0, 0 | 959.065 | 967.712 | 16.88 | 14.75 | 1.144 | 49.43 / 57.09 | 4.91 / 5.15 | 2.39 |
+| (b) policy-outlet vs search-v1-anytime | 1200 / 1200 | true | 0.3808 [0.3601, 0.4016] | -84.4 [-99.9, -69.3] | 0, 0, 1 | - | 900.057 | - | 15.64 | - | - / 50.41 | - / 4.46 | 1.56 |
+
+(a) config hashes: search-v2-rrandom4-m60 216e66d89fe3, search-v1-anytime cdd55e02a89c. Deck set tools/ai-bench/pairs-confirm.txt; 600 mirrored pairs; match id justin-a-B650-GAMING-X-AX-V2:20261110T021240-3906774. Deal blocks 150, 114900000 to 114900149, 1200 games. Rounds per searched decision 6.61 / 5.65; decided on fewer than two rounds 764 = 2.80% / 1130 = 4.00%; rollout errors 0 / 0, step caps 0 / 0; the rollout reader saw 1200 games and 27326 / 28278 searched decisions (the match line: 27326 / 28278). Random rollouts 471244 of config A's 461274; search-v2's side 0; random-seat failures 102. Outlet-policy actions (policy.*): search-v2-rrandom4-m60 217 in 61 games {"CAST_OUTLET":39,"COMBAT":64,"THREATENED":25,"FODDER":12,"LETHAL":77}, search-v1-anytime 240 in 64 games {"COMBAT":39,"FODDER":23,"LETHAL":117,"CAST_OUTLET":40,"THREATENED":21}.
+(b) config hashes: policy-outlet e350d94649a4, search-v1-anytime cdd55e02a89c. Deck set tools/ai-bench/pairs-confirm.txt; 600 mirrored pairs; match id justin-a-B650-GAMING-X-AX-V2:20261110T043626-1714278. Deal blocks 150, 114900000 to 114900149, 1200 games. Rounds per searched decision - / 5.98; decided on fewer than two rounds 0 = - / 942 = 3.23%; rollout errors 0 / 0, step caps 0 / 0; the rollout reader saw 1200 games and 0 / 29182 searched decisions (the match line: 0 / 29182). Random rollouts 0 of config A's 0; search-v2's side 0; random-seat failures 0. Outlet-policy actions (policy.*): policy-outlet 240 in 64 games {"LETHAL":76,"FODDER":16,"CAST_OUTLET":41,"COMBAT":81,"THREATENED":26}, search-v1-anytime 280 in 70 games {"FODDER":23,"CAST_OUTLET":40,"COMBAT":68,"THREATENED":32,"LETHAL":117}.
+
+J194 (a), search-v1-anytime vs forge-default on the same deals (information only): search-v2's outlet-policy actions 311 in 72 games {"COMBAT":58,"FODDER":26,"CAST_OUTLET":41,"LETHAL":154,"THREATENED":32}; forge-default (outlets off) 0.
+
+| search.rr.<name> | (a) fires | (a) per random rollout | (a) per game |
+|---|---|---|---|
+| v2.castSomething | 108330 | 0.2299 | 90.28 |
+| v2.chumpBlock | 23593 | 0.0501 | 19.66 |
+| v2.dominatedAttacker | 24469 | 0.0519 | 20.39 |
+| v2.lethalAttack | 4873 | 0.0103 | 4.06 |
+| v2.lethalBlock | 6301 | 0.0134 | 5.25 |
+| v2.ownStack | 1142048 | 2.4235 | 951.71 |
+| v2.targetSide | 267399 | 0.5674 | 222.83 |
+| v3.goodBlock | 10264 | 0.0218 | 8.55 |
+| v3.goodBlockIllegal | 126 | 0.0003 | 0.11 |
+| v4.goodBlockLethal | 1035 | 0.0022 | 0.86 |
+| v4.goodBlockRefused | 12085 | 0.0256 | 10.07 |
+| cardTargetOffered | 279995 | 0.5942 | 233.33 |
+| costTargetAvoided | 84 | 0.0002 | 0.07 |
+| failures | 102 | 0.0002 | 0.09 |
+| land | 50732 | 0.1077 | 42.28 |
+| modesDrawn | 1517 | 0.0032 | 1.26 |
+| noRepeatNoOp | 26989 | 0.0573 | 22.49 |
+| noRepeatRefused | 1846 | 0.0039 | 1.54 |
+| refusedCast | 2302 | 0.0049 | 1.92 |
+| targetCountTrimmed | 833 | 0.0018 | 0.69 |
+| xDrawn | 9633 | 0.0204 | 8.03 |
+| zeroXLeftOut | 73604 | 0.1562 | 61.34 |
+| rollouts (the denominator) | 471244 | 1 | 392.7 |
+
+R3's v2.targetSide counts target lists narrowed at each listing, not picks (D523's residual). Under rollout=random4 the fires of both random seats are summed. J202 (b), the same rollouts at margin 40, per random rollout: v2.ownStack 2.4546, v2.targetSide 0.5908, v2.castSomething 0.2316, v3.goodBlock 0.0231, v4.goodBlockLethal 0.0025, v4.goodBlockRefused 0.0294, v2.lethalBlock 0.014, v2.chumpBlock 0.0541.
+
+| match | side | decisions searched (games) | changed Forge: p | a | b | all | ms per decision (p+a+b) | ms p / a / b | budget fallbacks [95%] | other fallbacks | step timeouts |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| (a) | search-v2-rrandom4-m60 | 27326 (1199) | 4823/18492 (26.1%) | 751/6270 (12.0%) | 336/2564 (13.1%) | 5910/27326 (21.6%) | 959.065 | 955.067 / 948.874 / 1012.817 | 41 = 0.1% [0.1%, 0.2%] | unmappable 26 | 9 |
+| (a) | search-v1-anytime | 28278 (1198) | 3780/19478 (19.4%) | 995/6393 (15.6%) | 464/2407 (19.3%) | 5239/28278 (18.5%) | 967.712 | 974.925 / 940.179 / 982.468 | 123 = 0.4% [0.3%, 0.6%] | unmappable 30 | 10 |
+| (b) | policy-outlet | no search | | | | | | | | | |
+| (b) | search-v1-anytime | 29182 (1199) | 3993/20504 (19.5%) | 1057/6802 (15.5%) | 273/1876 (14.6%) | 5323/29182 (18.2%) | 900.057 | 911.371 / 872.575 / 876.052 | 118 = 0.4% [0.2%, 0.6%] | unmappable 25 | 2 |
+
+J202, the same deals, changed Forge (all / p / a / b): search-v2-rrandom4 (margin 20) 33.3% / 39.5% / 19.8% / 22.1%; search-v2-rrandom4-m40 26.4% / 31.7% / 14.3% / 18.0%; search-v2 on their other side 18.0% / 19.0% / 14.6% / 18.6%.
+
+(a) search-v2-rrandom4-m60: 642 lost, 558 won, 0 drawn, errored or timed out of 1200 batch lines; mean turns 17.86 lost, 17.85 won; lines whose config A is not the arm's: 0. No life total is on a batch line: the iteration replays a game's seed with full recording for it (D523 point 10).
+
+(a) the ten longest lost games (turns descending):
+
+| batch:line | seed | arm's deck vs search-v2's | arm seat | turns | reason | ms | searched / changed | random rollouts | search.rr.v2.*, v3.* and v4.* per random rollout | failures / rollout errors |
+|---|---|---|---|---|---|---|---|---|---|---|
+| b61.jsonl:4 | 114900405710190 | fair-fight-900000007-A vs fair-fight-900000007-B | 0 | 39 | AllOpponentsLost | 129774 | 44 / 9 | 461 | v2.castSomething 0.191, v2.dominatedAttacker 0.015, v2.lethalBlock 0.02, v2.ownStack 3.438, v2.targetSide 0.987, v3.goodBlock 0.041, v4.goodBlockLethal 0.007 | 0 / 0 |
+| b59.jsonl:5 | 114900403710185 | vintage-900000009-B vs vintage-900000009-A | 0 | 38 | AllOpponentsLost | 115094 | 54 / 5 | 819 | v2.castSomething 0.414, v2.chumpBlock 0.005, v2.ownStack 3.278, v2.targetSide 1.659, v3.goodBlock 0.023 | 0 / 0 |
+| b52.jsonl:3 | 114900396700156 | pauper-900000009-B vs pauper-900000009-A | 1 | 35 | AllOpponentsLost | 94144 | 52 / 13 | 854 | v2.castSomething 0.166, v2.dominatedAttacker 0.006, v2.ownStack 3.693, v2.targetSide 0.119, v3.goodBlock 0.015 | 0 / 0 |
+| b51.jsonl:2 | 114900395700154 | pauper-900000005-A vs pauper-900000005-B | 1 | 35 | AllOpponentsLost | 84079 | 34 / 5 | 624 | v2.castSomething 0.277, v2.chumpBlock 0.038, v2.dominatedAttacker 0.027, v2.ownStack 1.864, v2.targetSide 0.213, v3.goodBlock 0.008 | 0 / 0 |
+| b121.jsonl:4 | 114900465710370 | fair-fight-900000007-A vs fair-fight-900000007-B | 0 | 35 | AllOpponentsLost | 79961 | 40 / 9 | 566 | v2.castSomething 0.27, v2.chumpBlock 0.009, v2.dominatedAttacker 0.027, v2.lethalAttack 0.014, v2.lethalBlock 0.021, v2.ownStack 3.053, v2.targetSide 2.456, v3.goodBlock 0.021 | 0 / 0 |
+| b91.jsonl:6 | 114900435710281 | fair-fight-900000007-A vs fair-fight-900000007-B | 1 | 35 | AllOpponentsLost | 79233 | 38 / 7 | 507 | v2.castSomething 0.266, v2.chumpBlock 0.053, v2.dominatedAttacker 0.045, v2.ownStack 3.424, v2.targetSide 0.584, v3.goodBlock 0.037 | 0 / 0 |
+| b136.jsonl:4 | 114900480710415 | fair-fight-900000007-A vs fair-fight-900000007-B | 0 | 34 | AllOpponentsLost | 114136 | 42 / 7 | 550 | v2.castSomething 0.378, v2.chumpBlock 0.047, v2.dominatedAttacker 0.195, v2.lethalBlock 0.024, v2.ownStack 2.789, v2.targetSide 0.715, v3.goodBlock 0.065, v4.goodBlockLethal 0.029, v4.goodBlockRefused 0.009 | 0 / 0 |
+| b90.jsonl:6 | 114900434710278 | fair-fight-900000003-A vs fair-fight-900000003-B | 1 | 34 | AllOpponentsLost | 99170 | 42 / 13 | 644 | v2.castSomething 0.205, v2.chumpBlock 0.135, v2.dominatedAttacker 0.008, v2.lethalBlock 0.008, v2.ownStack 2.902, v2.targetSide 0.09, v3.goodBlock 0.003 | 0 / 0 |
+| b123.jsonl:4 | 114900467710376 | modern-era-900000005-A vs modern-era-900000005-B | 0 | 33 | AllOpponentsLost | 70984 | 33 / 3 | 572 | v2.castSomething 0.196, v2.chumpBlock 0.023, v2.dominatedAttacker 0.012, v2.ownStack 2.28, v2.targetSide 0.738, v3.goodBlock 0.005, v4.goodBlockLethal 0.002 | 0 / 0 |
+| b51.jsonl:6 | 114900395710161 | pauper-900000007-A vs pauper-900000007-B | 1 | 32 | AllOpponentsLost | 113065 | 41 / 9 | 565 | v2.castSomething 0.288, v2.chumpBlock 0.073, v2.dominatedAttacker 0.129, v2.ownStack 3.175, v2.targetSide 0.527, v3.goodBlock 0.039 | 0 / 0 |
+
+(a) the ten quickest lost games (turns ascending):
+
+| batch:line | seed | arm's deck vs search-v2's | arm seat | turns | reason | ms | searched / changed | random rollouts | search.rr.v2.*, v3.* and v4.* per random rollout | failures / rollout errors |
+|---|---|---|---|---|---|---|---|---|---|---|
+| b14.jsonl:4 | 114900358710049 | vintage-900000009-A vs vintage-900000009-B | 0 | 7 | AllOpponentsLost | 10434 | 2 / 0 | 38 | v2.castSomething 0.211, v2.ownStack 3.079, v2.targetSide 1.816 | 0 / 0 |
+| b58.jsonl:2 | 114900402700175 | vintage-900000003-A vs vintage-900000003-B | 1 | 7 | AllOpponentsLost | 14603 | 12 / 2 | 226 | v2.castSomething 0.186, v2.dominatedAttacker 0.173, v2.ownStack 1.527, v2.targetSide 0.075, v3.goodBlock 0.004 | 0 / 0 |
+| b119.jsonl:6 | 114900463710365 | vintage-900000009-A vs vintage-900000009-B | 1 | 9 | AllOpponentsLost | 5965 | 4 / 0 | 78 | v2.castSomething 0.308, v2.ownStack 1.731 | 0 / 0 |
+| b87.jsonl:6 | 114900431710269 | vintage-900000001-A vs vintage-900000001-B | 1 | 9 | AllOpponentsLost | 6290 | 1 / 0 | 24 | v2.castSomething 0.5, v2.ownStack 1 | 0 / 0 |
+| b119.jsonl:2 | 114900463700358 | vintage-900000007-A vs vintage-900000007-B | 1 | 9 | AllOpponentsLost | 10704 | 9 / 1 | 181 | v2.castSomething 0.293, v2.dominatedAttacker 0.006, v2.ownStack 1.779, v2.targetSide 0.177 | 0 / 0 |
+| b3.jsonl:2 | 114900347700010 | modern-era-900000003-A vs modern-era-900000003-B | 1 | 9 | AllOpponentsLost | 10986 | 7 / 2 | 97 | v2.castSomething 0.124, v2.ownStack 1.753, v2.targetSide 2.134 | 0 / 0 |
+| b118.jsonl:5 | 114900462710362 | vintage-900000005-B vs vintage-900000005-A | 0 | 9 | AllOpponentsLost | 12426 | 6 / 0 | 114 | v2.castSomething 0.421, v2.ownStack 0.947 | 0 / 0 |
+| b19.jsonl:0 | 114900363700057 | modern-era-900000007-A vs modern-era-900000007-B | 0 | 9 | AllOpponentsLost | 14222 | 5 / 0 | 107 | v2.castSomething 0.019, v2.ownStack 1.467, v2.targetSide 0.075 | 0 / 0 |
+| b53.jsonl:7 | 114900397710166 | peasant-900000005-B vs peasant-900000005-A | 1 | 9 | AllOpponentsLost | 14844 | 13 / 1 | 294 | v2.castSomething 0.245, v2.ownStack 1.915 | 0 / 0 |
+| b83.jsonl:3 | 114900427700249 | peasant-900000003-B vs peasant-900000003-A | 1 | 9 | AllOpponentsLost | 15178 | 10 / 0 | 190 | v2.castSomething 0.337, v2.chumpBlock 0.1, v2.ownStack 1.826, v2.targetSide 0.137 | 0 / 0 |
+
+Rule parts. The arm, read by the first row that holds: complete 1 (complete: true, 1200 games, errors + timeouts at most 60); lower end above 0.5: 0; point at least +15 Elo: 0; upper end at least +15 Elo: 0; Elo interval contains 0: 0; lower end above -15 Elo: 0; upper end below 0: 1; upper end below -15 Elo: 0. SHOWN 0, INCONCLUSIVE 0 (case 1 0), NOT SHOWN indistinguishable 0, no weaker (case 2) 0, worse, not badly 1 (too wide 0, case 3 0), loses badly 0; candidate 0, diagnose 1. The baseline complete 1. SIGNAL read 1: diff 60, hw 20.7, interval [39.3, 80.7]; SIGNAL SHOWN 1, SIGNAL AGAINST 0, NO SIGNAL 0, SIGNAL INCONCLUSIVE 0. The night: the track closes 0 (D529 owed 0); the closing waits on a confirmation 0; the track kept open 1; a 4,800-game confirmation owed 0; iterate as random-v6 1; the principle's cheap path in doubt 0; repost 0 (none). The loop's count (D528 point 7): J202's lines read 1 ((a) complete 1, upper end -25.3, loses badly 1; (b) complete 1, upper end -7.7, loses badly 0); random-v4 lost badly 0; this iteration loses badly 0; loop stops 0; self-play from random opens 0, live seat changed 0 (both 0 on this night by the rule).
+
+J202 (b), random4 at margin 40: (a) minus it is the margin 40 to 60, on the same deals (information only): search-v2-rrandom4-m40 vs search-v1-anytime, 1200 games, complete true, score 0.47 [0.4511, 0.4889], Elo -20.9 [-34.1, -7.7]; (a)'s point minus it: -3.5 (about +-19 of noise).
+
+J202 (a), random4 at margin 20: (a) minus it is the margin 20 to 60, on the same deals (information only): search-v2-rrandom4 vs search-v1-anytime, 1200 games, complete true, score 0.4433 [0.423, 0.4636], Elo -39.5 [-53.9, -25.3]; (a)'s point minus it: 15.1 (about +-19 of noise).
+
+J194 (a), search-v2 against forge-default (outlets off), from search-v2's side: forge-default is the negative, on the same deals (information only): search-v1-anytime vs forge-default, 1200 games, complete true, score 0.6233 [0.6023, 0.6444], Elo 87.5 [72.1, 103.2]; (b) minus forge-default (the outlet policy's worth) 3.1.
+
+Beside them on the same 600 deals, against search-v2 (information only): J199 (a) random-v2 -43.7 [-57.1, -30.4], J199 (b) random-v2 searching seat only -25.5 [-38.3, -12.8], J201 (a) random-v3 -30.8 [-44.4, -17.2], J201 (b) R8 + R9 -29.6 [-43.7, -15.6]; J195 search-v2-routlets +6.9 [-2.7, +16.6].
