@@ -1,7 +1,8 @@
-running
+failed
+reason: pilot: pmn.a == 1 (pmn.a = 0); pmn.b == 1 (pmn.b = 0)
 runner: forgecoach-runner 5876b554
 started: 2026-11-10T10:42:10-05:00
-phase: pilot 4/4
+finished: 2026-11-10T10:49:04-05:00
 mtg-table: 429ccd9
 workers: 3
-peak_worker_rss_gb: 0.91
+peak_worker_rss_gb: 1.44
