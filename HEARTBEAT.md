@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T00:16:21-05:00
+- time: 2026-11-10T00:21:04-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J204 commands 2/3, 1688/2400 games, 808.3/h, ETA 2026-11-10T01:09:13-05:00, 6 worker(s), 7 core(s)
+- running: J204 commands 2/3, 1760/2400 games, 823.9/h, ETA 2026-11-10T01:07:40-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 12.13; memory 12.4/30.5 GB, swap 4506 MB, pressure 0% (lab budget 23.4 GB)
+- load: 11.38; memory 12.9/30.5 GB, swap 4504 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J203 failed at 2026-11-09T21:06:52-05:00: branches 10710 · spines_done 61 · branch_errors 14 · branch_timeouts 14 · replay_diverged 2 · v.valid 58 · v.validControl 69 · v.forge.wins 23 · v.forge.losses 15 · v.forge.ties 20 · v.forge.share 0.605 · v.forge.shareLo 0.432 · v.forge.shareHi 0.75 · v.forge.gain 0.012 · v.forge.gainLo -0.011 · v.forge.gainHi 0.036 · v.control.share 0.682 · v.control.shareLo 0.5 · v.control.gain 0.015 · v.control.gainLo -0.012 · v.control.gainHi 0.04 · v.whole.gain 0.006 · v.shown 0 · v.notShown 0 · v.inconclusive 1 · v.controlHolds 0 · v.controlFails 0 · v.checks.problems 2
