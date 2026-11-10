@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T08:35:02-05:00",
- "heartbeat": "2026-11-10T08:35:02-05:00",
+ "updated": "2026-11-10T08:35:35-05:00",
+ "heartbeat": "2026-11-10T08:35:35-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,10 +39,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 10.48,
-  "memUsedGb": 12.4,
+  "load1": 10.95,
+  "memUsedGb": 12,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4516,
+  "swapUsedMb": 4514,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -58,19 +58,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-11-10T07:08:33-05:00",
-   "elapsed": 5189,
-   "done": 704,
+   "elapsed": 5222,
+   "done": 712,
    "total": 1200,
    "unit": "games",
-   "ratePerHour": 576.5,
-   "eta": "2026-11-10T09:26:39-05:00",
-   "workers": 6,
+   "ratePerHour": 560,
+   "eta": "2026-11-10T09:27:52-05:00",
+   "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T08:34:08-05:00",
-   "memGb": 7.02,
+   "dataUpdated": "2026-11-10T08:35:15-05:00",
+   "memGb": 6.61,
    "live": {
     "cma.played": 0,
     "cma.score": 0,
@@ -179,6 +179,12 @@
      "kind": "drop",
      "workers": 6,
      "pressure": 1.9
+    },
+    {
+     "at": "2026-11-10T08:35:35-05:00",
+     "kind": "raise",
+     "workers": 7,
+     "pressure": 0
     }
    ],
    "detail": "lab-J206-run1"
