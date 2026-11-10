@@ -2,16 +2,16 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T14:03:46-05:00
+- time: 2026-11-10T14:08:26-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
 - ALERT: J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J208 commands 2/3, 1584/2400 games, 476.5/h, ETA 2026-11-10T15:46:32-05:00, 6 worker(s), 7 core(s)
+- running: J208 commands 2/3, 1632/2400 games, 476.6/h, ETA 2026-11-10T15:45:08-05:00, 6 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 10.11; memory 15.8/30.5 GB, swap 4133 MB, pressure 0% (lab budget 23.4 GB)
+- load: 10.69; memory 14.7/30.5 GB, swap 4131 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J207 failed at 2026-11-10T10:49:04-05:00
