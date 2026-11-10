@@ -28,9 +28,9 @@ The counters say what the rule change did:
 | J206's arm (lcb at 40) | 11.2% / 8.5% / 11.6% | 5.11% / 4.17% / 1.94% |
 | J202 (b)'s arm (both seats random, margin 40) | 31.7% / 14.3% / 18.0% | 16.41% / 10.51% / 4.82% |
 
-The excess of plays made from a pass that the both-seats-random arms showed (16.4% at margin 40) is absent without
-lcb once the searching seat's own continuation is Forge's: 6.7% at margin 40 and 8.9% at margin 20, against the
-Forge-rollout search's 8.1%. That is what D532's arm (a) was built to measure: the excess goes with the searching
+The excess of plays made from a pass that the both-seats-random arms showed (16.4% at margin 40, 19.2% at margin
+20) is almost all gone without lcb once the searching seat's own continuation is Forge's: 6.7% at margin 40, under
+the Forge-rollout search's 8.1%, and 8.9% at margin 20, 0.8 points above it. That is what D532's arm (a) was built to measure: the excess goes with the searching
 seat's own random continuation, not with the random opponent and not with the margin rule. Dropping lcb brought the arm's override rates back to about the
 Forge-rollout search's own, and at margin 20 above them in attack and block. None of that moved the result: the
 arm overrides about as often as the Forge-rollout search does and still scores about 20 Elo under it. The counters
