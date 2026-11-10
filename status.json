@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T15:32:50-05:00",
- "heartbeat": "2026-11-10T15:32:50-05:00",
+ "updated": "2026-11-10T15:36:26-05:00",
+ "heartbeat": "2026-11-10T15:36:26-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,14 +39,14 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.93,
-  "memUsedGb": 10.4,
+  "load1": 4.45,
+  "memUsedGb": 5.8,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4186,
+  "swapUsedMb": 4157,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 14
  },
  "running": [
@@ -56,21 +56,21 @@
    "id": "J208",
    "title": "Random rollouts, iteration 7 (random-v8, no new Java: rollout=random4-them on the margin rule): two fixed 1,200-game matches (600 mirrored pairs each, D398, the confirm set, no stopping rule), each against search-v1-anytime (search-v2): (a) search-v2-rrandom4them-m40, J206's arm without override=lcb (the rollout's opponent random-v4, the searching seat's own continuation Forge's, the margin rule at 40), then (b) search-v2-rrandom4them, the same at search-v2's own margin of 20; each read from its own match under D527's table (its SHOWN row restated by D530 point 7); a candidate goes to a 4,800-game confirmation, both arms losing badly close the random-rollout track, otherwise random-v9 (a per-rollout mix, the track's last iteration) at the better arm's margin; alone on the machine",
    "cpu": "heavy",
-   "phase": "commands 2/3",
+   "phase": "commands 3/3",
    "started": "2026-11-10T10:51:25-05:00",
-   "elapsed": 16885,
-   "done": 2368,
+   "elapsed": 17101,
+   "done": 2392,
    "total": 2400,
    "unit": "games",
-   "ratePerHour": 542.4,
-   "eta": "2026-11-10T15:36:22-05:00",
-   "workers": 6,
+   "ratePerHour": 543,
+   "eta": "2026-11-10T15:37:19-05:00",
+   "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-11-10T15:32:50-05:00",
-   "memGb": 4.66,
+   "dataUpdated": "2026-11-10T15:36:03-05:00",
+   "memGb": 0.01,
    "live": {
     "cma.played": 1200,
     "cma.score": 0.4725,
@@ -167,7 +167,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J208-run2"
+   "detail": "lab-J208-run3"
   }
  ],
  "queue": [],
