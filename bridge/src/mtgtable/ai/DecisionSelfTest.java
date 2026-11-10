@@ -151,6 +151,7 @@ public final class DecisionSelfTest {
         rolloutRandomV3();
         rolloutRandomV4();
         rolloutRandomV4Them();
+        rolloutMix4Them();
         explore();
         randomSeat();
         leakVerdict();
@@ -1102,6 +1103,150 @@ public final class DecisionSelfTest {
             unknown = e.getMessage().contains("random4-them");
         }
         check(unknown, "an unknown rollout= is refused, naming random4-them");
+    }
+
+    /**
+     * D533 (random-v9, pre-registered by D532 point 5): {@code rollout=mix4-them}, the search's rollouts taken by
+     * turns, by round -- round 0 of a decision search-v2's Forge rollout (both seats plain Forge), round 1
+     * {@code random4-them}'s (the opponent's seat random-v4, the searching seat plain Forge), round 2 Forge's, and so
+     * on.  Checked on the config, on the {@link SearchPolicy.Limits} that {@code SearchPolicy.rollout} builds in each
+     * round ({@code SearchPolicy.rolloutLimits}, the one place they are built), on the three counters' helpers over
+     * synthetic leaves, and on the two arms' texts.  Also the guard that no other value's limits depend on the round:
+     * every earlier value's rollouts are what they were before D533.
+     */
+    private static void rolloutMix4Them() {
+        final String v2Text = "ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1";
+        final SearchConfig v2 = SearchConfig.parse(v2Text);
+        final SearchConfig rt = SearchConfig.parse(v2Text + ",rollout=random4-them");
+        final SearchConfig mx = SearchConfig.parse(v2Text + ",rollout=mix4-them");
+        check(mx.rolloutMix() && !mx.rolloutRandomUs() && !mx.rolloutRandomThem() && !mx.rolloutOutletsUs()
+                        && !mx.rolloutOutletsThem() && !rt.rolloutMix() && !v2.rolloutMix(),
+                "mix4-them: a mix, and no seat random in every rollout (rolloutRandomUs and rolloutRandomThem false); "
+                        + "no other value is a mix");
+        check(!SearchConfig.mixRoundRandom(0) && SearchConfig.mixRoundRandom(1) && !SearchConfig.mixRoundRandom(2)
+                        && SearchConfig.mixRoundRandom(3) && !SearchConfig.mixRoundRandom(10) && SearchConfig.mixRoundRandom(11),
+                "mix4-them's kind by round index: round 0 Forge's, round 1 random4-them's, then alternating (10 Forge's, "
+                        + "11 random)");
+        check(!mx.rolloutRandomThemIn(0) && mx.rolloutRandomThemIn(1) && !mx.rolloutRandomThemIn(2)
+                        && mx.rolloutRandomThemIn(3),
+                "mix4-them's opponent seat: Forge in round 0 and 2, random in round 1 and 3");
+        final ExploreMath.Config sm = mx.rolloutRandomSeat();
+        final ExploreMath.Config st = rt.rolloutRandomSeat();
+        check(sm.v2 == st.v2 && sm.goodBlock == st.goodBlock && sm.lethalGood == st.lethalGood
+                        && sm.heldInstant == st.heldInstant && sm.random == st.random && sm.epsilon == st.epsilon
+                        && sm.closeCall == st.closeCall && sm.opening == st.opening && sm.lethalGood && !sm.heldInstant,
+                "mix4-them's random seat is random4-them's (random4's): random-v2 plus R8 made lethal-aware, no R9");
+        final SearchPolicy.Limits l0 = SearchPolicy.rolloutLimits(mx, 0L, 0, null, 0);
+        final SearchPolicy.Limits l1 = SearchPolicy.rolloutLimits(mx, 0L, 0, null, 1);
+        final SearchPolicy.Limits l2 = SearchPolicy.rolloutLimits(mx, 0L, 0, null, 2);
+        final SearchPolicy.Limits f0 = SearchPolicy.rolloutLimits(v2, 0L, 0, null, 0);
+        final SearchPolicy.Limits t1 = SearchPolicy.rolloutLimits(rt, 0L, 0, null, 1);
+        check(!l0.randomUs && !l0.randomThem && !l0.outletsUs && !l0.outletsThem && l0.line == null
+                        && l0.randomUs == f0.randomUs && l0.randomThem == f0.randomThem,
+                "round 0 of mix4-them is Forge's: the limits seat both players as search-v2's do (got randomUs "
+                        + l0.randomUs + ", randomThem " + l0.randomThem + ")");
+        check(!l1.randomUs && l1.randomThem && l1.randomSeat.lethalGood && !l1.outletsUs && !l1.outletsThem
+                        && l1.randomUs == t1.randomUs && l1.randomThem == t1.randomThem,
+                "round 1 of mix4-them is random4-them's: the opponent alone on random-v4 (got randomUs " + l1.randomUs
+                        + ", randomThem " + l1.randomThem + ")");
+        check(!l2.randomThem, "round 2 of mix4-them is Forge's again");
+        boolean roundFree = true;
+        final StringBuilder moved = new StringBuilder();
+        for (final String r : SearchConfig.ROLLOUTS) {
+            if ("mix4-them".equals(r)) {
+                continue;
+            }
+            final SearchConfig c = SearchConfig.parse(v2Text + ",rollout=" + r);
+            for (int round = 0; round < 4; round++) {
+                final SearchPolicy.Limits l = SearchPolicy.rolloutLimits(c, 0L, 0, null, round);
+                if (l.randomUs != c.rolloutRandomUs() || l.randomThem != c.rolloutRandomThem()
+                        || l.outletsUs != c.rolloutOutletsUs() || l.outletsThem != c.rolloutOutletsThem()) {
+                    roundFree = false;
+                    moved.append(' ').append(r).append('@').append(round);
+                }
+            }
+        }
+        check(roundFree, "every value before D533 seats its rollouts as it did, in every round:" + moved);
+        // the counters' helpers, on synthetic leaves: round 3 holds no leaf (every rollout failed)
+        final double nan = Double.NaN;
+        final List<double[]> leaves = List.of(new double[] {10, 30, nan}, new double[] {10, 0, 5},
+                new double[] {20, 50, nan}, new double[] {nan, nan, nan}, new double[] {0, 10, nan});
+        final Map<String, Integer> counts = new java.util.HashMap<>();
+        final SearchPolicy.Sink sink = new SearchPolicy.Sink() {
+            @Override
+            public void add(final String key, final int n) {
+                counts.merge(key, n, Integer::sum);
+            }
+
+            @Override
+            public void event(final String text) {
+                // nothing
+            }
+        };
+        SearchPolicy.countMixRounds(leaves, sink);
+        check(Integer.valueOf(3).equals(counts.get("search.mix.forgeRounds"))
+                        && Integer.valueOf(1).equals(counts.get("search.mix.randomRounds"))
+                        && Integer.valueOf(1).equals(counts.get("search.mix.decisions")),
+                "mix rounds by kind: rounds 0, 2 and 4 Forge's, round 1 random, round 3 (no leaf) neither (" + counts + ")");
+        counts.clear();
+        SearchPolicy.countMixPairs(leaves, 1, sink);
+        check(Integer.valueOf(3).equals(counts.get("search.mix.pairsForge")) && Integer.valueOf(60).equals(counts.get("search.mix.dForge"))
+                        && Integer.valueOf(1).equals(counts.get("search.mix.pairsRandom"))
+                        && Integer.valueOf(-10).equals(counts.get("search.mix.dRandom"))
+                        && Integer.valueOf(1).equals(counts.get("search.mix.both"))
+                        && Integer.valueOf(1).equals(counts.get("search.mix.disagree")),
+                "mix pairs by kind for candidate 1: Forge's rounds +20 +30 +10, the random round -10, and they disagree ("
+                        + counts + ")");
+        counts.clear();
+        SearchPolicy.countMixPairs(leaves, 2, sink);
+        check(!counts.containsKey("search.mix.pairsForge") && Integer.valueOf(1).equals(counts.get("search.mix.pairsRandom"))
+                        && Integer.valueOf(-5).equals(counts.get("search.mix.dRandom")) && !counts.containsKey("search.mix.both")
+                        && !counts.containsKey("search.mix.disagree"),
+                "mix pairs for candidate 2, scored in the random round alone: one random pair, no both, no disagree ("
+                        + counts + ")");
+        counts.clear();
+        SearchPolicy.countMixPairs(leaves, 0, sink);
+        SearchPolicy.countMixRollout(0, sink);
+        SearchPolicy.countMixRollout(1, sink);
+        SearchPolicy.countMixRollout(2, sink);
+        check(counts.size() == 2 && Integer.valueOf(2).equals(counts.get("search.mix.forgeRollouts"))
+                        && Integer.valueOf(1).equals(counts.get("search.mix.randomRollouts")),
+                "Forge's own answer as best counts no pair; rollouts by their round's kind (" + counts + ")");
+        // the texts: search-v2's plus the value; the two arms
+        check(mx.toString().equals(v2.toString() + ",rollout=mix4-them"), "the text is search-v2's plus rollout=mix4-them: " + mx);
+        configOnly("rmix4-them", v2, mx, List.of("rollout"));
+        configOnly("rmix4-them vs rrandom4-them", rt, mx, List.of("rollout"));
+        final String m40 = v2Text.replace(",margin=20,", ",margin=40,");
+        final SearchConfig rt40 = SearchConfig.parse(m40 + ",rollout=random4-them");
+        final SearchConfig mx40 = SearchConfig.parse(m40 + ",rollout=mix4-them");
+        configOnly("rmix4them-m40 vs rrandom4them-m40", rt40, mx40, List.of("rollout"));
+        configOnly("rmix4them-m40 vs rmix4them", mx, mx40, List.of("margin"));
+        check(!mx40.lcb && mx40.margin == 40 && !mx.lcb && mx.margin == 20
+                        && mx40.toString().equals(rt40.toString().replace(",rollout=random4-them", ",rollout=mix4-them"))
+                        && mx40.toString().endsWith(",anytime=1,rollout=mix4-them") && !mx40.toString().contains("override="),
+                "rmix4them-m40 is rrandom4them-m40 (the margin rule at 40) with the rollout value alone changed: " + mx40);
+        boolean liveRefused = false;
+        try {
+            SearchConfig.parseLive("rollout=mix4-them");
+        } catch (final IllegalArgumentException e) {
+            liveRefused = e.getMessage().contains("measurement only");
+        }
+        check(liveRefused, "parseLive refuses rollout=mix4-them (measurement only), although no seat is random in "
+                + "every rollout");
+        boolean liveDefault = true;
+        try {
+            SearchConfig.parseLive("rollout=default");
+        } catch (final IllegalArgumentException e) {
+            liveDefault = false;
+        }
+        check(liveDefault, "parseLive still takes rollout=default");
+        boolean unknown = false;
+        try {
+            SearchConfig.parse("rollout=mix5");
+        } catch (final IllegalArgumentException e) {
+            unknown = e.getMessage().contains("mix4-them") && e.getMessage().contains("random4-them");
+        }
+        check(unknown, "an unknown rollout= is refused, naming mix4-them (and random4-them)");
     }
 
     /** D517: of {@link SearchConfig}'s public instance fields, exactly {@code only} differ between {@code a} and {@code b}. */

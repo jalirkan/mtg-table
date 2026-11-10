@@ -103,6 +103,17 @@ import java.util.Locale;
  *     plays its own continuation as search-v2's rollouts do (plain Forge, its
  *     candidate forced first), the opponent the same random-v4 seat as under
  *     {@code random4}; {@code random-self}'s seating reversed.</li>
+ * <li>{@code rollout=mix4-them} -- the two kinds of rollout above taken by
+ *     turns, by round (D533, random-v9, pre-registered by D532 point 5): round
+ *     0 of a decision (the first round in its leaves) plays every candidate's
+ *     rollout as search-v2's (both seats plain Forge), round 1 every
+ *     candidate's as {@code random4-them}'s (the opponent's seat random-v4),
+ *     round 2 Forge's again, and so on ({@link #rolloutRandomThemIn}).  Every
+ *     candidate in one round shares the round's determinization, as always,
+ *     and its kind, so each paired difference the override rule averages is
+ *     taken inside one kind; the rule reads them pooled over every round.
+ *     Under the ranking ({@code rank=prior}) its playouts, which have no
+ *     round, are Forge's.</li>
  * </ul>
  *
  * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
@@ -250,7 +261,7 @@ public final class SearchConfig {
         }
         if (!ROLLOUTS.contains(rollout)) {
             throw new IllegalArgumentException("search rollout= is default, outlets, both, random, random-self, random3, "
-                    + "random3-held, random4 or random4-them: " + rollout);
+                    + "random3-held, random4, random4-them or mix4-them: " + rollout);
         }
         this.budgetMs = budgetMs;
         this.maxCandidates = maxCandidates;
@@ -283,11 +294,11 @@ public final class SearchConfig {
     }
 
     /**
-     * The {@code rollout=} values: D390's three, D523's two random ones, D525's two random-v3 ones, D527's random-v4 and
-     * D531's random-v4 on the opponent's seat alone.
+     * The {@code rollout=} values: D390's three, D523's two random ones, D525's two random-v3 ones, D527's random-v4,
+     * D531's random-v4 on the opponent's seat alone and D533's mix of Forge's rollouts and D531's, by round.
      */
     public static final java.util.List<String> ROLLOUTS = java.util.List.of("default", "outlets", "both", "random", "random-self",
-            "random3", "random3-held", "random4", "random4-them");
+            "random3", "random3-held", "random4", "random4-them", "mix4-them");
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
     public boolean rolloutOutletsUs() {
@@ -320,6 +331,36 @@ public final class SearchConfig {
         return "random4".equals(rollout) || "random4-them".equals(rollout);
     }
 
+    /**
+     * D533: whether the rollouts take search-v2's Forge rollout and D531's {@code random4-them} rollout by turns, by
+     * round ({@code mix4-them}).  Under it {@link #rolloutRandomUs} and {@link #rolloutRandomThem} are false -- no seat
+     * is random in every rollout -- and the round decides: {@link #rolloutRandomThemIn}.
+     */
+    public boolean rolloutMix() {
+        return "mix4-them".equals(rollout);
+    }
+
+    /**
+     * D533: under {@code mix4-them}, whether round {@code round} of a decision plays {@code random4-them}'s rollout.
+     * {@code round} is the round's index in the decision's leaves, from 0: round 0 and every even round are Forge's,
+     * every odd round {@code random4-them}'s, so a decision with an odd number of rounds has one more Forge round
+     * than random ones.  A pure function of the index, so a round the search retries (an errored round of the
+     * fixed-rounds search, which keeps its index) keeps its kind.
+     */
+    public static boolean mixRoundRandom(final int round) {
+        return (round & 1) == 1;
+    }
+
+    /**
+     * Whether the opponent's seat is the random seat in the rollouts of round {@code round}: {@link #rolloutRandomThem}
+     * for every value but D533's {@code mix4-them}, whatever the round, and under it {@link #mixRoundRandom}.  The
+     * searching seat's choice never depends on the round ({@link #rolloutRandomUs}; under {@code mix4-them} it is
+     * plain Forge in every round, as under {@code random4-them}).
+     */
+    public boolean rolloutRandomThemIn(final int round) {
+        return rolloutRandomThem() || rolloutMix() && mixRoundRandom(round);
+    }
+
     /** D525: whether the rollouts' random seats are random-v3 ({@code random3}, {@code random3-held}, both seats) rather than random-v2. */
     public boolean rolloutRandomV3() {
         return "random3".equals(rollout) || "random3-held".equals(rollout);
@@ -329,10 +370,11 @@ public final class SearchConfig {
      * The rollouts' random seat's settings: under D525's values random-v3, each value one rule more than the
      * one before -- {@code random3} R8 ({@link ExploreMath.Config#randomV3Block}), {@code random3-held} R8 and R9
      * ({@link ExploreMath.Config#randomV3BlockHeld}) -- under D527's {@code random4} random-v4
-     * ({@link ExploreMath.Config#randomV4Block}), else random-v2 (D523).
+     * ({@link ExploreMath.Config#randomV4Block}), else random-v2 (D523).  D533's {@code mix4-them}: random-v4, the
+     * seat its random rounds give the opponent ({@code random4-them}'s).
      */
     public ExploreMath.Config rolloutRandomSeat() {
-        if (rolloutRandomV4()) {
+        if (rolloutRandomV4() || rolloutMix()) {
             return ExploreMath.Config.randomV4Block();
         }
         if ("random3".equals(rollout)) {
@@ -475,7 +517,8 @@ public final class SearchConfig {
      * person never sees their hidden cards (D312, D350) -- and so are D523's
      * measurement-only {@code rollout=random} and {@code random-self}, and
      * D525's {@code random3} and {@code random3-held}, and D527's {@code random4}, and D531's
-     * {@code random4-them}, whose random seat is the opponent's alone, so the test is either seat.
+     * {@code random4-them}, whose random seat is the opponent's alone, so the test is either seat, and D533's
+     * {@code mix4-them}, whose opponent is random in every other round.
      */
     public static SearchConfig parseLive(final String text) {
         final SearchConfig c = parse(text == null || text.isBlank() ? LIVE_DEFAULTS : LIVE_DEFAULTS + "," + text);
@@ -483,11 +526,11 @@ public final class SearchConfig {
             throw new IllegalArgumentException("search oracle=1 reads the opponent's real hidden cards: bench only "
                     + "(tools/ai-bench, the ladder), never a live seat");
         }
-        if (c.rolloutRandomUs() || c.rolloutRandomThem()) {
+        if (c.rolloutRandomUs() || c.rolloutRandomThem() || c.rolloutMix()) {
             // D523: random rollouts are a measurement until a separate decision puts them in front of a person;
-            // D531: either seat (random4-them seats the opponent alone)
+            // D531: either seat (random4-them seats the opponent alone); D533: or half the rounds (mix4-them)
             throw new IllegalArgumentException("search rollout=" + c.rollout + " is measurement only: bench only "
-                    + "(tools/ai-bench, the ladder), never a live seat (D523, D525, D527, D531)");
+                    + "(tools/ai-bench, the ladder), never a live seat (D523, D525, D527, D531, D533)");
         }
         return c;
     }

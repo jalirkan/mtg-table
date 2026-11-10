@@ -2403,12 +2403,13 @@ public final class SearchPolicy {
             rounds:
             while (System.nanoTime() < deadline && leaves.size() < cfg.maxRounds) {
                 final long seed = rng.nextLong();
+                final int ri = leaves.size();   // D533: the round's index, which mix4-them's kind is a function of
                 final double[] round = new double[k];
                 final double[] roundWin = new double[k];
                 for (int i = 0; i < k; i++) {
                     final Playout p;
                     try {
-                        p = rollout(game, ai, cands.get(i), seed, deadline, leaves.isEmpty() && i == 0, horizon);
+                        p = rollout(game, ai, cands.get(i), seed, deadline, leaves.isEmpty() && i == 0, horizon, ri);
                     } catch (final CopyFailed e) {
                         throw e;
                     } catch (final CandidateUnmappable e) {
@@ -2439,6 +2440,9 @@ public final class SearchPolicy {
                     if (newKind(kind)) {
                         sink.add("search." + kind + ".rollouts", 1);
                     }
+                    if (cfg.rolloutMix()) {
+                        countMixRollout(ri, sink);
+                    }
                     rep.playouts++;
                     round[i] = p.leaf;
                     roundWin[i] = winOf(p);
@@ -2466,6 +2470,9 @@ public final class SearchPolicy {
         }
         final int rounds = leaves.size();
         sink.add("search.rounds", rounds);
+        if (cfg.rolloutMix()) {
+            countMixRounds(leaves, sink);
+        }
         if (rounds < cfg.minRounds) {
             sink.add("search.fallback.budget", 1);
             rep.fallback = "budget";
@@ -2482,6 +2489,9 @@ public final class SearchPolicy {
             }
         }
         o.chosen = Report.verdict(lcbFor(kind), cfg.z, cfg.margin, rep, best, rounds);
+        if (cfg.rolloutMix()) {
+            countMixPairs(leaves, best, sink);
+        }
         if (lcbFor(kind)) {
             sink.add(o.chosen > 0 ? "search.lcb.overrode" : best > 0 && rep.diffLeaf[best] > cfg.margin
                     ? "search.lcb.held" : "search.lcb.none", 1);
@@ -2579,7 +2589,7 @@ public final class SearchPolicy {
                     final long tr = System.nanoTime();
                     final Playout p;
                     try {
-                        p = rollout(game, ai, cands.get(i), seed, deadline, r == 0 && i == 0, horizon);
+                        p = rollout(game, ai, cands.get(i), seed, deadline, r == 0 && i == 0, horizon, r);
                     } catch (final CopyFailed e) {
                         throw e;
                     } catch (final CandidateUnmappable e) {
@@ -2621,6 +2631,9 @@ public final class SearchPolicy {
                     if (newKind(kind)) {
                         sink.add("search." + kind + ".rollouts", 1);   // D417: the new kinds' own count (p, a, b's lines unchanged)
                     }
+                    if (cfg.rolloutMix()) {
+                        countMixRollout(r, sink);
+                    }
                     rep.playouts++;
                     round[i] = p.leaf;
                     roundWin[i] = winOf(p);
@@ -2660,6 +2673,9 @@ public final class SearchPolicy {
             }
         }
         sink.add("search.rounds", complete);
+        if (cfg.rolloutMix()) {
+            countMixRounds(leaves, sink);
+        }
         // The verdict on the evidence that exists.
         // "No information" is about every alternative scored, raced out or not:
         // racing every alternative away is a verdict (Forge's), not a fallback.
@@ -2686,6 +2702,9 @@ public final class SearchPolicy {
         o.rounds = complete;
         o.mean = rep.meanLeaf.clone();
         o.chosen = Report.verdict(lcbFor(kind), cfg.z, cfg.margin, rep, best, best == 0 ? most : Anytime.paired(leaves, best));
+        if (cfg.rolloutMix()) {
+            countMixPairs(leaves, best, sink);
+        }
         if (lcbFor(kind)) {
             sink.add(o.chosen > 0 ? "search.lcb.overrode" : best > 0 && rep.diffLeaf[best] > cfg.margin
                     ? "search.lcb.held" : "search.lcb.none", 1);
@@ -2755,12 +2774,118 @@ public final class SearchPolicy {
         }
     }
 
-    /** One rollout: null if the deadline passed before its leaf. */
+    /**
+     * One rollout: null if the deadline passed before its leaf.  {@code round} is the round's index in the decision's
+     * leaves (D533: under {@code rollout=mix4-them} it decides the rollout's kind; every other value ignores it).
+     */
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
-                            final boolean first, final int horizon) {
-        return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle,
+                            final boolean first, final int horizon, final int round) {
+        return playout(game, ai, cand, seed, rolloutLimits(cfg, deadline, horizon, leafEval, round), sink, first,
+                failCopyForTest);
+    }
+
+    /**
+     * The {@link Limits} of a search rollout in round {@code round} of a decision.  Every value but D533's
+     * {@code mix4-them} gives the same limits in every round -- the opponent's seat random exactly when
+     * {@link SearchConfig#rolloutRandomThem} says, as before D533 -- and {@code mix4-them} gives search-v2's (both seats
+     * plain Forge) in round 0 and every even round and {@code random4-them}'s (the opponent's seat random-v4) in every
+     * odd one ({@link SearchConfig#rolloutRandomThemIn}).  Package-private for {@code DecisionSelfTest}.
+     */
+    static Limits rolloutLimits(final SearchConfig cfg, final long deadline, final int horizon,
+                                final mtgtable.eval.PositionEvaluator leafEval, final int round) {
+        return new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle,
                 cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval, null,
-                cfg.rolloutRandomUs(), cfg.rolloutRandomThem(), cfg.rolloutRandomSeat()), sink, first, failCopyForTest);
+                cfg.rolloutRandomUs(), cfg.rolloutRandomThemIn(round), cfg.rolloutRandomSeat());
+    }
+
+    /**
+     * D533: one rollout of a {@code mix4-them} search, counted by its round's kind --
+     * {@code search.mix.forgeRollouts} or {@code search.mix.randomRollouts} -- where {@code search.rollouts} counts it.
+     * {@code search.rr.rollouts} counts every rollout that seated a random seat however it ended (past the deadline, or
+     * thrown), so it is at least {@code search.mix.randomRollouts}, which counts only the random rollouts that gave a
+     * leaf.
+     */
+    static void countMixRollout(final int round, final Sink sink) {
+        sink.add(SearchConfig.mixRoundRandom(round) ? "search.mix.randomRollouts" : "search.mix.forgeRollouts", 1);
+    }
+
+    /**
+     * D533: a {@code mix4-them} decision's rounds by kind -- {@code search.mix.forgeRounds} and
+     * {@code search.mix.randomRounds} -- counting each round of {@code leaves} that holds at least one leaf (a round
+     * whose every rollout failed carries no evidence; the anytime loop's partial rounds count).  Counted beside
+     * {@code search.rounds}, which counts complete rounds under {@code anytime=1}, so the two sums can differ by the
+     * partial rounds.  {@code search.mix.decisions} counts the decisions that reached this count (the ones
+     * {@code search.rounds} counts; a fallback before it -- a copy error, an unmappable Forge answer, rollout errors --
+     * counts in neither).
+     */
+    static void countMixRounds(final List<double[]> leaves, final Sink sink) {
+        int forge = 0;
+        int random = 0;
+        for (int j = 0; j < leaves.size(); j++) {
+            if (Anytime.allNaN(leaves.get(j))) {
+                continue;
+            }
+            if (SearchConfig.mixRoundRandom(j)) {
+                random++;
+            } else {
+                forge++;
+            }
+        }
+        if (forge > 0) {
+            sink.add("search.mix.forgeRounds", forge);
+        }
+        if (random > 0) {
+            sink.add("search.mix.randomRounds", random);
+        }
+        sink.add("search.mix.decisions", 1);
+    }
+
+    /**
+     * D533: whether a {@code mix4-them} decision's two kinds of round agreed about the candidate the verdict read.
+     * For the best candidate {@code best} (none when it is Forge's own, 0), each round where both it and Forge's
+     * answer were scored gives a paired difference, {@code best − Forge's}, in leaf points -- the units the margin rule
+     * compares -- and they are summed by the round's kind: {@code search.mix.pairsForge} and {@code .pairsRandom} count
+     * them, {@code search.mix.dForge} and {@code .dRandom} carry their sums rounded to whole leaf points (so a night's
+     * mean difference by kind is {@code dForge / pairsForge}; the rounding is at most half a point a decision).  When
+     * both kinds have pairs, {@code search.mix.both} counts the decision and {@code search.mix.disagree} counts it again
+     * when the two kinds' mean differences have opposite signs.  A rate of disagreement, never which kind was right.
+     */
+    static void countMixPairs(final List<double[]> leaves, final int best, final Sink sink) {
+        if (best <= 0) {
+            return;
+        }
+        int nf = 0;
+        int nr = 0;
+        double sf = 0;
+        double sr = 0;
+        for (int j = 0; j < leaves.size(); j++) {
+            final double[] row = leaves.get(j);
+            if (best >= row.length || Double.isNaN(row[best]) || Double.isNaN(row[0])) {
+                continue;
+            }
+            final double d = row[best] - row[0];
+            if (SearchConfig.mixRoundRandom(j)) {
+                nr++;
+                sr += d;
+            } else {
+                nf++;
+                sf += d;
+            }
+        }
+        if (nf > 0) {
+            sink.add("search.mix.pairsForge", nf);
+            sink.add("search.mix.dForge", (int) Math.round(sf));
+        }
+        if (nr > 0) {
+            sink.add("search.mix.pairsRandom", nr);
+            sink.add("search.mix.dRandom", (int) Math.round(sr));
+        }
+        if (nf > 0 && nr > 0) {
+            sink.add("search.mix.both", 1);
+            if (sf * sr < 0) {
+                sink.add("search.mix.disagree", 1);
+            }
+        }
     }
 
     /** How far a {@link #playout} may run. */
