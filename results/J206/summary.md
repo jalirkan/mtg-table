@@ -26,11 +26,17 @@ so inside the noise, on the right side of it). The counters say what changed:
 | J205 (a), both random, lcb at 40 | 11.39% | 7.43% | 1.88% | 7.8% | 11.5% |
 | J206, opponent random only, lcb at 40 | 5.11% | 4.17% | 1.94% | 8.4% | 11.6% |
 
-The excess of plays made from a pass is gone: 5.1% against the Forge-rollout search's 8.0%, where both-random
-arms ran at 11% to 16%. So that excess came from the searching seat's own random continuation (a random self
-wastes what it holds, so acting now looked better than it was), not from the random opponent. With it gone, lcb
-has nothing bad left to remove and still holds 35.5% of the overrides (1,669 of 4,703): the arm now overrides less
-than the Forge-rollout search in every kind, attack and block at about two thirds of its rates.
+The share of plays made from a pass reads under the Forge-rollout search's: 5.1% against 8.0%, where both-random
+arms ran at 11% to 19% (J202 (a), at margin 20, ran 19.2%). That is consistent with the excess coming from the
+searching seat's own random continuation (a random self wastes what it holds, so acting now looked better than it
+was) and not from the random opponent. It was measured with lcb on, and lcb itself took the share from 16.4% to
+11.4% at the same margin, so whether the excess is gone without lcb is not measured yet: random-v8's arm (a)
+measures it. lcb still held 35.5% of the overrides (1,669 of 4,703), and the arm overrides less than the
+Forge-rollout search in every kind, attack and block at about two thirds of its rates. The counters give rates,
+not which overrides win.
+
+*(Corrected 2026-11-10 after D532's review: this paragraph first said the excess "is gone", that lcb "has nothing
+bad left to remove", and "11% to 16%". No number of J206's changed.)*
 
 **What follows (D531's rule, no owner question):** not a candidate; not "loses badly", so the loop does not stop
 and the track stays open (SIGNAL SHOWN for the third time: +60.0, +49.0, +61.2). A new decision from the counters
