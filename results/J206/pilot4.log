@@ -1,0 +1,16 @@
+==== J206 pilot4 started 2026-11-10T07:10:20-05:00 in unit lab-J206-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-rrandom4them-lcb-m40 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-rrandom4them-lcb-m40 vs search-v1-anytime (match:j206-pilot:20261110T121021-242252, seed 666900000, 1 pair(s))
+  done   w0 search-v2-rrandom4them-lcb-m40 2-2 search-v1-anytime (0 draws) in 177 s
+  4 decisive games (2 pairs): search-v2-rrandom4them-lcb-m40 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-rrandom4them-lcb-m40 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-rrandom4them-lcb-m40: 107 decisions searched in 4 games, 13 changed Forge's answer (12.1%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-rrandom4them-lcb-m40 by kind: p 10/69, a 3/27, b 0/11
+search-v2-rrandom4them-lcb-m40 time per decision: 781.955 ms (p+a+b); by kind p 758.793, a 851.425, b 756.732
+search-v1-anytime: 105 decisions searched in 4 games, 22 changed Forge's answer (21.0%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 14/69, a 6/27, b 2/9
+search-v1-anytime time per decision: 795.058 ms (p+a+b); by kind p 779.62, a 771.419, b 984.338
+{"run":"20261110T121021-242252","games":4,"aRolloutsPerDecision":19.08,"bRolloutsPerDecision":17.37,"ratio":1.098,"aRrRollouts":2065,"bRrRollouts":0,"aV2Fires":1521,"aV3Fires":31,"aV4Fires":0,"aPolicy":0,"aPolicyGames":0,"bPolicy":0,"bPolicyGames":0,"aLcb":{"overrode":13,"held":5,"none":89},"bLcb":{"overrode":0,"held":0,"none":0},"aPriorityShare":{"fromPass":0.029,"toOther":0.058,"toPass":0.058},"bPriorityShare":{"fromPass":0.029,"toOther":0.0725,"toPass":0.1014},"aPerRollout":{"cardTargetOffered":0.1666,"costTargetAvoided":0.0005,"land":0.0199,"noRepeatNoOp":0.1225,"targetCountTrimmed":0.0005,"v2_castSomething":0.0218,"v2_chumpBlock":0.138,"v2_lethalBlock":0.0208,"v2_ownStack":0.5012,"v2_targetSide":0.0547,"v3_goodBlock":0.015,"xDrawn":0.001,"zeroXLeftOut":0.0068}}
+{"run":"20261110T121021-242252","games":4,"lost":2,"won":2,"other":0,"aCfgOther":0,"meanTurnsLost":20,"meanTurnsWon":21}
