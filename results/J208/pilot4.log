@@ -1,0 +1,33 @@
+==== J208 pilot4 started 2026-11-10T10:53:16-05:00 in unit lab-J208-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-rrandom4them-m40 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-rrandom4them-m40 vs search-v1-anytime (match:j208-pilot:20261110T155317-1687942, seed 718900000, 1 pair(s))
+  done   w0 search-v2-rrandom4them-m40 2-2 search-v1-anytime (0 draws) in 108 s
+  4 decisive games (2 pairs): search-v2-rrandom4them-m40 scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-rrandom4them-m40 scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-rrandom4them-m40: 76 decisions searched in 4 games, 8 changed Forge's answer (10.5%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-rrandom4them-m40 by kind: p 4/46, a 4/24, b 0/6
+search-v2-rrandom4them-m40 time per decision: 674.296 ms (p+a+b); by kind p 650.881, a 750.646, b 548.403
+search-v1-anytime: 83 decisions searched in 4 games, 11 changed Forge's answer (13.3%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 5/49, a 4/24, b 2/10
+search-v1-anytime time per decision: 606.615 ms (p+a+b); by kind p 645.059, a 506.824, b 657.742
+{"run":"20261110T155317-1687942","games":4,"aRolloutsPerDecision":20.96,"bRolloutsPerDecision":19.14,"ratio":1.095,"aRrRollouts":1603,"bRrRollouts":0,"aV2Fires":1445,"aV3Fires":48,"aV4Fires":0,"aPolicy":0,"aPolicyGames":0,"bPolicy":0,"bPolicyGames":0,"aLcb":{"overrode":0,"held":0,"none":0},"bLcb":{"overrode":0,"held":0,"none":0},"aPriorityShare":{"fromPass":0.0217,"toOther":0,"toPass":0.0652},"bPriorityShare":{"fromPass":0.0204,"toOther":0.0204,"toPass":0.0612},"aPerRollout":{"cardTargetOffered":0.2845,"land":0.0094,"noRepeatNoOp":0.0019,"v2_castSomething":0.0293,"v2_chumpBlock":0.0755,"v2_lethalBlock":0.0056,"v2_ownStack":0.5153,"v2_targetSide":0.2757,"v3_goodBlock":0.0299}}
+{"run":"20261110T155317-1687942","lines":4,"aExact":4,"bExact":4,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261110T155317-1687942","games":4,"lost":2,"won":2,"other":0,"aCfgOther":0,"meanTurnsLost":19.5,"meanTurnsWon":15.5}
+match search-v2-rrandom4them vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 4 games (4 games, 2 mirrored pairs), no stopping rule
+  start  w0 search-v2-rrandom4them vs search-v1-anytime (match:j208-pilot:20261110T155506-1722622, seed 718900000, 1 pair(s))
+  done   w0 search-v2-rrandom4them 2-2 search-v1-anytime (0 draws) in 162 s
+  4 decisive games (2 pairs): search-v2-rrandom4them scores 50.0%
+
+match finished: 4 of 4 games (0 draws, 0 engine errors, 0 timeouts), 2 mirrored pairs
+search-v2-rrandom4them scores 50.0% [95% 50.0%, 50.0%] = +0 Elo [+0, +0] against search-v1-anytime
+search-v2-rrandom4them: 101 decisions searched in 4 games, 17 changed Forge's answer (16.8%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-rrandom4them by kind: p 8/61, a 8/32, b 1/8
+search-v2-rrandom4them time per decision: 762.992 ms (p+a+b); by kind p 778.461, a 739.325, b 739.7
+search-v1-anytime: 107 decisions searched in 4 games, 21 changed Forge's answer (19.6%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 10/63, a 9/32, b 2/12
+search-v1-anytime time per decision: 711.662 ms (p+a+b); by kind p 752.352, a 667.913, b 614.7
+{"run":"20261110T155506-1722622","games":4,"aRolloutsPerDecision":19.54,"bRolloutsPerDecision":19.21,"ratio":1.017,"aRrRollouts":1995,"bRrRollouts":0,"aV2Fires":1696,"aV3Fires":75,"aV4Fires":5,"aPolicy":0,"aPolicyGames":0,"bPolicy":0,"bPolicyGames":0,"aLcb":{"overrode":0,"held":0,"none":0},"bLcb":{"overrode":0,"held":0,"none":0},"aPriorityShare":{"fromPass":0.082,"toOther":0.0328,"toPass":0.0164},"bPriorityShare":{"fromPass":0.0794,"toOther":0.0476,"toPass":0.0317},"aPerRollout":{"cardTargetOffered":0.3133,"land":0.007,"noRepeatNoOp":0.0145,"v2_castSomething":0.0481,"v2_chumpBlock":0.0722,"v2_lethalBlock":0.0331,"v2_ownStack":0.5429,"v2_targetSide":0.1539,"v3_goodBlock":0.0376,"v4_goodBlockLethal":0.0025}}
+{"run":"20261110T155506-1722622","lines":4,"aExact":4,"bExact":4,"aOther":0,"bOther":0,"ok":1,"aOtherSeen":[],"bOtherSeen":[]}
+{"run":"20261110T155506-1722622","games":4,"lost":2,"won":2,"other":0,"aCfgOther":0,"meanTurnsLost":23.5,"meanTurnsWon":20}

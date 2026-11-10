@@ -2,15 +2,15 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T10:53:17-05:00
+- time: 2026-11-10T10:57:58-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
 - ALERT: J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J208 pilot 4/4, 0/2400 games, 3 worker(s), 3 core(s)
-- cores: 3 of 14 in use (the running jobs' widths; 16 threads)
-- load: 3.59; memory 8.4/30.5 GB, swap 4080 MB, pressure 0% (lab budget 23.4 GB)
+- running: J208 commands 1/3, 0/2400 games, 7 worker(s), 7 core(s)
+- cores: 7 of 14 in use (the running jobs' widths; 16 threads)
+- load: 3.35; memory 8.3/30.5 GB, swap 4078 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J207 failed at 2026-11-10T10:49:04-05:00
