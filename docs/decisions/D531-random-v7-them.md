@@ -10,8 +10,9 @@ random-v6). One new rollout value, one ladder player, one self-test case, tests 
 `bridge/src` change** — `SearchConfig.java` (the value, and `parseLive`'s refusal now tests either seat) and
 `DecisionSelfTest.java` (the case D530 point 7 requires) — and no existing value's behaviour does: the live seat, the
 atlas's random seat (D508's frozen population), D523's to D530's arms, the wire and the protocol are unchanged, so this
-is free under D509. Everything that depends on J205's numbers is a marked placeholder, `TODO(J205)`, filled in when
-J205 has read.*
+is free under D509. Everything that depended on J205's numbers was a marked placeholder while J205 ran; J205 read at
+06:38 EST on 2026-11-10 (both arms to diagnose, the track open, `iterate` 1) and its numbers, the build and the pilot
+are filled in below.*
 
 **2026-11-10**
 
@@ -30,31 +31,37 @@ J205 has read.*
   | random-v4 (J202 b) | `search-v2-rrandom4-m40` | + the override margin 20 → 40 | −20.9 [−34.1, −7.7] | worse, not badly |
   | random-v5 (J204 a) | `search-v2-rrandom4-m60` | the override margin 40 → 60 | −24.4 [−38.4, −10.4] | worse, not badly |
   | random-v5 (J204 b) | `policy-outlet` (the baseline) | search-v2's seat, the search off | −84.4 [−99.9, −69.3] | (no reading of its own) |
-  | random-v6 (J205 a) | `search-v2-rrandom4-lcb-m40` | D350's `override=lcb`, z 1, at margin 40 | TODO(J205) | TODO(J205) |
-  | random-v6 (J205 b) | `search-v2-rrandom4-lcb-m60` | the same at margin 60 | TODO(J205) | TODO(J205) |
+  | random-v6 (J205 a) | `search-v2-rrandom4-lcb-m40` | D350's `override=lcb`, z 1, at margin 40 | −35.4 [−49.5, −21.5] | loses badly |
+  | random-v6 (J205 b) | `search-v2-rrandom4-lcb-m60` | the same at margin 60 | −34.3 [−47.8, −20.9] | loses badly |
 
-- **J205's reading of random-v6, TODO(J205)** (the runner's lines, 1,200 games each): (a) `search-v2-rrandom4-lcb-m40` (the deciding arm,
-  `98eea870967e`) scored TODO(J205) [lo, hi], TODO(J205) Elo [eloLo, eloHi], **TODO(J205): its D527 reading**, errors
-  and timeouts TODO(J205); (b) `search-v2-rrandom4-lcb-m60` (`d6d75fdefd25`) TODO(J205) Elo [eloLo, eloHi],
-  **TODO(J205): its reading**; SIGNAL (a) − J204 (b) = **TODO(J205): diff [lo, hi] (±hw), its reading**;
-  `signalInconclusiveCount` TODO(J205) (J204's 0, plus 1 or reset); this iteration lost badly TODO(J205) (both arms:
-  TODO(J205)/TODO(J205)), so the loop count going into J206 is TODO(J205); the rule's own effect, (a) − J202 (b),
-  TODO(J205). **The condition this file merges on, not yet a fact:** J205's report names `v.iterate` 1 and `v.v7`
-  `search-v2-rrandom4them-lcb-m40` (both arms to diagnose, the track open: the case this file is written for);
-  TODO(J205): whether it did.
-- **The counters D530 point 8 used, at J205** (TODO(J205), from `var/j205/rollouts-a.json` and `-b.json`; each as a
+- **J205's reading of random-v6** (the runner's lines, 1,200 games each, read 2026-11-10 06:38 EST): (a)
+  `search-v2-rrandom4-lcb-m40` (the deciding arm, `98eea870967e`) scored 0.4492 [0.4292, 0.4691], −35.4 Elo [−49.5,
+  −21.5], **NOT SHOWN, loses badly**, errors 0 and timeouts 1; (b) `search-v2-rrandom4-lcb-m60` (`d6d75fdefd25`) −34.3
+  Elo [−47.8, −20.9], **NOT SHOWN, loses badly** (errors 0, timeouts 0); SIGNAL (a) − J204 (b) = **+49.0 [28.3, 69.7]
+  (±20.7), SIGNAL SHOWN** (58.1% of search-v2's own gain over the seat under it, information); `signalInconclusiveCount`
+  0 (J204's 0, reset); this iteration lost badly (both arms: 1/1), so the loop count going into J206 is 1; the rule's
+  own effect, (a) − J202 (b), −14.5 Elo on the point (about ±19), and (b) − (a) is +1.1. **The condition this file
+  merges on held:** J205's `verdict.json` carries `iterate` 1 and `v7` `search-v2-rrandom4them-lcb-m40` (`candidate` 0,
+  `closes` 0, `loopStops` 0: J204 (a) did not lose badly), and its report says "the agent iterates as random-v7 without
+  asking the owner".
+- **The counters D530 point 8 used, at J205** (from `var/j205/rollouts-a.json` and `-b.json`; each as a
   share of the side's decisions of that kind):
 
   | side | p changed from pass | p to another play | p to pass | a changed | b changed | lcb overrode / held / none | held share |
   |---|---|---|---|---|---|---|---|
   | search-v2 (J202 b's other side) | 8.15% | 6.27% | 4.65% | 14.8% | 19.5% | — (margin rule) | — |
   | J202 (b) `rrandom4-m40` (margin rule) | 16.4% | 10.5% | 4.82% | 14.3% | 18.0% | — | — |
-  | J205 (a) `rrandom4-lcb-m40` | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) |
-  | J205 (b) `rrandom4-lcb-m60` | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) |
-  | search-v2 (J205 a's other side) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | TODO(J205) | — | — |
+  | J205 (a) `rrandom4-lcb-m40` | 11.39% | 7.43% | 1.88% | 7.8% | 11.5% | 4,669 / 2,849 / 20,071 | 37.9% |
+  | J205 (b) `rrandom4-lcb-m60` | 9.68% | 6.26% | 1.21% | 6.7% | 9.9% | 3,913 / 2,317 / 21,366 | 37.2% |
+  | search-v2 (J205 a's other side) | 7.99% | 6.50% | 4.87% | 14.8% | 18.0% | — | — |
 
-  TODO(J205): one sentence on whether lcb cut the from-pass excess or only the rest; it decides nothing here, since
-  random-v7 was pre-registered before J205 and is what D530 point 7 says it is.
+  lcb cut every kind of override and not the from-pass excess alone: at margin 40 the from-pass share fell from 16.4%
+  to 11.39% and is still +3.4 points above search-v2's 7.99%, the other-play share fell to +0.9 above, and the kinds
+  that were already at search-v2's rates fell well under them (attack 7.8% against 14.8%, block 11.5% against 18.0%,
+  to a pass 1.88% against 4.87%); the arm held 37.9% of what the margin rule would have overridden and scored −14.5 on
+  the point (about ±19) against the margin rule on the same deals. It decides nothing here, since random-v7 was
+  pre-registered before J205 and is what D530 point 7 says it is; it is why the arm's attack, block and to-pass rates
+  are in J206's report beside the from-pass one.
 - **What D530 point 7 fixed, and what is left to fix here.** random-v7 is "`rollout=random4-them` — the rollout's
   *opponent* seat plays random-v4 (`Config.randomV4Block()`), the *searching* seat plays its own continuation as
   search-v2's rollouts do (Forge's Default AI) — on the deciding arm's verdict unchanged (`override=lcb,z=1` at
@@ -99,9 +106,9 @@ J205 has read.*
    `random-self`'s; its text is search-v2's plus `,rollout=random4-them`, and it differs from search-v2 and from
    `random4` in the field `rollout` alone (`configOnly`); the arm's config (`margin=40`, `override=lcb,z=1`) differs
    from `search-v2-rrandom4-lcb-m40`'s in `rollout` alone; `parseLive` refuses it and still takes `default`, `outlets`
-   and `both`; an unknown value is refused naming `random4-them`. **Written while J205 held the machine alone, so
-   uncompiled and unrun when this file was written**: `./bridge/build.sh` (the lint, javac, this self-test) runs before
-   the pilot, on the lane, after J205.
+   and `both`; an unknown value is refused naming `random4-them`. **Written while J205 held the machine alone**, so
+   compiled and run only after it: `./bridge/build.sh` (the lint, javac, this self-test) ran before the pilot, on the
+   lane, after J205 (*Measured*, below).
 3. **One arm**, kind `search`, every param search-v2's plus J205 (a)'s rule and the new value. Its note says "for
    measurement, never the live seat".
 
@@ -195,8 +202,8 @@ J205 has read.*
    (complete, upper end below −15). **The loop stops** when it does and J205's iteration lost badly — both of J205's
    arms complete and each with its upper end below −15, read from `var/ai-ladder/match-J205a.json` (`98eea870967e`) and
    `match-J205b.json` (`d6d75fdefd25`), complete by the same test; when they are not both complete, whether J205's
-   iteration lost badly is unread and the loop does not stop on it. Going into J206 the count is TODO(J205) (J205's iteration lost
-   badly: TODO(J205)).
+   iteration lost badly is unread and the loop does not stop on it. Going into J206 the count is 1 (J205's iteration lost
+   badly: both arms, upper ends −21.5 and −20.9), so the loop stops if J206's arm loses badly.
 
    *Numbers.* Every threshold above is compared on the numbers the match lines carry: Elo in integer tenths, the
    score's lower end in integer ten-thousandths; `hw` is the root of those exact numbers.
@@ -263,30 +270,36 @@ J205 has read.*
 
 **Measured.**
 
-- Nothing was run on the engine: J205 held the machine alone while this lane was written, so no Java was compiled and
-  no pilot played. `web/test/ai-ladder.test.ts` (49 tests, 49 passed, `node --test`): the arm's raw params are
+- **Written before anything ran on the engine**: J205 held the machine alone while this lane was written, so the Java
+  was compiled and the pilot played only after J205 ended (06:38 EST), below. `web/test/ai-ladder.test.ts` (49 tests,
+  49 passed, `node --test`): the arm's raw params are
   search-v2's plus margin 40, `override: lcb`, `z: '1'` and `rollout: random4-them`; its resolved params are J205
   (a)'s but `rollout`; its seat config is J205 (a)'s with the rollout value alone changed; hash `01e2aba2d33e`; the
   ladder's enum takes the value; no `-lcb-m60` arm; D527's, D528's and D530's arms, `rrandom-self`, `policy-outlet`
   and search-v2 keep theirs.
-- TODO(build): `./bridge/build.sh` (nice 19, after J205): the lint and its self-test, javac, `decision selftest: <n>
-  check(s), 0 failure(s)` (D530's build: 337; this case adds 15).
-- TODO(pilot): `./tools/ai-ladder.sh match search-v2-rrandom4them-lcb-m40 search-v1-anytime --games 4 --batch-pairs 1
-  --jobs 1 --purpose pilot --dir var/pilot-rrandom7 …` at nice 19, never beside a lab job: the arm's decision reports
-  say `rule lcb margin 40 z 1.00`, its random rollouts are counted (`search.rr.rollouts` > 0, guardrails firing) and
-  search-v2's side carries none.
+- **The build** (`./bridge/build.sh`, 06:38 EST, after J205 ended, the lab runner idle): the lint and its self-test,
+  javac, `build OK`, `decision selftest: 352 check(s), 0 failure(s)` (D530's build: 337; this case adds 15).
+- **The pilot** (`./tools/ai-ladder.sh match search-v2-rrandom4them-lcb-m40 search-v1-anytime --games 4 --batch-pairs 1
+  --jobs 2 --purpose pilot --dir var/pilot-rrandom7 …`, 06:39 to 06:42 EST, the lab runner idle; one batch, so one
+  worker, 157 s): 4 of 4 games, **0 engine errors, 0 timeouts**, the arm 1-3 (no reading at 4 games). The arm's seat
+  config in every row is `…,margin=40,…,override=lcb,z=1,anytime=1,rollout=random4-them` (hash `01e2aba2d33e`); its
+  side counts its random rollouts (`search.rr.rollouts` 438, 413, 506 and 323, 1,680 in the four games, with the
+  guardrail counters `search.rr.v2.*`, `search.rr.v3.goodBlock`, `search.rr.land` firing) and the lcb rule's three
+  outcomes (`search.lcb.overrode` 10, `held` 2, `none` 87); search-v2's side carries no `search.rr.*` and no
+  `search.lcb.*` counter in any row. 100 decisions searched on the arm's side, 10 changed Forge's answer (p 8/57,
+  a 1/29, b 1/14), 0 budget fallbacks, 696 ms a decision against search-v2's 741 ms on the other side. The decision
+  reports' own `rule lcb margin 40 z 1.00` line is not written by a ladder match and was not read; the seat config and
+  the `search.lcb.*` counters are what say the rule ran.
 
 **What is unverified.**
 
-- **That the Java compiles and the self-test passes.** Written against the surrounding code (every method and field it
-  calls read), never compiled. The case constructs `SearchPolicy.Limits` through its 14-argument constructor with
-  three `null`s, the first such use outside `SearchPolicy`.
-- **That the seating plays as read.** `playout`'s seat choice has never run with `randomUs` false and `randomThem`
-  true; the self-test checks what `playout` reads, not a game. The pilot is the first run.
+- **That the seating plays as read, beyond four games.** The Java compiles and the self-test's case passes (above);
+  `playout`'s seat choice with `randomUs` false and `randomThem` true first ran in the pilot, whose counters are the
+  expected shape (random rollouts counted on the arm's side alone). Four games check that it runs, not that every
+  branch of it is right; J206's 1,200 games and its job's checks are the wider run.
 - **That nothing else assumed "random means the searching seat is random".** Every reader of `rolloutRandomUs()` under
-  `bridge/src` was read (`parseLive`, the two `Limits` constructions); `tools/` has none. The batch counters were not
-  run.
-- **J205's numbers**, every `TODO(J205)` above, and so whether this decision merges at all.
+  `bridge/src` was read (`parseLive`, the two `Limits` constructions); `tools/` has none. The pilot's batch counters
+  ran and read as expected; no reader outside those was exercised.
 
 **Residuals.**
 
