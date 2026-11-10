@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-09T20:04:29-05:00",
- "heartbeat": "2026-11-09T20:04:29-05:00",
+ "updated": "2026-11-09T20:05:11-05:00",
+ "heartbeat": "2026-11-09T20:05:11-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -19,10 +19,10 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 25.31,
-  "memUsedGb": 13.1,
+  "load1": 22.87,
+  "memUsedGb": 7.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4875,
+  "swapUsedMb": 4869,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -36,21 +36,21 @@
    "id": "J203",
    "title": "Judge the judge, unselected -- does J200's KNOWLEDGE SHOWN hold on decisions nobody chose? 160 move-atlas decisions drawn at random (seed 203, stratified by kind, no filter on confidence, disagreement or either map), each read blind by two judges for a first choice, a second choice and a confidence; set i (both judges on one option that is not Forge's) branched on D451's Forge map for Forge's option and theirs, exactly as J200; set ii (both judges on Forge's option) branched for Forge's option and their second choice, as a control; set iii (the judges split) recorded, not branched; two pre-registered readings: J200's rule on set i (KNOWLEDGE SHOWN, NOT SHOWN or INCONCLUSIVE) and the control on set ii (CONTROL HOLDS, FAILS or INCONCLUSIVE)",
    "cpu": "heavy",
-   "phase": "commands 1/3",
+   "phase": "commands 2/3",
    "started": "2026-11-09T18:05:49-05:00",
-   "elapsed": 7120,
+   "elapsed": 7162,
    "done": 7571,
    "total": 10720,
    "unit": "lines",
    "ratePerHour": 5187.8,
-   "eta": "2026-11-09T20:40:54-05:00",
+   "eta": "2026-11-09T20:41:36-05:00",
    "workers": 6,
    "workersMax": 6,
    "cores": 7,
    "errors": 5,
    "paused": false,
    "dataUpdated": "2026-11-09T20:04:27-05:00",
-   "memGb": 5.97,
+   "memGb": 0.01,
    "live": {
     "branches": 7568,
     "spines_done": 39,
@@ -109,7 +109,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J203-run1"
+   "detail": "lab-J203-run2"
   }
  ],
  "queue": [
