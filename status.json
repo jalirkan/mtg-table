@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-11-10T16:00:29-05:00",
- "heartbeat": "2026-11-10T16:00:29-05:00",
+ "updated": "2026-11-10T16:00:44-05:00",
+ "heartbeat": "2026-11-10T16:00:44-05:00",
  "paused": false,
  "state": "running",
  "alerts": [
@@ -39,8 +39,8 @@
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.85,
-  "memUsedGb": 5.9,
+  "load1": 3.44,
+  "memUsedGb": 5.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 4314,
   "pressure": 0,
@@ -56,9 +56,9 @@
    "id": "J209",
    "title": "Random rollouts, iteration 8, the track's last (random-v9, new Java: rollout=mix4-them, a decision's rollouts taken by turns by round between search-v2's Forge rollout and D531's random4-them, round 0 Forge's): one fixed 1,200-game match (600 mirrored pairs, D398, the confirm set, no stopping rule), search-v2-rmix4them-m40 (margin 40, the margin D532 point 4 names from J208's two points) against search-v1-anytime (search-v2), read from its own match under D527's table (its SHOWN row restated by D530 point 7, in D532 point 4's words); a candidate goes to a 4,800-game confirmation, anything else closes the random-rollout track; alone on the machine",
    "cpu": "heavy",
-   "phase": "pilot 2/4",
+   "phase": "pilot 3/4",
    "started": "2026-11-10T15:59:09-05:00",
-   "elapsed": 80,
+   "elapsed": 95,
    "done": 0,
    "total": 1200,
    "unit": "games",
@@ -140,7 +140,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J209-pilot2"
+   "detail": "lab-J209-pilot3"
   }
  ],
  "queue": [],

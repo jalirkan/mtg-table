@@ -2,15 +2,15 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T16:00:29-05:00
+- time: 2026-11-10T16:00:44-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J208 started with 6 of 7 workers at 2026-11-10T13:12:14-05:00, as many as fit (MemAvailable 25.1 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J205 started with 6 of 7 workers at 2026-11-10T04:07:33-05:00, as many as fit (MemAvailable 24.7 GB, 3.41 GB a worker); raised toward 7 as memory frees
 - ALERT: J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees
-- running: J209 pilot 2/4, 0/1200 games, 3 worker(s), 3 core(s)
+- running: J209 pilot 3/4, 0/1200 games, 3 worker(s), 3 core(s)
 - cores: 3 of 14 in use (the running jobs' widths; 16 threads)
-- load: 3.85; memory 5.9/30.5 GB, swap 4314 MB, pressure 0% (lab budget 23.4 GB)
+- load: 3.44; memory 5.7/30.5 GB, swap 4314 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J208 done at 2026-11-10T15:36:39-05:00: cma.played 1200 · cma.score 0.473 · cma.elo -19.1 · cma.eloLo -30.3 · cma.eloHi -8 · cmb.played 1200 · cmb.score 0.472 · cmb.elo -19.7 · cmb.eloLo -31 · cmb.eloHi -8.4 · cma.aSearch.msPerDecision 930.52 · cma.bSearch.msPerDecision 912.737 · cmb.aSearch.msPerDecision 879.038 · cmb.bSearch.msPerDecision 867.383 · roa.aRolloutsPerDecision 16.26 · rob.aRolloutsPerDecision 16.7 · roa.ratio 1.046 · rob.ratio 1.033 · roa.aPriorityShare.fromPass 0.067 · roa.bPriorityShare.fromPass 0.081 · rob.aPriorityShare.fromPass 0.089 · rob.bPriorityShare.fromPass 0.081 · roa.aChangedShare.a 0.141 · rob.aChangedShare.a 0.177 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.noWeaker 0 · v.a.worseNotBadly 1 · v.a.losesBadly 0 · v.b.shown 0 · v.b.inconclusive 0 · v.b.indistinguishable 0 · v.b.noWeaker 0 · v.b.worseNotBadly 1 · v.b.losesBadly 0 · v.confirm 0 · v.confirmA 0 · v.confirmB 0 · v.bothLoseBadly 0 · v.trackCloses 0 · v.v9 1 · v.v9Margin 40 · v.repost 0 · v.info.aMinusJ206 4.1 · v.info.bMinusJ206 3.5 · v.info.bMinusA -0.6 · v.info.aMinusJ204b.diff 65.3 · v.info.bMinusJ204b.diff 64.7 · v.a.chainDeals 1 · v.b.chainDeals 1 · wa.lost 633 · wb.lost 634
