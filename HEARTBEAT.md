@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-11-10T03:39:21-05:00
+- time: 2026-11-10T03:44:02-05:00
 - runner: 5876b554, up since 2026-11-09T12:05:14-05:00
 - state: running
 - ALERT: J204 started with 5 of 7 workers at 2026-11-09T23:36:26-05:00, as many as fit (MemAvailable 22.8 GB, 3.64 GB a worker); raised toward 7 as memory frees
 - ALERT: J202 started with 6 of 7 workers at 2026-11-09T15:28:17-05:00, as many as fit (MemAvailable 24 GB, 3.42 GB a worker); raised toward 7 as memory frees
-- running: J205 commands 1/3, 920/2400 games, 505.4/h, ETA 2026-11-10T06:35:03-05:00, 7 worker(s), 7 core(s)
+- running: J205 commands 1/3, 976/2400 games, 521.7/h, ETA 2026-11-10T06:27:48-05:00, 7 worker(s), 7 core(s)
 - cores: 7 of 14 in use (the running jobs' widths; 16 threads)
-- load: 14.29; memory 14.9/30.5 GB, swap 4131 MB, pressure 0% (lab budget 23.4 GB)
+- load: 11.91; memory 15.3/30.5 GB, swap 4125 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J204 done at 2026-11-10T01:10:34-05:00: cma.played 1200 · cma.score 0.465 · cma.lo 0.445 · cma.hi 0.485 · cma.elo -24.4 · cma.eloLo -38.4 · cma.eloHi -10.4 · cma.aSearch.msPerDecision 959.065 · cma.bSearch.msPerDecision 967.712 · roa.aRolloutsPerDecision 16.88 · roa.bRolloutsPerDecision 14.75 · roa.ratio 1.144 · roa.aPerRollout.v2_lethalBlock 0.013 · roa.aPerRollout.v2_ownStack 2.424 · roa.aPerRollout.v3_goodBlock 0.022 · roa.aPerRollout.v4_goodBlockLethal 0.002 · roa.aRrFailures 102 · v.a.shown 0 · v.a.inconclusive 0 · v.a.indistinguishable 0 · v.a.worseNotBadly 1 · v.a.losesBadly 0 · v.a.candidate 0 · cmb.played 1200 · cmb.score 0.381 · cmb.lo 0.36 · cmb.hi 0.402 · cmb.elo -84.4 · cmb.eloLo -99.9 · cmb.eloHi -69.3 · cmb.bSearch.msPerDecision 900.057 · rob.bRolloutsPerDecision 15.64 · rob.aPolicy 240 · rob.aPolicyGames 64 · v.signal.diff 60 · v.signal.hw 20.7 · v.signal.lo 39.3 · v.signal.hi 80.7 · v.signal.share 0.711 · v.signal.signalShown 1 · v.signal.signalAgainst 0 · v.signal.noSignal 0 · v.signal.signalInconclusive 0 · v.trackCloses 0 · v.closingWaits 0 · v.keepsOpen 1 · v.signalInconclusiveCount 0 · v.m40MinusBaseline 63.5 · v.marginStep -3.5 · v.v6Margin 40 · bsa.min 114900000 · bsb.min 114900000 · v.confirm 0 · v.iterate 1 · v.principleInDoubt 0 · v.j202.v4LosesBadly 0 · v.loopStops 0 · wa.lost 642
